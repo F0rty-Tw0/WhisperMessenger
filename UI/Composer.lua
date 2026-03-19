@@ -125,11 +125,12 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
     submitMessage()
   end)
   input:SetScript("OnEscapePressed", function()
-    if input.ClearFocus then
-      input:ClearFocus()
-    end
     if onEscape then
       onEscape()
+      return
+    end
+    if input.ClearFocus then
+      input:ClearFocus()
     end
   end)
 

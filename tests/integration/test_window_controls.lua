@@ -10,6 +10,7 @@ local function loadAddonFromToc(addonName, ns)
 end
 
 return function()
+  local savedUISpecialFrames = _G.UISpecialFrames
   local factory = FakeUI.NewFactory()
   local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1 }
   local characterState = {
@@ -34,6 +35,8 @@ return function()
   loadAddonFromToc("WhisperMessenger", ns)
   local Bootstrap = ns.Bootstrap
 
+  _G.UISpecialFrames = {}
+
   local runtime = Bootstrap.Initialize(factory, {
     accountState = accountState,
     characterState = characterState,
@@ -42,6 +45,7 @@ return function()
 
   runtime.toggle()
   assert(runtime.window.frame.shown == true)
+  assert(_G.UISpecialFrames[1] == "WhisperMessengerWindow")
 
   assert(runtime.window.closeButton.template == "UIPanelButtonTemplate")
   assert(runtime.window.optionsButton ~= nil, "expected an Options button")
@@ -65,4 +69,6 @@ return function()
 
   runtime.icon.frame.scripts.OnClick(runtime.icon.frame)
   assert(runtime.window.frame.shown == true)
+
+  _G.UISpecialFrames = savedUISpecialFrames
 end

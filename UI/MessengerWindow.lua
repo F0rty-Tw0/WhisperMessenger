@@ -127,6 +127,19 @@ function MessengerWindow.Create(factory, options)
     frame:SetMinResize(640, 420)
   end
   frame:SetClampedToScreen(true)
+  local frameName = frame.GetName and frame:GetName() or frame.name
+  if type(_G.UISpecialFrames) == "table" and frameName ~= nil then
+    local alreadyRegistered = false
+    for _, specialFrameName in ipairs(_G.UISpecialFrames) do
+      if specialFrameName == frameName then
+        alreadyRegistered = true
+        break
+      end
+    end
+    if not alreadyRegistered then
+      table.insert(_G.UISpecialFrames, frameName)
+    end
+  end
 
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
