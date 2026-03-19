@@ -25,6 +25,11 @@ local function buildItem(conversationKey, conversation)
     guid = conversation.guid,
     bnetAccountID = conversation.bnetAccountID,
     gameAccountName = conversation.gameAccountName,
+    className = conversation.className,
+    classTag = conversation.classTag,
+    raceName = conversation.raceName,
+    raceTag = conversation.raceTag,
+    factionName = conversation.factionName,
   }
 end
 

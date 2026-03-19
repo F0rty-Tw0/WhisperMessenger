@@ -15,9 +15,18 @@ return function()
   local savedSlashCmdList = _G.SlashCmdList
   local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
   local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
+  local savedGetPlayerInfoByGUID = _G.GetPlayerInfoByGUID
 
   local createdFrames = {}
   local factory = FakeUI.NewFactory()
+
+  _G.GetPlayerInfoByGUID = function(guid)
+    if guid ~= "Player-3676-0ABCDEF0" then
+      return nil
+    end
+
+    return "Priest", "PRIEST", "Human", "Human", 2, "Arthas", "Area52"
+  end
 
   _G.require = nil
   _G.SlashCmdList = {}
@@ -76,13 +85,20 @@ return function()
   assert(eventFrame.events.CHAT_MSG_DND == true)
   assert(eventFrame.events.CAN_LOCAL_WHISPER_TARGET_RESPONSE == true)
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "hi there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 101, "Player-3676-0ABCDEF0")
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "hi there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 101, "Player-3676-0ABCDEF0")
 
   local conversation = runtime.store.conversations["current::WOW::arthas-area52"]
   assert(conversation ~= nil, "expected whisper event to reach runtime store")
   assert(#conversation.messages == 1)
   assert(conversation.messages[1].text == "hi there")
   assert(runtime.window.contacts.rows[1].item.conversationKey == "current::WOW::arthas-area52")
+  assert(conversation.className == "Priest")
+  assert(conversation.classTag == "PRIEST")
+  assert(conversation.raceName == "Human")
+  assert(conversation.raceTag == "Human")
+  assert(conversation.factionName == "Alliance")
+  assert(runtime.window.contacts.rows[1].item.className == "Priest")
+  assert(runtime.window.contacts.rows[1].item.factionName == "Alliance")
 
   _G.SlashCmdList.WHISPERMESSENGER()
   assert(runtime.window.frame.shown == true)
@@ -92,7 +108,7 @@ return function()
   assert(conversation.unreadCount == 0)
   assert(runtime.window.conversation.header.text == "Arthas-Area52")
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "still there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 102, "Player-3676-0ABCDEF0")
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "still there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 102, "Player-3676-0ABCDEF0")
   assert(#conversation.messages == 2)
   assert(conversation.unreadCount == 0)
   assert(runtime.window.conversation.transcript.lines[2] == "still there")
@@ -100,7 +116,7 @@ return function()
   runtime.window.closeButton.scripts.OnClick(runtime.window.closeButton)
   assert(runtime.window.frame.shown == false)
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "ping again", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 103, "Player-3676-0ABCDEF0")
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "ping again", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 103, "Player-3676-0ABCDEF0")
   assert(#conversation.messages == 3)
   assert(conversation.unreadCount == 1)
   _G.require = savedRequire
@@ -108,4 +124,5 @@ return function()
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
+  _G.GetPlayerInfoByGUID = savedGetPlayerInfoByGUID
 end

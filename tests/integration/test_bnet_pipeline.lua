@@ -58,6 +58,9 @@ return function()
           characterName = "Jaina",
           realmName = "Proudmoore",
           playerGuid = "Player-60-0ABCDE123",
+          className = "Mage",
+          raceName = "Human",
+          factionName = "Alliance",
         },
       }
     end,
@@ -110,6 +113,11 @@ return function()
   assert(conversation.bnetAccountID == 99)
   assert(conversation.gameAccountName == "Jaina-Proudmoore")
   assert(runtime.window.contacts.rows[1].item.conversationKey == conversationKey)
+  assert(conversation.className == "Mage")
+  assert(conversation.raceName == "Human")
+  assert(conversation.factionName == "Alliance")
+  assert(runtime.window.contacts.rows[1].item.className == "Mage")
+  assert(runtime.window.contacts.rows[1].item.factionName == "Alliance")
 
   _G.SlashCmdList.WHISPERMESSENGER()
   runtime.window.contacts.rows[1].scripts.OnClick()

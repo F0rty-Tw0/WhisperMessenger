@@ -31,6 +31,11 @@ local function ensureConversation(state, key)
     guid = nil,
     bnetAccountID = nil,
     gameAccountName = nil,
+    className = nil,
+    classTag = nil,
+    raceName = nil,
+    raceTag = nil,
+    factionName = nil,
   }
 
   return state.conversations[key]
@@ -48,6 +53,11 @@ local function applyMessageMetadata(conversation, message)
   conversation.guid = message.guid or conversation.guid
   conversation.bnetAccountID = message.bnetAccountID or conversation.bnetAccountID
   conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName
+  conversation.className = message.className or conversation.className
+  conversation.classTag = message.classTag or conversation.classTag
+  conversation.raceName = message.raceName or conversation.raceName
+  conversation.raceTag = message.raceTag or conversation.raceTag
+  conversation.factionName = message.factionName or conversation.factionName
 end
 
 local function shouldIncrementUnread(message)

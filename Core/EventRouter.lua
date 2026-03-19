@@ -38,7 +38,7 @@ local function buildConversationContact(state, payload)
     return nil, nil
   end
 
-  local contact = Identity.FromWhisper(payload.playerName, payload.guid)
+  local contact = Identity.FromWhisper(payload.playerName, payload.guid, payload.playerInfo)
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
   return contact, conversationKey
 end
@@ -57,6 +57,11 @@ local function buildMessage(eventName, payload, contact, direction, kind, sentAt
     channel = (contact and contact.channel) or payload.channel or "WOW",
     bnetAccountID = (contact and contact.bnetAccountID) or payload.bnetAccountID,
     gameAccountName = (contact and contact.gameAccountName) or payload.gameAccountName,
+    className = (contact and contact.className) or payload.className,
+    classTag = (contact and contact.classTag) or payload.classTag,
+    raceName = (contact and contact.raceName) or payload.raceName,
+    raceTag = (contact and contact.raceTag) or payload.raceTag,
+    factionName = (contact and contact.factionName) or payload.factionName,
   }
 end
 
@@ -65,7 +70,7 @@ function Router.RecordPendingSend(state, target, text)
   if target.channel == "BN" then
     contact = Identity.FromBattleNet(target.bnetAccountID, target.accountInfo or target)
   else
-    contact = Identity.FromWhisper(target.displayName, target.guid)
+    contact = Identity.FromWhisper(target.displayName, target.guid, target)
   end
 
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)

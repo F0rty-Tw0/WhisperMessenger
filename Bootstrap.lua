@@ -81,6 +81,7 @@ local function createRuntimeState(accountState, characterState, localProfileId, 
     availabilityByGUID = {},
     chatApi = options.chatApi or _G.C_ChatInfo or {},
     bnetApi = options.bnetApi or _G.C_BattleNet or {},
+    playerInfoByGUID = options.playerInfoByGUID or _G.GetPlayerInfoByGUID,
     store = store,
     queue = Queue.New(),
     now = options.now or currentTime,
@@ -111,6 +112,28 @@ local function resolveBattleNetAccountInfo(bnetApi, bnetAccountID, guid)
   return accountInfo
 end
 
+local function resolveWhisperPlayerInfo(runtime, guid)
+  if runtime == nil or type(runtime.playerInfoByGUID) ~= "function" or guid == nil then
+    return nil
+  end
+
+  local ok, className, classTag, raceName, raceTag = pcall(runtime.playerInfoByGUID, guid)
+  if not ok then
+    return nil
+  end
+
+  if className == nil and classTag == nil and raceName == nil and raceTag == nil then
+    return nil
+  end
+
+  return {
+    className = className,
+    classTag = classTag,
+    raceName = raceName,
+    raceTag = raceTag,
+  }
+end
+
 local function buildLivePayload(runtime, eventName, ...)
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
     local guid, status = ...
@@ -139,6 +162,7 @@ local function buildLivePayload(runtime, eventName, ...)
     playerName = playerName,
     lineID = lineID,
     guid = guid,
+    playerInfo = resolveWhisperPlayerInfo(runtime, guid),
   }
 end
 
@@ -218,6 +242,11 @@ local function buildWindowSelectionState(runtime, contacts)
       guid = conversation.guid,
       bnetAccountID = conversation.bnetAccountID,
       gameAccountName = conversation.gameAccountName,
+      className = conversation.className,
+      classTag = conversation.classTag,
+      raceName = conversation.raceName,
+      raceTag = conversation.raceTag,
+      factionName = conversation.factionName,
     }
   end
 
