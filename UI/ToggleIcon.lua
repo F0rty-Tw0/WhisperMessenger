@@ -40,16 +40,15 @@ function ToggleIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- Circular icon background (solid color + circular mask)
-  local CIRCLE_MASK = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+  -- Circular background: use the circle texture directly, tinted to desired color
+  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
+  background:SetTexture(CIRCLE_TEX)
   local c = Theme.COLORS.icon_bg
-  if background.SetColorTexture then
-    background:SetColorTexture(c[1], c[2], c[3], c[4])
-  end
-  if background.SetMask then
-    background:SetMask(CIRCLE_MASK)
+  if background.SetVertexColor then
+    background:SetVertexColor(c[1], c[2], c[3], c[4] or 1)
   end
 
   -- Circular border ring
@@ -62,10 +61,17 @@ function ToggleIcon.Create(factory, options)
     border:SetVertexColor(bc[1], bc[2], bc[3], 0.3)
   end
 
-  -- Label
-  local label = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  label:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  label:SetText("WM")
+  -- Chat icon (speech bubble) instead of text label
+  local chatIcon = frame:CreateTexture(nil, "ARTWORK")
+  chatIcon:SetSize(ICON_SIZE * 0.6, ICON_SIZE * 0.6)
+  chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
+  chatIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
+  if chatIcon.SetVertexColor then
+    local tc = Theme.COLORS.text_primary
+    chatIcon:SetVertexColor(tc[1], tc[2], tc[3], 1)
+  end
+
+  local label = chatIcon -- reference kept for return table
 
   -- Unread badge (accent blue style)
   local badge = factory.CreateFrame("Frame", nil, frame)
@@ -74,12 +80,10 @@ function ToggleIcon.Create(factory, options)
 
   local badgeBackground = badge:CreateTexture(nil, "BACKGROUND")
   badgeBackground:SetAllPoints(badge)
+  badgeBackground:SetTexture(CIRCLE_TEX)
   local bgc = Theme.COLORS.badge_bg
-  if badgeBackground.SetColorTexture then
-    badgeBackground:SetColorTexture(bgc[1], bgc[2], bgc[3], bgc[4])
-  end
-  if badgeBackground.SetMask then
-    badgeBackground:SetMask(CIRCLE_MASK)
+  if badgeBackground.SetVertexColor then
+    badgeBackground:SetVertexColor(bgc[1], bgc[2], bgc[3], bgc[4] or 1)
   end
 
   local badgeLabel = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
@@ -92,12 +96,9 @@ function ToggleIcon.Create(factory, options)
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      if background.SetColorTexture then
+      if background.SetVertexColor then
         local hc = Theme.COLORS.send_button_hover
-        background:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
-        if background.SetMask then
-          background:SetMask(CIRCLE_MASK)
-        end
+        background:SetVertexColor(hc[1], hc[2], hc[3], hc[4] or 1)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -111,12 +112,9 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      if background.SetColorTexture then
+      if background.SetVertexColor then
         local lc = Theme.COLORS.icon_bg
-        background:SetColorTexture(lc[1], lc[2], lc[3], lc[4])
-        if background.SetMask then
-          background:SetMask(CIRCLE_MASK)
-        end
+        background:SetVertexColor(lc[1], lc[2], lc[3], lc[4] or 1)
       end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()

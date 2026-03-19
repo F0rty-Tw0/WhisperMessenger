@@ -40,9 +40,8 @@ end
 
 local function setComposerEnabled(composer, selectedContact)
   local enabled = selectedContact ~= nil
-  composer.sendButton.disabled = not enabled
-  if composer.sendButton.SetEnabled then
-    composer.sendButton:SetEnabled(enabled)
+  if composer.setEnabled then
+    composer.setEnabled(enabled)
   end
 end
 
@@ -355,7 +354,7 @@ function MessengerWindow.Create(factory, options)
   end
   closeButton:EnableMouse(true)
 
-  -- Gear icon for options (replaces text button)
+  -- Gear icon for options
   local optionsButton = factory.CreateFrame("Button", nil, frame)
   optionsButton:SetSize(28, 28)
   optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -4, 0)
@@ -364,29 +363,27 @@ function MessengerWindow.Create(factory, options)
   if optionsBg.SetColorTexture then
     optionsBg:SetColorTexture(0, 0, 0, 0)
   end
-  local optionsLabel = optionsButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  optionsLabel:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
-  optionsLabel:SetText("*")
-  if optionsLabel.SetTextColor then
+  local optionsIcon = optionsButton:CreateTexture(nil, "ARTWORK")
+  optionsIcon:SetSize(18, 18)
+  optionsIcon:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
+  optionsIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
+  optionsIcon:SetDesaturated(true)
+  do
     local c = Theme.COLORS.text_secondary
-    optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
+    optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
   end
   if optionsButton.SetScript then
     optionsButton:SetScript("OnEnter", function()
-      if optionsLabel.SetTextColor then
-        local c = Theme.COLORS.text_primary
-        optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
-      end
+      local c = Theme.COLORS.text_primary
+      optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
       if optionsBg.SetColorTexture then
-        local c = Theme.COLORS.bg_contact_hover
-        optionsBg:SetColorTexture(c[1], c[2], c[3], 0.5)
+        local bc = Theme.COLORS.bg_contact_hover
+        optionsBg:SetColorTexture(bc[1], bc[2], bc[3], 0.5)
       end
     end)
     optionsButton:SetScript("OnLeave", function()
-      if optionsLabel.SetTextColor then
-        local c = Theme.COLORS.text_secondary
-        optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
-      end
+      local c = Theme.COLORS.text_secondary
+      optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
       if optionsBg.SetColorTexture then
         optionsBg:SetColorTexture(0, 0, 0, 0)
       end

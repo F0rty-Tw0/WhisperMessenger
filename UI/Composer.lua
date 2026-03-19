@@ -91,7 +91,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
 
   -- Input background texture (sits behind the EditBox)
   local inputBg = pane:CreateTexture(nil, "BACKGROUND")
-  local inputW = parentWidth - 80
+  local inputW = parentWidth - 24
   local inputH = Theme.LAYOUT.COMPOSER_INPUT_HEIGHT
   local inputX, inputY = 12, 8
   inputBg:SetSize(inputW, inputH)
@@ -127,7 +127,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   -- Placeholder text
   local placeholder = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
-  placeholder:SetText("Type a message...")
+  placeholder:SetText("Type a message and press Enter")
   local tc = Theme.COLORS.text_secondary
   if placeholder.SetTextColor then
     placeholder:SetTextColor(tc[1], tc[2], tc[3], tc[4])
@@ -137,67 +137,10 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   table.insert(linkedInputs, 1, input)
   registerLinkHooks()
 
-  -- Send button (no template, custom styled)
-  local btnSize = Theme.LAYOUT.SEND_BUTTON_SIZE
-  local sendButton = factory.CreateFrame("Button", nil, pane)
-  sendButton:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -12, 8)
-  sendButton:SetSize(btnSize, btnSize)
-
-  -- Send button background texture
-  local sendBg = sendButton:CreateTexture(nil, "BACKGROUND")
-  sendBg:SetAllPoints(sendButton)
-  local sc = Theme.COLORS.send_button
-  if sendBg.SetColorTexture then
-    sendBg:SetColorTexture(sc[1], sc[2], sc[3], sc[4])
-  end
-  sendButton.bg = sendBg
-
-  -- Send button label ">"
-  local sendLabel = sendButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  sendLabel:SetAllPoints(sendButton)
-  sendLabel:SetJustifyH("CENTER")
-  sendLabel:SetJustifyV("MIDDLE")
-  sendLabel:SetText(">")
-  if sendLabel.SetTextColor then
-    sendLabel:SetTextColor(1, 1, 1, 1)
-  end
-
-  -- Send button hover / disabled state handling
-  if sendButton.SetScript then
-    sendButton:SetScript("OnEnter", function()
-      if sendButton.disabled then return end
-      local hc = Theme.COLORS.send_button_hover
-      if sendBg.SetColorTexture then
-        sendBg:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
-      end
-    end)
-    sendButton:SetScript("OnLeave", function()
-      if sendButton.disabled then
-        local dc = Theme.COLORS.send_button_disabled
-        if sendBg.SetColorTexture then
-          sendBg:SetColorTexture(dc[1], dc[2], dc[3], dc[4])
-        end
-      else
-        local nc = Theme.COLORS.send_button
-        if sendBg.SetColorTexture then
-          sendBg:SetColorTexture(nc[1], nc[2], nc[3], nc[4])
-        end
-      end
-    end)
-  end
-
-  sendButton.disabled = selectedContact == nil
-
-  -- Apply initial disabled visual if needed
-  if sendButton.disabled then
-    local dc = Theme.COLORS.send_button_disabled
-    if sendBg.SetColorTexture then
-      sendBg:SetColorTexture(dc[1], dc[2], dc[3], dc[4])
-    end
-  end
+  local sendDisabled = selectedContact == nil
 
   local function submitMessage()
-    if sendButton.disabled then
+    if sendDisabled then
       return
     end
 
@@ -219,8 +162,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
 
     input:SetText("")
   end
-
-  sendButton:SetScript("OnClick", submitMessage)
 
   input:SetScript("OnTextChanged", function()
     local text = input.GetText and input:GetText() or input.text or ""
@@ -247,7 +188,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   return {
     frame = pane,
     input = input,
-    sendButton = sendButton,
+    setEnabled = function(enabled)
+      sendDisabled = not enabled
+    end,
   }
 end
 
