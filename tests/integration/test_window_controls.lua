@@ -59,7 +59,8 @@ return function()
   assert(runtime.window.optionsPanel.shown == false)
 
   assert(runtime.window.closeButton.scripts.OnClick ~= nil, "expected the Close button to be wired")
-  runtime.window.closeButton.scripts.OnClick(runtime.window.closeButton)
+  assert(runtime.window.composer.input.scripts.OnEscapePressed ~= nil, "expected composer Esc to be wired")
+  runtime.window.composer.input.scripts.OnEscapePressed(runtime.window.composer.input)
   assert(runtime.window.frame.shown == false)
 
   runtime.icon.frame.scripts.OnClick(runtime.icon.frame)

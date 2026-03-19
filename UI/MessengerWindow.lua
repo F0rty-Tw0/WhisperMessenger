@@ -243,7 +243,33 @@ function MessengerWindow.Create(factory, options)
 
   refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil)
   local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
-  local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end)
+
+  local function setOptionsVisible(nextVisible)
+    if nextVisible then
+      optionsPanel:Show()
+      contactsPane:Hide()
+      contentPane:Hide()
+      trace("options shown")
+      return
+    end
+
+    optionsPanel:Hide()
+    contactsPane:Show()
+    contentPane:Show()
+    trace("options hidden")
+  end
+
+  local function closeWindow()
+    setOptionsVisible(false)
+    trace("close click")
+    if options.onClose then
+      options.onClose()
+    elseif frame.Hide then
+      frame:Hide()
+    end
+  end
+
+  local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
 
   local function refreshSelection(nextState)
     nextState = nextState or {}
@@ -287,33 +313,10 @@ function MessengerWindow.Create(factory, options)
     status = options.status,
   })
 
-  local function setOptionsVisible(nextVisible)
-    if nextVisible then
-      optionsPanel:Show()
-      contactsPane:Hide()
-      contentPane:Hide()
-      trace("options shown")
-      return
-    end
-
-    optionsPanel:Hide()
-    contactsPane:Show()
-    contentPane:Show()
-    trace("options hidden")
-  end
-
   setOptionsVisible(false)
 
   if closeButton.SetScript then
-    closeButton:SetScript("OnClick", function()
-      setOptionsVisible(false)
-      trace("close click")
-      if options.onClose then
-        options.onClose()
-      elseif frame.Hide then
-        frame:Hide()
-      end
-    end)
+    closeButton:SetScript("OnClick", closeWindow)
   end
 
   if optionsButton.SetScript then
