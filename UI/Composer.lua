@@ -25,7 +25,7 @@ function Composer.Create(factory, parent, selectedContact, onSend)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
 
-  local input = factory.CreateFrame("EditBox", nil, pane)
+  local input = factory.CreateFrame("EditBox", nil, pane, "InputBoxTemplate")
   input:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 16, 16)
   input:SetSize(parentWidth - 120, 24)
   input:SetText("")
@@ -36,12 +36,12 @@ function Composer.Create(factory, parent, selectedContact, onSend)
   sendButton:SetText("Send")
   sendButton.disabled = selectedContact == nil
 
-  sendButton:SetScript("OnClick", function()
+  local function submitMessage()
     if sendButton.disabled then
       return
     end
 
-    local text = input.text
+    local text = input.GetText and input:GetText() or input.text
     if text == nil or text == "" then
       return
     end
@@ -58,6 +58,11 @@ function Composer.Create(factory, parent, selectedContact, onSend)
     })
 
     input:SetText("")
+  end
+
+  sendButton:SetScript("OnClick", submitMessage)
+  input:SetScript("OnEnterPressed", function()
+    submitMessage()
   end)
 
   return {

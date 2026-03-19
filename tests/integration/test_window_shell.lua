@@ -67,6 +67,7 @@ return function()
   assert(window.conversation.transcript.height ~= nil)
   assert(window.composer.input.point[1] == "BOTTOMLEFT")
   assert(window.composer.input.width ~= nil)
+  assert(window.composer.input.template == "InputBoxTemplate")
   assert(window.composer.sendButton.point[1] == "BOTTOMRIGHT")
   assert(window.composer.sendButton.width ~= nil)
   _G.UIParent = savedUIParent
