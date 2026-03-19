@@ -1,0 +1,4 @@
+.omc/
+dist/
+*.zip
+docs/
