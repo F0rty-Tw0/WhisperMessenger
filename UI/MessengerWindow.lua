@@ -490,6 +490,7 @@ function MessengerWindow.Create(factory, options)
   local currentContacts = options.contacts or {}
   local composerSelectedContact = {}
   local handleContactSelected
+  local contactsVisibleCount = 10
   local contacts = {
     rows = {},
     scrollFrame = contactsView.scrollFrame,
@@ -501,10 +502,12 @@ function MessengerWindow.Create(factory, options)
   local function refreshContacts(nextContacts, selectedConversationKey)
     if nextContacts ~= nil then
       currentContacts = nextContacts
+      contactsVisibleCount = 10
     end
 
     contacts.rows = ContactsList.Refresh(factory, contacts.content, contacts.rows, currentContacts, {
       selectedConversationKey = selectedConversationKey,
+      visibleCount = contactsVisibleCount,
       onSelect = function(item)
         if handleContactSelected then
           handleContactSelected(item)
@@ -514,6 +517,44 @@ function MessengerWindow.Create(factory, options)
     ScrollView.Sync(contacts.view)
 
     return contacts.rows
+  end
+
+  local function loadMoreContacts()
+    if not ContactsList.HasMore(contacts.content) then
+      return
+    end
+    contactsVisibleCount = contactsVisibleCount + 10
+    local selectedKey = currentSelectedContact and currentSelectedContact.conversationKey or nil
+    refreshContacts(nil, selectedKey)
+  end
+
+  -- Infinite scroll: load more contacts when scrolling near the bottom
+  local function checkLoadMore()
+    local range = ScrollView.GetRange(contactsView)
+    local offset = ScrollView.GetOffset(contactsView)
+    if range > 0 and offset >= range - Theme.LAYOUT.CONTACT_ROW_HEIGHT then
+      loadMoreContacts()
+    end
+  end
+
+  if contactsView.scrollFrame and contactsView.scrollFrame.SetScript then
+    local originalOnWheel = contactsView.scrollFrame:GetScript("OnMouseWheel")
+    contactsView.scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+      if originalOnWheel then
+        originalOnWheel(self, delta)
+      end
+      checkLoadMore()
+    end)
+  end
+
+  if contactsView.scrollBar and contactsView.scrollBar.SetScript then
+    local originalOnValue = contactsView.scrollBar:GetScript("OnValueChanged")
+    contactsView.scrollBar:SetScript("OnValueChanged", function(self, value)
+      if originalOnValue then
+        originalOnValue(self, value)
+      end
+      checkLoadMore()
+    end)
   end
 
   refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil)

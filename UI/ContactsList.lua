@@ -12,6 +12,7 @@ end
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
 local ContactsList = {}
+local PAGE_SIZE = 10
 
 local function compareItems(left, right)
   if left.lastActivityAt ~= right.lastActivityAt then
@@ -270,11 +271,16 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   items = items or {}
   options = options or {}
 
-  for index, item in ipairs(items) do
-    rows[index] = bindRow(factory, parent, rows[index], index, item, options)
+  local visibleCount = options.visibleCount or #items
+  if visibleCount > #items then
+    visibleCount = #items
   end
 
-  for index = #items + 1, #rows do
+  for index = 1, visibleCount do
+    rows[index] = bindRow(factory, parent, rows[index], index, items[index], options)
+  end
+
+  for index = visibleCount + 1, #rows do
     local row = rows[index]
     row.item = nil
     row.selected = false
@@ -305,8 +311,8 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
 
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
   local viewport = parent and parent.parent or nil
-  local viewportHeight = sizeValue(viewport, "GetHeight", "height", #items * ROW_HEIGHT)
-  local contentHeight = math.max(viewportHeight, #items * ROW_HEIGHT)
+  local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * ROW_HEIGHT)
+  local contentHeight = math.max(viewportHeight, visibleCount * ROW_HEIGHT)
 
   if parent and parent.SetSize then
     parent:SetSize(parentWidth, contentHeight)
@@ -317,8 +323,17 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   end
 
   parent.rows = rows
+  parent.visibleCount = visibleCount
+  parent.totalCount = #items
   ContactsList.SetSelected(rows, options.selectedConversationKey)
   return rows
+end
+
+function ContactsList.HasMore(parent)
+  if parent == nil then
+    return false
+  end
+  return (parent.visibleCount or 0) < (parent.totalCount or 0)
 end
 
 function ContactsList.Render(factory, parent, items, options)
