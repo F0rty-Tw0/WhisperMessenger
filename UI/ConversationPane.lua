@@ -22,6 +22,7 @@ local function loadModule(name, key)
 end
 
 local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
+local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
 local function formatMessage(message)
   if message.kind == "system" then
@@ -133,8 +134,112 @@ function ConversationPane.SetStatus(view, status)
   return view.statusBanner.text
 end
 
+local function applyColor(fontString, colorTable)
+  if fontString and colorTable then
+    fontString:SetTextColor(colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1)
+  end
+end
+
+local function buildStatusLine(selectedContact)
+  if not selectedContact then
+    return "Online"
+  end
+
+  local parts = { "Online" }
+
+  if selectedContact.realmName and selectedContact.realmName ~= "" then
+    local name = selectedContact.name or selectedContact.displayName or ""
+    if name ~= "" then
+      table.insert(parts, name .. "-" .. selectedContact.realmName)
+    else
+      table.insert(parts, selectedContact.realmName)
+    end
+  elseif selectedContact.characterName and selectedContact.characterName ~= "" then
+    local realm = selectedContact.realm or ""
+    if realm ~= "" then
+      table.insert(parts, selectedContact.characterName .. "-" .. realm)
+    else
+      table.insert(parts, selectedContact.characterName)
+    end
+  end
+
+  if selectedContact.faction and selectedContact.faction ~= "" then
+    table.insert(parts, selectedContact.faction)
+  end
+
+  return table.concat(parts, "  \xC2\xB7  ")
+end
+
 function ConversationPane.Refresh(view, selectedContact, conversation, status)
-  view.header:SetText(headerTextFor(selectedContact))
+  -- Update new Telegram-style header elements
+  if view.headerFrame then
+    local hasContact = selectedContact ~= nil
+
+    -- Update class icon
+    if view.headerClassIcon then
+      local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
+      if iconPath then
+        view.headerClassIcon:SetTexture(iconPath)
+      else
+        view.headerClassIcon:SetTexture(Theme.TEXTURES.bnet_icon)
+      end
+      view.headerClassIcon:SetShown(hasContact)
+    end
+
+    -- Update contact name with class color
+    if view.headerName then
+      if hasContact then
+        view.headerName:SetText(selectedContact.displayName or "")
+        -- Apply class color if available
+        local classTag = selectedContact.classTag
+        if classTag and _G.RAID_CLASS_COLORS then
+          local classColor = _G.RAID_CLASS_COLORS[string.upper(classTag)]
+          if classColor then
+            if classColor.r then
+              view.headerName:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
+            elseif type(classColor[1]) == "number" then
+              view.headerName:SetTextColor(classColor[1], classColor[2], classColor[3], 1)
+            end
+          else
+            applyColor(view.headerName, Theme.COLORS.text_primary)
+          end
+        else
+          applyColor(view.headerName, Theme.COLORS.text_primary)
+        end
+        view.headerName:Show()
+      else
+        view.headerName:SetText("")
+        view.headerName:Hide()
+      end
+    end
+
+    -- Update status line
+    if view.headerStatus then
+      if hasContact then
+        view.headerStatus:SetText(buildStatusLine(selectedContact))
+        view.headerStatus:Show()
+      else
+        view.headerStatus:SetText("")
+        view.headerStatus:Hide()
+      end
+    end
+
+    -- Update status dot visibility
+    if view.headerStatusDot then
+      view.headerStatusDot:SetShown(hasContact)
+    end
+
+    -- Update empty state visibility
+    if view.headerEmpty then
+      view.headerEmpty:SetShown(not hasContact)
+    end
+  else
+    -- Fallback: legacy header (should not happen after Create, but kept for safety)
+    if view.header then
+      view.header:SetText(headerTextFor(selectedContact))
+    end
+  end
+
   ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
   ConversationPane.SetStatus(view, status)
   return view
@@ -146,23 +251,131 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   local parentHeight = sizeValue(parent, "GetHeight", "height", 420)
   pane:SetAllPoints(parent)
 
-  local header = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-  header:SetPoint("TOPLEFT", pane, "TOPLEFT", 16, -16)
-  header:SetText(headerTextFor(selectedContact))
+  local HEADER_HEIGHT = 56
 
+  ---------------------------------------------------------------------------
+  -- Header container (56px tall, bg_header background)
+  ---------------------------------------------------------------------------
+  local headerFrame = factory.CreateFrame("Frame", nil, pane)
+  headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, 0)
+  headerFrame:SetPoint("TOPRIGHT", pane, "TOPRIGHT", 0, 0)
+  headerFrame:SetHeight(HEADER_HEIGHT)
+
+  local headerBg = headerFrame:CreateTexture(nil, "BACKGROUND")
+  headerBg:SetAllPoints(headerFrame)
+  local hc = Theme.COLORS.bg_header
+  headerBg:SetColorTexture(hc[1], hc[2], hc[3], hc[4] or 1)
+
+  ---------------------------------------------------------------------------
+  -- Class icon (32x32)
+  ---------------------------------------------------------------------------
+  local classIcon = headerFrame:CreateTexture(nil, "ARTWORK")
+  local iconSize = Theme.LAYOUT.HEADER_ICON_SIZE  -- 32
+  classIcon:SetSize(iconSize, iconSize)
+  classIcon:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
+
+  local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
+  if iconPath then
+    classIcon:SetTexture(iconPath)
+  else
+    classIcon:SetTexture(Theme.TEXTURES.bnet_icon)
+  end
+
+  ---------------------------------------------------------------------------
+  -- Contact name (class-colored, GameFontHighlightLarge)
+  ---------------------------------------------------------------------------
+  local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+  headerName:SetPoint("TOPLEFT", classIcon, "TOPRIGHT", 10, -4)
+
+  if selectedContact then
+    headerName:SetText(selectedContact.displayName or "")
+    local classTag = selectedContact.classTag
+    if classTag and _G.RAID_CLASS_COLORS then
+      local classColor = _G.RAID_CLASS_COLORS[string.upper(classTag)]
+      if classColor then
+        if classColor.r then
+          headerName:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
+        elseif type(classColor[1]) == "number" then
+          headerName:SetTextColor(classColor[1], classColor[2], classColor[3], 1)
+        end
+      else
+        applyColor(headerName, Theme.COLORS.text_primary)
+      end
+    else
+      applyColor(headerName, Theme.COLORS.text_primary)
+    end
+    headerName:Show()
+  else
+    headerName:SetText("")
+    headerName:Hide()
+  end
+
+  ---------------------------------------------------------------------------
+  -- Status line text (below name)
+  ---------------------------------------------------------------------------
+  local headerStatus = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
+  headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -2)
+  applyColor(headerStatus, Theme.COLORS.text_secondary)
+
+  if selectedContact then
+    headerStatus:SetText(buildStatusLine(selectedContact))
+    headerStatus:Show()
+  else
+    headerStatus:SetText("")
+    headerStatus:Hide()
+  end
+
+  ---------------------------------------------------------------------------
+  -- Status dot (8x8) anchored just left of status text
+  ---------------------------------------------------------------------------
+  local statusDot = headerFrame:CreateTexture(nil, "ARTWORK")
+  local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE  -- 8
+  statusDot:SetSize(dotSize, dotSize)
+  statusDot:SetPoint("RIGHT", headerStatus, "LEFT", -4, 0)
+  statusDot:SetTexture("Interface\\COMMON\\Indicator-Gray")
+  local oc = Theme.COLORS.online
+  statusDot:SetVertexColor(oc[1], oc[2], oc[3], oc[4] or 1)
+  statusDot:SetShown(selectedContact ~= nil)
+
+  ---------------------------------------------------------------------------
+  -- Header divider (1px line at bottom of header)
+  ---------------------------------------------------------------------------
+  local headerDivider = headerFrame:CreateTexture(nil, "BACKGROUND")
+  headerDivider:SetPoint("BOTTOMLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
+  headerDivider:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMRIGHT", 0, 0)
+  headerDivider:SetHeight(1)
+  local dc = Theme.COLORS.divider
+  headerDivider:SetColorTexture(dc[1], dc[2], dc[3], dc[4] or 1)
+
+  ---------------------------------------------------------------------------
+  -- Empty state label (centered, shown when no contact selected)
+  ---------------------------------------------------------------------------
+  local headerEmpty = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
+  headerEmpty:SetPoint("CENTER", pane, "CENTER", 0, 0)
+  headerEmpty:SetText("Select a conversation")
+  applyColor(headerEmpty, Theme.COLORS.text_secondary)
+  headerEmpty:SetShown(selectedContact == nil)
+
+  ---------------------------------------------------------------------------
+  -- Legacy statusBanner (kept for SetStatus compatibility)
+  ---------------------------------------------------------------------------
   local statusBanner = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  statusBanner:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -8)
+  statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
   statusBanner:SetText("")
 
+  ---------------------------------------------------------------------------
+  -- Transcript ScrollView (anchored below header)
+  ---------------------------------------------------------------------------
+  local transcriptHeight = parentHeight - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
   local transcript = ScrollView.Create(factory, pane, {
     width = parentWidth - 32,
-    height = parentHeight - TRANSCRIPT_BOTTOM_GAP,
-    point = { "TOPLEFT", statusBanner, "BOTTOMLEFT", 0, -12 },
+    height = transcriptHeight,
+    point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", 16, -8 },
     step = TRANSCRIPT_SCROLL_STEP,
   })
   transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
-  transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", parentHeight - TRANSCRIPT_BOTTOM_GAP)
+  transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
   transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
   transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
   if transcript.text.SetMultiLine then
@@ -201,7 +414,14 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
 
   local view = {
     frame = pane,
-    header = header,
+    -- Legacy header stub so any callers using view.header:SetText() don't crash
+    header = headerName,
+    headerFrame = headerFrame,
+    headerClassIcon = classIcon,
+    headerName = headerName,
+    headerStatus = headerStatus,
+    headerStatusDot = statusDot,
+    headerEmpty = headerEmpty,
     statusBanner = statusBanner,
     transcript = transcript,
   }

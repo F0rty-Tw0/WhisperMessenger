@@ -19,8 +19,8 @@ return function()
       relativePoint = "CENTER",
       x = 0,
       y = 0,
-      width = 900,
-      height = 560,
+      width = 920,
+      height = 580,
       minimized = false,
     },
     icon = {
@@ -47,13 +47,11 @@ return function()
   assert(runtime.window.frame.shown == true)
   assert(_G.UISpecialFrames[1] == "WhisperMessengerWindow")
 
-  assert(runtime.window.closeButton.template == "UIPanelButtonTemplate")
+  assert(runtime.window.closeButton ~= nil, "expected a Close button")
   assert(runtime.window.optionsButton ~= nil, "expected an Options button")
-  assert(runtime.window.optionsButton.template == "UIPanelButtonTemplate")
   assert(runtime.window.optionsPanel ~= nil, "expected an Options panel")
-  assert(runtime.window.resetWindowButton.template == "UIPanelButtonTemplate")
-  assert(runtime.window.resetIconButton.template == "UIPanelButtonTemplate")
-  assert(runtime.window.composer.sendButton.template == "UIPanelButtonTemplate")
+  assert(runtime.window.resetWindowButton ~= nil, "expected a Reset Window button")
+  assert(runtime.window.resetIconButton ~= nil, "expected a Reset Icon button")
   assert(runtime.window.optionsPanel.shown == false)
 
   runtime.window.optionsButton.scripts.OnClick(runtime.window.optionsButton)

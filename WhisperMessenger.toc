@@ -19,8 +19,10 @@ Model/LockdownQueue.lua
 Transport/Availability.lua
 Transport/WhisperGateway.lua
 Core/EventRouter.lua
+Util/TimeFormat.lua
 UI/Theme.lua
 UI/ScrollView.lua
+UI/ChatBubble.lua
 UI/ContactsList.lua
 UI/ConversationPane.lua
 UI/Composer.lua

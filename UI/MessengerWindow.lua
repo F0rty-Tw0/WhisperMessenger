@@ -255,27 +255,153 @@ function MessengerWindow.Create(factory, options)
     frame.alpha = Theme.WINDOW_IDLE_ALPHA
   end
 
+  -- Window background
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   if background.SetColorTexture then
-    background:SetColorTexture(0.05, 0.05, 0.08, 0.95)
+    local c = Theme.COLORS.bg_primary
+    background:SetColorTexture(c[1], c[2], c[3], c[4])
   end
   frame.background = background
 
-  local title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -16)
+  -- Subtle edge highlight (1px lighter border)
+  local edgeTop = frame:CreateTexture(nil, "BORDER")
+  edgeTop:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+  edgeTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+  edgeTop:SetHeight(1)
+  if edgeTop.SetColorTexture then
+    local c = Theme.COLORS.divider
+    edgeTop:SetColorTexture(c[1], c[2], c[3], 0.4)
+  end
+
+  local edgeLeft = frame:CreateTexture(nil, "BORDER")
+  edgeLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+  edgeLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+  edgeLeft:SetWidth(1)
+  if edgeLeft.SetColorTexture then
+    local c = Theme.COLORS.divider
+    edgeLeft:SetColorTexture(c[1], c[2], c[3], 0.4)
+  end
+
+  local edgeRight = frame:CreateTexture(nil, "BORDER")
+  edgeRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+  edgeRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+  edgeRight:SetWidth(1)
+  if edgeRight.SetColorTexture then
+    local c = Theme.COLORS.divider
+    edgeRight:SetColorTexture(c[1], c[2], c[3], 0.4)
+  end
+
+  local edgeBottom = frame:CreateTexture(nil, "BORDER")
+  edgeBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+  edgeBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+  edgeBottom:SetHeight(1)
+  if edgeBottom.SetColorTexture then
+    local c = Theme.COLORS.divider
+    edgeBottom:SetColorTexture(c[1], c[2], c[3], 0.4)
+  end
+
+  -- Title bar with header background
+  local titleBar = factory.CreateFrame("Frame", nil, frame)
+  titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
+  titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
+  titleBar:SetHeight(Theme.TOP_BAR_HEIGHT)
+  local titleBarBg = titleBar:CreateTexture(nil, "ARTWORK")
+  titleBarBg:SetAllPoints(titleBar)
+  if titleBarBg.SetColorTexture then
+    local c = Theme.COLORS.bg_header
+    titleBarBg:SetColorTexture(c[1], c[2], c[3], c[4])
+  end
+
+  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+  title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -18)
   title:SetText(options.title or Theme.TITLE)
   frame.title = title
 
-  local closeButton = factory.CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-  closeButton:SetSize(60, 24)
-  closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -12)
-  closeButton:SetText("Close")
+  -- Custom close button (no template)
+  local closeButton = factory.CreateFrame("Button", nil, frame)
+  closeButton:SetSize(28, 28)
+  closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -14)
+  local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
+  closeBg:SetAllPoints(closeButton)
+  if closeBg.SetColorTexture then
+    closeBg:SetColorTexture(0, 0, 0, 0)
+  end
+  local closeLabel = closeButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
+  closeLabel:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
+  closeLabel:SetText("X")
+  if closeLabel.SetTextColor then
+    local c = Theme.COLORS.text_secondary
+    closeLabel:SetTextColor(c[1], c[2], c[3], c[4])
+  end
+  if closeButton.SetScript then
+    closeButton:SetScript("OnEnter", function()
+      if closeLabel.SetTextColor then
+        closeLabel:SetTextColor(0.9, 0.3, 0.3, 1)
+      end
+      if closeBg.SetColorTexture then
+        closeBg:SetColorTexture(0.9, 0.3, 0.3, 0.15)
+      end
+    end)
+    closeButton:SetScript("OnLeave", function()
+      if closeLabel.SetTextColor then
+        local c = Theme.COLORS.text_secondary
+        closeLabel:SetTextColor(c[1], c[2], c[3], c[4])
+      end
+      if closeBg.SetColorTexture then
+        closeBg:SetColorTexture(0, 0, 0, 0)
+      end
+    end)
+  end
+  closeButton:EnableMouse(true)
 
-  local optionsButton = factory.CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-  optionsButton:SetSize(72, 24)
-  optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -8, 0)
-  optionsButton:SetText("Options")
+  -- Gear icon for options (replaces text button)
+  local optionsButton = factory.CreateFrame("Button", nil, frame)
+  optionsButton:SetSize(28, 28)
+  optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -4, 0)
+  local optionsBg = optionsButton:CreateTexture(nil, "BACKGROUND")
+  optionsBg:SetAllPoints(optionsButton)
+  if optionsBg.SetColorTexture then
+    optionsBg:SetColorTexture(0, 0, 0, 0)
+  end
+  local optionsLabel = optionsButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
+  optionsLabel:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
+  optionsLabel:SetText("*")
+  if optionsLabel.SetTextColor then
+    local c = Theme.COLORS.text_secondary
+    optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
+  end
+  if optionsButton.SetScript then
+    optionsButton:SetScript("OnEnter", function()
+      if optionsLabel.SetTextColor then
+        local c = Theme.COLORS.text_primary
+        optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
+      end
+      if optionsBg.SetColorTexture then
+        local c = Theme.COLORS.bg_contact_hover
+        optionsBg:SetColorTexture(c[1], c[2], c[3], 0.5)
+      end
+    end)
+    optionsButton:SetScript("OnLeave", function()
+      if optionsLabel.SetTextColor then
+        local c = Theme.COLORS.text_secondary
+        optionsLabel:SetTextColor(c[1], c[2], c[3], c[4])
+      end
+      if optionsBg.SetColorTexture then
+        optionsBg:SetColorTexture(0, 0, 0, 0)
+      end
+    end)
+  end
+  optionsButton:EnableMouse(true)
+
+  -- Resize grip in bottom-right
+  local resizeGrip = frame:CreateTexture(nil, "OVERLAY")
+  resizeGrip:SetSize(12, 12)
+  resizeGrip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
+  if resizeGrip.SetColorTexture then
+    local c = Theme.COLORS.text_secondary
+    resizeGrip:SetColorTexture(c[1], c[2], c[3], 0.3)
+  end
 
   local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local contentWidth = initialState.width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
@@ -286,17 +412,26 @@ function MessengerWindow.Create(factory, options)
   contactsPane:SetSize(Theme.CONTACTS_WIDTH, contactsHeight)
   contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
 
+  -- Contacts pane background (slightly lighter than main window)
+  local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
+  contactsPaneBg:SetAllPoints(contactsPane)
+  if contactsPaneBg.SetColorTexture then
+    local c = Theme.COLORS.bg_secondary
+    contactsPaneBg:SetColorTexture(c[1], c[2], c[3], c[4])
+  end
+
   local contactsView = ScrollView.Create(factory, contactsPane, {
     width = Theme.CONTACTS_WIDTH,
     height = contactsHeight,
-    step = 48,
+    step = Theme.LAYOUT.CONTACT_ROW_HEIGHT,
   })
 
   local contactsDivider = frame:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
   contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
   if contactsDivider.SetColorTexture then
-    contactsDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+    local dc = Theme.COLORS.divider
+    contactsDivider:SetColorTexture(dc[1], dc[2], dc[3], dc[4])
   end
 
   local contentPane = factory.CreateFrame("Frame", nil, frame)
@@ -307,7 +442,8 @@ function MessengerWindow.Create(factory, options)
   headerDivider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
   headerDivider:SetSize(initialState.width, Theme.DIVIDER_THICKNESS)
   if headerDivider.SetColorTexture then
-    headerDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+    local hdc = Theme.COLORS.divider
+    headerDivider:SetColorTexture(hdc[1], hdc[2], hdc[3], hdc[4])
   end
 
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
@@ -322,7 +458,8 @@ function MessengerWindow.Create(factory, options)
   composerDivider:SetPoint("BOTTOMLEFT", threadPane, "BOTTOMLEFT", 0, -Theme.DIVIDER_THICKNESS)
   composerDivider:SetSize(contentWidth, Theme.DIVIDER_THICKNESS)
   if composerDivider.SetColorTexture then
-    composerDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+    local cdc = Theme.COLORS.divider
+    composerDivider:SetColorTexture(cdc[1], cdc[2], cdc[3], cdc[4])
   end
 
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)

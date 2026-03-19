@@ -3,6 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local function loadModule(name, key)
+  if ns[key] then return ns[key] end
+  local ok, loaded = pcall(require, name)
+  if ok then return loaded end
+  error(key .. " module not available")
+end
+
+local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+
 local function trace(...)
   if type(_G.print) == "function" then
     _G.print("[WM]", ...)
@@ -21,41 +30,88 @@ function ToggleIcon.Create(factory, options)
   local x = state.x or 0
   local y = state.y or 0
 
+  local ICON_SIZE = Theme.LAYOUT.ICON_SIZE
+  local BADGE_SIZE = Theme.LAYOUT.ICON_BADGE_SIZE
+
   local frame = factory.CreateFrame("Button", "WhisperMessengerToggleIcon", parent)
-  frame:SetSize(36, 36)
+  frame:SetSize(ICON_SIZE, ICON_SIZE)
   frame:SetPoint(anchorPoint, parent, relativePoint, x, y)
   frame:SetMovable(true)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
+  -- Circular icon background
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
-  if background.SetColorTexture then
-    background:SetColorTexture(0.18, 0.5, 0.95, 0.95)
+  background:SetTexture("Interface\\COMMON\\Indicator-Gray")
+  if background.SetVertexColor then
+    local c = Theme.COLORS.icon_bg
+    background:SetVertexColor(c[1], c[2], c[3], c[4])
   end
 
-  local label = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  -- Circular border ring
+  local border = frame:CreateTexture(nil, "BORDER")
+  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+  border:SetTexture("Interface\\COMMON\\RingBorder")
+  if border.SetVertexColor then
+    local c = Theme.COLORS.accent
+    border:SetVertexColor(c[1], c[2], c[3], 0.3)
+  end
+
+  -- Label
+  local label = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   label:SetPoint("CENTER", frame, "CENTER", 0, 0)
   label:SetText("WM")
 
+  -- Unread badge (accent blue style)
   local badge = factory.CreateFrame("Frame", nil, frame)
-  badge:SetSize(18, 18)
-  badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 5, 5)
+  badge:SetSize(BADGE_SIZE, BADGE_SIZE)
+  badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 6)
 
   local badgeBackground = badge:CreateTexture(nil, "BACKGROUND")
   badgeBackground:SetAllPoints(badge)
-  if badgeBackground.SetColorTexture then
-    badgeBackground:SetColorTexture(0.82, 0.18, 0.22, 0.95)
+  badgeBackground:SetTexture("Interface\\COMMON\\Indicator-Gray")
+  if badgeBackground.SetVertexColor then
+    local c = Theme.COLORS.badge_bg
+    badgeBackground:SetVertexColor(c[1], c[2], c[3], c[4])
   end
 
-  local badgeLabel = badge:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local badgeLabel = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
   badgeLabel:SetPoint("CENTER", badge, "CENTER", 0, 0)
   badgeLabel:SetText("")
   if badge.Hide then
     badge:Hide()
   end
 
+  -- Hover glow effect
   if frame.SetScript then
+    frame:SetScript("OnEnter", function()
+      if background.SetVertexColor then
+        local c = Theme.COLORS.send_button_hover
+        background:SetVertexColor(c[1], c[2], c[3], c[4])
+      end
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
+        local unreadText = ""
+        if badge:IsShown() then
+          unreadText = " — " .. badgeLabel:GetText() .. " unread"
+        end
+        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText)
+        _G.GameTooltip:Show()
+      end
+    end)
+
+    frame:SetScript("OnLeave", function()
+      if background.SetVertexColor then
+        local c = Theme.COLORS.icon_bg
+        background:SetVertexColor(c[1], c[2], c[3], c[4])
+      end
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
+    end)
+
     frame:SetScript("OnClick", function()
       trace("icon click")
       if options.onToggle then
@@ -121,6 +177,7 @@ function ToggleIcon.Create(factory, options)
   return {
     frame = frame,
     background = background,
+    border = border,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,

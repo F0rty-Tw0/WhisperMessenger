@@ -48,18 +48,19 @@ return function()
     end,
   })
 
-  assert(window.conversation.header.text == "No conversation selected")
+  -- No conversation selected: header name should be empty/hidden, empty state shown
+  assert(window.conversation.headerEmpty ~= nil, "expected empty state element")
+  assert(window.conversation.headerEmpty.shown == true, "expected empty state to be shown when no contact selected")
   assert(window.composer.sendButton.disabled == true)
 
   window.contacts.rows[1].scripts.OnClick()
 
+  -- After selecting Arthas: header should show name
   assert(window.conversation.header.text == "Arthas-Area52")
   assert(window.conversation.transcript.lines[1] == "Need help?")
   assert(window.conversation.transcript.text.text == "Need help?")
   assert(window.contacts.rows[1].selected == true)
   assert(window.contacts.rows[2].selected == false)
-  assert(window.contacts.rows[1].preview.text == "")
-  assert(window.contacts.rows[1].channel.text == "")
   assert(window.composer.sendButton.disabled == false)
   assert(window.composer.input.scripts.OnEnterPressed ~= nil)
 
@@ -81,8 +82,6 @@ return function()
   assert(window.conversation.transcript.text.text == "You: On my way.")
   assert(window.contacts.rows[1].selected == false)
   assert(window.contacts.rows[2].selected == true)
-  assert(window.contacts.rows[2].preview.text == "")
-  assert(window.contacts.rows[2].channel.text == "")
 
   window.composer.input:SetText("Meet at the bank")
   window.composer.sendButton.scripts.OnClick()
@@ -93,6 +92,8 @@ return function()
   assert(#window.conversation.transcript.lines == 1)
 
   window.refreshSelection()
-  assert(window.conversation.header.text == "No conversation selected")
+  -- After deselecting: header should be empty again
+  assert(window.conversation.header.text == "")
+  assert(window.conversation.headerEmpty.shown == true, "expected empty state after deselecting")
   assert(window.composer.sendButton.disabled == true)
 end

@@ -105,6 +105,14 @@ function FakeUI.NewFactory()
       return self.shown == true
     end
 
+    function frame:SetShown(value)
+      if value then
+        self:Show()
+      else
+        self:Hide()
+      end
+    end
+
     function frame:SetScript(eventName, handler)
       self.scripts = self.scripts or {}
       self.scripts[eventName] = handler
@@ -241,8 +249,48 @@ function FakeUI.NewFactory()
     end
 
 
+    function frame:SetJustifyH(value)
+      self.justifyH = value
+    end
+
+    function frame:SetJustifyV(value)
+      self.justifyV = value
+    end
+
+    function frame:SetWordWrap(value)
+      self.wordWrap = value
+    end
+
+    function frame:SetMaxLines(value)
+      self.maxLines = value
+    end
+
     function frame:CreateFontString(childName, layer, inheritedTemplate)
       return createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
+    end
+
+    function frame:SetTextColor(...)
+      self.textColor = { ... }
+    end
+
+    function frame:SetTextInsets(left, right, top, bottom)
+      self.textInsets = { left, right, top, bottom }
+    end
+
+    function frame:Insert(text)
+      self.text = (self.text or "") .. (text or "")
+    end
+
+    function frame:GetName()
+      return self.name
+    end
+
+    function frame:GetWidth()
+      return self.width or 0
+    end
+
+    function frame:GetHeight()
+      return self.height or 0
     end
 
     function frame:CreateTexture(childName, layer, inheritedTemplate)
@@ -250,6 +298,14 @@ function FakeUI.NewFactory()
 
       function texture:SetColorTexture(...)
         self.color = { ... }
+      end
+
+      function texture:SetTexture(path)
+        self.texturePath = path
+      end
+
+      function texture:SetVertexColor(...)
+        self.vertexColor = { ... }
       end
 
       return texture

@@ -4,7 +4,15 @@ if type(ns) ~= "table" then
 end
 
 local ScrollView = {}
-local SCROLLBAR_WIDTH = 16
+
+local function loadModule(name, key)
+  if ns[key] then return ns[key] end
+  local ok, loaded = pcall(require, name)
+  if ok then return loaded end
+  error(key .. " module not available")
+end
+local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local SCROLLBAR_WIDTH = Theme.LAYOUT.SCROLLBAR_WIDTH  -- 4px
 local SCROLLBAR_INSET = 0
 
 local function sizeValue(target, getterName, fieldName, fallback)
@@ -255,21 +263,52 @@ function ScrollView.Create(factory, parent, options)
     scrollBar:SetObeyStepOnDrag(true)
   end
 
+  -- Transparent track (slim Telegram-style bar — no dark background)
   local track = scrollBar:CreateTexture(nil, "BACKGROUND")
   track:SetAllPoints(scrollBar)
   if track.SetColorTexture then
-    track:SetColorTexture(0.1, 0.1, 0.14, 0.85)
+    track:SetColorTexture(0, 0, 0, 0)
   end
   scrollBar.track = track
 
+  -- Slim thumb using Theme colors and dimensions
+  local thumbColors = Theme.COLORS.scrollbar
   local thumb = scrollBar:CreateTexture(nil, "ARTWORK")
-  thumb:SetSize(SCROLLBAR_WIDTH - 4, 24)
+  thumb:SetSize(SCROLLBAR_WIDTH, Theme.LAYOUT.SCROLLBAR_THUMB_MIN_H)
   if thumb.SetColorTexture then
-    thumb:SetColorTexture(0.75, 0.6, 0.15, 0.95)
+    thumb:SetColorTexture(thumbColors[1], thumbColors[2], thumbColors[3], thumbColors[4])
   end
   scrollBar.thumb = thumb
   if scrollBar.SetThumbTexture then
     scrollBar:SetThumbTexture(thumb)
+  end
+
+  -- Hover behavior: widen and brighten the thumb
+  if scrollBar.SetScript then
+    scrollBar:SetScript("OnEnter", function()
+      local hc = Theme.COLORS.scrollbar_hover
+      if thumb.SetColorTexture then
+        thumb:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
+      end
+      if scrollBar.SetSize then
+        scrollBar:SetSize(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER, height)
+      end
+      if thumb.SetWidth then
+        thumb:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER)
+      end
+    end)
+    scrollBar:SetScript("OnLeave", function()
+      local nc = Theme.COLORS.scrollbar
+      if thumb.SetColorTexture then
+        thumb:SetColorTexture(nc[1], nc[2], nc[3], nc[4])
+      end
+      if scrollBar.SetSize then
+        scrollBar:SetSize(SCROLLBAR_WIDTH, height)
+      end
+      if thumb.SetWidth then
+        thumb:SetWidth(SCROLLBAR_WIDTH)
+      end
+    end)
   end
 
   if scrollBar.Hide then
