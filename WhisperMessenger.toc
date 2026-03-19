@@ -1,0 +1,27 @@
+## Interface: 120001
+## Title: WhisperMessenger
+## Notes: Messenger-style whisper UI for WoW Retail
+## Author: Claude
+## Version: 0.1.0
+## SavedVariables: WhisperMessengerDB
+## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
+
+Bootstrap.lua
+Core/Constants.lua
+Core/SlashCommands.lua
+Model/Identity.lua
+Persistence/Schema.lua
+Persistence/Migrations.lua
+Persistence/SavedState.lua
+Model/Retention.lua
+Model/ConversationStore.lua
+Model/LockdownQueue.lua
+Transport/Availability.lua
+Transport/WhisperGateway.lua
+Core/EventRouter.lua
+UI/Theme.lua
+UI/ContactsList.lua
+UI/ConversationPane.lua
+UI/Composer.lua
+UI/ToggleIcon.lua
+UI/MessengerWindow.lua
