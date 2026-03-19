@@ -1,0 +1,85 @@
+local Bootstrap = require("WhisperMessenger.Bootstrap")
+local Router = require("WhisperMessenger.Core.EventRouter")
+local FakeUI = require("tests.helpers.fake_ui")
+
+return function()
+  local factory = FakeUI.NewFactory()
+  local savedUIParent = _G.UIParent
+  local savedSlashCmdList = _G.SlashCmdList
+  local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
+  local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
+  local savedUnitFullName = _G.UnitFullName
+  local savedGetNormalizedRealmName = _G.GetNormalizedRealmName
+
+  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+  _G.SlashCmdList = {}
+  _G.SLASH_WHISPERMESSENGER1 = nil
+  _G.SLASH_WHISPERMESSENGER2 = nil
+
+  local accountState = {
+    schemaVersion = 1,
+    conversations = {},
+    contacts = {},
+    pendingHydration = {},
+  }
+
+  local arthasCharacterState = {
+    window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
+    icon = { x = 0, y = 0 },
+  }
+
+  _G.UnitFullName = function(unit)
+    assert(unit == "player")
+    return "Arthas", "Area52"
+  end
+
+  _G.GetNormalizedRealmName = function()
+    return "Area52"
+  end
+
+  local arthasRuntime = Bootstrap.Initialize(factory, {
+    accountState = accountState,
+    characterState = arthasCharacterState,
+  })
+
+  assert(arthasRuntime.localProfileId == "arthas-area52")
+
+  Router.HandleEvent(arthasRuntime, "CHAT_MSG_WHISPER", {
+    text = "Need help?",
+    playerName = "Jaina-Proudmoore",
+    lineID = 101,
+    guid = "Player-60-0ABCDE123",
+  })
+
+  assert(accountState.conversations["arthas-area52::WOW::jaina-proudmoore"].unreadCount == 1)
+
+  local thrallCharacterState = {
+    window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
+    icon = { x = 0, y = 0 },
+  }
+
+  _G.UnitFullName = function(unit)
+    assert(unit == "player")
+    return "Thrall", "Draenor"
+  end
+
+  _G.GetNormalizedRealmName = function()
+    return "Draenor"
+  end
+
+  local thrallRuntime = Bootstrap.Initialize(factory, {
+    accountState = accountState,
+    characterState = thrallCharacterState,
+  })
+
+  assert(thrallRuntime.localProfileId == "thrall-draenor")
+  assert(#thrallRuntime.window.contacts.rows == 0)
+  assert(thrallRuntime.icon.badge.shown == false)
+
+  _G.UIParent = savedUIParent
+  _G.SlashCmdList = savedSlashCmdList
+  _G.SLASH_WHISPERMESSENGER1 = savedSlash1
+  _G.SLASH_WHISPERMESSENGER2 = savedSlash2
+  _G.UnitFullName = savedUnitFullName
+  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
+end

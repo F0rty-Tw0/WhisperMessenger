@@ -17,10 +17,21 @@ return function()
   local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
   local savedChatInfo = _G.C_ChatInfo
   local savedBattleNet = _G.C_BattleNet
+  local savedUnitFullName = _G.UnitFullName
+  local savedGetNormalizedRealmName = _G.GetNormalizedRealmName
 
   local createdFrames = {}
   local sendCalls = {}
   local factory = FakeUI.NewFactory()
+
+  _G.UnitFullName = function(unit)
+    assert(unit == "player")
+    return "Arthas", "Area52"
+  end
+
+  _G.GetNormalizedRealmName = function()
+    return "Area52"
+  end
 
   _G.require = nil
   _G.SlashCmdList = {}
@@ -105,7 +116,7 @@ return function()
 
   eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_BN_WHISPER", "hello from bn", "|Kq1|k", nil, nil, nil, nil, nil, nil, nil, nil, 301, nil, 99, false, false, false, false)
 
-  local conversationKey = "current::BN::99"
+  local conversationKey = "arthas-area52::BN::99"
   local conversation = runtime.store.conversations[conversationKey]
   assert(conversation ~= nil, "expected bn whisper conversation to be created")
   assert(conversation.channel == "BN")
@@ -146,4 +157,6 @@ return function()
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   _G.C_ChatInfo = savedChatInfo
   _G.C_BattleNet = savedBattleNet
+  _G.UnitFullName = savedUnitFullName
+  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
 end

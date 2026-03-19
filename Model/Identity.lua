@@ -65,6 +65,18 @@ local function buildGameAccountName(accountInfo)
   return characterName or realmName
 end
 
+function Identity.BuildLocalProfileId(name, realmName)
+  if name == nil or name == "" then
+    return nil
+  end
+
+  if realmName ~= nil and realmName ~= "" then
+    return normalizeName(name .. "-" .. realmName)
+  end
+
+  return normalizeName(name)
+end
+
 function Identity.FromWhisper(fullName, guid, playerInfo)
   playerInfo = playerInfo or {}
   return {

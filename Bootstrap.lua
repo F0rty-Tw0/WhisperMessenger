@@ -61,6 +61,43 @@ local function currentTime()
   return 0
 end
 
+local function resolveLocalProfileId(options)
+  if options.localProfileId ~= nil then
+    return options.localProfileId
+  end
+
+  local Identity = loadModule("WhisperMessenger.Model.Identity", "Identity")
+  local unitFullName = options.unitFullName or _G.UnitFullName
+  local unitName = options.unitName or _G.UnitName
+  local getNormalizedRealmName = options.getNormalizedRealmName or _G.GetNormalizedRealmName
+  local getRealmName = options.getRealmName or _G.GetRealmName
+
+  local name
+  local realmName
+
+  if type(unitFullName) == "function" then
+    name, realmName = unitFullName("player")
+  elseif type(unitName) == "function" then
+    name, realmName = unitName("player")
+  end
+
+  if realmName == nil or realmName == "" then
+    if type(getNormalizedRealmName) == "function" then
+      realmName = getNormalizedRealmName()
+    elseif type(getRealmName) == "function" then
+      realmName = getRealmName()
+    end
+  end
+
+  local profileId = Identity.BuildLocalProfileId(name, realmName)
+  if profileId ~= nil then
+    return profileId
+  end
+
+  -- Safe fallback for stripped test environments where player identity APIs are unavailable.
+  return "current"
+end
+
 local function createRuntimeState(accountState, characterState, localProfileId, options)
   local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
   local Queue = loadModule("WhisperMessenger.Model.LockdownQueue", "LockdownQueue")
@@ -284,7 +321,7 @@ function Bootstrap.Initialize(factory, options)
   local uiFactory = factory or _G
   local accountState, characterState = SavedState.Initialize(options.accountState, options.characterState)
   local defaultCharacterState = Schema.NewCharacterState()
-  local localProfileId = options.localProfileId or "current"
+  local localProfileId = resolveLocalProfileId(options)
   local runtime = createRuntimeState(accountState, characterState, localProfileId, options)
   local contacts = buildContacts(runtime)
   local selectedState = buildWindowSelectionState(runtime, contacts)
@@ -490,7 +527,6 @@ local function initializeRuntime()
   Bootstrap.runtime = Bootstrap.Initialize(_G, {
     accountState = _G.WhisperMessengerDB,
     characterState = _G.WhisperMessengerCharacterDB,
-    localProfileId = "current",
   })
   _G.WhisperMessengerDB = Bootstrap.runtime.accountState
   _G.WhisperMessengerCharacterDB = Bootstrap.runtime.characterState
