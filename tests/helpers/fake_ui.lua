@@ -61,6 +61,22 @@ function FakeUI.NewFactory()
       return self.text
     end
 
+    function frame:SetMultiLine(value)
+      self.multiline = value
+    end
+
+    function frame:SetAutoFocus(value)
+      self.autoFocus = value
+    end
+
+    function frame:SetHyperlinksEnabled(value)
+      self.hyperlinksEnabled = value
+    end
+
+    function frame:SetFontObject(value)
+      self.fontObject = value
+    end
+
     function frame:GetStringHeight()
       local text = tostring(self.text or "")
       local _, lineCount = string.gsub(text, "\n", "\n")

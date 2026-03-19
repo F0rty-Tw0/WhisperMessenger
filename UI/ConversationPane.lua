@@ -163,16 +163,37 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", parentHeight - TRANSCRIPT_BOTTOM_GAP)
-  transcript.text = transcript.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
   transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
+  if transcript.text.SetMultiLine then
+    transcript.text:SetMultiLine(true)
+  end
+  if transcript.text.SetAutoFocus then
+    transcript.text:SetAutoFocus(false)
+  end
+  if transcript.text.EnableMouse then
+    transcript.text:EnableMouse(true)
+  end
+  if transcript.text.SetHyperlinksEnabled then
+    transcript.text:SetHyperlinksEnabled(true)
+  end
+  if transcript.text.SetFontObject then
+    transcript.text:SetFontObject(_G.GameFontHighlightSmall or "GameFontHighlightSmall")
+  end
   if transcript.text.SetWidth then
     transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32))
   end
-  if transcript.text.SetJustifyH then
-    transcript.text:SetJustifyH("LEFT")
-  end
-  if transcript.text.SetJustifyV then
-    transcript.text:SetJustifyV("TOP")
+  if transcript.text.SetScript then
+    transcript.text:SetScript("OnHyperlinkClick", function(self, link, text, button)
+      if type(_G.SetItemRef) == "function" then
+        _G.SetItemRef(link, text, button, self)
+      end
+    end)
+    transcript.text:SetScript("OnEditFocusGained", function(self)
+      if self.ClearFocus then
+        self:ClearFocus()
+      end
+    end)
   end
   transcript.text:SetText("")
   transcript.lines = {}
