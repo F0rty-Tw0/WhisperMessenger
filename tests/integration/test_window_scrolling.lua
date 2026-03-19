@@ -1,5 +1,6 @@
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
+local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local FakeUI = require("tests.helpers.fake_ui")
 
 local function buildContacts(count)
@@ -90,6 +91,7 @@ return function()
   assert(window.conversation.transcript.scrollFrame.scrollChild == window.conversation.transcript.content, "expected transcript content to be wired as scroll child")
   assert(window.conversation.transcript.scrollFrame:GetVerticalScrollRange() > 0, "expected overflowing transcript to be scrollable")
   assert(window.conversation.transcript.scrollFrame.scripts.OnMouseWheel ~= nil, "expected transcript mouse wheel scrolling")
+  assert(window.conversation.transcript.content.width == window.conversation.transcript.scrollFrame.width, "expected transcript content width to track the viewport width on overflow")
   assert(window.conversation.transcript.scrollFrame:GetVerticalScroll() == window.conversation.transcript.scrollFrame:GetVerticalScrollRange(), "expected transcript to snap to newest messages")
 
   for _ = 1, 20 do
@@ -104,6 +106,80 @@ return function()
     window.conversation.transcript.scrollFrame:GetVerticalScroll() == window.conversation.transcript.scrollFrame:GetVerticalScrollRange(),
     "expected transcript scroll to clamp at the newest message"
   )
+
+  local transitionWindow = MessengerWindow.Create(factory, {
+    title = "WhisperMessenger",
+    contacts = contacts,
+    selectedContact = selectedContact,
+    conversation = {
+      displayName = selectedContact.displayName,
+      messages = buildMessages(1),
+    },
+  })
+  assert(transitionWindow.conversation.transcript.scrollBar.shown == false, "expected transcript scrollbar to stay hidden before overflow")
+  local fullTranscriptWidth = transitionWindow.conversation.transcript.scrollFrame.width
+  assert(transitionWindow.conversation.transcript.text.width == fullTranscriptWidth, "expected transcript text width to match the viewport before overflow")
+
+  transitionWindow.refreshSelection({
+    contacts = contacts,
+    selectedContact = selectedContact,
+    conversation = {
+      displayName = selectedContact.displayName,
+      messages = buildMessages(40),
+    },
+  })
+  assert(transitionWindow.conversation.transcript.scrollBar.shown == true, "expected transcript scrollbar to appear after transcript overflow")
+  assert(transitionWindow.conversation.transcript.scrollFrame.width < fullTranscriptWidth, "expected transcript viewport to shrink when overflow begins")
+  assert(transitionWindow.conversation.transcript.text.width == transitionWindow.conversation.transcript.scrollFrame.width, "expected transcript text width to shrink with the viewport when overflow begins")
+
+  transitionWindow.refreshSelection({
+    contacts = contacts,
+    selectedContact = selectedContact,
+    conversation = {
+      displayName = selectedContact.displayName,
+      messages = buildMessages(1),
+    },
+  })
+  assert(transitionWindow.conversation.transcript.scrollBar.shown == false, "expected transcript scrollbar to hide after transcript overflow clears")
+  assert(transitionWindow.conversation.transcript.scrollFrame.width == fullTranscriptWidth, "expected transcript viewport to expand when overflow clears")
+  assert(transitionWindow.conversation.transcript.text.width == transitionWindow.conversation.transcript.scrollFrame.width, "expected transcript text width to expand with the viewport when overflow clears")
+
+  local scrollHost = factory.CreateFrame("Frame", nil, _G.UIParent)
+  scrollHost:SetSize(120, 100)
+
+  local exactFitView = ScrollView.Create(factory, scrollHost, {
+    width = 120,
+    height = 100,
+    step = 24,
+  })
+  ScrollView.RefreshMetrics(exactFitView, 100, false)
+  assert(exactFitView.scrollBar.shown == false, "expected scrollbar to stay hidden when content exactly fits the viewport")
+
+  local resizedView = ScrollView.Create(factory, scrollHost, {
+    width = 120,
+    height = 100,
+    step = 24,
+  })
+  resizedView.scrollFrame:SetSize(120, 50)
+  ScrollView.RefreshMetrics(resizedView, 120, false)
+  assert(resizedView.scrollFrame.height == 50, "expected refresh to preserve the live viewport height after resize")
+  assert(resizedView.scrollBar.height == 50, "expected scrollbar height to track the live viewport height after resize")
+  assert(resizedView.scrollFrame.width == 104, "expected overflowing viewport width to shrink after resize")
+  assert(resizedView.content.width == resizedView.scrollFrame.width, "expected resized content width to match the viewport width")
+  assert(resizedView.scrollBar.shown == true, "expected resized overflowing view to show the scrollbar")
+
+  local lateInitView = ScrollView.Create(factory, scrollHost, {
+    width = 120,
+    height = 0,
+    step = 24,
+  })
+  lateInitView.scrollFrame:SetSize(120, 80)
+  ScrollView.RefreshMetrics(lateInitView, 160, false)
+  assert(lateInitView.scrollFrame.height == 80, "expected refresh to recover from zero-height initialization")
+  assert(lateInitView.scrollBar.height == 80, "expected zero-height recovery to size the scrollbar to the live viewport height")
+  assert(lateInitView.scrollFrame.width == 104, "expected zero-height recovery to apply overflowing viewport width")
+  assert(lateInitView.content.width == lateInitView.scrollFrame.width, "expected zero-height recovery to keep content width aligned with the viewport")
+  assert(lateInitView.scrollBar.shown == true, "expected zero-height recovery to show the scrollbar for overflowing content")
 
   _G.UIParent = savedUIParent
 end

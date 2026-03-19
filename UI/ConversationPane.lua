@@ -69,16 +69,42 @@ local function transcriptContentHeight(transcript)
   return math.max(#(transcript.lines or {}), 1) * TRANSCRIPT_LINE_HEIGHT
 end
 
-local function updateTranscriptLayout(transcript, snapToEnd)
-  local scrollFrame = transcript.scrollFrame or transcript
-  local transcriptWidth = sizeValue(scrollFrame, "GetWidth", "width", 0)
-
-  if transcript.text and transcript.text.SetWidth then
-    transcript.text:SetWidth(transcriptWidth)
+local function pointValue(target, fallback)
+  if target and target.point ~= nil then
+    return target.point
   end
 
-  ScrollView.RefreshMetrics(transcript, transcriptContentHeight(transcript), snapToEnd == true)
-  transcript.point = scrollFrame and scrollFrame.point or transcript.point
+  if target and type(target.GetPoint) == "function" then
+    local point, relativeTo, relativePoint, offsetX, offsetY = target:GetPoint(1)
+    if point ~= nil then
+      return { point, relativeTo, relativePoint, offsetX, offsetY }
+    end
+  end
+
+  return fallback
+end
+
+local function updateTranscriptLayout(transcript, snapToEnd)
+  local scrollFrame = transcript.scrollFrame or transcript
+  local appliedWidth = nil
+
+  for _ = 1, 3 do
+    local transcriptWidth = sizeValue(scrollFrame, "GetWidth", "width", 0)
+
+    if transcript.text and transcript.text.SetWidth and transcriptWidth ~= appliedWidth then
+      transcript.text:SetWidth(transcriptWidth)
+      appliedWidth = transcriptWidth
+    end
+
+    ScrollView.RefreshMetrics(transcript, transcriptContentHeight(transcript), snapToEnd == true)
+
+    local settledWidth = sizeValue(scrollFrame, "GetWidth", "width", transcriptWidth)
+    if transcript.text == nil or transcript.text.SetWidth == nil or settledWidth == appliedWidth then
+      break
+    end
+  end
+
+  transcript.point = pointValue(scrollFrame, transcript.point)
   transcript.width = sizeValue(scrollFrame, "GetWidth", "width", transcript.width or 0)
   transcript.height = sizeValue(scrollFrame, "GetHeight", "height", transcript.height or 0)
 end
@@ -134,7 +160,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     point = { "TOPLEFT", statusBanner, "BOTTOMLEFT", 0, -12 },
     step = TRANSCRIPT_SCROLL_STEP,
   })
-  transcript.point = transcript.scrollFrame and transcript.scrollFrame.point or nil
+  transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", parentHeight - TRANSCRIPT_BOTTOM_GAP)
   transcript.text = transcript.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")

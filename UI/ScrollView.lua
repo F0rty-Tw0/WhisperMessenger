@@ -76,41 +76,63 @@ function ScrollView.GetOffset(view)
   return view.scrollFrame.verticalScroll or 0
 end
 
+local function captureLiveGeometry(view)
+  if view == nil or view.scrollFrame == nil then
+    return 0, 0
+  end
+
+  local fallbackViewportWidth = view.hasOverflow
+    and math.max((view.totalWidth or 0) - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0)
+    or (view.totalWidth or 0)
+  local liveViewportWidth = sizeValue(view.scrollFrame, "GetWidth", "width", fallbackViewportWidth)
+  local liveViewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", view.viewportHeight or 0)
+
+  view.totalWidth = liveViewportWidth + (view.hasOverflow and (SCROLLBAR_WIDTH + SCROLLBAR_INSET) or 0)
+  view.viewportHeight = liveViewportHeight
+  view.viewportWidth = liveViewportWidth
+  return liveViewportWidth, liveViewportHeight
+end
+
 local function applyViewportLayout(view, hasOverflow)
   if view == nil or view.scrollFrame == nil then
     return 0
   end
 
-  local scrollFrameWidth = hasOverflow and math.max(view.totalWidth - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0) or view.totalWidth
-  local contentHeight = sizeValue(view.content, "GetHeight", "height", view.viewportHeight)
+  local totalWidth = view.totalWidth or 0
+  local viewportHeight = view.viewportHeight or 0
+  local scrollFrameWidth = hasOverflow and math.max(totalWidth - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0) or totalWidth
+  local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
 
   if view.scrollFrame.SetSize then
-    view.scrollFrame:SetSize(scrollFrameWidth, view.viewportHeight)
+    view.scrollFrame:SetSize(scrollFrameWidth, viewportHeight)
   end
 
   if view.content and view.content.SetSize then
     view.content:SetSize(scrollFrameWidth, contentHeight)
   end
 
+  if view.scrollBar and view.scrollBar.SetSize then
+    view.scrollBar:SetSize(SCROLLBAR_WIDTH, viewportHeight)
+  end
+
+  view.viewportWidth = scrollFrameWidth
   view.hasOverflow = hasOverflow
   return scrollFrameWidth
 end
-
 
 function ScrollView.Sync(view)
   if view == nil or view.scrollFrame == nil or view.scrollBar == nil then
     return 0
   end
 
+  captureLiveGeometry(view)
+
   local range = ScrollView.GetRange(view)
   local hasOverflow = range > 0
-  local current = clamp(ScrollView.GetOffset(view), 0, range)
+  applyViewportLayout(view, hasOverflow)
+  range = ScrollView.GetRange(view)
 
-  if view.hasOverflow ~= hasOverflow then
-    applyViewportLayout(view, hasOverflow)
-    range = ScrollView.GetRange(view)
-    current = clamp(current, 0, range)
-  end
+  local current = clamp(ScrollView.GetOffset(view), 0, range)
 
   if view.scrollBar.SetMinMaxValues then
     view.scrollBar:SetMinMaxValues(0, range)
@@ -170,18 +192,21 @@ function ScrollView.ScrollBy(view, delta)
   return ScrollView.SetVerticalScroll(view, ScrollView.GetOffset(view) + (delta or 0))
 end
 
+
 function ScrollView.RefreshMetrics(view, contentHeight, snapToEnd)
   if view == nil or view.content == nil or view.scrollFrame == nil then
     return 0
   end
 
-  local viewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", view.viewportHeight or 0)
+  captureLiveGeometry(view)
+
+  local viewportHeight = view.viewportHeight or 0
   local nextContentHeight = math.max(viewportHeight, contentHeight or 0)
   local hasOverflow = (contentHeight or 0) > viewportHeight
 
   applyViewportLayout(view, hasOverflow)
 
-  local viewportWidth = sizeValue(view.scrollFrame, "GetWidth", "width", view.totalWidth or view.viewportWidth or 0)
+  local viewportWidth = sizeValue(view.scrollFrame, "GetWidth", "width", view.viewportWidth or view.totalWidth or 0)
   if view.content.SetSize then
     view.content:SetSize(viewportWidth, nextContentHeight)
   end
