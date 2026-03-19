@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ContactsList = {}
+local ROW_HEIGHT = 48
 
 local function compareItems(left, right)
   if left.lastActivityAt ~= right.lastActivityAt then
@@ -78,8 +79,8 @@ local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
-  row:SetSize(parentWidth, 48)
-  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -((index - 1) * 48))
+  row:SetSize(parentWidth, ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -((index - 1) * ROW_HEIGHT))
   if row.EnableMouse then
     row:EnableMouse(true)
   end
@@ -152,6 +153,19 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
     if row.Hide then
       row:Hide()
     end
+  end
+
+  local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
+  local viewport = parent and parent.parent or nil
+  local viewportHeight = sizeValue(viewport, "GetHeight", "height", #items * ROW_HEIGHT)
+  local contentHeight = math.max(viewportHeight, #items * ROW_HEIGHT)
+
+  if parent and parent.SetSize then
+    parent:SetSize(parentWidth, contentHeight)
+  end
+
+  if viewport and type(viewport.UpdateScrollChildRect) == "function" then
+    viewport:UpdateScrollChildRect()
   end
 
   parent.rows = rows

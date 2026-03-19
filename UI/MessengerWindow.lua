@@ -17,6 +17,7 @@ local function loadModule(name, key)
 end
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
 local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
 local ConversationPane = loadModule("WhisperMessenger.UI.ConversationPane", "ConversationPane")
 local Composer = loadModule("WhisperMessenger.UI.Composer", "Composer")
@@ -117,7 +118,7 @@ function MessengerWindow.Create(factory, options)
 
   local frame = nil
   local composer = nil
-  local windowIsActive = true
+  local windowIsDimmed = false
   local alphaElapsed = 0
 
   local function getAlpha(target, fallback)
@@ -153,7 +154,7 @@ function MessengerWindow.Create(factory, options)
     end)
   end
 
-  local function shouldUseActiveAlpha()
+  local function isWindowEngaged()
     if composer and composer.input and type(composer.input.HasFocus) == "function" and composer.input:HasFocus() then
       return true
     end
@@ -165,15 +166,34 @@ function MessengerWindow.Create(factory, options)
     return false
   end
 
-  local function applyWindowAlpha(active)
+  local function isExternalActivityActive()
+    if type(_G.GetUnitSpeed) == "function" then
+      local movementSpeed = _G.GetUnitSpeed("player")
+      if type(movementSpeed) == "number" and movementSpeed > 0 then
+        return true
+      end
+    end
+
+    if type(_G.IsMouselooking) == "function" and _G.IsMouselooking() then
+      return true
+    end
+
+    if type(_G.IsMouseButtonDown) == "function" and _G.IsMouseButtonDown() then
+      return true
+    end
+
+    return false
+  end
+
+  local function applyWindowAlpha(dimmed)
     if frame == nil then
       return
     end
 
-    local targetAlpha = active and Theme.WINDOW_ACTIVE_ALPHA or Theme.WINDOW_INACTIVE_ALPHA
-    local currentAlpha = getAlpha(frame, Theme.WINDOW_ACTIVE_ALPHA)
+    local targetAlpha = dimmed and Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA or Theme.WINDOW_IDLE_ALPHA
+    local currentAlpha = getAlpha(frame, Theme.WINDOW_IDLE_ALPHA)
 
-    if currentAlpha == targetAlpha and windowIsActive == active then
+    if currentAlpha == targetAlpha and windowIsDimmed == dimmed then
       return
     end
 
@@ -181,26 +201,26 @@ function MessengerWindow.Create(factory, options)
       _G.UIFrameFadeRemoveFrame(frame)
     end
 
-    if active and type(_G.UIFrameFadeIn) == "function" then
-      _G.UIFrameFadeIn(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
-    elseif (not active) and type(_G.UIFrameFadeOut) == "function" then
+    if dimmed and type(_G.UIFrameFadeOut) == "function" then
       _G.UIFrameFadeOut(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
+    elseif (not dimmed) and type(_G.UIFrameFadeIn) == "function" then
+      _G.UIFrameFadeIn(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
     elseif frame.SetAlpha then
       frame:SetAlpha(targetAlpha)
     else
       frame.alpha = targetAlpha
     end
 
-    windowIsActive = active
+    windowIsDimmed = dimmed
   end
 
-  local function refreshWindowAlpha(forceActive)
-    if forceActive == true then
-      applyWindowAlpha(true)
+  local function refreshWindowAlpha(forceOpaque)
+    if forceOpaque == true then
+      applyWindowAlpha(false)
       return
     end
 
-    applyWindowAlpha(shouldUseActiveAlpha())
+    applyWindowAlpha((not isWindowEngaged()) and isExternalActivityActive())
   end
 
   frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
@@ -230,9 +250,9 @@ function MessengerWindow.Create(factory, options)
   end
 
   if frame.SetAlpha then
-    frame:SetAlpha(Theme.WINDOW_ACTIVE_ALPHA)
+    frame:SetAlpha(Theme.WINDOW_IDLE_ALPHA)
   else
-    frame.alpha = Theme.WINDOW_ACTIVE_ALPHA
+    frame.alpha = Theme.WINDOW_IDLE_ALPHA
   end
 
   local background = frame:CreateTexture(nil, "BACKGROUND")
@@ -265,6 +285,12 @@ function MessengerWindow.Create(factory, options)
   local contactsPane = factory.CreateFrame("Frame", nil, frame)
   contactsPane:SetSize(Theme.CONTACTS_WIDTH, contactsHeight)
   contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
+
+  local contactsView = ScrollView.Create(factory, contactsPane, {
+    width = Theme.CONTACTS_WIDTH,
+    height = contactsHeight,
+    step = 48,
+  })
 
   local contactsDivider = frame:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
@@ -329,6 +355,10 @@ function MessengerWindow.Create(factory, options)
   local handleContactSelected
   local contacts = {
     rows = {},
+    scrollFrame = contactsView.scrollFrame,
+    scrollBar = contactsView.scrollBar,
+    content = contactsView.content,
+    view = contactsView,
   }
 
   local function refreshContacts(nextContacts, selectedConversationKey)
@@ -336,7 +366,7 @@ function MessengerWindow.Create(factory, options)
       currentContacts = nextContacts
     end
 
-    contacts.rows = ContactsList.Refresh(factory, contactsPane, contacts.rows, currentContacts, {
+    contacts.rows = ContactsList.Refresh(factory, contacts.content, contacts.rows, currentContacts, {
       selectedConversationKey = selectedConversationKey,
       onSelect = function(item)
         if handleContactSelected then
@@ -344,6 +374,7 @@ function MessengerWindow.Create(factory, options)
         end
       end,
     })
+    ScrollView.Sync(contacts.view)
 
     return contacts.rows
   end

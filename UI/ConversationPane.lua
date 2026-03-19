@@ -4,6 +4,24 @@ if type(ns) ~= "table" then
 end
 
 local ConversationPane = {}
+local TRANSCRIPT_LINE_HEIGHT = 16
+local TRANSCRIPT_SCROLL_STEP = 24
+local TRANSCRIPT_BOTTOM_GAP = 56
+
+local function loadModule(name, key)
+  if ns[key] then
+    return ns[key]
+  end
+
+  local ok, loaded = pcall(require, name)
+  if ok then
+    return loaded
+  end
+
+  error(key .. " module not available")
+end
+
+local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
 
 local function formatMessage(message)
   if message.kind == "system" then
@@ -40,6 +58,31 @@ local function sizeValue(target, getterName, fieldName, fallback)
   return fallback
 end
 
+local function transcriptContentHeight(transcript)
+  if transcript.text and type(transcript.text.GetStringHeight) == "function" then
+    local measuredHeight = transcript.text:GetStringHeight()
+    if type(measuredHeight) == "number" and measuredHeight > 0 then
+      return measuredHeight
+    end
+  end
+
+  return math.max(#(transcript.lines or {}), 1) * TRANSCRIPT_LINE_HEIGHT
+end
+
+local function updateTranscriptLayout(transcript, snapToEnd)
+  local scrollFrame = transcript.scrollFrame or transcript
+  local transcriptWidth = sizeValue(scrollFrame, "GetWidth", "width", 0)
+
+  if transcript.text and transcript.text.SetWidth then
+    transcript.text:SetWidth(transcriptWidth)
+  end
+
+  ScrollView.RefreshMetrics(transcript, transcriptContentHeight(transcript), snapToEnd == true)
+  transcript.point = scrollFrame and scrollFrame.point or transcript.point
+  transcript.width = sizeValue(scrollFrame, "GetWidth", "width", transcript.width or 0)
+  transcript.height = sizeValue(scrollFrame, "GetHeight", "height", transcript.height or 0)
+end
+
 function ConversationPane.RenderTranscript(transcript, messages)
   transcript.lines = {}
 
@@ -51,6 +94,7 @@ function ConversationPane.RenderTranscript(transcript, messages)
     transcript.text:SetText(table.concat(transcript.lines, "\n"))
   end
 
+  updateTranscriptLayout(transcript, true)
   return transcript.lines
 end
 
@@ -84,14 +128,19 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   statusBanner:SetPoint("TOPLEFT", header, "BOTTOMLEFT", 0, -8)
   statusBanner:SetText("")
 
-  local transcript = factory.CreateFrame("Frame", nil, pane)
-  transcript:SetPoint("TOPLEFT", statusBanner, "BOTTOMLEFT", 0, -12)
-  transcript:SetSize(parentWidth - 32, parentHeight - 110)
-  transcript.lines = {}
-  transcript.text = transcript:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  transcript.text:SetPoint("TOPLEFT", transcript, "TOPLEFT", 0, 0)
+  local transcript = ScrollView.Create(factory, pane, {
+    width = parentWidth - 32,
+    height = parentHeight - TRANSCRIPT_BOTTOM_GAP,
+    point = { "TOPLEFT", statusBanner, "BOTTOMLEFT", 0, -12 },
+    step = TRANSCRIPT_SCROLL_STEP,
+  })
+  transcript.point = transcript.scrollFrame and transcript.scrollFrame.point or nil
+  transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
+  transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", parentHeight - TRANSCRIPT_BOTTOM_GAP)
+  transcript.text = transcript.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
   if transcript.text.SetWidth then
-    transcript.text:SetWidth(sizeValue(transcript, "GetWidth", "width", parentWidth - 32))
+    transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32))
   end
   if transcript.text.SetJustifyH then
     transcript.text:SetJustifyH("LEFT")
@@ -100,6 +149,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     transcript.text:SetJustifyV("TOP")
   end
   transcript.text:SetText("")
+  transcript.lines = {}
+  updateTranscriptLayout(transcript, false)
 
   local view = {
     frame = pane,

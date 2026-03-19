@@ -61,6 +61,16 @@ function FakeUI.NewFactory()
       return self.text
     end
 
+    function frame:GetStringHeight()
+      local text = tostring(self.text or "")
+      local _, lineCount = string.gsub(text, "\n", "\n")
+      local effectiveLines = math.max(1, lineCount + 1)
+      local lineHeight = self.lineHeight or 16
+
+      return effectiveLines * lineHeight
+    end
+
+
     function frame:Show()
       self.shown = true
       if self.scripts and self.scripts.OnShow then
@@ -120,6 +130,98 @@ function FakeUI.NewFactory()
       if self.scripts and self.scripts.OnEditFocusLost then
         self.scripts.OnEditFocusLost(self)
       end
+    end
+
+
+    function frame:SetScrollChild(child)
+      self.scrollChild = child
+    end
+
+    function frame:UpdateScrollChildRect()
+      self.scrollChildRectUpdated = true
+    end
+
+    function frame:GetVerticalScrollRange()
+      local child = self.scrollChild
+      local childHeight = 0
+      local selfHeight = self.height or 0
+
+      if child ~= nil then
+        if type(child.GetHeight) == "function" then
+          childHeight = child:GetHeight() or 0
+        elseif type(child.height) == "number" then
+          childHeight = child.height
+        end
+      end
+
+      local range = childHeight - selfHeight
+      if range < 0 then
+        return 0
+      end
+
+      return range
+    end
+
+    function frame:SetVerticalScroll(offset)
+      local range = self:GetVerticalScrollRange()
+      local clamped = offset or 0
+
+      if clamped < 0 then
+        clamped = 0
+      elseif clamped > range then
+        clamped = range
+      end
+
+      self.verticalScroll = clamped
+      if self.scripts and self.scripts.OnVerticalScroll then
+        self.scripts.OnVerticalScroll(self, clamped)
+      end
+    end
+
+    function frame:GetVerticalScroll()
+      return self.verticalScroll or 0
+    end
+
+    function frame:EnableMouseWheel(value)
+      self.mouseWheelEnabled = value
+    end
+
+
+    function frame:SetMinMaxValues(minimum, maximum)
+      self.minValue = minimum
+      self.maxValue = maximum
+    end
+
+    function frame:GetMinMaxValues()
+      return self.minValue or 0, self.maxValue or 0
+    end
+
+    function frame:SetValueStep(step)
+      self.valueStep = step
+    end
+
+    function frame:SetOrientation(value)
+      self.orientation = value
+    end
+
+    function frame:SetThumbTexture(texture)
+      self.thumbTexture = texture
+    end
+
+
+    function frame:SetObeyStepOnDrag(value)
+      self.obeyStepOnDrag = value
+    end
+
+    function frame:SetValue(value)
+      self.value = value
+      if self.scripts and self.scripts.OnValueChanged then
+        self.scripts.OnValueChanged(self, value)
+      end
+    end
+
+    function frame:GetValue()
+      return self.value or 0
     end
 
 

@@ -20,6 +20,7 @@ Transport/Availability.lua
 Transport/WhisperGateway.lua
 Core/EventRouter.lua
 UI/Theme.lua
+UI/ScrollView.lua
 UI/ContactsList.lua
 UI/ConversationPane.lua
 UI/Composer.lua
