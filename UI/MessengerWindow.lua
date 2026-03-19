@@ -196,15 +196,7 @@ function MessengerWindow.Create(factory, options)
       return
     end
 
-    if type(_G.UIFrameFadeRemoveFrame) == "function" then
-      _G.UIFrameFadeRemoveFrame(frame)
-    end
-
-    if dimmed and type(_G.UIFrameFadeOut) == "function" then
-      _G.UIFrameFadeOut(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
-    elseif (not dimmed) and type(_G.UIFrameFadeIn) == "function" then
-      _G.UIFrameFadeIn(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
-    elseif frame.SetAlpha then
+    if frame.SetAlpha then
       frame:SetAlpha(targetAlpha)
     else
       frame.alpha = targetAlpha

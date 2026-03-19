@@ -212,7 +212,10 @@ local function bindRow(factory, parent, row, index, item, options)
     row.factionIcon:SetSize(Theme.LAYOUT.CONTACT_FACTION_SIZE, Theme.LAYOUT.CONTACT_FACTION_SIZE)
     row.factionIcon:SetPoint("LEFT", row.title, "RIGHT", 4, 0)
   end
-  local factionPath = Theme.FactionIcon(item.factionName)
+  -- Only show faction icon when we have reliable data:
+  -- WOW whispers infer faction from race (reliable), BNet only when classTag is present (active session)
+  local showFaction = item.factionName and (item.channel == "WOW" or (item.channel == "BN" and item.classTag))
+  local factionPath = showFaction and Theme.FactionIcon(item.factionName) or nil
   if factionPath then
     row.factionIcon:SetTexture(factionPath)
     row.factionIcon:Show()

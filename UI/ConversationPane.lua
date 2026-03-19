@@ -111,16 +111,37 @@ local function updateTranscriptLayout(transcript, snapToEnd)
   transcript.height = sizeValue(scrollFrame, "GetHeight", "height", transcript.height or 0)
 end
 
+local MESSAGES_PAGE_SIZE = 10
+
 function ConversationPane.RenderTranscript(transcript, messages)
+  local allMessages = messages or {}
   transcript.lines = {}
 
-  for _, message in ipairs(messages or {}) do
+  for _, message in ipairs(allMessages) do
     table.insert(transcript.lines, formatMessage(message))
   end
 
+  -- Determine visible slice (last N messages)
+  local totalCount = #allMessages
+  transcript._allMessages = allMessages
+  transcript._visibleCount = transcript._visibleCount or MESSAGES_PAGE_SIZE
+  if transcript._visibleCount > totalCount then
+    transcript._visibleCount = totalCount
+  end
+
+  local startIndex = math.max(1, totalCount - transcript._visibleCount + 1)
+  local visibleMessages = {}
+  for i = startIndex, totalCount do
+    table.insert(visibleMessages, allMessages[i])
+  end
+
   if not transcript.factory then
+    local visibleLines = {}
+    for i = startIndex, totalCount do
+      table.insert(visibleLines, transcript.lines[i])
+    end
     if transcript.text then
-      transcript.text:SetText(table.concat(transcript.lines, "\n"))
+      transcript.text:SetText(table.concat(visibleLines, "\n"))
     end
     updateTranscriptLayout(transcript, true)
     return transcript.lines
@@ -133,7 +154,7 @@ function ConversationPane.RenderTranscript(transcript, messages)
   end
 
   local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
-  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, messages or {}, paneWidth)
+  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth)
 
   ScrollView.RefreshMetrics(transcript, totalHeight, true)
 
@@ -147,6 +168,18 @@ function ConversationPane.RenderTranscript(transcript, messages)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcript.height or 0)
 
   return transcript.lines
+end
+
+function ConversationPane.HasMore(transcript)
+  if not transcript._allMessages then return false end
+  return (transcript._visibleCount or 0) < #transcript._allMessages
+end
+
+function ConversationPane.LoadMore(transcript)
+  if not ConversationPane.HasMore(transcript) then return false end
+  transcript._visibleCount = (transcript._visibleCount or MESSAGES_PAGE_SIZE) + MESSAGES_PAGE_SIZE
+  ConversationPane.RenderTranscript(transcript, transcript._allMessages)
+  return true
 end
 
 function ConversationPane.SetStatus(view, status)
@@ -264,6 +297,8 @@ function ConversationPane.Refresh(view, selectedContact, conversation, status)
     end
   end
 
+  -- Reset visible count when conversation changes
+  view.transcript._visibleCount = MESSAGES_PAGE_SIZE
   ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
   ConversationPane.SetStatus(view, status)
   return view
@@ -436,6 +471,42 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   transcript.text:SetText("")
   transcript.lines = {}
   updateTranscriptLayout(transcript, false)
+
+  -- Infinite scroll: load older messages when scrolling near the top
+  local function checkLoadMoreMessages()
+    local offset = ScrollView.GetOffset(transcript)
+    if offset <= TRANSCRIPT_SCROLL_STEP and ConversationPane.HasMore(transcript) then
+      -- Remember current content height to preserve scroll position
+      local prevHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
+      ConversationPane.LoadMore(transcript)
+      local newHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
+      -- Adjust scroll so the user stays at the same visual position
+      local delta = newHeight - prevHeight
+      if delta > 0 then
+        ScrollView.SetVerticalScroll(transcript, offset + delta)
+      end
+    end
+  end
+
+  if transcript.scrollFrame and transcript.scrollFrame.SetScript then
+    local originalOnWheel = transcript.scrollFrame:GetScript("OnMouseWheel")
+    transcript.scrollFrame:SetScript("OnMouseWheel", function(self, delta)
+      if originalOnWheel then
+        originalOnWheel(self, delta)
+      end
+      checkLoadMoreMessages()
+    end)
+  end
+
+  if transcript.scrollBar and transcript.scrollBar.SetScript then
+    local originalOnValue = transcript.scrollBar:GetScript("OnValueChanged")
+    transcript.scrollBar:SetScript("OnValueChanged", function(self, value)
+      if originalOnValue then
+        originalOnValue(self, value)
+      end
+      checkLoadMoreMessages()
+    end)
+  end
 
   local view = {
     frame = pane,
