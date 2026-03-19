@@ -197,12 +197,29 @@ local function applyColor(fontString, colorTable)
   end
 end
 
-local function buildStatusLine(selectedContact)
+local AVAILABILITY_DISPLAY = {
+  CanWhisper      = { label = "Online",        color = "online" },
+  CanWhisperGuild = { label = "Online",        color = "online" },
+  Offline         = { label = "Offline",       color = "offline" },
+  WrongFaction    = { label = "Wrong Faction", color = "offline" },
+  Lockdown        = { label = "Unavailable",   color = "dnd" },
+}
+
+local function buildStatusLine(selectedContact, status)
   if not selectedContact then
-    return "Online"
+    return "", nil
   end
 
-  local parts = { "Online" }
+  local parts = {}
+  local dotColor = nil
+
+  -- Availability status from the game API
+  local statusKey = status and status.status or nil
+  local avail = statusKey and AVAILABILITY_DISPLAY[statusKey] or nil
+  if avail then
+    table.insert(parts, avail.label)
+    dotColor = avail.color
+  end
 
   if selectedContact.realmName and selectedContact.realmName ~= "" then
     local name = selectedContact.name or selectedContact.displayName or ""
@@ -220,11 +237,11 @@ local function buildStatusLine(selectedContact)
     end
   end
 
-  if selectedContact.faction and selectedContact.faction ~= "" then
-    table.insert(parts, selectedContact.faction)
+  if selectedContact.className and selectedContact.className ~= "" then
+    table.insert(parts, selectedContact.className)
   end
 
-  return table.concat(parts, "  \xC2\xB7  ")
+  return table.concat(parts, "  \xC2\xB7  "), dotColor
 end
 
 function ConversationPane.Refresh(view, selectedContact, conversation, status)
@@ -270,10 +287,11 @@ function ConversationPane.Refresh(view, selectedContact, conversation, status)
       end
     end
 
-    -- Update status line
+    -- Update status line and dot color from availability
+    local statusText, dotColorKey = buildStatusLine(selectedContact, status)
     if view.headerStatus then
       if hasContact then
-        view.headerStatus:SetText(buildStatusLine(selectedContact))
+        view.headerStatus:SetText(statusText)
         view.headerStatus:Show()
       else
         view.headerStatus:SetText("")
@@ -281,9 +299,14 @@ function ConversationPane.Refresh(view, selectedContact, conversation, status)
       end
     end
 
-    -- Update status dot visibility
     if view.headerStatusDot then
-      view.headerStatusDot:SetShown(hasContact)
+      if hasContact and dotColorKey and Theme.COLORS[dotColorKey] then
+        local dc = Theme.COLORS[dotColorKey]
+        view.headerStatusDot:SetVertexColor(dc[1], dc[2], dc[3], dc[4] or 1)
+        view.headerStatusDot:SetShown(true)
+      else
+        view.headerStatusDot:SetShown(false)
+      end
     end
 
     -- Update empty state visibility

@@ -488,10 +488,12 @@ function MessengerWindow.Create(factory, options)
     view = contactsView,
   }
 
-  local function refreshContacts(nextContacts, selectedConversationKey)
+  local function refreshContacts(nextContacts, selectedConversationKey, resetPaging)
     if nextContacts ~= nil then
       currentContacts = nextContacts
-      contactsVisibleCount = 10
+      if resetPaging then
+        contactsVisibleCount = 10
+      end
     end
 
     contacts.rows = ContactsList.Refresh(factory, contacts.content, contacts.rows, currentContacts, {
@@ -546,7 +548,7 @@ function MessengerWindow.Create(factory, options)
     end)
   end
 
-  refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil)
+  refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil, true)
   local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
 
   local function setOptionsVisible(nextVisible)
@@ -582,13 +584,13 @@ function MessengerWindow.Create(factory, options)
     refreshWindowAlpha()
   end)
 
-  local function refreshSelection(nextState)
+  local function refreshSelection(nextState, resetPaging)
     nextState = nextState or {}
     currentSelectedContact = nextState.selectedContact
     currentConversation = nextState.conversation
     currentStatus = nextState.status
 
-    refreshContacts(nextState.contacts, currentSelectedContact and currentSelectedContact.conversationKey or nil)
+    refreshContacts(nextState.contacts, currentSelectedContact and currentSelectedContact.conversationKey or nil, resetPaging)
     ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus)
     syncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
     setComposerEnabled(composer, currentSelectedContact)
@@ -622,7 +624,7 @@ function MessengerWindow.Create(factory, options)
     selectedContact = options.selectedContact,
     conversation = options.conversation,
     status = options.status,
-  })
+  }, true)
 
   setOptionsVisible(false)
 

@@ -65,6 +65,10 @@ local function buildGameAccountName(accountInfo)
   return characterName or realmName
 end
 
+function Identity.InferFaction(raceTag)
+  return inferFactionName(raceTag)
+end
+
 function Identity.BuildLocalProfileId(name, realmName)
   if name == nil or name == "" then
     return nil

@@ -177,7 +177,7 @@ local function bindRow(factory, parent, row, index, item, options)
     row.classIcon:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
   end
 
-  -- Status dot (10x10, bottom-right of class icon)
+  -- Status dot (10x10, bottom-right of class icon) — hidden until online tracking is implemented
   if row.statusDot == nil then
     row.statusDot = row:CreateTexture(nil, "OVERLAY")
     row.statusDot:SetSize(Theme.LAYOUT.CONTACT_STATUS_SIZE, Theme.LAYOUT.CONTACT_STATUS_SIZE)
@@ -190,6 +190,7 @@ local function bindRow(factory, parent, row, index, item, options)
       row.statusDot:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
     end
   end
+  row.statusDot:Hide()
 
   -- Contact name (top line, class-colored)
   if row.title == nil then
@@ -212,12 +213,13 @@ local function bindRow(factory, parent, row, index, item, options)
     row.factionIcon:SetSize(Theme.LAYOUT.CONTACT_FACTION_SIZE, Theme.LAYOUT.CONTACT_FACTION_SIZE)
     row.factionIcon:SetPoint("LEFT", row.title, "RIGHT", 4, 0)
   end
-  -- Only show faction icon when we have reliable data:
-  -- WOW whispers infer faction from race (reliable), BNet only when classTag is present (active session)
-  local showFaction = item.factionName and (item.channel == "WOW" or (item.channel == "BN" and item.classTag))
-  local factionPath = showFaction and Theme.FactionIcon(item.factionName) or nil
-  if factionPath then
-    row.factionIcon:SetTexture(factionPath)
+  -- Only show faction icon when race is unambiguously Alliance or Horde
+  -- (stored factionName can be stale from BNet API for offline contacts)
+  local reliableFaction = item.raceTag and Theme.FactionIcon(
+    ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag) or nil
+  ) or nil
+  if reliableFaction then
+    row.factionIcon:SetTexture(reliableFaction)
     row.factionIcon:Show()
   else
     row.factionIcon:Hide()
