@@ -5,14 +5,34 @@ end
 
 local Composer = {}
 
+local function sizeValue(target, getterName, fieldName, fallback)
+  if target and type(target[getterName]) == "function" then
+    local value = target[getterName](target)
+    if type(value) == "number" and value > 0 then
+      return value
+    end
+  end
+
+  if target and type(target[fieldName]) == "number" then
+    return target[fieldName]
+  end
+
+  return fallback
+end
+
 function Composer.Create(factory, parent, selectedContact, onSend)
   local pane = factory.CreateFrame("Frame", nil, parent)
+  local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
 
   local input = factory.CreateFrame("EditBox", nil, pane)
+  input:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 16, 16)
+  input:SetSize(parentWidth - 120, 24)
   input:SetText("")
 
   local sendButton = factory.CreateFrame("Button", nil, pane, "UIPanelButtonTemplate")
+  sendButton:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -16, 16)
+  sendButton:SetSize(88, 24)
   sendButton:SetText("Send")
   sendButton.disabled = selectedContact == nil
 
@@ -29,6 +49,11 @@ function Composer.Create(factory, parent, selectedContact, onSend)
     onSend({
       conversationKey = selectedContact.conversationKey,
       target = selectedContact.displayName,
+      displayName = selectedContact.displayName,
+      channel = selectedContact.channel,
+      bnetAccountID = selectedContact.bnetAccountID,
+      guid = selectedContact.guid,
+      gameAccountName = selectedContact.gameAccountName,
       text = text,
     })
 

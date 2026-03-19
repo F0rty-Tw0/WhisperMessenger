@@ -28,6 +28,38 @@ end
 
 local MessengerWindow = {}
 
+local function syncComposerSelectedContact(target, selectedContact)
+  target.conversationKey = selectedContact and selectedContact.conversationKey or nil
+  target.displayName = selectedContact and selectedContact.displayName or nil
+  target.channel = selectedContact and selectedContact.channel or nil
+  target.bnetAccountID = selectedContact and selectedContact.bnetAccountID or nil
+  target.guid = selectedContact and selectedContact.guid or nil
+  target.gameAccountName = selectedContact and selectedContact.gameAccountName or nil
+end
+
+local function setComposerEnabled(composer, selectedContact)
+  local enabled = selectedContact ~= nil
+  composer.sendButton.disabled = not enabled
+  if composer.sendButton.SetEnabled then
+    composer.sendButton:SetEnabled(enabled)
+  end
+end
+
+local function sizeValue(target, getterName, fieldName, fallback)
+  if target and type(target[getterName]) == "function" then
+    local value = target[getterName](target)
+    if type(value) == "number" and value > 0 then
+      return value
+    end
+  end
+
+  if target and type(target[fieldName]) == "number" then
+    return target[fieldName]
+  end
+
+  return fallback
+end
+
 function MessengerWindow.Create(factory, options)
   options = options or {}
 
@@ -69,8 +101,8 @@ function MessengerWindow.Create(factory, options)
       relativePoint = relative or point or initialState.anchorPoint,
       x = offsetX or 0,
       y = offsetY or 0,
-      width = target.width or initialState.width,
-      height = target.height or initialState.height,
+      width = sizeValue(target, "GetWidth", "width", initialState.width),
+      height = sizeValue(target, "GetHeight", "height", initialState.height),
       minimized = false,
     }
   end
@@ -118,17 +150,51 @@ function MessengerWindow.Create(factory, options)
   optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -8, 0)
   optionsButton:SetText("Options")
 
+  local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
+  local contentWidth = initialState.width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
+  local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
+  local threadHeight = contentHeight - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
+
   local contactsPane = factory.CreateFrame("Frame", nil, frame)
-  contactsPane:SetSize(Theme.CONTACTS_WIDTH, initialState.height)
-  contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+  contactsPane:SetSize(Theme.CONTACTS_WIDTH, contactsHeight)
+  contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
+
+  local contactsDivider = frame:CreateTexture(nil, "BORDER")
+  contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
+  contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
+  if contactsDivider.SetColorTexture then
+    contactsDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+  end
 
   local contentPane = factory.CreateFrame("Frame", nil, frame)
-  contentPane:SetSize(initialState.width - Theme.CONTACTS_WIDTH, initialState.height)
-  contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
+  contentPane:SetSize(contentWidth, contentHeight)
+  contentPane:SetPoint("TOPLEFT", frame, "TOPLEFT", Theme.CONTACTS_WIDTH + Theme.DIVIDER_THICKNESS, -Theme.TOP_BAR_HEIGHT)
+
+  local headerDivider = frame:CreateTexture(nil, "BORDER")
+  headerDivider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
+  headerDivider:SetSize(initialState.width, Theme.DIVIDER_THICKNESS)
+  if headerDivider.SetColorTexture then
+    headerDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+  end
+
+  local threadPane = factory.CreateFrame("Frame", nil, contentPane)
+  threadPane:SetSize(contentWidth, threadHeight)
+  threadPane:SetPoint("TOPLEFT", contentPane, "TOPLEFT", 0, 0)
+
+  local composerPane = factory.CreateFrame("Frame", nil, contentPane)
+  composerPane:SetSize(contentWidth, Theme.COMPOSER_HEIGHT)
+  composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, 0)
+
+  local composerDivider = contentPane:CreateTexture(nil, "BORDER")
+  composerDivider:SetPoint("BOTTOMLEFT", threadPane, "BOTTOMLEFT", 0, -Theme.DIVIDER_THICKNESS)
+  composerDivider:SetSize(contentWidth, Theme.DIVIDER_THICKNESS)
+  if composerDivider.SetColorTexture then
+    composerDivider:SetColorTexture(0.16, 0.18, 0.24, 1)
+  end
 
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
-  optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -48)
-  optionsPanel:SetSize(initialState.width - 32, initialState.height - 64)
+  optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", Theme.CONTENT_PADDING, -(Theme.TOP_BAR_HEIGHT + Theme.CONTENT_PADDING))
+  optionsPanel:SetSize(initialState.width - (Theme.CONTENT_PADDING * 2), initialState.height - Theme.TOP_BAR_HEIGHT - (Theme.CONTENT_PADDING * 2))
 
   local optionsHeader = optionsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
   optionsHeader:SetPoint("TOPLEFT", optionsPanel, "TOPLEFT", 0, 0)
@@ -148,9 +214,78 @@ function MessengerWindow.Create(factory, options)
   resetIconButton:SetPoint("TOPLEFT", resetWindowButton, "BOTTOMLEFT", 0, -10)
   resetIconButton:SetText("Reset Icon Position")
 
-  local rows = ContactsList.Render(factory, contactsPane, options.contacts or {})
-  local conversation = ConversationPane.Create(factory, contentPane, options.selectedContact, options.conversation)
-  local composer = Composer.Create(factory, contentPane, options.selectedContact, options.onSend or function() end)
+  local currentSelectedContact = nil
+  local currentConversation = nil
+  local currentStatus = nil
+  local currentContacts = options.contacts or {}
+  local composerSelectedContact = {}
+  local handleContactSelected
+  local contacts = {
+    rows = {},
+  }
+
+  local function refreshContacts(nextContacts, selectedConversationKey)
+    if nextContacts ~= nil then
+      currentContacts = nextContacts
+    end
+
+    contacts.rows = ContactsList.Refresh(factory, contactsPane, contacts.rows, currentContacts, {
+      selectedConversationKey = selectedConversationKey,
+      onSelect = function(item)
+        if handleContactSelected then
+          handleContactSelected(item)
+        end
+      end,
+    })
+
+    return contacts.rows
+  end
+
+  refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil)
+  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
+  local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end)
+
+  local function refreshSelection(nextState)
+    nextState = nextState or {}
+    currentSelectedContact = nextState.selectedContact
+    currentConversation = nextState.conversation
+    currentStatus = nextState.status
+
+    refreshContacts(nextState.contacts, currentSelectedContact and currentSelectedContact.conversationKey or nil)
+    ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus)
+    syncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
+    setComposerEnabled(composer, currentSelectedContact)
+  end
+
+  local function buildSelectedState(item)
+    local nextState = nil
+    if options.onSelectConversation then
+      nextState = options.onSelectConversation(item.conversationKey, item)
+    end
+
+    if nextState == nil then
+      nextState = {
+        selectedContact = options.getSelectedContact and options.getSelectedContact(item.conversationKey, item) or item,
+        conversation = options.getConversation and options.getConversation(item.conversationKey, item) or nil,
+        status = options.getStatus and options.getStatus(item.conversationKey, item) or nil,
+      }
+    elseif nextState.selectedContact == nil then
+      nextState.selectedContact = item
+    end
+
+    return nextState
+  end
+
+  handleContactSelected = function(item)
+    refreshSelection(buildSelectedState(item))
+  end
+
+  refreshSelection({
+    contacts = currentContacts,
+    selectedContact = options.selectedContact,
+    conversation = options.conversation,
+    status = options.status,
+  })
 
   local function setOptionsVisible(nextVisible)
     if nextVisible then
@@ -238,7 +373,12 @@ function MessengerWindow.Create(factory, options)
     frame = frame,
     title = title,
     contactsPane = contactsPane,
+    contactsDivider = contactsDivider,
     contentPane = contentPane,
+    headerDivider = headerDivider,
+    threadPane = threadPane,
+    composerPane = composerPane,
+    composerDivider = composerDivider,
     closeButton = closeButton,
     optionsButton = optionsButton,
     optionsPanel = optionsPanel,
@@ -246,11 +386,22 @@ function MessengerWindow.Create(factory, options)
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
-    contacts = {
-      rows = rows,
-    },
+    contacts = contacts,
     conversation = conversation,
     composer = composer,
+    refreshContacts = refreshContacts,
+    refreshSelection = refreshSelection,
+    selectConversation = function(conversationKey)
+      for _, row in ipairs(contacts.rows) do
+        if row.item ~= nil and row.item.conversationKey == conversationKey then
+          handleContactSelected(row.item)
+          return true
+        end
+      end
+
+      refreshSelection()
+      return false
+    end,
   }
 end
 
