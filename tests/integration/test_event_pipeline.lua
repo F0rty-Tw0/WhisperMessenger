@@ -27,7 +27,7 @@ return function()
   assert(#conversation.messages == 1)
   assert(conversation.messages[1].direction == "in")
 
-  Router.RecordPendingSend(state, "Arthas-Area52", "hello back")
+  Router.RecordPendingSend(state, { channel = "WOW", displayName = "Arthas-Area52" }, "hello back")
   assert(#conversation.messages == 1)
 
   Router.HandleEvent(state, fixture.inform.eventName, fixture.inform.payload)
@@ -41,4 +41,17 @@ return function()
 
   Router.HandleEvent(state, fixture.availability.eventName, fixture.availability.payload)
   assert(state.availabilityByGUID["Player-3676-0ABCDEF0"].status == "Offline")
+
+  local missingGuidResult = Router.HandleEvent(state, fixture.availability.eventName, { status = "Offline" })
+  assert(missingGuidResult == nil)
+
+  Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+    text = "guidless ping",
+    playerName = "Jaina-Proudmoore",
+  })
+
+  local fallbackConversation = state.store.conversations["me::WOW::jaina-proudmoore"]
+  assert(fallbackConversation ~= nil)
+  assert(fallbackConversation.messages[1].id == "500")
+  assert(fallbackConversation.messages[1].guid == nil)
 end

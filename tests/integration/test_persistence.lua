@@ -28,11 +28,15 @@ return function()
     messages = { { text = "Lok'tar." } },
   }
 
+  character.activeConversationKey = "me::WOW::jaina-proudmoore"
+
   local currentProfile = SavedState.ListProfileConversations(account, "me")
   local items = ContactsList.BuildItems(currentProfile)
+  local _, reloadedCharacter = SavedState.Initialize(account, character)
 
   assert(items[1].displayName == "Jaina-Proudmoore")
   assert(items[2].displayName == "Anduin-Stormrage")
   assert(character.window.width == 900)
   assert(character.window.height == 560)
+  assert(reloadedCharacter.activeConversationKey == "me::WOW::jaina-proudmoore")
 end

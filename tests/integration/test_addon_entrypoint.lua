@@ -53,25 +53,56 @@ return function()
   end
 
   assert(eventFrame ~= nil, "expected addon load event frame")
+  assert(eventFrame.events.ADDON_LOADED == true)
+  assert(eventFrame.events.CHAT_MSG_WHISPER == nil)
+
+  local Bootstrap = ns.Bootstrap
   eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "WhisperMessenger")
 
-  assert(_G.SLASH_WHISPERMESSENGER1 == "/wmsg")
-  assert(_G.SLASH_WHISPERMESSENGER2 == "/whispermessenger")
-  assert(type(_G.SlashCmdList.WHISPERMESSENGER) == "function")
+  local runtime = Bootstrap.runtime
+  assert(runtime ~= nil, "expected bootstrap runtime after load")
+  assert(runtime.localProfileId == "current")
+  assert(runtime.activeConversationKey == nil)
+  assert(type(runtime.pendingOutgoing) == "table")
+  assert(type(runtime.availabilityByGUID) == "table")
+  assert(type(runtime.store) == "table")
+  assert(type(runtime.queue) == "table")
+  assert(runtime.store.conversations == runtime.accountState.conversations)
 
-  local windowFrame
-  for _, frame in ipairs(createdFrames) do
-    if frame.name == "WhisperMessengerWindow" then
-      windowFrame = frame
-      break
-    end
-  end
+  assert(eventFrame.events.ADDON_LOADED == nil)
+  assert(eventFrame.events.CHAT_MSG_WHISPER == true)
+  assert(eventFrame.events.CHAT_MSG_WHISPER_INFORM == true)
+  assert(eventFrame.events.CHAT_MSG_AFK == true)
+  assert(eventFrame.events.CHAT_MSG_DND == true)
+  assert(eventFrame.events.CAN_LOCAL_WHISPER_TARGET_RESPONSE == true)
 
-  assert(windowFrame ~= nil, "expected messenger window frame")
-  assert(windowFrame.shown == false)
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "hi there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 101, "Player-3676-0ABCDEF0")
+
+  local conversation = runtime.store.conversations["current::WOW::arthas-area52"]
+  assert(conversation ~= nil, "expected whisper event to reach runtime store")
+  assert(#conversation.messages == 1)
+  assert(conversation.messages[1].text == "hi there")
+  assert(runtime.window.contacts.rows[1].item.conversationKey == "current::WOW::arthas-area52")
+
   _G.SlashCmdList.WHISPERMESSENGER()
-  assert(windowFrame.shown == true)
+  assert(runtime.window.frame.shown == true)
+  runtime.window.contacts.rows[1].scripts.OnClick()
+  assert(runtime.activeConversationKey == "current::WOW::arthas-area52")
+  assert(runtime.characterState.activeConversationKey == "current::WOW::arthas-area52")
+  assert(conversation.unreadCount == 0)
+  assert(runtime.window.conversation.header.text == "Arthas-Area52")
 
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "still there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 102, "Player-3676-0ABCDEF0")
+  assert(#conversation.messages == 2)
+  assert(conversation.unreadCount == 0)
+  assert(runtime.window.conversation.transcript.lines[2] == "still there")
+
+  runtime.window.closeButton.scripts.OnClick(runtime.window.closeButton)
+  assert(runtime.window.frame.shown == false)
+
+  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "ping again", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, 103, "Player-3676-0ABCDEF0")
+  assert(#conversation.messages == 3)
+  assert(conversation.unreadCount == 1)
   _G.require = savedRequire
   _G.CreateFrame = savedCreateFrame
   _G.SlashCmdList = savedSlashCmdList
