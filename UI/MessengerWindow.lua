@@ -115,7 +115,95 @@ function MessengerWindow.Create(factory, options)
     return target ~= nil and target.shown == true
   end
 
-  local frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
+  local frame = nil
+  local composer = nil
+  local windowIsActive = true
+  local alphaElapsed = 0
+
+  local function getAlpha(target, fallback)
+    if target and type(target.GetAlpha) == "function" then
+      local value = target:GetAlpha()
+
+      if type(value) == "number" then
+        return value
+      end
+    end
+
+    if target and type(target.alpha) == "number" then
+      return target.alpha
+    end
+
+    return fallback
+  end
+
+  local function hookScript(target, eventName, handler)
+    if target == nil or type(target.SetScript) ~= "function" then
+      return
+    end
+
+    local previous = target.GetScript and target:GetScript(eventName) or nil
+    if previous == nil then
+      target:SetScript(eventName, handler)
+      return
+    end
+
+    target:SetScript(eventName, function(...)
+      previous(...)
+      handler(...)
+    end)
+  end
+
+  local function shouldUseActiveAlpha()
+    if composer and composer.input and type(composer.input.HasFocus) == "function" and composer.input:HasFocus() then
+      return true
+    end
+
+    if frame and type(frame.IsMouseOver) == "function" and frame:IsMouseOver() then
+      return true
+    end
+
+    return false
+  end
+
+  local function applyWindowAlpha(active)
+    if frame == nil then
+      return
+    end
+
+    local targetAlpha = active and Theme.WINDOW_ACTIVE_ALPHA or Theme.WINDOW_INACTIVE_ALPHA
+    local currentAlpha = getAlpha(frame, Theme.WINDOW_ACTIVE_ALPHA)
+
+    if currentAlpha == targetAlpha and windowIsActive == active then
+      return
+    end
+
+    if type(_G.UIFrameFadeRemoveFrame) == "function" then
+      _G.UIFrameFadeRemoveFrame(frame)
+    end
+
+    if active and type(_G.UIFrameFadeIn) == "function" then
+      _G.UIFrameFadeIn(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
+    elseif (not active) and type(_G.UIFrameFadeOut) == "function" then
+      _G.UIFrameFadeOut(frame, Theme.WINDOW_ALPHA_FADE_SECONDS, currentAlpha, targetAlpha)
+    elseif frame.SetAlpha then
+      frame:SetAlpha(targetAlpha)
+    else
+      frame.alpha = targetAlpha
+    end
+
+    windowIsActive = active
+  end
+
+  local function refreshWindowAlpha(forceActive)
+    if forceActive == true then
+      applyWindowAlpha(true)
+      return
+    end
+
+    applyWindowAlpha(shouldUseActiveAlpha())
+  end
+
+  frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
   applyState(frame, initialState)
   frame:SetMovable(true)
   frame:EnableMouse(true)
@@ -139,6 +227,12 @@ function MessengerWindow.Create(factory, options)
     if not alreadyRegistered then
       table.insert(_G.UISpecialFrames, frameName)
     end
+  end
+
+  if frame.SetAlpha then
+    frame:SetAlpha(Theme.WINDOW_ACTIVE_ALPHA)
+  else
+    frame.alpha = Theme.WINDOW_ACTIVE_ALPHA
   end
 
   local background = frame:CreateTexture(nil, "BACKGROUND")
@@ -282,7 +376,13 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
+  composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
+  hookScript(composer.input, "OnEditFocusGained", function()
+    refreshWindowAlpha(true)
+  end)
+  hookScript(composer.input, "OnEditFocusLost", function()
+    refreshWindowAlpha()
+  end)
 
   local function refreshSelection(nextState)
     nextState = nextState or {}
@@ -361,10 +461,29 @@ function MessengerWindow.Create(factory, options)
 
   if frame.SetScript then
     frame:SetScript("OnShow", function()
+      alphaElapsed = 0
+      refreshWindowAlpha(true)
       trace("window shown")
     end)
     frame:SetScript("OnHide", function()
+      alphaElapsed = 0
       trace("window hidden")
+    end)
+    frame:SetScript("OnEnter", function()
+      refreshWindowAlpha(true)
+    end)
+    frame:SetScript("OnLeave", function()
+      refreshWindowAlpha()
+    end)
+    frame:SetScript("OnUpdate", function(_, elapsed)
+      alphaElapsed = alphaElapsed + (elapsed or 0)
+
+      if alphaElapsed < Theme.WINDOW_ALPHA_UPDATE_INTERVAL then
+        return
+      end
+
+      alphaElapsed = 0
+      refreshWindowAlpha()
     end)
     frame:SetScript("OnDragStart", function(self)
       if self.IsMovable == nil or self:IsMovable() then

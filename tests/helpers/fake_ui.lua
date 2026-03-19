@@ -11,6 +11,9 @@ function FakeUI.NewFactory()
       template = template,
       children = {},
       shown = false,
+      alpha = 1,
+      mouseOver = false,
+      _hasFocus = false,
     }
 
     if parent then
@@ -80,6 +83,45 @@ function FakeUI.NewFactory()
       self.scripts = self.scripts or {}
       self.scripts[eventName] = handler
     end
+
+    function frame:GetScript(eventName)
+      if self.scripts == nil then
+        return nil
+      end
+
+      return self.scripts[eventName]
+    end
+
+    function frame:SetAlpha(value)
+      self.alpha = value
+    end
+
+    function frame:GetAlpha()
+      return self.alpha
+    end
+
+    function frame:IsMouseOver()
+      return self.mouseOver == true
+    end
+
+    function frame:HasFocus()
+      return self._hasFocus == true
+    end
+
+    function frame:SetFocus()
+      self._hasFocus = true
+      if self.scripts and self.scripts.OnEditFocusGained then
+        self.scripts.OnEditFocusGained(self)
+      end
+    end
+
+    function frame:ClearFocus()
+      self._hasFocus = false
+      if self.scripts and self.scripts.OnEditFocusLost then
+        self.scripts.OnEditFocusLost(self)
+      end
+    end
+
 
     function frame:CreateFontString(childName, layer, inheritedTemplate)
       return createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
