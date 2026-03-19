@@ -116,7 +116,7 @@ return function()
 
   eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_BN_WHISPER", "hello from bn", "|Kq1|k", nil, nil, nil, nil, nil, nil, nil, nil, 301, nil, 99, false, false, false, false)
 
-  local conversationKey = "arthas-area52::BN::99"
+  local conversationKey = "bnet::BN::99"
   local conversation = runtime.store.conversations[conversationKey]
   assert(conversation ~= nil, "expected bn whisper conversation to be created")
   assert(conversation.channel == "BN")

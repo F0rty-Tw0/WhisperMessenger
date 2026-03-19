@@ -94,12 +94,12 @@ return function()
   assert(window.conversation.transcript.content.width == window.conversation.transcript.scrollFrame.width, "expected transcript content width to track the viewport width on overflow")
   assert(window.conversation.transcript.scrollFrame:GetVerticalScroll() == window.conversation.transcript.scrollFrame:GetVerticalScrollRange(), "expected transcript to snap to newest messages")
 
-  for _ = 1, 20 do
+  for _ = 1, 200 do
     window.conversation.transcript.scrollFrame.scripts.OnMouseWheel(window.conversation.transcript.scrollFrame, 1)
   end
   assert(window.conversation.transcript.scrollFrame:GetVerticalScroll() == 0, "expected transcript scroll to clamp at the first message")
 
-  for _ = 1, 20 do
+  for _ = 1, 200 do
     window.conversation.transcript.scrollFrame.scripts.OnMouseWheel(window.conversation.transcript.scrollFrame, -1)
   end
   assert(

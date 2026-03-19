@@ -23,6 +23,7 @@ end
 
 local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local ChatBubble = loadModule("WhisperMessenger.UI.ChatBubble", "ChatBubble")
 
 local function formatMessage(message)
   if message.kind == "system" then
@@ -117,11 +118,34 @@ function ConversationPane.RenderTranscript(transcript, messages)
     table.insert(transcript.lines, formatMessage(message))
   end
 
-  if transcript.text then
-    transcript.text:SetText(table.concat(transcript.lines, "\n"))
+  if not transcript.factory then
+    if transcript.text then
+      transcript.text:SetText(table.concat(transcript.lines, "\n"))
+    end
+    updateTranscriptLayout(transcript, true)
+    return transcript.lines
   end
 
-  updateTranscriptLayout(transcript, true)
+  -- Keep legacy text content (for accessibility / backward compat) but hide renderer
+  if transcript.text then
+    transcript.text:SetText(table.concat(transcript.lines, "\n"))
+    if transcript.text.Hide then transcript.text:Hide() end
+  end
+
+  local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
+  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, messages or {}, paneWidth)
+
+  ScrollView.RefreshMetrics(transcript, totalHeight, true)
+
+  -- Sync legacy text width with viewport for backward compat
+  if transcript.text and transcript.text.SetWidth then
+    transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth))
+  end
+
+  transcript.point = pointValue(transcript.scrollFrame, transcript.point)
+  transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", transcript.width or 0)
+  transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcript.height or 0)
+
   return transcript.lines
 end
 
@@ -373,6 +397,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", 16, -8 },
     step = TRANSCRIPT_SCROLL_STEP,
   })
+  transcript.factory = factory
   transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)

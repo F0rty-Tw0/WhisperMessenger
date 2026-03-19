@@ -52,7 +52,7 @@ function ChatBubble.ShouldGroup(prev, current)
   if not prev or not current then return false end
   if prev.direction ~= current.direction then return false end
   if prev.kind == "system" or current.kind == "system" then return false end
-  if prev.senderDisplayName ~= current.senderDisplayName then return false end
+  if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then return false end
   if math.abs((current.sentAt or 0) - (prev.sentAt or 0)) > 120 then return false end
   return true
 end
@@ -78,94 +78,129 @@ function ChatBubble.CreateBubble(factory, parent, message, options)
     pV = 4
   end
 
-  -- Resolve timestamp string
-  local timeStr = ""
-  if kind ~= "system" then
-    if ns.TimeFormat and ns.TimeFormat.MessageTime then
-      timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
-    end
-  end
-
   -- Create the outer frame
   local frame = factory.CreateFrame("Frame", nil, parent)
 
-  -- Background texture
-  local bg = frame:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(frame)
+  local CORNER_R = 8
+  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
+
+  -- Build a solid-color rounded rectangle from 9 texture regions:
+  -- center rect, 4 edge strips, 4 quarter-circle corners
+  local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
+  bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, -CORNER_R)
+  bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, CORNER_R)
+
+  local bgTop = frame:CreateTexture(nil, "BACKGROUND")
+  bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, 0)
+  bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CORNER_R, 0)
+  bgTop:SetHeight(CORNER_R)
+
+  local bgBottom = frame:CreateTexture(nil, "BACKGROUND")
+  bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", CORNER_R, 0)
+  bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, 0)
+  bgBottom:SetHeight(CORNER_R)
+
+  local bgLeft = frame:CreateTexture(nil, "BACKGROUND")
+  bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -CORNER_R)
+  bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, CORNER_R)
+  bgLeft:SetWidth(CORNER_R)
+
+  local bgRight = frame:CreateTexture(nil, "BACKGROUND")
+  bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -CORNER_R)
+  bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, CORNER_R)
+  bgRight:SetWidth(CORNER_R)
+
+  -- Quarter-circle corners (cut from a circle texture via TexCoord)
+  local function makeCorner(point, relPoint)
+    local c = frame:CreateTexture(nil, "BACKGROUND")
+    c:SetSize(CORNER_R, CORNER_R)
+    c:SetPoint(point, frame, point, 0, 0)
+    if c.SetTexture then c:SetTexture(CIRCLE_TEX) end
+    return c
+  end
+
+  local cTL = makeCorner("TOPLEFT")
+  local cTR = makeCorner("TOPRIGHT")
+  local cBL = makeCorner("BOTTOMLEFT")
+  local cBR = makeCorner("BOTTOMRIGHT")
+
+  -- Set TexCoord to select the correct quarter of the circle
+  if cTL.SetTexCoord then
+    cTL:SetTexCoord(0, 0.5, 0, 0.5)       -- top-left quarter
+    cTR:SetTexCoord(0.5, 1, 0, 0.5)       -- top-right quarter
+    cBL:SetTexCoord(0, 0.5, 0.5, 1)       -- bottom-left quarter
+    cBR:SetTexCoord(0.5, 1, 0.5, 1)       -- bottom-right quarter
+  end
+
+  local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
+  local bgCorners = { cTL, cTR, cBL, cBR }
+
+  local function applyBubbleColor(colorTable)
+    local r, g, b, a = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
+    -- Flat fill pieces: solid color rectangles
+    for _, part in ipairs(bgFills) do
+      if part.SetColorTexture then
+        part:SetColorTexture(r, g, b, a)
+      end
+    end
+    -- Corner pieces: tint the circle texture (do NOT overwrite with SetColorTexture)
+    for _, part in ipairs(bgCorners) do
+      if part.SetVertexColor then
+        part:SetVertexColor(r, g, b, a)
+      end
+    end
+  end
 
   -- Message text font string
   local textFS = frame:CreateFontString(nil, "OVERLAY")
-  local timestampFS = nil
 
   if kind == "system" then
     setFontObject(textFS, Theme.FONTS.system_text)
     setTextColor(textFS, Theme.COLORS.text_system)
-    applyColor(bg, Theme.COLORS.bg_bubble_system)
+    applyBubbleColor(Theme.COLORS.bg_bubble_system)
   elseif direction == "out" then
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, Theme.COLORS.text_sent)
-    applyColor(bg, Theme.COLORS.bg_bubble_out)
+    applyBubbleColor(Theme.COLORS.bg_bubble_out)
   else
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, Theme.COLORS.text_received)
-    applyColor(bg, Theme.COLORS.bg_bubble_in)
+    applyBubbleColor(Theme.COLORS.bg_bubble_in)
   end
 
-  -- Timestamp font string (user messages only)
-  if kind ~= "system" then
-    timestampFS = frame:CreateFontString(nil, "OVERLAY")
-    setFontObject(timestampFS, Theme.FONTS.message_time)
-    setTextColor(timestampFS, Theme.COLORS.text_timestamp)
-    if timestampFS.SetText then
-      timestampFS:SetText(timeStr)
-    end
-  end
-
-  -- Measure text width available (account for padding and, for incoming, icon space)
+  -- Measure text width available (account for padding)
   local iconLeftMargin = 48
   local rightMargin    = 12
+  local textAvailWidth = maxBubbleWidth - pH * 2
 
-  local textAvailWidth
-  if kind == "system" then
-    textAvailWidth = maxBubbleWidth - pH * 2
-  elseif direction == "in" then
-    textAvailWidth = maxBubbleWidth - pH * 2
-  else
-    textAvailWidth = maxBubbleWidth - pH * 2
-  end
-
-  -- Measure text height
+  -- Measure text at max width first (for proper wrapping / height calc)
   local textHeight = measureTextHeight(textFS, message.text, textAvailWidth)
 
-  -- Measure timestamp height/width
-  local tsHeight = 0
-  local tsWidth  = 0
-  if timestampFS then
-    timestampFS:SetText(timeStr)
-    if timestampFS.GetStringWidth then
-      tsWidth = timestampFS:GetStringWidth() or 0
+  -- Shrink bubble to fit text when possible
+  local textColumnWidth = textAvailWidth
+  if type(textFS.GetStringWidth) == "function" then
+    local rawWidth = textFS:GetStringWidth() or 0
+    if rawWidth > 0 then
+      textColumnWidth = math.min(rawWidth, textAvailWidth)
     end
-    if timestampFS.GetStringHeight then
-      tsHeight = timestampFS:GetStringHeight() or 12
-    end
-    if tsHeight == 0 then tsHeight = 12 end
   end
 
-  -- Calculate bubble dimensions
-  local bubbleInnerWidth  = textAvailWidth
-  local bubbleInnerHeight = textHeight + (tsHeight > 0 and (tsHeight + Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP) or 0)
+  -- Re-measure height at the actual column width (may differ if narrower)
+  if textColumnWidth < textAvailWidth then
+    textHeight = measureTextHeight(textFS, message.text, textColumnWidth)
+  end
+
+  -- Calculate bubble dimensions (no timestamp inside bubble)
+  local bubbleInnerWidth  = textColumnWidth
+  local bubbleInnerHeight = textHeight
   local bubbleWidth       = bubbleInnerWidth + pH * 2
   local bubbleHeight      = bubbleInnerHeight + pV * 2
 
-  -- Position text inside bubble
-  textFS:SetWidth(textAvailWidth)
+  -- Position text inside bubble (left-aligned)
+  textFS:SetWidth(textColumnWidth)
+  textFS:SetJustifyH("LEFT")
   textFS:SetText(message.text or "")
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
-
-  -- Position timestamp at bottom-right inside bubble
-  if timestampFS then
-    timestampFS:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -pH, pV)
-  end
 
   -- Size the frame
   frame:SetSize(bubbleWidth, bubbleHeight)
@@ -181,16 +216,31 @@ function ChatBubble.CreateBubble(factory, parent, message, options)
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", leftOffset, 0)
   end
 
-  -- Class icon for incoming user messages
+  -- Class icon for user messages (both sent and received)
   local icon = nil
-  if direction == "in" and kind == "user" and showIcon then
+  if kind == "user" and showIcon then
     icon = frame:CreateTexture(nil, "OVERLAY")
     icon:SetSize(Theme.LAYOUT.BUBBLE_ICON_SIZE, Theme.LAYOUT.BUBBLE_ICON_SIZE)
-    -- Position at left edge of parent, vertically centered with bubble
-    icon:SetPoint("RIGHT", frame, "LEFT", -(iconLeftMargin - Theme.LAYOUT.BUBBLE_ICON_SIZE) / 2 - Theme.LAYOUT.BUBBLE_ICON_SIZE / 2, 0)
-    local iconPath = Theme.ClassIcon(message.senderClassTag)
-    if not iconPath then
-      iconPath = Theme.TEXTURES.bnet_icon
+    if direction == "in" then
+      icon:SetPoint("TOPRIGHT", frame, "TOPLEFT", -8, 0)
+    else
+      icon:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
+    end
+    local iconPath
+    if direction == "out" then
+      -- Player's own class icon
+      if type(_G.UnitClass) == "function" then
+        local _, classTag = _G.UnitClass("player")
+        iconPath = Theme.ClassIcon(classTag)
+      end
+      if not iconPath then
+        iconPath = "Interface\\CHATFRAME\\UI-ChatIcon-ArmoryChat"
+      end
+    else
+      iconPath = Theme.ClassIcon(message.classTag or message.senderClassTag)
+      if not iconPath then
+        iconPath = Theme.TEXTURES.bnet_icon
+      end
     end
     if icon.SetTexture then
       icon:SetTexture(iconPath)
@@ -202,9 +252,9 @@ function ChatBubble.CreateBubble(factory, parent, message, options)
 
   return {
     frame     = frame,
-    bg        = bg,
+    bgFills   = bgFills,
+    bgCorners = bgCorners,
     text      = textFS,
-    timestamp = timestampFS,
     icon      = icon,
     kind      = kind,
     direction = direction,
@@ -318,8 +368,44 @@ function ChatBubble.LayoutMessages(factory, contentFrame, messages, paneWidth)
 
     yOffset = yOffset + spacing
 
-    -- Show icon only on first of a group (incoming user messages)
-    local showIcon = (not grouped) and (message.direction == "in") and (message.kind ~= "system")
+    -- Show icon on first of a group (both directions)
+    local showIcon = (not grouped) and (message.kind ~= "system")
+
+    -- Sender name + timestamp label above first bubble in a group
+    if showIcon then
+      local nameFrame = factory.CreateFrame("Frame", nil, contentFrame)
+      nameFrame:SetSize(paneWidth, 16)
+      nameFrame:ClearAllPoints()
+
+      local nameFS = nameFrame:CreateFontString(nil, "OVERLAY")
+      setFontObject(nameFS, Theme.FONTS.message_time)
+      setTextColor(nameFS, Theme.COLORS.text_secondary)
+
+      -- Timestamp next to sender name
+      local timeStr = ""
+      if ns.TimeFormat and ns.TimeFormat.MessageTime then
+        timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
+      end
+      local timeFS = nameFrame:CreateFontString(nil, "OVERLAY")
+      setFontObject(timeFS, Theme.FONTS.message_time)
+      setTextColor(timeFS, Theme.COLORS.text_timestamp)
+      timeFS:SetText(timeStr)
+
+      if message.direction == "out" then
+        nameFS:SetText("You")
+        nameFS:SetPoint("RIGHT", nameFrame, "RIGHT", -48, 0)
+        timeFS:SetPoint("RIGHT", nameFS, "LEFT", -6, 0)
+        nameFrame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
+      else
+        local displayName = message.playerName or message.senderDisplayName or ""
+        nameFS:SetText(displayName)
+        nameFS:SetPoint("LEFT", nameFrame, "LEFT", 48, 0)
+        timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
+        nameFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+      end
+      table.insert(pool, nameFrame)
+      yOffset = yOffset + 18
+    end
 
     local bubble = ChatBubble.CreateBubble(factory, contentFrame, message, {
       paneWidth = paneWidth,
@@ -332,7 +418,7 @@ function ChatBubble.LayoutMessages(factory, contentFrame, messages, paneWidth)
     if message.kind == "system" then
       bubble.frame:SetPoint("TOP", contentFrame, "TOPLEFT", paneWidth / 2, -yOffset)
     elseif message.direction == "out" then
-      bubble.frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -12, -yOffset)
+      bubble.frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -48, -yOffset)
     else
       bubble.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 48, -yOffset)
     end

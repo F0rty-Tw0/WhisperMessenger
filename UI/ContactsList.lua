@@ -54,9 +54,12 @@ end
 
 function ContactsList.BuildItemsForProfile(savedState, localProfileId)
   local items = {}
+  local profilePrefix = localProfileId .. "::"
+  local bnetPrefix = "bnet::"
 
   for conversationKey, conversation in pairs(savedState.conversations or {}) do
-    if string.find(conversationKey, localProfileId .. "::", 1, true) == 1 then
+    if string.find(conversationKey, profilePrefix, 1, true) == 1
+        or string.find(conversationKey, bnetPrefix, 1, true) == 1 then
       table.insert(items, buildItem(conversationKey, conversation))
     end
   end
@@ -170,15 +173,22 @@ local function bindRow(factory, parent, row, index, item, options)
   else
     row.classIcon:SetTexture(Theme.TEXTURES.bnet_icon)
   end
+  if row.classIcon.SetMask then
+    row.classIcon:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+  end
 
   -- Status dot (10x10, bottom-right of class icon)
   if row.statusDot == nil then
     row.statusDot = row:CreateTexture(nil, "OVERLAY")
     row.statusDot:SetSize(Theme.LAYOUT.CONTACT_STATUS_SIZE, Theme.LAYOUT.CONTACT_STATUS_SIZE)
     row.statusDot:SetPoint("BOTTOMRIGHT", row.classIcon, "BOTTOMRIGHT", 2, -2)
-    row.statusDot:SetTexture("Interface\\COMMON\\Indicator-Gray")
     local oc = Theme.COLORS.online
-    row.statusDot:SetVertexColor(oc[1], oc[2], oc[3], oc[4])
+    if row.statusDot.SetColorTexture then
+      row.statusDot:SetColorTexture(oc[1], oc[2], oc[3], oc[4])
+    end
+    if row.statusDot.SetMask then
+      row.statusDot:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    end
   end
 
   -- Contact name (top line, class-colored)
@@ -243,6 +253,9 @@ local function bindRow(factory, parent, row, index, item, options)
     row.unreadBadge.bg:SetAllPoints()
     local ub = Theme.COLORS.unread_badge
     row.unreadBadge.bg:SetColorTexture(ub[1], ub[2], ub[3], ub[4])
+    if row.unreadBadge.bg.SetMask then
+      row.unreadBadge.bg:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    end
 
     row.unreadBadge.label = row.unreadBadge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
     row.unreadBadge.label:SetAllPoints()

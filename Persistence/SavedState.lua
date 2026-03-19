@@ -121,6 +121,50 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
 
   migrateLegacyCurrentProfile(account, character, localProfileId)
 
+  -- Migrate old per-character BNet conversation keys to shared "bnet::" prefix
+  local bnetMigrations = {}
+  for conversationKey, conversation in pairs(account.conversations or {}) do
+    -- Match keys like "profileId::BN::accountId" that aren't already "bnet::BN::..."
+    local bnPos = string.find(conversationKey, "::BN::", 1, true)
+    if bnPos and string.find(conversationKey, "bnet::", 1, true) ~= 1 then
+      local newKey = "bnet" .. string.sub(conversationKey, bnPos)
+      bnetMigrations[conversationKey] = { newKey = newKey, conversation = conversation }
+    end
+  end
+
+  for oldKey, entry in pairs(bnetMigrations) do
+    local existing = account.conversations[entry.newKey]
+    if existing then
+      -- Merge: keep the one with more recent activity
+      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
+        -- Merge messages from existing into the newer conversation
+        for _, msg in ipairs(existing.messages or {}) do
+          table.insert(entry.conversation.messages, msg)
+        end
+        account.conversations[entry.newKey] = entry.conversation
+      else
+        -- Merge messages from old into the existing conversation
+        for _, msg in ipairs(entry.conversation.messages or {}) do
+          table.insert(existing.messages, msg)
+        end
+      end
+    else
+      account.conversations[entry.newKey] = entry.conversation
+    end
+    account.conversations[oldKey] = nil
+  end
+
+  -- Update active conversation key if it was a BNet key
+  if character.activeConversationKey then
+    local bnPos = string.find(character.activeConversationKey, "::BN::", 1, true)
+    if bnPos and string.find(character.activeConversationKey, "bnet::", 1, true) ~= 1 then
+      local newActiveKey = "bnet" .. string.sub(character.activeConversationKey, bnPos)
+      if account.conversations[newActiveKey] then
+        character.activeConversationKey = newActiveKey
+      end
+    end
+  end
+
   return account, character
 end
 

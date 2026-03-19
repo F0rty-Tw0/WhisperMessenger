@@ -114,6 +114,10 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo)
 end
 
 function Identity.BuildConversationKey(localProfileId, contactKey)
+  -- BNet conversations are account-wide, use a shared prefix
+  if type(contactKey) == "string" and string.find(contactKey, "BN::", 1, true) == 1 then
+    return "bnet::" .. contactKey
+  end
   return localProfileId .. "::" .. contactKey
 end
 

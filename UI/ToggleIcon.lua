@@ -40,13 +40,16 @@ function ToggleIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- Circular icon background
+  -- Circular icon background (solid color + circular mask)
+  local CIRCLE_MASK = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
-  background:SetTexture("Interface\\COMMON\\Indicator-Gray")
-  if background.SetVertexColor then
-    local c = Theme.COLORS.icon_bg
-    background:SetVertexColor(c[1], c[2], c[3], c[4])
+  local c = Theme.COLORS.icon_bg
+  if background.SetColorTexture then
+    background:SetColorTexture(c[1], c[2], c[3], c[4])
+  end
+  if background.SetMask then
+    background:SetMask(CIRCLE_MASK)
   end
 
   -- Circular border ring
@@ -55,8 +58,8 @@ function ToggleIcon.Create(factory, options)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
   border:SetTexture("Interface\\COMMON\\RingBorder")
   if border.SetVertexColor then
-    local c = Theme.COLORS.accent
-    border:SetVertexColor(c[1], c[2], c[3], 0.3)
+    local bc = Theme.COLORS.accent
+    border:SetVertexColor(bc[1], bc[2], bc[3], 0.3)
   end
 
   -- Label
@@ -71,10 +74,12 @@ function ToggleIcon.Create(factory, options)
 
   local badgeBackground = badge:CreateTexture(nil, "BACKGROUND")
   badgeBackground:SetAllPoints(badge)
-  badgeBackground:SetTexture("Interface\\COMMON\\Indicator-Gray")
-  if badgeBackground.SetVertexColor then
-    local c = Theme.COLORS.badge_bg
-    badgeBackground:SetVertexColor(c[1], c[2], c[3], c[4])
+  local bgc = Theme.COLORS.badge_bg
+  if badgeBackground.SetColorTexture then
+    badgeBackground:SetColorTexture(bgc[1], bgc[2], bgc[3], bgc[4])
+  end
+  if badgeBackground.SetMask then
+    badgeBackground:SetMask(CIRCLE_MASK)
   end
 
   local badgeLabel = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
@@ -87,9 +92,12 @@ function ToggleIcon.Create(factory, options)
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      if background.SetVertexColor then
-        local c = Theme.COLORS.send_button_hover
-        background:SetVertexColor(c[1], c[2], c[3], c[4])
+      if background.SetColorTexture then
+        local hc = Theme.COLORS.send_button_hover
+        background:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
+        if background.SetMask then
+          background:SetMask(CIRCLE_MASK)
+        end
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -103,9 +111,12 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      if background.SetVertexColor then
-        local c = Theme.COLORS.icon_bg
-        background:SetVertexColor(c[1], c[2], c[3], c[4])
+      if background.SetColorTexture then
+        local lc = Theme.COLORS.icon_bg
+        background:SetColorTexture(lc[1], lc[2], lc[3], lc[4])
+        if background.SetMask then
+          background:SetMask(CIRCLE_MASK)
+        end
       end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
