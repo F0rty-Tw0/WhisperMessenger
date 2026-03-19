@@ -14,7 +14,37 @@ return function()
   _G.SLASH_WHISPERMESSENGER2 = nil
 
   local runtime = Bootstrap.Initialize(factory, {
-    accountState = nil,
+    accountState = {
+      schemaVersion = 1,
+      conversations = {
+        ["me::WOW::arthas-area52"] = {
+          displayName = "Arthas-Area52",
+          unreadCount = 2,
+          lastPreview = "Need help?",
+          lastActivityAt = 20,
+          channel = "WOW",
+          messages = {},
+        },
+        ["me::WOW::jaina-proudmoore"] = {
+          displayName = "Jaina-Proudmoore",
+          unreadCount = 3,
+          lastPreview = "On my way.",
+          lastActivityAt = 10,
+          channel = "WOW",
+          messages = {},
+        },
+        ["alt::WOW::thrall-draenor"] = {
+          displayName = "Thrall-Draenor",
+          unreadCount = 9,
+          lastPreview = "Lok'tar.",
+          lastActivityAt = 30,
+          channel = "WOW",
+          messages = {},
+        },
+      },
+      contacts = {},
+      pendingHydration = {},
+    },
     characterState = {
       window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
       icon = {
@@ -33,6 +63,10 @@ return function()
   assert(runtime.icon.frame.point[4] == 25)
   assert(runtime.icon.frame.point[5] == -40)
   assert(runtime.window.frame.shown == false)
+  assert(runtime.icon.badge ~= nil)
+  assert(runtime.icon.badgeLabel.text == "5")
+  assert(runtime.icon.badge.shown == true)
+
 
   assert(type(runtime.icon.frame.scripts.OnClick) == "function")
   runtime.icon.frame.scripts.OnClick(runtime.icon.frame)
@@ -52,6 +86,12 @@ return function()
   assert(runtime.characterState.icon.relativePoint == "BOTTOMLEFT")
   assert(runtime.characterState.icon.x == 75)
   assert(runtime.characterState.icon.y == 90)
+
+  runtime.accountState.conversations["me::WOW::arthas-area52"].unreadCount = 0
+  runtime.accountState.conversations["me::WOW::jaina-proudmoore"].unreadCount = 0
+  runtime.refreshWindow()
+  assert(runtime.icon.badgeLabel.text == "")
+  assert(runtime.icon.badge.shown == false)
 
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList

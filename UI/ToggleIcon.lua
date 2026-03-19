@@ -38,6 +38,23 @@ function ToggleIcon.Create(factory, options)
   label:SetPoint("CENTER", frame, "CENTER", 0, 0)
   label:SetText("WM")
 
+  local badge = factory.CreateFrame("Frame", nil, frame)
+  badge:SetSize(18, 18)
+  badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 5, 5)
+
+  local badgeBackground = badge:CreateTexture(nil, "BACKGROUND")
+  badgeBackground:SetAllPoints(badge)
+  if badgeBackground.SetColorTexture then
+    badgeBackground:SetColorTexture(0.82, 0.18, 0.22, 0.95)
+  end
+
+  local badgeLabel = badge:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  badgeLabel:SetPoint("CENTER", badge, "CENTER", 0, 0)
+  badgeLabel:SetText("")
+  if badge.Hide then
+    badge:Hide()
+  end
+
   if frame.SetScript then
     frame:SetScript("OnClick", function()
       trace("icon click")
@@ -77,12 +94,38 @@ function ToggleIcon.Create(factory, options)
     end)
   end
 
+  local function setUnreadCount(count)
+    local unreadCount = tonumber(count) or 0
+    local text = ""
+    if unreadCount > 0 then
+      text = unreadCount > 99 and "99+" or tostring(unreadCount)
+    end
+
+    badgeLabel:SetText(text)
+    if text == "" then
+      if badge.Hide then
+        badge:Hide()
+      end
+      return
+    end
+
+    if badge.Show then
+      badge:Show()
+    end
+  end
+
+  setUnreadCount(options.unreadCount)
+
   trace("icon created", anchorPoint, x, y)
 
   return {
     frame = frame,
     background = background,
     label = label,
+    badge = badge,
+    badgeBackground = badgeBackground,
+    badgeLabel = badgeLabel,
+    setUnreadCount = setUnreadCount,
   }
 end
 

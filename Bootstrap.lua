@@ -153,6 +153,15 @@ local function buildContacts(runtime)
   return ContactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
 end
 
+local function sumUnreadCount(contacts)
+  local total = 0
+  for _, item in ipairs(contacts or {}) do
+    total = total + (item.unreadCount or 0)
+  end
+
+  return total
+end
+
 local function findContactByConversationKey(contacts, conversationKey)
   for _, item in ipairs(contacts or {}) do
     if item.conversationKey == conversationKey then
@@ -281,9 +290,14 @@ function Bootstrap.Initialize(factory, options)
   end
 
   local function refreshWindow()
-    local nextState = buildWindowSelectionState(runtime, buildContacts(runtime))
+    local contacts = buildContacts(runtime)
+    local nextState = buildWindowSelectionState(runtime, contacts)
     if window and window.refreshSelection then
       window.refreshSelection(nextState)
+    end
+
+    if icon and icon.setUnreadCount then
+      icon.setUnreadCount(sumUnreadCount(contacts))
     end
 
     return nextState

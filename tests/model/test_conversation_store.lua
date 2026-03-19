@@ -22,6 +22,16 @@ return function()
   })
 
   Store.AppendIncoming(state, "me::WOW::arthas-area52", {
+    id = "echo-2",
+    direction = "out",
+    kind = "user",
+    text = "hello",
+    sentAt = 2,
+  }, false)
+
+  assert(state.conversations["me::WOW::arthas-area52"].unreadCount == 1)
+
+  Store.AppendIncoming(state, "me::WOW::arthas-area52", {
     id = "3",
     direction = "in",
     kind = "user",
@@ -40,7 +50,7 @@ return function()
   local conversation = state.conversations["me::WOW::arthas-area52"]
   assert(conversation.unreadCount == 2)
   assert(#conversation.messages == 3)
-  assert(conversation.messages[1].id == "2")
+  assert(conversation.messages[1].id == "echo-2")
   assert(conversation.lastPreview == "ping")
   assert(conversation.lastActivityAt == 4)
 

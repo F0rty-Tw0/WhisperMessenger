@@ -50,13 +50,17 @@ local function applyMessageMetadata(conversation, message)
   conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName
 end
 
+local function shouldIncrementUnread(message)
+  return message ~= nil and message.kind == "user" and message.direction == "in"
+end
+
 function Store.AppendIncoming(state, key, message, isActive)
   local conversation = ensureConversation(state, key)
   table.insert(conversation.messages, message)
   applyRetention(state, conversation)
   applyMessageMetadata(conversation, message)
 
-  if not isActive and message.kind == "user" then
+  if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
   end
 end
