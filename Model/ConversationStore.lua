@@ -28,6 +28,9 @@ local function ensureConversation(state, key)
     unreadCount = 0,
     lastPreview = nil,
     lastActivityAt = 0,
+    guid = nil,
+    bnetAccountID = nil,
+    gameAccountName = nil,
   }
 
   return state.conversations[key]
@@ -37,14 +40,21 @@ local function applyRetention(state, conversation)
   Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
 end
 
-function Store.AppendIncoming(state, key, message, isActive)
-  local conversation = ensureConversation(state, key)
-  table.insert(conversation.messages, message)
-  applyRetention(state, conversation)
+local function applyMessageMetadata(conversation, message)
   conversation.lastPreview = message.text
   conversation.lastActivityAt = message.sentAt
   conversation.displayName = message.playerName or conversation.displayName
   conversation.channel = message.channel or conversation.channel or "WOW"
+  conversation.guid = message.guid or conversation.guid
+  conversation.bnetAccountID = message.bnetAccountID or conversation.bnetAccountID
+  conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName
+end
+
+function Store.AppendIncoming(state, key, message, isActive)
+  local conversation = ensureConversation(state, key)
+  table.insert(conversation.messages, message)
+  applyRetention(state, conversation)
+  applyMessageMetadata(conversation, message)
 
   if not isActive and message.kind == "user" then
     conversation.unreadCount = conversation.unreadCount + 1
@@ -55,10 +65,7 @@ function Store.AppendOutgoing(state, key, message)
   local conversation = ensureConversation(state, key)
   table.insert(conversation.messages, message)
   applyRetention(state, conversation)
-  conversation.lastPreview = message.text
-  conversation.lastActivityAt = message.sentAt
-  conversation.displayName = message.playerName or conversation.displayName
-  conversation.channel = message.channel or conversation.channel or "WOW"
+  applyMessageMetadata(conversation, message)
 end
 
 function Store.MarkRead(state, key)
