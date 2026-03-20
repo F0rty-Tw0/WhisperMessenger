@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -96,7 +98,9 @@ local function bindRow(factory, parent, row, index, item, options)
   local avail = item.availability
   if avail then
     local colorKey = avail.canWhisper and "online" or "offline"
-    if avail.status == "WrongFaction" then colorKey = "dnd" end
+    if avail.status == "WrongFaction" then
+      colorKey = "dnd"
+    end
     local sc = Theme.COLORS[colorKey]
     if sc and row.statusDot.SetColorTexture then
       row.statusDot:SetColorTexture(sc[1], sc[2], sc[3], sc[4])
@@ -129,7 +133,9 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   -- Only show faction icon when race is unambiguously Alliance or Horde
   -- (stored factionName can be stale from BNet API for offline contacts)
-  local inferredFaction = item.raceTag and (ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag)) or nil
+  local inferredFaction = item.raceTag
+      and (ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag))
+    or nil
   local factionForIcon = inferredFaction or item.factionName
   local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
   if reliableFaction then

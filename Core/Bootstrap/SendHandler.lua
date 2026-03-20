@@ -1,18 +1,29 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
-
-local Loader = ns.Loader or (type(require) == "function" and (function()
-  local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
-  return ok and L or nil
-end)())
-local loadModule = Loader and Loader.LoadModule or function(name, key)
-  if ns[key] then return ns[key] end
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, name)
-    if ok then return loaded end
-  end
-  error(key .. " module not available")
+if type(ns) ~= "table" then
+  ns = {}
 end
+
+local Loader = ns.Loader
+  or (
+    type(require) == "function"
+    and (function()
+      local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
+      return ok and L or nil
+    end)()
+  )
+local loadModule = Loader and Loader.LoadModule
+  or function(name, key)
+    if ns[key] then
+      return ns[key]
+    end
+    if type(require) == "function" then
+      local ok, loaded = pcall(require, name)
+      if ok then
+        return loaded
+      end
+    end
+    error(key .. " module not available")
+  end
 
 local SendHandler = {}
 
@@ -43,12 +54,12 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   end
 
   local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text)
-  local callOk = false
-  local sendOk = true
+  local callOk, sendOk
   if payload.channel == "BN" then
     callOk, sendOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
   else
     callOk = pcall(Gateway.SendCharacterWhisper, runtime.chatApi, payload.target, payload.text)
+    sendOk = true
   end
 
   if not callOk or sendOk == false then

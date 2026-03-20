@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local DataBuilder = {}
 
@@ -48,9 +50,11 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
   local wowPrefix = "wow::"
 
   for conversationKey, conversation in pairs(savedState.conversations or {}) do
-    if string.find(conversationKey, profilePrefix, 1, true) == 1
-        or string.find(conversationKey, bnetPrefix, 1, true) == 1
-        or string.find(conversationKey, wowPrefix, 1, true) == 1 then
+    if
+      string.find(conversationKey, profilePrefix, 1, true) == 1
+      or string.find(conversationKey, bnetPrefix, 1, true) == 1
+      or string.find(conversationKey, wowPrefix, 1, true) == 1
+    then
       table.insert(items, buildItem(conversationKey, conversation))
     end
   end

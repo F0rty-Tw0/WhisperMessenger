@@ -22,7 +22,9 @@ return function()
 
   -- ResolveAccountInfo with error
   local errorApi = {
-    GetAccountInfoByID = function() error("api error") end,
+    GetAccountInfoByID = function()
+      error("api error")
+    end,
   }
   assert(BNetResolver.ResolveAccountInfo(errorApi, 42) == nil, "error should return nil")
 
@@ -40,7 +42,9 @@ return function()
   assert(BNetResolver.ResolvePlayerInfo(mockPlayerInfo, nil) == nil, "nil guid should return nil")
 
   -- ResolvePlayerInfo with all nil results
-  local nilPlayerInfo = function(guid) return nil, nil, nil, nil end
+  local nilPlayerInfo = function(guid)
+    return nil, nil, nil, nil
+  end
   assert(BNetResolver.ResolvePlayerInfo(nilPlayerInfo, "guid") == nil, "all-nil should return nil")
 
   -- NormalizeAvailabilityStatus

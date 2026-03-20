@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -11,7 +13,8 @@ local unpackValues = TableUtils.unpackValues
 local clamp = TableUtils.clamp
 
 local Metrics = ns.ScrollViewMetrics or loadModule("WhisperMessenger.UI.ScrollView.Metrics", "ScrollViewMetrics")
-local Navigation = ns.ScrollViewNavigation or loadModule("WhisperMessenger.UI.ScrollView.Navigation", "ScrollViewNavigation")
+local Navigation = ns.ScrollViewNavigation
+  or loadModule("WhisperMessenger.UI.ScrollView.Navigation", "ScrollViewNavigation")
 
 local SCROLLBAR_WIDTH = Metrics.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = Metrics.SCROLLBAR_INSET

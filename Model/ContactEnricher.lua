@@ -103,7 +103,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
 
   -- Enrich selected contact with live BNet metadata for display
   if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
-    local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
+    local accountInfo =
+      BNetResolver.ResolveAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
     if accountInfo then
       local gameInfo = accountInfo.gameAccountInfo
       if gameInfo then

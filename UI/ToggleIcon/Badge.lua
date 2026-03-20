@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
@@ -25,7 +27,9 @@ function Badge.Create(factory, parentFrame)
   local badgeLabel = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
   badgeLabel:SetPoint("CENTER", badge, "CENTER", 0, 0)
   badgeLabel:SetText("")
-  if badge.Hide then badge:Hide() end
+  if badge.Hide then
+    badge:Hide()
+  end
 
   local function setUnreadCount(count)
     local unreadCount = tonumber(count) or 0
@@ -35,10 +39,14 @@ function Badge.Create(factory, parentFrame)
     end
     badgeLabel:SetText(text)
     if text == "" then
-      if badge.Hide then badge:Hide() end
+      if badge.Hide then
+        badge:Hide()
+      end
       return
     end
-    if badge.Show then badge:Show() end
+    if badge.Show then
+      badge:Show()
+    end
   end
 
   return {

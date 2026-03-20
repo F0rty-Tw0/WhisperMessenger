@@ -1,18 +1,29 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
-
-local Loader = ns.Loader or (type(require) == "function" and (function()
-  local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
-  return ok and L or nil
-end)())
-local loadModule = Loader and Loader.LoadModule or function(name, key)
-  if ns[key] then return ns[key] end
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, name)
-    if ok then return loaded end
-  end
-  error(key .. " module not available")
+if type(ns) ~= "table" then
+  ns = {}
 end
+
+local Loader = ns.Loader
+  or (
+    type(require) == "function"
+    and (function()
+      local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
+      return ok and L or nil
+    end)()
+  )
+local loadModule = Loader and Loader.LoadModule
+  or function(name, key)
+    if ns[key] then
+      return ns[key]
+    end
+    if type(require) == "function" then
+      local ok, loaded = pcall(require, name)
+      if ok then
+        return loaded
+      end
+    end
+    error(key .. " module not available")
+  end
 
 local EventBridge = {}
 
@@ -27,7 +38,11 @@ local function buildLivePayload(runtime, eventName, ...)
     }
   end
 
-  if eventName == "CHAT_MSG_BN_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE" then
+  if
+    eventName == "CHAT_MSG_BN_WHISPER"
+    or eventName == "CHAT_MSG_BN_WHISPER_INFORM"
+    or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE"
+  then
     local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, bnetAccountID = ...
     return {
       text = text,
@@ -36,7 +51,11 @@ local function buildLivePayload(runtime, eventName, ...)
       guid = guid,
       channel = "BN",
       bnetAccountID = bnetAccountID,
-      accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid),
+      accountInfo = BNetResolver.ResolveAccountInfo(
+        runtime and runtime.bnetApi or _G.C_BattleNet or {},
+        bnetAccountID,
+        guid
+      ),
     }
   end
 
@@ -58,10 +77,14 @@ function EventBridge.RegisterLiveEvents(frame)
 end
 
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
-  if runtime == nil then return nil end
+  if runtime == nil then
+    return nil
+  end
   local Router = loadModule("WhisperMessenger.Core.EventRouter", "EventRouter")
   local result = Router.HandleEvent(runtime, eventName, buildLivePayload(runtime, eventName, ...))
-  if refreshWindow then refreshWindow() end
+  if refreshWindow then
+    refreshWindow()
+  end
   return result
 end
 

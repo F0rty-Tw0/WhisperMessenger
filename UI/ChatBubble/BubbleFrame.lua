@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -18,10 +20,10 @@ local BubbleFrame = {}
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
   options = options or {}
-  local paneWidth   = options.paneWidth or 400
-  local showIcon    = options.showIcon
-  local kind        = message.kind or "user"
-  local direction   = message.direction or "in"
+  local paneWidth = options.paneWidth or 400
+  local showIcon = options.showIcon
+  local kind = message.kind or "user"
+  local direction = message.direction or "in"
 
   local pH = Theme.LAYOUT.BUBBLE_PADDING_H
   local pV = Theme.LAYOUT.BUBBLE_PADDING_V
@@ -42,7 +44,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     frame:SetHyperlinksEnabled(true)
   end
   if frame.SetScript then
-    frame:SetScript("OnHyperlinkEnter", function(self, link, text)
+    frame:SetScript("OnHyperlinkEnter", function(self, link, _text)
       if type(_G.GameTooltip) == "table" and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
         _G.GameTooltip:SetHyperlink(link)
@@ -91,11 +93,13 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   bgRight:SetWidth(CORNER_R)
 
   -- Quarter-circle corners (cut from a circle texture via TexCoord)
-  local function makeCorner(point, relPoint)
+  local function makeCorner(point, _relPoint)
     local c = frame:CreateTexture(nil, "BACKGROUND")
     c:SetSize(CORNER_R, CORNER_R)
     c:SetPoint(point, frame, point, 0, 0)
-    if c.SetTexture then c:SetTexture(CIRCLE_TEX) end
+    if c.SetTexture then
+      c:SetTexture(CIRCLE_TEX)
+    end
     return c
   end
 
@@ -106,10 +110,10 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   -- Set TexCoord to select the correct quarter of the circle
   if cTL.SetTexCoord then
-    cTL:SetTexCoord(0, 0.5, 0, 0.5)       -- top-left quarter
-    cTR:SetTexCoord(0.5, 1, 0, 0.5)       -- top-right quarter
-    cBL:SetTexCoord(0, 0.5, 0.5, 1)       -- bottom-left quarter
-    cBR:SetTexCoord(0.5, 1, 0.5, 1)       -- bottom-right quarter
+    cTL:SetTexCoord(0, 0.5, 0, 0.5) -- top-left quarter
+    cTR:SetTexCoord(0.5, 1, 0, 0.5) -- top-right quarter
+    cBL:SetTexCoord(0, 0.5, 0.5, 1) -- bottom-left quarter
+    cBR:SetTexCoord(0.5, 1, 0.5, 1) -- bottom-right quarter
   end
 
   local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
@@ -150,7 +154,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   -- Measure text width available (account for padding)
   local iconLeftMargin = 48
-  local rightMargin    = 12
+  local rightMargin = 12
   local textAvailWidth = maxBubbleWidth - pH * 2
 
   -- Measure text at max width first (for proper wrapping / height calc)
@@ -171,10 +175,10 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   end
 
   -- Calculate bubble dimensions (no timestamp inside bubble)
-  local bubbleInnerWidth  = textColumnWidth
+  local bubbleInnerWidth = textColumnWidth
   local bubbleInnerHeight = textHeight
-  local bubbleWidth       = bubbleInnerWidth + pH * 2
-  local bubbleHeight      = bubbleInnerHeight + pV * 2
+  local bubbleWidth = bubbleInnerWidth + pH * 2
+  local bubbleHeight = bubbleInnerHeight + pV * 2
 
   -- Position text inside bubble (left-aligned)
   textFS:SetWidth(textColumnWidth)
@@ -231,14 +235,14 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local totalHeight = bubbleHeight
 
   return {
-    frame     = frame,
-    bgFills   = bgFills,
+    frame = frame,
+    bgFills = bgFills,
     bgCorners = bgCorners,
-    text      = textFS,
-    icon      = icon,
-    kind      = kind,
+    text = textFS,
+    icon = icon,
+    kind = kind,
     direction = direction,
-    height    = totalHeight,
+    height = totalHeight,
   }
 end
 

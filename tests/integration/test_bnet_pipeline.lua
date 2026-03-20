@@ -114,7 +114,27 @@ return function()
   assert(eventFrame.events.CHAT_MSG_BN_WHISPER_INFORM == true)
   assert(eventFrame.events.CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE == true)
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_BN_WHISPER", "hello from bn", "|Kq1|k", nil, nil, nil, nil, nil, nil, nil, nil, 301, nil, 99, false, false, false, false)
+  eventFrame.scripts.OnEvent(
+    eventFrame,
+    "CHAT_MSG_BN_WHISPER",
+    "hello from bn",
+    "|Kq1|k",
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    301,
+    nil,
+    99,
+    false,
+    false,
+    false,
+    false
+  )
 
   local conversationKey = "bnet::BN::99"
   local conversation = runtime.store.conversations[conversationKey]
@@ -142,11 +162,51 @@ return function()
   assert(sendCalls[1].bnetAccountID == 99)
   assert(sendCalls[1].text == "reply over bn")
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_BN_WHISPER_INFORM", "reply over bn", "|Kq1|k", nil, nil, nil, nil, nil, nil, nil, nil, 302, nil, 99, false, false, false, false)
+  eventFrame.scripts.OnEvent(
+    eventFrame,
+    "CHAT_MSG_BN_WHISPER_INFORM",
+    "reply over bn",
+    "|Kq1|k",
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    302,
+    nil,
+    99,
+    false,
+    false,
+    false,
+    false
+  )
   assert(#conversation.messages == 2)
   assert(conversation.messages[2].direction == "out")
 
-  eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE", "Friend is offline", "|Kq1|k", nil, nil, nil, nil, nil, nil, nil, nil, 303, nil, 99, false, false, false, false)
+  eventFrame.scripts.OnEvent(
+    eventFrame,
+    "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
+    "Friend is offline",
+    "|Kq1|k",
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    nil,
+    303,
+    nil,
+    99,
+    false,
+    false,
+    false,
+    false
+  )
   assert(#conversation.messages == 3)
   assert(conversation.messages[3].kind == "system")
 

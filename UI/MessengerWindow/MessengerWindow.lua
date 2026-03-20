@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -7,10 +9,12 @@ local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local ConversationPane = loadModule("WhisperMessenger.UI.ConversationPane", "ConversationPane")
 local Composer = loadModule("WhisperMessenger.UI.Composer", "Composer")
-local AlphaController = loadModule("WhisperMessenger.UI.MessengerWindow.AlphaController", "MessengerWindowAlphaController")
+local AlphaController =
+  loadModule("WhisperMessenger.UI.MessengerWindow.AlphaController", "MessengerWindowAlphaController")
 local ChromeBuilder = loadModule("WhisperMessenger.UI.MessengerWindow.ChromeBuilder", "MessengerWindowChromeBuilder")
 local LayoutBuilder = loadModule("WhisperMessenger.UI.MessengerWindow.LayoutBuilder", "MessengerWindowLayoutBuilder")
-local ContactsController = loadModule("WhisperMessenger.UI.MessengerWindow.ContactsController", "MessengerWindowContactsController")
+local ContactsController =
+  loadModule("WhisperMessenger.UI.MessengerWindow.ContactsController", "MessengerWindowContactsController")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
@@ -99,22 +103,22 @@ function MessengerWindow.Create(factory, options)
 
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, {})
-  local contactsPane    = layout.contactsPane
+  local contactsPane = layout.contactsPane
   local contactsDivider = layout.contactsDivider
-  local contentPane     = layout.contentPane
-  local headerDivider   = layout.headerDivider
-  local threadPane      = layout.threadPane
-  local composerPane    = layout.composerPane
+  local contentPane = layout.contentPane
+  local headerDivider = layout.headerDivider
+  local threadPane = layout.threadPane
+  local composerPane = layout.composerPane
   local composerDivider = layout.composerDivider
-  local optionsPanel    = layout.optionsPanel
-  local optionsHeader   = layout.optionsHeader
-  local optionsHint     = layout.optionsHint
+  local optionsPanel = layout.optionsPanel
+  local optionsHeader = layout.optionsHeader
+  local optionsHint = layout.optionsHint
   local resetWindowButton = layout.resetWindowButton
-  local resetIconButton   = layout.resetIconButton
-  local contactsView      = layout.contactsView
+  local resetIconButton = layout.resetIconButton
+  local contactsView = layout.contactsView
 
   -- Contacts controller (manages rows, paging, scroll hooks)
-  local handleContactSelected  -- forward declaration
+  local handleContactSelected -- forward declaration
   local contactsController = ContactsController.Create(factory, contactsView, options.contacts or {}, {
     onSelect = function(item)
       if handleContactSelected then
@@ -171,7 +175,8 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
+  composer =
+    Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
 
   -- Alpha helpers (capture composer.input now that composer exists)
   local composerInput = composer.input
@@ -198,7 +203,11 @@ function MessengerWindow.Create(factory, options)
     currentConversation = nextState.conversation
     currentStatus = nextState.status
 
-    refreshContacts(nextState.contacts, currentSelectedContact and currentSelectedContact.conversationKey or nil, resetPaging)
+    refreshContacts(
+      nextState.contacts,
+      currentSelectedContact and currentSelectedContact.conversationKey or nil,
+      resetPaging
+    )
     ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus)
     syncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
     setComposerEnabled(composer, currentSelectedContact)

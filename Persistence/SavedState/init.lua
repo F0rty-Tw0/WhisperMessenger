@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -7,8 +9,10 @@ local loadModule = Loader.LoadModule
 local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
 local Migrations = loadModule("WhisperMessenger.Persistence.Migrations", "Migrations")
 local Helpers = ns.PersistenceHelpers or require("WhisperMessenger.Persistence.Helpers")
-local LegacyMigration = ns.SavedStateLegacyMigration or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")
-local PrefixMigration = ns.SavedStatePrefixMigration or require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
+local LegacyMigration = ns.SavedStateLegacyMigration
+  or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")
+local PrefixMigration = ns.SavedStatePrefixMigration
+  or require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
 
 local SavedState = {}
 

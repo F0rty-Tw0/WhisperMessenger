@@ -23,20 +23,21 @@ function Store.New(config)
 end
 
 local function ensureConversation(state, key)
-  state.conversations[key] = state.conversations[key] or {
-    messages = {},
-    unreadCount = 0,
-    lastPreview = nil,
-    lastActivityAt = 0,
-    guid = nil,
-    bnetAccountID = nil,
-    gameAccountName = nil,
-    className = nil,
-    classTag = nil,
-    raceName = nil,
-    raceTag = nil,
-    factionName = nil,
-  }
+  state.conversations[key] = state.conversations[key]
+    or {
+      messages = {},
+      unreadCount = 0,
+      lastPreview = nil,
+      lastActivityAt = 0,
+      guid = nil,
+      bnetAccountID = nil,
+      gameAccountName = nil,
+      className = nil,
+      classTag = nil,
+      raceName = nil,
+      raceTag = nil,
+      factionName = nil,
+    }
 
   return state.conversations[key]
 end

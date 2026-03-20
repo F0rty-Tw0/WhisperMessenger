@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Factions = ns.IdentityFactions or require("WhisperMessenger.Model.Identity.Factions")
 
@@ -64,7 +66,9 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo)
     channel = "BN",
     contactKey = "BN::" .. tostring(bnetAccountID),
     canonicalName = tostring(bnetAccountID),
-    displayName = (accountInfo and (accountInfo.battleTag or accountInfo.accountName)) or gameAccountName or tostring(bnetAccountID),
+    displayName = (accountInfo and (accountInfo.battleTag or accountInfo.accountName)) or gameAccountName or tostring(
+      bnetAccountID
+    ),
     battleTag = accountInfo and accountInfo.battleTag or nil,
     accountName = accountInfo and accountInfo.accountName or nil,
     bnetAccountID = bnetAccountID,

@@ -53,15 +53,16 @@ return function()
     conversationKey = "me::WOW::arthas-area52",
     displayName = "Arthas-Area52",
     channel = "WOW",
-  }, function()
-  end)
+  }, function() end)
 
   assert(registeredHooks.HandleModifiedItemClick ~= nil, "expected composer to register a HandleModifiedItemClick hook")
 
   composer.frame:Show()
   composer.input:Show()
   composer.input:SetFocus()
-  registeredHooks.HandleModifiedItemClick("|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r")
+  registeredHooks.HandleModifiedItemClick(
+    "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r"
+  )
 
   assert(
     composer.input:GetText() == "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r",

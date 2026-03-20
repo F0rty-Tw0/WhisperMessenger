@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -10,52 +12,43 @@ local setTextColor = UIHelpers.setTextColor
 
 local Layout = {}
 
-local function acquireFrame(pool)
-  for i, f in ipairs(pool) do
-    if not f:IsShown() then
-      table.remove(pool, i)
-      f:Show()
-      return f
-    end
-  end
-  return nil
-end
-
 local function releaseAllFrames(pool)
   for _, f in ipairs(pool) do
-    if f.Hide then f:Hide() end
+    if f.Hide then
+      f:Hide()
+    end
   end
 end
 
 function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth)
-  local Grouping      = ns.ChatBubbleGrouping      or require("WhisperMessenger.UI.ChatBubble.Grouping")
-  local BubbleFrame   = ns.ChatBubbleBubbleFrame   or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
+  local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
+  local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
   local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")
 
-  local ShouldGroup         = Grouping.ShouldGroup
-  local CreateBubble        = BubbleFrame.CreateBubble
+  local ShouldGroup = Grouping.ShouldGroup
+  local CreateBubble = BubbleFrame.CreateBubble
   local CreateDateSeparator = DateSeparator.CreateDateSeparator
 
   -- Hide all pooled frames
   contentFrame._bubblePool = contentFrame._bubblePool or {}
   releaseAllFrames(contentFrame._bubblePool)
 
-  local pool    = contentFrame._bubblePool
+  local pool = contentFrame._bubblePool
   local yOffset = 0
   local prevMsg = nil
 
-  local BUBBLE_SPACING       = Theme.LAYOUT.BUBBLE_SPACING
+  local BUBBLE_SPACING = Theme.LAYOUT.BUBBLE_SPACING
   local BUBBLE_GROUP_SPACING = Theme.LAYOUT.BUBBLE_GROUP_SPACING
 
   for i, message in ipairs(messages or {}) do
     -- Date separator check
     if prevMsg then
-      local needsSeparator = false
+      local needsSeparator
       if ns.TimeFormat and ns.TimeFormat.IsDifferentDay then
         needsSeparator = ns.TimeFormat.IsDifferentDay(prevMsg.sentAt, message.sentAt)
       else
         -- Fallback: compare floor(ts / 86400)
-        local d1 = math.floor((prevMsg.sentAt  or 0) / 86400)
+        local d1 = math.floor((prevMsg.sentAt or 0) / 86400)
         local d2 = math.floor((message.sentAt or 0) / 86400)
         needsSeparator = d1 ~= d2
       end
@@ -70,9 +63,11 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth)
     end
 
     -- Determine grouping and spacing
-    local grouped  = ShouldGroup(prevMsg, message)
-    local spacing  = grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING
-    if i == 1 then spacing = 0 end
+    local grouped = ShouldGroup(prevMsg, message)
+    local spacing = grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING
+    if i == 1 then
+      spacing = 0
+    end
 
     yOffset = yOffset + spacing
 
@@ -117,7 +112,7 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth)
 
     local bubble = CreateBubble(factory, contentFrame, message, {
       paneWidth = paneWidth,
-      showIcon  = showIcon,
+      showIcon = showIcon,
       isGrouped = grouped,
     })
 

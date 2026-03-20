@@ -4,7 +4,9 @@ local function makeRuntime(overrides)
   local r = {
     availabilityByGUID = {},
     sendStatusByConversation = {},
-    isChatMessagingLocked = function() return false end,
+    isChatMessagingLocked = function()
+      return false
+    end,
     activeConversationKey = nil,
     bnetApi = {},
     store = { conversations = {} },
@@ -85,7 +87,9 @@ return function()
   -- BuildConversationStatus: returns Lockdown when messaging is locked
   do
     local runtime = makeRuntime({
-      isChatMessagingLocked = function() return true end,
+      isChatMessagingLocked = function()
+        return true
+      end,
     })
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-1", nil)
     assert(result ~= nil, "should return a status when locked")

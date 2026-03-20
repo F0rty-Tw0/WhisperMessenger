@@ -50,7 +50,7 @@ function Bootstrap.Initialize(factory, options)
   trace("initialize start")
 
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
-  local EventBridge = loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
+  loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
   local SendHandler = loadModule("WhisperMessenger.Core.Bootstrap.SendHandler", "BootstrapSendHandler")
   local MessengerWindow = loadModule("WhisperMessenger.UI.MessengerWindow", "MessengerWindow")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
@@ -63,7 +63,8 @@ function Bootstrap.Initialize(factory, options)
 
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
-  local accountState, characterState = SavedState.Initialize(options.accountState, options.characterState, localProfileId)
+  local accountState, characterState =
+    SavedState.Initialize(options.accountState, options.characterState, localProfileId)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
 
@@ -104,21 +105,21 @@ function Bootstrap.Initialize(factory, options)
   end
 
   local function refreshWindow()
-    local contacts = buildContacts()
+    local freshContacts = buildContacts()
     -- Proactively request availability for WoW contacts with GUIDs we haven't queried yet
     local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
-    for _, item in ipairs(contacts) do
+    for _, item in ipairs(freshContacts) do
       if item.channel == "WOW" and item.guid and not runtime.availabilityByGUID[item.guid] then
         Gateway.RequestAvailability(runtime.chatApi, item.guid)
       end
     end
-    local nextState = ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
+    local nextState = ContactEnricher.BuildWindowSelectionState(runtime, freshContacts, buildContacts)
     if window and window.refreshSelection then
       window.refreshSelection(nextState)
     end
 
     if icon and icon.setUnreadCount then
-      icon.setUnreadCount(TableUtils.sumBy(contacts, "unreadCount"))
+      icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
     end
 
     return nextState
@@ -127,7 +128,6 @@ function Bootstrap.Initialize(factory, options)
   local function selectConversation(conversationKey)
     local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
     local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
-    local chatApi = options.chatApi or _G.C_ChatInfo or {}
     runtime.activeConversationKey = conversationKey
     characterState.activeConversationKey = conversationKey
 
@@ -256,7 +256,8 @@ if type(_G.CreateFrame) == "function" then
 
       -- Resolve EventBridge after Initialize has run (modules now loaded)
       if not EventBridge then
-        EventBridge = ns.BootstrapEventBridge or loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
+        EventBridge = ns.BootstrapEventBridge
+          or loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
       end
       EventBridge.RegisterLiveEvents(loadFrame)
 
@@ -271,7 +272,12 @@ if type(_G.CreateFrame) == "function" then
       EventBridge = ns.BootstrapEventBridge
     end
     if EventBridge then
-      EventBridge.RouteLiveEvent(Bootstrap.runtime, Bootstrap.runtime and Bootstrap.runtime.refreshWindow or nil, event, ...)
+      EventBridge.RouteLiveEvent(
+        Bootstrap.runtime,
+        Bootstrap.runtime and Bootstrap.runtime.refreshWindow or nil,
+        event,
+        ...
+      )
     end
   end)
 end

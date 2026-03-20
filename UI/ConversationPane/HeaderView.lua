@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -8,8 +10,7 @@ local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local applyColor = UIHelpers.applyColor
 
-local StatusLine = ns.ConversationPaneStatusLine
-  or require("WhisperMessenger.UI.ConversationPane.StatusLine")
+local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 
 local HeaderView = {}
 
@@ -44,7 +45,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   -- Class icon (32x32)
   ---------------------------------------------------------------------------
   local classIcon = headerFrame:CreateTexture(nil, "ARTWORK")
-  local iconSize = Theme.LAYOUT.HEADER_ICON_SIZE  -- 32
+  local iconSize = Theme.LAYOUT.HEADER_ICON_SIZE -- 32
   classIcon:SetSize(iconSize, iconSize)
   classIcon:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
 
@@ -119,7 +120,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   -- Status dot (8x8) anchored just left of status text
   ---------------------------------------------------------------------------
   local statusDot = headerFrame:CreateTexture(nil, "ARTWORK")
-  local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE  -- 8
+  local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE -- 8
   statusDot:SetSize(dotSize, dotSize)
   statusDot:SetPoint("RIGHT", headerStatus, "LEFT", -4, 0)
   statusDot:SetTexture("Interface\\COMMON\\Indicator-Gray")
@@ -147,19 +148,19 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   headerEmpty:SetShown(selectedContact == nil)
 
   return {
-    headerFrame      = headerFrame,
-    headerClassIcon  = classIcon,
-    headerName       = headerName,
+    headerFrame = headerFrame,
+    headerClassIcon = classIcon,
+    headerName = headerName,
     headerFactionIcon = headerFactionIcon,
-    headerStatus     = headerStatus,
-    headerStatusDot  = statusDot,
-    headerDivider    = headerDivider,
-    headerEmpty      = headerEmpty,
+    headerStatus = headerStatus,
+    headerStatusDot = statusDot,
+    headerDivider = headerDivider,
+    headerEmpty = headerEmpty,
   }
 end
 
 -- Update all header widgets to reflect the current contact and status.
-function HeaderView.Refresh(view, selectedContact, conversation, status)
+function HeaderView.Refresh(view, selectedContact, _conversation, status)
   if view.headerFrame then
     local hasContact = selectedContact ~= nil
 
@@ -224,7 +225,8 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
 
     -- Update faction icon
     if view.headerFactionIcon then
-      local factionPath = hasContact and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName) or nil
+      local factionPath = hasContact and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName)
+        or nil
       if factionPath then
         view.headerFactionIcon:SetTexture(factionPath)
         view.headerFactionIcon:Show()

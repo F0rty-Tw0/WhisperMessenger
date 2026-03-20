@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -13,7 +15,7 @@ local DateSeparator = {}
 
 function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth)
   local height = Theme.LAYOUT.DATE_SEPARATOR_HEIGHT
-  local frame  = factory.CreateFrame("Frame", nil, parent)
+  local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetSize(paneWidth, height)
 
   -- Date label
@@ -34,15 +36,15 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
   local lineLeft = frame:CreateTexture(nil, "ARTWORK")
   lineLeft:SetHeight(1)
   applyColorTexture(lineLeft, Theme.COLORS.divider)
-  lineLeft:SetPoint("LEFT",  frame,  "LEFT",  16, 0)
+  lineLeft:SetPoint("LEFT", frame, "LEFT", 16, 0)
   lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
 
   -- Right line
   local lineRight = frame:CreateTexture(nil, "ARTWORK")
   lineRight:SetHeight(1)
   applyColorTexture(lineRight, Theme.COLORS.divider)
-  lineRight:SetPoint("LEFT",  labelFS, "RIGHT",  8, 0)
-  lineRight:SetPoint("RIGHT", frame,   "RIGHT", -16, 0)
+  lineRight:SetPoint("LEFT", labelFS, "RIGHT", 8, 0)
+  lineRight:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
 
   return { frame = frame, height = height }
 end

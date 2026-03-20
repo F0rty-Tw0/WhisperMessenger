@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -15,7 +17,6 @@ TranscriptView.TRANSCRIPT_SCROLL_STEP = 24
 TranscriptView.TRANSCRIPT_BOTTOM_GAP = 56
 TranscriptView.MESSAGES_PAGE_SIZE = 10
 
-local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 local MESSAGES_PAGE_SIZE = TranscriptView.MESSAGES_PAGE_SIZE
 
 local function formatMessage(message)
@@ -118,7 +119,9 @@ function TranscriptView.RenderTranscript(transcript, messages)
   -- Keep legacy text content (for accessibility / backward compat) but hide renderer
   if transcript.text then
     transcript.text:SetText(table.concat(transcript.lines, "\n"))
-    if transcript.text.Hide then transcript.text:Hide() end
+    if transcript.text.Hide then
+      transcript.text:Hide()
+    end
   end
 
   -- ChatBubble loaded lazily since it may not be available at module load time
@@ -141,12 +144,16 @@ function TranscriptView.RenderTranscript(transcript, messages)
 end
 
 function TranscriptView.HasMore(transcript)
-  if not transcript._allMessages then return false end
+  if not transcript._allMessages then
+    return false
+  end
   return (transcript._visibleCount or 0) < #transcript._allMessages
 end
 
 function TranscriptView.LoadMore(transcript)
-  if not TranscriptView.HasMore(transcript) then return false end
+  if not TranscriptView.HasMore(transcript) then
+    return false
+  end
   transcript._visibleCount = (transcript._visibleCount or MESSAGES_PAGE_SIZE) + MESSAGES_PAGE_SIZE
   TranscriptView.RenderTranscript(transcript, transcript._allMessages)
   return true

@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Factions = {}
 
@@ -32,8 +34,12 @@ local HORDE_RACES = {
 }
 
 function Factions.InferFaction(raceTag)
-  if ALLIANCE_RACES[raceTag] then return "Alliance" end
-  if HORDE_RACES[raceTag] then return "Horde" end
+  if ALLIANCE_RACES[raceTag] then
+    return "Alliance"
+  end
+  if HORDE_RACES[raceTag] then
+    return "Horde"
+  end
   -- Pandaren, Dracthyr, Earthen, and unknown future neutral races are ambiguous here.
   return nil
 end

@@ -67,7 +67,6 @@ return function()
   assert(runtime.icon.badgeLabel.text == "14")
   assert(runtime.icon.badge.shown == true)
 
-
   assert(type(runtime.icon.frame.scripts.OnClick) == "function")
   runtime.icon.frame.scripts.OnClick(runtime.icon.frame)
   assert(runtime.window.frame.shown == true)

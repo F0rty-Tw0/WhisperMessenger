@@ -72,7 +72,8 @@ return function()
     localProfileId = "current",
   })
 
-  local reloadedWindowPoint, _, reloadedWindowRelative, reloadedWindowX, reloadedWindowY = reloaded.window.frame:GetPoint()
+  local reloadedWindowPoint, _, reloadedWindowRelative, reloadedWindowX, reloadedWindowY =
+    reloaded.window.frame:GetPoint()
   assert(reloadedWindowPoint == "BOTTOMLEFT")
   assert(reloadedWindowRelative == "BOTTOMLEFT")
   assert(reloadedWindowX == 55)

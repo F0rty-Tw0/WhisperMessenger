@@ -1,16 +1,20 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Textures = {
-  class_icon_prefix  = "Interface\\ICONS\\ClassIcon_",
-  faction_alliance   = "Interface\\ICONS\\PVPCurrency-Honor-Alliance",
-  faction_horde      = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
-  bnet_icon          = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
+  class_icon_prefix = "Interface\\ICONS\\ClassIcon_",
+  faction_alliance = "Interface\\ICONS\\PVPCurrency-Honor-Alliance",
+  faction_horde = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
+  bnet_icon = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
 }
 
 --- Map classTag to atlas icon path
 local function ClassIcon(classTag)
-  if not classTag or classTag == "" then return nil end
+  if not classTag or classTag == "" then
+    return nil
+  end
   return Textures.class_icon_prefix .. classTag
 end
 

@@ -16,7 +16,15 @@ end
 
 function Schema.NewCharacterState()
   return {
-    window = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0, width = 900, height = 560, minimized = false },
+    window = {
+      anchorPoint = "CENTER",
+      relativePoint = "CENTER",
+      x = 0,
+      y = 0,
+      width = 900,
+      height = 560,
+      minimized = false,
+    },
     icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
     activeConversationKey = nil,
   }

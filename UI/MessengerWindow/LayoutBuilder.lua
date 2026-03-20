@@ -1,5 +1,7 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -22,9 +24,7 @@ local LayoutBuilder = {}
 --   optionsPanel, optionsHeader, optionsHint,
 --   resetWindowButton, resetIconButton,
 --   contactsView (the ScrollView for the contacts list)
-function LayoutBuilder.Build(factory, frame, initialState, options)
-  options = options or {}
-
+function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local contentWidth = initialState.width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
   local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
@@ -58,7 +58,13 @@ function LayoutBuilder.Build(factory, frame, initialState, options)
 
   local contentPane = factory.CreateFrame("Frame", nil, frame)
   contentPane:SetSize(contentWidth, contentHeight)
-  contentPane:SetPoint("TOPLEFT", frame, "TOPLEFT", Theme.CONTACTS_WIDTH + Theme.DIVIDER_THICKNESS, -Theme.TOP_BAR_HEIGHT)
+  contentPane:SetPoint(
+    "TOPLEFT",
+    frame,
+    "TOPLEFT",
+    Theme.CONTACTS_WIDTH + Theme.DIVIDER_THICKNESS,
+    -Theme.TOP_BAR_HEIGHT
+  )
 
   local headerDivider = frame:CreateTexture(nil, "BORDER")
   headerDivider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
@@ -85,8 +91,17 @@ function LayoutBuilder.Build(factory, frame, initialState, options)
   end
 
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
-  optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", Theme.CONTENT_PADDING, -(Theme.TOP_BAR_HEIGHT + Theme.CONTENT_PADDING))
-  optionsPanel:SetSize(initialState.width - (Theme.CONTENT_PADDING * 2), initialState.height - Theme.TOP_BAR_HEIGHT - (Theme.CONTENT_PADDING * 2))
+  optionsPanel:SetPoint(
+    "TOPLEFT",
+    frame,
+    "TOPLEFT",
+    Theme.CONTENT_PADDING,
+    -(Theme.TOP_BAR_HEIGHT + Theme.CONTENT_PADDING)
+  )
+  optionsPanel:SetSize(
+    initialState.width - (Theme.CONTENT_PADDING * 2),
+    initialState.height - Theme.TOP_BAR_HEIGHT - (Theme.CONTENT_PADDING * 2)
+  )
 
   local optionsHeader = optionsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
   optionsHeader:SetPoint("TOPLEFT", optionsPanel, "TOPLEFT", 0, 0)

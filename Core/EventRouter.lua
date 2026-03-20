@@ -84,7 +84,15 @@ local function handleUnlockedEvent(state, eventName, payload)
     return state.availabilityByGUID[payload.guid]
   end
 
-  if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" or eventName == "CHAT_MSG_BN_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE" then
+  if
+    eventName == "CHAT_MSG_WHISPER"
+    or eventName == "CHAT_MSG_WHISPER_INFORM"
+    or eventName == "CHAT_MSG_AFK"
+    or eventName == "CHAT_MSG_DND"
+    or eventName == "CHAT_MSG_BN_WHISPER"
+    or eventName == "CHAT_MSG_BN_WHISPER_INFORM"
+    or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE"
+  then
     local contact, conversationKey = buildConversationContact(state, payload)
     if conversationKey == nil then
       return nil
@@ -97,15 +105,29 @@ local function handleUnlockedEvent(state, eventName, payload)
     local sentAt = state.now()
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      Store.AppendIncoming(state.store, conversationKey, buildMessage(eventName, payload, contact, "in", "user", sentAt), isActive)
+      Store.AppendIncoming(
+        state.store,
+        conversationKey,
+        buildMessage(eventName, payload, contact, "in", "user", sentAt),
+        isActive
+      )
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-      Store.AppendOutgoing(state.store, conversationKey, buildMessage(eventName, payload, contact, "out", "user", sentAt))
+      Store.AppendOutgoing(
+        state.store,
+        conversationKey,
+        buildMessage(eventName, payload, contact, "out", "user", sentAt)
+      )
       local pending = state.pendingOutgoing[conversationKey]
       if pending and #pending > 0 then
         table.remove(pending, 1)
       end
     else
-      Store.AppendIncoming(state.store, conversationKey, buildMessage(eventName, payload, contact, "in", "system", sentAt), isActive)
+      Store.AppendIncoming(
+        state.store,
+        conversationKey,
+        buildMessage(eventName, payload, contact, "in", "system", sentAt),
+        isActive
+      )
     end
 
     return state.store.conversations[conversationKey]

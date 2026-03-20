@@ -1,14 +1,16 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then ns = {} end
+if type(ns) ~= "table" then
+  ns = {}
+end
 
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
-  CanWhisper      = { label = "Online",        color = "online" },
-  CanWhisperGuild = { label = "Online",        color = "online" },
-  Offline         = { label = "Offline",       color = "offline" },
-  WrongFaction    = { label = "Wrong Faction", color = "offline" },
-  Lockdown        = { label = "Unavailable",   color = "dnd" },
+  CanWhisper = { label = "Online", color = "online" },
+  CanWhisperGuild = { label = "Online", color = "online" },
+  Offline = { label = "Offline", color = "offline" },
+  WrongFaction = { label = "Wrong Faction", color = "offline" },
+  Lockdown = { label = "Unavailable", color = "dnd" },
 }
 
 function StatusLine.Build(selectedContact, status)

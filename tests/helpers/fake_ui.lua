@@ -86,7 +86,6 @@ function FakeUI.NewFactory()
       return effectiveLines * lineHeight
     end
 
-
     function frame:Show()
       self.shown = true
       if self.scripts and self.scripts.OnShow then
@@ -156,7 +155,6 @@ function FakeUI.NewFactory()
       end
     end
 
-
     function frame:SetScrollChild(child)
       self.scrollChild = child
     end
@@ -210,7 +208,6 @@ function FakeUI.NewFactory()
       self.mouseWheelEnabled = value
     end
 
-
     function frame:SetMinMaxValues(minimum, maximum)
       self.minValue = minimum
       self.maxValue = maximum
@@ -232,7 +229,6 @@ function FakeUI.NewFactory()
       self.thumbTexture = texture
     end
 
-
     function frame:SetObeyStepOnDrag(value)
       self.obeyStepOnDrag = value
     end
@@ -247,7 +243,6 @@ function FakeUI.NewFactory()
     function frame:GetValue()
       return self.value or 0
     end
-
 
     function frame:SetJustifyH(value)
       self.justifyH = value

@@ -17,7 +17,6 @@ local Constants = {
     "CHAT_MSG_BN_WHISPER_INFORM",
     "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
   },
-
 }
 
 ns.Constants = Constants

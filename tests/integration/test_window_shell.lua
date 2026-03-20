@@ -60,15 +60,27 @@ return function()
   assert(window.contacts.scrollBar ~= nil)
   assert(window.contacts.scrollBar.template == nil, "expected contacts scrollbar to avoid Blizzard scrollbar templates")
   assert(window.contacts.scrollBar.shown == false, "expected contacts scrollbar to stay hidden without overflow")
-  assert(window.contacts.scrollFrame.width == window.contactsPane.width, "expected contacts viewport to use full width when scrollbar is hidden")
+  assert(
+    window.contacts.scrollFrame.width == window.contactsPane.width,
+    "expected contacts viewport to use full width when scrollbar is hidden"
+  )
   assert(window.conversation.header ~= nil)
   assert(window.conversation.transcript ~= nil)
   assert(window.conversation.transcript.width ~= nil)
   assert(window.conversation.transcript.height ~= nil)
   assert(window.conversation.transcript.scrollBar ~= nil)
-  assert(window.conversation.transcript.scrollBar.template == nil, "expected transcript scrollbar to avoid Blizzard scrollbar templates")
-  assert(window.conversation.transcript.scrollBar.shown == false, "expected transcript scrollbar to stay hidden without overflow")
-  assert(window.conversation.transcript.scrollFrame.width == window.conversation.transcript.width, "expected transcript viewport to use full width when scrollbar is hidden")
+  assert(
+    window.conversation.transcript.scrollBar.template == nil,
+    "expected transcript scrollbar to avoid Blizzard scrollbar templates"
+  )
+  assert(
+    window.conversation.transcript.scrollBar.shown == false,
+    "expected transcript scrollbar to stay hidden without overflow"
+  )
+  assert(
+    window.conversation.transcript.scrollFrame.width == window.conversation.transcript.width,
+    "expected transcript viewport to use full width when scrollbar is hidden"
+  )
   assert(window.composer.input.point[1] == "BOTTOMLEFT")
   assert(window.composer.input.width ~= nil)
   assert(window.composer.sendButton.point[1] == "BOTTOMRIGHT")
