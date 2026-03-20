@@ -5,6 +5,8 @@ end
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local applyVertexColor = UIHelpers.applyVertexColor
 
 local Badge = {}
 
@@ -19,10 +21,7 @@ function Badge.Create(factory, parentFrame)
   local badgeBackground = badge:CreateTexture(nil, "BACKGROUND")
   badgeBackground:SetAllPoints(badge)
   badgeBackground:SetTexture(CIRCLE_TEX)
-  local bgc = Theme.COLORS.badge_bg
-  if badgeBackground.SetVertexColor then
-    badgeBackground:SetVertexColor(bgc[1], bgc[2], bgc[3], bgc[4] or 1)
-  end
+  applyVertexColor(badgeBackground, Theme.COLORS.badge_bg)
 
   local badgeLabel = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
   badgeLabel:SetPoint("CENTER", badge, "CENTER", 0, 0)

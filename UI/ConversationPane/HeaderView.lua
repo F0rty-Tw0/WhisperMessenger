@@ -9,6 +9,9 @@ local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local applyColor = UIHelpers.applyColor
+local applyClassColor = UIHelpers.applyClassColor
+local applyColorTexture = UIHelpers.applyColorTexture
+local applyVertexColor = UIHelpers.applyVertexColor
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 
@@ -38,8 +41,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   local headerBg = headerFrame:CreateTexture(nil, "BACKGROUND")
   headerBg:SetAllPoints(headerFrame)
-  local hc = Theme.COLORS.bg_header
-  headerBg:SetColorTexture(hc[1], hc[2], hc[3], hc[4] or 1)
+  applyColorTexture(headerBg, Theme.COLORS.bg_header)
 
   ---------------------------------------------------------------------------
   -- Class icon (32x32)
@@ -64,21 +66,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   if selectedContact then
     headerName:SetText(selectedContact.displayName or "")
-    local classTag = selectedContact.classTag
-    if classTag and _G.RAID_CLASS_COLORS then
-      local classColor = _G.RAID_CLASS_COLORS[string.upper(classTag)]
-      if classColor then
-        if classColor.r then
-          headerName:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
-        elseif type(classColor[1]) == "number" then
-          headerName:SetTextColor(classColor[1], classColor[2], classColor[3], 1)
-        end
-      else
-        applyColor(headerName, Theme.COLORS.text_primary)
-      end
-    else
-      applyColor(headerName, Theme.COLORS.text_primary)
-    end
+    UIHelpers.applyClassColor(headerName, selectedContact.classTag, Theme.COLORS.text_primary)
     headerName:Show()
   else
     headerName:SetText("")
@@ -124,8 +112,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   statusDot:SetSize(dotSize, dotSize)
   statusDot:SetPoint("RIGHT", headerStatus, "LEFT", -4, 0)
   statusDot:SetTexture("Interface\\COMMON\\Indicator-Gray")
-  local oc = Theme.COLORS.online
-  statusDot:SetVertexColor(oc[1], oc[2], oc[3], oc[4] or 1)
+  applyVertexColor(statusDot, Theme.COLORS.online)
   statusDot:SetShown(selectedContact ~= nil)
 
   ---------------------------------------------------------------------------
@@ -135,8 +122,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   headerDivider:SetPoint("BOTTOMLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
   headerDivider:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMRIGHT", 0, 0)
   headerDivider:SetHeight(1)
-  local dc = Theme.COLORS.divider
-  headerDivider:SetColorTexture(dc[1], dc[2], dc[3], dc[4] or 1)
+  applyColorTexture(headerDivider, Theme.COLORS.divider)
 
   ---------------------------------------------------------------------------
   -- Empty state label (centered, shown when no contact selected)
@@ -179,21 +165,7 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
     if view.headerName then
       if hasContact then
         view.headerName:SetText(selectedContact.displayName or "")
-        local classTag = selectedContact.classTag
-        if classTag and _G.RAID_CLASS_COLORS then
-          local classColor = _G.RAID_CLASS_COLORS[string.upper(classTag)]
-          if classColor then
-            if classColor.r then
-              view.headerName:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
-            elseif type(classColor[1]) == "number" then
-              view.headerName:SetTextColor(classColor[1], classColor[2], classColor[3], 1)
-            end
-          else
-            applyColor(view.headerName, Theme.COLORS.text_primary)
-          end
-        else
-          applyColor(view.headerName, Theme.COLORS.text_primary)
-        end
+        UIHelpers.applyClassColor(view.headerName, selectedContact.classTag, Theme.COLORS.text_primary)
         view.headerName:Show()
       else
         view.headerName:SetText("")
@@ -216,7 +188,7 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
     if view.headerStatusDot then
       if hasContact and dotColorKey and Theme.COLORS[dotColorKey] then
         local dotColor = Theme.COLORS[dotColorKey]
-        view.headerStatusDot:SetVertexColor(dotColor[1], dotColor[2], dotColor[3], dotColor[4] or 1)
+        applyVertexColor(view.headerStatusDot, dotColor)
         view.headerStatusDot:SetShown(true)
       else
         view.headerStatusDot:SetShown(false)

@@ -8,6 +8,7 @@ local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
+local applyColorTexture = UIHelpers.applyColorTexture
 
 local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.ContactsList.DataBuilder")
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
@@ -27,7 +28,7 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
     -- Update visual state for each row
     if row.bg then
       local c = row.selected and Theme.COLORS.bg_contact_selected or Theme.COLORS.bg_secondary
-      row.bg:SetColorTexture(c[1], c[2], c[3], c[4])
+      applyColorTexture(row.bg, c)
     end
 
     if row.accentBar then
@@ -63,7 +64,7 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
 
     if row.bg then
       local c = Theme.COLORS.bg_secondary
-      row.bg:SetColorTexture(c[1], c[2], c[3], c[4])
+      applyColorTexture(row.bg, c)
     end
     if row.accentBar then
       row.accentBar:Hide()

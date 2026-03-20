@@ -9,7 +9,13 @@
       "Bash(for f:*)",
       "Bash(do lua:*)",
       "Bash(done)",
-      "Bash(rtk read:*)"
+      "Bash(rtk read:*)",
+      "Bash(cp UI/Theme/init.lua UI/Theme/Theme.lua)",
+      "Bash(cp UI/ChatBubble/init.lua UI/ChatBubble/ChatBubble.lua)",
+      "Bash(cp UI/ScrollView/init.lua UI/ScrollView/ScrollView.lua)",
+      "Bash(cp Model/Identity/init.lua Model/Identity/Identity.lua)",
+      "Bash(cp Persistence/SavedState/init.lua Persistence/SavedState/SavedState.lua)",
+      "Bash(rtk git:*)"
     ]
   }
 }

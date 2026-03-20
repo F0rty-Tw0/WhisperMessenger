@@ -9,6 +9,7 @@ local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
+local applyColorTexture = UIHelpers.applyColorTexture
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 
@@ -22,10 +23,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   -- Pane background
   local paneBg = pane:CreateTexture(nil, "BACKGROUND")
   paneBg:SetAllPoints(pane)
-  local bc = Theme.COLORS.bg_composer
-  if paneBg.SetColorTexture then
-    paneBg:SetColorTexture(bc[1], bc[2], bc[3], bc[4])
-  end
+  applyColorTexture(paneBg, Theme.COLORS.bg_composer)
 
   -- Input background texture (sits behind the EditBox)
   local inputBg = pane:CreateTexture(nil, "BACKGROUND")
@@ -34,10 +32,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local inputX, inputY = 12, 8
   inputBg:SetSize(inputW, inputH)
   inputBg:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inputX, inputY)
-  local ic = Theme.COLORS.bg_input
-  if inputBg.SetColorTexture then
-    inputBg:SetColorTexture(ic[1], ic[2], ic[3], ic[4])
-  end
+  applyColorTexture(inputBg, Theme.COLORS.bg_input)
 
   -- Send button
   local buttonW = 72

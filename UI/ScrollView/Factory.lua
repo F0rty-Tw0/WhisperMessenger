@@ -8,6 +8,7 @@ local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
+local applyColorTexture = UIHelpers.applyColorTexture
 local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
 local unpackValues = TableUtils.unpackValues
 local clamp = TableUtils.clamp
@@ -59,18 +60,13 @@ function Factory.Create(factory, parent, options)
   -- Transparent track (slim Telegram-style bar — no dark background)
   local track = scrollBar:CreateTexture(nil, "BACKGROUND")
   track:SetAllPoints(scrollBar)
-  if track.SetColorTexture then
-    track:SetColorTexture(0, 0, 0, 0)
-  end
+  applyColorTexture(track, { 0, 0, 0, 0 })
   scrollBar.track = track
 
   -- Slim thumb using Theme colors and dimensions
-  local thumbColors = Theme.COLORS.scrollbar
   local thumb = scrollBar:CreateTexture(nil, "ARTWORK")
   thumb:SetSize(SCROLLBAR_WIDTH, Theme.LAYOUT.SCROLLBAR_THUMB_MIN_H)
-  if thumb.SetColorTexture then
-    thumb:SetColorTexture(thumbColors[1], thumbColors[2], thumbColors[3], thumbColors[4])
-  end
+  applyColorTexture(thumb, Theme.COLORS.scrollbar)
   scrollBar.thumb = thumb
   if scrollBar.SetThumbTexture then
     scrollBar:SetThumbTexture(thumb)
@@ -79,10 +75,7 @@ function Factory.Create(factory, parent, options)
   -- Hover behavior: widen and brighten the thumb
   if scrollBar.SetScript then
     scrollBar:SetScript("OnEnter", function()
-      local hc = Theme.COLORS.scrollbar_hover
-      if thumb.SetColorTexture then
-        thumb:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
-      end
+      applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
       if scrollBar.SetSize then
         scrollBar:SetSize(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER, height)
       end
@@ -91,10 +84,7 @@ function Factory.Create(factory, parent, options)
       end
     end)
     scrollBar:SetScript("OnLeave", function()
-      local nc = Theme.COLORS.scrollbar
-      if thumb.SetColorTexture then
-        thumb:SetColorTexture(nc[1], nc[2], nc[3], nc[4])
-      end
+      applyColorTexture(thumb, Theme.COLORS.scrollbar)
       if scrollBar.SetSize then
         scrollBar:SetSize(SCROLLBAR_WIDTH, height)
       end

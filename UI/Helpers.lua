@@ -35,6 +35,51 @@ function UIHelpers.applyColorTexture(region, colorTable)
   end
 end
 
+function UIHelpers.applyVertexColor(region, colorTable)
+  if not region or not colorTable then
+    return
+  end
+  if region.SetVertexColor then
+    region:SetVertexColor(colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1)
+  end
+end
+
+function UIHelpers.applyClassColor(fontString, classTag, fallbackColor)
+  if not fontString then
+    return
+  end
+  if classTag and _G.RAID_CLASS_COLORS then
+    local classColor = _G.RAID_CLASS_COLORS[string.upper(classTag)]
+    if classColor then
+      if classColor.r then
+        fontString:SetTextColor(classColor.r, classColor.g, classColor.b, 1)
+      elseif type(classColor[1]) == "number" then
+        fontString:SetTextColor(classColor[1], classColor[2], classColor[3], 1)
+      end
+      return
+    end
+  end
+  if fallbackColor and fontString.SetTextColor then
+    fontString:SetTextColor(fallbackColor[1], fallbackColor[2], fallbackColor[3], fallbackColor[4] or 1)
+  end
+end
+
+function UIHelpers.captureFramePosition(frame)
+  local point, _, relative, offsetX, offsetY
+  if frame.GetPoint then
+    point, _, relative, offsetX, offsetY = frame:GetPoint()
+  else
+    local savedPoint = frame.point or {}
+    point, relative, offsetX, offsetY = savedPoint[1], savedPoint[3], savedPoint[4], savedPoint[5]
+  end
+  return {
+    anchorPoint = point or "CENTER",
+    relativePoint = relative or point or "CENTER",
+    x = offsetX or 0,
+    y = offsetY or 0,
+  }
+end
+
 function UIHelpers.setFontObject(fontString, fontKey)
   local fontObj = _G[fontKey] or fontKey
   if fontString.SetFontObject then

@@ -8,6 +8,8 @@ local loadModule = Loader.LoadModule
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local applyColorTexture = UIHelpers.applyColorTexture
 
 local LayoutBuilder = {}
 
@@ -37,10 +39,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   -- Contacts pane background (slightly lighter than main window)
   local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
   contactsPaneBg:SetAllPoints(contactsPane)
-  if contactsPaneBg.SetColorTexture then
-    local c = Theme.COLORS.bg_secondary
-    contactsPaneBg:SetColorTexture(c[1], c[2], c[3], c[4])
-  end
+  applyColorTexture(contactsPaneBg, Theme.COLORS.bg_secondary)
 
   local contactsView = ScrollView.Create(factory, contactsPane, {
     width = Theme.CONTACTS_WIDTH,
@@ -51,10 +50,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsDivider = frame:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
   contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
-  if contactsDivider.SetColorTexture then
-    local dc = Theme.COLORS.divider
-    contactsDivider:SetColorTexture(dc[1], dc[2], dc[3], dc[4])
-  end
+  applyColorTexture(contactsDivider, Theme.COLORS.divider)
 
   local contentPane = factory.CreateFrame("Frame", nil, frame)
   contentPane:SetSize(contentWidth, contentHeight)
@@ -69,10 +65,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local headerDivider = frame:CreateTexture(nil, "BORDER")
   headerDivider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
   headerDivider:SetSize(initialState.width, Theme.DIVIDER_THICKNESS)
-  if headerDivider.SetColorTexture then
-    local hdc = Theme.COLORS.divider
-    headerDivider:SetColorTexture(hdc[1], hdc[2], hdc[3], hdc[4])
-  end
+  applyColorTexture(headerDivider, Theme.COLORS.divider)
 
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
@@ -85,10 +78,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local composerDivider = contentPane:CreateTexture(nil, "BORDER")
   composerDivider:SetPoint("BOTTOMLEFT", threadPane, "BOTTOMLEFT", 0, -Theme.DIVIDER_THICKNESS)
   composerDivider:SetSize(contentWidth, Theme.DIVIDER_THICKNESS)
-  if composerDivider.SetColorTexture then
-    local cdc = Theme.COLORS.divider
-    composerDivider:SetColorTexture(cdc[1], cdc[2], cdc[3], cdc[4])
-  end
+  applyColorTexture(composerDivider, Theme.COLORS.divider)
 
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
   optionsPanel:SetPoint(

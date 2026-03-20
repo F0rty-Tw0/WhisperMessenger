@@ -7,6 +7,9 @@ local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local applyColorTexture = UIHelpers.applyColorTexture
+local applyVertexColor = UIHelpers.applyVertexColor
 
 local ChromeBuilder = {}
 
@@ -68,10 +71,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- Window background
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
-  if background.SetColorTexture then
-    local c = Theme.COLORS.bg_primary
-    background:SetColorTexture(c[1], c[2], c[3], c[4])
-  end
+  applyColorTexture(background, Theme.COLORS.bg_primary)
   frame.background = background
 
   -- Subtle edge highlights (1px border)
@@ -79,36 +79,36 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   edgeTop:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
   edgeTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
   edgeTop:SetHeight(1)
-  if edgeTop.SetColorTexture then
+  do
     local c = Theme.COLORS.divider
-    edgeTop:SetColorTexture(c[1], c[2], c[3], 0.4)
+    applyColorTexture(edgeTop, { c[1], c[2], c[3], 0.4 })
   end
 
   local edgeLeft = frame:CreateTexture(nil, "BORDER")
   edgeLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
   edgeLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
   edgeLeft:SetWidth(1)
-  if edgeLeft.SetColorTexture then
+  do
     local c = Theme.COLORS.divider
-    edgeLeft:SetColorTexture(c[1], c[2], c[3], 0.4)
+    applyColorTexture(edgeLeft, { c[1], c[2], c[3], 0.4 })
   end
 
   local edgeRight = frame:CreateTexture(nil, "BORDER")
   edgeRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
   edgeRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   edgeRight:SetWidth(1)
-  if edgeRight.SetColorTexture then
+  do
     local c = Theme.COLORS.divider
-    edgeRight:SetColorTexture(c[1], c[2], c[3], 0.4)
+    applyColorTexture(edgeRight, { c[1], c[2], c[3], 0.4 })
   end
 
   local edgeBottom = frame:CreateTexture(nil, "BORDER")
   edgeBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
   edgeBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   edgeBottom:SetHeight(1)
-  if edgeBottom.SetColorTexture then
+  do
     local c = Theme.COLORS.divider
-    edgeBottom:SetColorTexture(c[1], c[2], c[3], 0.4)
+    applyColorTexture(edgeBottom, { c[1], c[2], c[3], 0.4 })
   end
 
   -- Title bar with header background
@@ -118,10 +118,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   titleBar:SetHeight(Theme.TOP_BAR_HEIGHT)
   local titleBarBg = titleBar:CreateTexture(nil, "ARTWORK")
   titleBarBg:SetAllPoints(titleBar)
-  if titleBarBg.SetColorTexture then
-    local c = Theme.COLORS.bg_header
-    titleBarBg:SetColorTexture(c[1], c[2], c[3], c[4])
-  end
+  applyColorTexture(titleBarBg, Theme.COLORS.bg_header)
 
   local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -18)
@@ -134,31 +131,21 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -14)
   local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
   closeBg:SetAllPoints(closeButton)
-  if closeBg.SetColorTexture then
-    closeBg:SetColorTexture(0, 0, 0, 0)
-  end
+  applyColorTexture(closeBg, { 0, 0, 0, 0 })
   local closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
   closeIcon:SetSize(18, 18)
   closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
   closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
   closeIcon:SetDesaturated(true)
-  do
-    local c = Theme.COLORS.text_secondary
-    closeIcon:SetVertexColor(c[1], c[2], c[3], c[4])
-  end
+  applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
   if closeButton.SetScript then
     closeButton:SetScript("OnEnter", function()
-      closeIcon:SetVertexColor(0.9, 0.3, 0.3, 1)
-      if closeBg.SetColorTexture then
-        closeBg:SetColorTexture(0.9, 0.3, 0.3, 0.15)
-      end
+      applyVertexColor(closeIcon, { 0.9, 0.3, 0.3, 1 })
+      applyColorTexture(closeBg, { 0.9, 0.3, 0.3, 0.15 })
     end)
     closeButton:SetScript("OnLeave", function()
-      local c = Theme.COLORS.text_secondary
-      closeIcon:SetVertexColor(c[1], c[2], c[3], c[4])
-      if closeBg.SetColorTexture then
-        closeBg:SetColorTexture(0, 0, 0, 0)
-      end
+      applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
+      applyColorTexture(closeBg, { 0, 0, 0, 0 })
     end)
   end
   closeButton:EnableMouse(true)
@@ -169,33 +156,24 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -4, 0)
   local optionsBg = optionsButton:CreateTexture(nil, "BACKGROUND")
   optionsBg:SetAllPoints(optionsButton)
-  if optionsBg.SetColorTexture then
-    optionsBg:SetColorTexture(0, 0, 0, 0)
-  end
+  applyColorTexture(optionsBg, { 0, 0, 0, 0 })
   local optionsIcon = optionsButton:CreateTexture(nil, "ARTWORK")
   optionsIcon:SetSize(18, 18)
   optionsIcon:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
   optionsIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
   optionsIcon:SetDesaturated(true)
-  do
-    local c = Theme.COLORS.text_secondary
-    optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
-  end
+  applyVertexColor(optionsIcon, Theme.COLORS.text_secondary)
   if optionsButton.SetScript then
     optionsButton:SetScript("OnEnter", function()
-      local c = Theme.COLORS.text_primary
-      optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
-      if optionsBg.SetColorTexture then
+      applyVertexColor(optionsIcon, Theme.COLORS.text_primary)
+      do
         local bc = Theme.COLORS.bg_contact_hover
-        optionsBg:SetColorTexture(bc[1], bc[2], bc[3], 0.5)
+        applyColorTexture(optionsBg, { bc[1], bc[2], bc[3], 0.5 })
       end
     end)
     optionsButton:SetScript("OnLeave", function()
-      local c = Theme.COLORS.text_secondary
-      optionsIcon:SetVertexColor(c[1], c[2], c[3], c[4])
-      if optionsBg.SetColorTexture then
-        optionsBg:SetColorTexture(0, 0, 0, 0)
-      end
+      applyVertexColor(optionsIcon, Theme.COLORS.text_secondary)
+      applyColorTexture(optionsBg, { 0, 0, 0, 0 })
     end)
   end
   optionsButton:EnableMouse(true)
@@ -204,9 +182,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local resizeGrip = frame:CreateTexture(nil, "OVERLAY")
   resizeGrip:SetSize(12, 12)
   resizeGrip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
-  if resizeGrip.SetColorTexture then
+  do
     local c = Theme.COLORS.text_secondary
-    resizeGrip:SetColorTexture(c[1], c[2], c[3], 0.3)
+    applyColorTexture(resizeGrip, { c[1], c[2], c[3], 0.3 })
   end
 
   return {

@@ -19,6 +19,7 @@ local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local sizeValue = UIHelpers.sizeValue
+local captureFramePosition = UIHelpers.captureFramePosition
 
 local MessengerWindow = {}
 
@@ -65,22 +66,11 @@ function MessengerWindow.Create(factory, options)
   end
 
   local function buildState(target)
-    local point, _, relative, offsetX, offsetY
-    if target.GetPoint then
-      point, _, relative, offsetX, offsetY = target:GetPoint()
-    else
-      local savedPoint = target.point or {}
-      point, relative, offsetX, offsetY = savedPoint[1], savedPoint[3], savedPoint[4], savedPoint[5]
-    end
-    return {
-      anchorPoint = point or initialState.anchorPoint,
-      relativePoint = relative or point or initialState.anchorPoint,
-      x = offsetX or 0,
-      y = offsetY or 0,
-      width = sizeValue(target, "GetWidth", "width", initialState.width),
-      height = sizeValue(target, "GetHeight", "height", initialState.height),
-      minimized = false,
-    }
+    local pos = captureFramePosition(target)
+    pos.width = sizeValue(target, "GetWidth", "width", initialState.width)
+    pos.height = sizeValue(target, "GetHeight", "height", initialState.height)
+    pos.minimized = false
+    return pos
   end
 
   local function isShown(target)

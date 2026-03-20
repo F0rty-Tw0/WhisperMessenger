@@ -5,6 +5,9 @@ end
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local captureFramePosition = UIHelpers.captureFramePosition
+local applyVertexColor = UIHelpers.applyVertexColor
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
 
@@ -35,30 +38,21 @@ function ToggleIcon.Create(factory, options)
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   background:SetTexture(CIRCLE_TEX)
-  local c = Theme.COLORS.icon_bg
-  if background.SetVertexColor then
-    background:SetVertexColor(c[1], c[2], c[3], c[4] or 1)
-  end
+  applyVertexColor(background, Theme.COLORS.icon_bg)
 
   -- Circular border ring
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
   border:SetTexture("Interface\\COMMON\\RingBorder")
-  if border.SetVertexColor then
-    local bc = Theme.COLORS.accent
-    border:SetVertexColor(bc[1], bc[2], bc[3], 0.3)
-  end
+  applyVertexColor(border, { Theme.COLORS.accent[1], Theme.COLORS.accent[2], Theme.COLORS.accent[3], 0.3 })
 
   -- Chat icon (speech bubble) instead of text label
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
   chatIcon:SetSize(ICON_SIZE * 0.6, ICON_SIZE * 0.6)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
   chatIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
-  if chatIcon.SetVertexColor then
-    local tc = Theme.COLORS.text_primary
-    chatIcon:SetVertexColor(tc[1], tc[2], tc[3], 1)
-  end
+  applyVertexColor(chatIcon, Theme.COLORS.text_primary)
 
   local label = chatIcon -- reference kept for return table
 
@@ -77,10 +71,7 @@ function ToggleIcon.Create(factory, options)
     glowTexture:SetBlendMode("ADD")
   end
   do
-    local gc = Theme.COLORS.accent
-    if glowTexture.SetVertexColor then
-      glowTexture:SetVertexColor(gc[1], gc[2], gc[3], 1)
-    end
+    applyVertexColor(glowTexture, Theme.COLORS.accent)
   end
   glowFrame:Hide()
 
@@ -164,10 +155,7 @@ function ToggleIcon.Create(factory, options)
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      if background.SetVertexColor then
-        local hc = Theme.COLORS.send_button_hover
-        background:SetVertexColor(hc[1], hc[2], hc[3], hc[4] or 1)
-      end
+      applyVertexColor(background, Theme.COLORS.send_button_hover)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         local unreadText = ""
@@ -180,10 +168,7 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      if background.SetVertexColor then
-        local lc = Theme.COLORS.icon_bg
-        background:SetVertexColor(lc[1], lc[2], lc[3], lc[4] or 1)
-      end
+      applyVertexColor(background, Theme.COLORS.icon_bg)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -205,20 +190,7 @@ function ToggleIcon.Create(factory, options)
 
     frame:SetScript("OnDragStop", function(self)
       self:StopMovingOrSizing()
-      local point, _, relative, offsetX, offsetY
-      if self.GetPoint then
-        point, _, relative, offsetX, offsetY = self:GetPoint()
-      else
-        local savedPoint = self.point or {}
-        point, relative, offsetX, offsetY = savedPoint[1], savedPoint[3], savedPoint[4], savedPoint[5]
-      end
-
-      local nextState = {
-        anchorPoint = point or "CENTER",
-        relativePoint = relative or point or "CENTER",
-        x = offsetX or 0,
-        y = offsetY or 0,
-      }
+      local nextState = captureFramePosition(self)
 
       trace("icon drag stop", nextState.anchorPoint, nextState.x, nextState.y)
       if options.onPositionChanged then

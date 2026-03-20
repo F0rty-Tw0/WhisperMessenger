@@ -8,6 +8,8 @@ local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
+local applyClassColor = UIHelpers.applyClassColor
+local applyColorTexture = UIHelpers.applyColorTexture
 
 local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
@@ -27,16 +29,14 @@ local function bindRow(factory, parent, row, index, item, options)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
   end
-  local bgColor = Theme.COLORS.bg_secondary
-  row.bg:SetColorTexture(bgColor[1], bgColor[2], bgColor[3], bgColor[4])
+  applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
 
   -- Left accent bar (shown when selected)
   if row.accentBar == nil then
     row.accentBar = row:CreateTexture(nil, "BORDER")
     row.accentBar:SetSize(Theme.LAYOUT.CONTACT_ACCENT_BAR_W, ROW_HEIGHT)
     row.accentBar:SetPoint("LEFT", row, "LEFT", 0, 0)
-    local ac = Theme.COLORS.accent_bar
-    row.accentBar:SetColorTexture(ac[1], ac[2], ac[3], ac[4])
+    applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
   end
   row.accentBar:Hide()
 
@@ -44,18 +44,15 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.SetScript then
     row:SetScript("OnEnter", function()
       if not row.selected then
-        local hc = Theme.COLORS.bg_contact_hover
-        row.bg:SetColorTexture(hc[1], hc[2], hc[3], hc[4])
+        applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
       end
     end)
 
     row:SetScript("OnLeave", function()
       if row.selected then
-        local sc = Theme.COLORS.bg_contact_selected
-        row.bg:SetColorTexture(sc[1], sc[2], sc[3], sc[4])
+        applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
       else
-        local dc = Theme.COLORS.bg_secondary
-        row.bg:SetColorTexture(dc[1], dc[2], dc[3], dc[4])
+        applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
       end
     end)
 
@@ -87,10 +84,7 @@ local function bindRow(factory, parent, row, index, item, options)
     row.statusDot = row:CreateTexture(nil, "OVERLAY")
     row.statusDot:SetSize(Theme.LAYOUT.CONTACT_STATUS_SIZE, Theme.LAYOUT.CONTACT_STATUS_SIZE)
     row.statusDot:SetPoint("BOTTOMRIGHT", row.classIcon, "BOTTOMRIGHT", 2, -2)
-    local oc = Theme.COLORS.online
-    if row.statusDot.SetColorTexture then
-      row.statusDot:SetColorTexture(oc[1], oc[2], oc[3], oc[4])
-    end
+    applyColorTexture(row.statusDot, Theme.COLORS.online)
     if row.statusDot.SetMask then
       row.statusDot:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
     end
@@ -102,8 +96,8 @@ local function bindRow(factory, parent, row, index, item, options)
       colorKey = "dnd"
     end
     local sc = Theme.COLORS[colorKey]
-    if sc and row.statusDot.SetColorTexture then
-      row.statusDot:SetColorTexture(sc[1], sc[2], sc[3], sc[4])
+    if sc then
+      applyColorTexture(row.statusDot, sc)
     end
     row.statusDot:Show()
   else
@@ -117,13 +111,7 @@ local function bindRow(factory, parent, row, index, item, options)
     row.title:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 160)
   end
   row.title:SetText(item.displayName)
-  if RAID_CLASS_COLORS and item.classTag and RAID_CLASS_COLORS[item.classTag] then
-    local cc = RAID_CLASS_COLORS[item.classTag]
-    row.title:SetTextColor(cc.r, cc.g, cc.b, 1)
-  else
-    local tc = Theme.COLORS.text_primary
-    row.title:SetTextColor(tc[1], tc[2], tc[3], tc[4])
-  end
+  applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
 
   -- Faction icon (14x14, after name)
   if row.factionIcon == nil then
@@ -176,8 +164,7 @@ local function bindRow(factory, parent, row, index, item, options)
 
     row.unreadBadge.bg = row.unreadBadge:CreateTexture(nil, "BACKGROUND")
     row.unreadBadge.bg:SetAllPoints()
-    local ub = Theme.COLORS.unread_badge
-    row.unreadBadge.bg:SetColorTexture(ub[1], ub[2], ub[3], ub[4])
+    applyColorTexture(row.unreadBadge.bg, Theme.COLORS.unread_badge)
     if row.unreadBadge.bg.SetMask then
       row.unreadBadge.bg:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
     end
