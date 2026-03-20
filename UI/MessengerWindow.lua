@@ -216,6 +216,9 @@ function MessengerWindow.Create(factory, options)
 
   frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
   applyState(frame, initialState)
+  if frame.SetFrameStrata then
+    frame:SetFrameStrata("HIGH")
+  end
   frame:SetMovable(true)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
