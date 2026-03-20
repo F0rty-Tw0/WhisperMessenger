@@ -142,11 +142,12 @@ function LayoutBuilder.Relayout(layout, width, height)
   layout.composerPane:SetSize(contentW, Theme.COMPOSER_HEIGHT)
   layout.composerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
 
-  -- Resize contacts scroll view
+  -- Resize contacts scroll view (viewport + scrollbar only; content height is
+  -- managed by ContactsList.Refresh / fillViewport — shrinking it here would
+  -- collapse the scroll range and trigger a checkLoadMore cascade).
   local cv = layout.contactsView
   if cv then
     cv.scrollFrame:SetSize(Theme.CONTACTS_WIDTH, contactsH)
-    cv.content:SetSize(Theme.CONTACTS_WIDTH, contactsH)
     cv.scrollBar:SetHeight(contactsH)
     cv.viewportHeight = contactsH
   end
