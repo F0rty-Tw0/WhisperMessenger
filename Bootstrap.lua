@@ -2,11 +2,6 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
-local function trace(...)
-  if type(_G.print) == "function" then
-    _G.print("[WM]", ...)
-  end
-end
 
 local function loadModule(name, key)
   if ns[key] then
@@ -23,35 +18,32 @@ local function loadModule(name, key)
   error(key .. " module not available")
 end
 
+if ns.Loader then
+  loadModule = ns.Loader.LoadModule
+elseif type(require) == "function" then
+  local ok, Loader = pcall(require, "WhisperMessenger.Core.Loader")
+  if ok and Loader then
+    loadModule = Loader.LoadModule
+  end
+end
+
+local function trace(...)
+  if type(_G.print) == "function" then
+    _G.print("[WM]", ...)
+  end
+end
+
+if ns.trace then
+  trace = ns.trace
+elseif type(require) == "function" then
+  local ok, loaded = pcall(require, "WhisperMessenger.Core.Trace")
+  if ok and loaded then
+    trace = loaded
+  end
+end
+
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
-
-local LIVE_EVENT_NAMES = {
-  "CHAT_MSG_WHISPER",
-  "CHAT_MSG_WHISPER_INFORM",
-  "CHAT_MSG_AFK",
-  "CHAT_MSG_DND",
-  "CAN_LOCAL_WHISPER_TARGET_RESPONSE",
-  "CHAT_MSG_BN_WHISPER",
-  "CHAT_MSG_BN_WHISPER_INFORM",
-  "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
-}
-
-local AVAILABILITY_STATUS_BY_CODE = {
-  [0] = "CanWhisper",
-  [1] = "Offline",
-  [2] = "WrongFaction",
-}
-
-local function copyState(source)
-  local copy = {}
-
-  for key, value in pairs(source or {}) do
-    copy[key] = value
-  end
-
-  return copy
-end
 
 local function currentTime()
   if type(_G.time) == "function" then
@@ -128,88 +120,14 @@ local function createRuntimeState(accountState, characterState, localProfileId, 
   }
 end
 
-local function normalizeAvailabilityStatus(status)
-  if status == nil or type(status) == "string" then
-    return status
-  end
-
-  return AVAILABILITY_STATUS_BY_CODE[status] or tostring(status)
-end
-
-local function resolveBattleNetAccountInfo(bnetApi, bnetAccountID, guid)
-  if bnetApi == nil or type(bnetApi.GetAccountInfoByID) ~= "function" or bnetAccountID == nil then
-    return nil
-  end
-
-  local ok, accountInfo = pcall(bnetApi.GetAccountInfoByID, bnetAccountID, guid)
-  if not ok then
-    return nil
-  end
-
-  return accountInfo
-end
-
-local function enrichContactsAvailability(contacts, runtime)
-  for _, item in ipairs(contacts) do
-    -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
-    if item.guid and runtime.availabilityByGUID[item.guid] then
-      item.availability = runtime.availabilityByGUID[item.guid]
-    end
-    -- BNet contacts: query live status and refresh metadata from BNet API
-    if item.channel == "BN" and item.bnetAccountID then
-      local accountInfo = resolveBattleNetAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
-      if accountInfo then
-        local gameInfo = accountInfo.gameAccountInfo
-        if gameInfo and gameInfo.characterName then
-          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
-          item.availability = Availability.FromStatus("CanWhisper")
-          -- Refresh potentially stale metadata from live BNet data
-          if gameInfo.factionName and gameInfo.factionName ~= "" then
-            item.factionName = gameInfo.factionName
-          end
-          if gameInfo.className and gameInfo.className ~= "" then
-            item.className = gameInfo.className
-          end
-          if gameInfo.raceName and gameInfo.raceName ~= "" then
-            item.raceName = gameInfo.raceName
-          end
-        else
-          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
-          item.availability = Availability.FromStatus("Offline")
-        end
-      end
-    end
-  end
-end
-
-local function resolveWhisperPlayerInfo(runtime, guid)
-  if runtime == nil or type(runtime.playerInfoByGUID) ~= "function" or guid == nil then
-    return nil
-  end
-
-  local ok, className, classTag, raceName, raceTag = pcall(runtime.playerInfoByGUID, guid)
-  if not ok then
-    return nil
-  end
-
-  if className == nil and classTag == nil and raceName == nil and raceTag == nil then
-    return nil
-  end
-
-  return {
-    className = className,
-    classTag = classTag,
-    raceName = raceName,
-    raceTag = raceTag,
-  }
-end
-
 local function buildLivePayload(runtime, eventName, ...)
+  local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
+
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
     local guid, status = ...
     return {
       guid = guid,
-      status = normalizeAvailabilityStatus(status),
+      status = BNetResolver.NormalizeAvailabilityStatus(status),
     }
   end
 
@@ -222,7 +140,7 @@ local function buildLivePayload(runtime, eventName, ...)
       guid = guid,
       channel = "BN",
       bnetAccountID = bnetAccountID,
-      accountInfo = resolveBattleNetAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid),
+      accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid),
     }
   end
 
@@ -232,12 +150,13 @@ local function buildLivePayload(runtime, eventName, ...)
     playerName = playerName,
     lineID = lineID,
     guid = guid,
-    playerInfo = resolveWhisperPlayerInfo(runtime, guid),
+    playerInfo = BNetResolver.ResolvePlayerInfo(runtime and runtime.playerInfoByGUID or nil, guid),
   }
 end
 
 local function registerLiveEvents(frame)
-  for _, eventName in ipairs(LIVE_EVENT_NAMES) do
+  local Constants = loadModule("WhisperMessenger.Core.Constants", "Constants")
+  for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
     frame:RegisterEvent(eventName)
   end
 end
@@ -247,106 +166,9 @@ local function buildContacts(runtime)
   return ContactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
 end
 
-local function sumUnreadCount(contacts)
-  local total = 0
-  for _, item in ipairs(contacts or {}) do
-    total = total + (item.unreadCount or 0)
-  end
-
-  return total
-end
-
-local function findContactByConversationKey(contacts, conversationKey)
-  for _, item in ipairs(contacts or {}) do
-    if item.conversationKey == conversationKey then
-      return item
-    end
-  end
-
-  return nil
-end
-
-local function buildConversationStatus(runtime, conversationKey, conversation)
-  if conversationKey == nil then
-    return nil
-  end
-
-  if runtime.sendStatusByConversation[conversationKey] ~= nil then
-    return runtime.sendStatusByConversation[conversationKey]
-  end
-
-  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
-    local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
-    return Availability.FromStatus("Lockdown")
-  end
-
-  if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
-    return runtime.availabilityByGUID[conversation.guid]
-  end
-
-  return nil
-end
-
 local function buildWindowSelectionState(runtime, contacts)
-  contacts = contacts or buildContacts(runtime)
-  enrichContactsAvailability(contacts, runtime)
-  if runtime.activeConversationKey == nil then
-    return {
-      contacts = contacts,
-    }
-  end
-
-  local conversationKey = runtime.activeConversationKey
-  local conversation = runtime.store.conversations[conversationKey]
-  local selectedContact = findContactByConversationKey(contacts, conversationKey)
-  if selectedContact == nil and conversation ~= nil then
-    selectedContact = {
-      conversationKey = conversationKey,
-      displayName = conversation.displayName or conversation.contactDisplayName or conversationKey,
-      lastPreview = conversation.lastPreview or "",
-      unreadCount = conversation.unreadCount or 0,
-      lastActivityAt = conversation.lastActivityAt or 0,
-      channel = conversation.channel or "WOW",
-      guid = conversation.guid,
-      bnetAccountID = conversation.bnetAccountID,
-      gameAccountName = conversation.gameAccountName,
-      className = conversation.className,
-      classTag = conversation.classTag,
-      raceName = conversation.raceName,
-      raceTag = conversation.raceTag,
-      factionName = conversation.factionName,
-    }
-  end
-
-  -- Enrich selected contact with live BNet metadata for display
-  if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
-    local accountInfo = resolveBattleNetAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
-    if accountInfo then
-      local gameInfo = accountInfo.gameAccountInfo
-      if gameInfo then
-        if gameInfo.factionName and gameInfo.factionName ~= "" then
-          selectedContact.factionName = gameInfo.factionName
-        end
-        if gameInfo.className and gameInfo.className ~= "" then
-          selectedContact.className = gameInfo.className
-        end
-        if gameInfo.raceName and gameInfo.raceName ~= "" then
-          selectedContact.raceName = gameInfo.raceName
-        end
-        if gameInfo.characterName then
-          selectedContact.characterName = gameInfo.characterName
-          selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
-        end
-      end
-    end
-  end
-
-  return {
-    contacts = contacts,
-    selectedContact = selectedContact,
-    conversation = conversation,
-    status = buildConversationStatus(runtime, conversationKey, conversation),
-  }
+  local ContactEnricher = loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
+  return ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
 end
 
 local function routeLiveEvent(eventName, ...)
@@ -372,6 +194,7 @@ function Bootstrap.Initialize(factory, options)
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
   local ToggleIcon = loadModule("WhisperMessenger.UI.ToggleIcon", "ToggleIcon")
+  local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
   local uiFactory = factory or _G
   local localProfileId = resolveLocalProfileId(options)
   local accountState, characterState = SavedState.Initialize(options.accountState, options.characterState, localProfileId)
@@ -424,7 +247,7 @@ function Bootstrap.Initialize(factory, options)
     end
 
     if icon and icon.setUnreadCount then
-      icon.setUnreadCount(sumUnreadCount(contacts))
+      icon.setUnreadCount(TableUtils.sumBy(contacts, "unreadCount"))
     end
 
     return nextState
@@ -528,18 +351,18 @@ function Bootstrap.Initialize(factory, options)
       return true
     end,
     onPositionChanged = function(nextState)
-      characterState.window = copyState(nextState)
+      characterState.window = TableUtils.copyState(nextState)
     end,
     onClose = function()
       setWindowVisible(false)
     end,
     onResetWindowPosition = function()
-      local nextState = copyState(defaultCharacterState.window)
+      local nextState = TableUtils.copyState(defaultCharacterState.window)
       characterState.window = nextState
       return nextState
     end,
     onResetIconPosition = function()
-      local nextState = copyState(defaultCharacterState.icon)
+      local nextState = TableUtils.copyState(defaultCharacterState.icon)
       characterState.icon = nextState
 
       if icon and icon.frame and icon.frame.SetPoint then
@@ -559,7 +382,7 @@ function Bootstrap.Initialize(factory, options)
     state = characterState.icon,
     onToggle = toggle,
     onPositionChanged = function(nextState)
-      characterState.icon = copyState(nextState)
+      characterState.icon = TableUtils.copyState(nextState)
     end,
   })
 

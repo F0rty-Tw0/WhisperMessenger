@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(lua:*)"
+      "Bash(lua:*)",
+      "Bash(rtk ls:*)",
+      "Bash(rtk find:*)",
+      "Bash(rtk wc:*)",
+      "Bash(rtk grep:*)",
+      "Bash(for f:*)",
+      "Bash(do lua:*)",
+      "Bash(done)",
+      "Bash(rtk read:*)"
     ]
   }
 }

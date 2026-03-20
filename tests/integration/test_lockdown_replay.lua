@@ -35,6 +35,6 @@ return function()
   local replayed = Router.ReplayQueued(state)
   assert(replayed == 1)
 
-  local key = "me::WOW::arthas-area52"
+  local key = "wow::WOW::arthas-area52"
   assert(state.store.conversations[key].messages[1].text == "queued whisper")
 end

@@ -64,7 +64,7 @@ return function()
   assert(runtime.icon.frame.point[5] == -40)
   assert(runtime.window.frame.shown == false)
   assert(runtime.icon.badge ~= nil)
-  assert(runtime.icon.badgeLabel.text == "5")
+  assert(runtime.icon.badgeLabel.text == "14")
   assert(runtime.icon.badge.shown == true)
 
 
@@ -87,8 +87,9 @@ return function()
   assert(runtime.characterState.icon.x == 75)
   assert(runtime.characterState.icon.y == 90)
 
-  runtime.accountState.conversations["me::WOW::arthas-area52"].unreadCount = 0
-  runtime.accountState.conversations["me::WOW::jaina-proudmoore"].unreadCount = 0
+  runtime.accountState.conversations["wow::WOW::arthas-area52"].unreadCount = 0
+  runtime.accountState.conversations["wow::WOW::jaina-proudmoore"].unreadCount = 0
+  runtime.accountState.conversations["wow::WOW::thrall-draenor"].unreadCount = 0
   runtime.refreshWindow()
   assert(runtime.icon.badgeLabel.text == "")
   assert(runtime.icon.badge.shown == false)

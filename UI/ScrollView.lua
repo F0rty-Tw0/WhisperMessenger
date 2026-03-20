@@ -5,51 +5,17 @@ end
 
 local ScrollView = {}
 
-local function loadModule(name, key)
-  if ns[key] then return ns[key] end
-  local ok, loaded = pcall(require, name)
-  if ok then return loaded end
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local SCROLLBAR_WIDTH = Theme.LAYOUT.SCROLLBAR_WIDTH  -- 4px
 local SCROLLBAR_INSET = 0
 
-local function sizeValue(target, getterName, fieldName, fallback)
-  if target and type(target[getterName]) == "function" then
-    local value = target[getterName](target)
-    if type(value) == "number" and value > 0 then
-      return value
-    end
-  end
-
-  if target and type(target[fieldName]) == "number" then
-    return target[fieldName]
-  end
-
-  return fallback
-end
-
-local function clamp(value, minimum, maximum)
-  if value < minimum then
-    return minimum
-  end
-
-  if value > maximum then
-    return maximum
-  end
-
-  return value
-end
-
-local function unpackValues(values)
-  local unpackFn = table.unpack or _G.unpack
-  if type(unpackFn) ~= "function" then
-    error("unpack not available")
-  end
-
-  return unpackFn(values)
-end
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local sizeValue = UIHelpers.sizeValue
+local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
+local clamp = TableUtils.clamp
+local unpackValues = TableUtils.unpackValues
 
 
 function ScrollView.GetRange(view)

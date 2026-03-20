@@ -8,18 +8,8 @@ local TRANSCRIPT_LINE_HEIGHT = 16
 local TRANSCRIPT_SCROLL_STEP = 24
 local TRANSCRIPT_BOTTOM_GAP = 56
 
-local function loadModule(name, key)
-  if ns[key] then
-    return ns[key]
-  end
-
-  local ok, loaded = pcall(require, name)
-  if ok then
-    return loaded
-  end
-
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
@@ -45,20 +35,9 @@ local function headerTextFor(selectedContact)
   return "No conversation selected"
 end
 
-local function sizeValue(target, getterName, fieldName, fallback)
-  if target and type(target[getterName]) == "function" then
-    local value = target[getterName](target)
-    if type(value) == "number" and value > 0 then
-      return value
-    end
-  end
-
-  if target and type(target[fieldName]) == "number" then
-    return target[fieldName]
-  end
-
-  return fallback
-end
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local sizeValue = UIHelpers.sizeValue
+local applyColor = UIHelpers.applyColor
 
 local function transcriptContentHeight(transcript)
   if transcript.text and type(transcript.text.GetStringHeight) == "function" then
@@ -189,12 +168,6 @@ function ConversationPane.SetStatus(view, status)
 
   view.statusBanner:SetText(status and status.status or "")
   return view.statusBanner.text
-end
-
-local function applyColor(fontString, colorTable)
-  if fontString and colorTable then
-    fontString:SetTextColor(colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1)
-  end
 end
 
 local AVAILABILITY_DISPLAY = {

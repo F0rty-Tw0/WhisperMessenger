@@ -3,29 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then
-    return ns[key]
-  end
-
-  local ok, loaded = pcall(require, name)
-  if ok then
-    return loaded
-  end
-
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
 local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
 local ConversationPane = loadModule("WhisperMessenger.UI.ConversationPane", "ConversationPane")
 local Composer = loadModule("WhisperMessenger.UI.Composer", "Composer")
-local function trace(...)
-  if type(_G.print) == "function" then
-    _G.print("[WM]", ...)
-  end
-end
+local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local MessengerWindow = {}
 
@@ -45,20 +31,8 @@ local function setComposerEnabled(composer, selectedContact)
   end
 end
 
-local function sizeValue(target, getterName, fieldName, fallback)
-  if target and type(target[getterName]) == "function" then
-    local value = target[getterName](target)
-    if type(value) == "number" and value > 0 then
-      return value
-    end
-  end
-
-  if target and type(target[fieldName]) == "number" then
-    return target[fieldName]
-  end
-
-  return fallback
-end
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local sizeValue = UIHelpers.sizeValue
 
 function MessengerWindow.Create(factory, options)
   options = options or {}

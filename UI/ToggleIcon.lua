@@ -3,20 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then return ns[key] end
-  local ok, loaded = pcall(require, name)
-  if ok then return loaded end
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
-local function trace(...)
-  if type(_G.print) == "function" then
-    _G.print("[WM]", ...)
-  end
-end
+local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local ToggleIcon = {}
 

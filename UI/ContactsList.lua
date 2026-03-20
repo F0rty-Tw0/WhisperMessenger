@@ -3,12 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then return ns[key] end
-  local ok, loaded = pcall(require, name)
-  if ok then return loaded end
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
 local ContactsList = {}
@@ -92,20 +88,8 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
   return selectedConversationKey
 end
 
-local function sizeValue(target, getterName, fieldName, fallback)
-  if target and type(target[getterName]) == "function" then
-    local value = target[getterName](target)
-    if type(value) == "number" and value > 0 then
-      return value
-    end
-  end
-
-  if target and type(target[fieldName]) == "number" then
-    return target[fieldName]
-  end
-
-  return fallback
-end
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local sizeValue = UIHelpers.sizeValue
 
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
 

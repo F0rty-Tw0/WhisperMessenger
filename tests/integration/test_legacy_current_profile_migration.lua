@@ -51,7 +51,7 @@ return function()
     characterState = characterState,
   })
 
-  local migratedKey = "arthas-area52::WOW::jaina-proudmoore"
+  local migratedKey = "wow::WOW::jaina-proudmoore"
   assert(runtime.localProfileId == "arthas-area52")
   assert(accountState.conversations[migratedKey] ~= nil, "expected legacy current conversation to migrate to the resolved profile")
   assert(accountState.conversations["current::WOW::jaina-proudmoore"] == nil, "expected legacy current conversation key to be removed after migration")

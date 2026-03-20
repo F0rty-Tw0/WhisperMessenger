@@ -3,18 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then
-    return ns[key]
-  end
-
-  local ok, loaded = pcall(require, name)
-  if ok then
-    return loaded
-  end
-
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
 local Migrations = loadModule("WhisperMessenger.Persistence.Migrations", "Migrations")
@@ -80,6 +70,61 @@ local function migrateLegacyCurrentProfile(accountState, characterState, localPr
   end
 end
 
+local function updateActiveConversationKey(characterState, conversations, matchPattern, newPrefix, guardPrefix)
+  if characterState.activeConversationKey then
+    local pos = string.find(characterState.activeConversationKey, matchPattern, 1, true)
+    if pos and string.find(characterState.activeConversationKey, guardPrefix, 1, true) ~= 1 then
+      local newActiveKey = newPrefix .. string.sub(characterState.activeConversationKey, pos)
+      if conversations[newActiveKey] then
+        characterState.activeConversationKey = newActiveKey
+      end
+    end
+  end
+end
+
+local function migrateConversationPrefix(conversations, matchPattern, newPrefix, sortMessages, characterState)
+  local migrations = {}
+  for conversationKey, conversation in pairs(conversations or {}) do
+    local pos = string.find(conversationKey, matchPattern, 1, true)
+    if pos and string.find(conversationKey, newPrefix .. "::", 1, true) ~= 1 then
+      local newKey = newPrefix .. string.sub(conversationKey, pos)
+      migrations[conversationKey] = { newKey = newKey, conversation = conversation }
+    end
+  end
+
+  for oldKey, entry in pairs(migrations) do
+    local existing = conversations[entry.newKey]
+    if existing then
+      -- Merge: keep the one with more recent activity, combine messages
+      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
+        for _, msg in ipairs(existing.messages or {}) do
+          table.insert(entry.conversation.messages, msg)
+        end
+        if sortMessages then
+          table.sort(entry.conversation.messages, function(a, b)
+            return (a.sentAt or 0) < (b.sentAt or 0)
+          end)
+        end
+        conversations[entry.newKey] = entry.conversation
+      else
+        for _, msg in ipairs(entry.conversation.messages or {}) do
+          table.insert(existing.messages, msg)
+        end
+        if sortMessages then
+          table.sort(existing.messages, function(a, b)
+            return (a.sentAt or 0) < (b.sentAt or 0)
+          end)
+        end
+      end
+    else
+      conversations[entry.newKey] = entry.conversation
+    end
+    conversations[oldKey] = nil
+  end
+
+  updateActiveConversationKey(characterState, conversations, matchPattern, newPrefix, newPrefix .. "::")
+end
+
 function SavedState.Initialize(accountState, characterState, localProfileId)
   local account = Migrations.Apply(accountState, Schema)
   local defaults = Schema.NewCharacterState()
@@ -121,99 +166,8 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
 
   migrateLegacyCurrentProfile(account, character, localProfileId)
 
-  -- Migrate old per-character BNet conversation keys to shared "bnet::" prefix
-  local bnetMigrations = {}
-  for conversationKey, conversation in pairs(account.conversations or {}) do
-    -- Match keys like "profileId::BN::accountId" that aren't already "bnet::BN::..."
-    local bnPos = string.find(conversationKey, "::BN::", 1, true)
-    if bnPos and string.find(conversationKey, "bnet::", 1, true) ~= 1 then
-      local newKey = "bnet" .. string.sub(conversationKey, bnPos)
-      bnetMigrations[conversationKey] = { newKey = newKey, conversation = conversation }
-    end
-  end
-
-  for oldKey, entry in pairs(bnetMigrations) do
-    local existing = account.conversations[entry.newKey]
-    if existing then
-      -- Merge: keep the one with more recent activity
-      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
-        -- Merge messages from existing into the newer conversation
-        for _, msg in ipairs(existing.messages or {}) do
-          table.insert(entry.conversation.messages, msg)
-        end
-        account.conversations[entry.newKey] = entry.conversation
-      else
-        -- Merge messages from old into the existing conversation
-        for _, msg in ipairs(entry.conversation.messages or {}) do
-          table.insert(existing.messages, msg)
-        end
-      end
-    else
-      account.conversations[entry.newKey] = entry.conversation
-    end
-    account.conversations[oldKey] = nil
-  end
-
-  -- Update active conversation key if it was a BNet key
-  if character.activeConversationKey then
-    local bnPos = string.find(character.activeConversationKey, "::BN::", 1, true)
-    if bnPos and string.find(character.activeConversationKey, "bnet::", 1, true) ~= 1 then
-      local newActiveKey = "bnet" .. string.sub(character.activeConversationKey, bnPos)
-      if account.conversations[newActiveKey] then
-        character.activeConversationKey = newActiveKey
-      end
-    end
-  end
-
-  -- Migrate per-character WoW conversation keys to shared "wow::" prefix
-  local wowMigrations = {}
-  for conversationKey, conversation in pairs(account.conversations or {}) do
-    -- Match keys like "profileId::WOW::contactName" that aren't already "wow::WOW::..."
-    local wowPos = string.find(conversationKey, "::WOW::", 1, true)
-    if wowPos and string.find(conversationKey, "wow::", 1, true) ~= 1 then
-      local newKey = "wow" .. string.sub(conversationKey, wowPos)
-      wowMigrations[conversationKey] = { newKey = newKey, conversation = conversation }
-    end
-  end
-
-  for oldKey, entry in pairs(wowMigrations) do
-    local existing = account.conversations[entry.newKey]
-    if existing then
-      -- Merge: keep the one with more recent activity, combine messages
-      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
-        for _, msg in ipairs(existing.messages or {}) do
-          table.insert(entry.conversation.messages, msg)
-        end
-        -- Sort merged messages by sentAt to maintain chronological order
-        table.sort(entry.conversation.messages, function(a, b)
-          return (a.sentAt or 0) < (b.sentAt or 0)
-        end)
-        account.conversations[entry.newKey] = entry.conversation
-      else
-        for _, msg in ipairs(entry.conversation.messages or {}) do
-          table.insert(existing.messages, msg)
-        end
-        -- Sort merged messages by sentAt to maintain chronological order
-        table.sort(existing.messages, function(a, b)
-          return (a.sentAt or 0) < (b.sentAt or 0)
-        end)
-      end
-    else
-      account.conversations[entry.newKey] = entry.conversation
-    end
-    account.conversations[oldKey] = nil
-  end
-
-  -- Update active conversation key if it was a per-character WoW key
-  if character.activeConversationKey then
-    local wowPos = string.find(character.activeConversationKey, "::WOW::", 1, true)
-    if wowPos and string.find(character.activeConversationKey, "wow::", 1, true) ~= 1 then
-      local newActiveKey = "wow" .. string.sub(character.activeConversationKey, wowPos)
-      if account.conversations[newActiveKey] then
-        character.activeConversationKey = newActiveKey
-      end
-    end
-  end
+  migrateConversationPrefix(account.conversations, "::BN::", "bnet", false, character)
+  migrateConversationPrefix(account.conversations, "::WOW::", "wow", true, character)
 
   return account, character
 end

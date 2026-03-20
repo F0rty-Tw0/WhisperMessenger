@@ -51,7 +51,7 @@ return function()
     guid = "Player-60-0ABCDE123",
   })
 
-  assert(accountState.conversations["arthas-area52::WOW::jaina-proudmoore"].unreadCount == 1)
+  assert(accountState.conversations["wow::WOW::jaina-proudmoore"].unreadCount == 1)
 
   local thrallCharacterState = {
     window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
@@ -73,8 +73,8 @@ return function()
   })
 
   assert(thrallRuntime.localProfileId == "thrall-draenor")
-  assert(#thrallRuntime.window.contacts.rows == 0)
-  assert(thrallRuntime.icon.badge.shown == false)
+  assert(#thrallRuntime.window.contacts.rows == 1)
+  assert(thrallRuntime.icon.badge.shown == true)
 
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList

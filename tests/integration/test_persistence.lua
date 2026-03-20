@@ -38,5 +38,5 @@ return function()
   assert(items[2].displayName == "Anduin-Stormrage")
   assert(character.window.width == 900)
   assert(character.window.height == 560)
-  assert(reloadedCharacter.activeConversationKey == "me::WOW::jaina-proudmoore")
+  assert(reloadedCharacter.activeConversationKey == "wow::WOW::jaina-proudmoore")
 end

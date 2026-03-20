@@ -308,6 +308,18 @@ function FakeUI.NewFactory()
         self.vertexColor = { ... }
       end
 
+      function texture:SetDesaturated(value)
+        self.desaturated = value
+      end
+
+      function texture:SetTexCoord(...)
+        self.texCoords = { ... }
+      end
+
+      function texture:SetMask(mask)
+        self.mask = mask
+      end
+
       return texture
     end
 

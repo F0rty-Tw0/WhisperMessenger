@@ -98,11 +98,11 @@ return function()
 
   eventFrame.scripts.OnEvent(eventFrame, "CHAT_MSG_WHISPER", "hi there", "Arthas-Area52", nil, nil, nil, nil, nil, nil, nil, nil, 101, "Player-3676-0ABCDEF0")
 
-  local conversation = runtime.store.conversations["arthas-area52::WOW::arthas-area52"]
+  local conversation = runtime.store.conversations["wow::WOW::arthas-area52"]
   assert(conversation ~= nil, "expected whisper event to reach runtime store")
   assert(#conversation.messages == 1)
   assert(conversation.messages[1].text == "hi there")
-  assert(runtime.window.contacts.rows[1].item.conversationKey == "arthas-area52::WOW::arthas-area52")
+  assert(runtime.window.contacts.rows[1].item.conversationKey == "wow::WOW::arthas-area52")
   assert(conversation.className == "Priest")
   assert(conversation.classTag == "PRIEST")
   assert(conversation.raceName == "Human")
@@ -114,8 +114,8 @@ return function()
   _G.SlashCmdList.WHISPERMESSENGER()
   assert(runtime.window.frame.shown == true)
   runtime.window.contacts.rows[1].scripts.OnClick()
-  assert(runtime.activeConversationKey == "arthas-area52::WOW::arthas-area52")
-  assert(runtime.characterState.activeConversationKey == "arthas-area52::WOW::arthas-area52")
+  assert(runtime.activeConversationKey == "wow::WOW::arthas-area52")
+  assert(runtime.characterState.activeConversationKey == "wow::WOW::arthas-area52")
   assert(conversation.unreadCount == 0)
   assert(runtime.window.conversation.header.text == "Arthas-Area52")
 

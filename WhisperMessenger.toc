@@ -6,21 +6,31 @@
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 
-Bootstrap.lua
+Core/Loader.lua
+Core/Trace.lua
 Core/Constants.lua
-Core/SlashCommands.lua
+Util/TableUtils.lua
+Util/TimeFormat.lua
+
 Model/Identity.lua
-Persistence/Schema.lua
-Persistence/Migrations.lua
-Persistence/SavedState.lua
 Model/Retention.lua
 Model/ConversationStore.lua
 Model/LockdownQueue.lua
+Model/ContactEnricher.lua
+
+Persistence/Schema.lua
+Persistence/Migrations.lua
+Persistence/SavedState.lua
+
 Transport/Availability.lua
 Transport/WhisperGateway.lua
+Transport/BNetResolver.lua
+
 Core/EventRouter.lua
-Util/TimeFormat.lua
+Core/SlashCommands.lua
+
 UI/Theme.lua
+UI/Helpers.lua
 UI/ScrollView.lua
 UI/ChatBubble.lua
 UI/ContactsList.lua
@@ -28,3 +38,5 @@ UI/ConversationPane.lua
 UI/Composer.lua
 UI/ToggleIcon.lua
 UI/MessengerWindow.lua
+
+Bootstrap.lua

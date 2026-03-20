@@ -21,7 +21,7 @@ return function()
 
   Router.HandleEvent(state, fixture.incoming.eventName, fixture.incoming.payload)
 
-  local key = "me::WOW::arthas-area52"
+  local key = "wow::WOW::arthas-area52"
   local conversation = state.store.conversations[key]
   assert(conversation.unreadCount == 1)
   assert(#conversation.messages == 1)
@@ -50,7 +50,7 @@ return function()
     playerName = "Jaina-Proudmoore",
   })
 
-  local fallbackConversation = state.store.conversations["me::WOW::jaina-proudmoore"]
+  local fallbackConversation = state.store.conversations["wow::WOW::jaina-proudmoore"]
   assert(fallbackConversation ~= nil)
   assert(fallbackConversation.messages[1].id == "500")
   assert(fallbackConversation.messages[1].guid == nil)

@@ -5,12 +5,8 @@ end
 
 local ChatBubble = {}
 
-local function loadModule(name, key)
-  if ns[key] then return ns[key] end
-  local ok, loaded = pcall(require, name)
-  if ok then return loaded end
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
@@ -18,30 +14,15 @@ local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 -- Internal helpers
 ---------------------------------------------------------------------------
 
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local applyColorTexture = UIHelpers.applyColorTexture
+local setFontObject = UIHelpers.setFontObject
+local setTextColor = UIHelpers.setTextColor
+
 local function measureTextHeight(fontString, text, maxWidth)
   fontString:SetWidth(maxWidth)
   fontString:SetText(text or "")
   return fontString:GetStringHeight() or 14
-end
-
-local function applyColor(region, colorTable)
-  if not region or not colorTable then return end
-  if region.SetColorTexture then
-    region:SetColorTexture(colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1)
-  end
-end
-
-local function setFontObject(fontString, fontKey)
-  local fontObj = _G[fontKey] or fontKey
-  if fontString.SetFontObject then
-    fontString:SetFontObject(fontObj)
-  end
-end
-
-local function setTextColor(fontString, colorTable)
-  if fontString.SetTextColor and colorTable then
-    fontString:SetTextColor(colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1)
-  end
 end
 
 ---------------------------------------------------------------------------
@@ -313,14 +294,14 @@ function ChatBubble.CreateDateSeparator(factory, parent, timestamp, paneWidth)
   -- Left line
   local lineLeft = frame:CreateTexture(nil, "ARTWORK")
   lineLeft:SetHeight(1)
-  applyColor(lineLeft, Theme.COLORS.divider)
+  applyColorTexture(lineLeft, Theme.COLORS.divider)
   lineLeft:SetPoint("LEFT",  frame,  "LEFT",  16, 0)
   lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
 
   -- Right line
   local lineRight = frame:CreateTexture(nil, "ARTWORK")
   lineRight:SetHeight(1)
-  applyColor(lineRight, Theme.COLORS.divider)
+  applyColorTexture(lineRight, Theme.COLORS.divider)
   lineRight:SetPoint("LEFT",  labelFS, "RIGHT",  8, 0)
   lineRight:SetPoint("RIGHT", frame,   "RIGHT", -16, 0)
 

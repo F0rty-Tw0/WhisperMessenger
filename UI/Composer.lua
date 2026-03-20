@@ -7,28 +7,12 @@ local Composer = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
 
-local function loadModule(name, key)
-  if ns[key] then return ns[key] end
-  local ok, loaded = pcall(require, name)
-  if ok then return loaded end
-  error(key .. " module not available")
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
-local function sizeValue(target, getterName, fieldName, fallback)
-  if target and type(target[getterName]) == "function" then
-    local value = target[getterName](target)
-    if type(value) == "number" and value > 0 then
-      return value
-    end
-  end
-
-  if target and type(target[fieldName]) == "number" then
-    return target[fieldName]
-  end
-
-  return fallback
-end
+local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local sizeValue = UIHelpers.sizeValue
 
 local function canInsertLink(input)
   if input == nil or type(input.Insert) ~= "function" then
@@ -101,10 +85,21 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
     inputBg:SetColorTexture(ic[1], ic[2], ic[3], ic[4])
   end
 
+  -- Send button
+  local buttonW = 72
+  local buttonH = inputH
+  local button = factory.CreateFrame("Button", nil, pane)
+  button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -inputX, inputY)
+  button:SetSize(buttonW, buttonH)
+  local buttonLabel = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
+  buttonLabel:SetAllPoints(button)
+  buttonLabel:SetText("Send")
+
   -- Plain EditBox (no template)
+  local inputW2 = inputW - buttonW - 8
   local input = factory.CreateFrame("EditBox", nil, pane)
   input:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inputX, inputY)
-  input:SetSize(inputW, inputH)
+  input:SetSize(inputW2, inputH)
   input:SetText("")
 
   local fontObj = _G.ChatFontNormal or "ChatFontNormal"
@@ -138,6 +133,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   registerLinkHooks()
 
   local sendDisabled = selectedContact == nil
+  button.disabled = sendDisabled
 
   local function submitMessage()
     if sendDisabled then
@@ -175,6 +171,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   input:SetScript("OnEnterPressed", function()
     submitMessage()
   end)
+  button:SetScript("OnClick", function()
+    submitMessage()
+  end)
   input:SetScript("OnEscapePressed", function()
     if onEscape then
       onEscape()
@@ -188,8 +187,10 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   return {
     frame = pane,
     input = input,
+    sendButton = button,
     setEnabled = function(enabled)
       sendDisabled = not enabled
+      button.disabled = not enabled
     end,
   }
 end
