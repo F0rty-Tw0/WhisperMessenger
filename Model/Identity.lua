@@ -122,6 +122,10 @@ function Identity.BuildConversationKey(localProfileId, contactKey)
   if type(contactKey) == "string" and string.find(contactKey, "BN::", 1, true) == 1 then
     return "bnet::" .. contactKey
   end
+  -- WoW whisper conversations are account-wide, use a shared prefix
+  if type(contactKey) == "string" and string.find(contactKey, "WOW::", 1, true) == 1 then
+    return "wow::" .. contactKey
+  end
   return localProfileId .. "::" .. contactKey
 end
 

@@ -56,10 +56,12 @@ function ContactsList.BuildItemsForProfile(savedState, localProfileId)
   local items = {}
   local profilePrefix = localProfileId .. "::"
   local bnetPrefix = "bnet::"
+  local wowPrefix = "wow::"
 
   for conversationKey, conversation in pairs(savedState.conversations or {}) do
     if string.find(conversationKey, profilePrefix, 1, true) == 1
-        or string.find(conversationKey, bnetPrefix, 1, true) == 1 then
+        or string.find(conversationKey, bnetPrefix, 1, true) == 1
+        or string.find(conversationKey, wowPrefix, 1, true) == 1 then
       table.insert(items, buildItem(conversationKey, conversation))
     end
   end
@@ -190,7 +192,18 @@ local function bindRow(factory, parent, row, index, item, options)
       row.statusDot:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
     end
   end
-  row.statusDot:Hide()
+  local avail = item.availability
+  if avail then
+    local colorKey = avail.canWhisper and "online" or "offline"
+    if avail.status == "WrongFaction" then colorKey = "dnd" end
+    local sc = Theme.COLORS[colorKey]
+    if sc and row.statusDot.SetColorTexture then
+      row.statusDot:SetColorTexture(sc[1], sc[2], sc[3], sc[4])
+    end
+    row.statusDot:Show()
+  else
+    row.statusDot:Hide()
+  end
 
   -- Contact name (top line, class-colored)
   if row.title == nil then
@@ -215,9 +228,9 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   -- Only show faction icon when race is unambiguously Alliance or Horde
   -- (stored factionName can be stale from BNet API for offline contacts)
-  local reliableFaction = item.raceTag and Theme.FactionIcon(
-    ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag) or nil
-  ) or nil
+  local inferredFaction = item.raceTag and (ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag)) or nil
+  local factionForIcon = inferredFaction or item.factionName
+  local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
   if reliableFaction then
     row.factionIcon:SetTexture(reliableFaction)
     row.factionIcon:Show()

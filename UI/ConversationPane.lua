@@ -241,6 +241,12 @@ local function buildStatusLine(selectedContact, status)
     table.insert(parts, selectedContact.className)
   end
 
+  -- Show faction (inferred from race, or direct from BNet API)
+  local factionName = selectedContact.factionName
+  if factionName and factionName ~= "" then
+    table.insert(parts, factionName)
+  end
+
   return table.concat(parts, "  \xC2\xB7  "), dotColor
 end
 
@@ -306,6 +312,17 @@ function ConversationPane.Refresh(view, selectedContact, conversation, status)
         view.headerStatusDot:SetShown(true)
       else
         view.headerStatusDot:SetShown(false)
+      end
+    end
+
+    -- Update faction icon
+    if view.headerFactionIcon then
+      local factionPath = hasContact and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName) or nil
+      if factionPath then
+        view.headerFactionIcon:SetTexture(factionPath)
+        view.headerFactionIcon:Show()
+      else
+        view.headerFactionIcon:Hide()
       end
     end
 
@@ -390,6 +407,22 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   else
     headerName:SetText("")
     headerName:Hide()
+  end
+
+  ---------------------------------------------------------------------------
+  -- Faction icon (16x16, right of name)
+  ---------------------------------------------------------------------------
+  local headerFactionIcon = headerFrame:CreateTexture(nil, "ARTWORK")
+  headerFactionIcon:SetSize(16, 16)
+  headerFactionIcon:SetPoint("LEFT", headerName, "RIGHT", 6, 0)
+  headerFactionIcon:Hide()
+
+  if selectedContact and selectedContact.factionName then
+    local factionPath = Theme.FactionIcon(selectedContact.factionName)
+    if factionPath then
+      headerFactionIcon:SetTexture(factionPath)
+      headerFactionIcon:Show()
+    end
   end
 
   ---------------------------------------------------------------------------
@@ -538,6 +571,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     headerFrame = headerFrame,
     headerClassIcon = classIcon,
     headerName = headerName,
+    headerFactionIcon = headerFactionIcon,
     headerStatus = headerStatus,
     headerStatusDot = statusDot,
     headerEmpty = headerEmpty,

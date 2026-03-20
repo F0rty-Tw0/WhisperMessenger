@@ -165,6 +165,56 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
     end
   end
 
+  -- Migrate per-character WoW conversation keys to shared "wow::" prefix
+  local wowMigrations = {}
+  for conversationKey, conversation in pairs(account.conversations or {}) do
+    -- Match keys like "profileId::WOW::contactName" that aren't already "wow::WOW::..."
+    local wowPos = string.find(conversationKey, "::WOW::", 1, true)
+    if wowPos and string.find(conversationKey, "wow::", 1, true) ~= 1 then
+      local newKey = "wow" .. string.sub(conversationKey, wowPos)
+      wowMigrations[conversationKey] = { newKey = newKey, conversation = conversation }
+    end
+  end
+
+  for oldKey, entry in pairs(wowMigrations) do
+    local existing = account.conversations[entry.newKey]
+    if existing then
+      -- Merge: keep the one with more recent activity, combine messages
+      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
+        for _, msg in ipairs(existing.messages or {}) do
+          table.insert(entry.conversation.messages, msg)
+        end
+        -- Sort merged messages by sentAt to maintain chronological order
+        table.sort(entry.conversation.messages, function(a, b)
+          return (a.sentAt or 0) < (b.sentAt or 0)
+        end)
+        account.conversations[entry.newKey] = entry.conversation
+      else
+        for _, msg in ipairs(entry.conversation.messages or {}) do
+          table.insert(existing.messages, msg)
+        end
+        -- Sort merged messages by sentAt to maintain chronological order
+        table.sort(existing.messages, function(a, b)
+          return (a.sentAt or 0) < (b.sentAt or 0)
+        end)
+      end
+    else
+      account.conversations[entry.newKey] = entry.conversation
+    end
+    account.conversations[oldKey] = nil
+  end
+
+  -- Update active conversation key if it was a per-character WoW key
+  if character.activeConversationKey then
+    local wowPos = string.find(character.activeConversationKey, "::WOW::", 1, true)
+    if wowPos and string.find(character.activeConversationKey, "wow::", 1, true) ~= 1 then
+      local newActiveKey = "wow" .. string.sub(character.activeConversationKey, wowPos)
+      if account.conversations[newActiveKey] then
+        character.activeConversationKey = newActiveKey
+      end
+    end
+  end
+
   return account, character
 end
 

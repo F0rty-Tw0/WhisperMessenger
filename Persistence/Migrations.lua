@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Migrations = {
-  CURRENT_VERSION = 1,
+  CURRENT_VERSION = 2,
 }
 
 function Migrations.Apply(accountState, schema)

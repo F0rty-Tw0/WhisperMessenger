@@ -149,6 +149,39 @@ local function resolveBattleNetAccountInfo(bnetApi, bnetAccountID, guid)
   return accountInfo
 end
 
+local function enrichContactsAvailability(contacts, runtime)
+  for _, item in ipairs(contacts) do
+    -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
+    if item.guid and runtime.availabilityByGUID[item.guid] then
+      item.availability = runtime.availabilityByGUID[item.guid]
+    end
+    -- BNet contacts: query live status and refresh metadata from BNet API
+    if item.channel == "BN" and item.bnetAccountID then
+      local accountInfo = resolveBattleNetAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
+      if accountInfo then
+        local gameInfo = accountInfo.gameAccountInfo
+        if gameInfo and gameInfo.characterName then
+          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
+          item.availability = Availability.FromStatus("CanWhisper")
+          -- Refresh potentially stale metadata from live BNet data
+          if gameInfo.factionName and gameInfo.factionName ~= "" then
+            item.factionName = gameInfo.factionName
+          end
+          if gameInfo.className and gameInfo.className ~= "" then
+            item.className = gameInfo.className
+          end
+          if gameInfo.raceName and gameInfo.raceName ~= "" then
+            item.raceName = gameInfo.raceName
+          end
+        else
+          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
+          item.availability = Availability.FromStatus("Offline")
+        end
+      end
+    end
+  end
+end
+
 local function resolveWhisperPlayerInfo(runtime, guid)
   if runtime == nil or type(runtime.playerInfoByGUID) ~= "function" or guid == nil then
     return nil
@@ -248,10 +281,7 @@ local function buildConversationStatus(runtime, conversationKey, conversation)
   end
 
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
-    local availability = runtime.availabilityByGUID[conversation.guid]
-    if availability.canWhisper == false then
-      return availability
-    end
+    return runtime.availabilityByGUID[conversation.guid]
   end
 
   return nil
@@ -259,6 +289,7 @@ end
 
 local function buildWindowSelectionState(runtime, contacts)
   contacts = contacts or buildContacts(runtime)
+  enrichContactsAvailability(contacts, runtime)
   if runtime.activeConversationKey == nil then
     return {
       contacts = contacts,
@@ -285,6 +316,29 @@ local function buildWindowSelectionState(runtime, contacts)
       raceTag = conversation.raceTag,
       factionName = conversation.factionName,
     }
+  end
+
+  -- Enrich selected contact with live BNet metadata for display
+  if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
+    local accountInfo = resolveBattleNetAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
+    if accountInfo then
+      local gameInfo = accountInfo.gameAccountInfo
+      if gameInfo then
+        if gameInfo.factionName and gameInfo.factionName ~= "" then
+          selectedContact.factionName = gameInfo.factionName
+        end
+        if gameInfo.className and gameInfo.className ~= "" then
+          selectedContact.className = gameInfo.className
+        end
+        if gameInfo.raceName and gameInfo.raceName ~= "" then
+          selectedContact.raceName = gameInfo.raceName
+        end
+        if gameInfo.characterName then
+          selectedContact.characterName = gameInfo.characterName
+          selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
+        end
+      end
+    end
   end
 
   return {
@@ -357,6 +411,13 @@ function Bootstrap.Initialize(factory, options)
 
   local function refreshWindow()
     local contacts = buildContacts(runtime)
+    -- Proactively request availability for WoW contacts with GUIDs we haven't queried yet
+    local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
+    for _, item in ipairs(contacts) do
+      if item.channel == "WOW" and item.guid and not runtime.availabilityByGUID[item.guid] then
+        Gateway.RequestAvailability(runtime.chatApi, item.guid)
+      end
+    end
     local nextState = buildWindowSelectionState(runtime, contacts)
     if window and window.refreshSelection then
       window.refreshSelection(nextState)
