@@ -20,8 +20,12 @@ Model/ContactEnricher.lua
 
 Persistence/Schema.lua
 Persistence/Migrations.lua
-Persistence/SavedState.lua
+Persistence/Helpers.lua
+Persistence/SavedState/LegacyMigration.lua
+Persistence/SavedState/PrefixMigration.lua
+Persistence/SavedState/SavedState.lua
 
+Transport/Types.lua
 Transport/Availability.lua
 Transport/WhisperGateway.lua
 Transport/BNetResolver.lua

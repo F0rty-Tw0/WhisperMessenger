@@ -18,11 +18,6 @@ local Constants = {
     "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
   },
 
-  AVAILABILITY_STATUS_BY_CODE = {
-    [0] = "CanWhisper",
-    [1] = "Offline",
-    [2] = "WrongFaction",
-  },
 }
 
 ns.Constants = Constants

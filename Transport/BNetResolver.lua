@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Types = ns.TransportTypes or require("WhisperMessenger.Transport.Types")
 local BNetResolver = {}
 
 function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
@@ -45,12 +46,7 @@ function BNetResolver.NormalizeAvailabilityStatus(status)
     return status
   end
 
-  local Constants = ns.Constants
-  if Constants and Constants.AVAILABILITY_STATUS_BY_CODE then
-    return Constants.AVAILABILITY_STATUS_BY_CODE[status] or tostring(status)
-  end
-
-  return tostring(status)
+  return Types.AVAILABILITY_STATUS_BY_CODE[status] or tostring(status)
 end
 
 ns.BNetResolver = BNetResolver
