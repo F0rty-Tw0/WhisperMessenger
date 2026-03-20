@@ -5,8 +5,7 @@ end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
--- Load StatusLine module (registers on ns as side effect)
-local _ = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine") -- luacheck: ignore 211
+local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView
   or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
@@ -43,7 +42,14 @@ function ConversationPane.SetStatus(view, status)
     return nil
   end
 
-  view.statusBanner:SetText(status and status.status or "")
+  local label = ""
+  if status and status.status and StatusLine and StatusLine.AVAILABILITY_DISPLAY then
+    local avail = StatusLine.AVAILABILITY_DISPLAY[status.status]
+    if avail then
+      label = avail.label
+    end
+  end
+  view.statusBanner:SetText(label)
   return view.statusBanner.text
 end
 
@@ -62,11 +68,12 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   local headerFrame = header.headerFrame
 
   ---------------------------------------------------------------------------
-  -- Legacy statusBanner (kept for SetStatus compatibility)
+  -- Legacy statusBanner (hidden; status is shown in header status line)
   ---------------------------------------------------------------------------
   local statusBanner = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
   statusBanner:SetText("")
+  statusBanner:Hide()
 
   ---------------------------------------------------------------------------
   -- Transcript ScrollView (anchored below header)

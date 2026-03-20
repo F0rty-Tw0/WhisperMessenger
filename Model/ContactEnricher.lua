@@ -73,6 +73,7 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
     return Availability.FromStatus("Lockdown")
   end
 
+  -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
     return runtime.availabilityByGUID[conversation.guid]
   end
@@ -150,7 +151,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     contacts = contacts,
     selectedContact = selectedContact,
     conversation = conversation,
-    status = ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
+    status = selectedContact and selectedContact.availability
+      or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
   }
 end
 

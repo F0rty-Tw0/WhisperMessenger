@@ -55,7 +55,8 @@ function StatusLine.Build(selectedContact, status)
     table.insert(parts, factionName)
   end
 
-  return table.concat(parts, "  \xC2\xB7  "), dotColor
+  local sep = "  " .. string.char(194, 183) .. "  "
+  return table.concat(parts, sep), dotColor
 end
 
 ns.ConversationPaneStatusLine = StatusLine

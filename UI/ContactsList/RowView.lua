@@ -9,6 +9,7 @@ local sizeValue = UIHelpers.sizeValue
 local applyClassColor = UIHelpers.applyClassColor
 local applyColorTexture = UIHelpers.applyColorTexture
 local setTextColor = UIHelpers.setTextColor
+local createCircularIcon = UIHelpers.createCircularIcon
 
 local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
@@ -63,10 +64,11 @@ local function bindRow(factory, parent, row, index, item, options)
   end
 
   -- Class icon (40x40, left side)
-  if row.classIcon == nil then
-    row.classIcon = row:CreateTexture(nil, "ARTWORK")
-    row.classIcon:SetSize(Theme.LAYOUT.CONTACT_ICON_SIZE, Theme.LAYOUT.CONTACT_ICON_SIZE)
-    row.classIcon:SetPoint("LEFT", row, "LEFT", Theme.LAYOUT.CONTACT_PADDING, 0)
+  if row.classIconFrame == nil then
+    local icon = createCircularIcon(factory, row, Theme.LAYOUT.CONTACT_ICON_SIZE)
+    row.classIconFrame = icon.frame
+    row.classIcon = icon.texture
+    row.classIconFrame:SetPoint("LEFT", row, "LEFT", Theme.LAYOUT.CONTACT_PADDING, 0)
   end
   local iconPath = Theme.ClassIcon(item.classTag)
   if iconPath then
@@ -74,19 +76,24 @@ local function bindRow(factory, parent, row, index, item, options)
   else
     row.classIcon:SetTexture(Theme.TEXTURES.bnet_icon)
   end
-  if row.classIcon.SetMask then
-    row.classIcon:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-  end
 
-  -- Status dot (10x10, bottom-right of class icon) — hidden until online tracking is implemented
+  -- Status dot (10x10, bottom-right of class icon) — rendered as a frame so
+  -- it stacks above the clipping icon frame. Uses a circular texture tinted
+  -- with vertex color (SetColorTexture can't be masked).
+  local statusSize = Theme.LAYOUT.CONTACT_STATUS_SIZE
+  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
   if row.statusDot == nil then
-    row.statusDot = row:CreateTexture(nil, "OVERLAY")
-    row.statusDot:SetSize(Theme.LAYOUT.CONTACT_STATUS_SIZE, Theme.LAYOUT.CONTACT_STATUS_SIZE)
-    row.statusDot:SetPoint("BOTTOMRIGHT", row.classIcon, "BOTTOMRIGHT", 2, -2)
-    applyColorTexture(row.statusDot, Theme.COLORS.online)
-    if row.statusDot.SetMask then
-      row.statusDot:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    row.statusDot = factory.CreateFrame("Frame", nil, row)
+    row.statusDot:SetSize(statusSize, statusSize)
+    row.statusDot:SetPoint("BOTTOMRIGHT", row.classIconFrame, "BOTTOMRIGHT", 2, -2)
+    if row.statusDot.SetFrameLevel and row.classIconFrame.GetFrameLevel then
+      row.statusDot:SetFrameLevel(row.classIconFrame:GetFrameLevel() + 2)
     end
+    row.statusDot.bg = row.statusDot:CreateTexture(nil, "OVERLAY")
+    row.statusDot.bg:SetAllPoints()
+    row.statusDot.bg:SetTexture(CIRCLE_TEX)
+    local c = Theme.COLORS.online
+    row.statusDot.bg:SetVertexColor(c[1], c[2], c[3], c[4] or 1)
   end
   local avail = item.availability
   if avail then
@@ -96,7 +103,7 @@ local function bindRow(factory, parent, row, index, item, options)
     end
     local sc = Theme.COLORS[colorKey]
     if sc then
-      applyColorTexture(row.statusDot, sc)
+      row.statusDot.bg:SetVertexColor(sc[1], sc[2], sc[3], sc[4] or 1)
     end
     row.statusDot:Show()
   else
@@ -106,7 +113,7 @@ local function bindRow(factory, parent, row, index, item, options)
   -- Contact name (top line, class-colored)
   if row.title == nil then
     row.title = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-    row.title:SetPoint("TOPLEFT", row.classIcon, "TOPRIGHT", 10, -4)
+    row.title:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", 10, -4)
     row.title:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 160)
   end
   row.title:SetText(item.displayName)
@@ -147,7 +154,7 @@ local function bindRow(factory, parent, row, index, item, options)
   -- Preview text (bottom line)
   if row.preview == nil then
     row.preview = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
-    row.preview:SetPoint("TOPLEFT", row.classIcon, "TOPRIGHT", 10, -28)
+    row.preview:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", 10, -28)
     setTextColor(row.preview, Theme.COLORS.text_secondary)
     row.preview:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 40)
   end

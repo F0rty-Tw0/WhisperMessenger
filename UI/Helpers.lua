@@ -93,6 +93,27 @@ function UIHelpers.setTextColor(fontString, colorTable)
   end
 end
 
+local CIRCLE_MASK = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+local ICON_ZOOM = 1.15
+
+function UIHelpers.createCircularIcon(factory, parent, size)
+  local frame = factory.CreateFrame("Frame", nil, parent)
+  frame:SetSize(size, size)
+  if frame.SetClipsChildren then
+    frame:SetClipsChildren(true)
+  end
+
+  local zoom = math.floor(size * ICON_ZOOM + 0.5)
+  local texture = frame:CreateTexture(nil, "ARTWORK")
+  texture:SetSize(zoom, zoom)
+  texture:SetPoint("CENTER", frame, "CENTER", 0, 0)
+  if texture.SetMask then
+    texture:SetMask(CIRCLE_MASK)
+  end
+
+  return { frame = frame, texture = texture }
+end
+
 ns.UIHelpers = UIHelpers
 
 return UIHelpers

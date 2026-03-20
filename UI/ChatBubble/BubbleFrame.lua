@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
+local createCircularIcon = UIHelpers.createCircularIcon
 
 local function measureTextHeight(fontString, text, maxWidth)
   fontString:SetWidth(maxWidth)
@@ -200,14 +201,17 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   -- Class icon for user messages (both sent and received)
   local icon = nil
+  local iconFrame = nil
   if kind == "user" and showIcon then
-    icon = frame:CreateTexture(nil, "OVERLAY")
-    icon:SetSize(Theme.LAYOUT.BUBBLE_ICON_SIZE, Theme.LAYOUT.BUBBLE_ICON_SIZE)
+    local bubbleIcon = createCircularIcon(factory, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
+    iconFrame = bubbleIcon.frame
+    icon = bubbleIcon.texture
     if direction == "in" then
-      icon:SetPoint("TOPRIGHT", frame, "TOPLEFT", -8, 0)
+      bubbleIcon.frame:SetPoint("TOPRIGHT", frame, "TOPLEFT", -8, 0)
     else
-      icon:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
+      bubbleIcon.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
     end
+
     local iconPath
     if direction == "out" then
       -- Player's own class icon
@@ -234,6 +238,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   return {
     frame = frame,
+    iconFrame = iconFrame,
     bgFills = bgFills,
     bgCorners = bgCorners,
     text = textFS,

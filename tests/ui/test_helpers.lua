@@ -162,4 +162,18 @@ return function()
   assert(pos3.anchorPoint == "CENTER", "captureFramePosition default anchorPoint")
   assert(pos3.x == 0, "captureFramePosition default x")
   assert(pos3.y == 0, "captureFramePosition default y")
+
+  -- createCircularIcon returns a clipping frame and oversized texture
+  local FakeUI = require("tests.helpers.fake_ui")
+  local factory = FakeUI.NewFactory()
+  local parent = factory.CreateFrame("Frame", nil, nil)
+  parent:SetSize(200, 200)
+
+  local icon = UIHelpers.createCircularIcon(factory, parent, 40)
+  assert(icon.frame ~= nil, "createCircularIcon should return a frame")
+  assert(icon.texture ~= nil, "createCircularIcon should return a texture")
+  assert(icon.frame.width == 40, "frame should be the requested size")
+  assert(icon.frame.height == 40, "frame height should be the requested size")
+  assert(icon.texture.width == 46, "texture should be ~15% larger (40 * 1.15 = 46)")
+  assert(icon.texture.mask == "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "texture should have circular mask")
 end

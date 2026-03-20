@@ -127,6 +127,9 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
     end
 
     table.insert(pool, bubble.frame)
+    if bubble.iconFrame then
+      table.insert(pool, bubble.iconFrame)
+    end
     yOffset = yOffset + bubble.height
 
     prevMsg = message

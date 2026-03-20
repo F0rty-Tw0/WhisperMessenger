@@ -9,6 +9,7 @@ local applyColor = UIHelpers.applyColor
 local applyClassColor = UIHelpers.applyClassColor
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
+local createCircularIcon = UIHelpers.createCircularIcon
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 
@@ -43,10 +44,10 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   ---------------------------------------------------------------------------
   -- Class icon (32x32)
   ---------------------------------------------------------------------------
-  local classIcon = headerFrame:CreateTexture(nil, "ARTWORK")
-  local iconSize = Theme.LAYOUT.HEADER_ICON_SIZE -- 32
-  classIcon:SetSize(iconSize, iconSize)
-  classIcon:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
+  local headerIcon = createCircularIcon(factory, headerFrame, Theme.LAYOUT.HEADER_ICON_SIZE)
+  local classIconFrame = headerIcon.frame
+  local classIcon = headerIcon.texture
+  classIconFrame:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
 
   local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
   if iconPath then
@@ -59,7 +60,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   -- Contact name (class-colored, GameFontHighlightLarge)
   ---------------------------------------------------------------------------
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  headerName:SetPoint("TOPLEFT", classIcon, "TOPRIGHT", 10, -4)
+  headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
 
   if selectedContact then
     headerName:SetText(selectedContact.displayName or "")
@@ -102,14 +103,22 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   end
 
   ---------------------------------------------------------------------------
-  -- Status dot (8x8) anchored just left of status text
+  -- Status dot (overlay on class icon, bottom-right corner)
+  -- Rendered as a frame so it stacks above the clipping icon frame.
   ---------------------------------------------------------------------------
-  local statusDot = headerFrame:CreateTexture(nil, "ARTWORK")
+  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
   local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE -- 8
+  local statusDot = factory.CreateFrame("Frame", nil, headerFrame)
   statusDot:SetSize(dotSize, dotSize)
-  statusDot:SetPoint("RIGHT", headerStatus, "LEFT", -4, 0)
-  statusDot:SetTexture("Interface\\COMMON\\Indicator-Gray")
-  applyVertexColor(statusDot, Theme.COLORS.online)
+  statusDot:SetPoint("BOTTOMRIGHT", classIconFrame, "BOTTOMRIGHT", 2, -2)
+  if statusDot.SetFrameLevel and classIconFrame.GetFrameLevel then
+    statusDot:SetFrameLevel(classIconFrame:GetFrameLevel() + 2)
+  end
+  statusDot.bg = statusDot:CreateTexture(nil, "OVERLAY")
+  statusDot.bg:SetAllPoints()
+  statusDot.bg:SetTexture(CIRCLE_TEX)
+  local dotColor = Theme.COLORS.online
+  statusDot.bg:SetVertexColor(dotColor[1], dotColor[2], dotColor[3], dotColor[4] or 1)
   statusDot:SetShown(selectedContact ~= nil)
 
   ---------------------------------------------------------------------------
@@ -133,6 +142,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   return {
     headerFrame = headerFrame,
     headerClassIcon = classIcon,
+    headerClassIconFrame = classIconFrame,
     headerName = headerName,
     headerFactionIcon = headerFactionIcon,
     headerStatus = headerStatus,
@@ -155,6 +165,10 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       else
         view.headerClassIcon:SetTexture(Theme.TEXTURES.bnet_icon)
       end
+    end
+    if view.headerClassIconFrame and view.headerClassIconFrame.SetShown then
+      view.headerClassIconFrame:SetShown(hasContact)
+    elseif view.headerClassIcon then
       view.headerClassIcon:SetShown(hasContact)
     end
 
@@ -184,8 +198,10 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
 
     if view.headerStatusDot then
       if hasContact and dotColorKey and Theme.COLORS[dotColorKey] then
-        local dotColor = Theme.COLORS[dotColorKey]
-        applyVertexColor(view.headerStatusDot, dotColor)
+        local dc = Theme.COLORS[dotColorKey]
+        if view.headerStatusDot.bg and view.headerStatusDot.bg.SetVertexColor then
+          view.headerStatusDot.bg:SetVertexColor(dc[1], dc[2], dc[3], dc[4] or 1)
+        end
         view.headerStatusDot:SetShown(true)
       else
         view.headerStatusDot:SetShown(false)
