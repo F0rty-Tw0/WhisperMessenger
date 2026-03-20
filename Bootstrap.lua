@@ -176,7 +176,6 @@ function Bootstrap.Initialize(factory, options)
   end
 
   window = MessengerWindow.Create(uiFactory, {
-    title = "WhisperMessenger",
     contacts = contacts,
     selectedContact = selectedState.selectedContact,
     conversation = selectedState.conversation,

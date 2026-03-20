@@ -11,7 +11,7 @@ local ThemeTextures = ns.ThemeTextures or require("WhisperMessenger.UI.Theme.Tex
 local Theme = {}
 
 -- Legacy flat constants
-Theme.TITLE = "WhisperMessenger"
+Theme.TITLE = "WM"
 Theme.WINDOW_IDLE_ALPHA = 1
 Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA = 0.72
 Theme.WINDOW_ALPHA_FADE_SECONDS = 0.12

@@ -118,14 +118,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   applyColorTexture(titleBarBg, Theme.COLORS.bg_header)
 
   local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", 16, -18)
+  title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -9)
   title:SetText(options.title or Theme.TITLE)
   frame.title = title
 
   -- Custom close button (no template)
   local closeButton = factory.CreateFrame("Button", nil, frame)
   closeButton:SetSize(28, 28)
-  closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -14)
+  closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -4)
   local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
   closeBg:SetAllPoints(closeButton)
   applyColorTexture(closeBg, { 0, 0, 0, 0 })
