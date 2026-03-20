@@ -219,7 +219,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
         iconPath = "Interface\\CHATFRAME\\UI-ChatIcon-ArmoryChat"
       end
     else
-      iconPath = Theme.ClassIcon(message.classTag or message.senderClassTag)
+      iconPath = Theme.ClassIcon(message.classTag or message.senderClassTag or options.fallbackClassTag)
       if not iconPath then
         iconPath = Theme.TEXTURES.bnet_icon
       end

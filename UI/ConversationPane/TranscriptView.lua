@@ -124,7 +124,9 @@ function TranscriptView.RenderTranscript(transcript, messages)
   -- ChatBubble loaded lazily since it may not be available at module load time
   local ChatBubble = ns.ChatBubble or require("WhisperMessenger.UI.ChatBubble")
   local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
-  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth)
+  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth, {
+    fallbackClassTag = transcript.fallbackClassTag,
+  })
 
   ScrollView.RefreshMetrics(transcript, totalHeight, true)
 

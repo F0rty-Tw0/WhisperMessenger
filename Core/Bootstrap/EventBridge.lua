@@ -24,6 +24,11 @@ local function buildLivePayload(runtime, eventName, ...)
     or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE"
   then
     local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, bnetAccountID = ...
+    local accountInfo =
+      BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid)
+    -- Resolve classTag/raceTag via GetPlayerInfoByGUID (BNet API only provides localized className)
+    local playerGuid = accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.playerGuid or guid
+    local playerInfo = BNetResolver.ResolvePlayerInfo(runtime and runtime.playerInfoByGUID or nil, playerGuid)
     return {
       text = text,
       playerName = playerName,
@@ -31,11 +36,8 @@ local function buildLivePayload(runtime, eventName, ...)
       guid = guid,
       channel = "BN",
       bnetAccountID = bnetAccountID,
-      accountInfo = BNetResolver.ResolveAccountInfo(
-        runtime and runtime.bnetApi or _G.C_BattleNet or {},
-        bnetAccountID,
-        guid
-      ),
+      accountInfo = accountInfo,
+      playerInfo = playerInfo,
     }
   end
 

@@ -18,7 +18,7 @@ local function releaseAllFrames(pool)
   end
 end
 
-function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth)
+function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, options)
   local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
   local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
   local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")
@@ -108,10 +108,12 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth)
       yOffset = yOffset + 18
     end
 
+    local fallbackClassTag = options and options.fallbackClassTag or nil
     local bubble = CreateBubble(factory, contentFrame, message, {
       paneWidth = paneWidth,
       showIcon = showIcon,
       isGrouped = grouped,
+      fallbackClassTag = fallbackClassTag,
     })
 
     -- Re-anchor to content frame at current yOffset

@@ -16,7 +16,7 @@ local function buildConversationContact(state, payload)
       return nil, nil
     end
 
-    local contact = Identity.FromBattleNet(payload.bnetAccountID, payload.accountInfo)
+    local contact = Identity.FromBattleNet(payload.bnetAccountID, payload.accountInfo, payload.playerInfo)
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
     return contact, conversationKey
   end

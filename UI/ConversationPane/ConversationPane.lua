@@ -30,6 +30,9 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status)
   HeaderView.Refresh(view, selectedContact, conversation, status)
   -- Reset visible count when conversation changes
   view.transcript._visibleCount = MESSAGES_PAGE_SIZE
+  -- Pass classTag from selected contact so chat bubbles can use it as fallback
+  -- when individual messages lack classTag (e.g., older BNet messages)
+  view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
   ConversationPane.SetStatus(view, status)
   return view

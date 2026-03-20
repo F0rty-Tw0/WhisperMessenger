@@ -172,6 +172,89 @@ return function()
     assert(result.selectedContact.displayName == "Jaina", "fallback contact displayName should match")
   end
 
+  -- EnrichContactsAvailability: BNet contact gets classTag/raceTag from playerInfoByGUID
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            gameAccountInfo = {
+              characterName = "Arthas",
+              playerGuid = "Player-1-00000001",
+              className = "Paladin",
+              factionName = "Alliance",
+              raceName = "Human",
+            },
+          }
+        end,
+      },
+      playerInfoByGUID = function(_guid)
+        return "Paladin", "PALADIN", "Human", "Human"
+      end,
+    })
+    local contacts = {
+      {
+        channel = "BN",
+        bnetAccountID = 123,
+        guid = "Player-1-00000001",
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].classTag == "PALADIN", "BNet contact should get classTag from playerInfoByGUID")
+    assert(contacts[1].raceTag == "Human", "BNet contact should get raceTag from playerInfoByGUID")
+  end
+
+  -- BuildWindowSelectionState: selected BNet contact gets classTag from playerInfoByGUID
+  do
+    local runtime = makeRuntime({
+      activeConversationKey = "bnet::BN::42",
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            gameAccountInfo = {
+              characterName = "Jaina",
+              playerGuid = "Player-1-00000002",
+              className = "Mage",
+              factionName = "Alliance",
+              raceName = "Human",
+            },
+          }
+        end,
+      },
+      playerInfoByGUID = function(_guid)
+        return "Mage", "MAGE", "Human", "Human"
+      end,
+      store = {
+        conversations = {
+          ["bnet::BN::42"] = {
+            displayName = "Jaina",
+            lastPreview = "hello",
+            unreadCount = 0,
+            lastActivityAt = 50,
+            channel = "BN",
+            bnetAccountID = 42,
+            guid = "Player-1-00000002",
+          },
+        },
+      },
+    })
+    local contacts = {
+      {
+        conversationKey = "bnet::BN::42",
+        channel = "BN",
+        bnetAccountID = 42,
+        guid = "Player-1-00000002",
+        displayName = "Jaina",
+      },
+    }
+    local result = ContactEnricher.BuildWindowSelectionState(runtime, contacts, nil)
+    assert(result.selectedContact ~= nil, "should select BNet contact")
+    assert(
+      result.selectedContact.classTag == "MAGE",
+      "selected BNet contact should get classTag, got " .. tostring(result.selectedContact.classTag)
+    )
+  end
+
   -- BuildWindowSelectionState: uses buildContactsFn when contacts is nil
   do
     local runtime = makeRuntime()

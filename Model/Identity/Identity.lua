@@ -58,9 +58,10 @@ function Identity.FromWhisper(fullName, guid, playerInfo)
   }
 end
 
-function Identity.FromBattleNet(bnetAccountID, accountInfo)
+function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
   local gameAccountName = buildGameAccountName(accountInfo)
   local gameAccountInfo = accountInfo and accountInfo.gameAccountInfo or nil
+  playerInfo = playerInfo or {}
 
   return {
     channel = "BN",
@@ -74,9 +75,13 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo)
     bnetAccountID = bnetAccountID,
     gameAccountName = gameAccountName,
     guid = gameAccountInfo and gameAccountInfo.playerGuid or nil,
-    className = gameAccountInfo and gameAccountInfo.className or nil,
-    raceName = gameAccountInfo and gameAccountInfo.raceName or nil,
-    factionName = gameAccountInfo and gameAccountInfo.factionName or nil,
+    className = playerInfo.className or (gameAccountInfo and gameAccountInfo.className or nil),
+    classTag = playerInfo.classTag or nil,
+    raceName = playerInfo.raceName or (gameAccountInfo and gameAccountInfo.raceName or nil),
+    raceTag = playerInfo.raceTag or nil,
+    factionName = (gameAccountInfo and gameAccountInfo.factionName)
+      or (playerInfo.factionName or Factions.InferFaction(playerInfo.raceTag))
+      or nil,
   }
 end
 

@@ -54,4 +54,37 @@ return function()
   assert(fallbackConversation ~= nil)
   assert(fallbackConversation.messages[1].id == "500")
   assert(fallbackConversation.messages[1].guid == nil)
+
+  -- BNet whisper with playerInfo carries classTag into stored message
+  Router.HandleEvent(state, "CHAT_MSG_BN_WHISPER", {
+    text = "hello from bn",
+    playerName = "Jaina",
+    lineID = 501,
+    guid = nil,
+    channel = "BN",
+    bnetAccountID = 42,
+    accountInfo = {
+      battleTag = "Jaina#1234",
+      gameAccountInfo = {
+        characterName = "Jaina",
+        realmName = "Proudmoore",
+        playerGuid = "Player-60-0ABCDE123",
+        className = "Mage",
+        raceName = "Human",
+        factionName = "Alliance",
+      },
+    },
+    playerInfo = {
+      className = "Mage",
+      classTag = "MAGE",
+      raceName = "Human",
+      raceTag = "Human",
+    },
+  })
+
+  local bnConv = state.store.conversations["bnet::BN::42"]
+  assert(bnConv ~= nil, "expected BNet conversation to be created")
+  assert(bnConv.className == "Mage", "expected BNet conversation className")
+  assert(bnConv.classTag == "MAGE", "expected BNet conversation classTag from playerInfo")
+  assert(bnConv.messages[1].classTag == "MAGE", "expected BNet message classTag for chat bubble icons")
 end

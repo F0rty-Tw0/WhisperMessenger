@@ -5,6 +5,22 @@ end
 
 local ContactEnricher = {}
 
+-- Resolve classTag/raceTag for a contact via GetPlayerInfoByGUID.
+-- The BNet API provides className (localized) but not classTag (engine token),
+-- which is needed for class coloring and icons.
+local function enrichClassTag(item, guid, runtime)
+  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  local playerInfo = BNetResolver.ResolvePlayerInfo(runtime.playerInfoByGUID, guid)
+  if playerInfo then
+    if playerInfo.classTag then
+      item.classTag = playerInfo.classTag
+    end
+    if playerInfo.raceTag then
+      item.raceTag = playerInfo.raceTag
+    end
+  end
+end
+
 function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
@@ -29,6 +45,11 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
           end
           if gameInfo.raceName and gameInfo.raceName ~= "" then
             item.raceName = gameInfo.raceName
+          end
+          -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
+          local guid = gameInfo.playerGuid or item.guid
+          if guid then
+            enrichClassTag(item, guid, runtime)
           end
         else
           item.availability = Availability.FromStatus("Offline")
@@ -115,6 +136,11 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
         if gameInfo.characterName then
           selectedContact.characterName = gameInfo.characterName
           selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
+        end
+        -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
+        local guid = gameInfo.playerGuid or selectedContact.guid
+        if guid then
+          enrichClassTag(selectedContact, guid, runtime)
         end
       end
     end
