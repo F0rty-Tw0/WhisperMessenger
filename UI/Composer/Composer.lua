@@ -1,11 +1,5 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then
-  ns = {}
-end
-
-local Composer = {}
-local registeredLinkHooks = false
-local linkedInputs = {}
+if type(ns) ~= "table" then ns = {} end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
@@ -14,51 +8,9 @@ local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
 
-local function canInsertLink(input)
-  if input == nil or type(input.Insert) ~= "function" then
-    return false
-  end
+local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 
-  if type(input.HasFocus) == "function" and not input:HasFocus() then
-    return false
-  end
-
-  if type(input.IsShown) == "function" and not input:IsShown() then
-    return false
-  end
-
-  return true
-end
-
-local function tryInsertLink(link)
-  if link == nil then
-    return false
-  end
-
-  for _, input in ipairs(linkedInputs) do
-    if canInsertLink(input) then
-      input:Insert(link)
-      return true
-    end
-  end
-
-  return false
-end
-
-local function registerLinkHooks()
-  if registeredLinkHooks or type(_G.hooksecurefunc) ~= "function" then
-    return
-  end
-
-  _G.hooksecurefunc("HandleModifiedItemClick", function(link)
-    tryInsertLink(link)
-  end)
-  _G.hooksecurefunc("SetItemRef", function(link, text)
-    tryInsertLink(text or link)
-  end)
-
-  registeredLinkHooks = true
-end
+local Composer = {}
 
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local pane = factory.CreateFrame("Frame", nil, parent)
@@ -129,8 +81,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   end
   placeholder:Show()
 
-  table.insert(linkedInputs, 1, input)
-  registerLinkHooks()
+  LinkHooks.RegisterInput(input)
 
   local sendDisabled = selectedContact == nil
   button.disabled = sendDisabled
@@ -196,5 +147,4 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
 end
 
 ns.Composer = Composer
-
 return Composer

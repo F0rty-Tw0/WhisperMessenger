@@ -1,96 +1,13 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then
-  ns = {}
-end
+if type(ns) ~= "table" then ns = {} end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-
-local ContactsList = {}
-local PAGE_SIZE = 10
-
-local function compareItems(left, right)
-  if left.lastActivityAt ~= right.lastActivityAt then
-    return left.lastActivityAt > right.lastActivityAt
-  end
-
-  return (left.displayName or "") < (right.displayName or "")
-end
-
-local function buildItem(conversationKey, conversation)
-  return {
-    conversationKey = conversationKey,
-    displayName = conversation.displayName or conversation.contactDisplayName or conversationKey,
-    lastPreview = conversation.lastPreview or "",
-    unreadCount = conversation.unreadCount or 0,
-    lastActivityAt = conversation.lastActivityAt or 0,
-    channel = conversation.channel or "WOW",
-    guid = conversation.guid,
-    bnetAccountID = conversation.bnetAccountID,
-    gameAccountName = conversation.gameAccountName,
-    className = conversation.className,
-    classTag = conversation.classTag,
-    raceName = conversation.raceName,
-    raceTag = conversation.raceTag,
-    factionName = conversation.factionName,
-  }
-end
-
-function ContactsList.BuildItems(conversations)
-  local items = {}
-
-  for conversationKey, conversation in pairs(conversations or {}) do
-    table.insert(items, buildItem(conversationKey, conversation))
-  end
-
-  table.sort(items, compareItems)
-  return items
-end
-
-function ContactsList.BuildItemsForProfile(savedState, localProfileId)
-  local items = {}
-  local profilePrefix = localProfileId .. "::"
-  local bnetPrefix = "bnet::"
-  local wowPrefix = "wow::"
-
-  for conversationKey, conversation in pairs(savedState.conversations or {}) do
-    if string.find(conversationKey, profilePrefix, 1, true) == 1
-        or string.find(conversationKey, bnetPrefix, 1, true) == 1
-        or string.find(conversationKey, wowPrefix, 1, true) == 1 then
-      table.insert(items, buildItem(conversationKey, conversation))
-    end
-  end
-
-  table.sort(items, compareItems)
-  return items
-end
-
-function ContactsList.SetSelected(rows, selectedConversationKey)
-  for _, row in ipairs(rows or {}) do
-    row.selected = row.item ~= nil and row.item.conversationKey == selectedConversationKey
-
-    -- Update visual state for each row
-    if row.bg then
-      local c = row.selected and Theme.COLORS.bg_contact_selected or Theme.COLORS.bg_secondary
-      row.bg:SetColorTexture(c[1], c[2], c[3], c[4])
-    end
-
-    if row.accentBar then
-      if row.selected then
-        row.accentBar:Show()
-      else
-        row.accentBar:Hide()
-      end
-    end
-  end
-
-  return selectedConversationKey
-end
-
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
 local sizeValue = UIHelpers.sizeValue
 
+local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
 
 local function bindRow(factory, parent, row, index, item, options)
@@ -281,80 +198,8 @@ local function bindRow(factory, parent, row, index, item, options)
   return row
 end
 
-function ContactsList.Refresh(factory, parent, rows, items, options)
-  rows = rows or {}
-  items = items or {}
-  options = options or {}
+RowView.bindRow = bindRow
+RowView.ROW_HEIGHT = ROW_HEIGHT
 
-  local visibleCount = options.visibleCount or #items
-  if visibleCount > #items then
-    visibleCount = #items
-  end
-
-  for index = 1, visibleCount do
-    rows[index] = bindRow(factory, parent, rows[index], index, items[index], options)
-  end
-
-  for index = visibleCount + 1, #rows do
-    local row = rows[index]
-    row.item = nil
-    row.selected = false
-
-    if row.bg then
-      local c = Theme.COLORS.bg_secondary
-      row.bg:SetColorTexture(c[1], c[2], c[3], c[4])
-    end
-    if row.accentBar then
-      row.accentBar:Hide()
-    end
-    if row.title then
-      row.title:SetText("")
-    end
-    if row.preview then
-      row.preview:SetText("")
-    end
-    if row.timeLabel then
-      row.timeLabel:SetText("")
-    end
-    if row.unreadBadge then
-      row.unreadBadge:Hide()
-    end
-    if row.Hide then
-      row:Hide()
-    end
-  end
-
-  local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
-  local viewport = parent and parent.parent or nil
-  local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * ROW_HEIGHT)
-  local contentHeight = math.max(viewportHeight, visibleCount * ROW_HEIGHT)
-
-  if parent and parent.SetSize then
-    parent:SetSize(parentWidth, contentHeight)
-  end
-
-  if viewport and type(viewport.UpdateScrollChildRect) == "function" then
-    viewport:UpdateScrollChildRect()
-  end
-
-  parent.rows = rows
-  parent.visibleCount = visibleCount
-  parent.totalCount = #items
-  ContactsList.SetSelected(rows, options.selectedConversationKey)
-  return rows
-end
-
-function ContactsList.HasMore(parent)
-  if parent == nil then
-    return false
-  end
-  return (parent.visibleCount or 0) < (parent.totalCount or 0)
-end
-
-function ContactsList.Render(factory, parent, items, options)
-  return ContactsList.Refresh(factory, parent, {}, items, options)
-end
-
-ns.ContactsList = ContactsList
-
-return ContactsList
+ns.ContactsListRowView = RowView
+return RowView

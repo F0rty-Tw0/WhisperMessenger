@@ -1,0 +1,56 @@
+local addonName, ns = ...
+if type(ns) ~= "table" then ns = {} end
+
+local Layout = {
+  WINDOW_WIDTH           = 920,
+  WINDOW_HEIGHT          = 580,
+  WINDOW_MIN_WIDTH       = 640,
+  WINDOW_MIN_HEIGHT      = 420,
+  CONTACTS_WIDTH         = 300,
+  TOP_BAR_HEIGHT         = 56,
+  CONTENT_PADDING        = 16,
+  COMPOSER_HEIGHT        = 52,
+  DIVIDER_THICKNESS      = 1,
+
+  -- Contact rows
+  CONTACT_ROW_HEIGHT     = 64,
+  CONTACT_ICON_SIZE      = 40,
+  CONTACT_FACTION_SIZE   = 14,
+  CONTACT_STATUS_SIZE    = 10,
+  CONTACT_PADDING        = 12,
+  CONTACT_ACCENT_BAR_W   = 3,
+
+  -- Chat bubbles
+  BUBBLE_MAX_WIDTH_PCT   = 0.75,
+  BUBBLE_PADDING_H       = 12,
+  BUBBLE_PADDING_V       = 8,
+  BUBBLE_SPACING         = 4,
+  BUBBLE_GROUP_SPACING   = 12,
+  BUBBLE_ICON_SIZE       = 24,
+
+  -- Date separators
+  DATE_SEPARATOR_HEIGHT  = 28,
+
+  -- Scrollbar
+  SCROLLBAR_WIDTH        = 4,
+  SCROLLBAR_WIDTH_HOVER  = 6,
+  SCROLLBAR_THUMB_MIN_H  = 20,
+
+  -- Composer
+  COMPOSER_INPUT_HEIGHT  = 36,
+  SEND_BUTTON_SIZE       = 36,
+
+  -- Toggle icon
+  ICON_SIZE              = 42,
+  ICON_BADGE_SIZE        = 20,
+
+  -- Header
+  HEADER_ICON_SIZE       = 32,
+  HEADER_STATUS_DOT_SIZE = 8,
+
+  -- Misc
+  MESSAGE_TIMESTAMP_GAP  = 6,
+}
+
+ns.ThemeLayout = Layout
+return Layout

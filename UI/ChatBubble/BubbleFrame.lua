@@ -1,21 +1,10 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then
-  ns = {}
-end
-
-local ChatBubble = {}
+if type(ns) ~= "table" then ns = {} end
 
 local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
 local loadModule = Loader.LoadModule
-
 local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-
----------------------------------------------------------------------------
--- Internal helpers
----------------------------------------------------------------------------
-
 local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
-local applyColorTexture = UIHelpers.applyColorTexture
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -25,24 +14,9 @@ local function measureTextHeight(fontString, text, maxWidth)
   return fontString:GetStringHeight() or 14
 end
 
----------------------------------------------------------------------------
--- ChatBubble.ShouldGroup
----------------------------------------------------------------------------
+local BubbleFrame = {}
 
-function ChatBubble.ShouldGroup(prev, current)
-  if not prev or not current then return false end
-  if prev.direction ~= current.direction then return false end
-  if prev.kind == "system" or current.kind == "system" then return false end
-  if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then return false end
-  if math.abs((current.sentAt or 0) - (prev.sentAt or 0)) > 120 then return false end
-  return true
-end
-
----------------------------------------------------------------------------
--- ChatBubble.CreateBubble
----------------------------------------------------------------------------
-
-function ChatBubble.CreateBubble(factory, parent, message, options)
+function BubbleFrame.CreateBubble(factory, parent, message, options)
   options = options or {}
   local paneWidth   = options.paneWidth or 400
   local showIcon    = options.showIcon
@@ -268,180 +242,5 @@ function ChatBubble.CreateBubble(factory, parent, message, options)
   }
 end
 
----------------------------------------------------------------------------
--- ChatBubble.CreateDateSeparator
----------------------------------------------------------------------------
-
-function ChatBubble.CreateDateSeparator(factory, parent, timestamp, paneWidth)
-  local height = Theme.LAYOUT.DATE_SEPARATOR_HEIGHT
-  local frame  = factory.CreateFrame("Frame", nil, parent)
-  frame:SetSize(paneWidth, height)
-
-  -- Date label
-  local labelFS = frame:CreateFontString(nil, "OVERLAY")
-  setFontObject(labelFS, Theme.FONTS.date_separator)
-  setTextColor(labelFS, Theme.COLORS.text_timestamp)
-
-  local dateStr = ""
-  if ns.TimeFormat and ns.TimeFormat.DateSeparator then
-    dateStr = ns.TimeFormat.DateSeparator(timestamp) or ""
-  end
-  if labelFS.SetText then
-    labelFS:SetText(dateStr)
-  end
-  labelFS:SetPoint("CENTER", frame, "CENTER", 0, 0)
-
-  -- Left line
-  local lineLeft = frame:CreateTexture(nil, "ARTWORK")
-  lineLeft:SetHeight(1)
-  applyColorTexture(lineLeft, Theme.COLORS.divider)
-  lineLeft:SetPoint("LEFT",  frame,  "LEFT",  16, 0)
-  lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
-
-  -- Right line
-  local lineRight = frame:CreateTexture(nil, "ARTWORK")
-  lineRight:SetHeight(1)
-  applyColorTexture(lineRight, Theme.COLORS.divider)
-  lineRight:SetPoint("LEFT",  labelFS, "RIGHT",  8, 0)
-  lineRight:SetPoint("RIGHT", frame,   "RIGHT", -16, 0)
-
-  return { frame = frame, height = height }
-end
-
----------------------------------------------------------------------------
--- Frame pool helpers
----------------------------------------------------------------------------
-
-local function acquireFrame(pool)
-  for i, f in ipairs(pool) do
-    if not f:IsShown() then
-      table.remove(pool, i)
-      f:Show()
-      return f
-    end
-  end
-  return nil
-end
-
-local function releaseAllFrames(pool)
-  for _, f in ipairs(pool) do
-    if f.Hide then f:Hide() end
-  end
-end
-
----------------------------------------------------------------------------
--- ChatBubble.LayoutMessages
----------------------------------------------------------------------------
-
-function ChatBubble.LayoutMessages(factory, contentFrame, messages, paneWidth)
-  -- Hide all pooled frames
-  contentFrame._bubblePool = contentFrame._bubblePool or {}
-  releaseAllFrames(contentFrame._bubblePool)
-
-  local pool    = contentFrame._bubblePool
-  local yOffset = 0
-  local prevMsg = nil
-
-  local BUBBLE_SPACING       = Theme.LAYOUT.BUBBLE_SPACING
-  local BUBBLE_GROUP_SPACING = Theme.LAYOUT.BUBBLE_GROUP_SPACING
-
-  for i, message in ipairs(messages or {}) do
-    -- Date separator check
-    if prevMsg then
-      local needsSeparator = false
-      if ns.TimeFormat and ns.TimeFormat.IsDifferentDay then
-        needsSeparator = ns.TimeFormat.IsDifferentDay(prevMsg.sentAt, message.sentAt)
-      else
-        -- Fallback: compare floor(ts / 86400)
-        local d1 = math.floor((prevMsg.sentAt  or 0) / 86400)
-        local d2 = math.floor((message.sentAt or 0) / 86400)
-        needsSeparator = d1 ~= d2
-      end
-
-      if needsSeparator then
-        local sep = ChatBubble.CreateDateSeparator(factory, contentFrame, message.sentAt, paneWidth)
-        sep.frame:ClearAllPoints()
-        sep.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-        table.insert(pool, sep.frame)
-        yOffset = yOffset + sep.height + BUBBLE_GROUP_SPACING
-      end
-    end
-
-    -- Determine grouping and spacing
-    local grouped  = ChatBubble.ShouldGroup(prevMsg, message)
-    local spacing  = grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING
-    if i == 1 then spacing = 0 end
-
-    yOffset = yOffset + spacing
-
-    -- Show icon on first of a group (both directions)
-    local showIcon = (not grouped) and (message.kind ~= "system")
-
-    -- Sender name + timestamp label above first bubble in a group
-    if showIcon then
-      local nameFrame = factory.CreateFrame("Frame", nil, contentFrame)
-      nameFrame:SetSize(paneWidth, 16)
-      nameFrame:ClearAllPoints()
-
-      local nameFS = nameFrame:CreateFontString(nil, "OVERLAY")
-      setFontObject(nameFS, Theme.FONTS.message_time)
-      setTextColor(nameFS, Theme.COLORS.text_secondary)
-
-      -- Timestamp next to sender name
-      local timeStr = ""
-      if ns.TimeFormat and ns.TimeFormat.MessageTime then
-        timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
-      end
-      local timeFS = nameFrame:CreateFontString(nil, "OVERLAY")
-      setFontObject(timeFS, Theme.FONTS.message_time)
-      setTextColor(timeFS, Theme.COLORS.text_timestamp)
-      timeFS:SetText(timeStr)
-
-      if message.direction == "out" then
-        nameFS:SetText("You")
-        nameFS:SetPoint("RIGHT", nameFrame, "RIGHT", -48, 0)
-        timeFS:SetPoint("RIGHT", nameFS, "LEFT", -6, 0)
-        nameFrame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
-      else
-        local displayName = message.playerName or message.senderDisplayName or ""
-        nameFS:SetText(displayName)
-        nameFS:SetPoint("LEFT", nameFrame, "LEFT", 48, 0)
-        timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
-        nameFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-      end
-      table.insert(pool, nameFrame)
-      yOffset = yOffset + 18
-    end
-
-    local bubble = ChatBubble.CreateBubble(factory, contentFrame, message, {
-      paneWidth = paneWidth,
-      showIcon  = showIcon,
-      isGrouped = grouped,
-    })
-
-    -- Re-anchor to content frame at current yOffset
-    bubble.frame:ClearAllPoints()
-    if message.kind == "system" then
-      bubble.frame:SetPoint("TOP", contentFrame, "TOPLEFT", paneWidth / 2, -yOffset)
-    elseif message.direction == "out" then
-      bubble.frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -48, -yOffset)
-    else
-      bubble.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 48, -yOffset)
-    end
-
-    table.insert(pool, bubble.frame)
-    yOffset = yOffset + bubble.height
-
-    prevMsg = message
-  end
-
-  return yOffset
-end
-
----------------------------------------------------------------------------
--- Export
----------------------------------------------------------------------------
-
-ns.ChatBubble = ChatBubble
-
-return ChatBubble
+ns.ChatBubbleBubbleFrame = BubbleFrame
+return BubbleFrame
