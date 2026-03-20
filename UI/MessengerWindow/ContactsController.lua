@@ -22,7 +22,9 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   options = options or {}
 
   local currentContacts = initialContacts or {}
-  local visibleCount = 10
+  local viewportH = contactsView.viewportHeight or 0
+  local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  local visibleCount = math.max(10, math.ceil(viewportH / rowH) + 1)
 
   local controller = {
     rows = {},
@@ -63,8 +65,17 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     refresh(nil, nil)
   end
 
+  local function fillViewport(newHeight)
+    local needed = math.ceil(newHeight / rowH) + 1
+    if needed > visibleCount then
+      visibleCount = needed
+      refresh(nil, nil)
+    end
+  end
+
   controller.refresh = refresh
   controller.loadMore = loadMore
+  controller.fillViewport = fillViewport
 
   -- Infinite scroll: load more contacts when scrolling near the bottom
   local function checkLoadMore()

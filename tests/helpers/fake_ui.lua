@@ -334,6 +334,16 @@ function FakeUI.NewFactory()
     function frame:StopMovingOrSizing()
       self.stoppedMoving = true
       self.moving = false
+      self.sizing = false
+    end
+
+    function frame:StartSizing(anchor)
+      self.sizingAnchor = anchor
+      self.sizing = true
+    end
+
+    function frame:SetFrameStrata(strata)
+      self.frameStrata = strata
     end
 
     function frame:EnableMouse(value)

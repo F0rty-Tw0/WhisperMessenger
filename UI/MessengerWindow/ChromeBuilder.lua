@@ -175,13 +175,37 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   end
   optionsButton:EnableMouse(true)
 
-  -- Resize grip in bottom-right
-  local resizeGrip = frame:CreateTexture(nil, "OVERLAY")
-  resizeGrip:SetSize(12, 12)
-  resizeGrip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -2, 2)
+  -- Resize grip in bottom-right (triangle corner)
+  local resizeGrip = factory.CreateFrame("Frame", nil, frame)
+  resizeGrip:SetSize(16, 16)
+  resizeGrip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
+  resizeGrip:EnableMouse(true)
   do
     local c = Theme.COLORS.text_secondary
-    applyColorTexture(resizeGrip, { c[1], c[2], c[3], 0.3 })
+    local gripColor = { c[1], c[2], c[3], 0.4 }
+    -- Three diagonal lines forming a triangle in the corner
+    local line1 = resizeGrip:CreateTexture(nil, "OVERLAY")
+    line1:SetSize(2, 2)
+    line1:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 1)
+    applyColorTexture(line1, gripColor)
+
+    local line2 = resizeGrip:CreateTexture(nil, "OVERLAY")
+    line2:SetSize(6, 2)
+    line2:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 5)
+    applyColorTexture(line2, gripColor)
+    local line2h = resizeGrip:CreateTexture(nil, "OVERLAY")
+    line2h:SetSize(2, 6)
+    line2h:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -5, 1)
+    applyColorTexture(line2h, gripColor)
+
+    local line3 = resizeGrip:CreateTexture(nil, "OVERLAY")
+    line3:SetSize(10, 2)
+    line3:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 9)
+    applyColorTexture(line3, gripColor)
+    local line3h = resizeGrip:CreateTexture(nil, "OVERLAY")
+    line3h:SetSize(2, 10)
+    line3h:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -9, 1)
+    applyColorTexture(line3h, gripColor)
   end
 
   return {

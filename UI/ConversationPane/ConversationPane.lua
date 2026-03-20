@@ -168,6 +168,30 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   return view
 end
 
+-- Resize the transcript scroll view to match new thread pane dimensions.
+-- width, height: new threadPane dimensions
+function ConversationPane.Relayout(view, width, height)
+  if view == nil or view.transcript == nil then
+    return
+  end
+  local HEADER_HEIGHT = 56
+  local transcriptW = width - 32
+  local transcriptH = height - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
+  local t = view.transcript
+  t.scrollFrame:SetSize(transcriptW, transcriptH)
+  t.content:SetSize(transcriptW, t.content.height or transcriptH)
+  t.scrollBar:SetHeight(transcriptH)
+  t.viewportHeight = transcriptH
+  t.totalWidth = transcriptW
+  if t.text and t.text.SetWidth then
+    t.text:SetWidth(transcriptW)
+  end
+  -- Re-render bubbles at the new width
+  if t._allMessages then
+    TranscriptView.RenderTranscript(t, t._allMessages)
+  end
+end
+
 ns.ConversationPane = ConversationPane
 
 return ConversationPane

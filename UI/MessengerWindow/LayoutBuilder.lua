@@ -125,6 +125,33 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   }
 end
 
+-- Recalculate all pane sizes after a frame resize.
+-- layout: the table returned by LayoutBuilder.Build
+-- width, height: new frame dimensions
+function LayoutBuilder.Relayout(layout, width, height)
+  local contactsH = height - Theme.TOP_BAR_HEIGHT
+  local contentW = width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
+  local contentH = contactsH
+  local threadH = contentH - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
+
+  layout.contactsPane:SetSize(Theme.CONTACTS_WIDTH, contactsH)
+  layout.contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsH)
+  layout.contentPane:SetSize(contentW, contentH)
+  layout.headerDivider:SetSize(width, Theme.DIVIDER_THICKNESS)
+  layout.threadPane:SetSize(contentW, threadH)
+  layout.composerPane:SetSize(contentW, Theme.COMPOSER_HEIGHT)
+  layout.composerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
+
+  -- Resize contacts scroll view
+  local cv = layout.contactsView
+  if cv then
+    cv.scrollFrame:SetSize(Theme.CONTACTS_WIDTH, contactsH)
+    cv.content:SetSize(Theme.CONTACTS_WIDTH, contactsH)
+    cv.scrollBar:SetHeight(contactsH)
+    cv.viewportHeight = contactsH
+  end
+end
+
 ns.MessengerWindowLayoutBuilder = LayoutBuilder
 
 return LayoutBuilder

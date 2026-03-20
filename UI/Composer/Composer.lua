@@ -25,7 +25,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
 
   -- Input background texture (sits behind the EditBox)
   local inputBg = pane:CreateTexture(nil, "BACKGROUND")
-  local inputW = parentWidth - 24
+  local buttonW = 72
+  local inputW = parentWidth - 24 - buttonW - 8
   local inputH = Theme.LAYOUT.COMPOSER_INPUT_HEIGHT
   local inputX, inputY = 12, 8
   inputBg:SetSize(inputW, inputH)
@@ -33,7 +34,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   applyColorTexture(inputBg, Theme.COLORS.bg_input)
 
   -- Send button
-  local buttonW = 72
   local buttonH = inputH
   local button = factory.CreateFrame("Button", nil, pane)
   button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -inputX, inputY)
@@ -43,10 +43,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   buttonLabel:SetText("Send")
 
   -- Plain EditBox (no template)
-  local inputW2 = inputW - buttonW - 8
   local input = factory.CreateFrame("EditBox", nil, pane)
   input:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inputX, inputY)
-  input:SetSize(inputW2, inputH)
+  input:SetSize(inputW, inputH)
   input:SetText("")
 
   local fontObj = _G.ChatFontNormal or "ChatFontNormal"
@@ -130,10 +129,16 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   return {
     frame = pane,
     input = input,
+    inputBg = inputBg,
     sendButton = button,
     setEnabled = function(enabled)
       sendDisabled = not enabled
       button.disabled = not enabled
+    end,
+    relayout = function(parentW)
+      local newInputW = parentW - 24 - buttonW - 8
+      input:SetSize(newInputW, inputH)
+      inputBg:SetSize(newInputW, inputH)
     end,
   }
 end

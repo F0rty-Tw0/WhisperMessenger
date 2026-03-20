@@ -87,6 +87,7 @@ function MessengerWindow.Create(factory, options)
   local title = chrome.title
   local closeButton = chrome.closeButton
   local optionsButton = chrome.optionsButton
+  local resizeGrip = chrome.resizeGrip
 
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, {})
@@ -289,6 +290,21 @@ function MessengerWindow.Create(factory, options)
       alphaElapsed = 0
       refreshWindowAlpha()
     end)
+    frame:SetScript("OnSizeChanged", function(_self, w, h)
+      LayoutBuilder.Relayout(layout, w, h)
+      local contentW = w - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
+      if composer and composer.relayout then
+        composer.relayout(contentW)
+      end
+      local contactsH = h - Theme.TOP_BAR_HEIGHT
+      if contactsController and contactsController.fillViewport then
+        contactsController.fillViewport(contactsH)
+      end
+      local threadH = contactsH - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
+      if conversation then
+        ConversationPane.Relayout(conversation, contentW, threadH)
+      end
+    end)
     frame:SetScript("OnDragStart", function(self)
       if self.IsMovable == nil or self:IsMovable() then
         self:StartMoving()
@@ -301,6 +317,26 @@ function MessengerWindow.Create(factory, options)
       trace("window drag stop", nextState.anchorPoint, nextState.x, nextState.y)
       if options.onPositionChanged then
         options.onPositionChanged(nextState)
+      end
+    end)
+  end
+
+  -- Resize grip scripts
+  if resizeGrip and resizeGrip.SetScript then
+    resizeGrip:SetScript("OnMouseDown", function(_self, button)
+      if button == "LeftButton" then
+        frame:StartSizing("BOTTOMRIGHT")
+        trace("window resize start")
+      end
+    end)
+    resizeGrip:SetScript("OnMouseUp", function(_self, button)
+      if button == "LeftButton" then
+        frame:StopMovingOrSizing()
+        local nextState = buildState(frame)
+        trace("window resize stop", nextState.width, nextState.height)
+        if options.onPositionChanged then
+          options.onPositionChanged(nextState)
+        end
       end
     end)
   end
@@ -324,6 +360,7 @@ function MessengerWindow.Create(factory, options)
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
+    resizeGrip = resizeGrip,
     contacts = contacts,
     conversation = conversation,
     composer = composer,
