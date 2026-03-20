@@ -3,13 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
 local ContactEnricher = {}
 
 function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-  local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
+  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   for _, item in ipairs(contacts) do
     -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
     if item.guid and runtime.availabilityByGUID[item.guid] then
@@ -21,7 +19,6 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
         if gameInfo and gameInfo.characterName then
-          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
           item.availability = Availability.FromStatus("CanWhisper")
           -- Refresh potentially stale metadata from live BNet data
           if gameInfo.factionName and gameInfo.factionName ~= "" then
@@ -34,7 +31,6 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
             item.raceName = gameInfo.raceName
           end
         else
-          local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
           item.availability = Availability.FromStatus("Offline")
         end
       end
@@ -52,7 +48,7 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
   end
 
   if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
-    local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
+    local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
     return Availability.FromStatus("Lockdown")
   end
 
@@ -64,9 +60,8 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
 end
 
 function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
-  local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
-  local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
-
+  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
   if contacts == nil and buildContactsFn then
     contacts = buildContactsFn(runtime)
   end

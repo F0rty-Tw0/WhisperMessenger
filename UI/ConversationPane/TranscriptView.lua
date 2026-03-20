@@ -3,11 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptView = {}
@@ -125,7 +122,7 @@ function TranscriptView.RenderTranscript(transcript, messages)
   end
 
   -- ChatBubble loaded lazily since it may not be available at module load time
-  local ChatBubble = loadModule("WhisperMessenger.UI.ChatBubble", "ChatBubble")
+  local ChatBubble = ns.ChatBubble or require("WhisperMessenger.UI.ChatBubble")
   local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
   local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth)
 

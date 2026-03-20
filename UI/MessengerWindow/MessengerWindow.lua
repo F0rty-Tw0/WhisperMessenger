@@ -3,19 +3,16 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local ConversationPane = loadModule("WhisperMessenger.UI.ConversationPane", "ConversationPane")
-local Composer = loadModule("WhisperMessenger.UI.Composer", "Composer")
-local AlphaController =
-  loadModule("WhisperMessenger.UI.MessengerWindow.AlphaController", "MessengerWindowAlphaController")
-local ChromeBuilder = loadModule("WhisperMessenger.UI.MessengerWindow.ChromeBuilder", "MessengerWindowChromeBuilder")
-local LayoutBuilder = loadModule("WhisperMessenger.UI.MessengerWindow.LayoutBuilder", "MessengerWindowLayoutBuilder")
-local ContactsController =
-  loadModule("WhisperMessenger.UI.MessengerWindow.ContactsController", "MessengerWindowContactsController")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
+local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
+local AlphaController = ns.MessengerWindowAlphaController
+  or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
+local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
+local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
+local ContactsController = ns.MessengerWindowContactsController
+  or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local sizeValue = UIHelpers.sizeValue

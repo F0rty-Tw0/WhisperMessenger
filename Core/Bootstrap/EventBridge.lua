@@ -3,33 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader
-  or (
-    type(require) == "function"
-    and (function()
-      local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
-      return ok and L or nil
-    end)()
-  )
-local loadModule = Loader and Loader.LoadModule
-  or function(name, key)
-    if ns[key] then
-      return ns[key]
-    end
-    if type(require) == "function" then
-      local ok, loaded = pcall(require, name)
-      if ok then
-        return loaded
-      end
-    end
-    error(key .. " module not available")
-  end
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
+local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 
 local EventBridge = {}
 
 local function buildLivePayload(runtime, eventName, ...)
-  local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
-
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
     local guid, status = ...
     return {
@@ -70,7 +50,6 @@ local function buildLivePayload(runtime, eventName, ...)
 end
 
 function EventBridge.RegisterLiveEvents(frame)
-  local Constants = loadModule("WhisperMessenger.Core.Constants", "Constants")
   for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
     frame:RegisterEvent(eventName)
   end
@@ -80,8 +59,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
-  local Router = loadModule("WhisperMessenger.Core.EventRouter", "EventRouter")
-  local result = Router.HandleEvent(runtime, eventName, buildLivePayload(runtime, eventName, ...))
+  local result = EventRouter.HandleEvent(runtime, eventName, buildLivePayload(runtime, eventName, ...))
   if refreshWindow then
     refreshWindow()
   end

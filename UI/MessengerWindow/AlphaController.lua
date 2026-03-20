@@ -3,10 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local AlphaController = {}
 

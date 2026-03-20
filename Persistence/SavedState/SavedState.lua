@@ -3,11 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
-local Migrations = loadModule("WhisperMessenger.Persistence.Migrations", "Migrations")
+local Schema = ns.Schema or require("WhisperMessenger.Persistence.Schema")
+local Migrations = ns.Migrations or require("WhisperMessenger.Persistence.Migrations")
 local Helpers = ns.PersistenceHelpers or require("WhisperMessenger.Persistence.Helpers")
 local LegacyMigration = ns.SavedStateLegacyMigration
   or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")

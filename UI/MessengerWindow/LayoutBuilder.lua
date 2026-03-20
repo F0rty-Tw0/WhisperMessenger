@@ -3,12 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local LayoutBuilder = {}

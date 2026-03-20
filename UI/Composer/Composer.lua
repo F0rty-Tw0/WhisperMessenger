@@ -3,13 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
+local setTextColor = UIHelpers.setTextColor
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 
@@ -72,10 +70,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local placeholder = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
   placeholder:SetText("Type a message and press Enter")
-  local tc = Theme.COLORS.text_secondary
-  if placeholder.SetTextColor then
-    placeholder:SetTextColor(tc[1], tc[2], tc[3], tc[4])
-  end
+  setTextColor(placeholder, Theme.COLORS.text_secondary)
   placeholder:Show()
 
   LinkHooks.RegisterInput(input)

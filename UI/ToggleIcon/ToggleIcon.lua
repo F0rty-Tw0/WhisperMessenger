@@ -2,10 +2,8 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")

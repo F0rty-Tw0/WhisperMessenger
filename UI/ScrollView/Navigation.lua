@@ -3,12 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
+local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local clamp = TableUtils.clamp
 
-local Metrics = ns.ScrollViewMetrics or loadModule("WhisperMessenger.UI.ScrollView.Metrics", "ScrollViewMetrics")
+local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
 
 local Navigation = {}
 

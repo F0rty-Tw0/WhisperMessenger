@@ -3,13 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Metrics = ns.ScrollViewMetrics or loadModule("WhisperMessenger.UI.ScrollView.Metrics", "ScrollViewMetrics")
-local Navigation = ns.ScrollViewNavigation
-  or loadModule("WhisperMessenger.UI.ScrollView.Navigation", "ScrollViewNavigation")
-local Factory = ns.ScrollViewFactory or loadModule("WhisperMessenger.UI.ScrollView.Factory", "ScrollViewFactory")
+local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
+local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
+local Factory = ns.ScrollViewFactory or require("WhisperMessenger.UI.ScrollView.Factory")
 
 local ScrollView = {}
 ScrollView.GetRange = Metrics.GetRange

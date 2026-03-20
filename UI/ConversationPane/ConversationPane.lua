@@ -3,10 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
 -- Load StatusLine module (registers on ns as side effect)
 local _ = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine") -- luacheck: ignore 211

@@ -3,10 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 
 local SCROLLBAR_WIDTH = Theme.LAYOUT.SCROLLBAR_WIDTH
@@ -123,8 +121,7 @@ function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
   end
 
   -- Late-bind Navigation to avoid circular dependency at module load time
-  local Navigation = ns.ScrollViewNavigation
-    or loadModule("WhisperMessenger.UI.ScrollView.Navigation", "ScrollViewNavigation")
+  local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
   local targetOffset = snapToEnd and Metrics.GetRange(view) or Metrics.GetOffset(view)
   Navigation.SetVerticalScroll(view, targetOffset)
   return nextContentHeight

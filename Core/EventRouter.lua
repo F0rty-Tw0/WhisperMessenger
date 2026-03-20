@@ -3,13 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local Identity = loadModule("WhisperMessenger.Model.Identity", "Identity")
-local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
-local Queue = loadModule("WhisperMessenger.Model.LockdownQueue", "LockdownQueue")
-local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 
 local Router = {}
 

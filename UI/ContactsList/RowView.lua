@@ -3,13 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyClassColor = UIHelpers.applyClassColor
 local applyColorTexture = UIHelpers.applyColorTexture
+local setTextColor = UIHelpers.setTextColor
 
 local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
@@ -137,8 +136,7 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.timeLabel == nil then
     row.timeLabel = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_time)
     row.timeLabel:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -4)
-    local ts = Theme.COLORS.text_secondary
-    row.timeLabel:SetTextColor(ts[1], ts[2], ts[3], ts[4])
+    setTextColor(row.timeLabel, Theme.COLORS.text_secondary)
   end
   if ns.TimeFormat and ns.TimeFormat.ContactPreview then
     row.timeLabel:SetText(ns.TimeFormat.ContactPreview(item.lastActivityAt))
@@ -150,8 +148,7 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.preview == nil then
     row.preview = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
     row.preview:SetPoint("TOPLEFT", row.classIcon, "TOPRIGHT", 10, -28)
-    local ps = Theme.COLORS.text_secondary
-    row.preview:SetTextColor(ps[1], ps[2], ps[3], ps[4])
+    setTextColor(row.preview, Theme.COLORS.text_secondary)
     row.preview:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 40)
   end
   row.preview:SetText(item.lastPreview or "")

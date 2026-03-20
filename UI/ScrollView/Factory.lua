@@ -3,19 +3,16 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
-local UIHelpers = loadModule("WhisperMessenger.UI.Helpers", "UIHelpers")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
-local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
+local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local unpackValues = TableUtils.unpackValues
 local clamp = TableUtils.clamp
 
-local Metrics = ns.ScrollViewMetrics or loadModule("WhisperMessenger.UI.ScrollView.Metrics", "ScrollViewMetrics")
-local Navigation = ns.ScrollViewNavigation
-  or loadModule("WhisperMessenger.UI.ScrollView.Navigation", "ScrollViewNavigation")
+local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
+local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 
 local SCROLLBAR_WIDTH = Metrics.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = Metrics.SCROLLBAR_INSET

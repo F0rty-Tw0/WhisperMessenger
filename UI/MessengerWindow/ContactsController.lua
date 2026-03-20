@@ -3,12 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
-local loadModule = Loader.LoadModule
-
-local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
-local ScrollView = loadModule("WhisperMessenger.UI.ScrollView", "ScrollView")
-local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+local ContactsList = ns.ContactsList or require("WhisperMessenger.UI.ContactsList")
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local ContactsController = {}
 

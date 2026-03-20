@@ -3,35 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Loader = ns.Loader
-  or (
-    type(require) == "function"
-    and (function()
-      local ok, L = pcall(require, "WhisperMessenger.Core.Loader")
-      return ok and L or nil
-    end)()
-  )
-local loadModule = Loader and Loader.LoadModule
-  or function(name, key)
-    if ns[key] then
-      return ns[key]
-    end
-    if type(require) == "function" then
-      local ok, loaded = pcall(require, name)
-      if ok then
-        return loaded
-      end
-    end
-    error(key .. " module not available")
-  end
+local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
+local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 
 local SendHandler = {}
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
-  local Availability = loadModule("WhisperMessenger.Transport.Availability", "Availability")
-  local Router = loadModule("WhisperMessenger.Core.EventRouter", "EventRouter")
-  local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
-
   runtime.sendStatusByConversation[payload.conversationKey] = nil
 
   if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
