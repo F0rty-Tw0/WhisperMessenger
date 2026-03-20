@@ -1,53 +1,12 @@
 local addonName, ns = ...
-if type(ns) ~= "table" then
-  ns = {}
-end
+if type(ns) ~= "table" then ns = {} end
+
+local Factions = ns.IdentityFactions or require("WhisperMessenger.Model.Identity.Factions")
 
 local Identity = {}
 
 local function normalizeName(name)
   return string.lower(name or "")
-end
-
-local ALLIANCE_RACES = {
-  Human = true,
-  Dwarf = true,
-  NightElf = true,
-  Gnome = true,
-  Draenei = true,
-  Worgen = true,
-  VoidElf = true,
-  LightforgedDraenei = true,
-  DarkIronDwarf = true,
-  KulTiran = true,
-  Mechagnome = true,
-}
-
-local HORDE_RACES = {
-  Orc = true,
-  Scourge = true,
-  Tauren = true,
-  Troll = true,
-  BloodElf = true,
-  Goblin = true,
-  Nightborne = true,
-  HighmountainTauren = true,
-  MagharOrc = true,
-  ZandalariTroll = true,
-  Vulpera = true,
-}
-
-local function inferFactionName(raceTag)
-  if ALLIANCE_RACES[raceTag] then
-    return "Alliance"
-  end
-
-  if HORDE_RACES[raceTag] then
-    return "Horde"
-  end
-
-  -- Pandaren, Dracthyr, Earthen, and unknown future neutral races are ambiguous here.
-  return nil
 end
 
 local function buildGameAccountName(accountInfo)
@@ -66,7 +25,7 @@ local function buildGameAccountName(accountInfo)
 end
 
 function Identity.InferFaction(raceTag)
-  return inferFactionName(raceTag)
+  return Factions.InferFaction(raceTag)
 end
 
 function Identity.BuildLocalProfileId(name, realmName)
@@ -93,7 +52,7 @@ function Identity.FromWhisper(fullName, guid, playerInfo)
     classTag = playerInfo.classTag,
     raceName = playerInfo.raceName,
     raceTag = playerInfo.raceTag,
-    factionName = playerInfo.factionName or inferFactionName(playerInfo.raceTag),
+    factionName = playerInfo.factionName or Factions.InferFaction(playerInfo.raceTag),
   }
 end
 
