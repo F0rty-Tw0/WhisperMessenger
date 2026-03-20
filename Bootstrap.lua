@@ -143,13 +143,29 @@ function Bootstrap.Initialize(factory, options)
     return refreshWindow()
   end
 
+  local function findLatestUnreadKey()
+    local freshContacts = buildContacts()
+    -- Contacts are sorted by lastActivityAt desc, so first unread is latest
+    for _, item in ipairs(freshContacts) do
+      if (item.unreadCount or 0) > 0 then
+        return item.conversationKey
+      end
+    end
+    return nil
+  end
+
   local function toggle()
     local nextVisible = not isWindowVisible()
     setWindowVisible(nextVisible)
 
-    if nextVisible and runtime.activeConversationKey ~= nil then
-      selectConversation(runtime.activeConversationKey)
-      return
+    if nextVisible then
+      -- Open the latest unread conversation, fall back to last active
+      local unreadKey = findLatestUnreadKey()
+      local targetKey = unreadKey or runtime.activeConversationKey
+      if targetKey ~= nil then
+        selectConversation(targetKey)
+        return
+      end
     end
 
     refreshWindow()

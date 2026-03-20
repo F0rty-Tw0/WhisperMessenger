@@ -137,27 +137,25 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   if closeBg.SetColorTexture then
     closeBg:SetColorTexture(0, 0, 0, 0)
   end
-  local closeLabel = closeButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  closeLabel:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
-  closeLabel:SetText("X")
-  if closeLabel.SetTextColor then
+  local closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
+  closeIcon:SetSize(18, 18)
+  closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
+  closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
+  closeIcon:SetDesaturated(true)
+  do
     local c = Theme.COLORS.text_secondary
-    closeLabel:SetTextColor(c[1], c[2], c[3], c[4])
+    closeIcon:SetVertexColor(c[1], c[2], c[3], c[4])
   end
   if closeButton.SetScript then
     closeButton:SetScript("OnEnter", function()
-      if closeLabel.SetTextColor then
-        closeLabel:SetTextColor(0.9, 0.3, 0.3, 1)
-      end
+      closeIcon:SetVertexColor(0.9, 0.3, 0.3, 1)
       if closeBg.SetColorTexture then
         closeBg:SetColorTexture(0.9, 0.3, 0.3, 0.15)
       end
     end)
     closeButton:SetScript("OnLeave", function()
-      if closeLabel.SetTextColor then
-        local c = Theme.COLORS.text_secondary
-        closeLabel:SetTextColor(c[1], c[2], c[3], c[4])
-      end
+      local c = Theme.COLORS.text_secondary
+      closeIcon:SetVertexColor(c[1], c[2], c[3], c[4])
       if closeBg.SetColorTexture then
         closeBg:SetColorTexture(0, 0, 0, 0)
       end

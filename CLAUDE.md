@@ -22,16 +22,11 @@ Messenger-style whisper UI addon for World of Warcraft Retail.
 ## Linting
 
 ```bash
-# Check (CI-safe)
-./scripts/lint.sh
+# Check (CI-safe) — always use the project script, not bare tool commands
+bash scripts/lint.sh
 
 # Auto-format + check
-./scripts/lint.sh --fix
-
-# Individual tools
-luacheck .          # static analysis — must show 0 warnings
-stylua --check .    # format check
-stylua .            # auto-format
+bash scripts/lint.sh --fix
 ```
 
 Luacheck handles semantics (unused vars, undefined globals, shadowing). StyLua handles formatting (line length, spacing, alignment). Both must pass clean before committing.
@@ -49,6 +44,36 @@ Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `te
 ```bash
 for f in tests/**/*.lua; do lua tests/run.lua "$f"; done
 ```
+
+## Development Workflow — TDD (Red-Green-Refactor)
+
+Every change follows test-driven development. No exceptions.
+
+1. **Red** — Write a failing test first. The test must fail for the right reason (missing behavior, not a syntax error). Run it and confirm the failure.
+2. **Green** — Write the minimum code to make the test pass. No more, no less. Run the test and confirm it passes.
+3. **Refactor** — Clean up the implementation and the test. Remove duplication, improve naming, simplify logic. Run all tests to confirm nothing broke.
+
+Rules:
+- **Never write production code without a failing test that demands it.**
+- **One behavior per test** — each test should verify a single expectation.
+- **Test file mirrors source file** — `Model/ConversationStore.lua` → `tests/model/test_conversation_store.lua`
+- **Test names describe behavior** — `test_mark_read_resets_unread_count`, not `test_mark_read_1`
+- **Run the relevant test file after Red and Green steps.** Run all tests after Refactor.
+- **Lint after Refactor** — run `bash scripts/lint.sh` before considering the cycle complete.
+
+## Lua Best Practices
+
+- **Localize everything** — `local` variables and functions are faster than globals. Always `local function` unless exporting on a module table.
+- **Localize hot-path API calls** — `local pairs = pairs`, `local tinsert = table.insert` at the top of files that use them in loops.
+- **Avoid creating tables in tight loops** — reuse tables or build outside the loop when possible. Table creation triggers GC pressure.
+- **Prefer `ipairs` for arrays, `pairs` for dictionaries** — never use `pairs` on sequential arrays; iteration order is not guaranteed.
+- **String concatenation** — use `table.concat` for building strings in loops. The `..` operator creates a new string each time.
+- **Nil checks before method calls** — WoW frames may be nil or lack methods in test stubs. Guard with `if obj and obj.Method then` before calling.
+- **No global leaks** — every variable must be `local`. Luacheck catches these, but be vigilant. The only intentional globals are WoW API calls via `_G.`.
+- **Early returns over deep nesting** — prefer `if not condition then return end` at the top of a function over wrapping the whole body in an `if`.
+- **Avoid magic numbers** — extract constants into `Theme.LAYOUT`, `Theme.COLORS`, or a local `UPPER_CASE` variable at the top of the file.
+- **Keep functions small** — if a function exceeds ~40 lines, extract helpers. Each function should do one thing.
+- **No `table.getn` or `#` on sparse tables** — `#` is only reliable on proper sequences (no nil holes).
 
 ## Project Structure
 
