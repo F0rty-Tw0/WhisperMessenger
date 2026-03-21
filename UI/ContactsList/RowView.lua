@@ -118,17 +118,26 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.title == nil then
     row.title = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
     row.title:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", 10, -4)
-    row.title:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 160)
+    row.title:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 60)
+    row.title:SetJustifyH("LEFT")
+    row.title:SetWordWrap(false)
+    if row.title.SetMaxLines then
+      row.title:SetMaxLines(1)
+    end
   end
   row.title:SetText(item.displayName)
   applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
 
-  -- Faction icon (14x14, after name)
+  -- Faction icon (14x14, after name — positioned relative to actual text width)
   if row.factionIcon == nil then
     row.factionIcon = row:CreateTexture(nil, "ARTWORK")
     row.factionIcon:SetSize(Theme.LAYOUT.CONTACT_FACTION_SIZE, Theme.LAYOUT.CONTACT_FACTION_SIZE)
-    row.factionIcon:SetPoint("LEFT", row.title, "RIGHT", 4, 0)
   end
+  local titleTextWidth = row.title.GetStringWidth and row.title:GetStringWidth() or 0
+  local titleMaxWidth = row.title.GetWidth and row.title:GetWidth() or 0
+  local textW = math.min(titleTextWidth, titleMaxWidth)
+  row.factionIcon:ClearAllPoints()
+  row.factionIcon:SetPoint("LEFT", row.title, "LEFT", textW + 4, 0)
   -- Only show faction icon when race is unambiguously Alliance or Horde
   -- (stored factionName can be stale from BNet API for offline contacts)
   local inferredFaction = item.raceTag
@@ -146,7 +155,8 @@ local function bindRow(factory, parent, row, index, item, options)
   -- Timestamp (top-right)
   if row.timeLabel == nil then
     row.timeLabel = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_time)
-    row.timeLabel:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -4)
+    row.timeLabel:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, 0)
+    row.timeLabel:SetPoint("TOP", row.title, "TOP", 0, 0)
     setTextColor(row.timeLabel, Theme.COLORS.text_secondary)
   end
   if ns.TimeFormat and ns.TimeFormat.ContactPreview then
@@ -155,12 +165,17 @@ local function bindRow(factory, parent, row, index, item, options)
     row.timeLabel:SetText("")
   end
 
-  -- Preview text (bottom line)
+  -- Preview text (bottom line, right-aligned, single line with ellipsis)
   if row.preview == nil then
     row.preview = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
-    row.preview:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", 10, -28)
+    row.preview:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", 10, 2)
     setTextColor(row.preview, Theme.COLORS.text_secondary)
     row.preview:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 40)
+    row.preview:SetJustifyH("LEFT")
+    row.preview:SetWordWrap(false)
+    if row.preview.SetMaxLines then
+      row.preview:SetMaxLines(1)
+    end
   end
   row.preview:SetText(item.lastPreview or "")
 
