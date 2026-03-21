@@ -471,7 +471,8 @@ return function()
     assert(contacts[1].availability.canWhisper == false, "WrongFaction should not be whisperable")
   end
 
-  -- EnrichContactsAvailability: BNet contact with isAFK=true but isOnline=nil is treated as online
+  -- EnrichContactsAvailability: BNet contact with isAFK=true but isOnline=nil shows Offline
+  -- (isAFK/isDND are sticky flags that persist after going offline)
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -496,12 +497,13 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet AFK with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Away",
-      "BNet isAFK=true with isOnline=nil should be Away, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Offline",
+      "BNet isAFK=true with isOnline=nil should be Offline (sticky flag), got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 
-  -- EnrichContactsAvailability: BNet contact with isDND=true but isOnline=nil is treated as online
+  -- EnrichContactsAvailability: BNet contact with isDND=true but isOnline=nil shows Offline
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -526,8 +528,9 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet DND with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Busy",
-      "BNet isDND=true with isOnline=nil should be Busy, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Offline",
+      "BNet isDND=true with isOnline=nil should be Offline (sticky flag), got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 

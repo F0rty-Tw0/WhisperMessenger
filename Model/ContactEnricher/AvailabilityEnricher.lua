@@ -92,10 +92,7 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
-        local isOnline = accountInfo.isOnline
-          or accountInfo.isAFK
-          or accountInfo.isDND
-          or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+        local isOnline = accountInfo.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
         if isOnline then
           local bnetStatus = "CanWhisper"
           -- Check both top-level (BNet app) and game-level AFK/DND flags

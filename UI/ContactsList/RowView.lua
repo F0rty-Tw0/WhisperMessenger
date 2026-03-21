@@ -172,10 +172,8 @@ local function bindRow(factory, parent, row, index, item, options)
 
     row.unreadBadge.bg = row.unreadBadge:CreateTexture(nil, "BACKGROUND")
     row.unreadBadge.bg:SetAllPoints()
-    applyColorTexture(row.unreadBadge.bg, Theme.COLORS.unread_badge)
-    if row.unreadBadge.bg.SetMask then
-      row.unreadBadge.bg:SetMask("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-    end
+    row.unreadBadge.bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
+    UIHelpers.applyVertexColor(row.unreadBadge.bg, Theme.COLORS.unread_badge)
 
     row.unreadBadge.label = row.unreadBadge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
     row.unreadBadge.label:SetAllPoints()
