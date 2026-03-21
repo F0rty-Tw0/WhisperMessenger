@@ -103,6 +103,7 @@ function MessengerWindow.Create(factory, options)
   local optionsHint = layout.optionsHint
   local resetWindowButton = layout.resetWindowButton
   local resetIconButton = layout.resetIconButton
+  local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
 
   -- Contacts controller (manages rows, paging, scroll hooks)
@@ -265,6 +266,20 @@ function MessengerWindow.Create(factory, options)
     end)
   end
 
+  if clearAllChatsButton.SetScript then
+    clearAllChatsButton:SetScript("OnClick", function()
+      if options.onClearAllChats then
+        options.onClearAllChats()
+        refreshSelection({
+          contacts = {},
+          selectedContact = nil,
+          conversation = nil,
+          status = nil,
+        }, true)
+      end
+    end)
+  end
+
   -- Frame-level scripts
   if frame.SetScript then
     frame:SetScript("OnShow", function()
@@ -360,6 +375,7 @@ function MessengerWindow.Create(factory, options)
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
+    clearAllChatsButton = clearAllChatsButton,
     resizeGrip = resizeGrip,
     contacts = contacts,
     conversation = conversation,

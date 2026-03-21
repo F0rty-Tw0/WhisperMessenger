@@ -198,6 +198,13 @@ function Bootstrap.Initialize(factory, options)
       characterState.window = nextState
       return nextState
     end,
+    onClearAllChats = function()
+      for key in pairs(runtime.store.conversations) do
+        runtime.store.conversations[key] = nil
+      end
+      runtime.activeConversationKey = nil
+      characterState.activeConversationKey = nil
+    end,
     onResetIconPosition = function()
       local nextState = TableUtils.copyState(defaultCharacterState.icon)
       characterState.icon = nextState

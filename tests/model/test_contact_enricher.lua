@@ -114,6 +114,64 @@ return function()
     assert(result == nil, "should return nil when no status available")
   end
 
+  -- EnrichContactsAvailability: BNet contact online without characterName shows as online
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            isOnline = true,
+            gameAccountInfo = {
+              characterName = nil,
+              clientProgram = "App",
+            },
+          }
+        end,
+      },
+    })
+    local contacts = {
+      {
+        channel = "BN",
+        bnetAccountID = 99,
+        guid = "guid-bn-app",
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet online contact should have availability")
+    assert(
+      contacts[1].availability.status == "CanWhisper",
+      "BNet online contact without characterName should be CanWhisper, got: "
+        .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: BNet contact offline shows as offline
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            isOnline = false,
+            gameAccountInfo = nil,
+          }
+        end,
+      },
+    })
+    local contacts = {
+      {
+        channel = "BN",
+        bnetAccountID = 100,
+        guid = "guid-bn-off",
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet offline contact should have availability")
+    assert(
+      contacts[1].availability.status == "Offline",
+      "BNet offline contact should be Offline, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
   -- BuildWindowSelectionState: no active conversation returns only contacts
   do
     local runtime = makeRuntime()

@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
+local createOptionButton = UIHelpers.createOptionButton
 
 local LayoutBuilder = {}
 
@@ -21,7 +22,7 @@ local LayoutBuilder = {}
 --   contactsPane, contactsDivider, contentPane, headerDivider,
 --   threadPane, composerPane, composerDivider,
 --   optionsPanel, optionsHeader, optionsHint,
---   resetWindowButton, resetIconButton,
+--   resetWindowButton, resetIconButton, clearAllChatsButton,
 --   contactsView (the ScrollView for the contacts list)
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
@@ -96,17 +97,32 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local optionsHint = optionsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   optionsHint:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -12)
-  optionsHint:SetText("Reset the messenger and icon to their default positions.")
+  optionsHint:SetText("Reset positions or clear all conversation history.")
 
-  local resetWindowButton = factory.CreateFrame("Button", nil, optionsPanel, "UIPanelButtonTemplate")
-  resetWindowButton:SetSize(180, 24)
+  local btnH = Theme.LAYOUT.OPTION_BUTTON_HEIGHT
+  local btnSpacing = Theme.LAYOUT.OPTION_BUTTON_SPACING
+  local normalColors = {
+    bg = Theme.COLORS.option_button_bg,
+    bgHover = Theme.COLORS.option_button_hover,
+    text = Theme.COLORS.option_button_text,
+    textHover = Theme.COLORS.option_button_text_hover,
+  }
+  local dangerColors = {
+    bg = Theme.COLORS.danger_button_bg,
+    bgHover = Theme.COLORS.danger_button_hover,
+    text = Theme.COLORS.option_button_text,
+    textHover = Theme.COLORS.option_button_text_hover,
+  }
+  local btnLayout = { height = btnH, width = 200 }
+
+  local resetWindowButton = createOptionButton(factory, optionsPanel, "Reset Window Position", normalColors, btnLayout)
   resetWindowButton:SetPoint("TOPLEFT", optionsHint, "BOTTOMLEFT", 0, -16)
-  resetWindowButton:SetText("Reset Window Position")
 
-  local resetIconButton = factory.CreateFrame("Button", nil, optionsPanel, "UIPanelButtonTemplate")
-  resetIconButton:SetSize(160, 24)
-  resetIconButton:SetPoint("TOPLEFT", resetWindowButton, "BOTTOMLEFT", 0, -10)
-  resetIconButton:SetText("Reset Icon Position")
+  local resetIconButton = createOptionButton(factory, optionsPanel, "Reset Icon Position", normalColors, btnLayout)
+  resetIconButton:SetPoint("TOPLEFT", resetWindowButton, "BOTTOMLEFT", 0, -btnSpacing)
+
+  local clearAllChatsButton = createOptionButton(factory, optionsPanel, "Clear All Chats", dangerColors, btnLayout)
+  clearAllChatsButton:SetPoint("TOPLEFT", resetIconButton, "BOTTOMLEFT", 0, -btnSpacing)
 
   return {
     contactsPane = contactsPane,
@@ -121,6 +137,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
+    clearAllChatsButton = clearAllChatsButton,
     contactsView = contactsView,
   }
 end

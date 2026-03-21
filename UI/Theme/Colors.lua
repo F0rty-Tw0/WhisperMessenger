@@ -35,6 +35,12 @@ local Colors = {
   send_button_disabled = { 0.25, 0.25, 0.30, 0.60 },
   icon_bg = { 0.18, 0.50, 0.95, 0.95 },
   badge_bg = { 0.90, 0.25, 0.25, 0.95 },
+  option_button_bg = { 0.14, 0.15, 0.20, 0.80 },
+  option_button_hover = { 0.18, 0.20, 0.28, 0.90 },
+  option_button_text = { 0.82, 0.82, 0.88, 1.0 },
+  option_button_text_hover = { 0.95, 0.95, 0.98, 1.0 },
+  danger_button_bg = { 0.45, 0.12, 0.12, 0.80 },
+  danger_button_hover = { 0.55, 0.16, 0.16, 0.90 },
 }
 
 ns.ThemeColors = Colors

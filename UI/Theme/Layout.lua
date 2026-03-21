@@ -50,6 +50,11 @@ local Layout = {
   HEADER_ICON_SIZE = 32,
   HEADER_STATUS_DOT_SIZE = 8,
 
+  -- Option buttons
+  OPTION_BUTTON_HEIGHT = 30,
+  OPTION_BUTTON_SPACING = 8,
+  OPTION_BUTTON_RADIUS = 4,
+
   -- Misc
   MESSAGE_TIMESTAMP_GAP = 6,
 }

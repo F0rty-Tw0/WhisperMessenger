@@ -114,6 +114,39 @@ function UIHelpers.createCircularIcon(factory, parent, size)
   return { frame = frame, texture = texture }
 end
 
+function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
+  local bgColor = colors.bg
+  local bgHover = colors.bgHover
+  local textColor = colors.text
+  local textHover = colors.textHover
+  local btnHeight = layout.height or 30
+  local btnWidth = layout.width or 200
+
+  local button = factory.CreateFrame("Button", nil, parent)
+  button:SetSize(btnWidth, btnHeight)
+
+  local bg = button:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(button)
+  UIHelpers.applyColorTexture(bg, bgColor)
+
+  local labelFs = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  labelFs:SetPoint("CENTER", button, "CENTER", 0, 0)
+  labelFs:SetText(label)
+  UIHelpers.setTextColor(labelFs, textColor)
+
+  button:SetScript("OnEnter", function()
+    UIHelpers.applyColorTexture(bg, bgHover)
+    UIHelpers.setTextColor(labelFs, textHover)
+  end)
+
+  button:SetScript("OnLeave", function()
+    UIHelpers.applyColorTexture(bg, bgColor)
+    UIHelpers.setTextColor(labelFs, textColor)
+  end)
+
+  return button
+end
+
 ns.UIHelpers = UIHelpers
 
 return UIHelpers
