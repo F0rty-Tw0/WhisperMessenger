@@ -15,6 +15,17 @@ local function measureTextHeight(fontString, text, maxWidth)
   return fontString:GetStringHeight() or 14
 end
 
+local CORNER_R = 8
+local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
+
+-- Pre-cache the corner texture at load time so it's in memory before any bubble is created
+if type(_G.UIParent) == "table" and type(_G.UIParent.CreateTexture) == "function" then
+  local preload = _G.UIParent:CreateTexture(nil, "BACKGROUND")
+  preload:SetTexture(CIRCLE_TEX)
+  preload:SetAlpha(0)
+  preload:SetSize(1, 1)
+end
+
 local BubbleFrame = {}
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
@@ -62,9 +73,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end)
   end
 
-  local CORNER_R = 8
-  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
-
   -- Build a solid-color rounded rectangle from 9 texture regions:
   -- center rect, 4 edge strips, 4 quarter-circle corners
   local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
@@ -91,8 +99,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, CORNER_R)
   bgRight:SetWidth(CORNER_R)
 
-  -- Quarter-circle corners (cut from a circle texture via TexCoord)
-  local function makeCorner(point, _relPoint)
+  -- Quarter-circle corners (cut from pre-cached circle texture via TexCoord)
+  local function makeCorner(point)
     local c = frame:CreateTexture(nil, "BACKGROUND")
     c:SetSize(CORNER_R, CORNER_R)
     c:SetPoint(point, frame, point, 0, 0)
@@ -107,12 +115,11 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local cBL = makeCorner("BOTTOMLEFT")
   local cBR = makeCorner("BOTTOMRIGHT")
 
-  -- Set TexCoord to select the correct quarter of the circle
   if cTL.SetTexCoord then
-    cTL:SetTexCoord(0, 0.5, 0, 0.5) -- top-left quarter
-    cTR:SetTexCoord(0.5, 1, 0, 0.5) -- top-right quarter
-    cBL:SetTexCoord(0, 0.5, 0.5, 1) -- bottom-left quarter
-    cBR:SetTexCoord(0.5, 1, 0.5, 1) -- bottom-right quarter
+    cTL:SetTexCoord(0, 0.5, 0, 0.5)
+    cTR:SetTexCoord(0.5, 1, 0, 0.5)
+    cBL:SetTexCoord(0, 0.5, 0.5, 1)
+    cBR:SetTexCoord(0.5, 1, 0.5, 1)
   end
 
   local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
@@ -120,13 +127,11 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   local function applyBubbleColor(colorTable)
     local r, g, b, a = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
-    -- Flat fill pieces: solid color rectangles
     for _, part in ipairs(bgFills) do
       if part.SetColorTexture then
         part:SetColorTexture(r, g, b, a)
       end
     end
-    -- Corner pieces: tint the circle texture (do NOT overwrite with SetColorTexture)
     for _, part in ipairs(bgCorners) do
       if part.SetVertexColor then
         part:SetVertexColor(r, g, b, a)
