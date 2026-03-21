@@ -86,6 +86,116 @@ return function()
     assert(result.battleTag == "Primary#1111", "should use primary when isOnline is set")
   end
 
+  -- ResolveAccountInfo falls back to game account iteration when isOnline=nil everywhere
+  do
+    local gameAccountApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, bnetAccountID = 88, battleTag = "AppOnly#1234" }
+      end,
+      GetNumFriends = function()
+        return 2
+      end,
+      GetFriendAccountInfo = function(index)
+        if index == 1 then
+          return { bnetAccountID = 88, isOnline = nil }
+        end
+        return { bnetAccountID = 99 }
+      end,
+      GetFriendNumGameAccounts = function(_friendIndex)
+        return 3
+      end,
+      GetFriendGameAccountInfo = function(_friendIndex, gameIndex)
+        if gameIndex == 2 then
+          return { isOnline = true, clientProgram = "BSAp" }
+        end
+        return { isOnline = false }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(gameAccountApi, 88)
+    assert(result ~= nil, "game account fallback should return info")
+    assert(result.isOnline == true, "game account fallback should set isOnline=true")
+    assert(result.gameAccountInfo.clientProgram == "BSAp", "should return active game account info")
+  end
+
+  -- ResolveAccountInfo game account fallback skipped when no active game accounts
+  do
+    local noActiveApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, bnetAccountID = 77 }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 77, isOnline = nil }
+      end,
+      GetFriendNumGameAccounts = function(_friendIndex)
+        return 2
+      end,
+      GetFriendGameAccountInfo = function(_friendIndex, _gameIndex)
+        return { isOnline = false }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(noActiveApi, 77)
+    assert(result ~= nil, "should still return account info")
+    assert(result.isOnline == nil, "should not set isOnline when no active game accounts")
+  end
+
+  -- ResolveAccountInfo falls back to GetAccountInfoByGUID when isOnline=nil
+  do
+    local byGuidApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, bnetAccountID = 16, battleTag = "Primary#1234", isAFK = false }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 16, isOnline = nil }
+      end,
+      GetFriendNumGameAccounts = function(_fi)
+        return 0
+      end,
+      GetFriendGameAccountInfo = function()
+        return nil
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return {
+          isOnline = nil,
+          isAFK = true,
+          isDND = false,
+          gameAccountInfo = { isOnline = true, characterName = "Deathrøse", factionName = "Horde" },
+        }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(byGuidApi, 16, "Player-1305-0D65D962")
+    assert(result ~= nil, "ByGUID fallback should return info")
+    assert(result.isOnline == true, "ByGUID fallback should set isOnline=true, got: " .. tostring(result.isOnline))
+    assert(result.isAFK == true, "ByGUID fallback should preserve isAFK")
+    assert(
+      result.gameAccountInfo.characterName == "Deathrøse",
+      "ByGUID fallback should merge gameAccountInfo"
+    )
+  end
+
+  -- ResolveAccountInfo ByGUID fallback skipped when guid is nil
+  do
+    local noGuidApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, bnetAccountID = 88 }
+      end,
+      GetNumFriends = function()
+        return 0
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return { isOnline = true }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(noGuidApi, 88, nil)
+    assert(result ~= nil, "should return primary info")
+    assert(result.isOnline == nil, "should not use ByGUID without guid")
+  end
+
   -- NormalizeAvailabilityStatus
   assert(BNetResolver.NormalizeAvailabilityStatus(nil) == nil, "nil should return nil")
   assert(BNetResolver.NormalizeAvailabilityStatus("CanWhisper") == "CanWhisper", "string should pass through")

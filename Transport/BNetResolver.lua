@@ -25,14 +25,68 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
   end
 
   -- Fallback: scan friend list to find matching bnetAccountID
+  local friendIndex
   if type(bnetApi.GetNumFriends) == "function" and type(bnetApi.GetFriendAccountInfo) == "function" then
     local ok, numFriends = pcall(bnetApi.GetNumFriends)
     if ok and numFriends then
       for i = 1, numFriends do
         local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
         if ok2 and info and info.bnetAccountID == bnetAccountID then
-          return info
+          if info.isOnline ~= nil then
+            return info
+          end
+          accountInfo = accountInfo or info
+          friendIndex = i
+          break
         end
+      end
+    end
+  end
+
+  -- Fallback: iterate game accounts to detect online status when isOnline is nil
+  if
+    friendIndex
+    and accountInfo
+    and accountInfo.isOnline == nil
+    and type(bnetApi.GetFriendNumGameAccounts) == "function"
+    and type(bnetApi.GetFriendGameAccountInfo) == "function"
+  then
+    local ok, numAccounts = pcall(bnetApi.GetFriendNumGameAccounts, friendIndex)
+    if ok and numAccounts and numAccounts > 0 then
+      for j = 1, numAccounts do
+        local ok2, gameInfo = pcall(bnetApi.GetFriendGameAccountInfo, friendIndex, j)
+        if ok2 and gameInfo and (gameInfo.isOnline or gameInfo.characterName) then
+          accountInfo.isOnline = true
+          accountInfo.gameAccountInfo = gameInfo
+          return accountInfo
+        end
+      end
+    end
+  end
+
+  -- Fallback: look up by GUID (returns different data path for some friends)
+  if accountInfo and accountInfo.isOnline == nil and guid and type(bnetApi.GetAccountInfoByGUID) == "function" then
+    local ok, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
+    if ok and info then
+      local gameInfo = info.gameAccountInfo
+      if info.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+        -- Merge useful fields from ByGUID result into accountInfo
+        if gameInfo then
+          accountInfo.gameAccountInfo = gameInfo
+        end
+        accountInfo.isOnline = info.isOnline
+        -- If isOnline is still nil but game data proves online, set it
+        if accountInfo.isOnline == nil and gameInfo and (gameInfo.isOnline or gameInfo.characterName) then
+          accountInfo.isOnline = true
+        end
+        -- Preserve AFK/DND flags from whichever source has them
+        if info.isAFK then
+          accountInfo.isAFK = true
+        end
+        if info.isDND then
+          accountInfo.isDND = true
+        end
+        return accountInfo
       end
     end
   end
