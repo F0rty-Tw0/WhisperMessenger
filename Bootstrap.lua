@@ -177,6 +177,30 @@ function Bootstrap.Initialize(factory, options)
       else
         trace("  accountInfo:  nil")
       end
+      -- Try alternative API: GetAccountInfoByGUID
+      if guid and runtime.bnetApi and type(runtime.bnetApi.GetAccountInfoByGUID) == "function" then
+        local ok2, altInfo = pcall(runtime.bnetApi.GetAccountInfoByGUID, guid)
+        if ok2 and altInfo then
+          local agi = altInfo.gameAccountInfo
+          trace("  alt(ByGUID).isOnline: " .. tostring(altInfo.isOnline))
+          trace("  alt(ByGUID).isAFK:    " .. tostring(altInfo.isAFK))
+          trace("  alt(ByGUID).isDND:    " .. tostring(altInfo.isDND))
+          if agi then
+            trace("  alt(ByGUID).game.isOnline:  " .. tostring(agi.isOnline))
+            trace("  alt(ByGUID).game.charName:  " .. tostring(agi.characterName))
+            trace("  alt(ByGUID).game.faction:   " .. tostring(agi.factionName))
+          end
+        else
+          trace("  alt(ByGUID): nil or error")
+        end
+      end
+      -- Try alternative API: GetFriendNumGameAccounts + GetFriendGameAccountInfo
+      if runtime.bnetApi and type(runtime.bnetApi.GetFriendNumGameAccounts) == "function" then
+        local ok3, numAccounts = pcall(runtime.bnetApi.GetFriendNumGameAccounts, conversation.bnetAccountID)
+        if ok3 and numAccounts then
+          trace("  numGameAccounts: " .. tostring(numAccounts))
+        end
+      end
     end
     trace("--- End Debug ---")
   end

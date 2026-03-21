@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ContactEnricher = {}
+local AvailabilityEnricher = {}
 
 -- Check if contact is opposite faction from local player.
 -- Returns true only when both factions are known and differ.
@@ -30,7 +30,11 @@ local function enrichClassTag(item, guid, runtime)
   end
 end
 
-function ContactEnricher.ShouldRequestAvailability(cached)
+-- Expose helpers for use by ContactEnricher facade
+AvailabilityEnricher.isOppositeFaction = isOppositeFaction
+AvailabilityEnricher.enrichClassTag = enrichClassTag
+
+function AvailabilityEnricher.ShouldRequestAvailability(cached)
   if cached == nil then
     return true
   end
@@ -38,7 +42,7 @@ function ContactEnricher.ShouldRequestAvailability(cached)
   return cached.status == "Offline" or cached.status == "WrongFaction"
 end
 
-function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
   local localFaction = runtime.localFaction
@@ -64,11 +68,23 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
           end
           -- nil = not a member, keep original status
         end
-      else
+      elseif item.factionName ~= nil and item.factionName ~= "" and item.factionName == localFaction then
         -- Same faction: WrongFaction is a stale or erroneous API response
         if item.availability.status == "WrongFaction" then
           item.availability = Availability.FromStatus("CanWhisper")
         end
+      end
+    elseif item.guid and item.channel ~= "BN" and type(runtime.getGuildOrCommunityPresence) == "function" then
+      -- No cached availability yet; use guild/community presence as initial status
+      local presence = runtime.getGuildOrCommunityPresence(item.guid)
+      if presence == "online" then
+        if isOppositeFaction(item.factionName, localFaction) then
+          item.availability = Availability.FromStatus("XFaction")
+        else
+          item.availability = Availability.FromStatus("CanWhisper")
+        end
+      elseif presence == "offline" then
+        item.availability = Availability.FromStatus("Offline")
       end
     end
     -- BNet contacts: query live status and refresh metadata from BNet API
@@ -111,109 +127,26 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
             end
           end
         else
-          item.availability = Availability.FromStatus("Offline")
+          -- BNet API says offline; fall back to guild/community presence
+          if item.guid and type(runtime.getGuildOrCommunityPresence) == "function" then
+            local presence = runtime.getGuildOrCommunityPresence(item.guid)
+            if presence == "online" then
+              if isOppositeFaction(item.factionName, localFaction) then
+                item.availability = Availability.FromStatus("XFaction")
+              else
+                item.availability = Availability.FromStatus("CanWhisper")
+              end
+            else
+              item.availability = Availability.FromStatus("Offline")
+            end
+          else
+            item.availability = Availability.FromStatus("Offline")
+          end
         end
       end
     end
   end
 end
 
-function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation)
-  if conversationKey == nil then
-    return nil
-  end
-
-  if runtime.sendStatusByConversation[conversationKey] ~= nil then
-    return runtime.sendStatusByConversation[conversationKey]
-  end
-
-  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
-    local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-    return Availability.FromStatus("Lockdown")
-  end
-
-  -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
-  if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
-    return runtime.availabilityByGUID[conversation.guid]
-  end
-
-  return nil
-end
-
-function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-  local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
-  if contacts == nil and buildContactsFn then
-    contacts = buildContactsFn(runtime)
-  end
-
-  ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-
-  if runtime.activeConversationKey == nil then
-    return {
-      contacts = contacts,
-    }
-  end
-
-  local conversationKey = runtime.activeConversationKey
-  local conversation = runtime.store.conversations[conversationKey]
-  local selectedContact = TableUtils.findWhere(contacts, "conversationKey", conversationKey)
-  if selectedContact == nil and conversation ~= nil then
-    selectedContact = {
-      conversationKey = conversationKey,
-      displayName = conversation.displayName or conversation.contactDisplayName or conversationKey,
-      lastPreview = conversation.lastPreview or "",
-      unreadCount = conversation.unreadCount or 0,
-      lastActivityAt = conversation.lastActivityAt or 0,
-      channel = conversation.channel or "WOW",
-      guid = conversation.guid,
-      bnetAccountID = conversation.bnetAccountID,
-      gameAccountName = conversation.gameAccountName,
-      className = conversation.className,
-      classTag = conversation.classTag,
-      raceName = conversation.raceName,
-      raceTag = conversation.raceTag,
-      factionName = conversation.factionName,
-    }
-  end
-
-  -- Enrich selected contact with live BNet metadata for display
-  if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
-    local accountInfo =
-      BNetResolver.ResolveAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
-    if accountInfo then
-      local gameInfo = accountInfo.gameAccountInfo
-      if gameInfo then
-        if gameInfo.factionName and gameInfo.factionName ~= "" then
-          selectedContact.factionName = gameInfo.factionName
-        end
-        if gameInfo.className and gameInfo.className ~= "" then
-          selectedContact.className = gameInfo.className
-        end
-        if gameInfo.raceName and gameInfo.raceName ~= "" then
-          selectedContact.raceName = gameInfo.raceName
-        end
-        if gameInfo.characterName then
-          selectedContact.characterName = gameInfo.characterName
-          selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
-        end
-        -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
-        local guid = gameInfo.playerGuid or selectedContact.guid
-        if guid then
-          enrichClassTag(selectedContact, guid, runtime)
-        end
-      end
-    end
-  end
-
-  return {
-    contacts = contacts,
-    selectedContact = selectedContact,
-    conversation = conversation,
-    status = selectedContact and selectedContact.availability
-      or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
-  }
-end
-
-ns.ContactEnricher = ContactEnricher
-return ContactEnricher
+ns.AvailabilityEnricher = AvailabilityEnricher
+return AvailabilityEnricher

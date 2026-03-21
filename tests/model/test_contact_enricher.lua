@@ -574,6 +574,176 @@ return function()
     )
   end
 
+  -- EnrichContactsAvailability: BNet contact offline via API but guild online becomes XFaction
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            isOnline = nil,
+            isAFK = false,
+            isDND = false,
+            gameAccountInfo = {
+              isOnline = false,
+              isGameAFK = false,
+              isGameBusy = false,
+              characterName = nil,
+              factionName = nil,
+            },
+          }
+        end,
+      },
+      getGuildOrCommunityPresence = function(_guid)
+        return "online"
+      end,
+    })
+    local contacts = {
+      { channel = "BN", bnetAccountID = 8, guid = "guid-bn-guild-online", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet offline+guild online should have availability")
+    assert(
+      contacts[1].availability.status == "XFaction",
+      "BNet offline via API but guild online should be XFaction, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: BNet contact offline via API but guild online same faction becomes CanWhisper
+  do
+    local runtime = makeRuntime({
+      localFaction = "Horde",
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            isOnline = nil,
+            isAFK = false,
+            isDND = false,
+            gameAccountInfo = {
+              isOnline = false,
+              characterName = nil,
+            },
+          }
+        end,
+      },
+      getGuildOrCommunityPresence = function(_guid)
+        return "online"
+      end,
+    })
+    local contacts = {
+      { channel = "BN", bnetAccountID = 9, guid = "guid-bn-guild-same", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].availability.status == "CanWhisper",
+      "BNet offline via API but guild online same faction should be CanWhisper, got: "
+        .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WoW contact with no cached status but guild online gets XFaction
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {},
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-nocache-guild" then
+          return "online"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-nocache-guild", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "no-cache guild online contact should have availability")
+    assert(
+      contacts[1].availability.status == "XFaction",
+      "no-cache opposite faction guild online should be XFaction, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WoW contact with no cached status but guild online same faction gets CanWhisper
+  do
+    local runtime = makeRuntime({
+      localFaction = "Horde",
+      availabilityByGUID = {},
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-nocache-same" then
+          return "online"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-nocache-same", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "no-cache same-faction guild online should have availability")
+    assert(
+      contacts[1].availability.status == "CanWhisper",
+      "no-cache same-faction guild online should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WoW contact with no cached status and guild offline gets Offline
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {},
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-nocache-guildoff" then
+          return "offline"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-nocache-guildoff", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "no-cache guild offline contact should have availability")
+    assert(
+      contacts[1].availability.status == "Offline",
+      "no-cache guild offline should be Offline, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WoW contact with no cached status and not in guild stays nil
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {},
+      getGuildOrCommunityPresence = function(_guid)
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-nocache-noguld", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability == nil, "no-cache non-guild contact should have no availability")
+  end
+
+  -- EnrichContactsAvailability: WrongFaction with nil faction stays WrongFaction (unknown faction)
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-nil-fac"] = { status = "WrongFaction", canWhisper = false },
+      },
+    })
+    local contacts = {
+      { guid = "guid-nil-fac", channel = "WOW", factionName = nil },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].availability.status == "WrongFaction",
+      "nil faction WrongFaction should stay WrongFaction, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
   -- ShouldRequestAvailability: returns true when no cached status
   do
     assert(ContactEnricher.ShouldRequestAvailability(nil) == true, "should request when no cached availability")
