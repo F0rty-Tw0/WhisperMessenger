@@ -24,10 +24,10 @@ return function()
   assert(string.find(text, "Hunter", 1, true), "should include className: " .. text)
   assert(string.find(text, "Horde", 1, true), "should include factionName: " .. text)
 
-  -- CanWhisperGuild (cross-faction community/guild) should show "X-Faction" label
+  -- XFaction (computed cross-faction guild/community) should show "X-Faction" label
   do
     local xfContact = { displayName = "Thrall", factionName = "Horde" }
-    local xfStatus = { status = "CanWhisperGuild", canWhisper = true }
+    local xfStatus = { status = "XFaction", canWhisper = true }
     local xfText, xfColor = StatusLine.Build(xfContact, xfStatus)
     assert(string.find(xfText, "X-Faction", 1, true), "should show 'X-Faction' label: " .. xfText)
     assert(xfColor == "online", "X-Faction dot color should be 'online', got: " .. tostring(xfColor))

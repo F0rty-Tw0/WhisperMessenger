@@ -5,6 +5,15 @@ end
 
 local ContactEnricher = {}
 
+-- Check if contact is opposite faction from local player.
+-- Returns true only when both factions are known and differ.
+local function isOppositeFaction(itemFaction, localFaction)
+  if localFaction == nil or itemFaction == nil or itemFaction == "" then
+    return false
+  end
+  return itemFaction ~= localFaction
+end
+
 -- Resolve classTag/raceTag for a contact via GetPlayerInfoByGUID.
 -- The BNet API provides className (localized) but not classTag (engine token),
 -- which is needed for class coloring and icons.
@@ -25,29 +34,58 @@ function ContactEnricher.ShouldRequestAvailability(cached)
   if cached == nil then
     return true
   end
-  -- Only re-request for Offline (stale); WrongFaction is authoritative
-  return cached.status == "Offline"
+  -- Re-request for Offline (stale) and WrongFaction (player may have gone offline)
+  return cached.status == "Offline" or cached.status == "WrongFaction"
 end
 
 function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+  local localFaction = runtime.localFaction
   for _, item in ipairs(contacts) do
     -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
     if item.guid and runtime.availabilityByGUID[item.guid] then
       item.availability = runtime.availabilityByGUID[item.guid]
+      if isOppositeFaction(item.factionName, localFaction) then
+        if item.availability.status == "CanWhisper" then
+          -- CanWhisper + opposite faction = cross-faction guild/community member
+          item.availability = Availability.FromStatus("XFaction")
+        elseif
+          (item.availability.status == "WrongFaction" or item.availability.status == "Offline")
+          and type(runtime.getGuildOrCommunityPresence) == "function"
+        then
+          -- API returns WrongFaction for all opposite-faction players;
+          -- Offline may be stale — check guild/community presence to distinguish
+          local presence = runtime.getGuildOrCommunityPresence(item.guid)
+          if presence == "online" then
+            item.availability = Availability.FromStatus("XFaction")
+          elseif presence == "offline" then
+            item.availability = Availability.FromStatus("Offline")
+          end
+          -- nil = not a member, keep original status
+        end
+      else
+        -- Same faction: WrongFaction is a stale or erroneous API response
+        if item.availability.status == "WrongFaction" then
+          item.availability = Availability.FromStatus("CanWhisper")
+        end
+      end
     end
     -- BNet contacts: query live status and refresh metadata from BNet API
     if item.channel == "BN" and item.bnetAccountID then
       local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
-        local isOnline = accountInfo.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+        local isOnline = accountInfo.isOnline
+          or accountInfo.isAFK
+          or accountInfo.isDND
+          or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
         if isOnline then
           local bnetStatus = "CanWhisper"
-          if gameInfo and gameInfo.isGameAFK then
+          -- Check both top-level (BNet app) and game-level AFK/DND flags
+          if accountInfo.isAFK or (gameInfo and gameInfo.isGameAFK) then
             bnetStatus = "Away"
-          elseif gameInfo and gameInfo.isGameBusy then
+          elseif accountInfo.isDND or (gameInfo and gameInfo.isGameBusy) then
             bnetStatus = "Busy"
           end
           item.availability = Availability.FromStatus(bnetStatus)
@@ -66,6 +104,10 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
             local guid = gameInfo.playerGuid or item.guid
             if guid then
               enrichClassTag(item, guid, runtime)
+            end
+            -- Compute XFaction for BNet contacts in WoW with opposite faction
+            if bnetStatus == "CanWhisper" and isOppositeFaction(item.factionName, localFaction) then
+              item.availability = Availability.FromStatus("XFaction")
             end
           end
         else

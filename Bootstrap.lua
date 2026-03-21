@@ -129,6 +129,58 @@ function Bootstrap.Initialize(factory, options)
     return nextState
   end
 
+  local function debugContact(conversationKey)
+    if conversationKey == nil then
+      return
+    end
+    local conversation = runtime.store.conversations[conversationKey]
+    if conversation == nil then
+      return
+    end
+
+    local guid = conversation.guid
+    local cached = guid and runtime.availabilityByGUID[guid] or nil
+    local presence = type(runtime.getGuildOrCommunityPresence) == "function"
+        and guid
+        and runtime.getGuildOrCommunityPresence(guid)
+      or nil
+    local isBN = conversation.channel == "BN"
+
+    trace("--- Contact Debug ---")
+    trace("  key:          " .. tostring(conversationKey))
+    trace("  channel:      " .. tostring(conversation.channel))
+    trace("  guid:         " .. tostring(guid))
+    trace("  faction:      " .. tostring(conversation.factionName))
+    trace("  localFaction:  " .. tostring(runtime.localFaction))
+    trace("  isBattleNet:  " .. tostring(isBN))
+    trace("  cachedStatus: " .. (cached and cached.status or "nil"))
+    trace("  canWhisper:   " .. (cached and tostring(cached.canWhisper) or "nil"))
+    trace("  guildPresence: " .. tostring(presence))
+
+    if isBN and conversation.bnetAccountID then
+      local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+      local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid)
+      if accountInfo then
+        local gi = accountInfo.gameAccountInfo
+        trace("  bn.isOnline:  " .. tostring(accountInfo.isOnline))
+        trace("  bn.isAFK:     " .. tostring(accountInfo.isAFK))
+        trace("  bn.isDND:     " .. tostring(accountInfo.isDND))
+        if gi then
+          trace("  game.isOnline:  " .. tostring(gi.isOnline))
+          trace("  game.isGameAFK: " .. tostring(gi.isGameAFK))
+          trace("  game.isGameBusy:" .. tostring(gi.isGameBusy))
+          trace("  game.charName:  " .. tostring(gi.characterName))
+          trace("  game.faction:   " .. tostring(gi.factionName))
+        else
+          trace("  gameAccountInfo: nil")
+        end
+      else
+        trace("  accountInfo:  nil")
+      end
+    end
+    trace("--- End Debug ---")
+  end
+
   local function selectConversation(conversationKey)
     local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
     local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
@@ -144,6 +196,7 @@ function Bootstrap.Initialize(factory, options)
       end
     end
 
+    debugContact(conversationKey)
     return refreshWindow()
   end
 
