@@ -7,9 +7,11 @@ local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
   CanWhisper = { label = "Online", color = "online" },
-  CanWhisperGuild = { label = "Online", color = "online" },
+  CanWhisperGuild = { label = "X-Faction", color = "online" },
+  Away = { label = "Away", color = "away" },
+  Busy = { label = "Busy", color = "dnd" },
   Offline = { label = "Offline", color = "offline" },
-  WrongFaction = { label = "Wrong Faction", color = "offline" },
+  WrongFaction = { label = "Wrong Faction", color = "dnd" },
   Lockdown = { label = "Unavailable", color = "dnd" },
 }
 

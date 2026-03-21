@@ -100,6 +100,10 @@ local function bindRow(factory, parent, row, index, item, options)
     local colorKey = avail.canWhisper and "online" or "offline"
     if avail.status == "WrongFaction" then
       colorKey = "dnd"
+    elseif avail.status == "Away" then
+      colorKey = "away"
+    elseif avail.status == "Busy" then
+      colorKey = "dnd"
     end
     local sc = Theme.COLORS[colorKey]
     if sc then

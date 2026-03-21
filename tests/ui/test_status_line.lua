@@ -23,4 +23,31 @@ return function()
   -- Should include class and faction
   assert(string.find(text, "Hunter", 1, true), "should include className: " .. text)
   assert(string.find(text, "Horde", 1, true), "should include factionName: " .. text)
+
+  -- CanWhisperGuild (cross-faction community/guild) should show "X-Faction" label
+  do
+    local xfContact = { displayName = "Thrall", factionName = "Horde" }
+    local xfStatus = { status = "CanWhisperGuild", canWhisper = true }
+    local xfText, xfColor = StatusLine.Build(xfContact, xfStatus)
+    assert(string.find(xfText, "X-Faction", 1, true), "should show 'X-Faction' label: " .. xfText)
+    assert(xfColor == "online", "X-Faction dot color should be 'online', got: " .. tostring(xfColor))
+  end
+
+  -- Away status should display as "Away" with away color
+  do
+    local awayContact = { displayName = "Jaina" }
+    local awayStatus = { status = "Away", canWhisper = true }
+    local awayText, awayColor = StatusLine.Build(awayContact, awayStatus)
+    assert(string.find(awayText, "Away", 1, true), "should show 'Away' label: " .. awayText)
+    assert(awayColor == "away", "Away dot color should be 'away', got: " .. tostring(awayColor))
+  end
+
+  -- Busy status should display as "Busy" with dnd color
+  do
+    local busyContact = { displayName = "Thrall" }
+    local busyStatus = { status = "Busy", canWhisper = true }
+    local busyText, busyColor = StatusLine.Build(busyContact, busyStatus)
+    assert(string.find(busyText, "Busy", 1, true), "should show 'Busy' label: " .. busyText)
+    assert(busyColor == "dnd", "Busy dot color should be 'dnd', got: " .. tostring(busyColor))
+  end
 end

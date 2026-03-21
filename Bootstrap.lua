@@ -109,7 +109,11 @@ function Bootstrap.Initialize(factory, options)
     -- Proactively request availability for WoW contacts with GUIDs we haven't queried yet
     local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
     for _, item in ipairs(freshContacts) do
-      if item.channel == "WOW" and item.guid and not runtime.availabilityByGUID[item.guid] then
+      if
+        item.channel == "WOW"
+        and item.guid
+        and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
+      then
         Gateway.RequestAvailability(runtime.chatApi, item.guid)
       end
     end

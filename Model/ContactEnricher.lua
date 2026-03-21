@@ -21,6 +21,14 @@ local function enrichClassTag(item, guid, runtime)
   end
 end
 
+function ContactEnricher.ShouldRequestAvailability(cached)
+  if cached == nil then
+    return true
+  end
+  -- Only re-request for Offline (stale); WrongFaction is authoritative
+  return cached.status == "Offline"
+end
+
 function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
@@ -34,22 +42,31 @@ function ContactEnricher.EnrichContactsAvailability(contacts, runtime)
       local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
-        if gameInfo and gameInfo.characterName then
-          item.availability = Availability.FromStatus("CanWhisper")
-          -- Refresh potentially stale metadata from live BNet data
-          if gameInfo.factionName and gameInfo.factionName ~= "" then
-            item.factionName = gameInfo.factionName
+        local isOnline = accountInfo.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+        if isOnline then
+          local bnetStatus = "CanWhisper"
+          if gameInfo and gameInfo.isGameAFK then
+            bnetStatus = "Away"
+          elseif gameInfo and gameInfo.isGameBusy then
+            bnetStatus = "Busy"
           end
-          if gameInfo.className and gameInfo.className ~= "" then
-            item.className = gameInfo.className
-          end
-          if gameInfo.raceName and gameInfo.raceName ~= "" then
-            item.raceName = gameInfo.raceName
-          end
-          -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
-          local guid = gameInfo.playerGuid or item.guid
-          if guid then
-            enrichClassTag(item, guid, runtime)
+          item.availability = Availability.FromStatus(bnetStatus)
+          -- Refresh potentially stale metadata from live BNet data when in WoW
+          if gameInfo and gameInfo.characterName then
+            if gameInfo.factionName and gameInfo.factionName ~= "" then
+              item.factionName = gameInfo.factionName
+            end
+            if gameInfo.className and gameInfo.className ~= "" then
+              item.className = gameInfo.className
+            end
+            if gameInfo.raceName and gameInfo.raceName ~= "" then
+              item.raceName = gameInfo.raceName
+            end
+            -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
+            local guid = gameInfo.playerGuid or item.guid
+            if guid then
+              enrichClassTag(item, guid, runtime)
+            end
           end
         else
           item.availability = Availability.FromStatus("Offline")

@@ -114,14 +114,37 @@ return function()
     assert(result == nil, "should return nil when no status available")
   end
 
-  -- EnrichContactsAvailability: BNet contact online without characterName shows as online
+  -- EnrichContactsAvailability: BNet contact online via top-level isOnline shows as online
   do
     local runtime = makeRuntime({
       bnetApi = {
         GetAccountInfoByID = function(_bnetAccountID, _guid)
           return {
             isOnline = true,
+            gameAccountInfo = nil,
+          }
+        end,
+      },
+    })
+    local contacts = {
+      { channel = "BN", bnetAccountID = 98, guid = "guid-bn-top" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet top-level isOnline contact should have availability")
+    assert(
+      contacts[1].availability.status == "CanWhisper",
+      "BNet top-level isOnline should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: BNet contact online via gameAccountInfo.isOnline shows as online
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
             gameAccountInfo = {
+              isOnline = true,
               characterName = nil,
               clientProgram = "App",
             },
@@ -145,14 +168,72 @@ return function()
     )
   end
 
+  -- EnrichContactsAvailability: BNet contact away shows as Away (whisperable)
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            gameAccountInfo = {
+              isOnline = true,
+              isGameAFK = true,
+              isGameBusy = false,
+              characterName = "Jaina",
+            },
+          }
+        end,
+      },
+    })
+    local contacts = {
+      { channel = "BN", bnetAccountID = 101, guid = "guid-bn-away" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet away contact should have availability")
+    assert(
+      contacts[1].availability.status == "Away",
+      "BNet AFK contact should be Away, got: " .. tostring(contacts[1].availability.status)
+    )
+    assert(contacts[1].availability.canWhisper == true, "Away contacts should be whisperable")
+  end
+
+  -- EnrichContactsAvailability: BNet contact busy shows as Busy (whisperable)
+  do
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID, _guid)
+          return {
+            gameAccountInfo = {
+              isOnline = true,
+              isGameAFK = false,
+              isGameBusy = true,
+              characterName = "Thrall",
+            },
+          }
+        end,
+      },
+    })
+    local contacts = {
+      { channel = "BN", bnetAccountID = 102, guid = "guid-bn-busy" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "BNet busy contact should have availability")
+    assert(
+      contacts[1].availability.status == "Busy",
+      "BNet busy contact should be Busy, got: " .. tostring(contacts[1].availability.status)
+    )
+    assert(contacts[1].availability.canWhisper == true, "Busy contacts should be whisperable")
+  end
+
   -- EnrichContactsAvailability: BNet contact offline shows as offline
   do
     local runtime = makeRuntime({
       bnetApi = {
         GetAccountInfoByID = function(_bnetAccountID, _guid)
           return {
-            isOnline = false,
-            gameAccountInfo = nil,
+            gameAccountInfo = {
+              isOnline = false,
+              characterName = nil,
+            },
           }
         end,
       },
@@ -170,6 +251,51 @@ return function()
       contacts[1].availability.status == "Offline",
       "BNet offline contact should be Offline, got: " .. tostring(contacts[1].availability.status)
     )
+  end
+
+  -- EnrichContactsAvailability: WoW guild member with CanWhisperGuild shows as online
+  do
+    local runtime = makeRuntime({
+      availabilityByGUID = {
+        ["guid-guild-1"] = { status = "CanWhisperGuild", canWhisper = true },
+      },
+    })
+    local contacts = {
+      { guid = "guid-guild-1", channel = "WOW" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "guild member should have availability")
+    assert(
+      contacts[1].availability.status == "CanWhisperGuild",
+      "guild member should be CanWhisperGuild, got: " .. tostring(contacts[1].availability.status)
+    )
+    assert(contacts[1].availability.canWhisper == true, "guild member should be whisperable")
+  end
+
+  -- ShouldRequestAvailability: returns true when no cached status
+  do
+    assert(ContactEnricher.ShouldRequestAvailability(nil) == true, "should request when no cached availability")
+  end
+
+  -- ShouldRequestAvailability: returns true when cached as offline
+  do
+    local cached = { status = "Offline", canWhisper = false }
+    assert(ContactEnricher.ShouldRequestAvailability(cached) == true, "should re-request when cached as offline")
+  end
+
+  -- ShouldRequestAvailability: returns false when cached as wrong faction (authoritative)
+  do
+    local cached = { status = "WrongFaction", canWhisper = false }
+    assert(
+      ContactEnricher.ShouldRequestAvailability(cached) == false,
+      "should not re-request WrongFaction (authoritative)"
+    )
+  end
+
+  -- ShouldRequestAvailability: returns false when cached as online
+  do
+    local cached = { status = "CanWhisper", canWhisper = true }
+    assert(ContactEnricher.ShouldRequestAvailability(cached) == false, "should not re-request when already online")
   end
 
   -- BuildWindowSelectionState: no active conversation returns only contacts
