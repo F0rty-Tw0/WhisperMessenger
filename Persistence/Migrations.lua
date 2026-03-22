@@ -28,6 +28,19 @@ function Migrations.Apply(accountState, schema)
     accountState.pendingHydration = {}
   end
 
+  -- Strip legacy AFK/DND system messages from saved conversations
+  for _, conv in pairs(accountState.conversations) do
+    if conv.messages then
+      local filtered = {}
+      for _, msg in ipairs(conv.messages) do
+        if msg.eventName ~= "CHAT_MSG_AFK" and msg.eventName ~= "CHAT_MSG_DND" then
+          filtered[#filtered + 1] = msg
+        end
+      end
+      conv.messages = filtered
+    end
+  end
+
   accountState.schemaVersion = Migrations.CURRENT_VERSION
   return accountState
 end

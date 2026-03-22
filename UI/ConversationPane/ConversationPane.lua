@@ -13,11 +13,17 @@ local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
 
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local applyColor = UIHelpers.applyColor
+local applyColorTexture = UIHelpers.applyColorTexture
+
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 local TRANSCRIPT_BOTTOM_GAP = TranscriptView.TRANSCRIPT_BOTTOM_GAP
 local MESSAGES_PAGE_SIZE = TranscriptView.MESSAGES_PAGE_SIZE
+local ACTIVE_STATUS_BANNER_HEIGHT = 24
 
 -- Re-export transcript helpers
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
@@ -34,7 +40,22 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
   ConversationPane.SetStatus(view, status)
+  ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)
   return view
+end
+
+function ConversationPane.RefreshActiveStatus(view, activeStatus)
+  if view.activeStatusBanner == nil then
+    return
+  end
+
+  if activeStatus and activeStatus.text and activeStatus.text ~= "" then
+    view.activeStatusBanner:SetText(activeStatus.text)
+    view.activeStatusBanner:Show()
+  else
+    view.activeStatusBanner:SetText("")
+    view.activeStatusBanner:Hide()
+  end
 end
 
 function ConversationPane.SetStatus(view, status)
@@ -159,6 +180,16 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     end)
   end
 
+  ---------------------------------------------------------------------------
+  -- Active status banner (above composer, shown for AFK/DND)
+  ---------------------------------------------------------------------------
+  local activeStatusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  activeStatusBanner:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 16, 4)
+  activeStatusBanner:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -16, 4)
+  activeStatusBanner:SetText("")
+  applyColor(activeStatusBanner, Theme.COLORS.text_system)
+  activeStatusBanner:Hide()
+
   local view = {
     frame = pane,
     -- Legacy header stub so any callers using view.header:SetText() don't crash
@@ -171,6 +202,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     headerStatusDot = header.headerStatusDot,
     headerEmpty = header.headerEmpty,
     statusBanner = statusBanner,
+    activeStatusBanner = activeStatusBanner,
     transcript = transcript,
   }
 

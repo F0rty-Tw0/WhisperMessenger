@@ -118,6 +118,11 @@ local function handleUnlockedEvent(state, eventName, payload)
       if pending and #pending > 0 then
         table.remove(pending, 1)
       end
+    elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
+      Store.SetActiveStatus(state.store, conversationKey, {
+        eventName = eventName,
+        text = payload.text,
+      })
     else
       Store.AppendIncoming(
         state.store,

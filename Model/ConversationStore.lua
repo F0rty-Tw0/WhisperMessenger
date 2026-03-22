@@ -102,6 +102,10 @@ function Store.AppendIncoming(state, key, message, isActive)
   applyMessageMetadata(conversation, message)
   evictOldestConversation(state)
 
+  if message.kind == "user" and message.direction == "in" then
+    conversation.activeStatus = nil
+  end
+
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
   end
@@ -113,6 +117,18 @@ function Store.AppendOutgoing(state, key, message)
   applyRetention(state, conversation)
   applyMessageMetadata(conversation, message)
   evictOldestConversation(state)
+end
+
+function Store.SetActiveStatus(state, key, status)
+  local conversation = ensureConversation(state, key)
+  conversation.activeStatus = status
+end
+
+function Store.ClearActiveStatus(state, key)
+  local conversation = state.conversations[key]
+  if conversation then
+    conversation.activeStatus = nil
+  end
 end
 
 function Store.MarkRead(state, key)

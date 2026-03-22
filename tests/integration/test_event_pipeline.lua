@@ -35,8 +35,9 @@ return function()
   assert(conversation.messages[2].direction == "out")
 
   Router.HandleEvent(state, fixture.afk.eventName, fixture.afk.payload)
-  assert(#conversation.messages == 3)
-  assert(conversation.messages[3].kind == "system")
+  assert(#conversation.messages == 2, "AFK should not add a message, got " .. #conversation.messages)
+  assert(conversation.activeStatus ~= nil, "AFK should set activeStatus")
+  assert(conversation.activeStatus.text == "Away from keyboard")
   assert(conversation.unreadCount == 1)
 
   Router.HandleEvent(state, fixture.availability.eventName, fixture.availability.payload)
