@@ -10,11 +10,75 @@ local setTextColor = UIHelpers.setTextColor
 
 local Layout = {}
 
-local function releaseAllFrames(pool)
-  for _, f in ipairs(pool) do
+-- Frame pool: acquire/release pattern to avoid CreateFrame on every render
+
+local function initPool(contentFrame)
+  if not contentFrame._freeFrames then
+    contentFrame._freeFrames = {}
+    contentFrame._activeFrames = {}
+    -- Migrate legacy _bubblePool if present
+    if contentFrame._bubblePool then
+      for _, f in ipairs(contentFrame._bubblePool) do
+        if f.Hide then
+          f:Hide()
+        end
+        table.insert(contentFrame._freeFrames, f)
+      end
+      contentFrame._bubblePool = nil
+    end
+  end
+end
+
+local function acquireFrame(realFactory, contentFrame, frameType, parent)
+  local free = contentFrame._freeFrames
+  local frame = table.remove(free)
+  if frame then
+    if frame.Show then
+      frame:Show()
+    end
+    if frame.ClearAllPoints then
+      frame:ClearAllPoints()
+    end
+  else
+    frame = realFactory.CreateFrame(frameType, nil, parent)
+  end
+  table.insert(contentFrame._activeFrames, frame)
+  return frame
+end
+
+local function hideAllRegions(frame)
+  if frame.GetRegions then
+    local regions = { frame:GetRegions() }
+    for _, r in ipairs(regions) do
+      if r.Hide then
+        r:Hide()
+      end
+    end
+  end
+  if frame.GetChildren then
+    local children = { frame:GetChildren() }
+    for _, c in ipairs(children) do
+      if c.Hide then
+        c:Hide()
+      end
+    end
+  end
+end
+
+local function releaseAll(contentFrame)
+  local active = contentFrame._activeFrames
+  local free = contentFrame._freeFrames
+  for i = #active, 1, -1 do
+    local f = active[i]
+    hideAllRegions(f)
     if f.Hide then
       f:Hide()
     end
+    if f.ClearAllPoints then
+      f:ClearAllPoints()
+    end
+    table.insert(free, f)
+    active[i] = nil
   end
 end
 
@@ -27,11 +91,16 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
   local CreateBubble = BubbleFrame.CreateBubble
   local CreateDateSeparator = DateSeparator.CreateDateSeparator
 
-  -- Hide all pooled frames
-  contentFrame._bubblePool = contentFrame._bubblePool or {}
-  releaseAllFrames(contentFrame._bubblePool)
+  initPool(contentFrame)
+  releaseAll(contentFrame)
 
-  local pool = contentFrame._bubblePool
+  -- Wrap factory to route CreateFrame through the pool
+  local pooledFactory = {
+    CreateFrame = function(frameType, name, parent)
+      return acquireFrame(factory, contentFrame, frameType, parent)
+    end,
+  }
+
   local yOffset = 0
   local prevMsg = nil
 
@@ -45,22 +114,19 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       if ns.TimeFormat and ns.TimeFormat.IsDifferentDay then
         needsSeparator = ns.TimeFormat.IsDifferentDay(prevMsg.sentAt, message.sentAt)
       else
-        -- Fallback: compare floor(ts / 86400)
         local d1 = math.floor((prevMsg.sentAt or 0) / 86400)
         local d2 = math.floor((message.sentAt or 0) / 86400)
         needsSeparator = d1 ~= d2
       end
 
       if needsSeparator then
-        local sep = CreateDateSeparator(factory, contentFrame, message.sentAt, paneWidth)
+        local sep = CreateDateSeparator(pooledFactory, contentFrame, message.sentAt, paneWidth)
         sep.frame:ClearAllPoints()
         sep.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-        table.insert(pool, sep.frame)
         yOffset = yOffset + sep.height + BUBBLE_GROUP_SPACING
       end
     end
 
-    -- Determine grouping and spacing
     local grouped = ShouldGroup(prevMsg, message)
     local spacing = grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING
     if i == 1 then
@@ -69,12 +135,11 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
 
     yOffset = yOffset + spacing
 
-    -- Show icon on first of a group (both directions)
     local showIcon = (not grouped) and (message.kind ~= "system")
 
     -- Sender name + timestamp label above first bubble in a group
     if showIcon then
-      local nameFrame = factory.CreateFrame("Frame", nil, contentFrame)
+      local nameFrame = acquireFrame(factory, contentFrame, "Frame", contentFrame)
       nameFrame:SetSize(paneWidth, 16)
       nameFrame:ClearAllPoints()
 
@@ -82,7 +147,6 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       setFontObject(nameFS, Theme.FONTS.message_time)
       setTextColor(nameFS, Theme.COLORS.text_secondary)
 
-      -- Timestamp next to sender name
       local timeStr = ""
       if ns.TimeFormat and ns.TimeFormat.MessageTime then
         timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
@@ -104,16 +168,16 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
         timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
         nameFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
       end
-      table.insert(pool, nameFrame)
       yOffset = yOffset + 18
     end
 
     local fallbackClassTag = options and options.fallbackClassTag or nil
-    local bubble = CreateBubble(factory, contentFrame, message, {
+    local bubble = CreateBubble(pooledFactory, contentFrame, message, {
       paneWidth = paneWidth,
       showIcon = showIcon,
       isGrouped = grouped,
       fallbackClassTag = fallbackClassTag,
+      iconFactory = pooledFactory,
     })
 
     -- Re-anchor to content frame at current yOffset
@@ -126,10 +190,7 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       bubble.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 48, -yOffset)
     end
 
-    table.insert(pool, bubble.frame)
-    if bubble.iconFrame then
-      table.insert(pool, bubble.iconFrame)
-    end
+    -- iconFrame was already acquired through pooledFactory inside CreateBubble
     yOffset = yOffset + bubble.height
 
     prevMsg = message

@@ -13,6 +13,8 @@ StatusLine.AVAILABILITY_DISPLAY = {
   Offline = { label = "Offline", color = "offline" },
   WrongFaction = { label = "Wrong Faction", color = "dnd" },
   Lockdown = { label = "Unavailable", color = "dnd" },
+  ["Send unavailable"] = { label = "Send unavailable", color = "dnd" },
+  ["Send failed"] = { label = "Send failed", color = "dnd" },
 }
 
 function StatusLine.Build(selectedContact, status)

@@ -16,8 +16,38 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetSize(paneWidth, height)
 
-  -- Date label
-  local labelFS = frame:CreateFontString(nil, "OVERLAY")
+  -- Reuse cached regions or create once
+  local labelFS = frame._labelFS
+  if not labelFS then
+    labelFS = frame:CreateFontString(nil, "OVERLAY")
+    frame._labelFS = labelFS
+
+    local lineLeft = frame:CreateTexture(nil, "ARTWORK")
+    lineLeft:SetHeight(1)
+    applyColorTexture(lineLeft, Theme.COLORS.divider)
+    lineLeft:SetPoint("LEFT", frame, "LEFT", 16, 0)
+    lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
+    frame._lineLeft = lineLeft
+
+    local lineRight = frame:CreateTexture(nil, "ARTWORK")
+    lineRight:SetHeight(1)
+    applyColorTexture(lineRight, Theme.COLORS.divider)
+    lineRight:SetPoint("LEFT", labelFS, "RIGHT", 8, 0)
+    lineRight:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
+    frame._lineRight = lineRight
+  else
+    -- Re-show cached regions (hidden during pool release)
+    if labelFS.Show then
+      labelFS:Show()
+    end
+    if frame._lineLeft and frame._lineLeft.Show then
+      frame._lineLeft:Show()
+    end
+    if frame._lineRight and frame._lineRight.Show then
+      frame._lineRight:Show()
+    end
+  end
+
   setFontObject(labelFS, Theme.FONTS.date_separator)
   setTextColor(labelFS, Theme.COLORS.text_timestamp)
 
@@ -28,21 +58,8 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
   if labelFS.SetText then
     labelFS:SetText(dateStr)
   end
+  labelFS:ClearAllPoints()
   labelFS:SetPoint("CENTER", frame, "CENTER", 0, 0)
-
-  -- Left line
-  local lineLeft = frame:CreateTexture(nil, "ARTWORK")
-  lineLeft:SetHeight(1)
-  applyColorTexture(lineLeft, Theme.COLORS.divider)
-  lineLeft:SetPoint("LEFT", frame, "LEFT", 16, 0)
-  lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
-
-  -- Right line
-  local lineRight = frame:CreateTexture(nil, "ARTWORK")
-  lineRight:SetHeight(1)
-  applyColorTexture(lineRight, Theme.COLORS.divider)
-  lineRight:SetPoint("LEFT", labelFS, "RIGHT", 8, 0)
-  lineRight:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
 
   return { frame = frame, height = height }
 end

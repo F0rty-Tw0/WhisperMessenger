@@ -19,19 +19,19 @@ return function()
 
   -- First render — creates bubble + icon + name label
   Layout.LayoutMessages(factory, contentFrame, messages, 400)
-  local pool = contentFrame._bubblePool
-  local poolSize = #pool
+  local active = contentFrame._activeFrames
+  local activeSize = #active
 
   -- Pool should contain nameFrame + bubbleFrame + iconFrame = 3
-  assert(poolSize >= 3, "pool should contain nameFrame + bubbleFrame + iconFrame, got: " .. poolSize)
+  assert(activeSize >= 3, "active pool should contain nameFrame + bubbleFrame + iconFrame, got: " .. activeSize)
 
   -- Capture all frames from first render
   local firstRenderFrames = {}
-  for i = 1, poolSize do
-    firstRenderFrames[i] = pool[i]
+  for i = 1, activeSize do
+    firstRenderFrames[i] = active[i]
   end
 
-  -- Second render with different messages — should hide all old frames
+  -- Second render with different messages — old frames should be released and reused
   local messages2 = {
     {
       direction = "out",
@@ -43,8 +43,9 @@ return function()
   }
   Layout.LayoutMessages(factory, contentFrame, messages2, 400)
 
-  -- All frames from the first render should now be hidden
-  for i, frame in ipairs(firstRenderFrames) do
-    assert(frame.shown == false, "frame " .. i .. " from first render should be hidden after re-render")
+  -- Frames from first render that are now in the free pool should be hidden
+  local freePool = contentFrame._freeFrames
+  for i, frame in ipairs(freePool) do
+    assert(frame.shown == false, "free frame " .. i .. " should be hidden after re-render")
   end
 end

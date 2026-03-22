@@ -28,25 +28,9 @@ end
 
 local BubbleFrame = {}
 
-function BubbleFrame.CreateBubble(factory, parent, message, options)
-  options = options or {}
-  local paneWidth = options.paneWidth or 400
-  local showIcon = options.showIcon
-  local kind = message.kind or "user"
-  local direction = message.direction or "in"
-
-  local pH = Theme.LAYOUT.BUBBLE_PADDING_H
-  local pV = Theme.LAYOUT.BUBBLE_PADDING_V
-  local maxBubbleWidth = paneWidth * Theme.LAYOUT.BUBBLE_MAX_WIDTH_PCT
-
-  -- System bubbles use smaller padding
-  if kind == "system" then
-    pH = 8
-    pV = 4
-  end
-
-  -- Create the outer frame
-  local frame = factory.CreateFrame("Frame", nil, parent)
+-- Create the structural frame elements (textures, corners, font string).
+-- Called once per frame; results are cached on frame._bgFills, _bgCorners, _textFS.
+local function createBubbleStructure(frame)
   if frame.EnableMouse then
     frame:EnableMouse(true)
   end
@@ -73,8 +57,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end)
   end
 
-  -- Build a solid-color rounded rectangle from 9 texture regions:
-  -- center rect, 4 edge strips, 4 quarter-circle corners
   local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
   bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, -CORNER_R)
   bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, CORNER_R)
@@ -99,7 +81,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, CORNER_R)
   bgRight:SetWidth(CORNER_R)
 
-  -- Quarter-circle corners (cut from pre-cached circle texture via TexCoord)
   local function makeCorner(point)
     local c = frame:CreateTexture(nil, "BACKGROUND")
     c:SetSize(CORNER_R, CORNER_R)
@@ -124,6 +105,56 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
   local bgCorners = { cTL, cTR, cBL, cBR }
+  local textFS = frame:CreateFontString(nil, "OVERLAY")
+
+  frame._bgFills = bgFills
+  frame._bgCorners = bgCorners
+  frame._textFS = textFS
+
+  return bgFills, bgCorners, textFS
+end
+
+function BubbleFrame.CreateBubble(factory, parent, message, options)
+  options = options or {}
+  local paneWidth = options.paneWidth or 400
+  local showIcon = options.showIcon
+  local kind = message.kind or "user"
+  local direction = message.direction or "in"
+
+  local pH = Theme.LAYOUT.BUBBLE_PADDING_H
+  local pV = Theme.LAYOUT.BUBBLE_PADDING_V
+  local maxBubbleWidth = paneWidth * Theme.LAYOUT.BUBBLE_MAX_WIDTH_PCT
+
+  if kind == "system" then
+    pH = 8
+    pV = 4
+  end
+
+  -- Acquire or create frame
+  local frame = factory.CreateFrame("Frame", nil, parent)
+
+  -- Create structure once, reuse on subsequent calls
+  local bgFills = frame._bgFills
+  local bgCorners = frame._bgCorners
+  local textFS = frame._textFS
+  if not textFS then
+    bgFills, bgCorners, textFS = createBubbleStructure(frame)
+  else
+    -- Re-show cached regions (hidden during pool release)
+    for _, part in ipairs(bgFills) do
+      if part.Show then
+        part:Show()
+      end
+    end
+    for _, part in ipairs(bgCorners) do
+      if part.Show then
+        part:Show()
+      end
+    end
+    if textFS.Show then
+      textFS:Show()
+    end
+  end
 
   local function applyBubbleColor(colorTable)
     local r, g, b, a = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
@@ -139,9 +170,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-  -- Message text font string
-  local textFS = frame:CreateFontString(nil, "OVERLAY")
-
   if kind == "system" then
     setFontObject(textFS, Theme.FONTS.system_text)
     setTextColor(textFS, Theme.COLORS.text_system)
@@ -156,15 +184,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     applyBubbleColor(Theme.COLORS.bg_bubble_in)
   end
 
-  -- Measure text width available (account for padding)
   local iconLeftMargin = 48
   local rightMargin = 12
   local textAvailWidth = maxBubbleWidth - pH * 2
 
-  -- Measure text at max width first (for proper wrapping / height calc)
   local textHeight = measureTextHeight(textFS, message.text, textAvailWidth)
 
-  -- Shrink bubble to fit text when possible
   local textColumnWidth = textAvailWidth
   if type(textFS.GetStringWidth) == "function" then
     local rawWidth = textFS:GetStringWidth() or 0
@@ -173,42 +198,37 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-  -- Re-measure height at the actual column width (may differ if narrower)
   if textColumnWidth < textAvailWidth then
     textHeight = measureTextHeight(textFS, message.text, textColumnWidth)
   end
 
-  -- Calculate bubble dimensions (no timestamp inside bubble)
   local bubbleInnerWidth = textColumnWidth
   local bubbleInnerHeight = textHeight
   local bubbleWidth = bubbleInnerWidth + pH * 2
   local bubbleHeight = bubbleInnerHeight + pV * 2
 
-  -- Position text inside bubble (left-aligned)
+  textFS:ClearAllPoints()
   textFS:SetWidth(textColumnWidth)
   textFS:SetJustifyH("LEFT")
   textFS:SetText(message.text or "")
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
 
-  -- Size the frame
   frame:SetSize(bubbleWidth, bubbleHeight)
 
-  -- Anchor the frame to parent based on direction/kind
   if kind == "system" then
     frame:SetPoint("TOP", parent, "TOPLEFT", paneWidth / 2, 0)
   elseif direction == "out" then
     frame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -rightMargin, 0)
   else
-    -- direction == "in"
     local leftOffset = iconLeftMargin
     frame:SetPoint("TOPLEFT", parent, "TOPLEFT", leftOffset, 0)
   end
 
-  -- Class icon for user messages (both sent and received)
   local icon = nil
   local iconFrame = nil
   if kind == "user" and showIcon then
-    local bubbleIcon = createCircularIcon(factory, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
+    local iconFact = options.iconFactory or factory
+    local bubbleIcon = createCircularIcon(iconFact, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
     iconFrame = bubbleIcon.frame
     icon = bubbleIcon.texture
     if direction == "in" then
@@ -219,7 +239,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
     local iconPath
     if direction == "out" then
-      -- Player's own class icon
       if type(_G.UnitClass) == "function" then
         local _, classTag = _G.UnitClass("player")
         iconPath = Theme.ClassIcon(classTag)
@@ -238,7 +257,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-  -- Total height for layout purposes
   local totalHeight = bubbleHeight
 
   return {

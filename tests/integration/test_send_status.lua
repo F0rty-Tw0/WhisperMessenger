@@ -61,7 +61,9 @@ return function()
   runtime.window.composer.input:SetText("hello")
   runtime.window.composer.sendButton.scripts.OnClick()
 
-  assert(runtime.window.conversation.statusBanner.text == "Send unavailable")
+  -- Enriched availability (Offline) takes precedence over sendStatusByConversation
+  -- in the header banner. The send status is still tracked in runtime for other uses.
+  assert(runtime.window.conversation.statusBanner.text == "Offline")
   local pending = runtime.pendingOutgoing["me::WOW::arthas-area52"]
   assert(pending == nil or #pending == 0)
 

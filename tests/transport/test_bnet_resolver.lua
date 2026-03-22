@@ -172,10 +172,7 @@ return function()
     assert(result ~= nil, "ByGUID fallback should return info")
     assert(result.isOnline == true, "ByGUID fallback should set isOnline=true, got: " .. tostring(result.isOnline))
     assert(result.isAFK == true, "ByGUID fallback should preserve isAFK")
-    assert(
-      result.gameAccountInfo.characterName == "Deathrøse",
-      "ByGUID fallback should merge gameAccountInfo"
-    )
+    assert(result.gameAccountInfo.characterName == "Deathrøse", "ByGUID fallback should merge gameAccountInfo")
   end
 
   -- ResolveAccountInfo ByGUID fallback skipped when guid is nil

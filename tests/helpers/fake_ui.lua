@@ -315,6 +315,14 @@ function FakeUI.NewFactory()
         self.mask = mask
       end
 
+      function texture:SetAtlas(atlas)
+        self.atlas = atlas
+      end
+
+      function texture:SetBlendMode(mode)
+        self.blendMode = mode
+      end
+
       return texture
     end
 
@@ -346,6 +354,14 @@ function FakeUI.NewFactory()
       self.frameStrata = strata
     end
 
+    function frame:GetFrameLevel()
+      return self.frameLevel or 1
+    end
+
+    function frame:SetFrameLevel(level)
+      self.frameLevel = level
+    end
+
     function frame:EnableMouse(value)
       self.mouseEnabled = value
     end
@@ -364,6 +380,35 @@ function FakeUI.NewFactory()
 
     function frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
       self.resizeBounds = { minWidth, minHeight, maxWidth, maxHeight }
+    end
+
+    function frame:GetRegions()
+      local regions = {}
+      for _, child in ipairs(self.children) do
+        if child.frameType == "Texture" or child.frameType == "FontString" then
+          table.insert(regions, child)
+        end
+      end
+      return table.unpack(regions)
+    end
+
+    function frame:GetChildren()
+      local frames = {}
+      for _, child in ipairs(self.children) do
+        if child.frameType ~= "Texture" and child.frameType ~= "FontString" then
+          table.insert(frames, child)
+        end
+      end
+      return table.unpack(frames)
+    end
+
+    function frame:GetStringWidth()
+      local text = tostring(self.text or "")
+      return #text * 7
+    end
+
+    function frame:SetClipsChildren(value)
+      self.clipsChildren = value
     end
 
     function frame:SetClampedToScreen(value)

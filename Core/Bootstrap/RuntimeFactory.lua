@@ -127,7 +127,8 @@ end
 
 function RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   local store = Store.New({
-    maxMessagesPerConversation = options.maxMessagesPerConversation,
+    maxMessagesPerConversation = options.maxMessagesPerConversation or 200,
+    maxConversations = options.maxConversations or 200,
   })
 
   store.conversations = accountState.conversations or {}

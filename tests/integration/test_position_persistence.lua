@@ -40,6 +40,7 @@ return function()
     localProfileId = "current",
   })
 
+  runtime.ensureWindow()
   local windowPoint, _, windowRelative, windowX, windowY = runtime.window.frame:GetPoint()
   assert(windowPoint == "TOPLEFT")
   assert(windowRelative == "TOPLEFT")
@@ -72,6 +73,7 @@ return function()
     localProfileId = "current",
   })
 
+  reloaded.ensureWindow()
   local reloadedWindowPoint, _, reloadedWindowRelative, reloadedWindowX, reloadedWindowY =
     reloaded.window.frame:GetPoint()
   assert(reloadedWindowPoint == "BOTTOMLEFT")

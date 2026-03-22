@@ -72,10 +72,6 @@ function Bootstrap.Initialize(factory, options)
     return ContactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
   end
 
-  local contacts = buildContacts()
-  local selectedState = ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
-  trace("initialize contacts=" .. tostring(#contacts))
-
   local window
   local icon
 
@@ -104,7 +100,9 @@ function Bootstrap.Initialize(factory, options)
     return window.frame.shown == true
   end
 
-  local function refreshWindow()
+  -- Contact enrichment: ALWAYS runs regardless of window visibility.
+  -- This is the critical path for keeping statuses fresh.
+  local function refreshContacts()
     local freshContacts = buildContacts()
     -- Proactively request availability for WoW contacts with GUIDs we haven't queried yet
     local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
@@ -118,12 +116,21 @@ function Bootstrap.Initialize(factory, options)
       end
     end
     local nextState = ContactEnricher.BuildWindowSelectionState(runtime, freshContacts, buildContacts)
-    if window and window.refreshSelection then
-      window.refreshSelection(nextState)
-    end
 
+    -- Icon badge always updates
     if icon and icon.setUnreadCount then
       icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
+    end
+
+    return nextState
+  end
+
+  -- Full refresh: enriches contacts (always) + updates UI (only when visible)
+  local function refreshWindow()
+    local nextState = refreshContacts()
+
+    if isWindowVisible() and window and window.refreshSelection then
+      window.refreshSelection(nextState)
     end
 
     return nextState
@@ -235,7 +242,67 @@ function Bootstrap.Initialize(factory, options)
     return nil
   end
 
+  -- Lazy window creation: deferred to first toggle
+  local function ensureWindow()
+    if window then
+      return
+    end
+
+    local contacts = buildContacts()
+    local selectedState = ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
+
+    window = MessengerWindow.Create(uiFactory, {
+      contacts = contacts,
+      selectedContact = selectedState.selectedContact,
+      conversation = selectedState.conversation,
+      status = selectedState.status,
+      state = characterState.window,
+      onSelectConversation = function(conversationKey)
+        return selectConversation(conversationKey)
+      end,
+      onSend = function(payload)
+        return SendHandler.HandleSend(runtime, payload, refreshWindow)
+      end,
+      onPositionChanged = function(nextState)
+        characterState.window = TableUtils.copyState(nextState)
+      end,
+      onClose = function()
+        setWindowVisible(false)
+      end,
+      onResetWindowPosition = function()
+        local nextState = TableUtils.copyState(defaultCharacterState.window)
+        characterState.window = nextState
+        return nextState
+      end,
+      onClearAllChats = function()
+        for key in pairs(runtime.store.conversations) do
+          runtime.store.conversations[key] = nil
+        end
+        runtime.activeConversationKey = nil
+        characterState.activeConversationKey = nil
+      end,
+      onResetIconPosition = function()
+        local nextState = TableUtils.copyState(defaultCharacterState.icon)
+        characterState.icon = nextState
+
+        if icon and icon.frame and icon.frame.SetPoint then
+          local iconParent = icon.frame.parent or _G.UIParent
+          icon.frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
+        end
+
+        return nextState
+      end,
+    })
+
+    if window.frame.Hide then
+      window.frame:Hide()
+    end
+
+    runtime.window = window
+  end
+
   local function toggle()
+    ensureWindow()
     local nextVisible = not isWindowVisible()
     setWindowVisible(nextVisible)
 
@@ -256,53 +323,6 @@ function Bootstrap.Initialize(factory, options)
     return isWindowVisible() and runtime.activeConversationKey == conversationKey
   end
 
-  window = MessengerWindow.Create(uiFactory, {
-    contacts = contacts,
-    selectedContact = selectedState.selectedContact,
-    conversation = selectedState.conversation,
-    status = selectedState.status,
-    state = characterState.window,
-    onSelectConversation = function(conversationKey)
-      return selectConversation(conversationKey)
-    end,
-    onSend = function(payload)
-      return SendHandler.HandleSend(runtime, payload, refreshWindow)
-    end,
-    onPositionChanged = function(nextState)
-      characterState.window = TableUtils.copyState(nextState)
-    end,
-    onClose = function()
-      setWindowVisible(false)
-    end,
-    onResetWindowPosition = function()
-      local nextState = TableUtils.copyState(defaultCharacterState.window)
-      characterState.window = nextState
-      return nextState
-    end,
-    onClearAllChats = function()
-      for key in pairs(runtime.store.conversations) do
-        runtime.store.conversations[key] = nil
-      end
-      runtime.activeConversationKey = nil
-      characterState.activeConversationKey = nil
-    end,
-    onResetIconPosition = function()
-      local nextState = TableUtils.copyState(defaultCharacterState.icon)
-      characterState.icon = nextState
-
-      if icon and icon.frame and icon.frame.SetPoint then
-        local iconParent = icon.frame.parent or _G.UIParent
-        icon.frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
-      end
-
-      return nextState
-    end,
-  })
-
-  if window.frame.Hide then
-    window.frame:Hide()
-  end
-
   icon = ToggleIcon.Create(uiFactory, {
     state = characterState.icon,
     onToggle = toggle,
@@ -311,17 +331,173 @@ function Bootstrap.Initialize(factory, options)
     end,
   })
 
+  local prevSnapshot = nil
+
+  local function countRegions(frame)
+    local count = 0
+    if frame.GetRegions then
+      local regions = { frame:GetRegions() }
+      count = count + #regions
+    end
+    if frame.GetChildren then
+      local children = { frame:GetChildren() }
+      count = count + #children
+    end
+    return count
+  end
+
+  local function memoryReport()
+    local pairs = pairs
+    local collectgarbage = collectgarbage
+    local fmt = string.format
+
+    trace("=== WhisperMessenger Memory Report ===")
+
+    -- Pre-GC snapshot (what WoW's game menu shows)
+    local preGcKB = 0
+    if type(_G.UpdateAddOnMemoryUsage) == "function" then
+      _G.UpdateAddOnMemoryUsage()
+      if type(_G.GetAddOnMemoryUsage) == "function" then
+        preGcKB = _G.GetAddOnMemoryUsage(addonName) or 0
+      end
+    end
+
+    -- Force GC then measure again (actual footprint)
+    local postGcKB = 0
+    if type(collectgarbage) == "function" then
+      collectgarbage("collect")
+    end
+    if type(_G.UpdateAddOnMemoryUsage) == "function" then
+      _G.UpdateAddOnMemoryUsage()
+      if type(_G.GetAddOnMemoryUsage) == "function" then
+        postGcKB = _G.GetAddOnMemoryUsage(addonName) or 0
+      end
+    end
+
+    local garbageKB = preGcKB - postGcKB
+    trace("  WM pre-GC:  " .. fmt("%.1f", preGcKB) .. " KB  (game menu sees this)")
+    trace("  WM post-GC: " .. fmt("%.1f", postGcKB) .. " KB  (actual footprint)")
+    if garbageKB > 0 then
+      trace("  Garbage:    " .. fmt("%.1f", garbageKB) .. " KB  (transient, reclaimable)")
+    end
+    if type(collectgarbage) == "function" then
+      trace("  Lua total:  " .. fmt("%.0f", collectgarbage("count")) .. " KB")
+    end
+    local wmKB = postGcKB
+
+    -- Data layer
+    local convCount = 0
+    local totalMessages = 0
+    local totalUnread = 0
+    local largestConv = 0
+    local largestConvKey = "none"
+    for key, conv in pairs(runtime.store.conversations) do
+      convCount = convCount + 1
+      local msgCount = #(conv.messages or {})
+      totalMessages = totalMessages + msgCount
+      totalUnread = totalUnread + (conv.unreadCount or 0)
+      if msgCount > largestConv then
+        largestConv = msgCount
+        largestConvKey = key
+      end
+    end
+    trace("  Conversations: " .. convCount .. "  Messages: " .. totalMessages .. "  Unread: " .. totalUnread)
+    if largestConv > 0 then
+      trace("  Largest: " .. largestConv .. " msgs (" .. largestConvKey .. ")")
+    end
+
+    -- Caches
+    local availCount = 0
+    for _ in pairs(runtime.availabilityByGUID) do
+      availCount = availCount + 1
+    end
+    local pendingCount = 0
+    for _ in pairs(runtime.pendingOutgoing) do
+      pendingCount = pendingCount + 1
+    end
+    trace("  Avail cache: " .. availCount .. "  Pending: " .. pendingCount)
+
+    -- Window state
+    trace("  Window: " .. (window and (isWindowVisible() and "visible" or "hidden") or "not created"))
+
+    -- Frame pool breakdown
+    local snapshot = { wmKB = wmKB, pools = {} }
+
+    if window and window.conversation and window.conversation.transcript then
+      local cf = window.conversation.transcript.content
+      if cf and cf._activeFrames then
+        local activeCount = #cf._activeFrames
+        local freeCount = cf._freeFrames and #cf._freeFrames or 0
+        local totalFrames = activeCount + freeCount
+        local totalRegions = 0
+
+        for _, f in ipairs(cf._activeFrames) do
+          totalRegions = totalRegions + countRegions(f)
+        end
+        if cf._freeFrames then
+          for _, f in ipairs(cf._freeFrames) do
+            totalRegions = totalRegions + countRegions(f)
+          end
+        end
+
+        snapshot.pools = { active = activeCount, free = freeCount, regions = totalRegions }
+        trace("  --- Frame Pool ---")
+        trace(
+          "  Frames: "
+            .. activeCount
+            .. " active / "
+            .. freeCount
+            .. " free / "
+            .. totalFrames
+            .. " total  |  regions: "
+            .. totalRegions
+        )
+      end
+    end
+
+    -- Delta from previous snapshot
+    if prevSnapshot then
+      trace("  --- Delta from last /wmsg mem ---")
+      local deltaKB = wmKB - prevSnapshot.wmKB
+      trace("  WM memory: " .. (deltaKB >= 0 and "+" or "") .. fmt("%.1f", deltaKB) .. " KB")
+      if snapshot.pools.active and prevSnapshot.pools.active then
+        local dTotal = (snapshot.pools.active + snapshot.pools.free)
+          - (prevSnapshot.pools.active + prevSnapshot.pools.free)
+        local dRegions = snapshot.pools.regions - prevSnapshot.pools.regions
+        if dTotal ~= 0 or dRegions ~= 0 then
+          trace(
+            "  Frames: "
+              .. (dTotal >= 0 and "+" or "")
+              .. dTotal
+              .. "  regions: "
+              .. (dRegions >= 0 and "+" or "")
+              .. dRegions
+          )
+        end
+      end
+    end
+
+    prevSnapshot = snapshot
+    trace("=== End Memory Report ===")
+  end
+
   SlashCommands.Register({
     toggle = toggle,
+    memoryReport = memoryReport,
   })
 
   trace("initialize complete")
 
-  runtime.window = window
   runtime.icon = icon
   runtime.toggle = toggle
   runtime.refreshWindow = refreshWindow
-  refreshWindow()
+  runtime.ensureWindow = ensureWindow
+
+  -- Update icon badge without creating the window
+  local initContacts = buildContacts()
+  if icon and icon.setUnreadCount then
+    icon.setUnreadCount(TableUtils.sumBy(initContacts, "unreadCount"))
+  end
 
   return runtime
 end

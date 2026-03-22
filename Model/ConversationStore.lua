@@ -42,6 +42,36 @@ local function ensureConversation(state, key)
   return state.conversations[key]
 end
 
+local function evictOldestConversation(state)
+  local maxConversations = state.config.maxConversations
+  if type(maxConversations) ~= "number" or maxConversations < 1 then
+    return
+  end
+
+  local count = 0
+  for _ in pairs(state.conversations) do
+    count = count + 1
+  end
+
+  if count <= maxConversations then
+    return
+  end
+
+  local oldestKey = nil
+  local oldestTime = math.huge
+  for key, conv in pairs(state.conversations) do
+    local activity = conv.lastActivityAt or 0
+    if activity < oldestTime then
+      oldestTime = activity
+      oldestKey = key
+    end
+  end
+
+  if oldestKey then
+    state.conversations[oldestKey] = nil
+  end
+end
+
 local function applyRetention(state, conversation)
   Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
 end
@@ -70,6 +100,7 @@ function Store.AppendIncoming(state, key, message, isActive)
   table.insert(conversation.messages, message)
   applyRetention(state, conversation)
   applyMessageMetadata(conversation, message)
+  evictOldestConversation(state)
 
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
@@ -81,6 +112,7 @@ function Store.AppendOutgoing(state, key, message)
   table.insert(conversation.messages, message)
   applyRetention(state, conversation)
   applyMessageMetadata(conversation, message)
+  evictOldestConversation(state)
 end
 
 function Store.MarkRead(state, key)

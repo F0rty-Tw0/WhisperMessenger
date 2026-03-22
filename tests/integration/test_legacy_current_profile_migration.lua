@@ -62,11 +62,12 @@ return function()
     "expected legacy current conversation key to be removed after migration"
   )
   assert(characterState.activeConversationKey == migratedKey, "expected active conversation to follow the migrated key")
+  assert(runtime.icon.badgeLabel.text == "2", "expected migrated unread count to remain visible")
+  runtime.ensureWindow()
   assert(
     runtime.window.contacts.rows[1].item.conversationKey == migratedKey,
     "expected migrated conversation to appear in contacts"
   )
-  assert(runtime.icon.badgeLabel.text == "2", "expected migrated unread count to remain visible")
 
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList

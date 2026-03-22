@@ -73,8 +73,9 @@ return function()
   })
 
   assert(thrallRuntime.localProfileId == "thrall-draenor")
+  assert(thrallRuntime.icon.badge.shown == true, "expected badge visible before toggle")
+  thrallRuntime.ensureWindow()
   assert(#thrallRuntime.window.contacts.rows == 1)
-  assert(thrallRuntime.icon.badge.shown == true)
 
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList

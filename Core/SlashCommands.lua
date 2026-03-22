@@ -12,7 +12,16 @@ function SlashCommands.Register(handlers)
   SlashCmdList = SlashCmdList or {}
   SLASH_WHISPERMESSENGER1 = "/wmsg"
   SLASH_WHISPERMESSENGER2 = "/whispermessenger"
-  SlashCmdList.WHISPERMESSENGER = function()
+  SlashCmdList.WHISPERMESSENGER = function(input)
+    local cmd = type(input) == "string" and string.lower(string.match(input, "^%s*(%S+)") or "") or ""
+
+    if cmd == "mem" or cmd == "memory" then
+      if handlers.memoryReport then
+        handlers.memoryReport()
+      end
+      return
+    end
+
     trace("slash invoked")
     if handlers.toggle then
       handlers.toggle()
