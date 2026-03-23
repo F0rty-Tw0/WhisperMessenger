@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
+local Retention = ns.Retention or require("WhisperMessenger.Model.Retention")
 
 local RuntimeFactory = {}
 
@@ -44,7 +45,7 @@ function RuntimeFactory.BuildGuildOrCommunityPresenceCheck()
 
   local function checkClubForGUID(clubId, guid)
     local ok, members = pcall(getClubMembers, clubId)
-    if not ok or not members then
+    if not ok or type(members) ~= "table" then
       return nil
     end
     for _, memberId in ipairs(members) do
@@ -129,10 +130,14 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   local store = Store.New({
     maxMessagesPerConversation = options.maxMessagesPerConversation or 200,
     maxConversations = options.maxConversations or 200,
+    messageMaxAge = options.messageMaxAge or 86400,
+    conversationMaxAge = options.conversationMaxAge or 86400,
   })
 
   store.conversations = accountState.conversations or {}
   accountState.conversations = store.conversations
+
+  Store.ExpireAll(store, options.now and options.now() or currentTime())
 
   return {
     accountState = accountState,

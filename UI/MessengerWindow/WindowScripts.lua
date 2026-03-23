@@ -61,16 +61,31 @@ function WindowScripts.WireButtons(refs, options)
   end
 
   if clearAllChatsButton and clearAllChatsButton.SetScript then
+    local dialogName = "WHISPER_MESSENGER_CLEAR_ALL_CHATS"
+    _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+    _G.StaticPopupDialogs[dialogName] = {
+      text = "Are you sure you want to clear all chats?\n\nThis will permanently delete all conversation history.",
+      button1 = "Clear All",
+      button2 = "Cancel",
+      OnAccept = function()
+        if options.onClearAllChats then
+          options.onClearAllChats()
+          options.refreshSelection({
+            contacts = {},
+            selectedContact = nil,
+            conversation = nil,
+            status = nil,
+          }, true)
+        end
+      end,
+      timeout = 0,
+      whileDead = true,
+      hideOnEscape = true,
+      preferredIndex = 3,
+    }
+
     clearAllChatsButton:SetScript("OnClick", function()
-      if options.onClearAllChats then
-        options.onClearAllChats()
-        options.refreshSelection({
-          contacts = {},
-          selectedContact = nil,
-          conversation = nil,
-          status = nil,
-        }, true)
-      end
+      _G.StaticPopup_Show(dialogName)
     end)
   end
 end

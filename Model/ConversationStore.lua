@@ -181,6 +181,13 @@ function Store.SwapOrder(state, keyA, keyB)
   end
 end
 
+function Store.ExpireAll(state, now)
+  Retention.ExpireConversations(state.conversations, state.config.conversationMaxAge, now)
+  for _, conv in pairs(state.conversations) do
+    Retention.ExpireMessages(conv.messages, state.config.messageMaxAge, now)
+  end
+end
+
 ns.ConversationStore = Store
 
 return Store
