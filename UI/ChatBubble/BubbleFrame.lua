@@ -5,114 +5,12 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local BubbleStructure = ns.ChatBubbleBubbleStructure or require("WhisperMessenger.UI.ChatBubble.BubbleStructure")
+local BubbleIcon = ns.ChatBubbleBubbleIcon or require("WhisperMessenger.UI.ChatBubble.BubbleIcon")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
-local createCircularIcon = UIHelpers.createCircularIcon
-
-local function measureTextHeight(fontString, text, maxWidth)
-  fontString:SetWidth(maxWidth)
-  fontString:SetText(text or "")
-  return fontString:GetStringHeight() or 14
-end
-
-local CORNER_R = 8
-local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
-
--- Pre-cache the corner texture at load time so it's in memory before any bubble is created
-if type(_G.UIParent) == "table" and type(_G.UIParent.CreateTexture) == "function" then
-  local preload = _G.UIParent:CreateTexture(nil, "BACKGROUND")
-  preload:SetTexture(CIRCLE_TEX)
-  preload:SetAlpha(0)
-  preload:SetSize(1, 1)
-end
 
 local BubbleFrame = {}
-
--- Create the structural frame elements (textures, corners, font string).
--- Called once per frame; results are cached on frame._bgFills, _bgCorners, _textFS.
-local function createBubbleStructure(frame)
-  if frame.EnableMouse then
-    frame:EnableMouse(true)
-  end
-  if frame.SetHyperlinksEnabled then
-    frame:SetHyperlinksEnabled(true)
-  end
-  if frame.SetScript then
-    frame:SetScript("OnHyperlinkEnter", function(self, link, _text)
-      if type(_G.GameTooltip) == "table" and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-        _G.GameTooltip:SetHyperlink(link)
-        _G.GameTooltip:Show()
-      end
-    end)
-    frame:SetScript("OnHyperlinkLeave", function(self)
-      if type(_G.GameTooltip) == "table" and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
-    frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      if type(_G.SetItemRef) == "function" then
-        _G.SetItemRef(link, text, button, self)
-      end
-    end)
-  end
-
-  local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
-  bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, -CORNER_R)
-  bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, CORNER_R)
-
-  local bgTop = frame:CreateTexture(nil, "BACKGROUND")
-  bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, 0)
-  bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CORNER_R, 0)
-  bgTop:SetHeight(CORNER_R)
-
-  local bgBottom = frame:CreateTexture(nil, "BACKGROUND")
-  bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", CORNER_R, 0)
-  bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, 0)
-  bgBottom:SetHeight(CORNER_R)
-
-  local bgLeft = frame:CreateTexture(nil, "BACKGROUND")
-  bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -CORNER_R)
-  bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, CORNER_R)
-  bgLeft:SetWidth(CORNER_R)
-
-  local bgRight = frame:CreateTexture(nil, "BACKGROUND")
-  bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -CORNER_R)
-  bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, CORNER_R)
-  bgRight:SetWidth(CORNER_R)
-
-  local function makeCorner(point)
-    local c = frame:CreateTexture(nil, "BACKGROUND")
-    c:SetSize(CORNER_R, CORNER_R)
-    c:SetPoint(point, frame, point, 0, 0)
-    if c.SetTexture then
-      c:SetTexture(CIRCLE_TEX)
-    end
-    return c
-  end
-
-  local cTL = makeCorner("TOPLEFT")
-  local cTR = makeCorner("TOPRIGHT")
-  local cBL = makeCorner("BOTTOMLEFT")
-  local cBR = makeCorner("BOTTOMRIGHT")
-
-  if cTL.SetTexCoord then
-    cTL:SetTexCoord(0, 0.5, 0, 0.5)
-    cTR:SetTexCoord(0.5, 1, 0, 0.5)
-    cBL:SetTexCoord(0, 0.5, 0.5, 1)
-    cBR:SetTexCoord(0.5, 1, 0.5, 1)
-  end
-
-  local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
-  local bgCorners = { cTL, cTR, cBL, cBR }
-  local textFS = frame:CreateFontString(nil, "OVERLAY")
-
-  frame._bgFills = bgFills
-  frame._bgCorners = bgCorners
-  frame._textFS = textFS
-
-  return bgFills, bgCorners, textFS
-end
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
   options = options or {}
@@ -138,7 +36,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local bgCorners = frame._bgCorners
   local textFS = frame._textFS
   if not textFS then
-    bgFills, bgCorners, textFS = createBubbleStructure(frame)
+    bgFills, bgCorners, textFS = BubbleStructure.createStructure(frame)
   else
     -- Re-show cached regions (hidden during pool release)
     for _, part in ipairs(bgFills) do
@@ -188,7 +86,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local rightMargin = 12
   local textAvailWidth = maxBubbleWidth - pH * 2
 
-  local textHeight = measureTextHeight(textFS, message.text, textAvailWidth)
+  local textHeight = BubbleStructure.measureTextHeight(textFS, message.text, textAvailWidth)
 
   local textColumnWidth = textAvailWidth
   if type(textFS.GetStringWidth) == "function" then
@@ -199,7 +97,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   end
 
   if textColumnWidth < textAvailWidth then
-    textHeight = measureTextHeight(textFS, message.text, textColumnWidth)
+    textHeight = BubbleStructure.measureTextHeight(textFS, message.text, textColumnWidth)
   end
 
   local bubbleInnerWidth = textColumnWidth
@@ -227,34 +125,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local icon = nil
   local iconFrame = nil
   if kind == "user" and showIcon then
-    local iconFact = options.iconFactory or factory
-    local bubbleIcon = createCircularIcon(iconFact, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
-    iconFrame = bubbleIcon.frame
+    local bubbleIcon = BubbleIcon.CreateIcon(options.iconFactory or factory, parent, frame, message, direction, {
+      fallbackClassTag = options.fallbackClassTag,
+      iconFactory = options.iconFactory,
+    })
     icon = bubbleIcon.texture
-    if direction == "in" then
-      bubbleIcon.frame:SetPoint("TOPRIGHT", frame, "TOPLEFT", -8, 0)
-    else
-      bubbleIcon.frame:SetPoint("TOPLEFT", frame, "TOPRIGHT", 8, 0)
-    end
-
-    local iconPath
-    if direction == "out" then
-      if type(_G.UnitClass) == "function" then
-        local _, classTag = _G.UnitClass("player")
-        iconPath = Theme.ClassIcon(classTag)
-      end
-      if not iconPath then
-        iconPath = "Interface\\CHATFRAME\\UI-ChatIcon-ArmoryChat"
-      end
-    else
-      iconPath = Theme.ClassIcon(message.classTag or message.senderClassTag or options.fallbackClassTag)
-      if not iconPath then
-        iconPath = Theme.TEXTURES.bnet_icon
-      end
-    end
-    if icon.SetTexture then
-      icon:SetTexture(iconPath)
-    end
+    iconFrame = bubbleIcon.frame
   end
 
   local totalHeight = bubbleHeight

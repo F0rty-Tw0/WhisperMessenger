@@ -1,0 +1,49 @@
+local addonName, ns = ...
+if type(ns) ~= "table" then
+  ns = {}
+end
+
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+
+local BubbleIcon = {}
+
+-- Create a circular icon for a chat bubble.
+-- Returns { frame = iconFrame, texture = icon }
+function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction, options)
+  options = options or {}
+  local bubbleIcon = UIHelpers.createCircularIcon(factory, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
+  local iconFrame = bubbleIcon.frame
+  local icon = bubbleIcon.texture
+
+  if direction == "in" then
+    iconFrame:SetPoint("TOPRIGHT", bubbleFrame, "TOPLEFT", -8, 0)
+  else
+    iconFrame:SetPoint("TOPLEFT", bubbleFrame, "TOPRIGHT", 8, 0)
+  end
+
+  local iconPath
+  if direction == "out" then
+    if type(_G.UnitClass) == "function" then
+      local _, classTag = _G.UnitClass("player")
+      iconPath = Theme.ClassIcon(classTag)
+    end
+    if not iconPath then
+      iconPath = "Interface\\CHATFRAME\\UI-ChatIcon-ArmoryChat"
+    end
+  else
+    iconPath = Theme.ClassIcon(message.classTag or message.senderClassTag or options.fallbackClassTag)
+    if not iconPath then
+      iconPath = Theme.TEXTURES.bnet_icon
+    end
+  end
+
+  if icon.SetTexture then
+    icon:SetTexture(iconPath)
+  end
+
+  return { frame = iconFrame, texture = icon }
+end
+
+ns.ChatBubbleBubbleIcon = BubbleIcon
+return BubbleIcon

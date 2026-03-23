@@ -46,8 +46,12 @@ UI/ScrollView/Navigation.lua
 UI/ScrollView/Factory.lua
 UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
+UI/ChatBubble/BubbleStructure.lua
+UI/ChatBubble/BubbleIcon.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
+UI/ChatBubble/FramePool.lua
+UI/ChatBubble/SenderLabel.lua
 UI/ChatBubble/Layout.lua
 UI/ChatBubble/ChatBubble.lua
 UI/ContactsList/DataBuilder.lua

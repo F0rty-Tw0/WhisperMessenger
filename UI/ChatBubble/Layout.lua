@@ -10,94 +10,24 @@ local setTextColor = UIHelpers.setTextColor
 
 local Layout = {}
 
--- Frame pool: acquire/release pattern to avoid CreateFrame on every render
-
-local function initPool(contentFrame)
-  if not contentFrame._freeFrames then
-    contentFrame._freeFrames = {}
-    contentFrame._activeFrames = {}
-    -- Migrate legacy _bubblePool if present
-    if contentFrame._bubblePool then
-      for _, f in ipairs(contentFrame._bubblePool) do
-        if f.Hide then
-          f:Hide()
-        end
-        table.insert(contentFrame._freeFrames, f)
-      end
-      contentFrame._bubblePool = nil
-    end
-  end
-end
-
-local function acquireFrame(realFactory, contentFrame, frameType, parent)
-  local free = contentFrame._freeFrames
-  local frame = table.remove(free)
-  if frame then
-    if frame.Show then
-      frame:Show()
-    end
-    if frame.ClearAllPoints then
-      frame:ClearAllPoints()
-    end
-  else
-    frame = realFactory.CreateFrame(frameType, nil, parent)
-  end
-  table.insert(contentFrame._activeFrames, frame)
-  return frame
-end
-
-local function hideAllRegions(frame)
-  if frame.GetRegions then
-    local regions = { frame:GetRegions() }
-    for _, r in ipairs(regions) do
-      if r.Hide then
-        r:Hide()
-      end
-    end
-  end
-  if frame.GetChildren then
-    local children = { frame:GetChildren() }
-    for _, c in ipairs(children) do
-      if c.Hide then
-        c:Hide()
-      end
-    end
-  end
-end
-
-local function releaseAll(contentFrame)
-  local active = contentFrame._activeFrames
-  local free = contentFrame._freeFrames
-  for i = #active, 1, -1 do
-    local f = active[i]
-    hideAllRegions(f)
-    if f.Hide then
-      f:Hide()
-    end
-    if f.ClearAllPoints then
-      f:ClearAllPoints()
-    end
-    table.insert(free, f)
-    active[i] = nil
-  end
-end
-
 function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, options)
   local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
   local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
   local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")
+  local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBubble.FramePool")
+  local SenderLabel = ns.ChatBubbleSenderLabel or require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 
   local ShouldGroup = Grouping.ShouldGroup
   local CreateBubble = BubbleFrame.CreateBubble
   local CreateDateSeparator = DateSeparator.CreateDateSeparator
 
-  initPool(contentFrame)
-  releaseAll(contentFrame)
+  FramePool.initPool(contentFrame)
+  FramePool.releaseAll(contentFrame)
 
   -- Wrap factory to route CreateFrame through the pool
   local pooledFactory = {
     CreateFrame = function(frameType, name, parent)
-      return acquireFrame(factory, contentFrame, frameType, parent)
+      return FramePool.acquireFrame(factory, contentFrame, frameType, parent)
     end,
   }
 
@@ -139,36 +69,8 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
 
     -- Sender name + timestamp label above first bubble in a group
     if showIcon then
-      local nameFrame = acquireFrame(factory, contentFrame, "Frame", contentFrame)
-      nameFrame:SetSize(paneWidth, 16)
-      nameFrame:ClearAllPoints()
-
-      local nameFS = nameFrame:CreateFontString(nil, "OVERLAY")
-      setFontObject(nameFS, Theme.FONTS.message_time)
-      setTextColor(nameFS, Theme.COLORS.text_secondary)
-
-      local timeStr = ""
-      if ns.TimeFormat and ns.TimeFormat.MessageTime then
-        timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
-      end
-      local timeFS = nameFrame:CreateFontString(nil, "OVERLAY")
-      setFontObject(timeFS, Theme.FONTS.message_time)
-      setTextColor(timeFS, Theme.COLORS.text_timestamp)
-      timeFS:SetText(timeStr)
-
-      if message.direction == "out" then
-        nameFS:SetText("You")
-        nameFS:SetPoint("RIGHT", nameFrame, "RIGHT", -48, 0)
-        timeFS:SetPoint("RIGHT", nameFS, "LEFT", -6, 0)
-        nameFrame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
-      else
-        local displayName = message.playerName or message.senderDisplayName or ""
-        nameFS:SetText(displayName)
-        nameFS:SetPoint("LEFT", nameFrame, "LEFT", 48, 0)
-        timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
-        nameFrame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
-      end
-      yOffset = yOffset + 18
+      local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset)
+      yOffset = yOffset + label.height
     end
 
     local fallbackClassTag = options and options.fallbackClassTag or nil
