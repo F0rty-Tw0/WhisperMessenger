@@ -32,7 +32,11 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "contact with known guid should get availability")
     assert(contacts[1].availability.status == "CanWhisper", "availability status should match")
-    assert(contacts[2].availability == nil, "contact with unknown guid should have no availability")
+    assert(contacts[2].availability ~= nil, "contact with unknown guid should default to Offline")
+    assert(
+      contacts[2].availability.status == "Offline",
+      "contact with unknown guid should be Offline, got: " .. tostring(contacts[2].availability.status)
+    )
   end
 
   -- EnrichContactsAvailability: BNet contact online gets CanWhisper availability and metadata refreshed
@@ -471,8 +475,8 @@ return function()
     assert(contacts[1].availability.canWhisper == false, "WrongFaction should not be whisperable")
   end
 
-  -- EnrichContactsAvailability: BNet contact with isAFK=true but isOnline=nil shows Offline
-  -- (isAFK/isDND are sticky flags that persist after going offline)
+  -- EnrichContactsAvailability: BNet contact with isAFK=true but isOnline=nil shows Away
+  -- (isAFK=true implies the account is online — you can't be AFK if not logged in)
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -497,13 +501,13 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet AFK with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Offline",
-      "BNet isAFK=true with isOnline=nil should be Offline (sticky flag), got: "
-        .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Away",
+      "BNet isAFK=true with isOnline=nil should be Away, got: " .. tostring(contacts[1].availability.status)
     )
+    assert(contacts[1].availability.canWhisper == true, "Away contacts should be whisperable")
   end
 
-  -- EnrichContactsAvailability: BNet contact with isDND=true but isOnline=nil shows Offline
+  -- EnrichContactsAvailability: BNet contact with isDND=true but isOnline=nil shows Busy
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -528,10 +532,10 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet DND with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Offline",
-      "BNet isDND=true with isOnline=nil should be Offline (sticky flag), got: "
-        .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Busy",
+      "BNet isDND=true with isOnline=nil should be Busy, got: " .. tostring(contacts[1].availability.status)
     )
+    assert(contacts[1].availability.canWhisper == true, "Busy contacts should be whisperable")
   end
 
   -- EnrichContactsAvailability: WoW contact Offline + opposite faction + guild online becomes XFaction
@@ -559,7 +563,7 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: same faction WrongFaction overrides to CanWhisper
+  -- EnrichContactsAvailability: same faction WrongFaction without guild defaults to Offline
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -572,8 +576,59 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
+      contacts[1].availability.status == "Offline",
+      "same faction WrongFaction without guild should become Offline, got: "
+        .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: same faction WrongFaction with guild online becomes CanWhisper
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-same-wf-gon"] = { status = "WrongFaction", canWhisper = false },
+      },
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-same-wf-gon" then
+          return "online"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-same-wf-gon", channel = "WOW", factionName = "Alliance" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
       contacts[1].availability.status == "CanWhisper",
-      "same faction WrongFaction should become CanWhisper, got: " .. tostring(contacts[1].availability.status)
+      "same faction WrongFaction with guild online should become CanWhisper, got: "
+        .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: same faction WrongFaction with guild offline becomes Offline
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-same-wf-goff"] = { status = "WrongFaction", canWhisper = false },
+      },
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-same-wf-goff" then
+          return "offline"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-same-wf-goff", channel = "WOW", factionName = "Alliance" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].availability.status == "Offline",
+      "same faction WrongFaction with guild offline should become Offline, got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -713,7 +768,7 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: WoW contact with no cached status and not in guild stays nil
+  -- EnrichContactsAvailability: WoW contact with no cached status and not in guild defaults to Offline
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -726,10 +781,32 @@ return function()
       { guid = "guid-nocache-noguld", channel = "WOW", factionName = "Horde" },
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(contacts[1].availability == nil, "no-cache non-guild contact should have no availability")
+    assert(contacts[1].availability ~= nil, "no-cache non-guild contact should default to Offline")
+    assert(
+      contacts[1].availability.status == "Offline",
+      "no-cache non-guild contact should be Offline, got: " .. tostring(contacts[1].availability.status)
+    )
   end
 
-  -- EnrichContactsAvailability: WrongFaction with nil faction stays WrongFaction (unknown faction)
+  -- EnrichContactsAvailability: WoW contact with no cached status and no guild fn defaults to Offline
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {},
+    })
+    local contacts = {
+      { guid = "guid-nocache-nofn", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(contacts[1].availability ~= nil, "no-cache no-guild-fn contact should default to Offline")
+    assert(
+      contacts[1].availability.status == "Offline",
+      "no-cache no-guild-fn contact should be Offline, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WrongFaction with nil faction defaults to Offline
+  -- (can't determine if same/opposite faction, WrongFaction likely means offline)
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -742,8 +819,33 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
-      contacts[1].availability.status == "WrongFaction",
-      "nil faction WrongFaction should stay WrongFaction, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Offline",
+      "nil faction WrongFaction should become Offline, got: " .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: WrongFaction with nil faction + guild online becomes CanWhisper
+  do
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-nil-fac-gon"] = { status = "WrongFaction", canWhisper = false },
+      },
+      getGuildOrCommunityPresence = function(guid)
+        if guid == "guid-nil-fac-gon" then
+          return "online"
+        end
+        return nil
+      end,
+    })
+    local contacts = {
+      { guid = "guid-nil-fac-gon", channel = "WOW", factionName = nil },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].availability.status == "CanWhisper",
+      "nil faction WrongFaction + guild online should become CanWhisper, got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 

@@ -65,9 +65,23 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
   end
 
   -- Fallback: look up by GUID (returns different data path for some friends)
+  -- Guard: reject if the GUID resolves to a clearly different person (different
+  -- battleTag), which prevents cross-contamination of contact metadata.
   if accountInfo and accountInfo.isOnline == nil and guid and type(bnetApi.GetAccountInfoByGUID) == "function" then
     local ok, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
-    if ok and info then
+    local isDifferentPerson = ok
+      and info
+      and info.battleTag
+      and accountInfo.battleTag
+      and info.battleTag ~= accountInfo.battleTag
+    if ok and info and isDifferentPerson then
+      -- bnetAccountID has shifted to a different person between sessions;
+      -- the GUID-based lookup is authoritative for the stored contact.
+      local gameInfo = info.gameAccountInfo
+      if info.isOnline or info.isAFK or info.isDND or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+        return info
+      end
+    elseif ok and info and not isDifferentPerson then
       local gameInfo = info.gameAccountInfo
       if info.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
         -- Merge useful fields from ByGUID result into accountInfo

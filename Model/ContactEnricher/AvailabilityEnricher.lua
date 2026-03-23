@@ -68,10 +68,21 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
           end
           -- nil = not a member, keep original status
         end
-      elseif item.factionName ~= nil and item.factionName ~= "" and item.factionName == localFaction then
-        -- Same faction: WrongFaction is a stale or erroneous API response
+      else
+        -- Same faction or unknown faction: WrongFaction likely means the player
+        -- is offline (the API returns code 2 for unreachable players regardless
+        -- of faction). Check guild/community presence, default to Offline.
         if item.availability.status == "WrongFaction" then
-          item.availability = Availability.FromStatus("CanWhisper")
+          if type(runtime.getGuildOrCommunityPresence) == "function" then
+            local presence = runtime.getGuildOrCommunityPresence(item.guid)
+            if presence == "online" then
+              item.availability = Availability.FromStatus("CanWhisper")
+            else
+              item.availability = Availability.FromStatus("Offline")
+            end
+          else
+            item.availability = Availability.FromStatus("Offline")
+          end
         end
       end
     elseif item.guid and item.channel ~= "BN" and type(runtime.getGuildOrCommunityPresence) == "function" then
@@ -87,12 +98,20 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
         item.availability = Availability.FromStatus("Offline")
       end
     end
+    -- WoW contacts with no availability after all checks: default to Offline
+    if item.availability == nil and item.channel ~= "BN" then
+      item.availability = Availability.FromStatus("Offline")
+    end
     -- BNet contacts: query live status and refresh metadata from BNet API
     if item.channel == "BN" and item.bnetAccountID then
       local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
-        local isOnline = accountInfo.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+        -- isAFK/isDND at account level imply online (you can't be AFK if not logged in)
+        local isOnline = accountInfo.isOnline
+          or accountInfo.isAFK
+          or accountInfo.isDND
+          or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
         if isOnline then
           local bnetStatus = "CanWhisper"
           -- Check both top-level (BNet app) and game-level AFK/DND flags

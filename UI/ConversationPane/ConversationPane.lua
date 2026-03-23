@@ -49,12 +49,30 @@ function ConversationPane.RefreshActiveStatus(view, activeStatus)
     return
   end
 
+  local wasVisible = view._activeStatusVisible or false
+
   if activeStatus and activeStatus.text and activeStatus.text ~= "" then
     view.activeStatusBanner:SetText(activeStatus.text)
     view.activeStatusBanner:Show()
+    view._activeStatusVisible = true
   else
     view.activeStatusBanner:SetText("")
     view.activeStatusBanner:Hide()
+    view._activeStatusVisible = false
+  end
+
+  -- Adjust transcript height when banner visibility changes
+  if view._activeStatusVisible ~= wasVisible and view.transcript then
+    local t = view.transcript
+    local delta = view._activeStatusVisible and -ACTIVE_STATUS_BANNER_HEIGHT or ACTIVE_STATUS_BANNER_HEIGHT
+    local currentH = sizeValue(t.scrollFrame, "GetHeight", "height", 0)
+    if currentH > 0 then
+      local newH = currentH + delta
+      t.scrollFrame:SetSize(sizeValue(t.scrollFrame, "GetWidth", "width", 0), newH)
+      t.scrollBar:SetHeight(newH)
+      t.viewportHeight = newH
+      ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), true)
+    end
   end
 end
 
@@ -217,8 +235,9 @@ function ConversationPane.Relayout(view, width, height)
     return
   end
   local HEADER_HEIGHT = 56
+  local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
   local transcriptW = width - 32
-  local transcriptH = height - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
+  local transcriptH = height - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
   local t = view.transcript
   t.scrollFrame:SetSize(transcriptW, transcriptH)
   t.content:SetSize(transcriptW, t.content.height or transcriptH)

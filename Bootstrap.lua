@@ -154,21 +154,38 @@ function Bootstrap.Initialize(factory, options)
     local isBN = conversation.channel == "BN"
 
     trace("--- Contact Debug ---")
-    trace("  key:          " .. tostring(conversationKey))
-    trace("  channel:      " .. tostring(conversation.channel))
-    trace("  guid:         " .. tostring(guid))
-    trace("  faction:      " .. tostring(conversation.factionName))
-    trace("  localFaction:  " .. tostring(runtime.localFaction))
-    trace("  isBattleNet:  " .. tostring(isBN))
-    trace("  cachedStatus: " .. (cached and cached.status or "nil"))
-    trace("  canWhisper:   " .. (cached and tostring(cached.canWhisper) or "nil"))
-    trace("  guildPresence: " .. tostring(presence))
+    trace("[stored] conversation data from message history:")
+    trace("  key:            " .. tostring(conversationKey))
+    trace("  displayName:    " .. tostring(conversation.displayName))
+    trace("  channel:        " .. tostring(conversation.channel))
+    trace("  guid:           " .. tostring(guid))
+    trace("  bnetAccountID:  " .. tostring(conversation.bnetAccountID))
+    trace("  gameAccountName:" .. tostring(conversation.gameAccountName))
+    trace("  className:      " .. tostring(conversation.className))
+    trace("  classTag:       " .. tostring(conversation.classTag))
+    trace("  raceName:       " .. tostring(conversation.raceName))
+    trace("  raceTag:        " .. tostring(conversation.raceTag))
+    trace("  faction:        " .. tostring(conversation.factionName))
+    trace("  unreadCount:    " .. tostring(conversation.unreadCount))
+    trace("  lastActivityAt: " .. tostring(conversation.lastActivityAt))
+    trace("  lastPreview:    " .. tostring(conversation.lastPreview))
+    local activeStatus = conversation.activeStatus
+    trace("  activeStatus:   " .. (activeStatus and (activeStatus.eventName .. ": " .. activeStatus.text) or "nil"))
+    trace("[cached] runtime availability (from CAN_LOCAL_WHISPER_TARGET_RESPONSE):")
+    trace("  cachedStatus:   " .. (cached and cached.status or "nil"))
+    trace("  canWhisper:     " .. (cached and tostring(cached.canWhisper) or "nil"))
+    trace("[runtime] derived / environment:")
+    trace("  localFaction:   " .. tostring(runtime.localFaction))
+    trace("  isBattleNet:    " .. tostring(isBN))
+    trace("  guildPresence:  " .. tostring(presence))
 
     if isBN and conversation.bnetAccountID then
       local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
       local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid)
+      trace("[live] BNet API (ResolveAccountInfo):")
       if accountInfo then
         local gi = accountInfo.gameAccountInfo
+        trace("  bn.battleTag: " .. tostring(accountInfo.battleTag))
         trace("  bn.isOnline:  " .. tostring(accountInfo.isOnline))
         trace("  bn.isAFK:     " .. tostring(accountInfo.isAFK))
         trace("  bn.isDND:     " .. tostring(accountInfo.isDND))
@@ -187,15 +204,18 @@ function Bootstrap.Initialize(factory, options)
       -- Try alternative API: GetAccountInfoByGUID
       if guid and runtime.bnetApi and type(runtime.bnetApi.GetAccountInfoByGUID) == "function" then
         local ok2, altInfo = pcall(runtime.bnetApi.GetAccountInfoByGUID, guid)
+        trace("[live] BNet API (GetAccountInfoByGUID):")
         if ok2 and altInfo then
           local agi = altInfo.gameAccountInfo
-          trace("  alt(ByGUID).isOnline: " .. tostring(altInfo.isOnline))
-          trace("  alt(ByGUID).isAFK:    " .. tostring(altInfo.isAFK))
-          trace("  alt(ByGUID).isDND:    " .. tostring(altInfo.isDND))
+          trace("  alt.bnetAcctID: " .. tostring(altInfo.bnetAccountID))
+          trace("  alt.battleTag: " .. tostring(altInfo.battleTag))
+          trace("  alt.isOnline: " .. tostring(altInfo.isOnline))
+          trace("  alt.isAFK:    " .. tostring(altInfo.isAFK))
+          trace("  alt.isDND:    " .. tostring(altInfo.isDND))
           if agi then
-            trace("  alt(ByGUID).game.isOnline:  " .. tostring(agi.isOnline))
-            trace("  alt(ByGUID).game.charName:  " .. tostring(agi.characterName))
-            trace("  alt(ByGUID).game.faction:   " .. tostring(agi.factionName))
+            trace("  alt.game.isOnline:  " .. tostring(agi.isOnline))
+            trace("  alt.game.charName:  " .. tostring(agi.characterName))
+            trace("  alt.game.faction:   " .. tostring(agi.factionName))
           end
         else
           trace("  alt(ByGUID): nil or error")
@@ -203,11 +223,33 @@ function Bootstrap.Initialize(factory, options)
       end
       -- Try alternative API: GetFriendNumGameAccounts + GetFriendGameAccountInfo
       if runtime.bnetApi and type(runtime.bnetApi.GetFriendNumGameAccounts) == "function" then
+        trace("[live] BNet API (GetFriendNumGameAccounts):")
         local ok3, numAccounts = pcall(runtime.bnetApi.GetFriendNumGameAccounts, conversation.bnetAccountID)
         if ok3 and numAccounts then
           trace("  numGameAccounts: " .. tostring(numAccounts))
+        else
+          trace("  numGameAccounts: nil or error")
         end
       end
+    end
+    -- Show what the enricher actually computes for this contact
+    local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
+    local testContacts = {
+      {
+        guid = guid,
+        channel = conversation.channel or "WOW",
+        factionName = conversation.factionName,
+        bnetAccountID = conversation.bnetAccountID,
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(testContacts, runtime)
+    local enriched = testContacts[1].availability
+    trace("[enriched] final availability (what the UI displays):")
+    if enriched then
+      trace("  status:     " .. tostring(enriched.status))
+      trace("  canWhisper: " .. tostring(enriched.canWhisper))
+    else
+      trace("  availability: nil (no data)")
     end
     trace("--- End Debug ---")
   end

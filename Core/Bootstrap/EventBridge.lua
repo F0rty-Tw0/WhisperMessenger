@@ -33,7 +33,9 @@ local function buildLivePayload(runtime, eventName, ...)
       text = text,
       playerName = playerName,
       lineID = lineID,
-      guid = guid,
+      -- Prefer the resolved playerGuid from the BNet API over the raw event
+      -- guid, which may belong to a different player's character.
+      guid = playerGuid,
       channel = "BN",
       bnetAccountID = bnetAccountID,
       accountInfo = accountInfo,

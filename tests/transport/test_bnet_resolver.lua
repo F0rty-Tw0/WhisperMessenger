@@ -193,6 +193,110 @@ return function()
     assert(result.isOnline == nil, "should not use ByGUID without guid")
   end
 
+  -- ResolveAccountInfo ByGUID fallback with shifted bnetAccountID returns ByGUID result
+  -- (bnetAccountID shifted to Crowheart, but GUID belongs to Nergrom who is online)
+  do
+    local shiftedApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Crowheart#2268" }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 10, isOnline = nil }
+      end,
+      GetFriendNumGameAccounts = function(_fi)
+        return 0
+      end,
+      GetFriendGameAccountInfo = function()
+        return nil
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return {
+          bnetAccountID = 11,
+          isOnline = true,
+          battleTag = "Nergrom#2503",
+          gameAccountInfo = {
+            isOnline = true,
+            characterName = "Nergrom",
+            realmName = "Kazzak",
+            factionName = "Horde",
+          },
+        }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(shiftedApi, 10, "Player-1305-08ACF728")
+    assert(result ~= nil, "shifted ID should return ByGUID result")
+    -- GUID is authoritative: should return the real person's data
+    assert(
+      result.battleTag == "Nergrom#2503",
+      "shifted ID should return ByGUID person's battleTag, got: " .. tostring(result.battleTag)
+    )
+    assert(result.isOnline == true, "shifted ID should return ByGUID person's online status")
+  end
+
+  -- ResolveAccountInfo ByGUID fallback with shifted bnetAccountID but offline contact falls through
+  do
+    local shiftedOfflineApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Crowheart#2268" }
+      end,
+      GetNumFriends = function()
+        return 0
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return {
+          isOnline = nil,
+          battleTag = "Nergrom#2503",
+          gameAccountInfo = { isOnline = false, characterName = nil },
+        }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(shiftedOfflineApi, 10, "Player-1305-08ACF728")
+    assert(result ~= nil, "shifted ID with offline ByGUID should return primary")
+    assert(
+      result.battleTag == "Crowheart#2268",
+      "shifted ID offline should keep primary, got: " .. tostring(result.battleTag)
+    )
+  end
+
+  -- ResolveAccountInfo ByGUID fallback merges same-person data (matching battleTag)
+  do
+    local samePersonApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Palapop#2189" }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 2, isOnline = nil }
+      end,
+      GetFriendNumGameAccounts = function(_fi)
+        return 0
+      end,
+      GetFriendGameAccountInfo = function()
+        return nil
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return {
+          isOnline = nil,
+          battleTag = "Palapop#2189",
+          gameAccountInfo = {
+            isOnline = true,
+            characterName = "Stormdream",
+            factionName = "Alliance",
+          },
+        }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(samePersonApi, 2, "Player-1597-0CE0FFA7")
+    assert(result ~= nil, "same-person ByGUID should return info")
+    assert(result.isOnline == true, "same-person ByGUID should set isOnline=true")
+    assert(result.gameAccountInfo.characterName == "Stormdream", "same-person ByGUID should merge gameAccountInfo")
+  end
+
   -- NormalizeAvailabilityStatus
   assert(BNetResolver.NormalizeAvailabilityStatus(nil) == nil, "nil should return nil")
   assert(BNetResolver.NormalizeAvailabilityStatus("CanWhisper") == "CanWhisper", "string should pass through")

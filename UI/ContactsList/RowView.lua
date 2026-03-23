@@ -111,7 +111,12 @@ local function bindRow(factory, parent, row, index, item, options)
     end
     row.statusDot:Show()
   else
-    row.statusDot:Hide()
+    -- No availability data: show as offline (gray) rather than hiding
+    local sc = Theme.COLORS["offline"]
+    if sc then
+      row.statusDot.bg:SetVertexColor(sc[1], sc[2], sc[3], sc[4] or 1)
+    end
+    row.statusDot:Show()
   end
 
   -- Contact name (top line, class-colored)
