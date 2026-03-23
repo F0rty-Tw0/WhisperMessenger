@@ -101,4 +101,69 @@ return function()
       "battleTag should not be overwritten by nil, got: " .. tostring(conv.battleTag)
     )
   end
+
+  -- test_pin_marks_conversation_pinned
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::alice", {
+      id = "p1",
+      direction = "in",
+      kind = "user",
+      text = "hey",
+      sentAt = 1,
+    }, false)
+
+    assert(Store.IsPinned(s, "me::WOW::alice") == false, "should not be pinned by default")
+
+    Store.Pin(s, "me::WOW::alice")
+    assert(Store.IsPinned(s, "me::WOW::alice") == true, "should be pinned after Pin")
+  end
+
+  -- test_unpin_removes_pinned_flag
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::bob", {
+      id = "u1",
+      direction = "in",
+      kind = "user",
+      text = "hi",
+      sentAt = 1,
+    }, false)
+
+    Store.Pin(s, "me::WOW::bob")
+    assert(Store.IsPinned(s, "me::WOW::bob") == true, "precondition: pinned")
+
+    Store.Unpin(s, "me::WOW::bob")
+    assert(Store.IsPinned(s, "me::WOW::bob") == false, "should not be pinned after Unpin")
+  end
+
+  -- test_pin_nonexistent_conversation_is_noop
+  do
+    local s = Store.New({})
+    Store.Pin(s, "me::WOW::ghost")
+    assert(Store.IsPinned(s, "me::WOW::ghost") == false, "pinning nonexistent key should be noop")
+  end
+
+  -- test_remove_deletes_conversation
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::carol", {
+      id = "r1",
+      direction = "in",
+      kind = "user",
+      text = "bye",
+      sentAt = 1,
+    }, false)
+    assert(s.conversations["me::WOW::carol"] ~= nil, "precondition: conversation exists")
+
+    Store.Remove(s, "me::WOW::carol")
+    assert(s.conversations["me::WOW::carol"] == nil, "conversation should be removed")
+  end
+
+  -- test_remove_nonexistent_conversation_is_noop
+  do
+    local s = Store.New({})
+    Store.Remove(s, "me::WOW::nobody")
+    -- should not error
+  end
 end

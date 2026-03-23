@@ -50,6 +50,16 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
           options.onSelect(item)
         end
       end,
+      onPin = function(item)
+        if options.onPin then
+          options.onPin(item)
+        end
+      end,
+      onRemove = function(item)
+        if options.onRemove then
+          options.onRemove(item)
+        end
+      end,
     })
     ScrollView.Sync(contactsView)
 

@@ -6,6 +6,12 @@ end
 local DataBuilder = {}
 
 local function compareItems(left, right)
+  local leftPinned = left.pinned and true or false
+  local rightPinned = right.pinned and true or false
+  if leftPinned ~= rightPinned then
+    return leftPinned
+  end
+
   if left.lastActivityAt ~= right.lastActivityAt then
     return left.lastActivityAt > right.lastActivityAt
   end
@@ -30,6 +36,7 @@ local function buildItem(conversationKey, conversation)
     raceName = conversation.raceName,
     raceTag = conversation.raceTag,
     factionName = conversation.factionName,
+    pinned = conversation.pinned or false,
   }
 end
 

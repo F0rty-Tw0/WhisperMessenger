@@ -114,6 +114,16 @@ function MessengerWindow.Create(factory, options)
         handleContactSelected(item)
       end
     end,
+    onPin = function(item)
+      if options.onPin then
+        options.onPin(item)
+      end
+    end,
+    onRemove = function(item)
+      if options.onRemove then
+        options.onRemove(item)
+      end
+    end,
   })
 
   -- Expose contacts in the same shape as before

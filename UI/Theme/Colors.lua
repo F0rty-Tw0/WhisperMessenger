@@ -41,6 +41,10 @@ local Colors = {
   option_button_text_hover = { 0.95, 0.95, 0.98, 1.0 },
   danger_button_bg = { 0.45, 0.12, 0.12, 0.80 },
   danger_button_hover = { 0.55, 0.16, 0.16, 0.90 },
+  action_icon = { 0.55, 0.55, 0.62, 0.70 },
+  action_icon_hover = { 0.92, 0.92, 0.95, 1.0 },
+  action_icon_pinned = { 0.90, 0.72, 0.20, 1.0 },
+  action_remove_hover = { 0.85, 0.25, 0.25, 1.0 },
 }
 
 ns.ThemeColors = Colors

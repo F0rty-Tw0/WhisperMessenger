@@ -138,6 +138,32 @@ function Store.MarkRead(state, key)
   conversation.unreadCount = 0
 end
 
+function Store.Pin(state, key)
+  local conversation = state.conversations[key]
+  if conversation then
+    conversation.pinned = true
+  end
+end
+
+function Store.Unpin(state, key)
+  local conversation = state.conversations[key]
+  if conversation then
+    conversation.pinned = false
+  end
+end
+
+function Store.IsPinned(state, key)
+  local conversation = state.conversations[key]
+  if conversation and conversation.pinned then
+    return true
+  end
+  return false
+end
+
+function Store.Remove(state, key)
+  state.conversations[key] = nil
+end
+
 ns.ConversationStore = Store
 
 return Store

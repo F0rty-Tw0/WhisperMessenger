@@ -347,6 +347,28 @@ function Bootstrap.Initialize(factory, options)
         runtime.activeConversationKey = nil
         characterState.activeConversationKey = nil
       end,
+      onPin = function(item)
+        local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
+        local key = item.conversationKey
+        trace("onPin", "key=" .. tostring(key), "wasPinned=" .. tostring(item.pinned))
+        if Store.IsPinned(runtime.store, key) then
+          Store.Unpin(runtime.store, key)
+        else
+          Store.Pin(runtime.store, key)
+        end
+        refreshWindow()
+      end,
+      onRemove = function(item)
+        local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
+        local key = item.conversationKey
+        trace("onRemove", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
+        Store.Remove(runtime.store, key)
+        if runtime.activeConversationKey == key then
+          runtime.activeConversationKey = nil
+          characterState.activeConversationKey = nil
+        end
+        refreshWindow()
+      end,
       onResetIconPosition = function()
         local nextState = TableUtils.copyState(defaultCharacterState.icon)
         characterState.icon = nextState
