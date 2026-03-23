@@ -5,13 +5,10 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColor = UIHelpers.applyColor
-local applyClassColor = UIHelpers.applyClassColor
-local applyColorTexture = UIHelpers.applyColorTexture
-local applyVertexColor = UIHelpers.applyVertexColor
-local createCircularIcon = UIHelpers.createCircularIcon
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
+local HeaderElements = ns.ConversationPaneHeaderElements
+  or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 
 local HeaderView = {}
 
@@ -32,29 +29,14 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   ---------------------------------------------------------------------------
   -- Header container (56px tall, bg_header background)
   ---------------------------------------------------------------------------
-  local headerFrame = factory.CreateFrame("Frame", nil, pane)
-  headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, 0)
-  headerFrame:SetPoint("TOPRIGHT", pane, "TOPRIGHT", 0, 0)
-  headerFrame:SetHeight(HEADER_HEIGHT)
-
-  local headerBg = headerFrame:CreateTexture(nil, "BACKGROUND")
-  headerBg:SetAllPoints(headerFrame)
-  applyColorTexture(headerBg, Theme.COLORS.bg_header)
+  local headerFrame = HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
 
   ---------------------------------------------------------------------------
   -- Class icon (32x32)
   ---------------------------------------------------------------------------
-  local headerIcon = createCircularIcon(factory, headerFrame, Theme.LAYOUT.HEADER_ICON_SIZE)
-  local classIconFrame = headerIcon.frame
-  local classIcon = headerIcon.texture
-  classIconFrame:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
-
-  local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
-  if iconPath then
-    classIcon:SetTexture(iconPath)
-  else
-    classIcon:SetTexture(Theme.TEXTURES.bnet_icon)
-  end
+  local classIconResult = HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
+  local classIconFrame = classIconResult.frame
+  local classIcon = classIconResult.texture
 
   ---------------------------------------------------------------------------
   -- Contact name (class-colored, GameFontHighlightLarge)
@@ -74,70 +56,28 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   ---------------------------------------------------------------------------
   -- Faction icon (16x16, right of name)
   ---------------------------------------------------------------------------
-  local headerFactionIcon = headerFrame:CreateTexture(nil, "ARTWORK")
-  headerFactionIcon:SetSize(16, 16)
-  headerFactionIcon:SetPoint("LEFT", headerName, "RIGHT", 6, 0)
-  headerFactionIcon:Hide()
-
-  if selectedContact and selectedContact.factionName then
-    local factionPath = Theme.FactionIcon(selectedContact.factionName)
-    if factionPath then
-      headerFactionIcon:SetTexture(factionPath)
-      headerFactionIcon:Show()
-    end
-  end
+  local headerFactionIcon = HeaderElements.createFactionIcon(headerFrame, headerName, selectedContact)
 
   ---------------------------------------------------------------------------
   -- Status line text (below name)
   ---------------------------------------------------------------------------
-  local headerStatus = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
-  headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -2)
-  applyColor(headerStatus, Theme.COLORS.text_secondary)
-
-  if selectedContact then
-    headerStatus:SetText(StatusLine.Build(selectedContact))
-    headerStatus:Show()
-  else
-    headerStatus:SetText("")
-    headerStatus:Hide()
-  end
+  local headerStatus = HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
 
   ---------------------------------------------------------------------------
   -- Status dot (overlay on class icon, bottom-right corner)
   -- Rendered as a frame so it stacks above the clipping icon frame.
   ---------------------------------------------------------------------------
-  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
-  local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE -- 8
-  local statusDot = factory.CreateFrame("Frame", nil, headerFrame)
-  statusDot:SetSize(dotSize, dotSize)
-  statusDot:SetPoint("BOTTOMRIGHT", classIconFrame, "BOTTOMRIGHT", 2, -2)
-  if statusDot.SetFrameLevel and classIconFrame.GetFrameLevel then
-    statusDot:SetFrameLevel(classIconFrame:GetFrameLevel() + 2)
-  end
-  statusDot.bg = statusDot:CreateTexture(nil, "OVERLAY")
-  statusDot.bg:SetAllPoints()
-  statusDot.bg:SetTexture(CIRCLE_TEX)
-  local dotColor = Theme.COLORS.online
-  statusDot.bg:SetVertexColor(dotColor[1], dotColor[2], dotColor[3], dotColor[4] or 1)
-  statusDot:SetShown(selectedContact ~= nil)
+  local statusDot = HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
 
   ---------------------------------------------------------------------------
   -- Header divider (1px line at bottom of header)
   ---------------------------------------------------------------------------
-  local headerDivider = headerFrame:CreateTexture(nil, "BACKGROUND")
-  headerDivider:SetPoint("BOTTOMLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
-  headerDivider:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMRIGHT", 0, 0)
-  headerDivider:SetHeight(1)
-  applyColorTexture(headerDivider, Theme.COLORS.divider)
+  local headerDivider = HeaderElements.createDivider(headerFrame)
 
   ---------------------------------------------------------------------------
   -- Empty state label (centered, shown when no contact selected)
   ---------------------------------------------------------------------------
-  local headerEmpty = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
-  headerEmpty:SetPoint("CENTER", pane, "CENTER", 0, 0)
-  headerEmpty:SetText("Select a conversation")
-  applyColor(headerEmpty, Theme.COLORS.text_secondary)
-  headerEmpty:SetShown(selectedContact == nil)
+  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact)
 
   return {
     headerFrame = headerFrame,

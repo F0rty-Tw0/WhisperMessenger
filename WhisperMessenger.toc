@@ -56,11 +56,17 @@ UI/ChatBubble/Layout.lua
 UI/ChatBubble/ChatBubble.lua
 UI/ContactsList/DataBuilder.lua
 UI/ContactsList/DragReorder.lua
+UI/ContactsList/StatusDot.lua
+UI/ContactsList/RowElements.lua
+UI/ContactsList/RowScripts.lua
+UI/ContactsList/ActionButtons.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/StatusLine.lua
 UI/ConversationPane/TranscriptView.lua
+UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/HeaderView.lua
+UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Composer.lua

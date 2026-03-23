@@ -9,6 +9,8 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 local TranscriptView = ns.ConversationPaneTranscriptView
   or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
+local TranscriptSetup = ns.ConversationPaneTranscriptSetup
+  or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -128,75 +130,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
-  transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
-  transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
-  if transcript.text.SetMultiLine then
-    transcript.text:SetMultiLine(true)
-  end
-  if transcript.text.SetAutoFocus then
-    transcript.text:SetAutoFocus(false)
-  end
-  if transcript.text.EnableMouse then
-    transcript.text:EnableMouse(true)
-  end
-  if transcript.text.SetHyperlinksEnabled then
-    transcript.text:SetHyperlinksEnabled(true)
-  end
-  if transcript.text.SetFontObject then
-    transcript.text:SetFontObject(_G.GameFontHighlightSmall or "GameFontHighlightSmall")
-  end
-  if transcript.text.SetWidth then
-    transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32))
-  end
-  if transcript.text.SetScript then
-    transcript.text:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      if type(_G.SetItemRef) == "function" then
-        _G.SetItemRef(link, text, button, self)
-      end
-    end)
-    transcript.text:SetScript("OnEditFocusGained", function(self)
-      if self.ClearFocus then
-        self:ClearFocus()
-      end
-    end)
-  end
-  transcript.text:SetText("")
-  transcript.lines = {}
-  TranscriptView._updateTranscriptLayout(transcript, false)
-
-  -- Infinite scroll: load older messages when scrolling near the top
-  local function checkLoadMoreMessages()
-    local offset = ScrollView.GetOffset(transcript)
-    if offset <= TRANSCRIPT_SCROLL_STEP and ConversationPane.HasMore(transcript) then
-      local prevHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
-      ConversationPane.LoadMore(transcript)
-      local newHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
-      local delta = newHeight - prevHeight
-      if delta > 0 then
-        ScrollView.SetVerticalScroll(transcript, offset + delta)
-      end
-    end
-  end
-
-  if transcript.scrollFrame and transcript.scrollFrame.SetScript then
-    local originalOnWheel = transcript.scrollFrame:GetScript("OnMouseWheel")
-    transcript.scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-      if originalOnWheel then
-        originalOnWheel(self, delta)
-      end
-      checkLoadMoreMessages()
-    end)
-  end
-
-  if transcript.scrollBar and transcript.scrollBar.SetScript then
-    local originalOnValue = transcript.scrollBar:GetScript("OnValueChanged")
-    transcript.scrollBar:SetScript("OnValueChanged", function(self, value)
-      if originalOnValue then
-        originalOnValue(self, value)
-      end
-      checkLoadMoreMessages()
-    end)
-  end
+  TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
 
   ---------------------------------------------------------------------------
   -- Active status banner (above composer, shown for AFK/DND)
