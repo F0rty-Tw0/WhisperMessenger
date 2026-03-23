@@ -10,6 +10,7 @@ local AlphaController = ns.MessengerWindowAlphaController
   or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
+local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsController = ns.MessengerWindowContactsController
   or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
@@ -79,7 +80,6 @@ function MessengerWindow.Create(factory, options)
 
   -- Mutable state passed into AlphaController to track dimmed state
   local windowState = { isDimmed = false }
-  local alphaElapsed = 0
 
   -- Build chrome (outer frame, buttons, etc.)
   local chrome = ChromeBuilder.Build(factory, parent, initialState, { title = options.title })
@@ -251,125 +251,41 @@ function MessengerWindow.Create(factory, options)
   setOptionsVisible(false)
 
   -- Wire button scripts
-  if closeButton.SetScript then
-    closeButton:SetScript("OnClick", closeWindow)
-  end
-
-  if optionsButton.SetScript then
-    optionsButton:SetScript("OnClick", function()
-      setOptionsVisible(not isShown(optionsPanel))
-    end)
-  end
-
-  if resetWindowButton.SetScript then
-    resetWindowButton:SetScript("OnClick", function()
-      if options.onResetWindowPosition == nil then
-        return
-      end
-      local nextState = options.onResetWindowPosition()
-      if nextState ~= nil then
-        applyState(frame, nextState)
-      end
-    end)
-  end
-
-  if resetIconButton.SetScript then
-    resetIconButton:SetScript("OnClick", function()
-      if options.onResetIconPosition then
-        options.onResetIconPosition()
-      end
-    end)
-  end
-
-  if clearAllChatsButton.SetScript then
-    clearAllChatsButton:SetScript("OnClick", function()
-      if options.onClearAllChats then
-        options.onClearAllChats()
-        refreshSelection({
-          contacts = {},
-          selectedContact = nil,
-          conversation = nil,
-          status = nil,
-        }, true)
-      end
-    end)
-  end
+  WindowScripts.WireButtons({
+    closeButton = closeButton,
+    optionsButton = optionsButton,
+    resetWindowButton = resetWindowButton,
+    resetIconButton = resetIconButton,
+    clearAllChatsButton = clearAllChatsButton,
+    optionsPanel = optionsPanel,
+  }, {
+    onClose = closeWindow,
+    onResetWindowPosition = options.onResetWindowPosition,
+    onResetIconPosition = options.onResetIconPosition,
+    onClearAllChats = options.onClearAllChats,
+    setOptionsVisible = setOptionsVisible,
+    isShown = isShown,
+    applyState = function(nextState)
+      applyState(frame, nextState)
+    end,
+    refreshSelection = refreshSelection,
+  })
 
   -- Frame-level scripts
-  if frame.SetScript then
-    frame:SetScript("OnShow", function()
-      alphaElapsed = 0
-      refreshWindowAlpha(true)
-      trace("window shown")
-    end)
-    frame:SetScript("OnHide", function()
-      alphaElapsed = 0
-      trace("window hidden")
-    end)
-    frame:SetScript("OnEnter", function()
-      refreshWindowAlpha(true)
-    end)
-    frame:SetScript("OnLeave", function()
-      refreshWindowAlpha()
-    end)
-    frame:SetScript("OnUpdate", function(_, elapsed)
-      alphaElapsed = alphaElapsed + (elapsed or 0)
-      if alphaElapsed < Theme.WINDOW_ALPHA_UPDATE_INTERVAL then
-        return
-      end
-      alphaElapsed = 0
-      refreshWindowAlpha()
-    end)
-    frame:SetScript("OnSizeChanged", function(_self, w, h)
-      LayoutBuilder.Relayout(layout, w, h)
-      local contentW = w - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
-      if composer and composer.relayout then
-        composer.relayout(contentW)
-      end
-      local contactsH = h - Theme.TOP_BAR_HEIGHT
-      if contactsController and contactsController.fillViewport then
-        contactsController.fillViewport(contactsH)
-      end
-      local threadH = contactsH - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
-      if conversation then
-        ConversationPane.Relayout(conversation, contentW, threadH)
-      end
-    end)
-    frame:SetScript("OnDragStart", function(self)
-      if self.IsMovable == nil or self:IsMovable() then
-        self:StartMoving()
-        trace("window drag start")
-      end
-    end)
-    frame:SetScript("OnDragStop", function(self)
-      self:StopMovingOrSizing()
-      local nextState = buildState(self)
-      trace("window drag stop", nextState.anchorPoint, nextState.x, nextState.y)
-      if options.onPositionChanged then
-        options.onPositionChanged(nextState)
-      end
-    end)
-  end
-
-  -- Resize grip scripts
-  if resizeGrip and resizeGrip.SetScript then
-    resizeGrip:SetScript("OnMouseDown", function(_self, button)
-      if button == "LeftButton" then
-        frame:StartSizing("BOTTOMRIGHT")
-        trace("window resize start")
-      end
-    end)
-    resizeGrip:SetScript("OnMouseUp", function(_self, button)
-      if button == "LeftButton" then
-        frame:StopMovingOrSizing()
-        local nextState = buildState(frame)
-        trace("window resize stop", nextState.width, nextState.height)
-        if options.onPositionChanged then
-          options.onPositionChanged(nextState)
-        end
-      end
-    end)
-  end
+  WindowScripts.WireFrame({
+    frame = frame,
+    resizeGrip = resizeGrip,
+  }, {
+    refreshWindowAlpha = refreshWindowAlpha,
+    layout = layout,
+    composer = composer,
+    contactsController = contactsController,
+    conversation = conversation,
+    buildState = buildState,
+    trace = trace,
+    onPositionChanged = options.onPositionChanged,
+    Theme = Theme,
+  })
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
