@@ -618,7 +618,7 @@ if type(_G.CreateFrame) == "function" then
       return
     end
 
-    if event == "BN_FRIEND_LIST_AVAILABLE" or event == "BN_FRIEND_INFO_CHANGED" then
+    if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
       if Bootstrap.runtime then
         local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
         local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)

@@ -8,7 +8,7 @@ return function()
     for _, name in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
       found[name] = true
     end
-    assert(found["BN_FRIEND_LIST_AVAILABLE"], "should include BN_FRIEND_LIST_AVAILABLE")
+    assert(found["BN_FRIEND_LIST_SIZE_CHANGED"], "should include BN_FRIEND_LIST_SIZE_CHANGED")
     assert(found["BN_FRIEND_INFO_CHANGED"], "should include BN_FRIEND_INFO_CHANGED")
     assert(found["PLAYER_ENTERING_WORLD"], "should include PLAYER_ENTERING_WORLD")
   end
