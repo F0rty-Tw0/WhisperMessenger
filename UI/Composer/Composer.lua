@@ -38,6 +38,11 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local button = factory.CreateFrame("Button", nil, pane)
   button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -inputX, inputY)
   button:SetSize(buttonW, buttonH)
+
+  local sendBg = button:CreateTexture(nil, "BACKGROUND")
+  sendBg:SetAllPoints(button)
+  button.sendBg = sendBg
+
   local buttonLabel = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
   buttonLabel:SetAllPoints(button)
   buttonLabel:SetText("Send")
@@ -76,6 +81,22 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
 
   local sendDisabled = selectedContact == nil
   button.disabled = sendDisabled
+
+  local sendBgColor = sendDisabled and Theme.COLORS.send_button_disabled or Theme.COLORS.send_button
+  applyColorTexture(sendBg, sendBgColor)
+
+  button:SetScript("OnEnter", function()
+    if not sendDisabled then
+      applyColorTexture(sendBg, Theme.COLORS.send_button_hover)
+    end
+  end)
+  button:SetScript("OnLeave", function()
+    if sendDisabled then
+      applyColorTexture(sendBg, Theme.COLORS.send_button_disabled)
+    else
+      applyColorTexture(sendBg, Theme.COLORS.send_button)
+    end
+  end)
 
   local function submitMessage()
     if sendDisabled then
@@ -134,6 +155,11 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
     setEnabled = function(enabled)
       sendDisabled = not enabled
       button.disabled = not enabled
+      if sendDisabled then
+        applyColorTexture(sendBg, Theme.COLORS.send_button_disabled)
+      else
+        applyColorTexture(sendBg, Theme.COLORS.send_button)
+      end
     end,
     relayout = function(parentW)
       local newInputW = parentW - 24 - buttonW - 8

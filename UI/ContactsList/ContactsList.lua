@@ -25,7 +25,14 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
 
     -- Update visual state for each row
     if row.bg then
-      local c = row.selected and Theme.COLORS.bg_contact_selected or Theme.COLORS.bg_secondary
+      local c
+      if row.selected then
+        c = Theme.COLORS.bg_contact_selected
+      elseif row.item and row.item.pinned then
+        c = Theme.COLORS.bg_contact_pinned
+      else
+        c = Theme.COLORS.bg_secondary
+      end
       applyColorTexture(row.bg, c)
     end
 

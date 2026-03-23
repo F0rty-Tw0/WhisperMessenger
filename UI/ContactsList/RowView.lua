@@ -65,7 +65,8 @@ local function bindRow(factory, parent, row, index, item, options)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
   end
-  applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
+  local rowBaseBg = item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
+  applyColorTexture(row.bg, rowBaseBg)
 
   -- Left accent bar (shown when selected)
   if row.accentBar == nil then
@@ -93,7 +94,7 @@ local function bindRow(factory, parent, row, index, item, options)
       if row.selected then
         applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
       else
-        applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
+        applyColorTexture(row.bg, rowBaseBg)
       end
       hideActions(row)
     end)
@@ -285,6 +286,11 @@ local function bindRow(factory, parent, row, index, item, options)
           applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
         end
         showActions(row)
+        if _G.GameTooltip and _G.GameTooltip.SetOwner then
+          _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+          _G.GameTooltip:SetText("Remove")
+          _G.GameTooltip:Show()
+        end
       end)
       row.removeButton:SetScript("OnLeave", function(self)
         applyVertexColor(self.icon, Theme.COLORS.action_icon)
@@ -293,9 +299,12 @@ local function bindRow(factory, parent, row, index, item, options)
           if row.selected then
             applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
           else
-            applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
+            applyColorTexture(row.bg, rowBaseBg)
           end
           hideActions(row)
+        end
+        if _G.GameTooltip and _G.GameTooltip.Hide then
+          _G.GameTooltip:Hide()
         end
       end)
       row.removeButton:SetScript("OnClick", function()
@@ -333,6 +342,12 @@ local function bindRow(factory, parent, row, index, item, options)
           applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
         end
         showActions(row)
+        if _G.GameTooltip and _G.GameTooltip.SetOwner then
+          _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+          local pinLabel = item.pinned and "Unpin" or "Pin to top"
+          _G.GameTooltip:SetText(pinLabel)
+          _G.GameTooltip:Show()
+        end
       end)
       row.pinButton:SetScript("OnLeave", function(self)
         local baseColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
@@ -341,9 +356,12 @@ local function bindRow(factory, parent, row, index, item, options)
           if row.selected then
             applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
           else
-            applyColorTexture(row.bg, Theme.COLORS.bg_secondary)
+            applyColorTexture(row.bg, rowBaseBg)
           end
           hideActions(row)
+        end
+        if _G.GameTooltip and _G.GameTooltip.Hide then
+          _G.GameTooltip:Hide()
         end
       end)
       row.pinButton:SetScript("OnClick", function()
