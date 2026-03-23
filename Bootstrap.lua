@@ -389,6 +389,13 @@ function Bootstrap.Initialize(factory, options)
 
         return nextState
       end,
+      storeConfig = runtime.store.config,
+      onSettingChanged = function(key, value)
+        runtime.store.config[key] = value
+        accountState.settings = accountState.settings or {}
+        accountState.settings[key] = value
+        trace("setting changed", key, tostring(value))
+      end,
     })
 
     if window.frame.Hide then

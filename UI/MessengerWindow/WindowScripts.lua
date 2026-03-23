@@ -93,7 +93,7 @@ function WindowScripts.WireButtons(refs, options)
   end
 
   if generalToggle and generalToggle.SetScript and optionsContentPane then
-    optionsContentPane:Hide()
+    optionsContentPane:Show()
     generalToggle:SetScript("OnClick", function()
       if optionsContentPane:IsShown() then
         optionsContentPane:Hide()

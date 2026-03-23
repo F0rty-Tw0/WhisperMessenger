@@ -47,20 +47,20 @@ return function()
       "test_general_toggle: expected generalToggle to have OnClick script"
     )
 
-    -- Content pane starts hidden
-    assert(optionsContentPane.shown == false, "test_general_toggle: optionsContentPane should start hidden")
+    -- Content pane starts shown (General settings open by default)
+    assert(optionsContentPane.shown == true, "test_general_toggle: optionsContentPane should start shown")
 
-    -- First click shows it
-    generalToggle.scripts.OnClick(generalToggle)
-    assert(
-      optionsContentPane.shown == true,
-      "test_general_toggle: optionsContentPane should be shown after first click"
-    )
-
-    -- Second click hides it
+    -- First click hides it
     generalToggle.scripts.OnClick(generalToggle)
     assert(
       optionsContentPane.shown == false,
+      "test_general_toggle: optionsContentPane should be hidden after first click"
+    )
+
+    -- Second click shows it again
+    generalToggle.scripts.OnClick(generalToggle)
+    assert(
+      optionsContentPane.shown == true,
       "test_general_toggle: optionsContentPane should be hidden after second click"
     )
 

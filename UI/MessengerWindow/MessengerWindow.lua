@@ -13,6 +13,7 @@ local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMesseng
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsController = ns.MessengerWindowContactsController
   or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
+local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
@@ -108,6 +109,20 @@ function MessengerWindow.Create(factory, options)
   local resetIconButton = layout.resetIconButton
   local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
+
+  -- General settings view (inside options content pane)
+  local storeConfig = options.storeConfig or {}
+  local generalSettings = GeneralSettings.Create(factory, optionsContentPane, {
+    maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
+    maxConversations = storeConfig.maxConversations or 200,
+    messageMaxAge = storeConfig.messageMaxAge or 86400,
+  }, {
+    onChange = function(key, value)
+      if options.onSettingChanged then
+        options.onSettingChanged(key, value)
+      end
+    end,
+  })
 
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
@@ -310,6 +325,7 @@ function MessengerWindow.Create(factory, options)
     optionsMenu = optionsMenu,
     optionsContentPane = optionsContentPane,
     generalToggle = generalToggle,
+    generalSettings = generalSettings,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
