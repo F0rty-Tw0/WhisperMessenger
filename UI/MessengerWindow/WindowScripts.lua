@@ -11,11 +11,12 @@ local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.Con
 
 local WindowScripts = {}
 
--- Wire close, options, reset-window, reset-icon, and clear-all-chats buttons.
+-- Wire close, options, reset-window, reset-icon, clear-all-chats, and
+-- general-toggle buttons.
 --
 -- refs:
 --   closeButton, optionsButton, resetWindowButton, resetIconButton,
---   clearAllChatsButton, optionsPanel
+--   clearAllChatsButton, optionsPanel, generalToggle, optionsContentPane
 --
 -- options:
 --   onClose, onResetWindowPosition, onResetIconPosition, onClearAllChats,
@@ -27,6 +28,8 @@ function WindowScripts.WireButtons(refs, options)
   local resetIconButton = refs.resetIconButton
   local clearAllChatsButton = refs.clearAllChatsButton
   local optionsPanel = refs.optionsPanel
+  local generalToggle = refs.generalToggle
+  local optionsContentPane = refs.optionsContentPane
 
   if closeButton and closeButton.SetScript then
     closeButton:SetScript("OnClick", function()
@@ -86,6 +89,17 @@ function WindowScripts.WireButtons(refs, options)
 
     clearAllChatsButton:SetScript("OnClick", function()
       _G.StaticPopup_Show(dialogName)
+    end)
+  end
+
+  if generalToggle and generalToggle.SetScript and optionsContentPane then
+    optionsContentPane:Hide()
+    generalToggle:SetScript("OnClick", function()
+      if optionsContentPane:IsShown() then
+        optionsContentPane:Hide()
+      else
+        optionsContentPane:Show()
+      end
     end)
   end
 end

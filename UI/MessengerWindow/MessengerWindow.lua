@@ -99,6 +99,9 @@ function MessengerWindow.Create(factory, options)
   local composerPane = layout.composerPane
   local composerDivider = layout.composerDivider
   local optionsPanel = layout.optionsPanel
+  local optionsMenu = layout.optionsMenu
+  local optionsContentPane = layout.optionsContentPane
+  local generalToggle = layout.generalToggle
   local optionsHeader = layout.optionsHeader
   local optionsHint = layout.optionsHint
   local resetWindowButton = layout.resetWindowButton
@@ -258,6 +261,8 @@ function MessengerWindow.Create(factory, options)
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
     optionsPanel = optionsPanel,
+    generalToggle = generalToggle,
+    optionsContentPane = optionsContentPane,
   }, {
     onClose = closeWindow,
     onResetWindowPosition = options.onResetWindowPosition,
@@ -302,6 +307,9 @@ function MessengerWindow.Create(factory, options)
     closeButton = closeButton,
     optionsButton = optionsButton,
     optionsPanel = optionsPanel,
+    optionsMenu = optionsMenu,
+    optionsContentPane = optionsContentPane,
+    generalToggle = generalToggle,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,

@@ -78,27 +78,54 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   composerDivider:SetSize(contentWidth, Theme.DIVIDER_THICKNESS)
   applyColorTexture(composerDivider, Theme.COLORS.divider)
 
+  -- Options overlay container (hides contacts + content when visible)
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
-  optionsPanel:SetPoint(
-    "TOPLEFT",
-    frame,
-    "TOPLEFT",
-    Theme.CONTENT_PADDING,
-    -(Theme.TOP_BAR_HEIGHT + Theme.CONTENT_PADDING)
-  )
-  optionsPanel:SetSize(
-    initialState.width - (Theme.CONTENT_PADDING * 2),
-    initialState.height - Theme.TOP_BAR_HEIGHT - (Theme.CONTENT_PADDING * 2)
-  )
+  optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
+  optionsPanel:SetSize(initialState.width, initialState.height - Theme.TOP_BAR_HEIGHT)
 
-  local optionsHeader = optionsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-  optionsHeader:SetPoint("TOPLEFT", optionsPanel, "TOPLEFT", 0, 0)
+  -- Left sidebar menu
+  local optionsMenu = factory.CreateFrame("Frame", nil, optionsPanel)
+  optionsMenu:SetPoint("TOPLEFT", optionsPanel, "TOPLEFT", 0, 0)
+  optionsMenu:SetSize(Theme.CONTACTS_WIDTH, initialState.height - Theme.TOP_BAR_HEIGHT)
+
+  local optionsMenuBg = optionsMenu:CreateTexture(nil, "BACKGROUND")
+  optionsMenuBg:SetAllPoints(optionsMenu)
+  applyColorTexture(optionsMenuBg, Theme.COLORS.bg_secondary)
+
+  local menuPadding = Theme.CONTENT_PADDING
+
+  local optionsHeader = optionsMenu:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  optionsHeader:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
   optionsHeader:SetText("Options")
 
-  local optionsHint = optionsPanel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  optionsHint:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -12)
-  optionsHint:SetText("Reset positions or clear all conversation history.")
+  -- Divider between menu and content
+  local optionsMenuDivider = optionsPanel:CreateTexture(nil, "BORDER")
+  optionsMenuDivider:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", 0, 0)
+  optionsMenuDivider:SetSize(Theme.DIVIDER_THICKNESS, initialState.height - Theme.TOP_BAR_HEIGHT)
+  applyColorTexture(optionsMenuDivider, Theme.COLORS.divider)
 
+  -- Right content pane for settings views
+  local optionsContentWidth = initialState.width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
+  local optionsContentPane = factory.CreateFrame("Frame", nil, optionsPanel)
+  optionsContentPane:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
+  optionsContentPane:SetSize(optionsContentWidth, initialState.height - Theme.TOP_BAR_HEIGHT)
+
+  local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")
+  optionsContentBg:SetAllPoints(optionsContentPane)
+  applyColorTexture(optionsContentBg, Theme.COLORS.bg_primary)
+
+  -- "General" toggle at top of menu (below header)
+  local toggleColors = {
+    bg = Theme.COLORS.option_button_bg,
+    bgHover = Theme.COLORS.option_button_hover,
+    text = Theme.COLORS.option_button_text,
+    textHover = Theme.COLORS.option_button_text_hover,
+  }
+  local toggleLayout = { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.CONTACTS_WIDTH - (menuPadding * 2) }
+  local generalToggle = createOptionButton(factory, optionsMenu, "General", toggleColors, toggleLayout)
+  generalToggle:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
+
+  -- Action buttons anchored to bottom of menu
   local btnH = Theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnSpacing = Theme.LAYOUT.OPTION_BUTTON_SPACING
   local normalColors = {
@@ -113,16 +140,20 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     text = Theme.COLORS.option_button_text,
     textHover = Theme.COLORS.option_button_text_hover,
   }
-  local btnLayout = { height = btnH, width = 200 }
+  local btnLayout = { height = btnH, width = Theme.CONTACTS_WIDTH - (menuPadding * 2) }
 
-  local resetWindowButton = createOptionButton(factory, optionsPanel, "Reset Window Position", normalColors, btnLayout)
-  resetWindowButton:SetPoint("TOPLEFT", optionsHint, "BOTTOMLEFT", 0, -16)
+  local clearAllChatsButton = createOptionButton(factory, optionsMenu, "Clear All Chats", dangerColors, btnLayout)
+  clearAllChatsButton:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMLEFT", menuPadding, menuPadding)
 
-  local resetIconButton = createOptionButton(factory, optionsPanel, "Reset Icon Position", normalColors, btnLayout)
-  resetIconButton:SetPoint("TOPLEFT", resetWindowButton, "BOTTOMLEFT", 0, -btnSpacing)
+  local resetIconButton = createOptionButton(factory, optionsMenu, "Reset Icon Position", normalColors, btnLayout)
+  resetIconButton:SetPoint("BOTTOMLEFT", clearAllChatsButton, "TOPLEFT", 0, btnSpacing)
 
-  local clearAllChatsButton = createOptionButton(factory, optionsPanel, "Clear All Chats", dangerColors, btnLayout)
-  clearAllChatsButton:SetPoint("TOPLEFT", resetIconButton, "BOTTOMLEFT", 0, -btnSpacing)
+  local resetWindowButton = createOptionButton(factory, optionsMenu, "Reset Window Position", normalColors, btnLayout)
+  resetWindowButton:SetPoint("BOTTOMLEFT", resetIconButton, "TOPLEFT", 0, btnSpacing)
+
+  local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  optionsHint:SetPoint("BOTTOMLEFT", resetWindowButton, "TOPLEFT", 0, menuPadding)
+  optionsHint:SetText("Reset positions or clear all conversation history.")
 
   return {
     contactsPane = contactsPane,
@@ -133,6 +164,10 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     composerPane = composerPane,
     composerDivider = composerDivider,
     optionsPanel = optionsPanel,
+    optionsMenu = optionsMenu,
+    optionsMenuDivider = optionsMenuDivider,
+    optionsContentPane = optionsContentPane,
+    generalToggle = generalToggle,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
