@@ -51,6 +51,7 @@ UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/Layout.lua
 UI/ChatBubble/ChatBubble.lua
 UI/ContactsList/DataBuilder.lua
+UI/ContactsList/DragReorder.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/StatusLine.lua

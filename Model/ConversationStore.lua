@@ -164,6 +164,23 @@ function Store.Remove(state, key)
   state.conversations[key] = nil
 end
 
+function Store.SetSortOrder(state, key, order)
+  local conversation = state.conversations[key]
+  if conversation then
+    conversation.sortOrder = order
+  end
+end
+
+function Store.SwapOrder(state, keyA, keyB)
+  local a = state.conversations[keyA]
+  local b = state.conversations[keyB]
+  if a and b then
+    local tmp = a.sortOrder or 0
+    a.sortOrder = b.sortOrder or 0
+    b.sortOrder = tmp
+  end
+end
+
 ns.ConversationStore = Store
 
 return Store

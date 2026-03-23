@@ -124,6 +124,11 @@ function MessengerWindow.Create(factory, options)
         options.onRemove(item)
       end
     end,
+    onReorder = function(orders)
+      if options.onReorder then
+        options.onReorder(orders)
+      end
+    end,
   })
 
   -- Expose contacts in the same shape as before

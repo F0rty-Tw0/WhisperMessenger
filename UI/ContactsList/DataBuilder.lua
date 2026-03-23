@@ -12,6 +12,23 @@ local function compareItems(left, right)
     return leftPinned
   end
 
+  -- sortOrder only applies within the pinned group
+  if leftPinned and rightPinned then
+    local leftOrder = left.sortOrder or 0
+    local rightOrder = right.sortOrder or 0
+    if leftOrder ~= 0 or rightOrder ~= 0 then
+      if leftOrder ~= rightOrder then
+        if leftOrder == 0 then
+          return false
+        end
+        if rightOrder == 0 then
+          return true
+        end
+        return leftOrder < rightOrder
+      end
+    end
+  end
+
   if left.lastActivityAt ~= right.lastActivityAt then
     return left.lastActivityAt > right.lastActivityAt
   end
@@ -37,6 +54,7 @@ local function buildItem(conversationKey, conversation)
     raceTag = conversation.raceTag,
     factionName = conversation.factionName,
     pinned = conversation.pinned or false,
+    sortOrder = conversation.sortOrder or 0,
   }
 end
 

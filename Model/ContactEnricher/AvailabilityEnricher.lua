@@ -144,8 +144,8 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
             end
             -- BNet whispers are always cross-faction; no XFaction status needed
           end
-        else
-          -- BNet API says offline; fall back to guild/community presence
+        elseif accountInfo.isOnline == false or (gameInfo and gameInfo.isOnline == false) then
+          -- BNet API explicitly says offline; fall back to guild/community presence
           if item.guid and type(runtime.getGuildOrCommunityPresence) == "function" then
             local presence = runtime.getGuildOrCommunityPresence(item.guid)
             if presence == "online" then
@@ -158,6 +158,8 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
             item.availability = Availability.FromStatus("Offline")
           end
         end
+        -- When isOnline is nil (unknown), skip — don't override to Offline.
+        -- The API may not have loaded yet, or the friend is on the desktop app.
       end
     end
   end

@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyClassColor = UIHelpers.applyClassColor
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
 local createCircularIcon = UIHelpers.createCircularIcon
 
@@ -28,6 +29,10 @@ local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
 
 local function showActions(row)
+  local hasUnread = row.item and (row.item.unreadCount or 0) > 0
+  if hasUnread then
+    return
+  end
   if row.pinButton then
     row.pinButton:Show()
   end
@@ -98,6 +103,32 @@ local function bindRow(factory, parent, row, index, item, options)
         options.onSelect(row.item)
       end
     end)
+  end
+
+  -- Drag-and-drop reordering (pinned contacts only)
+  row.rowIndex = index
+  if item.pinned then
+    if row.RegisterForDrag then
+      row:RegisterForDrag("LeftButton")
+    end
+    if row.SetScript then
+      row:SetScript("OnDragStart", function()
+        if row.item and options.onDragStart then
+          options.onDragStart(row, row.rowIndex)
+        end
+      end)
+      row:SetScript("OnDragStop", function()
+        if row.item and options.onDragStop then
+          options.onDragStop(row, row.rowIndex)
+        end
+      end)
+    end
+  else
+    row.dragButtons = nil
+    if row.SetScript then
+      row:SetScript("OnDragStart", nil)
+      row:SetScript("OnDragStop", nil)
+    end
   end
 
   -- Class icon (40x40, left side)
@@ -198,7 +229,7 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.timeLabel == nil then
     row.timeLabel = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_time)
     row.timeLabel:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, 0)
-    row.timeLabel:SetPoint("TOP", row.title, "TOP", 0, 0)
+    row.timeLabel:SetPoint("TOP", row.title, "TOP", 0, 4)
     setTextColor(row.timeLabel, Theme.COLORS.text_secondary)
   end
   if ns.TimeFormat and ns.TimeFormat.ContactPreview then
@@ -228,19 +259,27 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.removeButton == nil then
     row.removeButton = factory.CreateFrame("Button", nil, row)
     row.removeButton:SetSize(ACTION_SIZE, ACTION_SIZE)
-    row.removeButton:SetPoint("RIGHT", row, "RIGHT", -Theme.LAYOUT.CONTACT_PADDING, 0)
+    row.removeButton:SetPoint(
+      "BOTTOMRIGHT",
+      row,
+      "BOTTOMRIGHT",
+      -Theme.LAYOUT.CONTACT_PADDING,
+      4 + ACTION_SIZE + ACTION_SPACING
+    )
     if row.removeButton.EnableMouse then
       row.removeButton:EnableMouse(true)
     end
-    row.removeButton.icon = row.removeButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-    row.removeButton.icon:SetAllPoints()
-    row.removeButton.icon:SetJustifyH("CENTER")
-    row.removeButton.icon:SetJustifyV("MIDDLE")
-    row.removeButton.icon:SetText("x")
-    setTextColor(row.removeButton.icon, Theme.COLORS.action_icon)
+    row.removeButton.icon = row.removeButton:CreateTexture(nil, "ARTWORK")
+    row.removeButton.icon:SetSize(ACTION_SIZE - 2, ACTION_SIZE - 2)
+    row.removeButton.icon:SetPoint("CENTER", row.removeButton, "CENTER", 0, 0)
+    row.removeButton.icon:SetTexture(Theme.TEXTURES.remove_icon)
+    if row.removeButton.icon.SetDesaturated then
+      row.removeButton.icon:SetDesaturated(true)
+    end
+    applyVertexColor(row.removeButton.icon, Theme.COLORS.action_icon)
     if row.removeButton.SetScript then
       row.removeButton:SetScript("OnEnter", function(self)
-        setTextColor(self.icon, Theme.COLORS.action_remove_hover)
+        applyVertexColor(self.icon, Theme.COLORS.action_remove_hover)
         -- Keep row hover state while over child button
         if not row.selected then
           applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
@@ -248,7 +287,7 @@ local function bindRow(factory, parent, row, index, item, options)
         showActions(row)
       end)
       row.removeButton:SetScript("OnLeave", function(self)
-        setTextColor(self.icon, Theme.COLORS.action_icon)
+        applyVertexColor(self.icon, Theme.COLORS.action_icon)
         -- If mouse left both button and row, reset row state
         if not (row.IsMouseOver and row:IsMouseOver()) then
           if row.selected then
@@ -277,18 +316,19 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.pinButton == nil then
     row.pinButton = factory.CreateFrame("Button", nil, row)
     row.pinButton:SetSize(ACTION_SIZE, ACTION_SIZE)
-    row.pinButton:SetPoint("RIGHT", row.removeButton, "LEFT", -ACTION_SPACING, 0)
+    row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, -ACTION_SPACING)
     if row.pinButton.EnableMouse then
       row.pinButton:EnableMouse(true)
     end
-    row.pinButton.icon = row.pinButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-    row.pinButton.icon:SetAllPoints()
-    row.pinButton.icon:SetJustifyH("CENTER")
-    row.pinButton.icon:SetJustifyV("MIDDLE")
+    row.pinButton.icon = row.pinButton:CreateTexture(nil, "ARTWORK")
+    row.pinButton.icon:SetSize(ACTION_SIZE - 2, ACTION_SIZE - 2)
+    row.pinButton.icon:SetPoint("CENTER", row.pinButton, "CENTER", 0, 0)
+    if row.pinButton.icon.SetDesaturated then
+      row.pinButton.icon:SetDesaturated(true)
+    end
     if row.pinButton.SetScript then
       row.pinButton:SetScript("OnEnter", function(self)
-        local hoverColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon_hover
-        setTextColor(self.icon, hoverColor)
+        applyVertexColor(self.icon, Theme.COLORS.action_icon_hover)
         if not row.selected then
           applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
         end
@@ -296,7 +336,7 @@ local function bindRow(factory, parent, row, index, item, options)
       end)
       row.pinButton:SetScript("OnLeave", function(self)
         local baseColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
-        setTextColor(self.icon, baseColor)
+        applyVertexColor(self.icon, baseColor)
         if not (row.IsMouseOver and row:IsMouseOver()) then
           if row.selected then
             applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
@@ -321,13 +361,18 @@ local function bindRow(factory, parent, row, index, item, options)
     end
   end
 
-  -- Update pin icon appearance based on pinned state
-  row.pinButton.icon:SetText(item.pinned and "|" or "|")
+  -- Update pin icon appearance and position based on pinned state
+  local pinTex = item.pinned and Theme.TEXTURES.pin_down_icon or Theme.TEXTURES.pin_up_icon
+  row.pinButton.icon:SetTexture(pinTex)
   local pinColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
-  setTextColor(row.pinButton.icon, pinColor)
+  applyVertexColor(row.pinButton.icon, pinColor)
+  row.pinButton:ClearAllPoints()
+  local pinYOffset = item.pinned and 0 or 6
+  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, -ACTION_SPACING + pinYOffset)
 
-  -- Show/hide action buttons: pinned items always show pin; others hide by default
-  if item.pinned then
+  -- Show/hide action buttons: hide when unread badge is visible
+  local hasUnread = (item.unreadCount or 0) > 0
+  if not hasUnread and item.pinned then
     row.pinButton:Show()
   else
     row.pinButton:Hide()

@@ -8,6 +8,9 @@ local Textures = {
   faction_alliance = "Interface\\ICONS\\PVPCurrency-Honor-Alliance",
   faction_horde = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
   bnet_icon = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
+  pin_up_icon = "Interface\\BUTTONS\\Arrow-Up-Up",
+  pin_down_icon = "Interface\\BUTTONS\\Arrow-Down-Up",
+  remove_icon = "Interface\\Buttons\\UI-StopButton",
 }
 
 --- Map classTag to atlas icon path

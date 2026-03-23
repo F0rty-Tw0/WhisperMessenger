@@ -81,4 +81,104 @@ return function()
     local items = DataBuilder.BuildItems(conversations)
     assert(items[1].pinned == true, "item should include pinned=true")
   end
+
+  -- test_sort_order_overrides_activity_within_pinned_group
+  do
+    local conversations = {
+      ["me::WOW::p1"] = {
+        displayName = "P1",
+        lastPreview = "a",
+        unreadCount = 0,
+        lastActivityAt = 100,
+        channel = "WOW",
+        pinned = true,
+        sortOrder = 2,
+      },
+      ["me::WOW::p2"] = {
+        displayName = "P2",
+        lastPreview = "b",
+        unreadCount = 0,
+        lastActivityAt = 200,
+        channel = "WOW",
+        pinned = true,
+        sortOrder = 1,
+      },
+    }
+
+    local items = DataBuilder.BuildItems(conversations)
+    -- P2 has sortOrder=1, P1 has sortOrder=2 → P2 first
+    assert(items[1].displayName == "P2", "lower sortOrder first in pinned group, got: " .. items[1].displayName)
+    assert(items[2].displayName == "P1", "higher sortOrder second in pinned group, got: " .. items[2].displayName)
+  end
+
+  -- test_sort_order_ignored_for_unpinned_contacts
+  do
+    local conversations = {
+      ["me::WOW::u1"] = {
+        displayName = "U1",
+        lastPreview = "a",
+        unreadCount = 0,
+        lastActivityAt = 300,
+        channel = "WOW",
+        sortOrder = 2,
+      },
+      ["me::WOW::u2"] = {
+        displayName = "U2",
+        lastPreview = "b",
+        unreadCount = 0,
+        lastActivityAt = 100,
+        channel = "WOW",
+        sortOrder = 1,
+      },
+    }
+
+    local items = DataBuilder.BuildItems(conversations)
+    -- Unpinned ignores sortOrder, uses lastActivityAt desc
+    assert(items[1].displayName == "U1", "unpinned should sort by activity: U1 first, got: " .. items[1].displayName)
+    assert(items[2].displayName == "U2", "unpinned should sort by activity: U2 second, got: " .. items[2].displayName)
+  end
+
+  -- test_zero_sort_order_falls_back_to_activity
+  do
+    local conversations = {
+      ["me::WOW::z1"] = {
+        displayName = "Z1",
+        lastPreview = "a",
+        unreadCount = 0,
+        lastActivityAt = 100,
+        channel = "WOW",
+        sortOrder = 0,
+      },
+      ["me::WOW::z2"] = {
+        displayName = "Z2",
+        lastPreview = "b",
+        unreadCount = 0,
+        lastActivityAt = 200,
+        channel = "WOW",
+        sortOrder = 0,
+      },
+    }
+
+    local items = DataBuilder.BuildItems(conversations)
+    -- Both sortOrder=0, falls back to lastActivityAt desc
+    assert(items[1].displayName == "Z2", "activity fallback: Z2 first, got: " .. items[1].displayName)
+    assert(items[2].displayName == "Z1", "activity fallback: Z1 second, got: " .. items[2].displayName)
+  end
+
+  -- test_item_includes_sort_order
+  do
+    local conversations = {
+      ["me::WOW::so1"] = {
+        displayName = "SO1",
+        lastPreview = "x",
+        unreadCount = 0,
+        lastActivityAt = 10,
+        channel = "WOW",
+        sortOrder = 7,
+      },
+    }
+
+    local items = DataBuilder.BuildItems(conversations)
+    assert(items[1].sortOrder == 7, "item should include sortOrder=7, got: " .. tostring(items[1].sortOrder))
+  end
 end

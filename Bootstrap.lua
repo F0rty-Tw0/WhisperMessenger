@@ -369,6 +369,15 @@ function Bootstrap.Initialize(factory, options)
         end
         refreshWindow()
       end,
+      onReorder = function(orders)
+        local Store = loadModule("WhisperMessenger.Model.ConversationStore", "ConversationStore")
+        trace("onReorder", "keys=" .. tostring(#orders or 0))
+        for key, order in pairs(orders) do
+          Store.SetSortOrder(runtime.store, key, order)
+          trace("  sortOrder", "key=" .. tostring(key), "order=" .. tostring(order))
+        end
+        refreshWindow()
+      end,
       onResetIconPosition = function()
         local nextState = TableUtils.copyState(defaultCharacterState.icon)
         characterState.icon = nextState
