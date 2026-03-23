@@ -147,4 +147,69 @@ return function()
       "message battleTag should be set from accountInfo, got: " .. tostring(msg.battleTag)
     )
   end
+
+  -- Outgoing whisper clears unread count (replying means user saw the conversation)
+  do
+    local state = makeState()
+
+    -- First, receive an incoming whisper to create unread
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+      text = "hey there",
+      playerName = "Thrall-Draenor",
+      lineID = 301,
+      guid = "Player-1403-0ABCDEF0",
+    })
+
+    local key = "wow::WOW::thrall-draenor"
+    local conv = state.store.conversations[key]
+    assert(conv ~= nil, "conversation should exist after incoming whisper")
+    assert(conv.unreadCount == 1, "should have 1 unread after incoming whisper, got: " .. tostring(conv.unreadCount))
+
+    -- Now reply via WoW chat
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", {
+      text = "hey!",
+      playerName = "Thrall-Draenor",
+      lineID = 302,
+      guid = "Player-1403-0ABCDEF0",
+    })
+
+    assert(conv.unreadCount == 0, "replying should clear unread count, got: " .. tostring(conv.unreadCount))
+  end
+
+  -- BNet outgoing whisper also clears unread count
+  do
+    local state = makeState()
+
+    Router.HandleEvent(state, "CHAT_MSG_BN_WHISPER", {
+      text = "hello",
+      playerName = "Friend",
+      lineID = 303,
+      guid = nil,
+      channel = "BN",
+      bnetAccountID = 50,
+      accountInfo = { battleTag = "Friend#9999" },
+    })
+
+    local convKey = nil
+    for k, _ in pairs(state.store.conversations) do
+      if k:find("friend#9999") then
+        convKey = k
+      end
+    end
+    assert(convKey ~= nil, "BNet conversation should exist")
+    local conv = state.store.conversations[convKey]
+    assert(conv.unreadCount == 1, "should have 1 unread after BNet incoming")
+
+    Router.HandleEvent(state, "CHAT_MSG_BN_WHISPER_INFORM", {
+      text = "hi back",
+      playerName = "Friend",
+      lineID = 304,
+      guid = nil,
+      channel = "BN",
+      bnetAccountID = 50,
+      accountInfo = { battleTag = "Friend#9999" },
+    })
+
+    assert(conv.unreadCount == 0, "BNet reply should clear unread count, got: " .. tostring(conv.unreadCount))
+  end
 end

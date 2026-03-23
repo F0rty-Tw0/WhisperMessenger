@@ -120,6 +120,8 @@ local function handleUnlockedEvent(state, eventName, payload)
         conversationKey,
         buildMessage(eventName, payload, contact, "out", "user", sentAt)
       )
+      -- Replying means the user saw the conversation; clear unread notification
+      Store.MarkRead(state.store, conversationKey)
       -- Our whisper was delivered, so the target is reachable
       local guid = payload.guid or (contact and contact.guid or nil)
       if guid then
