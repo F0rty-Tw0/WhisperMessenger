@@ -32,7 +32,10 @@ return function()
   })
 
   assert(bnetContact.channel == "BN")
-  assert(bnetContact.contactKey == "BN::99")
+  assert(
+    bnetContact.contactKey == "BN::jaina#1234",
+    "expected battleTag-based key, got " .. tostring(bnetContact.contactKey)
+  )
   assert(bnetContact.displayName == "Jaina#1234")
   assert(bnetContact.bnetAccountID == 99)
   assert(bnetContact.gameAccountName == "Jaina-Proudmoore")
@@ -40,4 +43,26 @@ return function()
   assert(bnetContact.className == "Mage")
   assert(bnetContact.raceName == "Human")
   assert(bnetContact.factionName == "Alliance")
+
+  -- BuildConversationKey with battleTag-based contactKey produces stable bnet key
+  local convKey = Identity.BuildConversationKey("me-area52", bnetContact.contactKey)
+  assert(convKey == "bnet::BN::jaina#1234", "expected bnet conversation key, got " .. tostring(convKey))
+
+  -- FromBattleNet without accountInfo falls back to numeric bnetAccountID
+  local fallbackContact = Identity.FromBattleNet(11, nil)
+  assert(
+    fallbackContact.contactKey == "BN::11",
+    "expected numeric fallback key, got " .. tostring(fallbackContact.contactKey)
+  )
+  assert(
+    fallbackContact.canonicalName == "11",
+    "expected numeric fallback canonicalName, got " .. tostring(fallbackContact.canonicalName)
+  )
+
+  -- FromBattleNet with accountInfo missing battleTag also falls back to numeric
+  local noBattleTagContact = Identity.FromBattleNet(22, { accountName = "someone" })
+  assert(
+    noBattleTagContact.contactKey == "BN::22",
+    "expected numeric fallback when no battleTag, got " .. tostring(noBattleTagContact.contactKey)
+  )
 end

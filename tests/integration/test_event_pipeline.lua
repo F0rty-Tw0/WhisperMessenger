@@ -83,7 +83,7 @@ return function()
     },
   })
 
-  local bnConv = state.store.conversations["bnet::BN::42"]
+  local bnConv = state.store.conversations["bnet::BN::jaina#1234"]
   assert(bnConv ~= nil, "expected BNet conversation to be created")
   assert(bnConv.className == "Mage", "expected BNet conversation className")
   assert(bnConv.classTag == "MAGE", "expected BNet conversation classTag from playerInfo")

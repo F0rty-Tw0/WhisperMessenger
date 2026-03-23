@@ -63,10 +63,11 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
   local gameAccountInfo = accountInfo and accountInfo.gameAccountInfo or nil
   playerInfo = playerInfo or {}
 
+  local stableKey = (accountInfo and accountInfo.battleTag) or tostring(bnetAccountID)
   return {
     channel = "BN",
-    contactKey = "BN::" .. tostring(bnetAccountID),
-    canonicalName = tostring(bnetAccountID),
+    contactKey = "BN::" .. normalizeName(stableKey),
+    canonicalName = normalizeName(stableKey),
     displayName = (accountInfo and (accountInfo.battleTag or accountInfo.accountName)) or gameAccountName or tostring(
       bnetAccountID
     ),

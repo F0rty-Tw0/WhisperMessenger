@@ -28,7 +28,30 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
 
   -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
-    return runtime.availabilityByGUID[conversation.guid]
+    local cached = runtime.availabilityByGUID[conversation.guid]
+    if cached.status == "WrongFaction" then
+      local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+      if AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction) then
+        -- Opposite faction: check guild/community presence
+        if type(runtime.getGuildOrCommunityPresence) == "function" then
+          local presence = runtime.getGuildOrCommunityPresence(conversation.guid)
+          if presence == "online" then
+            return Availability.FromStatus("XFaction")
+          end
+        end
+        return cached
+      else
+        -- Same faction or unknown: WrongFaction means offline unless guild/community says online
+        if type(runtime.getGuildOrCommunityPresence) == "function" then
+          local presence = runtime.getGuildOrCommunityPresence(conversation.guid)
+          if presence == "online" then
+            return Availability.FromStatus("CanWhisper")
+          end
+        end
+        return Availability.FromStatus("Offline")
+      end
+    end
+    return cached
   end
 
   return nil
@@ -62,6 +85,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
       channel = conversation.channel or "WOW",
       guid = conversation.guid,
       bnetAccountID = conversation.bnetAccountID,
+      battleTag = conversation.battleTag,
       gameAccountName = conversation.gameAccountName,
       className = conversation.className,
       classTag = conversation.classTag,
@@ -73,8 +97,12 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
 
   -- Enrich selected contact with live BNet metadata for display
   if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
-    local accountInfo =
-      BNetResolver.ResolveAccountInfo(runtime.bnetApi, selectedContact.bnetAccountID, selectedContact.guid)
+    local accountInfo = BNetResolver.ResolveAccountInfo(
+      runtime.bnetApi,
+      selectedContact.bnetAccountID,
+      selectedContact.guid,
+      selectedContact.battleTag or selectedContact.displayName
+    )
     if accountInfo then
       local gameInfo = accountInfo.gameAccountInfo
       if gameInfo then

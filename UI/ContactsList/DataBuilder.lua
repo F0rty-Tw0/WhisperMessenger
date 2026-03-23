@@ -23,6 +23,7 @@ local function buildItem(conversationKey, conversation)
     channel = conversation.channel or "WOW",
     guid = conversation.guid,
     bnetAccountID = conversation.bnetAccountID,
+    battleTag = conversation.battleTag,
     gameAccountName = conversation.gameAccountName,
     className = conversation.className,
     classTag = conversation.classTag,

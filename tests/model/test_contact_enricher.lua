@@ -118,6 +118,69 @@ return function()
     assert(result == nil, "should return nil when no status available")
   end
 
+  -- BuildConversationStatus: corrects WrongFaction to Offline for same-faction WoW contact
+  do
+    local runtime = makeRuntime({
+      availabilityByGUID = { ["guid-sf"] = { status = "WrongFaction", canWhisper = false } },
+      localFaction = "Horde",
+    })
+    local conversation = { guid = "guid-sf", factionName = "Horde", channel = "WOW" }
+    local result = ContactEnricher.BuildConversationStatus(runtime, "key-sf", conversation)
+    assert(result ~= nil, "same-faction WrongFaction should return a status")
+    assert(
+      result.status == "Offline",
+      "same-faction WrongFaction should be corrected to Offline, got: " .. tostring(result.status)
+    )
+  end
+
+  -- BuildConversationStatus: corrects WrongFaction to CanWhisper for same-faction contact with guild presence
+  do
+    local runtime = makeRuntime({
+      availabilityByGUID = { ["guid-gp"] = { status = "WrongFaction", canWhisper = false } },
+      localFaction = "Horde",
+      getGuildOrCommunityPresence = function(_guid)
+        return "online"
+      end,
+    })
+    local conversation = { guid = "guid-gp", factionName = "Horde", channel = "WOW" }
+    local result = ContactEnricher.BuildConversationStatus(runtime, "key-gp", conversation)
+    assert(result ~= nil, "same-faction WrongFaction+guild online should return a status")
+    assert(
+      result.status == "CanWhisper",
+      "same-faction WrongFaction+guild online should be CanWhisper, got: " .. tostring(result.status)
+    )
+  end
+
+  -- BuildConversationStatus: opposite-faction WrongFaction with guild presence returns XFaction
+  do
+    local runtime = makeRuntime({
+      availabilityByGUID = { ["guid-xf"] = { status = "WrongFaction", canWhisper = false } },
+      localFaction = "Alliance",
+      getGuildOrCommunityPresence = function(_guid)
+        return "online"
+      end,
+    })
+    local conversation = { guid = "guid-xf", factionName = "Horde", channel = "WOW" }
+    local result = ContactEnricher.BuildConversationStatus(runtime, "key-xf", conversation)
+    assert(result ~= nil, "opposite-faction WrongFaction+guild should return a status")
+    assert(
+      result.status == "XFaction",
+      "opposite-faction WrongFaction+guild online should be XFaction, got: " .. tostring(result.status)
+    )
+  end
+
+  -- BuildConversationStatus: non-WrongFaction status passes through unchanged
+  do
+    local avail = { status = "CanWhisper", canWhisper = true }
+    local runtime = makeRuntime({
+      availabilityByGUID = { ["guid-ok"] = avail },
+      localFaction = "Horde",
+    })
+    local conversation = { guid = "guid-ok", factionName = "Horde", channel = "WOW" }
+    local result = ContactEnricher.BuildConversationStatus(runtime, "key-ok", conversation)
+    assert(result == avail, "non-WrongFaction status should pass through unchanged")
+  end
+
   -- EnrichContactsAvailability: BNet contact online via top-level isOnline shows as online
   do
     local runtime = makeRuntime({
@@ -373,7 +436,7 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: BNet contact opposite faction with CanWhisper becomes XFaction
+  -- EnrichContactsAvailability: BNet contact opposite faction stays CanWhisper (BNet is cross-faction)
   do
     local runtime = makeRuntime({
       localFaction = "Horde",
@@ -397,10 +460,10 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet x-faction contact should have availability")
     assert(
-      contacts[1].availability.status == "XFaction",
-      "BNet opposite faction should be XFaction, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "CanWhisper",
+      "BNet opposite faction should be CanWhisper (not XFaction), got: " .. tostring(contacts[1].availability.status)
     )
-    assert(contacts[1].availability.canWhisper == true, "BNet XFaction should be whisperable")
+    assert(contacts[1].availability.canWhisper == true, "BNet opposite faction should be whisperable")
   end
 
   -- EnrichContactsAvailability: WrongFaction online guild member becomes XFaction
@@ -632,7 +695,7 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: BNet contact offline via API but guild online becomes XFaction
+  -- EnrichContactsAvailability: BNet contact offline via API but guild online becomes CanWhisper
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -662,8 +725,9 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet offline+guild online should have availability")
     assert(
-      contacts[1].availability.status == "XFaction",
-      "BNet offline via API but guild online should be XFaction, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "CanWhisper",
+      "BNet offline via API but guild online should be CanWhisper (BNet is cross-faction), got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -869,10 +933,13 @@ return function()
     )
   end
 
-  -- ShouldRequestAvailability: returns false when cached as online
+  -- ShouldRequestAvailability: always re-requests to keep statuses fresh
   do
     local cached = { status = "CanWhisper", canWhisper = true }
-    assert(ContactEnricher.ShouldRequestAvailability(cached) == false, "should not re-request when already online")
+    assert(
+      ContactEnricher.ShouldRequestAvailability(cached) == true,
+      "should always re-request to detect offline transitions"
+    )
   end
 
   -- BuildWindowSelectionState: no active conversation returns only contacts

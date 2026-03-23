@@ -297,6 +297,161 @@ return function()
     assert(result.gameAccountInfo.characterName == "Stormdream", "same-person ByGUID should merge gameAccountInfo")
   end
 
+  -- ResolveAccountInfo detects stale bnetAccountID via expectedBattleTag and scans by battleTag
+  do
+    local staleApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Mentis#2390" }
+      end,
+      GetNumFriends = function()
+        return 3
+      end,
+      GetFriendAccountInfo = function(index)
+        if index == 1 then
+          return { bnetAccountID = 5, battleTag = "Alpha#1111", isOnline = true }
+        elseif index == 2 then
+          return { bnetAccountID = 22, battleTag = "Nergrom#2503", isOnline = true }
+        elseif index == 3 then
+          return { bnetAccountID = 11, battleTag = "Mentis#2390", isOnline = true }
+        end
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(staleApi, 11, nil, "Nergrom#2503")
+    assert(result ~= nil, "stale ID with battleTag scan should find correct friend")
+    assert(
+      result.battleTag == "Nergrom#2503",
+      "stale ID should resolve to correct person by battleTag, got: " .. tostring(result.battleTag)
+    )
+    assert(result.isOnline == true, "stale ID should return correct person's online status")
+  end
+
+  -- ResolveAccountInfo with matching expectedBattleTag does not trigger stale detection
+  do
+    local matchingApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = true, battleTag = "Nergrom#2503" }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(matchingApi, 11, nil, "Nergrom#2503")
+    assert(result ~= nil, "matching battleTag should return normally")
+    assert(result.battleTag == "Nergrom#2503", "matching battleTag should return same data")
+    assert(result.isOnline == true, "matching battleTag should preserve isOnline")
+  end
+
+  -- ResolveAccountInfo without expectedBattleTag does not trigger stale detection (backward compat)
+  do
+    local noExpectedApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Mentis#2390" }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 11, isOnline = nil }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(noExpectedApi, 11, nil, nil)
+    assert(result ~= nil, "no expectedBattleTag should still work")
+    assert(result.battleTag == "Mentis#2390", "no expectedBattleTag should return ID-based result")
+  end
+
+  -- ResolveAccountInfo stale ID with friend not found falls through gracefully
+  do
+    local staleNotFoundApi = {
+      GetAccountInfoByID = function(_id)
+        return { isOnline = nil, battleTag = "Mentis#2390" }
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 11, battleTag = "Mentis#2390", isOnline = true }
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(staleNotFoundApi, 11, nil, "Nergrom#2503")
+    -- Nergrom not found in friend list, and no GUID — should return nil
+    assert(
+      result == nil,
+      "stale ID with friend not found and no GUID should return nil, got: " .. tostring(result and result.battleTag)
+    )
+  end
+
+  -- ScanFriendList returns lookup table by battleTag
+  do
+    local scanApi = {
+      GetNumFriends = function()
+        return 3
+      end,
+      GetFriendAccountInfo = function(index)
+        if index == 1 then
+          return { bnetAccountID = 5, battleTag = "Alpha#1111", isOnline = true }
+        elseif index == 2 then
+          return { bnetAccountID = 22, battleTag = "Nergrom#2503", isOnline = nil }
+        elseif index == 3 then
+          return { bnetAccountID = 11, battleTag = "Mentis#2390", isOnline = true }
+        end
+      end,
+    }
+    local result = BNetResolver.ScanFriendList(scanApi)
+    assert(result["Nergrom#2503"] ~= nil, "should find Nergrom by battleTag")
+    assert(result["Nergrom#2503"].bnetAccountID == 22, "should have correct bnetAccountID")
+    assert(result["Nergrom#2503"].friendIndex == 2, "should have correct friendIndex")
+    assert(result["Alpha#1111"] ~= nil, "should find Alpha")
+    assert(result["Mentis#2390"] ~= nil, "should find Mentis")
+  end
+
+  -- ScanFriendList with nil API returns empty table
+  do
+    local result = BNetResolver.ScanFriendList(nil)
+    local count = 0
+    for _ in pairs(result) do
+      count = count + 1
+    end
+    assert(count == 0, "nil API should return empty table")
+  end
+
+  -- ScanFriendList with empty friend list returns empty table
+  do
+    local emptyApi = {
+      GetNumFriends = function()
+        return 0
+      end,
+      GetFriendAccountInfo = function()
+        return nil
+      end,
+    }
+    local result = BNetResolver.ScanFriendList(emptyApi)
+    local count = 0
+    for _ in pairs(result) do
+      count = count + 1
+    end
+    assert(count == 0, "empty friend list should return empty table")
+  end
+
+  -- ScanFriendList skips friends without battleTag
+  do
+    local partialApi = {
+      GetNumFriends = function()
+        return 2
+      end,
+      GetFriendAccountInfo = function(index)
+        if index == 1 then
+          return { bnetAccountID = 1, battleTag = nil }
+        elseif index == 2 then
+          return { bnetAccountID = 2, battleTag = "HasTag#1234" }
+        end
+      end,
+    }
+    local result = BNetResolver.ScanFriendList(partialApi)
+    local count = 0
+    for _ in pairs(result) do
+      count = count + 1
+    end
+    assert(count == 1, "should only include friends with battleTag")
+    assert(result["HasTag#1234"] ~= nil, "should include friend with battleTag")
+  end
+
   -- NormalizeAvailabilityStatus
   assert(BNetResolver.NormalizeAvailabilityStatus(nil) == nil, "nil should return nil")
   assert(BNetResolver.NormalizeAvailabilityStatus("CanWhisper") == "CanWhisper", "string should pass through")

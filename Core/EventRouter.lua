@@ -43,6 +43,7 @@ local function buildMessage(eventName, payload, contact, direction, kind, sentAt
     playerName = (contact and contact.displayName) or payload.playerName,
     channel = (contact and contact.channel) or payload.channel or "WOW",
     bnetAccountID = (contact and contact.bnetAccountID) or payload.bnetAccountID,
+    battleTag = (contact and contact.battleTag) or payload.battleTag,
     gameAccountName = (contact and contact.gameAccountName) or payload.gameAccountName,
     className = (contact and contact.className) or payload.className,
     classTag = (contact and contact.classTag) or payload.classTag,
@@ -108,12 +109,22 @@ local function handleUnlockedEvent(state, eventName, payload)
         buildMessage(eventName, payload, contact, "in", "user", sentAt),
         isActive
       )
+      -- If someone whispers us, they are clearly online and whisperable
+      local guid = payload.guid or (contact and contact.guid or nil)
+      if guid then
+        state.availabilityByGUID[guid] = Availability.FromStatus("CanWhisper")
+      end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
       Store.AppendOutgoing(
         state.store,
         conversationKey,
         buildMessage(eventName, payload, contact, "out", "user", sentAt)
       )
+      -- Our whisper was delivered, so the target is reachable
+      local guid = payload.guid or (contact and contact.guid or nil)
+      if guid then
+        state.availabilityByGUID[guid] = Availability.FromStatus("CanWhisper")
+      end
       local pending = state.pendingOutgoing[conversationKey]
       if pending and #pending > 0 then
         table.remove(pending, 1)

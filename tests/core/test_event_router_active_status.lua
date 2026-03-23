@@ -74,7 +74,7 @@ return function()
     bnetAccountID = 42,
     accountInfo = { battleTag = "Arthas#1234" },
   })
-  local bnKey = "bnet::BN::42"
+  local bnKey = "bnet::BN::arthas#1234"
   local bnConv = state.store.conversations[bnKey]
   assert(bnConv ~= nil, "expected BNet conversation for offline event")
   assert(bnConv.messages[1].kind == "system", "offline event should still be system message")

@@ -157,6 +157,8 @@ function Bootstrap.Initialize(factory, options)
     trace("[stored] conversation data from message history:")
     trace("  key:            " .. tostring(conversationKey))
     trace("  displayName:    " .. tostring(conversation.displayName))
+    trace("  contactDisplayName:" .. tostring(conversation.contactDisplayName))
+    trace("  battleTag:      " .. tostring(conversation.battleTag))
     trace("  channel:        " .. tostring(conversation.channel))
     trace("  guid:           " .. tostring(guid))
     trace("  bnetAccountID:  " .. tostring(conversation.bnetAccountID))
@@ -181,7 +183,8 @@ function Bootstrap.Initialize(factory, options)
 
     if isBN and conversation.bnetAccountID then
       local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-      local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid)
+      local accountInfo =
+        BNetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid, conversation.displayName)
       trace("[live] BNet API (ResolveAccountInfo):")
       if accountInfo then
         local gi = accountInfo.gameAccountInfo
@@ -222,13 +225,34 @@ function Bootstrap.Initialize(factory, options)
         end
       end
       -- Try alternative API: GetFriendNumGameAccounts + GetFriendGameAccountInfo
-      if runtime.bnetApi and type(runtime.bnetApi.GetFriendNumGameAccounts) == "function" then
+      if
+        runtime.bnetApi
+        and type(runtime.bnetApi.GetFriendNumGameAccounts) == "function"
+        and type(runtime.bnetApi.GetNumFriends) == "function"
+        and type(runtime.bnetApi.GetFriendAccountInfo) == "function"
+      then
         trace("[live] BNet API (GetFriendNumGameAccounts):")
-        local ok3, numAccounts = pcall(runtime.bnetApi.GetFriendNumGameAccounts, conversation.bnetAccountID)
-        if ok3 and numAccounts then
-          trace("  numGameAccounts: " .. tostring(numAccounts))
+        -- Find the friendIndex by scanning the friend list for matching bnetAccountID
+        local debugFriendIndex
+        local okN, numFriends = pcall(runtime.bnetApi.GetNumFriends)
+        if okN and numFriends then
+          for i = 1, numFriends do
+            local okF, fInfo = pcall(runtime.bnetApi.GetFriendAccountInfo, i)
+            if okF and fInfo and fInfo.bnetAccountID == conversation.bnetAccountID then
+              debugFriendIndex = i
+              break
+            end
+          end
+        end
+        if debugFriendIndex then
+          local ok3, numAccounts = pcall(runtime.bnetApi.GetFriendNumGameAccounts, debugFriendIndex)
+          if ok3 and numAccounts then
+            trace("  numGameAccounts: " .. tostring(numAccounts))
+          else
+            trace("  numGameAccounts: nil or error")
+          end
         else
-          trace("  numGameAccounts: nil or error")
+          trace("  numGameAccounts: (friendIndex not found)")
         end
       end
     end
@@ -582,10 +606,62 @@ if type(_G.CreateFrame) == "function" then
       end
       EventBridge.RegisterLiveEvents(loadFrame)
 
+      local Constants = loadModule("WhisperMessenger.Core.Constants", "Constants")
+      for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
+        loadFrame:RegisterEvent(eventName)
+      end
+
       if loadFrame.UnregisterEvent then
         loadFrame:UnregisterEvent("ADDON_LOADED")
       end
 
+      return
+    end
+
+    if event == "BN_FRIEND_LIST_AVAILABLE" or event == "BN_FRIEND_INFO_CHANGED" then
+      if Bootstrap.runtime then
+        local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
+        local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
+
+        -- Update all BNet conversations with current session bnetAccountID
+        for _conversationKey, conversation in pairs(Bootstrap.runtime.store.conversations) do
+          if conversation.channel == "BN" and conversation.battleTag then
+            local friend = friendMap[conversation.battleTag]
+            if friend then
+              conversation.bnetAccountID = friend.bnetAccountID
+              -- Refresh metadata from live data
+              local gi = friend.accountInfo and friend.accountInfo.gameAccountInfo
+              if gi then
+                if gi.factionName and gi.factionName ~= "" then
+                  conversation.factionName = gi.factionName
+                end
+                if gi.className and gi.className ~= "" then
+                  conversation.className = gi.className
+                end
+                if gi.raceName and gi.raceName ~= "" then
+                  conversation.raceName = gi.raceName
+                end
+                if gi.characterName then
+                  conversation.gameAccountName = gi.characterName .. (gi.realmName and ("-" .. gi.realmName) or "")
+                end
+              end
+            end
+          end
+        end
+
+        if Bootstrap.runtime.refreshWindow then
+          Bootstrap.runtime.refreshWindow()
+        end
+      end
+      return
+    end
+
+    if event == "PLAYER_ENTERING_WORLD" then
+      if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
+        _G.C_Timer.After(2, function()
+          Bootstrap.runtime.refreshWindow()
+        end)
+      end
       return
     end
 

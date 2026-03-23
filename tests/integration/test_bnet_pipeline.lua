@@ -136,7 +136,7 @@ return function()
     false
   )
 
-  local conversationKey = "bnet::BN::99"
+  local conversationKey = "bnet::BN::jaina#1234"
   local conversation = runtime.store.conversations[conversationKey]
   assert(conversation ~= nil, "expected bn whisper conversation to be created")
   assert(conversation.channel == "BN")

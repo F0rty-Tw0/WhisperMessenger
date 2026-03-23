@@ -17,6 +17,12 @@ local Constants = {
     "CHAT_MSG_BN_WHISPER_INFORM",
     "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
   },
+
+  LIFECYCLE_EVENT_NAMES = {
+    "BN_FRIEND_LIST_AVAILABLE",
+    "BN_FRIEND_INFO_CHANGED",
+    "PLAYER_ENTERING_WORLD",
+  },
 }
 
 ns.Constants = Constants

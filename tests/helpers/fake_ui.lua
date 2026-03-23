@@ -434,4 +434,13 @@ function FakeUI.NewFactory()
   return factory
 end
 
+_G.C_Timer = _G.C_Timer
+  or {
+    After = function(_seconds, callback)
+      if callback then
+        callback()
+      end
+    end,
+  }
+
 return FakeUI

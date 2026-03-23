@@ -6,27 +6,98 @@ end
 local Types = ns.TransportTypes or require("WhisperMessenger.Transport.Types")
 local BNetResolver = {}
 
-function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
+function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
+  if type(bnetApi.GetNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+    return nil
+  end
+  local ok, numFriends = pcall(bnetApi.GetNumFriends)
+  if not ok or not numFriends then
+    return nil
+  end
+  local friendIndex
+  local accountInfo
+  for i = 1, numFriends do
+    local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
+    if ok2 and info and info.battleTag == battleTag then
+      if info.isOnline ~= nil then
+        return info
+      end
+      accountInfo = info
+      friendIndex = i
+      break
+    end
+  end
+  -- Try game account iteration if found but isOnline=nil
+  if
+    friendIndex
+    and accountInfo
+    and accountInfo.isOnline == nil
+    and type(bnetApi.GetFriendNumGameAccounts) == "function"
+    and type(bnetApi.GetFriendGameAccountInfo) == "function"
+  then
+    local ok3, numAccounts = pcall(bnetApi.GetFriendNumGameAccounts, friendIndex)
+    if ok3 and numAccounts and numAccounts > 0 then
+      for j = 1, numAccounts do
+        local ok4, gameInfo = pcall(bnetApi.GetFriendGameAccountInfo, friendIndex, j)
+        if ok4 and gameInfo and (gameInfo.isOnline or gameInfo.characterName) then
+          accountInfo.isOnline = true
+          accountInfo.gameAccountInfo = gameInfo
+          return accountInfo
+        end
+      end
+    end
+  end
+  -- Try GUID fallback
+  if guid and type(bnetApi.GetAccountInfoByGUID) == "function" then
+    local ok2, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
+    if ok2 and info and info.battleTag == battleTag then
+      local gameInfo = info.gameAccountInfo
+      if info.isOnline or info.isAFK or info.isDND or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+        return info
+      end
+    end
+  end
+  return accountInfo
+end
+
+function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedBattleTag)
   if bnetApi == nil or bnetAccountID == nil then
     return nil
   end
 
   -- Primary: look up by BNet account ID
   local accountInfo
+  local isStaleId = false
   if type(bnetApi.GetAccountInfoByID) == "function" then
     local ok, info = pcall(bnetApi.GetAccountInfoByID, bnetAccountID, guid)
     if ok and info then
-      -- If isOnline is explicitly set (true or false), trust the result
-      if info.isOnline ~= nil then
+      -- Detect stale bnetAccountID: stored ID now belongs to a different person
+      if expectedBattleTag and info.battleTag and info.battleTag ~= expectedBattleTag then
+        isStaleId = true
+      elseif info.isOnline ~= nil then
         return info
+      else
+        accountInfo = info
       end
-      accountInfo = info
     end
   end
 
-  -- Fallback: scan friend list to find matching bnetAccountID
+  -- When bnetAccountID is stale, resolve by battleTag instead
+  if isStaleId then
+    local resolved = BNetResolver.ResolveFriendByBattleTag(bnetApi, expectedBattleTag, guid)
+    if resolved then
+      return resolved
+    end
+    -- Fall through to GUID fallback below with accountInfo=nil
+  end
+
+  -- Fallback: scan friend list to find matching bnetAccountID (skip when stale)
   local friendIndex
-  if type(bnetApi.GetNumFriends) == "function" and type(bnetApi.GetFriendAccountInfo) == "function" then
+  if
+    not isStaleId
+    and type(bnetApi.GetNumFriends) == "function"
+    and type(bnetApi.GetFriendAccountInfo) == "function"
+  then
     local ok, numFriends = pcall(bnetApi.GetNumFriends)
     if ok and numFriends then
       for i = 1, numFriends do
@@ -43,9 +114,10 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
     end
   end
 
-  -- Fallback: iterate game accounts to detect online status when isOnline is nil
+  -- Fallback: iterate game accounts to detect online status when isOnline is nil (skip when stale)
   if
-    friendIndex
+    not isStaleId
+    and friendIndex
     and accountInfo
     and accountInfo.isOnline == nil
     and type(bnetApi.GetFriendNumGameAccounts) == "function"
@@ -105,6 +177,18 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid)
     end
   end
 
+  -- When stale and battleTag scan failed, try GUID path directly
+  if isStaleId and accountInfo == nil and guid and type(bnetApi.GetAccountInfoByGUID) == "function" then
+    local ok, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
+    if ok and info then
+      local gameInfo = info.gameAccountInfo
+      if info.isOnline or info.isAFK or info.isDND or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+        return info
+      end
+      return info
+    end
+  end
+
   return accountInfo
 end
 
@@ -128,6 +212,32 @@ function BNetResolver.ResolvePlayerInfo(playerInfoByGUID, guid)
     raceName = raceName,
     raceTag = raceTag,
   }
+end
+
+function BNetResolver.ScanFriendList(bnetApi)
+  local byBattleTag = {}
+  if
+    type(bnetApi) ~= "table"
+    or type(bnetApi.GetNumFriends) ~= "function"
+    or type(bnetApi.GetFriendAccountInfo) ~= "function"
+  then
+    return byBattleTag
+  end
+  local ok, numFriends = pcall(bnetApi.GetNumFriends)
+  if not ok or not numFriends then
+    return byBattleTag
+  end
+  for i = 1, numFriends do
+    local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
+    if ok2 and info and info.battleTag then
+      byBattleTag[info.battleTag] = {
+        bnetAccountID = info.bnetAccountID,
+        friendIndex = i,
+        accountInfo = info,
+      }
+    end
+  end
+  return byBattleTag
 end
 
 function BNetResolver.NormalizeAvailabilityStatus(status)

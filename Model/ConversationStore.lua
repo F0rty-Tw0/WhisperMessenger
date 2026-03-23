@@ -31,6 +31,7 @@ local function ensureConversation(state, key)
       lastActivityAt = 0,
       guid = nil,
       bnetAccountID = nil,
+      battleTag = nil,
       gameAccountName = nil,
       className = nil,
       classTag = nil,
@@ -83,6 +84,7 @@ local function applyMessageMetadata(conversation, message)
   conversation.channel = message.channel or conversation.channel or "WOW"
   conversation.guid = message.guid or conversation.guid
   conversation.bnetAccountID = message.bnetAccountID or conversation.bnetAccountID
+  conversation.battleTag = message.battleTag or conversation.battleTag
   conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName
   conversation.className = message.className or conversation.className
   conversation.classTag = message.classTag or conversation.classTag

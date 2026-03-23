@@ -34,12 +34,12 @@ end
 AvailabilityEnricher.isOppositeFaction = isOppositeFaction
 AvailabilityEnricher.enrichClassTag = enrichClassTag
 
-function AvailabilityEnricher.ShouldRequestAvailability(cached)
-  if cached == nil then
-    return true
-  end
-  -- Re-request for Offline (stale) and WrongFaction (player may have gone offline)
-  return cached.status == "Offline" or cached.status == "WrongFaction"
+function AvailabilityEnricher.ShouldRequestAvailability(_cached)
+  -- Always re-request: the async whisper-check API is lightweight and ensures
+  -- statuses stay fresh. A player marked CanWhisper may have gone offline,
+  -- and a WrongFaction player may have come online. Re-checking every refresh
+  -- cycle keeps the UI accurate without manual intervention.
+  return true
 end
 
 function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
@@ -104,7 +104,12 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
     end
     -- BNet contacts: query live status and refresh metadata from BNet API
     if item.channel == "BN" and item.bnetAccountID then
-      local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid)
+      local accountInfo = BNetResolver.ResolveAccountInfo(
+        runtime.bnetApi,
+        item.bnetAccountID,
+        item.guid,
+        item.battleTag or item.displayName
+      )
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
         -- isAFK/isDND at account level imply online (you can't be AFK if not logged in)
@@ -137,21 +142,15 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
             if guid then
               enrichClassTag(item, guid, runtime)
             end
-            -- Compute XFaction for BNet contacts in WoW with opposite faction
-            if bnetStatus == "CanWhisper" and isOppositeFaction(item.factionName, localFaction) then
-              item.availability = Availability.FromStatus("XFaction")
-            end
+            -- BNet whispers are always cross-faction; no XFaction status needed
           end
         else
           -- BNet API says offline; fall back to guild/community presence
           if item.guid and type(runtime.getGuildOrCommunityPresence) == "function" then
             local presence = runtime.getGuildOrCommunityPresence(item.guid)
             if presence == "online" then
-              if isOppositeFaction(item.factionName, localFaction) then
-                item.availability = Availability.FromStatus("XFaction")
-              else
-                item.availability = Availability.FromStatus("CanWhisper")
-              end
+              -- BNet whispers are always cross-faction; no XFaction needed
+              item.availability = Availability.FromStatus("CanWhisper")
             else
               item.availability = Availability.FromStatus("Offline")
             end

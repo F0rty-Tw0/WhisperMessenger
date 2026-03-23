@@ -56,4 +56,49 @@ return function()
 
   Store.MarkRead(state, "me::WOW::arthas-area52")
   assert(conversation.unreadCount == 0)
+
+  -- test_battletag_persisted_on_append_incoming
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::BN::16", {
+      id = "bt1",
+      direction = "in",
+      kind = "user",
+      text = "hey",
+      sentAt = 10,
+      battleTag = "Friend#1234",
+    }, false)
+    local conv = s.conversations["me::BN::16"]
+    assert(conv ~= nil, "conversation should exist")
+    assert(
+      conv.battleTag == "Friend#1234",
+      "battleTag should be persisted on conversation, got: " .. tostring(conv.battleTag)
+    )
+  end
+
+  -- test_battletag_not_overwritten_by_nil
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::BN::17", {
+      id = "bt2",
+      direction = "in",
+      kind = "user",
+      text = "first",
+      sentAt = 11,
+      battleTag = "Keep#5678",
+    }, false)
+    Store.AppendIncoming(s, "me::BN::17", {
+      id = "bt3",
+      direction = "in",
+      kind = "user",
+      text = "second",
+      sentAt = 12,
+      battleTag = nil,
+    }, false)
+    local conv = s.conversations["me::BN::17"]
+    assert(
+      conv.battleTag == "Keep#5678",
+      "battleTag should not be overwritten by nil, got: " .. tostring(conv.battleTag)
+    )
+  end
 end
