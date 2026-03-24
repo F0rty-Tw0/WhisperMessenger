@@ -67,8 +67,12 @@ jobs:
             git commit -m "release: v${VERSION}"
             git push origin HEAD:master
           fi
-          git tag -a "${VERSION}" -m "Release ${VERSION}"
-          git push origin "${VERSION}"
+          if git rev-parse "${VERSION}" >/dev/null 2>&1; then
+            echo "Tag ${VERSION} already exists, skipping tag creation"
+          else
+            git tag -a "${VERSION}" -m "Release ${VERSION}"
+            git push origin "${VERSION}"
+          fi
 
       - name: Package and release
         uses: BigWigsMods/packager@v2
