@@ -6,8 +6,6 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
-local Retention = ns.Retention or require("WhisperMessenger.Model.Retention")
-
 local RuntimeFactory = {}
 
 local function currentTime()

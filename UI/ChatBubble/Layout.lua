@@ -4,9 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local setFontObject = UIHelpers.setFontObject
-local setTextColor = UIHelpers.setTextColor
 
 local Layout = {}
 
@@ -26,7 +23,7 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
 
   -- Wrap factory to route CreateFrame through the pool
   local pooledFactory = {
-    CreateFrame = function(frameType, name, parent)
+    CreateFrame = function(frameType, _name, parent)
       return FramePool.acquireFrame(factory, contentFrame, frameType, parent)
     end,
   }

@@ -271,7 +271,7 @@ function Bootstrap.Initialize(factory, options)
       end
     end
     -- Show what the enricher actually computes for this contact
-    local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
+    local DebugEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
     local testContacts = {
       {
         guid = guid,
@@ -280,7 +280,7 @@ function Bootstrap.Initialize(factory, options)
         bnetAccountID = conversation.bnetAccountID,
       },
     }
-    ContactEnricher.EnrichContactsAvailability(testContacts, runtime)
+    DebugEnricher.EnrichContactsAvailability(testContacts, runtime)
     local enriched = testContacts[1].availability
     trace("[enriched] final availability (what the UI displays):")
     if enriched then
@@ -725,7 +725,7 @@ if type(_G.CreateFrame) == "function" then
         local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
 
         -- Update all BNet conversations with current session bnetAccountID
-        for _conversationKey, conversation in pairs(Bootstrap.runtime.store.conversations) do
+        for _, conversation in pairs(Bootstrap.runtime.store.conversations) do
           if conversation.channel == "BN" and conversation.battleTag then
             local friend = friendMap[conversation.battleTag]
             if friend then
@@ -776,6 +776,7 @@ if type(_G.CreateFrame) == "function" then
       if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
         -- First rebuild after 2s (when club data is ready), then refresh window
         _G.C_Timer.After(2, function()
+          trace("PresenceCache: initial rebuild (PLAYER_ENTERING_WORLD +2s)")
           PresenceCache.Rebuild()
           if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
             Bootstrap.runtime.refreshWindow()
@@ -784,6 +785,7 @@ if type(_G.CreateFrame) == "function" then
         -- Recurring timer for subsequent rebuilds
         local function presenceTimerLoop()
           if PresenceCache.IsStale() then
+            trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
             PresenceCache.Rebuild()
           end
           _G.C_Timer.After(PresenceCache.GetTTL(), presenceTimerLoop)
@@ -807,11 +809,13 @@ if type(_G.CreateFrame) == "function" then
       local PresenceCache = ns.PresenceCache
       if PresenceCache then
         PresenceCache.Invalidate()
+        trace("PresenceCache: invalidated by " .. event)
         -- Debounce: rebuild after 2s to coalesce rapid events
         if not Bootstrap._presenceRebuildPending and type(_G.C_Timer) == "table" then
           Bootstrap._presenceRebuildPending = true
           _G.C_Timer.After(2, function()
             Bootstrap._presenceRebuildPending = false
+            trace("PresenceCache: debounced rebuild after " .. event)
             PresenceCache.Rebuild()
           end)
         end

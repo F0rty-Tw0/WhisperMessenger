@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Trace = ns.Trace
+
 local PresenceCache = {}
 
 -- Private module state
@@ -65,6 +67,8 @@ end
 
 function PresenceCache.Rebuild()
   local newCache = {}
+  local guildCount = 0
+  local communityCount = 0
 
   if type(clubApi) == "table" then
     -- Cache guild members
@@ -72,16 +76,26 @@ function PresenceCache.Rebuild()
       local ok, guildId = pcall(clubApi.GetGuildClubId)
       if ok and guildId then
         cacheClub(newCache, clubApi, guildId)
+        for _ in pairs(newCache) do
+          guildCount = guildCount + 1
+        end
       end
     end
 
     -- Cache all community members
+    local preCount = guildCount
     if type(clubApi.GetSubscribedClubs) == "function" then
       local ok, clubs = pcall(clubApi.GetSubscribedClubs)
       if ok and clubs then
         for _, club in ipairs(clubs) do
           cacheClub(newCache, clubApi, club.clubId)
         end
+        -- Count new entries added by communities
+        local total = 0
+        for _ in pairs(newCache) do
+          total = total + 1
+        end
+        communityCount = total - preCount
       end
     end
   end
@@ -89,6 +103,14 @@ function PresenceCache.Rebuild()
   cache = newCache
   lastRebuiltAt = nowFn()
   dirty = false
+
+  local total = 0
+  for _ in pairs(cache) do
+    total = total + 1
+  end
+  if Trace then
+    Trace("PresenceCache.Rebuild: guild=" .. guildCount .. " community=" .. communityCount .. " total=" .. total)
+  end
 end
 
 function PresenceCache.GetPresence(guid)

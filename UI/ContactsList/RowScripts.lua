@@ -61,7 +61,7 @@ end
 
 --- Bind OnClick script to a row.
 --- Calls options.onSelect(item) when clicked.
-function RowScripts.bindClick(row, item, options)
+function RowScripts.bindClick(row, _item, options)
   if row.SetScript then
     row:SetScript("OnClick", function()
       if row.item ~= nil and options and options.onSelect then

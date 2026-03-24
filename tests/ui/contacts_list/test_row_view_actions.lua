@@ -18,8 +18,8 @@ return function()
     pinned = false,
   }
 
-  local pinnedKey = nil
-  local removedKey = nil
+  local pinnedKey
+  local removedKey
 
   local options = {
     onSelect = function() end,

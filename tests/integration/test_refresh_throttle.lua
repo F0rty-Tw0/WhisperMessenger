@@ -60,11 +60,7 @@ return function()
   assert(enricherCallCount == 3, "expected enricher called 3 times even when window hidden, got " .. enricherCallCount)
 
   -- Verify icon badge still updates
-  local conv
-  for _k, v in pairs(runtime.store.conversations) do
-    conv = v
-    break
-  end
+  local conv = (next(runtime.store.conversations) and runtime.store.conversations[next(runtime.store.conversations)])
   assert(conv ~= nil, "expected at least one conversation in store")
   conv.unreadCount = 3
   runtime.refreshWindow()

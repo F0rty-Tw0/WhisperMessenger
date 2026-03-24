@@ -32,19 +32,11 @@ return function()
     },
   }
 
-  local reorderCalled = false
-  local reorderFrom = nil
-  local reorderTo = nil
-
   local options = {
     onSelect = function() end,
     onPin = function() end,
     onRemove = function() end,
-    onReorder = function(item, fromIdx, toIdx)
-      reorderCalled = true
-      reorderFrom = fromIdx
-      reorderTo = toIdx
-    end,
+    onReorder = function() end,
   }
 
   -- test_row_is_registered_for_drag

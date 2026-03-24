@@ -48,7 +48,7 @@ end
 
 --- Create the faction icon texture (14x14, after name).
 --- Returns texture (visible) or texture (hidden) depending on faction.
-function RowElements.createFactionIcon(factory, row, item, ns_ref)
+function RowElements.createFactionIcon(_factory, row, item, ns_ref)
   local tex = row:CreateTexture(nil, "ARTWORK")
   tex:SetSize(Theme.LAYOUT.CONTACT_FACTION_SIZE, Theme.LAYOUT.CONTACT_FACTION_SIZE)
   row.factionIcon = tex

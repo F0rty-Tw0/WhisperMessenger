@@ -55,7 +55,7 @@ end
 ---@param row table parent row frame
 ---@param parentWidth number width of the parent for layout
 ---@param options table callbacks: onRemove(item)
-function ActionButtons.createRemoveButton(factory, row, parentWidth, options)
+function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
   local rowBaseBg = row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
@@ -130,7 +130,7 @@ end
 ---@param item table contact item data
 ---@param parentWidth number width of the parent for layout
 ---@param options table callbacks: onPin(item)
-function ActionButtons.createPinButton(factory, row, item, parentWidth, options)
+function ActionButtons.createPinButton(factory, row, item, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
   local rowBaseBg = item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary

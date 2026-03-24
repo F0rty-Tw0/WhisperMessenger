@@ -4,8 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local AlphaController = ns.MessengerWindowAlphaController
-  or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 

@@ -18,7 +18,6 @@ local pointValue = TranscriptView._pointValue
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColor = UIHelpers.applyColor
-local applyColorTexture = UIHelpers.applyColorTexture
 
 local ConversationPane = {}
 

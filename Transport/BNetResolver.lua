@@ -8,11 +8,11 @@ local BNetResolver = {}
 
 -- Stage 1: Primary lookup by bnetAccountID.
 -- Returns accountInfo, isStaleId.
-local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTag)
+local function lookupByAccountId(bnetApi, bnetAccountID, guid, expectedBattleTag)
   if type(bnetApi.GetAccountInfoByID) ~= "function" then
     return nil, false
   end
-  local ok, info = pcall(bnetApi.GetAccountInfoByID, bnetAccountID, _guid)
+  local ok, info = pcall(bnetApi.GetAccountInfoByID, bnetAccountID, guid)
   if not ok or not info then
     return nil, false
   end

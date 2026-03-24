@@ -25,12 +25,6 @@ return function()
   -- Pool should contain nameFrame + bubbleFrame + iconFrame = 3
   assert(activeSize >= 3, "active pool should contain nameFrame + bubbleFrame + iconFrame, got: " .. activeSize)
 
-  -- Capture all frames from first render
-  local firstRenderFrames = {}
-  for i = 1, activeSize do
-    firstRenderFrames[i] = active[i]
-  end
-
   -- Second render with different messages — old frames should be released and reused
   local messages2 = {
     {
