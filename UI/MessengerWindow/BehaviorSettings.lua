@@ -57,7 +57,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local autoFocusToggle = UIHelpers.createToggleRow(
     factory,
     frame,
-    "Auto-focus composer",
+    "Auto-focus chat input",
     config.autoFocusComposer == true,
     toggleColors,
     toggleLayout,

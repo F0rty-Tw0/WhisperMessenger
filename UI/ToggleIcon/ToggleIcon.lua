@@ -140,10 +140,21 @@ function ToggleIcon.Create(factory, options)
   local badgeLabel = badgeResult.badgeLabel
   local innerSetUnreadCount = badgeResult.setUnreadCount
 
+  local getShowUnreadBadge = options.getShowUnreadBadge
+  local getBadgePulse = options.getBadgePulse
+
   local function setUnreadCount(count)
-    innerSetUnreadCount(count)
+    local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
+    local allowPulse = not getBadgePulse or getBadgePulse()
     local unreadCount = tonumber(count) or 0
-    if unreadCount > 0 then
+
+    if showBadge then
+      innerSetUnreadCount(count)
+    else
+      innerSetUnreadCount(0)
+    end
+
+    if unreadCount > 0 and allowPulse and showBadge then
       startPulse()
     else
       stopPulse()

@@ -108,22 +108,24 @@ function WindowScripts.WireButtons(refs, options)
         end
       end
       for i, tab in ipairs(settingsTabs) do
-        if tab and tab.children then
-          for _, child in ipairs(tab.children) do
-            if child.SetColorTexture then
-              if i == index then
-                child:SetColorTexture(
-                  activeHighlight[1],
-                  activeHighlight[2],
-                  activeHighlight[3],
-                  activeHighlight[4] or 1
-                )
-              else
-                child:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
-              end
-              break
-            end
+        if tab and tab.bg and tab.SetScript then
+          local bg = tab.bg
+          local isActive = i == index
+          if isActive then
+            bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
+          else
+            bg:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
           end
+          tab:SetScript("OnEnter", function()
+            bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
+          end)
+          tab:SetScript("OnLeave", function()
+            if isActive then
+              bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
+            else
+              bg:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
+            end
+          end)
         end
       end
     end
@@ -163,6 +165,14 @@ function WindowScripts.WireFrame(refs, options)
     frame:SetScript("OnShow", function()
       alphaElapsed = 0
       options.refreshWindowAlpha(true)
+      if
+        options.composerInput
+        and options.getAutoFocusChatInput
+        and options.getAutoFocusChatInput()
+        and options.composerInput.SetFocus
+      then
+        options.composerInput:SetFocus()
+      end
       options.trace("window shown")
     end)
 

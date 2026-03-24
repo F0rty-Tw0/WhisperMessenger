@@ -362,6 +362,10 @@ function MessengerWindow.Create(factory, options)
     trace = trace,
     onPositionChanged = options.onPositionChanged,
     Theme = Theme,
+    composerInput = composerInput,
+    getAutoFocusChatInput = function()
+      return settingsConfig.autoFocusComposer == true
+    end,
   })
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)

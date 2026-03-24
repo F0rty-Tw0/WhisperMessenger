@@ -144,6 +144,9 @@ function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
     UIHelpers.setTextColor(labelFs, textColor)
   end)
 
+  button.bg = bg
+  button.label = labelFs
+
   return button
 end
 
