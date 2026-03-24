@@ -57,7 +57,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   local playSoundToggle = UIHelpers.createToggleRow(
     factory,
     frame,
-    "Play sound on whisper",
+    "Notification sound",
     config.playSoundOnWhisper == true,
     toggleColors,
     toggleLayout,

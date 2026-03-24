@@ -461,20 +461,23 @@ function Bootstrap.Initialize(factory, options)
     end,
   })
 
-  -- Suppress WoW's default whisper/tell sound; our addon handles notification audio.
-  -- The chat frame calls PlaySound(SOUNDKIT.TELL_MESSAGE) on incoming whispers.
-  -- We wrap PlaySound to intercept that specific sound kit ID.
-  do
-    local TELL_MESSAGE_ID = _G.SOUNDKIT and _G.SOUNDKIT.TELL_MESSAGE or 3175
-    local originalPlaySound = _G.PlaySound
-    if type(originalPlaySound) == "function" then
-      _G.PlaySound = function(soundKitID, ...)
-        if soundKitID == TELL_MESSAGE_ID then
-          return false, nil
-        end
-        return originalPlaySound(soundKitID, ...)
+  -- Suppress whisper messages from the default chat frame (and their sound).
+  -- Our addon provides its own messenger UI for whispers.
+  -- We must preserve /r reply targets since the default handler won't run.
+  if type(_G.ChatFrame_AddMessageEventFilter) == "function" then
+    local setLastTell = _G.ChatEdit_SetLastTellTarget
+    _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", function(_self, _event, _msg, sender)
+      if type(setLastTell) == "function" and sender then
+        setLastTell(sender, "WHISPER")
       end
-    end
+      return true
+    end)
+    _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", function(_self, _event, _msg, sender)
+      if type(setLastTell) == "function" and sender then
+        setLastTell(sender, "BN_WHISPER")
+      end
+      return true
+    end)
   end
 
   local prevSnapshot = nil
