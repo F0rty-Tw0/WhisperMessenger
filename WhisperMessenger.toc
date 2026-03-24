@@ -2,7 +2,7 @@
 ## Title: WhisperMessenger
 ## Notes: Messenger-style whisper UI for WoW Retail
 ## Author: Claude
-## Version: v1.0.1
+## Version: v1.0.2
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
