@@ -14,6 +14,10 @@ local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMesseng
 local ContactsController = ns.MessengerWindowContactsController
   or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
 local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
+local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
+local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
+local NotificationSettings = ns.NotificationSettings
+  or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
@@ -102,7 +106,10 @@ function MessengerWindow.Create(factory, options)
   local optionsPanel = layout.optionsPanel
   local optionsMenu = layout.optionsMenu
   local optionsContentPane = layout.optionsContentPane
-  local generalToggle = layout.generalToggle
+  local generalTab = layout.generalTab
+  local appearanceTab = layout.appearanceTab
+  local behaviorTab = layout.behaviorTab
+  local notificationsTab = layout.notificationsTab
   local optionsHeader = layout.optionsHeader
   local optionsHint = layout.optionsHint
   local resetWindowButton = layout.resetWindowButton
@@ -110,23 +117,65 @@ function MessengerWindow.Create(factory, options)
   local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
 
-  -- General settings view (inside options content pane)
+  -- Settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
-  local generalSettings = GeneralSettings.Create(factory, optionsContentPane, {
+  local settingsConfig = options.settingsConfig or {}
+
+  local function onSettingChanged(key, value)
+    if options.onSettingChanged then
+      options.onSettingChanged(key, value)
+    end
+  end
+
+  local generalPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
+  generalPanel:SetAllPoints(optionsContentPane)
+  local generalSettings = GeneralSettings.Create(factory, generalPanel, {
     maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
     maxConversations = storeConfig.maxConversations or 200,
     messageMaxAge = storeConfig.messageMaxAge or 86400,
+    clearOnLogout = settingsConfig.clearOnLogout,
+    hideMessagePreview = settingsConfig.hideMessagePreview,
   }, {
-    onChange = function(key, value)
-      if options.onSettingChanged then
-        options.onSettingChanged(key, value)
-      end
-    end,
+    onChange = onSettingChanged,
+  })
+
+  local appearancePanel = factory.CreateFrame("Frame", nil, optionsContentPane)
+  appearancePanel:SetAllPoints(optionsContentPane)
+  local appearanceSettings = AppearanceSettings.Create(factory, appearancePanel, {
+    windowOpacityInactive = settingsConfig.windowOpacityInactive,
+    windowOpacityActive = settingsConfig.windowOpacityActive,
+    bubbleMaxWidthPct = settingsConfig.bubbleMaxWidthPct,
+    contactsPaneWidth = settingsConfig.contactsPaneWidth,
+  }, {
+    onChange = onSettingChanged,
+  })
+
+  local behaviorPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
+  behaviorPanel:SetAllPoints(optionsContentPane)
+  local behaviorSettings = BehaviorSettings.Create(factory, behaviorPanel, {
+    dimWhenMoving = settingsConfig.dimWhenMoving,
+    autoFocusComposer = settingsConfig.autoFocusComposer,
+    autoSelectUnread = settingsConfig.autoSelectUnread,
+  }, {
+    onChange = onSettingChanged,
+  })
+
+  local notificationsPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
+  notificationsPanel:SetAllPoints(optionsContentPane)
+  local notificationSettings = NotificationSettings.Create(factory, notificationsPanel, {
+    badgePulse = settingsConfig.badgePulse,
+    playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
+    showUnreadBadge = settingsConfig.showUnreadBadge,
+  }, {
+    onChange = onSettingChanged,
   })
 
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
   local contactsController = ContactsController.Create(factory, contactsView, options.contacts or {}, {
+    getHideMessagePreview = function()
+      return settingsConfig.hideMessagePreview == true
+    end,
     onSelect = function(item)
       if handleContactSelected then
         handleContactSelected(item)
@@ -276,8 +325,8 @@ function MessengerWindow.Create(factory, options)
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
     optionsPanel = optionsPanel,
-    generalToggle = generalToggle,
-    optionsContentPane = optionsContentPane,
+    settingsTabs = { generalTab, appearanceTab, behaviorTab, notificationsTab },
+    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel },
   }, {
     onClose = closeWindow,
     onResetWindowPosition = options.onResetWindowPosition,
@@ -324,8 +373,14 @@ function MessengerWindow.Create(factory, options)
     optionsPanel = optionsPanel,
     optionsMenu = optionsMenu,
     optionsContentPane = optionsContentPane,
-    generalToggle = generalToggle,
+    generalTab = generalTab,
+    appearanceTab = appearanceTab,
+    behaviorTab = behaviorTab,
+    notificationsTab = notificationsTab,
     generalSettings = generalSettings,
+    appearanceSettings = appearanceSettings,
+    behaviorSettings = behaviorSettings,
+    notificationSettings = notificationSettings,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,

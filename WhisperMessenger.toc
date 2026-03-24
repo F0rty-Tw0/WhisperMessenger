@@ -79,6 +79,9 @@ UI/MessengerWindow/DragController.lua
 UI/MessengerWindow/ContactsController.lua
 UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/GeneralSettings.lua
+UI/MessengerWindow/AppearanceSettings.lua
+UI/MessengerWindow/BehaviorSettings.lua
+UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/RuntimeFactory.lua

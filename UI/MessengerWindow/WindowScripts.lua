@@ -12,11 +12,11 @@ local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.Con
 local WindowScripts = {}
 
 -- Wire close, options, reset-window, reset-icon, clear-all-chats, and
--- general-toggle buttons.
+-- settings tab buttons.
 --
 -- refs:
 --   closeButton, optionsButton, resetWindowButton, resetIconButton,
---   clearAllChatsButton, optionsPanel, generalToggle, optionsContentPane
+--   clearAllChatsButton, optionsPanel, settingsPanels, settingsTabs
 --
 -- options:
 --   onClose, onResetWindowPosition, onResetIconPosition, onClearAllChats,
@@ -28,8 +28,8 @@ function WindowScripts.WireButtons(refs, options)
   local resetIconButton = refs.resetIconButton
   local clearAllChatsButton = refs.clearAllChatsButton
   local optionsPanel = refs.optionsPanel
-  local generalToggle = refs.generalToggle
-  local optionsContentPane = refs.optionsContentPane
+  local settingsPanels = refs.settingsPanels or {}
+  local settingsTabs = refs.settingsTabs or {}
 
   if closeButton and closeButton.SetScript then
     closeButton:SetScript("OnClick", function()
@@ -92,15 +92,53 @@ function WindowScripts.WireButtons(refs, options)
     end)
   end
 
-  if generalToggle and generalToggle.SetScript and optionsContentPane then
-    optionsContentPane:Show()
-    generalToggle:SetScript("OnClick", function()
-      if optionsContentPane:IsShown() then
-        optionsContentPane:Hide()
-      else
-        optionsContentPane:Show()
+  -- Tab switching: show one panel at a time, highlight active tab
+  if #settingsTabs > 0 and #settingsPanels > 0 then
+    local activeHighlight = Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
+    local inactiveBg = Theme.COLORS.option_button_bg or { 0.14, 0.15, 0.20, 0.80 }
+
+    local function selectTab(index)
+      for i, panel in ipairs(settingsPanels) do
+        if panel and panel.Hide and panel.Show then
+          if i == index then
+            panel:Show()
+          else
+            panel:Hide()
+          end
+        end
       end
-    end)
+      for i, tab in ipairs(settingsTabs) do
+        if tab and tab.children then
+          for _, child in ipairs(tab.children) do
+            if child.SetColorTexture then
+              if i == index then
+                child:SetColorTexture(
+                  activeHighlight[1],
+                  activeHighlight[2],
+                  activeHighlight[3],
+                  activeHighlight[4] or 1
+                )
+              else
+                child:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
+              end
+              break
+            end
+          end
+        end
+      end
+    end
+
+    for i, tab in ipairs(settingsTabs) do
+      if tab and tab.SetScript then
+        local tabIndex = i
+        tab:SetScript("OnClick", function()
+          selectTab(tabIndex)
+        end)
+      end
+    end
+
+    -- Default: show first tab (General)
+    selectTab(1)
   end
 end
 

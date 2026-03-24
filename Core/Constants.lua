@@ -22,6 +22,7 @@ local Constants = {
     "BN_FRIEND_LIST_SIZE_CHANGED",
     "BN_FRIEND_INFO_CHANGED",
     "PLAYER_ENTERING_WORLD",
+    "PLAYER_LOGOUT",
   },
 }
 

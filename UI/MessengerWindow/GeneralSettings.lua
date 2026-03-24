@@ -21,6 +21,8 @@ local DEFAULTS = {
   maxMessagesPerConversation = 200,
   maxConversations = 200,
   messageMaxAge = 86400,
+  clearOnLogout = false,
+  hideMessagePreview = false,
 }
 
 local function createSettingRow(factory, parent, label, min, max, step, initial, onChange)
@@ -158,6 +160,45 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  -- Privacy toggles
+  local toggleColors = {
+    text = Theme.COLORS.text_primary,
+    on = Theme.COLORS.online,
+    off = Theme.COLORS.offline,
+  }
+  local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
+
+  local privacyLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  privacyLabel:SetText("Privacy")
+  UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
+
+  local clearOnLogoutToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Clear on logout",
+    config.clearOnLogout == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("clearOnLogout", value)
+    end
+  )
+  clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
+
+  local hidePreviewToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Hide message preview",
+    config.hideMessagePreview == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("hideMessagePreview", value)
+    end
+  )
+  hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
+
   -- Reset to Defaults button
   local normalColors = {
     bg = Theme.COLORS.option_button_bg,
@@ -172,12 +213,16 @@ function GeneralSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = SLIDER_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
     messagesRow.slider:SetValue(DEFAULTS.maxMessagesPerConversation)
     conversationsRow.slider:SetValue(DEFAULTS.maxConversations)
     retentionRow.slider:SetValue(math.floor(DEFAULTS.messageMaxAge / 3600 + 0.5))
+    clearOnLogoutToggle.setValue(DEFAULTS.clearOnLogout)
+    onChange("clearOnLogout", DEFAULTS.clearOnLogout)
+    hidePreviewToggle.setValue(DEFAULTS.hideMessagePreview)
+    onChange("hideMessagePreview", DEFAULTS.hideMessagePreview)
   end)
 
   return {
@@ -191,6 +236,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     maxConversationsMaxLabel = conversationsRow.maxLabel,
     retentionMinLabel = retentionRow.minLabel,
     retentionMaxLabel = retentionRow.maxLabel,
+    clearOnLogoutToggle = clearOnLogoutToggle,
+    hidePreviewToggle = hidePreviewToggle,
     resetButton = resetButton,
   }
 end

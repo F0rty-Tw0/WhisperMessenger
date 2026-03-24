@@ -390,11 +390,21 @@ function Bootstrap.Initialize(factory, options)
         return nextState
       end,
       storeConfig = runtime.store.config,
-      onSettingChanged = function(key, value)
-        runtime.store.config[key] = value
+      settingsConfig = (function()
         accountState.settings = accountState.settings or {}
+        return accountState.settings
+      end)(),
+      onSettingChanged = function(key, value)
         accountState.settings[key] = value
+        -- Update runtime store config for retention/limit settings
+        if runtime.store.config[key] ~= nil then
+          runtime.store.config[key] = value
+        end
         trace("setting changed", key, tostring(value))
+        -- Refresh contacts list for display-affecting settings
+        if key == "hideMessagePreview" and runtime.refreshWindow then
+          runtime.refreshWindow()
+        end
       end,
     })
 
@@ -689,6 +699,19 @@ if type(_G.CreateFrame) == "function" then
 
         if Bootstrap.runtime.refreshWindow then
           Bootstrap.runtime.refreshWindow()
+        end
+      end
+      return
+    end
+
+    if event == "PLAYER_LOGOUT" then
+      if Bootstrap.runtime then
+        local settings = Bootstrap.runtime.accountState and Bootstrap.runtime.accountState.settings
+        if settings and settings.clearOnLogout then
+          for key in pairs(Bootstrap.runtime.store.conversations) do
+            Bootstrap.runtime.store.conversations[key] = nil
+          end
+          trace("clear on logout")
         end
       end
       return

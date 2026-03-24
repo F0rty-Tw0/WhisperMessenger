@@ -32,9 +32,12 @@ return function()
   assert(layout.optionsContentPane ~= nil, "optionsContentPane should exist")
 
   -- -----------------------------------------------------------------------
-  -- test_general_toggle_exists
+  -- test_category_tabs_exist
   -- -----------------------------------------------------------------------
-  assert(layout.generalToggle ~= nil, "generalToggle button should exist")
+  assert(layout.generalTab ~= nil, "generalTab should exist")
+  assert(layout.appearanceTab ~= nil, "appearanceTab should exist")
+  assert(layout.behaviorTab ~= nil, "behaviorTab should exist")
+  assert(layout.notificationsTab ~= nil, "notificationsTab should exist")
 
   -- -----------------------------------------------------------------------
   -- test_buttons_are_still_present
@@ -49,17 +52,21 @@ return function()
   assert(layout.optionsHeader ~= nil, "optionsHeader should exist")
 
   -- -----------------------------------------------------------------------
-  -- test_general_toggle_has_label
+  -- test_tabs_have_labels
   -- -----------------------------------------------------------------------
   do
-    local foundLabel = false
-    for _, child in ipairs(layout.generalToggle.children) do
-      if child.text and (string.find(child.text, "General", 1, true)) then
-        foundLabel = true
-        break
+    local function hasLabel(btn, expected)
+      for _, child in ipairs(btn.children) do
+        if child.text and string.find(child.text, expected, 1, true) then
+          return true
+        end
       end
+      return false
     end
-    assert(foundLabel, "generalToggle should have a label containing 'General'")
+    assert(hasLabel(layout.generalTab, "General"), "generalTab should have 'General' label")
+    assert(hasLabel(layout.appearanceTab, "Appearance"), "appearanceTab should have 'Appearance' label")
+    assert(hasLabel(layout.behaviorTab, "Behavior"), "behaviorTab should have 'Behavior' label")
+    assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
   end
 
   -- -----------------------------------------------------------------------

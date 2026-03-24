@@ -114,16 +114,27 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   optionsContentBg:SetAllPoints(optionsContentPane)
   applyColorTexture(optionsContentBg, Theme.COLORS.bg_primary)
 
-  -- "General" toggle at top of menu (below header)
-  local toggleColors = {
+  -- Category tabs at top of menu (below header)
+  local tabColors = {
     bg = Theme.COLORS.option_button_bg,
     bgHover = Theme.COLORS.option_button_hover,
     text = Theme.COLORS.option_button_text,
     textHover = Theme.COLORS.option_button_text_hover,
   }
-  local toggleLayout = { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.CONTACTS_WIDTH - (menuPadding * 2) }
-  local generalToggle = createOptionButton(factory, optionsMenu, "General", toggleColors, toggleLayout)
-  generalToggle:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
+  local tabLayout = { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.CONTACTS_WIDTH - (menuPadding * 2) }
+  local tabSpacing = 4
+
+  local generalTab = createOptionButton(factory, optionsMenu, "General", tabColors, tabLayout)
+  generalTab:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
+
+  local appearanceTab = createOptionButton(factory, optionsMenu, "Appearance", tabColors, tabLayout)
+  appearanceTab:SetPoint("TOPLEFT", generalTab, "BOTTOMLEFT", 0, -tabSpacing)
+
+  local behaviorTab = createOptionButton(factory, optionsMenu, "Behavior", tabColors, tabLayout)
+  behaviorTab:SetPoint("TOPLEFT", appearanceTab, "BOTTOMLEFT", 0, -tabSpacing)
+
+  local notificationsTab = createOptionButton(factory, optionsMenu, "Notifications", tabColors, tabLayout)
+  notificationsTab:SetPoint("TOPLEFT", behaviorTab, "BOTTOMLEFT", 0, -tabSpacing)
 
   -- Action buttons anchored to bottom of menu
   local btnH = Theme.LAYOUT.OPTION_BUTTON_HEIGHT
@@ -167,7 +178,10 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsMenu = optionsMenu,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,
-    generalToggle = generalToggle,
+    generalTab = generalTab,
+    appearanceTab = appearanceTab,
+    behaviorTab = behaviorTab,
+    notificationsTab = notificationsTab,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,

@@ -7,11 +7,27 @@ return function()
   local function noop() end
 
   -- -----------------------------------------------------------------------
-  -- test_general_toggle_shows_content_pane_on_click
+  -- test_tab_switching_shows_correct_panel
   -- -----------------------------------------------------------------------
   do
-    local generalToggle = factory.CreateFrame("Frame", nil, parent)
-    local optionsContentPane = factory.CreateFrame("Frame", nil, parent)
+    local generalPanel = factory.CreateFrame("Frame", nil, parent)
+    local appearancePanel = factory.CreateFrame("Frame", nil, parent)
+    local behaviorPanel = factory.CreateFrame("Frame", nil, parent)
+    local notificationsPanel = factory.CreateFrame("Frame", nil, parent)
+
+    -- Give each tab a bg texture child (for highlight logic)
+    local function makeTab()
+      local tab = factory.CreateFrame("Frame", nil, parent)
+      local bg = tab:CreateTexture(nil, "BACKGROUND")
+      bg:SetAllPoints(tab)
+      bg:SetColorTexture(0.14, 0.15, 0.20, 0.80)
+      return tab
+    end
+
+    local generalTab = makeTab()
+    local appearanceTab = makeTab()
+    local behaviorTab = makeTab()
+    local notificationsTab = makeTab()
 
     local refs = {
       closeButton = factory.CreateFrame("Frame", nil, parent),
@@ -20,8 +36,8 @@ return function()
       resetIconButton = factory.CreateFrame("Frame", nil, parent),
       clearAllChatsButton = factory.CreateFrame("Frame", nil, parent),
       optionsPanel = factory.CreateFrame("Frame", nil, parent),
-      generalToggle = generalToggle,
-      optionsContentPane = optionsContentPane,
+      settingsTabs = { generalTab, appearanceTab, behaviorTab, notificationsTab },
+      settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel },
     }
 
     _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
@@ -42,27 +58,33 @@ return function()
 
     WindowScripts.WireButtons(refs, options)
 
-    assert(
-      type(generalToggle.scripts) == "table" and type(generalToggle.scripts.OnClick) == "function",
-      "test_general_toggle: expected generalToggle to have OnClick script"
-    )
+    -- Default: first panel (General) shown, others hidden
+    assert(generalPanel.shown == true, "generalPanel should be shown by default")
+    assert(appearancePanel.shown == false, "appearancePanel should be hidden by default")
+    assert(behaviorPanel.shown == false, "behaviorPanel should be hidden by default")
+    assert(notificationsPanel.shown == false, "notificationsPanel should be hidden by default")
 
-    -- Content pane starts shown (General settings open by default)
-    assert(optionsContentPane.shown == true, "test_general_toggle: optionsContentPane should start shown")
+    -- Click Appearance tab
+    appearanceTab.scripts.OnClick(appearanceTab)
+    assert(generalPanel.shown == false, "generalPanel should be hidden after clicking appearance")
+    assert(appearancePanel.shown == true, "appearancePanel should be shown after clicking appearance")
+    assert(behaviorPanel.shown == false, "behaviorPanel should stay hidden")
+    assert(notificationsPanel.shown == false, "notificationsPanel should stay hidden")
 
-    -- First click hides it
-    generalToggle.scripts.OnClick(generalToggle)
-    assert(
-      optionsContentPane.shown == false,
-      "test_general_toggle: optionsContentPane should be hidden after first click"
-    )
+    -- Click Behavior tab
+    behaviorTab.scripts.OnClick(behaviorTab)
+    assert(appearancePanel.shown == false, "appearancePanel should be hidden after clicking behavior")
+    assert(behaviorPanel.shown == true, "behaviorPanel should be shown after clicking behavior")
 
-    -- Second click shows it again
-    generalToggle.scripts.OnClick(generalToggle)
-    assert(
-      optionsContentPane.shown == true,
-      "test_general_toggle: optionsContentPane should be hidden after second click"
-    )
+    -- Click Notifications tab
+    notificationsTab.scripts.OnClick(notificationsTab)
+    assert(behaviorPanel.shown == false, "behaviorPanel should be hidden after clicking notifications")
+    assert(notificationsPanel.shown == true, "notificationsPanel should be shown after clicking notifications")
+
+    -- Click General tab again
+    generalTab.scripts.OnClick(generalTab)
+    assert(notificationsPanel.shown == false, "notificationsPanel should be hidden after clicking general")
+    assert(generalPanel.shown == true, "generalPanel should be shown after clicking general")
 
     _G.StaticPopupDialogs = nil
     _G.StaticPopup_Show = nil

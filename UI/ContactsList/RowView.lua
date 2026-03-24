@@ -127,10 +127,12 @@ local function bindRow(factory, parent, row, index, item, options)
   end
 
   -- Preview text (create once, update text every bind)
+  local previewText = options.hideMessagePreview and "" or (item.lastPreview or "")
   if row.preview == nil then
     RowElements.createPreview(row, item, parentWidth)
+    row.preview:SetText(previewText)
   else
-    row.preview:SetText(item.lastPreview or "")
+    row.preview:SetText(previewText)
   end
 
   -- Action buttons (create once)

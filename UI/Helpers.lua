@@ -147,6 +147,58 @@ function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
   return button
 end
 
+function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layout, onChange)
+  local toggleWidth = layout.width or 280
+  local toggleHeight = layout.height or 24
+  local dotSize = 14
+
+  local row = factory.CreateFrame("Frame", nil, parent)
+  row:SetSize(toggleWidth, toggleHeight)
+
+  local labelFs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  labelFs:SetPoint("LEFT", row, "LEFT", 0, 0)
+  labelFs:SetText(label)
+  UIHelpers.setTextColor(labelFs, colors.text)
+
+  local dot = factory.CreateFrame("Button", nil, row)
+  dot:SetSize(dotSize, dotSize)
+  dot:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+
+  local dotBg = dot:CreateTexture(nil, "BACKGROUND")
+  dotBg:SetAllPoints(dot)
+
+  local enabled = initial == true
+  local function updateVisual()
+    if enabled then
+      UIHelpers.applyColorTexture(dotBg, colors.on or { 0.30, 0.82, 0.40, 1.0 })
+    else
+      UIHelpers.applyColorTexture(dotBg, colors.off or { 0.45, 0.45, 0.50, 1.0 })
+    end
+  end
+  updateVisual()
+
+  dot:SetScript("OnClick", function()
+    enabled = not enabled
+    updateVisual()
+    if onChange then
+      onChange(enabled)
+    end
+  end)
+
+  return {
+    row = row,
+    label = labelFs,
+    dot = dot,
+    getValue = function()
+      return enabled
+    end,
+    setValue = function(val)
+      enabled = val == true
+      updateVisual()
+    end,
+  }
+end
+
 ns.UIHelpers = UIHelpers
 
 return UIHelpers
