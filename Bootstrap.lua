@@ -400,6 +400,10 @@ function Bootstrap.Initialize(factory, options)
         if runtime.store.config[key] ~= nil then
           runtime.store.config[key] = value
         end
+        -- Keep conversationMaxAge in sync with messageMaxAge
+        if key == "messageMaxAge" then
+          runtime.store.config.conversationMaxAge = value
+        end
         trace("setting changed", key, tostring(value))
         -- Refresh contacts list for display-affecting settings
         if key == "hideMessagePreview" and runtime.refreshWindow then

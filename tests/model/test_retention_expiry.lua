@@ -132,4 +132,51 @@ return function()
       "expected default conversationMaxAge=86400, got " .. tostring(runtime.store.config.conversationMaxAge)
     )
   end
+
+  -- test_conversation_max_age_follows_message_max_age_from_settings
+  do
+    local runtime = RuntimeFactory.CreateRuntimeState(
+      { conversations = {}, settings = { messageMaxAge = 7200 } },
+      { activeConversationKey = nil },
+      "testplayer",
+      {}
+    )
+    assert(
+      runtime.store.config.messageMaxAge == 7200,
+      "expected messageMaxAge=7200 from settings, got " .. tostring(runtime.store.config.messageMaxAge)
+    )
+    assert(
+      runtime.store.config.conversationMaxAge == 7200,
+      "expected conversationMaxAge to match messageMaxAge=7200, got "
+        .. tostring(runtime.store.config.conversationMaxAge)
+    )
+  end
+
+  -- test_expire_all_removes_stale_contacts_within_retention_period
+  do
+    local now = 10000
+    local state = Store.New({
+      messageMaxAge = 3600,
+      conversationMaxAge = 3600,
+    })
+
+    state.conversations["key::stale-contact"] = {
+      messages = {},
+      lastActivityAt = now - 5000,
+      unreadCount = 0,
+    }
+    state.conversations["key::recent-contact"] = {
+      messages = { { sentAt = now - 100 } },
+      lastActivityAt = now - 100,
+      unreadCount = 0,
+    }
+
+    Store.ExpireAll(state, now)
+
+    assert(
+      state.conversations["key::stale-contact"] == nil,
+      "expected stale contact (last activity > retention) to be removed"
+    )
+    assert(state.conversations["key::recent-contact"] ~= nil, "expected recent contact to be kept")
+  end
 end
