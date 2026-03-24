@@ -95,10 +95,7 @@ return function()
     icon.setUnreadCount(5)
 
     -- Badge should show but pulse should not be active
-    assert(
-      icon.badge.shown == true,
-      "test_pulse_not_started_when_badgePulse_disabled: badge should still show"
-    )
+    assert(icon.badge.shown == true, "test_pulse_not_started_when_badgePulse_disabled: badge should still show")
   end
 
   -- -----------------------------------------------------------------------
@@ -111,9 +108,6 @@ return function()
     })
 
     -- Without getters, should default to showing badge (backward compat)
-    assert(
-      icon.badge.shown == true,
-      "test_defaults_when_no_getters_provided: badge should show by default"
-    )
+    assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
 end

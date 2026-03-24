@@ -409,6 +409,11 @@ function Bootstrap.Initialize(factory, options)
         if key == "hideMessagePreview" and runtime.refreshWindow then
           runtime.refreshWindow()
         end
+        -- Re-evaluate icon badge/pulse when notification settings change
+        if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
+          local freshContacts = buildContacts()
+          icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
+        end
       end,
     })
 
@@ -441,11 +446,18 @@ function Bootstrap.Initialize(factory, options)
     return isWindowVisible() and runtime.activeConversationKey == conversationKey
   end
 
+  accountState.settings = accountState.settings or {}
   icon = ToggleIcon.Create(uiFactory, {
     state = characterState.icon,
     onToggle = toggle,
     onPositionChanged = function(nextState)
       characterState.icon = TableUtils.copyState(nextState)
+    end,
+    getShowUnreadBadge = function()
+      return accountState.settings.showUnreadBadge ~= false
+    end,
+    getBadgePulse = function()
+      return accountState.settings.badgePulse ~= false
     end,
   })
 

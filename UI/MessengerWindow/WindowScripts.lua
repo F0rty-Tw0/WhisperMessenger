@@ -65,7 +65,9 @@ function WindowScripts.WireButtons(refs, options)
 
   if clearAllChatsButton and clearAllChatsButton.SetScript then
     local dialogName = "WHISPER_MESSENGER_CLEAR_ALL_CHATS"
-    _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+    if not _G.StaticPopupDialogs then
+      _G.StaticPopupDialogs = {}
+    end
     _G.StaticPopupDialogs[dialogName] = {
       text = "Are you sure you want to clear all chats?\n\nThis will permanently delete all conversation history.",
       button1 = "Clear All",
