@@ -1,3 +1,5 @@
+table.unpack = table.unpack or unpack
+
 local FakeUI = {}
 
 function FakeUI.NewFactory()
