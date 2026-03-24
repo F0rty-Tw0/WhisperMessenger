@@ -59,11 +59,27 @@ function EventBridge.RegisterLiveEvents(frame)
   end
 end
 
+local WHISPER_SOUND_ID = 7355
+
+local INCOMING_WHISPER_EVENTS = {
+  CHAT_MSG_WHISPER = true,
+  CHAT_MSG_BN_WHISPER = true,
+}
+
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
   local result = EventRouter.HandleEvent(runtime, eventName, buildLivePayload(runtime, eventName, ...))
+  if
+    INCOMING_WHISPER_EVENTS[eventName]
+    and runtime.accountState
+    and runtime.accountState.settings
+    and runtime.accountState.settings.playSoundOnWhisper == true
+    and type(_G.PlaySound) == "function"
+  then
+    _G.PlaySound(WHISPER_SOUND_ID)
+  end
   if refreshWindow then
     refreshWindow()
   end
