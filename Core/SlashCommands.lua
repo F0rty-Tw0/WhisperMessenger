@@ -22,6 +22,19 @@ function SlashCommands.Register(handlers)
       return
     end
 
+    if cmd == "debug" then
+      if trace.isEnabled() then
+        trace.disable()
+      else
+        trace.enable()
+      end
+      local status = trace.isEnabled() and "ON" or "OFF"
+      if type(_G.print) == "function" then
+        _G.print("[WM] Debug tracing: " .. status)
+      end
+      return
+    end
+
     trace("slash invoked")
     if handlers.toggle then
       handlers.toggle()
