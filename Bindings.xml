@@ -1,5 +1,5 @@
 <Bindings>
-  <Binding name="WHISPERMESSENGER_TOGGLE" category="Whisper Messenger">
+  <Binding name="WHISPERMESSENGER_TOGGLE" category="Whisper Messenger" default="CTRL-O">
     WhisperMessenger_Toggle()
   </Binding>
 </Bindings>
