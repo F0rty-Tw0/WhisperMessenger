@@ -180,6 +180,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   resizeGrip:SetSize(16, 16)
   resizeGrip:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -1, 1)
   resizeGrip:EnableMouse(true)
+  if resizeGrip.SetFrameLevel and frame.GetFrameLevel then
+    resizeGrip:SetFrameLevel(frame:GetFrameLevel() + 20)
+  end
   do
     local c = Theme.COLORS.text_secondary
     local gripColor = { c[1], c[2], c[3], 0.4 }

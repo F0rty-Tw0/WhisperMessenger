@@ -109,6 +109,7 @@ function MessengerWindow.Create(factory, options)
   local optionsPanel = layout.optionsPanel
   local optionsMenu = layout.optionsMenu
   local optionsContentPane = layout.optionsContentPane
+  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or optionsContentPane
   local generalTab = layout.generalTab
   local appearanceTab = layout.appearanceTab
   local behaviorTab = layout.behaviorTab
@@ -129,8 +130,8 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  local generalPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
-  generalPanel:SetAllPoints(optionsContentPane)
+  local generalPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
+  generalPanel:SetAllPoints(optionsScrollContent)
   local generalSettings = GeneralSettings.Create(factory, generalPanel, {
     maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
     maxConversations = storeConfig.maxConversations or 100,
@@ -141,8 +142,8 @@ function MessengerWindow.Create(factory, options)
     onChange = onSettingChanged,
   })
 
-  local appearancePanel = factory.CreateFrame("Frame", nil, optionsContentPane)
-  appearancePanel:SetAllPoints(optionsContentPane)
+  local appearancePanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
+  appearancePanel:SetAllPoints(optionsScrollContent)
   local appearanceSettings = AppearanceSettings.Create(factory, appearancePanel, {
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
@@ -150,8 +151,8 @@ function MessengerWindow.Create(factory, options)
     onChange = onSettingChanged,
   })
 
-  local behaviorPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
-  behaviorPanel:SetAllPoints(optionsContentPane)
+  local behaviorPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
+  behaviorPanel:SetAllPoints(optionsScrollContent)
   local behaviorSettings = BehaviorSettings.Create(factory, behaviorPanel, {
     dimWhenMoving = settingsConfig.dimWhenMoving,
     autoFocusComposer = settingsConfig.autoFocusComposer,
@@ -160,8 +161,8 @@ function MessengerWindow.Create(factory, options)
     onChange = onSettingChanged,
   })
 
-  local notificationsPanel = factory.CreateFrame("Frame", nil, optionsContentPane)
-  notificationsPanel:SetAllPoints(optionsContentPane)
+  local notificationsPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
+  notificationsPanel:SetAllPoints(optionsScrollContent)
   local notificationSettings = NotificationSettings.Create(factory, notificationsPanel, {
     badgePulse = settingsConfig.badgePulse,
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,

@@ -104,15 +104,24 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   optionsMenuDivider:SetSize(Theme.DIVIDER_THICKNESS, initialState.height - Theme.TOP_BAR_HEIGHT)
   applyColorTexture(optionsMenuDivider, Theme.COLORS.divider)
 
-  -- Right content pane for settings views
+  -- Right content pane for settings views (scrollable)
   local optionsContentWidth = initialState.width - Theme.CONTACTS_WIDTH - Theme.DIVIDER_THICKNESS
+  local optionsContentH = initialState.height - Theme.TOP_BAR_HEIGHT
   local optionsContentPane = factory.CreateFrame("Frame", nil, optionsPanel)
   optionsContentPane:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
-  optionsContentPane:SetSize(optionsContentWidth, initialState.height - Theme.TOP_BAR_HEIGHT)
+  optionsContentPane:SetSize(optionsContentWidth, optionsContentH)
 
   local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")
   optionsContentBg:SetAllPoints(optionsContentPane)
   applyColorTexture(optionsContentBg, Theme.COLORS.bg_primary)
+
+  local OPTIONS_CONTENT_HEIGHT = 420
+  local optionsScrollView = ScrollView.Create(factory, optionsContentPane, {
+    width = optionsContentWidth,
+    height = optionsContentH,
+    step = 24,
+  })
+  optionsScrollView.content:SetSize(optionsContentWidth, OPTIONS_CONTENT_HEIGHT)
 
   -- Category tabs at top of menu (below header)
   local tabColors = {
@@ -178,6 +187,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsMenu = optionsMenu,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,
+    optionsScrollView = optionsScrollView,
     generalTab = generalTab,
     appearanceTab = appearanceTab,
     behaviorTab = behaviorTab,
@@ -216,6 +226,25 @@ function LayoutBuilder.Relayout(layout, width, height)
     cv.scrollFrame:SetSize(Theme.CONTACTS_WIDTH, contactsH)
     cv.scrollBar:SetHeight(contactsH)
     cv.viewportHeight = contactsH
+  end
+
+  -- Resize options overlay to match new window dimensions
+  local optionsH = contactsH
+  local optionsContentW = contentW
+  layout.optionsPanel:SetSize(width, optionsH)
+  layout.optionsMenu:SetSize(Theme.CONTACTS_WIDTH, optionsH)
+  layout.optionsMenuDivider:SetSize(Theme.DIVIDER_THICKNESS, optionsH)
+  layout.optionsContentPane:SetSize(optionsContentW, optionsH)
+
+  -- Resize options scroll view
+  local osv = layout.optionsScrollView
+  if osv then
+    osv.scrollFrame:SetSize(optionsContentW, optionsH)
+    osv.scrollBar:SetHeight(optionsH)
+    osv.viewportHeight = optionsH
+    osv.totalWidth = optionsContentW
+    local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
+    Metrics.RefreshMetrics(osv, osv.content.height or 420)
   end
 end
 
