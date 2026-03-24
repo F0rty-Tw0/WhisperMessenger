@@ -20,6 +20,7 @@ Model/Identity/Identity.lua
 Model/Retention.lua
 Model/ConversationStore.lua
 Model/LockdownQueue.lua
+Model/PresenceCache.lua
 Model/ContactEnricher/AvailabilityEnricher.lua
 Model/ContactEnricher/ContactEnricher.lua
 

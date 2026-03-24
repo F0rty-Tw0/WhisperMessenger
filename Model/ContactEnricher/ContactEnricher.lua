@@ -5,6 +5,7 @@ end
 
 local AvailabilityEnricher = ns.AvailabilityEnricher
   or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
+local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 
 local ContactEnricher = {}
 
@@ -33,20 +34,16 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
       local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
       if AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction) then
         -- Opposite faction: check guild/community presence
-        if type(runtime.getGuildOrCommunityPresence) == "function" then
-          local presence = runtime.getGuildOrCommunityPresence(conversation.guid)
-          if presence == "online" then
-            return Availability.FromStatus("XFaction")
-          end
+        local presence = PresenceCache.GetPresence(conversation.guid)
+        if presence == "online" then
+          return Availability.FromStatus("XFaction")
         end
         return cached
       else
         -- Same faction or unknown: WrongFaction means offline unless guild/community says online
-        if type(runtime.getGuildOrCommunityPresence) == "function" then
-          local presence = runtime.getGuildOrCommunityPresence(conversation.guid)
-          if presence == "online" then
-            return Availability.FromStatus("CanWhisper")
-          end
+        local presence = PresenceCache.GetPresence(conversation.guid)
+        if presence == "online" then
+          return Availability.FromStatus("CanWhisper")
         end
         return Availability.FromStatus("Offline")
       end

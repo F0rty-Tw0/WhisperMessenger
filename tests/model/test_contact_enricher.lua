@@ -1,4 +1,5 @@
 local ContactEnricher = require("WhisperMessenger.Model.ContactEnricher")
+local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 local function makeRuntime(overrides)
   local r = {
@@ -20,6 +21,10 @@ local function makeRuntime(overrides)
 end
 
 return function()
+  -- Reset PresenceCache before each test suite run to avoid state leaks
+  PresenceCache._reset()
+  PresenceCache._setCache({})
+
   -- EnrichContactsAvailability: WoW contact gets cached availability
   do
     local runtime = makeRuntime({
@@ -135,12 +140,11 @@ return function()
 
   -- BuildConversationStatus: corrects WrongFaction to CanWhisper for same-faction contact with guild presence
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-gp"] = "online" })
     local runtime = makeRuntime({
       availabilityByGUID = { ["guid-gp"] = { status = "WrongFaction", canWhisper = false } },
       localFaction = "Horde",
-      getGuildOrCommunityPresence = function(_guid)
-        return "online"
-      end,
     })
     local conversation = { guid = "guid-gp", factionName = "Horde", channel = "WOW" }
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-gp", conversation)
@@ -153,12 +157,11 @@ return function()
 
   -- BuildConversationStatus: opposite-faction WrongFaction with guild presence returns XFaction
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-xf"] = "online" })
     local runtime = makeRuntime({
       availabilityByGUID = { ["guid-xf"] = { status = "WrongFaction", canWhisper = false } },
       localFaction = "Alliance",
-      getGuildOrCommunityPresence = function(_guid)
-        return "online"
-      end,
     })
     local conversation = { guid = "guid-xf", factionName = "Horde", channel = "WOW" }
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-xf", conversation)
@@ -181,7 +184,7 @@ return function()
     assert(result == avail, "non-WrongFaction status should pass through unchanged")
   end
 
-  -- EnrichContactsAvailability: BNet contact online via top-level isOnline shows as online
+  -- EnrichContactsAvailability: BNet contact online via top-level isOnline but not in WoW shows BNetOnline
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -199,9 +202,10 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet top-level isOnline contact should have availability")
     assert(
-      contacts[1].availability.status == "CanWhisper",
-      "BNet top-level isOnline should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "BNetOnline",
+      "BNet top-level isOnline without game should be BNetOnline, got: " .. tostring(contacts[1].availability.status)
     )
+    assert(contacts[1].availability.canWhisper == true, "BNetOnline should be whisperable")
   end
 
   -- EnrichContactsAvailability: BNet contact online via gameAccountInfo.isOnline shows as online
@@ -468,17 +472,13 @@ return function()
 
   -- EnrichContactsAvailability: WrongFaction online guild member becomes XFaction
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-guild-xfac"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Horde",
       availabilityByGUID = {
         ["guid-guild-xfac"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-guild-xfac" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-guild-xfac", channel = "WOW", factionName = "Alliance" },
@@ -494,17 +494,13 @@ return function()
 
   -- EnrichContactsAvailability: WrongFaction offline guild member becomes Offline
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-guild-off"] = "offline" })
     local runtime = makeRuntime({
       localFaction = "Horde",
       availabilityByGUID = {
         ["guid-guild-off"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-guild-off" then
-          return "offline"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-guild-off", channel = "WOW", factionName = "Alliance" },
@@ -518,14 +514,13 @@ return function()
 
   -- EnrichContactsAvailability: WrongFaction non-guild member stays WrongFaction
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
     local runtime = makeRuntime({
       localFaction = "Horde",
       availabilityByGUID = {
         ["guid-stranger"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(_guid)
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-stranger", channel = "WOW", factionName = "Alliance" },
@@ -603,17 +598,13 @@ return function()
 
   -- EnrichContactsAvailability: WoW contact Offline + opposite faction + guild online becomes XFaction
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-guild-offline-online"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {
         ["guid-guild-offline-online"] = { status = "Offline", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-guild-offline-online" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-guild-offline-online", channel = "WOW", factionName = "Horde" },
@@ -626,7 +617,7 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: same faction WrongFaction without guild defaults to Offline
+  -- EnrichContactsAvailability: same faction WrongFaction without guild defaults to Unavailable
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -639,25 +630,21 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
-      contacts[1].availability.status == "Offline",
-      "same faction WrongFaction without guild should become Offline, got: "
+      contacts[1].availability.status == "Unavailable",
+      "same faction WrongFaction without guild should become Unavailable, got: "
         .. tostring(contacts[1].availability.status)
     )
   end
 
   -- EnrichContactsAvailability: same faction WrongFaction with guild online becomes CanWhisper
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-same-wf-gon"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {
         ["guid-same-wf-gon"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-same-wf-gon" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-same-wf-gon", channel = "WOW", factionName = "Alliance" },
@@ -672,17 +659,13 @@ return function()
 
   -- EnrichContactsAvailability: same faction WrongFaction with guild offline becomes Offline
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-same-wf-goff"] = "offline" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {
         ["guid-same-wf-goff"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-same-wf-goff" then
-          return "offline"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-same-wf-goff", channel = "WOW", factionName = "Alliance" },
@@ -715,10 +698,9 @@ return function()
           }
         end,
       },
-      getGuildOrCommunityPresence = function(_guid)
-        return "online"
-      end,
     })
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-bn-guild-online"] = "online" })
     local contacts = {
       { channel = "BN", bnetAccountID = 8, guid = "guid-bn-guild-online", factionName = "Horde" },
     }
@@ -733,6 +715,8 @@ return function()
 
   -- EnrichContactsAvailability: BNet contact offline via API but guild online same faction becomes CanWhisper
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-bn-guild-same"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Horde",
       bnetApi = {
@@ -748,9 +732,6 @@ return function()
           }
         end,
       },
-      getGuildOrCommunityPresence = function(_guid)
-        return "online"
-      end,
     })
     local contacts = {
       { channel = "BN", bnetAccountID = 9, guid = "guid-bn-guild-same", factionName = "Horde" },
@@ -765,15 +746,11 @@ return function()
 
   -- EnrichContactsAvailability: WoW contact with no cached status but guild online gets XFaction
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-nocache-guild"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {},
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-nocache-guild" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-nocache-guild", channel = "WOW", factionName = "Horde" },
@@ -788,15 +765,11 @@ return function()
 
   -- EnrichContactsAvailability: WoW contact with no cached status but guild online same faction gets CanWhisper
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-nocache-same"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Horde",
       availabilityByGUID = {},
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-nocache-same" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-nocache-same", channel = "WOW", factionName = "Horde" },
@@ -811,15 +784,11 @@ return function()
 
   -- EnrichContactsAvailability: WoW contact with no cached status and guild offline gets Offline
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-nocache-guildoff"] = "offline" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {},
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-nocache-guildoff" then
-          return "offline"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-nocache-guildoff", channel = "WOW", factionName = "Horde" },
@@ -834,12 +803,11 @@ return function()
 
   -- EnrichContactsAvailability: WoW contact with no cached status and not in guild defaults to Offline
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {},
-      getGuildOrCommunityPresence = function(_guid)
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-nocache-noguld", channel = "WOW", factionName = "Horde" },
@@ -869,9 +837,11 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: WrongFaction with nil faction defaults to Offline
-  -- (can't determine if same/opposite faction, WrongFaction likely means offline)
+  -- EnrichContactsAvailability: WrongFaction with nil faction defaults to Offline (same-faction path)
+  -- (nil faction treated as unknown/same-faction; WrongFaction → Unavailable when no other data)
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {
@@ -883,24 +853,26 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
-      contacts[1].availability.status == "Offline",
-      "nil faction WrongFaction should become Offline, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].factionName == nil,
+      "WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
+    )
+    assert(
+      contacts[1].availability.status == "Unavailable",
+      "nil faction WrongFaction should become Unavailable (same-faction path), got: "
+        .. tostring(contacts[1].availability.status)
     )
   end
 
   -- EnrichContactsAvailability: WrongFaction with nil faction + guild online becomes CanWhisper
+  -- (nil faction treated as same-faction; guild online overrides WrongFaction → CanWhisper)
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({ ["guid-nil-fac-gon"] = "online" })
     local runtime = makeRuntime({
       localFaction = "Alliance",
       availabilityByGUID = {
         ["guid-nil-fac-gon"] = { status = "WrongFaction", canWhisper = false },
       },
-      getGuildOrCommunityPresence = function(guid)
-        if guid == "guid-nil-fac-gon" then
-          return "online"
-        end
-        return nil
-      end,
     })
     local contacts = {
       { guid = "guid-nil-fac-gon", channel = "WOW", factionName = nil },
@@ -939,6 +911,78 @@ return function()
     assert(
       ContactEnricher.ShouldRequestAvailability(cached) == true,
       "should always re-request to detect offline transitions"
+    )
+  end
+
+  -- EnrichContactsAvailability: WrongFaction with nil faction does NOT infer faction
+  -- (WrongFaction is a generic "unreachable" status, not proof of opposite faction —
+  -- same-faction cross-realm players also get WrongFaction)
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-neutral"] = { status = "WrongFaction", canWhisper = false },
+      },
+    })
+    local contacts = {
+      { guid = "guid-neutral", channel = "WOW", factionName = nil },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].factionName == nil,
+      "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
+    )
+  end
+
+  -- EnrichContactsAvailability: CanWhisper with nil faction infers same faction as local
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local conversations = {
+      ["key-canwhisper"] = { factionName = nil, channel = "WOW" },
+    }
+    local runtime = makeRuntime({
+      localFaction = "Horde",
+      availabilityByGUID = {
+        ["guid-canwhisper"] = { status = "CanWhisper", canWhisper = true },
+      },
+      store = { conversations = conversations },
+    })
+    local contacts = {
+      {
+        guid = "guid-canwhisper",
+        channel = "WOW",
+        factionName = nil,
+        conversationKey = "key-canwhisper",
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].factionName == "Horde",
+      "nil faction + CanWhisper + Horde local should infer Horde, got: " .. tostring(contacts[1].factionName)
+    )
+    assert(conversations["key-canwhisper"].factionName == "Horde", "faction should be persisted to conversation")
+  end
+
+  -- EnrichContactsAvailability: WrongFaction with nil faction does NOT infer faction (Horde local)
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local runtime = makeRuntime({
+      localFaction = "Horde",
+      availabilityByGUID = {
+        ["guid-neutral2"] = { status = "WrongFaction", canWhisper = false },
+      },
+    })
+    local contacts = {
+      { guid = "guid-neutral2", channel = "WOW", factionName = nil },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].factionName == nil,
+      "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
     )
   end
 

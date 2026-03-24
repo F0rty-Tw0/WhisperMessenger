@@ -17,79 +17,6 @@ local function currentTime()
   return 0
 end
 
--- Build a function that checks if a GUID belongs to the player's guild or communities
--- and returns their online presence. Queries C_Club API live each call so data stays fresh.
--- Returns: "online" (member is online), "offline" (member is offline), or nil (not a member).
-function RuntimeFactory.BuildGuildOrCommunityPresenceCheck()
-  local clubApi = _G.C_Club
-  if type(clubApi) ~= "table" then
-    return nil
-  end
-
-  local getGuildClubId = clubApi.GetGuildClubId
-  local getClubMembers = clubApi.GetClubMembers
-  local getMemberInfo = clubApi.GetMemberInfo
-  local getSubscribedClubs = clubApi.GetSubscribedClubs
-
-  if type(getClubMembers) ~= "function" or type(getMemberInfo) ~= "function" then
-    return nil
-  end
-
-  -- Enum.ClubMemberPresence: 0=Unknown, 1=Online, 2=OnlineMobile, 3=Offline, 4=Away
-  local function presenceToString(presence)
-    if presence == 1 or presence == 2 or presence == 4 then
-      return "online"
-    end
-    return "offline"
-  end
-
-  local function checkClubForGUID(clubId, guid)
-    local ok, members = pcall(getClubMembers, clubId)
-    if not ok or type(members) ~= "table" then
-      return nil
-    end
-    for _, memberId in ipairs(members) do
-      local infoOk, info = pcall(getMemberInfo, clubId, memberId)
-      if infoOk and info and info.guid == guid then
-        return presenceToString(info.presence)
-      end
-    end
-    return nil
-  end
-
-  return function(guid)
-    if guid == nil then
-      return nil
-    end
-
-    -- Check guild
-    if type(getGuildClubId) == "function" then
-      local ok, guildClubId = pcall(getGuildClubId)
-      if ok and guildClubId then
-        local presence = checkClubForGUID(guildClubId, guid)
-        if presence then
-          return presence
-        end
-      end
-    end
-
-    -- Check communities
-    if type(getSubscribedClubs) == "function" then
-      local ok, clubs = pcall(getSubscribedClubs)
-      if ok and clubs then
-        for _, club in ipairs(clubs) do
-          local presence = checkClubForGUID(club.clubId, guid)
-          if presence then
-            return presence
-          end
-        end
-      end
-    end
-
-    return nil
-  end
-end
-
 function RuntimeFactory.ResolveLocalProfileId(options)
   if options.localProfileId ~= nil then
     return options.localProfileId
@@ -154,8 +81,6 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     playerInfoByGUID = options.playerInfoByGUID or _G.GetPlayerInfoByGUID,
     localFaction = options.localFaction
       or (type(_G.UnitFactionGroup) == "function" and _G.UnitFactionGroup("player") or nil),
-    getGuildOrCommunityPresence = options.getGuildOrCommunityPresence
-      or RuntimeFactory.BuildGuildOrCommunityPresenceCheck(),
     store = store,
     queue = Queue.New(),
     now = options.now or currentTime,

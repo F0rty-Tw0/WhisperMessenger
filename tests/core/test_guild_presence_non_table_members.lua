@@ -1,12 +1,12 @@
-local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
+local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 return function()
   -- -----------------------------------------------------------------------
   -- test_get_club_members_returns_non_table_does_not_error
   -- -----------------------------------------------------------------------
   do
-    local originalCClub = _G.C_Club
-    _G.C_Club = {
+    PresenceCache._reset()
+    local api = {
       GetGuildClubId = function()
         return 12345
       end,
@@ -22,26 +22,27 @@ return function()
       end,
     }
 
-    local checkFn = RuntimeFactory.BuildGuildOrCommunityPresenceCheck()
-    assert(type(checkFn) == "function", "expected presence check function")
+    PresenceCache._initForTest(api, {
+      now = function()
+        return 100
+      end,
+    })
 
     -- Should not error when GetClubMembers returns nil
-    local result = checkFn("Player-1-001")
+    local result = PresenceCache.GetPresence("Player-1-001")
     assert(result == nil, "expected nil when guild members is not a table, got: " .. tostring(result))
-
-    _G.C_Club = originalCClub
   end
 
   -- -----------------------------------------------------------------------
   -- test_get_club_members_returns_userdata_does_not_error
   -- -----------------------------------------------------------------------
   do
-    local originalCClub = _G.C_Club
+    PresenceCache._reset()
     local fakeUserdata = setmetatable({}, {
       __type = "secret",
     })
 
-    _G.C_Club = {
+    local api = {
       GetGuildClubId = function()
         return 99999
       end,
@@ -56,24 +57,25 @@ return function()
       end,
     }
 
-    local checkFn = RuntimeFactory.BuildGuildOrCommunityPresenceCheck()
-    assert(type(checkFn) == "function", "expected presence check function")
+    PresenceCache._initForTest(api, {
+      now = function()
+        return 100
+      end,
+    })
 
     -- fakeUserdata is a table due to Lua limitations, but the type guard
-    -- should still pass since setmetatable returns a table. Test the nil case
-    -- above for the real protection. This test verifies no crash on edge cases.
-    local ok, _ = pcall(checkFn, "Player-1-002")
+    -- should still pass since setmetatable returns a table. This test verifies
+    -- no crash on edge cases.
+    local ok, _ = pcall(PresenceCache.GetPresence, "Player-1-002")
     assert(ok, "expected no error when GetClubMembers returns unusual value")
-
-    _G.C_Club = originalCClub
   end
 
   -- -----------------------------------------------------------------------
   -- test_normal_members_table_still_works
   -- -----------------------------------------------------------------------
   do
-    local originalCClub = _G.C_Club
-    _G.C_Club = {
+    PresenceCache._reset()
+    local api = {
       GetGuildClubId = function()
         return 77777
       end,
@@ -91,10 +93,13 @@ return function()
       end,
     }
 
-    local checkFn = RuntimeFactory.BuildGuildOrCommunityPresenceCheck()
-    local result = checkFn("Player-1-099")
-    assert(result == "online", "expected 'online' for matching guild member, got: " .. tostring(result))
+    PresenceCache._initForTest(api, {
+      now = function()
+        return 100
+      end,
+    })
 
-    _G.C_Club = originalCClub
+    local result = PresenceCache.GetPresence("Player-1-099")
+    assert(result == "online", "expected 'online' for matching guild member, got: " .. tostring(result))
   end
 end

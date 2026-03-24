@@ -60,6 +60,7 @@ function Bootstrap.Initialize(factory, options)
   local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
   local ContactEnricher = loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
   local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
+  local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
 
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
@@ -67,6 +68,15 @@ function Bootstrap.Initialize(factory, options)
     SavedState.Initialize(options.accountState, options.characterState, localProfileId)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
+
+  -- Initialize guild/community presence cache
+  local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
+  PresenceCache.Initialize(options.clubApi or _G.C_Club, {
+    ttl = presenceTTL,
+    now = options.now or function()
+      return type(_G.time) == "function" and _G.time() or 0
+    end,
+  })
 
   local function buildContacts()
     return ContactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
@@ -147,10 +157,7 @@ function Bootstrap.Initialize(factory, options)
 
     local guid = conversation.guid
     local cached = guid and runtime.availabilityByGUID[guid] or nil
-    local presence = type(runtime.getGuildOrCommunityPresence) == "function"
-        and guid
-        and runtime.getGuildOrCommunityPresence(guid)
-      or nil
+    local presence = guid and PresenceCache.GetPresence(guid) or nil
     local isBN = conversation.channel == "BN"
 
     trace("--- Contact Debug ---")
@@ -176,10 +183,17 @@ function Bootstrap.Initialize(factory, options)
     trace("[cached] runtime availability (from CAN_LOCAL_WHISPER_TARGET_RESPONSE):")
     trace("  cachedStatus:   " .. (cached and cached.status or "nil"))
     trace("  canWhisper:     " .. (cached and tostring(cached.canWhisper) or "nil"))
+    trace("  rawStatusCode:  " .. (cached and tostring(cached.rawStatus) or "nil"))
+    trace("[presenceCache] guild/community presence:")
+    trace("  presence:       " .. tostring(presence))
+    trace("  cacheStale:     " .. tostring(PresenceCache.IsStale()))
+    -- Targeted refresh to get live data for this contact
+    local freshPresence = guid and PresenceCache.RefreshPresence(guid) or nil
+    trace("  freshPresence:  " .. tostring(freshPresence))
     trace("[runtime] derived / environment:")
     trace("  localFaction:   " .. tostring(runtime.localFaction))
     trace("  isBattleNet:    " .. tostring(isBN))
-    trace("  guildPresence:  " .. tostring(presence))
+    trace("  sameFaction:    " .. tostring(conversation.factionName == runtime.localFaction))
 
     if isBN and conversation.bnetAccountID then
       local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
@@ -288,6 +302,10 @@ function Bootstrap.Initialize(factory, options)
       local conversation = runtime.store.conversations[conversationKey]
       Store.MarkRead(runtime.store, conversationKey)
 
+      if conversation.guid then
+        -- Targeted presence refresh for the clicked contact (fresh guild/community check)
+        PresenceCache.RefreshPresence(conversation.guid)
+      end
       if conversation.channel == "WOW" and conversation.guid then
         Gateway.RequestAvailability(runtime.chatApi, conversation.guid)
       end
@@ -753,10 +771,50 @@ if type(_G.CreateFrame) == "function" then
     end
 
     if event == "PLAYER_ENTERING_WORLD" then
-      if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
+      -- Start recurring presence cache rebuild timer + first rebuild after data loads
+      local PresenceCache = ns.PresenceCache
+      if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
+        -- First rebuild after 2s (when club data is ready), then refresh window
+        _G.C_Timer.After(2, function()
+          PresenceCache.Rebuild()
+          if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
+            Bootstrap.runtime.refreshWindow()
+          end
+        end)
+        -- Recurring timer for subsequent rebuilds
+        local function presenceTimerLoop()
+          if PresenceCache.IsStale() then
+            PresenceCache.Rebuild()
+          end
+          _G.C_Timer.After(PresenceCache.GetTTL(), presenceTimerLoop)
+        end
+        _G.C_Timer.After(PresenceCache.GetTTL(), presenceTimerLoop)
+      elseif Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
         _G.C_Timer.After(2, function()
           Bootstrap.runtime.refreshWindow()
         end)
+      end
+      return
+    end
+
+    -- Guild/community presence events: debounced cache invalidation
+    if
+      event == "GUILD_ROSTER_UPDATE"
+      or event == "CLUB_MEMBER_UPDATED"
+      or event == "CLUB_MEMBER_ADDED"
+      or event == "CLUB_MEMBER_REMOVED"
+    then
+      local PresenceCache = ns.PresenceCache
+      if PresenceCache then
+        PresenceCache.Invalidate()
+        -- Debounce: rebuild after 2s to coalesce rapid events
+        if not Bootstrap._presenceRebuildPending and type(_G.C_Timer) == "table" then
+          Bootstrap._presenceRebuildPending = true
+          _G.C_Timer.After(2, function()
+            Bootstrap._presenceRebuildPending = false
+            PresenceCache.Rebuild()
+          end)
+        end
       end
       return
     end

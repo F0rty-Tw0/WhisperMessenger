@@ -78,8 +78,17 @@ local function handleUnlockedEvent(state, eventName, payload)
       return nil
     end
 
-    state.availabilityByGUID[payload.guid] = Availability.FromStatus(payload.status)
-    return state.availabilityByGUID[payload.guid]
+    local avail = Availability.FromStatus(payload.status)
+    avail.rawStatus = payload.rawStatus
+    -- Don't downgrade CanWhisper set by a recent successful whisper.
+    -- A whisper exchange proves reachability; the async availability API
+    -- may return WrongFaction for cross-realm same-faction players.
+    local existing = state.availabilityByGUID[payload.guid]
+    if existing and existing.canWhisper and existing.confirmedByWhisper and not avail.canWhisper then
+      return existing
+    end
+    state.availabilityByGUID[payload.guid] = avail
+    return avail
   end
 
   if
@@ -112,7 +121,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       -- If someone whispers us, they are clearly online and whisperable
       local guid = payload.guid or (contact and contact.guid or nil)
       if guid then
-        state.availabilityByGUID[guid] = Availability.FromStatus("CanWhisper")
+        local avail = Availability.FromStatus("CanWhisper")
+        avail.confirmedByWhisper = true
+        state.availabilityByGUID[guid] = avail
       end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
       Store.AppendOutgoing(
@@ -125,7 +136,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       -- Our whisper was delivered, so the target is reachable
       local guid = payload.guid or (contact and contact.guid or nil)
       if guid then
-        state.availabilityByGUID[guid] = Availability.FromStatus("CanWhisper")
+        local avail = Availability.FromStatus("CanWhisper")
+        avail.confirmedByWhisper = true
+        state.availabilityByGUID[guid] = avail
       end
       local pending = state.pendingOutgoing[conversationKey]
       if pending and #pending > 0 then

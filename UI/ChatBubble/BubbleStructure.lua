@@ -58,6 +58,12 @@ function BubbleStructure.createStructure(frame)
   local bgFills = rounded.fills
   local bgCorners = rounded.corners
   local textFS = frame:CreateFontString(nil, "OVERLAY")
+  if textFS.SetWordWrap then
+    textFS:SetWordWrap(true)
+  end
+  if textFS.SetNonSpaceWrap then
+    textFS:SetNonSpaceWrap(true)
+  end
 
   frame._bgFills = bgFills
   frame._bgCorners = bgCorners

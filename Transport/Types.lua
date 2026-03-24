@@ -19,11 +19,14 @@ Types.AVAILABILITY_STATUS_BY_CODE = {
 
 -- Canonical set of statuses that allow whispering (used by Availability).
 -- XFaction is a computed status (CanWhisper + opposite faction), not from the API.
+-- Unavailable is a computed status: WrongFaction code 2 for same-faction cross-realm players
+-- who are not BNet friends, not in guild/community, and not in party/raid.
 Types.WHISPERABLE = {
   CanWhisper = true,
   XFaction = true,
   Away = true,
   Busy = true,
+  BNetOnline = true,
 }
 
 -- All known channel types

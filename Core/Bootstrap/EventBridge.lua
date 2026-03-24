@@ -15,6 +15,7 @@ local function buildLivePayload(runtime, eventName, ...)
     return {
       guid = guid,
       status = BNetResolver.NormalizeAvailabilityStatus(status),
+      rawStatus = status,
     }
   end
 
