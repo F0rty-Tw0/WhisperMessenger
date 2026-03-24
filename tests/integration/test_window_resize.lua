@@ -82,8 +82,9 @@ return function()
   )
 
   -- Composer input and inputBg should scale with new width
-  local buttonW = 72
-  local expectedInputW = expectedContentW - 24 - buttonW - 8
+  local buttonSize = 44
+  local buttonGap = 8
+  local expectedInputW = expectedContentW - 24 - buttonSize - buttonGap
   assert(
     window.composer.input.width == expectedInputW,
     "expected composer input width " .. expectedInputW .. " but got " .. tostring(window.composer.input.width)
