@@ -34,11 +34,8 @@ jobs:
           version: latest
           args: --check .
 
-      - name: Install Luacheck
-        uses: lunarmodules/luacheck@v1
-
       - name: Run Luacheck
-        run: luacheck .
+        uses: lunarmodules/luacheck@v1
 
   release:
     needs: lint
