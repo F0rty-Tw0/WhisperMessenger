@@ -37,6 +37,9 @@ globals = {
   "SlashCmdList",
   "SLASH_WHISPERMESSENGER1",
   "SLASH_WHISPERMESSENGER2",
+
+  -- Keybinding toggle (called from Bindings.xml)
+  "WhisperMessenger_Toggle",
 }
 
 -- Globals the addon READS (WoW API surface used by this addon)

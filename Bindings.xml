@@ -1,0 +1,5 @@
+<Bindings>
+  <Binding name="WHISPERMESSENGER_TOGGLE" category="Whisper Messenger">
+    WhisperMessenger_Toggle()
+  </Binding>
+</Bindings>

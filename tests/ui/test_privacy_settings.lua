@@ -2,7 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 local function loadAddonFromToc(addonName, tns)
   for line in io.lines("WhisperMessenger.toc") do
-    if line ~= "" and string.sub(line, 1, 2) ~= "##" then
+    if line ~= "" and string.sub(line, 1, 2) ~= "##" and not string.match(line, "%.xml$") then
       local chunk = assert(loadfile(line))
       chunk(addonName, tns)
     end

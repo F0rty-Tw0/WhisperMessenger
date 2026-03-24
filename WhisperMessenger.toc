@@ -10,6 +10,7 @@
 
 Core/Loader.lua
 Core/Trace.lua
+Core/Bindings.lua
 Core/Constants.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
