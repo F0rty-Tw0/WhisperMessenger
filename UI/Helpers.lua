@@ -202,6 +202,89 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
   }
 end
 
+local ROUNDED_CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
+
+--- Create a rounded-rectangle background on a frame using fill rects + corner textures.
+--- Returns { fills = {textures}, corners = {textures}, setColor = function(colorTable) }
+function UIHelpers.createRoundedBackground(frame, cornerRadius)
+  local r = cornerRadius or 8
+
+  local fills = {}
+  local corners = {}
+
+  local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
+  bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", r, -r)
+  bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, r)
+  fills[#fills + 1] = bgCenter
+
+  local bgTop = frame:CreateTexture(nil, "BACKGROUND")
+  bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", r, 0)
+  bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -r, 0)
+  bgTop:SetHeight(r)
+  fills[#fills + 1] = bgTop
+
+  local bgBottom = frame:CreateTexture(nil, "BACKGROUND")
+  bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", r, 0)
+  bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, 0)
+  bgBottom:SetHeight(r)
+  fills[#fills + 1] = bgBottom
+
+  local bgLeft = frame:CreateTexture(nil, "BACKGROUND")
+  bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -r)
+  bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, r)
+  bgLeft:SetWidth(r)
+  fills[#fills + 1] = bgLeft
+
+  local bgRight = frame:CreateTexture(nil, "BACKGROUND")
+  bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -r)
+  bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, r)
+  bgRight:SetWidth(r)
+  fills[#fills + 1] = bgRight
+
+  local function makeCorner(point)
+    local c = frame:CreateTexture(nil, "BACKGROUND")
+    c:SetSize(r, r)
+    c:SetPoint(point, frame, point, 0, 0)
+    if c.SetTexture then
+      c:SetTexture(ROUNDED_CIRCLE_TEX)
+    end
+    return c
+  end
+
+  local cTL = makeCorner("TOPLEFT")
+  local cTR = makeCorner("TOPRIGHT")
+  local cBL = makeCorner("BOTTOMLEFT")
+  local cBR = makeCorner("BOTTOMRIGHT")
+
+  if cTL.SetTexCoord then
+    cTL:SetTexCoord(0, 0.5, 0, 0.5)
+    cTR:SetTexCoord(0.5, 1, 0, 0.5)
+    cBL:SetTexCoord(0, 0.5, 0.5, 1)
+    cBR:SetTexCoord(0.5, 1, 0.5, 1)
+  end
+
+  corners[#corners + 1] = cTL
+  corners[#corners + 1] = cTR
+  corners[#corners + 1] = cBL
+  corners[#corners + 1] = cBR
+
+  local function setColor(colorTable)
+    local cr, cg, cb, ca = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
+    for _, part in ipairs(fills) do
+      if part.SetColorTexture then
+        part:SetColorTexture(cr, cg, cb, ca)
+      end
+    end
+    for _, part in ipairs(corners) do
+      if part.SetVertexColor then
+        part:SetVertexColor(cr, cg, cb, ca)
+      end
+    end
+  end
+
+  return { fills = fills, corners = corners, setColor = setColor }
+end
+
 ns.UIHelpers = UIHelpers
 
 return UIHelpers

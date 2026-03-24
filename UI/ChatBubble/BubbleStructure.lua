@@ -3,13 +3,14 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+
 local CORNER_R = 8
-local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
 
 -- Pre-cache the corner texture at load time so it's in memory before any bubble is created
 if type(_G.UIParent) == "table" and type(_G.UIParent.CreateTexture) == "function" then
   local preload = _G.UIParent:CreateTexture(nil, "BACKGROUND")
-  preload:SetTexture(CIRCLE_TEX)
+  preload:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall")
   preload:SetAlpha(0)
   preload:SetSize(1, 1)
 end
@@ -53,54 +54,9 @@ function BubbleStructure.createStructure(frame)
     end)
   end
 
-  local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
-  bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, -CORNER_R)
-  bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, CORNER_R)
-
-  local bgTop = frame:CreateTexture(nil, "BACKGROUND")
-  bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", CORNER_R, 0)
-  bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CORNER_R, 0)
-  bgTop:SetHeight(CORNER_R)
-
-  local bgBottom = frame:CreateTexture(nil, "BACKGROUND")
-  bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", CORNER_R, 0)
-  bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -CORNER_R, 0)
-  bgBottom:SetHeight(CORNER_R)
-
-  local bgLeft = frame:CreateTexture(nil, "BACKGROUND")
-  bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -CORNER_R)
-  bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, CORNER_R)
-  bgLeft:SetWidth(CORNER_R)
-
-  local bgRight = frame:CreateTexture(nil, "BACKGROUND")
-  bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -CORNER_R)
-  bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, CORNER_R)
-  bgRight:SetWidth(CORNER_R)
-
-  local function makeCorner(point)
-    local c = frame:CreateTexture(nil, "BACKGROUND")
-    c:SetSize(CORNER_R, CORNER_R)
-    c:SetPoint(point, frame, point, 0, 0)
-    if c.SetTexture then
-      c:SetTexture(CIRCLE_TEX)
-    end
-    return c
-  end
-
-  local cTL = makeCorner("TOPLEFT")
-  local cTR = makeCorner("TOPRIGHT")
-  local cBL = makeCorner("BOTTOMLEFT")
-  local cBR = makeCorner("BOTTOMRIGHT")
-
-  if cTL.SetTexCoord then
-    cTL:SetTexCoord(0, 0.5, 0, 0.5)
-    cTR:SetTexCoord(0.5, 1, 0, 0.5)
-    cBL:SetTexCoord(0, 0.5, 0.5, 1)
-    cBR:SetTexCoord(0.5, 1, 0.5, 1)
-  end
-
-  local bgFills = { bgCenter, bgTop, bgBottom, bgLeft, bgRight }
-  local bgCorners = { cTL, cTR, cBL, cBR }
+  local rounded = UIHelpers.createRoundedBackground(frame, CORNER_R)
+  local bgFills = rounded.fills
+  local bgCorners = rounded.corners
   local textFS = frame:CreateFontString(nil, "OVERLAY")
 
   frame._bgFills = bgFills

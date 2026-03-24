@@ -36,88 +36,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   applyColorTexture(inputBg, Theme.COLORS.bg_input)
 
   -- Send button (compact rounded pill)
-  local CORNER_R = 8
-  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMaskSmall"
+  local createRoundedBackground = UIHelpers.createRoundedBackground
   local button = factory.CreateFrame("Button", nil, pane)
   button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -inputX, inputY + (inputH - buttonH) / 2)
   button:SetSize(buttonW, buttonH)
 
-  -- Rounded background: center + edge strips + 4 corner textures
-  local sendFills = {}
-  local sendCorners = {}
-
-  local bgCenter = button:CreateTexture(nil, "BACKGROUND")
-  bgCenter:SetPoint("TOPLEFT", button, "TOPLEFT", CORNER_R, -CORNER_R)
-  bgCenter:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -CORNER_R, CORNER_R)
-  sendFills[#sendFills + 1] = bgCenter
-
-  local bgTop = button:CreateTexture(nil, "BACKGROUND")
-  bgTop:SetPoint("TOPLEFT", button, "TOPLEFT", CORNER_R, 0)
-  bgTop:SetPoint("TOPRIGHT", button, "TOPRIGHT", -CORNER_R, 0)
-  bgTop:SetHeight(CORNER_R)
-  sendFills[#sendFills + 1] = bgTop
-
-  local bgBottom = button:CreateTexture(nil, "BACKGROUND")
-  bgBottom:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", CORNER_R, 0)
-  bgBottom:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", -CORNER_R, 0)
-  bgBottom:SetHeight(CORNER_R)
-  sendFills[#sendFills + 1] = bgBottom
-
-  local bgLeft = button:CreateTexture(nil, "BACKGROUND")
-  bgLeft:SetPoint("TOPLEFT", button, "TOPLEFT", 0, -CORNER_R)
-  bgLeft:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, CORNER_R)
-  bgLeft:SetWidth(CORNER_R)
-  sendFills[#sendFills + 1] = bgLeft
-
-  local bgRight = button:CreateTexture(nil, "BACKGROUND")
-  bgRight:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, -CORNER_R)
-  bgRight:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, CORNER_R)
-  bgRight:SetWidth(CORNER_R)
-  sendFills[#sendFills + 1] = bgRight
-
-  local function makeCorner(point)
-    local c = button:CreateTexture(nil, "BACKGROUND")
-    c:SetSize(CORNER_R, CORNER_R)
-    c:SetPoint(point, button, point, 0, 0)
-    if c.SetTexture then
-      c:SetTexture(CIRCLE_TEX)
-    end
-    return c
-  end
-
-  local cTL = makeCorner("TOPLEFT")
-  local cTR = makeCorner("TOPRIGHT")
-  local cBL = makeCorner("BOTTOMLEFT")
-  local cBR = makeCorner("BOTTOMRIGHT")
-
-  if cTL.SetTexCoord then
-    cTL:SetTexCoord(0, 0.5, 0, 0.5)
-    cTR:SetTexCoord(0.5, 1, 0, 0.5)
-    cBL:SetTexCoord(0, 0.5, 0.5, 1)
-    cBR:SetTexCoord(0.5, 1, 0.5, 1)
-  end
-
-  sendCorners[#sendCorners + 1] = cTL
-  sendCorners[#sendCorners + 1] = cTR
-  sendCorners[#sendCorners + 1] = cBL
-  sendCorners[#sendCorners + 1] = cBR
-
-  button._sendFills = sendFills
-  button._sendCorners = sendCorners
-
-  local function applySendColor(colorTable)
-    local r, g, b, a = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
-    for _, part in ipairs(sendFills) do
-      if part.SetColorTexture then
-        part:SetColorTexture(r, g, b, a)
-      end
-    end
-    for _, part in ipairs(sendCorners) do
-      if part.SetVertexColor then
-        part:SetVertexColor(r, g, b, a)
-      end
-    end
-  end
+  local sendBg = createRoundedBackground(button, 8)
+  local applySendColor = sendBg.setColor
 
   local buttonLabel = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
   buttonLabel:SetPoint("CENTER", button, "CENTER", 0, 0)
