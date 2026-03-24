@@ -18,8 +18,6 @@ local LABEL_SPACING = 6
 local DEFAULTS = {
   windowOpacityInactive = 0.72,
   windowOpacityActive = 1.0,
-  bubbleMaxWidthPct = 0.75,
-  contactsPaneWidth = 300,
 }
 
 local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
@@ -96,7 +94,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
 
   local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText("Customize window opacity and layout dimensions.")
+  hint:SetText("Customize window opacity.")
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
   local opacityInactiveRow = createSliderRow(
@@ -129,36 +127,6 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   opacityActiveRow.row:SetPoint("TOPLEFT", opacityInactiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
-  local bubbleWidthRow = createSliderRow(
-    factory,
-    frame,
-    "Chat Bubble Max Width",
-    0.50,
-    1.0,
-    0.05,
-    config.bubbleMaxWidthPct or DEFAULTS.bubbleMaxWidthPct,
-    pctFormat,
-    function(value)
-      onChange("bubbleMaxWidthPct", value)
-    end
-  )
-  bubbleWidthRow.row:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
-
-  local contactsWidthRow = createSliderRow(
-    factory,
-    frame,
-    "Contacts Pane Width",
-    200,
-    400,
-    10,
-    config.contactsPaneWidth or DEFAULTS.contactsPaneWidth,
-    nil,
-    function(value)
-      onChange("contactsPaneWidth", value)
-    end
-  )
-  contactsWidthRow.row:SetPoint("TOPLEFT", bubbleWidthRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
-
   -- Reset button
   local normalColors = {
     bg = Theme.COLORS.option_button_bg,
@@ -173,20 +141,16 @@ function AppearanceSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = SLIDER_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", contactsWidthRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
   resetButton:SetScript("OnClick", function()
     opacityInactiveRow.slider:SetValue(DEFAULTS.windowOpacityInactive)
     opacityActiveRow.slider:SetValue(DEFAULTS.windowOpacityActive)
-    bubbleWidthRow.slider:SetValue(DEFAULTS.bubbleMaxWidthPct)
-    contactsWidthRow.slider:SetValue(DEFAULTS.contactsPaneWidth)
   end)
 
   return {
     frame = frame,
     opacityInactiveSlider = opacityInactiveRow.slider,
     opacityActiveSlider = opacityActiveRow.slider,
-    bubbleWidthSlider = bubbleWidthRow.slider,
-    contactsWidthSlider = contactsWidthRow.slider,
     resetButton = resetButton,
   }
 end

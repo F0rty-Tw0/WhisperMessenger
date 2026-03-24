@@ -160,7 +160,7 @@ function ActionButtons.createPinButton(factory, row, item, parentWidth, options)
       ActionButtons.showActions(row)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        local pinLabel = item.pinned and "Unpin" or "Pin"
+        local pinLabel = item.pinned and "Unpin" or "Pin to top"
         _G.GameTooltip:SetText(pinLabel)
         _G.GameTooltip:Show()
       end

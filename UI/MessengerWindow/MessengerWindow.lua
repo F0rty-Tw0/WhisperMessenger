@@ -94,6 +94,9 @@ function MessengerWindow.Create(factory, options)
   local optionsButton = chrome.optionsButton
   local resizeGrip = chrome.resizeGrip
 
+  -- Settings config (must be available before layout and alpha wiring)
+  local settingsConfig = options.settingsConfig or {}
+
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, {})
   local contactsPane = layout.contactsPane
@@ -119,7 +122,6 @@ function MessengerWindow.Create(factory, options)
 
   -- Settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
-  local settingsConfig = options.settingsConfig or {}
 
   local function onSettingChanged(key, value)
     if options.onSettingChanged then
@@ -131,7 +133,7 @@ function MessengerWindow.Create(factory, options)
   generalPanel:SetAllPoints(optionsContentPane)
   local generalSettings = GeneralSettings.Create(factory, generalPanel, {
     maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
-    maxConversations = storeConfig.maxConversations or 200,
+    maxConversations = storeConfig.maxConversations or 100,
     messageMaxAge = storeConfig.messageMaxAge or 86400,
     clearOnLogout = settingsConfig.clearOnLogout,
     hideMessagePreview = settingsConfig.hideMessagePreview,
@@ -144,8 +146,6 @@ function MessengerWindow.Create(factory, options)
   local appearanceSettings = AppearanceSettings.Create(factory, appearancePanel, {
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
-    bubbleMaxWidthPct = settingsConfig.bubbleMaxWidthPct,
-    contactsPaneWidth = settingsConfig.contactsPaneWidth,
   }, {
     onChange = onSettingChanged,
   })
@@ -252,15 +252,23 @@ function MessengerWindow.Create(factory, options)
   -- Alpha helpers (capture composer.input now that composer exists)
   local composerInput = composer.input
 
+  local function getAlphaSettings()
+    return {
+      dimWhenMoving = settingsConfig.dimWhenMoving,
+      windowOpacityActive = settingsConfig.windowOpacityActive,
+      windowOpacityInactive = settingsConfig.windowOpacityInactive,
+    }
+  end
+
   AlphaController.hookScript(composerInput, "OnEditFocusGained", function()
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, true)
+    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, true, getAlphaSettings())
   end)
   AlphaController.hookScript(composerInput, "OnEditFocusLost", function()
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState)
+    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, false, getAlphaSettings())
   end)
 
   local function refreshWindowAlpha(forceOpaque)
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque)
+    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, getAlphaSettings())
   end
 
   -- Selection management

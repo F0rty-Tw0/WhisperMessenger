@@ -131,7 +131,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   local messageMaxAge = options.messageMaxAge or saved.messageMaxAge or 86400
   local store = Store.New({
     maxMessagesPerConversation = options.maxMessagesPerConversation or saved.maxMessagesPerConversation or 200,
-    maxConversations = options.maxConversations or saved.maxConversations or 200,
+    maxConversations = options.maxConversations or saved.maxConversations or 100,
     messageMaxAge = messageMaxAge,
     conversationMaxAge = options.conversationMaxAge or messageMaxAge,
   })

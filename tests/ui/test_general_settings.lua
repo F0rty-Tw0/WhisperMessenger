@@ -135,8 +135,8 @@ return function()
       "min label should be '10', got: " .. tostring(settings.maxConversationsMinLabel.text)
     )
     assert(
-      settings.maxConversationsMaxLabel.text == "500",
-      "max label should be '500', got: " .. tostring(settings.maxConversationsMaxLabel.text)
+      settings.maxConversationsMaxLabel.text == "100",
+      "max label should be '100', got: " .. tostring(settings.maxConversationsMaxLabel.text)
     )
 
     assert(settings.retentionMinLabel ~= nil, "should have retentionMinLabel")
@@ -206,8 +206,8 @@ return function()
       "maxMessages should reset to 200, got: " .. tostring(settings.maxMessagesSlider:GetValue())
     )
     assert(
-      settings.maxConversationsSlider:GetValue() == 200,
-      "maxConversations should reset to 200, got: " .. tostring(settings.maxConversationsSlider:GetValue())
+      settings.maxConversationsSlider:GetValue() == 100,
+      "maxConversations should reset to 100, got: " .. tostring(settings.maxConversationsSlider:GetValue())
     )
     assert(
       settings.retentionSlider:GetValue() == 24,
@@ -216,7 +216,7 @@ return function()
 
     -- onChange should have fired for each
     assert(changes.maxMessagesPerConversation == 200, "should fire onChange for maxMessagesPerConversation=200")
-    assert(changes.maxConversations == 200, "should fire onChange for maxConversations=200")
+    assert(changes.maxConversations == 100, "should fire onChange for maxConversations=100")
     assert(changes.messageMaxAge == 86400, "should fire onChange for messageMaxAge=86400")
   end
 end

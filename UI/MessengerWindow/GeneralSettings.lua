@@ -19,7 +19,7 @@ local LABEL_SPACING = 6
 
 local DEFAULTS = {
   maxMessagesPerConversation = 200,
-  maxConversations = 200,
+  maxConversations = 100,
   messageMaxAge = 86400,
   clearOnLogout = false,
   hideMessagePreview = false,
@@ -135,9 +135,9 @@ function GeneralSettings.Create(factory, parent, config, options)
     frame,
     "Max Contacts",
     10,
-    500,
+    100,
     10,
-    config.maxConversations or 200,
+    config.maxConversations or 100,
     function(value)
       onChange("maxConversations", value)
     end

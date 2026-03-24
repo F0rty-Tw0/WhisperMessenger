@@ -64,12 +64,15 @@ function AlphaController.isExternalActivityActive()
 end
 
 -- windowState: table with a `isDimmed` boolean field (mutated in place)
-function AlphaController.applyWindowAlpha(frame, dimmed, windowState)
+-- alphaConfig (optional): { active = number, inactive = number }
+function AlphaController.applyWindowAlpha(frame, dimmed, windowState, alphaConfig)
   if frame == nil then
     return
   end
-  local targetAlpha = dimmed and Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA or Theme.WINDOW_IDLE_ALPHA
-  local currentAlpha = AlphaController.getAlpha(frame, Theme.WINDOW_IDLE_ALPHA)
+  local activeAlpha = alphaConfig and alphaConfig.active or Theme.WINDOW_IDLE_ALPHA
+  local inactiveAlpha = alphaConfig and alphaConfig.inactive or Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA
+  local targetAlpha = dimmed and inactiveAlpha or activeAlpha
+  local currentAlpha = AlphaController.getAlpha(frame, activeAlpha)
   if currentAlpha == targetAlpha and windowState.isDimmed == dimmed then
     return
   end
@@ -81,15 +84,23 @@ function AlphaController.applyWindowAlpha(frame, dimmed, windowState)
   windowState.isDimmed = dimmed
 end
 
-function AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque)
+-- settings (optional): { dimWhenMoving, windowOpacityActive, windowOpacityInactive }
+function AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, settings)
+  local alphaConfig = settings and { active = settings.windowOpacityActive, inactive = settings.windowOpacityInactive }
+    or nil
   if forceOpaque == true then
-    AlphaController.applyWindowAlpha(frame, false, windowState)
+    AlphaController.applyWindowAlpha(frame, false, windowState, alphaConfig)
+    return
+  end
+  if settings and settings.dimWhenMoving == false then
+    AlphaController.applyWindowAlpha(frame, false, windowState, alphaConfig)
     return
   end
   AlphaController.applyWindowAlpha(
     frame,
     (not AlphaController.isWindowEngaged(frame, composerInput)) and AlphaController.isExternalActivityActive(),
-    windowState
+    windowState,
+    alphaConfig
   )
 end
 
