@@ -5,8 +5,8 @@
 ## Version: 0.1.0
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
-## X-Curse-Project-ID: CHANGEME
-## X-Wago-ID: CHANGEME
+## X-Curse-Project-ID: 1494311
+## X-Wago-ID: whispermessenger
 
 Core/Loader.lua
 Core/Trace.lua
