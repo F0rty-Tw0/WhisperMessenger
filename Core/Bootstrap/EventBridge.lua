@@ -7,6 +7,8 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 
+local Trace = ns.Trace
+
 local EventBridge = {}
 
 local function buildLivePayload(runtime, eventName, ...)
@@ -67,11 +69,43 @@ local INCOMING_WHISPER_EVENTS = {
   CHAT_MSG_BN_WHISPER = true,
 }
 
+local TRACE_EVENTS = {
+  CHAT_MSG_WHISPER = true,
+  CHAT_MSG_WHISPER_INFORM = true,
+  CHAT_MSG_BN_WHISPER = true,
+  CHAT_MSG_BN_WHISPER_INFORM = true,
+  CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE = true,
+  CHAT_MSG_AFK = true,
+  CHAT_MSG_DND = true,
+}
+
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
-  local result = EventRouter.HandleEvent(runtime, eventName, buildLivePayload(runtime, eventName, ...))
+  local payload = buildLivePayload(runtime, eventName, ...)
+  if Trace and TRACE_EVENTS[eventName] then
+    Trace(
+      "EventBridge: "
+        .. eventName
+        .. " from="
+        .. tostring(payload.playerName)
+        .. " guid="
+        .. tostring(payload.guid)
+        .. " lineID="
+        .. tostring(payload.lineID)
+    )
+  end
+  local result = EventRouter.HandleEvent(runtime, eventName, payload)
+  if Trace and TRACE_EVENTS[eventName] then
+    if result and result.queued then
+      Trace("EventBridge: queued (chat locked)")
+    elseif result then
+      Trace("EventBridge: routed OK, unread=" .. tostring(result.unreadCount))
+    else
+      Trace("EventBridge: result=nil (not processed)")
+    end
+  end
   if
     INCOMING_WHISPER_EVENTS[eventName]
     and runtime.accountState

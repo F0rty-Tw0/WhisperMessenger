@@ -61,9 +61,14 @@ jobs:
           sed -i "s/^## Version: .*/## Version: ${VERSION}/" WhisperMessenger.toc
           sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${VERSION}\"/" Core/Constants.lua
           git add WhisperMessenger.toc Core/Constants.lua
-          git commit -m "release: v${VERSION}"
+          if git diff --cached --quiet; then
+            echo "Version already set to ${VERSION}, skipping commit"
+          else
+            git commit -m "release: v${VERSION}"
+            git push origin HEAD:master
+          fi
           git tag -a "${VERSION}" -m "Release ${VERSION}"
-          git push origin HEAD:master "${VERSION}"
+          git push origin "${VERSION}"
 
       - name: Package and release
         uses: BigWigsMods/packager@v2
