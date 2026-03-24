@@ -1,0 +1,18 @@
+package-as: WhisperMessenger
+
+ignore:
+  - .github
+  - .claude
+  - .omc
+  - tests
+  - scripts
+  - docs
+  - .editorconfig
+  - .gitignore
+  - .luacheckrc
+  - stylua.toml
+  - CLAUDE.md
+
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
