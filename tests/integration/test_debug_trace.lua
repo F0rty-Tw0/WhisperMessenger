@@ -55,6 +55,13 @@ return function()
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
 
+  -- Enable tracing so lifecycle trace() calls produce output captured by the
+  -- overridden _G.print above. Tracing is off by default; the test verifies
+  -- that the trace calls are wired up correctly when tracing is enabled.
+  if ns.trace and ns.trace.enable then
+    ns.trace.enable()
+  end
+
   local eventFrame
   for _, frame in ipairs(createdFrames) do
     if frame.scripts and frame.scripts.OnEvent then

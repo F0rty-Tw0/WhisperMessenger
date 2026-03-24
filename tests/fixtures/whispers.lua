@@ -29,7 +29,9 @@ return {
   availability = {
     eventName = "CAN_LOCAL_WHISPER_TARGET_RESPONSE",
     payload = {
-      guid = "Player-3676-0ABCDEF0",
+      -- Use a different guid than the whisper fixture so the "don't downgrade
+      -- confirmed-by-whisper" guard in EventRouter does not suppress this event.
+      guid = "Player-3676-0ABCDEF1",
       status = "Offline",
     },
   },

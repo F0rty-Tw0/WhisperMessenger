@@ -38,10 +38,10 @@ return function()
   assert(#conversation.messages == 2, "AFK should not add a message, got " .. #conversation.messages)
   assert(conversation.activeStatus ~= nil, "AFK should set activeStatus")
   assert(conversation.activeStatus.text == "Away from keyboard")
-  assert(conversation.unreadCount == 1)
+  assert(conversation.unreadCount == 0, "unreadCount should be 0 after outgoing INFORM marked conversation read")
 
   Router.HandleEvent(state, fixture.availability.eventName, fixture.availability.payload)
-  assert(state.availabilityByGUID["Player-3676-0ABCDEF0"].status == "Offline")
+  assert(state.availabilityByGUID["Player-3676-0ABCDEF1"].status == "Offline")
 
   local missingGuidResult = Router.HandleEvent(state, fixture.availability.eventName, { status = "Offline" })
   assert(missingGuidResult == nil)

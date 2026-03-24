@@ -92,6 +92,12 @@ function Bootstrap.Initialize(factory, options)
 
     trace("set visible=" .. tostring(nextVisible))
     if nextVisible then
+      -- Rebuild presence cache on window open so all contacts show fresh statuses
+      local PresenceCache = ns.PresenceCache
+      if PresenceCache then
+        trace("PresenceCache: rebuild on window open")
+        PresenceCache.Rebuild()
+      end
       window.frame:Show()
     else
       window.frame:Hide()
