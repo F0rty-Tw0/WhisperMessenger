@@ -237,8 +237,8 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
             end
             -- BNet whispers are always cross-faction; no XFaction status needed
           end
-        elseif accountInfo.isOnline == false or (gameInfo and gameInfo.isOnline == false) then
-          -- BNet API explicitly says offline; fall back to guild/community presence
+        elseif accountInfo.isOnline == false then
+          -- BNet API explicitly says offline at account level; fall back to guild/community presence
           local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil
           if presence == "online" then
             -- BNet whispers are always cross-faction; no XFaction needed
@@ -246,9 +246,18 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
           else
             item.availability = Availability.FromStatus("Offline")
           end
+        elseif accountInfo.isOnline == nil then
+          -- isOnline is nil (unknown at account level). Could be BNet mobile app user
+          -- or API still loading. Check guild/community presence for ground truth.
+          local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil
+          if presence == "online" then
+            -- Guild/community says online — they're in WoW, BNet API just hasn't caught up
+            item.availability = Availability.FromStatus("CanWhisper")
+          else
+            -- Not in guild/community as online — likely on BNet mobile app
+            item.availability = Availability.FromStatus("BNetOnline")
+          end
         end
-        -- When isOnline is nil (unknown), skip — don't override to Offline.
-        -- The API may not have loaded yet, or the friend is on the desktop app.
       end
     end
   end

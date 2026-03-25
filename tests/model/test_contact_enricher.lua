@@ -301,6 +301,7 @@ return function()
       bnetApi = {
         GetAccountInfoByID = function(_bnetAccountID, _guid)
           return {
+            isOnline = false,
             gameAccountInfo = {
               isOnline = false,
               characterName = nil,

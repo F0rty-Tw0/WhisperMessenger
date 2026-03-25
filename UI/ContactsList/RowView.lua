@@ -74,6 +74,10 @@ local function bindRow(factory, parent, row, index, item, options)
         colorKey = "away"
       elseif item.availability.status == "Busy" then
         colorKey = "dnd"
+      elseif item.availability.status == "BNetOnline" then
+        colorKey = "away"
+      elseif item.availability.status == "Unavailable" then
+        colorKey = "offline"
       end
     else
       colorKey = "offline"

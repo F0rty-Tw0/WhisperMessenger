@@ -39,6 +39,10 @@ function StatusDot.create(factory, parent, anchorFrame, availability)
       colorKey = "away"
     elseif availability.status == "Busy" then
       colorKey = "dnd"
+    elseif availability.status == "BNetOnline" then
+      colorKey = "away"
+    elseif availability.status == "Unavailable" then
+      colorKey = "offline"
     end
   else
     colorKey = "offline"
