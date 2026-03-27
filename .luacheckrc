@@ -85,6 +85,10 @@ read_globals = {
   "ChatFrame_RemoveMessageEventFilter",
   "ChatEdit_SetLastTellTarget",
 
+  -- CVar API
+  "GetCVar",
+  "SetCVar",
+
   -- Misc
   "GetTime",
   "GetServerTime",

@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.6] - 2026-03-27
+
+### Added
+
+- Profanity filter toggle in Behavior settings — enable or disable WoW's built-in profanity filter directly from the messenger without opening game options
+
+### Fixed
+
+- Fixed lint warnings for unused variables in whisper chat filter tests and link hooks
+
 ## [1.0.5] - 2026-03-27
 
 ### Improved

@@ -94,6 +94,22 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   hideFromDefaultChatToggle.row:SetPoint("TOPLEFT", autoSelectToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
+  local profanityFilterToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Enable profanity filter",
+    profanityEnabled,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      if _G.SetCVar then
+        _G.SetCVar("profanityFilter", value and "1" or "0")
+      end
+    end
+  )
+  profanityFilterToggle.row:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local normalColors = {
     bg = Theme.COLORS.option_button_bg,
@@ -108,7 +124,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -118,6 +134,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoSelectUnread", DEFAULTS.autoSelectUnread)
     hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
     onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
+    profanityFilterToggle.setValue(true)
+    if _G.SetCVar then
+      _G.SetCVar("profanityFilter", "1")
+    end
   end)
 
   return {
@@ -126,6 +146,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoFocusToggle = autoFocusToggle,
     autoSelectToggle = autoSelectToggle,
     hideFromDefaultChatToggle = hideFromDefaultChatToggle,
+    profanityFilterToggle = profanityFilterToggle,
     resetButton = resetButton,
   }
 end
