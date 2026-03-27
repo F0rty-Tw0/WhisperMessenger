@@ -17,15 +17,22 @@ local function buildConversationContact(state, payload)
     end
 
     local contact = Identity.FromBattleNet(payload.bnetAccountID, payload.accountInfo, payload.playerInfo)
+    if contact.canonicalName == "" then
+      return nil, nil
+    end
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
     return contact, conversationKey
   end
 
-  if payload.playerName == nil then
+  if payload.playerName == nil or payload.playerName == "" then
     return nil, nil
   end
 
   local contact = Identity.FromWhisper(payload.playerName, payload.guid, payload.playerInfo)
+  -- During tainted execution normalizeName degrades to ""; reject degenerate contacts
+  if contact.canonicalName == "" then
+    return nil, nil
+  end
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
   return contact, conversationKey
 end

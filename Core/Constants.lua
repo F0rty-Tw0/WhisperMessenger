@@ -27,6 +27,8 @@ local Constants = {
     "CLUB_MEMBER_UPDATED",
     "CLUB_MEMBER_ADDED",
     "CLUB_MEMBER_REMOVED",
+    "CHALLENGE_MODE_START",
+    "CHALLENGE_MODE_COMPLETED",
   },
 }
 

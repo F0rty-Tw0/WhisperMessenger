@@ -16,6 +16,7 @@ local DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
   autoSelectUnread = true,
+  hideFromDefaultChat = false,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -80,6 +81,19 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   autoSelectToggle.row:SetPoint("TOPLEFT", autoFocusToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local hideFromDefaultChatToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Hide whispers from default chat",
+    config.hideFromDefaultChat == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("hideFromDefaultChat", value)
+    end
+  )
+  hideFromDefaultChatToggle.row:SetPoint("TOPLEFT", autoSelectToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local normalColors = {
     bg = Theme.COLORS.option_button_bg,
@@ -94,7 +108,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", autoSelectToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -102,6 +116,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoFocusComposer", DEFAULTS.autoFocusComposer)
     autoSelectToggle.setValue(DEFAULTS.autoSelectUnread)
     onChange("autoSelectUnread", DEFAULTS.autoSelectUnread)
+    hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
+    onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
   end)
 
   return {
@@ -109,6 +125,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     dimToggle = dimToggle,
     autoFocusToggle = autoFocusToggle,
     autoSelectToggle = autoSelectToggle,
+    hideFromDefaultChatToggle = hideFromDefaultChatToggle,
     resetButton = resetButton,
   }
 end

@@ -8,7 +8,23 @@ local Factions = ns.IdentityFactions or require("WhisperMessenger.Model.Identity
 local Identity = {}
 
 local function normalizeName(name)
-  return string.lower(name or "")
+  if name == nil then
+    return ""
+  end
+  -- Detaint secret strings from chat events before string ops.
+  -- During tainted execution (e.g. mythic lockdown) Ambiguate itself
+  -- rejects secret values, so guard with pcall.
+  if _G.Ambiguate then
+    local ok, clean = pcall(_G.Ambiguate, name, "none")
+    if ok then
+      name = clean
+    end
+  end
+  local ok, result = pcall(string.lower, name)
+  if ok then
+    return result
+  end
+  return ""
 end
 
 local function buildGameAccountName(accountInfo)
@@ -44,6 +60,14 @@ end
 
 function Identity.FromWhisper(fullName, guid, playerInfo)
   playerInfo = playerInfo or {}
+  -- Detaint the name once; normalizeName handles nil but displayName needs a clean copy too.
+  -- pcall guards against tainted execution (mythic lockdown).
+  if _G.Ambiguate and fullName then
+    local ok, clean = pcall(_G.Ambiguate, fullName, "none")
+    if ok then
+      fullName = clean
+    end
+  end
   return {
     channel = "WOW",
     contactKey = "WOW::" .. normalizeName(fullName),

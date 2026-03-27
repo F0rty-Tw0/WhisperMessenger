@@ -2,6 +2,7 @@
 ## Title: WhisperMessenger
 ## Notes: Messenger-style whisper UI for WoW Retail
 ## Author: Claude
+## Category: Chat
 ## Version: v1.0.2
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
@@ -12,6 +13,7 @@ Core/Loader.lua
 Core/Trace.lua
 Core/Bindings.lua
 Core/Constants.lua
+Core/ContentDetector.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 

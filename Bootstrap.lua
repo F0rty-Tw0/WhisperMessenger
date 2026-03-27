@@ -487,19 +487,28 @@ function Bootstrap.Initialize(factory, options)
   -- Suppress whisper messages from the default chat frame (and their sound).
   -- Our addon provides its own messenger UI for whispers.
   -- We must preserve /r reply targets since the default handler won't run.
+  -- Setting hideFromDefaultChat = false lets whispers appear in both places.
   if type(_G.ChatFrame_AddMessageEventFilter) == "function" then
     local setLastTell = _G.ChatEdit_SetLastTellTarget
     _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", function(_self, _event, _msg, sender)
-      if type(setLastTell) == "function" and sender then
+      if Bootstrap.runtime and Bootstrap.runtime.isMythicLockdown and Bootstrap.runtime.isMythicLockdown() then
+        return false
+      end
+      local hide = accountState.settings.hideFromDefaultChat == true
+      if hide and type(setLastTell) == "function" and sender then
         setLastTell(sender, "WHISPER")
       end
-      return true
+      return hide
     end)
     _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", function(_self, _event, _msg, sender)
-      if type(setLastTell) == "function" and sender then
+      if Bootstrap.runtime and Bootstrap.runtime.isMythicLockdown and Bootstrap.runtime.isMythicLockdown() then
+        return false
+      end
+      local hide = accountState.settings.hideFromDefaultChat == true
+      if hide and type(setLastTell) == "function" and sender then
         setLastTell(sender, "BN_WHISPER")
       end
-      return true
+      return hide
     end)
   end
 
@@ -664,6 +673,16 @@ function Bootstrap.Initialize(factory, options)
   runtime.toggle = toggle
   runtime.refreshWindow = refreshWindow
   runtime.ensureWindow = ensureWindow
+  runtime.suspend = function()
+    Bootstrap._wasVisibleBeforeMythic = isWindowVisible()
+    setWindowVisible(false)
+  end
+  runtime.resume = function()
+    if Bootstrap._wasVisibleBeforeMythic then
+      setWindowVisible(true)
+    end
+    Bootstrap._wasVisibleBeforeMythic = nil
+  end
 
   -- Update icon badge without creating the window
   local initContacts = buildContacts()
@@ -775,7 +794,43 @@ if type(_G.CreateFrame) == "function" then
       return
     end
 
+    if event == "CHALLENGE_MODE_START" then
+      Bootstrap._inMythicContent = true
+      if Bootstrap.runtime and Bootstrap.runtime.suspend then
+        Bootstrap.runtime.suspend()
+      end
+      trace("mythic lockdown: M+ started")
+      return
+    end
+
+    if event == "CHALLENGE_MODE_COMPLETED" then
+      Bootstrap._inMythicContent = false
+      if Bootstrap.runtime and Bootstrap.runtime.resume then
+        Bootstrap.runtime.resume()
+      end
+      trace("mythic lockdown: M+ completed")
+      return
+    end
+
     if event == "PLAYER_ENTERING_WORLD" then
+      -- Mythic content suspension
+      local ContentDetector = ns.ContentDetector
+      local wasMythic = Bootstrap._inMythicContent or false
+      local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
+      Bootstrap._inMythicContent = isMythic
+
+      if isMythic and not wasMythic then
+        if Bootstrap.runtime and Bootstrap.runtime.suspend then
+          Bootstrap.runtime.suspend()
+        end
+        trace("mythic lockdown: suspended")
+      elseif wasMythic and not isMythic then
+        if Bootstrap.runtime and Bootstrap.runtime.resume then
+          Bootstrap.runtime.resume()
+        end
+        trace("mythic lockdown: resumed")
+      end
+
       -- Start recurring presence cache rebuild timer + first rebuild after data loads
       local PresenceCache = ns.PresenceCache
       if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then

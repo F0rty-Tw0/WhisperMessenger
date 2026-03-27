@@ -18,6 +18,12 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     return false
   end
 
+  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
+    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")
+    refreshWindow()
+    return false
+  end
+
   local sendAvailable
   if payload.channel == "BN" then
     sendAvailable = payload.bnetAccountID ~= nil and type(runtime.bnetApi.SendWhisper) == "function"
@@ -36,7 +42,11 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   if payload.channel == "BN" then
     callOk, sendOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
   else
-    callOk = pcall(Gateway.SendCharacterWhisper, runtime.chatApi, payload.target, payload.text)
+    -- SendChatMessage is hardware-event-protected; pcall breaks the
+    -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
+    -- and let WoW's error handler surface failures instead.
+    Gateway.SendCharacterWhisper(runtime.chatApi, payload.target, payload.text)
+    callOk = true
     sendOk = true
   end
 

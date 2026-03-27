@@ -83,6 +83,11 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
+  -- Drop all whisper events during mythic content — tainted strings crash
+  -- on any string operation. Must guard BEFORE buildLivePayload.
+  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
+    return nil
+  end
   local payload = buildLivePayload(runtime, eventName, ...)
   if Trace and TRACE_EVENTS[eventName] then
     Trace(

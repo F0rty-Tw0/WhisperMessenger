@@ -48,7 +48,7 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_filter_suppresses_messages
+  -- test_filter_passes_through_by_default
   -- -----------------------------------------------------------------------
   do
     local filters = {}
@@ -71,7 +71,34 @@ return function()
     })
 
     local suppress = filters["CHAT_MSG_WHISPER"](nil, "CHAT_MSG_WHISPER", "hello", "Arthas")
-    assert(suppress == true, "test_filter_suppresses_messages: filter should return true to suppress")
+    assert(suppress == false, "test_filter_passes_through_by_default: filter should return false by default")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_filter_suppresses_when_hideFromDefaultChat_is_true
+  -- -----------------------------------------------------------------------
+  do
+    local filters = {}
+    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
+      filters[event] = fn
+    end
+
+    local runtime = Bootstrap.Initialize(factory, {
+      accountState = {
+        schemaVersion = 1,
+        conversations = {},
+        contacts = {},
+        pendingHydration = {},
+        settings = { hideFromDefaultChat = true },
+      },
+      characterState = {
+        window = { x = 0, y = 0, width = 900, height = 560 },
+        icon = {},
+      },
+    })
+
+    local suppress = filters["CHAT_MSG_WHISPER"](nil, "CHAT_MSG_WHISPER", "hello", "Arthas")
+    assert(suppress == true, "test_filter_suppresses: filter should return true when hideFromDefaultChat is true")
   end
 
   -- -----------------------------------------------------------------------
@@ -95,7 +122,7 @@ return function()
         conversations = {},
         contacts = {},
         pendingHydration = {},
-        settings = {},
+        settings = { hideFromDefaultChat = true },
       },
       characterState = {
         window = { x = 0, y = 0, width = 900, height = 560 },
@@ -112,6 +139,42 @@ return function()
     assert(lastTellType == "BN_WHISPER", "test_filter_preserves_reply_target: should set type to BN_WHISPER")
 
     _G.ChatEdit_SetLastTellTarget = nil
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_filter_passes_through_when_hideFromDefaultChat_is_false
+  -- -----------------------------------------------------------------------
+  do
+    local filters = {}
+    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
+      filters[event] = fn
+    end
+
+    local runtime = Bootstrap.Initialize(factory, {
+      accountState = {
+        schemaVersion = 1,
+        conversations = {},
+        contacts = {},
+        pendingHydration = {},
+        settings = { hideFromDefaultChat = false },
+      },
+      characterState = {
+        window = { x = 0, y = 0, width = 900, height = 560 },
+        icon = {},
+      },
+    })
+
+    local suppress = filters["CHAT_MSG_WHISPER"](nil, "CHAT_MSG_WHISPER", "hello", "Arthas")
+    assert(
+      suppress == false,
+      "test_filter_passes_through: filter should return false when hideFromDefaultChat is disabled"
+    )
+
+    local bnSuppress = filters["CHAT_MSG_BN_WHISPER"](nil, "CHAT_MSG_BN_WHISPER", "hi", "Jaina")
+    assert(
+      bnSuppress == false,
+      "test_filter_passes_through: BN filter should return false when hideFromDefaultChat is disabled"
+    )
   end
 
   _G.ChatFrame_AddMessageEventFilter = savedFilter

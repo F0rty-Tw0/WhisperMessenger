@@ -65,4 +65,39 @@ return function()
     noBattleTagContact.contactKey == "BN::22",
     "expected numeric fallback when no battleTag, got " .. tostring(noBattleTagContact.contactKey)
   )
+
+  -- FromWhisper detaints secret strings via Ambiguate before string ops
+  local ambiguateCalled = false
+  _G.Ambiguate = function(name, context)
+    ambiguateCalled = true
+    assert(context == "none", "expected context 'none', got " .. tostring(context))
+    return name -- in tests, name is already a plain string
+  end
+
+  local taintedContact = Identity.FromWhisper("Thrall-Nagrand", "Player-11-0ABC", {})
+  assert(ambiguateCalled, "expected Ambiguate to be called for whisper names")
+  assert(
+    taintedContact.contactKey == "WOW::thrall-nagrand",
+    "expected detainted contactKey, got " .. tostring(taintedContact.contactKey)
+  )
+  assert(taintedContact.displayName == "Thrall-Nagrand")
+
+  _G.Ambiguate = nil
+
+  -- During tainted execution (mythic lockdown), Ambiguate rejects secret
+  -- strings.  normalizeName must not crash — it should degrade gracefully.
+  _G.Ambiguate = function()
+    error("secret values are only allowed during untainted execution")
+  end
+
+  local ok, taintedBnet = pcall(Identity.FromBattleNet, 55, { battleTag = "Locked#9999" })
+  assert(ok, "FromBattleNet must not crash during tainted execution, got: " .. tostring(taintedBnet))
+  -- contactKey should still be usable (empty normalization fallback)
+  assert(taintedBnet.contactKey ~= nil, "expected non-nil contactKey during tainted execution")
+
+  local ok2, taintedWhisper = pcall(Identity.FromWhisper, "Locked-Realm", "Player-99-0ABC", {})
+  assert(ok2, "FromWhisper must not crash during tainted execution, got: " .. tostring(taintedWhisper))
+  assert(taintedWhisper.contactKey ~= nil, "expected non-nil contactKey during tainted execution")
+
+  _G.Ambiguate = nil
 end

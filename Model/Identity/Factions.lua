@@ -34,13 +34,24 @@ local HORDE_RACES = {
 }
 
 function Factions.InferFaction(raceTag)
-  if ALLIANCE_RACES[raceTag] then
+  if raceTag == nil then
+    return nil
+  end
+  -- raceTag may be a WoW secret/tainted string during mythic lockdown;
+  -- using it as a table index throws "table index is secret". Guard with pcall.
+  local ok, isAlliance = pcall(function()
+    return ALLIANCE_RACES[raceTag]
+  end)
+  if ok and isAlliance then
     return "Alliance"
   end
-  if HORDE_RACES[raceTag] then
+  local ok2, isHorde = pcall(function()
+    return HORDE_RACES[raceTag]
+  end)
+  if ok2 and isHorde then
     return "Horde"
   end
-  -- Pandaren, Dracthyr, Earthen, and unknown future neutral races are ambiguous here.
+  -- Pandaren, Dracthyr, Earthen, unknown future neutral races, or tainted values.
   return nil
 end
 

@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
+local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.ContentDetector")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -82,8 +83,11 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     store = store,
     queue = Queue.New(),
     now = options.now or currentTime,
-    isChatMessagingLocked = options.isChatMessagingLocked or function()
+    isChatMessagingLocked = options.isChatMessagingLocked or _G.InCombatLockdown or function()
       return false
+    end,
+    isMythicLockdown = options.isMythicLockdown or function()
+      return ContentDetector.IsMythicRestricted(_G.GetInstanceInfo)
     end,
   }
 end
