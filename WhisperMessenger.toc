@@ -1,9 +1,9 @@
 ## Interface: 120001
 ## Title: WhisperMessenger
 ## Notes: Messenger-style whisper UI for WoW Retail
-## Author: Claude
+## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.0.2
+## Version: v1.0.3
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
