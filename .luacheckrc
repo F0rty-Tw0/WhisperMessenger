@@ -81,6 +81,9 @@ read_globals = {
   "seterrorhandler",
   "securecall",
   "hooksecurefunc",
+  "ChatFrame_AddMessageEventFilter",
+  "ChatFrame_RemoveMessageEventFilter",
+  "ChatEdit_SetLastTellTarget",
 
   -- Misc
   "GetTime",

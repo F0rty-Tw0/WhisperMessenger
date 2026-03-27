@@ -1,18 +1,33 @@
 # Changelog
 
+## [1.0.5] - 2026-03-27
+
+### Improved
+
+- Mythic content suspension is now much more robust — the addon cleanly suspends all activity when you enter a Mythic+ dungeon or Mythic raid, and fully resumes when you leave
+- Added support for abandoned or depleted keystones — the addon now correctly resumes if your group leaves a key early
+- You will now see a chat message when the addon suspends and resumes for mythic content, so you always know the current state
+- Contact list and presence lookups are paused during mythic content to avoid unnecessary background work
+
+### Fixed
+
+- Fixed an issue where whispering from guild or community rosters could break the chat input during mythic content
+- Fixed a rare issue where the reply target (/r) could become corrupted after receiving a whisper with "Hide from default chat" enabled
+- Fixed the addon not resuming properly if a mythic keystone was abandoned or depleted without completing
+- Fixed the addon sometimes not resuming after leaving a mythic dungeon — zone transitions now reliably detect when you are no longer in mythic content
+
 ## [1.0.4] - 2026-03-27
 
 ### Fixed
 
-- Fix `ADDON_ACTION_FORBIDDEN` when sending character whispers during combat — wire `InCombatLockdown` as the default lockdown check so sends are blocked with a "Lockdown" status instead of triggering a protected function error
-- Fix `attempt to perform string conversion on a secret string value` — detaint player names from chat events via `Ambiguate` before string operations
-- Fix `table index is secret` crash in faction inference during mythic lockdown — guard tainted `raceTag` table lookups with `pcall`
-- Drop fully-tainted events in EventRouter when all payload fields are secret — prevents degenerate conversations and `table index is secret` crashes on `availabilityByGUID`
-- Harden all Identity and Factions string operations against tainted execution (mythic/challenge mode lockdown) with graceful `pcall` fallbacks
+- Fix sending whispers during combat — sends are now blocked with a friendly status message instead of causing an error
+- Fix occasional crashes with player names during mythic lockdown
+- Fix rare crash in faction detection during mythic content
+- Prevent broken conversations from appearing when receiving whispers during restricted content
 
 ### Added
 
-- Automatic mythic content suspension — addon fully disables in Mythic+ dungeons and Mythic raids (detected via `GetInstanceInfo` difficultyID). Events are dropped before payload build, chat filter lets whispers through to default chat, window auto-hides and restores on exit. Responds to `PLAYER_ENTERING_WORLD`, `CHALLENGE_MODE_START`, and `CHALLENGE_MODE_COMPLETED`.
+- Automatic mythic content suspension — the addon fully disables itself in Mythic+ dungeons and Mythic raids. Your window auto-hides and restores when you leave. Whispers fall through to the default chat frame during this time.
 - "Hide whispers from default chat" toggle in Behavior settings — disable to show whispers in both WhisperMessenger and the default chat frame (defaults to off)
 
 ## [0.1.0] - 2025-01-01

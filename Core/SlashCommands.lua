@@ -9,11 +9,9 @@ ns.SlashCommands = SlashCommands
 
 function SlashCommands.Register(handlers)
   handlers = handlers or {}
-  SlashCmdList = SlashCmdList or {}
-  SLASH_WHISPERMESSENGER1 = "/wmsg"
-  SLASH_WHISPERMESSENGER2 = "/whispermessenger"
-  SlashCmdList.WHISPERMESSENGER = function(input)
-    local cmd = type(input) == "string" and string.lower(string.match(input, "^%s*(%S+)") or "") or ""
+
+  local function handleCommand(msg)
+    local cmd = type(msg) == "string" and string.lower(msg) or ""
 
     if cmd == "mem" or cmd == "memory" then
       if handlers.memoryReport then
@@ -41,7 +39,16 @@ function SlashCommands.Register(handlers)
     end
   end
 
-  trace("slash registered", "/wmsg", "/whispermessenger")
+  -- Register through the standard SLASH_*/SlashCmdList mechanism.
+  -- Do NOT reassign SlashCmdList itself — use _G.SlashCmdList for indexing
+  -- to avoid tainting the table reference.
+  if type(_G.SlashCmdList) == "table" then
+    _G.SLASH_WHISPERMESSENGER1 = "/wmsg"
+    _G.SLASH_WHISPERMESSENGER2 = "/whispermessenger"
+    _G.SlashCmdList["WHISPERMESSENGER"] = handleCommand
+  end
+
+  trace("slash registered /wmsg /whispermessenger")
   return true
 end
 

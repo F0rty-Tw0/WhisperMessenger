@@ -44,10 +44,21 @@ local function registerLinkHooks()
   end
 
   _G.hooksecurefunc("HandleModifiedItemClick", function(link)
+    if _G._wmSuspended then
+      return
+    end
     tryInsertLink(link)
   end)
-  _G.hooksecurefunc("SetItemRef", function(link, text)
-    tryInsertLink(text or link)
+
+  local originalSetItemRef = _G.SetItemRef
+  _G.hooksecurefunc("SetItemRef", function(link)
+    if _G._wmSuspended then
+      return
+    end
+    if link == nil then
+      return
+    end
+    tryInsertLink(link)
   end)
 
   registeredLinkHooks = true

@@ -119,15 +119,19 @@ function Bootstrap.Initialize(factory, options)
   -- This is the critical path for keeping statuses fresh.
   local function refreshContacts()
     local freshContacts = buildContacts()
-    -- Proactively request availability for WoW contacts with GUIDs we haven't queried yet
-    local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
-    for _, item in ipairs(freshContacts) do
-      if
-        item.channel == "WOW"
-        and item.guid
-        and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
-      then
-        Gateway.RequestAvailability(runtime.chatApi, item.guid)
+    -- Skip availability API requests during mythic lockdown — calling
+    -- C_ChatInfo.RequestCanLocalWhisperTarget is restricted during M+.
+    -- Contacts are still built so users can view old conversations.
+    if not Bootstrap._inMythicContent then
+      local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
+      for _, item in ipairs(freshContacts) do
+        if
+          item.channel == "WOW"
+          and item.guid
+          and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
+        then
+          Gateway.RequestAvailability(runtime.chatApi, item.guid)
+        end
       end
     end
     local nextState = ContactEnricher.BuildWindowSelectionState(runtime, freshContacts, buildContacts)
@@ -488,28 +492,59 @@ function Bootstrap.Initialize(factory, options)
   -- Our addon provides its own messenger UI for whispers.
   -- We must preserve /r reply targets since the default handler won't run.
   -- Setting hideFromDefaultChat = false lets whispers appear in both places.
+  --
+  -- IMPORTANT: Any addon code running inside a ChatFrame filter taints
+  -- Blizzard's chat processing context.  During mythic content this breaks
+  -- /r, /w, and community whispers.  We remove the filters entirely on
+  -- mythic enter and re-register them on mythic leave.
   if type(_G.ChatFrame_AddMessageEventFilter) == "function" then
-    local setLastTell = _G.ChatEdit_SetLastTellTarget
-    _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", function(_self, _event, _msg, sender)
-      if Bootstrap.runtime and Bootstrap.runtime.isMythicLockdown and Bootstrap.runtime.isMythicLockdown() then
+    -- DO NOT call ChatEdit_SetLastTellTarget from inside a filter.
+    -- Calling it from addon code taints the stored reply target, and
+    -- that taint persists into mythic content where it breaks /w, /r,
+    -- and community whispers.  The /r target will not update when we
+    -- hide whispers, but that is an acceptable trade-off vs breaking
+    -- all whisper functionality.
+
+    Bootstrap._whisperFilter = function(_self, _event, _msg, _sender)
+      if accountState.settings.hideFromDefaultChat ~= true then
         return false
       end
-      local hide = accountState.settings.hideFromDefaultChat == true
-      if hide and type(setLastTell) == "function" and sender then
-        setLastTell(sender, "WHISPER")
-      end
-      return hide
-    end)
-    _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", function(_self, _event, _msg, sender)
-      if Bootstrap.runtime and Bootstrap.runtime.isMythicLockdown and Bootstrap.runtime.isMythicLockdown() then
+      return true
+    end
+
+    Bootstrap._bnWhisperFilter = function(_self, _event, _msg, _sender)
+      if accountState.settings.hideFromDefaultChat ~= true then
         return false
       end
-      local hide = accountState.settings.hideFromDefaultChat == true
-      if hide and type(setLastTell) == "function" and sender then
-        setLastTell(sender, "BN_WHISPER")
+      return true
+    end
+
+    Bootstrap._filtersRegistered = false
+    Bootstrap.registerChatFilters = function()
+      if Bootstrap._filtersRegistered then
+        return
       end
-      return hide
-    end)
+      if type(_G.ChatFrame_AddMessageEventFilter) ~= "function" then
+        return
+      end
+      _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+      _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+      Bootstrap._filtersRegistered = true
+    end
+    Bootstrap.unregisterChatFilters = function()
+      if not Bootstrap._filtersRegistered then
+        return
+      end
+      if type(_G.ChatFrame_RemoveMessageEventFilter) == "function" then
+        _G.ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+        _G.ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+      end
+      Bootstrap._filtersRegistered = false
+    end
+
+    if not Bootstrap._inMythicContent then
+      Bootstrap.registerChatFilters()
+    end
   end
 
   local prevSnapshot = nil
@@ -676,8 +711,36 @@ function Bootstrap.Initialize(factory, options)
   runtime.suspend = function()
     Bootstrap._wasVisibleBeforeMythic = isWindowVisible()
     setWindowVisible(false)
+    if Bootstrap.unregisterChatFilters then
+      Bootstrap.unregisterChatFilters()
+    end
+    -- Unregister live AND non-essential lifecycle events so our OnEvent
+    -- handler doesn't run at all during mythic content — any addon code
+    -- in the event dispatch taints Blizzard's chat frame context.
+    local EB = ns.BootstrapEventBridge
+    if EB and Bootstrap._loadFrame then
+      EB.UnregisterLiveEvents(Bootstrap._loadFrame)
+      EB.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
+    end
+    -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
+    _G._wmSuspended = true
+    if type(_G.print) == "function" then
+      _G.print("|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave.")
+    end
   end
   runtime.resume = function()
+    _G._wmSuspended = nil
+    if type(_G.print) == "function" then
+      _G.print("|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.")
+    end
+    local EB = ns.BootstrapEventBridge
+    if EB and Bootstrap._loadFrame then
+      EB.RegisterLiveEvents(Bootstrap._loadFrame)
+      EB.RegisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
+    end
+    if Bootstrap.registerChatFilters then
+      Bootstrap.registerChatFilters()
+    end
     if Bootstrap._wasVisibleBeforeMythic then
       setWindowVisible(true)
     end
@@ -712,6 +775,7 @@ end
 
 if type(_G.CreateFrame) == "function" then
   local loadFrame = _G.CreateFrame("Frame", "WhisperMessengerLoadFrame")
+  Bootstrap._loadFrame = loadFrame
   local EventBridge = ns.BootstrapEventBridge
   loadFrame:RegisterEvent("ADDON_LOADED")
   loadFrame:SetScript("OnEvent", function(_, event, ...)
@@ -812,11 +876,54 @@ if type(_G.CreateFrame) == "function" then
       return
     end
 
+    if event == "CHALLENGE_MODE_RESET" then
+      Bootstrap._inMythicContent = false
+      if Bootstrap.runtime and Bootstrap.runtime.resume then
+        Bootstrap.runtime.resume()
+      end
+      trace("mythic lockdown: M+ reset")
+      return
+    end
+
+    if event == "ZONE_CHANGED_NEW_AREA" then
+      -- Re-check mythic status after zone data is fully loaded.
+      -- PLAYER_ENTERING_WORLD fires before GetInstanceInfo updates,
+      -- so we need this event to catch the transition out of mythic.
+      if Bootstrap._inMythicContent then
+        local ContentDetector = ns.ContentDetector
+        local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
+        trace("ZONE_CHANGED_NEW_AREA wasMythic=true isMythic=" .. tostring(isMythic))
+        if not isMythic then
+          Bootstrap._inMythicContent = false
+          if Bootstrap.runtime and Bootstrap.runtime.resume then
+            Bootstrap.runtime.resume()
+          end
+          -- Rebuild presence cache and refresh UI after mythic exit
+          local PresenceCache = ns.PresenceCache
+          if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
+            _G.C_Timer.After(2, function()
+              if Bootstrap._inMythicContent then
+                return
+              end
+              trace("PresenceCache: rebuild after mythic exit")
+              PresenceCache.Rebuild()
+              if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
+                Bootstrap.runtime.refreshWindow()
+              end
+            end)
+          end
+          trace("mythic lockdown: resumed via zone change")
+        end
+      end
+      return
+    end
+
     if event == "PLAYER_ENTERING_WORLD" then
       -- Mythic content suspension
       local ContentDetector = ns.ContentDetector
       local wasMythic = Bootstrap._inMythicContent or false
       local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
+      trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
       Bootstrap._inMythicContent = isMythic
 
       if isMythic and not wasMythic then
@@ -824,11 +931,15 @@ if type(_G.CreateFrame) == "function" then
           Bootstrap.runtime.suspend()
         end
         trace("mythic lockdown: suspended")
+        return
       elseif wasMythic and not isMythic then
         if Bootstrap.runtime and Bootstrap.runtime.resume then
           Bootstrap.runtime.resume()
         end
         trace("mythic lockdown: resumed")
+      elseif isMythic then
+        -- Already in mythic, skip all PresenceCache work
+        return
       end
 
       -- Start recurring presence cache rebuild timer + first rebuild after data loads
@@ -836,15 +947,20 @@ if type(_G.CreateFrame) == "function" then
       if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
         -- First rebuild after 2s (when club data is ready), then refresh window
         _G.C_Timer.After(2, function()
+          if Bootstrap._inMythicContent then
+            return
+          end
           trace("PresenceCache: initial rebuild (PLAYER_ENTERING_WORLD +2s)")
           PresenceCache.Rebuild()
           if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
             Bootstrap.runtime.refreshWindow()
           end
         end)
-        -- Recurring timer for subsequent rebuilds
+        -- Recurring timer for subsequent rebuilds.
+        -- Skip C_Club API calls during mythic — addon code touching club
+        -- data taints it, breaking Blizzard's guild/community whisper UI.
         local function presenceTimerLoop()
-          if PresenceCache.IsStale() then
+          if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
             trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
             PresenceCache.Rebuild()
           end
@@ -875,11 +991,22 @@ if type(_G.CreateFrame) == "function" then
           Bootstrap._presenceRebuildPending = true
           _G.C_Timer.After(2, function()
             Bootstrap._presenceRebuildPending = false
+            if Bootstrap._inMythicContent then
+              return
+            end
             trace("PresenceCache: debounced rebuild after " .. event)
             PresenceCache.Rebuild()
           end)
         end
       end
+      return
+    end
+
+    -- Drop live whisper events during mythic content using the pre-computed
+    -- flag.  Do NOT call isMythicLockdown()/GetInstanceInfo() here — that
+    -- would introduce taint into the shared event-processing context and
+    -- break Blizzard's /r and /w handling for the player.
+    if Bootstrap._inMythicContent then
       return
     end
 

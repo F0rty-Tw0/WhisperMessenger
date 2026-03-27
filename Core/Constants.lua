@@ -5,7 +5,7 @@ end
 
 local Constants = {
   ADDON_NAME = addonName or "WhisperMessenger",
-  VERSION = "v1.0.3",
+  VERSION = "v1.0.5",
 
   LIVE_EVENT_NAMES = {
     "CHAT_MSG_WHISPER",
@@ -29,6 +29,19 @@ local Constants = {
     "CLUB_MEMBER_REMOVED",
     "CHALLENGE_MODE_START",
     "CHALLENGE_MODE_COMPLETED",
+    "CHALLENGE_MODE_RESET",
+    "ZONE_CHANGED_NEW_AREA",
+  },
+
+  -- Lifecycle events that must stay registered during mythic lockdown
+  -- (needed for detecting zone transitions and mythic end).
+  MYTHIC_ESSENTIAL_EVENTS = {
+    PLAYER_ENTERING_WORLD = true,
+    PLAYER_LOGOUT = true,
+    CHALLENGE_MODE_START = true,
+    CHALLENGE_MODE_COMPLETED = true,
+    CHALLENGE_MODE_RESET = true,
+    ZONE_CHANGED_NEW_AREA = true,
   },
 }
 

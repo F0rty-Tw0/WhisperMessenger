@@ -62,6 +62,32 @@ function EventBridge.RegisterLiveEvents(frame)
   end
 end
 
+function EventBridge.UnregisterLiveEvents(frame)
+  for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
+    if frame.UnregisterEvent then
+      frame:UnregisterEvent(eventName)
+    end
+  end
+end
+
+function EventBridge.UnregisterSuspendableLifecycleEvents(frame)
+  local essential = Constants.MYTHIC_ESSENTIAL_EVENTS or {}
+  for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
+    if not essential[eventName] and frame.UnregisterEvent then
+      frame:UnregisterEvent(eventName)
+    end
+  end
+end
+
+function EventBridge.RegisterSuspendableLifecycleEvents(frame)
+  local essential = Constants.MYTHIC_ESSENTIAL_EVENTS or {}
+  for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
+    if not essential[eventName] then
+      frame:RegisterEvent(eventName)
+    end
+  end
+end
+
 local WHISPER_SOUND_ID = 7355
 
 local INCOMING_WHISPER_EVENTS = {
@@ -81,11 +107,6 @@ local TRACE_EVENTS = {
 
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
-    return nil
-  end
-  -- Drop all whisper events during mythic content — tainted strings crash
-  -- on any string operation. Must guard BEFORE buildLivePayload.
-  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
     return nil
   end
   local payload = buildLivePayload(runtime, eventName, ...)
