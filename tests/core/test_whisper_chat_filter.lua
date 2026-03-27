@@ -62,9 +62,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     -- Re-initialize with hideFromDefaultChat = false
-    local filters2 = {}
+    local _filters2 = {}
     _G.ChatFrame_AddMessageEventFilter = function(event, fn)
-      filters2[event] = fn
+      _filters2[event] = fn
     end
     Bootstrap._filtersRegistered = false
 
@@ -101,9 +101,9 @@ return function()
 
     -- Re-initialize with hideFromDefaultChat = true
     Bootstrap._filtersRegistered = false
-    local filters3 = {}
+    local _filters3 = {}
     _G.ChatFrame_AddMessageEventFilter = function(event, fn)
-      filters3[event] = fn
+      _filters3[event] = fn
     end
 
     Bootstrap.Initialize(factory, {
