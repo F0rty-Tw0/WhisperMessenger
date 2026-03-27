@@ -50,7 +50,6 @@ local function registerLinkHooks()
     tryInsertLink(link)
   end)
 
-  local originalSetItemRef = _G.SetItemRef
   _G.hooksecurefunc("SetItemRef", function(link)
     if _G._wmSuspended then
       return

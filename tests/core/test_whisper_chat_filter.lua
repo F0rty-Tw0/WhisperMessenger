@@ -62,10 +62,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     -- Re-initialize with hideFromDefaultChat = false
-    local _filters2 = {}
-    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
-      _filters2[event] = fn
-    end
+    _G.ChatFrame_AddMessageEventFilter = function() end
     Bootstrap._filtersRegistered = false
 
     local runtime2 = Bootstrap.Initialize(factory, {
@@ -101,10 +98,7 @@ return function()
 
     -- Re-initialize with hideFromDefaultChat = true
     Bootstrap._filtersRegistered = false
-    local _filters3 = {}
-    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
-      _filters3[event] = fn
-    end
+    _G.ChatFrame_AddMessageEventFilter = function() end
 
     Bootstrap.Initialize(factory, {
       accountState = {
