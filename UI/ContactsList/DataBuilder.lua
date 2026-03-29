@@ -5,6 +5,8 @@ end
 
 local DataBuilder = {}
 
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+
 local function compareItems(left, right)
   local leftPinned = left.pinned and true or false
   local rightPinned = right.pinned and true or false
@@ -36,33 +38,12 @@ local function compareItems(left, right)
   return (left.displayName or "") < (right.displayName or "")
 end
 
-local function buildItem(conversationKey, conversation)
-  return {
-    conversationKey = conversationKey,
-    displayName = conversation.displayName or conversation.contactDisplayName or conversationKey,
-    lastPreview = conversation.lastPreview or "",
-    unreadCount = conversation.unreadCount or 0,
-    lastActivityAt = conversation.lastActivityAt or 0,
-    channel = conversation.channel or "WOW",
-    guid = conversation.guid,
-    bnetAccountID = conversation.bnetAccountID,
-    battleTag = conversation.battleTag,
-    gameAccountName = conversation.gameAccountName,
-    className = conversation.className,
-    classTag = conversation.classTag,
-    raceName = conversation.raceName,
-    raceTag = conversation.raceTag,
-    factionName = conversation.factionName,
-    pinned = conversation.pinned or false,
-    sortOrder = conversation.sortOrder or 0,
-  }
-end
 
 function DataBuilder.BuildItems(conversations)
   local items = {}
 
   for conversationKey, conversation in pairs(conversations or {}) do
-    table.insert(items, buildItem(conversationKey, conversation))
+    table.insert(items, ConversationSnapshot.Build(conversationKey, conversation))
   end
 
   table.sort(items, compareItems)
@@ -81,7 +62,7 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
       or string.find(conversationKey, bnetPrefix, 1, true) == 1
       or string.find(conversationKey, wowPrefix, 1, true) == 1
     then
-      table.insert(items, buildItem(conversationKey, conversation))
+      table.insert(items, ConversationSnapshot.Build(conversationKey, conversation))
     end
   end
 

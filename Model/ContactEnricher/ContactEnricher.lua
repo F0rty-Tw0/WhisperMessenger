@@ -6,6 +6,7 @@ end
 local AvailabilityEnricher = ns.AvailabilityEnricher
   or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 local ContactEnricher = {}
 
@@ -73,23 +74,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local conversation = runtime.store.conversations[conversationKey]
   local selectedContact = TableUtils.findWhere(contacts, "conversationKey", conversationKey)
   if selectedContact == nil and conversation ~= nil then
-    selectedContact = {
-      conversationKey = conversationKey,
-      displayName = conversation.displayName or conversation.contactDisplayName or conversationKey,
-      lastPreview = conversation.lastPreview or "",
-      unreadCount = conversation.unreadCount or 0,
-      lastActivityAt = conversation.lastActivityAt or 0,
-      channel = conversation.channel or "WOW",
-      guid = conversation.guid,
-      bnetAccountID = conversation.bnetAccountID,
-      battleTag = conversation.battleTag,
-      gameAccountName = conversation.gameAccountName,
-      className = conversation.className,
-      classTag = conversation.classTag,
-      raceName = conversation.raceName,
-      raceTag = conversation.raceTag,
-      factionName = conversation.factionName,
-    }
+    selectedContact = ConversationSnapshot.Build(conversationKey, conversation)
   end
 
   -- Enrich selected contact with live BNet metadata for display

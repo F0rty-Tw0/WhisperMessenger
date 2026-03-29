@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
+local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local TranscriptView = ns.ConversationPaneTranscriptView
   or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
@@ -78,25 +79,7 @@ function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, C
     end
   end
 
-  if transcript.scrollFrame and transcript.scrollFrame.SetScript then
-    local originalOnWheel = transcript.scrollFrame:GetScript("OnMouseWheel")
-    transcript.scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-      if originalOnWheel then
-        originalOnWheel(self, delta)
-      end
-      checkLoadMoreMessages()
-    end)
-  end
-
-  if transcript.scrollBar and transcript.scrollBar.SetScript then
-    local originalOnValue = transcript.scrollBar:GetScript("OnValueChanged")
-    transcript.scrollBar:SetScript("OnValueChanged", function(self, value)
-      if originalOnValue then
-        originalOnValue(self, value)
-      end
-      checkLoadMoreMessages()
-    end)
-  end
+  Navigation.InstallPostScrollHook(transcript, checkLoadMoreMessages)
 end
 
 ns.ConversationPaneTranscriptSetup = TranscriptSetup

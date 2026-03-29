@@ -106,31 +106,114 @@ return function()
   end
 
   -------------------------------------------------------------------------
-  -- test_scroll_wiring_preserves_original_handler
+  -- test_scroll_wiring_preserves_original_mouse_wheel_handler
   -------------------------------------------------------------------------
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
+    local heights = { 600, 720, 840, 960, 1080 }
+    local loadMoreCalls = 0
+    local wheelOriginalCalled = false
+    local wheelDelta = nil
+    local stub = {
+      HasMore = function(_transcript)
+        return loadMoreCalls < 4
+      end,
+      LoadMore = function(target)
+        loadMoreCalls = loadMoreCalls + 1
+        target.content:SetSize(target.content:GetWidth(), heights[loadMoreCalls + 1])
+      end,
+    }
 
-    -- Pre-install an original OnMouseWheel handler
-    local originalCalled = false
-    transcript.scrollFrame:SetScript("OnMouseWheel", function(_self, _delta)
-      originalCalled = true
+    transcript.scrollFrame:SetScript("OnMouseWheel", function(_self, delta)
+      wheelOriginalCalled = true
+      wheelDelta = delta
     end)
 
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
 
-    -- Fire the new OnMouseWheel handler
-    local handler = transcript.scrollFrame:GetScript("OnMouseWheel")
+    transcript.content:SetSize(transcript.content:GetWidth(), heights[1])
+    transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
+
+    local wheelHandler = transcript.scrollFrame:GetScript("OnMouseWheel")
     assert(
-      type(handler) == "function",
-      "test_scroll_wiring_preserves_original_handler: OnMouseWheel handler must exist"
+      type(wheelHandler) == "function",
+      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel handler must exist"
     )
-    handler(transcript.scrollFrame, -1)
+    wheelHandler(transcript.scrollFrame, -1)
     assert(
-      originalCalled,
-      "test_scroll_wiring_preserves_original_handler: original OnMouseWheel handler should be called"
+      wheelOriginalCalled,
+      "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should be called"
+    )
+    assert(
+      wheelDelta == -1,
+      "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should receive the wheel delta"
+    )
+    assert(
+      loadMoreCalls > 0,
+      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel should still trigger transcript loading near the top"
+    )
+    assert(
+      transcript.content:GetHeight() > heights[1],
+      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel should still grow the transcript content when loading older messages"
+    )
+  end
+
+  -------------------------------------------------------------------------
+  -- test_scroll_wiring_preserves_original_value_changed_handler
+  -------------------------------------------------------------------------
+  do
+    local factory = FakeUI.NewFactory()
+    local transcript = makeTranscript(factory)
+    local heights = { 600, 720, 840, 960, 1080 }
+    local loadMoreCalls = 0
+    local valueOriginalCalled = false
+    local valueSeen = nil
+    local stub = {
+      HasMore = function(_transcript)
+        return loadMoreCalls < 4
+      end,
+      LoadMore = function(target)
+        loadMoreCalls = loadMoreCalls + 1
+        target.content:SetSize(target.content:GetWidth(), heights[loadMoreCalls + 1])
+      end,
+    }
+
+    transcript.scrollBar:SetScript("OnValueChanged", function(_self, value)
+      valueOriginalCalled = true
+      if valueSeen == nil then
+        valueSeen = value
+      end
+    end)
+
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+
+    transcript.content:SetSize(transcript.content:GetWidth(), heights[1])
+    transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
+
+    local valueHandler = transcript.scrollBar:GetScript("OnValueChanged")
+    assert(
+      type(valueHandler) == "function",
+      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged handler must exist"
+    )
+    valueOriginalCalled = false
+    valueSeen = nil
+    valueHandler(transcript.scrollBar, TranscriptView.TRANSCRIPT_SCROLL_STEP)
+    assert(
+      valueOriginalCalled,
+      "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should be called"
+    )
+    assert(
+      valueSeen == TranscriptView.TRANSCRIPT_SCROLL_STEP,
+      "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should receive the scroll value"
+    )
+    assert(
+      loadMoreCalls > 0,
+      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged should still trigger transcript loading near the top"
+    )
+    assert(
+      transcript.content:GetHeight() > heights[1],
+      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged should still grow the transcript content when loading older messages"
     )
   end
 end

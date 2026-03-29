@@ -1,6 +1,44 @@
 local DataBuilder = require("WhisperMessenger.UI.ContactsList.DataBuilder")
+local ConversationSnapshot = require("WhisperMessenger.Model.ConversationSnapshot")
 
 return function()
+  -- test_conversation_snapshot_applies_defaults_and_preserves_metadata
+  do
+    local snapshot = ConversationSnapshot.Build("bnet::BN::jaina#1234", {
+      contactDisplayName = "Jaina#1234",
+      channel = "BN",
+      guid = "Player-1-00000042",
+      bnetAccountID = 42,
+      battleTag = "Jaina#1234",
+      gameAccountName = "Jaina",
+      className = "Mage",
+      classTag = "MAGE",
+      raceName = "Human",
+      raceTag = "Human",
+      factionName = "Alliance",
+      pinned = true,
+      sortOrder = 7,
+    })
+
+    assert(snapshot.conversationKey == "bnet::BN::jaina#1234", "conversationKey should be preserved")
+    assert(snapshot.displayName == "Jaina#1234", "displayName should fall back to contactDisplayName")
+    assert(snapshot.lastPreview == "", "lastPreview should default to empty string")
+    assert(snapshot.unreadCount == 0, "unreadCount should default to 0")
+    assert(snapshot.lastActivityAt == 0, "lastActivityAt should default to 0")
+    assert(snapshot.channel == "BN", "channel should be preserved")
+    assert(snapshot.guid == "Player-1-00000042", "guid should be preserved")
+    assert(snapshot.bnetAccountID == 42, "bnetAccountID should be preserved")
+    assert(snapshot.battleTag == "Jaina#1234", "battleTag should be preserved")
+    assert(snapshot.gameAccountName == "Jaina", "gameAccountName should be preserved")
+    assert(snapshot.className == "Mage", "className should be preserved")
+    assert(snapshot.classTag == "MAGE", "classTag should be preserved")
+    assert(snapshot.raceName == "Human", "raceName should be preserved")
+    assert(snapshot.raceTag == "Human", "raceTag should be preserved")
+    assert(snapshot.factionName == "Alliance", "factionName should be preserved")
+    assert(snapshot.pinned == true, "pinned should be preserved")
+    assert(snapshot.sortOrder == 7, "sortOrder should be preserved")
+  end
+
   -- test_pinned_contacts_sort_before_unpinned
   do
     local conversations = {

@@ -1,5 +1,6 @@
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local FakeUI = require("tests.helpers.fake_ui")
+local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -7,6 +8,12 @@ return function()
   local savedSlashCmdList = _G.SlashCmdList
   local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
   local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
+  local rebuildCount = 0
+  local savedRebuild = PresenceCache.Rebuild
+  PresenceCache.Rebuild = function(...)
+    rebuildCount = rebuildCount + 1
+    return savedRebuild(...)
+  end
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.SlashCmdList = {}
@@ -53,10 +60,11 @@ return function()
   -- TEST 3: icon badge updates even without window
   assert(runtime.icon.badgeLabel.text == "2", "expected icon badge to show unread count")
 
-  -- TEST 4: window is created on first toggle
+  -- TEST 4: window is created on first toggle and rebuilds presence on open
   runtime.toggle()
   assert(runtime.window ~= nil, "expected window to be created on first toggle")
   assert(runtime.window.frame.shown == true, "expected window to be visible after toggle")
+  assert(rebuildCount == 1, "expected PresenceCache.Rebuild once on first open, got " .. rebuildCount)
 
   -- TEST 5: second toggle hides the window
   runtime.toggle()
@@ -66,6 +74,7 @@ return function()
   runtime.refreshWindow()
   assert(runtime.window ~= nil, "expected window to still exist after refresh")
 
+  PresenceCache.Rebuild = savedRebuild
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1

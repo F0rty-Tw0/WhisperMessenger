@@ -82,8 +82,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     applyBubbleColor(Theme.COLORS.bg_bubble_in)
   end
 
-  local iconLeftMargin = 48
-  local rightMargin = 12
   local textAvailWidth = maxBubbleWidth - pH * 2
 
   local textHeight = BubbleStructure.measureTextHeight(textFS, message.text, textAvailWidth)
@@ -113,14 +111,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   frame:SetSize(bubbleWidth, bubbleHeight)
 
-  if kind == "system" then
-    frame:SetPoint("TOP", parent, "TOPLEFT", paneWidth / 2, 0)
-  elseif direction == "out" then
-    frame:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -rightMargin, 0)
-  else
-    local leftOffset = iconLeftMargin
-    frame:SetPoint("TOPLEFT", parent, "TOPLEFT", leftOffset, 0)
-  end
 
   local icon = nil
   local iconFrame = nil

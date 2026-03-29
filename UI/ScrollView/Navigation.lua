@@ -82,5 +82,32 @@ function Navigation.ScrollBy(view, delta)
   return Navigation.SetVerticalScroll(view, Metrics.GetOffset(view) + (delta or 0))
 end
 
+local function wrapScriptWithCallback(target, scriptName, callback)
+  if target == nil or type(target.SetScript) ~= "function" then
+    return
+  end
+
+  local original = nil
+  if type(target.GetScript) == "function" then
+    original = target:GetScript(scriptName)
+  end
+
+  target:SetScript(scriptName, function(...)
+    if original then
+      original(...)
+    end
+    callback()
+  end)
+end
+
+function Navigation.InstallPostScrollHook(view, callback)
+  if view == nil or type(callback) ~= "function" then
+    return
+  end
+
+  wrapScriptWithCallback(view.scrollFrame, "OnMouseWheel", callback)
+  wrapScriptWithCallback(view.scrollBar, "OnValueChanged", callback)
+end
+
 ns.ScrollViewNavigation = Navigation
 return Navigation

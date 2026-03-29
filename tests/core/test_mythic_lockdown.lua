@@ -202,6 +202,7 @@ return function()
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")
+    local ContactEnricher = require("WhisperMessenger.Model.ContactEnricher")
     local factory = FakeUI.NewFactory()
 
     local savedUIParent = _G.UIParent
@@ -221,6 +222,13 @@ return function()
       table.insert(availabilityRequests, guid)
     end
 
+    local buildSelectionCalls = 0
+    local originalBuildState = ContactEnricher.BuildWindowSelectionState
+    ContactEnricher.BuildWindowSelectionState = function(...)
+      buildSelectionCalls = buildSelectionCalls + 1
+      return originalBuildState(...)
+    end
+
     local runtime = Bootstrap.Initialize(factory, {
       accountState = {
         schemaVersion = 1,
@@ -238,15 +246,21 @@ return function()
     -- Simulate mythic lockdown then call refreshWindow
     Bootstrap._inMythicContent = true
     availabilityRequests = {}
+    buildSelectionCalls = 0
     runtime.refreshWindow()
 
     assert(
       #availabilityRequests == 0,
       "should not request availability during mythic, got " .. #availabilityRequests .. " requests"
     )
+    assert(
+      buildSelectionCalls == 1,
+      "should still rebuild contact selection state during mythic refresh, got " .. buildSelectionCalls
+    )
 
     -- Cleanup
     Bootstrap._inMythicContent = false
+    ContactEnricher.BuildWindowSelectionState = originalBuildState
     if savedRequestCanLocal then
       _G.C_ChatInfo.RequestCanLocalWhisperTarget = savedRequestCanLocal
     end
@@ -429,6 +443,7 @@ return function()
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")
+    local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
     local factory = FakeUI.NewFactory()
 
     local savedUIParent = _G.UIParent
@@ -440,6 +455,13 @@ return function()
     _G.SlashCmdList = {}
     _G.SLASH_WHISPERMESSENGER1 = nil
     _G.SLASH_WHISPERMESSENGER2 = nil
+
+    local rebuildCount = 0
+    local savedRebuild = PresenceCache.Rebuild
+    PresenceCache.Rebuild = function(...)
+      rebuildCount = rebuildCount + 1
+      return savedRebuild(...)
+    end
 
     local runtime = Bootstrap.Initialize(factory, {
       accountState = {
@@ -458,14 +480,16 @@ return function()
     -- Open the window
     runtime.toggle()
     assert(runtime.window ~= nil, "window should be created after toggle")
+    assert(rebuildCount == 1, "window open should rebuild presence once, got " .. rebuildCount)
 
     -- Suspend should hide the window
     runtime.suspend()
     assert(runtime.window.frame.shown == false, "window should be hidden after suspend")
 
-    -- Resume should restore the window
+    -- Resume should restore the window and rebuild presence on reopen
     runtime.resume()
     assert(runtime.window.frame.shown == true, "window should be visible after resume")
+    assert(rebuildCount == 2, "window resume should rebuild presence once more, got " .. rebuildCount)
 
     -- If window was closed before suspend, resume should not open it
     runtime.toggle() -- close
@@ -473,7 +497,9 @@ return function()
     runtime.suspend()
     runtime.resume()
     assert(runtime.window.frame.shown == false, "window should stay closed if it was closed before suspend")
+    assert(rebuildCount == 2, "closed window should not rebuild presence on resume, got " .. rebuildCount)
 
+    PresenceCache.Rebuild = savedRebuild
     _G.UIParent = savedUIParent
     _G.SlashCmdList = savedSlashCmdList
     _G.SLASH_WHISPERMESSENGER1 = savedSlash1

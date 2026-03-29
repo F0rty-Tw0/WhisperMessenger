@@ -6,8 +6,21 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local Layout = {}
+Layout.MESSAGE_EDGE_INSET = Theme.LAYOUT.MESSAGE_EDGE_INSET
+local function PlaceBubble(frame, contentFrame, message, paneWidth, yOffset)
+  frame:ClearAllPoints()
+
+  if message.kind == "system" then
+    frame:SetPoint("TOP", contentFrame, "TOPLEFT", paneWidth / 2, -yOffset)
+  elseif message.direction == "out" then
+    frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -Layout.MESSAGE_EDGE_INSET, -yOffset)
+  else
+    frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", Layout.MESSAGE_EDGE_INSET, -yOffset)
+  end
+end
 
 function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, options)
+
   local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
   local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
   local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")
@@ -79,15 +92,7 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       iconFactory = pooledFactory,
     })
 
-    -- Re-anchor to content frame at current yOffset
-    bubble.frame:ClearAllPoints()
-    if message.kind == "system" then
-      bubble.frame:SetPoint("TOP", contentFrame, "TOPLEFT", paneWidth / 2, -yOffset)
-    elseif message.direction == "out" then
-      bubble.frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", -48, -yOffset)
-    else
-      bubble.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 48, -yOffset)
-    end
+    PlaceBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)
 
     -- iconFrame was already acquired through pooledFactory inside CreateBubble
     yOffset = yOffset + bubble.height

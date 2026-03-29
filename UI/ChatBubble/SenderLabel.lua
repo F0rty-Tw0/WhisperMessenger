@@ -30,13 +30,13 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
 
   if message.direction == "out" then
     nameFS:SetText("You")
-    nameFS:SetPoint("RIGHT", frame, "RIGHT", -48, 0)
+    nameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
     timeFS:SetPoint("RIGHT", nameFS, "LEFT", -6, 0)
     frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
   else
     local displayName = message.playerName or message.senderDisplayName or ""
     nameFS:SetText(displayName)
-    nameFS:SetPoint("LEFT", frame, "LEFT", 48, 0)
+    nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
     timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
     frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
   end

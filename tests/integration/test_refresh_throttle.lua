@@ -66,22 +66,33 @@ return function()
   runtime.refreshWindow()
   assert(runtime.icon.badgeLabel.text == "3", "expected icon badge to update even when window hidden")
 
-  -- TEST 2: refreshWindow runs enricher when window is visible
+  -- TEST 2: visible refreshWindow enriches contacts and pushes selection into the window
   runtime.toggle() -- creates and shows window
   assert(runtime.window ~= nil, "expected window after toggle")
   assert(runtime.window.frame.shown == true, "expected window visible after toggle")
 
+  local selectionRefreshCount = 0
+  local originalRefreshSelection = runtime.window.refreshSelection
+  runtime.window.refreshSelection = function(...)
+    selectionRefreshCount = selectionRefreshCount + 1
+    return originalRefreshSelection(...)
+  end
+
   enricherCallCount = 0
+  selectionRefreshCount = 0
   runtime.refreshWindow()
   assert(enricherCallCount >= 1, "expected enricher called when window visible, got " .. enricherCallCount)
+  assert(selectionRefreshCount == 1, "expected visible refreshWindow to push selection once, got " .. selectionRefreshCount)
 
-  -- TEST 3: refreshWindow STILL runs enricher after window is hidden again
+  -- TEST 3: hidden refreshWindow still enriches contacts without touching visible selection
   runtime.toggle() -- hide window
   assert(runtime.window.frame.shown == false, "expected window hidden after second toggle")
 
   enricherCallCount = 0
+  selectionRefreshCount = 0
   runtime.refreshWindow()
   assert(enricherCallCount == 1, "expected enricher called even after window hidden again, got " .. enricherCallCount)
+  assert(selectionRefreshCount == 0, "expected hidden refreshWindow to skip pushing selection, got " .. selectionRefreshCount)
   -- Icon badge should still update
   conv.unreadCount = 7
   runtime.refreshWindow()

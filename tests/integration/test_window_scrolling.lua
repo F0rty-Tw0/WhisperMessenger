@@ -74,7 +74,21 @@ return function()
     window.contacts.rows[1].parent == window.contacts.content,
     "expected contact rows to be parented to scroll content"
   )
+  local initialContactVisibleCount = window.contacts.content.visibleCount
+  assert(initialContactVisibleCount < #contacts, "expected contact paging before infinite scroll")
   assert(window.contacts.scrollFrame.scripts.OnMouseWheel ~= nil, "expected contacts mouse wheel scrolling")
+
+  window.contacts.scrollBar:SetValue(0)
+  assert(
+    window.contacts.content.visibleCount == initialContactVisibleCount,
+    "expected contacts load more to ignore top scrolling"
+  )
+
+  window.contacts.scrollBar:SetValue(window.contacts.scrollFrame:GetVerticalScrollRange())
+  assert(
+    window.contacts.content.visibleCount > initialContactVisibleCount,
+    "expected contacts load more to trigger near the bottom"
+  )
 
   for _ = 1, 20 do
     window.contacts.scrollFrame.scripts.OnMouseWheel(window.contacts.scrollFrame, -1)
@@ -114,6 +128,7 @@ return function()
     window.conversation.transcript.scrollFrame:GetVerticalScrollRange() > 0,
     "expected overflowing transcript to be scrollable"
   )
+  local initialTranscriptVisibleCount = window.conversation.transcript._visibleCount
   assert(
     window.conversation.transcript.scrollFrame.scripts.OnMouseWheel ~= nil,
     "expected transcript mouse wheel scrolling"
@@ -126,6 +141,16 @@ return function()
     window.conversation.transcript.scrollFrame:GetVerticalScroll()
       == window.conversation.transcript.scrollFrame:GetVerticalScrollRange(),
     "expected transcript to snap to newest messages"
+  )
+
+  window.conversation.transcript.scrollBar:SetValue(0)
+  assert(
+    window.conversation.transcript._visibleCount > initialTranscriptVisibleCount,
+    "expected transcript load more to trigger near the top"
+  )
+  assert(
+    window.conversation.transcript.scrollFrame:GetVerticalScroll() > 0,
+    "expected transcript load more to preserve scroll position"
   )
 
   for _ = 1, 200 do

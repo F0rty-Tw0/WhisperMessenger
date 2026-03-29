@@ -52,13 +52,13 @@ function Bootstrap.Initialize(factory, options)
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
   local SendHandler = loadModule("WhisperMessenger.Core.Bootstrap.SendHandler", "BootstrapSendHandler")
+  local WindowCoordinator = loadModule("WhisperMessenger.Core.Bootstrap.WindowCoordinator", "BootstrapWindowCoordinator")
   local MessengerWindow = loadModule("WhisperMessenger.UI.MessengerWindow", "MessengerWindow")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
   local ToggleIcon = loadModule("WhisperMessenger.UI.ToggleIcon", "ToggleIcon")
   local TableUtils = loadModule("WhisperMessenger.Util.TableUtils", "TableUtils")
-  local ContactEnricher = loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
   local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
   local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
 
@@ -84,75 +84,32 @@ function Bootstrap.Initialize(factory, options)
 
   local window
   local icon
+  local windowCoordinator = WindowCoordinator.Create({
+    runtime = runtime,
+    buildContacts = buildContacts,
+    getWindow = function()
+      return window
+    end,
+    getIcon = function()
+      return icon
+    end,
+    trace = trace,
+    isMythicRestricted = function()
+      return Bootstrap._inMythicContent == true
+    end,
+    presenceCache = PresenceCache,
+  })
 
   local function setWindowVisible(nextVisible)
-    if window == nil or window.frame == nil then
-      return
-    end
-
-    trace("set visible=" .. tostring(nextVisible))
-    if nextVisible then
-      -- Rebuild presence cache on window open so all contacts show fresh statuses
-      if PresenceCache then
-        trace("PresenceCache: rebuild on window open")
-        PresenceCache.Rebuild()
-      end
-      window.frame:Show()
-    else
-      window.frame:Hide()
-    end
+    return windowCoordinator.setWindowVisible(nextVisible)
   end
 
   local function isWindowVisible()
-    if window == nil or window.frame == nil then
-      return false
-    end
-
-    if window.frame.IsShown then
-      return window.frame:IsShown()
-    end
-
-    return window.frame.shown == true
+    return windowCoordinator.isWindowVisible()
   end
 
-  -- Contact enrichment: ALWAYS runs regardless of window visibility.
-  -- This is the critical path for keeping statuses fresh.
-  local function refreshContacts()
-    local freshContacts = buildContacts()
-    -- Skip availability API requests during mythic lockdown — calling
-    -- C_ChatInfo.RequestCanLocalWhisperTarget is restricted during M+.
-    -- Contacts are still built so users can view old conversations.
-    if not Bootstrap._inMythicContent then
-      local Gateway = loadModule("WhisperMessenger.Transport.WhisperGateway", "WhisperGateway")
-      for _, item in ipairs(freshContacts) do
-        if
-          item.channel == "WOW"
-          and item.guid
-          and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
-        then
-          Gateway.RequestAvailability(runtime.chatApi, item.guid)
-        end
-      end
-    end
-    local nextState = ContactEnricher.BuildWindowSelectionState(runtime, freshContacts, buildContacts)
-
-    -- Icon badge always updates
-    if icon and icon.setUnreadCount then
-      icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
-    end
-
-    return nextState
-  end
-
-  -- Full refresh: enriches contacts (always) + updates UI (only when visible)
   local function refreshWindow()
-    local nextState = refreshContacts()
-
-    if isWindowVisible() and window and window.refreshSelection then
-      window.refreshSelection(nextState)
-    end
-
-    return nextState
+    return windowCoordinator.refreshWindow()
   end
 
   local function debugContact(conversationKey)
@@ -324,16 +281,6 @@ function Bootstrap.Initialize(factory, options)
     return refreshWindow()
   end
 
-  local function findLatestUnreadKey()
-    local freshContacts = buildContacts()
-    -- Contacts are sorted by lastActivityAt desc, so first unread is latest
-    for _, item in ipairs(freshContacts) do
-      if (item.unreadCount or 0) > 0 then
-        return item.conversationKey
-      end
-    end
-    return nil
-  end
 
   -- Lazy window creation: deferred to first toggle
   local function ensureWindow()
@@ -342,7 +289,7 @@ function Bootstrap.Initialize(factory, options)
     end
 
     local contacts = buildContacts()
-    local selectedState = ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
+    local selectedState = windowCoordinator.buildSelectionState(contacts)
 
     window = MessengerWindow.Create(uiFactory, {
       contacts = contacts,
@@ -458,7 +405,7 @@ function Bootstrap.Initialize(factory, options)
 
     if nextVisible then
       -- Open the latest unread conversation, fall back to last active
-      local unreadKey = findLatestUnreadKey()
+      local unreadKey = windowCoordinator.findLatestUnreadKey()
       local targetKey = unreadKey or runtime.activeConversationKey
       if targetKey ~= nil then
         selectConversation(targetKey)

@@ -1027,12 +1027,15 @@ return function()
   -- BuildWindowSelectionState: active conversation not in contacts list builds fallback selectedContact
   do
     local conversation = {
-      displayName = "Jaina",
-      lastPreview = "hello",
-      unreadCount = 0,
-      lastActivityAt = 50,
-      channel = "WOW",
+      contactDisplayName = "Jaina-Proudmoore",
       guid = "guid-2",
+      className = "Mage",
+      classTag = "MAGE",
+      raceName = "Human",
+      raceTag = "Human",
+      factionName = "Alliance",
+      pinned = true,
+      sortOrder = 9,
     }
     local runtime = makeRuntime({
       activeConversationKey = "k2",
@@ -1042,7 +1045,22 @@ return function()
     local result = ContactEnricher.BuildWindowSelectionState(runtime, contacts, nil)
     assert(result.selectedContact ~= nil, "should build fallback selectedContact")
     assert(result.selectedContact.conversationKey == "k2", "fallback contact key should match")
-    assert(result.selectedContact.displayName == "Jaina", "fallback contact displayName should match")
+    assert(
+      result.selectedContact.displayName == "Jaina-Proudmoore",
+      "fallback contact displayName should fall back to contactDisplayName"
+    )
+    assert(result.selectedContact.lastPreview == "", "fallback contact should default lastPreview to empty string")
+    assert(result.selectedContact.unreadCount == 0, "fallback contact should default unreadCount to 0")
+    assert(result.selectedContact.lastActivityAt == 0, "fallback contact should default lastActivityAt to 0")
+    assert(result.selectedContact.channel == "WOW", "fallback contact should default channel to WOW")
+    assert(result.selectedContact.guid == "guid-2", "fallback contact should preserve guid")
+    assert(result.selectedContact.className == "Mage", "fallback contact should preserve className")
+    assert(result.selectedContact.classTag == "MAGE", "fallback contact should preserve classTag")
+    assert(result.selectedContact.raceName == "Human", "fallback contact should preserve raceName")
+    assert(result.selectedContact.raceTag == "Human", "fallback contact should preserve raceTag")
+    assert(result.selectedContact.factionName == "Alliance", "fallback contact should preserve factionName")
+    assert(result.selectedContact.pinned == true, "fallback contact should preserve pinned")
+    assert(result.selectedContact.sortOrder == 9, "fallback contact should preserve sortOrder")
   end
 
   -- EnrichContactsAvailability: BNet contact gets classTag/raceTag from playerInfoByGUID

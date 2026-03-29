@@ -23,6 +23,7 @@ Model/Retention.lua
 Model/ConversationStore.lua
 Model/LockdownQueue.lua
 Model/PresenceCache.lua
+Model/ConversationSnapshot.lua
 Model/ContactEnricher/AvailabilityEnricher.lua
 Model/ContactEnricher/ContactEnricher.lua
 
@@ -93,4 +94,5 @@ UI/MessengerWindow/MessengerWindow.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua
+Core/Bootstrap/WindowCoordinator.lua
 Bootstrap.lua

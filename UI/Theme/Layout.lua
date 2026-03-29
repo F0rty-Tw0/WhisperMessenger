@@ -31,6 +31,7 @@ local Layout = {
   BUBBLE_SPACING = 4,
   BUBBLE_GROUP_SPACING = 12,
   BUBBLE_ICON_SIZE = 24,
+  MESSAGE_EDGE_INSET = 48,
 
   -- Date separators
   DATE_SEPARATOR_HEIGHT = 28,

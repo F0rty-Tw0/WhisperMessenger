@@ -5,6 +5,7 @@ end
 
 local ContactsList = ns.ContactsList or require("WhisperMessenger.UI.ContactsList")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
+local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local DragController = ns.MessengerWindowDragController or require("WhisperMessenger.UI.MessengerWindow.DragController")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
@@ -110,25 +111,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     end
   end
 
-  if contactsView.scrollFrame and contactsView.scrollFrame.SetScript then
-    local originalOnWheel = contactsView.scrollFrame:GetScript("OnMouseWheel")
-    contactsView.scrollFrame:SetScript("OnMouseWheel", function(self, delta)
-      if originalOnWheel then
-        originalOnWheel(self, delta)
-      end
-      checkLoadMore()
-    end)
-  end
-
-  if contactsView.scrollBar and contactsView.scrollBar.SetScript then
-    local originalOnValue = contactsView.scrollBar:GetScript("OnValueChanged")
-    contactsView.scrollBar:SetScript("OnValueChanged", function(self, value)
-      if originalOnValue then
-        originalOnValue(self, value)
-      end
-      checkLoadMore()
-    end)
-  end
+  Navigation.InstallPostScrollHook(contactsView, checkLoadMore)
 
   return controller
 end
