@@ -6,6 +6,7 @@ return function()
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+  _G.UIParent:SetSize(1280, 720)
 
   local positionChanged = nil
   local window = MessengerWindow.Create(factory, {
@@ -110,5 +111,80 @@ return function()
       .. tostring(window.conversation.transcript.scrollFrame.height)
   )
 
+
+  -- Oversized saved state and oversize resize attempts should clamp to the screen bounds
+  local clampedState = nil
+  local oversizedWindow = MessengerWindow.Create(factory, {
+    contacts = {},
+    state = {
+      anchorPoint = "CENTER",
+      relativePoint = "CENTER",
+      x = 0,
+      y = 0,
+      width = 2000,
+      height = 1200,
+    },
+    onPositionChanged = function(state)
+      clampedState = state
+    end,
+  })
+
+  assert(
+    oversizedWindow.frame.width <= _G.UIParent:GetWidth(),
+    "expected oversized saved width to clamp within UIParent width, got " .. tostring(oversizedWindow.frame.width)
+  )
+  assert(
+    oversizedWindow.frame.height <= _G.UIParent:GetHeight(),
+    "expected oversized saved height to clamp within UIParent height, got " .. tostring(oversizedWindow.frame.height)
+  )
+  assert(
+    oversizedWindow.frame.resizeBounds[3] == _G.UIParent:GetWidth(),
+    "expected native resize max width to track UIParent width, got "
+      .. tostring(oversizedWindow.frame.resizeBounds[3])
+  )
+  assert(
+    oversizedWindow.frame.resizeBounds[4] == _G.UIParent:GetHeight(),
+    "expected native resize max height to track UIParent height, got "
+      .. tostring(oversizedWindow.frame.resizeBounds[4])
+  )
+
+  local unsizedParent = factory.CreateFrame("Frame", "UnsizedParent", nil)
+  local recoveredWindow = MessengerWindow.Create(factory, {
+    parent = unsizedParent,
+    contacts = {},
+    state = {
+      anchorPoint = "CENTER",
+      relativePoint = "CENTER",
+      x = 0,
+      y = 0,
+      width = 2000,
+      height = 1200,
+    },
+  })
+
+  assert(
+    recoveredWindow.frame.width <= Theme.WINDOW_WIDTH,
+    "expected unsized parent fallback to recover width to a sane default, got "
+      .. tostring(recoveredWindow.frame.width)
+  )
+  assert(
+    recoveredWindow.frame.height <= Theme.WINDOW_HEIGHT,
+    "expected unsized parent fallback to recover height to a sane default, got "
+      .. tostring(recoveredWindow.frame.height)
+  )
+
+  oversizedWindow.resizeGrip.scripts.OnMouseDown(oversizedWindow.resizeGrip, "LeftButton")
+  oversizedWindow.frame:SetSize(2400, 1600)
+  oversizedWindow.resizeGrip.scripts.OnMouseUp(oversizedWindow.resizeGrip, "LeftButton")
+
+  assert(clampedState ~= nil, "expected oversized resize attempt to persist a state")
+  assert(
+    clampedState.width <= _G.UIParent:GetWidth(),
+    "expected persisted width to clamp within UIParent width, got " .. tostring(clampedState.width)
+  )
+  assert(
+    clampedState.height <= _G.UIParent:GetHeight(),
+    "expected persisted height to clamp within UIParent height, got " .. tostring(clampedState.height)
+  )
   _G.UIParent = savedUIParent
 end

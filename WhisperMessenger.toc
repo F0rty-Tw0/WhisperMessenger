@@ -80,6 +80,7 @@ UI/Composer/Composer.lua
 UI/ToggleIcon/Badge.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
+UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder.lua
 UI/MessengerWindow/DragController.lua

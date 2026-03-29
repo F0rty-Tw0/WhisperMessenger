@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 
@@ -38,10 +39,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
   frame:SetResizable(true)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, Theme)
   if frame.SetResizeBounds then
-    frame:SetResizeBounds(640, 420)
-  elseif frame.SetMinResize then
-    frame:SetMinResize(640, 420)
+    frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+  else
+    frame:SetMinResize(minWidth, minHeight)
+    if frame.SetMaxResize and maxWidth and maxHeight then
+      frame:SetMaxResize(maxWidth, maxHeight)
+    end
   end
   frame:SetClampedToScreen(true)
 

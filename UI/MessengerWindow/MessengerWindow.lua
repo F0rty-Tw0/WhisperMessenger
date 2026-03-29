@@ -8,6 +8,7 @@ local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.Con
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
 local AlphaController = ns.MessengerWindowAlphaController
   or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
+local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
@@ -20,7 +21,6 @@ local NotificationSettings = ns.NotificationSettings
   or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
-
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
 
@@ -47,7 +47,7 @@ function MessengerWindow.Create(factory, options)
 
   local parent = options.parent or _G.UIParent
   local state = options.state or {}
-  local initialState = {
+  local initialState = WindowBounds.ClampState(parent, {
     anchorPoint = state.anchorPoint or "CENTER",
     relativePoint = state.relativePoint or state.anchorPoint or "CENTER",
     x = state.x or 0,
@@ -55,16 +55,17 @@ function MessengerWindow.Create(factory, options)
     width = state.width or Theme.WINDOW_WIDTH,
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
-  }
+  }, Theme)
 
   local function applyState(target, nextState)
-    target:SetSize(nextState.width or Theme.WINDOW_WIDTH, nextState.height or Theme.WINDOW_HEIGHT)
+    local clampedState = WindowBounds.ClampState(parent, nextState, Theme)
+    target:SetSize(clampedState.width or Theme.WINDOW_WIDTH, clampedState.height or Theme.WINDOW_HEIGHT)
     target:SetPoint(
-      nextState.anchorPoint or "CENTER",
+      clampedState.anchorPoint or "CENTER",
       parent,
-      nextState.relativePoint or nextState.anchorPoint or "CENTER",
-      nextState.x or 0,
-      nextState.y or 0
+      clampedState.relativePoint or clampedState.anchorPoint or "CENTER",
+      clampedState.x or 0,
+      clampedState.y or 0
     )
   end
 
@@ -73,7 +74,7 @@ function MessengerWindow.Create(factory, options)
     pos.width = sizeValue(target, "GetWidth", "width", initialState.width)
     pos.height = sizeValue(target, "GetHeight", "height", initialState.height)
     pos.minimized = false
-    return pos
+    return WindowBounds.ClampState(parent, pos, Theme)
   end
 
   local function isShown(target)
