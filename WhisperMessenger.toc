@@ -94,5 +94,7 @@ UI/MessengerWindow/MessengerWindow.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua
+Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/WindowCoordinator.lua
+Core/Bootstrap/LifecycleHandlers.lua
 Bootstrap.lua

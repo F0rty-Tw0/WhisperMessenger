@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.7] - 2026-03-29
+
+### Improved
+
+- Large behind-the-scenes cleanup to make the messenger feel more consistent and easier to maintain going forward
+- Contact details now stay in sync more reliably, especially when Battle.net friend details change while the addon is open
+- Scrolling is now more consistent in long contact lists and long conversations
+- Message headers and chat bubbles now line up more consistently
+
+### Fixed
+
+- Fixed cases where contact details could lag behind until the window was reopened
+- Fixed inconsistent spacing between sender names and chat bubbles
+- Fixed refresh behavior so unread counts and contact updates stay accurate even while the window is hidden
+
+
 ## [1.0.6] - 2026-03-27
 
 ### Added

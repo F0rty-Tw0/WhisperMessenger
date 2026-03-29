@@ -52,6 +52,7 @@ function Bootstrap.Initialize(factory, options)
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
   local SendHandler = loadModule("WhisperMessenger.Core.Bootstrap.SendHandler", "BootstrapSendHandler")
+  local ChatFilters = loadModule("WhisperMessenger.Core.Bootstrap.ChatFilters", "BootstrapChatFilters")
   local WindowCoordinator = loadModule("WhisperMessenger.Core.Bootstrap.WindowCoordinator", "BootstrapWindowCoordinator")
   local MessengerWindow = loadModule("WhisperMessenger.UI.MessengerWindow", "MessengerWindow")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
@@ -441,57 +442,12 @@ function Bootstrap.Initialize(factory, options)
   -- Setting hideFromDefaultChat = false lets whispers appear in both places.
   --
   -- IMPORTANT: Any addon code running inside a ChatFrame filter taints
-  -- Blizzard's chat processing context.  During mythic content this breaks
-  -- /r, /w, and community whispers.  We remove the filters entirely on
+  -- Blizzard's chat processing context. During mythic content this breaks
+  -- /r, /w, and community whispers. We remove the filters entirely on
   -- mythic enter and re-register them on mythic leave.
-  if type(_G.ChatFrame_AddMessageEventFilter) == "function" then
-    -- DO NOT call ChatEdit_SetLastTellTarget from inside a filter.
-    -- Calling it from addon code taints the stored reply target, and
-    -- that taint persists into mythic content where it breaks /w, /r,
-    -- and community whispers.  The /r target will not update when we
-    -- hide whispers, but that is an acceptable trade-off vs breaking
-    -- all whisper functionality.
-
-    Bootstrap._whisperFilter = function(_self, _event, _msg, _sender)
-      if accountState.settings.hideFromDefaultChat ~= true then
-        return false
-      end
-      return true
-    end
-
-    Bootstrap._bnWhisperFilter = function(_self, _event, _msg, _sender)
-      if accountState.settings.hideFromDefaultChat ~= true then
-        return false
-      end
-      return true
-    end
-
-    Bootstrap._filtersRegistered = false
-    Bootstrap.registerChatFilters = function()
-      if Bootstrap._filtersRegistered then
-        return
-      end
-      if type(_G.ChatFrame_AddMessageEventFilter) ~= "function" then
-        return
-      end
-      _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-      _G.ChatFrame_AddMessageEventFilter("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-      Bootstrap._filtersRegistered = true
-    end
-    Bootstrap.unregisterChatFilters = function()
-      if not Bootstrap._filtersRegistered then
-        return
-      end
-      if type(_G.ChatFrame_RemoveMessageEventFilter) == "function" then
-        _G.ChatFrame_RemoveMessageEventFilter("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-        _G.ChatFrame_RemoveMessageEventFilter("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-      end
-      Bootstrap._filtersRegistered = false
-    end
-
-    if not Bootstrap._inMythicContent then
-      Bootstrap.registerChatFilters()
-    end
+  ChatFilters.Configure(Bootstrap, accountState)
+  if not Bootstrap._inMythicContent then
+    Bootstrap.registerChatFilters()
   end
 
   local prevSnapshot = nil
@@ -724,6 +680,7 @@ if type(_G.CreateFrame) == "function" then
   local loadFrame = _G.CreateFrame("Frame", "WhisperMessengerLoadFrame")
   Bootstrap._loadFrame = loadFrame
   local EventBridge = ns.BootstrapEventBridge
+  local LifecycleHandlers = ns.BootstrapLifecycleHandlers
   loadFrame:RegisterEvent("ADDON_LOADED")
   loadFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
@@ -754,198 +711,23 @@ if type(_G.CreateFrame) == "function" then
       return
     end
 
-    if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
-      if Bootstrap.runtime then
-        local BNetResolver = loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
-        local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
-
-        -- Update all BNet conversations with current session bnetAccountID
-        for _, conversation in pairs(Bootstrap.runtime.store.conversations) do
-          if conversation.channel == "BN" and conversation.battleTag then
-            local friend = friendMap[conversation.battleTag]
-            if friend then
-              conversation.bnetAccountID = friend.bnetAccountID
-              -- Refresh metadata from live data
-              local gi = friend.accountInfo and friend.accountInfo.gameAccountInfo
-              if gi then
-                if gi.factionName and gi.factionName ~= "" then
-                  conversation.factionName = gi.factionName
-                end
-                if gi.className and gi.className ~= "" then
-                  conversation.className = gi.className
-                end
-                if gi.raceName and gi.raceName ~= "" then
-                  conversation.raceName = gi.raceName
-                end
-                if gi.characterName then
-                  conversation.gameAccountName = gi.characterName .. (gi.realmName and ("-" .. gi.realmName) or "")
-                end
-              end
-            end
-          end
-        end
-
-        if Bootstrap.runtime.refreshWindow then
-          Bootstrap.runtime.refreshWindow()
-        end
-      end
-      return
+    if not LifecycleHandlers then
+      LifecycleHandlers = ns.BootstrapLifecycleHandlers
+        or loadModule("WhisperMessenger.Core.Bootstrap.LifecycleHandlers", "BootstrapLifecycleHandlers")
     end
-
-    if event == "PLAYER_LOGOUT" then
-      if Bootstrap.runtime then
-        local settings = Bootstrap.runtime.accountState and Bootstrap.runtime.accountState.settings
-        if settings and settings.clearOnLogout then
-          for key in pairs(Bootstrap.runtime.store.conversations) do
-            Bootstrap.runtime.store.conversations[key] = nil
-          end
-          trace("clear on logout")
-        end
-      end
-      return
-    end
-
-    if event == "CHALLENGE_MODE_START" then
-      Bootstrap._inMythicContent = true
-      if Bootstrap.runtime and Bootstrap.runtime.suspend then
-        Bootstrap.runtime.suspend()
-      end
-      trace("mythic lockdown: M+ started")
-      return
-    end
-
-    if event == "CHALLENGE_MODE_COMPLETED" then
-      Bootstrap._inMythicContent = false
-      if Bootstrap.runtime and Bootstrap.runtime.resume then
-        Bootstrap.runtime.resume()
-      end
-      trace("mythic lockdown: M+ completed")
-      return
-    end
-
-    if event == "CHALLENGE_MODE_RESET" then
-      Bootstrap._inMythicContent = false
-      if Bootstrap.runtime and Bootstrap.runtime.resume then
-        Bootstrap.runtime.resume()
-      end
-      trace("mythic lockdown: M+ reset")
-      return
-    end
-
-    if event == "ZONE_CHANGED_NEW_AREA" then
-      -- Re-check mythic status after zone data is fully loaded.
-      -- PLAYER_ENTERING_WORLD fires before GetInstanceInfo updates,
-      -- so we need this event to catch the transition out of mythic.
-      if Bootstrap._inMythicContent then
-        local ContentDetector = ns.ContentDetector
-        local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
-        trace("ZONE_CHANGED_NEW_AREA wasMythic=true isMythic=" .. tostring(isMythic))
-        if not isMythic then
-          Bootstrap._inMythicContent = false
-          if Bootstrap.runtime and Bootstrap.runtime.resume then
-            Bootstrap.runtime.resume()
-          end
-          -- Rebuild presence cache and refresh UI after mythic exit
-          local PresenceCache = ns.PresenceCache
-          if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
-            _G.C_Timer.After(2, function()
-              if Bootstrap._inMythicContent then
-                return
-              end
-              trace("PresenceCache: rebuild after mythic exit")
-              PresenceCache.Rebuild()
-              if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
-                Bootstrap.runtime.refreshWindow()
-              end
-            end)
-          end
-          trace("mythic lockdown: resumed via zone change")
-        end
-      end
-      return
-    end
-
-    if event == "PLAYER_ENTERING_WORLD" then
-      -- Mythic content suspension
-      local ContentDetector = ns.ContentDetector
-      local wasMythic = Bootstrap._inMythicContent or false
-      local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
-      trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
-      Bootstrap._inMythicContent = isMythic
-
-      if isMythic and not wasMythic then
-        if Bootstrap.runtime and Bootstrap.runtime.suspend then
-          Bootstrap.runtime.suspend()
-        end
-        trace("mythic lockdown: suspended")
-        return
-      elseif wasMythic and not isMythic then
-        if Bootstrap.runtime and Bootstrap.runtime.resume then
-          Bootstrap.runtime.resume()
-        end
-        trace("mythic lockdown: resumed")
-      elseif isMythic then
-        -- Already in mythic, skip all PresenceCache work
-        return
-      end
-
-      -- Start recurring presence cache rebuild timer + first rebuild after data loads
-      local PresenceCache = ns.PresenceCache
-      if PresenceCache and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
-        -- First rebuild after 2s (when club data is ready), then refresh window
-        _G.C_Timer.After(2, function()
-          if Bootstrap._inMythicContent then
-            return
-          end
-          trace("PresenceCache: initial rebuild (PLAYER_ENTERING_WORLD +2s)")
-          PresenceCache.Rebuild()
-          if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
-            Bootstrap.runtime.refreshWindow()
-          end
-        end)
-        -- Recurring timer for subsequent rebuilds.
-        -- Skip C_Club API calls during mythic — addon code touching club
-        -- data taints it, breaking Blizzard's guild/community whisper UI.
-        local function presenceTimerLoop()
-          if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
-            trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
-            PresenceCache.Rebuild()
-          end
-          _G.C_Timer.After(PresenceCache.GetTTL(), presenceTimerLoop)
-        end
-        _G.C_Timer.After(PresenceCache.GetTTL(), presenceTimerLoop)
-      elseif Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
-        _G.C_Timer.After(2, function()
-          Bootstrap.runtime.refreshWindow()
-        end)
-      end
-      return
-    end
-
-    -- Guild/community presence events: debounced cache invalidation
     if
-      event == "GUILD_ROSTER_UPDATE"
-      or event == "CLUB_MEMBER_UPDATED"
-      or event == "CLUB_MEMBER_ADDED"
-      or event == "CLUB_MEMBER_REMOVED"
+      LifecycleHandlers
+      and LifecycleHandlers.Handle(Bootstrap, event, {
+        loadModule = loadModule,
+        trace = trace,
+        getContentDetector = function()
+          return ns.ContentDetector
+        end,
+        getPresenceCache = function()
+          return ns.PresenceCache
+        end,
+      })
     then
-      local PresenceCache = ns.PresenceCache
-      if PresenceCache then
-        PresenceCache.Invalidate()
-        trace("PresenceCache: invalidated by " .. event)
-        -- Debounce: rebuild after 2s to coalesce rapid events
-        if not Bootstrap._presenceRebuildPending and type(_G.C_Timer) == "table" then
-          Bootstrap._presenceRebuildPending = true
-          _G.C_Timer.After(2, function()
-            Bootstrap._presenceRebuildPending = false
-            if Bootstrap._inMythicContent then
-              return
-            end
-            trace("PresenceCache: debounced rebuild after " .. event)
-            PresenceCache.Rebuild()
-          end)
-        end
-      end
       return
     end
 

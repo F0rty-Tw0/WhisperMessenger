@@ -212,6 +212,32 @@ return function()
   assert(#conversation.messages == 3)
   assert(conversation.messages[3].kind == "system")
 
+
+  _G.C_BattleNet.GetNumFriends = function()
+    return 1
+  end
+  _G.C_BattleNet.GetFriendAccountInfo = function(index)
+    assert(index == 1)
+    return {
+      bnetAccountID = 77,
+      battleTag = "Jaina#1234",
+      gameAccountInfo = {
+        characterName = "Jaina",
+        realmName = "KulTiras",
+        className = "Priest",
+        raceName = "Kul Tiran",
+        factionName = "Alliance",
+      },
+    }
+  end
+
+  eventFrame.scripts.OnEvent(eventFrame, "BN_FRIEND_INFO_CHANGED")
+
+  assert(conversation.bnetAccountID == 77, "expected BNet refresh to update account id")
+  assert(conversation.gameAccountName == "Jaina-KulTiras", "expected BNet refresh to update gameAccountName")
+  assert(conversation.className == "Priest", "expected BNet refresh to update class name")
+  assert(conversation.raceName == "Kul Tiran", "expected BNet refresh to update race name")
+  assert(runtime.window.contacts.rows[1].item.className == "Priest", "expected open window row to refresh after BNet update")
   _G.require = savedRequire
   _G.CreateFrame = savedCreateFrame
   _G.SlashCmdList = savedSlashCmdList
