@@ -45,6 +45,7 @@ end
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
+local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
   trace("initialize start")
@@ -69,7 +70,7 @@ function Bootstrap.Initialize(factory, options)
     SavedState.Initialize(options.accountState, options.characterState, localProfileId)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
-
+  runtime.messagingNotice = nil
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G.C_Club, {
@@ -612,6 +613,7 @@ function Bootstrap.Initialize(factory, options)
   runtime.refreshWindow = refreshWindow
   runtime.ensureWindow = ensureWindow
   runtime.suspend = function()
+    runtime.messagingNotice = MYTHIC_PAUSE_NOTICE
     Bootstrap._wasVisibleBeforeMythic = isWindowVisible()
     setWindowVisible(false)
     if Bootstrap.unregisterChatFilters then
@@ -632,6 +634,7 @@ function Bootstrap.Initialize(factory, options)
     end
   end
   runtime.resume = function()
+    runtime.messagingNotice = nil
     _G._wmSuspended = nil
     if type(_G.print) == "function" then
       _G.print("|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.")
@@ -647,6 +650,7 @@ function Bootstrap.Initialize(factory, options)
     if Bootstrap._wasVisibleBeforeMythic then
       setWindowVisible(true)
     end
+    refreshWindow()
     Bootstrap._wasVisibleBeforeMythic = nil
   end
 

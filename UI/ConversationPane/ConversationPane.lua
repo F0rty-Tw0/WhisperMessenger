@@ -32,7 +32,7 @@ ConversationPane.HasMore = TranscriptView.HasMore
 ConversationPane.LoadMore = TranscriptView.LoadMore
 
 -- Re-export header refresh
-ConversationPane.Refresh = function(view, selectedContact, conversation, status)
+ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
   HeaderView.Refresh(view, selectedContact, conversation, status)
   -- Reset visible count when conversation changes
   view.transcript._visibleCount = MESSAGES_PAGE_SIZE
@@ -41,19 +41,24 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
   ConversationPane.SetStatus(view, status)
+  ConversationPane.SetNotice(view, noticeText)
   ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)
   return view
 end
 
-function ConversationPane.RefreshActiveStatus(view, activeStatus)
+local function refreshBottomBanner(view)
   if view.activeStatusBanner == nil then
     return
   end
 
   local wasVisible = view._activeStatusVisible or false
+  local nextText = view._noticeText or ""
+  if nextText == "" and view._activeStatusText and view._activeStatusText ~= "" then
+    nextText = view._activeStatusText
+  end
 
-  if activeStatus and activeStatus.text and activeStatus.text ~= "" then
-    view.activeStatusBanner:SetText(activeStatus.text)
+  if nextText ~= "" then
+    view.activeStatusBanner:SetText(nextText)
     view.activeStatusBanner:Show()
     view._activeStatusVisible = true
   else
@@ -76,6 +81,17 @@ function ConversationPane.RefreshActiveStatus(view, activeStatus)
     end
   end
 end
+
+function ConversationPane.SetNotice(view, noticeText)
+  view._noticeText = noticeText or ""
+  refreshBottomBanner(view)
+end
+
+function ConversationPane.RefreshActiveStatus(view, activeStatus)
+  view._activeStatusText = activeStatus and activeStatus.text or ""
+  refreshBottomBanner(view)
+end
+
 
 function ConversationPane.SetStatus(view, status)
   if view.statusBanner == nil then

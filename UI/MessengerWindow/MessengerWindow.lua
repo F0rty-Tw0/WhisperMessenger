@@ -35,8 +35,8 @@ local function syncComposerSelectedContact(target, selectedContact)
   target.gameAccountName = selectedContact and selectedContact.gameAccountName or nil
 end
 
-local function setComposerEnabled(composer, selectedContact)
-  local enabled = selectedContact ~= nil
+local function setComposerEnabled(composer, selectedContact, noticeText)
+  local enabled = selectedContact ~= nil and not (noticeText and noticeText ~= "")
   if composer.setEnabled then
     composer.setEnabled(enabled)
   end
@@ -268,6 +268,7 @@ function MessengerWindow.Create(factory, options)
   -- Selection management
   local currentConversation = nil
   local currentStatus = nil
+  local currentNotice = nil
   local currentContacts = options.contacts or {}
 
   local function refreshSelection(nextState, resetPaging)
@@ -275,15 +276,16 @@ function MessengerWindow.Create(factory, options)
     currentSelectedContact = nextState.selectedContact
     currentConversation = nextState.conversation
     currentStatus = nextState.status
+    currentNotice = nextState.notice
 
     refreshContacts(
       nextState.contacts,
       currentSelectedContact and currentSelectedContact.conversationKey or nil,
       resetPaging
     )
-    ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus)
+    ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus, currentNotice)
     syncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
-    setComposerEnabled(composer, currentSelectedContact)
+    setComposerEnabled(composer, currentSelectedContact, currentNotice)
   end
 
   local function buildSelectedState(item)

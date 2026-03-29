@@ -116,6 +116,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     conversation = conversation,
     status = selectedContact and selectedContact.availability
       or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
+    notice = runtime.messagingNotice,
   }
 end
 

@@ -505,4 +505,85 @@ return function()
     _G.SLASH_WHISPERMESSENGER1 = savedSlash1
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
+
+  -- -----------------------------------------------------------------------
+  -- test_window_shows_mythic_notice_when_reopened_during_suspend
+  -- -----------------------------------------------------------------------
+  do
+    local Bootstrap = require("WhisperMessenger.Bootstrap")
+    local FakeUI = require("tests.helpers.fake_ui")
+    local factory = FakeUI.NewFactory()
+
+    local savedUIParent = _G.UIParent
+    local savedSlashCmdList = _G.SlashCmdList
+    local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
+    local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
+
+    _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+    _G.SlashCmdList = {}
+    _G.SLASH_WHISPERMESSENGER1 = nil
+    _G.SLASH_WHISPERMESSENGER2 = nil
+
+    local conversationKey = "me::WOW::arthas-area52"
+    local runtime = Bootstrap.Initialize(factory, {
+      localProfileId = "me",
+      accountState = {
+        schemaVersion = 1,
+        conversations = {
+          [conversationKey] = {
+            displayName = "Arthas-Area52",
+            guid = "Player-3676-0ABCDEF0",
+            unreadCount = 1,
+            lastPreview = "Need help?",
+            lastActivityAt = 20,
+            channel = "WOW",
+            messages = {
+              {
+                direction = "in",
+                kind = "user",
+                playerName = "Arthas-Area52",
+                text = "Need help?",
+                sentAt = 1,
+                guid = "Player-3676-0ABCDEF0",
+              },
+            },
+          },
+        },
+        contacts = {},
+        pendingHydration = {},
+        settings = {},
+      },
+      characterState = {
+        window = { x = 0, y = 0, width = 900, height = 560 },
+        icon = {},
+      },
+    })
+
+    runtime.toggle()
+    runtime.window.contacts.rows[1].scripts.OnClick()
+    assert(runtime.window.composer.sendButton.disabled == false, "composer should be enabled before suspend")
+
+    runtime.suspend()
+    assert(runtime.window.frame.shown == false, "window should hide during mythic suspend")
+
+    runtime.toggle()
+    assert(runtime.window.frame.shown == true, "window should reopen during mythic suspend")
+    assert(
+      runtime.window.conversation.activeStatusBanner.text
+        == "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave.",
+      "window should show a mythic pause notice when reopened during suspend"
+    )
+    assert(runtime.window.conversation.activeStatusBanner.shown == true, "mythic pause notice should be visible")
+    assert(runtime.window.composer.sendButton.disabled == true, "composer should stay disabled while mythic notice is active")
+
+    runtime.resume()
+    assert(runtime.window.conversation.activeStatusBanner.text == "", "mythic pause notice should clear after resume")
+    assert(runtime.window.conversation.activeStatusBanner.shown == false, "mythic pause notice should hide after resume")
+    assert(runtime.window.composer.sendButton.disabled == false, "composer should re-enable after resume")
+
+    _G.UIParent = savedUIParent
+    _G.SlashCmdList = savedSlashCmdList
+    _G.SLASH_WHISPERMESSENGER1 = savedSlash1
+    _G.SLASH_WHISPERMESSENGER2 = savedSlash2
+  end
 end
