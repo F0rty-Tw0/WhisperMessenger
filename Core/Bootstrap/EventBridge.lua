@@ -56,16 +56,54 @@ local function buildLivePayload(runtime, eventName, ...)
   }
 end
 
+local function isUnknownEventError(err)
+  local message = string.lower(tostring(err or ""))
+  return string.find(message, "unknown event", 1, true) ~= nil
+end
+
+local function registerEventIfSupported(frame, eventName)
+  local ok, err = pcall(frame.RegisterEvent, frame, eventName)
+  if ok then
+    return true
+  end
+
+  if isUnknownEventError(err) then
+    if Trace then
+      Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
+    end
+    return false
+  end
+
+  error(err)
+end
+
+local function unregisterEventIfSupported(frame, eventName)
+  local ok, err = pcall(frame.UnregisterEvent, frame, eventName)
+  if ok then
+    return true
+  end
+
+  if isUnknownEventError(err) then
+    if Trace then
+      Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
+    end
+    return false
+  end
+
+  error(err)
+end
+
+
 function EventBridge.RegisterLiveEvents(frame)
   for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
-    frame:RegisterEvent(eventName)
+    registerEventIfSupported(frame, eventName)
   end
 end
 
 function EventBridge.UnregisterLiveEvents(frame)
   for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
     if frame.UnregisterEvent then
-      frame:UnregisterEvent(eventName)
+      unregisterEventIfSupported(frame, eventName)
     end
   end
 end
@@ -74,7 +112,7 @@ function EventBridge.UnregisterSuspendableLifecycleEvents(frame)
   local essential = Constants.MYTHIC_ESSENTIAL_EVENTS or {}
   for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
     if not essential[eventName] and frame.UnregisterEvent then
-      frame:UnregisterEvent(eventName)
+      unregisterEventIfSupported(frame, eventName)
     end
   end
 end
@@ -83,7 +121,7 @@ function EventBridge.RegisterSuspendableLifecycleEvents(frame)
   local essential = Constants.MYTHIC_ESSENTIAL_EVENTS or {}
   for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
     if not essential[eventName] then
-      frame:RegisterEvent(eventName)
+      registerEventIfSupported(frame, eventName)
     end
   end
 end

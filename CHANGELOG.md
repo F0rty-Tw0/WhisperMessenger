@@ -14,7 +14,8 @@
 - Fixed cases where contact details could lag behind until the window was reopened
 - Fixed inconsistent spacing between sender names and chat bubbles
 - Fixed refresh behavior so unread counts and contact updates stay accurate even while the window is hidden
-- Added an in-window pause notice during Mythic content so the messenger now clearly tells you why whispers are unavailable, and the send box stays disabled until you leave
+- Fixed Mythic content confusion by showing an in-window pause notice and disabling the send box until whispers are available again
+- Fixed a Classic startup error caused by unsupported whisper-related events, so the addon now loads cleanly on clients that do not provide them
 
 
 ## [1.0.6] - 2026-03-27
