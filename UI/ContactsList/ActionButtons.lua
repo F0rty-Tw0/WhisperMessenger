@@ -23,6 +23,30 @@ end
 
 local ActionButtons = {}
 
+local function rowBaseBackgroundColor(row)
+  local item = row and row.item or nil
+  return item and item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
+end
+
+local function pinBaseColor(row)
+  local item = row and row.item or nil
+  return item and item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
+end
+
+local function pinTooltipText(row)
+  local item = row and row.item or nil
+  return item and item.pinned and "Unpin" or "Pin to top"
+end
+
+local function restoreRowVisualState(row)
+  if row.selected then
+    applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
+  else
+    applyColorTexture(row.bg, rowBaseBackgroundColor(row))
+  end
+  ActionButtons.hideActions(row)
+end
+
 --- Show action buttons on a row (pin + remove), respecting unread state.
 ---@param row table row frame with item, pinButton, removeButton fields
 function ActionButtons.showActions(row)
@@ -58,7 +82,6 @@ end
 function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
-  local rowBaseBg = row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
 
   local btn = factory.CreateFrame("Button", nil, row)
   btn:SetSize(ACTION_SIZE, ACTION_SIZE)
@@ -93,12 +116,7 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
     btn:SetScript("OnLeave", function(self)
       applyVertexColor(self.icon, Theme.COLORS.action_icon)
       if not (row.IsMouseOver and row:IsMouseOver()) then
-        if row.selected then
-          applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-        else
-          applyColorTexture(row.bg, rowBaseBg)
-        end
-        ActionButtons.hideActions(row)
+        restoreRowVisualState(row)
       end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
@@ -127,13 +145,12 @@ end
 --- Returns the button frame.
 ---@param factory table frame factory
 ---@param row table parent row frame (must have row.removeButton)
----@param item table contact item data
+---@param _item table contact item data
 ---@param parentWidth number width of the parent for layout
 ---@param options table callbacks: onPin(item)
-function ActionButtons.createPinButton(factory, row, item, _parentWidth, options)
+function ActionButtons.createPinButton(factory, row, _item, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
-  local rowBaseBg = item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
 
   local btn = factory.CreateFrame("Button", nil, row)
   btn:SetSize(ACTION_SIZE, ACTION_SIZE)
@@ -160,22 +177,15 @@ function ActionButtons.createPinButton(factory, row, item, _parentWidth, options
       ActionButtons.showActions(row)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        local pinLabel = item.pinned and "Unpin" or "Pin to top"
-        _G.GameTooltip:SetText(pinLabel)
+        _G.GameTooltip:SetText(pinTooltipText(row))
         _G.GameTooltip:Show()
       end
     end)
 
     btn:SetScript("OnLeave", function(self)
-      local baseColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
-      applyVertexColor(self.icon, baseColor)
+      applyVertexColor(self.icon, pinBaseColor(row))
       if not (row.IsMouseOver and row:IsMouseOver()) then
-        if row.selected then
-          applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-        else
-          applyColorTexture(row.bg, rowBaseBg)
-        end
-        ActionButtons.hideActions(row)
+        restoreRowVisualState(row)
       end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()

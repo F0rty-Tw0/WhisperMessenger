@@ -8,9 +8,7 @@ local Migrations = {
 }
 
 function Migrations.Apply(accountState, schema)
-  if accountState == nil then
-    return schema.NewAccountState()
-  end
+  accountState = accountState or schema.NewAccountState()
 
   if accountState.schemaVersion == nil then
     accountState.schemaVersion = Migrations.CURRENT_VERSION

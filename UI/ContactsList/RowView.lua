@@ -61,32 +61,9 @@ local function bindRow(factory, parent, row, index, item, options)
 
   -- Status dot (create once, update color every bind)
   if row.statusDot == nil then
-    local dot = StatusDot.create(factory, row, row.classIconFrame, item.availability)
-    row.statusDot = dot.frame
-    row.statusDot.bg = dot.texture
+    row.statusDot = StatusDot.create(factory, row, row.classIconFrame, item.availability).frame
   else
-    local colorKey
-    if item.availability then
-      colorKey = item.availability.canWhisper and "online" or "offline"
-      if item.availability.status == "WrongFaction" then
-        colorKey = "dnd"
-      elseif item.availability.status == "Away" then
-        colorKey = "away"
-      elseif item.availability.status == "Busy" then
-        colorKey = "dnd"
-      elseif item.availability.status == "BNetOnline" then
-        colorKey = "away"
-      elseif item.availability.status == "Unavailable" then
-        colorKey = "offline"
-      end
-    else
-      colorKey = "offline"
-    end
-    local sc = Theme.COLORS[colorKey]
-    if sc then
-      row.statusDot.bg:SetVertexColor(sc[1], sc[2], sc[3], sc[4] or 1)
-    end
-    row.statusDot:Show()
+    StatusDot.update(row.statusDot, item.availability)
   end
 
   -- Contact name (create once, update text every bind)
@@ -101,43 +78,21 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.factionIcon == nil then
     RowElements.createFactionIcon(factory, row, item, ns)
   else
-    local titleTextWidth = row.title.GetStringWidth and row.title:GetStringWidth() or 0
-    local titleMaxWidth = row.title.GetWidth and row.title:GetWidth() or 0
-    local textW = math.min(titleTextWidth, titleMaxWidth)
-    row.factionIcon:ClearAllPoints()
-    row.factionIcon:SetPoint("LEFT", row.title, "LEFT", textW + 4, 0)
-    local inferredFaction = item.raceTag
-        and (ns.Identity and ns.Identity.InferFaction and ns.Identity.InferFaction(item.raceTag))
-      or nil
-    local factionForIcon = inferredFaction or item.factionName
-    local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
-    if reliableFaction then
-      row.factionIcon:SetTexture(reliableFaction)
-      row.factionIcon:Show()
-    else
-      row.factionIcon:Hide()
-    end
+    RowElements.updateFactionIcon(row, item, ns)
   end
 
   -- Timestamp (create once, update text every bind)
   if row.timeLabel == nil then
     RowElements.createTimestamp(row, item, ns)
   else
-    if ns.TimeFormat and ns.TimeFormat.ContactPreview then
-      row.timeLabel:SetText(ns.TimeFormat.ContactPreview(item.lastActivityAt))
-    else
-      row.timeLabel:SetText("")
-    end
+    RowElements.updateTimestamp(row, item, ns)
   end
 
   -- Preview text (create once, update text every bind)
-  local previewText = options.hideMessagePreview and "" or (item.lastPreview or "")
   if row.preview == nil then
     RowElements.createPreview(row, item, parentWidth)
-    row.preview:SetText(previewText)
-  else
-    row.preview:SetText(previewText)
   end
+  RowElements.updatePreview(row, item, parentWidth, options and options.hideMessagePreview)
 
   -- Action buttons (create once)
   if row.removeButton == nil then

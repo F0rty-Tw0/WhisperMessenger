@@ -9,6 +9,38 @@ local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
 local StatusDot = {}
 
+
+local function colorKeyForAvailability(availability)
+  if availability then
+    local colorKey = availability.canWhisper and "online" or "offline"
+    if availability.status == "WrongFaction" then
+      return "dnd"
+    elseif availability.status == "Away" then
+      return "away"
+    elseif availability.status == "Busy" then
+      return "dnd"
+    elseif availability.status == "BNetOnline" then
+      return "away"
+    elseif availability.status == "Unavailable" then
+      return "offline"
+    end
+    return colorKey
+  end
+
+  return "offline"
+end
+
+function StatusDot.update(dotFrame, availability)
+  local dotTexture = dotFrame and dotFrame.bg or nil
+  local c = Theme.COLORS[colorKeyForAvailability(availability)]
+  if dotTexture and c then
+    dotTexture:SetVertexColor(c[1], c[2], c[3], c[4] or 1)
+  end
+  if dotFrame and dotFrame.Show then
+    dotFrame:Show()
+  end
+end
+
 --- Create a status dot frame anchored to the bottom-right of anchorFrame.
 --- Returns { frame = dotFrame, texture = dotTexture }.
 ---@param factory table frame factory
@@ -28,32 +60,8 @@ function StatusDot.create(factory, parent, anchorFrame, availability)
   local dotTexture = dotFrame:CreateTexture(nil, "OVERLAY")
   dotTexture:SetAllPoints()
   dotTexture:SetTexture(CIRCLE_TEX)
-
-  -- Determine color key from availability
-  local colorKey
-  if availability then
-    colorKey = availability.canWhisper and "online" or "offline"
-    if availability.status == "WrongFaction" then
-      colorKey = "dnd"
-    elseif availability.status == "Away" then
-      colorKey = "away"
-    elseif availability.status == "Busy" then
-      colorKey = "dnd"
-    elseif availability.status == "BNetOnline" then
-      colorKey = "away"
-    elseif availability.status == "Unavailable" then
-      colorKey = "offline"
-    end
-  else
-    colorKey = "offline"
-  end
-
-  local c = Theme.COLORS[colorKey]
-  if c then
-    dotTexture:SetVertexColor(c[1], c[2], c[3], c[4] or 1)
-  end
-
-  dotFrame:Show()
+  dotFrame.bg = dotTexture
+  StatusDot.update(dotFrame, availability)
 
   return { frame = dotFrame, texture = dotTexture }
 end

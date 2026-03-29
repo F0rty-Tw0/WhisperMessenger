@@ -121,7 +121,7 @@ function MessengerWindow.Create(factory, options)
   local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
 
-  -- Settings panels (each inside its own frame within optionsContentPane)
+  -- Compose settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
 
   local function onSettingChanged(key, value)
@@ -130,45 +130,38 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  local generalPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
-  generalPanel:SetAllPoints(optionsScrollContent)
-  local generalSettings = GeneralSettings.Create(factory, generalPanel, {
+  local function createSettingsPanel(createSettingsView, config)
+    local panel = factory.CreateFrame("Frame", nil, optionsScrollContent)
+    panel:SetAllPoints(optionsScrollContent)
+    local settings = createSettingsView(factory, panel, config, {
+      onChange = onSettingChanged,
+    })
+    return panel, settings
+  end
+
+  local generalPanel, generalSettings = createSettingsPanel(GeneralSettings.Create, {
     maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
     maxConversations = storeConfig.maxConversations or 100,
     messageMaxAge = storeConfig.messageMaxAge or 86400,
     clearOnLogout = settingsConfig.clearOnLogout,
     hideMessagePreview = settingsConfig.hideMessagePreview,
-  }, {
-    onChange = onSettingChanged,
   })
 
-  local appearancePanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
-  appearancePanel:SetAllPoints(optionsScrollContent)
-  local appearanceSettings = AppearanceSettings.Create(factory, appearancePanel, {
+  local appearancePanel, appearanceSettings = createSettingsPanel(AppearanceSettings.Create, {
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
-  }, {
-    onChange = onSettingChanged,
   })
 
-  local behaviorPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
-  behaviorPanel:SetAllPoints(optionsScrollContent)
-  local behaviorSettings = BehaviorSettings.Create(factory, behaviorPanel, {
+  local behaviorPanel, behaviorSettings = createSettingsPanel(BehaviorSettings.Create, {
     dimWhenMoving = settingsConfig.dimWhenMoving,
     autoFocusComposer = settingsConfig.autoFocusComposer,
     autoSelectUnread = settingsConfig.autoSelectUnread,
-  }, {
-    onChange = onSettingChanged,
   })
 
-  local notificationsPanel = factory.CreateFrame("Frame", nil, optionsScrollContent)
-  notificationsPanel:SetAllPoints(optionsScrollContent)
-  local notificationSettings = NotificationSettings.Create(factory, notificationsPanel, {
+  local notificationsPanel, notificationSettings = createSettingsPanel(NotificationSettings.Create, {
     badgePulse = settingsConfig.badgePulse,
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
     showUnreadBadge = settingsConfig.showUnreadBadge,
-  }, {
-    onChange = onSettingChanged,
   })
 
   -- Contacts controller (manages rows, paging, scroll hooks)
@@ -369,53 +362,57 @@ function MessengerWindow.Create(factory, options)
     end,
   })
 
+  local function buildFacade()
+    return {
+      frame = frame,
+      title = title,
+      contactsPane = contactsPane,
+      contactsDivider = contactsDivider,
+      contentPane = contentPane,
+      headerDivider = headerDivider,
+      threadPane = threadPane,
+      composerPane = composerPane,
+      composerDivider = composerDivider,
+      closeButton = closeButton,
+      optionsButton = optionsButton,
+      optionsPanel = optionsPanel,
+      optionsMenu = optionsMenu,
+      optionsContentPane = optionsContentPane,
+      generalTab = generalTab,
+      appearanceTab = appearanceTab,
+      behaviorTab = behaviorTab,
+      notificationsTab = notificationsTab,
+      generalSettings = generalSettings,
+      appearanceSettings = appearanceSettings,
+      behaviorSettings = behaviorSettings,
+      notificationSettings = notificationSettings,
+      optionsHeader = optionsHeader,
+      optionsHint = optionsHint,
+      resetWindowButton = resetWindowButton,
+      resetIconButton = resetIconButton,
+      clearAllChatsButton = clearAllChatsButton,
+      resizeGrip = resizeGrip,
+      contacts = contacts,
+      conversation = conversation,
+      composer = composer,
+      refreshContacts = refreshContacts,
+      refreshSelection = refreshSelection,
+      selectConversation = function(conversationKey)
+        for _, row in ipairs(contacts.rows) do
+          if row.item ~= nil and row.item.conversationKey == conversationKey then
+            handleContactSelected(row.item)
+            return true
+          end
+        end
+        refreshSelection()
+        return false
+      end,
+    }
+  end
+
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
-  return {
-    frame = frame,
-    title = title,
-    contactsPane = contactsPane,
-    contactsDivider = contactsDivider,
-    contentPane = contentPane,
-    headerDivider = headerDivider,
-    threadPane = threadPane,
-    composerPane = composerPane,
-    composerDivider = composerDivider,
-    closeButton = closeButton,
-    optionsButton = optionsButton,
-    optionsPanel = optionsPanel,
-    optionsMenu = optionsMenu,
-    optionsContentPane = optionsContentPane,
-    generalTab = generalTab,
-    appearanceTab = appearanceTab,
-    behaviorTab = behaviorTab,
-    notificationsTab = notificationsTab,
-    generalSettings = generalSettings,
-    appearanceSettings = appearanceSettings,
-    behaviorSettings = behaviorSettings,
-    notificationSettings = notificationSettings,
-    optionsHeader = optionsHeader,
-    optionsHint = optionsHint,
-    resetWindowButton = resetWindowButton,
-    resetIconButton = resetIconButton,
-    clearAllChatsButton = clearAllChatsButton,
-    resizeGrip = resizeGrip,
-    contacts = contacts,
-    conversation = conversation,
-    composer = composer,
-    refreshContacts = refreshContacts,
-    refreshSelection = refreshSelection,
-    selectConversation = function(conversationKey)
-      for _, row in ipairs(contacts.rows) do
-        if row.item ~= nil and row.item.conversationKey == conversationKey then
-          handleContactSelected(row.item)
-          return true
-        end
-      end
-      refreshSelection()
-      return false
-    end,
-  }
+  return buildFacade()
 end
 
 ns.MessengerWindow = MessengerWindow
