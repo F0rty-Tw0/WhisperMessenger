@@ -167,8 +167,8 @@ return function()
     local transcript = makeTranscript(factory)
     local heights = { 600, 720, 840, 960, 1080 }
     local loadMoreCalls = 0
-    local valueOriginalCalled = false
-    local valueSeen = nil
+    local valueOriginalCalled
+    local valueSeen
     local stub = {
       HasMore = function(_transcript)
         return loadMoreCalls < 4
