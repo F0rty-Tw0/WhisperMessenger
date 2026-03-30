@@ -36,7 +36,6 @@ local FONT_MAP = {
 }
 
 local currentMode = "default"
-local initialized = false
 
 local function applyMode(mode)
   local CreateFont = _G.CreateFont

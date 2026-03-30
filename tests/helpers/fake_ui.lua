@@ -437,7 +437,6 @@ function FakeUI.NewFactory()
 end
 
 -- CreateFont stub for font object creation
-local fontObjects = {}
 _G.CreateFont = _G.CreateFont
   or function(name)
     local font = {
@@ -473,7 +472,6 @@ _G.CreateFont = _G.CreateFont
       self:CopyFontObject(source)
     end
 
-    fontObjects[name] = font
     _G[name] = font
     return font
   end
