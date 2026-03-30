@@ -2,6 +2,10 @@
 
 ## [1.0.7] - 2026-03-29
 
+### Added
+
+- Font family selector in Appearance settings — choose between Default (Friz Quadrata), System (Arial Narrow), or Custom (inherits fonts from addons like ElvUI)
+
 ### Improved
 
 - Large behind-the-scenes cleanup to make the messenger feel more consistent and easier to maintain going forward
@@ -17,7 +21,6 @@
 - Fixed Mythic content confusion by showing an in-window pause notice and disabling the send box until whispers are available again
 - Fixed a Classic startup error caused by unsupported whisper-related events, so the addon now loads cleanly on clients that do not provide them
 - Fixed drag-resizing the messenger window beyond the screen bounds so it no longer snaps to an unrecoverable fullscreen size or requires deleting SavedVariables to recover
-
 
 ## [1.0.6] - 2026-03-27
 
