@@ -65,7 +65,6 @@ end
 
 function Fonts.Initialize(mode)
   applyMode(mode or "default")
-  initialized = true
 end
 
 function Fonts.SetMode(mode)
