@@ -84,6 +84,13 @@ read_globals = {
   "ChatFrame_AddMessageEventFilter",
   "ChatFrame_RemoveMessageEventFilter",
   "ChatEdit_SetLastTellTarget",
+  "BNGetNumFriends",
+  "ChatEdit_DeactivateChat",
+  "ChatEdit_UpdateHeader",
+  "ChatFrame_OpenChat",
+  "ChatFrame_ReplyTell",
+  "ChatFrame_SendBNetTell",
+  "ChatFrame_SendTell",
 
   -- CVar API
   "GetCVar",
@@ -94,6 +101,8 @@ read_globals = {
   "GetServerTime",
   "GetAddOnMetadata",
   "InCombatLockdown",
+  "IsInGroup",
+  "IsInRaid",
   "PlaySound",
   "print",
 

@@ -17,6 +17,7 @@ local DEFAULTS = {
   autoFocusComposer = false,
   autoSelectUnread = true,
   hideFromDefaultChat = false,
+  autoOpenWindow = false,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -114,6 +115,23 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   profanityFilterToggle.row:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local autoOpenWindowToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Auto-open on whisper",
+    config.autoOpenWindow == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("autoOpenWindow", value)
+    end,
+    {
+      "Auto-open on whisper",
+      "Opens the messenger when you receive a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
+    }
+  )
+  autoOpenWindowToggle.row:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local normalColors = {
     bg = Theme.COLORS.option_button_bg,
@@ -128,7 +146,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", autoOpenWindowToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -138,6 +156,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoSelectUnread", DEFAULTS.autoSelectUnread)
     hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
     onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
+    autoOpenWindowToggle.setValue(DEFAULTS.autoOpenWindow)
+    onChange("autoOpenWindow", DEFAULTS.autoOpenWindow)
     profanityFilterToggle.setValue(true)
     if _G.SetCVar then
       _G.SetCVar("profanityFilter", "1")
@@ -151,6 +171,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoSelectToggle = autoSelectToggle,
     hideFromDefaultChatToggle = hideFromDefaultChatToggle,
     profanityFilterToggle = profanityFilterToggle,
+    autoOpenWindowToggle = autoOpenWindowToggle,
     resetButton = resetButton,
   }
 end

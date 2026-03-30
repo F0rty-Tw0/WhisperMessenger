@@ -99,4 +99,5 @@ Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers.lua
+Core/Bootstrap/AutoOpenHooks.lua
 Bootstrap.lua

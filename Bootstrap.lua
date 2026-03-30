@@ -434,6 +434,90 @@ function Bootstrap.Initialize(factory, options)
     return isWindowVisible() and runtime.activeConversationKey == conversationKey
   end
 
+  -- Auto-open hooks: open window on incoming whisper, reply, or friends list whisper
+  local AutoOpenHooks = loadModule("WhisperMessenger.Core.Bootstrap.AutoOpenHooks", "BootstrapAutoOpenHooks")
+  local Identity = loadModule("WhisperMessenger.Model.Identity", "Identity")
+  local function findConversationKeyByName(name)
+    if not name or not runtime.store or not runtime.store.conversations then
+      return nil
+    end
+    local lowerName = string.lower(name)
+    local inputBase = string.match(name, "^([^%-]+)")
+    for key, conv in pairs(runtime.store.conversations) do
+      -- Match displayName or contactDisplayName
+      local displayName = conv.displayName or conv.contactDisplayName or ""
+      if string.lower(displayName) == lowerName then
+        return key
+      end
+      -- Match character name without realm suffix (e.g. "Arthas-Silvermoon" matches "Arthas")
+      local baseName = string.match(displayName, "^([^%-]+)")
+      if baseName and string.lower(baseName) == lowerName then
+        return key
+      end
+      -- Match reverse: input has realm but stored name doesn't
+      if inputBase and string.lower(displayName) == string.lower(inputBase) then
+        return key
+      end
+      -- Match by battleTag (e.g. "Friend#1234")
+      if conv.battleTag and string.lower(conv.battleTag) == lowerName then
+        return key
+      end
+      -- Match by gameAccountName
+      if conv.gameAccountName and string.lower(conv.gameAccountName) == lowerName then
+        return key
+      end
+    end
+    return nil
+  end
+
+  local autoOpenHooks = AutoOpenHooks.Create({
+    trace = trace,
+    getSettings = function()
+      return accountState.settings
+    end,
+    isInCombat = function()
+      return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown()
+    end,
+    ensureWindow = ensureWindow,
+    setWindowVisible = setWindowVisible,
+    selectConversation = selectConversation,
+    focusComposer = function()
+      if window and window.composer and window.composer.input and window.composer.input.SetFocus then
+        window.composer.input:SetFocus()
+      end
+    end,
+    findConversationKeyByName = findConversationKeyByName,
+    buildConversationKeyFromName = function(name)
+      local contact = Identity.FromWhisper(name, nil, {})
+      if contact.canonicalName == "" then
+        return nil
+      end
+      return Identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+    end,
+    ensureConversation = function(conversationKey, displayName)
+      if runtime.store.conversations[conversationKey] then
+        return
+      end
+      runtime.store.conversations[conversationKey] = {
+        displayName = displayName,
+        channel = "WOW",
+        messages = {},
+        unreadCount = 0,
+        lastActivityAt = runtime.now(),
+        conversationKey = conversationKey,
+      }
+    end,
+    getLastReplyKey = function()
+      return runtime.lastIncomingWhisperKey
+    end,
+  })
+
+  runtime.onAutoOpen = autoOpenHooks.onIncomingWhisper
+  runtime.onAutoOpenOutgoing = autoOpenHooks.onOutgoingWhisper
+
+  -- Store hooks on runtime so deferred installation can access them
+  runtime.autoOpenHooks = autoOpenHooks
+
   accountState.settings = accountState.settings or {}
   icon = ToggleIcon.Create(uiFactory, {
     state = characterState.icon,
@@ -624,6 +708,12 @@ function Bootstrap.Initialize(factory, options)
   runtime.toggle = toggle
   runtime.refreshWindow = refreshWindow
   runtime.ensureWindow = ensureWindow
+  runtime.setWindowVisible = setWindowVisible
+  runtime.setComposerText = function(text)
+    if window and window.composer and window.composer.input and window.composer.input.SetText then
+      window.composer.input:SetText(text or "")
+    end
+  end
   runtime.suspend = function()
     runtime.messagingNotice = MYTHIC_PAUSE_NOTICE
     Bootstrap._wasVisibleBeforeMythic = isWindowVisible()
@@ -714,6 +804,154 @@ if type(_G.CreateFrame) == "function" then
           or loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
       end
       EventBridge.RegisterLiveEvents(loadFrame)
+
+      -- Defer whisper-initiation hooks to the next frame so that all
+      -- Blizzard UI modules (Blizzard_ChatFrameBase, etc.) are loaded.
+      local rt = Bootstrap.runtime
+      if rt and rt.autoOpenHooks and type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
+        _G.C_Timer.After(0, function()
+          local hooks = rt.autoOpenHooks
+
+          -- Modern retail WoW sets editBox.chatType directly via mixins
+          -- without calling any hookable global function.  Poll the edit
+          -- box state each frame to detect whisper-mode activation.  The
+          -- per-frame cost is negligible (a few property reads).
+          local pollFrame = _G.CreateFrame("Frame")
+          local function readEditBoxState(editBox, key)
+            local direct = editBox[key]
+            if direct ~= nil and direct ~= "" then
+              return direct
+            end
+            if type(editBox.GetAttribute) == "function" then
+              local attribute = editBox:GetAttribute(key)
+              if attribute ~= nil and attribute ~= "" then
+                return attribute
+              end
+            end
+            return nil
+          end
+
+          local function writeEditBoxState(editBox, key, value)
+            editBox[key] = value
+            if type(editBox.SetAttribute) == "function" then
+              pcall(editBox.SetAttribute, editBox, key, value)
+            end
+          end
+
+          local function closeEditBox(editBox)
+            local typed = editBox.GetText and editBox:GetText() or ""
+            if typed ~= "" then
+              rt.setComposerText(typed)
+            end
+            local stickyType = readEditBoxState(editBox, "stickyType")
+            if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
+              writeEditBoxState(editBox, "chatType", stickyType)
+            end
+            writeEditBoxState(editBox, "tellTarget", nil)
+            editBox:SetText("")
+            if type(_G.ChatEdit_DeactivateChat) == "function" then
+              _G.ChatEdit_DeactivateChat(editBox)
+            else
+              editBox:Hide()
+            end
+          end
+
+          pollFrame:SetScript("OnUpdate", function()
+            if _G._wmSuspended then
+              return
+            end
+            local settings = rt.accountState and rt.accountState.settings
+            if not settings or settings.autoOpenWindow ~= true then
+              return
+            end
+            if type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() then
+              return
+            end
+            for i = 1, _G.NUM_CHAT_WINDOWS or 10 do
+              local editBox = _G["ChatFrame" .. i .. "EditBox"]
+              if editBox and editBox:HasFocus() then
+                local text = editBox.GetText and editBox:GetText() or ""
+                if string.sub(text, 1, 1) == "/" then
+                  local cmd = string.lower(string.match(text, "^(/[^%s]*)") or "")
+                  if cmd ~= "/w" and cmd ~= "/whisper" then
+                    return
+                  end
+                end
+                local chatType = readEditBoxState(editBox, "chatType")
+                local target = readEditBoxState(editBox, "tellTarget")
+                if chatType == "BN_WHISPER" and target then
+                  pcall(function()
+                    local bnetApi = _G.C_BattleNet
+                    if not bnetApi or not bnetApi.GetFriendAccountInfo then
+                      return
+                    end
+                    local numFriends = _G.BNGetNumFriends and _G.BNGetNumFriends() or 0
+                    local foundAcctInfo = nil
+                    for fi = 1, numFriends do
+                      local acctInfo = bnetApi.GetFriendAccountInfo(fi)
+                      if acctInfo then
+                        local charName = acctInfo.gameAccountInfo and acctInfo.gameAccountInfo.characterName
+                        local btag = acctInfo.battleTag
+                        local btagBase = btag and string.match(btag, "^([^#]+)")
+                        local acctName = acctInfo.accountName
+                        if
+                          (charName and charName == target)
+                          or (btag and btag == target)
+                          or (btagBase and btagBase == target)
+                          or (acctName and acctName == target)
+                        then
+                          foundAcctInfo = acctInfo
+                          break
+                        end
+                      end
+                    end
+                    if not foundAcctInfo then
+                      return
+                    end
+                    local foundBnetID = foundAcctInfo.bnetAccountID
+                    local convKey = nil
+                    for key, conv in pairs(rt.store.conversations) do
+                      if conv.bnetAccountID == foundBnetID then
+                        convKey = key
+                        break
+                      end
+                    end
+                    if not convKey then
+                      local contact = Identity.FromBattleNet(foundBnetID, foundAcctInfo)
+                      if contact.canonicalName ~= "" then
+                        convKey = Identity.BuildConversationKey(rt.localProfileId, contact.contactKey)
+                        rt.store.conversations[convKey] = {
+                          displayName = foundAcctInfo.battleTag or foundAcctInfo.accountName or tostring(foundBnetID),
+                          channel = "BN",
+                          bnetAccountID = foundBnetID,
+                          battleTag = foundAcctInfo.battleTag,
+                          gameAccountName = foundAcctInfo.gameAccountInfo
+                            and foundAcctInfo.gameAccountInfo.characterName,
+                          messages = {},
+                          unreadCount = 0,
+                          lastActivityAt = rt.now(),
+                          conversationKey = convKey,
+                        }
+                      end
+                    end
+                    if convKey then
+                      hooks.onOutgoingWhisper(convKey)
+                      closeEditBox(editBox)
+                    end
+                  end)
+                  return
+                end
+                if chatType == "WHISPER" and target and target ~= "" then
+                  hooks.onSendTell(target)
+                  closeEditBox(editBox)
+                  return
+                end
+              end
+            end
+          end)
+          trace("AutoOpen: edit box poll installed")
+        end)
+      end
 
       local Constants = loadModule("WhisperMessenger.Core.Constants", "Constants")
       for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do

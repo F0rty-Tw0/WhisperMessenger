@@ -131,6 +131,11 @@ local INCOMING_WHISPER_EVENTS = {
   CHAT_MSG_BN_WHISPER = true,
 }
 
+local OUTGOING_WHISPER_EVENTS = {
+  CHAT_MSG_WHISPER_INFORM = true,
+  CHAT_MSG_BN_WHISPER_INFORM = true,
+}
+
 local TRACE_EVENTS = {
   CHAT_MSG_WHISPER = true,
   CHAT_MSG_WHISPER_INFORM = true,
@@ -175,6 +180,32 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     and runtime.accountState.settings.playSoundOnWhisper == true
   then
     SoundPlayer.Play(runtime.accountState.settings)
+  end
+  if INCOMING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
+    -- Always track the last incoming whisper for reply (R key), even in combat
+    runtime.lastIncomingWhisperKey = result.conversationKey
+    if
+      runtime.accountState
+      and runtime.accountState.settings
+      and runtime.accountState.settings.autoOpenWindow == true
+      and runtime.onAutoOpen
+      and type(_G.InCombatLockdown) == "function"
+      and not _G.InCombatLockdown()
+    then
+      runtime.onAutoOpen(result.conversationKey)
+    end
+  end
+  if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
+    if
+      runtime.accountState
+      and runtime.accountState.settings
+      and runtime.accountState.settings.autoOpenWindow == true
+      and runtime.onAutoOpenOutgoing
+      and type(_G.InCombatLockdown) == "function"
+      and not _G.InCombatLockdown()
+    then
+      runtime.onAutoOpenOutgoing(result.conversationKey)
+    end
   end
   if refreshWindow then
     refreshWindow()

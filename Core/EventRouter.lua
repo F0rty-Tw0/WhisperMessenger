@@ -165,7 +165,11 @@ local function handleUnlockedEvent(state, eventName, payload)
       )
     end
 
-    return state.store.conversations[conversationKey]
+    local conversation = state.store.conversations[conversationKey]
+    if conversation then
+      conversation.conversationKey = conversationKey
+    end
+    return conversation
   end
 
   return nil

@@ -4,8 +4,13 @@
 
 ### Added
 
+- Auto-open window on incoming whisper, right-click "Whisper", click-on-name whisper, or BNet friend whisper — configurable in Behavior settings, disabled during combat
 - Notification sounds now play even when in-game audio is muted
 - Choose from five notification sounds: Whisper, Ping, Chime, Bell, or Raid Warning
+
+### Fixed
+
+- Whisper messages received during combat were queued and never stored — they now record immediately
 
 ### Improved
 

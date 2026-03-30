@@ -83,7 +83,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     store = store,
     queue = Queue.New(),
     now = options.now or currentTime,
-    isChatMessagingLocked = options.isChatMessagingLocked or _G.InCombatLockdown or function()
+    isChatMessagingLocked = options.isChatMessagingLocked or function()
       return false
     end,
     isMythicLockdown = options.isMythicLockdown or function()
