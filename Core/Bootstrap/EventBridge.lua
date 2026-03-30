@@ -6,6 +6,7 @@ end
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
+local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 
 local Trace = ns.Trace
 
@@ -125,8 +126,6 @@ function EventBridge.RegisterSuspendableLifecycleEvents(frame)
   end
 end
 
-local WHISPER_SOUND_ID = 7355
-
 local INCOMING_WHISPER_EVENTS = {
   CHAT_MSG_WHISPER = true,
   CHAT_MSG_BN_WHISPER = true,
@@ -174,9 +173,8 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     and runtime.accountState
     and runtime.accountState.settings
     and runtime.accountState.settings.playSoundOnWhisper == true
-    and type(_G.PlaySound) == "function"
   then
-    _G.PlaySound(WHISPER_SOUND_ID)
+    SoundPlayer.Play(runtime.accountState.settings)
   end
   if refreshWindow then
     refreshWindow()

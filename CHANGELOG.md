@@ -2,6 +2,11 @@
 
 ## [1.0.8] - 2026-03-30
 
+### Added
+
+- Notification sounds now play even when in-game audio is muted
+- Choose from five notification sounds: Whisper, Ping, Chime, Bell, or Raid Warning
+
 ### Improved
 
 - Settings toggles now show helpful descriptions on hover, starting with the auto-focus option

@@ -92,6 +92,7 @@ UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/MessengerWindow.lua
 
+Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua

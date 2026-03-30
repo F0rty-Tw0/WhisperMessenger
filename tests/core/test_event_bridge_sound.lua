@@ -3,13 +3,32 @@ local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 return function()
   -- -----------------------------------------------------------------------
+  -- Helpers: stub globals needed by SoundPlayer (called via EventBridge)
+  -- -----------------------------------------------------------------------
+  local function stubSoundGlobals()
+    local soundPlayed = nil
+    _G.PlaySound = function(soundId, _channel)
+      soundPlayed = soundId
+    end
+    _G.GetCVar = function()
+      return "1"
+    end
+    _G.SetCVar = function() end
+    _G.C_Timer = {
+      After = function(_delay, fn)
+        fn()
+      end,
+    }
+    return function()
+      return soundPlayed
+    end
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_incoming_whisper_plays_sound_when_enabled
   -- -----------------------------------------------------------------------
   do
-    local soundPlayed = nil
-    _G.PlaySound = function(soundId)
-      soundPlayed = soundId
-    end
+    local getSoundPlayed = stubSoundGlobals()
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -39,9 +58,10 @@ return function()
       "Player-1-ABC"
     )
 
+    local soundPlayed = getSoundPlayed()
     assert(
-      soundPlayed == 7355,
-      "test_incoming_whisper_plays_sound_when_enabled: expected sound 7355, got " .. tostring(soundPlayed)
+      soundPlayed == 3081,
+      "test_incoming_whisper_plays_sound_when_enabled: expected sound 3081, got " .. tostring(soundPlayed)
     )
   end
 
@@ -49,10 +69,7 @@ return function()
   -- test_incoming_whisper_no_sound_when_disabled
   -- -----------------------------------------------------------------------
   do
-    local soundPlayed = nil
-    _G.PlaySound = function(soundId)
-      soundPlayed = soundId
-    end
+    local getSoundPlayed = stubSoundGlobals()
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -82,6 +99,7 @@ return function()
       "Player-1-ABC"
     )
 
+    local soundPlayed = getSoundPlayed()
     assert(
       soundPlayed == nil,
       "test_incoming_whisper_no_sound_when_disabled: expected no sound, got " .. tostring(soundPlayed)
@@ -92,10 +110,7 @@ return function()
   -- test_outgoing_whisper_does_not_play_sound
   -- -----------------------------------------------------------------------
   do
-    local soundPlayed = nil
-    _G.PlaySound = function(soundId)
-      soundPlayed = soundId
-    end
+    local getSoundPlayed = stubSoundGlobals()
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -126,6 +141,7 @@ return function()
       "Player-1-ABC"
     )
 
+    local soundPlayed = getSoundPlayed()
     assert(
       soundPlayed == nil,
       "test_outgoing_whisper_does_not_play_sound: expected no sound, got " .. tostring(soundPlayed)
@@ -133,4 +149,7 @@ return function()
   end
 
   _G.PlaySound = nil
+  _G.GetCVar = nil
+  _G.SetCVar = nil
+  _G.C_Timer = nil
 end
