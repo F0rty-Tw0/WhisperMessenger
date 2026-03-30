@@ -6,19 +6,77 @@ end
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local SendHandler = {}
+
+local function isCombatSendLocked(runtime)
+  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
+    return true
+  end
+
+  -- Guard direct SendChatMessage usage during combat even when runtime-level
+  -- lockdown queueing is disabled; insecure addon calls are blocked here.
+  return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
+end
+
+local function appendBlockedOutgoing(runtime, payload, reason)
+  if runtime == nil or runtime.store == nil or payload == nil or payload.conversationKey == nil then
+    return
+  end
+
+  local now = runtime.now and runtime.now() or 0
+  local blockedMessage = {
+    id = tostring(now),
+    eventName = "WHISPERMESSENGER_OUTGOING_BLOCKED",
+    direction = "out",
+    kind = "user",
+    text = payload.text,
+    sentAt = now,
+    guid = payload.guid,
+    playerName = payload.displayName or payload.target,
+    channel = payload.channel or "WOW",
+    bnetAccountID = payload.bnetAccountID,
+    gameAccountName = payload.gameAccountName,
+    delivery = "blocked",
+    blockedReason = reason,
+  }
+
+  if type(runtime.store.config) == "table" then
+    Store.AppendOutgoing(runtime.store, payload.conversationKey, blockedMessage)
+    return
+  end
+
+  runtime.store.conversations = runtime.store.conversations or {}
+  local conversation = runtime.store.conversations[payload.conversationKey]
+  if conversation == nil then
+    conversation = { messages = {}, unreadCount = 0, lastPreview = nil, lastActivityAt = 0 }
+    runtime.store.conversations[payload.conversationKey] = conversation
+  end
+
+  conversation.messages = conversation.messages or {}
+  table.insert(conversation.messages, blockedMessage)
+  conversation.lastPreview = blockedMessage.text
+  conversation.lastActivityAt = blockedMessage.sentAt
+  conversation.displayName = blockedMessage.playerName or conversation.displayName
+  conversation.channel = blockedMessage.channel or conversation.channel
+
+
+end
+
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   runtime.sendStatusByConversation[payload.conversationKey] = nil
 
-  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
+  if isCombatSendLocked(runtime) then
+    appendBlockedOutgoing(runtime, payload, "Lockdown")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Lockdown")
     refreshWindow()
     return false
   end
 
   if runtime.isMythicLockdown and runtime.isMythicLockdown() then
+    appendBlockedOutgoing(runtime, payload, "Mythic Lockdown")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")
     refreshWindow()
     return false

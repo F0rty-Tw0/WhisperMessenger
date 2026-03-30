@@ -15,7 +15,7 @@ local FONT_DEFS = {
   { "WM_Highlight", "GameFontHighlight", 12 },
   { "WM_HighlightSmall", "GameFontHighlightSmall", 10 },
   { "WM_HighlightLarge", "GameFontHighlightLarge", 16 },
-  { "WM_ChatNormal", "ChatFontNormal", 14 },
+  { "WM_ChatNormal", "ChatFontNormal", 12 },
 }
 
 -- Semantic font mapping -> WM_ object names

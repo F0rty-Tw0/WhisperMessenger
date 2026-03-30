@@ -44,7 +44,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local sendBg = createRoundedBackground(button, 8)
   local applySendColor = sendBg.setColor
 
-  local buttonLabel = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
+  local buttonLabel = button:CreateFontString(nil, "OVERLAY")
+  UIHelpers.setFontObject(buttonLabel, Theme.FONTS.composer_input)
   buttonLabel:SetPoint("CENTER", button, "CENTER", 0, 0)
   buttonLabel:SetText("Send")
 
@@ -69,7 +70,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   end
 
   -- Placeholder text
-  local placeholder = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.composer_input)
+  local placeholder = pane:CreateFontString(nil, "OVERLAY")
+  UIHelpers.setFontObject(placeholder, Theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
   placeholder:SetText("Type a message and press Enter")
   setTextColor(placeholder, Theme.COLORS.text_secondary)
