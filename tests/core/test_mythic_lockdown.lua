@@ -193,7 +193,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local Constants = require("WhisperMessenger.Core.Constants")
-    assert(Constants.VERSION == "v1.0.6", "VERSION should be v1.0.6, got: " .. tostring(Constants.VERSION))
+    assert(Constants.VERSION == "v1.0.7", "VERSION should be v1.0.7, got: " .. tostring(Constants.VERSION))
   end
 
   -- -----------------------------------------------------------------------
@@ -574,11 +574,17 @@ return function()
       "window should show a mythic pause notice when reopened during suspend"
     )
     assert(runtime.window.conversation.activeStatusBanner.shown == true, "mythic pause notice should be visible")
-    assert(runtime.window.composer.sendButton.disabled == true, "composer should stay disabled while mythic notice is active")
+    assert(
+      runtime.window.composer.sendButton.disabled == true,
+      "composer should stay disabled while mythic notice is active"
+    )
 
     runtime.resume()
     assert(runtime.window.conversation.activeStatusBanner.text == "", "mythic pause notice should clear after resume")
-    assert(runtime.window.conversation.activeStatusBanner.shown == false, "mythic pause notice should hide after resume")
+    assert(
+      runtime.window.conversation.activeStatusBanner.shown == false,
+      "mythic pause notice should hide after resume"
+    )
     assert(runtime.window.composer.sendButton.disabled == false, "composer should re-enable after resume")
 
     _G.UIParent = savedUIParent
