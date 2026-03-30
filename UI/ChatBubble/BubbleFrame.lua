@@ -111,7 +111,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   frame:SetSize(bubbleWidth, bubbleHeight)
 
-
   local icon = nil
   local iconFrame = nil
   if kind == "user" and showIcon then

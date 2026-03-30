@@ -54,10 +54,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   input:SetSize(inputW, inputH)
   input:SetText("")
 
-  local fontObj = _G.ChatFontNormal or "ChatFontNormal"
-  if input.SetFontObject then
-    input:SetFontObject(fontObj)
-  end
+  UIHelpers.setFontObject(input, Theme.FONTS.composer_input)
   if input.SetTextInsets then
     input:SetTextInsets(8, 8, 4, 4)
   end

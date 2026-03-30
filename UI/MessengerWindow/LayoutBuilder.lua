@@ -94,7 +94,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local menuPadding = Theme.CONTENT_PADDING
 
-  local optionsHeader = optionsMenu:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  local optionsHeader = optionsMenu:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   optionsHeader:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
   optionsHeader:SetText("Options")
 
@@ -171,7 +171,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local resetWindowButton = createOptionButton(factory, optionsMenu, "Reset Window Position", normalColors, btnLayout)
   resetWindowButton:SetPoint("BOTTOMLEFT", resetIconButton, "TOPLEFT", 0, btnSpacing)
 
-  local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   optionsHint:SetPoint("BOTTOMLEFT", resetWindowButton, "TOPLEFT", 0, menuPadding)
   optionsHint:SetText("Reset positions or clear all conversation history.")
 

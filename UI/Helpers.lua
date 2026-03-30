@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+
 local UIHelpers = {}
 
 function UIHelpers.sizeValue(target, getterName, fieldName, fallback)
@@ -129,7 +131,7 @@ function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
   bg:SetAllPoints(button)
   UIHelpers.applyColorTexture(bg, bgColor)
 
-  local labelFs = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local labelFs = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("CENTER", button, "CENTER", 0, 0)
   labelFs:SetText(label)
   UIHelpers.setTextColor(labelFs, textColor)
@@ -158,7 +160,7 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(toggleWidth, toggleHeight)
 
-  local labelFs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("LEFT", row, "LEFT", 0, 0)
   labelFs:SetText(label)
   UIHelpers.setTextColor(labelFs, colors.text)

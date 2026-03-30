@@ -9,7 +9,6 @@ local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
 local StatusDot = {}
 
-
 local function colorKeyForAvailability(availability)
   if availability then
     local colorKey = availability.canWhisper and "online" or "offline"

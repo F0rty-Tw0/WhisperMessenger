@@ -92,7 +92,6 @@ function ConversationPane.RefreshActiveStatus(view, activeStatus)
   refreshBottomBanner(view)
 end
 
-
 function ConversationPane.SetStatus(view, status)
   if view.statusBanner == nil then
     return nil
@@ -126,7 +125,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   ---------------------------------------------------------------------------
   -- Legacy statusBanner (hidden; status is shown in header status line)
   ---------------------------------------------------------------------------
-  local statusBanner = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local statusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
   statusBanner:SetText("")
   statusBanner:Hide()

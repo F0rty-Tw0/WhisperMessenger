@@ -69,19 +69,34 @@ return function()
     local bubbles = collectBubbleFrames(contentFrame)
     assert(#bubbles == 3, "expected three bubble frames after layout, got " .. tostring(#bubbles))
 
-    assert(bubbles[1].point[1] == "TOPLEFT", "expected incoming bubble anchor TOPLEFT, got " .. tostring(bubbles[1].point[1]))
+    assert(
+      bubbles[1].point[1] == "TOPLEFT",
+      "expected incoming bubble anchor TOPLEFT, got " .. tostring(bubbles[1].point[1])
+    )
     assert(
       bubbles[1].point[4] == Layout.MESSAGE_EDGE_INSET,
-      "expected incoming bubble inset " .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(bubbles[1].point[4])
+      "expected incoming bubble inset "
+        .. tostring(Layout.MESSAGE_EDGE_INSET)
+        .. ", got "
+        .. tostring(bubbles[1].point[4])
     )
 
     assert(bubbles[2].point[1] == "TOP", "expected system bubble anchor TOP, got " .. tostring(bubbles[2].point[1]))
-    assert(bubbles[2].point[4] == 200, "expected system bubble centered at pane midpoint, got " .. tostring(bubbles[2].point[4]))
+    assert(
+      bubbles[2].point[4] == 200,
+      "expected system bubble centered at pane midpoint, got " .. tostring(bubbles[2].point[4])
+    )
 
-    assert(bubbles[3].point[1] == "TOPRIGHT", "expected outgoing bubble anchor TOPRIGHT, got " .. tostring(bubbles[3].point[1]))
+    assert(
+      bubbles[3].point[1] == "TOPRIGHT",
+      "expected outgoing bubble anchor TOPRIGHT, got " .. tostring(bubbles[3].point[1])
+    )
     assert(
       bubbles[3].point[4] == -Layout.MESSAGE_EDGE_INSET,
-      "expected outgoing bubble inset -" .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(bubbles[3].point[4])
+      "expected outgoing bubble inset -"
+        .. tostring(Layout.MESSAGE_EDGE_INSET)
+        .. ", got "
+        .. tostring(bubbles[3].point[4])
     )
   end
 

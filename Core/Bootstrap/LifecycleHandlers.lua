@@ -45,7 +45,8 @@ local function handleBNetFriendEvent(Bootstrap, deps)
             conversation.raceName = gameInfo.raceName
           end
           if gameInfo.characterName then
-            conversation.gameAccountName = gameInfo.characterName .. (gameInfo.realmName and ("-" .. gameInfo.realmName) or "")
+            conversation.gameAccountName = gameInfo.characterName
+              .. (gameInfo.realmName and ("-" .. gameInfo.realmName) or "")
           end
         end
       end
@@ -224,7 +225,12 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps)
     return handlePlayerEnteringWorld(Bootstrap, deps)
   end
 
-  if event == "GUILD_ROSTER_UPDATE" or event == "CLUB_MEMBER_UPDATED" or event == "CLUB_MEMBER_ADDED" or event == "CLUB_MEMBER_REMOVED" then
+  if
+    event == "GUILD_ROSTER_UPDATE"
+    or event == "CLUB_MEMBER_UPDATED"
+    or event == "CLUB_MEMBER_ADDED"
+    or event == "CLUB_MEMBER_REMOVED"
+  then
     return handlePresenceInvalidation(Bootstrap, event, deps)
   end
 

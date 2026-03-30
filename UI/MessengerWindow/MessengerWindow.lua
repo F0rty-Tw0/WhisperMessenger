@@ -149,6 +149,7 @@ function MessengerWindow.Create(factory, options)
   })
 
   local appearancePanel, appearanceSettings = createSettingsPanel(AppearanceSettings.Create, {
+    fontFamily = settingsConfig.fontFamily,
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
   })

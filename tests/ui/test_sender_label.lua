@@ -35,12 +35,21 @@ return function()
     assert(nameFS.point ~= nil, "expected incoming name label to have an anchor")
     assert(nameFS.point[1] == "LEFT", "expected incoming name anchor LEFT, got " .. tostring(nameFS.point[1]))
     assert(nameFS.point[2] == result.frame, "expected incoming name label to anchor to its frame")
-    assert(nameFS.point[3] == "LEFT", "expected incoming name label relative point LEFT, got " .. tostring(nameFS.point[3]))
+    assert(
+      nameFS.point[3] == "LEFT",
+      "expected incoming name label relative point LEFT, got " .. tostring(nameFS.point[3])
+    )
     assert(
       nameFS.point[4] == Layout.MESSAGE_EDGE_INSET,
-      "expected incoming name label inset " .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(nameFS.point[4])
+      "expected incoming name label inset "
+        .. tostring(Layout.MESSAGE_EDGE_INSET)
+        .. ", got "
+        .. tostring(nameFS.point[4])
     )
-    assert(result.frame.point[1] == "TOPLEFT", "expected incoming label frame to anchor TOPLEFT, got " .. tostring(result.frame.point[1]))
+    assert(
+      result.frame.point[1] == "TOPLEFT",
+      "expected incoming label frame to anchor TOPLEFT, got " .. tostring(result.frame.point[1])
+    )
   end
 
   -- test_creates_label_for_outgoing_message
@@ -61,12 +70,21 @@ return function()
     assert(youFS.point ~= nil, "expected outgoing name label to have an anchor")
     assert(youFS.point[1] == "RIGHT", "expected outgoing name anchor RIGHT, got " .. tostring(youFS.point[1]))
     assert(youFS.point[2] == result.frame, "expected outgoing name label to anchor to its frame")
-    assert(youFS.point[3] == "RIGHT", "expected outgoing name label relative point RIGHT, got " .. tostring(youFS.point[3]))
+    assert(
+      youFS.point[3] == "RIGHT",
+      "expected outgoing name label relative point RIGHT, got " .. tostring(youFS.point[3])
+    )
     assert(
       youFS.point[4] == -Layout.MESSAGE_EDGE_INSET,
-      "expected outgoing name label inset -" .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(youFS.point[4])
+      "expected outgoing name label inset -"
+        .. tostring(Layout.MESSAGE_EDGE_INSET)
+        .. ", got "
+        .. tostring(youFS.point[4])
     )
-    assert(result.frame.point[1] == "TOPRIGHT", "expected outgoing label frame to anchor TOPRIGHT, got " .. tostring(result.frame.point[1]))
+    assert(
+      result.frame.point[1] == "TOPRIGHT",
+      "expected outgoing label frame to anchor TOPRIGHT, got " .. tostring(result.frame.point[1])
+    )
   end
 
   -- test_returns_height_18

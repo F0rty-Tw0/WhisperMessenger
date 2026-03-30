@@ -46,7 +46,6 @@ function RowElements.createNameLabel(row, item, parentWidth)
   return label
 end
 
-
 function RowElements.updateFactionIcon(row, item, ns_ref)
   if row.factionIcon == nil then
     return
@@ -85,7 +84,6 @@ function RowElements.createFactionIcon(_factory, row, item, ns_ref)
   return tex
 end
 
-
 function RowElements.updateTimestamp(row, item, ns_ref)
   if row.timeLabel == nil then
     return
@@ -112,7 +110,6 @@ function RowElements.createTimestamp(row, item, ns_ref)
 
   return label
 end
-
 
 function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
   if row.preview == nil then

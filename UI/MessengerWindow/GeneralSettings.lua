@@ -29,12 +29,12 @@ local function createSettingRow(factory, parent, label, min, max, step, initial,
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT + 20)
 
-  local labelFs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
   labelFs:SetText(label)
   UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
 
-  local valueFs = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
   UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
 
@@ -59,12 +59,12 @@ local function createSettingRow(factory, parent, label, min, max, step, initial,
     slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
   end
 
-  local minLabel = slider:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
   minLabel:SetText(tostring(min))
   UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
 
-  local maxLabel = slider:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
   maxLabel:SetText(tostring(max))
   UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
@@ -104,12 +104,12 @@ function GeneralSettings.Create(factory, parent, config, options)
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
 
-  local title = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
   title:SetText("General Settings")
   UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
 
-  local hint = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
   hint:SetText("Configure message storage and retention limits.")
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
@@ -168,7 +168,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   }
   local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
 
-  local privacyLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
   privacyLabel:SetText("Privacy")
   UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)

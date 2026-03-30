@@ -38,7 +38,6 @@ local function compareItems(left, right)
   return (left.displayName or "") < (right.displayName or "")
 end
 
-
 function DataBuilder.BuildItems(conversations)
   local items = {}
 

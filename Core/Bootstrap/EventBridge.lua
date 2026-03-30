@@ -93,7 +93,6 @@ local function unregisterEventIfSupported(frame, eventName)
   error(err)
 end
 
-
 function EventBridge.RegisterLiveEvents(frame)
   for _, eventName in ipairs(Constants.LIVE_EVENT_NAMES) do
     registerEventIfSupported(frame, eventName)

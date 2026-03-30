@@ -7,6 +7,7 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local TranscriptView = ns.ConversationPaneTranscriptView
   or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 
@@ -38,7 +39,7 @@ function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, C
     transcript.text:SetHyperlinksEnabled(true)
   end
   if transcript.text.SetFontObject then
-    transcript.text:SetFontObject(_G.GameFontHighlightSmall or "GameFontHighlightSmall")
+    transcript.text:SetFontObject(_G[Theme.FONTS.system_text] or Theme.FONTS.system_text)
   end
   if transcript.text.SetWidth then
     transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32))

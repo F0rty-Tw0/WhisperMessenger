@@ -111,7 +111,6 @@ return function()
       .. tostring(window.conversation.transcript.scrollFrame.height)
   )
 
-
   -- Oversized saved state and oversize resize attempts should clamp to the screen bounds
   local clampedState = nil
   local oversizedWindow = MessengerWindow.Create(factory, {
@@ -139,8 +138,7 @@ return function()
   )
   assert(
     oversizedWindow.frame.resizeBounds[3] == _G.UIParent:GetWidth(),
-    "expected native resize max width to track UIParent width, got "
-      .. tostring(oversizedWindow.frame.resizeBounds[3])
+    "expected native resize max width to track UIParent width, got " .. tostring(oversizedWindow.frame.resizeBounds[3])
   )
   assert(
     oversizedWindow.frame.resizeBounds[4] == _G.UIParent:GetHeight(),
@@ -164,8 +162,7 @@ return function()
 
   assert(
     recoveredWindow.frame.width <= Theme.WINDOW_WIDTH,
-    "expected unsized parent fallback to recover width to a sane default, got "
-      .. tostring(recoveredWindow.frame.width)
+    "expected unsized parent fallback to recover width to a sane default, got " .. tostring(recoveredWindow.frame.width)
   )
   assert(
     recoveredWindow.frame.height <= Theme.WINDOW_HEIGHT,

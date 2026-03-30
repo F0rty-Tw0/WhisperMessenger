@@ -20,7 +20,6 @@ local function PlaceBubble(frame, contentFrame, message, paneWidth, yOffset)
 end
 
 function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, options)
-
   local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
   local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
   local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")

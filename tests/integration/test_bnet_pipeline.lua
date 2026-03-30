@@ -212,7 +212,6 @@ return function()
   assert(#conversation.messages == 3)
   assert(conversation.messages[3].kind == "system")
 
-
   _G.C_BattleNet.GetNumFriends = function()
     return 1
   end
@@ -237,7 +236,10 @@ return function()
   assert(conversation.gameAccountName == "Jaina-KulTiras", "expected BNet refresh to update gameAccountName")
   assert(conversation.className == "Priest", "expected BNet refresh to update class name")
   assert(conversation.raceName == "Kul Tiran", "expected BNet refresh to update race name")
-  assert(runtime.window.contacts.rows[1].item.className == "Priest", "expected open window row to refresh after BNet update")
+  assert(
+    runtime.window.contacts.rows[1].item.className == "Priest",
+    "expected open window row to refresh after BNet update"
+  )
   _G.require = savedRequire
   _G.CreateFrame = savedCreateFrame
   _G.SlashCmdList = savedSlashCmdList

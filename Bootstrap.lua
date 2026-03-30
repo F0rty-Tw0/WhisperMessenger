@@ -45,7 +45,8 @@ end
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
-local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
+local MYTHIC_PAUSE_NOTICE =
+  "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
   trace("initialize start")
@@ -54,7 +55,8 @@ function Bootstrap.Initialize(factory, options)
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
   local SendHandler = loadModule("WhisperMessenger.Core.Bootstrap.SendHandler", "BootstrapSendHandler")
   local ChatFilters = loadModule("WhisperMessenger.Core.Bootstrap.ChatFilters", "BootstrapChatFilters")
-  local WindowCoordinator = loadModule("WhisperMessenger.Core.Bootstrap.WindowCoordinator", "BootstrapWindowCoordinator")
+  local WindowCoordinator =
+    loadModule("WhisperMessenger.Core.Bootstrap.WindowCoordinator", "BootstrapWindowCoordinator")
   local MessengerWindow = loadModule("WhisperMessenger.UI.MessengerWindow", "MessengerWindow")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
@@ -64,6 +66,8 @@ function Bootstrap.Initialize(factory, options)
   local ContactsList = loadModule("WhisperMessenger.UI.ContactsList", "ContactsList")
   local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
 
+  local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
+
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
   local accountState, characterState =
@@ -71,6 +75,11 @@ function Bootstrap.Initialize(factory, options)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   runtime.messagingNotice = nil
+  -- Initialize font mode from saved settings
+  accountState.settings = accountState.settings or {}
+  if Fonts.Initialize then
+    Fonts.Initialize(accountState.settings.fontFamily or "default")
+  end
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G.C_Club, {
@@ -283,7 +292,6 @@ function Bootstrap.Initialize(factory, options)
     return refreshWindow()
   end
 
-
   -- Lazy window creation: deferred to first toggle
   local function ensureWindow()
     if window then
@@ -381,8 +389,12 @@ function Bootstrap.Initialize(factory, options)
           runtime.store.config.conversationMaxAge = value
         end
         trace("setting changed", key, tostring(value))
+        -- Apply font mode change and refresh UI
+        if key == "fontFamily" and Fonts.SetMode then
+          Fonts.SetMode(value or "default")
+        end
         -- Refresh contacts list for display-affecting settings
-        if key == "hideMessagePreview" and runtime.refreshWindow then
+        if (key == "hideMessagePreview" or key == "fontFamily") and runtime.refreshWindow then
           runtime.refreshWindow()
         end
         -- Re-evaluate icon badge/pulse when notification settings change

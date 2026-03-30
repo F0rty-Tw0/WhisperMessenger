@@ -10,7 +10,7 @@ return function()
 
     function frame:RegisterEvent(eventName)
       if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
-        error("Attempt to register unknown event \"" .. eventName .. "\"")
+        error('Attempt to register unknown event "' .. eventName .. '"')
       end
       registered[eventName] = true
     end
@@ -34,14 +34,14 @@ return function()
 
     function frame:RegisterEvent(eventName)
       if eventName == "CLUB_MEMBER_UPDATED" then
-        error("Attempt to register unknown event \"" .. eventName .. "\"")
+        error('Attempt to register unknown event "' .. eventName .. '"')
       end
       registered[eventName] = true
     end
 
     function frame:UnregisterEvent(eventName)
       if eventName == "CLUB_MEMBER_UPDATED" then
-        error("Attempt to unregister unknown event \"" .. eventName .. "\"")
+        error('Attempt to unregister unknown event "' .. eventName .. '"')
       end
       unregistered[eventName] = true
     end
