@@ -29,6 +29,38 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_auto_focus_toggle_has_tooltip
+  -- -----------------------------------------------------------------------
+  do
+    local tooltipTitle = nil
+    local addedLines = {}
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipTitle = text
+      end,
+      AddLine = function(_self, text)
+        addedLines[#addedLines + 1] = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local config = { autoFocusComposer = false }
+    local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
+
+    local row = result.autoFocusToggle.row
+    local onEnter = row:GetScript("OnEnter")
+    assert(onEnter ~= nil, "test_auto_focus_toggle_has_tooltip: row should have OnEnter script")
+
+    onEnter(row)
+    assert(tooltipTitle ~= nil, "test_auto_focus_toggle_has_tooltip: tooltip title should be set on hover")
+    assert(#addedLines > 0, "test_auto_focus_toggle_has_tooltip: tooltip should have a description line")
+
+    _G.GameTooltip = nil
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_hide_from_default_chat_toggle_exists
   -- -----------------------------------------------------------------------
   do

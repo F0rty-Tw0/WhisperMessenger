@@ -64,7 +64,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("autoFocusComposer", value)
-    end
+    end,
+    {
+      "Auto-focus chat input",
+      "Places the cursor in the text box when you open the messenger.",
+    }
   )
   autoFocusToggle.row:SetPoint("TOPLEFT", dimToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.8] - 2026-03-30
+
+### Improved
+
+- Settings toggles now show helpful descriptions on hover, starting with the auto-focus option
+
 ## [1.0.7] - 2026-03-29
 
 ### Added

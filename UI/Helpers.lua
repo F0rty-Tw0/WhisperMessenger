@@ -152,7 +152,7 @@ function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
   return button
 end
 
-function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layout, onChange)
+function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layout, onChange, tooltip)
   local toggleWidth = layout.width or 280
   local toggleHeight = layout.height or 24
   local dotSize = 14
@@ -189,6 +189,27 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
       onChange(enabled)
     end
   end)
+
+  if tooltip and row.SetScript then
+    local lines = type(tooltip) == "table" and tooltip or { tooltip }
+    row:SetScript("OnEnter", function()
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(row, "ANCHOR_TOP")
+        _G.GameTooltip:SetText(lines[1])
+        for i = 2, #lines do
+          if _G.GameTooltip.AddLine then
+            _G.GameTooltip:AddLine(lines[i], 1, 1, 1)
+          end
+        end
+        _G.GameTooltip:Show()
+      end
+    end)
+    row:SetScript("OnLeave", function()
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
+    end)
+  end
 
   return {
     row = row,
