@@ -97,7 +97,12 @@ Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/ChatFilters.lua
+Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
+Core/Bootstrap/AutoOpenCoordinator.lua
+Core/Bootstrap/Diagnostics.lua
+Core/Bootstrap/WindowRuntime.lua
+Core/Bootstrap/AddonEventFrame.lua
 Bootstrap.lua
