@@ -15,8 +15,8 @@ return function()
     assert(result.fontSelector ~= nil, "test_font_selector_exists: should expose fontSelector")
     assert(result.fontSelector.buttons ~= nil, "test_font_selector_exists: fontSelector should have buttons")
     assert(
-      #result.fontSelector.buttons == 3,
-      "test_font_selector_exists: should have 3 font buttons, got: " .. tostring(#result.fontSelector.buttons)
+      #result.fontSelector.buttons == 2,
+      "test_font_selector_exists: should have 2 font buttons, got: " .. tostring(#result.fontSelector.buttons)
     )
   end
 
@@ -34,7 +34,7 @@ return function()
       end
     end
 
-    local found = { default = false, system = false, custom = false }
+    local found = { default = false, system = false }
     for _, text in ipairs(labels) do
       local lower = string.lower(text)
       if string.find(lower, "default", 1, true) then
@@ -43,14 +43,10 @@ return function()
       if string.find(lower, "system", 1, true) then
         found.system = true
       end
-      if string.find(lower, "custom", 1, true) then
-        found.custom = true
-      end
     end
 
     assert(found.default, "test_font_selector_labels: should have a 'Default' button")
     assert(found.system, "test_font_selector_labels: should have a 'System' button")
-    assert(found.custom, "test_font_selector_labels: should have a 'Custom' button")
   end
 
   -- -----------------------------------------------------------------------
@@ -154,11 +150,11 @@ return function()
     local config = { fontFamily = "default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
 
-    -- Hover over the "Custom" button (3rd)
-    local customBtn = result.fontSelector.buttons[3]
-    local onEnter = customBtn:GetScript("OnEnter")
+    -- Hover over the "System" button (2nd)
+    local systemBtn = result.fontSelector.buttons[2]
+    local onEnter = systemBtn:GetScript("OnEnter")
     assert(onEnter ~= nil, "test_font_tooltip: button should have OnEnter")
-    onEnter(customBtn)
+    onEnter(systemBtn)
 
     assert(_G.GameTooltip._shown == true, "test_font_tooltip: GameTooltip should be shown on hover")
     assert(
@@ -167,8 +163,8 @@ return function()
     )
 
     -- Leave should hide
-    local onLeave = customBtn:GetScript("OnLeave")
-    onLeave(customBtn)
+    local onLeave = systemBtn:GetScript("OnLeave")
+    onLeave(systemBtn)
     assert(_G.GameTooltip._shown == false, "test_font_tooltip: GameTooltip should be hidden on leave")
 
     _G.GameTooltip = nil
@@ -207,11 +203,8 @@ return function()
       onLeave(btn)
     end
 
-    assert(#tooltipTexts == 3, "test_distinct_tooltips: should have 3 tooltips")
-    assert(
-      tooltipTexts[1] ~= tooltipTexts[2] and tooltipTexts[2] ~= tooltipTexts[3],
-      "test_distinct_tooltips: each button should have a distinct tooltip"
-    )
+    assert(#tooltipTexts == 2, "test_distinct_tooltips: should have 2 tooltips")
+    assert(tooltipTexts[1] ~= tooltipTexts[2], "test_distinct_tooltips: each button should have a distinct tooltip")
 
     _G.GameTooltip = nil
   end

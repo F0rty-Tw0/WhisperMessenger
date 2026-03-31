@@ -5,10 +5,14 @@ end
 
 local Fonts = {}
 
-local DEFAULT_FONT_PATH = "Fonts\\FRIZQT__.TTF"
-local SYSTEM_FONT_PATH = "Fonts\\ARIALN.TTF"
+-- WM_ font objects act as stable references that all FontStrings point at.
+-- Mode switching calls SetFontObject (for the engine's glyph fallback chain)
+-- then SetFont (to propagate the change to every FontString).
 
--- Font object definitions: { wmName, sourceGameFont, size }
+local FRIZQT_PATH = "Fonts\\FRIZQT__.TTF"
+local ARIALN_PATH = "Fonts\\ARIALN.TTF"
+
+-- { wmName, gameFont, size }
 local FONT_DEFS = {
   { "WM_Normal", "GameFontNormal", 12 },
   { "WM_DisableSmall", "GameFontDisableSmall", 10 },
@@ -18,7 +22,6 @@ local FONT_DEFS = {
   { "WM_ChatNormal", "ChatFontNormal", 12 },
 }
 
--- Semantic font mapping -> WM_ object names
 local FONT_MAP = {
   contact_name = "WM_Normal",
   contact_preview = "WM_DisableSmall",
@@ -40,23 +43,22 @@ local currentMode = "default"
 local function applyMode(mode)
   local CreateFont = _G.CreateFont
   for _, def in ipairs(FONT_DEFS) do
-    local wmName, sourceGameFont, size = def[1], def[2], def[3]
+    local wmName, gameFont, size = def[1], def[2], def[3]
     local fontObj = _G[wmName]
     if not fontObj then
       fontObj = CreateFont(wmName)
     end
 
-    if mode == "default" then
-      fontObj:SetFont(DEFAULT_FONT_PATH, size, "")
-    elseif mode == "system" then
-      fontObj:SetFont(SYSTEM_FONT_PATH, size, "")
-    elseif mode == "custom" then
-      local source = _G[sourceGameFont]
-      if source and source.GetFont then
-        local path, _, flags = source:GetFont()
-        fontObj:SetFont(path or DEFAULT_FONT_PATH, size, flags or "")
+    if mode == "system" then
+      fontObj:SetFont(ARIALN_PATH, size, "")
+    else
+      local source = _G[gameFont]
+      if source then
+        fontObj:SetFontObject(source)
+        local p, _, flags = source:GetFont()
+        fontObj:SetFont(p or FRIZQT_PATH, size, flags or "")
       else
-        fontObj:SetFont(DEFAULT_FONT_PATH, size, "")
+        fontObj:SetFont(FRIZQT_PATH, size, "")
       end
     end
   end
@@ -79,7 +81,6 @@ function Fonts.GetFonts()
   return FONT_MAP
 end
 
--- Backward compatibility: expose font keys directly on the module table
 for key, value in pairs(FONT_MAP) do
   Fonts[key] = value
 end

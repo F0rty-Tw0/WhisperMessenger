@@ -478,14 +478,20 @@ _G.CreateFont = _G.CreateFont
 
 -- Stub standard WoW font objects used as sources by Fonts.lua
 local DEFAULT_FONT = "Fonts\\FRIZQT__.TTF"
-local CHAT_FONT = "Fonts\\ARIALN.TTF"
+local SYSTEM_FONT = "Fonts\\ARIALN.TTF"
 local standardFonts = {
+  -- GameFont family (Friz Quadrata / locale equivalent)
   { "GameFontNormal", DEFAULT_FONT, 12 },
   { "GameFontDisableSmall", DEFAULT_FONT, 10 },
   { "GameFontHighlight", DEFAULT_FONT, 12 },
   { "GameFontHighlightSmall", DEFAULT_FONT, 10 },
   { "GameFontHighlightLarge", DEFAULT_FONT, 16 },
-  { "ChatFontNormal", CHAT_FONT, 14 },
+  { "ChatFontNormal", DEFAULT_FONT, 14 },
+  -- SystemFont family (Arial Narrow / locale equivalent)
+  { "SystemFont_Small", SYSTEM_FONT, 10 },
+  { "SystemFont_Med1", SYSTEM_FONT, 12 },
+  { "SystemFont_Med3", SYSTEM_FONT, 14 },
+  { "SystemFont_Large", SYSTEM_FONT, 16 },
 }
 for _, def in ipairs(standardFonts) do
   local name, path, size = def[1], def[2], def[3]

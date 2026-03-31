@@ -16,9 +16,8 @@ local ROW_SPACING = 32
 local LABEL_SPACING = 6
 
 local FONT_OPTIONS = {
-  { key = "default", label = "Default", tooltip = "Blizzard's built-in font (Friz Quadrata)." },
-  { key = "system", label = "System", tooltip = "Clean sans-serif font (Arial Narrow)." },
-  { key = "custom", label = "Custom", tooltip = "Inherits the font set by other addons like ElvUI." },
+  { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
+  { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
 }
 
 local DEFAULTS = {
