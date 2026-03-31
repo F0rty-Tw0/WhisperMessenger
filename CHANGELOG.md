@@ -3,6 +3,7 @@
 ## [1.0.9] - 2026-03-31
 
 - Added independent contacts-pane resizing with persisted width, plus compact spacing/truncation fixes to prevent overlap in narrow layouts.
+- Added native right-click contact context menu support in the contacts list, so contact rows now open the standard WoW player menu (including entries added by other addons).
 
 ## [1.0.8] - 2026-03-30
 

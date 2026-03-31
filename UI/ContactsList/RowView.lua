@@ -99,15 +99,22 @@ local function bindRow(factory, parent, row, index, item, options)
     row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
   end
 
-  -- Update pin icon appearance and position
+  -- Update action icon appearance and position just below the timestamp.
   local pinTex = item.pinned and Theme.TEXTURES.pin_down_icon or Theme.TEXTURES.pin_up_icon
   row.pinButton.icon:SetTexture(pinTex)
   local pinColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
   applyVertexColor(row.pinButton.icon, pinColor)
-  row.pinButton:ClearAllPoints()
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
-  local pinYOffset = item.pinned and 0 or 6
-  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, -ACTION_SPACING + pinYOffset)
+
+  row.removeButton:ClearAllPoints()
+  if row.timeLabel then
+    row.removeButton:SetPoint("TOPRIGHT", row.timeLabel, "BOTTOMRIGHT", 0, -ACTION_SPACING)
+  else
+    row.removeButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -ACTION_SPACING)
+  end
+
+  row.pinButton:ClearAllPoints()
+  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, -ACTION_SPACING)
 
   -- Show/hide action buttons: hide when unread badge is visible
   local hasUnread = (item.unreadCount or 0) > 0

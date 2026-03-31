@@ -1,4 +1,5 @@
 local RowView = require("WhisperMessenger.UI.ContactsList.RowView")
+local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
 return function()
@@ -36,6 +37,25 @@ return function()
     local row = RowView.bindRow(factory, parent, nil, 1, item, options)
     assert(row.pinButton ~= nil, "row should have pinButton")
     assert(row.removeButton ~= nil, "row should have removeButton")
+  end
+
+  -- test_action_buttons_anchor_below_timestamp
+  do
+    local row = RowView.bindRow(factory, parent, nil, 1, item, options)
+    local actionSpacing = Theme.LAYOUT.CONTACT_ACTION_SPACING
+
+    assert(row.timeLabel ~= nil, "row should have timeLabel before action button anchoring")
+    assert(row.removeButton.point ~= nil, "removeButton should have point")
+    assert(row.removeButton.point[1] == "TOPRIGHT", "removeButton should anchor TOPRIGHT")
+    assert(row.removeButton.point[2] == row.timeLabel, "removeButton should anchor to time label")
+    assert(row.removeButton.point[3] == "BOTTOMRIGHT", "removeButton should sit below time label")
+    assert(row.removeButton.point[5] == -actionSpacing, "removeButton should be offset below time label")
+
+    assert(row.pinButton.point ~= nil, "pinButton should have point")
+    assert(row.pinButton.point[1] == "TOP", "pinButton should anchor TOP")
+    assert(row.pinButton.point[2] == row.removeButton, "pinButton should anchor to removeButton")
+    assert(row.pinButton.point[3] == "BOTTOM", "pinButton should sit below removeButton")
+    assert(row.pinButton.point[5] == -actionSpacing, "pinButton should be offset below removeButton")
   end
 
   -- test_action_buttons_hidden_by_default

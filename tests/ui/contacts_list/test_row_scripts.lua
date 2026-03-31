@@ -1,4 +1,5 @@
 local RowScripts = require("WhisperMessenger.UI.ContactsList.RowScripts")
+local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local FakeUI = require("tests.helpers.fake_ui")
 
 return function()
@@ -53,6 +54,98 @@ return function()
     assert(clicked == true, "onSelect callback should be called on OnClick")
     assert(clickedItem == item, "onSelect callback should receive the item, got: " .. tostring(clickedItem))
   end
+
+  -- test_bind_click_registers_right_button
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.item = item
+
+    local registered = nil
+    row.RegisterForClicks = function(_self, ... )
+      registered = { ... }
+    end
+
+    RowScripts.bindClick(row, item, { onSelect = function() end })
+
+    assert(registered ~= nil, "bindClick should register click buttons")
+    assert(registered[1] == "LeftButtonUp", "bindClick should register LeftButtonUp")
+    assert(registered[2] == "RightButtonUp", "bindClick should register RightButtonUp")
+  end
+
+
+  -- test_bind_click_right_button_opens_context_menu_without_selecting
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.item = item
+
+    local clicked = false
+    local menuOpenedWith = nil
+    local originalOpen = ContextMenu.Open
+    ContextMenu.Open = function(openItem, openAnchor)
+      menuOpenedWith = { item = openItem, anchor = openAnchor }
+      return true
+    end
+
+    local options = {
+      onSelect = function()
+        clicked = true
+      end,
+    }
+
+    RowScripts.bindClick(row, item, options)
+    row.scripts.OnClick(row, "RightButton")
+
+    ContextMenu.Open = originalOpen
+
+    assert(clicked == false, "onSelect should not be called on right-click")
+    assert(menuOpenedWith ~= nil, "right-click should open the context menu")
+    assert(menuOpenedWith.item == item, "context menu should receive row item")
+    assert(menuOpenedWith.anchor == row, "context menu should anchor to row frame")
+  end
+
+  -- test_bind_click_right_button_falls_back_to_select_when_menu_fails
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.item = item
+
+    local clicked = false
+    local originalOpen = ContextMenu.Open
+    ContextMenu.Open = function()
+      return false
+    end
+
+    local options = {
+      onSelect = function()
+        clicked = true
+      end,
+    }
+
+    RowScripts.bindClick(row, item, options)
+    row.scripts.OnClick(row, "RightButton")
+
+    ContextMenu.Open = originalOpen
+
+    assert(clicked == true, "onSelect should run when right-click menu could not be opened")
+  end
+
 
   -- test_bind_drag_registers_for_pinned_item
   do

@@ -7,6 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
+local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
+
 local RowScripts = {}
 
 local function showActions(row)
@@ -60,16 +62,31 @@ function RowScripts.bindHover(row, options)
 end
 
 --- Bind OnClick script to a row.
---- Calls options.onSelect(item) when clicked.
+--- Left-click selects the conversation. Right-click opens the native player menu.
 function RowScripts.bindClick(row, _item, options)
+  if row.RegisterForClicks then
+    row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  end
+
   if row.SetScript then
-    row:SetScript("OnClick", function()
-      if row.item ~= nil and options and options.onSelect then
+    row:SetScript("OnClick", function(self, button)
+      if row.item == nil then
+        return
+      end
+
+      if button == "RightButton" then
+        if ContextMenu.Open(row.item, self or row) then
+          return
+        end
+      end
+
+      if options and options.onSelect then
         options.onSelect(row.item)
       end
     end)
   end
 end
+
 
 --- Bind drag-and-drop scripts to a row (pinned contacts only).
 --- For pinned items: registers for drag and sets OnDragStart/OnDragStop.

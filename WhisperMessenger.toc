@@ -65,6 +65,7 @@ UI/ContactsList/DataBuilder.lua
 UI/ContactsList/DragReorder.lua
 UI/ContactsList/StatusDot.lua
 UI/ContactsList/RowElements.lua
+UI/ContactsList/ContextMenu.lua
 UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
 UI/ContactsList/RowView.lua
