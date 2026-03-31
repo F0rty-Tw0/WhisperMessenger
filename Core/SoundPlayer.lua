@@ -26,34 +26,9 @@ function SoundPlayer.Play(settings)
   local soundKey = settings.notificationSound or DEFAULT_SOUND_KEY
   local soundId = SOUND_BY_KEY[soundKey] or SOUND_BY_KEY[DEFAULT_SOUND_KEY]
 
-  -- Force-enable audio when muted so notifications always play
-  local savedEnableAll = nil
-  local savedEnableSFX = nil
-  local enableAll = _G.GetCVar("Sound_EnableAllSound")
-  local enableSFX = _G.GetCVar("Sound_EnableSFX")
-  if enableAll == "0" then
-    savedEnableAll = enableAll
-    _G.SetCVar("Sound_EnableAllSound", "1")
-  end
-  if enableSFX == "0" then
-    savedEnableSFX = enableSFX
-    _G.SetCVar("Sound_EnableSFX", "1")
-  end
-
-  -- Play on Master channel to bypass per-channel muting
+  -- Play on Master channel so notification uses dedicated channel settings.
+  -- Do not toggle global sound CVars; changing them can leak unrelated game audio.
   _G.PlaySound(soundId, "Master")
-
-  -- Restore audio CVars after a short delay so the sound has time to start
-  if savedEnableAll ~= nil or savedEnableSFX ~= nil then
-    _G.C_Timer.After(0.5, function()
-      if savedEnableAll ~= nil then
-        _G.SetCVar("Sound_EnableAllSound", savedEnableAll)
-      end
-      if savedEnableSFX ~= nil then
-        _G.SetCVar("Sound_EnableSFX", savedEnableSFX)
-      end
-    end)
-  end
 end
 
 function SoundPlayer.Preview(soundKey)

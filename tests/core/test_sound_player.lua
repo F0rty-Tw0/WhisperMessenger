@@ -56,60 +56,37 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_play_always_force_enables_audio_when_muted
+  -- test_play_does_not_toggle_global_sound_cvars_when_muted
   -- -----------------------------------------------------------------------
   do
-    local setCvarCalls = {}
-    local timerCallback = nil
+    local setCvarCalled = false
+    local timerScheduled = false
     _G.PlaySound = function() end
     _G.GetCVar = function(key)
-      if key == "Sound_EnableAllSound" then
-        return "0"
-      end
-      if key == "Sound_EnableSFX" then
+      if key == "Sound_EnableAllSound" or key == "Sound_EnableSFX" then
         return "0"
       end
       return "1"
     end
-    _G.SetCVar = function(key, val)
-      table.insert(setCvarCalls, { key = key, val = val })
+    _G.SetCVar = function()
+      setCvarCalled = true
     end
     _G.C_Timer = {
-      After = function(_delay, fn)
-        timerCallback = fn
+      After = function(_delay, _fn)
+        timerScheduled = true
       end,
     }
 
     SoundPlayer.Play({})
 
-    -- verify both enable CVars were set to "1"
-    local enabledAll, enabledSFX = false, false
-    for _, call in ipairs(setCvarCalls) do
-      if call.key == "Sound_EnableAllSound" and call.val == "1" then
-        enabledAll = true
-      end
-      if call.key == "Sound_EnableSFX" and call.val == "1" then
-        enabledSFX = true
-      end
-    end
-    assert(enabledAll, "test_play_always_force_enables: expected SetCVar('Sound_EnableAllSound', '1')")
-    assert(enabledSFX, "test_play_always_force_enables: expected SetCVar('Sound_EnableSFX', '1')")
-
-    -- fire timer and verify restore to "0"
-    setCvarCalls = {}
-    assert(timerCallback ~= nil, "test_play_always_force_enables: expected C_Timer.After to be called")
-    timerCallback()
-    local restoredAll, restoredSFX = false, false
-    for _, call in ipairs(setCvarCalls) do
-      if call.key == "Sound_EnableAllSound" and call.val == "0" then
-        restoredAll = true
-      end
-      if call.key == "Sound_EnableSFX" and call.val == "0" then
-        restoredSFX = true
-      end
-    end
-    assert(restoredAll, "test_play_always_force_enables: expected restore SetCVar('Sound_EnableAllSound', '0')")
-    assert(restoredSFX, "test_play_always_force_enables: expected restore SetCVar('Sound_EnableSFX', '0')")
+    assert(
+      setCvarCalled == false,
+      "test_play_does_not_toggle_global_sound_cvars_when_muted: should not call SetCVar while playing notification sound"
+    )
+    assert(
+      timerScheduled == false,
+      "test_play_does_not_toggle_global_sound_cvars_when_muted: should not schedule C_Timer.After when not changing CVars"
+    )
   end
 
   -- -----------------------------------------------------------------------
