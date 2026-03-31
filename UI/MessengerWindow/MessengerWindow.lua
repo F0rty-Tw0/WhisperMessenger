@@ -56,19 +56,13 @@ function MessengerWindow.Create(factory, options)
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
   }, Theme)
-  local currentContactsWidth = LayoutBuilder.ClampContactsWidth(
-    initialState.width,
-    state.contactsWidth or Theme.CONTACTS_WIDTH,
-    Theme
-  )
+  local currentContactsWidth =
+    LayoutBuilder.ClampContactsWidth(initialState.width, state.contactsWidth or Theme.CONTACTS_WIDTH, Theme)
 
   local function applyState(target, nextState)
     local clampedState = WindowBounds.ClampState(parent, nextState, Theme)
-    currentContactsWidth = LayoutBuilder.ClampContactsWidth(
-      clampedState.width,
-      clampedState.contactsWidth or Theme.CONTACTS_WIDTH,
-      Theme
-    )
+    currentContactsWidth =
+      LayoutBuilder.ClampContactsWidth(clampedState.width, clampedState.contactsWidth or Theme.CONTACTS_WIDTH, Theme)
     target:SetSize(clampedState.width or Theme.WINDOW_WIDTH, clampedState.height or Theme.WINDOW_HEIGHT)
     target:SetPoint(
       clampedState.anchorPoint or "CENTER",

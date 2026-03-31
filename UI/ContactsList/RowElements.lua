@@ -118,7 +118,6 @@ function RowElements.updateNameLabel(row, item, parentWidth)
   applyClassColor(row.title, item and item.classTag or nil, Theme.COLORS.text_primary)
 end
 
-
 --- Create the circular class icon (40x40, left side).
 --- Returns { frame, texture }
 function RowElements.createClassIcon(factory, row, item)
@@ -167,10 +166,8 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   local titleMaxWidth = row.title and row.title.GetWidth and row.title:GetWidth() or 0
   local textBudget = titleMaxWidth
   if reliableFaction then
-    textBudget = math.max(
-      0,
-      titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING
-    )
+    textBudget =
+      math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
     row.title:SetText(fitLabelTextWithEllipsis(row.title, item.displayName or "", textBudget))

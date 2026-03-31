@@ -53,11 +53,8 @@ end
 --   resetWindowButton, resetIconButton, clearAllChatsButton, contactsView
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
-  local contactsWidth = LayoutBuilder.ClampContactsWidth(
-    initialState.width,
-    _options.contactsWidth or initialState.contactsWidth,
-    Theme
-  )
+  local contactsWidth =
+    LayoutBuilder.ClampContactsWidth(initialState.width, _options.contactsWidth or initialState.contactsWidth, Theme)
   local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local contentWidth = initialState.width - contactsWidth - Theme.DIVIDER_THICKNESS
   local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT

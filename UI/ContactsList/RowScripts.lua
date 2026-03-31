@@ -87,7 +87,6 @@ function RowScripts.bindClick(row, _item, options)
   end
 end
 
-
 --- Bind drag-and-drop scripts to a row (pinned contacts only).
 --- For pinned items: registers for drag and sets OnDragStart/OnDragStop.
 --- For non-pinned items: clears drag registration and scripts.

@@ -117,7 +117,10 @@ return function()
     type(window.contactsResizeHandle.scripts.OnMouseDown) == "function",
     "expected contacts resize handle OnMouseDown script"
   )
-  assert(type(window.contactsResizeHandle.scripts.OnMouseUp) == "function", "expected contacts resize handle OnMouseUp script")
+  assert(
+    type(window.contactsResizeHandle.scripts.OnMouseUp) == "function",
+    "expected contacts resize handle OnMouseUp script"
+  )
 
   assert(window.contactsResizeHandle.hoverBg ~= nil, "expected contacts resize hover background")
   assert(window.contactsResizeHandle.outline ~= nil, "expected contacts resize outline textures")
@@ -136,7 +139,6 @@ return function()
     "expected resize handle hover background to clear on leave"
   )
   assert(window.contactsResizeHandle.outline.left.shown == false, "expected resize outline to hide on leave")
-
 
   local originalGetCursorPosition = _G.GetCursorPosition
   _G.GetCursorPosition = function()

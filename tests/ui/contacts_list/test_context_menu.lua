@@ -12,7 +12,19 @@ return function()
   -- test_open_wow_contact_uses_friends_dropdown
   do
     local called = nil
-    _G.FriendsFrame_ShowDropdown = function(name, connected, lineID, chatType, chatFrame, friendsList, clubID, streamID, epoch, position, guid)
+    _G.FriendsFrame_ShowDropdown = function(
+      name,
+      connected,
+      lineID,
+      chatType,
+      chatFrame,
+      friendsList,
+      clubID,
+      streamID,
+      epoch,
+      position,
+      guid
+    )
       called = {
         name = name,
         connected = connected,

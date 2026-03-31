@@ -67,7 +67,7 @@ return function()
     row.item = item
 
     local registered = nil
-    row.RegisterForClicks = function(_self, ... )
+    row.RegisterForClicks = function(_self, ...)
       registered = { ... }
     end
 
@@ -77,7 +77,6 @@ return function()
     assert(registered[1] == "LeftButtonUp", "bindClick should register LeftButtonUp")
     assert(registered[2] == "RightButtonUp", "bindClick should register RightButtonUp")
   end
-
 
   -- test_bind_click_right_button_opens_context_menu_without_selecting
   do
@@ -145,7 +144,6 @@ return function()
 
     assert(clicked == true, "onSelect should run when right-click menu could not be opened")
   end
-
 
   -- test_bind_drag_registers_for_pinned_item
   do

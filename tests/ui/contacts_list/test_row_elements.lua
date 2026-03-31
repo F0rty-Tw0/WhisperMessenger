@@ -91,10 +91,7 @@ return function()
     local label = RowElements.createNameLabel(row, item, 140)
     assert(label ~= nil, "createNameLabel should return a FontString for narrow rows")
     assert(string.sub(label.text or "", -3) == "...", "expected long contact name to end with ellipsis")
-    assert(
-      label:GetStringWidth() <= label:GetWidth(),
-      "expected ellipsized name width to fit label width"
-    )
+    assert(label:GetStringWidth() <= label:GetWidth(), "expected ellipsized name width to fit label width")
   end
 
   -- test_update_name_label_recalculates_width_on_resize
@@ -112,14 +109,9 @@ return function()
 
     local label = RowElements.createNameLabel(row, item, 260)
     RowElements.updateNameLabel(row, item, 180)
-    local expectedWidth = 180
-      - Theme.LAYOUT.CONTACT_ICON_SIZE
-      - Theme.LAYOUT.CONTACT_PADDING
-      - 10
-      - (4 + 14 + 2)
+    local expectedWidth = 180 - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 10 - (4 + 14 + 2)
     assert(label.width == expectedWidth, "expected name label width to track parent resize")
   end
-
 
   -- test_faction_icon_keeps_right_margin
   do
@@ -156,7 +148,6 @@ return function()
         .. tostring(maxOffset)
     )
   end
-
 
   -- test_create_faction_icon_for_alliance
   do
