@@ -158,6 +158,8 @@ function MessengerWindow.Create(factory, options)
     dimWhenMoving = settingsConfig.dimWhenMoving,
     autoFocusComposer = settingsConfig.autoFocusComposer,
     autoSelectUnread = settingsConfig.autoSelectUnread,
+    hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
+    autoOpenWindow = settingsConfig.autoOpenWindow,
   })
 
   local notificationsPanel, notificationSettings = createSettingsPanel(NotificationSettings.Create, {

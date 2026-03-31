@@ -486,7 +486,7 @@ local standardFonts = {
   { "GameFontHighlight", DEFAULT_FONT, 12 },
   { "GameFontHighlightSmall", DEFAULT_FONT, 10 },
   { "GameFontHighlightLarge", DEFAULT_FONT, 16 },
-  { "ChatFontNormal", DEFAULT_FONT, 14 },
+  { "ChatFontNormal", SYSTEM_FONT, 14 },
   -- SystemFont family (Arial Narrow / locale equivalent)
   { "SystemFont_Small", SYSTEM_FONT, 10 },
   { "SystemFont_Med1", SYSTEM_FONT, 12 },

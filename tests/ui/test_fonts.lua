@@ -114,6 +114,26 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_composer_font_matches_ui_font_in_default_mode
+  -- -----------------------------------------------------------------------
+  do
+    Fonts.SetMode("default")
+    local fonts = Fonts.GetFonts()
+    local uiObj = _G[fonts.contact_name]
+    local composerObj = _G[fonts.composer_input]
+    local uiPath = uiObj:GetFont()
+    local composerPath = composerObj:GetFont()
+    assert(
+      string.find(composerPath, "FRIZQT") ~= nil,
+      "test_composer_default: composer should use game font (FRIZQT), got: " .. tostring(composerPath)
+    )
+    assert(
+      string.find(uiPath, "FRIZQT") ~= nil and string.find(composerPath, "FRIZQT") ~= nil,
+      "test_composer_default: composer and UI fonts should both inherit the game font"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_initialize_with_mode
   -- -----------------------------------------------------------------------
   do
