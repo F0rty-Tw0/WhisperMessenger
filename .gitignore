@@ -3,3 +3,5 @@ dist/
 *.zip
 docs/
 .env
+.claude
+.wolf

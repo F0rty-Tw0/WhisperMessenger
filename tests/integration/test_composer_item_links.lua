@@ -3,11 +3,30 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 return function()
   local savedHooksecurefunc = _G.hooksecurefunc
+  local savedChatEditGetActiveWindow = _G.ChatEdit_GetActiveWindow
+  local savedChatEditInsertLink = _G.ChatEdit_InsertLink
+  local savedCQuestLog = _G.C_QuestLog
   local registeredHooks = {}
 
-  _G.hooksecurefunc = function(name, handler)
-    registeredHooks[name] = handler
+  _G.hooksecurefunc = function(target, methodOrHandler, maybeHandler)
+    if type(target) == "string" and type(methodOrHandler) == "function" then
+      registeredHooks[target] = methodOrHandler
+      return
+    end
+    if type(target) == "table" and type(methodOrHandler) == "string" and type(maybeHandler) == "function" then
+      registeredHooks["method:" .. methodOrHandler] = maybeHandler
+    end
   end
+
+  _G.C_QuestLog = {
+    SetSelectedQuest = function() end,
+    GetQuestLink = function()
+      return nil
+    end,
+    GetLogIndexForQuestID = function()
+      return nil
+    end,
+  }
 
   local baseFactory = FakeUI.NewFactory()
   local factory = {}
@@ -34,7 +53,6 @@ return function()
       frame.SetFocus = function(self)
         self._hasFocus = true
       end
-
       frame.ClearFocus = function(self)
         self._hasFocus = false
       end
@@ -49,25 +67,60 @@ return function()
   local parent = factory.CreateFrame("Frame", "ComposerParent", nil)
   parent:SetSize(600, 200)
 
+  -- Early overrides installed at module load time (before Composer.Create)
+  assert(type(_G.ChatEdit_GetActiveWindow) == "function", "expected ChatEdit_GetActiveWindow override at load")
+  assert(type(_G.ChatEdit_InsertLink) == "function", "expected ChatEdit_InsertLink override at load")
+
   local composer = Composer.Create(factory, parent, {
     conversationKey = "me::WOW::arthas-area52",
     displayName = "Arthas-Area52",
     channel = "WOW",
   }, function() end)
 
-  assert(registeredHooks.HandleModifiedItemClick ~= nil, "expected composer to register a HandleModifiedItemClick hook")
-
+  -- ChatEdit_GetActiveWindow returns our input when shown
   composer.frame:Show()
   composer.input:Show()
   composer.input:SetFocus()
-  registeredHooks.HandleModifiedItemClick(
-    "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r"
-  )
 
-  assert(
-    composer.input:GetText() == "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r",
-    "expected focused composer input to receive the item link"
-  )
+  local activeWindow = _G.ChatEdit_GetActiveWindow()
+  assert(activeWindow == composer.input, "expected ChatEdit_GetActiveWindow to return our composer input when visible")
 
+  -- ChatEdit_GetActiveWindow returns nil when composer is hidden
+  composer.input:Hide()
+  assert(_G.ChatEdit_GetActiveWindow() == nil, "expected ChatEdit_GetActiveWindow to return nil when composer hidden")
+
+  -- Restore visible state
+  composer.input:Show()
+
+  -- ChatEdit_InsertLink routes item links to our composer and returns true
+  composer.input:SetText("")
+  local itemLink = "|cff0070dd|Hitem:19019::::::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r"
+  local insertResult = _G.ChatEdit_InsertLink(itemLink)
+  assert(insertResult == true, "expected ChatEdit_InsertLink to return true")
+  assert(composer.input:GetText() == itemLink, "expected item link inserted into our composer")
+
+  -- ChatEdit_InsertLink routes quest links to our composer and returns true
+  local questLink = "|cffffff00|Hquest:78307:80|h[To Khaz Algar!]|h|r"
+  composer.input:SetText("")
+  local questResult = _G.ChatEdit_InsertLink(questLink)
+  assert(questResult == true, "expected ChatEdit_InsertLink to return true for quest link")
+  assert(composer.input:GetText() == questLink, "expected quest link inserted into our composer")
+
+  -- ChatEdit_InsertLink returns false when composer is hidden (no target)
+  composer.input:Hide()
+  assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when no visible input")
+  composer.input:Show()
+
+  -- SetItemRef hook for clicking hyperlinks in transcript
+  assert(registeredHooks.SetItemRef ~= nil, "expected SetItemRef hook registered")
+  composer.input:SetText("")
+  local questTextFromChat = "|cffffff00|Hquest:78307:80|h[To Khaz Algar!]|h|r"
+  registeredHooks.SetItemRef("quest:78307:80", questTextFromChat, "LeftButton")
+  assert(composer.input:GetText() == questTextFromChat, "expected SetItemRef to insert quest hyperlink text")
+
+  -- Cleanup
   _G.hooksecurefunc = savedHooksecurefunc
+  _G.ChatEdit_GetActiveWindow = savedChatEditGetActiveWindow
+  _G.ChatEdit_InsertLink = savedChatEditInsertLink
+  _G.C_QuestLog = savedCQuestLog
 end

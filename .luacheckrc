@@ -2,7 +2,7 @@
 -- Targets Lua 5.1 (WoW runtime)
 
 std = "lua51"
-max_line_length = false   -- StyLua handles formatting; luacheck handles semantics
+max_line_length = false -- StyLua handles formatting; luacheck handles semantics
 cache = true
 jobs = 4
 
@@ -15,16 +15,16 @@ exclude_files = {
 
 -- Warnings to suppress for common WoW addon patterns
 ignore = {
-  "11./BINDING_.*",    -- keybinding globals are expected
-  "11./SLASH_.*",      -- slash command globals are expected
-  "212/self",          -- unused 'self' in method definitions
-  "212/event",         -- unused 'event' in OnEvent handlers
-  "212/elapsed",       -- unused 'elapsed' in OnUpdate handlers
-  "211/addonName",     -- unused first return from `local addonName, ns = ...`
-  "212/addonName",     -- same when treated as argument
-  "331/ns",            -- ns is set (mutated) then exported, not read directly
-  "122/_G",            -- writing SavedVariables via _G.VarName is intentional
-  "143/table",         -- table.unpack exists in Lua 5.2+; WoW provides compat
+  "11./BINDING_.*", -- keybinding globals are expected
+  "11./SLASH_.*", -- slash command globals are expected
+  "212/self", -- unused 'self' in method definitions
+  "212/event", -- unused 'event' in OnEvent handlers
+  "212/elapsed", -- unused 'elapsed' in OnUpdate handlers
+  "211/addonName", -- unused first return from `local addonName, ns = ...`
+  "212/addonName", -- same when treated as argument
+  "331/ns", -- ns is set (mutated) then exported, not read directly
+  "122/_G", -- writing SavedVariables via _G.VarName is intentional
+  "143/table", -- table.unpack exists in Lua 5.2+; WoW provides compat
 }
 
 -- Globals the addon WRITES
@@ -87,6 +87,7 @@ read_globals = {
   "BNGetNumFriends",
   "ChatEdit_DeactivateChat",
   "ChatEdit_UpdateHeader",
+  "ChatFrameUtil",
   "ChatFrame_OpenChat",
   "ChatFrame_ReplyTell",
   "ChatFrame_SendBNetTell",
@@ -141,15 +142,15 @@ files["tests/**/*.lua"] = {
     "require",
   },
   ignore = {
-    "111",  -- setting undefined global (tests stub globals)
-    "112",  -- mutating undefined global
-    "113",  -- accessing undefined global
-    "142",  -- setting undefined field of global (table.unpack stubs)
-    "143",  -- accessing undefined field of global (table.unpack)
-    "211",  -- unused local variable
-    "212",  -- unused argument
-    "421",  -- shadowing local variable
-    "431",  -- shadowing upvalue
-    "432",  -- shadowing upvalue argument (common in fake_ui self patterns)
+    "111", -- setting undefined global (tests stub globals)
+    "112", -- mutating undefined global
+    "113", -- accessing undefined global
+    "142", -- setting undefined field of global (table.unpack stubs)
+    "143", -- accessing undefined field of global (table.unpack)
+    "211", -- unused local variable
+    "212", -- unused argument
+    "421", -- shadowing local variable
+    "431", -- shadowing upvalue
+    "432", -- shadowing upvalue argument (common in fake_ui self patterns)
   },
 }

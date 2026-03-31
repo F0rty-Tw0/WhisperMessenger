@@ -11,6 +11,7 @@
 ### Fixed
 
 - Whisper messages received during combat were queued and never stored — they now record immediately
+- Shift-clicking quests, achievements, spells, and professions now correctly links them into the messenger chat instead of triggering the default action (tracking, inspecting, etc.)
 
 ### Improved
 
