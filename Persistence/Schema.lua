@@ -23,6 +23,7 @@ function Schema.NewCharacterState()
       y = 0,
       width = 900,
       height = 560,
+      contactsWidth = 300,
       minimized = false,
     },
     icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },

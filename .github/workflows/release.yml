@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Release version (e.g. 1.0.0)"
+        description: "Release version (e.g. 1.0.0 or v1.0.0)"
         required: true
         type: string
       release_type:
@@ -55,23 +55,29 @@ jobs:
       - name: Bump version and tag (manual dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
-          VERSION="${{ inputs.version }}"
+          INPUT_VERSION="${{ inputs.version }}"
+          if [[ ! "$INPUT_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid version: '$INPUT_VERSION'. Expected 1.0.0 or v1.0.0"
+            exit 1
+          fi
+          NORMALIZED_VERSION="${INPUT_VERSION#v}"
+          TAG_VERSION="v${NORMALIZED_VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          sed -i "s/^## Version: .*/## Version: ${VERSION}/" WhisperMessenger.toc
-          sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${VERSION}\"/" Core/Constants.lua
+          sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
+          sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
           git add WhisperMessenger.toc Core/Constants.lua
           if git diff --cached --quiet; then
-            echo "Version already set to ${VERSION}, skipping commit"
+            echo "Version already set to ${TAG_VERSION}, skipping commit"
           else
-            git commit -m "release: v${VERSION}"
+            git commit -m "release: ${TAG_VERSION}"
             git push origin HEAD:master
           fi
-          if git rev-parse "${VERSION}" >/dev/null 2>&1; then
-            echo "Tag ${VERSION} already exists, skipping tag creation"
+          if git show-ref --verify --quiet "refs/tags/${TAG_VERSION}"; then
+            echo "Tag ${TAG_VERSION} already exists, skipping tag creation"
           else
-            git tag -a "${VERSION}" -m "Release ${VERSION}"
-            git push origin "${VERSION}"
+            git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
+            git push origin "${TAG_VERSION}"
           fi
 
       - name: Package and release

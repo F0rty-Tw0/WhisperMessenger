@@ -110,6 +110,76 @@ return function()
       .. " but got "
       .. tostring(window.conversation.transcript.scrollFrame.height)
   )
+  -- Contacts-only resize handle should clamp to min width and persist contactsWidth.
+  assert(window.contactsResizeHandle ~= nil, "expected contacts resize handle")
+  assert(window.contactsResizeHandle.mouseEnabled == true, "expected contacts resize handle to accept mouse input")
+  assert(
+    type(window.contactsResizeHandle.scripts.OnMouseDown) == "function",
+    "expected contacts resize handle OnMouseDown script"
+  )
+  assert(type(window.contactsResizeHandle.scripts.OnMouseUp) == "function", "expected contacts resize handle OnMouseUp script")
+
+  assert(window.contactsResizeHandle.hoverBg ~= nil, "expected contacts resize hover background")
+  assert(window.contactsResizeHandle.outline ~= nil, "expected contacts resize outline textures")
+  assert(window.contactsResizeHandle.outline.left ~= nil, "expected left outline texture")
+
+  window.contactsResizeHandle.scripts.OnEnter(window.contactsResizeHandle)
+  assert(
+    window.contactsResizeHandle.hoverBg.color ~= nil and window.contactsResizeHandle.hoverBg.color[4] > 0,
+    "expected resize handle hover background alpha to increase on hover"
+  )
+  assert(window.contactsResizeHandle.outline.left.shown == true, "expected resize outline to show on hover")
+
+  window.contactsResizeHandle.scripts.OnLeave(window.contactsResizeHandle)
+  assert(
+    window.contactsResizeHandle.hoverBg.color ~= nil and window.contactsResizeHandle.hoverBg.color[4] == 0,
+    "expected resize handle hover background to clear on leave"
+  )
+  assert(window.contactsResizeHandle.outline.left.shown == false, "expected resize outline to hide on leave")
+
+
+  local originalGetCursorPosition = _G.GetCursorPosition
+  _G.GetCursorPosition = function()
+    return 240
+  end
+  window.frame.GetLeft = function()
+    return 100
+  end
+  window.frame.GetEffectiveScale = function()
+    return 1
+  end
+
+  window.contactsResizeHandle.scripts.OnMouseDown(window.contactsResizeHandle, "LeftButton")
+  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+
+  local expectedMinContactsW = Theme.LAYOUT.CONTACTS_MIN_WIDTH
+  local expectedNarrowContentW = newWidth - expectedMinContactsW - Theme.DIVIDER_THICKNESS
+  assert(
+    window.contactsPane.width == expectedMinContactsW,
+    "expected contacts pane width to clamp to min "
+      .. tostring(expectedMinContactsW)
+      .. " but got "
+      .. tostring(window.contactsPane.width)
+  )
+  assert(
+    window.contentPane.width == expectedNarrowContentW,
+    "expected content width to follow contacts resize to "
+      .. tostring(expectedNarrowContentW)
+      .. " but got "
+      .. tostring(window.contentPane.width)
+  )
+
+  window.contactsResizeHandle.scripts.OnMouseUp(window.contactsResizeHandle, "LeftButton")
+  assert(positionChanged ~= nil, "expected contacts resize to persist window state")
+  assert(
+    positionChanged.contactsWidth == expectedMinContactsW,
+    "expected persisted contacts width "
+      .. tostring(expectedMinContactsW)
+      .. " but got "
+      .. tostring(positionChanged.contactsWidth)
+  )
+
+  _G.GetCursorPosition = originalGetCursorPosition
 
   -- Oversized saved state and oversize resize attempts should clamp to the screen bounds
   local clampedState = nil

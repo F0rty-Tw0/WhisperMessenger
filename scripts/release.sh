@@ -2,26 +2,27 @@
 #
 # Usage: bash scripts/release.sh <version>
 # Example: bash scripts/release.sh 1.0.0
-#
-# Bumps the version in WhisperMessenger.toc and Core/Constants.lua,
-# commits the change, creates an annotated git tag, and pushes it.
-# The push triggers the GitHub Actions release workflow.
+##
+## Accepts 1.0.0 or v1.0.0 and always normalizes to v-prefixed
+## tags and file versions.
 
 set -euo pipefail
 
-VERSION="${1:-}"
+INPUT_VERSION="${1:-}"
 
-if [[ -z "$VERSION" ]]; then
+if [[ -z "$INPUT_VERSION" ]]; then
   echo "Usage: bash scripts/release.sh <version>"
   echo "Example: bash scripts/release.sh 1.0.0"
   exit 1
 fi
 
-# Validate semver-ish format (e.g. 1.0.0, 2.1.3)
-if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-  echo "Error: Version must be in semver format (e.g. 1.0.0)"
+if ! [[ "$INPUT_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "Error: Version must be semver (e.g. 1.0.0 or v1.0.0)"
   exit 1
 fi
+
+NORMALIZED_VERSION="${INPUT_VERSION#v}"
+TAG_VERSION="v${NORMALIZED_VERSION}"
 
 # Ensure working tree is clean
 if [[ -n "$(git status --porcelain)" ]]; then
@@ -30,31 +31,31 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 # Ensure tag doesn't already exist
-if git rev-parse "$VERSION" >/dev/null 2>&1; then
-  echo "Error: Tag '$VERSION' already exists."
+if git show-ref --verify --quiet "refs/tags/${TAG_VERSION}"; then
+  echo "Error: Tag '${TAG_VERSION}' already exists."
   exit 1
 fi
 
-echo "Releasing WhisperMessenger v${VERSION}..."
+echo "Releasing WhisperMessenger ${TAG_VERSION}..."
 
 # Update version in TOC
-sed -i "s/^## Version: .*/## Version: ${VERSION}/" WhisperMessenger.toc
+sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
 
 # Update version in Constants.lua
-sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${VERSION}\"/" Core/Constants.lua
+sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
 
 # Commit version bump
 git add WhisperMessenger.toc Core/Constants.lua
-git commit -m "release: v${VERSION}"
+git commit -m "release: ${TAG_VERSION}"
 
 # Create annotated tag
-git tag -a "$VERSION" -m "Release ${VERSION}"
+git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
 
 echo ""
 echo "Version bumped and tag created."
 echo ""
 echo "To publish, push the tag:"
-echo "  git push origin master ${VERSION}"
+echo "  git push origin master ${TAG_VERSION}"
 echo ""
 echo "This will trigger the CI pipeline which:"
 echo "  1. Runs lint checks"

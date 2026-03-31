@@ -66,19 +66,12 @@ local function bindRow(factory, parent, row, index, item, options)
     StatusDot.update(row.statusDot, item.availability)
   end
 
-  -- Contact name (create once, update text every bind)
+  -- Contact name + faction icon (create once, update every bind)
   if row.title == nil then
     RowElements.createNameLabel(row, item, parentWidth)
-  else
-    row.title:SetText(item.displayName)
-    applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
   end
-
-  -- Faction icon (create once, update every bind)
   if row.factionIcon == nil then
     RowElements.createFactionIcon(factory, row, item, ns)
-  else
-    RowElements.updateFactionIcon(row, item, ns)
   end
 
   -- Timestamp (create once, update text every bind)
@@ -87,6 +80,10 @@ local function bindRow(factory, parent, row, index, item, options)
   else
     RowElements.updateTimestamp(row, item, ns)
   end
+
+  -- Refit name/faction now that timestamp width is known for this row.
+  RowElements.updateNameLabel(row, item, parentWidth)
+  RowElements.updateFactionIcon(row, item, ns)
 
   -- Preview text (create once, update text every bind)
   if row.preview == nil then

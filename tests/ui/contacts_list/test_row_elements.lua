@@ -1,4 +1,5 @@
 local RowElements = require("WhisperMessenger.UI.ContactsList.RowElements")
+local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
 return function()
@@ -73,6 +74,89 @@ return function()
     assert(label ~= nil, "createNameLabel should return a FontString")
     assert(label.text == "Alice", "name label should have displayName text, got: " .. tostring(label.text))
   end
+
+  -- test_create_name_label_ellipsizes_when_width_is_tight
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.classIconFrame = factory.CreateFrame("Frame", nil, row)
+    local item = {
+      displayName = "VeryVeryLongContactNameForTinyPane",
+      classTag = "MAGE",
+      raceTag = nil,
+      factionName = nil,
+      lastActivityAt = 100,
+      lastPreview = "hello",
+    }
+
+    local label = RowElements.createNameLabel(row, item, 140)
+    assert(label ~= nil, "createNameLabel should return a FontString for narrow rows")
+    assert(string.sub(label.text or "", -3) == "...", "expected long contact name to end with ellipsis")
+    assert(
+      label:GetStringWidth() <= label:GetWidth(),
+      "expected ellipsized name width to fit label width"
+    )
+  end
+
+  -- test_update_name_label_recalculates_width_on_resize
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.classIconFrame = factory.CreateFrame("Frame", nil, row)
+    local item = {
+      displayName = "Alice",
+      classTag = "WARRIOR",
+      raceTag = nil,
+      factionName = nil,
+      lastActivityAt = 100,
+      lastPreview = "hello",
+    }
+
+    local label = RowElements.createNameLabel(row, item, 260)
+    RowElements.updateNameLabel(row, item, 180)
+    local expectedWidth = 180
+      - Theme.LAYOUT.CONTACT_ICON_SIZE
+      - Theme.LAYOUT.CONTACT_PADDING
+      - 10
+      - (4 + 14 + 2)
+    assert(label.width == expectedWidth, "expected name label width to track parent resize")
+  end
+
+
+  -- test_faction_icon_keeps_right_margin
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.classIconFrame = factory.CreateFrame("Frame", nil, row)
+    local item = {
+      displayName = "VeryVeryLongFactionNameContact",
+      classTag = "PALADIN",
+      raceTag = "Human",
+      factionName = "Alliance",
+      lastActivityAt = 100,
+      lastPreview = "hello",
+    }
+    local ns_stub = {
+      Identity = {
+        InferFaction = function(raceTag)
+          if raceTag == "Human" then
+            return "Alliance"
+          end
+          return nil
+        end,
+      },
+    }
+
+    local label = RowElements.createNameLabel(row, item, 180)
+    local tex = RowElements.createFactionIcon(factory, row, item, ns_stub)
+    assert(label ~= nil and tex ~= nil, "expected name label and faction icon")
+    local maxOffset = label.width - Theme.LAYOUT.CONTACT_FACTION_SIZE - 1
+    assert(
+      tex.point[4] <= maxOffset,
+      "expected faction icon to preserve 1px right margin, got offset "
+        .. tostring(tex.point[4])
+        .. " > "
+        .. tostring(maxOffset)
+    )
+  end
+
 
   -- test_create_faction_icon_for_alliance
   do

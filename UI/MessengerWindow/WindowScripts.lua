@@ -146,20 +146,178 @@ end
 
 -- Wire OnShow, OnHide, OnEnter, OnLeave, OnUpdate, OnSizeChanged,
 -- OnDragStart, OnDragStop on the main frame, plus OnMouseDown/OnMouseUp
--- on the resize grip.
+-- on both resize handles.
 --
 -- refs:
---   frame, resizeGrip
+--   frame, resizeGrip, contactsResizeHandle
 --
 -- options:
 --   refreshWindowAlpha, layout, composer, contactsController, conversation,
 --   buildState, trace, onPositionChanged, Theme
+--   relayout (optional), refreshContactsLayout (optional),
+--   getCursorX (optional), getFrameLeft (optional)
 function WindowScripts.WireFrame(refs, options)
   local frame = refs.frame
   local resizeGrip = refs.resizeGrip
+  local contactsResizeHandle = refs.contactsResizeHandle
 
   local alphaElapsed = 0
   local frameTheme = options.Theme or Theme
+  local resizingContacts = false
+
+  local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
+    if options.relayout then
+      options.relayout(w, h, requestedContactsWidth, refreshContactsLayout)
+      return
+    end
+
+    if options.layout and options.layout.contactsPane then
+      LayoutBuilder.Relayout(options.layout, w, h, requestedContactsWidth)
+    end
+
+    local contentW = w - frameTheme.CONTACTS_WIDTH - frameTheme.DIVIDER_THICKNESS
+    if options.composer and options.composer.relayout then
+      options.composer.relayout(contentW)
+    end
+    local contactsH = h - frameTheme.TOP_BAR_HEIGHT
+    if options.contactsController and options.contactsController.fillViewport then
+      options.contactsController.fillViewport(contactsH)
+    end
+    local threadH = contactsH - frameTheme.COMPOSER_HEIGHT - frameTheme.DIVIDER_THICKNESS
+    if options.conversation then
+      ConversationPane.Relayout(options.conversation, contentW, threadH)
+    end
+    if refreshContactsLayout and options.refreshContactsLayout then
+      options.refreshContactsLayout()
+    end
+  end
+
+  local function frameWidth()
+    if frame and frame.GetWidth then
+      return frame:GetWidth()
+    end
+    return frameTheme.WINDOW_WIDTH
+  end
+
+  local function frameHeight()
+    if frame and frame.GetHeight then
+      return frame:GetHeight()
+    end
+    return frameTheme.WINDOW_HEIGHT
+  end
+
+  local function getCursorX()
+    if options.getCursorX then
+      return options.getCursorX()
+    end
+    if type(_G.GetCursorPosition) ~= "function" then
+      return nil
+    end
+
+    local cursorX = _G.GetCursorPosition()
+    local scale = 1
+    if frame and frame.GetEffectiveScale then
+      local effectiveScale = frame:GetEffectiveScale()
+      if type(effectiveScale) == "number" and effectiveScale > 0 then
+        scale = effectiveScale
+      end
+    end
+    return cursorX / scale
+  end
+
+  local function getFrameLeft()
+    if options.getFrameLeft then
+      return options.getFrameLeft()
+    end
+    if frame and frame.GetLeft then
+      return frame:GetLeft()
+    end
+    return nil
+  end
+
+  local function setContactsHandleHighlight(isActive)
+    if not contactsResizeHandle then
+      return
+    end
+
+    local divider = options.layout and options.layout.contactsDivider or nil
+    local dividerColor = frameTheme.COLORS and frameTheme.COLORS.divider or { 0.20, 0.22, 0.28, 1 }
+    local hoverFillColor = frameTheme.COLORS and frameTheme.COLORS.bg_contact_hover or { 0.24, 0.28, 0.42, 1 }
+    local outlineColor = dividerColor
+    local dividerActiveAlpha = 0.62
+    local hoverFillAlphaMultiplier = 0.18
+    local outlineAlpha = 0.45
+
+    if divider and divider.SetColorTexture then
+      if isActive then
+        divider:SetColorTexture(outlineColor[1], outlineColor[2], outlineColor[3], dividerActiveAlpha)
+      else
+        divider:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], dividerColor[4] or 1)
+      end
+    end
+
+    if contactsResizeHandle.hoverBg and contactsResizeHandle.hoverBg.SetColorTexture then
+      if isActive then
+        contactsResizeHandle.hoverBg:SetColorTexture(
+          hoverFillColor[1],
+          hoverFillColor[2],
+          hoverFillColor[3],
+          (hoverFillColor[4] or 1) * hoverFillAlphaMultiplier
+        )
+      else
+        contactsResizeHandle.hoverBg:SetColorTexture(0, 0, 0, 0)
+      end
+    end
+
+    local outline = contactsResizeHandle.outline
+    if outline then
+      for _, edge in pairs(outline) do
+        if edge and edge.SetColorTexture then
+          if isActive then
+            edge:SetColorTexture(outlineColor[1], outlineColor[2], outlineColor[3], outlineAlpha)
+            if edge.Show then
+              edge:Show()
+            end
+          else
+            edge:SetColorTexture(0, 0, 0, 0)
+            if edge.Hide then
+              edge:Hide()
+            end
+          end
+        end
+      end
+    end
+  end
+
+  local function updateContactsResizeFromCursor()
+    if not resizingContacts then
+      return
+    end
+
+    local cursorX = getCursorX()
+    local frameLeft = getFrameLeft()
+    if type(cursorX) ~= "number" or type(frameLeft) ~= "number" then
+      return
+    end
+
+    relayoutWindow(frameWidth(), frameHeight(), cursorX - frameLeft, true)
+  end
+
+  local function stopContactsResize(button)
+    if button ~= "LeftButton" or not resizingContacts then
+      return
+    end
+
+    resizingContacts = false
+    updateContactsResizeFromCursor()
+    setContactsHandleHighlight(false)
+
+    local nextState = options.buildState(frame)
+    options.trace("contacts resize stop", nextState.contactsWidth)
+    if options.onPositionChanged then
+      options.onPositionChanged(nextState)
+    end
+  end
 
   if frame and frame.SetScript then
     frame:SetScript("OnShow", function()
@@ -178,6 +336,8 @@ function WindowScripts.WireFrame(refs, options)
 
     frame:SetScript("OnHide", function()
       alphaElapsed = 0
+      resizingContacts = false
+      setContactsHandleHighlight(false)
       options.trace("window hidden")
     end)
 
@@ -191,27 +351,15 @@ function WindowScripts.WireFrame(refs, options)
 
     frame:SetScript("OnUpdate", function(_, elapsed)
       alphaElapsed = alphaElapsed + (elapsed or 0)
-      if alphaElapsed < frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
-        return
+      if alphaElapsed >= frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
+        alphaElapsed = 0
+        options.refreshWindowAlpha()
       end
-      alphaElapsed = 0
-      options.refreshWindowAlpha()
+      updateContactsResizeFromCursor()
     end)
 
     frame:SetScript("OnSizeChanged", function(_self, w, h)
-      LayoutBuilder.Relayout(options.layout, w, h)
-      local contentW = w - frameTheme.CONTACTS_WIDTH - frameTheme.DIVIDER_THICKNESS
-      if options.composer and options.composer.relayout then
-        options.composer.relayout(contentW)
-      end
-      local contactsH = h - frameTheme.TOP_BAR_HEIGHT
-      if options.contactsController and options.contactsController.fillViewport then
-        options.contactsController.fillViewport(contactsH)
-      end
-      local threadH = contactsH - frameTheme.COMPOSER_HEIGHT - frameTheme.DIVIDER_THICKNESS
-      if options.conversation then
-        ConversationPane.Relayout(options.conversation, contentW, threadH)
-      end
+      relayoutWindow(w, h, nil, false)
     end)
 
     frame:SetScript("OnDragStart", function(self)
@@ -228,6 +376,14 @@ function WindowScripts.WireFrame(refs, options)
       if options.onPositionChanged then
         options.onPositionChanged(nextState)
       end
+    end)
+
+    local previousFrameMouseUp = frame.GetScript and frame:GetScript("OnMouseUp")
+    frame:SetScript("OnMouseUp", function(self, button)
+      if previousFrameMouseUp then
+        previousFrameMouseUp(self, button)
+      end
+      stopContactsResize(button)
     end)
   end
 
@@ -248,6 +404,31 @@ function WindowScripts.WireFrame(refs, options)
           options.onPositionChanged(nextState)
         end
       end
+    end)
+  end
+
+  if contactsResizeHandle and contactsResizeHandle.SetScript then
+    contactsResizeHandle:SetScript("OnEnter", function()
+      setContactsHandleHighlight(true)
+    end)
+
+    contactsResizeHandle:SetScript("OnLeave", function()
+      if not resizingContacts then
+        setContactsHandleHighlight(false)
+      end
+    end)
+
+    contactsResizeHandle:SetScript("OnMouseDown", function(_self, button)
+      if button == "LeftButton" then
+        resizingContacts = true
+        setContactsHandleHighlight(true)
+        updateContactsResizeFromCursor()
+        options.trace("contacts resize start")
+      end
+    end)
+
+    contactsResizeHandle:SetScript("OnMouseUp", function(_self, button)
+      stopContactsResize(button)
     end)
   end
 end

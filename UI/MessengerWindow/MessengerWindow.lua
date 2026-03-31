@@ -56,9 +56,19 @@ function MessengerWindow.Create(factory, options)
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
   }, Theme)
+  local currentContactsWidth = LayoutBuilder.ClampContactsWidth(
+    initialState.width,
+    state.contactsWidth or Theme.CONTACTS_WIDTH,
+    Theme
+  )
 
   local function applyState(target, nextState)
     local clampedState = WindowBounds.ClampState(parent, nextState, Theme)
+    currentContactsWidth = LayoutBuilder.ClampContactsWidth(
+      clampedState.width,
+      clampedState.contactsWidth or Theme.CONTACTS_WIDTH,
+      Theme
+    )
     target:SetSize(clampedState.width or Theme.WINDOW_WIDTH, clampedState.height or Theme.WINDOW_HEIGHT)
     target:SetPoint(
       clampedState.anchorPoint or "CENTER",
@@ -67,12 +77,14 @@ function MessengerWindow.Create(factory, options)
       clampedState.x or 0,
       clampedState.y or 0
     )
+    return clampedState
   end
 
   local function buildState(target)
     local pos = captureFramePosition(target)
     pos.width = sizeValue(target, "GetWidth", "width", initialState.width)
     pos.height = sizeValue(target, "GetHeight", "height", initialState.height)
+    pos.contactsWidth = LayoutBuilder.ClampContactsWidth(pos.width, currentContactsWidth, Theme)
     pos.minimized = false
     return WindowBounds.ClampState(parent, pos, Theme)
   end
@@ -99,9 +111,11 @@ function MessengerWindow.Create(factory, options)
   local settingsConfig = options.settingsConfig or {}
 
   -- Build layout (panes)
-  local layout = LayoutBuilder.Build(factory, frame, initialState, {})
+  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
+  currentContactsWidth = layout.contactsWidth or currentContactsWidth
   local contactsPane = layout.contactsPane
   local contactsDivider = layout.contactsDivider
+  local contactsResizeHandle = layout.contactsResizeHandle
   local contentPane = layout.contentPane
   local headerDivider = layout.headerDivider
   local threadPane = layout.threadPane
@@ -121,7 +135,6 @@ function MessengerWindow.Create(factory, options)
   local resetIconButton = layout.resetIconButton
   local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
-
   -- Compose settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
 
@@ -292,6 +305,24 @@ function MessengerWindow.Create(factory, options)
     setComposerEnabled(composer, currentSelectedContact, currentNotice)
   end
 
+  local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
+    local metrics = LayoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
+    currentContactsWidth = metrics.contactsWidth or currentContactsWidth
+
+    if composer and composer.relayout then
+      composer.relayout(metrics.contentWidth)
+    end
+    if contactsController and contactsController.fillViewport then
+      contactsController.fillViewport(metrics.contactsHeight)
+    end
+    if conversation then
+      ConversationPane.Relayout(conversation, metrics.contentWidth, metrics.threadHeight)
+    end
+    if refreshContactsLayout then
+      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, false)
+    end
+  end
+
   local function buildSelectedState(item)
     local nextState = nil
     if options.onSelectConversation then
@@ -343,7 +374,8 @@ function MessengerWindow.Create(factory, options)
     setOptionsVisible = setOptionsVisible,
     isShown = isShown,
     applyState = function(nextState)
-      applyState(frame, nextState)
+      local appliedState = applyState(frame, nextState)
+      relayoutWindow(appliedState.width, appliedState.height, appliedState.contactsWidth, true)
     end,
     refreshSelection = refreshSelection,
   })
@@ -352,12 +384,14 @@ function MessengerWindow.Create(factory, options)
   WindowScripts.WireFrame({
     frame = frame,
     resizeGrip = resizeGrip,
+    contactsResizeHandle = contactsResizeHandle,
   }, {
     refreshWindowAlpha = refreshWindowAlpha,
     layout = layout,
     composer = composer,
     contactsController = contactsController,
     conversation = conversation,
+    relayout = relayoutWindow,
     buildState = buildState,
     trace = trace,
     onPositionChanged = options.onPositionChanged,
@@ -398,6 +432,7 @@ function MessengerWindow.Create(factory, options)
       resetIconButton = resetIconButton,
       clearAllChatsButton = clearAllChatsButton,
       resizeGrip = resizeGrip,
+      contactsResizeHandle = contactsResizeHandle,
       contacts = contacts,
       conversation = conversation,
       composer = composer,

@@ -368,4 +368,77 @@ return function()
       "test_wire_frame_sets_resize_grip_scripts: expected resizeGrip to have OnMouseUp script"
     )
   end
+  -- -----------------------------------------------------------------------
+  -- test_wire_frame_wires_contacts_resize_handle_and_persists_width
+  -- -----------------------------------------------------------------------
+  do
+    local frame = factory.CreateFrame("Frame", nil, parent)
+    frame:SetSize(920, 580)
+    local resizeGrip = factory.CreateFrame("Frame", nil, parent)
+    local contactsResizeHandle = factory.CreateFrame("Frame", nil, parent)
+
+    local relayoutArgs = nil
+    local persistedState = nil
+    local refs = {
+      frame = frame,
+      resizeGrip = resizeGrip,
+      contactsResizeHandle = contactsResizeHandle,
+    }
+    local options = {
+      refreshWindowAlpha = noop,
+      relayout = function(w, h, requestedContactsWidth, refreshContactsLayout)
+        relayoutArgs = {
+          width = w,
+          height = h,
+          contactsWidth = requestedContactsWidth,
+          refresh = refreshContactsLayout,
+        }
+      end,
+      buildState = function()
+        return { contactsWidth = relayoutArgs and relayoutArgs.contactsWidth or nil }
+      end,
+      trace = noop,
+      onPositionChanged = function(state)
+        persistedState = state
+      end,
+      Theme = Theme,
+      getCursorX = function()
+        return 260
+      end,
+      getFrameLeft = function()
+        return 100
+      end,
+    }
+
+    WindowScripts.WireFrame(refs, options)
+
+    assert(
+      type(contactsResizeHandle.scripts) == "table" and type(contactsResizeHandle.scripts.OnMouseDown) == "function",
+      "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnMouseDown"
+    )
+    assert(
+      type(contactsResizeHandle.scripts.OnEnter) == "function",
+      "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnEnter"
+    )
+    assert(
+      type(contactsResizeHandle.scripts.OnLeave) == "function",
+      "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnLeave"
+    )
+    assert(
+      type(contactsResizeHandle.scripts.OnMouseUp) == "function",
+      "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnMouseUp"
+    )
+
+    contactsResizeHandle.scripts.OnMouseDown(contactsResizeHandle, "LeftButton")
+    assert(relayoutArgs ~= nil, "expected relayout call while resizing contacts")
+    assert(relayoutArgs.contactsWidth == 160, "expected requested contacts width 160 from cursor delta")
+    assert(relayoutArgs.refresh == true, "expected contacts resize relayout to request list refresh")
+
+    frame.scripts.OnMouseUp(frame, "LeftButton")
+    assert(persistedState ~= nil, "expected contacts resize mouseup to persist state")
+    assert(
+      persistedState.contactsWidth == 160,
+      "expected persisted contacts width 160, got " .. tostring(persistedState.contactsWidth)
+    )
+  end
 end
