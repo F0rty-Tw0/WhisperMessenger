@@ -55,6 +55,7 @@ UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
 UI/ChatBubble/BubbleIcon.lua
+UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua

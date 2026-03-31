@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BubbleStructure = ns.ChatBubbleBubbleStructure or require("WhisperMessenger.UI.ChatBubble.BubbleStructure")
 local BubbleIcon = ns.ChatBubbleBubbleIcon or require("WhisperMessenger.UI.ChatBubble.BubbleIcon")
+local ContextMenu = ns.ChatBubbleContextMenu or require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -108,6 +109,45 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   textFS:SetJustifyH("LEFT")
   textFS:SetText(message.text or "")
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
+
+  if frame.SetScript then
+    local openedOnMouseDown = false
+
+    local function openBubbleMenu(anchor)
+      local currentText = nil
+      if textFS and textFS.GetText then
+        currentText = textFS:GetText()
+      end
+
+      if currentText == nil or currentText == "" then
+        currentText = message.text
+      end
+
+      ContextMenu.Open(currentText, anchor or frame)
+    end
+
+    frame:SetScript("OnMouseDown", function(self, button)
+      if button ~= "RightButton" then
+        return
+      end
+
+      openedOnMouseDown = true
+      openBubbleMenu(self)
+    end)
+
+    frame:SetScript("OnMouseUp", function(self, button)
+      if button ~= "RightButton" then
+        return
+      end
+
+      if openedOnMouseDown then
+        openedOnMouseDown = false
+        return
+      end
+
+      openBubbleMenu(self)
+    end)
+  end
 
   frame:SetSize(bubbleWidth, bubbleHeight)
 

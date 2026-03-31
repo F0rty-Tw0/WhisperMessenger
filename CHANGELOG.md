@@ -5,6 +5,8 @@
 - Added contacts-list search with live filtering across character names and message history, plus an inline clear (X) action to reset results.
 - Improved UI contrast and added deferred window resize with a ghost preview (stable positioning + smooth commit on release) for lag-free resizing.
 
+- Added right-click chat-bubble context menu actions with **Copy Text** support.
+- Improved chat-bubble copy flow with safer clipboard fallbacks and a messenger-styled manual copy dialog that pre-fills and highlights message text when direct clipboard APIs are unavailable.
 ## [1.0.9] - 2026-03-31
 
 - Added independent contacts-pane resizing with persisted width, plus compact spacing/truncation fixes to prevent overlap in narrow layouts.
