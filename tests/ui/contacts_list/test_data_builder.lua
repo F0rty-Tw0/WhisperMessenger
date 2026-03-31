@@ -18,11 +18,19 @@ return function()
       factionName = "Alliance",
       pinned = true,
       sortOrder = 7,
+      messages = {
+        { text = "Frostbolt ready", playerName = "Jaina" },
+        { text = "Meet at Dalaran", playerName = "Khadgar" },
+      },
     })
 
     assert(snapshot.conversationKey == "bnet::BN::jaina#1234", "conversationKey should be preserved")
     assert(snapshot.displayName == "Jaina#1234", "displayName should fall back to contactDisplayName")
     assert(snapshot.lastPreview == "", "lastPreview should default to empty string")
+    assert(type(snapshot.searchText) == "string", "searchText should be a string")
+    assert(string.find(snapshot.searchText, "jaina#1234", 1, true) ~= nil, "searchText should include lowercased display name")
+    assert(string.find(snapshot.searchText, "frostbolt ready", 1, true) ~= nil, "searchText should include message text")
+    assert(string.find(snapshot.searchText, "khadgar", 1, true) ~= nil, "searchText should include sender names")
     assert(snapshot.unreadCount == 0, "unreadCount should default to 0")
     assert(snapshot.lastActivityAt == 0, "lastActivityAt should default to 0")
     assert(snapshot.channel == "BN", "channel should be preserved")

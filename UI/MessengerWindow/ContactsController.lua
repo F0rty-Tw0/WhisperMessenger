@@ -48,9 +48,10 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   local function refresh(nextContacts, selectedKey, resetPaging)
     if nextContacts ~= nil then
       currentContacts = nextContacts
-      if resetPaging then
-        visibleCount = 10
-      end
+    end
+    if resetPaging then
+      visibleCount = 10
+      ScrollView.SetVerticalScroll(contactsView, 0)
     end
 
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, {

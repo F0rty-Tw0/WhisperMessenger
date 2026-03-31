@@ -3,7 +3,7 @@
 ## Notes: Messenger-style whisper UI for WoW Retail
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.0.9
+## Version: v1.0.10
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311

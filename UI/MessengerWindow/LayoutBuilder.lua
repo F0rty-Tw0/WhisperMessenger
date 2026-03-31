@@ -12,6 +12,16 @@ local sizeValue = UIHelpers.sizeValue
 
 local LayoutBuilder = {}
 
+local function contactsSearchMetrics(theme)
+  local layout = theme.LAYOUT or {}
+  local searchHeight = layout.CONTACT_SEARCH_HEIGHT or 30
+  local searchMargin = layout.CONTACT_SEARCH_MARGIN or 10
+  local clearButtonSize = layout.CONTACT_SEARCH_CLEAR_BUTTON_SIZE or 18
+  local totalHeight = searchHeight + (searchMargin * 2)
+
+  return searchHeight, searchMargin, clearButtonSize, totalHeight
+end
+
 -- Clamp contacts pane width so users can resize it without collapsing the chat area.
 -- windowWidth: overall window width
 -- requestedContactsWidth: desired contacts pane width (or nil to use defaults)
@@ -60,6 +70,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local threadHeight = contentHeight - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
   local contactsHandleWidth = Theme.LAYOUT.CONTACTS_RESIZE_HANDLE_WIDTH or 8
+  local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight = contactsSearchMetrics(Theme)
+  local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
 
   local contactsPane = factory.CreateFrame("Frame", nil, frame)
   contactsPane:SetSize(contactsWidth, contactsHeight)
@@ -70,9 +82,80 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   contactsPaneBg:SetAllPoints(contactsPane)
   applyColorTexture(contactsPaneBg, Theme.COLORS.bg_secondary)
 
+  local contactsSearchFrame = factory.CreateFrame("Frame", nil, contactsPane)
+  contactsSearchFrame:SetSize(math.max(0, contactsWidth - (searchMargin * 2)), searchHeight)
+  contactsSearchFrame:SetPoint("TOPLEFT", contactsPane, "TOPLEFT", searchMargin, -searchMargin)
+
+  local contactsSearchBg = contactsSearchFrame:CreateTexture(nil, "BACKGROUND")
+  contactsSearchBg:SetAllPoints(contactsSearchFrame)
+  applyColorTexture(contactsSearchBg, Theme.COLORS.bg_input)
+
+  local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
+  local searchBorderColor = { dividerColor[1], dividerColor[2], dividerColor[3], 0.95 }
+  local searchBorderTop = contactsSearchFrame:CreateTexture(nil, "BORDER")
+  searchBorderTop:SetPoint("TOPLEFT", contactsSearchFrame, "TOPLEFT", 0, 0)
+  searchBorderTop:SetPoint("TOPRIGHT", contactsSearchFrame, "TOPRIGHT", 0, 0)
+  searchBorderTop:SetHeight(1)
+  applyColorTexture(searchBorderTop, searchBorderColor)
+
+  local searchBorderBottom = contactsSearchFrame:CreateTexture(nil, "BORDER")
+  searchBorderBottom:SetPoint("BOTTOMLEFT", contactsSearchFrame, "BOTTOMLEFT", 0, 0)
+  searchBorderBottom:SetPoint("BOTTOMRIGHT", contactsSearchFrame, "BOTTOMRIGHT", 0, 0)
+  searchBorderBottom:SetHeight(1)
+  applyColorTexture(searchBorderBottom, searchBorderColor)
+
+  local searchBorderLeft = contactsSearchFrame:CreateTexture(nil, "BORDER")
+  searchBorderLeft:SetPoint("TOPLEFT", contactsSearchFrame, "TOPLEFT", 0, 0)
+  searchBorderLeft:SetPoint("BOTTOMLEFT", contactsSearchFrame, "BOTTOMLEFT", 0, 0)
+  searchBorderLeft:SetWidth(1)
+  applyColorTexture(searchBorderLeft, searchBorderColor)
+
+  local searchBorderRight = contactsSearchFrame:CreateTexture(nil, "BORDER")
+  searchBorderRight:SetPoint("TOPRIGHT", contactsSearchFrame, "TOPRIGHT", 0, 0)
+  searchBorderRight:SetPoint("BOTTOMRIGHT", contactsSearchFrame, "BOTTOMRIGHT", 0, 0)
+  searchBorderRight:SetWidth(1)
+  applyColorTexture(searchBorderRight, searchBorderColor)
+
+  local contactsSearchInput = factory.CreateFrame("EditBox", nil, contactsSearchFrame)
+  contactsSearchInput:SetPoint("TOPLEFT", contactsSearchFrame, "TOPLEFT", 8, -4)
+  contactsSearchInput:SetPoint("BOTTOMRIGHT", contactsSearchFrame, "BOTTOMRIGHT", -(searchClearButtonSize + 8), 4)
+  contactsSearchInput:SetText("")
+  UIHelpers.setFontObject(contactsSearchInput, Theme.FONTS.composer_input)
+  if contactsSearchInput.SetTextInsets then
+    contactsSearchInput:SetTextInsets(0, 0, 0, 0)
+  end
+  if contactsSearchInput.SetAutoFocus then
+    contactsSearchInput:SetAutoFocus(false)
+  end
+
+  local contactsSearchPlaceholder = contactsSearchFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
+  contactsSearchPlaceholder:SetPoint("LEFT", contactsSearchInput, "LEFT", 0, 0)
+  contactsSearchPlaceholder:SetText("Search chats")
+  UIHelpers.setTextColor(contactsSearchPlaceholder, Theme.COLORS.text_secondary)
+
+  local contactsSearchClearButton = factory.CreateFrame("Button", nil, contactsSearchFrame)
+  contactsSearchClearButton:SetSize(searchClearButtonSize, searchClearButtonSize)
+  contactsSearchClearButton:SetPoint("RIGHT", contactsSearchFrame, "RIGHT", -6, 0)
+  contactsSearchClearButton:EnableMouse(true)
+
+  local contactsSearchClearLabel = contactsSearchClearButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
+  contactsSearchClearLabel:SetPoint("CENTER", contactsSearchClearButton, "CENTER", 0, 0)
+  contactsSearchClearLabel:SetText("X")
+  UIHelpers.setTextColor(contactsSearchClearLabel, Theme.COLORS.text_secondary)
+
+  contactsSearchPlaceholder:Show()
+  contactsSearchClearButton:Hide()
+  contactsSearchClearButton:SetScript("OnEnter", function()
+    UIHelpers.setTextColor(contactsSearchClearLabel, Theme.COLORS.text_primary)
+  end)
+  contactsSearchClearButton:SetScript("OnLeave", function()
+    UIHelpers.setTextColor(contactsSearchClearLabel, Theme.COLORS.text_secondary)
+  end)
+
   local contactsView = ScrollView.Create(factory, contactsPane, {
     width = contactsWidth,
-    height = contactsHeight,
+    height = contactsListHeight,
+    point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight },
     step = Theme.LAYOUT.CONTACT_ROW_HEIGHT,
   })
 
@@ -118,6 +201,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     edge:Hide()
   end
   contactsResizeHandle.outline = contactsResizeOutline
+
   local contentPane = factory.CreateFrame("Frame", nil, frame)
   contentPane:SetSize(contentWidth, contentHeight)
   contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
@@ -243,6 +327,14 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsResizeHandle = contactsResizeHandle,
     contactsWidth = contactsWidth,
     contactsHandleWidth = contactsHandleWidth,
+    contactsSearchFrame = contactsSearchFrame,
+    contactsSearchInput = contactsSearchInput,
+    contactsSearchPlaceholder = contactsSearchPlaceholder,
+    contactsSearchClearButton = contactsSearchClearButton,
+    contactsSearchHeight = searchHeight,
+    contactsSearchMargin = searchMargin,
+    contactsSearchTotalHeight = searchTotalHeight,
+    contactsSearchClearButtonSize = searchClearButtonSize,
     menuPadding = menuPadding,
     optionsButtonHeight = btnH,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
@@ -280,6 +372,10 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
   local contentW = width - contactsWidth - Theme.DIVIDER_THICKNESS
   local contentH = contactsH
   local threadH = contentH - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
+  local searchHeight = layout.contactsSearchHeight or (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
+  local searchMargin = layout.contactsSearchMargin or (Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10)
+  local searchTotalHeight = layout.contactsSearchTotalHeight or (searchHeight + (searchMargin * 2))
+  local contactsListH = math.max(0, contactsH - searchTotalHeight)
 
   layout.contactsWidth = contactsWidth
 
@@ -293,6 +389,15 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
     end
     layout.contactsResizeHandle:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", -math.floor(handleWidth / 2), 0)
   end
+
+  if layout.contactsSearchFrame then
+    layout.contactsSearchFrame:SetSize(math.max(0, contactsWidth - (searchMargin * 2)), searchHeight)
+    if layout.contactsSearchFrame.ClearAllPoints then
+      layout.contactsSearchFrame:ClearAllPoints()
+    end
+    layout.contactsSearchFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", searchMargin, -searchMargin)
+  end
+
   layout.contentPane:SetSize(contentW, contentH)
   if layout.contentPane.ClearAllPoints then
     layout.contentPane:ClearAllPoints()
@@ -307,11 +412,15 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
   local cv = layout.contactsView
   if cv then
     cv.totalWidth = contactsWidth
-    cv.scrollFrame:SetSize(contactsWidth, contactsH)
-    cv.scrollBar:SetHeight(contactsH)
-    cv.viewportHeight = contactsH
+    if cv.scrollFrame.ClearAllPoints then
+      cv.scrollFrame:ClearAllPoints()
+    end
+    cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
+    cv.scrollFrame:SetSize(contactsWidth, contactsListH)
+    cv.scrollBar:SetHeight(contactsListH)
+    cv.viewportHeight = contactsListH
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
-    Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsH))
+    Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsListH))
   end
 
   -- Resize options overlay to match new window dimensions.
@@ -354,6 +463,7 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
     contactsWidth = contactsWidth,
     contentWidth = contentW,
     contactsHeight = contactsH,
+    contactsListHeight = contactsListH,
     threadHeight = threadH,
   }
 end

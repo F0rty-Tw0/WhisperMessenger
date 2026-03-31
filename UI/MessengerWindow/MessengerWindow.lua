@@ -129,6 +129,9 @@ function MessengerWindow.Create(factory, options)
   local resetIconButton = layout.resetIconButton
   local clearAllChatsButton = layout.clearAllChatsButton
   local contactsView = layout.contactsView
+  local contactsSearchInput = layout.contactsSearchInput
+  local contactsSearchClearButton = layout.contactsSearchClearButton
+  local contactsSearchPlaceholder = layout.contactsSearchPlaceholder
   -- Compose settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
 
@@ -214,11 +217,133 @@ function MessengerWindow.Create(factory, options)
 
   -- Wrapper so the facade keeps a single refreshContacts reference
   local currentSelectedContact = nil
+  local currentContacts = options.contacts or {}
+  local contactsSearchQuery = ""
+
+  local function normalizeSearchQuery(rawText)
+    if type(rawText) ~= "string" then
+      return ""
+    end
+
+    local normalized = string.lower(rawText)
+    normalized = string.gsub(normalized, "^%s+", "")
+    normalized = string.gsub(normalized, "%s+$", "")
+    return normalized
+  end
+
+  local function buildSearchTerms(normalizedQuery)
+    local terms = {}
+    for term in string.gmatch(normalizedQuery, "%S+") do
+      terms[#terms + 1] = term
+    end
+    return terms
+  end
+
+  local function itemMatchesSearch(item, terms)
+    if #terms == 0 then
+      return true
+    end
+    if type(item) ~= "table" then
+      return false
+    end
+
+    local haystack = item.searchText or item.displayName or ""
+    if haystack == "" then
+      return false
+    end
+
+    local loweredHaystack = string.lower(haystack)
+    for _, term in ipairs(terms) do
+      if string.find(loweredHaystack, term, 1, true) == nil then
+        return false
+      end
+    end
+    return true
+  end
+
+  local function isConversationVisible(items, conversationKey)
+    if conversationKey == nil then
+      return false
+    end
+
+    for _, item in ipairs(items or {}) do
+      if item and item.conversationKey == conversationKey then
+        return true
+      end
+    end
+    return false
+  end
+
+  local function syncSearchInputVisual()
+    local hasSearch = contactsSearchQuery ~= ""
+    if contactsSearchPlaceholder and contactsSearchPlaceholder.SetShown then
+      contactsSearchPlaceholder:SetShown(not hasSearch)
+    end
+    if contactsSearchClearButton and contactsSearchClearButton.SetShown then
+      contactsSearchClearButton:SetShown(hasSearch)
+    end
+  end
+
+  local function buildVisibleContacts()
+    local visible = {}
+    local terms = buildSearchTerms(contactsSearchQuery)
+    for _, item in ipairs(currentContacts or {}) do
+      if itemMatchesSearch(item, terms) then
+        visible[#visible + 1] = item
+      end
+    end
+    return visible
+  end
+
   local function refreshContacts(nextContacts, selectedConversationKey, resetPaging)
-    contactsController.rows = contactsController.refresh(nextContacts, selectedConversationKey, resetPaging)
+    if nextContacts ~= nil then
+      currentContacts = nextContacts
+    end
+
+    local visibleContacts = buildVisibleContacts()
+    local selectedKey = selectedConversationKey
+    if selectedKey ~= nil and not isConversationVisible(visibleContacts, selectedKey) then
+      selectedKey = nil
+    end
+
+    contactsController.rows = contactsController.refresh(visibleContacts, selectedKey, resetPaging)
     contacts.rows = contactsController.rows
+    syncSearchInputVisual()
     return contacts.rows
   end
+
+  if contactsSearchInput and contactsSearchInput.SetScript then
+    contactsSearchInput:SetScript("OnTextChanged", function()
+      local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
+      contactsSearchQuery = normalizeSearchQuery(searchText)
+      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
+    end)
+    contactsSearchInput:SetScript("OnEscapePressed", function()
+      if contactsSearchInput.SetText then
+        contactsSearchInput:SetText("")
+      else
+        contactsSearchInput.text = ""
+      end
+      contactsSearchQuery = ""
+      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
+      if contactsSearchInput.ClearFocus then
+        contactsSearchInput:ClearFocus()
+      end
+    end)
+  end
+
+  if contactsSearchClearButton and contactsSearchClearButton.SetScript then
+    contactsSearchClearButton:SetScript("OnClick", function()
+      if contactsSearchInput and contactsSearchInput.SetText then
+        contactsSearchInput:SetText("")
+      elseif contactsSearchInput then
+        contactsSearchInput.text = ""
+      end
+      contactsSearchQuery = ""
+      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
+    end)
+  end
+  syncSearchInputVisual()
 
   -- Conversation pane
   local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
@@ -280,7 +405,6 @@ function MessengerWindow.Create(factory, options)
   local currentConversation = nil
   local currentStatus = nil
   local currentNotice = nil
-  local currentContacts = options.contacts or {}
 
   local function refreshSelection(nextState, resetPaging)
     nextState = nextState or {}
@@ -307,7 +431,7 @@ function MessengerWindow.Create(factory, options)
       composer.relayout(metrics.contentWidth)
     end
     if contactsController and contactsController.fillViewport then
-      contactsController.fillViewport(metrics.contactsHeight)
+      contactsController.fillViewport(metrics.contactsListHeight or metrics.contactsHeight)
     end
     if conversation then
       ConversationPane.Relayout(conversation, metrics.contentWidth, metrics.threadHeight)
@@ -425,6 +549,9 @@ function MessengerWindow.Create(factory, options)
       resetWindowButton = resetWindowButton,
       resetIconButton = resetIconButton,
       clearAllChatsButton = clearAllChatsButton,
+      contactsSearchInput = contactsSearchInput,
+      contactsSearchClearButton = contactsSearchClearButton,
+      contactsSearchPlaceholder = contactsSearchPlaceholder,
       resizeGrip = resizeGrip,
       contactsResizeHandle = contactsResizeHandle,
       contacts = contacts,

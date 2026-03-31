@@ -46,10 +46,12 @@ return function()
   )
 
   -- Contacts scroll view should update
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local expectedContactsListH = expectedContactsH - searchTotalHeight
   assert(
-    window.contacts.scrollFrame.height == expectedContactsH,
+    window.contacts.scrollFrame.height == expectedContactsListH,
     "expected contacts scrollFrame height "
-      .. expectedContactsH
+      .. expectedContactsListH
       .. " but got "
       .. tostring(window.contacts.scrollFrame.height)
   )

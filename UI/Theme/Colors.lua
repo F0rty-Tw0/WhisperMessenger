@@ -6,7 +6,7 @@ end
 local Colors = {
   bg_primary = { 0.07, 0.07, 0.10, 0.97 },
   bg_secondary = { 0.10, 0.10, 0.14, 0.60 },
-  bg_bubble_in = { 0.12, 0.13, 0.18, 0.80 },
+  bg_bubble_in = { 0.18, 0.21, 0.30, 0.92 },
   bg_bubble_out = { 0.15, 0.38, 0.55, 0.80 },
   bg_bubble_system = { 0.14, 0.12, 0.10, 0.65 },
   bg_composer = { 0.09, 0.09, 0.13, 0.60 },
@@ -14,7 +14,7 @@ local Colors = {
   bg_contact_hover = { 0.14, 0.15, 0.22, 0.70 },
   bg_contact_pinned = { 0.14, 0.13, 0.10, 0.72 },
   bg_contact_selected = { 0.16, 0.18, 0.28, 0.80 },
-  bg_input = { 0.12, 0.12, 0.16, 0.70 },
+  bg_input = { 0.17, 0.19, 0.26, 1.0 },
   text_primary = { 0.92, 0.92, 0.95, 1.0 },
   text_secondary = { 0.55, 0.55, 0.62, 1.0 },
   text_sent = { 0.95, 0.95, 0.98, 1.0 },

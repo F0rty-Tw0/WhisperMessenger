@@ -1,5 +1,6 @@
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
+local Theme = require("WhisperMessenger.UI.Theme")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local FakeUI = require("tests.helpers.fake_ui")
@@ -53,11 +54,14 @@ return function()
   local contentHeightBefore = cv.content:GetHeight()
   assert(contentHeightBefore == 960, "precondition: content taller than viewport")
 
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+
   -- Relayout to a new height (window grows: 580 -> 700)
   LayoutBuilder.Relayout(layout, 920, 700)
-  local newContactsH = 700 - 36 -- TOP_BAR_HEIGHT = 36
+  local newContactsH = 700 - Theme.TOP_BAR_HEIGHT
+  local newContactsListH = newContactsH - searchTotalHeight
 
-  assert(cv.scrollFrame:GetHeight() == newContactsH, "expected scrollFrame height to update to new viewport height")
+  assert(cv.scrollFrame:GetHeight() == newContactsListH, "expected scrollFrame height to update to new viewport height")
   assert(
     cv.content:GetHeight() >= contentHeightBefore,
     "expected Relayout to NOT shrink content height below its pre-resize value, got "
@@ -69,9 +73,10 @@ return function()
 
   -- Relayout to a smaller height (window shrinks: 700 -> 450)
   LayoutBuilder.Relayout(layout, 920, 450)
-  local smallContactsH = 450 - 36
+  local smallContactsH = 450 - Theme.TOP_BAR_HEIGHT
+  local smallContactsListH = smallContactsH - searchTotalHeight
 
-  assert(cv.scrollFrame:GetHeight() == smallContactsH, "expected scrollFrame height to update after shrink")
+  assert(cv.scrollFrame:GetHeight() == smallContactsListH, "expected scrollFrame height to update after shrink")
   assert(
     cv.content:GetHeight() >= contentHeightBefore,
     "expected Relayout to NOT shrink content height after shrink, got "

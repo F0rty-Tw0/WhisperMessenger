@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.0.10] - 2026-03-31
+
+- Added contacts-list search with live filtering across character names and message history, plus an inline clear (X) action to reset results.
+- Improved UI contrast for incoming bubbles and unified search/composer input surface styling for clearer readability.
+
 ## [1.0.9] - 2026-03-31
 
 - Added independent contacts-pane resizing with persisted width, plus compact spacing/truncation fixes to prevent overlap in narrow layouts.
