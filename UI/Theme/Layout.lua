@@ -19,7 +19,7 @@ local Layout = {
 
   -- Contacts search
   CONTACT_SEARCH_HEIGHT = 30,
-  CONTACT_SEARCH_MARGIN = 10,
+  CONTACT_SEARCH_MARGIN = 4,
   CONTACT_SEARCH_CLEAR_BUTTON_SIZE = 18,
 
   -- Contact rows

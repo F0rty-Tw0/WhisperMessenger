@@ -20,17 +20,29 @@ return function()
   assert(window.resizeGrip ~= nil, "expected a resize grip")
   assert(window.resizeGrip.mouseEnabled == true, "expected resize grip to accept mouse input")
 
-  -- Mousedown on grip should start sizing the main frame
+  window.frame.GetLeft = function()
+    return 220
+  end
+  window.frame.GetTop = function()
+    return 680
+  end
+  -- Mousedown on grip should start deferred resize preview (no immediate heavy relayout).
   assert(type(window.resizeGrip.scripts.OnMouseDown) == "function", "expected OnMouseDown on resize grip")
   window.resizeGrip.scripts.OnMouseDown(window.resizeGrip, "LeftButton")
-  assert(window.frame.sizingAnchor == "BOTTOMRIGHT", "expected frame to start sizing from BOTTOMRIGHT")
+  assert(window.frame.sizingAnchor == nil, "expected deferred resize mode to avoid native StartSizing during drag")
+  assert(window.resizeGrip.preview ~= nil, "expected deferred resize preview textures")
+  assert(window.resizeGrip.preview.bg.parent ~= window.frame, "expected preview overlay to render outside the main frame alpha")
+  assert(window.resizeGrip.preview.bg:IsShown() == true, "expected resize preview to be visible while dragging")
+  assert(window.frame:GetAlpha() <= 0.08, "expected window alpha to fade strongly during deferred resize drag")
 
-  -- Mouseup should stop sizing and persist
+  -- Mouseup should commit the target size and persist.
   assert(type(window.resizeGrip.scripts.OnMouseUp) == "function", "expected OnMouseUp on resize grip")
   window.resizeGrip.scripts.OnMouseUp(window.resizeGrip, "LeftButton")
-  assert(window.frame.sizing == false, "expected frame to stop sizing")
+  assert(window.resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
+  assert(window.frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
+  assert(window.frame.point[1] == "TOPLEFT", "expected deferred resize commit to keep top-left anchoring")
+  assert(window.frame.point[4] == 220 and window.frame.point[5] == 680, "expected deferred resize commit to keep top-left position")
   assert(positionChanged ~= nil, "expected onPositionChanged to fire after resize")
-
   -- Simulate a resize: change frame size and fire OnSizeChanged
   local newWidth = 1100
   local newHeight = 700
@@ -244,8 +256,24 @@ return function()
       .. tostring(recoveredWindow.frame.height)
   )
 
+  local originalGetCursorPositionOversize = _G.GetCursorPosition
+  _G.GetCursorPosition = function()
+    return 2400, -1600
+  end
+  oversizedWindow.frame.GetLeft = function()
+    return 0
+  end
+  oversizedWindow.frame.GetTop = function()
+    return 0
+  end
+  oversizedWindow.frame.GetEffectiveScale = function()
+    return 1
+  end
+  oversizedWindow.frame.GetEffectiveScale = function()
+    return 1
+  end
   oversizedWindow.resizeGrip.scripts.OnMouseDown(oversizedWindow.resizeGrip, "LeftButton")
-  oversizedWindow.frame:SetSize(2400, 1600)
+  oversizedWindow.frame.scripts.OnUpdate(oversizedWindow.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
   oversizedWindow.resizeGrip.scripts.OnMouseUp(oversizedWindow.resizeGrip, "LeftButton")
 
   assert(clampedState ~= nil, "expected oversized resize attempt to persist a state")
@@ -257,5 +285,6 @@ return function()
     clampedState.height <= _G.UIParent:GetHeight(),
     "expected persisted height to clamp within UIParent height, got " .. tostring(clampedState.height)
   )
+  _G.GetCursorPosition = originalGetCursorPositionOversize
   _G.UIParent = savedUIParent
 end

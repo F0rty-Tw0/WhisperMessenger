@@ -135,7 +135,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local contactsSearchClearButton = factory.CreateFrame("Button", nil, contactsSearchFrame)
   contactsSearchClearButton:SetSize(searchClearButtonSize, searchClearButtonSize)
-  contactsSearchClearButton:SetPoint("RIGHT", contactsSearchFrame, "RIGHT", -6, 0)
+  contactsSearchClearButton:SetPoint("RIGHT", contactsSearchFrame, "RIGHT", -2, 0)
   contactsSearchClearButton:EnableMouse(true)
 
   local contactsSearchClearLabel = contactsSearchClearButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)

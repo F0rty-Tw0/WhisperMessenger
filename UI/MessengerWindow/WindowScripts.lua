@@ -9,6 +9,10 @@ local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.Con
 
 local WindowScripts = {}
 
+local RESIZE_PREVIEW_FILL_ALPHA = 0.20
+local RESIZE_PREVIEW_BORDER_ALPHA = 0.85
+local RESIZE_DRAG_FRAME_ALPHA = 0.08
+
 -- Wire close, options, reset-window, reset-icon, clear-all-chats, and
 -- settings tab buttons.
 --
@@ -155,7 +159,7 @@ end
 --   refreshWindowAlpha, layout, composer, contactsController, conversation,
 --   buildState, trace, onPositionChanged, Theme
 --   relayout (optional), refreshContactsLayout (optional),
---   getCursorX (optional), getFrameLeft (optional)
+--   getCursorX/getCursorY (optional), getFrameLeft/getFrameTop (optional)
 function WindowScripts.WireFrame(refs, options)
   local frame = refs.frame
   local resizeGrip = refs.resizeGrip
@@ -164,6 +168,11 @@ function WindowScripts.WireFrame(refs, options)
   local alphaElapsed = 0
   local frameTheme = options.Theme or Theme
   local resizingContacts = false
+  local resizingWindow = false
+  local pendingWindowWidth = nil
+  local pendingWindowHeight = nil
+  local suppressSizeChangedRelayout = false
+  local preResizeAlpha = nil
 
   local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
     if options.relayout then
@@ -235,6 +244,258 @@ function WindowScripts.WireFrame(refs, options)
     return nil
   end
 
+  local function getCursorY()
+    if options.getCursorY then
+      return options.getCursorY()
+    end
+    if type(_G.GetCursorPosition) ~= "function" then
+      return nil
+    end
+
+    local _, cursorY = _G.GetCursorPosition()
+    local scale = 1
+    if frame and frame.GetEffectiveScale then
+      local effectiveScale = frame:GetEffectiveScale()
+      if type(effectiveScale) == "number" and effectiveScale > 0 then
+        scale = effectiveScale
+      end
+    end
+    return cursorY / scale
+  end
+
+  local function getFrameTop()
+    if options.getFrameTop then
+      return options.getFrameTop()
+    end
+    if frame and frame.GetTop then
+      return frame:GetTop()
+    end
+    return nil
+  end
+
+  local function getFrameParent()
+    if options.getFrameParent then
+      return options.getFrameParent()
+    end
+    if frame and frame.parent then
+      return frame.parent
+    end
+    if _G.UIParent then
+      return _G.UIParent
+    end
+    return nil
+  end
+
+  local function resolveResizeBounds()
+    local minWidth, minHeight = frameTheme.WINDOW_MIN_WIDTH or 640, frameTheme.WINDOW_MIN_HEIGHT or 420
+    local maxWidth, maxHeight = nil, nil
+
+    if frame and type(frame.resizeBounds) == "table" then
+      minWidth = frame.resizeBounds[1] or minWidth
+      minHeight = frame.resizeBounds[2] or minHeight
+      maxWidth = frame.resizeBounds[3]
+      maxHeight = frame.resizeBounds[4]
+    elseif frame and type(frame.minResize) == "table" then
+      minWidth = frame.minResize[1] or minWidth
+      minHeight = frame.minResize[2] or minHeight
+    end
+
+    return minWidth, minHeight, maxWidth, maxHeight
+  end
+
+  local function clampWindowSize(width, height)
+    local minWidth, minHeight, maxWidth, maxHeight = resolveResizeBounds()
+    local clampedWidth = math.max(minWidth, width or minWidth)
+    local clampedHeight = math.max(minHeight, height or minHeight)
+    if type(maxWidth) == "number" and maxWidth > 0 then
+      clampedWidth = math.min(clampedWidth, maxWidth)
+    end
+    if type(maxHeight) == "number" and maxHeight > 0 then
+      clampedHeight = math.min(clampedHeight, maxHeight)
+    end
+    return clampedWidth, clampedHeight
+  end
+
+  local windowResizePreviewHost = getFrameParent() or frame
+  local windowResizePreview = nil
+  if windowResizePreviewHost and windowResizePreviewHost.CreateTexture then
+    local dividerColor = frameTheme.COLORS and frameTheme.COLORS.divider or { 0.20, 0.22, 0.28, 1 }
+    local fillColor = frameTheme.COLORS and frameTheme.COLORS.bg_secondary or { 0.10, 0.10, 0.14, 1 }
+
+    windowResizePreview = {
+      bg = windowResizePreviewHost:CreateTexture(nil, "OVERLAY"),
+      top = windowResizePreviewHost:CreateTexture(nil, "OVERLAY"),
+      bottom = windowResizePreviewHost:CreateTexture(nil, "OVERLAY"),
+      left = windowResizePreviewHost:CreateTexture(nil, "OVERLAY"),
+      right = windowResizePreviewHost:CreateTexture(nil, "OVERLAY"),
+    }
+
+    windowResizePreview.bg:SetColorTexture(fillColor[1], fillColor[2], fillColor[3], RESIZE_PREVIEW_FILL_ALPHA)
+    windowResizePreview.top:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
+    windowResizePreview.bottom:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
+    windowResizePreview.left:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
+    windowResizePreview.right:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
+
+    if resizeGrip then
+      resizeGrip.preview = windowResizePreview
+    end
+    for _, texture in pairs(windowResizePreview) do
+      if texture.Hide then
+        texture:Hide()
+      end
+    end
+  end
+
+  local function setWindowResizePreviewShown(isShown)
+    if not windowResizePreview then
+      return
+    end
+    for _, texture in pairs(windowResizePreview) do
+      if isShown then
+        if texture.Show then
+          texture:Show()
+        end
+      elseif texture.Hide then
+        texture:Hide()
+      end
+    end
+  end
+
+  local function updateWindowResizePreview(width, height)
+    if not windowResizePreview then
+      return
+    end
+
+    local previewLeft = getFrameLeft()
+    local previewTop = getFrameTop()
+    if type(previewLeft) ~= "number" or type(previewTop) ~= "number" then
+      return
+    end
+
+    local previewWidth = math.max(1, width or frameWidth())
+    local previewHeight = math.max(1, height or frameHeight())
+
+    if windowResizePreview.bg.ClearAllPoints then
+      windowResizePreview.bg:ClearAllPoints()
+    end
+    windowResizePreview.bg:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
+    windowResizePreview.bg:SetSize(previewWidth, previewHeight)
+
+    if windowResizePreview.top.ClearAllPoints then
+      windowResizePreview.top:ClearAllPoints()
+    end
+    windowResizePreview.top:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
+    windowResizePreview.top:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
+    windowResizePreview.top:SetHeight(1)
+
+    if windowResizePreview.bottom.ClearAllPoints then
+      windowResizePreview.bottom:ClearAllPoints()
+    end
+    windowResizePreview.bottom:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
+    windowResizePreview.bottom:SetPoint(
+      "BOTTOMRIGHT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft + previewWidth,
+      previewTop - previewHeight
+    )
+    windowResizePreview.bottom:SetHeight(1)
+
+    if windowResizePreview.left.ClearAllPoints then
+      windowResizePreview.left:ClearAllPoints()
+    end
+    windowResizePreview.left:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
+    windowResizePreview.left:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
+    windowResizePreview.left:SetWidth(1)
+
+    if windowResizePreview.right.ClearAllPoints then
+      windowResizePreview.right:ClearAllPoints()
+    end
+    windowResizePreview.right:SetPoint(
+      "TOPRIGHT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft + previewWidth,
+      previewTop
+    )
+    windowResizePreview.right:SetPoint(
+      "BOTTOMRIGHT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft + previewWidth,
+      previewTop - previewHeight
+    )
+    windowResizePreview.right:SetWidth(1)
+
+    setWindowResizePreviewShown(true)
+  end
+
+  local function updateWindowResizeFromCursor()
+    if not resizingWindow then
+      return
+    end
+
+    local cursorX = getCursorX()
+    local cursorY = getCursorY()
+    local frameLeft = getFrameLeft()
+    local frameTop = getFrameTop()
+    if
+      type(cursorX) ~= "number"
+      or type(cursorY) ~= "number"
+      or type(frameLeft) ~= "number"
+      or type(frameTop) ~= "number"
+    then
+      return
+    end
+
+    local nextWidth, nextHeight = clampWindowSize(cursorX - frameLeft, frameTop - cursorY)
+    pendingWindowWidth = nextWidth
+    pendingWindowHeight = nextHeight
+    updateWindowResizePreview(nextWidth, nextHeight)
+  end
+
+  local function stopWindowResize(button)
+    if button ~= "LeftButton" or not resizingWindow then
+      return
+    end
+
+    resizingWindow = false
+    setWindowResizePreviewShown(false)
+    if frame and frame.SetAlpha then
+      frame:SetAlpha(preResizeAlpha or 1)
+      preResizeAlpha = nil
+    end
+
+    local nextWidth, nextHeight = clampWindowSize(pendingWindowWidth or frameWidth(), pendingWindowHeight or frameHeight())
+    pendingWindowWidth = nil
+    pendingWindowHeight = nil
+
+    local stableLeft = getFrameLeft()
+    local stableTop = getFrameTop()
+
+    suppressSizeChangedRelayout = true
+    if frame and frame.SetSize then
+      frame:SetSize(nextWidth, nextHeight)
+    end
+    if
+      frame
+      and frame.ClearAllPoints
+      and frame.SetPoint
+      and type(stableLeft) == "number"
+      and type(stableTop) == "number"
+    then
+      frame:ClearAllPoints()
+      frame:SetPoint("TOPLEFT", getFrameParent(), "BOTTOMLEFT", stableLeft, stableTop)
+    end
+    suppressSizeChangedRelayout = false
+    relayoutWindow(nextWidth, nextHeight, nil, false)
+
+    local nextState = options.buildState(frame)
+    options.trace("window resize stop", nextState.width, nextState.height)
+    if options.onPositionChanged then
+      options.onPositionChanged(nextState)
+    end
+  end
   local function setContactsHandleHighlight(isActive)
     if not contactsResizeHandle then
       return
@@ -337,28 +598,43 @@ function WindowScripts.WireFrame(refs, options)
     frame:SetScript("OnHide", function()
       alphaElapsed = 0
       resizingContacts = false
+      resizingWindow = false
+      pendingWindowWidth = nil
+      pendingWindowHeight = nil
+      preResizeAlpha = nil
       setContactsHandleHighlight(false)
+      setWindowResizePreviewShown(false)
       options.trace("window hidden")
     end)
 
     frame:SetScript("OnEnter", function()
+      if resizingWindow then
+        return
+      end
       options.refreshWindowAlpha(true)
     end)
 
     frame:SetScript("OnLeave", function()
+      if resizingWindow then
+        return
+      end
       options.refreshWindowAlpha()
     end)
 
     frame:SetScript("OnUpdate", function(_, elapsed)
       alphaElapsed = alphaElapsed + (elapsed or 0)
-      if alphaElapsed >= frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
+      if not resizingWindow and alphaElapsed >= frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
         alphaElapsed = 0
         options.refreshWindowAlpha()
       end
       updateContactsResizeFromCursor()
+      updateWindowResizeFromCursor()
     end)
 
     frame:SetScript("OnSizeChanged", function(_self, w, h)
+      if suppressSizeChangedRelayout then
+        return
+      end
       relayoutWindow(w, h, nil, false)
     end)
 
@@ -383,6 +659,7 @@ function WindowScripts.WireFrame(refs, options)
       if previousFrameMouseUp then
         previousFrameMouseUp(self, button)
       end
+      stopWindowResize(button)
       stopContactsResize(button)
     end)
   end
@@ -390,20 +667,24 @@ function WindowScripts.WireFrame(refs, options)
   if resizeGrip and resizeGrip.SetScript then
     resizeGrip:SetScript("OnMouseDown", function(_self, button)
       if button == "LeftButton" then
-        frame:StartSizing("BOTTOMRIGHT")
+        resizingWindow = true
+        pendingWindowWidth, pendingWindowHeight = clampWindowSize(frameWidth(), frameHeight())
+        if frame and frame.GetAlpha then
+          preResizeAlpha = frame:GetAlpha()
+        else
+          preResizeAlpha = 1
+        end
+        if frame and frame.SetAlpha then
+          frame:SetAlpha(RESIZE_DRAG_FRAME_ALPHA)
+        end
+        updateWindowResizeFromCursor()
+        updateWindowResizePreview(pendingWindowWidth, pendingWindowHeight)
         options.trace("window resize start")
       end
     end)
 
     resizeGrip:SetScript("OnMouseUp", function(_self, button)
-      if button == "LeftButton" then
-        frame:StopMovingOrSizing()
-        local nextState = options.buildState(frame)
-        options.trace("window resize stop", nextState.width, nextState.height)
-        if options.onPositionChanged then
-          options.onPositionChanged(nextState)
-        end
-      end
+      stopWindowResize(button)
     end)
   end
 
