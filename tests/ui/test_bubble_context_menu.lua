@@ -132,7 +132,10 @@ return function()
     assert(type(easyMenuCall.menuList) == "table", "menu list should be a table")
     assert(easyMenuCall.menuList[1] ~= nil, "menu should include first entry")
     assert(type(easyMenuCall.menuList[1].text) == "string", "menu entry text should be a string")
-    assert(string.find(easyMenuCall.menuList[1].text, "Copy Text", 1, true) ~= nil, "menu should expose Copy Text action")
+    assert(
+      string.find(easyMenuCall.menuList[1].text, "Copy Text", 1, true) ~= nil,
+      "menu should expose Copy Text action"
+    )
     assert(type(easyMenuCall.menuList[1].func) == "function", "Copy Text entry should be callable")
 
     easyMenuCall.menuList[1].func()

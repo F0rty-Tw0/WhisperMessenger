@@ -37,9 +37,11 @@ local function styleManualCopyDialog(dialog)
     return
   end
 
-  if dialog._wmRoundedBackground == nil
+  if
+    dialog._wmRoundedBackground == nil
     and type(dialog.CreateTexture) == "function"
-    and type(UIHelpers.createRoundedBackground) == "function" then
+    and type(UIHelpers.createRoundedBackground) == "function"
+  then
     dialog._wmRoundedBackground = UIHelpers.createRoundedBackground(dialog, 10)
   end
 
@@ -306,10 +308,12 @@ function ContextMenu.Open(text, anchorFrame)
     return true
   end
 
-  if type(_G.UIDropDownMenu_Initialize) ~= "function"
+  if
+    type(_G.UIDropDownMenu_Initialize) ~= "function"
     or type(_G.UIDropDownMenu_CreateInfo) ~= "function"
     or type(_G.UIDropDownMenu_AddButton) ~= "function"
-    or type(_G.ToggleDropDownMenu) ~= "function" then
+    or type(_G.ToggleDropDownMenu) ~= "function"
+  then
     return false
   end
 

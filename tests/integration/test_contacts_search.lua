@@ -62,7 +62,10 @@ return function()
   window.contactsSearchInput:SetText("stormwind")
   window.contactsSearchInput.scripts.OnTextChanged(window.contactsSearchInput)
   assert(window.contacts.content.visibleCount == 1, "search by message keyword should narrow contacts")
-  assert(window.contacts.rows[1].item.displayName == "Jaina-Proudmoore", "keyword search should match Jaina conversation")
+  assert(
+    window.contacts.rows[1].item.displayName == "Jaina-Proudmoore",
+    "keyword search should match Jaina conversation"
+  )
 
   -- Clear via the X button and verify full list restoration.
   window.contactsSearchClearButton.scripts.OnClick(window.contactsSearchClearButton)

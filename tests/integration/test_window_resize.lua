@@ -31,7 +31,10 @@ return function()
   window.resizeGrip.scripts.OnMouseDown(window.resizeGrip, "LeftButton")
   assert(window.frame.sizingAnchor == nil, "expected deferred resize mode to avoid native StartSizing during drag")
   assert(window.resizeGrip.preview ~= nil, "expected deferred resize preview textures")
-  assert(window.resizeGrip.preview.bg.parent ~= window.frame, "expected preview overlay to render outside the main frame alpha")
+  assert(
+    window.resizeGrip.preview.bg.parent ~= window.frame,
+    "expected preview overlay to render outside the main frame alpha"
+  )
   assert(window.resizeGrip.preview.bg:IsShown() == true, "expected resize preview to be visible while dragging")
   assert(window.frame:GetAlpha() <= 0.08, "expected window alpha to fade strongly during deferred resize drag")
 
@@ -41,7 +44,10 @@ return function()
   assert(window.resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
   assert(window.frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
   assert(window.frame.point[1] == "TOPLEFT", "expected deferred resize commit to keep top-left anchoring")
-  assert(window.frame.point[4] == 220 and window.frame.point[5] == 680, "expected deferred resize commit to keep top-left position")
+  assert(
+    window.frame.point[4] == 220 and window.frame.point[5] == 680,
+    "expected deferred resize commit to keep top-left position"
+  )
   assert(positionChanged ~= nil, "expected onPositionChanged to fire after resize")
   -- Simulate a resize: change frame size and fire OnSizeChanged
   local newWidth = 1100
@@ -58,7 +64,8 @@ return function()
   )
 
   -- Contacts scroll view should update
-  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
+    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
   local expectedContactsListH = expectedContactsH - searchTotalHeight
   assert(
     window.contacts.scrollFrame.height == expectedContactsListH,

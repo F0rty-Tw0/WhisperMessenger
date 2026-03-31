@@ -88,9 +88,18 @@ return function()
   assert(window.composer.sendButton.point[1] == "BOTTOMRIGHT")
   assert(window.composer.sendButton.width ~= nil)
   assert(window.composer.inputBg.color ~= nil, "expected composer input background color")
-  assert(window.composer.inputBg.color[1] == Theme.COLORS.bg_input[1], "composer input red channel should match bg_input")
-  assert(window.composer.inputBg.color[2] == Theme.COLORS.bg_input[2], "composer input green channel should match bg_input")
-  assert(window.composer.inputBg.color[3] == Theme.COLORS.bg_input[3], "composer input blue channel should match bg_input")
+  assert(
+    window.composer.inputBg.color[1] == Theme.COLORS.bg_input[1],
+    "composer input red channel should match bg_input"
+  )
+  assert(
+    window.composer.inputBg.color[2] == Theme.COLORS.bg_input[2],
+    "composer input green channel should match bg_input"
+  )
+  assert(
+    window.composer.inputBg.color[3] == Theme.COLORS.bg_input[3],
+    "composer input blue channel should match bg_input"
+  )
   assert(window.composer.inputBg.color[4] == Theme.COLORS.bg_input[4], "composer input alpha should match bg_input")
   _G.UIParent = savedUIParent
 

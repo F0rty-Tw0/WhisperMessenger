@@ -331,10 +331,30 @@ function WindowScripts.WireFrame(refs, options)
     }
 
     windowResizePreview.bg:SetColorTexture(fillColor[1], fillColor[2], fillColor[3], RESIZE_PREVIEW_FILL_ALPHA)
-    windowResizePreview.top:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
-    windowResizePreview.bottom:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
-    windowResizePreview.left:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
-    windowResizePreview.right:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], RESIZE_PREVIEW_BORDER_ALPHA)
+    windowResizePreview.top:SetColorTexture(
+      dividerColor[1],
+      dividerColor[2],
+      dividerColor[3],
+      RESIZE_PREVIEW_BORDER_ALPHA
+    )
+    windowResizePreview.bottom:SetColorTexture(
+      dividerColor[1],
+      dividerColor[2],
+      dividerColor[3],
+      RESIZE_PREVIEW_BORDER_ALPHA
+    )
+    windowResizePreview.left:SetColorTexture(
+      dividerColor[1],
+      dividerColor[2],
+      dividerColor[3],
+      RESIZE_PREVIEW_BORDER_ALPHA
+    )
+    windowResizePreview.right:SetColorTexture(
+      dividerColor[1],
+      dividerColor[2],
+      dividerColor[3],
+      RESIZE_PREVIEW_BORDER_ALPHA
+    )
 
     if resizeGrip then
       resizeGrip.preview = windowResizePreview
@@ -385,13 +405,25 @@ function WindowScripts.WireFrame(refs, options)
       windowResizePreview.top:ClearAllPoints()
     end
     windowResizePreview.top:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
-    windowResizePreview.top:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
+    windowResizePreview.top:SetPoint(
+      "TOPRIGHT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft + previewWidth,
+      previewTop
+    )
     windowResizePreview.top:SetHeight(1)
 
     if windowResizePreview.bottom.ClearAllPoints then
       windowResizePreview.bottom:ClearAllPoints()
     end
-    windowResizePreview.bottom:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
+    windowResizePreview.bottom:SetPoint(
+      "BOTTOMLEFT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft,
+      previewTop - previewHeight
+    )
     windowResizePreview.bottom:SetPoint(
       "BOTTOMRIGHT",
       windowResizePreviewHost,
@@ -405,7 +437,13 @@ function WindowScripts.WireFrame(refs, options)
       windowResizePreview.left:ClearAllPoints()
     end
     windowResizePreview.left:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
-    windowResizePreview.left:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
+    windowResizePreview.left:SetPoint(
+      "BOTTOMLEFT",
+      windowResizePreviewHost,
+      "BOTTOMLEFT",
+      previewLeft,
+      previewTop - previewHeight
+    )
     windowResizePreview.left:SetWidth(1)
 
     if windowResizePreview.right.ClearAllPoints then
@@ -466,7 +504,8 @@ function WindowScripts.WireFrame(refs, options)
       preResizeAlpha = nil
     end
 
-    local nextWidth, nextHeight = clampWindowSize(pendingWindowWidth or frameWidth(), pendingWindowHeight or frameHeight())
+    local nextWidth, nextHeight =
+      clampWindowSize(pendingWindowWidth or frameWidth(), pendingWindowHeight or frameHeight())
     pendingWindowWidth = nil
     pendingWindowHeight = nil
 

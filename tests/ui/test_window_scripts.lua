@@ -417,7 +417,10 @@ return function()
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     assert(frame.sizingAnchor == nil, "expected deferred resize to avoid native StartSizing")
-    assert(resizeGrip.preview ~= nil and resizeGrip.preview.bg:IsShown(), "expected resize preview to be visible during drag")
+    assert(
+      resizeGrip.preview ~= nil and resizeGrip.preview.bg:IsShown(),
+      "expected resize preview to be visible during drag"
+    )
     assert(resizeGrip.preview.bg.parent ~= frame, "expected resize preview to live outside the resized frame")
     assert(frame:GetAlpha() <= 0.08, "expected window alpha to fade during deferred resize drag")
     frame.scripts.OnLeave(frame)
@@ -429,11 +432,20 @@ return function()
     assert(resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
     assert(frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
     assert(relayoutArgs ~= nil, "expected relayout to run when deferred resize commits")
-    assert(relayoutArgs.width == 1100 and relayoutArgs.height == 660, "expected committed resize dimensions from preview")
+    assert(
+      relayoutArgs.width == 1100 and relayoutArgs.height == 660,
+      "expected committed resize dimensions from preview"
+    )
     assert(frame.point[1] == "TOPLEFT", "expected deferred resize commit to preserve top-left anchor")
-    assert(frame.point[4] == 100 and frame.point[5] == 760, "expected deferred resize commit to preserve top-left position")
+    assert(
+      frame.point[4] == 100 and frame.point[5] == 760,
+      "expected deferred resize commit to preserve top-left position"
+    )
     assert(persistedState ~= nil, "expected committed resize to persist state")
-    assert(persistedState.width == 1100 and persistedState.height == 660, "expected persisted dimensions to match committed preview")
+    assert(
+      persistedState.width == 1100 and persistedState.height == 660,
+      "expected persisted dimensions to match committed preview"
+    )
   end
   -- -----------------------------------------------------------------------
   -- test_wire_frame_wires_contacts_resize_handle_and_persists_width

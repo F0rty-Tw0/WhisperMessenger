@@ -26,7 +26,10 @@ return function()
   -- Initial visible count should be based on viewport, not hardcoded 10
   local contactsH = Theme.WINDOW_HEIGHT - Theme.TOP_BAR_HEIGHT
   local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
-  local expectedInitial = math.ceil(contactsH / rowH) + 1
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
+    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local contactsListH = math.max(0, contactsH - searchTotalHeight)
+  local expectedInitial = math.ceil(contactsListH / rowH) + 1
   if expectedInitial > 20 then
     expectedInitial = 20
   end
@@ -47,7 +50,8 @@ return function()
   window.frame.scripts.OnSizeChanged(window.frame, Theme.WINDOW_WIDTH, tallHeight)
 
   local tallContactsH = tallHeight - Theme.TOP_BAR_HEIGHT
-  local expectedTall = math.ceil(tallContactsH / rowH) + 1
+  local tallContactsListH = math.max(0, tallContactsH - searchTotalHeight)
+  local expectedTall = math.ceil(tallContactsListH / rowH) + 1
   if expectedTall > 20 then
     expectedTall = 20
   end
