@@ -87,7 +87,9 @@ return function()
     )
     assert(
       editBox.chatType == expected.stickyType,
-      "expected " .. caseLabel .. " chatType restored to sticky "
+      "expected "
+        .. caseLabel
+        .. " chatType restored to sticky "
         .. expected.stickyType
         .. ", got "
         .. tostring(editBox.chatType)
@@ -97,10 +99,7 @@ return function()
       "expected " .. caseLabel .. " secure chatType restored to sticky " .. expected.stickyType
     )
     assert(editBox.tellTarget == nil, "expected " .. caseLabel .. " tellTarget cleared")
-    assert(
-      editBox:GetAttribute("tellTarget") == nil,
-      "expected " .. caseLabel .. " secure tellTarget cleared"
-    )
+    assert(editBox:GetAttribute("tellTarget") == nil, "expected " .. caseLabel .. " secure tellTarget cleared")
     assert(editBox:GetText() == "", "expected " .. caseLabel .. " Blizzard edit box text to be cleared")
     assert(editBox.shown == false, "expected " .. caseLabel .. " whisper edit box to hide")
     assert(editBox:HasFocus() == false, "expected " .. caseLabel .. " whisper edit box to lose focus")

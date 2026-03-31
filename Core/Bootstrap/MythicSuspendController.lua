@@ -18,10 +18,8 @@ function MythicSuspendController.Attach(runtime, deps)
   local isWindowVisible = deps.isWindowVisible or function()
     return false
   end
-  local setWindowVisible = deps.setWindowVisible or function()
-  end
-  local refreshWindow = deps.refreshWindow or function()
-  end
+  local setWindowVisible = deps.setWindowVisible or function() end
+  local refreshWindow = deps.refreshWindow or function() end
 
   runtime.suspend = function()
     runtime.messagingNotice = deps.mythicPauseNotice or DEFAULT_MYTHIC_PAUSE_NOTICE

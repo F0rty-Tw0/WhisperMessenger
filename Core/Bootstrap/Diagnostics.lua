@@ -198,7 +198,8 @@ function Diagnostics.Create(deps)
         bnetAccountID = conversation.bnetAccountID,
       },
     }
-    local contactEnricher = deps.contactEnricher or loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
+    local contactEnricher = deps.contactEnricher
+      or loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
     contactEnricher.EnrichContactsAvailability(testContacts, runtime)
     local enriched = testContacts[1].availability
     trace("[enriched] final availability (what the UI displays):")

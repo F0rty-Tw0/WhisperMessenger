@@ -90,8 +90,7 @@ return function()
   local function initializeRuntime()
     calls[#calls + 1] = "initializeRuntime"
     Bootstrap.runtime = {
-      refreshWindow = function()
-      end,
+      refreshWindow = function() end,
       autoOpenCoordinator = {
         installDeferredPoller = function()
           calls[#calls + 1] = "installDeferredPoller"
@@ -107,8 +106,7 @@ return function()
     createFrame = createFrame,
     initializeRuntime = initializeRuntime,
     loadModule = loadModule,
-    trace = function()
-    end,
+    trace = function() end,
   })
 
   assert(frame ~= nil, "expected load frame from install")

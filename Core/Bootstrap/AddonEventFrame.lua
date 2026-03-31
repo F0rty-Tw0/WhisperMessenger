@@ -22,14 +22,14 @@ function AddonEventFrame.Install(deps)
     return nil
   end
 
-  local loadModule = deps.loadModule or function(name, key)
-    error((key or name or "module") .. " module not available")
-  end
+  local loadModule = deps.loadModule
+    or function(name, key)
+      error((key or name or "module") .. " module not available")
+    end
   local initializeRuntime = deps.initializeRuntime or function()
     return Bootstrap.runtime
   end
-  local trace = deps.trace or function()
-  end
+  local trace = deps.trace or function() end
   local targetAddonName = deps.addonName or addonName
 
   local loadFrame = createFrame("Frame", "WhisperMessengerLoadFrame")
@@ -82,16 +82,19 @@ function AddonEventFrame.Install(deps)
       "WhisperMessenger.Core.Bootstrap.LifecycleHandlers",
       "BootstrapLifecycleHandlers"
     )
-    if LifecycleHandlers and LifecycleHandlers.Handle(Bootstrap, event, {
-      loadModule = loadModule,
-      trace = trace,
-      getContentDetector = function()
-        return ns.ContentDetector
-      end,
-      getPresenceCache = function()
-        return ns.PresenceCache
-      end,
-    }) then
+    if
+      LifecycleHandlers
+      and LifecycleHandlers.Handle(Bootstrap, event, {
+        loadModule = loadModule,
+        trace = trace,
+        getContentDetector = function()
+          return ns.ContentDetector
+        end,
+        getPresenceCache = function()
+          return ns.PresenceCache
+        end,
+      })
+    then
       return
     end
 

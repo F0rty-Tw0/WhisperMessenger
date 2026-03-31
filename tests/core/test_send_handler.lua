@@ -10,7 +10,6 @@ return function()
     return false
   end
 
-
   local runtime = {
     sendStatusByConversation = {},
     pendingOutgoing = {},

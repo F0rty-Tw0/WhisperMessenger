@@ -109,7 +109,6 @@ function Bootstrap.Initialize(factory, options)
   })
   windowRuntime.setDiagnostics(diagnostics)
 
-
   AutoOpenCoordinator.Attach({
     trace = trace,
     runtime = runtime,
@@ -147,7 +146,6 @@ function Bootstrap.Initialize(factory, options)
   })
 
   return runtime
-
 end
 
 local function initializeRuntime()

@@ -60,10 +60,7 @@ local function appendBlockedOutgoing(runtime, payload, reason)
   conversation.lastActivityAt = blockedMessage.sentAt
   conversation.displayName = blockedMessage.playerName or conversation.displayName
   conversation.channel = blockedMessage.channel or conversation.channel
-
-
 end
-
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   runtime.sendStatusByConversation[payload.conversationKey] = nil

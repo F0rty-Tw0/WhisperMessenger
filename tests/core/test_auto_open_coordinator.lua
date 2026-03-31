@@ -172,7 +172,6 @@ return function()
     return 1
   end
 
-
   coordinator.installDeferredPoller()
   assert(#timerCallbacks == 1 and timerCallbacks[1].delaySeconds == 0, "expected deferred poller timer callback")
 
@@ -260,7 +259,6 @@ return function()
   assert(bnEditBox:GetAttribute("tellTarget") == nil, "expected BN tell target cleared in secure state")
   assert(bnEditBox:GetText() == "", "expected BN intercepted edit box text cleared")
   assert(bnEditBox:HasFocus() == false, "expected BN intercepted edit box to lose focus")
-
 
   _G.CreateFrame = savedGlobals.CreateFrame
   _G.C_Timer = savedGlobals.C_Timer

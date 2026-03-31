@@ -243,16 +243,40 @@ return function()
 
   runtime.setWindowVisible(true)
   capturedWindowOptions.onSelectConversation(conversationKey)
-  assert(runtime.activeConversationKey == conversationKey, "expected selectConversation to update runtime activeConversationKey")
-  assert(characterState.activeConversationKey == conversationKey, "expected selectConversation to persist character activeConversationKey")
-  assert(#markedRead == 1 and markedRead[1] == conversationKey, "expected selectConversation to mark the conversation read")
-  assert(#presenceRefreshes == 1 and presenceRefreshes[1] == "Player-1-00000001", "expected selectConversation to refresh presence")
-  assert(#availabilityRequests == 1 and availabilityRequests[1] == "Player-1-00000001", "expected selectConversation to request availability for WOW contacts")
-  assert(#debugCalls == 1 and debugCalls[1] == conversationKey, "expected selectConversation to invoke diagnostics.debugContact")
-  assert(runtime.isConversationOpen(conversationKey) == true, "expected conversation to report open when visible and selected")
+  assert(
+    runtime.activeConversationKey == conversationKey,
+    "expected selectConversation to update runtime activeConversationKey"
+  )
+  assert(
+    characterState.activeConversationKey == conversationKey,
+    "expected selectConversation to persist character activeConversationKey"
+  )
+  assert(
+    #markedRead == 1 and markedRead[1] == conversationKey,
+    "expected selectConversation to mark the conversation read"
+  )
+  assert(
+    #presenceRefreshes == 1 and presenceRefreshes[1] == "Player-1-00000001",
+    "expected selectConversation to refresh presence"
+  )
+  assert(
+    #availabilityRequests == 1 and availabilityRequests[1] == "Player-1-00000001",
+    "expected selectConversation to request availability for WOW contacts"
+  )
+  assert(
+    #debugCalls == 1 and debugCalls[1] == conversationKey,
+    "expected selectConversation to invoke diagnostics.debugContact"
+  )
+  assert(
+    runtime.isConversationOpen(conversationKey) == true,
+    "expected conversation to report open when visible and selected"
+  )
 
   runtime.setComposerText("draft reply")
-  assert(runtime.window.composer.input:GetText() == "draft reply", "expected setComposerText to write into the composer")
+  assert(
+    runtime.window.composer.input:GetText() == "draft reply",
+    "expected setComposerText to write into the composer"
+  )
 
   runtime.setWindowVisible(false)
   assert(runtime.isConversationOpen(conversationKey) == false, "expected conversation to report closed when hidden")

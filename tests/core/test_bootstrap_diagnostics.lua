@@ -127,8 +127,7 @@ return function()
     isWindowVisible = function()
       return true
     end,
-    updateAddOnMemoryUsage = function()
-    end,
+    updateAddOnMemoryUsage = function() end,
     getAddOnMemoryUsage = function(name)
       memoryUsageQueries[#memoryUsageQueries + 1] = name
       return (#memoryUsageQueries == 1) and 12.5 or 8.5
@@ -161,9 +160,24 @@ return function()
   assert(gcCalls[2] == "count", "memoryReport should report Lua memory usage")
 
   local joined = table.concat(traces, "\n")
-  assert(string.find(joined, "--- Contact Debug ---", 1, true) ~= nil, "debugContact should preserve the contact debug header")
-  assert(string.find(joined, "[enriched] final availability (what the UI displays):", 1, true) ~= nil, "debugContact should report enriched availability")
-  assert(string.find(joined, "=== WhisperMessenger Memory Report ===", 1, true) ~= nil, "memoryReport should print the memory report header")
-  assert(string.find(joined, "Frames: 2 active / 1 free / 3 total  |  regions: 8", 1, true) ~= nil, "memoryReport should include frame pool region counts")
-  assert(string.find(joined, "=== End Memory Report ===", 1, true) ~= nil, "memoryReport should print the memory report footer")
+  assert(
+    string.find(joined, "--- Contact Debug ---", 1, true) ~= nil,
+    "debugContact should preserve the contact debug header"
+  )
+  assert(
+    string.find(joined, "[enriched] final availability (what the UI displays):", 1, true) ~= nil,
+    "debugContact should report enriched availability"
+  )
+  assert(
+    string.find(joined, "=== WhisperMessenger Memory Report ===", 1, true) ~= nil,
+    "memoryReport should print the memory report header"
+  )
+  assert(
+    string.find(joined, "Frames: 2 active / 1 free / 3 total  |  regions: 8", 1, true) ~= nil,
+    "memoryReport should include frame pool region counts"
+  )
+  assert(
+    string.find(joined, "=== End Memory Report ===", 1, true) ~= nil,
+    "memoryReport should print the memory report footer"
+  )
 end

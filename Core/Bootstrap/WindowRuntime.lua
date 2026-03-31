@@ -37,12 +37,14 @@ function WindowRuntime.Create(options)
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
 
-  local markConversationRead = options.markConversationRead or function(store, conversationKey)
-    return Store.MarkRead(store, conversationKey)
-  end
-  local requestAvailability = options.requestAvailability or function(chatApi, guid)
-    return WhisperGateway.RequestAvailability(chatApi, guid)
-  end
+  local markConversationRead = options.markConversationRead
+    or function(store, conversationKey)
+      return Store.MarkRead(store, conversationKey)
+    end
+  local requestAvailability = options.requestAvailability
+    or function(chatApi, guid)
+      return WhisperGateway.RequestAvailability(chatApi, guid)
+    end
 
   local diagnostics = options.diagnostics or {}
   local window
