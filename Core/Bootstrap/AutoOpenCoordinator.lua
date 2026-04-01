@@ -315,7 +315,8 @@ function AutoOpenCoordinator.Attach(options)
       bnetApi = options.bnetApi or _G.C_BattleNet,
       getNumFriends = options.BNGetNumFriends
         or (
-          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends or function()
+          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
+          or function()
             return 0, 0
           end
         ),
