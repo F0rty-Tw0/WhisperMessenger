@@ -7,8 +7,42 @@ local Colors = ns.ThemeColors or require("WhisperMessenger.UI.Theme.Colors")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Layout = ns.ThemeLayout or require("WhisperMessenger.UI.Theme.Layout")
 local ThemeTextures = ns.ThemeTextures or require("WhisperMessenger.UI.Theme.Textures")
+local ThemePresets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
 
 local Theme = {}
+Theme.DEFAULT_PRESET = ThemePresets.WOW_DEFAULT or "wow_default"
+local activePresetKey = Theme.DEFAULT_PRESET
+local function isValidColorToken(token)
+  return type(token) == "table"
+    and type(token[1]) == "number"
+    and type(token[2]) == "number"
+    and type(token[3]) == "number"
+    and type(token[4]) == "number"
+end
+
+local function canApplyPreset(preset)
+  if type(preset) ~= "table" then
+    return false
+  end
+
+  for key, current in pairs(Theme.COLORS) do
+    if type(current) ~= "table" or not isValidColorToken(preset[key]) then
+      return false
+    end
+  end
+
+  return true
+end
+
+local function applyPresetColors(preset)
+  for key, current in pairs(Theme.COLORS) do
+    local token = preset[key]
+    current[1] = token[1]
+    current[2] = token[2]
+    current[3] = token[3]
+    current[4] = token[4]
+  end
+end
 
 -- Legacy flat constants
 Theme.TITLE = "WM"
@@ -23,6 +57,47 @@ Theme.LAYOUT = Layout
 Theme.TEXTURES = ThemeTextures.TEXTURES
 Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
+
+function Theme.ListPresets()
+  return ThemePresets.ListKeys()
+end
+
+function Theme.GetPreset()
+  return activePresetKey
+end
+
+function Theme.SetPreset(presetKey)
+  local preset = ThemePresets.Get(presetKey)
+  if not canApplyPreset(preset) then
+    return false
+  end
+
+  applyPresetColors(preset)
+  activePresetKey = presetKey
+  return true
+end
+
+function Theme.ResolvePreset(requestedKey, trace)
+  local fallbackKey = Theme.DEFAULT_PRESET
+  local targetKey = requestedKey or fallbackKey
+
+  if Theme.SetPreset(targetKey) then
+    return targetKey, true
+  end
+
+  if targetKey ~= fallbackKey and Theme.SetPreset(fallbackKey) then
+    if trace then
+      trace("theme preset fallback", tostring(targetKey), "->", tostring(fallbackKey))
+    end
+    return fallbackKey, true
+  end
+
+  local activeKey = Theme.GetPreset() or fallbackKey
+  if trace then
+    trace("theme preset apply failed", tostring(targetKey), "active=" .. tostring(activeKey))
+  end
+  return activeKey, false
+end
 
 -- Backward-compatible flat aliases
 Theme.WINDOW_WIDTH = Layout.WINDOW_WIDTH

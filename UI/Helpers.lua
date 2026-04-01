@@ -37,6 +37,69 @@ function UIHelpers.applyColorTexture(region, colorTable)
   end
 end
 
+function UIHelpers.createBorderBox(frame, colorTable, thickness, layer, edges)
+  if not frame or type(frame.CreateTexture) ~= "function" then
+    return nil
+  end
+
+  local edgeThickness = thickness or 1
+  local drawLayer = layer or "BORDER"
+  local enabled = edges or { top = true, left = true, right = true, bottom = true }
+  local border = {}
+  if enabled.top ~= false then
+    border.top = frame:CreateTexture(nil, drawLayer)
+  end
+  if enabled.left ~= false then
+    border.left = frame:CreateTexture(nil, drawLayer)
+  end
+  if enabled.right ~= false then
+    border.right = frame:CreateTexture(nil, drawLayer)
+  end
+  if enabled.bottom ~= false then
+    border.bottom = frame:CreateTexture(nil, drawLayer)
+  end
+
+  if border.top then
+    border.top:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    border.top:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    border.top:SetHeight(edgeThickness)
+  end
+
+  if border.left then
+    border.left:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    border.left:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+    border.left:SetWidth(edgeThickness)
+  end
+
+  if border.right then
+    border.right:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
+    border.right:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    border.right:SetWidth(edgeThickness)
+  end
+
+  if border.bottom then
+    border.bottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+    border.bottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    border.bottom:SetHeight(edgeThickness)
+  end
+
+  if colorTable then
+    UIHelpers.applyBorderBoxColor(border, colorTable)
+  end
+
+  return border
+end
+
+function UIHelpers.applyBorderBoxColor(border, colorTable)
+  if type(border) ~= "table" or not colorTable then
+    return
+  end
+
+  for _, edge in pairs(border) do
+    UIHelpers.applyColorTexture(edge, colorTable)
+  end
+end
+
 function UIHelpers.applyVertexColor(region, colorTable)
   if not region or not colorTable then
     return
@@ -117,10 +180,6 @@ function UIHelpers.createCircularIcon(factory, parent, size)
 end
 
 function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
-  local bgColor = colors.bg
-  local bgHover = colors.bgHover
-  local textColor = colors.text
-  local textHover = colors.textHover
   local btnHeight = layout.height or 30
   local btnWidth = layout.width or 200
 
@@ -129,23 +188,65 @@ function UIHelpers.createOptionButton(factory, parent, label, colors, layout)
 
   local bg = button:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints(button)
-  UIHelpers.applyColorTexture(bg, bgColor)
 
   local labelFs = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("CENTER", button, "CENTER", 0, 0)
   labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, textColor)
+
+  button._wmHovered = false
+  button._wmColors = {
+    bg = colors.bg,
+    bgHover = colors.bgHover or colors.bg,
+    text = colors.text,
+    textHover = colors.textHover or colors.text,
+  }
+
+  local function applyBaseState()
+    local palette = button._wmColors
+    UIHelpers.applyColorTexture(bg, palette.bg)
+    UIHelpers.setTextColor(labelFs, palette.text)
+  end
+
+  local function applyHoverState()
+    local palette = button._wmColors
+    UIHelpers.applyColorTexture(bg, palette.bgHover or palette.bg)
+    UIHelpers.setTextColor(labelFs, palette.textHover or palette.text)
+  end
+
+  button.applyThemeColors = function(nextColors)
+    if type(nextColors) == "table" then
+      if nextColors.bg ~= nil then
+        button._wmColors.bg = nextColors.bg
+      end
+      if nextColors.bgHover ~= nil then
+        button._wmColors.bgHover = nextColors.bgHover
+      end
+      if nextColors.text ~= nil then
+        button._wmColors.text = nextColors.text
+      end
+      if nextColors.textHover ~= nil then
+        button._wmColors.textHover = nextColors.textHover
+      end
+    end
+
+    if button._wmHovered then
+      applyHoverState()
+    else
+      applyBaseState()
+    end
+  end
 
   button:SetScript("OnEnter", function()
-    UIHelpers.applyColorTexture(bg, bgHover)
-    UIHelpers.setTextColor(labelFs, textHover)
+    button._wmHovered = true
+    applyHoverState()
   end)
 
   button:SetScript("OnLeave", function()
-    UIHelpers.applyColorTexture(bg, bgColor)
-    UIHelpers.setTextColor(labelFs, textColor)
+    button._wmHovered = false
+    applyBaseState()
   end)
 
+  applyBaseState()
   button.bg = bg
   button.label = labelFs
 
@@ -163,21 +264,35 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("LEFT", row, "LEFT", 0, 0)
   labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, colors.text)
 
   local dot = factory.CreateFrame("Button", nil, row)
   dot:SetSize(dotSize, dotSize)
   dot:SetPoint("RIGHT", row, "RIGHT", 0, 0)
 
+  local dotBorder = dot:CreateTexture(nil, "BORDER")
+  dotBorder:SetAllPoints(dot)
+
   local dotBg = dot:CreateTexture(nil, "BACKGROUND")
-  dotBg:SetAllPoints(dot)
+  dotBg:SetPoint("TOPLEFT", dot, "TOPLEFT", 1, -1)
+  dotBg:SetPoint("BOTTOMRIGHT", dot, "BOTTOMRIGHT", -1, 1)
+
+  row._wmColors = {
+    text = colors.text,
+    on = colors.on or Theme.COLORS.option_toggle_on or Theme.COLORS.online or { 0.30, 0.82, 0.40, 1.0 },
+    off = colors.off or Theme.COLORS.option_toggle_off or Theme.COLORS.offline or { 0.45, 0.45, 0.50, 1.0 },
+    border = colors.border or Theme.COLORS.option_toggle_border or Theme.COLORS.divider or { 0.55, 0.57, 0.64, 0.90 },
+  }
 
   local enabled = initial == true
   local function updateVisual()
+    UIHelpers.setTextColor(labelFs, row._wmColors.text)
     if enabled then
-      UIHelpers.applyColorTexture(dotBg, colors.on or { 0.30, 0.82, 0.40, 1.0 })
+      -- Use the active color on the border too so checked toggles read clearly at a glance.
+      UIHelpers.applyColorTexture(dotBorder, row._wmColors.on)
+      UIHelpers.applyColorTexture(dotBg, row._wmColors.on)
     else
-      UIHelpers.applyColorTexture(dotBg, colors.off or { 0.45, 0.45, 0.50, 1.0 })
+      UIHelpers.applyColorTexture(dotBorder, row._wmColors.border)
+      UIHelpers.applyColorTexture(dotBg, row._wmColors.off)
     end
   end
   updateVisual()
@@ -215,11 +330,30 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
     row = row,
     label = labelFs,
     dot = dot,
+    dotBg = dotBg,
+    dotBorder = dotBorder,
     getValue = function()
       return enabled
     end,
     setValue = function(val)
       enabled = val == true
+      updateVisual()
+    end,
+    applyThemeColors = function(nextColors)
+      if type(nextColors) == "table" then
+        if nextColors.text ~= nil then
+          row._wmColors.text = nextColors.text
+        end
+        if nextColors.on ~= nil then
+          row._wmColors.on = nextColors.on
+        end
+        if nextColors.off ~= nil then
+          row._wmColors.off = nextColors.off
+        end
+        if nextColors.border ~= nil then
+          row._wmColors.border = nextColors.border
+        end
+      end
       updateVisual()
     end,
   }

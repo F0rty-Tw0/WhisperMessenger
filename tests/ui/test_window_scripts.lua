@@ -306,13 +306,22 @@ return function()
 
     WindowScripts.WireButtons(refs, opts)
 
-    -- Click tab2 to make it active
+    -- Click tab2 while hovered to make it active
+    tab2.mouseOver = true
     tab2.scripts.OnClick()
 
     assert(tab2.bg ~= nil, "tab2 should have a .bg reference")
 
-    local activeColor = Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
+    local activeColor = Theme.COLORS.option_button_active
+      or Theme.COLORS.bg_contact_selected
+      or { 0.16, 0.18, 0.28, 0.80 }
+    local activeHoverColor = Theme.COLORS.option_button_active_hover or activeColor
 
+    assert(
+      tab2.bg.color[1] == activeHoverColor[1] and tab2.bg.color[2] == activeHoverColor[2],
+      "test_select_tab_sets_active_bg_persists_after_leave: active hovered tab should use hover-active color immediately"
+    )
+    tab2.mouseOver = false
     -- Simulate mouse leave on the active tab
     if tab2.scripts.OnLeave then
       tab2.scripts.OnLeave()
@@ -455,6 +464,21 @@ return function()
     frame:SetSize(920, 580)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
     local contactsResizeHandle = factory.CreateFrame("Frame", nil, parent)
+    if Theme.SetPreset then
+      Theme.SetPreset("wow_default")
+    end
+
+    local contactsDivider = frame:CreateTexture(nil, "BORDER")
+    contactsResizeHandle.hoverBg = contactsResizeHandle:CreateTexture(nil, "BACKGROUND")
+    contactsResizeHandle.outline = {
+      top = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
+      bottom = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
+      left = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
+      right = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
+    }
+    for _, edge in pairs(contactsResizeHandle.outline) do
+      edge:Hide()
+    end
 
     local relayoutArgs = nil
     local persistedState = nil
@@ -481,6 +505,7 @@ return function()
         persistedState = state
       end,
       Theme = Theme,
+      layout = { contactsDivider = contactsDivider },
       getCursorX = function()
         return 260
       end,
@@ -508,6 +533,35 @@ return function()
       "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnMouseUp"
     )
 
+    local activeDividerColor = Theme.COLORS.contacts_divider_hover
+    local activeHoverFill = Theme.COLORS.contacts_resize_hover_fill
+    local activeOutline = Theme.COLORS.contacts_resize_outline
+    local idleDividerColor = Theme.COLORS.contacts_divider
+
+    contactsResizeHandle.scripts.OnEnter(contactsResizeHandle)
+    assert(
+      contactsDivider.color[1] == activeDividerColor[1] and contactsDivider.color[2] == activeDividerColor[2],
+      "expected contacts divider to use hover color on handle hover"
+    )
+    assert(
+      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1] and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
+      "expected contacts resize hover fill color to apply on handle hover"
+    )
+    assert(
+      contactsResizeHandle.outline.top.color[1] == activeOutline[1] and contactsResizeHandle.outline.top.shown == true,
+      "expected contacts resize outline to apply on handle hover"
+    )
+
+    contactsResizeHandle.scripts.OnLeave(contactsResizeHandle)
+    assert(
+      contactsDivider.color[1] == idleDividerColor[1] and contactsDivider.color[2] == idleDividerColor[2],
+      "expected contacts divider to restore idle color after hover"
+    )
+    assert(
+      contactsResizeHandle.hoverBg.color[4] == 0,
+      "expected contacts resize hover fill to clear after hover"
+    )
+    assert(contactsResizeHandle.outline.top.shown == false, "expected contacts resize outline to hide after hover")
     contactsResizeHandle.scripts.OnMouseDown(contactsResizeHandle, "LeftButton")
     assert(relayoutArgs ~= nil, "expected relayout call while resizing contacts")
     assert(relayoutArgs.contactsWidth == 160, "expected requested contacts width 160 from cursor delta")

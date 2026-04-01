@@ -6,6 +6,99 @@ return function()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
   -- -----------------------------------------------------------------------
+  -- test_theme_preset_selector_exists
+  -- -----------------------------------------------------------------------
+  do
+    local config = { themePreset = "wow_default" }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.themePresetSelector ~= nil, "test_theme_preset_selector_exists: should expose themePresetSelector")
+    assert(
+      result.themePresetSelector.buttons ~= nil,
+      "test_theme_preset_selector_exists: themePresetSelector should have buttons"
+    )
+    assert(
+      #result.themePresetSelector.buttons == 3,
+      "test_theme_preset_selector_exists: should have 3 preset buttons, got: "
+        .. tostring(#result.themePresetSelector.buttons)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_theme_preset_selector_labels
+  -- -----------------------------------------------------------------------
+  do
+    local config = { themePreset = "wow_default" }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    local labels = {}
+    for _, btn in ipairs(result.themePresetSelector.buttons) do
+      if btn.label and btn.label.text then
+        table.insert(labels, btn.label.text)
+      end
+    end
+
+    local expected = {
+      ["Midnight Blue"] = false,
+      ["Shadowlands Dark"] = false,
+      ["Draenor Warm"] = false,
+    }
+    for _, text in ipairs(labels) do
+      if expected[text] ~= nil then
+        expected[text] = true
+      end
+    end
+
+    assert(expected["Midnight Blue"], "test_theme_preset_selector_labels: should have a 'Midnight Blue' button")
+    assert(expected["Shadowlands Dark"], "test_theme_preset_selector_labels: should have a 'Shadowlands Dark' button")
+    assert(expected["Draenor Warm"], "test_theme_preset_selector_labels: should have a 'Draenor Warm' button")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_theme_preset_selector_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = { themePreset = "wow_default" }
+    local result = AppearanceSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    -- Click the "Draenor Warm" button (third one)
+    local warmBtn = result.themePresetSelector.buttons[3]
+    local onClick = warmBtn:GetScript("OnClick")
+    assert(onClick ~= nil, "test_theme_preset_selector_fires_on_change: button should have OnClick")
+    onClick(warmBtn)
+
+    assert(
+      changes.themePreset == "plumber_warm",
+      "test_theme_preset_selector_fires_on_change: should fire onChange with themePreset=plumber_warm, got: "
+        .. tostring(changes.themePreset)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_theme_preset_selector_highlights_initial
+  -- -----------------------------------------------------------------------
+  do
+    local config = { themePreset = "elvui_dark" }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    local darkBtn = result.themePresetSelector.buttons[2]
+    assert(
+      darkBtn._selected == true,
+      "test_theme_preset_selector_highlights_initial: Shadowlands Dark button should be selected when themePreset=elvui_dark"
+    )
+    local defaultBtn = result.themePresetSelector.buttons[1]
+    assert(
+      defaultBtn._selected ~= true,
+      "test_theme_preset_selector_highlights_initial: Midnight Blue button should NOT be selected when themePreset=elvui_dark"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_font_selector_exists
   -- -----------------------------------------------------------------------
   do
@@ -96,11 +189,16 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_reset_resets_font_to_default
+  -- test_reset_resets_font_and_theme_to_defaults
   -- -----------------------------------------------------------------------
   do
     local changes = {}
-    local config = { fontFamily = "system", windowOpacityInactive = 0.72, windowOpacityActive = 1.0 }
+    local config = {
+      fontFamily = "system",
+      themePreset = "elvui_dark",
+      windowOpacityInactive = 0.90,
+      windowOpacityActive = 0.60,
+    }
     local result = AppearanceSettings.Create(factory, parent, config, {
       onChange = function(key, value)
         changes[key] = value
@@ -109,13 +207,36 @@ return function()
 
     -- Click reset
     local resetClick = result.resetButton:GetScript("OnClick")
-    assert(resetClick ~= nil, "test_reset_resets_font: resetButton should have OnClick")
+    assert(resetClick ~= nil, "test_reset_resets_font_and_theme: resetButton should have OnClick")
     resetClick(result.resetButton)
 
     assert(
+      changes.themePreset == "wow_default",
+      "test_reset_resets_font_and_theme: reset should fire onChange with themePreset=wow_default, got: "
+        .. tostring(changes.themePreset)
+    )
+    assert(
       changes.fontFamily == "default",
-      "test_reset_resets_font: reset should fire onChange with fontFamily=default, got: "
+      "test_reset_resets_font_and_theme: reset should fire onChange with fontFamily=default, got: "
         .. tostring(changes.fontFamily)
+    )
+    assert(
+      math.abs((changes.windowOpacityInactive or 0) - 0.7) < 0.0001,
+      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityInactive=0.7, got: "
+        .. tostring(changes.windowOpacityInactive)
+    )
+    assert(
+      math.abs((changes.windowOpacityActive or 0) - 1.0) < 0.0001,
+      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityActive=1.0, got: "
+        .. tostring(changes.windowOpacityActive)
+    )
+    assert(
+      result.themePresetSelector.buttons[1]._selected == true,
+      "test_reset_resets_font_and_theme: Midnight Blue theme should be selected after reset"
+    )
+    assert(
+      result.fontSelector.buttons[1]._selected == true,
+      "test_reset_resets_font_and_theme: Default font should be selected after reset"
     )
   end
 

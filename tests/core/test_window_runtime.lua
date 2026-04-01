@@ -6,10 +6,14 @@ return function()
   local iconCreateCalls = 0
   local windowCreateCalls = 0
   local selectionRefreshes = 0
+  local themeRefreshes = 0
   local markedRead = {}
   local presenceRefreshes = {}
   local availabilityRequests = {}
   local debugCalls = {}
+  local themeSetPresetCalls = {}
+  local fontSetModeCalls = {}
+  local activeThemePreset = "wow_default"
   local capturedWindowOptions = nil
   local coordinatorWindow = nil
   local coordinatorIcon = nil
@@ -92,6 +96,9 @@ return function()
       createdWindow.refreshSelection = function(nextState)
         selectionRefreshes = selectionRefreshes + 1
         createdWindow.lastSelectionState = nextState
+      end
+      createdWindow.refreshTheme = function()
+        themeRefreshes = themeRefreshes + 1
       end
 
       coordinatorWindow = createdWindow
@@ -203,7 +210,45 @@ return function()
       end,
     },
     fonts = {
-      SetMode = function() end,
+      SetMode = function(mode)
+        fontSetModeCalls[#fontSetModeCalls + 1] = mode
+      end,
+    },
+    theme = {
+      DEFAULT_PRESET = "wow_default",
+      SetPreset = function(presetKey)
+        themeSetPresetCalls[#themeSetPresetCalls + 1] = presetKey
+        if presetKey == "unknown_preset" then
+          return false
+        end
+        activeThemePreset = presetKey
+        return true
+      end,
+      GetPreset = function()
+        return activeThemePreset
+      end,
+      ResolvePreset = function(requestedKey)
+        local fallbackKey = "wow_default"
+        local targetKey = requestedKey or fallbackKey
+
+        local requestedApplied = false
+        themeSetPresetCalls[#themeSetPresetCalls + 1] = targetKey
+        if targetKey ~= "unknown_preset" then
+          activeThemePreset = targetKey
+          requestedApplied = true
+        end
+        if requestedApplied then
+          return targetKey, true
+        end
+
+        if targetKey ~= fallbackKey then
+          themeSetPresetCalls[#themeSetPresetCalls + 1] = fallbackKey
+          activeThemePreset = fallbackKey
+          return fallbackKey, true
+        end
+
+        return activeThemePreset, false
+      end,
     },
     markConversationRead = function(store, key)
       markedRead[#markedRead + 1] = key
@@ -270,6 +315,79 @@ return function()
   assert(
     runtime.isConversationOpen(conversationKey) == true,
     "expected conversation to report open when visible and selected"
+  )
+
+  local refreshesBeforeFontChange = selectionRefreshes
+  capturedWindowOptions.onSettingChanged("fontFamily", "system")
+  assert(
+    accountState.settings.fontFamily == "system",
+    "expected fontFamily change to persist setting"
+  )
+  assert(
+    fontSetModeCalls[#fontSetModeCalls] == "system",
+    "expected fontFamily change to call fonts.SetMode with the selected mode"
+  )
+  assert(
+    selectionRefreshes == refreshesBeforeFontChange + 1,
+    "expected fontFamily change to refresh the window"
+  )
+
+  local refreshesBeforeThemeApply = selectionRefreshes
+  local themeRefreshesBeforeApply = themeRefreshes
+  capturedWindowOptions.onSettingChanged("themePreset", "elvui_dark")
+  assert(
+    accountState.settings.themePreset == "elvui_dark",
+    "expected valid themePreset to persist in account settings"
+  )
+  assert(activeThemePreset == "elvui_dark", "expected valid themePreset to apply to active theme")
+  assert(
+    themeSetPresetCalls[#themeSetPresetCalls] == "elvui_dark",
+    "expected valid themePreset to call Theme.SetPreset"
+  )
+  assert(
+    themeRefreshes == themeRefreshesBeforeApply + 1,
+    "expected valid themePreset change to refresh static window chrome"
+  )
+  assert(
+    selectionRefreshes == refreshesBeforeThemeApply + 1,
+    "expected valid themePreset change to refresh the window"
+  )
+
+  local themeCallsBeforeFallback = #themeSetPresetCalls
+  local refreshesBeforeThemeFallback = selectionRefreshes
+  local themeRefreshesBeforeFallback = themeRefreshes
+  capturedWindowOptions.onSettingChanged("themePreset", "unknown_preset")
+  assert(
+    #themeSetPresetCalls == themeCallsBeforeFallback + 2,
+    "expected invalid themePreset to attempt requested preset and fallback default"
+  )
+  assert(
+    themeSetPresetCalls[themeCallsBeforeFallback + 1] == "unknown_preset",
+    "expected invalid themePreset to try the requested key first"
+  )
+  assert(
+    themeSetPresetCalls[themeCallsBeforeFallback + 2] == "wow_default",
+    "expected invalid themePreset to fallback to wow_default"
+  )
+  assert(
+    accountState.settings.themePreset == "wow_default",
+    "expected invalid themePreset to persist wow_default fallback"
+  )
+  assert(activeThemePreset == "wow_default", "expected fallback to apply wow_default preset")
+  assert(
+    themeRefreshes == themeRefreshesBeforeFallback + 1,
+    "expected fallback themePreset apply to refresh static window chrome"
+  )
+  assert(
+    selectionRefreshes == refreshesBeforeThemeFallback + 1,
+    "expected fallback themePreset apply to refresh the window"
+  )
+
+  local refreshesBeforeHidePreview = selectionRefreshes
+  capturedWindowOptions.onSettingChanged("hideMessagePreview", true)
+  assert(
+    selectionRefreshes == refreshesBeforeHidePreview + 1,
+    "expected hideMessagePreview change to continue refreshing the window"
   )
 
   runtime.setComposerText("draft reply")

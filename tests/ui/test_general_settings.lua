@@ -1,5 +1,22 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local GeneralSettings = require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
+local Theme = require("WhisperMessenger.UI.Theme")
+
+local function colorsMatch(actual, expected)
+  if type(actual) ~= "table" or type(expected) ~= "table" then
+    return false
+  end
+  local epsilon = 0.0001
+  for i = 1, 4 do
+    local a = actual[i] or (i == 4 and 1 or nil)
+    local b = expected[i] or (i == 4 and 1 or nil)
+    if a == nil or b == nil or math.abs(a - b) > epsilon then
+      return false
+    end
+  end
+  return true
+end
+
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -219,4 +236,77 @@ return function()
     assert(changes.maxConversations == 100, "should fire onChange for maxConversations=100")
     assert(changes.messageMaxAge == 86400, "should fire onChange for messageMaxAge=86400")
   end
+  -- -----------------------------------------------------------------------
+  -- test_toggle_checked_state_uses_option_toggle_theme_tokens
+  -- -----------------------------------------------------------------------
+  do
+    local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
+    if Theme.SetPreset then
+      Theme.SetPreset("wow_default")
+    end
+
+    local settings = GeneralSettings.Create(factory, parent, {
+      clearOnLogout = false,
+      hideMessagePreview = false,
+    }, {
+      onChange = function() end,
+    })
+
+    local offDefault = Theme.COLORS.option_toggle_off
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offDefault),
+      "expected unchecked toggle to use option_toggle_off"
+    )
+    local borderDefault = Theme.COLORS.option_toggle_border
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderDefault),
+      "expected toggle border to use option_toggle_border"
+    )
+
+    local onClick = settings.clearOnLogoutToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "expected toggle dot click handler")
+    onClick(settings.clearOnLogoutToggle.dot)
+
+    local onDefault = Theme.COLORS.option_toggle_on
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onDefault),
+      "expected checked toggle to use option_toggle_on"
+    )
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onDefault),
+      "expected checked toggle border to use option_toggle_on for stronger visibility"
+    )
+
+    if Theme.SetPreset then
+      Theme.SetPreset("plumber_warm")
+      settings.refreshTheme(Theme)
+    end
+
+    local onPlumber = Theme.COLORS.option_toggle_on
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onPlumber),
+      "expected checked toggle to repaint with preset option_toggle_on"
+    )
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onPlumber),
+      "expected checked toggle border to repaint with preset option_toggle_on"
+    )
+
+    onClick(settings.clearOnLogoutToggle.dot)
+    local offPlumber = Theme.COLORS.option_toggle_off
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offPlumber),
+      "expected unchecked toggle to repaint with preset option_toggle_off"
+    )
+    local borderPlumber = Theme.COLORS.option_toggle_border
+    assert(
+      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderPlumber),
+      "expected toggle border to repaint with preset option_toggle_border"
+    )
+
+    if Theme.SetPreset and previousPreset then
+      Theme.SetPreset(previousPreset)
+    end
+  end
+
 end

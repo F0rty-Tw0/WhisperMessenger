@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
+local setTextColor = UIHelpers.setTextColor
 local createOptionButton = UIHelpers.createOptionButton
 local sizeValue = UIHelpers.sizeValue
 
@@ -73,14 +74,43 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight = contactsSearchMetrics(Theme)
   local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
 
+  local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
+  local strongDividerColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
+  local contactsSectionBorderColor = Theme.COLORS.contacts_border_right or Theme.COLORS.contacts_divider or dividerColor
+  local strongContactsBorderColor = {
+    contactsSectionBorderColor[1],
+    contactsSectionBorderColor[2],
+    contactsSectionBorderColor[3],
+    contactsSectionBorderColor[4] or 1,
+  }
+
   local contactsPane = factory.CreateFrame("Frame", nil, frame)
   contactsPane:SetSize(contactsWidth, contactsHeight)
   contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
 
-  -- Contacts pane background (slightly lighter than main window)
+  -- Contacts pane background and section border
   local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
   contactsPaneBg:SetAllPoints(contactsPane)
   applyColorTexture(contactsPaneBg, Theme.COLORS.bg_secondary)
+  local contactsPaneEdges = UIHelpers.createBorderBox(
+    contactsPane,
+    strongContactsBorderColor,
+    Theme.DIVIDER_THICKNESS,
+    "BORDER",
+    { top = false, left = true, right = true, bottom = true }
+  )
+  local contactsHeaderDivider = contactsPane:CreateTexture(nil, "BORDER")
+  contactsHeaderDivider:SetPoint("TOPLEFT", contactsPane, "TOPLEFT", 0, 0)
+  contactsHeaderDivider:SetPoint("TOPRIGHT", contactsPane, "TOPRIGHT", 0, 0)
+  contactsHeaderDivider:SetHeight(Theme.DIVIDER_THICKNESS)
+  applyColorTexture(contactsHeaderDivider, dividerColor)
+  local contactsPaneBorder = {
+    top = contactsHeaderDivider,
+    left = contactsPaneEdges and contactsPaneEdges.left or nil,
+    right = contactsPaneEdges and contactsPaneEdges.right or nil,
+    bottom = contactsPaneEdges and contactsPaneEdges.bottom or nil,
+  }
+  local contactsRightBorder = contactsPaneBorder.right
 
   local contactsSearchFrame = factory.CreateFrame("Frame", nil, contactsPane)
   contactsSearchFrame:SetSize(math.max(0, contactsWidth - (searchMargin * 2)), searchHeight)
@@ -88,9 +118,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local contactsSearchBg = contactsSearchFrame:CreateTexture(nil, "BACKGROUND")
   contactsSearchBg:SetAllPoints(contactsSearchFrame)
-  applyColorTexture(contactsSearchBg, Theme.COLORS.bg_input)
+  applyColorTexture(contactsSearchBg, Theme.COLORS.bg_search_input or Theme.COLORS.bg_input)
 
-  local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
   local searchBorderColor = { dividerColor[1], dividerColor[2], dividerColor[3], 0.95 }
   local searchBorderTop = contactsSearchFrame:CreateTexture(nil, "BORDER")
   searchBorderTop:SetPoint("TOPLEFT", contactsSearchFrame, "TOPLEFT", 0, 0)
@@ -127,6 +156,14 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   if contactsSearchInput.SetAutoFocus then
     contactsSearchInput:SetAutoFocus(false)
   end
+  if contactsSearchInput.SetTextColor then
+    contactsSearchInput:SetTextColor(
+      Theme.COLORS.text_primary[1],
+      Theme.COLORS.text_primary[2],
+      Theme.COLORS.text_primary[3],
+      Theme.COLORS.text_primary[4] or 1
+    )
+  end
 
   local contactsSearchPlaceholder = contactsSearchFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
   contactsSearchPlaceholder:SetPoint("LEFT", contactsSearchInput, "LEFT", 0, 0)
@@ -162,7 +199,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsDivider = frame:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
   contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
-  applyColorTexture(contactsDivider, Theme.COLORS.divider)
+  applyColorTexture(contactsDivider, Theme.COLORS.contacts_divider or Theme.COLORS.divider)
 
   -- Drag handle over the contacts divider for contacts-only resizing.
   local contactsResizeHandle = factory.CreateFrame("Frame", nil, frame)
@@ -206,23 +243,16 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   contentPane:SetSize(contentWidth, contentHeight)
   contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
 
-  local headerDivider = frame:CreateTexture(nil, "BORDER")
-  headerDivider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
-  headerDivider:SetSize(initialState.width, Theme.DIVIDER_THICKNESS)
-  applyColorTexture(headerDivider, Theme.COLORS.divider)
-
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
   threadPane:SetPoint("TOPLEFT", contentPane, "TOPLEFT", 0, 0)
+  local headerDivider = nil
 
   local composerPane = factory.CreateFrame("Frame", nil, contentPane)
   composerPane:SetSize(contentWidth, Theme.COMPOSER_HEIGHT)
   composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, 0)
-
-  local composerDivider = contentPane:CreateTexture(nil, "BORDER")
-  composerDivider:SetPoint("BOTTOMLEFT", threadPane, "BOTTOMLEFT", 0, -Theme.DIVIDER_THICKNESS)
-  composerDivider:SetSize(contentWidth, Theme.DIVIDER_THICKNESS)
-  applyColorTexture(composerDivider, Theme.COLORS.divider)
+  local composerPaneBorder = UIHelpers.createBorderBox(composerPane, strongDividerColor, Theme.DIVIDER_THICKNESS, "BORDER")
+  local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
   -- Options overlay container (hides contacts + content when visible)
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
@@ -321,27 +351,141 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   optionsHint:SetPoint("BOTTOMLEFT", resetWindowButton, "TOPLEFT", 0, menuPadding)
   optionsHint:SetText("Reset positions or clear all conversation history.")
 
+  if optionsHint.SetJustifyH then
+    optionsHint:SetJustifyH("LEFT")
+  end
+  if optionsHint.SetWordWrap then
+    optionsHint:SetWordWrap(true)
+  end
+  if optionsHint.SetWidth then
+    optionsHint:SetWidth(btnLayout.width)
+  end
+  local function paintOptionButton(button, backgroundColor, textColor, hoverBackgroundColor, hoverTextColor)
+    if not button then
+      return
+    end
+    if button.applyThemeColors then
+      button.applyThemeColors({
+        bg = backgroundColor,
+        bgHover = hoverBackgroundColor or backgroundColor,
+        text = textColor,
+        textHover = hoverTextColor or textColor,
+      })
+      return
+    end
+    if button.bg then
+      applyColorTexture(button.bg, backgroundColor)
+    end
+    if button.label then
+      setTextColor(button.label, textColor)
+    end
+  end
+
+  local function applyTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+
+    applyColorTexture(contactsPaneBg, activeTheme.COLORS.bg_secondary)
+    applyColorTexture(contactsSearchBg, activeTheme.COLORS.bg_search_input or activeTheme.COLORS.bg_input)
+
+    local divider = activeTheme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
+    local searchBorder = { divider[1], divider[2], divider[3], 0.95 }
+    applyColorTexture(searchBorderTop, searchBorder)
+    applyColorTexture(searchBorderBottom, searchBorder)
+    applyColorTexture(searchBorderLeft, searchBorder)
+    applyColorTexture(searchBorderRight, searchBorder)
+    if contactsSearchInput.SetTextColor then
+      contactsSearchInput:SetTextColor(
+        activeTheme.COLORS.text_primary[1],
+        activeTheme.COLORS.text_primary[2],
+        activeTheme.COLORS.text_primary[3],
+        activeTheme.COLORS.text_primary[4] or 1
+      )
+    end
+    setTextColor(contactsSearchPlaceholder, activeTheme.COLORS.text_secondary)
+    setTextColor(contactsSearchClearLabel, activeTheme.COLORS.text_secondary)
+    applyColorTexture(contactsDivider, activeTheme.COLORS.contacts_divider or activeTheme.COLORS.divider)
+    local strongDividerThemeColor = { divider[1], divider[2], divider[3], 1 }
+    local activeContactsBorder = activeTheme.COLORS.contacts_border_right or activeTheme.COLORS.contacts_divider or divider
+    local strongActiveContactsBorder = {
+      activeContactsBorder[1],
+      activeContactsBorder[2],
+      activeContactsBorder[3],
+      activeContactsBorder[4] or 1,
+    }
+    UIHelpers.applyBorderBoxColor(contactsPaneEdges, strongActiveContactsBorder)
+    applyColorTexture(contactsHeaderDivider, divider)
+    UIHelpers.applyBorderBoxColor(composerPaneBorder, strongDividerThemeColor)
+
+    applyColorTexture(optionsMenuBg, activeTheme.COLORS.bg_secondary)
+    applyColorTexture(optionsMenuDivider, activeTheme.COLORS.divider)
+    applyColorTexture(optionsContentBg, activeTheme.COLORS.bg_primary)
+    setTextColor(optionsHeader, activeTheme.COLORS.text_primary)
+    setTextColor(optionsHint, activeTheme.COLORS.text_secondary)
+
+    local activeTabBg = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected
+    local activeTabHoverBg = activeTheme.COLORS.option_button_active_hover or activeTabBg
+    local activeTabText = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary
+    local inactiveTabBg = activeTheme.COLORS.option_button_bg
+    local inactiveTabHoverBg = activeTheme.COLORS.option_button_hover
+    local inactiveTabText = activeTheme.COLORS.option_button_text
+    local inactiveTabHoverText = activeTheme.COLORS.option_button_text_hover
+
+    for _, tab in ipairs({ generalTab, appearanceTab, behaviorTab, notificationsTab }) do
+      if tab and tab._wmIsActiveTab then
+        paintOptionButton(tab, activeTabBg, activeTabText, activeTabHoverBg, activeTabText)
+      else
+        paintOptionButton(tab, inactiveTabBg, inactiveTabText, inactiveTabHoverBg, inactiveTabHoverText)
+      end
+    end
+    paintOptionButton(
+      resetWindowButton,
+      activeTheme.COLORS.option_button_bg,
+      activeTheme.COLORS.option_button_text,
+      activeTheme.COLORS.option_button_hover,
+      activeTheme.COLORS.option_button_text_hover
+    )
+    paintOptionButton(
+      resetIconButton,
+      activeTheme.COLORS.option_button_bg,
+      activeTheme.COLORS.option_button_text,
+      activeTheme.COLORS.option_button_hover,
+      activeTheme.COLORS.option_button_text_hover
+    )
+    paintOptionButton(
+      clearAllChatsButton,
+      activeTheme.COLORS.danger_button_bg,
+      activeTheme.COLORS.option_button_text,
+      activeTheme.COLORS.danger_button_hover,
+      activeTheme.COLORS.option_button_text_hover
+    )
+  end
+  applyTheme(Theme)
+
   return {
     contactsPane = contactsPane,
+    contactsPaneBorder = contactsPaneBorder,
     contactsDivider = contactsDivider,
+    contactsRightBorder = contactsRightBorder,
     contactsResizeHandle = contactsResizeHandle,
     contactsWidth = contactsWidth,
     contactsHandleWidth = contactsHandleWidth,
     contactsSearchFrame = contactsSearchFrame,
+    contactsSearchBg = contactsSearchBg,
     contactsSearchInput = contactsSearchInput,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
     contactsSearchClearButton = contactsSearchClearButton,
     contactsSearchHeight = searchHeight,
     contactsSearchMargin = searchMargin,
     contactsSearchTotalHeight = searchTotalHeight,
-    contactsSearchClearButtonSize = searchClearButtonSize,
-    menuPadding = menuPadding,
-    optionsButtonHeight = btnH,
+    contactsListHeight = contactsListHeight,
+    contactsView = contactsView,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
     contentPane = contentPane,
+    contactsHeaderDivider = contactsHeaderDivider,
     headerDivider = headerDivider,
     threadPane = threadPane,
     composerPane = composerPane,
+    composerPaneBorder = composerPaneBorder,
     composerDivider = composerDivider,
     optionsPanel = optionsPanel,
     optionsMenu = optionsMenu,
@@ -357,7 +501,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
-    contactsView = contactsView,
+    applyTheme = applyTheme,
   }
 end
 
@@ -380,6 +524,9 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
   layout.contactsWidth = contactsWidth
 
   layout.contactsPane:SetSize(contactsWidth, contactsH)
+  if layout.contactsRightBorder then
+    layout.contactsRightBorder:SetHeight(contactsH)
+  end
   layout.contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsH)
   if layout.contactsResizeHandle then
     local handleWidth = sizeValue(layout.contactsResizeHandle, "GetWidth", "width", layout.contactsHandleWidth or 8)
@@ -403,7 +550,12 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
     layout.contentPane:ClearAllPoints()
   end
   layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
-  layout.headerDivider:SetSize(width, Theme.DIVIDER_THICKNESS)
+  if layout.contactsHeaderDivider then
+    layout.contactsHeaderDivider:SetSize(contactsWidth, Theme.DIVIDER_THICKNESS)
+  end
+  if layout.headerDivider then
+    layout.headerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
+  end
   layout.threadPane:SetSize(contentW, threadH)
   layout.composerPane:SetSize(contentW, Theme.COMPOSER_HEIGHT)
   layout.composerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
@@ -434,6 +586,17 @@ function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
   local menuPadding = layout.menuPadding or Theme.CONTENT_PADDING
   local optionsButtonWidth = math.max(0, contactsWidth - (menuPadding * 2))
   local optionsButtonHeight = layout.optionsButtonHeight or Theme.LAYOUT.OPTION_BUTTON_HEIGHT
+  if layout.optionsHint then
+    if layout.optionsHint.SetWidth then
+      layout.optionsHint:SetWidth(optionsButtonWidth)
+    end
+    if layout.optionsHint.SetWordWrap then
+      layout.optionsHint:SetWordWrap(true)
+    end
+    if layout.optionsHint.SetJustifyH then
+      layout.optionsHint:SetJustifyH("LEFT")
+    end
+  end
   for _, button in ipairs({
     layout.generalTab,
     layout.appearanceTab,

@@ -33,30 +33,61 @@ local function hideActions(row)
   end
 end
 
+local function rowBaseColor(row)
+  if row._wmRowBaseBg then
+    return row._wmRowBaseBg
+  end
+  return (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
+end
+
+local function applyRowVisualState(row)
+  local hovered = row._wmRowHover == true or (row._wmActionHoverCount or 0) > 0
+  if row.selected then
+    applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
+  elseif hovered then
+    applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
+  else
+    applyColorTexture(row.bg, rowBaseColor(row))
+  end
+  if row.selectedRightBorder then
+    applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
+    if row.selected then
+      row.selectedRightBorder:Show()
+    else
+      row.selectedRightBorder:Hide()
+    end
+  end
+
+  if hovered then
+    showActions(row)
+  else
+    hideActions(row)
+  end
+
+end
+
 --- Bind OnEnter / OnLeave hover scripts to a row.
 --- options may include: rowBaseBg (color table for base background)
 function RowScripts.bindHover(row, options)
-  local rowBaseBg = options and options.rowBaseBg
+  row._wmRowBaseBg = (options and options.rowBaseBg)
     or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
+  row._wmRowHover = false
+  row._wmActionHoverCount = 0
+  row._wmApplyVisualState = function()
+    applyRowVisualState(row)
+  end
+
+  row._wmApplyVisualState()
 
   if row.SetScript then
     row:SetScript("OnEnter", function()
-      if not row.selected then
-        applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
-      end
-      showActions(row)
+      row._wmRowHover = true
+      row._wmApplyVisualState()
     end)
 
     row:SetScript("OnLeave", function()
-      if row.IsMouseOver and row:IsMouseOver() then
-        return
-      end
-      if row.selected then
-        applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-      else
-        applyColorTexture(row.bg, rowBaseBg)
-      end
-      hideActions(row)
+      row._wmRowHover = false
+      row._wmApplyVisualState()
     end)
   end
 end

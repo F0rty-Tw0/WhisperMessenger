@@ -42,8 +42,18 @@ local function bindRow(factory, parent, row, index, item, options)
     row.accentBar:SetPoint("LEFT", row, "LEFT", 0, 0)
     applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
   end
+  applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
   row.accentBar:Hide()
 
+  -- Right border for selected row
+  if row.selectedRightBorder == nil then
+    row.selectedRightBorder = row:CreateTexture(nil, "BORDER")
+    row.selectedRightBorder:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
+    row.selectedRightBorder:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
+    row.selectedRightBorder:SetWidth(2)
+  end
+  applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
+  row.selectedRightBorder:Hide()
   -- Event scripts (hover, click, drag)
   RowScripts.bindHover(row, { rowBaseBg = rowBaseBg })
   RowScripts.bindClick(row, item, options)

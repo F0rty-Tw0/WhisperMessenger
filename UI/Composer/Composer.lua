@@ -33,7 +33,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local inputX, inputY = 12, 8
   inputBg:SetSize(inputW, inputH)
   inputBg:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inputX, inputY)
-  applyColorTexture(inputBg, Theme.COLORS.bg_input)
+  applyColorTexture(inputBg, Theme.COLORS.bg_message_input or Theme.COLORS.bg_input)
 
   -- Send button (compact rounded pill)
   local createRoundedBackground = UIHelpers.createRoundedBackground
@@ -42,12 +42,17 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   button:SetSize(buttonW, buttonH)
 
   local sendBg = createRoundedBackground(button, 8)
-  local applySendColor = sendBg.setColor
 
+  local function applySendColor(color)
+    sendBg.setColor(color)
+    button.sendBg = button.sendBg or {}
+    button.sendBg.color = { color[1], color[2], color[3], color[4] or 1 }
+  end
   local buttonLabel = button:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(buttonLabel, Theme.FONTS.composer_input)
   buttonLabel:SetPoint("CENTER", button, "CENTER", 0, 0)
   buttonLabel:SetText("Send")
+  button.label = buttonLabel
 
   -- Plain EditBox (no template)
   local input = factory.CreateFrame("EditBox", nil, pane)
@@ -56,6 +61,14 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   input:SetText("")
 
   UIHelpers.setFontObject(input, Theme.FONTS.composer_input)
+  if input.SetTextColor then
+    input:SetTextColor(
+      Theme.COLORS.text_primary[1],
+      Theme.COLORS.text_primary[2],
+      Theme.COLORS.text_primary[3],
+      Theme.COLORS.text_primary[4] or 1
+    )
+  end
   if input.SetTextInsets then
     input:SetTextInsets(8, 8, 4, 4)
   end
@@ -82,12 +95,21 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
   local sendDisabled = selectedContact == nil
   button.disabled = sendDisabled
 
+  local function sendButtonTextColor()
+    if sendDisabled then
+      return Theme.COLORS.send_button_text_disabled or Theme.COLORS.text_secondary
+    end
+    return Theme.COLORS.send_button_text or Theme.COLORS.text_primary
+  end
+
   local sendBgColor = sendDisabled and Theme.COLORS.send_button_disabled or Theme.COLORS.send_button
   applySendColor(sendBgColor)
+  setTextColor(buttonLabel, sendButtonTextColor())
 
   button:SetScript("OnEnter", function()
     if not sendDisabled then
       applySendColor(Theme.COLORS.send_button_hover)
+      setTextColor(buttonLabel, Theme.COLORS.send_button_text or Theme.COLORS.text_primary)
     end
   end)
   button:SetScript("OnLeave", function()
@@ -96,6 +118,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
     else
       applySendColor(Theme.COLORS.send_button)
     end
+    setTextColor(buttonLabel, sendButtonTextColor())
   end)
 
   local function submitMessage()
@@ -160,6 +183,26 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
       else
         applySendColor(Theme.COLORS.send_button)
       end
+      setTextColor(buttonLabel, sendButtonTextColor())
+    end,
+    refreshTheme = function()
+      applyColorTexture(paneBg, Theme.COLORS.bg_composer)
+      applyColorTexture(inputBg, Theme.COLORS.bg_message_input or Theme.COLORS.bg_input)
+      if input.SetTextColor then
+        input:SetTextColor(
+          Theme.COLORS.text_primary[1],
+          Theme.COLORS.text_primary[2],
+          Theme.COLORS.text_primary[3],
+          Theme.COLORS.text_primary[4] or 1
+        )
+      end
+      setTextColor(placeholder, Theme.COLORS.text_secondary)
+      if sendDisabled then
+        applySendColor(Theme.COLORS.send_button_disabled)
+      else
+        applySendColor(Theme.COLORS.send_button)
+      end
+      setTextColor(buttonLabel, sendButtonTextColor())
     end,
     relayout = function(parentW)
       local newInputW = parentW - 24 - buttonW - buttonGap

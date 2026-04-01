@@ -13,6 +13,7 @@ local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local WindowRuntime = {}
 
@@ -36,6 +37,7 @@ function WindowRuntime.Create(options)
   local tableUtils = options.tableUtils or TableUtils
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
+  local theme = options.theme or Theme
 
   local markConversationRead = options.markConversationRead
     or function(store, conversationKey)
@@ -186,22 +188,52 @@ function WindowRuntime.Create(options)
         return accountState.settings
       end)(),
       onSettingChanged = function(key, value)
-        accountState.settings[key] = value
+        local persistedValue = value
+        local themeApplied = false
+
+        if key == "themePreset" then
+          local fallbackKey = theme.DEFAULT_PRESET or "wow_default"
+          local presetKey = value or fallbackKey
+          if theme.ResolvePreset then
+            local resolvedKey, applied = theme.ResolvePreset(presetKey, trace)
+            persistedValue = resolvedKey or presetKey
+            themeApplied = applied == true
+          else
+            if theme.SetPreset then
+              themeApplied = theme.SetPreset(presetKey) == true
+            end
+            if theme.GetPreset then
+              persistedValue = theme.GetPreset() or presetKey
+            else
+              persistedValue = presetKey
+            end
+          end
+        end
+
+        accountState.settings[key] = persistedValue
 
         if runtime.store.config[key] ~= nil then
-          runtime.store.config[key] = value
+          runtime.store.config[key] = persistedValue
         end
         if key == "messageMaxAge" then
-          runtime.store.config.conversationMaxAge = value
+          runtime.store.config.conversationMaxAge = persistedValue
         end
 
-        trace("setting changed", key, tostring(value))
+        trace("setting changed", key, tostring(persistedValue))
 
         if key == "fontFamily" and fonts.SetMode then
-          fonts.SetMode(value or "default")
+          fonts.SetMode(persistedValue or "default")
         end
         if (key == "hideMessagePreview" or key == "fontFamily") and runtime.refreshWindow then
           runtime.refreshWindow()
+        end
+        if key == "themePreset" and themeApplied then
+          if runtime.window and runtime.window.refreshTheme then
+            runtime.window.refreshTheme()
+          end
+          if runtime.refreshWindow then
+            runtime.refreshWindow()
+          end
         end
         if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
           local freshContacts = buildContacts()

@@ -24,7 +24,7 @@ function HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
   local headerBg = headerFrame:CreateTexture(nil, "BACKGROUND")
   headerBg:SetAllPoints(headerFrame)
   applyColorTexture(headerBg, Theme.COLORS.bg_header)
-
+  headerFrame.bg = headerBg
   return headerFrame
 end
 

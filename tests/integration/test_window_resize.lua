@@ -191,6 +191,12 @@ return function()
       .. " but got "
       .. tostring(window.contentPane.width)
   )
+  local expectedHintWidth = expectedMinContactsW - ((Theme.CONTENT_PADDING or 0) * 2)
+  assert(
+    window.optionsHint.width == expectedHintWidth,
+    "expected options hint width to compact with resized contacts pane"
+  )
+  assert(window.optionsHint.wordWrap == true, "expected options hint to keep word wrap after resize")
 
   window.contactsResizeHandle.scripts.OnMouseUp(window.contactsResizeHandle, "LeftButton")
   assert(positionChanged ~= nil, "expected contacts resize to persist window state")

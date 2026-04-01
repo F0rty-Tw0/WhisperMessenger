@@ -20,10 +20,27 @@ local FONT_OPTIONS = {
   { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
 }
 
+local PRESET_LABELS = {
+  wow_default = { label = "Midnight Blue", tooltip = "Default colors and contrasts." },
+  elvui_dark = { label = "Shadowlands Dark", tooltip = "Dark UI style inspired by ElvUI." },
+  plumber_warm = { label = "Draenor Warm", tooltip = "Warm tones with softer contrast." },
+}
+
+local function buildThemePresetOptions()
+  local keys = Theme.ListPresets and Theme.ListPresets() or { "wow_default", "elvui_dark", "plumber_warm" }
+  local options = {}
+  for _, key in ipairs(keys) do
+    local meta = PRESET_LABELS[key] or { label = key, tooltip = "Theme preset" }
+    options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
+  end
+  return options
+end
+
 local DEFAULTS = {
   windowOpacityInactive = 0.72,
   windowOpacityActive = 1.0,
   fontFamily = "default",
+  themePreset = Theme.DEFAULT_PRESET or "wow_default",
 }
 
 local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
@@ -80,10 +97,25 @@ local function createSliderRow(factory, parent, label, min, max, step, initial, 
     end
   end)
 
-  return { row = row, slider = slider, minLabel = minLabel, maxLabel = maxLabel }
+  return {
+    row = row,
+    label = labelFs,
+    value = valueFs,
+    slider = slider,
+    sliderBg = bg,
+    minLabel = minLabel,
+    maxLabel = maxLabel,
+    applyTheme = function(activeTheme)
+      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
+      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
+      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
+      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
+      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
+    end,
+  }
 end
 
-local function createFontSelector(factory, parent, initial, colors, onChange)
+local function createButtonSelector(factory, parent, labelText, optionsList, fallbackKey, initial, colors, onChange)
   local BUTTON_WIDTH = 86
   local BUTTON_HEIGHT = 26
   local BUTTON_SPACING = 8
@@ -93,28 +125,60 @@ local function createFontSelector(factory, parent, initial, colors, onChange)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText("Font Family")
+  labelFs:SetText(labelText)
   UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
 
-  local buttons = {}
-  local selected = initial or "default"
-
-  local function updateSelection(nextSelected)
-    selected = nextSelected
-    for _, entry in ipairs(buttons) do
-      if entry._key == selected then
-        entry._selected = true
-        applyColorTexture(entry.bg, colors.bgActive or { 0.30, 0.82, 0.40, 1.0 })
-        UIHelpers.setTextColor(entry.label, colors.textActive or Theme.COLORS.text_primary)
-      else
-        entry._selected = false
-        applyColorTexture(entry.bg, colors.bg or Theme.COLORS.option_button_bg)
-        UIHelpers.setTextColor(entry.label, colors.text or Theme.COLORS.option_button_text)
+  local function hasOptionKey(candidate)
+    for _, opt in ipairs(optionsList) do
+      if opt.key == candidate then
+        return true
       end
+    end
+    return false
+  end
+
+  local buttons = {}
+  local selected = hasOptionKey(initial) and initial or fallbackKey
+  local palette = {
+    bg = colors.bg or Theme.COLORS.option_button_bg,
+    bgHover = colors.bgHover or Theme.COLORS.option_button_hover,
+    bgActive = colors.bgActive or Theme.COLORS.option_button_active or Theme.COLORS.option_button_hover,
+    text = colors.text or Theme.COLORS.option_button_text,
+    textHover = colors.textHover or Theme.COLORS.option_button_text_hover,
+    textActive = colors.textActive or Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary,
+  }
+
+  local function paintButton(entry, isHovered)
+    if entry._key == selected then
+      entry._selected = true
+      applyColorTexture(entry.bg, palette.bgActive)
+      UIHelpers.setTextColor(entry.label, palette.textActive)
+      return
+    end
+
+    entry._selected = false
+    if isHovered then
+      applyColorTexture(entry.bg, palette.bgHover)
+      UIHelpers.setTextColor(entry.label, palette.textHover)
+      return
+    end
+
+    applyColorTexture(entry.bg, palette.bg)
+    UIHelpers.setTextColor(entry.label, palette.text)
+  end
+
+  local function repaintButtons()
+    for _, entry in ipairs(buttons) do
+      paintButton(entry, entry._hovered == true)
     end
   end
 
-  for i, opt in ipairs(FONT_OPTIONS) do
+  local function updateSelection(nextSelected)
+    selected = hasOptionKey(nextSelected) and nextSelected or fallbackKey
+    repaintButtons()
+  end
+
+  for i, opt in ipairs(optionsList) do
     local btn = factory.CreateFrame("Button", nil, row)
     btn:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT)
 
@@ -133,6 +197,7 @@ local function createFontSelector(factory, parent, initial, colors, onChange)
 
     btn._key = opt.key
     btn._selected = false
+    btn._hovered = false
     btn.bg = bg
     btn.label = btnLabel
 
@@ -144,10 +209,8 @@ local function createFontSelector(factory, parent, initial, colors, onChange)
     end)
 
     btn:SetScript("OnEnter", function()
-      if btn._key ~= selected then
-        applyColorTexture(bg, colors.bgHover or Theme.COLORS.option_button_hover)
-        UIHelpers.setTextColor(btnLabel, colors.textHover or Theme.COLORS.option_button_text_hover)
-      end
+      btn._hovered = true
+      paintButton(btn, true)
       if opt.tooltip and _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(btn, "ANCHOR_TOP")
         _G.GameTooltip:SetText(opt.label)
@@ -159,10 +222,8 @@ local function createFontSelector(factory, parent, initial, colors, onChange)
     end)
 
     btn:SetScript("OnLeave", function()
-      if btn._key ~= selected then
-        applyColorTexture(bg, colors.bg or Theme.COLORS.option_button_bg)
-        UIHelpers.setTextColor(btnLabel, colors.text or Theme.COLORS.option_button_text)
-      end
+      btn._hovered = false
+      paintButton(btn, false)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -175,8 +236,32 @@ local function createFontSelector(factory, parent, initial, colors, onChange)
 
   return {
     row = row,
+    label = labelFs,
     buttons = buttons,
     setSelected = updateSelection,
+    setColors = function(nextColors)
+      if type(nextColors) == "table" then
+        palette.bg = nextColors.bg or palette.bg
+        palette.bgHover = nextColors.bgHover or palette.bgHover
+        palette.bgActive = nextColors.bgActive or palette.bgActive
+        palette.text = nextColors.text or palette.text
+        palette.textHover = nextColors.textHover or palette.textHover
+        palette.textActive = nextColors.textActive or palette.textActive
+      end
+      repaintButtons()
+    end,
+    applyTheme = function(activeTheme, nextColors)
+      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
+      if nextColors then
+        palette.bg = nextColors.bg or palette.bg
+        palette.bgHover = nextColors.bgHover or palette.bgHover
+        palette.bgActive = nextColors.bgActive or palette.bgActive
+        palette.text = nextColors.text or palette.text
+        palette.textHover = nextColors.textHover or palette.textHover
+        palette.textActive = nextColors.textActive or palette.textActive
+      end
+      repaintButtons()
+    end,
   }
 end
 
@@ -197,28 +282,48 @@ function AppearanceSettings.Create(factory, parent, config, options)
 
   local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText("Customize fonts and window opacity.")
+  hint:SetText("Customize theme presets, fonts, and window opacity.")
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
-  -- Font family selector
-  local selectorColors = {
-    bg = Theme.COLORS.option_button_bg,
-    bgHover = Theme.COLORS.option_button_hover,
-    bgActive = Theme.COLORS.accent_primary or { 0.30, 0.82, 0.40, 1.0 },
-    text = Theme.COLORS.option_button_text,
-    textHover = Theme.COLORS.option_button_text_hover,
-    textActive = Theme.COLORS.text_primary,
-  }
-  local fontSelector = createFontSelector(
+  local function selectorColorsFor(activeTheme)
+    return {
+      bg = activeTheme.COLORS.option_button_bg,
+      bgHover = activeTheme.COLORS.option_button_hover,
+      bgActive = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected,
+      text = activeTheme.COLORS.option_button_text,
+      textHover = activeTheme.COLORS.option_button_text_hover,
+      textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
+    }
+  end
+  local selectorColors = selectorColorsFor(Theme)
+  local themePresetOptions = buildThemePresetOptions()
+  local themePresetSelector = createButtonSelector(
     factory,
     frame,
+    "Theme Preset",
+    themePresetOptions,
+    DEFAULTS.themePreset,
+    config.themePreset or DEFAULTS.themePreset,
+    selectorColors,
+    function(value)
+      onChange("themePreset", value)
+    end
+  )
+  themePresetSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+
+  local fontSelector = createButtonSelector(
+    factory,
+    frame,
+    "Font Family",
+    FONT_OPTIONS,
+    DEFAULTS.fontFamily,
     config.fontFamily or DEFAULTS.fontFamily,
     selectorColors,
     function(value)
       onChange("fontFamily", value)
     end
   )
-  fontSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+  fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   local opacityInactiveRow = createSliderRow(
     factory,
@@ -251,12 +356,15 @@ function AppearanceSettings.Create(factory, parent, config, options)
   opacityActiveRow.row:SetPoint("TOPLEFT", opacityInactiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   -- Reset button
-  local normalColors = {
-    bg = Theme.COLORS.option_button_bg,
-    bgHover = Theme.COLORS.option_button_hover,
-    text = Theme.COLORS.option_button_text,
-    textHover = Theme.COLORS.option_button_text_hover,
-  }
+  local function optionButtonColorsFor(activeTheme)
+    return {
+      bg = activeTheme.COLORS.option_button_bg,
+      bgHover = activeTheme.COLORS.option_button_hover,
+      text = activeTheme.COLORS.option_button_text,
+      textHover = activeTheme.COLORS.option_button_text_hover,
+    }
+  end
+  local normalColors = optionButtonColorsFor(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,
     frame,
@@ -268,16 +376,39 @@ function AppearanceSettings.Create(factory, parent, config, options)
   resetButton:SetScript("OnClick", function()
     opacityInactiveRow.slider:SetValue(DEFAULTS.windowOpacityInactive)
     opacityActiveRow.slider:SetValue(DEFAULTS.windowOpacityActive)
+    themePresetSelector.setSelected(DEFAULTS.themePreset)
+    onChange("themePreset", DEFAULTS.themePreset)
     fontSelector.setSelected(DEFAULTS.fontFamily)
     onChange("fontFamily", DEFAULTS.fontFamily)
   end)
 
+  local function refreshTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+    UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
+    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
+
+    local selectorColors = selectorColorsFor(activeTheme)
+    themePresetSelector.applyTheme(activeTheme, selectorColors)
+    fontSelector.applyTheme(activeTheme, selectorColors)
+
+    opacityInactiveRow.applyTheme(activeTheme)
+    opacityActiveRow.applyTheme(activeTheme)
+
+    if resetButton.applyThemeColors then
+      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+    end
+  end
+
+  refreshTheme(Theme)
+
   return {
     frame = frame,
+    themePresetSelector = themePresetSelector,
     fontSelector = fontSelector,
     opacityInactiveSlider = opacityInactiveRow.slider,
     opacityActiveSlider = opacityActiveRow.slider,
     resetButton = resetButton,
+    refreshTheme = refreshTheme,
   }
 end
 

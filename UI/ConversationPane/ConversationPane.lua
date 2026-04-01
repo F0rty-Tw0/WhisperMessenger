@@ -18,7 +18,7 @@ local pointValue = TranscriptView._pointValue
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColor = UIHelpers.applyColor
-
+local applyColorTexture = UIHelpers.applyColorTexture
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
@@ -33,6 +33,9 @@ ConversationPane.LoadMore = TranscriptView.LoadMore
 
 -- Re-export header refresh
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
+  view._selectedContact = selectedContact
+  view._conversation = conversation
+  view._status = status
   HeaderView.Refresh(view, selectedContact, conversation, status)
   -- Reset visible count when conversation changes
   view.transcript._visibleCount = MESSAGES_PAGE_SIZE
@@ -156,7 +159,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   applyColor(activeStatusBanner, Theme.COLORS.text_system)
   activeStatusBanner:Hide()
 
-  local view = {
+  local view
+  view = {
     frame = pane,
     -- Legacy header stub so any callers using view.header:SetText() don't crash
     header = header.headerName,
@@ -166,10 +170,32 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     headerFactionIcon = header.headerFactionIcon,
     headerStatus = header.headerStatus,
     headerStatusDot = header.headerStatusDot,
+    headerDivider = header.headerDivider,
     headerEmpty = header.headerEmpty,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     transcript = transcript,
+    refreshTheme = function()
+      if view.headerFrame and view.headerFrame.bg then
+        applyColorTexture(view.headerFrame.bg, Theme.COLORS.bg_header)
+      end
+      if view.headerDivider then
+        applyColorTexture(view.headerDivider, Theme.COLORS.divider)
+      end
+      HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
+      if view.headerStatus then
+        applyColor(view.headerStatus, Theme.COLORS.text_secondary)
+      end
+      if view.headerEmpty then
+        applyColor(view.headerEmpty, Theme.COLORS.text_secondary)
+      end
+      if view.activeStatusBanner then
+        applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
+      end
+      if view.transcript and view.transcript._allMessages then
+        TranscriptView.RenderTranscript(view.transcript, view.transcript._allMessages)
+      end
+    end,
   }
 
   ConversationPane.Refresh(view, selectedContact, conversation)

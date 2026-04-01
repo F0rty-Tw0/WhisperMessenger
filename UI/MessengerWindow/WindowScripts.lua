@@ -98,9 +98,27 @@ function WindowScripts.WireButtons(refs, options)
 
   -- Tab switching: show one panel at a time, highlight active tab
   if #settingsTabs > 0 and #settingsPanels > 0 then
-    local activeHighlight = Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
-    local inactiveBg = Theme.COLORS.option_button_bg or { 0.14, 0.15, 0.20, 0.80 }
-
+    local function activeHighlightColor()
+      return Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
+    end
+    local function activeHoverColor()
+      return Theme.COLORS.option_button_active_hover or activeHighlightColor()
+    end
+    local function inactiveBackgroundColor()
+      return Theme.COLORS.option_button_bg or { 0.14, 0.15, 0.20, 0.80 }
+    end
+    local function inactiveHoverColor()
+      return Theme.COLORS.option_button_hover or inactiveBackgroundColor()
+    end
+    local function inactiveTextColor()
+      return Theme.COLORS.option_button_text or Theme.COLORS.text_secondary
+    end
+    local function inactiveTextHoverColor()
+      return Theme.COLORS.option_button_text_hover or Theme.COLORS.text_primary
+    end
+    local function activeTextColor()
+      return Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary
+    end
     local function selectTab(index)
       for i, panel in ipairs(settingsPanels) do
         if panel and panel.Hide and panel.Show then
@@ -114,21 +132,50 @@ function WindowScripts.WireButtons(refs, options)
       for i, tab in ipairs(settingsTabs) do
         if tab and tab.bg and tab.SetScript then
           local bg = tab.bg
-          local isActive = i == index
-          if isActive then
-            bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
-          else
-            bg:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
+          local function applyTabVisual(hovered)
+            local isActive = tab._wmIsActiveTab == true
+            local color = nil
+            local textColor = nil
+            local hoverBg = nil
+            local hoverText = nil
+            if isActive then
+              color = activeHighlightColor()
+              hoverBg = activeHoverColor()
+              textColor = activeTextColor()
+              hoverText = activeTextColor()
+            else
+              color = inactiveBackgroundColor()
+              hoverBg = inactiveHoverColor()
+              textColor = inactiveTextColor()
+              hoverText = inactiveTextHoverColor()
+            end
+            if tab.applyThemeColors then
+              tab.applyThemeColors({
+                bg = color,
+                bgHover = hoverBg,
+                text = textColor,
+                textHover = hoverText,
+              })
+            end
+            local paintColor = hovered and hoverBg or color
+            if bg and bg.SetColorTexture then
+              bg:SetColorTexture(paintColor[1], paintColor[2], paintColor[3], paintColor[4] or 1)
+            end
+            if tab.label and tab.label.SetTextColor then
+              local paintText = hovered and hoverText or textColor
+              tab.label:SetTextColor(paintText[1], paintText[2], paintText[3], paintText[4] or 1)
+            end
           end
+          tab._wmIsActiveTab = i == index
+          tab._wmIsHoveredTab = tab.IsMouseOver and tab:IsMouseOver() or false
+          applyTabVisual(tab._wmIsHoveredTab)
           tab:SetScript("OnEnter", function()
-            bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
+            tab._wmIsHoveredTab = true
+            applyTabVisual(true)
           end)
           tab:SetScript("OnLeave", function()
-            if isActive then
-              bg:SetColorTexture(activeHighlight[1], activeHighlight[2], activeHighlight[3], activeHighlight[4] or 1)
-            else
-              bg:SetColorTexture(inactiveBg[1], inactiveBg[2], inactiveBg[3], inactiveBg[4] or 1)
-            end
+            tab._wmIsHoveredTab = false
+            applyTabVisual(false)
           end)
         end
       end
@@ -541,16 +588,23 @@ function WindowScripts.WireFrame(refs, options)
     end
 
     local divider = options.layout and options.layout.contactsDivider or nil
-    local dividerColor = frameTheme.COLORS and frameTheme.COLORS.divider or { 0.20, 0.22, 0.28, 1 }
-    local hoverFillColor = frameTheme.COLORS and frameTheme.COLORS.bg_contact_hover or { 0.24, 0.28, 0.42, 1 }
-    local outlineColor = dividerColor
-    local dividerActiveAlpha = 0.62
-    local hoverFillAlphaMultiplier = 0.18
-    local outlineAlpha = 0.45
+    local dividerColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_divider or frameTheme.COLORS.divider)
+      or { 0.20, 0.22, 0.28, 1 }
+    local dividerHoverColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_divider_hover or frameTheme.COLORS.accent_primary)
+      or { 0.24, 0.32, 0.54, 0.95 }
+    local hoverFillColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_resize_hover_fill or frameTheme.COLORS.bg_contact_hover)
+      or { 0.24, 0.32, 0.54, 0.22 }
+    local outlineColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_resize_outline or dividerHoverColor)
+      or { 0.24, 0.32, 0.54, 0.62 }
 
     if divider and divider.SetColorTexture then
       if isActive then
-        divider:SetColorTexture(outlineColor[1], outlineColor[2], outlineColor[3], dividerActiveAlpha)
+        divider:SetColorTexture(
+          dividerHoverColor[1],
+          dividerHoverColor[2],
+          dividerHoverColor[3],
+          dividerHoverColor[4] or 1
+        )
       else
         divider:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], dividerColor[4] or 1)
       end
@@ -562,7 +616,7 @@ function WindowScripts.WireFrame(refs, options)
           hoverFillColor[1],
           hoverFillColor[2],
           hoverFillColor[3],
-          (hoverFillColor[4] or 1) * hoverFillAlphaMultiplier
+          hoverFillColor[4] or 1
         )
       else
         contactsResizeHandle.hoverBg:SetColorTexture(0, 0, 0, 0)
@@ -574,7 +628,12 @@ function WindowScripts.WireFrame(refs, options)
       for _, edge in pairs(outline) do
         if edge and edge.SetColorTexture then
           if isActive then
-            edge:SetColorTexture(outlineColor[1], outlineColor[2], outlineColor[3], outlineAlpha)
+            edge:SetColorTexture(
+              outlineColor[1],
+              outlineColor[2],
+              outlineColor[3],
+              outlineColor[4] or 1
+            )
             if edge.Show then
               edge:Show()
             end

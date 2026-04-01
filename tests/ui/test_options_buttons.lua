@@ -85,4 +85,9 @@ return function()
     string.find(layout.optionsHint.text, "clear", 1, true) or string.find(layout.optionsHint.text, "Clear", 1, true),
     "optionsHint should mention clearing chats"
   )
+
+  local expectedHintWidth = layout.contactsWidth - ((Theme.CONTENT_PADDING or 0) * 2)
+  assert(layout.optionsHint.width == expectedHintWidth, "optionsHint should size to the current menu width")
+  assert(layout.optionsHint.wordWrap == true, "optionsHint should enable word wrap")
+  assert(layout.optionsHint.justifyH == "LEFT", "optionsHint should left-align wrapped text")
 end

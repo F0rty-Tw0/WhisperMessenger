@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
+local setTextColor = UIHelpers.setTextColor
 
 local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.ContactsList.DataBuilder")
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
@@ -22,26 +23,36 @@ ContactsList.BuildItemsForProfile = DataBuilder.BuildItemsForProfile
 function ContactsList.SetSelected(rows, selectedConversationKey)
   for _, row in ipairs(rows or {}) do
     row.selected = row.item ~= nil and row.item.conversationKey == selectedConversationKey
+    local baseColor = (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
+    row._wmRowBaseBg = baseColor
 
-    -- Update visual state for each row
-    if row.bg then
-      local c
-      if row.selected then
-        c = Theme.COLORS.bg_contact_selected
-      elseif row.item and row.item.pinned then
-        c = Theme.COLORS.bg_contact_pinned
-      else
-        c = Theme.COLORS.bg_secondary
-      end
+    if row._wmApplyVisualState then
+      row._wmApplyVisualState()
+    elseif row.bg then
+      local c = row.selected and Theme.COLORS.bg_contact_selected or baseColor
       applyColorTexture(row.bg, c)
     end
 
     if row.accentBar then
+      applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
       if row.selected then
         row.accentBar:Show()
       else
         row.accentBar:Hide()
       end
+    end
+    if row.selectedRightBorder then
+      applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
+      if row.selected then
+        row.selectedRightBorder:Show()
+      else
+        row.selectedRightBorder:Hide()
+      end
+    end
+
+    if row.preview then
+      local previewColor = row.selected and Theme.COLORS.text_primary or Theme.COLORS.text_secondary
+      setTextColor(row.preview, previewColor)
     end
   end
 
@@ -74,11 +85,15 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
     if row.accentBar then
       row.accentBar:Hide()
     end
+    if row.selectedRightBorder then
+      row.selectedRightBorder:Hide()
+    end
     if row.title then
       row.title:SetText("")
     end
     if row.preview then
       row.preview:SetText("")
+      setTextColor(row.preview, Theme.COLORS.text_secondary)
     end
     if row.timeLabel then
       row.timeLabel:SetText("")

@@ -66,6 +66,7 @@ function Bootstrap.Initialize(factory, options)
   local Diagnostics = loadModule("WhisperMessenger.Core.Bootstrap.Diagnostics", "BootstrapDiagnostics")
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
+  local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
 
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
@@ -74,11 +75,22 @@ function Bootstrap.Initialize(factory, options)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   runtime.messagingNotice = nil
-  -- Initialize font mode from saved settings
+  -- Initialize theme/font mode from saved settings
   accountState.settings = accountState.settings or {}
   if Fonts.Initialize then
     Fonts.Initialize(accountState.settings.fontFamily or "default")
   end
+  local themePresetKey = accountState.settings.themePreset or (Theme.DEFAULT_PRESET or "wow_default")
+  if Theme.ResolvePreset then
+    local resolvedKey = Theme.ResolvePreset(themePresetKey, trace)
+    themePresetKey = resolvedKey or themePresetKey
+  elseif Theme.SetPreset then
+    Theme.SetPreset(themePresetKey)
+    if Theme.GetPreset then
+      themePresetKey = Theme.GetPreset() or themePresetKey
+    end
+  end
+  accountState.settings.themePreset = themePresetKey
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G.C_Club, {

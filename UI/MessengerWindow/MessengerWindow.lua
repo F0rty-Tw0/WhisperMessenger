@@ -23,6 +23,8 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
+local applyColorTexture = UIHelpers.applyColorTexture
+local setTextColor = UIHelpers.setTextColor
 
 local MessengerWindow = {}
 
@@ -100,6 +102,7 @@ function MessengerWindow.Create(factory, options)
   local closeButton = chrome.closeButton
   local optionsButton = chrome.optionsButton
   local resizeGrip = chrome.resizeGrip
+  local titleBarTopBorder = chrome.titleBarTopBorder
 
   -- Settings config (must be available before layout and alpha wiring)
   local settingsConfig = options.settingsConfig or {}
@@ -108,9 +111,11 @@ function MessengerWindow.Create(factory, options)
   local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
   currentContactsWidth = layout.contactsWidth or currentContactsWidth
   local contactsPane = layout.contactsPane
+  local contactsRightBorder = layout.contactsRightBorder
   local contactsDivider = layout.contactsDivider
   local contactsResizeHandle = layout.contactsResizeHandle
   local contentPane = layout.contentPane
+  local contactsHeaderDivider = layout.contactsHeaderDivider
   local headerDivider = layout.headerDivider
   local threadPane = layout.threadPane
   local composerPane = layout.composerPane
@@ -134,10 +139,16 @@ function MessengerWindow.Create(factory, options)
   local contactsSearchPlaceholder = layout.contactsSearchPlaceholder
   -- Compose settings panels (each inside its own frame within optionsContentPane)
   local storeConfig = options.storeConfig or {}
+  local refreshThemeVisuals -- forward declaration
+  local conversation -- forward declaration
+  local composer -- forward declaration
 
   local function onSettingChanged(key, value)
     if options.onSettingChanged then
       options.onSettingChanged(key, value)
+    end
+    if key == "themePreset" and refreshThemeVisuals then
+      refreshThemeVisuals()
     end
   end
 
@@ -159,6 +170,7 @@ function MessengerWindow.Create(factory, options)
   })
 
   local appearancePanel, appearanceSettings = createSettingsPanel(AppearanceSettings.Create, {
+    themePreset = settingsConfig.themePreset,
     fontFamily = settingsConfig.fontFamily,
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
@@ -177,6 +189,29 @@ function MessengerWindow.Create(factory, options)
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
     showUnreadBadge = settingsConfig.showUnreadBadge,
   })
+
+
+  refreshThemeVisuals = function()
+    if chrome.applyTheme then
+      chrome.applyTheme(Theme)
+    end
+    if layout.applyTheme then
+      layout.applyTheme(Theme)
+    end
+    if conversation and conversation.refreshTheme then
+      conversation.refreshTheme()
+    end
+    if composer and composer.refreshTheme then
+      composer.refreshTheme()
+    end
+    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings }) do
+      if settingsView and settingsView.refreshTheme then
+        settingsView.refreshTheme(Theme)
+      end
+    end
+  end
+
+  refreshThemeVisuals()
 
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
@@ -346,11 +381,10 @@ function MessengerWindow.Create(factory, options)
   syncSearchInputVisual()
 
   -- Conversation pane
-  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
+  conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
 
   -- Composer (created before wiring alpha so we have composer.input)
   local composerSelectedContact = {}
-  local composer
 
   local function setOptionsVisible(nextVisible)
     if nextVisible then
@@ -525,11 +559,17 @@ function MessengerWindow.Create(factory, options)
       frame = frame,
       title = title,
       contactsPane = contactsPane,
+      contactsPaneBorder = layout.contactsPaneBorder,
       contactsDivider = contactsDivider,
+      contactsRightBorder = contactsRightBorder,
+      contactsHeaderDivider = contactsHeaderDivider,
       contentPane = contentPane,
       headerDivider = headerDivider,
+      titleBarBorder = chrome.titleBarBorder,
+      titleBarTopBorder = titleBarTopBorder,
       threadPane = threadPane,
       composerPane = composerPane,
+      composerPaneBorder = layout.composerPaneBorder,
       composerDivider = composerDivider,
       closeButton = closeButton,
       optionsButton = optionsButton,
@@ -559,6 +599,7 @@ function MessengerWindow.Create(factory, options)
       composer = composer,
       refreshContacts = refreshContacts,
       refreshSelection = refreshSelection,
+      refreshTheme = refreshThemeVisuals,
       selectConversation = function(conversationKey)
         for _, row in ipairs(contacts.rows) do
           if row.item ~= nil and row.item.conversationKey == conversationKey then

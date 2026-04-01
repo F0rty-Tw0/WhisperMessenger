@@ -8,7 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
-
+local setTextColor = UIHelpers.setTextColor
 local ChromeBuilder = {}
 
 -- Creates the outer frame, background, edge textures, title bar, title label,
@@ -77,41 +77,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   frame.background = background
 
   -- Subtle edge highlights (1px border)
-  local edgeTop = frame:CreateTexture(nil, "BORDER")
-  edgeTop:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-  edgeTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-  edgeTop:SetHeight(1)
-  do
-    local c = Theme.COLORS.divider
-    applyColorTexture(edgeTop, { c[1], c[2], c[3], 0.4 })
-  end
-
-  local edgeLeft = frame:CreateTexture(nil, "BORDER")
-  edgeLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-  edgeLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-  edgeLeft:SetWidth(1)
-  do
-    local c = Theme.COLORS.divider
-    applyColorTexture(edgeLeft, { c[1], c[2], c[3], 0.4 })
-  end
-
-  local edgeRight = frame:CreateTexture(nil, "BORDER")
-  edgeRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-  edgeRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-  edgeRight:SetWidth(1)
-  do
-    local c = Theme.COLORS.divider
-    applyColorTexture(edgeRight, { c[1], c[2], c[3], 0.4 })
-  end
-
-  local edgeBottom = frame:CreateTexture(nil, "BORDER")
-  edgeBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
-  edgeBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
-  edgeBottom:SetHeight(1)
-  do
-    local c = Theme.COLORS.divider
-    applyColorTexture(edgeBottom, { c[1], c[2], c[3], 0.4 })
-  end
+  local edgeTextures = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, 1, "BORDER")
 
   -- Title bar with header background
   local titleBar = factory.CreateFrame("Frame", nil, frame)
@@ -121,6 +87,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local titleBarBg = titleBar:CreateTexture(nil, "ARTWORK")
   titleBarBg:SetAllPoints(titleBar)
   applyColorTexture(titleBarBg, Theme.COLORS.bg_header)
+  local titleBarBorder = UIHelpers.createBorderBox(
+    titleBar,
+    Theme.COLORS.divider,
+    Theme.DIVIDER_THICKNESS,
+    "BORDER",
+    { top = true, left = true, right = true, bottom = false }
+  )
+  local titleBarTopBorder = titleBarBorder and titleBarBorder.top or nil
 
   local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -9)
@@ -188,6 +162,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   if resizeGrip.SetFrameLevel and frame.GetFrameLevel then
     resizeGrip:SetFrameLevel(frame:GetFrameLevel() + 20)
   end
+  local resizeLines = {}
   do
     local c = Theme.COLORS.text_secondary
     local gripColor = { c[1], c[2], c[3], 0.4 }
@@ -196,34 +171,64 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     line1:SetSize(2, 2)
     line1:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 1)
     applyColorTexture(line1, gripColor)
+    resizeLines[#resizeLines + 1] = line1
 
     local line2 = resizeGrip:CreateTexture(nil, "OVERLAY")
     line2:SetSize(6, 2)
     line2:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 5)
     applyColorTexture(line2, gripColor)
+    resizeLines[#resizeLines + 1] = line2
     local line2h = resizeGrip:CreateTexture(nil, "OVERLAY")
     line2h:SetSize(2, 6)
     line2h:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -5, 1)
     applyColorTexture(line2h, gripColor)
+    resizeLines[#resizeLines + 1] = line2h
 
     local line3 = resizeGrip:CreateTexture(nil, "OVERLAY")
     line3:SetSize(10, 2)
     line3:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 9)
     applyColorTexture(line3, gripColor)
+    resizeLines[#resizeLines + 1] = line3
     local line3h = resizeGrip:CreateTexture(nil, "OVERLAY")
     line3h:SetSize(2, 10)
     line3h:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -9, 1)
     applyColorTexture(line3h, gripColor)
+    resizeLines[#resizeLines + 1] = line3h
   end
+
+  local function applyTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+    applyColorTexture(background, activeTheme.COLORS.bg_primary)
+    applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
+    setTextColor(title, activeTheme.COLORS.text_title or activeTheme.COLORS.text_primary)
+
+    local divider = activeTheme.COLORS.divider
+    UIHelpers.applyBorderBoxColor(edgeTextures, { divider[1], divider[2], divider[3], divider[4] or 1 })
+    UIHelpers.applyBorderBoxColor(titleBarBorder, divider)
+
+    applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
+    applyVertexColor(optionsIcon, activeTheme.COLORS.text_secondary)
+
+    local secondary = activeTheme.COLORS.text_secondary
+    local gripColor = { secondary[1], secondary[2], secondary[3], 0.4 }
+    for _, line in ipairs(resizeLines) do
+      applyColorTexture(line, gripColor)
+    end
+  end
+
+  applyTheme(Theme)
 
   return {
     frame = frame,
     background = background,
     titleBar = titleBar,
+    titleBarBorder = titleBarBorder,
+    titleBarTopBorder = titleBarTopBorder,
     title = title,
     closeButton = closeButton,
     optionsButton = optionsButton,
     resizeGrip = resizeGrip,
+    applyTheme = applyTheme,
   }
 end
 

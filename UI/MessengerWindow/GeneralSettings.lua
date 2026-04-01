@@ -85,8 +85,16 @@ local function createSettingRow(factory, parent, label, min, max, step, initial,
     label = labelFs,
     value = valueFs,
     slider = slider,
+    sliderBg = bg,
     minLabel = minLabel,
     maxLabel = maxLabel,
+    applyTheme = function(activeTheme)
+      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
+      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
+      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
+      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
+      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
+    end,
   }
 end
 
@@ -161,11 +169,15 @@ function GeneralSettings.Create(factory, parent, config, options)
   retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   -- Privacy toggles
-  local toggleColors = {
-    text = Theme.COLORS.text_primary,
-    on = Theme.COLORS.online,
-    off = Theme.COLORS.offline,
-  }
+  local function toggleColorsFor(activeTheme)
+    return {
+      text = activeTheme.COLORS.text_primary,
+      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
+      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
+      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
+    }
+  end
+  local toggleColors = toggleColorsFor(Theme)
   local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
 
   local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
@@ -200,12 +212,15 @@ function GeneralSettings.Create(factory, parent, config, options)
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
 
   -- Reset to Defaults button
-  local normalColors = {
-    bg = Theme.COLORS.option_button_bg,
-    bgHover = Theme.COLORS.option_button_hover,
-    text = Theme.COLORS.option_button_text,
-    textHover = Theme.COLORS.option_button_text_hover,
-  }
+  local function optionButtonColorsFor(activeTheme)
+    return {
+      bg = activeTheme.COLORS.option_button_bg,
+      bgHover = activeTheme.COLORS.option_button_hover,
+      text = activeTheme.COLORS.option_button_text,
+      textHover = activeTheme.COLORS.option_button_text_hover,
+    }
+  end
+  local normalColors = optionButtonColorsFor(Theme)
   local resetButton = createOptionButton(
     factory,
     frame,
@@ -225,6 +240,27 @@ function GeneralSettings.Create(factory, parent, config, options)
     onChange("hideMessagePreview", DEFAULTS.hideMessagePreview)
   end)
 
+  local function refreshTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+    UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
+    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
+    UIHelpers.setTextColor(privacyLabel, activeTheme.COLORS.text_secondary)
+
+    messagesRow.applyTheme(activeTheme)
+    conversationsRow.applyTheme(activeTheme)
+    retentionRow.applyTheme(activeTheme)
+
+    local toggleColors = toggleColorsFor(activeTheme)
+    clearOnLogoutToggle.applyThemeColors(toggleColors)
+    hidePreviewToggle.applyThemeColors(toggleColors)
+
+    if resetButton.applyThemeColors then
+      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+    end
+  end
+
+  refreshTheme(Theme)
+
   return {
     frame = frame,
     maxMessagesSlider = messagesRow.slider,
@@ -239,6 +275,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     clearOnLogoutToggle = clearOnLogoutToggle,
     hidePreviewToggle = hidePreviewToggle,
     resetButton = resetButton,
+    refreshTheme = refreshTheme,
   }
 end
 

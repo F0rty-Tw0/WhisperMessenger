@@ -39,12 +39,27 @@ local function pinTooltipText(row)
 end
 
 local function restoreRowVisualState(row)
+  if row._wmApplyVisualState then
+    row._wmApplyVisualState()
+    return
+  end
   if row.selected then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
+  elseif (row._wmActionHoverCount or 0) > 0 then
+    applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
   else
     applyColorTexture(row.bg, rowBaseBackgroundColor(row))
   end
-  ActionButtons.hideActions(row)
+  if (row._wmActionHoverCount or 0) > 0 then
+    ActionButtons.showActions(row)
+  else
+    ActionButtons.hideActions(row)
+  end
+end
+
+local function adjustActionHoverCount(row, delta)
+  row._wmActionHoverCount = math.max(0, (row._wmActionHoverCount or 0) + delta)
+  restoreRowVisualState(row)
 end
 
 --- Show action buttons on a row (pin + remove), respecting unread state.
@@ -102,10 +117,7 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   if btn.SetScript then
     btn:SetScript("OnEnter", function(self)
       applyVertexColor(self.icon, Theme.COLORS.action_remove_hover)
-      if not row.selected then
-        applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
-      end
-      ActionButtons.showActions(row)
+      adjustActionHoverCount(row, 1)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         _G.GameTooltip:SetText("Remove")
@@ -115,9 +127,7 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
 
     btn:SetScript("OnLeave", function(self)
       applyVertexColor(self.icon, Theme.COLORS.action_icon)
-      if not (row.IsMouseOver and row:IsMouseOver()) then
-        restoreRowVisualState(row)
-      end
+      adjustActionHoverCount(row, -1)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -171,10 +181,7 @@ function ActionButtons.createPinButton(factory, row, _item, _parentWidth, option
   if btn.SetScript then
     btn:SetScript("OnEnter", function(self)
       applyVertexColor(self.icon, Theme.COLORS.action_icon_hover)
-      if not row.selected then
-        applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
-      end
-      ActionButtons.showActions(row)
+      adjustActionHoverCount(row, 1)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         _G.GameTooltip:SetText(pinTooltipText(row))
@@ -184,9 +191,7 @@ function ActionButtons.createPinButton(factory, row, _item, _parentWidth, option
 
     btn:SetScript("OnLeave", function(self)
       applyVertexColor(self.icon, pinBaseColor(row))
-      if not (row.IsMouseOver and row:IsMouseOver()) then
-        restoreRowVisualState(row)
-      end
+      adjustActionHoverCount(row, -1)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
