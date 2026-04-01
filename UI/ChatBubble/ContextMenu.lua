@@ -97,11 +97,7 @@ local function getMenuFrame()
     return frame
   end
 
-  if _G.UIDropDownMenuTemplate then
-    return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
-  end
-
-  return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent)
+  return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
 end
 
 resolvePopupEditBox = function(dialog)
@@ -283,7 +279,7 @@ function ContextMenu.CopyText(text)
   return showManualCopyDialog(normalized)
 end
 
-function ContextMenu.Open(text, anchorFrame)
+function ContextMenu.Open(text)
   local normalized = normalizeText(text)
   if normalized == nil then
     return false
@@ -291,7 +287,7 @@ function ContextMenu.Open(text, anchorFrame)
 
   local menuFrame = getMenuFrame()
   if menuFrame == nil then
-    return false
+    return ContextMenu.CopyText(normalized)
   end
 
   local menu = {
@@ -308,7 +304,7 @@ function ContextMenu.Open(text, anchorFrame)
   }
 
   if type(_G.EasyMenu) == "function" then
-    _G.EasyMenu(menu, menuFrame, anchorFrame or "cursor", 0, 0, "MENU")
+    _G.EasyMenu(menu, menuFrame, "cursor", 0, 0, "MENU")
     return true
   end
 
@@ -335,7 +331,7 @@ function ContextMenu.Open(text, anchorFrame)
     end
   end, "MENU")
 
-  _G.ToggleDropDownMenu(1, nil, menuFrame, anchorFrame or "cursor", 0, 0)
+  _G.ToggleDropDownMenu(1, nil, menuFrame, "cursor", 0, 0)
   return true
 end
 
