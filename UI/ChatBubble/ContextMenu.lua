@@ -279,7 +279,7 @@ function ContextMenu.CopyText(text)
   return showManualCopyDialog(normalized)
 end
 
-function ContextMenu.Open(text)
+function ContextMenu.Open(text, anchorFrame)
   local normalized = normalizeText(text)
   if normalized == nil then
     return false
@@ -290,6 +290,7 @@ function ContextMenu.Open(text)
     return ContextMenu.CopyText(normalized)
   end
 
+  local menuAnchor = anchorFrame or "cursor"
   local menu = {
     {
       text = styleMenuText("Copy Text"),
@@ -304,7 +305,7 @@ function ContextMenu.Open(text)
   }
 
   if type(_G.EasyMenu) == "function" then
-    _G.EasyMenu(menu, menuFrame, "cursor", 0, 0, "MENU")
+    _G.EasyMenu(menu, menuFrame, menuAnchor, 0, 0, "MENU")
     return true
   end
 
@@ -331,7 +332,7 @@ function ContextMenu.Open(text)
     end
   end, "MENU")
 
-  _G.ToggleDropDownMenu(1, nil, menuFrame, "cursor", 0, 0)
+  _G.ToggleDropDownMenu(1, nil, menuFrame, menuAnchor, 0, 0)
   return true
 end
 
