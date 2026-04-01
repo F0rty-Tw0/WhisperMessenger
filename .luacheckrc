@@ -92,6 +92,7 @@ read_globals = {
   "ChatFrame_ReplyTell",
   "ChatFrame_SendBNetTell",
   "ChatFrame_SendTell",
+  "BNSendWhisper",
 
   -- CVar API
   "GetCVar",
@@ -112,6 +113,16 @@ read_globals = {
 
   -- Standard globals
   "_G",
+
+  -- Flavor detection (multi-TOC Classic support)
+  "WOW_PROJECT_ID",
+  "WOW_PROJECT_MAINLINE",
+  "WOW_PROJECT_CLASSIC",
+  "WOW_PROJECT_BURNING_CRUSADE_CLASSIC",
+  "WOW_PROJECT_WRATH_CLASSIC",
+  "WOW_PROJECT_CATACLYSM_CLASSIC",
+  "WOW_PROJECT_MISTS_CLASSIC",
+  "LE_EXPANSION_LEVEL_CURRENT",
 }
 
 -- Test files: allow busted globals and relaxed global access

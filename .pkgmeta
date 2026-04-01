@@ -1,9 +1,11 @@
 package-as: WhisperMessenger
+enable-toc-creation: yes
 
 ignore:
   - .github
   - .claude
   - .omc
+  - .wolf
   - tests
   - scripts
   - docs

@@ -544,7 +544,8 @@ return function()
       "expected contacts divider to use hover color on handle hover"
     )
     assert(
-      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1] and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
+      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1]
+        and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
       "expected contacts resize hover fill color to apply on handle hover"
     )
     assert(
@@ -557,10 +558,7 @@ return function()
       contactsDivider.color[1] == idleDividerColor[1] and contactsDivider.color[2] == idleDividerColor[2],
       "expected contacts divider to restore idle color after hover"
     )
-    assert(
-      contactsResizeHandle.hoverBg.color[4] == 0,
-      "expected contacts resize hover fill to clear after hover"
-    )
+    assert(contactsResizeHandle.hoverBg.color[4] == 0, "expected contacts resize hover fill to clear after hover")
     assert(contactsResizeHandle.outline.top.shown == false, "expected contacts resize outline to hide after hover")
     contactsResizeHandle.scripts.OnMouseDown(contactsResizeHandle, "LeftButton")
     assert(relayoutArgs ~= nil, "expected relayout call while resizing contacts")

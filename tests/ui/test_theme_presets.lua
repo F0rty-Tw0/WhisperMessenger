@@ -5,10 +5,7 @@ local function colorsMatch(actual, expected)
     return false
   end
 
-  return actual[1] == expected[1]
-    and actual[2] == expected[2]
-    and actual[3] == expected[3]
-    and actual[4] == expected[4]
+  return actual[1] == expected[1] and actual[2] == expected[2] and actual[3] == expected[3] and actual[4] == expected[4]
 end
 
 return function()
@@ -38,10 +35,7 @@ return function()
       colorsMatch(Theme.COLORS.bg_primary, { 0.03, 0.03, 0.03, 0.98 }),
       "test_set_elvui_dark: bg_primary did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.accent, { 0.34, 0.51, 0.90, 1.0 }),
-      "test_set_elvui_dark: accent did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.accent, { 0.34, 0.51, 0.90, 1.0 }), "test_set_elvui_dark: accent did not update")
     assert(
       colorsMatch(Theme.COLORS.bg_search_input, { 0.09, 0.10, 0.12, 1.0 }),
       "test_set_elvui_dark: bg_search_input did not update"
@@ -50,7 +44,10 @@ return function()
       colorsMatch(Theme.COLORS.bg_message_input, { 0.09, 0.10, 0.12, 1.0 }),
       "test_set_elvui_dark: bg_message_input did not update"
     )
-    assert(Theme.COLORS.message_input_border_top == nil, "test_set_elvui_dark: message_input_border_top should be removed")
+    assert(
+      Theme.COLORS.message_input_border_top == nil,
+      "test_set_elvui_dark: message_input_border_top should be removed"
+    )
     assert(
       colorsMatch(Theme.COLORS.bg_bubble_in, { 0.16, 0.17, 0.20, 0.95 }),
       "test_set_elvui_dark: bg_bubble_in did not update"
@@ -100,7 +97,6 @@ return function()
       colorsMatch(Theme.COLORS.text_title, { 0.99, 0.99, 1.0, 1.0 }),
       "test_set_elvui_dark: text_title did not update"
     )
-
   end
 
   do
@@ -112,10 +108,7 @@ return function()
       colorsMatch(Theme.COLORS.bg_primary, { 0.12, 0.10, 0.08, 0.97 }),
       "test_set_plumber_warm: bg_primary did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.accent, { 0.88, 0.56, 0.22, 1.0 }),
-      "test_set_plumber_warm: accent did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.accent, { 0.88, 0.56, 0.22, 1.0 }), "test_set_plumber_warm: accent did not update")
     assert(
       colorsMatch(Theme.COLORS.bg_search_input, { 0.31, 0.22, 0.16, 0.98 }),
       "test_set_plumber_warm: bg_search_input did not update"
@@ -124,7 +117,10 @@ return function()
       colorsMatch(Theme.COLORS.bg_message_input, { 0.31, 0.22, 0.16, 0.98 }),
       "test_set_plumber_warm: bg_message_input did not update"
     )
-    assert(Theme.COLORS.message_input_border_top == nil, "test_set_plumber_warm: message_input_border_top should be removed")
+    assert(
+      Theme.COLORS.message_input_border_top == nil,
+      "test_set_plumber_warm: message_input_border_top should be removed"
+    )
     assert(
       colorsMatch(Theme.COLORS.send_button, { 0.74, 0.40, 0.20, 1.0 }),
       "test_set_plumber_warm: send_button did not update"
@@ -170,7 +166,6 @@ return function()
       colorsMatch(Theme.COLORS.text_title, { 1.0, 0.97, 0.92, 1.0 }),
       "test_set_plumber_warm: text_title did not update"
     )
-
   end
 
   do
@@ -185,10 +180,7 @@ return function()
     local ok = Theme.SetPreset("unknown")
     assert(ok == false, "test_invalid_key: expected SetPreset to return false")
     assert(Theme.GetPreset() == beforePreset, "test_invalid_key: active preset should remain unchanged")
-    assert(
-      colorsMatch(Theme.COLORS.accent, beforeAccent),
-      "test_invalid_key: color state should remain unchanged"
-    )
+    assert(colorsMatch(Theme.COLORS.accent, beforeAccent), "test_invalid_key: color state should remain unchanged")
   end
 
   do
@@ -199,13 +191,19 @@ return function()
 
     local resolved, applied = Theme.ResolvePreset("missing_preset", trace)
     assert(applied == true, "test_resolve_fallback: expected fallback apply to succeed")
-    assert(resolved == "wow_default", "test_resolve_fallback: expected wow_default fallback, got: " .. tostring(resolved))
+    assert(
+      resolved == "wow_default",
+      "test_resolve_fallback: expected wow_default fallback, got: " .. tostring(resolved)
+    )
     assert(#traceCalls > 0, "test_resolve_fallback: expected fallback trace to be emitted")
   end
 
   local resetOk = Theme.SetPreset("wow_default")
   assert(resetOk == true, "test_reset_default: expected wow_default preset to apply")
-  assert(Theme.COLORS.message_input_border_top == nil, "test_reset_default: message_input_border_top should remain removed")
+  assert(
+    Theme.COLORS.message_input_border_top == nil,
+    "test_reset_default: message_input_border_top should remain removed"
+  )
   assert(Theme.COLORS.send_button_border == nil, "test_reset_default: send_button_border should remain removed")
   assert(
     colorsMatch(Theme.COLORS.accent, { 0.12, 0.72, 0.96, 1.0 }),

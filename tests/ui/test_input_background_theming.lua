@@ -102,7 +102,10 @@ return function()
     colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button),
     "expected send button to repaint on preset change"
   )
-  assert(composer.sendButton.sendBorderTop == nil, "expected send button top border to stay removed after preset change")
+  assert(
+    composer.sendButton.sendBorderTop == nil,
+    "expected send button top border to stay removed after preset change"
+  )
   assert(
     colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary),
     "expected search input text color to update when preset changes"

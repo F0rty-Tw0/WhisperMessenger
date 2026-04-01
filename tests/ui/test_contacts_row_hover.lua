@@ -41,11 +41,19 @@ return function()
   removeButton.scripts.OnEnter(removeButton)
   row.scripts.OnLeave(row)
 
-  assertColorEquals(row.bg.color, Theme.COLORS.bg_contact_hover, "row should stay hover-colored while over action button")
+  assertColorEquals(
+    row.bg.color,
+    Theme.COLORS.bg_contact_hover,
+    "row should stay hover-colored while over action button"
+  )
 
   removeButton.scripts.OnLeave(removeButton)
 
-  assertColorEquals(row.bg.color, Theme.COLORS.bg_secondary, "row should restore base color after leaving action button")
+  assertColorEquals(
+    row.bg.color,
+    Theme.COLORS.bg_secondary,
+    "row should restore base color after leaving action button"
+  )
   assert(row.removeButton:IsShown() == false, "remove button should hide after leaving row/actions")
   assert(row.pinButton:IsShown() == false, "pin button should hide after leaving row/actions")
 

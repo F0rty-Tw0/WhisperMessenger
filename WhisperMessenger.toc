@@ -1,6 +1,11 @@
 ## Interface: 120001
+## Interface-Mainline: 120001
+## Interface-Vanilla: 11508
+## Interface-TBC: 20505
+## Interface-Cata: 40402
+## Interface-Mists: 50503
 ## Title: WhisperMessenger
-## Notes: Messenger-style whisper UI for WoW Retail
+## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
 ## Version: v1.1.0
@@ -9,6 +14,7 @@
 ## X-Curse-Project-ID: 1494311
 ## X-Wago-ID: jK8gze6y
 
+Core/FlavorCompat.lua
 Core/Loader.lua
 Core/Trace.lua
 Core/Bindings.lua

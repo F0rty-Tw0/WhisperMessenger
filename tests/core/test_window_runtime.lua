@@ -319,26 +319,17 @@ return function()
 
   local refreshesBeforeFontChange = selectionRefreshes
   capturedWindowOptions.onSettingChanged("fontFamily", "system")
-  assert(
-    accountState.settings.fontFamily == "system",
-    "expected fontFamily change to persist setting"
-  )
+  assert(accountState.settings.fontFamily == "system", "expected fontFamily change to persist setting")
   assert(
     fontSetModeCalls[#fontSetModeCalls] == "system",
     "expected fontFamily change to call fonts.SetMode with the selected mode"
   )
-  assert(
-    selectionRefreshes == refreshesBeforeFontChange + 1,
-    "expected fontFamily change to refresh the window"
-  )
+  assert(selectionRefreshes == refreshesBeforeFontChange + 1, "expected fontFamily change to refresh the window")
 
   local refreshesBeforeThemeApply = selectionRefreshes
   local themeRefreshesBeforeApply = themeRefreshes
   capturedWindowOptions.onSettingChanged("themePreset", "elvui_dark")
-  assert(
-    accountState.settings.themePreset == "elvui_dark",
-    "expected valid themePreset to persist in account settings"
-  )
+  assert(accountState.settings.themePreset == "elvui_dark", "expected valid themePreset to persist in account settings")
   assert(activeThemePreset == "elvui_dark", "expected valid themePreset to apply to active theme")
   assert(
     themeSetPresetCalls[#themeSetPresetCalls] == "elvui_dark",
@@ -348,10 +339,7 @@ return function()
     themeRefreshes == themeRefreshesBeforeApply + 1,
     "expected valid themePreset change to refresh static window chrome"
   )
-  assert(
-    selectionRefreshes == refreshesBeforeThemeApply + 1,
-    "expected valid themePreset change to refresh the window"
-  )
+  assert(selectionRefreshes == refreshesBeforeThemeApply + 1, "expected valid themePreset change to refresh the window")
 
   local themeCallsBeforeFallback = #themeSetPresetCalls
   local refreshesBeforeThemeFallback = selectionRefreshes

@@ -6,6 +6,8 @@
 - Improved the messenger's visual polish with stronger section framing, clearer settings toggles, and distinct accent identities for each preset.
 - Improved theme consistency by reducing redundant theme tokens, pruning dead preset colors, and making preset changes repaint search/input/settings surfaces immediately.
 - Fixed theme startup and preset application issues so the addon loads cleanly and live theme changes update the window reliably.
+- Added full Classic compatibility — the addon now runs on Classic Era, Season of Discovery, TBC Classic Anniversary, Cata Classic, and MoP Classic in addition to Retail.
+- Fixed a crash caused by the removed UIDropDownMenuTemplate on Retail 10.0+ clients.
 
 ## [1.0.10] - 2026-03-31
 

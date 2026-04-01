@@ -97,7 +97,11 @@ local function getMenuFrame()
     return frame
   end
 
-  return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
+  if _G.UIDropDownMenuTemplate then
+    return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
+  end
+
+  return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent)
 end
 
 resolvePopupEditBox = function(dialog)

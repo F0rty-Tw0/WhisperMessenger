@@ -59,8 +59,14 @@ return function()
     "expected contacts right border red channel to match contacts_border_right"
   )
   assert(window.contactsPaneBorder ~= nil, "expected contacts pane border set")
-  assert(window.contactsPaneBorder.right == window.contactsRightBorder, "expected contactsRightBorder alias to point at contactsPaneBorder.right")
-  assert(window.contactsPaneBorder.top == window.contactsHeaderDivider, "expected contactsHeaderDivider alias to point at contactsPaneBorder.top")
+  assert(
+    window.contactsPaneBorder.right == window.contactsRightBorder,
+    "expected contactsRightBorder alias to point at contactsPaneBorder.right"
+  )
+  assert(
+    window.contactsPaneBorder.top == window.contactsHeaderDivider,
+    "expected contactsHeaderDivider alias to point at contactsPaneBorder.top"
+  )
   assert(window.contactsPaneBorder.left ~= nil, "expected contacts pane left border")
   assert(window.contactsPaneBorder.bottom ~= nil, "expected contacts pane bottom border")
   local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
@@ -106,19 +112,28 @@ return function()
   assert(window.composerPane ~= nil)
   assert(window.threadPane.height < window.contentPane.height)
   assert(window.composerDivider ~= nil, "expected composer divider texture")
-  assert(window.composerDivider.point[2] == window.composerPane, "expected composer divider anchored against composer pane")
+  assert(
+    window.composerDivider.point[2] == window.composerPane,
+    "expected composer divider anchored against composer pane"
+  )
   assert(
     window.composerDivider.color[1] == Theme.COLORS.divider[1],
     "expected composer divider red channel to match divider"
   )
   assert(window.threadPaneBorder == nil, "expected thread pane border set to be removed")
   assert(window.composerPaneBorder ~= nil, "expected composer pane border set")
-  assert(window.composerPaneBorder.top == window.composerDivider, "expected composerDivider alias to point at composerPaneBorder.top")
+  assert(
+    window.composerPaneBorder.top == window.composerDivider,
+    "expected composerDivider alias to point at composerPaneBorder.top"
+  )
   assert(window.composerPaneBorder.left ~= nil, "expected composer pane left border")
   assert(window.composerPaneBorder.right ~= nil, "expected composer pane right border")
   assert(window.composerPaneBorder.bottom ~= nil, "expected composer pane bottom border")
   assert(window.titleBarBorder ~= nil, "expected title bar border set on window facade")
-  assert(window.titleBarBorder.top == window.titleBarTopBorder, "expected titleBarTopBorder alias to point at titleBarBorder.top")
+  assert(
+    window.titleBarBorder.top == window.titleBarTopBorder,
+    "expected titleBarTopBorder alias to point at titleBarBorder.top"
+  )
   assert(window.composer.frame.parent == window.composerPane)
   assert(window.conversation.frame.parent == window.threadPane)
   assert(#window.contacts.rows == 2)

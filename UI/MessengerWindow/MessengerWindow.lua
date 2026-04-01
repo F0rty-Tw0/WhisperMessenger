@@ -190,7 +190,6 @@ function MessengerWindow.Create(factory, options)
     showUnreadBadge = settingsConfig.showUnreadBadge,
   })
 
-
   refreshThemeVisuals = function()
     if chrome.applyTheme then
       chrome.applyTheme(Theme)

@@ -17,7 +17,6 @@ local function colorsMatch(actual, expected)
   return true
 end
 
-
 return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", nil, nil)
@@ -308,5 +307,4 @@ return function()
       Theme.SetPreset(previousPreset)
     end
   end
-
 end

@@ -1,6 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
 
-
 local function colorsMatch(actual, expected)
   if type(actual) ~= "table" or type(expected) ~= "table" then
     return false
@@ -55,7 +54,10 @@ return function()
     "expected title bar top border to use divider color"
   )
   assert(chrome.titleBarBorder ~= nil, "expected titleBarBorder set")
-  assert(chrome.titleBarBorder.top == chrome.titleBarTopBorder, "expected titleBarTopBorder alias to point at titleBarBorder.top")
+  assert(
+    chrome.titleBarBorder.top == chrome.titleBarTopBorder,
+    "expected titleBarTopBorder alias to point at titleBarBorder.top"
+  )
   assert(chrome.titleBarBorder.left ~= nil, "expected title bar left border")
   assert(chrome.titleBarBorder.right ~= nil, "expected title bar right border")
   assert(chrome.titleBarBorder.bottom == nil, "expected title bar bottom border to be omitted to avoid overlap")

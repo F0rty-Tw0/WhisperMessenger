@@ -251,7 +251,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local composerPane = factory.CreateFrame("Frame", nil, contentPane)
   composerPane:SetSize(contentWidth, Theme.COMPOSER_HEIGHT)
   composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, 0)
-  local composerPaneBorder = UIHelpers.createBorderBox(composerPane, strongDividerColor, Theme.DIVIDER_THICKNESS, "BORDER")
+  local composerPaneBorder =
+    UIHelpers.createBorderBox(composerPane, strongDividerColor, Theme.DIVIDER_THICKNESS, "BORDER")
   local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
   -- Options overlay container (hides contacts + content when visible)
@@ -405,7 +406,9 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     setTextColor(contactsSearchClearLabel, activeTheme.COLORS.text_secondary)
     applyColorTexture(contactsDivider, activeTheme.COLORS.contacts_divider or activeTheme.COLORS.divider)
     local strongDividerThemeColor = { divider[1], divider[2], divider[3], 1 }
-    local activeContactsBorder = activeTheme.COLORS.contacts_border_right or activeTheme.COLORS.contacts_divider or divider
+    local activeContactsBorder = activeTheme.COLORS.contacts_border_right
+      or activeTheme.COLORS.contacts_divider
+      or divider
     local strongActiveContactsBorder = {
       activeContactsBorder[1],
       activeContactsBorder[2],

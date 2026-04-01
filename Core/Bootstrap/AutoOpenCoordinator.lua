@@ -313,7 +313,12 @@ function AutoOpenCoordinator.Attach(options)
         return _G["ChatFrame" .. index .. "EditBox"]
       end,
       bnetApi = options.bnetApi or _G.C_BattleNet,
-      getNumFriends = options.BNGetNumFriends or _G.BNGetNumFriends,
+      getNumFriends = options.BNGetNumFriends
+        or (
+          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends or function()
+            return 0, 0
+          end
+        ),
       deactivateChat = options.ChatEdit_DeactivateChat or _G.ChatEdit_DeactivateChat,
     })
   end

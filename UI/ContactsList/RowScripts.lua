@@ -63,7 +63,6 @@ local function applyRowVisualState(row)
   else
     hideActions(row)
   end
-
 end
 
 --- Bind OnEnter / OnLeave hover scripts to a row.
