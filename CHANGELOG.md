@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.1.1] - 2026-04-01
+
+- Fixed pinned contacts so they retain message history indefinitely while pinned, still respecting the configured max-messages-per-contact limit.
+- Unpinned contacts now immediately fall back to the configured retention policy, including trimming old messages or removing stale conversations right away.
+
 ## [1.1.0] - 2026-04-01
 
 - Added runtime-switchable theme presets in Appearance settings, including Midnight, Shadowlands, and Draenor.
@@ -115,4 +120,3 @@
 - Drag-to-reorder contacts
 - BNet friend resolution
 - SavedVariables persistence with migrations
-

@@ -5,6 +5,27 @@ end
 
 local Retention = {}
 
+local function resolveNow(now)
+  if now ~= nil then
+    return now
+  end
+
+  if type(_G.time) == "function" then
+    return _G.time()
+  end
+
+  return os.time()
+end
+
+function Retention.IsExpired(timestamp, maxAgeSeconds, now)
+  if type(maxAgeSeconds) ~= "number" then
+    return false
+  end
+
+  now = resolveNow(now)
+  return now - (timestamp or 0) > maxAgeSeconds
+end
+
 function Retention.TrimMessages(messages, maxMessages)
   if type(maxMessages) ~= "number" or maxMessages < 1 then
     return messages
@@ -32,17 +53,10 @@ function Retention.ExpireMessages(messages, maxAgeSeconds, now)
     return messages
   end
 
-  if now == nil then
-    if type(_G.time) == "function" then
-      now = _G.time()
-    else
-      now = os.time()
-    end
-  end
+  now = resolveNow(now)
 
   for i = #messages, 1, -1 do
-    local age = now - (messages[i].sentAt or 0)
-    if age > maxAgeSeconds then
+    if Retention.IsExpired(messages[i].sentAt, maxAgeSeconds, now) then
       table.remove(messages, i)
     end
   end
@@ -55,25 +69,17 @@ function Retention.ExpireConversations(conversations, maxAgeSeconds, now)
     return conversations
   end
 
-  if now == nil then
-    if type(_G.time) == "function" then
-      now = _G.time()
-    else
-      now = os.time()
-    end
-  end
+  now = resolveNow(now)
 
   for key, conv in pairs(conversations) do
-    if not conv.pinned then
-      local age = now - (conv.lastActivityAt or 0)
-      if age > maxAgeSeconds then
-        conversations[key] = nil
-      end
+    if not conv.pinned and Retention.IsExpired(conv.lastActivityAt, maxAgeSeconds, now) then
+      conversations[key] = nil
     end
   end
 
   return conversations
 end
+
 
 ns.Retention = Retention
 

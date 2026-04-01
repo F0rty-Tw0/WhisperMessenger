@@ -73,7 +73,7 @@ local function evictOldestConversation(state)
   end
 end
 
-local function applyRetention(state, conversation)
+local function applyMessageCap(state, conversation)
   Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
 end
 
@@ -100,7 +100,7 @@ end
 function Store.AppendIncoming(state, key, message, isActive)
   local conversation = ensureConversation(state, key)
   table.insert(conversation.messages, message)
-  applyRetention(state, conversation)
+  applyMessageCap(state, conversation)
   applyMessageMetadata(conversation, message)
   evictOldestConversation(state)
 
@@ -116,7 +116,7 @@ end
 function Store.AppendOutgoing(state, key, message)
   local conversation = ensureConversation(state, key)
   table.insert(conversation.messages, message)
-  applyRetention(state, conversation)
+  applyMessageCap(state, conversation)
   applyMessageMetadata(conversation, message)
   evictOldestConversation(state)
 end
@@ -149,6 +149,7 @@ function Store.Unpin(state, key)
   local conversation = state.conversations[key]
   if conversation then
     conversation.pinned = false
+    Store.ExpireAll(state)
   end
 end
 
@@ -184,7 +185,9 @@ end
 function Store.ExpireAll(state, now)
   Retention.ExpireConversations(state.conversations, state.config.conversationMaxAge, now)
   for _, conv in pairs(state.conversations) do
-    Retention.ExpireMessages(conv.messages, state.config.messageMaxAge, now)
+    if not conv.pinned and conv.messages then
+      Retention.ExpireMessages(conv.messages, state.config.messageMaxAge, now)
+    end
   end
 end
 

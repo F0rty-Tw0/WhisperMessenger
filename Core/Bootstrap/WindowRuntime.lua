@@ -148,6 +148,10 @@ function WindowRuntime.Create(options)
         trace("onPin", "key=" .. tostring(key), "wasPinned=" .. tostring(item.pinned))
         if Store.IsPinned(runtime.store, key) then
           Store.Unpin(runtime.store, key)
+          if runtime.store.conversations[key] == nil and runtime.activeConversationKey == key then
+            runtime.activeConversationKey = nil
+            characterState.activeConversationKey = nil
+          end
         else
           Store.Pin(runtime.store, key)
         end

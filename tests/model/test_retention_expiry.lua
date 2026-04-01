@@ -115,6 +115,136 @@ return function()
     assert(conv.messages[1].sentAt == now - 100, "expected remaining message to be the recent one")
   end
 
+  -- test_pinned_conversations_keep_old_messages_but_still_honor_count_cap
+  do
+    local state = Store.New({
+      maxMessagesPerConversation = 2,
+      messageMaxAge = 3600,
+      conversationMaxAge = 86400,
+    })
+    local key = "key::pinned-cap"
+    Store.AppendIncoming(state, key, {
+      id = "1",
+      direction = "in",
+      kind = "user",
+      text = "old",
+      sentAt = 1,
+    }, false)
+    Store.Pin(state, key)
+    Store.AppendIncoming(state, key, {
+      id = "2",
+      direction = "in",
+      kind = "user",
+      text = "middle",
+      sentAt = 2,
+    }, false)
+    Store.AppendIncoming(state, key, {
+      id = "3",
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 3,
+    }, false)
+
+    local conv = state.conversations[key]
+    assert(conv ~= nil, "expected pinned conversation to exist")
+    assert(conv.pinned == true, "expected conversation to remain pinned")
+    assert(#conv.messages == 2, "expected pinned conversation to stay capped at 2 messages, got " .. #conv.messages)
+    assert(conv.messages[1].id == "2", "expected oldest capped message to be id 2, got " .. tostring(conv.messages[1].id))
+    assert(conv.messages[2].id == "3", "expected newest capped message to be id 3, got " .. tostring(conv.messages[2].id))
+  end
+
+  -- test_store_expire_all_keeps_old_messages_for_pinned_conversations
+  do
+    local now = 10000
+    local state = Store.New({
+      maxMessagesPerConversation = 5,
+      messageMaxAge = 3600,
+      conversationMaxAge = 3600,
+    })
+
+    state.conversations["key::pinned-history"] = {
+      pinned = true,
+      messages = {
+        { id = "old", sentAt = now - 7200 },
+        { id = "recent", sentAt = now - 100 },
+      },
+      lastActivityAt = now - 100,
+      unreadCount = 0,
+    }
+
+    Store.ExpireAll(state, now)
+
+    local conv = state.conversations["key::pinned-history"]
+    assert(conv ~= nil, "expected pinned conversation to remain after ExpireAll")
+    assert(#conv.messages == 2, "expected pinned conversation messages to skip age expiry, got " .. #conv.messages)
+    assert(conv.messages[1].id == "old", "expected oldest pinned message to remain after ExpireAll")
+    assert(conv.messages[2].id == "recent", "expected recent pinned message to remain after ExpireAll")
+  end
+
+  -- test_unpin_reapplies_message_retention_immediately
+  do
+    local now = 10000
+    local savedTime = _G.time
+    _G.time = function()
+      return now
+    end
+
+    local state = Store.New({
+      maxMessagesPerConversation = 5,
+      messageMaxAge = 3600,
+      conversationMaxAge = 86400,
+    })
+
+    state.conversations["key::unpinned-trim"] = {
+      pinned = true,
+      messages = {
+        { id = "old", sentAt = now - 7200 },
+        { id = "recent", sentAt = now - 120 },
+      },
+      lastActivityAt = now - 120,
+      unreadCount = 0,
+    }
+
+    Store.Unpin(state, "key::unpinned-trim")
+
+    _G.time = savedTime
+
+    local conv = state.conversations["key::unpinned-trim"]
+    assert(conv ~= nil, "expected recently active conversation to survive unpin")
+    assert(conv.pinned == false, "expected conversation to be unpinned")
+    assert(#conv.messages == 1, "expected old pinned history to be trimmed after unpin, got " .. #conv.messages)
+    assert(conv.messages[1].id == "recent", "expected recent message to remain after unpin")
+  end
+
+  -- test_unpin_removes_stale_conversation_immediately
+  do
+    local now = 10000
+    local savedTime = _G.time
+    _G.time = function()
+      return now
+    end
+
+    local state = Store.New({
+      maxMessagesPerConversation = 5,
+      messageMaxAge = 3600,
+      conversationMaxAge = 3600,
+    })
+
+    state.conversations["key::unpinned-stale"] = {
+      pinned = true,
+      messages = { { id = "old", sentAt = now - 7200 } },
+      lastActivityAt = now - 7200,
+      unreadCount = 0,
+    }
+
+    Store.Unpin(state, "key::unpinned-stale")
+
+    _G.time = savedTime
+
+    assert(state.conversations["key::unpinned-stale"] == nil, "expected stale pinned conversation to be removed immediately after unpin")
+  end
+
   -- test_default_config_has_24h_expiry
   do
     local runtime = RuntimeFactory.CreateRuntimeState(

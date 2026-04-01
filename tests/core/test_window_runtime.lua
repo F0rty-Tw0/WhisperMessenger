@@ -317,6 +317,45 @@ return function()
     "expected conversation to report open when visible and selected"
   )
 
+
+  local deletedConversationKey = "wow::WOW::stale-area52"
+  runtime.store.conversations[deletedConversationKey] = {
+    conversationKey = deletedConversationKey,
+    displayName = "Stale-Area52",
+    channel = "WOW",
+    unreadCount = 1,
+    pinned = true,
+    lastActivityAt = 1,
+    messages = { { id = "old", sentAt = 1 } },
+  }
+
+  runtime.store.conversations[conversationKey].lastActivityAt = 9990
+  runtime.store.conversations[conversationKey].messages = { { id = "recent", sentAt = 9990 } }
+
+  runtime.store.config.messageMaxAge = 3600
+  runtime.store.config.conversationMaxAge = 3600
+
+  local savedTime = _G.time
+  _G.time = function()
+    return 10000
+  end
+
+  local previousRefreshes = selectionRefreshes
+  runtime.activeConversationKey = deletedConversationKey
+  characterState.activeConversationKey = deletedConversationKey
+  capturedWindowOptions.onPin({
+    conversationKey = deletedConversationKey,
+    pinned = true,
+  })
+  assert(runtime.store.conversations[deletedConversationKey] == nil, "expected test precondition: unpin should remove stale conversation")
+  assert(runtime.activeConversationKey == nil, "expected onPin to clear runtime activeConversationKey when unpin removes the conversation")
+  assert(
+    characterState.activeConversationKey == nil,
+    "expected onPin to clear persisted activeConversationKey when unpin removes the conversation"
+  )
+  assert(selectionRefreshes == previousRefreshes + 1, "expected onPin to keep refreshing the window after clearing selection")
+  _G.time = savedTime
+
   local refreshesBeforeFontChange = selectionRefreshes
   capturedWindowOptions.onSettingChanged("fontFamily", "system")
   assert(accountState.settings.fontFamily == "system", "expected fontFamily change to persist setting")
