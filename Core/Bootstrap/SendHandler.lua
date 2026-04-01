@@ -81,9 +81,9 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
 
   local sendAvailable
   if payload.channel == "BN" then
-    sendAvailable = payload.bnetAccountID ~= nil and type(runtime.bnetApi.SendWhisper) == "function"
+    sendAvailable = payload.bnetAccountID ~= nil and Gateway.CanSendBattleNetWhisper(runtime.bnetApi)
   else
-    sendAvailable = type(runtime.chatApi.SendChatMessage) == "function"
+    sendAvailable = Gateway.CanSendCharacterWhisper(runtime.chatApi)
   end
 
   if not sendAvailable then

@@ -6,6 +6,7 @@ return function()
   local sentMessages = {}
   local refreshCalls = 0
   local savedInCombatLockdown = _G.InCombatLockdown
+  local savedBNSendWhisper = _G.BNSendWhisper
   _G.InCombatLockdown = function()
     return false
   end
@@ -105,5 +106,37 @@ return function()
     "expected blocked reason Lockdown on InCombatLockdown block"
   )
 
+  -- Test 4: Legacy BNSendWhisper fallback supports Classic/TBC Battle.net sends
+  runtime.isChatMessagingLocked = function()
+    return false
+  end
+  _G.InCombatLockdown = function()
+    return false
+  end
+  _G.BNSendWhisper = function(bnetAccountID, text)
+    table.insert(sentMessages, { bnetAccountID = bnetAccountID, text = text, channel = "BN" })
+    return true
+  end
+  runtime.sendStatusByConversation = {}
+  runtime.pendingOutgoing = {}
+  refreshCalls = 0
+  sentMessages = {}
+
+  local bnPayload = {
+    conversationKey = "me::BN::jaina#1234",
+    displayName = "Jaina#1234",
+    channel = "BN",
+    bnetAccountID = 77,
+    text = "hello bn",
+  }
+
+  local bnResult = SendHandler.HandleSend(runtime, bnPayload, refreshWindow)
+  assert(bnResult == true, "expected Battle.net send to use legacy BNSendWhisper fallback")
+  assert(#sentMessages == 1, "expected one Battle.net message to be sent")
+  assert(sentMessages[1].channel == "BN", "expected Battle.net transport marker")
+  assert(sentMessages[1].bnetAccountID == 77, "expected bnetAccountID to be forwarded")
+  assert(sentMessages[1].text == "hello bn", "expected Battle.net text to be forwarded")
+
   _G.InCombatLockdown = savedInCombatLockdown
+  _G.BNSendWhisper = savedBNSendWhisper
 end
