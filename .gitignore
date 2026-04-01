@@ -5,3 +5,4 @@ docs/
 .env
 .claude
 .wolf
+.tmp_elvui/

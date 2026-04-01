@@ -86,7 +86,7 @@ Download the latest ZIP from [GitHub Releases](https://github.com/F0rty-Tw0/Whis
 Open the settings panel by clicking the gear icon in the messenger window, or type:
 
 ```
-/wm
+/wmsg
 ```
 
 ## Contributing
@@ -115,4 +115,3 @@ Both lint and tests must pass before merging.
 ## License
 
 All rights reserved. See the [LICENSE](LICENSE) file for details.
-
