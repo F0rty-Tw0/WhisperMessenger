@@ -39,9 +39,9 @@ return function()
     end
 
     local expected = {
-      ["Midnight Blue"] = false,
-      ["Shadowlands Dark"] = false,
-      ["Draenor Warm"] = false,
+      ["Midnight"] = false,
+      ["Shadowlands"] = false,
+      ["Draenor"] = false,
     }
     for _, text in ipairs(labels) do
       if expected[text] ~= nil then
@@ -49,9 +49,9 @@ return function()
       end
     end
 
-    assert(expected["Midnight Blue"], "test_theme_preset_selector_labels: should have a 'Midnight Blue' button")
-    assert(expected["Shadowlands Dark"], "test_theme_preset_selector_labels: should have a 'Shadowlands Dark' button")
-    assert(expected["Draenor Warm"], "test_theme_preset_selector_labels: should have a 'Draenor Warm' button")
+    assert(expected["Midnight"], "test_theme_preset_selector_labels: should have a 'Midnight' button")
+    assert(expected["Shadowlands"], "test_theme_preset_selector_labels: should have a 'Shadowlands' button")
+    assert(expected["Draenor"], "test_theme_preset_selector_labels: should have a 'Draenor' button")
   end
 
   -- -----------------------------------------------------------------------
@@ -66,7 +66,7 @@ return function()
       end,
     })
 
-    -- Click the "Draenor Warm" button (third one)
+    -- Click the "Draenor" button (third one)
     local warmBtn = result.themePresetSelector.buttons[3]
     local onClick = warmBtn:GetScript("OnClick")
     assert(onClick ~= nil, "test_theme_preset_selector_fires_on_change: button should have OnClick")
@@ -89,12 +89,12 @@ return function()
     local darkBtn = result.themePresetSelector.buttons[2]
     assert(
       darkBtn._selected == true,
-      "test_theme_preset_selector_highlights_initial: Shadowlands Dark button should be selected when themePreset=elvui_dark"
+      "test_theme_preset_selector_highlights_initial: Shadowlands button should be selected when themePreset=elvui_dark"
     )
     local defaultBtn = result.themePresetSelector.buttons[1]
     assert(
       defaultBtn._selected ~= true,
-      "test_theme_preset_selector_highlights_initial: Midnight Blue button should NOT be selected when themePreset=elvui_dark"
+      "test_theme_preset_selector_highlights_initial: Midnight button should NOT be selected when themePreset=elvui_dark"
     )
   end
 
@@ -232,7 +232,7 @@ return function()
     )
     assert(
       result.themePresetSelector.buttons[1]._selected == true,
-      "test_reset_resets_font_and_theme: Midnight Blue theme should be selected after reset"
+      "test_reset_resets_font_and_theme: Midnight theme should be selected after reset"
     )
     assert(
       result.fontSelector.buttons[1]._selected == true,

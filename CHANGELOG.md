@@ -2,7 +2,7 @@
 
 ## [1.1.0] - 2026-04-01
 
-- Added runtime-switchable theme presets in Appearance settings, including Midnight Blue, Shadowlands Dark, and Draenor Warm.
+- Added runtime-switchable theme presets in Appearance settings, including Midnight, Shadowlands, and Draenor.
 - Improved the messenger's visual polish with stronger section framing, clearer settings toggles, and distinct accent identities for each preset.
 - Improved theme consistency by reducing redundant theme tokens, pruning dead preset colors, and making preset changes repaint search/input/settings surfaces immediately.
 - Fixed theme startup and preset application issues so the addon loads cleanly and live theme changes update the window reliably.

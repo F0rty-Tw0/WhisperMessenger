@@ -286,10 +286,10 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local toggleColors = toggleColorsFor(activeTheme)
-    badgePulseToggle.applyThemeColors(toggleColors)
-    playSoundToggle.applyThemeColors(toggleColors)
-    showBadgeToggle.applyThemeColors(toggleColors)
+    local activeToggleColors = toggleColorsFor(activeTheme)
+    badgePulseToggle.applyThemeColors(activeToggleColors)
+    playSoundToggle.applyThemeColors(activeToggleColors)
+    showBadgeToggle.applyThemeColors(activeToggleColors)
 
     soundSelector.applyTheme(activeTheme, selectorColorsFor(activeTheme))
 

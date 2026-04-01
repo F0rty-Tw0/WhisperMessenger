@@ -176,12 +176,12 @@ function BehaviorSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local toggleColors = toggleColorsFor(activeTheme)
-    dimToggle.applyThemeColors(toggleColors)
-    autoFocusToggle.applyThemeColors(toggleColors)
-    autoSelectToggle.applyThemeColors(toggleColors)
-    hideFromDefaultChatToggle.applyThemeColors(toggleColors)
-    profanityFilterToggle.applyThemeColors(toggleColors)
+    local activeToggleColors = toggleColorsFor(activeTheme)
+    dimToggle.applyThemeColors(activeToggleColors)
+    autoFocusToggle.applyThemeColors(activeToggleColors)
+    autoSelectToggle.applyThemeColors(activeToggleColors)
+    hideFromDefaultChatToggle.applyThemeColors(activeToggleColors)
+    profanityFilterToggle.applyThemeColors(activeToggleColors)
     autoOpenWindowToggle.applyThemeColors(toggleColors)
 
     if resetButton.applyThemeColors then

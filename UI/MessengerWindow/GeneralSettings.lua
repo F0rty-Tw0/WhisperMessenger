@@ -250,9 +250,9 @@ function GeneralSettings.Create(factory, parent, config, options)
     conversationsRow.applyTheme(activeTheme)
     retentionRow.applyTheme(activeTheme)
 
-    local toggleColors = toggleColorsFor(activeTheme)
-    clearOnLogoutToggle.applyThemeColors(toggleColors)
-    hidePreviewToggle.applyThemeColors(toggleColors)
+    local activeToggleColors = toggleColorsFor(activeTheme)
+    clearOnLogoutToggle.applyThemeColors(activeToggleColors)
+    hidePreviewToggle.applyThemeColors(activeToggleColors)
 
     if resetButton.applyThemeColors then
       resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))

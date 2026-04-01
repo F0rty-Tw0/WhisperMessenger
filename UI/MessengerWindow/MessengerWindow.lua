@@ -23,8 +23,6 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
-local applyColorTexture = UIHelpers.applyColorTexture
-local setTextColor = UIHelpers.setTextColor
 
 local MessengerWindow = {}
 

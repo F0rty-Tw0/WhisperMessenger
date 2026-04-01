@@ -134,10 +134,10 @@ function WindowScripts.WireButtons(refs, options)
           local bg = tab.bg
           local function applyTabVisual(hovered)
             local isActive = tab._wmIsActiveTab == true
-            local color = nil
-            local textColor = nil
-            local hoverBg = nil
-            local hoverText = nil
+            local color
+            local textColor
+            local hoverBg
+            local hoverText
             if isActive then
               color = activeHighlightColor()
               hoverBg = activeHoverColor()

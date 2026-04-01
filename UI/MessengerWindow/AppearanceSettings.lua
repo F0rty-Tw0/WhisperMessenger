@@ -21,9 +21,9 @@ local FONT_OPTIONS = {
 }
 
 local PRESET_LABELS = {
-  wow_default = { label = "Midnight Blue", tooltip = "Default colors and contrasts." },
-  elvui_dark = { label = "Shadowlands Dark", tooltip = "Dark UI style inspired by ElvUI." },
-  plumber_warm = { label = "Draenor Warm", tooltip = "Warm tones with softer contrast." },
+  wow_default = { label = "Midnight", tooltip = "Default colors and contrasts." },
+  elvui_dark = { label = "Shadowlands", tooltip = "Dark UI style inspired by ElvUI." },
+  plumber_warm = { label = "Draenor", tooltip = "Warm tones with softer contrast." },
 }
 
 local function buildThemePresetOptions()
@@ -387,9 +387,9 @@ function AppearanceSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local selectorColors = selectorColorsFor(activeTheme)
-    themePresetSelector.applyTheme(activeTheme, selectorColors)
-    fontSelector.applyTheme(activeTheme, selectorColors)
+    local activeSelectorColors = selectorColorsFor(activeTheme)
+    themePresetSelector.applyTheme(activeTheme, activeSelectorColors)
+    fontSelector.applyTheme(activeTheme, activeSelectorColors)
 
     opacityInactiveRow.applyTheme(activeTheme)
     opacityActiveRow.applyTheme(activeTheme)
