@@ -8,6 +8,9 @@ local registeredLinkHooks = false
 local linkedInputs = {}
 
 local function isInputShown(input)
+  if type(input.IsVisible) == "function" then
+    return input:IsVisible() == true
+  end
   if type(input.IsShown) ~= "function" then
     return true
   end

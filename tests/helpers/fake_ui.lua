@@ -106,6 +106,16 @@ function FakeUI.NewFactory()
       return self.shown == true
     end
 
+    function frame:IsVisible()
+      if not self.shown then
+        return false
+      end
+      if self.parent and type(self.parent.IsVisible) == "function" then
+        return self.parent:IsVisible()
+      end
+      return true
+    end
+
     function frame:SetShown(value)
       if value then
         self:Show()

@@ -78,6 +78,7 @@ return function()
   }, function() end)
 
   -- ChatEdit_GetActiveWindow returns our input when shown
+  parent:Show()
   composer.frame:Show()
   composer.input:Show()
   composer.input:SetFocus()
@@ -110,6 +111,19 @@ return function()
   composer.input:Hide()
   assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when no visible input")
   composer.input:Show()
+
+  -- ChatEdit_InsertLink returns false when parent window is hidden
+  -- (input itself is still "shown" but not visible because ancestor is hidden)
+  composer.input:SetText("")
+  parent:Hide()
+  assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when parent window is hidden")
+  assert(composer.input:GetText() == "", "expected no link inserted when parent hidden")
+  parent:Show()
+
+  -- ChatEdit_GetActiveWindow returns nil when parent window is hidden
+  parent:Hide()
+  assert(_G.ChatEdit_GetActiveWindow() == nil, "expected nil active window when parent hidden")
+  parent:Show()
 
   -- SetItemRef hook for clicking hyperlinks in transcript
   assert(registeredHooks.SetItemRef ~= nil, "expected SetItemRef hook registered")
