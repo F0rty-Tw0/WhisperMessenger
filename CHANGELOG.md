@@ -4,6 +4,7 @@
 
 - Fixed pinned contacts so they retain message history indefinitely while pinned, still respecting the configured max-messages-per-contact limit.
 - Unpinned contacts now immediately fall back to the configured retention policy, including trimming old messages or removing stale conversations right away.
+- Fixed shift-clicking quests, skills, and achievements silently inserting links into the messenger composer even when the window is closed — default WoW behavior is now preserved when the messenger is not visible.
 
 ## [1.1.0] - 2026-04-01
 
