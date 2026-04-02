@@ -462,6 +462,8 @@ local function restoreManualCopyDialog(dialog)
   setPartsShown(dialog._wmManualCopyBorder, false)
   dialog._wmManualCopyStyleActive = false
 
+  -- Do not restore popup font objects here: touching StaticPopup font objects
+  -- caused live-client SetFontObject stack overflows in OnHide cleanup paths.
   local textRegion = dialog.text
   if textRegion then
     if dialog._wmManualCopyOriginalTextColor ~= nil then
@@ -497,6 +499,8 @@ local function styleManualCopyDialog(dialog)
     setPartsShown(dialog._wmManualCopyBorder, true)
   end
 
+  -- Keep popup font objects unchanged; theme the dialog through colors only.
+  -- This avoids SetFontObject recursion/crash behavior seen in production.
   local textRegion = dialog.text
   if textRegion and dialog._wmManualCopyStyleActive ~= true then
     dialog._wmManualCopyOriginalTextColor = captureTextColor(textRegion)
@@ -536,6 +540,26 @@ local function getMenuFrame()
   return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
 end
 
+local function resolveNamedFrameChild(frame, suffix, isCandidate)
+  if type(frame) ~= "table" or type(isCandidate) ~= "function" then
+    return nil
+  end
+  if type(frame.GetName) ~= "function" then
+    return nil
+  end
+
+  local frameName = frame:GetName()
+  if type(frameName) ~= "string" or frameName == "" then
+    return nil
+  end
+
+  local namedChild = _G[frameName .. suffix]
+  if isCandidate(namedChild) then
+    return namedChild
+  end
+  return nil
+end
+
 resolvePopupEditBox = function(dialog)
   local function isEditBoxCandidate(candidate)
     if candidate == nil or type(candidate) ~= "table" or type(candidate.SetText) ~= "function" then
@@ -552,7 +576,7 @@ resolvePopupEditBox = function(dialog)
     return type(candidate.HighlightText) == "function" and type(candidate.SetFocus) == "function"
   end
 
-  if not isEditBoxCandidate(dialog) and type(dialog) ~= "table" then
+  if type(dialog) ~= "table" then
     return nil
   end
 
@@ -564,14 +588,9 @@ resolvePopupEditBox = function(dialog)
     return dialog.EditBox
   end
 
-  if type(dialog.GetName) == "function" then
-    local dialogName = dialog:GetName()
-    if type(dialogName) == "string" and dialogName ~= "" then
-      local namedEditBox = _G[dialogName .. "EditBox"]
-      if isEditBoxCandidate(namedEditBox) then
-        return namedEditBox
-      end
-    end
+  local namedEditBox = resolveNamedFrameChild(dialog, "EditBox", isEditBoxCandidate)
+  if namedEditBox then
+    return namedEditBox
   end
 
   if type(dialog.GetChildren) == "function" then
@@ -590,14 +609,9 @@ resolvePopupEditBox = function(dialog)
         return popup.editBox
       end
 
-      if type(popup.GetName) == "function" then
-        local popupName = popup:GetName()
-        if type(popupName) == "string" and popupName ~= "" then
-          local namedPopupEditBox = _G[popupName .. "EditBox"]
-          if isEditBoxCandidate(namedPopupEditBox) then
-            return namedPopupEditBox
-          end
-        end
+      local namedPopupEditBox = resolveNamedFrameChild(popup, "EditBox", isEditBoxCandidate)
+      if namedPopupEditBox then
+        return namedPopupEditBox
       end
     end
   end
@@ -641,14 +655,9 @@ resolvePopupButton = function(dialog, buttonIndex)
     return dialog[capitalizedKey]
   end
 
-  if type(dialog.GetName) == "function" then
-    local dialogName = dialog:GetName()
-    if type(dialogName) == "string" and dialogName ~= "" then
-      local namedButton = _G[dialogName .. "Button" .. tostring(buttonIndex)]
-      if isPopupButtonCandidate(namedButton) then
-        return namedButton
-      end
-    end
+  local namedButton = resolveNamedFrameChild(dialog, "Button" .. tostring(buttonIndex), isPopupButtonCandidate)
+  if namedButton then
+    return namedButton
   end
 
   if type(dialog.GetChildren) == "function" then
@@ -709,6 +718,24 @@ local function primePopupEditBox(dialog, value)
   return true
 end
 
+local function isFrameShown(frame)
+  if type(frame) ~= "table" then
+    return false
+  end
+  if type(frame.IsShown) == "function" then
+    return frame:IsShown() == true
+  end
+  return true
+end
+
+local function scheduleManualCopyRefocus(dialog, text, delaySeconds)
+  _G.C_Timer.After(delaySeconds, function()
+    if isFrameShown(dialog) then
+      primePopupEditBox(dialog, text)
+    end
+  end)
+end
+
 local function showManualCopyDialog(text)
   if type(_G.StaticPopup_Show) ~= "function" then
     return false
@@ -762,16 +789,8 @@ local function showManualCopyDialog(text)
   primePopupEditBox(dialog, text)
 
   if type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
-    _G.C_Timer.After(0, function()
-      if dialog and (type(dialog.IsShown) ~= "function" or dialog:IsShown()) then
-        primePopupEditBox(dialog, text)
-      end
-    end)
-    _G.C_Timer.After(0.05, function()
-      if dialog and (type(dialog.IsShown) ~= "function" or dialog:IsShown()) then
-        primePopupEditBox(dialog, text)
-      end
-    end)
+    scheduleManualCopyRefocus(dialog, text, 0)
+    scheduleManualCopyRefocus(dialog, text, 0.05)
   end
 
   return true
