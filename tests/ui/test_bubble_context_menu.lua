@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local ContextMenu = require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
   local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
@@ -345,6 +346,221 @@ return function()
     local copied = ContextMenu.CopyText("ordered")
     assert(copied == true, "CopyText should open manual popup when mixed child types are present")
     assert(popupText == "ordered", "CopyText should target editbox child even when it is not the first child")
+  end
+
+  -- test_manual_popup_styles_are_scoped_and_restored_on_reuse
+  do
+    local factory = FakeUI.NewFactory()
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    local dialog = factory.CreateFrame("Frame", "StaticPopup1", uiParent)
+    local dialogText = dialog:CreateFontString(nil, "OVERLAY")
+    local editBox = factory.CreateFrame("EditBox", "StaticPopup1EditBox", dialog)
+    local button1 = factory.CreateFrame("Button", "StaticPopup1Button1", dialog)
+    local buttonLabel = button1:CreateFontString(nil, "OVERLAY")
+    local editBoxDecoration = editBox:CreateTexture(nil, "ARTWORK")
+    editBoxDecoration:SetAllPoints(editBox)
+    editBoxDecoration:Show()
+    local buttonDecoration = button1:CreateTexture(nil, "ARTWORK")
+    buttonDecoration:SetAllPoints(button1)
+    buttonDecoration:Show()
+    local originalButtonTextColor = { 0.7, 0.71, 0.73, 1 }
+    dialog.text = dialogText
+    dialog.editBox = editBox
+    dialog.button1 = button1
+    button1.text = buttonLabel
+    buttonLabel:SetText("OK")
+    buttonLabel:SetTextColor(
+      originalButtonTextColor[1],
+      originalButtonTextColor[2],
+      originalButtonTextColor[3],
+      originalButtonTextColor[4]
+    )
+    _G.StaticPopup1 = dialog
+    _G.StaticPopup1EditBox = editBox
+    _G.StaticPopup1Button1 = button1
+    _G.CreateFrame = factory.CreateFrame
+    _G.UIParent = uiParent
+    _G.CopyToClipboard = nil
+    _G.C_Clipboard = nil
+    _G.StaticPopupDialogs = {
+      WM_TEST_GENERIC_DIALOG = {
+        text = "Generic dialog",
+        button1 = "Logout",
+      },
+    }
+    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+      local def = _G.StaticPopupDialogs[which]
+      dialog.which = which
+      dialog.data = data
+      dialog:Show()
+      if def and def.OnShow then
+        def.OnShow(dialog, data)
+      end
+      return dialog
+    end
+
+    local copied = ContextMenu.CopyText("styled")
+    assert(copied == true, "CopyText should open manual popup when clipboard APIs are unavailable")
+    assert(dialog._wmRoundedBackground ~= nil, "manual popup should create dialog background styling")
+    assert(dialog._wmRoundedBackground.fills[1].shown == true, "manual popup dialog background should be active while shown")
+    assert(editBox._wmManualCopyBorder ~= nil, "manual popup should add a bordered input style")
+    assert(editBox._wmManualCopyBorder.top.shown == true, "manual popup input border should be active while shown")
+    assert(button1._wmManualCopySkin ~= nil, "manual popup should style the OK button")
+    assert(button1._wmManualCopySkin.fills[1].shown == true, "manual popup button skin should be active while shown")
+    assert(editBoxDecoration.shown == false, "manual popup should hide default edit box decoration textures")
+    assert(buttonDecoration.shown == false, "manual popup should hide default button decoration textures")
+    assert(buttonLabel.textColor ~= nil, "manual popup should recolor the OK button label")
+    assert(
+      buttonLabel.textColor[1] == Theme.COLORS.option_button_text[1]
+        and buttonLabel.textColor[2] == Theme.COLORS.option_button_text[2]
+        and buttonLabel.textColor[3] == Theme.COLORS.option_button_text[3],
+      "manual popup should use settings-style OK button text colors"
+    )
+
+    local manualDef = _G.StaticPopupDialogs["WHISPER_MESSENGER_BUBBLE_COPY_TEXT"]
+    assert(manualDef ~= nil and type(manualDef.OnHide) == "function", "manual popup definition should expose OnHide cleanup")
+    manualDef.OnHide(dialog)
+    dialog:Hide()
+
+    assert(dialog._wmRoundedBackground.fills[1].shown == false, "manual popup dialog styling should be hidden after close")
+    assert(editBox._wmManualCopyBorder.top.shown == false, "manual popup input border should be hidden after close")
+    assert(button1._wmManualCopySkin.fills[1].shown == false, "manual popup button skin should be hidden after close")
+    assert(editBoxDecoration.shown == true, "manual popup should restore default edit box decoration textures after close")
+    assert(buttonDecoration.shown == true, "manual popup should restore default button decoration textures after close")
+    assert(
+      buttonLabel.textColor[1] == originalButtonTextColor[1]
+        and buttonLabel.textColor[2] == originalButtonTextColor[2]
+        and buttonLabel.textColor[3] == originalButtonTextColor[3],
+      "manual popup should restore the original OK button text color after close"
+    )
+
+    local reusedDialog = _G.StaticPopup_Show("WM_TEST_GENERIC_DIALOG")
+    assert(reusedDialog == dialog, "test should reuse the same StaticPopup frame")
+    assert(dialog._wmRoundedBackground.fills[1].shown == false, "manual popup dialog styling should stay inactive for reused generic popups")
+    assert(editBox._wmManualCopyBorder.top.shown == false, "manual popup input border should stay inactive for reused generic popups")
+    assert(button1._wmManualCopySkin.fills[1].shown == false, "manual popup button styling should stay inactive for reused generic popups")
+
+    local genericDialogFont = {
+      name = "GenericPopupFont",
+      GetFont = function()
+        return "Fonts\\FRIZQT__.TTF", 12, ""
+      end,
+    }
+    local genericEditFont = {
+      name = "GenericPopupEditFont",
+      GetFont = function()
+        return "Fonts\\ARIALN.TTF", 12, ""
+      end,
+    }
+    dialogText:SetFontObject(genericDialogFont)
+    dialogText:SetTextColor(0.92, 0.41, 0.36, 1)
+    editBox:SetFontObject(genericEditFont)
+    editBox:SetTextColor(0.24, 0.82, 0.54, 1)
+    editBox:SetTextInsets(3, 4, 5, 6)
+    buttonLabel:SetTextColor(0.31, 0.55, 0.94, 1)
+
+    local genericLeaveCount = 0
+    local genericOnEnter = function(self)
+      self.genericHoverActive = true
+    end
+    local genericOnLeave = function(self)
+      self.genericHoverActive = false
+      genericLeaveCount = genericLeaveCount + 1
+    end
+    button1.genericHoverActive = false
+    button1:SetScript("OnEnter", genericOnEnter)
+    button1:SetScript("OnLeave", genericOnLeave)
+
+    local reopened = ContextMenu.CopyText("styled-again")
+    assert(reopened == true, "CopyText should support repeated opens on the same StaticPopup frame")
+    assert(button1:GetScript("OnEnter") ~= genericOnEnter, "manual popup should install a fresh hover OnEnter handler for each session")
+    assert(button1:GetScript("OnLeave") ~= genericOnLeave, "manual popup should install a fresh hover OnLeave handler for each session")
+
+    manualDef.OnHide(dialog)
+    dialog:Hide()
+    assert(genericLeaveCount == 0, "manual popup cleanup should not fire generic OnLeave when the popup was never hovered")
+
+    local reopenedAfterHover = ContextMenu.CopyText("styled-third")
+    assert(reopenedAfterHover == true, "CopyText should support a third open on the same StaticPopup frame")
+    assert(button1:GetScript("OnEnter") ~= genericOnEnter, "manual popup should keep installing wrapped hover handlers after repeated reuse")
+    assert(button1:GetScript("OnLeave") ~= genericOnLeave, "manual popup should keep installing wrapped leave handlers after repeated reuse")
+    button1:GetScript("OnEnter")(button1)
+    assert(button1._wmManualCopyHovered == true, "manual popup hover handler should still update button state after reused-frame script changes")
+    button1:GetScript("OnLeave")(button1)
+    assert(button1._wmManualCopyHovered == false, "manual popup leave handler should clear manual hover state")
+    assert(genericLeaveCount == 1, "manual popup leave handler should delegate to generic OnLeave exactly once during hover exit")
+
+    manualDef.OnHide(dialog)
+    dialog:Hide()
+
+    assert(dialogText.fontObject == genericDialogFont, "manual popup should restore dialog font object for reused frames")
+    assert(
+      dialogText.textColor[1] == 0.92 and dialogText.textColor[2] == 0.41 and dialogText.textColor[3] == 0.36,
+      "manual popup should restore dialog text color for reused frames"
+    )
+    assert(editBox.fontObject == genericEditFont, "manual popup should restore edit box font object for reused frames")
+    assert(
+      editBox.textColor[1] == 0.24 and editBox.textColor[2] == 0.82 and editBox.textColor[3] == 0.54,
+      "manual popup should restore edit box text color for reused frames"
+    )
+    assert(
+      editBox.textInsets[1] == 3 and editBox.textInsets[2] == 4 and editBox.textInsets[3] == 5 and editBox.textInsets[4] == 6,
+      "manual popup should restore edit box text insets for reused frames"
+    )
+    assert(
+      buttonLabel.textColor[1] == 0.31 and buttonLabel.textColor[2] == 0.55 and buttonLabel.textColor[3] == 0.94,
+      "manual popup should restore button label color from the most recent non-manual styling"
+    )
+    assert(button1.genericHoverActive == false, "manual popup cleanup should clear generic hover side effects before frame reuse")
+    assert(genericLeaveCount == 1, "manual popup cleanup should not double-fire generic OnLeave after the hover already ended")
+    assert(button1:GetScript("OnEnter") == genericOnEnter, "manual popup should restore button OnEnter handler for reused frames")
+    assert(button1:GetScript("OnLeave") == genericOnLeave, "manual popup should restore button OnLeave handler for reused frames")
+
+    local recursiveLeaveCalls = 0
+    local recursiveOnLeave = function()
+      recursiveLeaveCalls = recursiveLeaveCalls + 1
+      if recursiveLeaveCalls > 1 then
+        error("recursive OnLeave teardown")
+      end
+      manualDef.OnHide(dialog)
+    end
+    button1:SetScript("OnLeave", recursiveOnLeave)
+
+    local reopenedRecursive = ContextMenu.CopyText("styled-recursive")
+    assert(reopenedRecursive == true, "CopyText should support reopen before recursive-teardown check")
+    button1:GetScript("OnEnter")(button1)
+    assert(button1:GetScript("OnLeave") ~= recursiveOnLeave, "recursive test should execute wrapped OnLeave")
+    local safeCloseOk, safeCloseErr = pcall(function()
+      button1:GetScript("OnLeave")(button1)
+    end)
+    assert(
+      safeCloseOk == true,
+      "manual popup close should not recurse when original OnLeave re-enters OnHide: " .. tostring(safeCloseErr)
+    )
+    assert(recursiveLeaveCalls <= 1, "manual popup teardown should invoke original OnLeave at most once")
+    dialog:Hide()
+
+    local originalGetFontObject = editBox.GetFontObject
+    local originalSetFontObject = editBox.SetFontObject
+    editBox.GetFontObject = function()
+      return editBox
+    end
+    editBox.SetFontObject = function()
+      error("unexpected SetFontObject")
+    end
+
+    local reopenedFontGuard = ContextMenu.CopyText("styled-font-guard")
+    assert(reopenedFontGuard == true, "CopyText should support reopen before font-restore guard check")
+    local fontCloseOk, fontCloseErr = pcall(function()
+      manualDef.OnHide(dialog)
+    end)
+    assert(
+      fontCloseOk == true,
+      "manual popup should not call edit box SetFontObject during open/close: " .. tostring(fontCloseErr)
+    )
+    dialog:Hide()
+    editBox.GetFontObject = originalGetFontObject
+    editBox.SetFontObject = originalSetFontObject
   end
 
   -- test_bubble_frame_right_click_opens_context_menu
