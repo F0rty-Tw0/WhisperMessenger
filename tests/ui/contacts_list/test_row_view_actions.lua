@@ -55,7 +55,7 @@ return function()
     assert(row.pinButton.point[1] == "TOP", "pinButton should anchor TOP")
     assert(row.pinButton.point[2] == row.removeButton, "pinButton should anchor to removeButton")
     assert(row.pinButton.point[3] == "BOTTOM", "pinButton should sit below removeButton")
-    assert(row.pinButton.point[5] == -actionSpacing + 8, "pinButton should be offset below removeButton")
+    assert(row.pinButton.point[5] == -actionSpacing + 10, "pinButton should be offset below removeButton")
   end
 
   -- test_action_buttons_hidden_by_default
@@ -133,6 +133,43 @@ return function()
     assert(row._wmRowHover == false, "row hover flag should be cleared")
     assert(row.pinButton:IsShown() == false, "pinButton should hide when mouse truly leaves")
     assert(row.removeButton:IsShown() == false, "removeButton should hide when mouse truly leaves")
+  end
+
+  -- test_action_buttons_visible_when_selected
+  do
+    local row = RowView.bindRow(factory, parent, nil, 1, item, options)
+    row.selected = true
+    local ContactsList = require("WhisperMessenger.UI.ContactsList")
+    ContactsList.SetSelected({ row }, item.conversationKey)
+    assert(row.pinButton:IsShown() == true, "pinButton should be visible when row is selected")
+    assert(row.removeButton:IsShown() == true, "removeButton should be visible when row is selected")
+  end
+
+  -- test_action_buttons_hidden_when_deselected
+  do
+    local row = RowView.bindRow(factory, parent, nil, 1, item, options)
+    local ContactsList = require("WhisperMessenger.UI.ContactsList")
+    -- First select
+    ContactsList.SetSelected({ row }, item.conversationKey)
+    -- Then deselect
+    ContactsList.SetSelected({ row }, "other::key")
+    assert(row.pinButton:IsShown() == false, "pinButton should be hidden when row is deselected")
+    assert(row.removeButton:IsShown() == false, "removeButton should be hidden when row is deselected")
+  end
+
+  -- test_action_buttons_stay_visible_after_hover_leave_when_selected
+  do
+    local row = RowView.bindRow(factory, parent, nil, 1, item, options)
+    local ContactsList = require("WhisperMessenger.UI.ContactsList")
+    ContactsList.SetSelected({ row }, item.conversationKey)
+
+    -- Simulate hover enter then leave
+    local onEnter = row.scripts.OnEnter
+    local onLeave = row.scripts.OnLeave
+    onEnter(row)
+    onLeave(row)
+    assert(row.pinButton:IsShown() == true, "pinButton should stay visible after hover leave on selected row")
+    assert(row.removeButton:IsShown() == true, "removeButton should stay visible after hover leave on selected row")
   end
 
   -- test_pinned_item_shows_pin_icon_active

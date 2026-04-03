@@ -111,5 +111,35 @@ return function()
     assert(called == "me::WOW::alice", "onPin should be called with item, got: " .. tostring(called))
   end
 
+  -- test_hide_actions_skips_when_row_is_selected
+  do
+    local row = makeRow()
+    local options = makeOptions({})
+    local parentWidth = 260
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, parentWidth, options)
+    row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
+    row.removeButton:Show()
+    row.pinButton:Show()
+    row.selected = true
+    ActionButtons.hideActions(row)
+    assert(row.removeButton:IsShown() == true, "hideActions should NOT hide removeButton when row is selected")
+    assert(row.pinButton:IsShown() == true, "hideActions should NOT hide pinButton when row is selected")
+  end
+
+  -- test_hide_actions_hides_when_row_is_not_selected
+  do
+    local row = makeRow()
+    local options = makeOptions({})
+    local parentWidth = 260
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, parentWidth, options)
+    row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
+    row.removeButton:Show()
+    row.pinButton:Show()
+    row.selected = false
+    ActionButtons.hideActions(row)
+    assert(row.removeButton:IsShown() == false, "hideActions should hide removeButton when not selected")
+    assert(row.pinButton:IsShown() == false, "hideActions should hide pinButton when not selected")
+  end
+
   print("PASS: test_action_buttons")
 end

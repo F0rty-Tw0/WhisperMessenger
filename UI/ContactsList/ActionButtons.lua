@@ -90,9 +90,13 @@ function ActionButtons.showActions(row)
   end
 end
 
---- Hide action buttons on a row (keeps pin visible for pinned items).
+--- Hide action buttons on a row (keeps pin visible for pinned items,
+--- keeps all actions visible for selected rows).
 ---@param row table row frame with item, pinButton, removeButton fields
 function ActionButtons.hideActions(row)
+  if row.selected then
+    return
+  end
   if row.pinButton and not (row.item and row.item.pinned) then
     row.pinButton:Hide()
   end

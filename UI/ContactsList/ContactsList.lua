@@ -9,6 +9,7 @@ local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
 local setTextColor = UIHelpers.setTextColor
 
+local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.ContactsList.DataBuilder")
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
 local bindRow = RowView.bindRow
@@ -48,6 +49,12 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
       else
         row.selectedRightBorder:Hide()
       end
+    end
+
+    if row.selected then
+      ActionButtons.showActions(row)
+    else
+      ActionButtons.hideActions(row)
     end
 
     if row.preview then
