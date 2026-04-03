@@ -85,8 +85,14 @@ return function()
       #deactivated == expected.deactivateIndex and deactivated[expected.deactivateIndex] == editBox,
       "expected " .. caseLabel .. " whisper edit box to close"
     )
-    -- chatType/tellTarget/text cleanup is delegated to ChatEdit_DeactivateChat;
-    -- closeEditBox no longer writes these directly to avoid tainting secure state.
+    -- chatType/tellTarget are restored via attributes only (not direct properties)
+    -- to avoid tainting secure state on subsequent whisper calls.
+    assert(
+      editBox:GetAttribute("chatType") == expected.stickyType,
+      "expected " .. caseLabel .. " secure chatType restored to sticky " .. expected.stickyType
+    )
+    assert(editBox:GetAttribute("tellTarget") == nil, "expected " .. caseLabel .. " secure tellTarget cleared")
+    assert(editBox:GetText() == "", "expected " .. caseLabel .. " Blizzard edit box text to be cleared")
     assert(editBox.shown == false, "expected " .. caseLabel .. " whisper edit box to hide")
     assert(editBox:HasFocus() == false, "expected " .. caseLabel .. " whisper edit box to lose focus")
   end

@@ -107,11 +107,19 @@ local function closeEditBox(runtime, editBox, deactivateChat)
     runtime.setComposerText(typed)
   end
 
-  -- Do NOT manually write chatType, tellTarget, or text on the editbox.
-  -- Direct property writes (editBox.chatType = value) persist and shadow
-  -- WoW's own SetAttribute-based state updates, breaking chatType
-  -- detection on subsequent whisper attempts. ChatEdit_DeactivateChat
-  -- handles sticky-type restoration, tell-target cleanup, and hiding.
+  -- Restore chatType to sticky type and clear tellTarget via secure
+  -- attributes only. Do NOT set direct Lua properties (editBox.chatType,
+  -- editBox.tellTarget) as they persist and shadow WoW's SetAttribute-based
+  -- state updates, breaking chatType detection on subsequent whispers.
+  if type(editBox.SetAttribute) == "function" then
+    local stickyType = readEditBoxState(editBox, "stickyType")
+    if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
+      pcall(editBox.SetAttribute, editBox, "chatType", stickyType)
+    end
+    pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
+  end
+  editBox:SetText("")
+
   if type(deactivateChat) == "function" then
     deactivateChat(editBox)
   elseif editBox.Hide then
