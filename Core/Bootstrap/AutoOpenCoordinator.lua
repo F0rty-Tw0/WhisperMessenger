@@ -107,14 +107,11 @@ local function closeEditBox(runtime, editBox, deactivateChat)
     runtime.setComposerText(typed)
   end
 
-  local stickyType = readEditBoxState(editBox, "stickyType")
-  if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
-    writeEditBoxState(editBox, "chatType", stickyType)
-  end
-
-  writeEditBoxState(editBox, "tellTarget", nil)
-  editBox:SetText("")
-
+  -- Do NOT manually write chatType, tellTarget, or text on the editbox.
+  -- Direct property writes (editBox.chatType = value) persist and shadow
+  -- WoW's own SetAttribute-based state updates, breaking chatType
+  -- detection on subsequent whisper attempts. ChatEdit_DeactivateChat
+  -- handles sticky-type restoration, tell-target cleanup, and hiding.
   if type(deactivateChat) == "function" then
     deactivateChat(editBox)
   elseif editBox.Hide then
@@ -187,24 +184,134 @@ local function ensureBattleNetConversation(runtime, identity, accountInfo)
   return conversationKey
 end
 
+local function interceptEditBox(runtime, hooks, deps, editBox)
+  local chatType = readEditBoxState(editBox, "chatType")
+  local target = readEditBoxState(editBox, "tellTarget")
+
+  if chatType == "BN_WHISPER" and target then
+    local opened = false
+    pcall(function()
+      local accountInfo = findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
+      if not accountInfo then
+        return
+      end
+      local conversationKey = ensureBattleNetConversation(runtime, deps.identity, accountInfo)
+      if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
+        opened = true
+      end
+    end)
+    if opened then
+      closeEditBox(runtime, editBox, deps.deactivateChat)
+    end
+    return true
+  end
+
+  if chatType == "WHISPER" and target and target ~= "" then
+    if hooks.onSendTell(target) then
+      closeEditBox(runtime, editBox, deps.deactivateChat)
+    end
+    return true
+  end
+
+  return false
+end
+
+local function findFocusedEditBox(deps)
+  for index = 1, deps.getNumChatWindows() do
+    local editBox = deps.getEditBox(index)
+    if editBox and type(editBox.HasFocus) == "function" and editBox:HasFocus() then
+      return editBox
+    end
+  end
+  return nil
+end
+
+local function shouldInterceptHook(runtime, deps)
+  if deps.isSuspended() then
+    return false
+  end
+  local settings = runtime.accountState and runtime.accountState.settings
+  if not settings or settings.autoOpenWindow ~= true then
+    return false
+  end
+  if deps.isInCombat() then
+    return false
+  end
+  return true
+end
+
+local function installDirectHooks(runtime, hooks, deps)
+  if type(_G.hooksecurefunc) ~= "function" then
+    return
+  end
+
+  local function handleWhisperHook()
+    if not shouldInterceptHook(runtime, deps) then
+      return
+    end
+    local editBox = findFocusedEditBox(deps)
+    if not editBox then
+      return
+    end
+
+    local chatType = readEditBoxState(editBox, "chatType")
+    local target = readEditBoxState(editBox, "tellTarget")
+    local opened = false
+
+    if chatType == "BN_WHISPER" and target then
+      pcall(function()
+        local accountInfo = findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
+        if not accountInfo then
+          return
+        end
+        local conversationKey = ensureBattleNetConversation(runtime, deps.identity, accountInfo)
+        if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
+          opened = true
+        end
+      end)
+    elseif chatType == "WHISPER" and target and target ~= "" then
+      opened = hooks.onSendTell(target) == true
+    end
+
+    if opened then
+      -- Defer editbox cleanup to next frame to avoid tainting secure chat
+      -- frame state. Writing to editbox attributes during a hooksecurefunc
+      -- callback can taint them, causing WoW to fail on subsequent calls.
+      local timer = _G.C_Timer
+      if type(timer) == "table" and type(timer.After) == "function" then
+        timer.After(0, function()
+          closeEditBox(runtime, editBox, deps.deactivateChat)
+        end)
+      end
+    end
+  end
+
+  local function safeHook(name)
+    if type(_G[name]) == "function" then
+      pcall(_G.hooksecurefunc, name, handleWhisperHook)
+    end
+  end
+
+  safeHook("ChatFrame_SendTell")
+  safeHook("ChatFrame_ReplyTell")
+  safeHook("ChatFrame_ReplyTell2")
+
+  if deps.trace then
+    deps.trace("AutoOpen: direct whisper hooks installed")
+  end
+end
+
 local function installPoller(runtime, hooks, deps)
   local createFrame = deps.createFrame
   if type(createFrame) ~= "function" then
     return nil
   end
 
+  installDirectHooks(runtime, hooks, deps)
+
   local pollFrame = createFrame("Frame")
   pollFrame:SetScript("OnUpdate", function()
-    if deps.isSuspended() then
-      return
-    end
-
-    local settings = runtime.accountState and runtime.accountState.settings
-    if not settings or settings.autoOpenWindow ~= true then
-      return
-    end
-
-    if deps.isInCombat() then
+    if not shouldInterceptHook(runtime, deps) then
       return
     end
 
@@ -219,29 +326,8 @@ local function installPoller(runtime, hooks, deps)
           end
         end
 
-        local chatType = readEditBoxState(editBox, "chatType")
-        local target = readEditBoxState(editBox, "tellTarget")
-        if chatType == "BN_WHISPER" and target then
-          pcall(function()
-            local accountInfo = findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
-            if not accountInfo then
-              return
-            end
-
-            local conversationKey = ensureBattleNetConversation(runtime, deps.identity, accountInfo)
-            if conversationKey then
-              hooks.onOutgoingWhisper(conversationKey)
-              closeEditBox(runtime, editBox, deps.deactivateChat)
-            end
-          end)
-          return
-        end
-
-        if chatType == "WHISPER" and target and target ~= "" then
-          hooks.onSendTell(target)
-          closeEditBox(runtime, editBox, deps.deactivateChat)
-          return
-        end
+        interceptEditBox(runtime, hooks, deps, editBox)
+        return
       end
     end
   end)

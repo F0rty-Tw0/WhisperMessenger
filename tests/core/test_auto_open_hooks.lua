@@ -53,8 +53,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onReplyTell()
+    local result = hooks.onReplyTell()
 
+    assert(result == true, "test_on_reply_tell_opens: should return true on success")
     assert(
       deps.calls.ensureWindow == 1,
       "test_on_reply_tell_opens: ensureWindow should be called once, got " .. deps.calls.ensureWindow
@@ -84,8 +85,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onReplyTell()
+    local result = hooks.onReplyTell()
 
+    assert(result == false, "test_on_reply_tell_combat: should return false in combat")
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_combat: should not open window in combat")
   end
 
@@ -103,8 +105,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onReplyTell()
+    local result = hooks.onReplyTell()
 
+    assert(result == false, "test_on_reply_tell_disabled: should return false when setting off")
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_disabled: should not open window when setting off")
   end
 
@@ -119,8 +122,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onReplyTell()
+    local result = hooks.onReplyTell()
 
+    assert(result == false, "test_on_reply_tell_no_key: should return false when no reply key")
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_no_key: should not open window when no reply key")
   end
 
@@ -138,8 +142,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onSendTell("Jaina")
+    local result = hooks.onSendTell("Jaina")
 
+    assert(result == true, "test_on_send_tell_opens: should return true on success")
     assert(deps.calls.ensureWindow == 1, "test_on_send_tell_opens: ensureWindow should be called once")
     assert(
       #deps.calls.setWindowVisible == 1 and deps.calls.setWindowVisible[1] == true,
@@ -169,8 +174,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onSendTell("Jaina")
+    local result = hooks.onSendTell("Jaina")
 
+    assert(result == false, "test_on_send_tell_combat: should return false in combat")
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_combat: should not open window in combat")
   end
 
@@ -191,8 +197,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onSendTell("Jaina")
+    local result = hooks.onSendTell("Jaina")
 
+    assert(result == false, "test_on_send_tell_disabled: should return false when setting off")
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_disabled: should not open window when setting off")
   end
 
@@ -234,8 +241,9 @@ return function()
     })
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onSendTell("Unknown")
+    local result = hooks.onSendTell("Unknown")
 
+    assert(result == false, "test_on_send_tell_no_conv: should return false when no key available")
     assert(
       deps.calls.ensureWindow == 0,
       "test_on_send_tell_no_conv: should not open window when no matching conversation and no builder"
@@ -249,8 +257,9 @@ return function()
     local deps = makeDeps()
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onOutgoingWhisper("wow::WOW::Arthas")
+    local result = hooks.onOutgoingWhisper("wow::WOW::Arthas")
 
+    assert(result == true, "test_on_outgoing_whisper: should return true on success")
     assert(deps.calls.ensureWindow == 1, "test_on_outgoing_whisper: ensureWindow should be called once")
     assert(
       #deps.calls.setWindowVisible == 1 and deps.calls.setWindowVisible[1] == true,
@@ -270,8 +279,9 @@ return function()
     local deps = makeDeps()
 
     local hooks = AutoOpenHooks.Create(deps)
-    hooks.onOutgoingWhisper(nil)
+    local result = hooks.onOutgoingWhisper(nil)
 
+    assert(result == false, "test_on_outgoing_whisper_nil: should return false when key is nil")
     assert(deps.calls.ensureWindow == 0, "test_on_outgoing_whisper_nil: should not open when key is nil")
   end
 

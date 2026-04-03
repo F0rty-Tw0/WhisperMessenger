@@ -5,6 +5,7 @@
 - Fixed pinned contacts so they retain message history indefinitely while pinned, still respecting the configured max-messages-per-contact limit.
 - Unpinned contacts now immediately fall back to the configured retention policy, including trimming old messages or removing stale conversations right away.
 - Fixed shift-clicking quests, skills, and achievements silently inserting links into the messenger composer even when the window is closed — default WoW behavior is now preserved when the messenger is not visible.
+- Fixed auto-open intermittently failing when pressing R to reply, right-clicking to whisper, or clicking a character name — replaced unreliable frame-by-frame polling with direct hooks on WoW's whisper functions for immediate detection. The default chat editbox is no longer closed when the messenger can't open the conversation.
 
 ## [1.1.0] - 2026-04-01
 
