@@ -123,7 +123,8 @@ local function bindRow(factory, parent, row, index, item, options)
   end
 
   row.pinButton:ClearAllPoints()
-  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, -ACTION_SPACING)
+  local pinYOffset = item.pinned and (-ACTION_SPACING + 4) or (-ACTION_SPACING + 10)
+  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, pinYOffset)
 
   -- Show/hide action buttons: hide when unread badge is visible
   local hasUnread = (item.unreadCount or 0) > 0

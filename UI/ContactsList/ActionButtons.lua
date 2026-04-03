@@ -50,16 +50,29 @@ local function restoreRowVisualState(row)
   else
     applyColorTexture(row.bg, rowBaseBackgroundColor(row))
   end
-  if (row._wmActionHoverCount or 0) > 0 then
-    ActionButtons.showActions(row)
-  else
-    ActionButtons.hideActions(row)
-  end
 end
 
 local function adjustActionHoverCount(row, delta)
   row._wmActionHoverCount = math.max(0, (row._wmActionHoverCount or 0) + delta)
-  restoreRowVisualState(row)
+  if row._wmActionHoverCount > 0 then
+    restoreRowVisualState(row)
+    ActionButtons.showActions(row)
+    return
+  end
+  -- Defer all visual updates when count drops to zero so WoW's
+  -- Row OnEnter can fire first, preventing bg flash and re-entrant events.
+  local CTimer = _G.C_Timer
+  if CTimer and CTimer.After then
+    CTimer.After(0, function()
+      if not row._wmRowHover and (row._wmActionHoverCount or 0) == 0 then
+        restoreRowVisualState(row)
+        ActionButtons.hideActions(row)
+      end
+    end)
+  else
+    restoreRowVisualState(row)
+    ActionButtons.hideActions(row)
+  end
 end
 
 --- Show action buttons on a row (pin + remove), respecting unread state.

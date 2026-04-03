@@ -11,25 +11,39 @@ local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.C
 
 local RowScripts = {}
 
-local function showActions(row)
-  local hasUnread = row.item and (row.item.unreadCount or 0) > 0
-  if hasUnread then
-    return
+-- Resolve ActionButtons lazily: RowScripts loads before ActionButtons in the
+-- TOC, so ns.ContactsListActionButtons is nil at load time.
+local _actionButtons
+local function getActionButtons()
+  if _actionButtons then
+    return _actionButtons
   end
-  if row.pinButton then
-    row.pinButton:Show()
+  _actionButtons = ns.ContactsListActionButtons
+  if not _actionButtons and type(require) == "function" then
+    local ok, mod = pcall(require, "WhisperMessenger.UI.ContactsList.ActionButtons")
+    if ok then
+      _actionButtons = mod
+    end
   end
-  if row.removeButton then
-    row.removeButton:Show()
-  end
+  return _actionButtons
 end
 
-local function hideActions(row)
-  if row.pinButton and not (row.item and row.item.pinned) then
-    row.pinButton:Hide()
-  end
-  if row.removeButton then
-    row.removeButton:Hide()
+--- Schedule hideActions for the next frame so button OnEnter/Row OnEnter
+--- can fire first, preventing re-entrant hover events from frame hiding.
+local function deferHideActions(row)
+  local CTimer = _G.C_Timer
+  if CTimer and CTimer.After then
+    CTimer.After(0, function()
+      local AB = getActionButtons()
+      if AB and not row._wmRowHover and (row._wmActionHoverCount or 0) == 0 then
+        AB.hideActions(row)
+      end
+    end)
+  else
+    local AB = getActionButtons()
+    if AB and (row._wmActionHoverCount or 0) == 0 then
+      AB.hideActions(row)
+    end
   end
 end
 
@@ -57,12 +71,6 @@ local function applyRowVisualState(row)
       row.selectedRightBorder:Hide()
     end
   end
-
-  if hovered then
-    showActions(row)
-  else
-    hideActions(row)
-  end
 end
 
 --- Bind OnEnter / OnLeave hover scripts to a row.
@@ -82,11 +90,16 @@ function RowScripts.bindHover(row, options)
     row:SetScript("OnEnter", function()
       row._wmRowHover = true
       row._wmApplyVisualState()
+      local AB = getActionButtons()
+      if AB then
+        AB.showActions(row)
+      end
     end)
 
     row:SetScript("OnLeave", function()
       row._wmRowHover = false
       row._wmApplyVisualState()
+      deferHideActions(row)
     end)
   end
 end
