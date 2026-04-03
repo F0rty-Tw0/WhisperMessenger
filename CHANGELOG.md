@@ -6,6 +6,10 @@
 - Unpinned contacts now immediately fall back to the configured retention policy, including trimming old messages or removing stale conversations right away.
 - Fixed shift-clicking quests, skills, and achievements silently inserting links into the messenger composer even when the window is closed — default WoW behavior is now preserved when the messenger is not visible.
 - Fixed auto-open intermittently failing when pressing R to reply, right-clicking to whisper, or clicking a character name — replaced unreliable frame-by-frame polling with direct hooks on WoW's whisper functions for immediate detection. The default chat editbox is no longer closed when the messenger can't open the conversation.
+- Fixed "Hide whispers from default chat" not hiding outgoing whisper echoes — sent messages no longer leak into the default chat frame when the setting is enabled.
+- Fixed pressing R (reply) not working after receiving a whisper with "Hide from default chat" enabled — the reply target is now preserved outside the chat filter to avoid taint.
+- Fixed a taint error (`attempt to perform string conversion on a secret string value`) caused by addon code executing inside a ChatFrame filter callback — filters now use a registration-based approach with no dynamic state checks in the filter body.
+- Fixed "Hide from default chat" not being disabled during battlegrounds, arenas, and rated PvP — the addon now detects competitive content via instance type and bypasses whisper filtering automatically.
 
 ## [1.1.0] - 2026-04-01
 

@@ -184,6 +184,20 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if INCOMING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
     -- Always track the last incoming whisper for reply (R key), even in combat
     runtime.lastIncomingWhisperKey = result.conversationKey
+    -- When we filter whispers from the default chat, WoW's ChatFrame handler
+    -- never runs and the reply target is lost. Restore it here (outside the
+    -- filter context so we don't taint Blizzard's secure execution path).
+    if
+      runtime.accountState
+      and runtime.accountState.settings
+      and runtime.accountState.settings.hideFromDefaultChat == true
+      and not _G._wmSuspended
+      and type(_G.ChatEdit_SetLastTellTarget) == "function"
+      and payload.playerName
+    then
+      local tellType = eventName == "CHAT_MSG_BN_WHISPER" and "BN_WHISPER" or "WHISPER"
+      _G.ChatEdit_SetLastTellTarget(payload.playerName, tellType)
+    end
     if
       runtime.accountState
       and runtime.accountState.settings

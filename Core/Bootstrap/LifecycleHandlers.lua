@@ -94,11 +94,22 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
 end
 
 local function handleZoneChangedNewArea(Bootstrap, deps)
+  local ContentDetector = deps.getContentDetector()
+
+  -- Update competitive content flag on every zone change so the chat
+  -- filter bypasses correctly when entering/leaving PvP or arenas.
+  if Bootstrap._inCompetitiveContent or Bootstrap._inMythicContent then
+    local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
+    Bootstrap._inCompetitiveContent = isCompetitive
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+  end
+
   if not Bootstrap._inMythicContent then
     return true
   end
 
-  local ContentDetector = deps.getContentDetector()
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
   deps.trace("ZONE_CHANGED_NEW_AREA wasMythic=true isMythic=" .. tostring(isMythic))
   if not isMythic then
@@ -150,8 +161,13 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
   local ContentDetector = deps.getContentDetector()
   local wasMythic = Bootstrap._inMythicContent or false
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
+  local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
   deps.trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
   Bootstrap._inMythicContent = isMythic
+  Bootstrap._inCompetitiveContent = isCompetitive
+  if Bootstrap.syncChatFilters then
+    Bootstrap.syncChatFilters()
+  end
 
   if isMythic and not wasMythic then
     if Bootstrap.runtime and Bootstrap.runtime.suspend then

@@ -60,7 +60,9 @@ function MythicSuspendController.Attach(runtime, deps)
       EventBridge.RegisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
     end
 
-    if Bootstrap.registerChatFilters then
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    elseif Bootstrap.registerChatFilters then
       Bootstrap.registerChatFilters()
     end
     if Bootstrap._wasVisibleBeforeMythic then

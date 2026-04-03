@@ -134,13 +134,13 @@ function Bootstrap.Initialize(factory, options)
   -- Setting hideFromDefaultChat = false lets whispers appear in both places.
   --
   -- IMPORTANT: Any addon code running inside a ChatFrame filter taints
-  -- Blizzard's chat processing context. During mythic content this breaks
-  -- /r, /w, and community whispers. We remove the filters entirely on
-  -- mythic enter and re-register them on mythic leave.
+  -- Blizzard's chat processing context. Filters are only registered when
+  -- they should suppress (hideFromDefaultChat=true, not in competitive
+  -- content or mythic). syncChatFilters manages this dynamically.
   ChatFilters.Configure(Bootstrap, accountState)
-  if not Bootstrap._inMythicContent then
-    Bootstrap.registerChatFilters()
-  end
+  Bootstrap.syncChatFilters()
+
+  runtime.syncChatFilters = Bootstrap.syncChatFilters
 
   SlashCommands.Register({
     toggle = runtime.toggle,

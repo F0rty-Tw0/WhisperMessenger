@@ -16,5 +16,16 @@ function ContentDetector.IsMythicRestricted(getInstanceInfo)
   return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY or difficultyID == MYTHIC_RAID_DIFFICULTY
 end
 
+function ContentDetector.IsCompetitiveContent(getInstanceInfo)
+  if type(getInstanceInfo) ~= "function" then
+    return false
+  end
+  local _, instanceType, difficultyID = getInstanceInfo()
+  if instanceType == "pvp" or instanceType == "arena" then
+    return true
+  end
+  return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY or difficultyID == MYTHIC_RAID_DIFFICULTY
+end
+
 ns.ContentDetector = ContentDetector
 return ContentDetector

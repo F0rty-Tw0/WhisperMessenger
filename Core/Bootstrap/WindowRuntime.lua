@@ -228,6 +228,9 @@ function WindowRuntime.Create(options)
         if key == "fontFamily" and fonts.SetMode then
           fonts.SetMode(persistedValue or "default")
         end
+        if key == "hideFromDefaultChat" and runtime.syncChatFilters then
+          runtime.syncChatFilters()
+        end
         if (key == "hideMessagePreview" or key == "fontFamily") and runtime.refreshWindow then
           runtime.refreshWindow()
         end
