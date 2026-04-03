@@ -383,6 +383,12 @@ function AutoOpenCoordinator.Attach(options)
     getLastReplyKey = function()
       return runtime.lastIncomingWhisperKey
     end,
+    isWindowVisible = function()
+      return windowRuntime.isWindowVisible and windowRuntime.isWindowVisible() or false
+    end,
+    getActiveConversationKey = function()
+      return runtime.activeConversationKey
+    end,
   })
 
   runtime.onAutoOpen = autoOpenHooks.onIncomingWhisper

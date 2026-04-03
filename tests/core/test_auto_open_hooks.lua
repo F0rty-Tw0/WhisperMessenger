@@ -38,6 +38,12 @@ return function()
       getLastReplyKey = overrides.getLastReplyKey or function()
         return nil
       end,
+      isWindowVisible = overrides.isWindowVisible or function()
+        return false
+      end,
+      getActiveConversationKey = overrides.getActiveConversationKey or function()
+        return nil
+      end,
       calls = calls,
     }
   end
@@ -306,6 +312,73 @@ return function()
     assert(
       deps.calls.focusComposer == 0,
       "test_on_auto_open_incoming: should NOT force focus composer (respects autoFocusComposer)"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_incoming_whisper_does_not_switch_when_window_open_with_active_conversation
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      isWindowVisible = function()
+        return true
+      end,
+      getActiveConversationKey = function()
+        return "wow::WOW::Jaina"
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    hooks.onIncomingWhisper("wow::WOW::Thrall")
+
+    assert(
+      #deps.calls.selectConversation == 0,
+      "test_incoming_no_switch: should NOT switch conversation when window is open with active conversation, got "
+        .. #deps.calls.selectConversation
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_incoming_whisper_selects_when_window_open_but_no_active_conversation
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      isWindowVisible = function()
+        return true
+      end,
+      getActiveConversationKey = function()
+        return nil
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    hooks.onIncomingWhisper("wow::WOW::Thrall")
+
+    assert(
+      #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Thrall",
+      "test_incoming_no_active: should select conversation when window is open but no active conversation"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_incoming_whisper_selects_when_window_not_visible
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      isWindowVisible = function()
+        return false
+      end,
+      getActiveConversationKey = function()
+        return "wow::WOW::Jaina"
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    hooks.onIncomingWhisper("wow::WOW::Thrall")
+
+    assert(
+      #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Thrall",
+      "test_incoming_not_visible: should select conversation when window is not visible"
     )
   end
 end

@@ -71,7 +71,7 @@ function Metrics.GetRange(view)
 
   if type(view.scrollFrame.GetVerticalScrollRange) == "function" then
     local range = view.scrollFrame:GetVerticalScrollRange()
-    if type(range) == "number" and range >= 0 then
+    if type(range) == "number" and range > 0 then
       return range
     end
   end
