@@ -83,6 +83,7 @@ return function()
       end,
     }
     local result = BNetResolver.ResolveAccountInfo(primaryOkApi, 77)
+    assert(type(result) == "table", "expected primary account info table")
     assert(result.battleTag == "Primary#1111", "should use primary when isOnline is set")
   end
 

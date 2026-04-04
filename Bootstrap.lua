@@ -34,11 +34,17 @@ local function trace(...)
 end
 
 if ns.trace then
-  trace = ns.trace
+  local loadedTrace = ns.trace
+  trace = function(...)
+    loadedTrace(...)
+  end
 elseif type(require) == "function" then
   local ok, loaded = pcall(require, "WhisperMessenger.Core.Trace")
   if ok and loaded then
-    trace = loaded
+    local loadedTrace = loaded
+    trace = function(...)
+      loadedTrace(...)
+    end
   end
 end
 
@@ -93,11 +99,9 @@ function Bootstrap.Initialize(factory, options)
   accountState.settings.themePreset = themePresetKey
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
-  PresenceCache.Initialize(options.clubApi or _G.C_Club, {
+  PresenceCache.Initialize(options.clubApi or _G["C_Club"], {
     ttl = presenceTTL,
-    now = options.now or function()
-      return type(_G.time) == "function" and _G.time() or 0
-    end,
+    now = options.now,
   })
 
   local windowRuntime = WindowRuntime.Create({

@@ -101,10 +101,10 @@ return function()
   -- test_profanity_filter_toggle_exists
   -- -----------------------------------------------------------------------
   do
-    _G.GetCVar = function()
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
 
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -130,13 +130,13 @@ return function()
   -- test_profanity_filter_toggle_reads_cvar
   -- -----------------------------------------------------------------------
   do
-    _G.GetCVar = function(name)
+    rawset(_G, "GetCVar", function(name)
       if name == "profanityFilter" then
         return "0"
       end
       return "0"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
 
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -260,12 +260,12 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local cvarWrites = {}
-    _G.GetCVar = function()
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function(name, value)
+    end)
+    rawset(_G, "SetCVar", function(name, value)
       cvarWrites[name] = value
-    end
+    end)
 
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })

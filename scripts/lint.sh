@@ -29,6 +29,13 @@ elif command -v luacheck &>/dev/null; then
   LUACHECK_CMD="$(command -v luacheck)"
 fi
 
+LUALS_CMD=""
+if [[ -x ".tools/lua-language-server/bin/lua-language-server.exe" ]]; then
+  LUALS_CMD=".tools/lua-language-server/bin/lua-language-server.exe"
+elif command -v lua-language-server &>/dev/null; then
+  LUALS_CMD="$(command -v lua-language-server)"
+fi
+
 # --- StyLua (formatting) ---
 if [[ -n "$STYLUA_CMD" ]]; then
   echo "=== StyLua ==="
@@ -62,4 +69,17 @@ else
   echo "WARN: luacheck not found (run 'powershell -ExecutionPolicy Bypass -File scripts/setup-lint-tools.ps1' or install globally)"
 fi
 
+
+echo ""
+
+# --- Lua Language Server diagnostics (type/null flow checks) ---
+if [[ -n "$LUALS_CMD" ]]; then
+  echo "=== LuaLS Diagnostics ==="
+  if ! "$LUALS_CMD" --check=. --check_format=pretty --checklevel=Warning; then
+    EXIT_CODE=1
+  fi
+else
+  echo "WARN: lua-language-server not found (run 'powershell -ExecutionPolicy Bypass -File scripts/setup-lint-tools.ps1' or install globally)"
+  EXIT_CODE=1
+fi
 exit $EXIT_CODE

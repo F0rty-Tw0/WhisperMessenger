@@ -53,9 +53,9 @@ local function isGroupMemberOnline(displayName)
   if displayName == nil then
     return false
   end
-  local UnitIsConnected = _G.UnitIsConnected
-  local UnitName = _G.UnitName
-  local GetNumGroupMembers = _G.GetNumGroupMembers
+  local UnitIsConnected = _G["UnitIsConnected"]
+  local UnitName = _G["UnitName"]
+  local GetNumGroupMembers = _G["GetNumGroupMembers"]
   if type(UnitIsConnected) ~= "function" or type(UnitName) ~= "function" then
     return false
   end
@@ -65,7 +65,7 @@ local function isGroupMemberOnline(displayName)
   end
   -- Normalize: compare lowercase name before realm separator
   local targetName = string.lower(string.match(displayName, "^([^%-]+)") or displayName)
-  local IsInRaid = _G.IsInRaid
+  local IsInRaid = _G["IsInRaid"]
   local prefix = (type(IsInRaid) == "function" and IsInRaid()) and "raid" or "party"
   for i = 1, numMembers do
     local unit = prefix .. i

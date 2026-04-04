@@ -34,16 +34,16 @@ return function()
   _G.SlashCmdList = {}
   _G.SLASH_WHISPERMESSENGER1 = nil
   _G.SLASH_WHISPERMESSENGER2 = nil
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Arthas", "Area52"
-  end
-  _G.GetNormalizedRealmName = function()
+  end)
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
-  end
-  _G.time = function()
+  end)
+  rawset(_G, "time", function()
     return 12345
-  end
+  end)
   _G.WhisperMessengerDB = {
     conversations = {
       [conversationKey] = {
@@ -78,7 +78,7 @@ return function()
       y = 0,
     },
   }
-  _G.CreateFrame = function(frameType, name, parent, template)
+  rawset(_G, "CreateFrame", function(frameType, name, parent, template)
     local frame = factory.CreateFrame(frameType, name, parent, template)
     createdFrames[#createdFrames + 1] = frame
 
@@ -94,7 +94,7 @@ return function()
     end
 
     return frame
-  end
+  end)
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -139,14 +139,14 @@ return function()
   assert(memoryReportCalls == 1, "expected slash mem to route to diagnostics.memoryReport")
 
   _G.require = savedRequire
-  _G.CreateFrame = savedCreateFrame
+  rawset(_G, "CreateFrame", savedCreateFrame)
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
-  _G.UnitFullName = savedUnitFullName
-  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
-  _G.time = savedTime
+  rawset(_G, "UnitFullName", savedUnitFullName)
+  rawset(_G, "GetNormalizedRealmName", savedGetNormalizedRealmName)
+  rawset(_G, "time", savedTime)
   _G.WhisperMessengerDB = savedAccountDb
   _G.WhisperMessengerCharacterDB = savedCharacterDb
 end

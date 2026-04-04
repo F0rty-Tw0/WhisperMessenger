@@ -4,11 +4,11 @@ local ConversationStore = require("WhisperMessenger.Model.ConversationStore")
 
 return function()
   -- Stub globals needed by SoundPlayer
-  _G.PlaySound = function() end
-  _G.GetCVar = function()
+  rawset(_G, "PlaySound", function() end)
+  rawset(_G, "GetCVar", function()
     return "1"
-  end
-  _G.SetCVar = function() end
+  end)
+  rawset(_G, "SetCVar", function() end)
   _G.C_Timer = {
     After = function(_delay, fn)
       fn()
@@ -19,9 +19,9 @@ return function()
   -- test_message_recorded_during_combat
   -- -----------------------------------------------------------------------
   do
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return true
-    end
+    end)
 
     local store = ConversationStore.New()
     local runtime = {
@@ -98,9 +98,9 @@ return function()
   -- test_message_recorded_out_of_combat
   -- -----------------------------------------------------------------------
   do
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local store = ConversationStore.New()
     local runtime = {
@@ -151,9 +151,9 @@ return function()
     assert(conversation.messages[1].text == "Hello outside combat!", "test_ooc_recording: message text should match")
   end
 
-  _G.PlaySound = nil
-  _G.GetCVar = nil
-  _G.SetCVar = nil
+  rawset(_G, "PlaySound", nil)
+  rawset(_G, "GetCVar", nil)
+  rawset(_G, "SetCVar", nil)
   _G.C_Timer = nil
-  _G.InCombatLockdown = nil
+  rawset(_G, "InCombatLockdown", nil)
 end

@@ -21,7 +21,7 @@ return function()
   _G.require = nil
   _G.WhisperMessengerDB = nil
   _G.WhisperMessengerCharacterDB = nil
-  _G.CreateFrame = function(frameType, name, parent)
+  rawset(_G, "CreateFrame", function(frameType, name, parent)
     local frame = factory.CreateFrame(frameType, name, parent)
     table.insert(createdFrames, frame)
 
@@ -37,7 +37,7 @@ return function()
     end
 
     return frame
-  end
+  end)
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -71,7 +71,7 @@ return function()
   assert(ns.Bootstrap.runtime.characterState == _G.WhisperMessengerCharacterDB)
 
   _G.require = savedRequire
-  _G.CreateFrame = savedCreateFrame
+  rawset(_G, "CreateFrame", savedCreateFrame)
   _G.WhisperMessengerDB = savedDB
   _G.WhisperMessengerCharacterDB = savedCharacterDB
 end

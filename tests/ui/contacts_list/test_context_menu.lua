@@ -12,33 +12,25 @@ return function()
   -- test_open_wow_contact_uses_friends_dropdown
   do
     local called = nil
-    _G.FriendsFrame_ShowDropdown = function(
-      name,
-      connected,
-      lineID,
-      chatType,
-      chatFrame,
-      friendsList,
-      clubID,
-      streamID,
-      epoch,
-      position,
-      guid
+    rawset(
+      _G,
+      "FriendsFrame_ShowDropdown",
+      function(name, connected, lineID, chatType, chatFrame, friendsList, clubID, streamID, epoch, position, guid)
+        called = {
+          name = name,
+          connected = connected,
+          lineID = lineID,
+          chatType = chatType,
+          chatFrame = chatFrame,
+          friendsList = friendsList,
+          clubID = clubID,
+          streamID = streamID,
+          epoch = epoch,
+          position = position,
+          guid = guid,
+        }
+      end
     )
-      called = {
-        name = name,
-        connected = connected,
-        lineID = lineID,
-        chatType = chatType,
-        chatFrame = chatFrame,
-        friendsList = friendsList,
-        clubID = clubID,
-        streamID = streamID,
-        epoch = epoch,
-        position = position,
-        guid = guid,
-      }
-    end
 
     local opened = ContextMenu.Open({
       channel = "WOW",
@@ -109,13 +101,13 @@ return function()
     local calledWhich = nil
     local calledContext = nil
     _G.FriendsFrame_ShowBNDropdown = nil
-    _G.FriendsFrame_ShowDropdown = function()
+    rawset(_G, "FriendsFrame_ShowDropdown", function()
       wowDropdownCalled = true
-    end
-    _G.UnitPopup_OpenMenu = function(which, contextData)
+    end)
+    rawset(_G, "UnitPopup_OpenMenu", function(which, contextData)
       calledWhich = which
       calledContext = contextData
-    end
+    end)
 
     local opened = ContextMenu.Open({
       channel = "BN",
@@ -134,12 +126,12 @@ return function()
   do
     local calledWhich = nil
     local calledContext = nil
-    _G.FriendsFrame_ShowDropdown = nil
+    rawset(_G, "FriendsFrame_ShowDropdown", nil)
     _G.FriendsFrame_ShowBNDropdown = nil
-    _G.UnitPopup_OpenMenu = function(which, contextData)
+    rawset(_G, "UnitPopup_OpenMenu", function(which, contextData)
       calledWhich = which
       calledContext = contextData
-    end
+    end)
 
     local opened = ContextMenu.Open({
       channel = "WOW",
@@ -157,9 +149,9 @@ return function()
 
   -- test_open_returns_false_when_no_display_name
   do
-    _G.FriendsFrame_ShowDropdown = function()
+    rawset(_G, "FriendsFrame_ShowDropdown", function()
       error("should not be called")
-    end
+    end)
 
     local opened = ContextMenu.Open({ channel = "WOW" }, anchor)
     assert(opened == false, "context menu should not open without a contact name")
@@ -167,9 +159,9 @@ return function()
 
   -- test_open_returns_false_when_no_menu_api_is_available
   do
-    _G.FriendsFrame_ShowDropdown = nil
+    rawset(_G, "FriendsFrame_ShowDropdown", nil)
     _G.FriendsFrame_ShowBNDropdown = nil
-    _G.UnitPopup_OpenMenu = nil
+    rawset(_G, "UnitPopup_OpenMenu", nil)
 
     local opened = ContextMenu.Open({
       channel = "WOW",
@@ -179,7 +171,7 @@ return function()
     assert(opened == false, "context menu should return false when all menu APIs are unavailable")
   end
 
-  _G.FriendsFrame_ShowDropdown = savedShowDropdown
+  rawset(_G, "FriendsFrame_ShowDropdown", savedShowDropdown)
   _G.FriendsFrame_ShowBNDropdown = savedShowBNDropdown
-  _G.UnitPopup_OpenMenu = savedUnitPopupOpenMenu
+  rawset(_G, "UnitPopup_OpenMenu", savedUnitPopupOpenMenu)
 end

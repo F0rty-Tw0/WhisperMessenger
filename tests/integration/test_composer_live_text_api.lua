@@ -15,14 +15,14 @@ return function()
     local frame = baseFactory.CreateFrame(frameType, name, parent, template)
     if frameType == "EditBox" then
       local originalSetText = frame.SetText
-      frame.SetText = function(self, value)
+      rawset(frame, "SetText", function(self, value)
         originalSetText(self, value)
         self._textValue = value
         self.text = nil
-      end
-      frame.GetText = function(self)
+      end)
+      rawset(frame, "GetText", function(self)
         return self._textValue
-      end
+      end)
     end
     return frame
   end

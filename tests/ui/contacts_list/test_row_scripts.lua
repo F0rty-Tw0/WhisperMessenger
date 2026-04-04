@@ -92,10 +92,10 @@ return function()
     local clicked = false
     local menuOpenedWith = nil
     local originalOpen = ContextMenu.Open
-    ContextMenu.Open = function(openItem, openAnchor)
+    rawset(ContextMenu, "Open", function(openItem, openAnchor)
       menuOpenedWith = { item = openItem, anchor = openAnchor }
       return true
-    end
+    end)
 
     local options = {
       onSelect = function()
@@ -106,7 +106,7 @@ return function()
     RowScripts.bindClick(row, item, options)
     row.scripts.OnClick(row, "RightButton")
 
-    ContextMenu.Open = originalOpen
+    rawset(ContextMenu, "Open", originalOpen)
 
     assert(clicked == false, "onSelect should not be called on right-click")
     assert(menuOpenedWith ~= nil, "right-click should open the context menu")
@@ -127,9 +127,9 @@ return function()
 
     local clicked = false
     local originalOpen = ContextMenu.Open
-    ContextMenu.Open = function()
+    rawset(ContextMenu, "Open", function()
       return false
-    end
+    end)
 
     local options = {
       onSelect = function()
@@ -140,7 +140,7 @@ return function()
     RowScripts.bindClick(row, item, options)
     row.scripts.OnClick(row, "RightButton")
 
-    ContextMenu.Open = originalOpen
+    rawset(ContextMenu, "Open", originalOpen)
 
     assert(clicked == true, "onSelect should run when right-click menu could not be opened")
   end

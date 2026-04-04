@@ -150,8 +150,14 @@ return function()
     assert(conv ~= nil, "expected pinned conversation to exist")
     assert(conv.pinned == true, "expected conversation to remain pinned")
     assert(#conv.messages == 2, "expected pinned conversation to stay capped at 2 messages, got " .. #conv.messages)
-    assert(conv.messages[1].id == "2", "expected oldest capped message to be id 2, got " .. tostring(conv.messages[1].id))
-    assert(conv.messages[2].id == "3", "expected newest capped message to be id 3, got " .. tostring(conv.messages[2].id))
+    assert(
+      conv.messages[1].id == "2",
+      "expected oldest capped message to be id 2, got " .. tostring(conv.messages[1].id)
+    )
+    assert(
+      conv.messages[2].id == "3",
+      "expected newest capped message to be id 3, got " .. tostring(conv.messages[2].id)
+    )
   end
 
   -- test_store_expire_all_keeps_old_messages_for_pinned_conversations
@@ -186,9 +192,9 @@ return function()
   do
     local now = 10000
     local savedTime = _G.time
-    _G.time = function()
+    rawset(_G, "time", function()
       return now
-    end
+    end)
 
     local state = Store.New({
       maxMessagesPerConversation = 5,
@@ -208,7 +214,7 @@ return function()
 
     Store.Unpin(state, "key::unpinned-trim")
 
-    _G.time = savedTime
+    rawset(_G, "time", savedTime)
 
     local conv = state.conversations["key::unpinned-trim"]
     assert(conv ~= nil, "expected recently active conversation to survive unpin")
@@ -221,9 +227,9 @@ return function()
   do
     local now = 10000
     local savedTime = _G.time
-    _G.time = function()
+    rawset(_G, "time", function()
       return now
-    end
+    end)
 
     local state = Store.New({
       maxMessagesPerConversation = 5,
@@ -240,9 +246,12 @@ return function()
 
     Store.Unpin(state, "key::unpinned-stale")
 
-    _G.time = savedTime
+    rawset(_G, "time", savedTime)
 
-    assert(state.conversations["key::unpinned-stale"] == nil, "expected stale pinned conversation to be removed immediately after unpin")
+    assert(
+      state.conversations["key::unpinned-stale"] == nil,
+      "expected stale pinned conversation to be removed immediately after unpin"
+    )
   end
 
   -- test_default_config_has_24h_expiry

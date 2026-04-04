@@ -7,9 +7,9 @@ return function()
   local refreshCalls = 0
   local savedInCombatLockdown = _G.InCombatLockdown
   local savedBNSendWhisper = _G.BNSendWhisper
-  _G.InCombatLockdown = function()
+  rawset(_G, "InCombatLockdown", function()
     return false
-  end
+  end)
 
   local runtime = {
     sendStatusByConversation = {},
@@ -56,9 +56,9 @@ return function()
   assert(sentMessages[1].target == "Thrall-Nagrand")
 
   -- Test 2: Combat lockdown blocks character whisper sends
-  runtime.isChatMessagingLocked = function()
+  rawset(runtime, "isChatMessagingLocked", function()
     return true
-  end
+  end)
   runtime.sendStatusByConversation = {}
   runtime.pendingOutgoing = {}
   refreshCalls = 0
@@ -79,12 +79,12 @@ return function()
   assert(blockedConversation.messages[1].text == "hello", "expected blocked outgoing text to be preserved")
 
   -- Test 3: Global InCombatLockdown blocks character whisper sends
-  runtime.isChatMessagingLocked = function()
+  rawset(runtime, "isChatMessagingLocked", function()
     return false
-  end
-  _G.InCombatLockdown = function()
+  end)
+  rawset(_G, "InCombatLockdown", function()
     return true
-  end
+  end)
   runtime.sendStatusByConversation = {}
   runtime.pendingOutgoing = {}
   refreshCalls = 0
@@ -107,16 +107,16 @@ return function()
   )
 
   -- Test 4: Legacy BNSendWhisper fallback supports Classic/TBC Battle.net sends
-  runtime.isChatMessagingLocked = function()
+  rawset(runtime, "isChatMessagingLocked", function()
     return false
-  end
-  _G.InCombatLockdown = function()
+  end)
+  rawset(_G, "InCombatLockdown", function()
     return false
-  end
-  _G.BNSendWhisper = function(bnetAccountID, text)
+  end)
+  rawset(_G, "BNSendWhisper", function(bnetAccountID, text)
     table.insert(sentMessages, { bnetAccountID = bnetAccountID, text = text, channel = "BN" })
     return true
-  end
+  end)
   runtime.sendStatusByConversation = {}
   runtime.pendingOutgoing = {}
   refreshCalls = 0
@@ -137,6 +137,6 @@ return function()
   assert(sentMessages[1].bnetAccountID == 77, "expected bnetAccountID to be forwarded")
   assert(sentMessages[1].text == "hello bn", "expected Battle.net text to be forwarded")
 
-  _G.InCombatLockdown = savedInCombatLockdown
-  _G.BNSendWhisper = savedBNSendWhisper
+  rawset(_G, "InCombatLockdown", savedInCombatLockdown)
+  rawset(_G, "BNSendWhisper", savedBNSendWhisper)
 end

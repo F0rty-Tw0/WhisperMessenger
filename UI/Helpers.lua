@@ -313,7 +313,7 @@ function UIHelpers.createToggleRow(factory, parent, label, initial, colors, layo
         _G.GameTooltip:SetText(lines[1])
         for i = 2, #lines do
           if _G.GameTooltip.AddLine then
-            _G.GameTooltip:AddLine(lines[i], 1, 1, 1)
+            pcall(_G.GameTooltip.AddLine, _G.GameTooltip, lines[i], 1, 1, 1)
           end
         end
         _G.GameTooltip:Show()

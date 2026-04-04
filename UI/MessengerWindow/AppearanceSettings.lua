@@ -215,7 +215,7 @@ local function createButtonSelector(factory, parent, labelText, optionsList, fal
         _G.GameTooltip:SetOwner(btn, "ANCHOR_TOP")
         _G.GameTooltip:SetText(opt.label)
         if _G.GameTooltip.AddLine then
-          _G.GameTooltip:AddLine(opt.tooltip, 1, 1, 1, true)
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, opt.tooltip, 1, 1, 1, true)
         end
         _G.GameTooltip:Show()
       end
@@ -270,7 +270,9 @@ local function pctFormat(v)
 end
 
 function AppearanceSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function() end
+  local onChange = options.onChange or function(...)
+    local _ = ...
+  end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)

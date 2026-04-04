@@ -22,7 +22,9 @@ function WindowCoordinator.Create(options)
   local getIcon = options.getIcon or function()
     return nil
   end
-  local trace = options.trace or function() end
+  local trace = options.trace or function(...)
+    local _ = ...
+  end
   local isMythicRestricted = options.isMythicRestricted or function()
     return false
   end

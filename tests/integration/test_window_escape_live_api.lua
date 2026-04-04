@@ -11,9 +11,9 @@ return function()
     local frame = baseFactory.CreateFrame(frameType, name, parent, template)
     local publicName = frame.name
     frame.name = nil
-    frame.GetName = function(self)
+    rawset(frame, "GetName", function(self)
       return publicName
-    end
+    end)
     return frame
   end
 

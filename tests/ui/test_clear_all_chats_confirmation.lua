@@ -13,9 +13,9 @@ return function()
     local clearCalled = false
     local popupShown = nil
 
-    _G.StaticPopup_Show = function(dialogName)
+    rawset(_G, "StaticPopup_Show", function(dialogName)
       popupShown = dialogName
-    end
+    end)
 
     local clearAllChatsButton = factory.CreateFrame("Frame", nil, parent)
     local refs = {
@@ -54,7 +54,7 @@ return function()
       "test_clear_all_chats_shows_confirmation: onClearAllChats should NOT be called before confirmation"
     )
 
-    _G.StaticPopup_Show = nil
+    rawset(_G, "StaticPopup_Show", nil)
   end
 
   -- -----------------------------------------------------------------------

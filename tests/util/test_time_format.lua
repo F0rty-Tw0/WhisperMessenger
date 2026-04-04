@@ -2,7 +2,7 @@ package.path = "./?.lua;" .. package.path
 local Assert = require("tests.helpers.assert")
 
 -- Stub WoW globals
-_G.time = os.time
+rawset(_G, "time", os.time)
 _G.date = os.date
 
 local TimeFormat = require("Util.TimeFormat")

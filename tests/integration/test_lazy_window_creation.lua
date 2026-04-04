@@ -10,10 +10,10 @@ return function()
   local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
   local rebuildCount = 0
   local savedRebuild = PresenceCache.Rebuild
-  PresenceCache.Rebuild = function(...)
+  rawset(PresenceCache, "Rebuild", function()
     rebuildCount = rebuildCount + 1
-    return savedRebuild(...)
-  end
+    return savedRebuild()
+  end)
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.SlashCmdList = {}
@@ -74,7 +74,7 @@ return function()
   runtime.refreshWindow()
   assert(runtime.window ~= nil, "expected window to still exist after refresh")
 
-  PresenceCache.Rebuild = savedRebuild
+  rawset(PresenceCache, "Rebuild", savedRebuild)
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1

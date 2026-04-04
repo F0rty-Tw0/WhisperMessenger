@@ -45,10 +45,10 @@ return function()
   -- Spy on ContactEnricher.BuildWindowSelectionState
   local enricherCallCount = 0
   local originalBuildState = ContactEnricher.BuildWindowSelectionState
-  ContactEnricher.BuildWindowSelectionState = function(...)
+  rawset(ContactEnricher, "BuildWindowSelectionState", function(...)
     enricherCallCount = enricherCallCount + 1
     return originalBuildState(...)
-  end
+  end)
 
   -- TEST 1: refreshWindow ALWAYS calls enricher (even when window hidden)
   -- This is the critical fix: statuses must stay fresh regardless of visibility
@@ -105,7 +105,7 @@ return function()
   assert(runtime.icon.badgeLabel.text == "7", "expected icon badge update when window hidden")
 
   -- Restore
-  ContactEnricher.BuildWindowSelectionState = originalBuildState
+  rawset(ContactEnricher, "BuildWindowSelectionState", originalBuildState)
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1

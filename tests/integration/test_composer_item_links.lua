@@ -8,7 +8,7 @@ return function()
   local savedCQuestLog = _G.C_QuestLog
   local registeredHooks = {}
 
-  _G.hooksecurefunc = function(target, methodOrHandler, maybeHandler)
+  rawset(_G, "hooksecurefunc", function(target, methodOrHandler, maybeHandler)
     if type(target) == "string" and type(methodOrHandler) == "function" then
       registeredHooks[target] = methodOrHandler
       return
@@ -16,7 +16,7 @@ return function()
     if type(target) == "table" and type(methodOrHandler) == "string" and type(maybeHandler) == "function" then
       registeredHooks["method:" .. methodOrHandler] = maybeHandler
     end
-  end
+  end)
 
   _G.C_QuestLog = {
     SetSelectedQuest = function() end,
@@ -37,29 +37,29 @@ return function()
       frame._textValue = ""
       frame._hasFocus = false
 
-      frame.SetText = function(self, value)
+      rawset(frame, "SetText", function(self, value)
         originalSetText(self, value)
         self._textValue = value
-      end
+      end)
 
-      frame.GetText = function(self)
+      rawset(frame, "GetText", function(self)
         return self._textValue
-      end
+      end)
 
-      frame.HasFocus = function(self)
+      rawset(frame, "HasFocus", function(self)
         return self._hasFocus == true
-      end
+      end)
 
-      frame.SetFocus = function(self)
+      rawset(frame, "SetFocus", function(self)
         self._hasFocus = true
-      end
-      frame.ClearFocus = function(self)
+      end)
+      rawset(frame, "ClearFocus", function(self)
         self._hasFocus = false
-      end
+      end)
 
-      frame.Insert = function(self, text)
+      rawset(frame, "Insert", function(self, text)
         self:SetText((self:GetText() or "") .. text)
-      end
+      end)
     end
     return frame
   end
@@ -133,7 +133,7 @@ return function()
   assert(composer.input:GetText() == questTextFromChat, "expected SetItemRef to insert quest hyperlink text")
 
   -- Cleanup
-  _G.hooksecurefunc = savedHooksecurefunc
+  rawset(_G, "hooksecurefunc", savedHooksecurefunc)
   _G.ChatEdit_GetActiveWindow = savedChatEditGetActiveWindow
   _G.ChatEdit_InsertLink = savedChatEditInsertLink
   _G.C_QuestLog = savedCQuestLog

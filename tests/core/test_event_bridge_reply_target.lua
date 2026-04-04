@@ -6,20 +6,20 @@ return function()
   local savedGetCVar = _G.GetCVar
   local savedSetCVar = _G.SetCVar
 
-  _G.GetCVar = function()
+  rawset(_G, "GetCVar", function()
     return "1"
-  end
-  _G.SetCVar = function() end
+  end)
+  rawset(_G, "SetCVar", function() end)
 
   -- -----------------------------------------------------------------------
   -- test_sets_reply_target_for_character_whisper_when_hide_enabled
   -- -----------------------------------------------------------------------
   do
     local lastTarget, lastType
-    _G.ChatEdit_SetLastTellTarget = function(target, chatType)
+    rawset(_G, "ChatEdit_SetLastTellTarget", function(target, chatType)
       lastTarget = target
       lastType = chatType
-    end
+    end)
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -49,10 +49,7 @@ return function()
       "Player-1-ABC"
     )
 
-    assert(
-      lastTarget == "Arthas",
-      "test_sets_reply_target_character: expected 'Arthas', got " .. tostring(lastTarget)
-    )
+    assert(lastTarget == "Arthas", "test_sets_reply_target_character: expected 'Arthas', got " .. tostring(lastTarget))
     assert(lastType == "WHISPER", "test_sets_reply_target_character: expected 'WHISPER', got " .. tostring(lastType))
   end
 
@@ -61,10 +58,10 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local lastTarget, lastType
-    _G.ChatEdit_SetLastTellTarget = function(target, chatType)
+    rawset(_G, "ChatEdit_SetLastTellTarget", function(target, chatType)
       lastTarget = target
       lastType = chatType
-    end
+    end)
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -97,14 +94,8 @@ return function()
       42
     )
 
-    assert(
-      lastTarget == "Friend",
-      "test_sets_reply_target_bnet: expected 'Friend', got " .. tostring(lastTarget)
-    )
-    assert(
-      lastType == "BN_WHISPER",
-      "test_sets_reply_target_bnet: expected 'BN_WHISPER', got " .. tostring(lastType)
-    )
+    assert(lastTarget == "Friend", "test_sets_reply_target_bnet: expected 'Friend', got " .. tostring(lastTarget))
+    assert(lastType == "BN_WHISPER", "test_sets_reply_target_bnet: expected 'BN_WHISPER', got " .. tostring(lastType))
   end
 
   -- -----------------------------------------------------------------------
@@ -112,9 +103,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local setLastTellCalled = false
-    _G.ChatEdit_SetLastTellTarget = function()
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
       setLastTellCalled = true
-    end
+    end)
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -144,10 +135,7 @@ return function()
       "Player-1-ABC"
     )
 
-    assert(
-      setLastTellCalled == false,
-      "test_no_reply_target_when_hide_disabled: should not call SetLastTellTarget"
-    )
+    assert(setLastTellCalled == false, "test_no_reply_target_when_hide_disabled: should not call SetLastTellTarget")
   end
 
   -- -----------------------------------------------------------------------
@@ -155,9 +143,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local setLastTellCalled = false
-    _G.ChatEdit_SetLastTellTarget = function()
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
       setLastTellCalled = true
-    end
+    end)
 
     local runtime = {
       store = { conversations = {}, config = {} },
@@ -199,9 +187,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local setLastTellCalled = false
-    _G.ChatEdit_SetLastTellTarget = function()
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
       setLastTellCalled = true
-    end
+    end)
 
     _G._wmSuspended = true
 
@@ -240,7 +228,7 @@ return function()
     _G._wmSuspended = nil
   end
 
-  _G.ChatEdit_SetLastTellTarget = savedSetLastTell
-  _G.GetCVar = savedGetCVar
-  _G.SetCVar = savedSetCVar
+  rawset(_G, "ChatEdit_SetLastTellTarget", savedSetLastTell)
+  rawset(_G, "GetCVar", savedGetCVar)
+  rawset(_G, "SetCVar", savedSetCVar)
 end

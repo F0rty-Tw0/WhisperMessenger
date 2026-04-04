@@ -7,13 +7,13 @@ return function()
   -- -----------------------------------------------------------------------
   local function stubSoundGlobals()
     local soundPlayed = nil
-    _G.PlaySound = function(soundId, _channel)
+    rawset(_G, "PlaySound", function(soundId, _channel)
       soundPlayed = soundId
-    end
-    _G.GetCVar = function()
+    end)
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
     _G.C_Timer = {
       After = function(_delay, fn)
         fn()
@@ -148,8 +148,8 @@ return function()
     )
   end
 
-  _G.PlaySound = nil
-  _G.GetCVar = nil
-  _G.SetCVar = nil
+  rawset(_G, "PlaySound", nil)
+  rawset(_G, "GetCVar", nil)
+  rawset(_G, "SetCVar", nil)
   _G.C_Timer = nil
 end

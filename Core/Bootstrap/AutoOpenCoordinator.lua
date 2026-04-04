@@ -94,7 +94,6 @@ local function readEditBoxState(editBox, key)
   return nil
 end
 
-
 local function closeEditBox(runtime, editBox, deactivateChat)
   local typed = editBox.GetText and editBox:GetText() or ""
   if typed ~= "" and runtime.setComposerText then

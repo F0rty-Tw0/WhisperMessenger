@@ -11,7 +11,7 @@ local function newStrictFactory()
     local width, height = frame.width, frame.height
 
     local originalSetSize = frame.SetSize
-    frame.SetSize = function(self, nextWidth, nextHeight)
+    rawset(frame, "SetSize", function(self, nextWidth, nextHeight)
       assert(type(nextWidth) == "number", "expected numeric width")
       assert(type(nextHeight) == "number", "expected numeric height")
       width = nextWidth
@@ -19,15 +19,15 @@ local function newStrictFactory()
       originalSetSize(self, nextWidth, nextHeight)
       self.width = nil
       self.height = nil
-    end
+    end)
 
-    frame.GetWidth = function()
+    rawset(frame, "GetWidth", function()
       return width
-    end
+    end)
 
-    frame.GetHeight = function()
+    rawset(frame, "GetHeight", function()
       return height
-    end
+    end)
 
     return frame
   end

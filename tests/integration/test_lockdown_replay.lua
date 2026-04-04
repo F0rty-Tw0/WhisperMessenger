@@ -27,6 +27,7 @@ return function()
   }
 
   local result = Router.HandleEvent(state, "CHAT_MSG_WHISPER", payload)
+  assert(type(result) == "table", "expected router result table")
   assert(result.queued == true)
   assert(#state.queue.items == 1)
   assert(next(state.store.conversations) == nil)

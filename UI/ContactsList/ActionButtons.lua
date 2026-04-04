@@ -17,7 +17,9 @@ if not trace then
     end
   end
   if not trace then
-    trace = function() end
+    trace = function(...)
+      local _ = ...
+    end
   end
 end
 
@@ -109,7 +111,7 @@ end
 --- Returns the button frame.
 ---@param factory table frame factory
 ---@param row table parent row frame
----@param parentWidth number width of the parent for layout
+---@param _parentWidth number width of the parent for layout
 ---@param options table callbacks: onRemove(item)
 function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
@@ -173,7 +175,7 @@ end
 ---@param factory table frame factory
 ---@param row table parent row frame (must have row.removeButton)
 ---@param _item table contact item data
----@param parentWidth number width of the parent for layout
+---@param _parentWidth number width of the parent for layout
 ---@param options table callbacks: onPin(item)
 function ActionButtons.createPinButton(factory, row, _item, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE

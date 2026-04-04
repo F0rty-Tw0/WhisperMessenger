@@ -20,9 +20,9 @@ return function()
   assert(window.resizeGrip ~= nil, "expected a resize grip")
   assert(window.resizeGrip.mouseEnabled == true, "expected resize grip to accept mouse input")
 
-  window.frame.GetLeft = function()
+  rawset(window.frame, "GetLeft", function()
     return 220
-  end
+  end)
   window.frame.GetTop = function()
     return 680
   end
@@ -162,15 +162,15 @@ return function()
   assert(window.contactsResizeHandle.outline.left.shown == false, "expected resize outline to hide on leave")
 
   local originalGetCursorPosition = _G.GetCursorPosition
-  _G.GetCursorPosition = function()
+  rawset(_G, "GetCursorPosition", function()
     return 240
-  end
-  window.frame.GetLeft = function()
+  end)
+  rawset(window.frame, "GetLeft", function()
     return 100
-  end
-  window.frame.GetEffectiveScale = function()
+  end)
+  rawset(window.frame, "GetEffectiveScale", function()
     return 1
-  end
+  end)
 
   window.contactsResizeHandle.scripts.OnMouseDown(window.contactsResizeHandle, "LeftButton")
   window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
@@ -208,7 +208,7 @@ return function()
       .. tostring(positionChanged.contactsWidth)
   )
 
-  _G.GetCursorPosition = originalGetCursorPosition
+  rawset(_G, "GetCursorPosition", originalGetCursorPosition)
 
   -- Oversized saved state and oversize resize attempts should clamp to the screen bounds
   local clampedState = nil
@@ -270,21 +270,21 @@ return function()
   )
 
   local originalGetCursorPositionOversize = _G.GetCursorPosition
-  _G.GetCursorPosition = function()
+  rawset(_G, "GetCursorPosition", function()
     return 2400, -1600
-  end
-  oversizedWindow.frame.GetLeft = function()
+  end)
+  rawset(oversizedWindow.frame, "GetLeft", function()
     return 0
-  end
+  end)
   oversizedWindow.frame.GetTop = function()
     return 0
   end
-  oversizedWindow.frame.GetEffectiveScale = function()
+  rawset(oversizedWindow.frame, "GetEffectiveScale", function()
     return 1
-  end
-  oversizedWindow.frame.GetEffectiveScale = function()
+  end)
+  rawset(oversizedWindow.frame, "GetEffectiveScale", function()
     return 1
-  end
+  end)
   oversizedWindow.resizeGrip.scripts.OnMouseDown(oversizedWindow.resizeGrip, "LeftButton")
   oversizedWindow.frame.scripts.OnUpdate(oversizedWindow.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
   oversizedWindow.resizeGrip.scripts.OnMouseUp(oversizedWindow.resizeGrip, "LeftButton")
@@ -298,6 +298,6 @@ return function()
     clampedState.height <= _G.UIParent:GetHeight(),
     "expected persisted height to clamp within UIParent height, got " .. tostring(clampedState.height)
   )
-  _G.GetCursorPosition = originalGetCursorPositionOversize
+  rawset(_G, "GetCursorPosition", originalGetCursorPositionOversize)
   _G.UIParent = savedUIParent
 end

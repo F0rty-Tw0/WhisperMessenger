@@ -45,14 +45,14 @@ return function()
       transport = "WOW",
     })
   end
-  _G.BNSendWhisper = function(bnetAccountID, text)
+  rawset(_G, "BNSendWhisper", function(bnetAccountID, text)
     table.insert(legacyCalls, {
       bnetAccountID = bnetAccountID,
       text = text,
       transport = "BN",
     })
     return true
-  end
+  end)
 
   Gateway.SendCharacterWhisper({}, "Jaina-Area52", "legacy hello")
   local legacyBnResult = Gateway.SendBattleNetWhisper({}, 55, "legacy bn")
@@ -67,5 +67,5 @@ return function()
   assert(legacyBnResult == true, "expected legacy BNSendWhisper result to be returned")
 
   _G.SendChatMessage = savedSendChatMessage
-  _G.BNSendWhisper = savedBNSendWhisper
+  rawset(_G, "BNSendWhisper", savedBNSendWhisper)
 end

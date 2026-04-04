@@ -6,11 +6,11 @@ return function()
   -- Helpers
   -- -----------------------------------------------------------------------
   local function stubGlobals()
-    _G.PlaySound = function() end
-    _G.GetCVar = function()
+    rawset(_G, "PlaySound", function() end)
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
     _G.C_Timer = {
       After = function(_delay, fn)
         fn()
@@ -19,11 +19,11 @@ return function()
   end
 
   local function cleanupGlobals()
-    _G.PlaySound = nil
-    _G.GetCVar = nil
-    _G.SetCVar = nil
+    rawset(_G, "PlaySound", nil)
+    rawset(_G, "GetCVar", nil)
+    rawset(_G, "SetCVar", nil)
     _G.C_Timer = nil
-    _G.InCombatLockdown = nil
+    rawset(_G, "InCombatLockdown", nil)
   end
 
   local function makeRuntime(settings)
@@ -58,9 +58,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local autoOpenCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -80,9 +80,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local autoOpenCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = false })
@@ -101,9 +101,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return true
-    end
+    end)
 
     local autoOpenCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -127,9 +127,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local autoOpenCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -152,9 +152,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local outgoingCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -175,9 +175,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local outgoingCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -214,9 +214,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return true
-    end
+    end)
 
     local outgoingCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -236,9 +236,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local outgoingCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = false })
@@ -258,9 +258,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local autoOpenCalls = {}
     local runtime = makeRuntime({ autoOpenWindow = true })
@@ -296,9 +296,9 @@ return function()
   -- -----------------------------------------------------------------------
   do
     stubGlobals()
-    _G.InCombatLockdown = function()
+    rawset(_G, "InCombatLockdown", function()
       return false
-    end
+    end)
 
     local runtime = makeRuntime({ autoOpenWindow = true })
     -- No onAutoOpen callback set — should not error

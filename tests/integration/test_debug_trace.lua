@@ -23,18 +23,18 @@ return function()
   local factory = FakeUI.NewFactory()
 
   _G.require = nil
-  _G.print = function(...)
+  rawset(_G, "print", function(...)
     local parts = {}
     for index = 1, select("#", ...) do
       parts[index] = tostring(select(index, ...))
     end
     table.insert(traces, table.concat(parts, " "))
-  end
+  end)
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.SlashCmdList = {}
   _G.SLASH_WHISPERMESSENGER1 = nil
   _G.SLASH_WHISPERMESSENGER2 = nil
-  _G.CreateFrame = function(frameType, name, parent)
+  rawset(_G, "CreateFrame", function(frameType, name, parent)
     local frame = factory.CreateFrame(frameType, name, parent)
     table.insert(createdFrames, frame)
 
@@ -50,7 +50,7 @@ return function()
     end
 
     return frame
-  end
+  end)
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -82,8 +82,8 @@ return function()
   assert(string.find(joined, "set visible=true", 1, true) ~= nil)
 
   _G.require = savedRequire
-  _G.print = savedPrint
-  _G.CreateFrame = savedCreateFrame
+  rawset(_G, "print", savedPrint)
+  rawset(_G, "CreateFrame", savedCreateFrame)
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1

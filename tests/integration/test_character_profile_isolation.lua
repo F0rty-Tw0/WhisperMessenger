@@ -28,14 +28,14 @@ return function()
     icon = { x = 0, y = 0 },
   }
 
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Arthas", "Area52"
-  end
+  end)
 
-  _G.GetNormalizedRealmName = function()
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
-  end
+  end)
 
   local arthasRuntime = Bootstrap.Initialize(factory, {
     accountState = accountState,
@@ -58,14 +58,14 @@ return function()
     icon = { x = 0, y = 0 },
   }
 
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Thrall", "Draenor"
-  end
+  end)
 
-  _G.GetNormalizedRealmName = function()
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Draenor"
-  end
+  end)
 
   local thrallRuntime = Bootstrap.Initialize(factory, {
     accountState = accountState,
@@ -81,6 +81,6 @@ return function()
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
-  _G.UnitFullName = savedUnitFullName
-  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
+  rawset(_G, "UnitFullName", savedUnitFullName)
+  rawset(_G, "GetNormalizedRealmName", savedGetNormalizedRealmName)
 end

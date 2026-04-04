@@ -101,9 +101,9 @@ return function()
     -- scale = 1 (no GetEffectiveScale). cursorY = 0 - cy/1 = 0 - (-50) = 50.
     -- scrollOffset = 0. targetIndex = floor(50/44)+1 = 2. dropIndex = 2.
     local savedGetCursorPosition = _G.GetCursorPosition
-    _G.GetCursorPosition = function()
+    rawset(_G, "GetCursorPosition", function()
       return 0, -50
-    end
+    end)
 
     local handlers = DragController.Create(factory, controller, function()
       return contacts
@@ -125,6 +125,6 @@ return function()
     assert(reorderCalled == true, "expected onReorder to be called when drop position differs")
     assert(reorderOrders ~= nil, "expected reorderOrders to be non-nil")
 
-    _G.GetCursorPosition = savedGetCursorPosition
+    rawset(_G, "GetCursorPosition", savedGetCursorPosition)
   end
 end

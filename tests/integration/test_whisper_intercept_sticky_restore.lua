@@ -103,13 +103,13 @@ return function()
   _G.SLASH_WHISPERMESSENGER1 = nil
   _G.SLASH_WHISPERMESSENGER2 = nil
   _G.NUM_CHAT_WINDOWS = 1
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Arthas", "Area52"
-  end
-  _G.GetNormalizedRealmName = function()
+  end)
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
-  end
+  end)
   _G.C_Timer = {
     After = function(delaySeconds, callback)
       timerCallbacks[#timerCallbacks + 1] = {
@@ -118,7 +118,7 @@ return function()
       }
     end,
   }
-  _G.ChatEdit_DeactivateChat = function(editBox)
+  rawset(_G, "ChatEdit_DeactivateChat", function(editBox)
     deactivated[#deactivated + 1] = editBox
     if editBox.ClearFocus then
       editBox:ClearFocus()
@@ -126,8 +126,8 @@ return function()
     if editBox.Hide then
       editBox:Hide()
     end
-  end
-  _G.CreateFrame = function(frameType, name, parent, template)
+  end)
+  rawset(_G, "CreateFrame", function(frameType, name, parent, template)
     local frame = factory.CreateFrame(frameType, name, parent, template)
     createdFrames[#createdFrames + 1] = frame
 
@@ -143,7 +143,7 @@ return function()
     end
 
     return frame
-  end
+  end)
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -203,15 +203,15 @@ return function()
   })
 
   _G.require = savedGlobals.require
-  _G.CreateFrame = savedGlobals.CreateFrame
+  rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
-  _G.ChatEdit_DeactivateChat = savedGlobals.ChatEdit_DeactivateChat
+  rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)
   _G.NUM_CHAT_WINDOWS = savedGlobals.NUM_CHAT_WINDOWS
   _G.ChatFrame1EditBox = savedGlobals.ChatFrame1EditBox
   _G.UIParent = savedGlobals.UIParent
   _G.SlashCmdList = savedGlobals.SlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedGlobals.SLASH_WHISPERMESSENGER1
   _G.SLASH_WHISPERMESSENGER2 = savedGlobals.SLASH_WHISPERMESSENGER2
-  _G.UnitFullName = savedGlobals.UnitFullName
-  _G.GetNormalizedRealmName = savedGlobals.GetNormalizedRealmName
+  rawset(_G, "UnitFullName", savedGlobals.UnitFullName)
+  rawset(_G, "GetNormalizedRealmName", savedGlobals.GetNormalizedRealmName)
 end

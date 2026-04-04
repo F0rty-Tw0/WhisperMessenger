@@ -27,7 +27,9 @@ function WindowRuntime.Create(options)
   local uiFactory = options.uiFactory or _G
   local uiParent = options.uiParent or _G.UIParent
   local bootstrap = options.bootstrap or {}
-  local trace = options.trace or function() end
+  local trace = options.trace or function(...)
+    local _ = ...
+  end
 
   local contactsList = options.contactsList or ContactsList
   local messengerWindow = options.messengerWindow or MessengerWindow

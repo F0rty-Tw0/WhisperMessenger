@@ -37,7 +37,7 @@ return function()
     "expected search input background to use bg_search_input token"
   )
   assert(
-    colorsMatch(layout.contactsRightBorder.color, Theme.COLORS.contacts_border_right),
+    colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
     "expected contacts right border to use contacts_border_right token"
   )
   assert(
@@ -95,7 +95,7 @@ return function()
   )
   assert(composer.inputTopBorder == nil, "expected composer input top border to stay removed after preset change")
   assert(
-    colorsMatch(layout.contactsRightBorder.color, Theme.COLORS.contacts_border_right),
+    colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
     "expected contacts right border to repaint on preset change"
   )
   assert(

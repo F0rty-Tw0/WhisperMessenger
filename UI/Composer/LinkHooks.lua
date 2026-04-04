@@ -108,9 +108,10 @@ end
 --- directly — the old ChatEdit_* globals are deprecated aliases.
 --- We replace BOTH the ChatFrameUtil table entries AND the globals.
 local function installEarlyOverrides()
-  if type(_G.ChatFrameUtil) == "table" then
-    _G.ChatFrameUtil.GetActiveWindow = wmGetActiveWindow(_G.ChatFrameUtil.GetActiveWindow)
-    _G.ChatFrameUtil.InsertLink = wmInsertLink(_G.ChatFrameUtil.InsertLink)
+  local chatFrameUtil = _G["ChatFrameUtil"]
+  if type(chatFrameUtil) == "table" then
+    chatFrameUtil.GetActiveWindow = wmGetActiveWindow(chatFrameUtil.GetActiveWindow)
+    chatFrameUtil.InsertLink = wmInsertLink(chatFrameUtil.InsertLink)
   end
 
   _G.ChatEdit_GetActiveWindow = wmGetActiveWindow(_G.ChatEdit_GetActiveWindow)

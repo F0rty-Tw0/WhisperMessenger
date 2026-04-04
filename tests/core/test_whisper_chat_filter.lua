@@ -14,10 +14,10 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local filters = {}
-    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
+    rawset(_G, "ChatFrame_AddMessageEventFilter", function(event, fn)
       filters[event] = fn
-    end
-    _G.ChatFrame_RemoveMessageEventFilter = function() end
+    end)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", function() end)
 
     Bootstrap.Initialize(factory, {
       accountState = {
@@ -64,10 +64,10 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local registered = {}
-    _G.ChatFrame_AddMessageEventFilter = function(event, fn)
+    rawset(_G, "ChatFrame_AddMessageEventFilter", function(event, fn)
       registered[event] = fn
-    end
-    _G.ChatFrame_RemoveMessageEventFilter = function() end
+    end)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", function() end)
     Bootstrap._filtersRegistered = false
 
     Bootstrap.Initialize(factory, {
@@ -97,15 +97,15 @@ return function()
   do
     local setLastTellCalled = false
     local savedSetLast = _G.ChatEdit_SetLastTellTarget
-    _G.ChatEdit_SetLastTellTarget = function()
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
       setLastTellCalled = true
-    end
+    end)
 
     -- Call the filter — it should NOT invoke SetLastTellTarget
     Bootstrap._whisperFilter(nil, "CHAT_MSG_WHISPER", "hello", "Arthas")
     assert(setLastTellCalled == false, "filter must NOT call ChatEdit_SetLastTellTarget (causes taint)")
 
-    _G.ChatEdit_SetLastTellTarget = savedSetLast
+    rawset(_G, "ChatEdit_SetLastTellTarget", savedSetLast)
   end
 
   -- -----------------------------------------------------------------------
@@ -113,11 +113,11 @@ return function()
   -- -----------------------------------------------------------------------
   do
     -- Re-initialize with hideFromDefaultChat = true so filters are registered
-    _G.ChatFrame_AddMessageEventFilter = function() end
+    rawset(_G, "ChatFrame_AddMessageEventFilter", function() end)
     local removedEvents = {}
-    _G.ChatFrame_RemoveMessageEventFilter = function(event)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", function(event)
       removedEvents[event] = true
-    end
+    end)
     Bootstrap._filtersRegistered = false
 
     Bootstrap.Initialize(factory, {
@@ -142,7 +142,10 @@ return function()
     assert(removedEvents["CHAT_MSG_WHISPER"] == true, "whisper filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_WHISPER_INFORM"] == true, "whisper inform filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_BN_WHISPER"] == true, "BN whisper filter should be removed when suspended")
-    assert(removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true, "BN whisper inform filter should be removed when suspended")
+    assert(
+      removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true,
+      "BN whisper inform filter should be removed when suspended"
+    )
     _G._wmSuspended = nil
   end
 
@@ -152,7 +155,7 @@ return function()
   do
     -- Re-register so we can test unregistration
     Bootstrap._filtersRegistered = false
-    _G.ChatFrame_AddMessageEventFilter = function() end
+    rawset(_G, "ChatFrame_AddMessageEventFilter", function() end)
     Bootstrap.registerChatFilters()
     assert(Bootstrap._filtersRegistered == true, "filters should be registered before competitive test")
 
@@ -177,7 +180,7 @@ return function()
     )
   end
 
-  _G.ChatFrame_AddMessageEventFilter = savedFilter
-  _G.ChatFrame_RemoveMessageEventFilter = savedRemoveFilter
+  rawset(_G, "ChatFrame_AddMessageEventFilter", savedFilter)
+  rawset(_G, "ChatFrame_RemoveMessageEventFilter", savedRemoveFilter)
   _G.UIParent = savedUIParent
 end

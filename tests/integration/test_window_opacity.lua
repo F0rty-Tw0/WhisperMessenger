@@ -13,17 +13,17 @@ return function()
   local pressedButtons = {}
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  _G.GetUnitSpeed = function(unit)
+  rawset(_G, "GetUnitSpeed", function(unit)
     if unit == "player" then
       return movementSpeed
     end
 
     return 0
-  end
-  _G.IsMouselooking = function()
+  end)
+  rawset(_G, "IsMouselooking", function()
     return isMouselooking
-  end
-  _G.IsMouseButtonDown = function(button)
+  end)
+  rawset(_G, "IsMouseButtonDown", function(button)
     if button == nil then
       for _, isPressed in pairs(pressedButtons) do
         if isPressed then
@@ -35,7 +35,7 @@ return function()
     end
 
     return pressedButtons[button] == true
-  end
+  end)
 
   local window = MessengerWindow.Create(factory, {
     title = "WhisperMessenger",
@@ -108,7 +108,7 @@ return function()
   )
 
   _G.UIParent = savedUIParent
-  _G.GetUnitSpeed = savedGetUnitSpeed
-  _G.IsMouselooking = savedIsMouselooking
-  _G.IsMouseButtonDown = savedIsMouseButtonDown
+  rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)
+  rawset(_G, "IsMouselooking", savedIsMouselooking)
+  rawset(_G, "IsMouseButtonDown", savedIsMouseButtonDown)
 end

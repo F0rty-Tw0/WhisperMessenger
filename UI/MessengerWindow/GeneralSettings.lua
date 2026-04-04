@@ -107,7 +107,9 @@ end
 --
 -- Returns: { frame, maxMessagesSlider, maxConversationsSlider, retentionSlider }
 function GeneralSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function() end
+  local onChange = options.onChange or function(...)
+    local _ = ...
+  end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)

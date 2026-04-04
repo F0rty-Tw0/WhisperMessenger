@@ -26,37 +26,83 @@ function DragController.Create(factory, controller, currentContactsRef, options)
     active = false,
     sourceIndex = nil,
     ghostFrame = nil,
+    ghostBg = nil,
+    ghostLabel = nil,
     dropIndicator = nil,
+    dropIndicatorBg = nil,
   }
 
   local function createGhostFrame(sourceRow)
     if dragState.ghostFrame == nil then
-      dragState.ghostFrame = factory.CreateFrame("Frame", nil, sourceRow.parent or controller.content)
-      dragState.ghostFrame:SetSize(sourceRow:GetWidth(), sourceRow:GetHeight())
-      if dragState.ghostFrame.SetFrameStrata then
-        dragState.ghostFrame:SetFrameStrata("TOOLTIP")
+      local ghostParent = sourceRow.parent or controller.content
+      local ghostFrame = factory.CreateFrame("Frame", nil, ghostParent)
+      if ghostFrame == nil then
+        return nil
       end
-      dragState.ghostFrame.bg = dragState.ghostFrame:CreateTexture(nil, "BACKGROUND")
-      dragState.ghostFrame.bg:SetAllPoints()
-      applyColorTexture(dragState.ghostFrame.bg, Theme.COLORS.bg_contact_selected)
-      if dragState.ghostFrame.SetAlpha then
-        dragState.ghostFrame:SetAlpha(0.7)
+      dragState.ghostFrame = ghostFrame
+
+      if ghostFrame.SetSize and sourceRow.GetWidth and sourceRow.GetHeight then
+        ghostFrame:SetSize(sourceRow:GetWidth(), sourceRow:GetHeight())
       end
-      dragState.ghostFrame.label = dragState.ghostFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-      dragState.ghostFrame.label:SetPoint("CENTER")
-      dragState.ghostFrame.label:SetJustifyH("CENTER")
+      if ghostFrame.SetFrameStrata then
+        ghostFrame:SetFrameStrata("TOOLTIP")
+      end
+
+      if ghostFrame.CreateTexture then
+        local ghostBg = ghostFrame:CreateTexture(nil, "BACKGROUND")
+        dragState.ghostBg = ghostBg
+        if ghostBg and ghostBg.SetAllPoints then
+          ghostBg:SetAllPoints()
+        end
+        if ghostBg then
+          applyColorTexture(ghostBg, Theme.COLORS.bg_contact_selected)
+        end
+      end
+
+      if ghostFrame.SetAlpha then
+        ghostFrame:SetAlpha(0.7)
+      end
+
+      if ghostFrame.CreateFontString then
+        local ghostLabel = ghostFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
+        dragState.ghostLabel = ghostLabel
+        if ghostLabel and ghostLabel.SetPoint then
+          ghostLabel:SetPoint("CENTER")
+        end
+        if ghostLabel and ghostLabel.SetJustifyH then
+          ghostLabel:SetJustifyH("CENTER")
+        end
+      end
     end
-    dragState.ghostFrame.label:SetText(sourceRow.item and sourceRow.item.displayName or "")
+
+    local ghostLabel = dragState.ghostLabel
+    if ghostLabel and ghostLabel.SetText then
+      ghostLabel:SetText(sourceRow.item and sourceRow.item.displayName or "")
+    end
     return dragState.ghostFrame
   end
 
   local function createDropIndicator()
     if dragState.dropIndicator == nil then
-      dragState.dropIndicator = factory.CreateFrame("Frame", nil, controller.content)
-      dragState.dropIndicator:SetSize(controller.content:GetWidth(), 2)
-      dragState.dropIndicator.bg = dragState.dropIndicator:CreateTexture(nil, "OVERLAY")
-      dragState.dropIndicator.bg:SetAllPoints()
-      applyColorTexture(dragState.dropIndicator.bg, Theme.COLORS.accent)
+      local indicator = factory.CreateFrame("Frame", nil, controller.content)
+      if indicator == nil then
+        return nil
+      end
+      dragState.dropIndicator = indicator
+
+      if indicator.SetSize and controller.content.GetWidth then
+        indicator:SetSize(controller.content:GetWidth(), 2)
+      end
+      if indicator.CreateTexture then
+        local indicatorBg = indicator:CreateTexture(nil, "OVERLAY")
+        dragState.dropIndicatorBg = indicatorBg
+        if indicatorBg and indicatorBg.SetAllPoints then
+          indicatorBg:SetAllPoints()
+        end
+        if indicatorBg then
+          applyColorTexture(indicatorBg, Theme.COLORS.accent)
+        end
+      end
     end
     return dragState.dropIndicator
   end
@@ -65,11 +111,17 @@ function DragController.Create(factory, controller, currentContactsRef, options)
     dragState.active = true
     dragState.sourceIndex = sourceIndex
     local ghost = createGhostFrame(sourceRow)
-    ghost:SetPoint("CENTER", sourceRow, "CENTER", 0, 0)
-    ghost:Show()
+    if ghost and ghost.SetPoint then
+      ghost:SetPoint("CENTER", sourceRow, "CENTER", 0, 0)
+    end
+    if ghost and ghost.Show then
+      ghost:Show()
+    end
 
     local indicator = createDropIndicator()
-    indicator:Hide()
+    if indicator and indicator.Hide then
+      indicator:Hide()
+    end
 
     -- Attach an OnUpdate to track cursor position and update drop indicator
     if controller.content.SetScript then
@@ -99,14 +151,22 @@ function DragController.Create(factory, controller, currentContactsRef, options)
         local dropIndex = DragReorder.FindDropIndex(currentContacts, sourceIndex, targetIndex)
 
         -- Position drop indicator
-        indicator:ClearAllPoints()
-        indicator:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((dropIndex - 1) * rowH))
-        indicator:Show()
+        if indicator and indicator.ClearAllPoints then
+          indicator:ClearAllPoints()
+        end
+        if indicator and indicator.SetPoint then
+          indicator:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((dropIndex - 1) * rowH))
+        end
+        if indicator and indicator.Show then
+          indicator:Show()
+        end
 
         -- Move ghost to follow cursor
-        if ghost.ClearAllPoints then
+        if ghost and ghost.ClearAllPoints then
           ghost:ClearAllPoints()
-          ghost:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((targetIndex - 1) * rowH))
+          if ghost.SetPoint then
+            ghost:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((targetIndex - 1) * rowH))
+          end
         end
       end)
     end
@@ -141,10 +201,10 @@ function DragController.Create(factory, controller, currentContactsRef, options)
     local dropIndex = DragReorder.FindDropIndex(currentContacts, sourceIndex, targetIndex)
 
     -- Clean up visuals
-    if dragState.ghostFrame then
+    if dragState.ghostFrame and dragState.ghostFrame.Hide then
       dragState.ghostFrame:Hide()
     end
-    if dragState.dropIndicator then
+    if dragState.dropIndicator and dragState.dropIndicator.Hide then
       dragState.dropIndicator:Hide()
     end
     if controller.content.SetScript then

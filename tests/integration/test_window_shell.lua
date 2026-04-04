@@ -50,12 +50,13 @@ return function()
   assert(window.contentPane.point[5] == 0, "expected content pane vertical offset to match contacts pane")
   assert(window.contactsDivider ~= nil)
   assert(window.contactsRightBorder ~= nil, "expected contacts right border texture")
+  local contactsRightBorderPoint = rawget(window.contactsRightBorder, "point")
+  local contactsRightBorderColor = rawget(window.contactsRightBorder, "color")
+  assert(type(contactsRightBorderPoint) == "table", "expected contacts right border point table")
+  assert(type(contactsRightBorderColor) == "table", "expected contacts right border color table")
+  assert(contactsRightBorderPoint[2] == window.contactsPane, "expected contacts right border anchored to contacts pane")
   assert(
-    window.contactsRightBorder.point[2] == window.contactsPane,
-    "expected contacts right border anchored to contacts pane"
-  )
-  assert(
-    window.contactsRightBorder.color[1] == Theme.COLORS.contacts_border_right[1],
+    rawget(window.contactsRightBorder, "color")[1] == Theme.COLORS.contacts_border_right[1],
     "expected contacts right border red channel to match contacts_border_right"
   )
   assert(window.contactsPaneBorder ~= nil, "expected contacts pane border set")
@@ -76,7 +77,7 @@ return function()
     window.refreshTheme()
 
     assert(
-      window.contactsRightBorder.color[1] == Theme.COLORS.contacts_border_right[1],
+      rawget(window.contactsRightBorder, "color")[1] == Theme.COLORS.contacts_border_right[1],
       "expected contacts right border red channel to repaint with preset"
     )
     assert(
@@ -104,22 +105,22 @@ return function()
     "expected contacts top divider alpha to match divider"
   )
   assert(window.titleBarTopBorder ~= nil, "expected title bar top border texture")
+  assert(window.composerDivider ~= nil, "expected composer divider texture")
+  local titleBarTopBorderColor = rawget(window.titleBarTopBorder, "color")
+  local composerDividerPoint = rawget(window.composerDivider, "point")
+  local composerDividerColor = rawget(window.composerDivider, "color")
+  assert(type(titleBarTopBorderColor) == "table", "expected title bar top border color table")
+  assert(type(composerDividerPoint) == "table", "expected composer divider point table")
+  assert(type(composerDividerColor) == "table", "expected composer divider color table")
   assert(
-    window.titleBarTopBorder.color[1] == Theme.COLORS.divider[1],
+    titleBarTopBorderColor[1] == Theme.COLORS.divider[1],
     "expected title bar top border red channel to match divider"
   )
   assert(window.threadPane ~= nil)
   assert(window.composerPane ~= nil)
   assert(window.threadPane.height < window.contentPane.height)
-  assert(window.composerDivider ~= nil, "expected composer divider texture")
-  assert(
-    window.composerDivider.point[2] == window.composerPane,
-    "expected composer divider anchored against composer pane"
-  )
-  assert(
-    window.composerDivider.color[1] == Theme.COLORS.divider[1],
-    "expected composer divider red channel to match divider"
-  )
+  assert(composerDividerPoint[2] == window.composerPane, "expected composer divider anchored against composer pane")
+  assert(composerDividerColor[1] == Theme.COLORS.divider[1], "expected composer divider red channel to match divider")
   assert(window.threadPaneBorder == nil, "expected thread pane border set to be removed")
   assert(window.composerPaneBorder ~= nil, "expected composer pane border set")
   assert(

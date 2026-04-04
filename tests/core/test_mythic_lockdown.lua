@@ -123,12 +123,12 @@ return function()
 
     local addedFilters = {}
     local removedFilters = {}
-    _G.ChatFrame_AddMessageEventFilter = function(event, _fn)
+    rawset(_G, "ChatFrame_AddMessageEventFilter", function(event, _fn)
       addedFilters[event] = (addedFilters[event] or 0) + 1
-    end
-    _G.ChatFrame_RemoveMessageEventFilter = function(event, _fn)
+    end)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", function(event, _fn)
       removedFilters[event] = (removedFilters[event] or 0) + 1
-    end
+    end)
 
     Bootstrap._filtersRegistered = false
     local runtime = Bootstrap.Initialize(factory, {
@@ -160,8 +160,8 @@ return function()
     assert(addedFilters["CHAT_MSG_WHISPER"] == 2, "whisper filter should be re-registered on resume")
     assert(Bootstrap._filtersRegistered == true, "flag should be true after resume")
 
-    _G.ChatFrame_AddMessageEventFilter = savedFilter
-    _G.ChatFrame_RemoveMessageEventFilter = savedRemoveFilter
+    rawset(_G, "ChatFrame_AddMessageEventFilter", savedFilter)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", savedRemoveFilter)
     _G.UIParent = savedUIParent
   end
 
@@ -224,10 +224,10 @@ return function()
 
     local buildSelectionCalls = 0
     local originalBuildState = ContactEnricher.BuildWindowSelectionState
-    ContactEnricher.BuildWindowSelectionState = function(...)
+    rawset(ContactEnricher, "BuildWindowSelectionState", function(...)
       buildSelectionCalls = buildSelectionCalls + 1
       return originalBuildState(...)
-    end
+    end)
 
     local runtime = Bootstrap.Initialize(factory, {
       accountState = {
@@ -260,7 +260,7 @@ return function()
 
     -- Cleanup
     Bootstrap._inMythicContent = false
-    ContactEnricher.BuildWindowSelectionState = originalBuildState
+    rawset(ContactEnricher, "BuildWindowSelectionState", originalBuildState)
     if savedRequestCanLocal then
       _G.C_ChatInfo.RequestCanLocalWhisperTarget = savedRequestCanLocal
     end
@@ -300,9 +300,9 @@ return function()
     local rebuildCount = 0
     local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
     local savedRebuild = PresenceCache.Rebuild
-    PresenceCache.Rebuild = function()
+    rawset(PresenceCache, "Rebuild", function()
       rebuildCount = rebuildCount + 1
-    end
+    end)
 
     Bootstrap._inMythicContent = true
 
@@ -323,7 +323,7 @@ return function()
     Bootstrap._inMythicContent = false
 
     -- Cleanup
-    PresenceCache.Rebuild = savedRebuild
+    rawset(PresenceCache, "Rebuild", savedRebuild)
     _G.C_Timer = savedCTimer
     Bootstrap._presenceRebuildPending = savedPresenceRebuildPending
     _G.UIParent = savedUIParent
@@ -458,10 +458,10 @@ return function()
 
     local rebuildCount = 0
     local savedRebuild = PresenceCache.Rebuild
-    PresenceCache.Rebuild = function(...)
+    rawset(PresenceCache, "Rebuild", function()
       rebuildCount = rebuildCount + 1
-      return savedRebuild(...)
-    end
+      return savedRebuild()
+    end)
 
     local runtime = Bootstrap.Initialize(factory, {
       accountState = {
@@ -499,7 +499,7 @@ return function()
     assert(runtime.window.frame.shown == false, "window should stay closed if it was closed before suspend")
     assert(rebuildCount == 2, "closed window should not rebuild presence on resume, got " .. rebuildCount)
 
-    PresenceCache.Rebuild = savedRebuild
+    rawset(PresenceCache, "Rebuild", savedRebuild)
     _G.UIParent = savedUIParent
     _G.SlashCmdList = savedSlashCmdList
     _G.SLASH_WHISPERMESSENGER1 = savedSlash1

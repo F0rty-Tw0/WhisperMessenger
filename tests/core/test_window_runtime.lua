@@ -276,7 +276,8 @@ return function()
   assert(type(runtime.setWindowVisible) == "function", "expected runtime.setWindowVisible to be wired")
   assert(type(runtime.setComposerText) == "function", "expected runtime.setComposerText to be wired")
   assert(type(runtime.isConversationOpen) == "function", "expected runtime.isConversationOpen to be wired")
-  assert(coordinatorIcon.lastUnreadCount == 3, "expected eager icon setup to initialize unread count")
+  assert(type(coordinatorIcon) == "table", "expected coordinator icon table")
+  assert(rawget(coordinatorIcon, "lastUnreadCount") == 3, "expected eager icon setup to initialize unread count")
 
   runtime.refreshWindow()
   assert(windowCreateCalls == 0, "expected refreshWindow to avoid forcing window creation")
@@ -287,7 +288,15 @@ return function()
   assert(runtime.window.frame.shown == false, "expected ensureWindow to leave the new window hidden")
 
   runtime.setWindowVisible(true)
-  capturedWindowOptions.onSelectConversation(conversationKey)
+  assert(type(capturedWindowOptions) == "table", "expected captured window options")
+  local onSelectConversation = rawget(capturedWindowOptions, "onSelectConversation")
+  local onPin = rawget(capturedWindowOptions, "onPin")
+  local onSettingChanged = rawget(capturedWindowOptions, "onSettingChanged")
+  assert(type(onSelectConversation) == "function", "expected onSelectConversation callback")
+  assert(type(onPin) == "function", "expected onPin callback")
+  assert(type(onSettingChanged) == "function", "expected onSettingChanged callback")
+
+  onSelectConversation(conversationKey)
   assert(
     runtime.activeConversationKey == conversationKey,
     "expected selectConversation to update runtime activeConversationKey"
@@ -317,7 +326,6 @@ return function()
     "expected conversation to report open when visible and selected"
   )
 
-
   local deletedConversationKey = "wow::WOW::stale-area52"
   runtime.store.conversations[deletedConversationKey] = {
     conversationKey = deletedConversationKey,
@@ -336,28 +344,37 @@ return function()
   runtime.store.config.conversationMaxAge = 3600
 
   local savedTime = _G.time
-  _G.time = function()
+  rawset(_G, "time", function()
     return 10000
-  end
+  end)
 
   local previousRefreshes = selectionRefreshes
   runtime.activeConversationKey = deletedConversationKey
   characterState.activeConversationKey = deletedConversationKey
-  capturedWindowOptions.onPin({
+  onPin({
     conversationKey = deletedConversationKey,
     pinned = true,
   })
-  assert(runtime.store.conversations[deletedConversationKey] == nil, "expected test precondition: unpin should remove stale conversation")
-  assert(runtime.activeConversationKey == nil, "expected onPin to clear runtime activeConversationKey when unpin removes the conversation")
+  assert(
+    runtime.store.conversations[deletedConversationKey] == nil,
+    "expected test precondition: unpin should remove stale conversation"
+  )
+  assert(
+    runtime.activeConversationKey == nil,
+    "expected onPin to clear runtime activeConversationKey when unpin removes the conversation"
+  )
   assert(
     characterState.activeConversationKey == nil,
     "expected onPin to clear persisted activeConversationKey when unpin removes the conversation"
   )
-  assert(selectionRefreshes == previousRefreshes + 1, "expected onPin to keep refreshing the window after clearing selection")
-  _G.time = savedTime
+  assert(
+    selectionRefreshes == previousRefreshes + 1,
+    "expected onPin to keep refreshing the window after clearing selection"
+  )
+  rawset(_G, "time", savedTime)
 
   local refreshesBeforeFontChange = selectionRefreshes
-  capturedWindowOptions.onSettingChanged("fontFamily", "system")
+  onSettingChanged("fontFamily", "system")
   assert(accountState.settings.fontFamily == "system", "expected fontFamily change to persist setting")
   assert(
     fontSetModeCalls[#fontSetModeCalls] == "system",
@@ -367,7 +384,7 @@ return function()
 
   local refreshesBeforeThemeApply = selectionRefreshes
   local themeRefreshesBeforeApply = themeRefreshes
-  capturedWindowOptions.onSettingChanged("themePreset", "elvui_dark")
+  onSettingChanged("themePreset", "elvui_dark")
   assert(accountState.settings.themePreset == "elvui_dark", "expected valid themePreset to persist in account settings")
   assert(activeThemePreset == "elvui_dark", "expected valid themePreset to apply to active theme")
   assert(
@@ -383,7 +400,7 @@ return function()
   local themeCallsBeforeFallback = #themeSetPresetCalls
   local refreshesBeforeThemeFallback = selectionRefreshes
   local themeRefreshesBeforeFallback = themeRefreshes
-  capturedWindowOptions.onSettingChanged("themePreset", "unknown_preset")
+  onSettingChanged("themePreset", "unknown_preset")
   assert(
     #themeSetPresetCalls == themeCallsBeforeFallback + 2,
     "expected invalid themePreset to attempt requested preset and fallback default"
@@ -411,7 +428,7 @@ return function()
   )
 
   local refreshesBeforeHidePreview = selectionRefreshes
-  capturedWindowOptions.onSettingChanged("hideMessagePreview", true)
+  onSettingChanged("hideMessagePreview", true)
   assert(
     selectionRefreshes == refreshesBeforeHidePreview + 1,
     "expected hideMessagePreview change to continue refreshing the window"

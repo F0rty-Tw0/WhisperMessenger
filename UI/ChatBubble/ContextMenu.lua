@@ -200,7 +200,6 @@ local function restoreSuppressedFrameTextures(frame, stateKey)
   frame[stateKey] = nil
 end
 
-
 local function paintManualCopyButton(button)
   if type(button) ~= "table" then
     return
@@ -481,7 +480,11 @@ local function styleManualCopyDialog(dialog)
     return
   end
 
-  if dialog._wmRoundedBackground == nil and type(dialog.CreateTexture) == "function" and type(UIHelpers.createRoundedBackground) == "function" then
+  if
+    dialog._wmRoundedBackground == nil
+    and type(dialog.CreateTexture) == "function"
+    and type(UIHelpers.createRoundedBackground) == "function"
+  then
     dialog._wmRoundedBackground = UIHelpers.createRoundedBackground(dialog, 10)
     setPartsShown(dialog._wmRoundedBackground, false)
   end
@@ -616,7 +619,6 @@ resolvePopupEditBox = function(dialog)
     end
   end
 
-
   return nil
 end
 
@@ -748,7 +750,7 @@ local function showManualCopyDialog(text)
   if _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] == nil then
     _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] = {
       text = "Press Ctrl+C to copy the message text.",
-      button1 = _G.OKAY or "OK",
+      button1 = _G["OKAY"] or "OK",
       hasEditBox = true,
       editBoxWidth = 320,
       timeout = 0,
@@ -862,7 +864,7 @@ function ContextMenu.Open(text, anchorFrame)
     return false
   end
 
-  _G.UIDropDownMenu_Initialize(menuFrame, function(_, level)
+  local function initializeMenu(_, level)
     if level ~= 1 then
       return
     end
@@ -874,7 +876,9 @@ function ContextMenu.Open(text, anchorFrame)
       end
       _G.UIDropDownMenu_AddButton(info, level)
     end
-  end, "MENU")
+  end
+
+  pcall(_G.UIDropDownMenu_Initialize, menuFrame, initializeMenu, "MENU")
 
   _G.ToggleDropDownMenu(1, nil, menuFrame, menuAnchor, 0, 0)
   return true

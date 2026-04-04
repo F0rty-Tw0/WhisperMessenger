@@ -5,13 +5,13 @@ end
 
 local FlavorCompat = {}
 
-local projectId = _G.WOW_PROJECT_ID
-local MAINLINE = _G.WOW_PROJECT_MAINLINE or 1
-local CLASSIC = _G.WOW_PROJECT_CLASSIC or 2
-local TBC = _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC or 5
-local WRATH = _G.WOW_PROJECT_WRATH_CLASSIC or 11
-local CATA = _G.WOW_PROJECT_CATACLYSM_CLASSIC or 14
-local MISTS = _G.WOW_PROJECT_MISTS_CLASSIC or 19
+local projectId = _G["WOW_PROJECT_ID"]
+local MAINLINE = _G["WOW_PROJECT_MAINLINE"] or 1
+local CLASSIC = _G["WOW_PROJECT_CLASSIC"] or 2
+local TBC = _G["WOW_PROJECT_BURNING_CRUSADE_CLASSIC"] or 5
+local WRATH = _G["WOW_PROJECT_WRATH_CLASSIC"] or 11
+local CATA = _G["WOW_PROJECT_CATACLYSM_CLASSIC"] or 14
+local MISTS = _G["WOW_PROJECT_MISTS_CLASSIC"] or 19
 
 FlavorCompat.isRetail = (projectId == MAINLINE)
 FlavorCompat.isClassicEra = (projectId == CLASSIC)

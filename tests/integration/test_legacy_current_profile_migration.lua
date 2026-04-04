@@ -14,13 +14,13 @@ return function()
   _G.SlashCmdList = {}
   _G.SLASH_WHISPERMESSENGER1 = nil
   _G.SLASH_WHISPERMESSENGER2 = nil
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Arthas", "Area52"
-  end
-  _G.GetNormalizedRealmName = function()
+  end)
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
-  end
+  end)
 
   local accountState = {
     schemaVersion = 1,
@@ -73,6 +73,6 @@ return function()
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
-  _G.UnitFullName = savedUnitFullName
-  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
+  rawset(_G, "UnitFullName", savedUnitFullName)
+  rawset(_G, "GetNormalizedRealmName", savedGetNormalizedRealmName)
 end

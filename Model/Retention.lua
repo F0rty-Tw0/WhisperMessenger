@@ -80,7 +80,6 @@ function Retention.ExpireConversations(conversations, maxAgeSeconds, now)
   return conversations
 end
 
-
 ns.Retention = Retention
 
 return Retention

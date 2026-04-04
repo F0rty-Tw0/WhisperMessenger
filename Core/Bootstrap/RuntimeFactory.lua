@@ -10,8 +10,8 @@ local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.Con
 local RuntimeFactory = {}
 
 local function currentTime()
-  if type(_G.time) == "function" then
-    return _G.time()
+  if type(_G["time"]) == "function" then
+    return _G["time"]()
   end
   return 0
 end
@@ -21,10 +21,10 @@ function RuntimeFactory.ResolveLocalProfileId(options)
     return options.localProfileId
   end
 
-  local unitFullName = options.unitFullName or _G.UnitFullName
-  local unitName = options.unitName or _G.UnitName
-  local getNormalizedRealmName = options.getNormalizedRealmName or _G.GetNormalizedRealmName
-  local getRealmName = options.getRealmName or _G.GetRealmName
+  local unitFullName = options.unitFullName or _G["UnitFullName"]
+  local unitName = options.unitName or _G["UnitName"]
+  local getNormalizedRealmName = options.getNormalizedRealmName or _G["GetNormalizedRealmName"]
+  local getRealmName = options.getRealmName or _G["GetRealmName"]
 
   local name
   local realmName
@@ -79,7 +79,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     bnetApi = options.bnetApi or _G.C_BattleNet or {},
     playerInfoByGUID = options.playerInfoByGUID or _G.GetPlayerInfoByGUID,
     localFaction = options.localFaction
-      or (type(_G.UnitFactionGroup) == "function" and _G.UnitFactionGroup("player") or nil),
+      or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
     store = store,
     queue = Queue.New(),
     now = options.now or currentTime,

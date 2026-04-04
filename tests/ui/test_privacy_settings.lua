@@ -10,7 +10,7 @@ local function loadAddonFromToc(addonName, tns)
 end
 
 return function()
-  _G.time = _G.time or os.time
+  rawset(_G, "time", _G.time or os.time)
   _G.date = _G.date or os.date
   _G.RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS or {}
 

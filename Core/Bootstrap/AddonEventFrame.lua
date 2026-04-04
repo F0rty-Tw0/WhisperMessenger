@@ -29,7 +29,9 @@ function AddonEventFrame.Install(deps)
   local initializeRuntime = deps.initializeRuntime or function()
     return Bootstrap.runtime
   end
-  local trace = deps.trace or function() end
+  local trace = deps.trace or function(...)
+    local _ = ...
+  end
   local targetAddonName = deps.addonName or addonName
 
   local loadFrame = createFrame("Frame", "WhisperMessengerLoadFrame")

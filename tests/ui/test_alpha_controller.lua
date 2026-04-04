@@ -25,15 +25,15 @@ return function()
   local savedGetUnitSpeed = _G.GetUnitSpeed
   local savedIsMouselooking = _G.IsMouselooking
   local savedIsMouseButtonDown = _G.IsMouseButtonDown
-  _G.GetUnitSpeed = function()
+  rawset(_G, "GetUnitSpeed", function()
     return 7
-  end
-  _G.IsMouselooking = function()
+  end)
+  rawset(_G, "IsMouselooking", function()
     return false
-  end
-  _G.IsMouseButtonDown = function()
+  end)
+  rawset(_G, "IsMouseButtonDown", function()
     return false
-  end
+  end)
 
   local frame2 = factory.CreateFrame("Frame", nil, nil)
   local ws2 = { isDimmed = false }
@@ -56,7 +56,7 @@ return function()
   AlphaController.refreshWindowAlpha(frame2, composerInput, ws2, true, opaqueSettings)
   assert(frame2.alpha == 0.85, "expected forceOpaque to use custom active alpha 0.85, got " .. tostring(frame2.alpha))
 
-  _G.GetUnitSpeed = savedGetUnitSpeed
-  _G.IsMouselooking = savedIsMouselooking
-  _G.IsMouseButtonDown = savedIsMouseButtonDown
+  rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)
+  rawset(_G, "IsMouselooking", savedIsMouselooking)
+  rawset(_G, "IsMouseButtonDown", savedIsMouseButtonDown)
 end

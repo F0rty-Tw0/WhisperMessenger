@@ -165,7 +165,9 @@ local function createSoundSelector(factory, parent, initial, colors, onChange)
 end
 
 function NotificationSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function() end
+  local onChange = options.onChange or function(...)
+    local _ = ...
+  end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)

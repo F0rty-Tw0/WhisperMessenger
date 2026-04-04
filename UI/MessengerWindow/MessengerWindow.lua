@@ -407,8 +407,9 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  composer =
-    Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function() end, closeWindow)
+  composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
+    local _ = ...
+  end, closeWindow)
 
   -- Alpha helpers (capture composer.input now that composer exists)
   local composerInput = composer.input

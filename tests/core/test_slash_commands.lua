@@ -31,11 +31,11 @@ return function()
   local function withCapture(fn)
     local captured = {}
     local originalPrint = _G.print
-    _G.print = function(...)
+    rawset(_G, "print", function(...)
       table.insert(captured, { ... })
-    end
+    end)
     fn()
-    _G.print = originalPrint
+    rawset(_G, "print", originalPrint)
     return captured
   end
 

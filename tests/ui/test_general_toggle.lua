@@ -41,7 +41,7 @@ return function()
     }
 
     _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
-    _G.StaticPopup_Show = function() end
+    rawset(_G, "StaticPopup_Show", function() end)
 
     local options = {
       onClose = noop,
@@ -87,6 +87,6 @@ return function()
     assert(generalPanel.shown == true, "generalPanel should be shown after clicking general")
 
     _G.StaticPopupDialogs = nil
-    _G.StaticPopup_Show = nil
+    rawset(_G, "StaticPopup_Show", nil)
   end
 end

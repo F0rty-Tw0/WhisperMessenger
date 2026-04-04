@@ -1,6 +1,12 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
 
+local function setGameFont(path, size, flags)
+  local gameFontNormal = rawget(_G, "GameFontNormal")
+  assert(type(gameFontNormal) == "table", "expected GameFontNormal table")
+  assert(type(gameFontNormal.SetFont) == "function", "expected GameFontNormal:SetFont")
+  gameFontNormal:SetFont(path, size, flags)
+end
 return function()
   -- -----------------------------------------------------------------------
   -- test_default_mode_on_init
@@ -42,7 +48,7 @@ return function()
   -- test_default_follows_locale_font (multilingual)
   -- -----------------------------------------------------------------------
   do
-    _G.GameFontNormal:SetFont("Fonts\\FRIZQT___CYR.TTF", 12, "")
+    setGameFont("Fonts\\FRIZQT___CYR.TTF", 12, "")
     Fonts.SetMode("default")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
@@ -50,7 +56,7 @@ return function()
       string.find(path, "CYR") ~= nil,
       "test_default_locale: should follow locale game font, got: " .. tostring(path)
     )
-    _G.GameFontNormal:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
   -- -----------------------------------------------------------------------
@@ -67,7 +73,7 @@ return function()
   -- test_unknown_mode_falls_back_to_default_behavior
   -- -----------------------------------------------------------------------
   do
-    _G.GameFontNormal:SetFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
+    setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
     Fonts.SetMode("custom")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path, size = fontObj:GetFont()
@@ -76,7 +82,7 @@ return function()
       "test_unknown_mode: should inherit game font, got: " .. tostring(path)
     )
     assert(size == 12, "test_unknown_mode: should use controlled size, got: " .. tostring(size))
-    _G.GameFontNormal:SetFont("Fonts\\FRIZQT__.TTF", 12, "")
+    setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
   -- -----------------------------------------------------------------------

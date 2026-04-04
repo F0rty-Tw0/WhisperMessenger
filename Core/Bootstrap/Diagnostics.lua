@@ -34,7 +34,9 @@ function Diagnostics.Create(deps)
   deps = deps or {}
 
   local runtime = deps.runtime or {}
-  local trace = deps.trace or function() end
+  local trace = deps.trace or function(...)
+    local _ = ...
+  end
   local presenceCache = deps.presenceCache or loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
   local getWindow = deps.getWindow or function()
     return nil
@@ -42,8 +44,8 @@ function Diagnostics.Create(deps)
   local isWindowVisible = deps.isWindowVisible or function()
     return false
   end
-  local updateAddOnMemoryUsage = deps.updateAddOnMemoryUsage or _G.UpdateAddOnMemoryUsage
-  local getAddOnMemoryUsage = deps.getAddOnMemoryUsage or _G.GetAddOnMemoryUsage
+  local updateAddOnMemoryUsage = deps.updateAddOnMemoryUsage or _G["UpdateAddOnMemoryUsage"]
+  local getAddOnMemoryUsage = deps.getAddOnMemoryUsage or _G["GetAddOnMemoryUsage"]
   local collectgarbageFn = deps.collectgarbage or collectgarbage
   local resolvedAddonName = deps.addonName or addonName
   local prevSnapshot = nil

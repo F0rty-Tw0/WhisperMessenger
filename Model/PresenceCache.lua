@@ -13,8 +13,22 @@ local lastRebuiltAt = 0
 local ttl = 30
 local dirty = true
 local clubApi = nil
-local nowFn = nil
+local function normalizeNow(now)
+  if type(now) ~= "number" then
+    return 0
+  end
+  return math.floor(now)
+end
 
+local function defaultNow()
+  local timeFn = _G.time
+  if type(timeFn) ~= "function" then
+    return 0
+  end
+  return normalizeNow(timeFn())
+end
+
+local nowFn = defaultNow
 local function presenceToString(presence)
   if presence == 1 or presence == 2 or presence == 4 then
     return "online"
@@ -28,9 +42,7 @@ end
 local function safeIpairs(tbl)
   local iterOk, iter, state, start = pcall(ipairs, tbl)
   if not iterOk then
-    return function()
-      return nil
-    end
+    return ipairs({})
   end
   return iter, state, start
 end
@@ -55,8 +67,13 @@ function PresenceCache.Initialize(api, options)
   options = options or {}
   clubApi = api
   ttl = options.ttl or 30
-  nowFn = options.now or function()
-    return type(_G.time) == "function" and _G.time() or 0
+  local providedNow = options.now
+  if type(providedNow) == "function" then
+    nowFn = function()
+      return normalizeNow(providedNow())
+    end
+  else
+    nowFn = defaultNow
   end
   cache = {}
   lastRebuiltAt = 0

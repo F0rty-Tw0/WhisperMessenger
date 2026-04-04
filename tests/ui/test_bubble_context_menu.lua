@@ -22,21 +22,21 @@ return function()
 
   -- test_open_returns_false_without_text
   do
-    _G.EasyMenu = function() end
+    rawset(_G, "EasyMenu", function() end)
     local opened = ContextMenu.Open(nil)
     assert(opened == false, "context menu should not open without bubble text")
   end
 
   -- test_open_returns_false_with_empty_text
   do
-    _G.EasyMenu = function() end
+    rawset(_G, "EasyMenu", function() end)
     local opened = ContextMenu.Open("")
     assert(opened == false, "context menu should not open when bubble text is empty")
   end
 
   -- test_open_returns_false_without_any_menu_api
   do
-    _G.EasyMenu = nil
+    rawset(_G, "EasyMenu", nil)
     _G.UIDropDownMenu_Initialize = nil
     _G.UIDropDownMenu_CreateInfo = nil
     _G.UIDropDownMenu_AddButton = nil
@@ -48,8 +48,8 @@ return function()
 
   -- test_open_returns_false_without_menu_frame_api
   do
-    _G.EasyMenu = function() end
-    _G.CreateFrame = nil
+    rawset(_G, "EasyMenu", function() end)
+    rawset(_G, "CreateFrame", nil)
     _G.UIParent = nil
 
     local opened = ContextMenu.Open("hello")
@@ -64,9 +64,9 @@ return function()
     local menuEntry = nil
     local toggledWith = nil
 
-    _G.CreateFrame = factory.CreateFrame
+    rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
-    _G.EasyMenu = nil
+    rawset(_G, "EasyMenu", nil)
     _G[MENU_FRAME_NAME] = nil
     _G.UIDropDownMenu_Initialize = function(frame, initFunction)
       initFunction(frame, 1)
@@ -100,12 +100,12 @@ return function()
     local copiedText = nil
     local protectedCallAttempted = false
 
-    _G.CreateFrame = factory.CreateFrame
+    rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
-    _G.CopyToClipboard = function()
+    rawset(_G, "CopyToClipboard", function()
       protectedCallAttempted = true
       error("forbidden")
-    end
+    end)
     _G.C_Clipboard = {
       SetClipboard = function(text)
         copiedText = text
@@ -113,7 +113,7 @@ return function()
     }
     _G[MENU_FRAME_NAME] = nil
 
-    _G.EasyMenu = function(menuList, menuFrame, menuAnchor, x, y, displayMode)
+    rawset(_G, "EasyMenu", function(menuList, menuFrame, menuAnchor, x, y, displayMode)
       easyMenuCall = {
         menuList = menuList,
         menuFrame = menuFrame,
@@ -122,7 +122,7 @@ return function()
         y = y,
         displayMode = displayMode,
       }
-    end
+    end)
 
     local opened = ContextMenu.Open("bubble text", anchor)
 
@@ -147,7 +147,7 @@ return function()
   -- test_copy_text_uses_clipboard_namespace_fallback
   do
     local copiedText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = {
       SetClipboard = function(text)
         copiedText = text
@@ -162,7 +162,7 @@ return function()
   -- test_copy_text_supports_alternate_clipboard_method_names
   do
     local copiedText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = {
       SetClipboardText = function(text)
         copiedText = text
@@ -179,19 +179,19 @@ return function()
     local protectedCallAttempted = false
     local shown = nil
 
-    _G.CopyToClipboard = function()
+    rawset(_G, "CopyToClipboard", function()
       protectedCallAttempted = true
       return 7
-    end
+    end)
     _G.C_Clipboard = nil
     _G.securecallfunction = function(fn, ...)
       return fn(...)
     end
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       shown = { which = which, data = data }
       return {}
-    end
+    end)
 
     local copied = ContextMenu.CopyText("manual")
     assert(copied == true, "CopyText should show manual-copy popup when clipboard APIs are unavailable")
@@ -203,17 +203,17 @@ return function()
   -- test_copy_text_falls_back_to_manual_popup_when_clipboard_method_errors
   do
     local shown = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = {
       SetClipboard = function()
         error("blocked")
       end,
     }
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       shown = { which = which, data = data }
       return {}
-    end
+    end)
 
     local copied = ContextMenu.CopyText("recover")
     assert(copied == true, "CopyText should fall back to manual popup when clipboard methods error")
@@ -223,10 +223,10 @@ return function()
   -- test_manual_popup_uses_dialog_data_when_onshow_data_arg_missing
   do
     local popupText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       local def = _G.StaticPopupDialogs[which]
       local dialog = {
         data = data,
@@ -242,7 +242,7 @@ return function()
         def.OnShow(dialog)
       end
       return {}
-    end
+    end)
 
     local copied = ContextMenu.CopyText("from-data")
     assert(copied == true, "CopyText should still open manual popup when only dialog data is available")
@@ -252,10 +252,10 @@ return function()
   -- test_manual_popup_supports_capitalized_editbox_field
   do
     local popupText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       local def = _G.StaticPopupDialogs[which]
       local dialog = {
         data = data,
@@ -271,7 +271,7 @@ return function()
         def.OnShow(dialog)
       end
       return dialog
-    end
+    end)
 
     local copied = ContextMenu.CopyText("from-EditBox")
     assert(copied == true, "CopyText should open manual popup with alternate editbox field")
@@ -281,10 +281,10 @@ return function()
   -- test_manual_popup_supports_editbox_as_child_only
   do
     local popupText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       local def = _G.StaticPopupDialogs[which]
       local childEditBox = {
         SetText = function(_self, value)
@@ -303,7 +303,7 @@ return function()
         def.OnShow(dialog)
       end
       return dialog
-    end
+    end)
 
     local copied = ContextMenu.CopyText("from-child")
     assert(copied == true, "CopyText should open manual popup when editbox is only discoverable through children")
@@ -313,10 +313,10 @@ return function()
   -- test_manual_popup_prefers_real_editbox_when_child_order_mixed
   do
     local popupText = nil
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       local def = _G.StaticPopupDialogs[which]
       local buttonLikeChild = {
         SetText = function() end,
@@ -341,7 +341,7 @@ return function()
         def.OnShow(dialog)
       end
       return dialog
-    end
+    end)
 
     local copied = ContextMenu.CopyText("ordered")
     assert(copied == true, "CopyText should open manual popup when mixed child types are present")
@@ -378,9 +378,9 @@ return function()
     _G.StaticPopup1 = dialog
     _G.StaticPopup1EditBox = editBox
     _G.StaticPopup1Button1 = button1
-    _G.CreateFrame = factory.CreateFrame
+    rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
-    _G.CopyToClipboard = nil
+    rawset(_G, "CopyToClipboard", nil)
     _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {
       WM_TEST_GENERIC_DIALOG = {
@@ -388,7 +388,7 @@ return function()
         button1 = "Logout",
       },
     }
-    _G.StaticPopup_Show = function(which, _textArg1, _textArg2, data)
+    rawset(_G, "StaticPopup_Show", function(which, _textArg1, _textArg2, data)
       local def = _G.StaticPopupDialogs[which]
       dialog.which = which
       dialog.data = data
@@ -397,12 +397,15 @@ return function()
         def.OnShow(dialog, data)
       end
       return dialog
-    end
+    end)
 
     local copied = ContextMenu.CopyText("styled")
     assert(copied == true, "CopyText should open manual popup when clipboard APIs are unavailable")
     assert(dialog._wmRoundedBackground ~= nil, "manual popup should create dialog background styling")
-    assert(dialog._wmRoundedBackground.fills[1].shown == true, "manual popup dialog background should be active while shown")
+    assert(
+      dialog._wmRoundedBackground.fills[1].shown == true,
+      "manual popup dialog background should be active while shown"
+    )
     assert(editBox._wmManualCopyBorder ~= nil, "manual popup should add a bordered input style")
     assert(editBox._wmManualCopyBorder.top.shown == true, "manual popup input border should be active while shown")
     assert(button1._wmManualCopySkin ~= nil, "manual popup should style the OK button")
@@ -418,14 +421,23 @@ return function()
     )
 
     local manualDef = _G.StaticPopupDialogs["WHISPER_MESSENGER_BUBBLE_COPY_TEXT"]
-    assert(manualDef ~= nil and type(manualDef.OnHide) == "function", "manual popup definition should expose OnHide cleanup")
+    assert(
+      manualDef ~= nil and type(manualDef.OnHide) == "function",
+      "manual popup definition should expose OnHide cleanup"
+    )
     manualDef.OnHide(dialog)
     dialog:Hide()
 
-    assert(dialog._wmRoundedBackground.fills[1].shown == false, "manual popup dialog styling should be hidden after close")
+    assert(
+      dialog._wmRoundedBackground.fills[1].shown == false,
+      "manual popup dialog styling should be hidden after close"
+    )
     assert(editBox._wmManualCopyBorder.top.shown == false, "manual popup input border should be hidden after close")
     assert(button1._wmManualCopySkin.fills[1].shown == false, "manual popup button skin should be hidden after close")
-    assert(editBoxDecoration.shown == true, "manual popup should restore default edit box decoration textures after close")
+    assert(
+      editBoxDecoration.shown == true,
+      "manual popup should restore default edit box decoration textures after close"
+    )
     assert(buttonDecoration.shown == true, "manual popup should restore default button decoration textures after close")
     assert(
       buttonLabel.textColor[1] == originalButtonTextColor[1]
@@ -436,9 +448,18 @@ return function()
 
     local reusedDialog = _G.StaticPopup_Show("WM_TEST_GENERIC_DIALOG")
     assert(reusedDialog == dialog, "test should reuse the same StaticPopup frame")
-    assert(dialog._wmRoundedBackground.fills[1].shown == false, "manual popup dialog styling should stay inactive for reused generic popups")
-    assert(editBox._wmManualCopyBorder.top.shown == false, "manual popup input border should stay inactive for reused generic popups")
-    assert(button1._wmManualCopySkin.fills[1].shown == false, "manual popup button styling should stay inactive for reused generic popups")
+    assert(
+      dialog._wmRoundedBackground.fills[1].shown == false,
+      "manual popup dialog styling should stay inactive for reused generic popups"
+    )
+    assert(
+      editBox._wmManualCopyBorder.top.shown == false,
+      "manual popup input border should stay inactive for reused generic popups"
+    )
+    assert(
+      button1._wmManualCopySkin.fills[1].shown == false,
+      "manual popup button styling should stay inactive for reused generic popups"
+    )
 
     local genericDialogFont = {
       name = "GenericPopupFont",
@@ -473,27 +494,51 @@ return function()
 
     local reopened = ContextMenu.CopyText("styled-again")
     assert(reopened == true, "CopyText should support repeated opens on the same StaticPopup frame")
-    assert(button1:GetScript("OnEnter") ~= genericOnEnter, "manual popup should install a fresh hover OnEnter handler for each session")
-    assert(button1:GetScript("OnLeave") ~= genericOnLeave, "manual popup should install a fresh hover OnLeave handler for each session")
+    assert(
+      button1:GetScript("OnEnter") ~= genericOnEnter,
+      "manual popup should install a fresh hover OnEnter handler for each session"
+    )
+    assert(
+      button1:GetScript("OnLeave") ~= genericOnLeave,
+      "manual popup should install a fresh hover OnLeave handler for each session"
+    )
 
     manualDef.OnHide(dialog)
     dialog:Hide()
-    assert(genericLeaveCount == 0, "manual popup cleanup should not fire generic OnLeave when the popup was never hovered")
+    assert(
+      genericLeaveCount == 0,
+      "manual popup cleanup should not fire generic OnLeave when the popup was never hovered"
+    )
 
     local reopenedAfterHover = ContextMenu.CopyText("styled-third")
     assert(reopenedAfterHover == true, "CopyText should support a third open on the same StaticPopup frame")
-    assert(button1:GetScript("OnEnter") ~= genericOnEnter, "manual popup should keep installing wrapped hover handlers after repeated reuse")
-    assert(button1:GetScript("OnLeave") ~= genericOnLeave, "manual popup should keep installing wrapped leave handlers after repeated reuse")
+    assert(
+      button1:GetScript("OnEnter") ~= genericOnEnter,
+      "manual popup should keep installing wrapped hover handlers after repeated reuse"
+    )
+    assert(
+      button1:GetScript("OnLeave") ~= genericOnLeave,
+      "manual popup should keep installing wrapped leave handlers after repeated reuse"
+    )
     button1:GetScript("OnEnter")(button1)
-    assert(button1._wmManualCopyHovered == true, "manual popup hover handler should still update button state after reused-frame script changes")
+    assert(
+      button1._wmManualCopyHovered == true,
+      "manual popup hover handler should still update button state after reused-frame script changes"
+    )
     button1:GetScript("OnLeave")(button1)
     assert(button1._wmManualCopyHovered == false, "manual popup leave handler should clear manual hover state")
-    assert(genericLeaveCount == 1, "manual popup leave handler should delegate to generic OnLeave exactly once during hover exit")
+    assert(
+      genericLeaveCount == 1,
+      "manual popup leave handler should delegate to generic OnLeave exactly once during hover exit"
+    )
 
     manualDef.OnHide(dialog)
     dialog:Hide()
 
-    assert(dialogText.fontObject == genericDialogFont, "manual popup should restore dialog font object for reused frames")
+    assert(
+      dialogText.fontObject == genericDialogFont,
+      "manual popup should restore dialog font object for reused frames"
+    )
     assert(
       dialogText.textColor[1] == 0.92 and dialogText.textColor[2] == 0.41 and dialogText.textColor[3] == 0.36,
       "manual popup should restore dialog text color for reused frames"
@@ -504,17 +549,32 @@ return function()
       "manual popup should restore edit box text color for reused frames"
     )
     assert(
-      editBox.textInsets[1] == 3 and editBox.textInsets[2] == 4 and editBox.textInsets[3] == 5 and editBox.textInsets[4] == 6,
+      editBox.textInsets[1] == 3
+        and editBox.textInsets[2] == 4
+        and editBox.textInsets[3] == 5
+        and editBox.textInsets[4] == 6,
       "manual popup should restore edit box text insets for reused frames"
     )
     assert(
       buttonLabel.textColor[1] == 0.31 and buttonLabel.textColor[2] == 0.55 and buttonLabel.textColor[3] == 0.94,
       "manual popup should restore button label color from the most recent non-manual styling"
     )
-    assert(button1.genericHoverActive == false, "manual popup cleanup should clear generic hover side effects before frame reuse")
-    assert(genericLeaveCount == 1, "manual popup cleanup should not double-fire generic OnLeave after the hover already ended")
-    assert(button1:GetScript("OnEnter") == genericOnEnter, "manual popup should restore button OnEnter handler for reused frames")
-    assert(button1:GetScript("OnLeave") == genericOnLeave, "manual popup should restore button OnLeave handler for reused frames")
+    assert(
+      button1.genericHoverActive == false,
+      "manual popup cleanup should clear generic hover side effects before frame reuse"
+    )
+    assert(
+      genericLeaveCount == 1,
+      "manual popup cleanup should not double-fire generic OnLeave after the hover already ended"
+    )
+    assert(
+      button1:GetScript("OnEnter") == genericOnEnter,
+      "manual popup should restore button OnEnter handler for reused frames"
+    )
+    assert(
+      button1:GetScript("OnLeave") == genericOnLeave,
+      "manual popup should restore button OnLeave handler for reused frames"
+    )
 
     local recursiveLeaveCalls = 0
     local recursiveOnLeave = function()
@@ -545,9 +605,9 @@ return function()
     editBox.GetFontObject = function()
       return editBox
     end
-    editBox.SetFontObject = function()
+    rawset(editBox, "SetFontObject", function()
       error("unexpected SetFontObject")
-    end
+    end)
 
     local reopenedFontGuard = ContextMenu.CopyText("styled-font-guard")
     assert(reopenedFontGuard == true, "CopyText should support reopen before font-restore guard check")
@@ -560,7 +620,7 @@ return function()
     )
     dialog:Hide()
     editBox.GetFontObject = originalGetFontObject
-    editBox.SetFontObject = originalSetFontObject
+    rawset(editBox, "SetFontObject", originalSetFontObject)
   end
 
   -- test_bubble_frame_right_click_opens_context_menu
@@ -573,12 +633,12 @@ return function()
     local openedWithAnchor = nil
     local openCount = 0
     local originalOpen = ContextMenu.Open
-    ContextMenu.Open = function(text, anchorFrame)
+    rawset(ContextMenu, "Open", function(text, anchorFrame)
       openedWithText = text
       openedWithAnchor = anchorFrame
       openCount = openCount + 1
       return true
-    end
+    end)
 
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
       direction = "in",
@@ -607,13 +667,13 @@ return function()
     bubble.frame.scripts.OnMouseUp(bubble.frame, "RightButton")
     assert(openCount == 2, "mouse-up-only right click should still open the menu")
 
-    ContextMenu.Open = originalOpen
+    rawset(ContextMenu, "Open", originalOpen)
   end
 
-  _G.EasyMenu = savedEasyMenu
-  _G.CreateFrame = savedCreateFrame
+  rawset(_G, "EasyMenu", savedEasyMenu)
+  rawset(_G, "CreateFrame", savedCreateFrame)
   _G.UIParent = savedUIParent
-  _G.CopyToClipboard = savedCopyToClipboard
+  rawset(_G, "CopyToClipboard", savedCopyToClipboard)
   _G.C_Clipboard = savedClipboardNamespace
   _G[MENU_FRAME_NAME] = savedMenuFrame
   _G.UIDropDownMenu_Initialize = savedDropdownInitialize
@@ -621,6 +681,6 @@ return function()
   _G.UIDropDownMenu_AddButton = savedDropdownAddButton
   _G.ToggleDropDownMenu = savedToggleDropDownMenu
   _G.securecallfunction = savedSecureCallFunction
-  _G.StaticPopup_Show = savedStaticPopupShow
+  rawset(_G, "StaticPopup_Show", savedStaticPopupShow)
   _G.StaticPopupDialogs = savedStaticPopupDialogs
 end

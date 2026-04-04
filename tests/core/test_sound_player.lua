@@ -6,14 +6,14 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local playedId, playedChannel
-    _G.PlaySound = function(soundId, channel)
+    rawset(_G, "PlaySound", function(soundId, channel)
       playedId = soundId
       playedChannel = channel
-    end
-    _G.GetCVar = function()
+    end)
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
     _G.C_Timer = {
       After = function(_delay, fn)
         fn()
@@ -37,13 +37,13 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local playedId
-    _G.PlaySound = function(soundId, _channel)
+    rawset(_G, "PlaySound", function(soundId, _channel)
       playedId = soundId
-    end
-    _G.GetCVar = function()
+    end)
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function() end
+    end)
+    rawset(_G, "SetCVar", function() end)
     _G.C_Timer = {
       After = function(_delay, fn)
         fn()
@@ -61,16 +61,16 @@ return function()
   do
     local setCvarCalled = false
     local timerScheduled = false
-    _G.PlaySound = function() end
-    _G.GetCVar = function(key)
+    rawset(_G, "PlaySound", function() end)
+    rawset(_G, "GetCVar", function(key)
       if key == "Sound_EnableAllSound" or key == "Sound_EnableSFX" then
         return "0"
       end
       return "1"
-    end
-    _G.SetCVar = function()
+    end)
+    rawset(_G, "SetCVar", function()
       setCvarCalled = true
-    end
+    end)
     _G.C_Timer = {
       After = function(_delay, _fn)
         timerScheduled = true
@@ -94,13 +94,13 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local setCvarCalled = false
-    _G.PlaySound = function() end
-    _G.GetCVar = function()
+    rawset(_G, "PlaySound", function() end)
+    rawset(_G, "GetCVar", function()
       return "1"
-    end
-    _G.SetCVar = function()
+    end)
+    rawset(_G, "SetCVar", function()
       setCvarCalled = true
-    end
+    end)
     _G.C_Timer = {
       After = function(_delay, fn)
         fn()
@@ -121,13 +121,13 @@ return function()
   do
     local playedId, playedChannel
     local setCvarCalled = false
-    _G.PlaySound = function(soundId, channel)
+    rawset(_G, "PlaySound", function(soundId, channel)
       playedId = soundId
       playedChannel = channel
-    end
-    _G.SetCVar = function()
+    end)
+    rawset(_G, "SetCVar", function()
       setCvarCalled = true
-    end
+    end)
 
     SoundPlayer.Preview("ping")
 
@@ -137,8 +137,8 @@ return function()
   end
 
   -- cleanup
-  _G.PlaySound = nil
-  _G.GetCVar = nil
-  _G.SetCVar = nil
+  rawset(_G, "PlaySound", nil)
+  rawset(_G, "GetCVar", nil)
+  rawset(_G, "SetCVar", nil)
   _G.C_Timer = nil
 end

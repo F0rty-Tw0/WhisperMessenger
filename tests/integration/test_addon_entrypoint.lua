@@ -30,20 +30,20 @@ return function()
     return "Priest", "PRIEST", "Human", "Human", 2, "Arthas", "Area52"
   end
 
-  _G.UnitFullName = function(unit)
+  rawset(_G, "UnitFullName", function(unit)
     assert(unit == "player")
     return "Arthas", "Area52"
-  end
+  end)
 
-  _G.GetNormalizedRealmName = function()
+  rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
-  end
+  end)
 
   _G.require = nil
   _G.SlashCmdList = {}
   _G.SLASH_WHISPERMESSENGER1 = nil
   _G.SLASH_WHISPERMESSENGER2 = nil
-  _G.CreateFrame = function(frameType, name, parent)
+  rawset(_G, "CreateFrame", function(frameType, name, parent)
     local frame = factory.CreateFrame(frameType, name, parent)
     table.insert(createdFrames, frame)
 
@@ -59,7 +59,7 @@ return function()
     end
 
     return frame
-  end
+  end)
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -179,11 +179,11 @@ return function()
   assert(#conversation.messages == 3)
   assert(conversation.unreadCount == 1)
   _G.require = savedRequire
-  _G.CreateFrame = savedCreateFrame
+  rawset(_G, "CreateFrame", savedCreateFrame)
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   _G.GetPlayerInfoByGUID = savedGetPlayerInfoByGUID
-  _G.UnitFullName = savedUnitFullName
-  _G.GetNormalizedRealmName = savedGetNormalizedRealmName
+  rawset(_G, "UnitFullName", savedUnitFullName)
+  rawset(_G, "GetNormalizedRealmName", savedGetNormalizedRealmName)
 end

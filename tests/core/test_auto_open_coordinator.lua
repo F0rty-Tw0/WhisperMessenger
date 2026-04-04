@@ -41,9 +41,9 @@ return function()
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.NUM_CHAT_WINDOWS = 1
   _G._wmSuspended = false
-  _G.InCombatLockdown = function()
+  rawset(_G, "InCombatLockdown", function()
     return false
-  end
+  end)
   _G.C_Timer = {
     After = function(delaySeconds, callback)
       timerCallbacks[#timerCallbacks + 1] = {
@@ -52,7 +52,7 @@ return function()
       }
     end,
   }
-  _G.ChatEdit_DeactivateChat = function(editBox)
+  rawset(_G, "ChatEdit_DeactivateChat", function(editBox)
     deactivated[#deactivated + 1] = editBox
     if editBox.ClearFocus then
       editBox:ClearFocus()
@@ -60,12 +60,12 @@ return function()
     if editBox.Hide then
       editBox:Hide()
     end
-  end
-  _G.CreateFrame = function(frameType, name, parent, template)
+  end)
+  rawset(_G, "CreateFrame", function(frameType, name, parent, template)
     local frame = factory.CreateFrame(frameType, name, parent, template)
     createdFrames[#createdFrames + 1] = frame
     return frame
-  end
+  end)
 
   local runtime = {
     localProfileId = "me",
@@ -145,18 +145,12 @@ return function()
   assert(runtime.autoOpenHooks == autoOpenHooks, "expected runtime.autoOpenHooks to reference created hooks")
   assert(type(coordinator.installDeferredPoller) == "function", "expected deferred poller installer")
 
-  assert(
-    autoOpenHookDeps.findConversationKeyByName("Arthas") == "wow::WOW::arthas-area52",
-    "expected base-name conversation lookup"
-  )
-  assert(
-    autoOpenHookDeps.findConversationKeyByName("Friend#1234") == "wow::WOW::friend",
-    "expected battleTag conversation lookup"
-  )
-  assert(
-    autoOpenHookDeps.findConversationKeyByName("Thrall") == "wow::WOW::friend",
-    "expected gameAccountName conversation lookup"
-  )
+  assert(type(autoOpenHookDeps) == "table", "expected auto-open hook deps table")
+  local findConversationKeyByName = rawget(autoOpenHookDeps, "findConversationKeyByName")
+  assert(type(findConversationKeyByName) == "function", "expected findConversationKeyByName helper")
+  assert(findConversationKeyByName("Arthas") == "wow::WOW::arthas-area52", "expected base-name conversation lookup")
+  assert(findConversationKeyByName("Friend#1234") == "wow::WOW::friend", "expected battleTag conversation lookup")
+  assert(findConversationKeyByName("Thrall") == "wow::WOW::friend", "expected gameAccountName conversation lookup")
 
   _G.C_BattleNet = {
     GetFriendAccountInfo = function(friendIndex)
@@ -180,10 +174,10 @@ return function()
 
   -- Set up globals for direct hook installation
   local hookedFunctions = {}
-  _G.hooksecurefunc = function(name, handler)
+  rawset(_G, "hooksecurefunc", function(name, handler)
     hookedFunctions[name] = hookedFunctions[name] or {}
     hookedFunctions[name][#hookedFunctions[name] + 1] = handler
-  end
+  end)
   _G.ChatFrame_SendTell = function() end
   _G.ChatFrame_ReplyTell = function() end
 
@@ -308,10 +302,7 @@ return function()
     )
     -- Edit box close is deferred to avoid taint
     assert(#deactivated == prevDeactivatedCount, "expected edit box NOT immediately closed (deferred)")
-    assert(
-      #timerCallbacks == prevTimerCount + 1,
-      "expected C_Timer.After scheduled for deferred close"
-    )
+    assert(#timerCallbacks == prevTimerCount + 1, "expected C_Timer.After scheduled for deferred close")
 
     -- Fire the deferred timer to actually close the edit box
     timerCallbacks[#timerCallbacks].callback()
@@ -343,14 +334,8 @@ return function()
     sendTellResult = false
     hookedFunctions["ChatFrame_SendTell"][1]("Nobody")
 
-    assert(
-      #deactivated == prevDeactivatedCount,
-      "expected edit box NOT closed when onSendTell returns false"
-    )
-    assert(
-      #timerCallbacks == prevTimerCount,
-      "expected NO deferred timer when onSendTell fails"
-    )
+    assert(#deactivated == prevDeactivatedCount, "expected edit box NOT closed when onSendTell returns false")
+    assert(#timerCallbacks == prevTimerCount, "expected NO deferred timer when onSendTell fails")
     assert(failEditBox:HasFocus() == true, "expected edit box to keep focus when hook fails")
   end
 
@@ -377,25 +362,22 @@ return function()
     sendTellResult = false
     pollFrame.scripts.OnUpdate(pollFrame)
 
-    assert(
-      #deactivated == prevDeactivatedCount,
-      "expected poller NOT to close edit box when onSendTell returns false"
-    )
+    assert(#deactivated == prevDeactivatedCount, "expected poller NOT to close edit box when onSendTell returns false")
     assert(pollerFailBox:HasFocus() == true, "expected edit box to keep focus when poller hook fails")
     sendTellResult = true
   end
 
-  _G.CreateFrame = savedGlobals.CreateFrame
+  rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
-  _G.ChatEdit_DeactivateChat = savedGlobals.ChatEdit_DeactivateChat
-  _G.InCombatLockdown = savedGlobals.InCombatLockdown
+  rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)
+  rawset(_G, "InCombatLockdown", savedGlobals.InCombatLockdown)
   _G.NUM_CHAT_WINDOWS = savedGlobals.NUM_CHAT_WINDOWS
   _G.ChatFrame1EditBox = savedGlobals.ChatFrame1EditBox
   _G.UIParent = savedGlobals.UIParent
   _G.C_BattleNet = savedGlobals.C_BattleNet
   _G.BNGetNumFriends = savedGlobals.BNGetNumFriends
   _G._wmSuspended = savedGlobals._wmSuspended
-  _G.hooksecurefunc = savedGlobals.hooksecurefunc
+  rawset(_G, "hooksecurefunc", savedGlobals.hooksecurefunc)
   _G.ChatFrame_SendTell = savedGlobals.ChatFrame_SendTell
   _G.ChatFrame_ReplyTell = savedGlobals.ChatFrame_ReplyTell
 end
