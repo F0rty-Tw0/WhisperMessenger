@@ -16,12 +16,12 @@ local NAME_LABEL_LEFT_INSET = 10
 local NAME_TO_ICON_GAP = 4
 local NAME_TO_TIME_GAP = 2
 local TIME_LABEL_FALLBACK_WIDTH = 14
-local TIME_LABEL_RIGHT_PADDING = 4
+local TIME_LABEL_RIGHT_INSET = 8
 local FACTION_ICON_RIGHT_PADDING = 1
 local UTF8_CHAR_PATTERN = "[%z\1-\127\194-\244][\128-\191]*"
 
 local function timestampReserveWidth(row)
-  local reserve = TIME_LABEL_RIGHT_PADDING + TIME_LABEL_FALLBACK_WIDTH + NAME_TO_TIME_GAP
+  local reserve = TIME_LABEL_RIGHT_INSET + TIME_LABEL_FALLBACK_WIDTH + NAME_TO_TIME_GAP
   local timeLabel = row and row.timeLabel or nil
   if timeLabel == nil then
     return reserve
@@ -35,7 +35,7 @@ local function timestampReserveWidth(row)
     liveWidth = timeLabel:GetWidth() or 0
   end
   if type(liveWidth) == "number" and liveWidth > 0 then
-    reserve = TIME_LABEL_RIGHT_PADDING + liveWidth + NAME_TO_TIME_GAP
+    reserve = TIME_LABEL_RIGHT_INSET + liveWidth + NAME_TO_TIME_GAP
   end
 
   return reserve
@@ -217,7 +217,7 @@ end
 --- Returns FontString
 function RowElements.createTimestamp(row, item, ns_ref)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_time)
-  label:SetPoint("TOPRIGHT", row, "TOPRIGHT", -TIME_LABEL_RIGHT_PADDING, 0)
+  label:SetPoint("TOPRIGHT", row, "TOPRIGHT", -TIME_LABEL_RIGHT_INSET, 0)
   if row.title then
     label:SetPoint("TOP", row.title, "TOP", 0, 4)
   end

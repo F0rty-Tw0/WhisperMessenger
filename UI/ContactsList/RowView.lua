@@ -16,6 +16,7 @@ local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.Con
 
 local RowView = {}
 local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
+local ACTIONS_RIGHT_INSET = 4
 
 local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
@@ -117,7 +118,7 @@ local function bindRow(factory, parent, row, index, item, options)
 
   row.removeButton:ClearAllPoints()
   if row.timeLabel then
-    row.removeButton:SetPoint("TOPRIGHT", row.timeLabel, "BOTTOMRIGHT", 0, -ACTION_SPACING)
+    row.removeButton:SetPoint("TOPRIGHT", row.timeLabel, "BOTTOMRIGHT", ACTIONS_RIGHT_INSET, -ACTION_SPACING)
   else
     row.removeButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -ACTION_SPACING)
   end
