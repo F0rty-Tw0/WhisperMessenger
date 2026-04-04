@@ -54,6 +54,9 @@ UI/Theme/Fonts.lua
 UI/Theme/Layout.lua
 UI/Theme/Textures.lua
 UI/Theme/Theme.lua
+UI/Helpers/Base.lua
+UI/Helpers/Shapes.lua
+UI/Helpers/Controls.lua
 UI/Helpers.lua
 UI/ScrollView/Metrics.lua
 UI/ScrollView/Navigation.lua
@@ -62,6 +65,11 @@ UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
 UI/ChatBubble/BubbleIcon.lua
+UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
+UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Styling.lua
+UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
+UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
+UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
@@ -91,14 +99,23 @@ UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder.lua
+UI/MessengerWindow/LayoutBuilder/Metrics.lua
+UI/MessengerWindow/LayoutBuilder/Apply.lua
 UI/MessengerWindow/LayoutBuilder.lua
 UI/MessengerWindow/DragController.lua
 UI/MessengerWindow/ContactsController.lua
+UI/MessengerWindow/WindowScripts/Buttons.lua
+UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
+UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
+UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings.lua
+UI/MessengerWindow/MessengerWindow/SelectionSync.lua
+UI/MessengerWindow/MessengerWindow/ContactSearch.lua
+UI/MessengerWindow/MessengerWindow/FacadeBuilder.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
@@ -110,6 +127,8 @@ Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
+Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
+Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/Diagnostics.lua
 Core/Bootstrap/WindowRuntime.lua

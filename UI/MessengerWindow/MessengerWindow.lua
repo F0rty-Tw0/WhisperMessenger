@@ -19,28 +19,18 @@ local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI
 local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
 local NotificationSettings = ns.NotificationSettings
   or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
+local SelectionSync = ns.MessengerWindowSelectionSync
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
+local ContactSearch = ns.MessengerWindowContactSearch
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
+local FacadeBuilder = ns.MessengerWindowFacadeBuilder
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.FacadeBuilder")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
 
 local MessengerWindow = {}
-
-local function syncComposerSelectedContact(target, selectedContact)
-  target.conversationKey = selectedContact and selectedContact.conversationKey or nil
-  target.displayName = selectedContact and selectedContact.displayName or nil
-  target.channel = selectedContact and selectedContact.channel or nil
-  target.bnetAccountID = selectedContact and selectedContact.bnetAccountID or nil
-  target.guid = selectedContact and selectedContact.guid or nil
-  target.gameAccountName = selectedContact and selectedContact.gameAccountName or nil
-end
-
-local function setComposerEnabled(composer, selectedContact, noticeText)
-  local enabled = selectedContact ~= nil and not (noticeText and noticeText ~= "")
-  if composer.setEnabled then
-    composer.setEnabled(enabled)
-  end
-end
 
 function MessengerWindow.Create(factory, options)
   options = options or {}
@@ -252,60 +242,6 @@ function MessengerWindow.Create(factory, options)
   local currentContacts = options.contacts or {}
   local contactsSearchQuery = ""
 
-  local function normalizeSearchQuery(rawText)
-    if type(rawText) ~= "string" then
-      return ""
-    end
-
-    local normalized = string.lower(rawText)
-    normalized = string.gsub(normalized, "^%s+", "")
-    normalized = string.gsub(normalized, "%s+$", "")
-    return normalized
-  end
-
-  local function buildSearchTerms(normalizedQuery)
-    local terms = {}
-    for term in string.gmatch(normalizedQuery, "%S+") do
-      terms[#terms + 1] = term
-    end
-    return terms
-  end
-
-  local function itemMatchesSearch(item, terms)
-    if #terms == 0 then
-      return true
-    end
-    if type(item) ~= "table" then
-      return false
-    end
-
-    local haystack = item.searchText or item.displayName or ""
-    if haystack == "" then
-      return false
-    end
-
-    local loweredHaystack = string.lower(haystack)
-    for _, term in ipairs(terms) do
-      if string.find(loweredHaystack, term, 1, true) == nil then
-        return false
-      end
-    end
-    return true
-  end
-
-  local function isConversationVisible(items, conversationKey)
-    if conversationKey == nil then
-      return false
-    end
-
-    for _, item in ipairs(items or {}) do
-      if item and item.conversationKey == conversationKey then
-        return true
-      end
-    end
-    return false
-  end
-
   local function syncSearchInputVisual()
     local hasSearch = contactsSearchQuery ~= ""
     if contactsSearchPlaceholder and contactsSearchPlaceholder.SetShown then
@@ -316,25 +252,14 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  local function buildVisibleContacts()
-    local visible = {}
-    local terms = buildSearchTerms(contactsSearchQuery)
-    for _, item in ipairs(currentContacts or {}) do
-      if itemMatchesSearch(item, terms) then
-        visible[#visible + 1] = item
-      end
-    end
-    return visible
-  end
-
   local function refreshContacts(nextContacts, selectedConversationKey, resetPaging)
     if nextContacts ~= nil then
       currentContacts = nextContacts
     end
 
-    local visibleContacts = buildVisibleContacts()
+    local visibleContacts = ContactSearch.BuildVisibleContacts(currentContacts, contactsSearchQuery)
     local selectedKey = selectedConversationKey
-    if selectedKey ~= nil and not isConversationVisible(visibleContacts, selectedKey) then
+    if selectedKey ~= nil and not ContactSearch.IsConversationVisible(visibleContacts, selectedKey) then
       selectedKey = nil
     end
 
@@ -347,7 +272,7 @@ function MessengerWindow.Create(factory, options)
   if contactsSearchInput and contactsSearchInput.SetScript then
     contactsSearchInput:SetScript("OnTextChanged", function()
       local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
-      contactsSearchQuery = normalizeSearchQuery(searchText)
+      contactsSearchQuery = ContactSearch.NormalizeSearchQuery(searchText)
       refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
     end)
     contactsSearchInput:SetScript("OnEscapePressed", function()
@@ -451,8 +376,8 @@ function MessengerWindow.Create(factory, options)
       resetPaging
     )
     ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus, currentNotice)
-    syncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
-    setComposerEnabled(composer, currentSelectedContact, currentNotice)
+    SelectionSync.SyncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
+    SelectionSync.SetComposerEnabled(composer, currentSelectedContact, currentNotice)
   end
 
   local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
@@ -552,68 +477,55 @@ function MessengerWindow.Create(factory, options)
     end,
   })
 
-  local function buildFacade()
-    return {
-      frame = frame,
-      title = title,
-      contactsPane = contactsPane,
-      contactsPaneBorder = layout.contactsPaneBorder,
-      contactsDivider = contactsDivider,
-      contactsRightBorder = contactsRightBorder,
-      contactsHeaderDivider = contactsHeaderDivider,
-      contentPane = contentPane,
-      headerDivider = headerDivider,
-      titleBarBorder = chrome.titleBarBorder,
-      titleBarTopBorder = titleBarTopBorder,
-      threadPane = threadPane,
-      composerPane = composerPane,
-      composerPaneBorder = layout.composerPaneBorder,
-      composerDivider = composerDivider,
-      closeButton = closeButton,
-      optionsButton = optionsButton,
-      optionsPanel = optionsPanel,
-      optionsMenu = optionsMenu,
-      optionsContentPane = optionsContentPane,
-      generalTab = generalTab,
-      appearanceTab = appearanceTab,
-      behaviorTab = behaviorTab,
-      notificationsTab = notificationsTab,
-      generalSettings = generalSettings,
-      appearanceSettings = appearanceSettings,
-      behaviorSettings = behaviorSettings,
-      notificationSettings = notificationSettings,
-      optionsHeader = optionsHeader,
-      optionsHint = optionsHint,
-      resetWindowButton = resetWindowButton,
-      resetIconButton = resetIconButton,
-      clearAllChatsButton = clearAllChatsButton,
-      contactsSearchInput = contactsSearchInput,
-      contactsSearchClearButton = contactsSearchClearButton,
-      contactsSearchPlaceholder = contactsSearchPlaceholder,
-      resizeGrip = resizeGrip,
-      contactsResizeHandle = contactsResizeHandle,
-      contacts = contacts,
-      conversation = conversation,
-      composer = composer,
-      refreshContacts = refreshContacts,
-      refreshSelection = refreshSelection,
-      refreshTheme = refreshThemeVisuals,
-      selectConversation = function(conversationKey)
-        for _, row in ipairs(contacts.rows) do
-          if row.item ~= nil and row.item.conversationKey == conversationKey then
-            handleContactSelected(row.item)
-            return true
-          end
-        end
-        refreshSelection()
-        return false
-      end,
-    }
-  end
-
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
-  return buildFacade()
+  return FacadeBuilder.Build({
+    frame = frame,
+    title = title,
+    contactsPane = contactsPane,
+    contactsPaneBorder = layout.contactsPaneBorder,
+    contactsDivider = contactsDivider,
+    contactsRightBorder = contactsRightBorder,
+    contactsHeaderDivider = contactsHeaderDivider,
+    contentPane = contentPane,
+    headerDivider = headerDivider,
+    titleBarBorder = chrome.titleBarBorder,
+    titleBarTopBorder = titleBarTopBorder,
+    threadPane = threadPane,
+    composerPane = composerPane,
+    composerPaneBorder = layout.composerPaneBorder,
+    composerDivider = composerDivider,
+    closeButton = closeButton,
+    optionsButton = optionsButton,
+    optionsPanel = optionsPanel,
+    optionsMenu = optionsMenu,
+    optionsContentPane = optionsContentPane,
+    generalTab = generalTab,
+    appearanceTab = appearanceTab,
+    behaviorTab = behaviorTab,
+    notificationsTab = notificationsTab,
+    generalSettings = generalSettings,
+    appearanceSettings = appearanceSettings,
+    behaviorSettings = behaviorSettings,
+    notificationSettings = notificationSettings,
+    optionsHeader = optionsHeader,
+    optionsHint = optionsHint,
+    resetWindowButton = resetWindowButton,
+    resetIconButton = resetIconButton,
+    clearAllChatsButton = clearAllChatsButton,
+    contactsSearchInput = contactsSearchInput,
+    contactsSearchClearButton = contactsSearchClearButton,
+    contactsSearchPlaceholder = contactsSearchPlaceholder,
+    resizeGrip = resizeGrip,
+    contactsResizeHandle = contactsResizeHandle,
+    contacts = contacts,
+    conversation = conversation,
+    composer = composer,
+    refreshContacts = refreshContacts,
+    refreshSelection = refreshSelection,
+    refreshTheme = refreshThemeVisuals,
+    handleContactSelected = handleContactSelected,
+  })
 end
 
 ns.MessengerWindow = MessengerWindow

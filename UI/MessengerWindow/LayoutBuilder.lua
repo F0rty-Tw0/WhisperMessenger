@@ -6,50 +6,16 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local LayoutMetrics = ns.MessengerWindowLayoutMetrics
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+local LayoutApply = ns.MessengerWindowLayoutApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Apply")
 local applyColorTexture = UIHelpers.applyColorTexture
 local setTextColor = UIHelpers.setTextColor
 local createOptionButton = UIHelpers.createOptionButton
-local sizeValue = UIHelpers.sizeValue
 
 local LayoutBuilder = {}
 
-local function contactsSearchMetrics(theme)
-  local layout = theme.LAYOUT or {}
-  local searchHeight = layout.CONTACT_SEARCH_HEIGHT or 30
-  local searchMargin = layout.CONTACT_SEARCH_MARGIN or 10
-  local clearButtonSize = layout.CONTACT_SEARCH_CLEAR_BUTTON_SIZE or 18
-  local totalHeight = searchHeight + (searchMargin * 2)
-
-  return searchHeight, searchMargin, clearButtonSize, totalHeight
-end
-
--- Clamp contacts pane width so users can resize it without collapsing the chat area.
--- windowWidth: overall window width
--- requestedContactsWidth: desired contacts pane width (or nil to use defaults)
--- theme: optional theme override for tests
-function LayoutBuilder.ClampContactsWidth(windowWidth, requestedContactsWidth, theme)
-  local resolvedTheme = theme or Theme
-  local layout = resolvedTheme.LAYOUT or {}
-  local dividerThickness = resolvedTheme.DIVIDER_THICKNESS or 1
-  local defaultContactsWidth = resolvedTheme.CONTACTS_WIDTH or layout.CONTACTS_WIDTH or 300
-  local minContactsWidth = layout.CONTACTS_MIN_WIDTH or resolvedTheme.CONTACTS_MIN_WIDTH or 180
-  local minContentWidth = layout.CONTENT_MIN_WIDTH
-    or resolvedTheme.CONTENT_MIN_WIDTH
-    or ((layout.WINDOW_MIN_WIDTH or resolvedTheme.WINDOW_MIN_WIDTH or 640) - defaultContactsWidth - dividerThickness)
-
-  local safeWindowWidth = type(windowWidth) == "number" and windowWidth or (resolvedTheme.WINDOW_WIDTH or 920)
-  local maxContactsWidth = math.max(minContactsWidth, safeWindowWidth - dividerThickness - minContentWidth)
-  local nextWidth = type(requestedContactsWidth) == "number" and requestedContactsWidth or defaultContactsWidth
-
-  if nextWidth < minContactsWidth then
-    nextWidth = minContactsWidth
-  end
-  if nextWidth > maxContactsWidth then
-    nextWidth = maxContactsWidth
-  end
-
-  return nextWidth
-end
+LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 
 -- Creates all layout panes inside the window frame.
 --
@@ -70,8 +36,9 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contentWidth = initialState.width - contactsWidth - Theme.DIVIDER_THICKNESS
   local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local threadHeight = contentHeight - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
-  local contactsHandleWidth = Theme.LAYOUT.CONTACTS_RESIZE_HANDLE_WIDTH or 8
-  local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight = contactsSearchMetrics(Theme)
+  local contactsHandleWidth = LayoutMetrics.GetContactsResizeHandleWidth(Theme)
+  local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight =
+    LayoutMetrics.ContactsSearchMetrics(Theme)
   local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
 
   local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
@@ -514,124 +481,8 @@ end
 -- requestedContactsWidth: optional target contacts pane width
 -- Returns: { contactsWidth, contentWidth, contactsHeight, threadHeight }
 function LayoutBuilder.Relayout(layout, width, height, requestedContactsWidth)
-  local contactsWidth = LayoutBuilder.ClampContactsWidth(width, requestedContactsWidth or layout.contactsWidth, Theme)
-  local contactsH = height - Theme.TOP_BAR_HEIGHT
-  local contentW = width - contactsWidth - Theme.DIVIDER_THICKNESS
-  local contentH = contactsH
-  local threadH = contentH - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
-  local searchHeight = layout.contactsSearchHeight or (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
-  local searchMargin = layout.contactsSearchMargin or (Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10)
-  local searchTotalHeight = layout.contactsSearchTotalHeight or (searchHeight + (searchMargin * 2))
-  local contactsListH = math.max(0, contactsH - searchTotalHeight)
-
-  layout.contactsWidth = contactsWidth
-
-  layout.contactsPane:SetSize(contactsWidth, contactsH)
-  if layout.contactsRightBorder then
-    layout.contactsRightBorder:SetHeight(contactsH)
-  end
-  layout.contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsH)
-  if layout.contactsResizeHandle then
-    local handleWidth = sizeValue(layout.contactsResizeHandle, "GetWidth", "width", layout.contactsHandleWidth or 8)
-    layout.contactsResizeHandle:SetSize(handleWidth, contactsH)
-    if layout.contactsResizeHandle.ClearAllPoints then
-      layout.contactsResizeHandle:ClearAllPoints()
-    end
-    layout.contactsResizeHandle:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", -math.floor(handleWidth / 2), 0)
-  end
-
-  if layout.contactsSearchFrame then
-    layout.contactsSearchFrame:SetSize(math.max(0, contactsWidth - (searchMargin * 2)), searchHeight)
-    if layout.contactsSearchFrame.ClearAllPoints then
-      layout.contactsSearchFrame:ClearAllPoints()
-    end
-    layout.contactsSearchFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", searchMargin, -searchMargin)
-  end
-
-  layout.contentPane:SetSize(contentW, contentH)
-  if layout.contentPane.ClearAllPoints then
-    layout.contentPane:ClearAllPoints()
-  end
-  layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
-  if layout.contactsHeaderDivider then
-    layout.contactsHeaderDivider:SetSize(contactsWidth, Theme.DIVIDER_THICKNESS)
-  end
-  if layout.headerDivider then
-    layout.headerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
-  end
-  layout.threadPane:SetSize(contentW, threadH)
-  layout.composerPane:SetSize(contentW, Theme.COMPOSER_HEIGHT)
-  layout.composerDivider:SetSize(contentW, Theme.DIVIDER_THICKNESS)
-
-  -- Resize contacts scroll view while preserving its content height and scroll position.
-  local cv = layout.contactsView
-  if cv then
-    cv.totalWidth = contactsWidth
-    if cv.scrollFrame.ClearAllPoints then
-      cv.scrollFrame:ClearAllPoints()
-    end
-    cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
-    cv.scrollFrame:SetSize(contactsWidth, contactsListH)
-    cv.scrollBar:SetHeight(contactsListH)
-    cv.viewportHeight = contactsListH
-    local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
-    Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsListH))
-  end
-
-  -- Resize options overlay to match new window dimensions.
-  local optionsH = contactsH
-  local optionsContentW = contentW
-  layout.optionsPanel:SetSize(width, optionsH)
-  layout.optionsMenu:SetSize(contactsWidth, optionsH)
-  layout.optionsMenuDivider:SetSize(Theme.DIVIDER_THICKNESS, optionsH)
-  layout.optionsContentPane:SetSize(optionsContentW, optionsH)
-
-  local menuPadding = layout.menuPadding or Theme.CONTENT_PADDING
-  local optionsButtonWidth = math.max(0, contactsWidth - (menuPadding * 2))
-  local optionsButtonHeight = layout.optionsButtonHeight or Theme.LAYOUT.OPTION_BUTTON_HEIGHT
-  if layout.optionsHint then
-    if layout.optionsHint.SetWidth then
-      layout.optionsHint:SetWidth(optionsButtonWidth)
-    end
-    if layout.optionsHint.SetWordWrap then
-      layout.optionsHint:SetWordWrap(true)
-    end
-    if layout.optionsHint.SetJustifyH then
-      layout.optionsHint:SetJustifyH("LEFT")
-    end
-  end
-  for _, button in ipairs({
-    layout.generalTab,
-    layout.appearanceTab,
-    layout.behaviorTab,
-    layout.notificationsTab,
-    layout.resetWindowButton,
-    layout.resetIconButton,
-    layout.clearAllChatsButton,
-  }) do
-    if button and button.SetSize then
-      button:SetSize(optionsButtonWidth, optionsButtonHeight)
-    end
-  end
-
-  -- Resize options scroll view.
-  local osv = layout.optionsScrollView
-  if osv then
-    osv.scrollFrame:SetSize(optionsContentW, optionsH)
-    osv.scrollBar:SetHeight(optionsH)
-    osv.viewportHeight = optionsH
-    osv.totalWidth = optionsContentW
-    local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
-    Metrics.RefreshMetrics(osv, sizeValue(osv.content, "GetHeight", "height", layout.optionsContentHeight or 420))
-  end
-
-  return {
-    contactsWidth = contactsWidth,
-    contentWidth = contentW,
-    contactsHeight = contactsH,
-    contactsListHeight = contactsListH,
-    threadHeight = threadH,
-  }
+  local relayout = LayoutMetrics.CalculateRelayout(layout, width, height, requestedContactsWidth, Theme)
+  return LayoutApply.Relayout(layout, relayout, Theme)
 end
 
 ns.MessengerWindowLayoutBuilder = LayoutBuilder

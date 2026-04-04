@@ -5,226 +5,18 @@ end
 
 local AutoOpenHooks = ns.BootstrapAutoOpenHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local ConversationOps = ns.BootstrapAutoOpenConversationOps
+  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop
+  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 
 local AutoOpenCoordinator = {}
-
-local function findConversationKeyByName(runtime, name)
-  if not name or not runtime.store or not runtime.store.conversations then
-    return nil
-  end
-
-  local lowerName = string.lower(name)
-  local inputBase = string.match(name, "^([^%-]+)")
-  for key, conv in pairs(runtime.store.conversations) do
-    local displayName = conv.displayName or conv.contactDisplayName or ""
-    if string.lower(displayName) == lowerName then
-      return key
-    end
-
-    local baseName = string.match(displayName, "^([^%-]+)")
-    if baseName and string.lower(baseName) == lowerName then
-      return key
-    end
-
-    if inputBase and string.lower(displayName) == string.lower(inputBase) then
-      return key
-    end
-
-    if conv.battleTag and string.lower(conv.battleTag) == lowerName then
-      return key
-    end
-
-    if conv.gameAccountName and string.lower(conv.gameAccountName) == lowerName then
-      return key
-    end
-  end
-
-  return nil
-end
-
-local function buildConversationKeyFromName(runtime, identity, name)
-  local contact = identity.FromWhisper(name, nil, {})
-  if contact.canonicalName == "" then
-    return nil
-  end
-
-  return identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
-end
-
-local function ensureConversation(runtime, conversationKey, displayName)
-  if not runtime.store then
-    runtime.store = {}
-  end
-  runtime.store.conversations = runtime.store.conversations or {}
-
-  if runtime.store.conversations[conversationKey] then
-    return
-  end
-
-  runtime.store.conversations[conversationKey] = {
-    displayName = displayName,
-    channel = "WOW",
-    messages = {},
-    unreadCount = 0,
-    lastActivityAt = runtime.now(),
-    conversationKey = conversationKey,
-  }
-end
 
 local function focusComposer(runtime)
   local window = runtime.window
   if window and window.composer and window.composer.input and window.composer.input.SetFocus then
     window.composer.input:SetFocus()
   end
-end
-
-local function readEditBoxState(editBox, key)
-  local direct = editBox[key]
-  if direct ~= nil and direct ~= "" then
-    return direct
-  end
-
-  if type(editBox.GetAttribute) == "function" then
-    local attribute = editBox:GetAttribute(key)
-    if attribute ~= nil and attribute ~= "" then
-      return attribute
-    end
-  end
-
-  return nil
-end
-
-local function closeEditBox(runtime, editBox, deactivateChat)
-  local typed = editBox.GetText and editBox:GetText() or ""
-  if typed ~= "" and runtime.setComposerText then
-    runtime.setComposerText(typed)
-  end
-
-  -- Restore chatType to sticky type and clear tellTarget via secure
-  -- attributes only. Do NOT set direct Lua properties (editBox.chatType,
-  -- editBox.tellTarget) as they persist and shadow WoW's SetAttribute-based
-  -- state updates, breaking chatType detection on subsequent whispers.
-  if type(editBox.SetAttribute) == "function" then
-    local stickyType = readEditBoxState(editBox, "stickyType")
-    if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
-      pcall(editBox.SetAttribute, editBox, "chatType", stickyType)
-    end
-    pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
-  end
-  editBox:SetText("")
-
-  if type(deactivateChat) == "function" then
-    deactivateChat(editBox)
-  elseif editBox.Hide then
-    editBox:Hide()
-  end
-end
-
-local function findBattleNetAccountInfo(target, bnetApi, getNumFriends)
-  if not bnetApi or not bnetApi.GetFriendAccountInfo then
-    return nil
-  end
-
-  local numFriends = type(getNumFriends) == "function" and getNumFriends() or 0
-  for friendIndex = 1, numFriends do
-    local accountInfo = bnetApi.GetFriendAccountInfo(friendIndex)
-    if accountInfo then
-      local characterName = accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.characterName
-      local battleTag = accountInfo.battleTag
-      local battleTagBase = battleTag and string.match(battleTag, "^([^#]+)")
-      local accountName = accountInfo.accountName
-      if
-        (characterName and characterName == target)
-        or (battleTag and battleTag == target)
-        or (battleTagBase and battleTagBase == target)
-        or (accountName and accountName == target)
-      then
-        return accountInfo
-      end
-    end
-  end
-
-  return nil
-end
-
-local function ensureBattleNetConversation(runtime, identity, accountInfo)
-  local bnetAccountID = accountInfo and accountInfo.bnetAccountID
-  if not bnetAccountID then
-    return nil
-  end
-
-  if not runtime.store then
-    runtime.store = {}
-  end
-  runtime.store.conversations = runtime.store.conversations or {}
-  local conversations = runtime.store.conversations
-  for key, conversation in pairs(conversations) do
-    if conversation.bnetAccountID == bnetAccountID then
-      return key
-    end
-  end
-
-  local contact = identity.FromBattleNet(bnetAccountID, accountInfo)
-  if contact.canonicalName == "" then
-    return nil
-  end
-
-  local conversationKey = identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
-  conversations[conversationKey] = {
-    displayName = accountInfo.battleTag or accountInfo.accountName or tostring(bnetAccountID),
-    channel = "BN",
-    bnetAccountID = bnetAccountID,
-    battleTag = accountInfo.battleTag,
-    gameAccountName = accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.characterName,
-    messages = {},
-    unreadCount = 0,
-    lastActivityAt = runtime.now(),
-    conversationKey = conversationKey,
-  }
-
-  return conversationKey
-end
-
-local function interceptEditBox(runtime, hooks, deps, editBox)
-  local chatType = readEditBoxState(editBox, "chatType")
-  local target = readEditBoxState(editBox, "tellTarget")
-
-  if chatType == "BN_WHISPER" and target then
-    local opened = false
-    pcall(function()
-      local accountInfo = findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
-      if not accountInfo then
-        return
-      end
-      local conversationKey = ensureBattleNetConversation(runtime, deps.identity, accountInfo)
-      if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
-        opened = true
-      end
-    end)
-    if opened then
-      closeEditBox(runtime, editBox, deps.deactivateChat)
-    end
-    return true
-  end
-
-  if chatType == "WHISPER" and target and target ~= "" then
-    if hooks.onSendTell(target) then
-      closeEditBox(runtime, editBox, deps.deactivateChat)
-    end
-    return true
-  end
-
-  return false
-end
-
-local function findFocusedEditBox(deps)
-  for index = 1, deps.getNumChatWindows() do
-    local editBox = deps.getEditBox(index)
-    if editBox and type(editBox.HasFocus) == "function" and editBox:HasFocus() then
-      return editBox
-    end
-  end
-  return nil
 end
 
 local function shouldInterceptHook(runtime, deps)
@@ -250,22 +42,22 @@ local function installDirectHooks(runtime, hooks, deps)
     if not shouldInterceptHook(runtime, deps) then
       return
     end
-    local editBox = findFocusedEditBox(deps)
+    local editBox = EditBoxInterop.findFocusedEditBox(deps)
     if not editBox then
       return
     end
 
-    local chatType = readEditBoxState(editBox, "chatType")
-    local target = readEditBoxState(editBox, "tellTarget")
+    local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
+    local target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
     local opened = false
 
     if chatType == "BN_WHISPER" and target then
       pcall(function()
-        local accountInfo = findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
+        local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
         if not accountInfo then
           return
         end
-        local conversationKey = ensureBattleNetConversation(runtime, deps.identity, accountInfo)
+        local conversationKey = ConversationOps.ensureBattleNetConversation(runtime, deps.identity, accountInfo)
         if conversationKey and hooks.onOutgoingWhisper(conversationKey) then
           opened = true
         end
@@ -281,7 +73,7 @@ local function installDirectHooks(runtime, hooks, deps)
       local timer = _G.C_Timer
       if type(timer) == "table" and type(timer.After) == "function" then
         timer.After(0, function()
-          closeEditBox(runtime, editBox, deps.deactivateChat)
+          EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat)
         end)
       end
     end
@@ -327,7 +119,13 @@ local function installPoller(runtime, hooks, deps)
           end
         end
 
-        interceptEditBox(runtime, hooks, deps, editBox)
+        EditBoxInterop.interceptEditBox(runtime, hooks, {
+          identity = deps.identity,
+          bnetApi = deps.bnetApi,
+          getNumFriends = deps.getNumFriends,
+          deactivateChat = deps.deactivateChat,
+          ensureBattleNetConversation = ConversationOps.ensureBattleNetConversation,
+        }, editBox)
         return
       end
     end
@@ -365,13 +163,13 @@ function AutoOpenCoordinator.Attach(options)
       focusComposer(runtime)
     end,
     findConversationKeyByName = function(name)
-      return findConversationKeyByName(runtime, name)
+      return ConversationOps.findConversationKeyByName(runtime, name)
     end,
     buildConversationKeyFromName = function(name)
-      return buildConversationKeyFromName(runtime, identity, name)
+      return ConversationOps.buildConversationKeyFromName(runtime, identity, name)
     end,
     ensureConversation = function(conversationKey, displayName)
-      return ensureConversation(runtime, conversationKey, displayName)
+      return ConversationOps.ensureConversation(runtime, conversationKey, displayName)
     end,
     getLastReplyKey = function()
       return runtime.lastIncomingWhisperKey
