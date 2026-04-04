@@ -94,12 +94,6 @@ local function readEditBoxState(editBox, key)
   return nil
 end
 
-local function writeEditBoxState(editBox, key, value)
-  editBox[key] = value
-  if type(editBox.SetAttribute) == "function" then
-    pcall(editBox.SetAttribute, editBox, key, value)
-  end
-end
 
 local function closeEditBox(runtime, editBox, deactivateChat)
   local typed = editBox.GetText and editBox:GetText() or ""

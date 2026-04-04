@@ -100,6 +100,13 @@ bash scripts/lint.sh          # check
 bash scripts/lint.sh --fix    # auto-format + check
 ```
 
+#### Windows local setup
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/setup-lint-tools.ps1
+bash scripts/lint.sh
+```
+
 ### Tests
 
 ```bash

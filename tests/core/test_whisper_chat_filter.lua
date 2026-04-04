@@ -139,6 +139,10 @@ return function()
     _G._wmSuspended = true
     Bootstrap.syncChatFilters()
     assert(Bootstrap._filtersRegistered == false, "syncChatFilters should unregister when suspended")
+    assert(removedEvents["CHAT_MSG_WHISPER"] == true, "whisper filter should be removed when suspended")
+    assert(removedEvents["CHAT_MSG_WHISPER_INFORM"] == true, "whisper inform filter should be removed when suspended")
+    assert(removedEvents["CHAT_MSG_BN_WHISPER"] == true, "BN whisper filter should be removed when suspended")
+    assert(removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true, "BN whisper inform filter should be removed when suspended")
     _G._wmSuspended = nil
   end
 
