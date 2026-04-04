@@ -15,6 +15,12 @@ local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.Messe
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
+local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
+
+local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
+
 local WindowRuntime = {}
 
 function WindowRuntime.Create(options)
@@ -84,27 +90,19 @@ function WindowRuntime.Create(options)
     return coordinator.refreshWindow()
   end
 
+  local conversationSelector = ConversationSelector.Create({
+    runtime = runtime,
+    characterState = characterState,
+    markConversationRead = markConversationRead,
+    presenceCache = presenceCache,
+    requestAvailability = requestAvailability,
+    getDiagnostics = function()
+      return diagnostics
+    end,
+    refreshWindow = refreshWindow,
+  })
   local function selectConversation(conversationKey)
-    runtime.activeConversationKey = conversationKey
-    characterState.activeConversationKey = conversationKey
-
-    local conversation = conversationKey ~= nil and runtime.store.conversations[conversationKey] or nil
-    if conversation ~= nil then
-      markConversationRead(runtime.store, conversationKey)
-
-      if conversation.guid then
-        presenceCache.RefreshPresence(conversation.guid)
-      end
-      if conversation.channel == "WOW" and conversation.guid then
-        requestAvailability(runtime.chatApi, conversation.guid)
-      end
-    end
-
-    if diagnostics.debugContact then
-      diagnostics.debugContact(conversationKey)
-    end
-
-    return refreshWindow()
+    return conversationSelector.selectConversation(conversationKey)
   end
 
   local function ensureWindow()
@@ -114,6 +112,22 @@ function WindowRuntime.Create(options)
 
     local contacts = buildContacts()
     local selectedState = coordinator.buildSelectionState(contacts)
+    local settingsState = (function()
+      accountState.settings = accountState.settings or {}
+      return accountState.settings
+    end)()
+    local onSettingChanged = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = settingsState,
+      theme = theme,
+      fonts = fonts,
+      trace = trace,
+      getIcon = function()
+        return icon
+      end,
+      buildContacts = buildContacts,
+      tableUtils = tableUtils,
+    })
 
     window = messengerWindow.Create(uiFactory, {
       contacts = contacts,
@@ -189,66 +203,8 @@ function WindowRuntime.Create(options)
         return nextState
       end,
       storeConfig = runtime.store.config,
-      settingsConfig = (function()
-        accountState.settings = accountState.settings or {}
-        return accountState.settings
-      end)(),
-      onSettingChanged = function(key, value)
-        local persistedValue = value
-        local themeApplied = false
-
-        if key == "themePreset" then
-          local fallbackKey = theme.DEFAULT_PRESET or "wow_default"
-          local presetKey = value or fallbackKey
-          if theme.ResolvePreset then
-            local resolvedKey, applied = theme.ResolvePreset(presetKey, trace)
-            persistedValue = resolvedKey or presetKey
-            themeApplied = applied == true
-          else
-            if theme.SetPreset then
-              themeApplied = theme.SetPreset(presetKey) == true
-            end
-            if theme.GetPreset then
-              persistedValue = theme.GetPreset() or presetKey
-            else
-              persistedValue = presetKey
-            end
-          end
-        end
-
-        accountState.settings[key] = persistedValue
-
-        if runtime.store.config[key] ~= nil then
-          runtime.store.config[key] = persistedValue
-        end
-        if key == "messageMaxAge" then
-          runtime.store.config.conversationMaxAge = persistedValue
-        end
-
-        trace("setting changed", key, tostring(persistedValue))
-
-        if key == "fontFamily" and fonts.SetMode then
-          fonts.SetMode(persistedValue or "default")
-        end
-        if key == "hideFromDefaultChat" and runtime.syncChatFilters then
-          runtime.syncChatFilters()
-        end
-        if (key == "hideMessagePreview" or key == "fontFamily") and runtime.refreshWindow then
-          runtime.refreshWindow()
-        end
-        if key == "themePreset" and themeApplied then
-          if runtime.window and runtime.window.refreshTheme then
-            runtime.window.refreshTheme()
-          end
-          if runtime.refreshWindow then
-            runtime.refreshWindow()
-          end
-        end
-        if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
-          local freshContacts = buildContacts()
-          icon.setUnreadCount(tableUtils.sumBy(freshContacts, "unreadCount"))
-        end
-      end,
+      settingsConfig = settingsState,
+      onSettingChanged = onSettingChanged,
     })
 
     if window.frame.Hide then

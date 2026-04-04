@@ -48,6 +48,7 @@ Transport/BNetResolver.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
+UI/Theme/Presets/Builder.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
 UI/Theme/Fonts.lua
@@ -66,6 +67,8 @@ UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
 UI/ChatBubble/BubbleIcon.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
+UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/StylingCommon.lua
+UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/ButtonStyling.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Styling.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
@@ -101,21 +104,39 @@ UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
+UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
+UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
+UI/MessengerWindow/LayoutBuilder/OptionsMenuButtons.lua
+UI/MessengerWindow/LayoutBuilder/OptionsPanelLayout.lua
 UI/MessengerWindow/LayoutBuilder.lua
 UI/MessengerWindow/DragController.lua
 UI/MessengerWindow/ContactsController.lua
 UI/MessengerWindow/WindowScripts/Buttons.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
+UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/GeneralSettings.lua
+UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
 UI/MessengerWindow/MessengerWindow/FacadeBuilder.lua
+UI/MessengerWindow/MessengerWindow/FacadePayload.lua
+UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
+UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
+UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
+UI/MessengerWindow/MessengerWindow/ContactsRuntime.lua
+UI/MessengerWindow/MessengerWindow/SelectionController.lua
+UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
+UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
+UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
+UI/MessengerWindow/MessengerWindow/ScriptWiring.lua
+UI/MessengerWindow/MessengerWindow/RelayoutController.lua
+UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
@@ -130,7 +151,10 @@ Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
 Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
+Core/Bootstrap/Diagnostics/MemoryReport.lua
 Core/Bootstrap/Diagnostics.lua
+Core/Bootstrap/WindowRuntime/SettingsHandler.lua
+Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Bootstrap.lua

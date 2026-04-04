@@ -12,19 +12,30 @@ local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
-local ContactsController = ns.MessengerWindowContactsController
-  or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
-local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
-local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
-local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
-local NotificationSettings = ns.NotificationSettings
-  or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
+local ContactsRuntime = ns.MessengerWindowContactsRuntime
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
+local SettingsRuntime = ns.MessengerWindowSettingsRuntime
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
 local SelectionSync = ns.MessengerWindowSelectionSync
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
-local ContactSearch = ns.MessengerWindowContactSearch
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
+local SelectionController = ns.MessengerWindowSelectionController
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionController")
+local WindowVisibility = ns.MessengerWindowWindowVisibility
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
+local WindowAlpha = ns.MessengerWindowWindowAlpha
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
+local WindowGeometry = ns.MessengerWindowWindowGeometry
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local FacadeBuilder = ns.MessengerWindowFacadeBuilder
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.FacadeBuilder")
+local FacadePayload = ns.MessengerWindowFacadePayload
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.FacadePayload")
+local ScriptWiring = ns.MessengerWindowScriptWiring
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
+local RelayoutController = ns.MessengerWindowRelayoutController
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
+local LifecycleWiring = ns.MessengerWindowLifecycleWiring
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
@@ -46,32 +57,17 @@ function MessengerWindow.Create(factory, options)
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
   }, Theme)
-  local currentContactsWidth =
-    LayoutBuilder.ClampContactsWidth(initialState.width, state.contactsWidth or Theme.CONTACTS_WIDTH, Theme)
-
-  local function applyState(target, nextState)
-    local clampedState = WindowBounds.ClampState(parent, nextState, Theme)
-    currentContactsWidth =
-      LayoutBuilder.ClampContactsWidth(clampedState.width, clampedState.contactsWidth or Theme.CONTACTS_WIDTH, Theme)
-    target:SetSize(clampedState.width or Theme.WINDOW_WIDTH, clampedState.height or Theme.WINDOW_HEIGHT)
-    target:SetPoint(
-      clampedState.anchorPoint or "CENTER",
-      parent,
-      clampedState.relativePoint or clampedState.anchorPoint or "CENTER",
-      clampedState.x or 0,
-      clampedState.y or 0
-    )
-    return clampedState
-  end
-
-  local function buildState(target)
-    local pos = captureFramePosition(target)
-    pos.width = sizeValue(target, "GetWidth", "width", initialState.width)
-    pos.height = sizeValue(target, "GetHeight", "height", initialState.height)
-    pos.contactsWidth = LayoutBuilder.ClampContactsWidth(pos.width, currentContactsWidth, Theme)
-    pos.minimized = false
-    return WindowBounds.ClampState(parent, pos, Theme)
-  end
+  local windowGeometry = WindowGeometry.Create({
+    parent = parent,
+    theme = Theme,
+    clampState = WindowBounds.ClampState,
+    clampContactsWidth = LayoutBuilder.ClampContactsWidth,
+    captureFramePosition = captureFramePosition,
+    sizeValue = sizeValue,
+    initialState = initialState,
+    initialContactsWidth = state.contactsWidth,
+  })
+  local currentContactsWidth = windowGeometry.getContactsWidth()
 
   local function isShown(target)
     if target and target.IsShown then
@@ -80,397 +76,168 @@ function MessengerWindow.Create(factory, options)
     return target ~= nil and target.shown == true
   end
 
-  -- Mutable state passed into AlphaController to track dimmed state
-  local windowState = { isDimmed = false }
-
   -- Build chrome (outer frame, buttons, etc.)
   local chrome = ChromeBuilder.Build(factory, parent, initialState, { title = options.title })
   local frame = chrome.frame
-  local title = chrome.title
-  local closeButton = chrome.closeButton
-  local optionsButton = chrome.optionsButton
-  local resizeGrip = chrome.resizeGrip
-  local titleBarTopBorder = chrome.titleBarTopBorder
-
   -- Settings config (must be available before layout and alpha wiring)
   local settingsConfig = options.settingsConfig or {}
 
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
   currentContactsWidth = layout.contactsWidth or currentContactsWidth
+  windowGeometry.setContactsWidth(currentContactsWidth)
   local contactsPane = layout.contactsPane
-  local contactsRightBorder = layout.contactsRightBorder
-  local contactsDivider = layout.contactsDivider
-  local contactsResizeHandle = layout.contactsResizeHandle
   local contentPane = layout.contentPane
-  local contactsHeaderDivider = layout.contactsHeaderDivider
-  local headerDivider = layout.headerDivider
   local threadPane = layout.threadPane
   local composerPane = layout.composerPane
-  local composerDivider = layout.composerDivider
   local optionsPanel = layout.optionsPanel
-  local optionsMenu = layout.optionsMenu
-  local optionsContentPane = layout.optionsContentPane
-  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or optionsContentPane
-  local generalTab = layout.generalTab
-  local appearanceTab = layout.appearanceTab
-  local behaviorTab = layout.behaviorTab
-  local notificationsTab = layout.notificationsTab
-  local optionsHeader = layout.optionsHeader
-  local optionsHint = layout.optionsHint
-  local resetWindowButton = layout.resetWindowButton
-  local resetIconButton = layout.resetIconButton
-  local clearAllChatsButton = layout.clearAllChatsButton
+  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content
+    or layout.optionsContentPane
   local contactsView = layout.contactsView
   local contactsSearchInput = layout.contactsSearchInput
   local contactsSearchClearButton = layout.contactsSearchClearButton
   local contactsSearchPlaceholder = layout.contactsSearchPlaceholder
   -- Compose settings panels (each inside its own frame within optionsContentPane)
-  local storeConfig = options.storeConfig or {}
-  local refreshThemeVisuals -- forward declaration
-  local conversation -- forward declaration
-  local composer -- forward declaration
-
-  local function onSettingChanged(key, value)
-    if options.onSettingChanged then
-      options.onSettingChanged(key, value)
-    end
-    if key == "themePreset" and refreshThemeVisuals then
-      refreshThemeVisuals()
-    end
-  end
-
-  local function createSettingsPanel(createSettingsView, config)
-    local panel = factory.CreateFrame("Frame", nil, optionsScrollContent)
-    panel:SetAllPoints(optionsScrollContent)
-    local settings = createSettingsView(factory, panel, config, {
-      onChange = onSettingChanged,
-    })
-    return panel, settings
-  end
-
-  local generalPanel, generalSettings = createSettingsPanel(GeneralSettings.Create, {
-    maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
-    maxConversations = storeConfig.maxConversations or 100,
-    messageMaxAge = storeConfig.messageMaxAge or 86400,
-    clearOnLogout = settingsConfig.clearOnLogout,
-    hideMessagePreview = settingsConfig.hideMessagePreview,
+  local settingsRuntime = SettingsRuntime.Create(factory, {
+    parent = optionsScrollContent,
+    settingsConfig = settingsConfig,
+    storeConfig = options.storeConfig or {},
+    onSettingChanged = options.onSettingChanged,
+    theme = Theme,
+    chrome = chrome,
+    layout = layout,
   })
-
-  local appearancePanel, appearanceSettings = createSettingsPanel(AppearanceSettings.Create, {
-    themePreset = settingsConfig.themePreset,
-    fontFamily = settingsConfig.fontFamily,
-    windowOpacityInactive = settingsConfig.windowOpacityInactive,
-    windowOpacityActive = settingsConfig.windowOpacityActive,
-  })
-
-  local behaviorPanel, behaviorSettings = createSettingsPanel(BehaviorSettings.Create, {
-    dimWhenMoving = settingsConfig.dimWhenMoving,
-    autoFocusComposer = settingsConfig.autoFocusComposer,
-    autoSelectUnread = settingsConfig.autoSelectUnread,
-    hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
-    autoOpenWindow = settingsConfig.autoOpenWindow,
-  })
-
-  local notificationsPanel, notificationSettings = createSettingsPanel(NotificationSettings.Create, {
-    badgePulse = settingsConfig.badgePulse,
-    playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
-    showUnreadBadge = settingsConfig.showUnreadBadge,
-  })
-
-  refreshThemeVisuals = function()
-    if chrome.applyTheme then
-      chrome.applyTheme(Theme)
-    end
-    if layout.applyTheme then
-      layout.applyTheme(Theme)
-    end
-    if conversation and conversation.refreshTheme then
-      conversation.refreshTheme()
-    end
-    if composer and composer.refreshTheme then
-      composer.refreshTheme()
-    end
-    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings }) do
-      if settingsView and settingsView.refreshTheme then
-        settingsView.refreshTheme(Theme)
-      end
-    end
-  end
-
-  refreshThemeVisuals()
+  local generalPanel = settingsRuntime.generalPanel
+  local generalSettings = settingsRuntime.generalSettings
+  local appearancePanel = settingsRuntime.appearancePanel
+  local appearanceSettings = settingsRuntime.appearanceSettings
+  local behaviorPanel = settingsRuntime.behaviorPanel
+  local behaviorSettings = settingsRuntime.behaviorSettings
+  local notificationsPanel = settingsRuntime.notificationsPanel
+  local notificationSettings = settingsRuntime.notificationSettings
+  local refreshThemeVisuals = settingsRuntime.refreshThemeVisuals
 
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
-  local contactsController = ContactsController.Create(factory, contactsView, options.contacts or {}, {
-    getHideMessagePreview = function()
-      return settingsConfig.hideMessagePreview == true
-    end,
+  local selectionController = nil
+  local contactsRuntime = ContactsRuntime.Create(factory, {
+    contactsView = contactsView,
+    initialContacts = options.contacts or {},
+    settingsConfig = settingsConfig,
     onSelect = function(item)
       if handleContactSelected then
         handleContactSelected(item)
       end
     end,
-    onPin = function(item)
-      if options.onPin then
-        options.onPin(item)
-      end
-    end,
-    onRemove = function(item)
-      if options.onRemove then
-        options.onRemove(item)
-      end
-    end,
-    onReorder = function(orders)
-      if options.onReorder then
-        options.onReorder(orders)
-      end
+    onPin = options.onPin,
+    onRemove = options.onRemove,
+    onReorder = options.onReorder,
+    contactsSearchInput = contactsSearchInput,
+    contactsSearchClearButton = contactsSearchClearButton,
+    contactsSearchPlaceholder = contactsSearchPlaceholder,
+    getSelectedConversationKey = function()
+      return selectionController and selectionController.getSelectedConversationKey() or nil
     end,
   })
-
-  -- Expose contacts in the same shape as before
-  local contacts = {
-    rows = contactsController.rows,
-    scrollFrame = contactsController.scrollFrame,
-    scrollBar = contactsController.scrollBar,
-    content = contactsController.content,
-    view = contactsController.view,
-  }
-
-  -- Wrapper so the facade keeps a single refreshContacts reference
-  local currentSelectedContact = nil
-  local currentContacts = options.contacts or {}
-  local contactsSearchQuery = ""
-
-  local function syncSearchInputVisual()
-    local hasSearch = contactsSearchQuery ~= ""
-    if contactsSearchPlaceholder and contactsSearchPlaceholder.SetShown then
-      contactsSearchPlaceholder:SetShown(not hasSearch)
-    end
-    if contactsSearchClearButton and contactsSearchClearButton.SetShown then
-      contactsSearchClearButton:SetShown(hasSearch)
-    end
-  end
-
-  local function refreshContacts(nextContacts, selectedConversationKey, resetPaging)
-    if nextContacts ~= nil then
-      currentContacts = nextContacts
-    end
-
-    local visibleContacts = ContactSearch.BuildVisibleContacts(currentContacts, contactsSearchQuery)
-    local selectedKey = selectedConversationKey
-    if selectedKey ~= nil and not ContactSearch.IsConversationVisible(visibleContacts, selectedKey) then
-      selectedKey = nil
-    end
-
-    contactsController.rows = contactsController.refresh(visibleContacts, selectedKey, resetPaging)
-    contacts.rows = contactsController.rows
-    syncSearchInputVisual()
-    return contacts.rows
-  end
-
-  if contactsSearchInput and contactsSearchInput.SetScript then
-    contactsSearchInput:SetScript("OnTextChanged", function()
-      local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
-      contactsSearchQuery = ContactSearch.NormalizeSearchQuery(searchText)
-      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
-    end)
-    contactsSearchInput:SetScript("OnEscapePressed", function()
-      if contactsSearchInput.SetText then
-        contactsSearchInput:SetText("")
-      else
-        contactsSearchInput.text = ""
-      end
-      contactsSearchQuery = ""
-      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
-      if contactsSearchInput.ClearFocus then
-        contactsSearchInput:ClearFocus()
-      end
-    end)
-  end
-
-  if contactsSearchClearButton and contactsSearchClearButton.SetScript then
-    contactsSearchClearButton:SetScript("OnClick", function()
-      if contactsSearchInput and contactsSearchInput.SetText then
-        contactsSearchInput:SetText("")
-      elseif contactsSearchInput then
-        contactsSearchInput.text = ""
-      end
-      contactsSearchQuery = ""
-      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, true)
-    end)
-  end
-  syncSearchInputVisual()
+  local contactsController = contactsRuntime.contactsController
+  local contacts = contactsRuntime.contacts
+  local refreshContacts = contactsRuntime.refreshContacts
+  local getCurrentContacts = contactsRuntime.getCurrentContacts
+  contactsRuntime.bindInputScripts()
 
   -- Conversation pane
-  conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
+  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
 
   -- Composer (created before wiring alpha so we have composer.input)
   local composerSelectedContact = {}
 
-  local function setOptionsVisible(nextVisible)
-    if nextVisible then
-      optionsPanel:Show()
-      contactsPane:Hide()
-      contentPane:Hide()
-      trace("options shown")
-      return
-    end
-    optionsPanel:Hide()
-    contactsPane:Show()
-    contentPane:Show()
-    trace("options hidden")
-  end
+  local windowVisibility = WindowVisibility.Create({
+    optionsPanel = optionsPanel,
+    contactsPane = contactsPane,
+    contentPane = contentPane,
+    frame = frame,
+    onClose = options.onClose,
+    trace = trace,
+  })
+  local setOptionsVisible = windowVisibility.setOptionsVisible
+  local closeWindow = windowVisibility.closeWindow
 
-  local function closeWindow()
-    setOptionsVisible(false)
-    trace("close click")
-    if options.onClose then
-      options.onClose()
-    elseif frame.Hide then
-      frame:Hide()
-    end
-  end
-
-  composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
+  local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...
   end, closeWindow)
+  settingsRuntime.setThemeTargets(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)
   local composerInput = composer.input
-
-  local function getAlphaSettings()
-    return {
-      dimWhenMoving = settingsConfig.dimWhenMoving,
-      windowOpacityActive = settingsConfig.windowOpacityActive,
-      windowOpacityInactive = settingsConfig.windowOpacityInactive,
-    }
-  end
-
-  AlphaController.hookScript(composerInput, "OnEditFocusGained", function()
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, true, getAlphaSettings())
-  end)
-  AlphaController.hookScript(composerInput, "OnEditFocusLost", function()
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, false, getAlphaSettings())
-  end)
-
-  local function refreshWindowAlpha(forceOpaque)
-    AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, getAlphaSettings())
-  end
+  local windowAlpha = WindowAlpha.Create({
+    alphaController = AlphaController,
+    frame = frame,
+    composerInput = composerInput,
+    settingsConfig = settingsConfig,
+  })
+  local refreshWindowAlpha = windowAlpha.refreshWindowAlpha
 
   -- Selection management
-  local currentConversation = nil
-  local currentStatus = nil
-  local currentNotice = nil
-
-  local function refreshSelection(nextState, resetPaging)
-    nextState = nextState or {}
-    currentSelectedContact = nextState.selectedContact
-    currentConversation = nextState.conversation
-    currentStatus = nextState.status
-    currentNotice = nextState.notice
-
-    refreshContacts(
-      nextState.contacts,
-      currentSelectedContact and currentSelectedContact.conversationKey or nil,
-      resetPaging
-    )
-    ConversationPane.Refresh(conversation, currentSelectedContact, currentConversation, currentStatus, currentNotice)
-    SelectionSync.SyncComposerSelectedContact(composerSelectedContact, currentSelectedContact)
-    SelectionSync.SetComposerEnabled(composer, currentSelectedContact, currentNotice)
-  end
-
-  local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
-    local metrics = LayoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
-    currentContactsWidth = metrics.contactsWidth or currentContactsWidth
-
-    if composer and composer.relayout then
-      composer.relayout(metrics.contentWidth)
-    end
-    if contactsController and contactsController.fillViewport then
-      contactsController.fillViewport(metrics.contactsListHeight or metrics.contactsHeight)
-    end
-    if conversation then
-      ConversationPane.Relayout(conversation, metrics.contentWidth, metrics.threadHeight)
-    end
-    if refreshContactsLayout then
-      refreshContacts(nil, currentSelectedContact and currentSelectedContact.conversationKey or nil, false)
-    end
-  end
-
-  local function buildSelectedState(item)
-    local nextState = nil
-    if options.onSelectConversation then
-      nextState = options.onSelectConversation(item.conversationKey, item)
-    end
-    if nextState == nil then
-      nextState = {
-        selectedContact = options.getSelectedContact and options.getSelectedContact(item.conversationKey, item) or item,
-        conversation = options.getConversation and options.getConversation(item.conversationKey, item) or nil,
-        status = options.getStatus and options.getStatus(item.conversationKey, item) or nil,
-      }
-    elseif nextState.selectedContact == nil then
-      nextState.selectedContact = item
-    end
-    return nextState
-  end
-
-  handleContactSelected = function(item)
-    refreshSelection(buildSelectedState(item))
-  end
-
-  -- Initial render
-  refreshContacts(currentContacts, options.selectedContact and options.selectedContact.conversationKey or nil, true)
-
-  refreshSelection({
-    contacts = currentContacts,
-    selectedContact = options.selectedContact,
-    conversation = options.conversation,
-    status = options.status,
-  }, true)
-
-  setOptionsVisible(false)
-
-  -- Wire button scripts
-  WindowScripts.WireButtons({
-    closeButton = closeButton,
-    optionsButton = optionsButton,
-    resetWindowButton = resetWindowButton,
-    resetIconButton = resetIconButton,
-    clearAllChatsButton = clearAllChatsButton,
-    optionsPanel = optionsPanel,
-    settingsTabs = { generalTab, appearanceTab, behaviorTab, notificationsTab },
-    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel },
-  }, {
-    onClose = closeWindow,
-    onResetWindowPosition = options.onResetWindowPosition,
-    onResetIconPosition = options.onResetIconPosition,
-    onClearAllChats = options.onClearAllChats,
-    setOptionsVisible = setOptionsVisible,
-    isShown = isShown,
-    applyState = function(nextState)
-      local appliedState = applyState(frame, nextState)
-      relayoutWindow(appliedState.width, appliedState.height, appliedState.contactsWidth, true)
+  selectionController = SelectionController.Create({
+    refreshContacts = refreshContacts,
+    refreshConversationPane = function(selectedContact, selectedConversation, selectedStatus, noticeText)
+      ConversationPane.Refresh(conversation, selectedContact, selectedConversation, selectedStatus, noticeText)
     end,
-    refreshSelection = refreshSelection,
+    syncComposerSelectedContact = function(selectedContact)
+      SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact)
+    end,
+    setComposerEnabled = function(selectedContact, noticeText)
+      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
+    end,
+    onSelectConversation = options.onSelectConversation,
+    getSelectedContact = options.getSelectedContact,
+    getConversation = options.getConversation,
+    getStatus = options.getStatus,
   })
 
-  -- Frame-level scripts
-  WindowScripts.WireFrame({
-    frame = frame,
-    resizeGrip = resizeGrip,
-    contactsResizeHandle = contactsResizeHandle,
-  }, {
-    refreshWindowAlpha = refreshWindowAlpha,
+  local function refreshSelection(nextState, resetPaging)
+    selectionController.refresh(nextState, resetPaging)
+  end
+
+  handleContactSelected = selectionController.handleContactSelected
+
+  LifecycleWiring.Setup({
+    relayoutFactory = RelayoutController,
+    layoutBuilder = LayoutBuilder,
     layout = layout,
+    setContactsWidth = function(nextContactsWidth)
+      currentContactsWidth = nextContactsWidth or currentContactsWidth
+      windowGeometry.setContactsWidth(currentContactsWidth)
+    end,
     composer = composer,
     contactsController = contactsController,
     conversation = conversation,
-    relayout = relayoutWindow,
-    buildState = buildState,
+    conversationPane = ConversationPane,
+    refreshContacts = refreshContacts,
+    getSelectedConversationKey = function()
+      return selectionController and selectionController.getSelectedConversationKey() or nil
+    end,
+    getCurrentContacts = getCurrentContacts,
+    selectedContact = options.selectedContact,
+    initialConversation = options.conversation,
+    initialStatus = options.status,
+    refreshSelection = refreshSelection,
+    setOptionsVisible = setOptionsVisible,
+    scriptWiring = ScriptWiring,
+    windowScripts = WindowScripts,
+    chrome = chrome,
+    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel },
+    closeWindow = closeWindow,
+    onResetWindowPosition = options.onResetWindowPosition,
+    onResetIconPosition = options.onResetIconPosition,
+    onClearAllChats = options.onClearAllChats,
+    isShown = isShown,
+    windowGeometry = windowGeometry,
+    frame = frame,
+    refreshWindowAlpha = refreshWindowAlpha,
     trace = trace,
     onPositionChanged = options.onPositionChanged,
-    Theme = Theme,
+    theme = Theme,
     composerInput = composerInput,
     getAutoFocusChatInput = function()
       return settingsConfig.autoFocusComposer == true
@@ -479,45 +246,15 @@ function MessengerWindow.Create(factory, options)
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
-  return FacadeBuilder.Build({
-    frame = frame,
-    title = title,
-    contactsPane = contactsPane,
-    contactsPaneBorder = layout.contactsPaneBorder,
-    contactsDivider = contactsDivider,
-    contactsRightBorder = contactsRightBorder,
-    contactsHeaderDivider = contactsHeaderDivider,
-    contentPane = contentPane,
-    headerDivider = headerDivider,
-    titleBarBorder = chrome.titleBarBorder,
-    titleBarTopBorder = titleBarTopBorder,
-    threadPane = threadPane,
-    composerPane = composerPane,
-    composerPaneBorder = layout.composerPaneBorder,
-    composerDivider = composerDivider,
-    closeButton = closeButton,
-    optionsButton = optionsButton,
-    optionsPanel = optionsPanel,
-    optionsMenu = optionsMenu,
-    optionsContentPane = optionsContentPane,
-    generalTab = generalTab,
-    appearanceTab = appearanceTab,
-    behaviorTab = behaviorTab,
-    notificationsTab = notificationsTab,
-    generalSettings = generalSettings,
-    appearanceSettings = appearanceSettings,
-    behaviorSettings = behaviorSettings,
-    notificationSettings = notificationSettings,
-    optionsHeader = optionsHeader,
-    optionsHint = optionsHint,
-    resetWindowButton = resetWindowButton,
-    resetIconButton = resetIconButton,
-    clearAllChatsButton = clearAllChatsButton,
-    contactsSearchInput = contactsSearchInput,
-    contactsSearchClearButton = contactsSearchClearButton,
-    contactsSearchPlaceholder = contactsSearchPlaceholder,
-    resizeGrip = resizeGrip,
-    contactsResizeHandle = contactsResizeHandle,
+  return FacadeBuilder.Build(FacadePayload.Build({
+    chrome = chrome,
+    layout = layout,
+    settings = {
+      general = generalSettings,
+      appearance = appearanceSettings,
+      behavior = behaviorSettings,
+      notifications = notificationSettings,
+    },
     contacts = contacts,
     conversation = conversation,
     composer = composer,
@@ -525,7 +262,7 @@ function MessengerWindow.Create(factory, options)
     refreshSelection = refreshSelection,
     refreshTheme = refreshThemeVisuals,
     handleContactSelected = handleContactSelected,
-  })
+  }))
 end
 
 ns.MessengerWindow = MessengerWindow

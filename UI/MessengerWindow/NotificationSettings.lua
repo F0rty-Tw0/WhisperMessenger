@@ -5,7 +5,8 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
+local ButtonSelector = ns.MessengerWindowButtonSelector
+  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
 local NotificationSettings = {}
 
@@ -30,138 +31,27 @@ local SOUND_OPTIONS = {
 }
 
 local function createSoundSelector(factory, parent, initial, colors, onChange)
-  local BUTTON_WIDTH = 50
-  local BUTTON_HEIGHT = 26
-  local BUTTON_SPACING = 4
-
-  local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(TOGGLE_WIDTH, BUTTON_HEIGHT + 20)
-
-  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText("Notification sound")
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
-
-  local buttons = {}
-  local function hasOptionKey(candidate)
-    for _, opt in ipairs(SOUND_OPTIONS) do
-      if opt.key == candidate then
-        return true
-      end
-    end
-    return false
-  end
-  local selected = hasOptionKey(initial) and initial or DEFAULTS.notificationSound
-  local palette = {
-    bg = colors.bg or Theme.COLORS.option_button_bg,
-    bgHover = colors.bgHover or Theme.COLORS.option_button_hover,
-    bgActive = colors.bgActive or Theme.COLORS.option_button_active or Theme.COLORS.option_button_hover,
-    text = colors.text or Theme.COLORS.option_button_text,
-    textHover = colors.textHover or Theme.COLORS.option_button_text_hover,
-    textActive = colors.textActive or Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary,
-  }
-
-  local function paintButton(entry, isHovered)
-    if entry._key == selected then
-      entry._selected = true
-      applyColorTexture(entry.bg, palette.bgActive)
-      UIHelpers.setTextColor(entry.label, palette.textActive)
-      return
-    end
-
-    entry._selected = false
-    if isHovered then
-      applyColorTexture(entry.bg, palette.bgHover)
-      UIHelpers.setTextColor(entry.label, palette.textHover)
-      return
-    end
-
-    applyColorTexture(entry.bg, palette.bg)
-    UIHelpers.setTextColor(entry.label, palette.text)
-  end
-
-  local function repaintButtons()
-    for _, entry in ipairs(buttons) do
-      paintButton(entry, entry._hovered == true)
-    end
-  end
-
-  local function updateSelection(nextSelected)
-    if hasOptionKey(nextSelected) then
-      selected = nextSelected
-    else
-      selected = DEFAULTS.notificationSound
-    end
-    repaintButtons()
-  end
-
-  for i, opt in ipairs(SOUND_OPTIONS) do
-    local btn = factory.CreateFrame("Button", nil, row)
-    btn:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT)
-
-    if i == 1 then
-      btn:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
-    else
-      btn:SetPoint("LEFT", buttons[i - 1], "RIGHT", BUTTON_SPACING, 0)
-    end
-
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(btn)
-
-    local btnLabel = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-    btnLabel:SetPoint("CENTER", btn, "CENTER", 0, 0)
-    btnLabel:SetText(opt.label)
-
-    btn._key = opt.key
-    btn._selected = false
-    btn._hovered = false
-    btn.bg = bg
-    btn.label = btnLabel
-
-    btn:SetScript("OnClick", function()
-      updateSelection(opt.key)
+  return ButtonSelector.Create(factory, parent, {
+    labelText = "Notification sound",
+    optionsList = SOUND_OPTIONS,
+    fallbackKey = DEFAULTS.notificationSound,
+    initial = initial,
+    colors = colors,
+    onChange = function(value)
       if onChange then
-        onChange(opt.key)
+        onChange(value)
       end
       local SoundPlayer = ns.SoundPlayer
       if SoundPlayer and SoundPlayer.Preview then
-        SoundPlayer.Preview(opt.key)
+        SoundPlayer.Preview(value)
       end
-    end)
-
-    btn:SetScript("OnEnter", function()
-      btn._hovered = true
-      paintButton(btn, true)
-    end)
-
-    btn:SetScript("OnLeave", function()
-      btn._hovered = false
-      paintButton(btn, false)
-    end)
-
-    table.insert(buttons, btn)
-  end
-
-  updateSelection(selected)
-
-  return {
-    row = row,
-    label = labelFs,
-    buttons = buttons,
-    setSelected = updateSelection,
-    applyTheme = function(activeTheme, nextColors)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      if type(nextColors) == "table" then
-        palette.bg = nextColors.bg or palette.bg
-        palette.bgHover = nextColors.bgHover or palette.bgHover
-        palette.bgActive = nextColors.bgActive or palette.bgActive
-        palette.text = nextColors.text or palette.text
-        palette.textHover = nextColors.textHover or palette.textHover
-        palette.textActive = nextColors.textActive or palette.textActive
-      end
-      repaintButtons()
     end,
-  }
+    rowWidth = TOGGLE_WIDTH,
+    labelSpacing = LABEL_SPACING,
+    buttonWidth = 50,
+    buttonHeight = 26,
+    buttonSpacing = 4,
+  })
 end
 
 function NotificationSettings.Create(factory, parent, config, options)

@@ -9,18 +9,7 @@ Presets.WOW_DEFAULT = "wow_default"
 Presets.ELVUI_DARK = "elvui_dark"
 Presets.PLUMBER_WARM = "plumber_warm"
 
-local function cloneColor(color)
-  return { color[1], color[2], color[3], color[4] }
-end
-
-local function clonePalette(palette)
-  local copy = {}
-  for key, color in pairs(palette) do
-    copy[key] = cloneColor(color)
-  end
-
-  return copy
-end
+local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
 
 local function rgb(r, g, b)
   return { r, g, b }
@@ -251,20 +240,6 @@ local presetRoles = {
   ),
 }
 
-local function buildPreset(roleSet)
-  local preset = {}
-
-  for token, role in pairs(tokenRoles) do
-    local color = roleSet[role]
-    if type(color) ~= "table" then
-      error(("missing theme role '%s' for token '%s'"):format(tostring(role), tostring(token)))
-    end
-    preset[token] = cloneColor(color)
-  end
-
-  return preset
-end
-
 local presetOrder = {
   Presets.WOW_DEFAULT,
   Presets.ELVUI_DARK,
@@ -277,7 +252,7 @@ for _, key in ipairs(presetOrder) do
   if type(roles) ~= "table" then
     error(("missing preset role set for '%s'"):format(tostring(key)))
   end
-  presetData[key] = buildPreset(roles)
+  presetData[key] = Builder.BuildPreset(tokenRoles, roles)
 end
 
 function Presets.ListKeys()
@@ -295,7 +270,7 @@ function Presets.Get(key)
     return nil
   end
 
-  return clonePalette(preset)
+  return Builder.ClonePalette(preset)
 end
 
 Presets.DATA = presetData

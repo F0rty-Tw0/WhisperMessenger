@@ -7,6 +7,9 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
+local ButtonSelector = ns.MessengerWindowButtonSelector
+  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+
 local AppearanceSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
@@ -116,153 +119,16 @@ local function createSliderRow(factory, parent, label, min, max, step, initial, 
 end
 
 local function createButtonSelector(factory, parent, labelText, optionsList, fallbackKey, initial, colors, onChange)
-  local BUTTON_WIDTH = 86
-  local BUTTON_HEIGHT = 26
-  local BUTTON_SPACING = 8
-
-  local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(SLIDER_WIDTH, BUTTON_HEIGHT + 20)
-
-  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText(labelText)
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
-
-  local function hasOptionKey(candidate)
-    for _, opt in ipairs(optionsList) do
-      if opt.key == candidate then
-        return true
-      end
-    end
-    return false
-  end
-
-  local buttons = {}
-  local selected = hasOptionKey(initial) and initial or fallbackKey
-  local palette = {
-    bg = colors.bg or Theme.COLORS.option_button_bg,
-    bgHover = colors.bgHover or Theme.COLORS.option_button_hover,
-    bgActive = colors.bgActive or Theme.COLORS.option_button_active or Theme.COLORS.option_button_hover,
-    text = colors.text or Theme.COLORS.option_button_text,
-    textHover = colors.textHover or Theme.COLORS.option_button_text_hover,
-    textActive = colors.textActive or Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary,
-  }
-
-  local function paintButton(entry, isHovered)
-    if entry._key == selected then
-      entry._selected = true
-      applyColorTexture(entry.bg, palette.bgActive)
-      UIHelpers.setTextColor(entry.label, palette.textActive)
-      return
-    end
-
-    entry._selected = false
-    if isHovered then
-      applyColorTexture(entry.bg, palette.bgHover)
-      UIHelpers.setTextColor(entry.label, palette.textHover)
-      return
-    end
-
-    applyColorTexture(entry.bg, palette.bg)
-    UIHelpers.setTextColor(entry.label, palette.text)
-  end
-
-  local function repaintButtons()
-    for _, entry in ipairs(buttons) do
-      paintButton(entry, entry._hovered == true)
-    end
-  end
-
-  local function updateSelection(nextSelected)
-    selected = hasOptionKey(nextSelected) and nextSelected or fallbackKey
-    repaintButtons()
-  end
-
-  for i, opt in ipairs(optionsList) do
-    local btn = factory.CreateFrame("Button", nil, row)
-    btn:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT)
-
-    if i == 1 then
-      btn:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
-    else
-      btn:SetPoint("LEFT", buttons[i - 1], "RIGHT", BUTTON_SPACING, 0)
-    end
-
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(btn)
-
-    local btnLabel = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-    btnLabel:SetPoint("CENTER", btn, "CENTER", 0, 0)
-    btnLabel:SetText(opt.label)
-
-    btn._key = opt.key
-    btn._selected = false
-    btn._hovered = false
-    btn.bg = bg
-    btn.label = btnLabel
-
-    btn:SetScript("OnClick", function()
-      updateSelection(opt.key)
-      if onChange then
-        onChange(opt.key)
-      end
-    end)
-
-    btn:SetScript("OnEnter", function()
-      btn._hovered = true
-      paintButton(btn, true)
-      if opt.tooltip and _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(btn, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(opt.label)
-        if _G.GameTooltip.AddLine then
-          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, opt.tooltip, 1, 1, 1, true)
-        end
-        _G.GameTooltip:Show()
-      end
-    end)
-
-    btn:SetScript("OnLeave", function()
-      btn._hovered = false
-      paintButton(btn, false)
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
-
-    table.insert(buttons, btn)
-  end
-
-  updateSelection(selected)
-
-  return {
-    row = row,
-    label = labelFs,
-    buttons = buttons,
-    setSelected = updateSelection,
-    setColors = function(nextColors)
-      if type(nextColors) == "table" then
-        palette.bg = nextColors.bg or palette.bg
-        palette.bgHover = nextColors.bgHover or palette.bgHover
-        palette.bgActive = nextColors.bgActive or palette.bgActive
-        palette.text = nextColors.text or palette.text
-        palette.textHover = nextColors.textHover or palette.textHover
-        palette.textActive = nextColors.textActive or palette.textActive
-      end
-      repaintButtons()
-    end,
-    applyTheme = function(activeTheme, nextColors)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      if nextColors then
-        palette.bg = nextColors.bg or palette.bg
-        palette.bgHover = nextColors.bgHover or palette.bgHover
-        palette.bgActive = nextColors.bgActive or palette.bgActive
-        palette.text = nextColors.text or palette.text
-        palette.textHover = nextColors.textHover or palette.textHover
-        palette.textActive = nextColors.textActive or palette.textActive
-      end
-      repaintButtons()
-    end,
-  }
+  return ButtonSelector.Create(factory, parent, {
+    labelText = labelText,
+    optionsList = optionsList,
+    fallbackKey = fallbackKey,
+    initial = initial,
+    colors = colors,
+    onChange = onChange,
+    rowWidth = SLIDER_WIDTH,
+    labelSpacing = LABEL_SPACING,
+  })
 end
 
 local function pctFormat(v)
