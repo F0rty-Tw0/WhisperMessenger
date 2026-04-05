@@ -30,7 +30,6 @@ return function()
   local inCombat = false
   local windowVisible = false
 
-
   local function findCreatedFrameWithScript(scriptName)
     for _, frame in ipairs(createdFrames) do
       if frame.scripts and frame.scripts[scriptName] then
@@ -286,9 +285,11 @@ return function()
     function hookEditBox:GetAttribute(key)
       return hookAttrState[key]
     end
+
     function hookEditBox:SetAttribute(key, value)
       hookAttrState[key] = value
     end
+
     hookEditBox.chatType = "WHISPER"
     hookEditBox.tellTarget = "Arthas"
     hookEditBox.stickyType = "SAY"
@@ -325,9 +326,11 @@ return function()
     function combatEditBox:GetAttribute(key)
       return combatAttrState[key]
     end
+
     function combatEditBox:SetAttribute(key, value)
       combatAttrState[key] = value
     end
+
     combatEditBox.chatType = "WHISPER"
     combatEditBox.tellTarget = "Arthas"
     combatEditBox.stickyType = "SAY"
@@ -357,7 +360,6 @@ return function()
     assert(combatEditBox:HasFocus() == false, "expected focused default edit box to blur after combat route")
   end
 
-
   -- -----------------------------------------------------------------------
   -- test_direct_hook_does_not_close_editbox_when_send_tell_fails
   -- -----------------------------------------------------------------------
@@ -367,9 +369,11 @@ return function()
     function failEditBox:GetAttribute(key)
       return failAttrState[key]
     end
+
     function failEditBox:SetAttribute(key, value)
       failAttrState[key] = value
     end
+
     failEditBox.chatType = "WHISPER"
     failEditBox.tellTarget = "Nobody"
     failEditBox.stickyType = "SAY"
@@ -396,9 +400,11 @@ return function()
     function pollerFailBox:GetAttribute(key)
       return pollerFailAttr[key]
     end
+
     function pollerFailBox:SetAttribute(key, value)
       pollerFailAttr[key] = value
     end
+
     pollerFailBox.chatType = "WHISPER"
     pollerFailBox.tellTarget = "Ghost"
     pollerFailBox.stickyType = "SAY"
@@ -424,9 +430,11 @@ return function()
     function carriedDraftBox:GetAttribute(key)
       return carriedAttrState[key]
     end
+
     function carriedDraftBox:SetAttribute(key, value)
       carriedAttrState[key] = value
     end
+
     carriedDraftBox.chatType = "WHISPER"
     carriedDraftBox.tellTarget = "Arthas"
     carriedDraftBox.stickyType = "SAY"
@@ -440,14 +448,8 @@ return function()
     windowVisible = false
     pollFrame.scripts.OnUpdate(pollFrame)
 
-    assert(
-      #sendTellCalls == prevSendTellCount,
-      "expected poller not to route whisper draft while still in combat"
-    )
-    assert(
-      #deactivated == prevDeactivatedCount,
-      "expected poller not to close Blizzard chat edit box while in combat"
-    )
+    assert(#sendTellCalls == prevSendTellCount, "expected poller not to route whisper draft while still in combat")
+    assert(#deactivated == prevDeactivatedCount, "expected poller not to close Blizzard chat edit box while in combat")
 
     inCombat = false
     pollFrame.scripts.OnUpdate(pollFrame)
@@ -479,9 +481,11 @@ return function()
     function carriedDraftBox:GetAttribute(key)
       return carriedAttrState[key]
     end
+
     function carriedDraftBox:SetAttribute(key, value)
       carriedAttrState[key] = value
     end
+
     carriedDraftBox.chatType = "WHISPER"
     carriedDraftBox.tellTarget = "Arthas"
     carriedDraftBox.stickyType = "SAY"
@@ -503,10 +507,7 @@ return function()
       #sendTellCalls == prevSendTellCount,
       "expected direct hook to keep combat-carried draft in Blizzard chat after combat ends"
     )
-    assert(
-      #deactivated == prevDeactivatedCount,
-      "expected direct hook not to close combat-carried draft edit box"
-    )
+    assert(#deactivated == prevDeactivatedCount, "expected direct hook not to close combat-carried draft edit box")
     assert(
       #timerCallbacks == prevTimerCount,
       "expected direct hook not to schedule deferred close for combat-carried draft"
@@ -515,10 +516,7 @@ return function()
       carriedDraftBox:GetText() == "typed during combat",
       "expected direct hook to preserve combat-carried draft text"
     )
-    assert(
-      carriedDraftBox:HasFocus() == true,
-      "expected direct hook to preserve focus for combat-carried draft"
-    )
+    assert(carriedDraftBox:HasFocus() == true, "expected direct hook to preserve focus for combat-carried draft")
   end
 
   -- -----------------------------------------------------------------------
@@ -530,9 +528,11 @@ return function()
     function resumedBox:GetAttribute(key)
       return resumedAttrState[key]
     end
+
     function resumedBox:SetAttribute(key, value)
       resumedAttrState[key] = value
     end
+
     resumedBox.chatType = "WHISPER"
     resumedBox.tellTarget = "Arthas"
     resumedBox.stickyType = "SAY"
@@ -559,10 +559,7 @@ return function()
       #deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == resumedBox,
       "expected poller to close Blizzard chat edit box once preserved draft is cleared"
     )
-    assert(
-      resumedBox:HasFocus() == false,
-      "expected cleared draft edit box to lose focus once normal routing resumes"
-    )
+    assert(resumedBox:HasFocus() == false, "expected cleared draft edit box to lose focus once normal routing resumes")
   end
 
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)

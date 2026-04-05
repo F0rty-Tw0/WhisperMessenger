@@ -84,22 +84,7 @@ return function()
   runtime.accountState.settings.autoOpenWindow = true
 
   local function dispatchWhisper(eventName, text, playerName, lineID, guid)
-    eventFrame.scripts.OnEvent(
-      eventFrame,
-      eventName,
-      text,
-      playerName,
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      lineID,
-      guid
-    )
+    eventFrame.scripts.OnEvent(eventFrame, eventName, text, playerName, "", "", "", "", "", "", "", "", lineID, guid)
   end
 
   dispatchWhisper("CHAT_MSG_WHISPER", "Need help?", "Arthas-Area52", 101, "Player-3676-0ABCDEF0")

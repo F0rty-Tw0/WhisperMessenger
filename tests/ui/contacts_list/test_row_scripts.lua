@@ -399,5 +399,4 @@ return function()
       assert(math.abs(actual - expected) < 0.0001, "row background should clear after pin->remove->leave")
     end
   end
-
 end

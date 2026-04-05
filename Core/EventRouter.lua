@@ -128,7 +128,6 @@ local function isPendingExpired(pending, sentAt)
   return sentAt - pending.createdAt > PENDING_MATCH_WINDOW_SECONDS
 end
 
-
 local function consumeFromPendingQueue(queue, payload, sentAt)
   if type(queue) ~= "table" or #queue == 0 then
     return false
@@ -164,7 +163,6 @@ local function consumePendingOutgoing(state, conversationKey, payload, sentAt)
 
   return false
 end
-
 
 function Router.RecordPendingSend(state, target, text)
   local contact
@@ -280,7 +278,6 @@ local function handleUnlockedEvent(state, eventName, payload)
     end
     return conversation, { outgoingFromPendingSend = outgoingFromPendingSend }
   end
-
 
   return nil
 end

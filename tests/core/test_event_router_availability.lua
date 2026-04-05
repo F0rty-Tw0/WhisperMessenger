@@ -84,7 +84,6 @@ return function()
     assert(pending ~= nil and #pending == 0, "matched pending send should be consumed")
   end
 
-
   -- Stale pending sends are pruned during outgoing inform processing
   do
     local state = makeState()
@@ -105,11 +104,13 @@ return function()
       guid = "Player-3676-0FRESH000",
     })
 
-    assert(meta ~= nil and meta.outgoingFromPendingSend == false, "fresh outgoing inform should not match stale pending send")
+    assert(
+      meta ~= nil and meta.outgoingFromPendingSend == false,
+      "fresh outgoing inform should not match stale pending send"
+    )
     local staleQueue = state.pendingOutgoing["wow::WOW::stale"]
     assert(staleQueue ~= nil and #staleQueue == 0, "stale pending sends should be pruned")
   end
-
 
   -- Incoming BNet whisper sets availability for GUID if available
   do

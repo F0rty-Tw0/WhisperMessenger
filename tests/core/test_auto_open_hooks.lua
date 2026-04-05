@@ -125,7 +125,6 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_reply_tell_combat_visible: should focus composer")
   end
 
-
   -- -----------------------------------------------------------------------
   -- test_on_reply_tell_skipped_when_setting_disabled
   -- -----------------------------------------------------------------------
@@ -245,7 +244,6 @@ return function()
     )
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_combat_visible: should focus composer")
   end
-
 
   -- -----------------------------------------------------------------------
   -- test_on_send_tell_skipped_when_setting_disabled

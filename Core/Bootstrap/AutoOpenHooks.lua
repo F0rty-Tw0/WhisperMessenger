@@ -31,7 +31,6 @@ function AutoOpenHooks.Create(deps)
     return true
   end
 
-
   local function openAndSelect(conversationKey, forceFocus)
     deps.ensureWindow()
     deps.setWindowVisible(true)

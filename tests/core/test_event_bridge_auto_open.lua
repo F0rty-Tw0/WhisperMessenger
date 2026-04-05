@@ -203,10 +203,12 @@ return function()
       "test_auto_open_outgoing_pending_send: expected 0 calls for tracked pending send, got " .. #outgoingCalls
     )
     local pending = runtime.pendingOutgoing["wow::WOW::arthas-area52"]
-    assert(pending ~= nil and #pending == 0, "test_auto_open_outgoing_pending_send: expected pending send to be consumed")
+    assert(
+      pending ~= nil and #pending == 0,
+      "test_auto_open_outgoing_pending_send: expected pending send to be consumed"
+    )
     cleanupGlobals()
   end
-
 
   -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_called_on_bnet_inform
