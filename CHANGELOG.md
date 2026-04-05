@@ -1,5 +1,17 @@
 # Changelog
 
+
+## [1.1.2] - 2026-04-05
+
+### Added
+
+- Clickable URL detection in chat bubbles and transcript text for plain `http://`, `https://`, and `www.` links.
+
+### Fixed
+
+- URL hyperlink clicks no longer trigger protected-function taint errors (`ADDON_ACTION_FORBIDDEN`).
+- URL clicks now use a safe copy fallback flow (clipboard or manual copy dialog) in WoW addon context.
+
 ## [1.1.1] - 2026-04-01
 
 ### Fixed
