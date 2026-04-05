@@ -81,6 +81,14 @@ function SettingsHandler.Create(options)
       local freshContacts = buildContacts()
       icon.setUnreadCount(tableUtils.sumBy(freshContacts, "unreadCount"))
     end
+
+    if key == "iconSize" and icon and icon.applyIconSize then
+      icon.applyIconSize(persistedValue)
+    end
+
+    if key == "iconDesaturated" and icon and icon.refreshDesaturation then
+      icon.refreshDesaturation()
+    end
   end
 end
 

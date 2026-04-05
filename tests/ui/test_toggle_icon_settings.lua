@@ -110,4 +110,150 @@ return function()
     -- Without getters, should default to showing badge (backward compat)
     assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_uses_custom_size
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      iconSize = 32,
+    })
+
+    local w, h = icon.frame:GetSize()
+    assert(w == 32, "test_icon_uses_custom_size: frame width should be 32, got " .. tostring(w))
+    assert(h == 32, "test_icon_uses_custom_size: frame height should be 32, got " .. tostring(h))
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_apply_icon_size_resizes_frame
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(icon.applyIconSize, "test_apply_icon_size_resizes_frame: applyIconSize method should exist")
+    icon.applyIconSize(56)
+
+    local w, h = icon.frame:GetSize()
+    assert(w == 56, "test_apply_icon_size_resizes_frame: frame width should be 56 after resize, got " .. tostring(w))
+    assert(h == 56, "test_apply_icon_size_resizes_frame: frame height should be 56 after resize, got " .. tostring(h))
+
+    -- Chat icon should be 60% of new size
+    local chatW, _chatH = icon.label:GetSize()
+    local expectedChatSize = math.floor(56 * 0.6)
+    assert(
+      chatW == expectedChatSize,
+      "test_apply_icon_size_resizes_frame: chat icon width should be "
+        .. expectedChatSize
+        .. ", got "
+        .. tostring(chatW)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_desaturated_when_no_unread
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      unreadCount = 0,
+      getIconDesaturated = function()
+        return true
+      end,
+      getShowUnreadBadge = function()
+        return true
+      end,
+    })
+
+    assert(
+      icon.label.desaturated == true,
+      "test_icon_desaturated_when_no_unread: chatIcon should be desaturated, got " .. tostring(icon.label.desaturated)
+    )
+    assert(
+      icon.background.desaturated == true,
+      "test_icon_desaturated_when_no_unread: background should be desaturated, got "
+        .. tostring(icon.background.desaturated)
+    )
+    assert(
+      icon.border.desaturated == true,
+      "test_icon_desaturated_when_no_unread: border should be desaturated, got " .. tostring(icon.border.desaturated)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_colorized_on_unread
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      unreadCount = 3,
+      getIconDesaturated = function()
+        return true
+      end,
+      getShowUnreadBadge = function()
+        return true
+      end,
+    })
+
+    assert(
+      icon.label.desaturated == false,
+      "test_icon_colorized_on_unread: chatIcon should be colorized when unread > 0, got "
+        .. tostring(icon.label.desaturated)
+    )
+    assert(
+      icon.background.desaturated == false,
+      "test_icon_colorized_on_unread: background should be colorized when unread > 0, got "
+        .. tostring(icon.background.desaturated)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_desaturated_when_unread_cleared
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      unreadCount = 5,
+      getIconDesaturated = function()
+        return true
+      end,
+      getShowUnreadBadge = function()
+        return true
+      end,
+    })
+
+    assert(icon.label.desaturated == false, "should be colorized initially with unread")
+
+    icon.setUnreadCount(0)
+
+    assert(
+      icon.label.desaturated == true,
+      "test_icon_desaturated_when_unread_cleared: icon should desaturate after unread cleared, got "
+        .. tostring(icon.label.desaturated)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_always_colorized_when_desaturation_disabled
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      unreadCount = 0,
+      getIconDesaturated = function()
+        return false
+      end,
+      getShowUnreadBadge = function()
+        return true
+      end,
+    })
+
+    assert(
+      icon.label.desaturated == false,
+      "test_icon_always_colorized_when_desaturation_disabled: icon should never desaturate when setting is off, got "
+        .. tostring(icon.label.desaturated)
+    )
+  end
 end

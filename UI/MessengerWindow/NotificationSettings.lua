@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local applyColorTexture = UIHelpers.applyColorTexture
 local ButtonSelector = ns.MessengerWindowButtonSelector
   or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
@@ -15,11 +16,16 @@ local TOGGLE_WIDTH = 280
 local ROW_SPACING = 16
 local LABEL_SPACING = 6
 
+local SLIDER_WIDTH = 280
+local SLIDER_HEIGHT = 16
+
 local DEFAULTS = {
   badgePulse = true,
   playSoundOnWhisper = false,
   showUnreadBadge = true,
   notificationSound = "whisper",
+  iconSize = 42,
+  iconDesaturated = true,
 }
 
 local SOUND_OPTIONS = {
@@ -52,6 +58,78 @@ local function createSoundSelector(factory, parent, initial, colors, onChange)
     buttonHeight = 26,
     buttonSpacing = 4,
   })
+end
+
+local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
+  local row = factory.CreateFrame("Frame", nil, parent)
+  row:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT + 20)
+
+  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
+  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+  labelFs:SetText(label)
+  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
+
+  local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
+  UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
+
+  local slider = factory.CreateFrame("Slider", nil, row)
+  slider:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT)
+  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
+  if slider.SetOrientation then
+    slider:SetOrientation("HORIZONTAL")
+  end
+  slider:SetMinMaxValues(min, max)
+  slider:SetValueStep(step)
+  if slider.SetObeyStepOnDrag then
+    slider:SetObeyStepOnDrag(true)
+  end
+
+  local bg = slider:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(slider)
+  applyColorTexture(bg, Theme.COLORS.option_button_bg)
+
+  if slider.SetThumbTexture then
+    slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
+  end
+
+  local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
+  minLabel:SetText(formatFn and formatFn(min) or tostring(min))
+  UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
+
+  local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
+  maxLabel:SetText(formatFn and formatFn(max) or tostring(max))
+  UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
+
+  slider:SetValue(initial)
+  valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
+
+  slider:SetScript("OnValueChanged", function(_self, value)
+    local stepped = math.floor(value / step + 0.5) * step
+    valueFs:SetText(formatFn and formatFn(stepped) or tostring(stepped))
+    if onChange then
+      onChange(stepped)
+    end
+  end)
+
+  return {
+    row = row,
+    label = labelFs,
+    value = valueFs,
+    slider = slider,
+    sliderBg = bg,
+    minLabel = minLabel,
+    maxLabel = maxLabel,
+    applyTheme = function(activeTheme)
+      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
+      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
+      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
+      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
+      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
+    end,
+  }
 end
 
 function NotificationSettings.Create(factory, parent, config, options)
@@ -144,6 +222,38 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   showBadgeToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local function pxFormat(v)
+    return tostring(math.floor(v + 0.5)) .. "px"
+  end
+
+  local iconSizeRow = createSliderRow(
+    factory,
+    frame,
+    "Icon Size",
+    24,
+    64,
+    2,
+    config.iconSize or DEFAULTS.iconSize,
+    pxFormat,
+    function(value)
+      onChange("iconSize", value)
+    end
+  )
+  iconSizeRow.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
+  local iconDesaturatedToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Desaturate icon when idle",
+    config.iconDesaturated ~= false,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("iconDesaturated", value)
+    end
+  )
+  iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
     return {
@@ -161,7 +271,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     badgePulseToggle.setValue(DEFAULTS.badgePulse)
     onChange("badgePulse", DEFAULTS.badgePulse)
@@ -171,6 +281,10 @@ function NotificationSettings.Create(factory, parent, config, options)
     onChange("notificationSound", DEFAULTS.notificationSound)
     showBadgeToggle.setValue(DEFAULTS.showUnreadBadge)
     onChange("showUnreadBadge", DEFAULTS.showUnreadBadge)
+    iconSizeRow.slider:SetValue(DEFAULTS.iconSize)
+    onChange("iconSize", DEFAULTS.iconSize)
+    iconDesaturatedToggle.setValue(DEFAULTS.iconDesaturated)
+    onChange("iconDesaturated", DEFAULTS.iconDesaturated)
   end)
 
   local function refreshTheme(activeTheme)
@@ -182,7 +296,9 @@ function NotificationSettings.Create(factory, parent, config, options)
     badgePulseToggle.applyThemeColors(activeToggleColors)
     playSoundToggle.applyThemeColors(activeToggleColors)
     showBadgeToggle.applyThemeColors(activeToggleColors)
+    iconDesaturatedToggle.applyThemeColors(activeToggleColors)
 
+    iconSizeRow.applyTheme(activeTheme)
     soundSelector.applyTheme(activeTheme, selectorColorsFor(activeTheme))
 
     if resetButton.applyThemeColors then
@@ -198,6 +314,8 @@ function NotificationSettings.Create(factory, parent, config, options)
     playSoundToggle = playSoundToggle,
     soundSelector = soundSelector,
     showBadgeToggle = showBadgeToggle,
+    iconSizeSlider = iconSizeRow.slider,
+    iconDesaturatedToggle = iconDesaturatedToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }

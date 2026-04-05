@@ -49,6 +49,8 @@ function SettingsPanels.Create(factory, options)
     badgePulse = settingsConfig.badgePulse,
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
     showUnreadBadge = settingsConfig.showUnreadBadge,
+    iconSize = settingsConfig.iconSize,
+    iconDesaturated = settingsConfig.iconDesaturated,
   }, onSettingChanged)
 
   local function refreshTheme(theme, context)

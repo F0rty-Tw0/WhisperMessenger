@@ -90,5 +90,87 @@ return function()
     )
   end
 
+  -- -----------------------------------------------------------------------
+  -- test_icon_size_slider_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    assert(result.iconSizeSlider ~= nil, "test_icon_size_slider_fires_on_change: iconSizeSlider should exist")
+
+    local onValueChanged = result.iconSizeSlider:GetScript("OnValueChanged")
+    assert(onValueChanged ~= nil, "test_icon_size_slider_fires_on_change: slider should have OnValueChanged")
+    onValueChanged(result.iconSizeSlider, 32)
+
+    assert(
+      changes.iconSize == 32,
+      "test_icon_size_slider_fires_on_change: onChange should fire with iconSize=32, got: "
+        .. tostring(changes.iconSize)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_icon_desaturated_toggle_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    assert(
+      result.iconDesaturatedToggle ~= nil,
+      "test_icon_desaturated_toggle_fires_on_change: iconDesaturatedToggle should exist"
+    )
+
+    -- Toggle is on by default (iconDesaturated defaults true), click dot to toggle off
+    local onClick = result.iconDesaturatedToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "dot should have OnClick handler")
+    onClick(result.iconDesaturatedToggle.dot)
+
+    assert(
+      changes.iconDesaturated ~= nil,
+      "test_icon_desaturated_toggle_fires_on_change: onChange should fire for iconDesaturated"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_reset_restores_icon_defaults
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = {
+      iconSize = 56,
+      iconDesaturated = false,
+    }
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local resetClick = result.resetButton:GetScript("OnClick")
+    resetClick(result.resetButton)
+
+    assert(
+      changes.iconSize == 42,
+      "test_reset_restores_icon_defaults: iconSize should reset to 42, got: " .. tostring(changes.iconSize)
+    )
+    assert(
+      changes.iconDesaturated == true,
+      "test_reset_restores_icon_defaults: iconDesaturated should reset to true, got: "
+        .. tostring(changes.iconDesaturated)
+    )
+  end
+
   print("  All notification settings tests passed")
 end

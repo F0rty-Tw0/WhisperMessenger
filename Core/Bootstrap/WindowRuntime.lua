@@ -379,6 +379,7 @@ function WindowRuntime.Create(options)
 
   icon = toggleIcon.Create(uiFactory, {
     state = characterState.icon,
+    iconSize = accountState.settings.iconSize,
     onToggle = toggle,
     onPositionChanged = function(nextState)
       characterState.icon = tableUtils.copyState(nextState)
@@ -388,6 +389,9 @@ function WindowRuntime.Create(options)
     end,
     getBadgePulse = function()
       return accountState.settings.badgePulse ~= false
+    end,
+    getIconDesaturated = function()
+      return accountState.settings.iconDesaturated ~= false
     end,
   })
 

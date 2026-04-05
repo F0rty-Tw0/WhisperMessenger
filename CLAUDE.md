@@ -68,6 +68,13 @@ Rules:
 - **Run the relevant test file after Red and Green steps.** Run all tests after Refactor.
 - **Lint after Refactor** — run `bash scripts/lint.sh` before considering the cycle complete.
 
+## File Size & Modularity
+
+- **Target ~300 lines per file.** If a file grows past 300 lines, split it into focused sub-modules.
+- **One responsibility per file** — a file that does two things should be two files.
+- **Extract early** — when adding code would push a file over 300 lines, extract a new module before continuing.
+- **Applies to both production and test files.**
+
 ## Lua Best Practices
 
 - **Localize everything** — `local` variables and functions are faster than globals. Always `local function` unless exporting on a module table.

@@ -21,7 +21,7 @@ function ToggleIcon.Create(factory, options)
   local x = state.x or 0
   local y = state.y or 0
 
-  local ICON_SIZE = Theme.LAYOUT.ICON_SIZE
+  local ICON_SIZE = options.iconSize or Theme.LAYOUT.ICON_SIZE
 
   local frame = factory.CreateFrame("Button", "WhisperMessengerToggleIcon", parent)
   frame:SetSize(ICON_SIZE, ICON_SIZE)
@@ -142,11 +142,45 @@ function ToggleIcon.Create(factory, options)
 
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getBadgePulse = options.getBadgePulse
+  local getIconDesaturated = options.getIconDesaturated
+
+  local lastUnreadCount = 0
+
+  -- Store original colors for desaturation restore
+  local originalColors = {
+    chatIcon = Theme.COLORS.text_primary,
+    background = Theme.COLORS.icon_bg,
+    border = { Theme.COLORS.accent[1], Theme.COLORS.accent[2], Theme.COLORS.accent[3], 0.3 },
+  }
+  local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
+  local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
+
+  local function updateDesaturation(unreadCount)
+    local desaturateEnabled = getIconDesaturated and getIconDesaturated()
+    local shouldDesaturate = desaturateEnabled and unreadCount == 0
+
+    for _, tex in ipairs({ chatIcon, background, border }) do
+      if tex.SetDesaturated then
+        tex:SetDesaturated(shouldDesaturate)
+      end
+    end
+
+    if shouldDesaturate then
+      applyVertexColor(chatIcon, DESAT_GREY)
+      applyVertexColor(background, DESAT_BG)
+      applyVertexColor(border, DESAT_GREY)
+    else
+      applyVertexColor(chatIcon, originalColors.chatIcon)
+      applyVertexColor(background, originalColors.background)
+      applyVertexColor(border, originalColors.border)
+    end
+  end
 
   local function setUnreadCount(count)
     local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
     local allowPulse = not getBadgePulse or getBadgePulse()
     local unreadCount = tonumber(count) or 0
+    lastUnreadCount = unreadCount
 
     if showBadge then
       innerSetUnreadCount(count)
@@ -159,12 +193,17 @@ function ToggleIcon.Create(factory, options)
     else
       stopPulse()
     end
+
+    updateDesaturation(unreadCount)
   end
 
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      applyVertexColor(background, Theme.COLORS.send_button_hover)
+      local isDesat = getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
+      if not isDesat then
+        applyVertexColor(background, Theme.COLORS.send_button_hover)
+      end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         local unreadText = ""
@@ -177,7 +216,8 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      applyVertexColor(background, Theme.COLORS.icon_bg)
+      local isDesat = getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
+      applyVertexColor(background, isDesat and DESAT_BG or Theme.COLORS.icon_bg)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -208,6 +248,22 @@ function ToggleIcon.Create(factory, options)
     end)
   end
 
+  local function refreshDesaturation()
+    updateDesaturation(lastUnreadCount)
+  end
+
+  local function applyIconSize(newSize)
+    newSize = tonumber(newSize) or ICON_SIZE
+    frame:SetSize(newSize, newSize)
+    chatIcon:SetSize(math.floor(newSize * 0.6), math.floor(newSize * 0.6))
+    glowFrame:SetSize(newSize * 1.8, newSize * 1.8)
+    if border.SetPoint and border.ClearAllPoints then
+      border:ClearAllPoints()
+      border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+      border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+    end
+  end
+
   setUnreadCount(options.unreadCount)
 
   trace("icon created", anchorPoint, x, y)
@@ -221,6 +277,8 @@ function ToggleIcon.Create(factory, options)
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,
     setUnreadCount = setUnreadCount,
+    applyIconSize = applyIconSize,
+    refreshDesaturation = refreshDesaturation,
   }
 end
 

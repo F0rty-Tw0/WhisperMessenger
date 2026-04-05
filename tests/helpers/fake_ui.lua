@@ -27,6 +27,10 @@ function FakeUI.NewFactory()
       self.height = height
     end
 
+    function frame:GetSize()
+      return self.width or 0, self.height or 0
+    end
+
     function frame:SetWidth(width)
       self.width = width
     end

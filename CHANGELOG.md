@@ -1,10 +1,12 @@
 # Changelog
 
 
-## [1.1.3] - 2026-04-05
+## [1.1.3] - 2026-04-06
 
 ### Added
 
+- **Icon size customization** — new slider in Notification settings lets you resize the toggle icon from 24px to 64px.
+- **Icon desaturation** — the toggle icon is now greyed-out by default and colorizes when you have unread whispers, making notification state visible at a glance. Controlled via a "Desaturate icon when idle" toggle in Notification settings.
 - **Censored message reveal** — Blizzard-censored whispers now show a "(click to reveal)" indicator on the chat bubble. Left-click to uncensor the message directly in the messenger, even when the default chat is hidden.
 - **Start New Whisper** button in the empty conversation pane — when no conversation is selected, a "Start New Whisper" button appears below the prompt text so you can begin a conversation without scrolling to the header.
 
