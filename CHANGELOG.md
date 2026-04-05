@@ -2,14 +2,23 @@
 
 ## [1.1.1] - 2026-04-01
 
-- Fixed pinned contacts so they retain message history indefinitely while pinned, still respecting the configured max-messages-per-contact limit.
-- Unpinned contacts now immediately fall back to the configured retention policy, including trimming old messages or removing stale conversations right away.
-- Fixed shift-clicking quests, skills, and achievements silently inserting links into the messenger composer even when the window is closed — default WoW behavior is now preserved when the messenger is not visible.
-- Fixed auto-open intermittently failing when pressing R to reply, right-clicking to whisper, or clicking a character name — replaced unreliable frame-by-frame polling with direct hooks on WoW's whisper functions for immediate detection. The default chat editbox is no longer closed when the messenger can't open the conversation.
-- Fixed "Hide whispers from default chat" not hiding outgoing whisper echoes — sent messages no longer leak into the default chat frame when the setting is enabled.
-- Fixed pressing R (reply) not working after receiving a whisper with "Hide from default chat" enabled — the reply target is now preserved outside the chat filter to avoid taint.
-- Fixed a taint error (`attempt to perform string conversion on a secret string value`) caused by addon code executing inside a ChatFrame filter callback — filters now use a registration-based approach with no dynamic state checks in the filter body.
-- Fixed "Hide from default chat" not being disabled during battlegrounds, arenas, and rated PvP — the addon now detects competitive content via instance type and bypasses whisper filtering automatically.
+### Fixed
+
+- Pinned chats now keep their history while pinned (still capped by your max messages per contact setting).
+- Unpinned chats now immediately follow your retention settings.
+- Shift-click links now insert into WhisperMessenger only when its window is open. If the window is closed, WoW does the default action.
+- Outgoing whispers are now properly hidden from default chat when "Hide whispers from default chat" is enabled.
+- Reply (/r) now works reliably with "Hide whispers from default chat" enabled.
+- Fixed a whisper-filter taint error (`secret string value`).
+- "Hide whispers from default chat" now auto-disables in battlegrounds, arenas, and rated PvP.
+- Fixed a race where pressing Enter, then quickly pressing Esc, could reopen the window when the delayed outgoing whisper event arrived.
+
+### Improved
+
+- Auto-open detection is more reliable for reply, right-click whisper, and name-click whisper.
+- Incoming whispers no longer steal focus when you already have the messenger open on an active conversation.
+- Draft text in the whisper edit box is now preserved across combat transitions.
+- Contacts row interactions are cleaner: better action-button visibility, hover-pointer behavior, and spacing.
 
 ## [1.1.0] - 2026-04-01
 

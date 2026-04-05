@@ -171,6 +171,44 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_auto_open_outgoing_not_called_for_tracked_pending_send
+  -- -----------------------------------------------------------------------
+  do
+    stubGlobals()
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+
+    local outgoingCalls = {}
+    local runtime = makeRuntime({ autoOpenWindow = true })
+    runtime.pendingOutgoing = {
+      ["wow::WOW::arthas-area52"] = {
+        {
+          text = "hello",
+          createdAt = 99,
+          channel = "WOW",
+          guid = "Player-1-ABC",
+          displayName = "Arthas-Area52",
+        },
+      },
+    }
+    runtime.onAutoOpenOutgoing = function(conversationKey)
+      outgoingCalls[#outgoingCalls + 1] = conversationKey
+    end
+
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
+
+    assert(
+      #outgoingCalls == 0,
+      "test_auto_open_outgoing_pending_send: expected 0 calls for tracked pending send, got " .. #outgoingCalls
+    )
+    local pending = runtime.pendingOutgoing["wow::WOW::arthas-area52"]
+    assert(pending ~= nil and #pending == 0, "test_auto_open_outgoing_pending_send: expected pending send to be consumed")
+    cleanupGlobals()
+  end
+
+
+  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_called_on_bnet_inform
   -- -----------------------------------------------------------------------
   do

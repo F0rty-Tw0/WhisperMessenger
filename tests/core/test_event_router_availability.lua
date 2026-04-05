@@ -62,6 +62,55 @@ return function()
     )
   end
 
+  -- Outgoing whisper inform with short playerName still matches pending send by guid/name
+  do
+    local state = makeState()
+
+    local pendingKey = Router.RecordPendingSend(state, {
+      channel = "WOW",
+      displayName = "Arthas-Area52",
+      guid = "Player-3676-0ABCDEF0",
+    }, "hello")
+
+    local _, meta = Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", {
+      text = "hello",
+      playerName = "Arthas",
+      lineID = 2021,
+      guid = "Player-3676-0ABCDEF0",
+    })
+
+    assert(meta ~= nil and meta.outgoingFromPendingSend == true, "pending send should be matched for outgoing inform")
+    local pending = state.pendingOutgoing[pendingKey]
+    assert(pending ~= nil and #pending == 0, "matched pending send should be consumed")
+  end
+
+
+  -- Stale pending sends are pruned during outgoing inform processing
+  do
+    local state = makeState()
+    state.pendingOutgoing["wow::WOW::stale"] = {
+      {
+        text = "old",
+        createdAt = 900,
+        channel = "WOW",
+        guid = "Player-3676-0STALE000",
+        displayName = "Stale-Area52",
+      },
+    }
+
+    local _, meta = Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", {
+      text = "fresh",
+      playerName = "Jaina-Proudmoore",
+      lineID = 2022,
+      guid = "Player-3676-0FRESH000",
+    })
+
+    assert(meta ~= nil and meta.outgoingFromPendingSend == false, "fresh outgoing inform should not match stale pending send")
+    local staleQueue = state.pendingOutgoing["wow::WOW::stale"]
+    assert(staleQueue ~= nil and #staleQueue == 0, "stale pending sends should be pruned")
+  end
+
+
   -- Incoming BNet whisper sets availability for GUID if available
   do
     local state = makeState()

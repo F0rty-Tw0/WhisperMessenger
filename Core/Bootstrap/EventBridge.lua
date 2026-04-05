@@ -163,7 +163,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
         .. tostring(payload.lineID)
     )
   end
-  local result = EventRouter.HandleEvent(runtime, eventName, payload)
+  local result, resultMeta = EventRouter.HandleEvent(runtime, eventName, payload)
   if Trace and TRACE_EVENTS[eventName] then
     if result and result.queued then
       Trace("EventBridge: queued (chat locked)")
@@ -217,6 +217,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and runtime.onAutoOpenOutgoing
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()
+      and not (resultMeta and resultMeta.outgoingFromPendingSend == true)
     then
       runtime.onAutoOpenOutgoing(result.conversationKey)
     end
