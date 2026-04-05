@@ -27,6 +27,9 @@ return function()
   local outgoingCalls = {}
   local selectedConversationKeys = {}
   local autoOpenHookDeps = nil
+  local inCombat = false
+  local windowVisible = false
+
 
   local function findCreatedFrameWithScript(scriptName)
     for _, frame in ipairs(createdFrames) do
@@ -42,7 +45,7 @@ return function()
   _G.NUM_CHAT_WINDOWS = 1
   _G._wmSuspended = false
   rawset(_G, "InCombatLockdown", function()
-    return false
+    return inCombat
   end)
   _G.C_Timer = {
     After = function(delaySeconds, callback)
@@ -113,6 +116,9 @@ return function()
     windowRuntime = {
       selectConversation = function(conversationKey)
         selectedConversationKeys[#selectedConversationKeys + 1] = conversationKey
+      end,
+      isWindowVisible = function()
+        return windowVisible
       end,
     },
     AutoOpenHooks = {
@@ -309,6 +315,48 @@ return function()
     assert(#deactivated == prevDeactivatedCount + 1, "expected edit box closed after deferred timer")
     assert(hookEditBox:HasFocus() == false, "expected edit box to lose focus after deferred close")
   end
+
+  -- -----------------------------------------------------------------------
+  -- test_direct_hook_routes_to_visible_window_during_combat
+  -- -----------------------------------------------------------------------
+  do
+    local combatEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local combatAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
+    function combatEditBox:GetAttribute(key)
+      return combatAttrState[key]
+    end
+    function combatEditBox:SetAttribute(key, value)
+      combatAttrState[key] = value
+    end
+    combatEditBox.chatType = "WHISPER"
+    combatEditBox.tellTarget = "Arthas"
+    combatEditBox.stickyType = "SAY"
+    combatEditBox:SetText("")
+    combatEditBox:SetFocus()
+    _G.ChatFrame1EditBox = combatEditBox
+
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+    local prevTimerCount = #timerCallbacks
+    sendTellResult = true
+    inCombat = true
+    windowVisible = true
+    hookedFunctions["ChatFrame_SendTell"][1]("Arthas")
+    inCombat = false
+    windowVisible = false
+
+    assert(
+      #sendTellCalls == prevSendTellCount + 1 and sendTellCalls[#sendTellCalls] == "Arthas",
+      "expected direct hook to keep routing whisper in combat when messenger is visible"
+    )
+    assert(#deactivated == prevDeactivatedCount, "expected combat visible route to defer edit box close")
+    assert(#timerCallbacks == prevTimerCount + 1, "expected deferred close timer when routing in combat")
+
+    timerCallbacks[#timerCallbacks].callback()
+    assert(#deactivated == prevDeactivatedCount + 1, "expected deferred close after combat visible route")
+    assert(combatEditBox:HasFocus() == false, "expected focused default edit box to blur after combat route")
+  end
+
 
   -- -----------------------------------------------------------------------
   -- test_direct_hook_does_not_close_editbox_when_send_tell_fails

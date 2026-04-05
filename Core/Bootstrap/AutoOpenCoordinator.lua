@@ -23,6 +23,11 @@ local function shouldInterceptHook(runtime, deps)
   if deps.isSuspended() then
     return false
   end
+
+  if deps.isWindowVisible and deps.isWindowVisible() then
+    return true
+  end
+
   local settings = runtime.accountState and runtime.accountState.settings
   if not settings or settings.autoOpenWindow ~= true then
     return false
@@ -196,6 +201,9 @@ function AutoOpenCoordinator.Attach(options)
       end,
       isInCombat = options.isInCombat or function()
         return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown()
+      end,
+      isWindowVisible = options.isWindowVisible or function()
+        return windowRuntime.isWindowVisible and windowRuntime.isWindowVisible() or false
       end,
       getNumChatWindows = options.getNumChatWindows or function()
         return _G.NUM_CHAT_WINDOWS or 10

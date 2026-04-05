@@ -98,6 +98,35 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_on_reply_tell_routes_to_open_window_even_in_combat
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      isInCombat = function()
+        return true
+      end,
+      isWindowVisible = function()
+        return true
+      end,
+      getLastReplyKey = function()
+        return "wow::WOW::Arthas"
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    local result = hooks.onReplyTell()
+
+    assert(result == true, "test_on_reply_tell_combat_visible: should route when window already visible")
+    assert(deps.calls.ensureWindow == 1, "test_on_reply_tell_combat_visible: should keep routing through messenger")
+    assert(
+      #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Arthas",
+      "test_on_reply_tell_combat_visible: should select reply conversation"
+    )
+    assert(deps.calls.focusComposer == 1, "test_on_reply_tell_combat_visible: should focus composer")
+  end
+
+
+  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_skipped_when_setting_disabled
   -- -----------------------------------------------------------------------
   do
@@ -185,6 +214,38 @@ return function()
     assert(result == false, "test_on_send_tell_combat: should return false in combat")
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_combat: should not open window in combat")
   end
+
+  -- -----------------------------------------------------------------------
+  -- test_on_send_tell_routes_to_open_window_even_in_combat
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      isInCombat = function()
+        return true
+      end,
+      isWindowVisible = function()
+        return true
+      end,
+      findConversationKeyByName = function(name)
+        if name == "Jaina" then
+          return "wow::WOW::Jaina"
+        end
+        return nil
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    local result = hooks.onSendTell("Jaina")
+
+    assert(result == true, "test_on_send_tell_combat_visible: should route when window already visible")
+    assert(deps.calls.ensureWindow == 1, "test_on_send_tell_combat_visible: should keep routing through messenger")
+    assert(
+      #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Jaina",
+      "test_on_send_tell_combat_visible: should select target conversation"
+    )
+    assert(deps.calls.focusComposer == 1, "test_on_send_tell_combat_visible: should focus composer")
+  end
+
 
   -- -----------------------------------------------------------------------
   -- test_on_send_tell_skipped_when_setting_disabled

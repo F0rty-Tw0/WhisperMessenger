@@ -9,22 +9,28 @@ function AutoOpenHooks.Create(deps)
   local hooks = {}
   local log = deps.trace
 
-  local function shouldAutoOpen()
+  local function shouldRouteToMessenger()
+    local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
+    if isVisible then
+      return true
+    end
+
     local settings = deps.getSettings()
     if not settings or settings.autoOpenWindow ~= true then
       if log then
-        log("AutoOpen: shouldAutoOpen=false (setting off)")
+        log("AutoOpen: shouldRouteToMessenger=false (setting off, window hidden)")
       end
       return false
     end
     if deps.isInCombat() then
       if log then
-        log("AutoOpen: shouldAutoOpen=false (in combat)")
+        log("AutoOpen: shouldRouteToMessenger=false (in combat, window hidden)")
       end
       return false
     end
     return true
   end
+
 
   local function openAndSelect(conversationKey, forceFocus)
     deps.ensureWindow()
@@ -50,7 +56,7 @@ function AutoOpenHooks.Create(deps)
   end
 
   function hooks.onReplyTell()
-    if not shouldAutoOpen() then
+    if not shouldRouteToMessenger() then
       return false
     end
     -- Use the last incoming whisper key tracked by runtime
@@ -66,7 +72,7 @@ function AutoOpenHooks.Create(deps)
   end
 
   function hooks.onSendTell(playerName)
-    if not shouldAutoOpen() then
+    if not shouldRouteToMessenger() then
       return false
     end
     if not playerName then
