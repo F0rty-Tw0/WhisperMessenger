@@ -238,7 +238,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
         applyColor(view.headerStatus, Theme.COLORS.text_secondary)
       end
       if view.headerEmpty then
-        applyColor(view.headerEmpty, Theme.COLORS.text_secondary)
+        local emptyLabel = view.headerEmpty._label or view.headerEmpty
+        applyColor(emptyLabel, Theme.COLORS.text_secondary)
       end
       if view.activeStatusBanner then
         applyColor(view.activeStatusBanner, Theme.COLORS.text_system)

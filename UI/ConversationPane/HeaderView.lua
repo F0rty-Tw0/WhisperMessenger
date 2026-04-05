@@ -77,7 +77,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   ---------------------------------------------------------------------------
   -- Empty state label (centered, shown when no contact selected)
   ---------------------------------------------------------------------------
-  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact)
+  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   return {
     headerFrame = headerFrame,

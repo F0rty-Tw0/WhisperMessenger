@@ -69,8 +69,41 @@ return function()
 
   -- test_create_empty_state_shown_when_no_contact
   do
-    local emptyLabel = HeaderElements.createEmptyState(pane, nil)
-    assert(emptyLabel ~= nil, "createEmptyState should return a FontString")
-    assert(emptyLabel.shown == true, "emptyLabel should be shown when contact is nil")
+    local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
+    assert(emptyState ~= nil, "createEmptyState should return a frame")
+    assert(emptyState.shown == true, "emptyState should be shown when contact is nil")
+  end
+
+  -- test_create_empty_state_has_new_whisper_button
+  do
+    _G.StaticPopupDialogs = {}
+    _G.StaticPopup_Show = function() end
+    local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
+    assert(emptyState._newWhisperButton ~= nil, "emptyState should have a _newWhisperButton")
+    assert(emptyState._newWhisperButton.shown == true, "newWhisperButton should be shown when no contact selected")
+  end
+
+  -- test_create_empty_state_hidden_when_contact_selected
+  do
+    local contact = { displayName = "Arthas", classTag = "WARRIOR" }
+    local emptyState = HeaderElements.createEmptyState(pane, contact, factory)
+    assert(emptyState.shown == false, "emptyState should be hidden when contact is selected")
+  end
+
+  -- test_create_empty_state_button_triggers_start_conversation_popup
+  do
+    local popupShown = nil
+    _G.StaticPopupDialogs = {}
+    _G.StaticPopup_Show = function(dialogName)
+      popupShown = dialogName
+    end
+    local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
+    local btn = emptyState._newWhisperButton
+    assert(btn.scripts ~= nil and btn.scripts.OnClick ~= nil, "expected OnClick script on new whisper button")
+    btn.scripts.OnClick(btn)
+    assert(
+      popupShown == "WHISPER_MESSENGER_START_CONVERSATION",
+      "expected button click to show start conversation popup, got: " .. tostring(popupShown)
+    )
   end
 end

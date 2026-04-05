@@ -138,16 +138,63 @@ function HeaderElements.createDivider(headerFrame)
   return headerDivider
 end
 
--- Creates the centered "Select a conversation" empty state label on pane.
--- Returns headerEmpty FontString.
-function HeaderElements.createEmptyState(pane, selectedContact)
-  local headerEmpty = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
-  headerEmpty:SetPoint("CENTER", pane, "CENTER", 0, 0)
-  headerEmpty:SetText("Select a conversation")
-  applyColor(headerEmpty, Theme.COLORS.text_secondary)
-  headerEmpty:SetShown(selectedContact == nil)
+-- Creates the centered empty state container with label + "Start New Whisper" button.
+-- Returns a Frame with ._label (FontString) and ._newWhisperButton (Button).
+function HeaderElements.createEmptyState(pane, selectedContact, factory)
+  local createFrame = (factory and factory.CreateFrame) or _G.CreateFrame
+  local container = createFrame("Frame", nil, pane)
+  container:SetPoint("CENTER", pane, "CENTER", 0, 0)
+  container:SetSize(200, 50)
 
-  return headerEmpty
+  local label = container:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
+  label:SetPoint("TOP", container, "TOP", 0, 0)
+  label:SetText("Select a conversation")
+  applyColor(label, Theme.COLORS.text_secondary)
+  container._label = label
+
+  local button = createFrame("Button", nil, container)
+  button:SetSize(140, 24)
+  button:SetPoint("TOP", label, "BOTTOM", 0, -8)
+  button:EnableMouse(true)
+
+  local buttonBg = button:CreateTexture(nil, "BACKGROUND")
+  buttonBg:SetAllPoints(button)
+  local baseColor = Theme.COLORS.bg_contact_hover
+  applyColorTexture(buttonBg, { baseColor[1], baseColor[2], baseColor[3], 0.35 })
+
+  local buttonIcon = button:CreateTexture(nil, "ARTWORK")
+  buttonIcon:SetSize(14, 14)
+  buttonIcon:SetPoint("LEFT", button, "LEFT", 8, 0)
+  buttonIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
+  buttonIcon:SetDesaturated(true)
+  UIHelpers.applyVertexColor(buttonIcon, Theme.COLORS.text_primary)
+
+  local buttonText = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  buttonText:SetPoint("LEFT", buttonIcon, "RIGHT", 4, 0)
+  buttonText:SetText("Start New Whisper")
+  applyColor(buttonText, Theme.COLORS.text_primary)
+
+  if button.SetScript then
+    button:SetScript("OnEnter", function()
+      local bc = Theme.COLORS.bg_contact_hover
+      applyColorTexture(buttonBg, { bc[1], bc[2], bc[3], 0.75 })
+    end)
+    button:SetScript("OnLeave", function()
+      local bc = Theme.COLORS.bg_contact_hover
+      applyColorTexture(buttonBg, { bc[1], bc[2], bc[3], 0.35 })
+    end)
+    button:SetScript("OnClick", function()
+      if type(_G.StaticPopup_Show) == "function" then
+        _G.StaticPopup_Show("WHISPER_MESSENGER_START_CONVERSATION")
+      end
+    end)
+  end
+
+  button:Show()
+  container._newWhisperButton = button
+  container:SetShown(selectedContact == nil)
+
+  return container
 end
 
 ns.ConversationPaneHeaderElements = HeaderElements
