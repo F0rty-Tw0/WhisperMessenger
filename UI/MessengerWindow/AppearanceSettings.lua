@@ -60,6 +60,25 @@ local function buildThemePresetOptions()
   return options
 end
 
+local BUBBLE_COLOR_LABELS = {
+  default = { label = "Default", tooltip = "Uses your theme's bubble colors." },
+  shadow = { label = "Shadow", tooltip = "Muted dark tones." },
+  ember = { label = "Ember", tooltip = "Warm earthy tones." },
+  arcane = { label = "Arcane", tooltip = "Purple arcane-infused tones." },
+  frost = { label = "Frost", tooltip = "Cool steel-blue tones." },
+  fel = { label = "Fel", tooltip = "Eerie fel-green tones." },
+}
+
+local function buildBubbleColorOptions()
+  local keys = Theme.ListBubblePresets and Theme.ListBubblePresets() or { "default" }
+  local options = {}
+  for _, key in ipairs(keys) do
+    local meta = BUBBLE_COLOR_LABELS[key] or { label = key, tooltip = "Bubble color preset" }
+    options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
+  end
+  return options
+end
+
 local DEFAULTS = {
   windowOpacityInactive = 0.72,
   windowOpacityActive = 1.0,
@@ -67,6 +86,7 @@ local DEFAULTS = {
   fontSize = 12,
   fontOutline = "NONE",
   fontColor = "default",
+  bubbleColorPreset = "default",
   themePreset = Theme.DEFAULT_PRESET or "wow_default",
 }
 
@@ -275,6 +295,22 @@ function AppearanceSettings.Create(factory, parent, config, options)
   })
   fontColorSelector.row:SetPoint("TOPLEFT", fontOutlineSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local bubbleColorOptions = buildBubbleColorOptions()
+  local bubbleColorSelector = ButtonSelector.Create(factory, frame, {
+    labelText = "Bubble Colors",
+    optionsList = bubbleColorOptions,
+    fallbackKey = DEFAULTS.bubbleColorPreset,
+    initial = config.bubbleColorPreset or DEFAULTS.bubbleColorPreset,
+    colors = selectorColors,
+    onChange = function(value)
+      onChange("bubbleColorPreset", value)
+    end,
+    rowWidth = SLIDER_WIDTH,
+    labelSpacing = LABEL_SPACING,
+    maxPerRow = 3,
+  })
+  bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   local opacityInactiveRow = createSliderRow(
     factory,
     frame,
@@ -288,7 +324,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("windowOpacityInactive", value)
     end
   )
-  opacityInactiveRow.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  opacityInactiveRow.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   local opacityActiveRow = createSliderRow(
     factory,
@@ -336,6 +372,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
     onChange("fontOutline", DEFAULTS.fontOutline)
     fontColorSelector.setSelected(DEFAULTS.fontColor)
     onChange("fontColor", DEFAULTS.fontColor)
+    bubbleColorSelector.setSelected(DEFAULTS.bubbleColorPreset)
+    onChange("bubbleColorPreset", DEFAULTS.bubbleColorPreset)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -352,6 +390,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     fontSelector.applyTheme(activeTheme, activeSelectorColors)
     fontOutlineSelector.applyTheme(activeTheme, activeSelectorColors)
     fontColorSelector.applyTheme(activeTheme, activeSelectorColors)
+    bubbleColorSelector.applyTheme(activeTheme, activeSelectorColors)
 
     fontSizeRow.applyTheme(activeTheme)
     opacityInactiveRow.applyTheme(activeTheme)
@@ -371,6 +410,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     fontSizeSlider = fontSizeRow.slider,
     fontOutlineSelector = fontOutlineSelector,
     fontColorSelector = fontColorSelector,
+    bubbleColorSelector = bubbleColorSelector,
     opacityInactiveSlider = opacityInactiveRow.slider,
     opacityActiveSlider = opacityActiveRow.slider,
     resetButton = resetButton,

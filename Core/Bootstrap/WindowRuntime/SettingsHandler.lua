@@ -69,6 +69,9 @@ function SettingsHandler.Create(options)
     if key == "fontColor" and fonts.SetFontColor then
       fonts.SetFontColor(persistedValue or "default")
     end
+    if key == "bubbleColorPreset" and theme.SetBubblePreset then
+      theme.SetBubblePreset(persistedValue or "default")
+    end
     if key == "hideFromDefaultChat" and runtime.syncChatFilters then
       runtime.syncChatFilters()
     end
@@ -79,6 +82,7 @@ function SettingsHandler.Create(options)
         or key == "fontSize"
         or key == "fontOutline"
         or key == "fontColor"
+        or key == "bubbleColorPreset"
       ) and runtime.refreshWindow
     then
       runtime.refreshWindow()

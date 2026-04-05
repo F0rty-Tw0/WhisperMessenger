@@ -43,13 +43,17 @@ When adding new WoW API globals, add them to `.luacheckrc` under `read_globals`.
 ## Tests
 
 ```bash
+# If lua is available:
 lua tests/run.lua tests/path/to/test_file.lua
+
+# If lua is not available (Windows), use the Python+lupa harness:
+python scripts/run_test.py tests/path/to/test_file.lua
 ```
 
 Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua`. Run all tests:
 
 ```bash
-for f in tests/**/*.lua; do lua tests/run.lua "$f"; done
+for f in tests/**/*.lua; do python scripts/run_test.py "$f"; done
 ```
 
 ## Development Workflow — TDD (Red-Green-Refactor)

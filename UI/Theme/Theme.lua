@@ -58,6 +58,14 @@ Theme.TEXTURES = ThemeTextures.TEXTURES
 Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
 
+local BubbleColors = ns.ThemeBubbleColors
+if type(BubbleColors) ~= "table" and type(require) == "function" then
+  local ok, mod = pcall(require, "WhisperMessenger.UI.Theme.BubbleColors")
+  if ok and type(mod) == "table" then
+    BubbleColors = mod
+  end
+end
+
 function Theme.ListPresets()
   return ThemePresets.ListKeys()
 end
@@ -74,6 +82,12 @@ function Theme.SetPreset(presetKey)
 
   applyPresetColors(preset)
   activePresetKey = presetKey
+
+  -- Re-apply custom bubble colors if a non-default bubble preset is active
+  if BubbleColors and BubbleColors.ApplyPreset then
+    BubbleColors.ApplyPreset()
+  end
+
   return true
 end
 
@@ -97,6 +111,27 @@ function Theme.ResolvePreset(requestedKey, trace)
     trace("theme preset apply failed", tostring(targetKey), "active=" .. tostring(activeKey))
   end
   return activeKey, false
+end
+
+function Theme.ListBubblePresets()
+  if BubbleColors and BubbleColors.ListPresets then
+    return BubbleColors.ListPresets()
+  end
+  return { "default" }
+end
+
+function Theme.GetBubblePreset()
+  if BubbleColors and BubbleColors.GetPreset then
+    return BubbleColors.GetPreset()
+  end
+  return "default"
+end
+
+function Theme.SetBubblePreset(presetKey)
+  if BubbleColors and BubbleColors.SetPreset then
+    return BubbleColors.SetPreset(presetKey)
+  end
+  return false
 end
 
 -- Backward-compatible flat aliases

@@ -52,6 +52,7 @@ Core/SlashCommands.lua
 UI/Theme/Presets/Builder.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
+UI/Theme/BubbleColors.lua
 UI/Theme/Fonts.lua
 UI/Theme/Layout.lua
 UI/Theme/Textures.lua

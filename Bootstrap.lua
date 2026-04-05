@@ -107,6 +107,9 @@ function Bootstrap.Initialize(factory, options)
     end
   end
   accountState.settings.themePreset = themePresetKey
+  if Theme.SetBubblePreset then
+    Theme.SetBubblePreset(accountState.settings.bubbleColorPreset or "default")
+  end
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G["C_Club"], {
