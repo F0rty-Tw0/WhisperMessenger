@@ -1,6 +1,19 @@
 # Changelog
 
 
+## [1.1.3] - 2026-04-05
+
+### Added
+
+- **Censored message reveal** — Blizzard-censored whispers now show a "(click to reveal)" indicator on the chat bubble. Left-click to uncensor the message directly in the messenger, even when the default chat is hidden.
+- **Start New Whisper** button in the empty conversation pane — when no conversation is selected, a "Start New Whisper" button appears below the prompt text so you can begin a conversation without scrolling to the header.
+
+### Fixed
+
+- Unread badge size and position adjusted for better alignment.
+- Title color now updates correctly across theme changes.
+- Fixed a parameter name bug in channel event registration.
+
 ## [1.1.2] - 2026-04-05
 
 ### Added

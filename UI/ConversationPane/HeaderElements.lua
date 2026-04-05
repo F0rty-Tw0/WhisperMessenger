@@ -148,7 +148,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   local label = container:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
   label:SetPoint("TOP", container, "TOP", 0, 0)
-  label:SetText("Select a conversation")
+  label:SetText("Select a conversation or")
   applyColor(label, Theme.COLORS.text_secondary)
   container._label = label
 
