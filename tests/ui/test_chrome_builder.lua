@@ -38,10 +38,10 @@ return function()
     chrome.title.text == Theme.TITLE,
     "expected title to be '" .. Theme.TITLE .. "' but got '" .. tostring(chrome.title.text) .. "'"
   )
-  local expectedTitleColor = Theme.COLORS.text_primary
+  local expectedTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
   assert(
     colorsMatch(chrome.title.textColor, expectedTitleColor),
-    "expected title text to use text_primary for better readability"
+    "expected title text to use text_title/text_primary for readability"
   )
   assert(chrome.newConversationButton ~= nil, "expected a New Conversation button")
   assert(chrome.newConversationButton.point ~= nil, "expected New Conversation button to be anchored")
@@ -138,10 +138,10 @@ return function()
       colorsMatch(chrome.titleBarTopBorder.color, Theme.COLORS.divider),
       "expected title bar top border to repaint with preset divider color"
     )
-    local expectedPresetTitleColor = Theme.COLORS.text_primary
+    local expectedPresetTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
     assert(
       colorsMatch(chrome.title.textColor, expectedPresetTitleColor),
-      "expected title text to repaint with text_primary token for readability"
+      "expected title text to repaint with text_title/text_primary token"
     )
   end
   if Theme.SetPreset and previousPreset then

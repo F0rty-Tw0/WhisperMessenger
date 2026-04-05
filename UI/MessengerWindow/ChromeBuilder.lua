@@ -99,6 +99,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -9)
   title:SetText(options.title or Theme.TITLE)
+  setTextColor(title, Theme.COLORS.text_title or Theme.COLORS.text_primary)
   if title.SetShadowColor then
     title:SetShadowColor(0, 0, 0, 0.85)
   end
@@ -246,7 +247,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     activeTheme = activeTheme or Theme
     applyColorTexture(background, activeTheme.COLORS.bg_primary)
     applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
-    setTextColor(title, activeTheme.COLORS.text_primary)
+    setTextColor(title, activeTheme.COLORS.text_title or activeTheme.COLORS.text_primary)
 
     local divider = activeTheme.COLORS.divider
     UIHelpers.applyBorderBoxColor(edgeTextures, { divider[1], divider[2], divider[3], divider[4] or 1 })
@@ -255,10 +256,10 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(optionsIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(newConversationIcon, activeTheme.COLORS.text_primary)
-    local newConversationBase = activeTheme.COLORS.bg_contact_hover
+    local refreshedConversationBase = activeTheme.COLORS.bg_contact_hover
     applyColorTexture(
       newConversationBg,
-      { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 }
+      { refreshedConversationBase[1], refreshedConversationBase[2], refreshedConversationBase[3], 0.35 }
     )
 
     local secondary = activeTheme.COLORS.text_secondary
