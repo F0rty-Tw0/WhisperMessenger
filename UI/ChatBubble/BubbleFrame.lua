@@ -118,6 +118,58 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   textFS:SetText(displayText)
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
 
+  -- Censored message indicator
+  local CENSORED_LABEL_HEIGHT = 12
+  local censoredLabel = frame._censoredLabel
+  if message.isCensored == true then
+    if not censoredLabel then
+      censoredLabel = frame:CreateFontString(nil, "OVERLAY")
+      if censoredLabel.SetWordWrap then
+        censoredLabel:SetWordWrap(false)
+      end
+      frame._censoredLabel = censoredLabel
+    end
+    setFontObject(censoredLabel, Theme.FONTS.system_text)
+    setTextColor(censoredLabel, Theme.COLORS.text_system)
+    censoredLabel:SetText("(click to reveal)")
+    censoredLabel:ClearAllPoints()
+    censoredLabel:SetPoint("TOPLEFT", textFS, "BOTTOMLEFT", 0, -2)
+    if censoredLabel.SetAlpha then
+      censoredLabel:SetAlpha(0.7)
+    end
+    if censoredLabel.Show then
+      censoredLabel:Show()
+    end
+    bubbleInnerHeight = bubbleInnerHeight + CENSORED_LABEL_HEIGHT
+    bubbleHeight = bubbleInnerHeight + pV * 2
+  elseif censoredLabel then
+    if censoredLabel.Hide then
+      censoredLabel:Hide()
+    end
+  end
+
+  local function revealCensored()
+    if message.isCensored ~= true then
+      return
+    end
+    local chatApi = _G.C_ChatInfo
+    if chatApi and message.lineID then
+      if type(chatApi.UncensorChatLine) == "function" then
+        pcall(chatApi.UncensorChatLine, message.lineID)
+      end
+      if type(chatApi.GetChatLineText) == "function" then
+        local ok, uncensoredText = pcall(chatApi.GetChatLineText, message.lineID)
+        if ok and type(uncensoredText) == "string" and uncensoredText ~= "" then
+          message.text = uncensoredText
+        end
+      end
+    end
+    message.isCensored = nil
+    if options.onRevealCensored then
+      options.onRevealCensored()
+    end
+  end
+
   if frame.SetScript then
     local openedOnMouseDown = false
 
@@ -128,6 +180,11 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
 
     frame:SetScript("OnMouseDown", function(self, button)
+      if button == "LeftButton" and message.isCensored == true then
+        revealCensored()
+        return
+      end
+
       if button ~= "RightButton" then
         return
       end

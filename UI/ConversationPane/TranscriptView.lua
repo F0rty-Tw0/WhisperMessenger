@@ -129,6 +129,9 @@ function TranscriptView.RenderTranscript(transcript, messages)
   local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
   local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth, {
     fallbackClassTag = transcript.fallbackClassTag,
+    onRevealCensored = function()
+      TranscriptView.RenderTranscript(transcript, transcript._allMessages)
+    end,
   })
 
   ScrollView.RefreshMetrics(transcript, totalHeight, true)

@@ -89,6 +89,7 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       isGrouped = grouped,
       fallbackClassTag = fallbackClassTag,
       iconFactory = pooledFactory,
+      onRevealCensored = options and options.onRevealCensored or nil,
     })
 
     PlaceBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)

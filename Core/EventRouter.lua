@@ -10,6 +10,21 @@ local Availability = ns.Availability or require("WhisperMessenger.Transport.Avai
 
 local Router = {}
 
+local function checkCensored(lineID)
+  local chatApi = _G.C_ChatInfo
+  if chatApi == nil or type(chatApi.IsChatLineCensored) ~= "function" then
+    return nil
+  end
+  if lineID == nil then
+    return nil
+  end
+  local ok, censored = pcall(chatApi.IsChatLineCensored, lineID)
+  if ok and censored == true then
+    return true
+  end
+  return nil
+end
+
 local function buildConversationContact(state, payload)
   if payload.channel == "BN" then
     if payload.bnetAccountID == nil then
@@ -57,6 +72,7 @@ local function buildMessage(eventName, payload, contact, direction, kind, sentAt
     raceName = (contact and contact.raceName) or payload.raceName,
     raceTag = (contact and contact.raceTag) or payload.raceTag,
     factionName = (contact and contact.factionName) or payload.factionName,
+    isCensored = payload.isCensored or checkCensored(payload.lineID),
   }
 end
 
