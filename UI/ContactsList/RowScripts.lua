@@ -8,6 +8,9 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
+local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
+local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
+local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
 local RowScripts = {}
 
@@ -28,6 +31,10 @@ local function getActionButtons()
   return _actionButtons
 end
 
+local function isPointerInsideRow(row)
+  return isPointerInsideRowFrames(row)
+end
+
 --- Schedule hideActions for the next frame so button OnEnter/Row OnEnter
 --- can fire first, preventing re-entrant hover events from frame hiding.
 local function deferHideActions(row)
@@ -35,13 +42,19 @@ local function deferHideActions(row)
   if CTimer and CTimer.After then
     CTimer.After(0, function()
       local AB = getActionButtons()
-      if AB and not row._wmRowHover and (row._wmActionHoverCount or 0) == 0 then
+      local pointerInside = (row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row)
+      if AB and not pointerInside and effectiveActionHoverCount(row) == 0 then
+        row._wmRowHover = false
+        row._wmApplyVisualState()
         AB.hideActions(row)
       end
     end)
   else
     local AB = getActionButtons()
-    if AB and (row._wmActionHoverCount or 0) == 0 then
+    local pointerInside = (row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row)
+    if AB and not pointerInside and effectiveActionHoverCount(row) == 0 then
+      row._wmRowHover = false
+      row._wmApplyVisualState()
       AB.hideActions(row)
     end
   end
@@ -55,7 +68,9 @@ local function rowBaseColor(row)
 end
 
 local function applyRowVisualState(row)
-  local hovered = row._wmRowHover == true or (row._wmActionHoverCount or 0) > 0
+  local hovered = row._wmRowHover == true
+    or (row._wmActionHoverCount or 0) > 0
+    or ((row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row))
   if row.selected then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
   elseif hovered then
@@ -73,6 +88,56 @@ local function applyRowVisualState(row)
   end
 end
 
+local function installHoverWatchdog(row)
+  if row._wmHoverWatchdogInstalled then
+    return
+  end
+  row._wmHoverWatchdogInstalled = true
+  row._wmHoverWatchdogPreviousOnUpdate = row.GetScript and row:GetScript("OnUpdate") or nil
+  row._wmHoverWatchdogElapsed = 0
+
+  if row.SetScript then
+    row:SetScript("OnUpdate", function(self, elapsed)
+      local previous = self._wmHoverWatchdogPreviousOnUpdate
+      if previous then
+        previous(self, elapsed)
+      end
+
+      self._wmHoverWatchdogElapsed = (self._wmHoverWatchdogElapsed or 0) + (elapsed or 0)
+      if self._wmHoverWatchdogElapsed < 0.05 then
+        return
+      end
+      self._wmHoverWatchdogElapsed = 0
+
+      if self.selected then
+        return
+      end
+      local pointerInside = (self._wmIsPointerInside and self._wmIsPointerInside()) or isPointerInsideRow(self)
+      if pointerInside then
+        return
+      end
+      local hadHoverState = self._wmRowHover or (self._wmActionHoverCount or 0) > 0
+      if not hadHoverState then
+        return
+      end
+      effectiveActionHoverCount(self)
+
+      self._wmRowHover = false
+      self._wmActionHoverCount = 0
+      if self._wmApplyVisualState then
+        self._wmApplyVisualState()
+      else
+        applyRowVisualState(self)
+      end
+
+      local AB = getActionButtons()
+      if AB then
+        AB.hideActions(self)
+      end
+    end)
+  end
+end
+
 --- Bind OnEnter / OnLeave hover scripts to a row.
 --- options may include: rowBaseBg (color table for base background)
 function RowScripts.bindHover(row, options)
@@ -80,9 +145,15 @@ function RowScripts.bindHover(row, options)
     or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
   row._wmRowHover = false
   row._wmActionHoverCount = 0
+  row._wmIsPointerInside = function()
+    return isPointerInsideRow(row)
+  end
   row._wmApplyVisualState = function()
     applyRowVisualState(row)
   end
+
+  row._wmHoverWatchdogElapsed = 0
+  installHoverWatchdog(row)
 
   row._wmApplyVisualState()
 

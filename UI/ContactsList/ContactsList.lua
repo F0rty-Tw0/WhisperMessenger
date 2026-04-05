@@ -14,6 +14,8 @@ local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.C
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
 local bindRow = RowView.bindRow
 local ROW_HEIGHT = RowView.ROW_HEIGHT
+local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
+local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
 local ContactsList = {}
 
@@ -21,11 +23,32 @@ local ContactsList = {}
 ContactsList.BuildItems = DataBuilder.BuildItems
 ContactsList.BuildItemsForProfile = DataBuilder.BuildItemsForProfile
 
+local function hasEffectiveActionHover(row)
+  return effectiveActionHoverCount(row) > 0
+end
+
+local function shouldKeepActionsVisible(row)
+  if row.selected then
+    return true
+  end
+  if row._wmRowHover == true then
+    return true
+  end
+  if hasEffectiveActionHover(row) then
+    return true
+  end
+  if row._wmIsPointerInside then
+    return row._wmIsPointerInside()
+  end
+  return false
+end
+
 function ContactsList.SetSelected(rows, selectedConversationKey)
   for _, row in ipairs(rows or {}) do
     row.selected = row.item ~= nil and row.item.conversationKey == selectedConversationKey
     local baseColor = (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
     row._wmRowBaseBg = baseColor
+    local keepActionsVisible = shouldKeepActionsVisible(row)
 
     if row._wmApplyVisualState then
       row._wmApplyVisualState()
@@ -51,7 +74,7 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
       end
     end
 
-    if row.selected then
+    if keepActionsVisible then
       ActionButtons.showActions(row)
     else
       ActionButtons.hideActions(row)

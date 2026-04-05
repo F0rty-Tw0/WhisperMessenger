@@ -7,6 +7,9 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
+local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
+local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
+local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
 local trace = ns.trace
 if not trace then
@@ -40,6 +43,13 @@ local function pinTooltipText(row)
   return item and item.pinned and "Unpin" or "Pin to top"
 end
 
+local function isPointerInsideRow(row)
+  if row and row._wmIsPointerInside then
+    return row._wmIsPointerInside()
+  end
+  return isPointerInsideRowFrames(row)
+end
+
 local function restoreRowVisualState(row)
   if row._wmApplyVisualState then
     row._wmApplyVisualState()
@@ -47,7 +57,7 @@ local function restoreRowVisualState(row)
   end
   if row.selected then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-  elseif (row._wmActionHoverCount or 0) > 0 then
+  elseif (row._wmActionHoverCount or 0) > 0 or isPointerInsideRow(row) then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
   else
     applyColorTexture(row.bg, rowBaseBackgroundColor(row))
@@ -66,14 +76,20 @@ local function adjustActionHoverCount(row, delta)
   local CTimer = _G.C_Timer
   if CTimer and CTimer.After then
     CTimer.After(0, function()
-      if not row._wmRowHover and (row._wmActionHoverCount or 0) == 0 then
+      if not isPointerInsideRow(row) and effectiveActionHoverCount(row) == 0 then
+        row._wmRowHover = false
         restoreRowVisualState(row)
         ActionButtons.hideActions(row)
       end
     end)
   else
-    restoreRowVisualState(row)
-    ActionButtons.hideActions(row)
+    if not isPointerInsideRow(row) and effectiveActionHoverCount(row) == 0 then
+      row._wmRowHover = false
+      restoreRowVisualState(row)
+      ActionButtons.hideActions(row)
+    else
+      restoreRowVisualState(row)
+    end
   end
 end
 

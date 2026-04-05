@@ -1,4 +1,6 @@
+local Theme = require("WhisperMessenger.UI.Theme")
 local RowScripts = require("WhisperMessenger.UI.ContactsList.RowScripts")
+local ActionButtons = require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local FakeUI = require("tests.helpers.fake_ui")
 
@@ -204,4 +206,198 @@ return function()
     assert(row.scripts == nil or row.scripts.OnDragStart == nil, "non-pinned row should not have OnDragStart script")
     assert(row.scripts == nil or row.scripts.OnDragStop == nil, "non-pinned row should not have OnDragStop script")
   end
+  -- test_action_hover_does_not_hide_buttons_when_pointer_returns_to_row
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.selected = false
+
+    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
+    row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
+
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    row.removeButton.mouseOver = true
+    row.removeButton.scripts.OnEnter(row.removeButton)
+
+    -- Entering a child button may trigger row OnLeave even though the pointer
+    -- is still inside the row region.
+    row.mouseOver = false
+    row.scripts.OnLeave(row)
+
+    -- Pointer leaves the action button and lands back on row body.
+    row.removeButton.mouseOver = false
+    row.mouseOver = true
+    row.removeButton.scripts.OnLeave(row.removeButton)
+
+    assert(row.removeButton:IsShown() == true, "remove button should remain visible while pointer is still over row")
+    assert(row.pinButton:IsShown() == true, "pin button should remain visible while pointer is still over row")
+  end
+
+  -- test_action_hover_clears_when_pointer_leaves_row_from_button
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.selected = false
+
+    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
+    row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
+
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    row.removeButton.mouseOver = true
+    row.removeButton.scripts.OnEnter(row.removeButton)
+
+    -- Row OnLeave can fire while entering child action button.
+    row.mouseOver = false
+    row.scripts.OnLeave(row)
+
+    -- Then pointer leaves action button to outside the row entirely.
+    row.removeButton.mouseOver = false
+    row.mouseOver = false
+    row.removeButton.scripts.OnLeave(row.removeButton)
+
+    assert(row.removeButton:IsShown() == false, "remove button should hide when pointer leaves row")
+    assert(row.pinButton:IsShown() == false, "pin button should hide when pointer leaves row")
+    for i = 1, 4 do
+      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
+      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      assert(math.abs(actual - expected) < 0.0001, "row background should restore base color after leaving row")
+    end
+  end
+
+  -- test_hover_clears_when_action_onleave_is_missing
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.selected = false
+
+    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
+    row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
+
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    row.removeButton.mouseOver = true
+    row.removeButton.scripts.OnEnter(row.removeButton)
+
+    -- Simulate missing button OnLeave (can happen when hovered button is hidden/rebound).
+    row.removeButton.mouseOver = false
+    row.mouseOver = false
+    row.scripts.OnLeave(row)
+
+    assert(row.removeButton:IsShown() == false, "remove button should hide even if action OnLeave was skipped")
+    assert(row.pinButton:IsShown() == false, "pin button should hide even if action OnLeave was skipped")
+    for i = 1, 4 do
+      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
+      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      assert(math.abs(actual - expected) < 0.0001, "row background should clear even if action OnLeave was skipped")
+    end
+  end
+
+  -- test_hover_watchdog_clears_state_when_leave_events_are_missed
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.selected = false
+
+    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
+    row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
+
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    row.mouseOver = false
+    row.removeButton.mouseOver = true
+    row.removeButton.scripts.OnEnter(row.removeButton)
+
+    -- Pointer leaves everything, but both OnLeave handlers are missed.
+    row.removeButton.mouseOver = false
+    row.mouseOver = false
+
+    assert(type(row.scripts.OnUpdate) == "function", "bindHover should install OnUpdate watchdog")
+    row.scripts.OnUpdate(row, 0.2)
+
+    assert(row.removeButton:IsShown() == false, "watchdog should hide remove button when hover is stale")
+    assert(row.pinButton:IsShown() == false, "watchdog should hide pin button when hover is stale")
+    for i = 1, 4 do
+      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
+      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      assert(math.abs(actual - expected) < 0.0001, "watchdog should restore base row background")
+    end
+  end
+
+  -- test_hover_clears_after_pin_to_remove_then_leave_list
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    row.bg = row:CreateTexture(nil, "BACKGROUND")
+    row.item = {
+      conversationKey = "me::WOW::alice",
+      displayName = "Alice",
+      pinned = false,
+      unreadCount = 0,
+    }
+    row.selected = false
+
+    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
+    row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
+
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+
+    row.pinButton.mouseOver = true
+    row.pinButton.scripts.OnEnter(row.pinButton)
+
+    -- Move pin -> remove while pin OnLeave is missed (stale pin hover flag).
+    row.removeButton.mouseOver = true
+    row.removeButton.scripts.OnEnter(row.removeButton)
+
+    -- Leave list from remove button: remove gets OnLeave, stale pin hover remains.
+    row.removeButton.mouseOver = false
+    row.mouseOver = false
+    row.removeButton.scripts.OnLeave(row.removeButton)
+
+    local previousGetMouseFocus = _G.GetMouseFocus
+    _G.GetMouseFocus = function()
+      return nil
+    end
+    row.scripts.OnUpdate(row, 0.2)
+    _G.GetMouseFocus = previousGetMouseFocus
+
+    assert(row.removeButton:IsShown() == false, "remove button should hide after leaving list from remove")
+    assert(row.pinButton:IsShown() == false, "pin button should hide after leaving list from remove")
+    for i = 1, 4 do
+      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
+      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      assert(math.abs(actual - expected) < 0.0001, "row background should clear after pin->remove->leave")
+    end
+  end
+
 end

@@ -108,6 +108,23 @@ return function()
     "expected preview text to restore when selection clears"
   )
 
+  -- Re-applying selection while hovering another row should not hide that row's actions.
+  unselectedRow.mouseOver = true
+  unselectedRow.scripts.OnEnter(unselectedRow)
+  assert(unselectedRow.removeButton:IsShown() == true, "expected hovered unselected row remove action to be shown")
+  assert(unselectedRow.pinButton:IsShown() == true, "expected hovered unselected row pin action to be shown")
+
+  ContactsList.SetSelected(rows, items[1].conversationKey)
+
+  assert(
+    unselectedRow.removeButton:IsShown() == true,
+    "expected hovered unselected row remove action to remain shown after selection refresh"
+  )
+  assert(
+    unselectedRow.pinButton:IsShown() == true,
+    "expected hovered unselected row pin action to remain shown after selection refresh"
+  )
+
   if Theme.SetPreset and previousPreset then
     Theme.SetPreset(previousPreset)
   end

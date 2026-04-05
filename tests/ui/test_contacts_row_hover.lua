@@ -37,7 +37,10 @@ return function()
   row.pinButton = pinButton
 
   -- Simulate pointer moving from row into action button, then fully out.
+  row.mouseOver = true
   row.scripts.OnEnter(row)
+  row.mouseOver = false
+  removeButton.mouseOver = true
   removeButton.scripts.OnEnter(removeButton)
   row.scripts.OnLeave(row)
 
@@ -47,6 +50,8 @@ return function()
     "row should stay hover-colored while over action button"
   )
 
+  removeButton.mouseOver = false
+  row.mouseOver = false
   removeButton.scripts.OnLeave(removeButton)
 
   assertColorEquals(
