@@ -80,6 +80,7 @@ function Bootstrap.Initialize(factory, options)
     SavedState.Initialize(options.accountState, options.characterState, localProfileId)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
+  ns._channelMessageState = runtime.channelMessageStore
   runtime.messagingNotice = nil
   -- Initialize theme/font mode from saved settings
   accountState.settings = accountState.settings or {}

@@ -15,6 +15,9 @@ return function()
     CHAT_MSG_AFK = true,
     CHAT_MSG_DND = true,
   }
+  local channelEvents = {
+    CHAT_MSG_CHANNEL = true,
+  }
   local lifecycleEvents = {
     "PLAYER_ENTERING_WORLD",
     "PLAYER_LOGOUT",
@@ -45,6 +48,15 @@ return function()
       for eventName in pairs(liveEvents) do
         frame:RegisterEvent(eventName)
       end
+    end,
+    RegisterChannelEvents = function(_frame)
+      calls[#calls + 1] = "RegisterChannelEvents"
+      for eventName in pairs(channelEvents) do
+        _frame:RegisterEvent(eventName)
+      end
+    end,
+    RouteChannelEvent = function()
+      return nil
     end,
     RouteLiveEvent = function(runtime, refreshWindow, eventName, ...)
       calls[#calls + 1] = "RouteLiveEvent:" .. eventName .. ":" .. tostring((...))
@@ -124,8 +136,8 @@ return function()
 
   frame.scripts.OnEvent(frame, "ADDON_LOADED", "WhisperMessenger")
   assert(
-    table.concat(calls, ",") == "initializeRuntime,RegisterLiveEvents,installDeferredPoller",
-    "expected ADDON_LOADED to initialize, register live events, and install deferred poller"
+    table.concat(calls, ",") == "initializeRuntime,RegisterLiveEvents,RegisterChannelEvents,installDeferredPoller",
+    "expected ADDON_LOADED to initialize, register live/channel events, and install deferred poller"
   )
   assert(
     table.concat(loadedModules, ",") == "WhisperMessenger.Core.Bootstrap.EventBridge,WhisperMessenger.Core.Constants",
@@ -137,6 +149,9 @@ return function()
   end
   for _, eventName in ipairs(lifecycleEvents) do
     assert(frame.events[eventName] == true, "expected lifecycle event registration for " .. eventName)
+  end
+  for eventName in pairs(channelEvents) do
+    assert(frame.events[eventName] == true, "expected channel event registration for " .. eventName)
   end
 
   calls = {}

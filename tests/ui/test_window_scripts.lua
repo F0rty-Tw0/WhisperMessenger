@@ -217,9 +217,18 @@ return function()
 
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
     assert(dialog ~= nil, "test_new_conversation_accept_trims_and_invokes_callback: expected dialog registration")
-    assert(type(dialog.OnAccept) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnAccept")
-    assert(type(dialog.OnShow) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnShow")
-    assert(type(dialog.OnHide) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnHide")
+    assert(
+      type(dialog.OnAccept) == "function",
+      "test_new_conversation_accept_trims_and_invokes_callback: expected OnAccept"
+    )
+    assert(
+      type(dialog.OnShow) == "function",
+      "test_new_conversation_accept_trims_and_invokes_callback: expected OnShow"
+    )
+    assert(
+      type(dialog.OnHide) == "function",
+      "test_new_conversation_accept_trims_and_invokes_callback: expected OnHide"
+    )
 
     dialog.OnAccept({
       editBox = {
@@ -290,7 +299,6 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-
   -- -----------------------------------------------------------------------
   -- test_new_conversation_popup_show_hide_handlers_are_safe
   -- -----------------------------------------------------------------------
@@ -324,8 +332,14 @@ return function()
 
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
     assert(dialog ~= nil, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog registration")
-    assert(type(dialog.OnShow) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow")
-    assert(type(dialog.OnHide) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide")
+    assert(
+      type(dialog.OnShow) == "function",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow"
+    )
+    assert(
+      type(dialog.OnHide) == "function",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide"
+    )
 
     local function makePopupButton(name)
       local button = factory.CreateFrame("Button", name, parent)
@@ -349,25 +363,66 @@ return function()
     fakePopup.text = factory.CreateFrame("FontString", nil, fakePopup)
 
     local showOk, showErr = pcall(dialog.OnShow, fakePopup, "Thrall")
-    assert(showOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to be safe: " .. tostring(showErr))
-    assert(fakePopup.editBox.text == "Thrall", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to prime editbox text")
-    assert(fakePopup.editBox.width == 392, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to stretch editbox to near full popup width")
-    assert(fakePopup._wmManualCopyStyleActive == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to activate")
-    assert(fakePopup.button1._wmManualCopyStyleActive == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to activate")
-    assert(fakePopup.button2._wmManualCopyStyleActive == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to activate")
-    assert(fakePopup.button1._normalTexture == "", "test_new_conversation_popup_show_hide_handlers_are_safe: expected style to override start button normal texture")
+    assert(
+      showOk == true,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to be safe: " .. tostring(showErr)
+    )
+    assert(
+      fakePopup.editBox.text == "Thrall",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to prime editbox text"
+    )
+    assert(
+      fakePopup.editBox.width == 392,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to stretch editbox to near full popup width"
+    )
+    assert(
+      fakePopup._wmManualCopyStyleActive == true,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to activate"
+    )
+    assert(
+      fakePopup.button1._wmManualCopyStyleActive == true,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to activate"
+    )
+    assert(
+      fakePopup.button2._wmManualCopyStyleActive == true,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to activate"
+    )
+    assert(
+      fakePopup.button1._normalTexture == "",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected style to override start button normal texture"
+    )
 
     local hideOk, hideErr = pcall(dialog.OnHide, fakePopup)
-    assert(hideOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to be safe: " .. tostring(hideErr))
-    assert(fakePopup.editBox.text == "", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to clear editbox text")
-    assert(fakePopup._wmManualCopyStyleActive == false, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to restore")
-    assert(fakePopup.button1._wmManualCopyStyleActive == false, "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to restore")
-    assert(fakePopup.button2._wmManualCopyStyleActive == false, "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to restore")
-    assert(fakePopup.button1._normalTexture == "orig-normal-start", "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button normal texture to restore exactly")
-    assert(fakePopup.button2._normalTexture == "orig-normal-cancel", "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button normal texture to restore exactly")
+    assert(
+      hideOk == true,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to be safe: " .. tostring(hideErr)
+    )
+    assert(
+      fakePopup.editBox.text == "",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to clear editbox text"
+    )
+    assert(
+      fakePopup._wmManualCopyStyleActive == false,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to restore"
+    )
+    assert(
+      fakePopup.button1._wmManualCopyStyleActive == false,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to restore"
+    )
+    assert(
+      fakePopup.button2._wmManualCopyStyleActive == false,
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to restore"
+    )
+    assert(
+      fakePopup.button1._normalTexture == "orig-normal-start",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button normal texture to restore exactly"
+    )
+    assert(
+      fakePopup.button2._normalTexture == "orig-normal-cancel",
+      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button normal texture to restore exactly"
+    )
     _G.StaticPopupDialogs = nil
   end
-
 
   -- -----------------------------------------------------------------------
   -- test_wire_frame_sets_on_show

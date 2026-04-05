@@ -256,7 +256,10 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     applyVertexColor(optionsIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(newConversationIcon, activeTheme.COLORS.text_primary)
     local newConversationBase = activeTheme.COLORS.bg_contact_hover
-    applyColorTexture(newConversationBg, { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 })
+    applyColorTexture(
+      newConversationBg,
+      { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 }
+    )
 
     local secondary = activeTheme.COLORS.text_secondary
     local gripColor = { secondary[1], secondary[2], secondary[3], 0.4 }

@@ -5,6 +5,7 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
 local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.ContentDetector")
 local RuntimeFactory = {}
@@ -81,6 +82,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     localFaction = options.localFaction
       or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
     store = store,
+    channelMessageStore = ChannelMessageStore.New(),
     queue = Queue.New(),
     now = options.now or currentTime,
     isChatMessagingLocked = options.isChatMessagingLocked or function()

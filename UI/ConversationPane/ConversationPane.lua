@@ -31,6 +31,55 @@ ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 ConversationPane.HasMore = TranscriptView.HasMore
 ConversationPane.LoadMore = TranscriptView.LoadMore
 
+-- Build a messages list that includes any recent channel context message
+-- for the selected contact, inserted at its chronological position.
+local function buildMessagesWithChannelContext(messages, selectedContact)
+  local ChannelMessageStore = ns.ChannelMessageStore
+  if not ChannelMessageStore or not selectedContact then
+    return messages
+  end
+  local storeState = ns._channelMessageState
+  if not storeState then
+    return messages
+  end
+  -- Derive lookup name: prefer gameAccountName (BNet in-game char), then displayName
+  local lookupName = selectedContact.gameAccountName or selectedContact.displayName
+  if not lookupName or lookupName == "" then
+    return messages
+  end
+  lookupName = string.lower(lookupName)
+  local now = type(_G["time"]) == "function" and _G["time"]() or nil
+  local entry = ChannelMessageStore.GetLatest(storeState, lookupName, now)
+  if not entry then
+    return messages
+  end
+
+  local channelMsg = {
+    id = "channel-ctx-" .. tostring(entry.sentAt),
+    direction = "in",
+    kind = "channel_context",
+    text = entry.text,
+    sentAt = entry.sentAt,
+    playerName = selectedContact.displayName or entry.playerName,
+    channelLabel = entry.channelLabel,
+  }
+
+  -- Insert at correct chronological position
+  local result = {}
+  local inserted = false
+  for _, m in ipairs(messages) do
+    if not inserted and (channelMsg.sentAt or 0) < (m.sentAt or 0) then
+      result[#result + 1] = channelMsg
+      inserted = true
+    end
+    result[#result + 1] = m
+  end
+  if not inserted then
+    result[#result + 1] = channelMsg
+  end
+  return result
+end
+
 -- Re-export header refresh
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
   view._selectedContact = selectedContact
@@ -42,7 +91,9 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- Pass classTag from selected contact so chat bubbles can use it as fallback
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
-  ConversationPane.RenderTranscript(view.transcript, conversation and conversation.messages or {})
+  local messages = conversation and conversation.messages or {}
+  messages = buildMessagesWithChannelContext(messages, selectedContact)
+  ConversationPane.RenderTranscript(view.transcript, messages)
   ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)
   ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)

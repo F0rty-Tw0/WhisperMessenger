@@ -75,6 +75,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     setFontObject(textFS, Theme.FONTS.system_text)
     setTextColor(textFS, Theme.COLORS.text_system)
     applyBubbleColor(Theme.COLORS.bg_bubble_system)
+  elseif kind == "channel_context" then
+    -- Channel context: muted version of incoming bubble
+    setFontObject(textFS, Theme.FONTS.message_text)
+    setTextColor(textFS, Theme.COLORS.text_received)
+    local base = Theme.COLORS.bg_bubble_in
+    applyBubbleColor({ base[1], base[2], base[3], (base[4] or 1) * 0.55 })
   elseif direction == "out" then
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, Theme.COLORS.text_sent)
@@ -148,7 +154,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   local icon = nil
   local iconFrame = nil
-  if kind == "user" and showIcon then
+  if (kind == "user" or kind == "channel_context") and showIcon then
     local bubbleIcon = BubbleIcon.CreateIcon(options.iconFactory or factory, parent, frame, message, direction, {
       fallbackClassTag = options.fallbackClassTag,
       iconFactory = options.iconFactory,

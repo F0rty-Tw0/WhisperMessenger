@@ -59,6 +59,7 @@ function AddonEventFrame.Install(deps)
         "BootstrapEventBridge"
       )
       EventBridge.RegisterLiveEvents(loadFrame)
+      EventBridge.RegisterChannelEvents(loadFrame)
 
       local runtime = Bootstrap.runtime
       if runtime and runtime.autoOpenCoordinator then
@@ -75,6 +76,21 @@ function AddonEventFrame.Install(deps)
       end
 
       return
+    end
+
+    -- Route channel messages directly to the store (bypass whisper pipeline)
+    EventBridge = resolveModule(
+      EventBridge,
+      "BootstrapEventBridge",
+      loadModule,
+      "WhisperMessenger.Core.Bootstrap.EventBridge",
+      "BootstrapEventBridge"
+    )
+    if EventBridge and EventBridge.RouteChannelEvent then
+      local runtime = Bootstrap.runtime
+      if EventBridge.RouteChannelEvent(runtime, event, ...) then
+        return
+      end
     end
 
     LifecycleHandlers = resolveModule(

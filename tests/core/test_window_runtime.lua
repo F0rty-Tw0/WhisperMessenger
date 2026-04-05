@@ -315,10 +315,22 @@ return function()
   local invalidActiveKey = runtime.activeConversationKey
   local invalidPersistedKey = characterState.activeConversationKey
   assert(onStartConversation("   \n  ") == false, "expected onStartConversation to reject whitespace-only names")
-  assert(countConversations() == invalidConversationCount, "expected invalid onStartConversation to keep conversations unchanged")
-  assert(runtime.activeConversationKey == invalidActiveKey, "expected invalid onStartConversation to keep runtime active key")
-  assert(characterState.activeConversationKey == invalidPersistedKey, "expected invalid onStartConversation to keep persisted active key")
-  assert(selectionRefreshes == invalidSelectionRefreshes, "expected invalid onStartConversation to skip selection refresh")
+  assert(
+    countConversations() == invalidConversationCount,
+    "expected invalid onStartConversation to keep conversations unchanged"
+  )
+  assert(
+    runtime.activeConversationKey == invalidActiveKey,
+    "expected invalid onStartConversation to keep runtime active key"
+  )
+  assert(
+    characterState.activeConversationKey == invalidPersistedKey,
+    "expected invalid onStartConversation to keep persisted active key"
+  )
+  assert(
+    selectionRefreshes == invalidSelectionRefreshes,
+    "expected invalid onStartConversation to skip selection refresh"
+  )
 
   local reuseConversationCount = countConversations()
   local reuseMarkedReadCount = #markedRead
@@ -326,20 +338,48 @@ return function()
   local reuseAvailabilityCount = #availabilityRequests
   local reuseFocusCount = composerFocuses
   assert(onStartConversation("  Arthas  ") == true, "expected onStartConversation to open an existing WOW conversation")
-  assert(countConversations() == reuseConversationCount, "expected onStartConversation to reuse existing conversation key")
+  assert(
+    countConversations() == reuseConversationCount,
+    "expected onStartConversation to reuse existing conversation key"
+  )
   assert(runtime.activeConversationKey == conversationKey, "expected existing conversation to become active")
   assert(characterState.activeConversationKey == conversationKey, "expected existing conversation to persist as active")
-  assert(#markedRead == reuseMarkedReadCount + 1 and markedRead[#markedRead] == conversationKey, "expected existing conversation path to mark read via selectConversation")
-  assert(#debugCalls == reuseDebugCount + 1 and debugCalls[#debugCalls] == conversationKey, "expected existing conversation path to go through diagnostics selector path")
-  assert(#availabilityRequests == reuseAvailabilityCount + 1 and availabilityRequests[#availabilityRequests] == "Player-1-00000001", "expected existing WOW conversation path to request availability")
+  assert(
+    #markedRead == reuseMarkedReadCount + 1 and markedRead[#markedRead] == conversationKey,
+    "expected existing conversation path to mark read via selectConversation"
+  )
+  assert(
+    #debugCalls == reuseDebugCount + 1 and debugCalls[#debugCalls] == conversationKey,
+    "expected existing conversation path to go through diagnostics selector path"
+  )
+  assert(
+    #availabilityRequests == reuseAvailabilityCount + 1
+      and availabilityRequests[#availabilityRequests] == "Player-1-00000001",
+    "expected existing WOW conversation path to request availability"
+  )
   assert(composerFocuses == reuseFocusCount + 1, "expected existing conversation path to focus composer input")
-  assert(runtime.isConversationOpen(conversationKey) == true, "expected existing conversation to report open when visible and selected")
+  assert(
+    runtime.isConversationOpen(conversationKey) == true,
+    "expected existing conversation to report open when visible and selected"
+  )
 
   local exactMatchConversationCount = countConversations()
-  assert(onStartConversation("  arTHas-ARea52  ") == true, "expected onStartConversation to reuse exact full-name match with mixed casing")
-  assert(countConversations() == exactMatchConversationCount, "expected exact full-name lookup to avoid creating a new conversation")
-  assert(runtime.activeConversationKey == conversationKey, "expected exact full-name lookup to keep Arthas-Area52 selected")
-  assert(characterState.activeConversationKey == conversationKey, "expected exact full-name lookup to persist selected conversation")
+  assert(
+    onStartConversation("  arTHas-ARea52  ") == true,
+    "expected onStartConversation to reuse exact full-name match with mixed casing"
+  )
+  assert(
+    countConversations() == exactMatchConversationCount,
+    "expected exact full-name lookup to avoid creating a new conversation"
+  )
+  assert(
+    runtime.activeConversationKey == conversationKey,
+    "expected exact full-name lookup to keep Arthas-Area52 selected"
+  )
+  assert(
+    characterState.activeConversationKey == conversationKey,
+    "expected exact full-name lookup to persist selected conversation"
+  )
 
   local secondArthasConversationKey = "wow::WOW::arthas-stormrage"
   runtime.store.conversations[secondArthasConversationKey] = {
@@ -356,17 +396,44 @@ return function()
   local ambiguousAvailabilityCount = #availabilityRequests
   local ambiguousFocusCount = composerFocuses
   local ambiguousConversationKey = "wow::WOW::arthas"
-  assert(onStartConversation("  Arthas  ") == true, "expected ambiguous base-name input to open a deterministic non-reused conversation")
-  assert(countConversations() == ambiguousConversationCount + 1, "expected ambiguous base-name lookup to create a new conversation")
-  assert(runtime.store.conversations[ambiguousConversationKey] ~= nil, "expected ambiguous base-name lookup to create key derived from typed whisper target")
-  assert(runtime.activeConversationKey == ambiguousConversationKey, "expected ambiguous base-name lookup to avoid selecting an arbitrary existing conversation")
-  assert(characterState.activeConversationKey == ambiguousConversationKey, "expected ambiguous base-name lookup to persist deterministic conversation key")
-  assert(#markedRead == ambiguousMarkedReadCount + 1 and markedRead[#markedRead] == ambiguousConversationKey, "expected ambiguous base-name path to select the newly-created conversation")
-  assert(#debugCalls == ambiguousDebugCount + 1 and debugCalls[#debugCalls] == ambiguousConversationKey, "expected ambiguous base-name path to go through diagnostics selector with new key")
-  assert(#availabilityRequests == ambiguousAvailabilityCount, "expected ambiguous base-name created conversation without guid to skip availability requests")
+  assert(
+    onStartConversation("  Arthas  ") == true,
+    "expected ambiguous base-name input to open a deterministic non-reused conversation"
+  )
+  assert(
+    countConversations() == ambiguousConversationCount + 1,
+    "expected ambiguous base-name lookup to create a new conversation"
+  )
+  assert(
+    runtime.store.conversations[ambiguousConversationKey] ~= nil,
+    "expected ambiguous base-name lookup to create key derived from typed whisper target"
+  )
+  assert(
+    runtime.activeConversationKey == ambiguousConversationKey,
+    "expected ambiguous base-name lookup to avoid selecting an arbitrary existing conversation"
+  )
+  assert(
+    characterState.activeConversationKey == ambiguousConversationKey,
+    "expected ambiguous base-name lookup to persist deterministic conversation key"
+  )
+  assert(
+    #markedRead == ambiguousMarkedReadCount + 1 and markedRead[#markedRead] == ambiguousConversationKey,
+    "expected ambiguous base-name path to select the newly-created conversation"
+  )
+  assert(
+    #debugCalls == ambiguousDebugCount + 1 and debugCalls[#debugCalls] == ambiguousConversationKey,
+    "expected ambiguous base-name path to go through diagnostics selector with new key"
+  )
+  assert(
+    #availabilityRequests == ambiguousAvailabilityCount,
+    "expected ambiguous base-name created conversation without guid to skip availability requests"
+  )
   assert(composerFocuses == ambiguousFocusCount + 1, "expected ambiguous base-name path to focus composer input")
   assert(runtime.store.conversations[conversationKey] ~= nil, "expected Arthas-Area52 conversation to remain available")
-  assert(runtime.store.conversations[secondArthasConversationKey] ~= nil, "expected Arthas-Stormrage conversation to remain available")
+  assert(
+    runtime.store.conversations[secondArthasConversationKey] ~= nil,
+    "expected Arthas-Stormrage conversation to remain available"
+  )
 
   local battleNetConversationKey = "wow::BN::uther#1234"
   runtime.store.conversations[battleNetConversationKey] = {
@@ -385,13 +452,34 @@ return function()
   local bnCollisionFocusCount = composerFocuses
   local bnCollisionConversationKey = "wow::WOW::uther"
   assert(onStartConversation("  Uther  ") == true, "expected whisper start flow to avoid reusing BN conversations")
-  assert(countConversations() == bnCollisionConversationCount + 1, "expected BN name collision to create a WOW whisper conversation")
-  assert(runtime.store.conversations[bnCollisionConversationKey] ~= nil, "expected BN name collision to create WOW conversation derived from typed name")
-  assert(runtime.activeConversationKey == bnCollisionConversationKey, "expected BN name collision to select WOW conversation key")
-  assert(characterState.activeConversationKey == bnCollisionConversationKey, "expected BN name collision to persist WOW conversation key")
-  assert(#markedRead == bnCollisionMarkedReadCount + 1 and markedRead[#markedRead] == bnCollisionConversationKey, "expected BN name collision path to select created WOW conversation")
-  assert(#debugCalls == bnCollisionDebugCount + 1 and debugCalls[#debugCalls] == bnCollisionConversationKey, "expected BN name collision path to route diagnostics through WOW key")
-  assert(#availabilityRequests == bnCollisionAvailabilityCount, "expected BN name collision created conversation without guid to skip availability requests")
+  assert(
+    countConversations() == bnCollisionConversationCount + 1,
+    "expected BN name collision to create a WOW whisper conversation"
+  )
+  assert(
+    runtime.store.conversations[bnCollisionConversationKey] ~= nil,
+    "expected BN name collision to create WOW conversation derived from typed name"
+  )
+  assert(
+    runtime.activeConversationKey == bnCollisionConversationKey,
+    "expected BN name collision to select WOW conversation key"
+  )
+  assert(
+    characterState.activeConversationKey == bnCollisionConversationKey,
+    "expected BN name collision to persist WOW conversation key"
+  )
+  assert(
+    #markedRead == bnCollisionMarkedReadCount + 1 and markedRead[#markedRead] == bnCollisionConversationKey,
+    "expected BN name collision path to select created WOW conversation"
+  )
+  assert(
+    #debugCalls == bnCollisionDebugCount + 1 and debugCalls[#debugCalls] == bnCollisionConversationKey,
+    "expected BN name collision path to route diagnostics through WOW key"
+  )
+  assert(
+    #availabilityRequests == bnCollisionAvailabilityCount,
+    "expected BN name collision created conversation without guid to skip availability requests"
+  )
   assert(composerFocuses == bnCollisionFocusCount + 1, "expected BN name collision path to focus composer input")
 
   local createdConversationName = "Jaina-Proudmoore"
@@ -401,18 +489,48 @@ return function()
   local createAvailabilityCount = #availabilityRequests
   local createPresenceCount = #presenceRefreshes
   local createFocusCount = composerFocuses
-  assert(onStartConversation("  " .. createdConversationName .. "  ") == true, "expected onStartConversation to create a missing WOW conversation")
-  assert(runtime.store.conversations[createdConversationKey] ~= nil, "expected missing conversation key to be created from player name")
-  assert(runtime.store.conversations[createdConversationKey].displayName == createdConversationName, "expected created conversation to preserve trimmed displayName")
-  assert(runtime.store.conversations[createdConversationKey].channel == "WOW", "expected created conversation channel to default to WOW")
+  assert(
+    onStartConversation("  " .. createdConversationName .. "  ") == true,
+    "expected onStartConversation to create a missing WOW conversation"
+  )
+  assert(
+    runtime.store.conversations[createdConversationKey] ~= nil,
+    "expected missing conversation key to be created from player name"
+  )
+  assert(
+    runtime.store.conversations[createdConversationKey].displayName == createdConversationName,
+    "expected created conversation to preserve trimmed displayName"
+  )
+  assert(
+    runtime.store.conversations[createdConversationKey].channel == "WOW",
+    "expected created conversation channel to default to WOW"
+  )
   assert(runtime.activeConversationKey == createdConversationKey, "expected created conversation to become active")
-  assert(characterState.activeConversationKey == createdConversationKey, "expected created conversation to persist as active")
-  assert(#markedRead == createMarkedReadCount + 1 and markedRead[#markedRead] == createdConversationKey, "expected created conversation path to route through selectConversation")
-  assert(#debugCalls == createDebugCount + 1 and debugCalls[#debugCalls] == createdConversationKey, "expected created conversation path to invoke diagnostics selector path")
-  assert(#availabilityRequests == createAvailabilityCount, "expected created conversation without guid to skip availability requests")
-  assert(#presenceRefreshes == createPresenceCount, "expected created conversation without guid to skip presence refresh")
+  assert(
+    characterState.activeConversationKey == createdConversationKey,
+    "expected created conversation to persist as active"
+  )
+  assert(
+    #markedRead == createMarkedReadCount + 1 and markedRead[#markedRead] == createdConversationKey,
+    "expected created conversation path to route through selectConversation"
+  )
+  assert(
+    #debugCalls == createDebugCount + 1 and debugCalls[#debugCalls] == createdConversationKey,
+    "expected created conversation path to invoke diagnostics selector path"
+  )
+  assert(
+    #availabilityRequests == createAvailabilityCount,
+    "expected created conversation without guid to skip availability requests"
+  )
+  assert(
+    #presenceRefreshes == createPresenceCount,
+    "expected created conversation without guid to skip presence refresh"
+  )
   assert(composerFocuses == createFocusCount + 1, "expected created conversation path to focus composer input")
-  assert(runtime.isConversationOpen(createdConversationKey) == true, "expected created conversation to report open when visible and selected")
+  assert(
+    runtime.isConversationOpen(createdConversationKey) == true,
+    "expected created conversation to report open when visible and selected"
+  )
 
   local deletedConversationKey = "wow::WOW::stale-area52"
   runtime.store.conversations[deletedConversationKey] = {

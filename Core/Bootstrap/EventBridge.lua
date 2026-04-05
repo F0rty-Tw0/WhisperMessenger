@@ -7,6 +7,7 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
+local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 
 local Trace = ns.Trace
 
@@ -115,6 +116,43 @@ function EventBridge.UnregisterSuspendableLifecycleEvents(frame)
       unregisterEventIfSupported(frame, eventName)
     end
   end
+end
+
+function EventBridge.RegisterChannelEvents(frame)
+  for _, eventName in ipairs(Constants.CHANNEL_EVENT_NAMES) do
+    registerEventIfSupported(frame, eventName)
+  end
+end
+
+function EventBridge.UnregisterChannelEvents(frame)
+  for _, eventName in ipairs(Constants.CHANNEL_EVENT_NAMES) do
+    if frame.UnregisterEvent then
+      unregisterEventIfSupported(frame, eventName)
+    end
+  end
+end
+
+local CHANNEL_EVENTS = {
+  CHAT_MSG_CHANNEL = true,
+}
+
+function EventBridge.RouteChannelEvent(runtime, eventName, ...)
+  if runtime == nil or not CHANNEL_EVENTS[eventName] then
+    return nil
+  end
+  local store = runtime.channelMessageStore
+  if store == nil then
+    return nil
+  end
+  local text, senderName, _, channelString = ...
+  -- Extract base channel name (e.g. "2. Trade - City" → "Trade")
+  local channelLabel = string.match(channelString or "", "^%d+%.%s*(.-)%s*%-") or channelString or ""
+  if channelLabel == "" then
+    channelLabel = channelString or ""
+  end
+  local sentAt = runtime.now and runtime.now() or 0
+  ChannelMessageStore.Record(store, senderName, text, channelLabel, sentAt)
+  return store
 end
 
 function EventBridge.RegisterSuspendableLifecycleEvents(frame)

@@ -9,6 +9,8 @@
 
 - New **Start New Whisper** header action next to `WM` opens a player-name prompt so you can start or jump to a whisper conversation without typing `/w`.
 - Start-conversation and manual-copy dialogs now share the same messenger popup styling, including a wider near full-width input field for easier text entry.
+- **Channel message context** — when opening a conversation, the contact's most recent message from public channels (Trade, General, LFG, etc.) now appears as a chat bubble with a gold "· via Trade" tag, so you know why you're whispering them.
+
 ### Fixed
 
 - URL hyperlink clicks no longer trigger protected-function taint errors (`ADDON_ACTION_FORBIDDEN`).

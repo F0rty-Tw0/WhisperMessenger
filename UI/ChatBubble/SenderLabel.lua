@@ -37,7 +37,19 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     local displayName = message.playerName or message.senderDisplayName or ""
     nameFS:SetText(displayName)
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
-    timeFS:SetPoint("LEFT", nameFS, "RIGHT", 6, 0)
+
+    -- Channel tag as a separate colored FontString (e.g. "· via Trade")
+    local channelAnchor = nameFS
+    if message.channelLabel and message.channelLabel ~= "" then
+      local tagFS = frame:CreateFontString(nil, "OVERLAY")
+      setFontObject(tagFS, Theme.FONTS.message_time)
+      tagFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- hardcoded gold
+      tagFS:SetText("\194\183 via " .. message.channelLabel)
+      tagFS:SetPoint("LEFT", nameFS, "RIGHT", 4, 0)
+      channelAnchor = tagFS
+    end
+
+    timeFS:SetPoint("LEFT", channelAnchor, "RIGHT", 6, 0)
     frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
   end
 
