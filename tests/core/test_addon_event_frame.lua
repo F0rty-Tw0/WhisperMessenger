@@ -49,10 +49,10 @@ return function()
         frame:RegisterEvent(eventName)
       end
     end,
-    RegisterChannelEvents = function(_frame)
+    RegisterChannelEvents = function(evtFrame)
       calls[#calls + 1] = "RegisterChannelEvents"
       for eventName in pairs(channelEvents) do
-        _frame:RegisterEvent(eventName)
+        evtFrame:RegisterEvent(eventName)
       end
     end,
     RouteChannelEvent = function()
