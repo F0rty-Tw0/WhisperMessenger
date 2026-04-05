@@ -52,6 +52,13 @@ local function installDirectHooks(runtime, hooks, deps)
       return
     end
 
+    if deps.isInCombat and deps.isInCombat() then
+      EditBoxInterop.markCombatDraft(editBox)
+    end
+    if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
+      return
+    end
+
     local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
     local target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
     local opened = false
@@ -109,6 +116,13 @@ local function installPoller(runtime, hooks, deps)
 
   local pollFrame = createFrame("Frame")
   pollFrame:SetScript("OnUpdate", function()
+    local inCombat = deps.isInCombat and deps.isInCombat()
+    if inCombat then
+      local focused = EditBoxInterop.findFocusedEditBox(deps)
+      if focused then
+        EditBoxInterop.markCombatDraft(focused)
+      end
+    end
     if not shouldInterceptHook(runtime, deps) then
       return
     end
@@ -116,6 +130,10 @@ local function installPoller(runtime, hooks, deps)
     for index = 1, deps.getNumChatWindows() do
       local editBox = deps.getEditBox(index)
       if editBox and editBox:HasFocus() then
+        if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
+          return
+        end
+
         local text = editBox.GetText and editBox:GetText() or ""
         if string.sub(text, 1, 1) == "/" then
           local command = string.lower(string.match(text, "^(/[^%s]*)") or "")

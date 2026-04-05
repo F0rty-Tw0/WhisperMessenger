@@ -415,6 +415,156 @@ return function()
     sendTellResult = true
   end
 
+  -- -----------------------------------------------------------------------
+  -- test_poller_preserves_combat_typed_draft_after_combat_ends
+  -- -----------------------------------------------------------------------
+  do
+    local carriedDraftBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local carriedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
+    function carriedDraftBox:GetAttribute(key)
+      return carriedAttrState[key]
+    end
+    function carriedDraftBox:SetAttribute(key, value)
+      carriedAttrState[key] = value
+    end
+    carriedDraftBox.chatType = "WHISPER"
+    carriedDraftBox.tellTarget = "Arthas"
+    carriedDraftBox.stickyType = "SAY"
+    carriedDraftBox:SetText("typed during combat")
+    carriedDraftBox:SetFocus()
+    _G.ChatFrame1EditBox = carriedDraftBox
+
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+    inCombat = true
+    windowVisible = false
+    pollFrame.scripts.OnUpdate(pollFrame)
+
+    assert(
+      #sendTellCalls == prevSendTellCount,
+      "expected poller not to route whisper draft while still in combat"
+    )
+    assert(
+      #deactivated == prevDeactivatedCount,
+      "expected poller not to close Blizzard chat edit box while in combat"
+    )
+
+    inCombat = false
+    pollFrame.scripts.OnUpdate(pollFrame)
+
+    assert(
+      #sendTellCalls == prevSendTellCount,
+      "expected combat-carried draft to remain in Blizzard chat after combat ends"
+    )
+    assert(
+      #deactivated == prevDeactivatedCount,
+      "expected combat-carried draft edit box to remain open after combat ends"
+    )
+    assert(
+      carriedDraftBox:GetText() == "typed during combat",
+      "expected combat-carried draft text to remain unchanged after combat ends"
+    )
+    assert(
+      carriedDraftBox:HasFocus() == true,
+      "expected combat-carried draft focus to remain in Blizzard chat after combat ends"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_direct_hook_preserves_combat_typed_draft_after_combat_ends
+  -- -----------------------------------------------------------------------
+  do
+    local carriedDraftBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local carriedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
+    function carriedDraftBox:GetAttribute(key)
+      return carriedAttrState[key]
+    end
+    function carriedDraftBox:SetAttribute(key, value)
+      carriedAttrState[key] = value
+    end
+    carriedDraftBox.chatType = "WHISPER"
+    carriedDraftBox.tellTarget = "Arthas"
+    carriedDraftBox.stickyType = "SAY"
+    carriedDraftBox:SetText("typed during combat")
+    carriedDraftBox:SetFocus()
+    _G.ChatFrame1EditBox = carriedDraftBox
+
+    inCombat = true
+    windowVisible = false
+    pollFrame.scripts.OnUpdate(pollFrame)
+    inCombat = false
+
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+    local prevTimerCount = #timerCallbacks
+    hookedFunctions["ChatFrame_SendTell"][1]("Arthas")
+
+    assert(
+      #sendTellCalls == prevSendTellCount,
+      "expected direct hook to keep combat-carried draft in Blizzard chat after combat ends"
+    )
+    assert(
+      #deactivated == prevDeactivatedCount,
+      "expected direct hook not to close combat-carried draft edit box"
+    )
+    assert(
+      #timerCallbacks == prevTimerCount,
+      "expected direct hook not to schedule deferred close for combat-carried draft"
+    )
+    assert(
+      carriedDraftBox:GetText() == "typed during combat",
+      "expected direct hook to preserve combat-carried draft text"
+    )
+    assert(
+      carriedDraftBox:HasFocus() == true,
+      "expected direct hook to preserve focus for combat-carried draft"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_poller_routes_again_after_preserved_draft_cleared
+  -- -----------------------------------------------------------------------
+  do
+    local resumedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local resumedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
+    function resumedBox:GetAttribute(key)
+      return resumedAttrState[key]
+    end
+    function resumedBox:SetAttribute(key, value)
+      resumedAttrState[key] = value
+    end
+    resumedBox.chatType = "WHISPER"
+    resumedBox.tellTarget = "Arthas"
+    resumedBox.stickyType = "SAY"
+    resumedBox:SetText("typed during combat")
+    resumedBox:SetFocus()
+    _G.ChatFrame1EditBox = resumedBox
+
+    inCombat = true
+    windowVisible = false
+    pollFrame.scripts.OnUpdate(pollFrame)
+    inCombat = false
+
+    resumedBox:SetText("")
+    sendTellResult = true
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+    pollFrame.scripts.OnUpdate(pollFrame)
+
+    assert(
+      #sendTellCalls == prevSendTellCount + 1 and sendTellCalls[#sendTellCalls] == "Arthas",
+      "expected routing to resume once preserved combat draft is cleared"
+    )
+    assert(
+      #deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == resumedBox,
+      "expected poller to close Blizzard chat edit box once preserved draft is cleared"
+    )
+    assert(
+      resumedBox:HasFocus() == false,
+      "expected cleared draft edit box to lose focus once normal routing resumes"
+    )
+  end
+
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
   rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)

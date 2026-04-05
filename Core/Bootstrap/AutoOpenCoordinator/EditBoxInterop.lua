@@ -21,8 +21,51 @@ function EditBoxInterop.readEditBoxState(editBox, key)
   return nil
 end
 
+local function readEditBoxText(editBox)
+  if type(editBox) == "table" and type(editBox.GetText) == "function" then
+    return editBox:GetText() or ""
+  end
+  return ""
+end
+
+function EditBoxInterop.markCombatDraft(editBox)
+  local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
+  if chatType ~= "WHISPER" and chatType ~= "BN_WHISPER" then
+    return
+  end
+
+  local typed = readEditBoxText(editBox)
+  if typed ~= "" then
+    editBox._wmTypedDuringCombat = true
+  end
+end
+
+function EditBoxInterop.shouldPreserveCombatDraft(editBox)
+  if type(editBox) ~= "table" then
+    return false
+  end
+
+  local typed = readEditBoxText(editBox)
+  if typed == "" then
+    editBox._wmTypedDuringCombat = nil
+    return false
+  end
+
+  if editBox._wmTypedDuringCombat ~= true then
+    return false
+  end
+
+  local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
+  if chatType == "WHISPER" or chatType == "BN_WHISPER" then
+    return true
+  end
+
+  editBox._wmTypedDuringCombat = nil
+  return false
+end
+
 function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
-  local typed = editBox.GetText and editBox:GetText() or ""
+  local typed = readEditBoxText(editBox)
   if typed ~= "" and runtime.setComposerText then
     runtime.setComposerText(typed)
   end
@@ -39,6 +82,7 @@ function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
     pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
   end
   editBox:SetText("")
+  editBox._wmTypedDuringCombat = nil
 
   if type(deactivateChat) == "function" then
     deactivateChat(editBox)
@@ -75,6 +119,10 @@ function EditBoxInterop.findBattleNetAccountInfo(target, bnetApi, getNumFriends)
 end
 
 function EditBoxInterop.interceptEditBox(runtime, hooks, deps, editBox)
+  if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
+    return false
+  end
+
   local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
   local target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
 
