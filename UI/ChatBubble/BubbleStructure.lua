@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 
 local CORNER_R = 8
 
@@ -36,21 +37,13 @@ function BubbleStructure.createStructure(frame)
   end
   if frame.SetScript then
     frame:SetScript("OnHyperlinkEnter", function(self, link, _text)
-      if type(_G.GameTooltip) == "table" and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(self, "ANCHOR_CURSOR")
-        _G.GameTooltip:SetHyperlink(link)
-        _G.GameTooltip:Show()
-      end
+      Hyperlinks.HandleEnter(self, link)
     end)
     frame:SetScript("OnHyperlinkLeave", function(self)
-      if type(_G.GameTooltip) == "table" and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
+      Hyperlinks.HandleLeave()
     end)
     frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      if type(_G.SetItemRef) == "function" then
-        _G.SetItemRef(link, text, button, self)
-      end
+      Hyperlinks.HandleClick(link, text, button, self)
     end)
   end
 

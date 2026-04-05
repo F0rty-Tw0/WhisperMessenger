@@ -59,6 +59,7 @@ UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
 UI/ScrollView/Navigation.lua
 UI/ScrollView/Factory.lua

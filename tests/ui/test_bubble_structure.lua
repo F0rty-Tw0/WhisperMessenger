@@ -50,4 +50,44 @@ return function()
     assert(type(BubbleStructure.CORNER_R) == "number", "expected CORNER_R to be a number")
     assert(BubbleStructure.CORNER_R == 8, "expected CORNER_R == 8")
   end
+
+  -- test_create_structure_avoids_protected_url_launch_and_copies_link
+  do
+    local savedExternalEventURL = _G.C_ExternalEventURL
+    local savedLaunchURL = _G.LaunchURL
+    local savedClipboardNamespace = _G.C_Clipboard
+
+    local launchAttempted = false
+    local copiedUrl = nil
+
+    _G.C_ExternalEventURL = {
+      LaunchURL = function()
+        launchAttempted = true
+      end,
+    }
+    _G.LaunchURL = function()
+      launchAttempted = true
+    end
+    _G.C_Clipboard = {
+      SetClipboard = function(text)
+        copiedUrl = text
+      end,
+    }
+
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    BubbleStructure.createStructure(frame)
+    frame.scripts.OnHyperlinkClick(
+      frame,
+      "url:https://example.com/path?q=1",
+      "https://example.com/path?q=1",
+      "LeftButton"
+    )
+
+    assert(launchAttempted == false, "expected URL click to avoid protected LaunchURL APIs")
+    assert(copiedUrl == "https://example.com/path?q=1", "expected URL click to copy URL as safe fallback")
+
+    _G.C_ExternalEventURL = savedExternalEventURL
+    _G.LaunchURL = savedLaunchURL
+    _G.C_Clipboard = savedClipboardNamespace
+  end
 end

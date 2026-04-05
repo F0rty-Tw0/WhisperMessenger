@@ -5,6 +5,7 @@ end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptView = {}
@@ -17,15 +18,17 @@ TranscriptView.MESSAGES_PAGE_SIZE = 10
 local MESSAGES_PAGE_SIZE = TranscriptView.MESSAGES_PAGE_SIZE
 
 local function formatMessage(message)
+  local body = Hyperlinks.FormatTextForDisplay(message and message.text or "")
+
   if message.kind == "system" then
-    return "[System] " .. (message.text or "")
+    return "[System] " .. body
   end
 
   if message.direction == "out" then
-    return "You: " .. (message.text or "")
+    return "You: " .. body
   end
 
-  return message.text or ""
+  return body
 end
 
 local function transcriptContentHeight(transcript)

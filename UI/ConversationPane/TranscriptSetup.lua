@@ -9,6 +9,7 @@ local TranscriptView = ns.ConversationPaneTranscriptView
   or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
@@ -46,9 +47,7 @@ function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, C
   end
   if transcript.text.SetScript then
     transcript.text:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      if type(_G.SetItemRef) == "function" then
-        _G.SetItemRef(link, text, button, self)
-      end
+      Hyperlinks.HandleClick(link, text, button, self)
     end)
     transcript.text:SetScript("OnEditFocusGained", function(self)
       if self.ClearFocus then

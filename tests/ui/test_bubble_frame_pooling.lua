@@ -35,6 +35,101 @@ return function()
     assert(bubble.frame.point == nil, "expected CreateBubble to leave bubble placement unset for Layout")
   end
 
+  -- TEST 0.5: BubbleFrame converts plain URLs into clickable hyperlinks
+  do
+    local factory = FakeUI.NewFactory()
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    contentFrame:SetSize(400, 600)
+
+    local bubble = BubbleFrame.CreateBubble(factory, contentFrame, {
+      direction = "in",
+      kind = "user",
+      text = "Visit https://example.com/docs for details.",
+      sentAt = 1000,
+      playerName = "Arthas",
+    }, {
+      paneWidth = 400,
+      showIcon = false,
+    })
+
+    assert(
+      bubble.text:GetText()
+        == "Visit |cff71d5ff|Hurl:https://example.com/docs|hhttps://example.com/docs|h|r for details.",
+      "expected BubbleFrame to render plain URLs as clickable hyperlinks"
+    )
+  end
+
+  -- TEST 0.6: BubbleFrame keeps balanced trailing URL delimiters
+  do
+    local factory = FakeUI.NewFactory()
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    contentFrame:SetSize(400, 600)
+
+    local bubble = BubbleFrame.CreateBubble(factory, contentFrame, {
+      direction = "in",
+      kind = "user",
+      text = "Wiki https://en.wikipedia.org/wiki/Function_(mathematics).",
+      sentAt = 1000,
+      playerName = "Arthas",
+    }, {
+      paneWidth = 400,
+      showIcon = false,
+    })
+
+    assert(
+      bubble.text:GetText()
+        == "Wiki |cff71d5ff|Hurl:https://en.wikipedia.org/wiki/Function_(mathematics)|hhttps://en.wikipedia.org/wiki/Function_(mathematics)|h|r.",
+      "expected BubbleFrame to preserve balanced trailing ')' in URLs"
+    )
+  end
+
+  -- TEST 0.7: BubbleFrame keeps IPv6 bracket delimiters in URLs
+  do
+    local factory = FakeUI.NewFactory()
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    contentFrame:SetSize(400, 600)
+
+    local bubble = BubbleFrame.CreateBubble(factory, contentFrame, {
+      direction = "in",
+      kind = "user",
+      text = "Server https://[2001:db8::1]/docs",
+      sentAt = 1000,
+      playerName = "Arthas",
+    }, {
+      paneWidth = 400,
+      showIcon = false,
+    })
+
+    assert(
+      bubble.text:GetText() == "Server |cff71d5ff|Hurl:https://[2001:db8::1]/docs|hhttps://[2001:db8::1]/docs|h|r",
+      "expected BubbleFrame to preserve IPv6 brackets in URLs"
+    )
+  end
+
+  -- TEST 0.8: BubbleFrame does not rewrite existing WoW hyperlinks
+  do
+    local factory = FakeUI.NewFactory()
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    contentFrame:SetSize(400, 600)
+
+    local itemLink = "|cffffff00|Hitem:19019::::::::|h[Thunderfury]|h|r"
+    local bubble = BubbleFrame.CreateBubble(factory, contentFrame, {
+      direction = "in",
+      kind = "user",
+      text = "Loot " .. itemLink .. " and https://example.com",
+      sentAt = 1000,
+      playerName = "Arthas",
+    }, {
+      paneWidth = 400,
+      showIcon = false,
+    })
+
+    assert(
+      bubble.text:GetText()
+        == "Loot " .. itemLink .. " and |cff71d5ff|Hurl:https://example.com|hhttps://example.com|h|r",
+      "expected BubbleFrame to preserve existing item hyperlinks while linkifying plain URLs"
+    )
+  end
   -- TEST 1: Layout owns final bubble placement for each alignment mode
   do
     local factory = FakeUI.NewFactory()

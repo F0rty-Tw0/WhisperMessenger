@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BubbleStructure = ns.ChatBubbleBubbleStructure or require("WhisperMessenger.UI.ChatBubble.BubbleStructure")
 local BubbleIcon = ns.ChatBubbleBubbleIcon or require("WhisperMessenger.UI.ChatBubble.BubbleIcon")
 local ContextMenu = ns.ChatBubbleContextMenu or require("WhisperMessenger.UI.ChatBubble.ContextMenu")
+local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -19,6 +20,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local showIcon = options.showIcon
   local kind = message.kind or "user"
   local direction = message.direction or "in"
+  local displayText = Hyperlinks.FormatTextForDisplay(message.text or "")
 
   local pH = Theme.LAYOUT.BUBBLE_PADDING_H
   local pV = Theme.LAYOUT.BUBBLE_PADDING_V
@@ -85,7 +87,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
   local textAvailWidth = maxBubbleWidth - pH * 2
 
-  local textHeight = BubbleStructure.measureTextHeight(textFS, message.text, textAvailWidth)
+  local textHeight = BubbleStructure.measureTextHeight(textFS, displayText, textAvailWidth)
 
   local textColumnWidth = textAvailWidth
   if type(textFS.GetStringWidth) == "function" then
@@ -96,7 +98,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   end
 
   if textColumnWidth < textAvailWidth then
-    textHeight = BubbleStructure.measureTextHeight(textFS, message.text, textColumnWidth)
+    textHeight = BubbleStructure.measureTextHeight(textFS, displayText, textColumnWidth)
   end
 
   local bubbleInnerWidth = textColumnWidth
@@ -107,21 +109,14 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   textFS:ClearAllPoints()
   textFS:SetWidth(textColumnWidth)
   textFS:SetJustifyH("LEFT")
-  textFS:SetText(message.text or "")
+  textFS:SetText(displayText)
   textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
 
   if frame.SetScript then
     local openedOnMouseDown = false
 
     local function openBubbleMenu(anchor)
-      local currentText = nil
-      if textFS and textFS.GetText then
-        currentText = textFS:GetText()
-      end
-
-      if currentText == nil or currentText == "" then
-        currentText = message.text
-      end
+      local currentText = message.text or ""
 
       ContextMenu.Open(currentText, anchor or frame)
     end
