@@ -7,6 +7,8 @@
 
 - Clickable URL detection in chat bubbles and transcript text for plain `http://`, `https://`, and `www.` links.
 
+- New **Start New Whisper** header action next to `WM` opens a player-name prompt so you can start or jump to a whisper conversation without typing `/w`.
+- Start-conversation and manual-copy dialogs now share the same messenger popup styling, including a wider near full-width input field for easier text entry.
 ### Fixed
 
 - URL hyperlink clicks no longer trigger protected-function taint errors (`ADDON_ACTION_FORBIDDEN`).
