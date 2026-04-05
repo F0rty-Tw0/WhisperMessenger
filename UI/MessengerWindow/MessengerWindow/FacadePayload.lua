@@ -15,6 +15,7 @@ function FacadePayload.Build(options)
   return {
     frame = chrome.frame,
     title = chrome.title,
+    newConversationButton = chrome.newConversationButton,
     contactsPane = layout.contactsPane,
     contactsPaneBorder = layout.contactsPaneBorder,
     contactsDivider = layout.contactsDivider,

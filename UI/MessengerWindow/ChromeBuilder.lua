@@ -12,14 +12,14 @@ local setTextColor = UIHelpers.setTextColor
 local ChromeBuilder = {}
 
 -- Creates the outer frame, background, edge textures, title bar, title label,
--- close button, options button, and resize grip.
+-- close button, options button, new conversation button, and resize grip.
 --
 -- factory   : frame factory (provides CreateFrame)
 -- parent    : parent frame (e.g. UIParent)
 -- initialState : { anchorPoint, relativePoint, x, y, width, height }
 -- options   : { title, onClose }
 --
--- Returns: { frame, background, titleBar, title, closeButton, optionsButton, resizeGrip }
+-- Returns: { frame, background, titleBar, title, newConversationButton, closeButton, optionsButton, resizeGrip }
 function ChromeBuilder.Build(factory, parent, initialState, options)
   options = options or {}
 
@@ -99,7 +99,53 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -9)
   title:SetText(options.title or Theme.TITLE)
+  if title.SetShadowColor then
+    title:SetShadowColor(0, 0, 0, 0.85)
+  end
+  if title.SetShadowOffset then
+    title:SetShadowOffset(1, -1)
+  end
   frame.title = title
+
+  local newConversationButton = factory.CreateFrame("Button", nil, frame)
+  newConversationButton:SetSize(24, 24)
+  newConversationButton:SetPoint("LEFT", title, "RIGHT", 6, 0)
+  local newConversationBg = newConversationButton:CreateTexture(nil, "BACKGROUND")
+  newConversationBg:SetAllPoints(newConversationButton)
+  local newConversationBase = Theme.COLORS.bg_contact_hover
+  applyColorTexture(newConversationBg, { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 })
+  local newConversationIcon = newConversationButton:CreateTexture(nil, "ARTWORK")
+  newConversationIcon:SetSize(16, 16)
+  newConversationIcon:SetPoint("CENTER", newConversationButton, "CENTER", 0, 0)
+  newConversationIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
+  newConversationIcon:SetDesaturated(true)
+  applyVertexColor(newConversationIcon, Theme.COLORS.text_primary)
+  if newConversationButton.SetScript then
+    newConversationButton:SetScript("OnEnter", function()
+      applyVertexColor(newConversationIcon, Theme.COLORS.text_title or Theme.COLORS.text_primary)
+      do
+        local bc = Theme.COLORS.bg_contact_hover
+        applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.75 })
+      end
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(newConversationButton, "ANCHOR_TOP")
+        _G.GameTooltip:SetText("Start New Whisper")
+        if _G.GameTooltip.AddLine then
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, "Open an empty conversation thread.", 1, 1, 1)
+        end
+        _G.GameTooltip:Show()
+      end
+    end)
+    newConversationButton:SetScript("OnLeave", function()
+      applyVertexColor(newConversationIcon, Theme.COLORS.text_primary)
+      local bc = Theme.COLORS.bg_contact_hover
+      applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.35 })
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
+    end)
+  end
+  newConversationButton:EnableMouse(true)
 
   -- Custom close button (no template)
   local closeButton = factory.CreateFrame("Button", nil, frame)
@@ -200,7 +246,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     activeTheme = activeTheme or Theme
     applyColorTexture(background, activeTheme.COLORS.bg_primary)
     applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
-    setTextColor(title, activeTheme.COLORS.text_title or activeTheme.COLORS.text_primary)
+    setTextColor(title, activeTheme.COLORS.text_primary)
 
     local divider = activeTheme.COLORS.divider
     UIHelpers.applyBorderBoxColor(edgeTextures, { divider[1], divider[2], divider[3], divider[4] or 1 })
@@ -208,6 +254,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
 
     applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(optionsIcon, activeTheme.COLORS.text_secondary)
+    applyVertexColor(newConversationIcon, activeTheme.COLORS.text_primary)
+    local newConversationBase = activeTheme.COLORS.bg_contact_hover
+    applyColorTexture(newConversationBg, { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 })
 
     local secondary = activeTheme.COLORS.text_secondary
     local gripColor = { secondary[1], secondary[2], secondary[3], 0.4 }
@@ -225,6 +274,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     titleBarBorder = titleBarBorder,
     titleBarTopBorder = titleBarTopBorder,
     title = title,
+    newConversationButton = newConversationButton,
     closeButton = closeButton,
     optionsButton = optionsButton,
     resizeGrip = resizeGrip,

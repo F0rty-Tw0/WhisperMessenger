@@ -231,6 +231,7 @@ function MessengerWindow.Create(factory, options)
     onResetWindowPosition = options.onResetWindowPosition,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
+    onStartConversation = options.onStartConversation,
     isShown = isShown,
     windowGeometry = windowGeometry,
     frame = frame,

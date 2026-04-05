@@ -38,11 +38,64 @@ return function()
     chrome.title.text == Theme.TITLE,
     "expected title to be '" .. Theme.TITLE .. "' but got '" .. tostring(chrome.title.text) .. "'"
   )
-  local expectedTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
+  local expectedTitleColor = Theme.COLORS.text_primary
   assert(
     colorsMatch(chrome.title.textColor, expectedTitleColor),
-    "expected title text to use text_title or text_primary token"
+    "expected title text to use text_primary for better readability"
   )
+  assert(chrome.newConversationButton ~= nil, "expected a New Conversation button")
+  assert(chrome.newConversationButton.point ~= nil, "expected New Conversation button to be anchored")
+  assert(chrome.newConversationButton.point[1] == "LEFT", "expected New Conversation button to anchor from its left edge")
+  assert(chrome.newConversationButton.point[2] == chrome.title, "expected New Conversation button to anchor relative to title")
+  assert(chrome.newConversationButton.point[3] == "RIGHT", "expected New Conversation button to sit to the right of title")
+  assert(chrome.newConversationButton.point[4] ~= nil and chrome.newConversationButton.point[4] >= 0 and chrome.newConversationButton.point[4] <= 12, "expected New Conversation button horizontal offset to stay near title")
+
+  local newConversationIconTexture = nil
+  for _, child in ipairs(chrome.newConversationButton.children or {}) do
+    if child.frameType == "Texture" and type(child.texturePath) == "string" and child.texturePath ~= "" then
+      newConversationIconTexture = child
+      break
+    end
+  end
+  assert(newConversationIconTexture ~= nil, "expected New Conversation button to include an icon texture")
+
+  local onEnterScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnEnter") or nil
+  local onLeaveScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnLeave") or nil
+  assert(type(onEnterScript) == "function", "expected New Conversation button OnEnter script")
+  assert(type(onLeaveScript) == "function", "expected New Conversation button OnLeave script")
+
+  local originalGameTooltip = _G.GameTooltip
+  local tooltipState = { shown = false, hidden = false }
+  _G.GameTooltip = {
+    SetOwner = function(_, owner, anchor)
+      tooltipState.owner = owner
+      tooltipState.anchor = anchor
+    end,
+    SetText = function(_, text)
+      tooltipState.text = text
+    end,
+    AddLine = function(_, text)
+      tooltipState.line = text
+    end,
+    Show = function()
+      tooltipState.shown = true
+    end,
+    Hide = function()
+      tooltipState.hidden = true
+    end,
+  }
+
+  onEnterScript(chrome.newConversationButton)
+  assert(tooltipState.owner == chrome.newConversationButton, "expected tooltip owner to be the New Conversation button")
+  assert(tooltipState.anchor == "ANCHOR_TOP", "expected tooltip to anchor above the New Conversation button")
+  assert(tooltipState.text == "Start New Whisper", "expected tooltip title text on hover")
+  assert(tooltipState.line == "Open an empty conversation thread.", "expected tooltip description text on hover")
+  assert(tooltipState.shown == true, "expected tooltip to be shown on hover")
+
+  onLeaveScript(chrome.newConversationButton)
+  assert(tooltipState.hidden == true, "expected tooltip to hide on leave")
+  _G.GameTooltip = originalGameTooltip
+  
 
   -- explicit title option overrides Theme.TITLE
   local chrome2 = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, { title = "Custom" })
@@ -70,10 +123,10 @@ return function()
       colorsMatch(chrome.titleBarTopBorder.color, Theme.COLORS.divider),
       "expected title bar top border to repaint with preset divider color"
     )
-    local expectedPresetTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
+    local expectedPresetTitleColor = Theme.COLORS.text_primary
     assert(
       colorsMatch(chrome.title.textColor, expectedPresetTitleColor),
-      "expected title text to repaint with preset title color token"
+      "expected title text to repaint with text_primary token for readability"
     )
   end
   if Theme.SetPreset and previousPreset then

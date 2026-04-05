@@ -4,8 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local PopupUI = {}
-local Styling = ns.ChatBubbleContextMenuManualCopyPopupUIStyling
-  or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.Styling")
+local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Resolvers = ns.ChatBubbleContextMenuManualCopyPopupUIResolvers
   or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.Resolvers")
 
@@ -43,15 +42,18 @@ function PopupUI.ShowManualCopyDialog(text)
       text = "Press Ctrl+C to copy the message text.",
       button1 = _G["OKAY"] or "OK",
       hasEditBox = true,
-      editBoxWidth = 320,
+      editBoxWidth = 340,
       timeout = 0,
       whileDead = 1,
       hideOnEscape = 1,
       preferredIndex = 3,
       OnShow = function(self, data)
         local value = tostring((self and self.data) or data or "")
-        Styling.styleManualCopyDialog(self, MANUAL_COPY_DIALOG_NAME)
-        Resolvers.primePopupEditBox(self, value, MANUAL_COPY_DIALOG_NAME)
+        StyledTextInputPopup.Apply(self, MANUAL_COPY_DIALOG_NAME, value, {
+          fullWidthInput = true,
+          inputHorizontalPadding = 14,
+          minInputWidth = 260,
+        })
       end,
       EditBoxOnEscapePressed = function(self)
         if self and self.ClearFocus then
@@ -63,11 +65,7 @@ function PopupUI.ShowManualCopyDialog(text)
         end
       end,
       OnHide = function(self)
-        Styling.restoreManualCopyDialog(self, MANUAL_COPY_DIALOG_NAME)
-        local editBox = Resolvers.resolvePopupEditBox(self, MANUAL_COPY_DIALOG_NAME)
-        if editBox and editBox.SetText then
-          editBox:SetText("")
-        end
+        StyledTextInputPopup.Restore(self, MANUAL_COPY_DIALOG_NAME, { clearEditBox = true })
       end,
     }
   end
@@ -78,8 +76,11 @@ function PopupUI.ShowManualCopyDialog(text)
   end
 
   dialog.data = text
-  Styling.styleManualCopyDialog(dialog, MANUAL_COPY_DIALOG_NAME)
-  Resolvers.primePopupEditBox(dialog, text, MANUAL_COPY_DIALOG_NAME)
+  StyledTextInputPopup.Apply(dialog, MANUAL_COPY_DIALOG_NAME, text, {
+    fullWidthInput = true,
+    inputHorizontalPadding = 14,
+    minInputWidth = 260,
+  })
 
   if type(_G.C_Timer) == "table" and type(_G.C_Timer.After) == "function" then
     scheduleManualCopyRefocus(dialog, text, 0)

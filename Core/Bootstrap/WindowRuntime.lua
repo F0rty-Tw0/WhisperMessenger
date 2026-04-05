@@ -14,6 +14,7 @@ local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 
 local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
@@ -105,6 +106,114 @@ function WindowRuntime.Create(options)
     return conversationSelector.selectConversation(conversationKey)
   end
 
+  local function normalizePlayerName(playerName)
+    if type(playerName) ~= "string" then
+      return nil
+    end
+
+    local trimmed = string.match(playerName, "^%s*(.-)%s*$")
+    if trimmed == "" then
+      return nil
+    end
+
+    return trimmed
+  end
+
+  local function findExistingConversationKeyByName(playerName)
+    if type(runtime.store) ~= "table" or type(runtime.store.conversations) ~= "table" then
+      return nil
+    end
+
+    local lowerName = string.lower(playerName)
+    local inputBase = string.match(playerName, "^([^%-]+)")
+    local lowerInputBase = inputBase and string.lower(inputBase) or nil
+    local baseMatchKey = nil
+    local baseMatchCount = 0
+
+    for key, conversation in pairs(runtime.store.conversations) do
+      if type(conversation) == "table" and conversation.channel == "WOW" then
+        local displayName = conversation.displayName or conversation.contactDisplayName or ""
+        local lowerDisplayName = string.lower(displayName)
+
+        if lowerDisplayName == lowerName then
+          return key
+        end
+
+        local baseName = string.match(displayName, "^([^%-]+)")
+        if baseName and string.lower(baseName) == lowerName then
+          baseMatchCount = baseMatchCount + 1
+          baseMatchKey = key
+        elseif lowerInputBase and lowerDisplayName == lowerInputBase then
+          baseMatchCount = baseMatchCount + 1
+          baseMatchKey = key
+        end
+      end
+    end
+
+    if baseMatchCount == 1 then
+      return baseMatchKey
+    end
+
+    return nil
+  end
+
+  local function ensureWhisperConversation(conversationKey, displayName)
+    runtime.store = runtime.store or {}
+    runtime.store.conversations = runtime.store.conversations or {}
+
+    if runtime.store.conversations[conversationKey] ~= nil then
+      return
+    end
+
+    local now = 0
+    if type(runtime.now) == "function" then
+      now = runtime.now()
+    elseif type(_G.time) == "function" then
+      now = _G.time()
+    end
+
+    runtime.store.conversations[conversationKey] = {
+      displayName = displayName,
+      channel = "WOW",
+      messages = {},
+      unreadCount = 0,
+      lastActivityAt = now,
+      conversationKey = conversationKey,
+    }
+  end
+
+  local function focusComposerInput()
+    if window and window.composer and window.composer.input and window.composer.input.SetFocus then
+      window.composer.input:SetFocus()
+    end
+  end
+
+  local function startConversation(playerName)
+    local normalizedName = normalizePlayerName(playerName)
+    if normalizedName == nil then
+      return false
+    end
+
+    local conversationKey = findExistingConversationKeyByName(normalizedName)
+    if conversationKey == nil then
+      local identity = Identity.FromWhisper(normalizedName, nil, {})
+      if identity.canonicalName == "" then
+        return false
+      end
+
+      conversationKey = Identity.BuildConversationKey(runtime.localProfileId, identity.contactKey)
+      if type(conversationKey) ~= "string" or conversationKey == "" then
+        return false
+      end
+
+      ensureWhisperConversation(conversationKey, normalizedName)
+    end
+
+    selectConversation(conversationKey)
+    focusComposerInput()
+    return true
+  end
+
   local function ensureWindow()
     if window then
       return
@@ -137,6 +246,9 @@ function WindowRuntime.Create(options)
       state = characterState.window,
       onSelectConversation = function(conversationKey)
         return selectConversation(conversationKey)
+      end,
+      onStartConversation = function(playerName)
+        return startConversation(playerName)
       end,
       onSend = function(payload)
         return sendHandler.HandleSend(runtime, payload, refreshWindow)

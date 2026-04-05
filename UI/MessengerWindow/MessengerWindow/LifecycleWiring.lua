@@ -44,6 +44,7 @@ function LifecycleWiring.Setup(options)
     buttonsRefs = {
       closeButton = chrome.closeButton,
       optionsButton = chrome.optionsButton,
+      newConversationButton = chrome.newConversationButton,
       resetWindowButton = layout.resetWindowButton,
       resetIconButton = layout.resetIconButton,
       clearAllChatsButton = layout.clearAllChatsButton,
@@ -53,6 +54,7 @@ function LifecycleWiring.Setup(options)
     },
     buttonsCallbacks = {
       onClose = options.closeWindow,
+      onStartConversation = options.onStartConversation,
       onResetWindowPosition = options.onResetWindowPosition,
       onResetIconPosition = options.onResetIconPosition,
       onClearAllChats = options.onClearAllChats,

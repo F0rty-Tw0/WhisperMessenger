@@ -13,6 +13,7 @@ function FacadeBuilder.Build(context)
   return {
     frame = context.frame,
     title = context.title,
+    newConversationButton = context.newConversationButton,
     contactsPane = context.contactsPane,
     contactsPaneBorder = context.contactsPaneBorder,
     contactsDivider = context.contactsDivider,

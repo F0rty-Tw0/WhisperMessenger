@@ -71,6 +71,7 @@ UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/StylingCommon.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/ButtonStyling.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Styling.lua
+UI/Shared/StyledTextInputPopup.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
 UI/ChatBubble/ContextMenu/ManualCopy.lua

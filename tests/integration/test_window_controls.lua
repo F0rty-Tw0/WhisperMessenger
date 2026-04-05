@@ -49,6 +49,7 @@ return function()
 
   assert(runtime.window.closeButton ~= nil, "expected a Close button")
   assert(runtime.window.optionsButton ~= nil, "expected an Options button")
+  assert(runtime.window.newConversationButton ~= nil, "expected a New Conversation button")
   assert(runtime.window.optionsPanel ~= nil, "expected an Options panel")
   assert(runtime.window.resetWindowButton ~= nil, "expected a Reset Window button")
   assert(runtime.window.resetIconButton ~= nil, "expected a Reset Icon button")
