@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ButtonSelector = ns.MessengerWindowButtonSelector
@@ -13,7 +14,7 @@ local ButtonSelector = ns.MessengerWindowButtonSelector
 local AppearanceSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local SLIDER_WIDTH = 280
+local SLIDER_WIDTH = 350
 local SLIDER_HEIGHT = 16
 local ROW_SPACING = 32
 local LABEL_SPACING = 6
@@ -21,7 +22,27 @@ local LABEL_SPACING = 6
 local FONT_OPTIONS = {
   { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
   { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
+  { key = "morpheus", label = "Morpheus", tooltip = "Fantasy decorative font. Great for immersion." },
 }
+
+local OUTLINE_OPTIONS = {
+  { key = "NONE", label = "None", tooltip = "No outline on text." },
+  { key = "OUTLINE", label = "Outline", tooltip = "Thin outline for readability." },
+  { key = "THICKOUTLINE", label = "Thick", tooltip = "Thick outline for maximum contrast." },
+}
+
+local function buildFontColorOptions()
+  local presets = Fonts.ListFontColorPresets and Fonts.ListFontColorPresets() or {}
+  local options = {}
+  for _, preset in ipairs(presets) do
+    local tooltip = "Use theme colors"
+    if preset.rgba then
+      tooltip = preset.label .. " text color"
+    end
+    options[#options + 1] = { key = preset.key, label = preset.label, tooltip = tooltip }
+  end
+  return options
+end
 
 local PRESET_LABELS = {
   wow_default = { label = "Midnight", tooltip = "Default colors and contrasts." },
@@ -43,6 +64,9 @@ local DEFAULTS = {
   windowOpacityInactive = 0.72,
   windowOpacityActive = 1.0,
   fontFamily = "default",
+  fontSize = 12,
+  fontOutline = "NONE",
+  fontColor = "default",
   themePreset = Theme.DEFAULT_PRESET or "wow_default",
 }
 
@@ -151,6 +175,15 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
   hint:SetText("Customize theme presets, fonts, and window opacity.")
+  if hint.SetWordWrap then
+    hint:SetWordWrap(true)
+  end
+  if hint.SetJustifyH then
+    hint:SetJustifyH("LEFT")
+  end
+  if hint.SetWidth then
+    hint:SetWidth(SLIDER_WIDTH)
+  end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
   local function selectorColorsFor(activeTheme)
@@ -193,6 +226,55 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local function pxFormat(v)
+    return tostring(math.floor(v + 0.5)) .. "px"
+  end
+
+  local fontSizeRow = createSliderRow(
+    factory,
+    frame,
+    "Font Size",
+    9,
+    17,
+    1,
+    config.fontSize or DEFAULTS.fontSize,
+    pxFormat,
+    function(value)
+      onChange("fontSize", value)
+    end
+  )
+  fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
+  local fontOutlineSelector = createButtonSelector(
+    factory,
+    frame,
+    "Font Outline",
+    OUTLINE_OPTIONS,
+    DEFAULTS.fontOutline,
+    config.fontOutline or DEFAULTS.fontOutline,
+    selectorColors,
+    function(value)
+      onChange("fontOutline", value)
+    end
+  )
+  fontOutlineSelector.row:SetPoint("TOPLEFT", fontSizeRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
+  local fontColorOptions = buildFontColorOptions()
+  local fontColorSelector = ButtonSelector.Create(factory, frame, {
+    labelText = "Chat Font Color",
+    optionsList = fontColorOptions,
+    fallbackKey = DEFAULTS.fontColor,
+    initial = config.fontColor or DEFAULTS.fontColor,
+    colors = selectorColors,
+    onChange = function(value)
+      onChange("fontColor", value)
+    end,
+    rowWidth = SLIDER_WIDTH,
+    labelSpacing = LABEL_SPACING,
+    maxPerRow = 3,
+  })
+  fontColorSelector.row:SetPoint("TOPLEFT", fontOutlineSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   local opacityInactiveRow = createSliderRow(
     factory,
     frame,
@@ -206,7 +288,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("windowOpacityInactive", value)
     end
   )
-  opacityInactiveRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  opacityInactiveRow.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   local opacityActiveRow = createSliderRow(
     factory,
@@ -248,7 +330,17 @@ function AppearanceSettings.Create(factory, parent, config, options)
     onChange("themePreset", DEFAULTS.themePreset)
     fontSelector.setSelected(DEFAULTS.fontFamily)
     onChange("fontFamily", DEFAULTS.fontFamily)
+    fontSizeRow.slider:SetValue(DEFAULTS.fontSize)
+    onChange("fontSize", DEFAULTS.fontSize)
+    fontOutlineSelector.setSelected(DEFAULTS.fontOutline)
+    onChange("fontOutline", DEFAULTS.fontOutline)
+    fontColorSelector.setSelected(DEFAULTS.fontColor)
+    onChange("fontColor", DEFAULTS.fontColor)
   end)
+
+  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
+  bottomSpacer:SetSize(1, PADDING)
+  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
@@ -258,7 +350,10 @@ function AppearanceSettings.Create(factory, parent, config, options)
     local activeSelectorColors = selectorColorsFor(activeTheme)
     themePresetSelector.applyTheme(activeTheme, activeSelectorColors)
     fontSelector.applyTheme(activeTheme, activeSelectorColors)
+    fontOutlineSelector.applyTheme(activeTheme, activeSelectorColors)
+    fontColorSelector.applyTheme(activeTheme, activeSelectorColors)
 
+    fontSizeRow.applyTheme(activeTheme)
     opacityInactiveRow.applyTheme(activeTheme)
     opacityActiveRow.applyTheme(activeTheme)
 
@@ -273,6 +368,9 @@ function AppearanceSettings.Create(factory, parent, config, options)
     frame = frame,
     themePresetSelector = themePresetSelector,
     fontSelector = fontSelector,
+    fontSizeSlider = fontSizeRow.slider,
+    fontOutlineSelector = fontOutlineSelector,
+    fontColorSelector = fontColorSelector,
     opacityInactiveSlider = opacityInactiveRow.slider,
     opacityActiveSlider = opacityActiveRow.slider,
     resetButton = resetButton,

@@ -108,8 +108,8 @@ return function()
     assert(result.fontSelector ~= nil, "test_font_selector_exists: should expose fontSelector")
     assert(result.fontSelector.buttons ~= nil, "test_font_selector_exists: fontSelector should have buttons")
     assert(
-      #result.fontSelector.buttons == 2,
-      "test_font_selector_exists: should have 2 font buttons, got: " .. tostring(#result.fontSelector.buttons)
+      #result.fontSelector.buttons == 3,
+      "test_font_selector_exists: should have 3 font buttons, got: " .. tostring(#result.fontSelector.buttons)
     )
   end
 
@@ -127,7 +127,7 @@ return function()
       end
     end
 
-    local found = { default = false, system = false }
+    local found = { default = false, system = false, morpheus = false }
     for _, text in ipairs(labels) do
       local lower = string.lower(text)
       if string.find(lower, "default", 1, true) then
@@ -136,10 +136,14 @@ return function()
       if string.find(lower, "system", 1, true) then
         found.system = true
       end
+      if string.find(lower, "morpheus", 1, true) then
+        found.morpheus = true
+      end
     end
 
     assert(found.default, "test_font_selector_labels: should have a 'Default' button")
     assert(found.system, "test_font_selector_labels: should have a 'System' button")
+    assert(found.morpheus, "test_font_selector_labels: should have a 'Morpheus' button")
   end
 
   -- -----------------------------------------------------------------------
@@ -324,10 +328,156 @@ return function()
       onLeave(btn)
     end
 
-    assert(#tooltipTexts == 2, "test_distinct_tooltips: should have 2 tooltips")
-    assert(tooltipTexts[1] ~= tooltipTexts[2], "test_distinct_tooltips: each button should have a distinct tooltip")
+    assert(#tooltipTexts == 3, "test_distinct_tooltips: should have 3 tooltips")
+    assert(tooltipTexts[1] ~= tooltipTexts[2], "test_distinct_tooltips: tooltips 1 and 2 should differ")
+    assert(tooltipTexts[2] ~= tooltipTexts[3], "test_distinct_tooltips: tooltips 2 and 3 should differ")
 
     _G.GameTooltip = nil
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_size_slider_exists
+  -- -----------------------------------------------------------------------
+  do
+    local config = { fontSize = 12 }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.fontSizeSlider ~= nil, "test_font_size_slider_exists: should expose fontSizeSlider")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_size_slider_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = { fontSize = 12 }
+    local result = AppearanceSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local onValueChanged = result.fontSizeSlider:GetScript("OnValueChanged")
+    assert(onValueChanged ~= nil, "test_font_size_fires: slider should have OnValueChanged")
+    onValueChanged(result.fontSizeSlider, 16)
+
+    assert(
+      changes.fontSize == 16,
+      "test_font_size_fires: should fire onChange with fontSize=16, got: " .. tostring(changes.fontSize)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_outline_selector_exists
+  -- -----------------------------------------------------------------------
+  do
+    local config = { fontOutline = "NONE" }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.fontOutlineSelector ~= nil, "test_font_outline_selector_exists: should expose fontOutlineSelector")
+    assert(
+      #result.fontOutlineSelector.buttons == 3,
+      "test_font_outline_selector_exists: should have 3 outline buttons, got: "
+        .. tostring(#result.fontOutlineSelector.buttons)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_outline_selector_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = { fontOutline = "NONE" }
+    local result = AppearanceSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    -- Click the "Outline" button (second one)
+    local outlineBtn = result.fontOutlineSelector.buttons[2]
+    local onClick = outlineBtn:GetScript("OnClick")
+    onClick(outlineBtn)
+
+    assert(
+      changes.fontOutline == "OUTLINE",
+      "test_font_outline_fires: should fire onChange with fontOutline=OUTLINE, got: " .. tostring(changes.fontOutline)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_color_selector_exists
+  -- -----------------------------------------------------------------------
+  do
+    local config = { fontColor = "default" }
+    local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.fontColorSelector ~= nil, "test_font_color_selector_exists: should expose fontColorSelector")
+    assert(
+      #result.fontColorSelector.buttons >= 6,
+      "test_font_color_selector_exists: should have at least 6 color buttons, got: "
+        .. tostring(#result.fontColorSelector.buttons)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_font_color_selector_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = { fontColor = "default" }
+    local result = AppearanceSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    -- Click the "Gold" button (second one: default, gold, ...)
+    local goldBtn = result.fontColorSelector.buttons[2]
+    local onClick = goldBtn:GetScript("OnClick")
+    onClick(goldBtn)
+
+    assert(
+      changes.fontColor == "gold",
+      "test_font_color_fires: should fire onChange with fontColor=gold, got: " .. tostring(changes.fontColor)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_reset_resets_new_font_settings
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = {
+      fontFamily = "system",
+      fontSize = 16,
+      fontOutline = "OUTLINE",
+      fontColor = "gold",
+      themePreset = "elvui_dark",
+      windowOpacityInactive = 0.90,
+      windowOpacityActive = 0.60,
+    }
+    local result = AppearanceSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local resetClick = result.resetButton:GetScript("OnClick")
+    resetClick(result.resetButton)
+
+    assert(
+      changes.fontSize == 12,
+      "test_reset_new_settings: reset should fire fontSize=12, got: " .. tostring(changes.fontSize)
+    )
+    assert(
+      changes.fontOutline == "NONE",
+      "test_reset_new_settings: reset should fire fontOutline=NONE, got: " .. tostring(changes.fontOutline)
+    )
+    assert(
+      changes.fontColor == "default",
+      "test_reset_new_settings: reset should fire fontColor=default, got: " .. tostring(changes.fontColor)
+    )
   end
 
   print("  All appearance settings tests passed")

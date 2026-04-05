@@ -5,6 +5,7 @@
 
 ### Added
 
+- **Font customization** — new controls in Appearance settings for font size (9–17px slider), font outline (None / Outline / Thick), chat font color (Default, Gold, Blue, Green, Purple, Rose), and a Morpheus fantasy font option alongside Default and System.
 - **Icon size customization** — new slider in Notification settings lets you resize the toggle icon from 24px to 64px.
 - **Icon desaturation** — the toggle icon is now greyed-out by default and colorizes when you have unread whispers, making notification state visible at a glance. Controlled via a "Desaturate icon when idle" toggle in Notification settings.
 - **Censored message reveal** — Blizzard-censored whispers now show a "(click to reveal)" indicator on the chat bubble. Left-click to uncensor the message directly in the messenger, even when the default chat is hidden.

@@ -12,6 +12,8 @@ local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
+local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
+
 local BubbleFrame = {}
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
@@ -71,6 +73,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
+  local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
+
   if kind == "system" then
     setFontObject(textFS, Theme.FONTS.system_text)
     setTextColor(textFS, Theme.COLORS.text_system)
@@ -78,16 +82,16 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   elseif kind == "channel_context" then
     -- Channel context: muted version of incoming bubble
     setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, Theme.COLORS.text_received)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
     local base = Theme.COLORS.bg_bubble_in
     applyBubbleColor({ base[1], base[2], base[3], (base[4] or 1) * 0.55 })
   elseif direction == "out" then
     setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, Theme.COLORS.text_sent)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_sent)
     applyBubbleColor(Theme.COLORS.bg_bubble_out)
   else
     setFontObject(textFS, Theme.FONTS.message_text)
-    setTextColor(textFS, Theme.COLORS.text_received)
+    setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
     applyBubbleColor(Theme.COLORS.bg_bubble_in)
   end
 

@@ -12,7 +12,7 @@ local createOptionButton = UIHelpers.createOptionButton
 local GeneralSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local SLIDER_WIDTH = 280
+local SLIDER_WIDTH = 350
 local SLIDER_HEIGHT = 16
 local ROW_SPACING = 32
 local LABEL_SPACING = 6
@@ -122,6 +122,15 @@ function GeneralSettings.Create(factory, parent, config, options)
   local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
   hint:SetText("Configure message storage and retention limits.")
+  if hint.SetWordWrap then
+    hint:SetWordWrap(true)
+  end
+  if hint.SetJustifyH then
+    hint:SetJustifyH("LEFT")
+  end
+  if hint.SetWidth then
+    hint:SetWidth(SLIDER_WIDTH)
+  end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
   -- Max messages per conversation
@@ -241,6 +250,10 @@ function GeneralSettings.Create(factory, parent, config, options)
     hidePreviewToggle.setValue(DEFAULTS.hideMessagePreview)
     onChange("hideMessagePreview", DEFAULTS.hideMessagePreview)
   end)
+
+  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
+  bottomSpacer:SetSize(1, PADDING)
+  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme

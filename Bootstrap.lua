@@ -87,6 +87,15 @@ function Bootstrap.Initialize(factory, options)
   if Fonts.Initialize then
     Fonts.Initialize(accountState.settings.fontFamily or "default")
   end
+  if Fonts.SetFontSize then
+    Fonts.SetFontSize(accountState.settings.fontSize or 12)
+  end
+  if Fonts.SetOutline then
+    Fonts.SetOutline(accountState.settings.fontOutline or "NONE")
+  end
+  if Fonts.SetFontColor then
+    Fonts.SetFontColor(accountState.settings.fontColor or "default")
+  end
   local themePresetKey = accountState.settings.themePreset or (Theme.DEFAULT_PRESET or "wow_default")
   if Theme.ResolvePreset then
     local resolvedKey = Theme.ResolvePreset(themePresetKey, trace)

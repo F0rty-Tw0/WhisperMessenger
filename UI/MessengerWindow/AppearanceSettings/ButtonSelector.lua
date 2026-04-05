@@ -9,7 +9,6 @@ local applyColorTexture = UIHelpers.applyColorTexture
 
 local ButtonSelector = {}
 
-local DEFAULT_BUTTON_WIDTH = 86
 local DEFAULT_BUTTON_HEIGHT = 26
 local DEFAULT_BUTTON_SPACING = 8
 
@@ -24,12 +23,19 @@ function ButtonSelector.Create(factory, parent, options)
   local onChange = options.onChange
   local rowWidth = options.rowWidth or 280
   local labelSpacing = options.labelSpacing or 6
-  local buttonWidth = options.buttonWidth or DEFAULT_BUTTON_WIDTH
+  local fixedButtonWidth = options.buttonWidth
   local buttonHeight = options.buttonHeight or DEFAULT_BUTTON_HEIGHT
   local buttonSpacing = options.buttonSpacing or DEFAULT_BUTTON_SPACING
+  local maxPerRow = options.maxPerRow
+
+  local numRows = 1
+  if maxPerRow and maxPerRow > 0 then
+    numRows = math.ceil(#optionsList / maxPerRow)
+  end
+  local rowGap = 4
 
   local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(rowWidth, buttonHeight + 20)
+  row:SetSize(rowWidth, buttonHeight * numRows + rowGap * math.max(numRows - 1, 0) + 20)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -86,12 +92,26 @@ function ButtonSelector.Create(factory, parent, options)
     repaintButtons()
   end
 
+  local firstButtonOfRow = {}
+
   for i, opt in ipairs(optionsList) do
     local btn = factory.CreateFrame("Button", nil, row)
-    btn:SetSize(buttonWidth, buttonHeight)
 
-    if i == 1 then
-      btn:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -labelSpacing)
+    local rowIndex = 1
+    local colIndex = i
+    if maxPerRow and maxPerRow > 0 then
+      rowIndex = math.ceil(i / maxPerRow)
+      colIndex = ((i - 1) % maxPerRow) + 1
+    end
+
+    if colIndex == 1 then
+      if rowIndex == 1 then
+        btn:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -labelSpacing)
+      else
+        local aboveBtn = firstButtonOfRow[rowIndex - 1]
+        btn:SetPoint("TOPLEFT", aboveBtn, "BOTTOMLEFT", 0, -rowGap)
+      end
+      firstButtonOfRow[rowIndex] = btn
     else
       btn:SetPoint("LEFT", buttons[i - 1], "RIGHT", buttonSpacing, 0)
     end
@@ -102,6 +122,14 @@ function ButtonSelector.Create(factory, parent, options)
     local btnLabel = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
     btnLabel:SetPoint("CENTER", btn, "CENTER", 0, 0)
     btnLabel:SetText(opt.label)
+
+    local btnWidth = fixedButtonWidth
+    if not btnWidth then
+      local countInRow = maxPerRow and math.min(maxPerRow, #optionsList - (rowIndex - 1) * maxPerRow) or #optionsList
+      local totalSpacing = buttonSpacing * math.max(countInRow - 1, 0)
+      btnWidth = math.floor((rowWidth - totalSpacing) / math.max(countInRow, 1))
+    end
+    btn:SetSize(btnWidth, buttonHeight)
 
     btn._key = opt.key
     btn._selected = false
@@ -142,32 +170,30 @@ function ButtonSelector.Create(factory, parent, options)
 
   updateSelection(selected)
 
+  local function mergePalette(nextColors)
+    if type(nextColors) ~= "table" then
+      return
+    end
+    palette.bg = nextColors.bg or palette.bg
+    palette.bgHover = nextColors.bgHover or palette.bgHover
+    palette.bgActive = nextColors.bgActive or palette.bgActive
+    palette.text = nextColors.text or palette.text
+    palette.textHover = nextColors.textHover or palette.textHover
+    palette.textActive = nextColors.textActive or palette.textActive
+  end
+
   return {
     row = row,
     label = labelFs,
     buttons = buttons,
     setSelected = updateSelection,
     setColors = function(nextColors)
-      if type(nextColors) == "table" then
-        palette.bg = nextColors.bg or palette.bg
-        palette.bgHover = nextColors.bgHover or palette.bgHover
-        palette.bgActive = nextColors.bgActive or palette.bgActive
-        palette.text = nextColors.text or palette.text
-        palette.textHover = nextColors.textHover or palette.textHover
-        palette.textActive = nextColors.textActive or palette.textActive
-      end
+      mergePalette(nextColors)
       repaintButtons()
     end,
     applyTheme = function(activeTheme, nextColors)
       UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      if nextColors then
-        palette.bg = nextColors.bg or palette.bg
-        palette.bgHover = nextColors.bgHover or palette.bgHover
-        palette.bgActive = nextColors.bgActive or palette.bgActive
-        palette.text = nextColors.text or palette.text
-        palette.textHover = nextColors.textHover or palette.textHover
-        palette.textActive = nextColors.textActive or palette.textActive
-      end
+      mergePalette(nextColors)
       repaintButtons()
     end,
   }

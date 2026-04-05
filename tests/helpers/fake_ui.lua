@@ -284,6 +284,11 @@ function FakeUI.NewFactory()
       self.textColor = { ... }
     end
 
+    function frame:GetTextColor()
+      local c = self.textColor or { 1, 1, 1, 1 }
+      return c[1] or 1, c[2] or 1, c[3] or 1, c[4] or 1
+    end
+
     function frame:SetTextInsets(left, right, top, bottom)
       self.textInsets = { left, right, top, bottom }
     end

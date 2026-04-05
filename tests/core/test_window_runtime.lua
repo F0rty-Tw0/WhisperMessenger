@@ -217,6 +217,15 @@ return function()
       SetMode = function(mode)
         fontSetModeCalls[#fontSetModeCalls + 1] = mode
       end,
+      SetFontSize = function(size)
+        fontSetModeCalls[#fontSetModeCalls + 1] = { "fontSize", size }
+      end,
+      SetOutline = function(outline)
+        fontSetModeCalls[#fontSetModeCalls + 1] = { "outline", outline }
+      end,
+      SetFontColor = function(color)
+        fontSetModeCalls[#fontSetModeCalls + 1] = { "fontColor", color }
+      end,
     },
     theme = {
       DEFAULT_PRESET = "wow_default",
@@ -587,6 +596,39 @@ return function()
     "expected fontFamily change to call fonts.SetMode with the selected mode"
   )
   assert(selectionRefreshes == refreshesBeforeFontChange + 1, "expected fontFamily change to refresh the window")
+
+  -- fontSize setting
+  local refreshesBeforeFontSize = selectionRefreshes
+  onSettingChanged("fontSize", 16)
+  assert(accountState.settings.fontSize == 16, "expected fontSize change to persist setting")
+  local lastFontSizeCall = fontSetModeCalls[#fontSetModeCalls]
+  assert(
+    type(lastFontSizeCall) == "table" and lastFontSizeCall[1] == "fontSize" and lastFontSizeCall[2] == 16,
+    "expected fontSize change to call fonts.SetFontSize(16)"
+  )
+  assert(selectionRefreshes == refreshesBeforeFontSize + 1, "expected fontSize change to refresh the window")
+
+  -- fontOutline setting
+  local refreshesBeforeFontOutline = selectionRefreshes
+  onSettingChanged("fontOutline", "OUTLINE")
+  assert(accountState.settings.fontOutline == "OUTLINE", "expected fontOutline change to persist setting")
+  local lastOutlineCall = fontSetModeCalls[#fontSetModeCalls]
+  assert(
+    type(lastOutlineCall) == "table" and lastOutlineCall[1] == "outline" and lastOutlineCall[2] == "OUTLINE",
+    "expected fontOutline change to call fonts.SetOutline(OUTLINE)"
+  )
+  assert(selectionRefreshes == refreshesBeforeFontOutline + 1, "expected fontOutline change to refresh the window")
+
+  -- fontColor setting
+  local refreshesBeforeFontColor = selectionRefreshes
+  onSettingChanged("fontColor", "gold")
+  assert(accountState.settings.fontColor == "gold", "expected fontColor change to persist setting")
+  local lastColorCall = fontSetModeCalls[#fontSetModeCalls]
+  assert(
+    type(lastColorCall) == "table" and lastColorCall[1] == "fontColor" and lastColorCall[2] == "gold",
+    "expected fontColor change to call fonts.SetFontColor(gold)"
+  )
+  assert(selectionRefreshes == refreshesBeforeFontColor + 1, "expected fontColor change to refresh the window")
 
   local refreshesBeforeThemeApply = selectionRefreshes
   local themeRefreshesBeforeApply = themeRefreshes

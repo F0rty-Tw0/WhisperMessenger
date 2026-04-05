@@ -33,6 +33,9 @@ function SettingsPanels.Create(factory, options)
   local appearancePanel, appearanceSettings = createSettingsPanel(factory, parent, options.appearanceCreate, {
     themePreset = settingsConfig.themePreset,
     fontFamily = settingsConfig.fontFamily,
+    fontSize = settingsConfig.fontSize,
+    fontOutline = settingsConfig.fontOutline,
+    fontColor = settingsConfig.fontColor,
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
   }, onSettingChanged)

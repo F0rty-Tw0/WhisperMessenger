@@ -60,10 +60,27 @@ function SettingsHandler.Create(options)
     if key == "fontFamily" and fonts.SetMode then
       fonts.SetMode(persistedValue or "default")
     end
+    if key == "fontSize" and fonts.SetFontSize then
+      fonts.SetFontSize(persistedValue or 12)
+    end
+    if key == "fontOutline" and fonts.SetOutline then
+      fonts.SetOutline(persistedValue or "NONE")
+    end
+    if key == "fontColor" and fonts.SetFontColor then
+      fonts.SetFontColor(persistedValue or "default")
+    end
     if key == "hideFromDefaultChat" and runtime.syncChatFilters then
       runtime.syncChatFilters()
     end
-    if (key == "hideMessagePreview" or key == "fontFamily") and runtime.refreshWindow then
+    if
+      (
+        key == "hideMessagePreview"
+        or key == "fontFamily"
+        or key == "fontSize"
+        or key == "fontOutline"
+        or key == "fontColor"
+      ) and runtime.refreshWindow
+    then
       runtime.refreshWindow()
     end
 
