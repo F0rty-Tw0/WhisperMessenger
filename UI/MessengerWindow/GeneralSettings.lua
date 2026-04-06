@@ -220,7 +220,11 @@ function GeneralSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("clearOnLogout", value)
-    end
+    end,
+    {
+      "Clear on logout",
+      "Deletes all saved conversations and contacts when you log out.",
+    }
   )
   clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
 
@@ -233,7 +237,11 @@ function GeneralSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("hideMessagePreview", value)
-    end
+    end,
+    {
+      "Hide message preview",
+      "Hides the last message preview text in the contacts list for privacy.",
+    }
   )
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
 
