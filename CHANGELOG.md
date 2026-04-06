@@ -8,6 +8,7 @@
 - **Timestamp format customization** — new "Time Format" selector in General settings lets you switch between 12-hour (2:30 PM) and 24-hour (14:30) time display in chat bubbles.
 - **Local / Server time source** — new "Time Source" selector in General settings lets you choose between your computer's local clock and the game server's clock for all timestamps, including chat bubble times, date separators, and contact preview times.
 - **Separate auto-open controls** — the single "Auto-open on whisper" toggle has been split into two independent toggles in Behavior settings: "Auto-open on incoming whisper" and "Auto-open on outgoing whisper", so you can control each direction separately.
+- **Scroll to latest on open** — the messenger now scrolls to the most recent message when opened. Controllable via a "Scroll to latest on open" toggle in Behavior settings (enabled by default).
 
 ## [1.1.3] - 2026-04-06
 

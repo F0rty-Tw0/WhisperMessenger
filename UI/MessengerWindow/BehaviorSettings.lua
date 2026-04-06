@@ -19,6 +19,7 @@ local DEFAULTS = {
   hideFromDefaultChat = false,
   autoOpenIncoming = false,
   autoOpenOutgoing = false,
+  scrollToLatestOnOpen = true,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -165,6 +166,23 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   autoOpenOutgoingToggle.row:SetPoint("TOPLEFT", autoOpenIncomingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local scrollToLatestToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Scroll to latest on open",
+    config.scrollToLatestOnOpen ~= false,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("scrollToLatestOnOpen", value)
+    end,
+    {
+      "Scroll to latest on open",
+      "Automatically scrolls to the most recent message when you open the messenger.",
+    }
+  )
+  scrollToLatestToggle.row:SetPoint("TOPLEFT", autoOpenOutgoingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
     return {
@@ -182,7 +200,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", autoOpenOutgoingToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", scrollToLatestToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -196,6 +214,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoOpenIncoming", DEFAULTS.autoOpenIncoming)
     autoOpenOutgoingToggle.setValue(DEFAULTS.autoOpenOutgoing)
     onChange("autoOpenOutgoing", DEFAULTS.autoOpenOutgoing)
+    scrollToLatestToggle.setValue(DEFAULTS.scrollToLatestOnOpen)
+    onChange("scrollToLatestOnOpen", DEFAULTS.scrollToLatestOnOpen)
     profanityFilterToggle.setValue(true)
     if _G.SetCVar then
       _G.SetCVar("profanityFilter", "1")
@@ -219,6 +239,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     profanityFilterToggle.applyThemeColors(activeToggleColors)
     autoOpenIncomingToggle.applyThemeColors(activeToggleColors)
     autoOpenOutgoingToggle.applyThemeColors(activeToggleColors)
+    scrollToLatestToggle.applyThemeColors(activeToggleColors)
 
     if resetButton.applyThemeColors then
       resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
@@ -236,6 +257,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     profanityFilterToggle = profanityFilterToggle,
     autoOpenIncomingToggle = autoOpenIncomingToggle,
     autoOpenOutgoingToggle = autoOpenOutgoingToggle,
+    scrollToLatestToggle = scrollToLatestToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }

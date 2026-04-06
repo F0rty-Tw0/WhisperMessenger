@@ -47,6 +47,7 @@ function SettingsPanels.Create(factory, options)
     hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
     autoOpenIncoming = settingsConfig.autoOpenIncoming,
     autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
+    scrollToLatestOnOpen = settingsConfig.scrollToLatestOnOpen,
   }, onSettingChanged)
 
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {
