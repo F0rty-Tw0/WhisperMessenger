@@ -145,42 +145,55 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_auto_open_window_toggle_exists
+  -- test_auto_open_incoming_toggle_exists
   -- -----------------------------------------------------------------------
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
     assert(
-      result.autoOpenWindowToggle ~= nil,
-      "test_auto_open_window_toggle_exists: should expose autoOpenWindowToggle"
+      result.autoOpenIncomingToggle ~= nil,
+      "test_auto_open_incoming_toggle_exists: should expose autoOpenIncomingToggle"
+    )
+    assert(
+      result.autoOpenOutgoingToggle ~= nil,
+      "test_auto_open_outgoing_toggle_exists: should expose autoOpenOutgoingToggle"
     )
 
-    local label = nil
-    local row = result.autoOpenWindowToggle.row
-    for _, child in ipairs(row.children) do
-      if child.text and string.find(child.text, "Auto%-open", 1, false) then
-        label = child.text
+    local incomingLabel = nil
+    local inRow = result.autoOpenIncomingToggle.row
+    for _, child in ipairs(inRow.children) do
+      if child.text and string.find(child.text, "incoming", 1, false) then
+        incomingLabel = child.text
         break
       end
     end
+    assert(incomingLabel ~= nil, "test_auto_open_incoming_toggle_exists: should have label with 'incoming'")
 
-    assert(label ~= nil, "test_auto_open_window_toggle_exists: should have a label with 'Auto-open'")
+    local outgoingLabel = nil
+    local outRow = result.autoOpenOutgoingToggle.row
+    for _, child in ipairs(outRow.children) do
+      if child.text and string.find(child.text, "outgoing", 1, false) then
+        outgoingLabel = child.text
+        break
+      end
+    end
+    assert(outgoingLabel ~= nil, "test_auto_open_outgoing_toggle_exists: should have label with 'outgoing'")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_auto_open_window_defaults_to_off
+  -- test_auto_open_toggles_default_to_off
   -- -----------------------------------------------------------------------
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    -- The toggle dot should reflect "off" state (config.autoOpenWindow is nil/false)
-    assert(result.autoOpenWindowToggle ~= nil, "test_auto_open_window_defaults_to_off: toggle should exist")
+    assert(result.autoOpenIncomingToggle ~= nil, "test_auto_open_defaults_to_off: incoming toggle should exist")
+    assert(result.autoOpenOutgoingToggle ~= nil, "test_auto_open_defaults_to_off: outgoing toggle should exist")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_auto_open_window_toggle_fires_on_change
+  -- test_auto_open_toggles_fire_on_change
   -- -----------------------------------------------------------------------
   do
     local changes = {}
@@ -191,18 +204,25 @@ return function()
       end,
     })
 
-    local onClickHandler = result.autoOpenWindowToggle.dot:GetScript("OnClick")
-    assert(onClickHandler ~= nil, "test_auto_open_window_toggle_fires_on_change: dot should have OnClick")
-    onClickHandler(result.autoOpenWindowToggle.dot)
-
+    local inClick = result.autoOpenIncomingToggle.dot:GetScript("OnClick")
+    assert(inClick ~= nil, "test_auto_open_incoming_fires: dot should have OnClick")
+    inClick(result.autoOpenIncomingToggle.dot)
     assert(
-      changes.autoOpenWindow ~= nil,
-      "test_auto_open_window_toggle_fires_on_change: should fire onChange with 'autoOpenWindow' key"
+      changes.autoOpenIncoming ~= nil,
+      "test_auto_open_incoming_fires: should fire onChange with 'autoOpenIncoming' key"
+    )
+
+    local outClick = result.autoOpenOutgoingToggle.dot:GetScript("OnClick")
+    assert(outClick ~= nil, "test_auto_open_outgoing_fires: dot should have OnClick")
+    outClick(result.autoOpenOutgoingToggle.dot)
+    assert(
+      changes.autoOpenOutgoing ~= nil,
+      "test_auto_open_outgoing_fires: should fire onChange with 'autoOpenOutgoing' key"
     )
   end
 
   -- -----------------------------------------------------------------------
-  -- test_auto_open_window_toggle_has_tooltip
+  -- test_auto_open_incoming_toggle_has_tooltip
   -- -----------------------------------------------------------------------
   do
     local tooltipTitle = nil
@@ -222,23 +242,23 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    local row = result.autoOpenWindowToggle.row
+    local row = result.autoOpenIncomingToggle.row
     local onEnter = row:GetScript("OnEnter")
-    assert(onEnter ~= nil, "test_auto_open_window_toggle_has_tooltip: row should have OnEnter script")
+    assert(onEnter ~= nil, "test_auto_open_incoming_tooltip: row should have OnEnter script")
 
     onEnter(row)
-    assert(tooltipTitle ~= nil, "test_auto_open_window_toggle_has_tooltip: tooltip title should be set on hover")
-    assert(#addedLines > 0, "test_auto_open_window_toggle_has_tooltip: tooltip should have a description line")
+    assert(tooltipTitle ~= nil, "test_auto_open_incoming_tooltip: tooltip title should be set on hover")
+    assert(#addedLines > 0, "test_auto_open_incoming_tooltip: tooltip should have a description line")
 
     _G.GameTooltip = nil
   end
 
   -- -----------------------------------------------------------------------
-  -- test_auto_open_window_included_in_reset
+  -- test_auto_open_toggles_included_in_reset
   -- -----------------------------------------------------------------------
   do
     local changes = {}
-    local config = { autoOpenWindow = true }
+    local config = { autoOpenIncoming = true, autoOpenOutgoing = true }
     local result = BehaviorSettings.Create(factory, parent, config, {
       onChange = function(key, value)
         changes[key] = value
@@ -246,12 +266,16 @@ return function()
     })
 
     local resetOnClick = result.resetButton:GetScript("OnClick")
-    assert(resetOnClick ~= nil, "test_auto_open_window_included_in_reset: reset button should have OnClick")
+    assert(resetOnClick ~= nil, "test_auto_open_included_in_reset: reset button should have OnClick")
     resetOnClick(result.resetButton)
 
     assert(
-      changes.autoOpenWindow == false,
-      "test_auto_open_window_included_in_reset: reset should set autoOpenWindow to false (default)"
+      changes.autoOpenIncoming == false,
+      "test_auto_open_included_in_reset: reset should set autoOpenIncoming to false (default)"
+    )
+    assert(
+      changes.autoOpenOutgoing == false,
+      "test_auto_open_included_in_reset: reset should set autoOpenOutgoing to false (default)"
     )
   end
 

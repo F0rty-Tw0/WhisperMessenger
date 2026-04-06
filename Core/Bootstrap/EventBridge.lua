@@ -239,7 +239,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     if
       runtime.accountState
       and runtime.accountState.settings
-      and runtime.accountState.settings.autoOpenWindow == true
+      and runtime.accountState.settings.autoOpenIncoming == true
       and runtime.onAutoOpen
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()
@@ -251,7 +251,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     if
       runtime.accountState
       and runtime.accountState.settings
-      and runtime.accountState.settings.autoOpenWindow == true
+      and runtime.accountState.settings.autoOpenOutgoing == true
       and runtime.onAutoOpenOutgoing
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()

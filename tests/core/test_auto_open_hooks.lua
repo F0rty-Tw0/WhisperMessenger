@@ -15,7 +15,7 @@ return function()
 
     return {
       getSettings = overrides.getSettings or function()
-        return { autoOpenWindow = true }
+        return { autoOpenIncoming = true, autoOpenOutgoing = true }
       end,
       isInCombat = overrides.isInCombat or function()
         return false
@@ -131,7 +131,7 @@ return function()
   do
     local deps = makeDeps({
       getSettings = function()
-        return { autoOpenWindow = false }
+        return { autoOpenIncoming = false, autoOpenOutgoing = false }
       end,
       getLastReplyKey = function()
         return "wow::WOW::Arthas"
@@ -143,6 +143,26 @@ return function()
 
     assert(result == false, "test_on_reply_tell_disabled: should return false when setting off")
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_disabled: should not open window when setting off")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_on_reply_tell_skipped_when_only_incoming_enabled
+  -- -----------------------------------------------------------------------
+  do
+    local deps = makeDeps({
+      getSettings = function()
+        return { autoOpenIncoming = true, autoOpenOutgoing = false }
+      end,
+      getLastReplyKey = function()
+        return "wow::WOW::Arthas"
+      end,
+    })
+
+    local hooks = AutoOpenHooks.Create(deps)
+    local result = hooks.onReplyTell()
+
+    assert(result == false, "test_on_reply_tell_incoming_only: should return false when only incoming enabled")
+    assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_incoming_only: should not open window")
   end
 
   -- -----------------------------------------------------------------------
@@ -251,7 +271,7 @@ return function()
   do
     local deps = makeDeps({
       getSettings = function()
-        return { autoOpenWindow = false }
+        return { autoOpenIncoming = false, autoOpenOutgoing = false }
       end,
       findConversationKeyByName = function(name)
         if name == "Jaina" then

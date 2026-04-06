@@ -29,7 +29,7 @@ local function shouldInterceptHook(runtime, deps)
   end
 
   local settings = runtime.accountState and runtime.accountState.settings
-  if not settings or settings.autoOpenWindow ~= true then
+  if not settings or settings.autoOpenOutgoing ~= true then
     return false
   end
   if deps.isInCombat() then

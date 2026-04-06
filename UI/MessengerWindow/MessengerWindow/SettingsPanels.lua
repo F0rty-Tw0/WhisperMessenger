@@ -45,7 +45,8 @@ function SettingsPanels.Create(factory, options)
     autoFocusComposer = settingsConfig.autoFocusComposer,
     autoSelectUnread = settingsConfig.autoSelectUnread,
     hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
-    autoOpenWindow = settingsConfig.autoOpenWindow,
+    autoOpenIncoming = settingsConfig.autoOpenIncoming,
+    autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
   }, onSettingChanged)
 
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {

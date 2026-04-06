@@ -63,7 +63,7 @@ return function()
     end)
 
     local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.onAutoOpen = function(conversationKey)
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
@@ -85,7 +85,7 @@ return function()
     end)
 
     local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = false })
+    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = false })
     runtime.onAutoOpen = function(conversationKey)
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
@@ -106,7 +106,7 @@ return function()
     end)
 
     local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.onAutoOpen = function(conversationKey)
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
@@ -132,7 +132,7 @@ return function()
     end)
 
     local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.pendingOutgoing = {}
     runtime.onAutoOpen = function(conversationKey)
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
@@ -157,7 +157,7 @@ return function()
     end)
 
     local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.pendingOutgoing = {}
     runtime.onAutoOpenOutgoing = function(conversationKey)
       outgoingCalls[#outgoingCalls + 1] = conversationKey
@@ -180,7 +180,7 @@ return function()
     end)
 
     local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.pendingOutgoing = {
       ["wow::WOW::arthas-area52"] = {
         {
@@ -220,7 +220,7 @@ return function()
     end)
 
     local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.pendingOutgoing = {}
     runtime.onAutoOpenOutgoing = function(conversationKey)
       outgoingCalls[#outgoingCalls + 1] = conversationKey
@@ -259,7 +259,7 @@ return function()
     end)
 
     local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.pendingOutgoing = {}
     runtime.onAutoOpenOutgoing = function(conversationKey)
       outgoingCalls[#outgoingCalls + 1] = conversationKey
@@ -281,7 +281,7 @@ return function()
     end)
 
     local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = false })
+    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = false })
     runtime.pendingOutgoing = {}
     runtime.onAutoOpenOutgoing = function(conversationKey)
       outgoingCalls[#outgoingCalls + 1] = conversationKey
@@ -290,6 +290,57 @@ return function()
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
 
     assert(#outgoingCalls == 0, "test_auto_open_outgoing_disabled: expected 0 calls, got " .. #outgoingCalls)
+    cleanupGlobals()
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_auto_open_outgoing_not_called_when_only_incoming_enabled
+  -- -----------------------------------------------------------------------
+  do
+    stubGlobals()
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+
+    local outgoingCalls = {}
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = false })
+    runtime.pendingOutgoing = {}
+    runtime.onAutoOpenOutgoing = function(conversationKey)
+      outgoingCalls[#outgoingCalls + 1] = conversationKey
+    end
+
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
+
+    assert(
+      #outgoingCalls == 0,
+      "test_auto_open_outgoing_incoming_only: expected 0 outgoing calls when only incoming enabled, got "
+        .. #outgoingCalls
+    )
+    cleanupGlobals()
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_auto_open_incoming_not_called_when_only_outgoing_enabled
+  -- -----------------------------------------------------------------------
+  do
+    stubGlobals()
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+
+    local autoOpenCalls = {}
+    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = true })
+    runtime.onAutoOpen = function(conversationKey)
+      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
+    end
+
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
+
+    assert(
+      #autoOpenCalls == 0,
+      "test_auto_open_incoming_outgoing_only: expected 0 incoming calls when only outgoing enabled, got "
+        .. #autoOpenCalls
+    )
     cleanupGlobals()
   end
 
@@ -303,7 +354,7 @@ return function()
     end)
 
     local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     runtime.onAutoOpen = function(conversationKey)
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
@@ -340,7 +391,7 @@ return function()
       return false
     end)
 
-    local runtime = makeRuntime({ autoOpenWindow = true })
+    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
     -- No onAutoOpen callback set — should not error
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
 

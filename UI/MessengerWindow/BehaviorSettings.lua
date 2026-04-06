@@ -17,7 +17,8 @@ local DEFAULTS = {
   autoFocusComposer = false,
   autoSelectUnread = true,
   hideFromDefaultChat = false,
-  autoOpenWindow = false,
+  autoOpenIncoming = false,
+  autoOpenOutgoing = false,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -130,22 +131,39 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   profanityFilterToggle.row:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
-  local autoOpenWindowToggle = UIHelpers.createToggleRow(
+  local autoOpenIncomingToggle = UIHelpers.createToggleRow(
     factory,
     frame,
-    "Auto-open on whisper",
-    config.autoOpenWindow == true,
+    "Auto-open on incoming whisper",
+    config.autoOpenIncoming == true,
     toggleColors,
     toggleLayout,
     function(value)
-      onChange("autoOpenWindow", value)
+      onChange("autoOpenIncoming", value)
     end,
     {
-      "Auto-open on whisper",
-      "Opens the messenger when you receive a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
+      "Auto-open on incoming whisper",
+      "Opens the messenger when you receive a whisper. Disabled during combat.",
     }
   )
-  autoOpenWindowToggle.row:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  autoOpenIncomingToggle.row:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
+  local autoOpenOutgoingToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Auto-open on outgoing whisper",
+    config.autoOpenOutgoing == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("autoOpenOutgoing", value)
+    end,
+    {
+      "Auto-open on outgoing whisper",
+      "Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
+    }
+  )
+  autoOpenOutgoingToggle.row:SetPoint("TOPLEFT", autoOpenIncomingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
@@ -164,7 +182,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", autoOpenWindowToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", autoOpenOutgoingToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -174,8 +192,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoSelectUnread", DEFAULTS.autoSelectUnread)
     hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
     onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
-    autoOpenWindowToggle.setValue(DEFAULTS.autoOpenWindow)
-    onChange("autoOpenWindow", DEFAULTS.autoOpenWindow)
+    autoOpenIncomingToggle.setValue(DEFAULTS.autoOpenIncoming)
+    onChange("autoOpenIncoming", DEFAULTS.autoOpenIncoming)
+    autoOpenOutgoingToggle.setValue(DEFAULTS.autoOpenOutgoing)
+    onChange("autoOpenOutgoing", DEFAULTS.autoOpenOutgoing)
     profanityFilterToggle.setValue(true)
     if _G.SetCVar then
       _G.SetCVar("profanityFilter", "1")
@@ -197,7 +217,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoSelectToggle.applyThemeColors(activeToggleColors)
     hideFromDefaultChatToggle.applyThemeColors(activeToggleColors)
     profanityFilterToggle.applyThemeColors(activeToggleColors)
-    autoOpenWindowToggle.applyThemeColors(activeToggleColors)
+    autoOpenIncomingToggle.applyThemeColors(activeToggleColors)
+    autoOpenOutgoingToggle.applyThemeColors(activeToggleColors)
 
     if resetButton.applyThemeColors then
       resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
@@ -213,7 +234,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoSelectToggle = autoSelectToggle,
     hideFromDefaultChatToggle = hideFromDefaultChatToggle,
     profanityFilterToggle = profanityFilterToggle,
-    autoOpenWindowToggle = autoOpenWindowToggle,
+    autoOpenIncomingToggle = autoOpenIncomingToggle,
+    autoOpenOutgoingToggle = autoOpenOutgoingToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }

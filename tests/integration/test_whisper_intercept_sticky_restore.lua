@@ -154,7 +154,8 @@ return function()
 
   local runtime = ns.Bootstrap.runtime
   assert(runtime ~= nil, "expected runtime after addon load")
-  runtime.accountState.settings.autoOpenWindow = true
+  runtime.accountState.settings.autoOpenIncoming = true
+  runtime.accountState.settings.autoOpenOutgoing = true
   assert(#timerCallbacks == 1, "expected deferred poll install after addon load")
 
   timerCallbacks[1].callback()

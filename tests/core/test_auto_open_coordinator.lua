@@ -73,7 +73,7 @@ return function()
     localProfileId = "me",
     accountState = {
       settings = {
-        autoOpenWindow = true,
+        autoOpenIncoming = true, autoOpenOutgoing = true,
       },
     },
     store = {

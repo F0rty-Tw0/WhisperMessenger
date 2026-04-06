@@ -34,7 +34,7 @@ return function()
       accountState = {
         settings = {
           playSoundOnWhisper = true,
-          autoOpenWindow = true,
+          autoOpenIncoming = true, autoOpenOutgoing = true,
         },
       },
     }
@@ -113,7 +113,7 @@ return function()
       accountState = {
         settings = {
           playSoundOnWhisper = false,
-          autoOpenWindow = true,
+          autoOpenIncoming = true, autoOpenOutgoing = true,
         },
       },
     }

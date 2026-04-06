@@ -81,7 +81,8 @@ return function()
   eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "WhisperMessenger")
 
   local runtime = ns.Bootstrap.runtime
-  runtime.accountState.settings.autoOpenWindow = true
+  runtime.accountState.settings.autoOpenIncoming = true
+  runtime.accountState.settings.autoOpenOutgoing = true
 
   local function dispatchWhisper(eventName, text, playerName, lineID, guid)
     eventFrame.scripts.OnEvent(eventFrame, eventName, text, playerName, "", "", "", "", "", "", "", "", lineID, guid)

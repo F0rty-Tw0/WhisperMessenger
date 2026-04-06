@@ -16,7 +16,7 @@ function AutoOpenHooks.Create(deps)
     end
 
     local settings = deps.getSettings()
-    if not settings or settings.autoOpenWindow ~= true then
+    if not settings or settings.autoOpenOutgoing ~= true then
       if log then
         log("AutoOpen: shouldRouteToMessenger=false (setting off, window hidden)")
       end
