@@ -9,6 +9,9 @@ local applyColorTexture = UIHelpers.applyColorTexture
 
 local createOptionButton = UIHelpers.createOptionButton
 
+local ButtonSelector = ns.MessengerWindowButtonSelector
+  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+
 local GeneralSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
@@ -23,6 +26,18 @@ local DEFAULTS = {
   messageMaxAge = 86400,
   clearOnLogout = false,
   hideMessagePreview = false,
+  timeFormat = "12h",
+  timeSource = "local",
+}
+
+local TIME_FORMAT_OPTIONS = {
+  { key = "12h", label = "12-hour", tooltip = "Display times as 2:30 PM." },
+  { key = "24h", label = "24-hour", tooltip = "Display times as 14:30." },
+}
+
+local TIME_SOURCE_OPTIONS = {
+  { key = "local", label = "Local Time", tooltip = "Use your computer's clock." },
+  { key = "server", label = "Server Time", tooltip = "Use the game server's clock." },
 }
 
 local function createSettingRow(factory, parent, label, min, max, step, initial, onChange)
@@ -222,6 +237,52 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
 
+  -- Time settings
+  local function selectorColorsFor(activeTheme)
+    return {
+      bg = activeTheme.COLORS.option_button_bg,
+      bgHover = activeTheme.COLORS.option_button_hover,
+      bgActive = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected,
+      text = activeTheme.COLORS.option_button_text,
+      textHover = activeTheme.COLORS.option_button_text_hover,
+      textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
+    }
+  end
+  local selectorColors = selectorColorsFor(Theme)
+
+  local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  timeLabel:SetText("Time Display")
+  UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
+
+  local timeFormatSelector = ButtonSelector.Create(factory, frame, {
+    labelText = "Time Format",
+    optionsList = TIME_FORMAT_OPTIONS,
+    fallbackKey = DEFAULTS.timeFormat,
+    initial = config.timeFormat or DEFAULTS.timeFormat,
+    colors = selectorColors,
+    onChange = function(value)
+      onChange("timeFormat", value)
+    end,
+    rowWidth = SLIDER_WIDTH,
+    labelSpacing = LABEL_SPACING,
+  })
+  timeFormatSelector.row:SetPoint("TOPLEFT", timeLabel, "BOTTOMLEFT", 0, -12)
+
+  local timeSourceSelector = ButtonSelector.Create(factory, frame, {
+    labelText = "Time Source",
+    optionsList = TIME_SOURCE_OPTIONS,
+    fallbackKey = DEFAULTS.timeSource,
+    initial = config.timeSource or DEFAULTS.timeSource,
+    colors = selectorColors,
+    onChange = function(value)
+      onChange("timeSource", value)
+    end,
+    rowWidth = SLIDER_WIDTH,
+    labelSpacing = LABEL_SPACING,
+  })
+  timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset to Defaults button
   local function optionButtonColorsFor(activeTheme)
     return {
@@ -239,7 +300,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = SLIDER_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
     messagesRow.slider:SetValue(DEFAULTS.maxMessagesPerConversation)
@@ -249,6 +310,10 @@ function GeneralSettings.Create(factory, parent, config, options)
     onChange("clearOnLogout", DEFAULTS.clearOnLogout)
     hidePreviewToggle.setValue(DEFAULTS.hideMessagePreview)
     onChange("hideMessagePreview", DEFAULTS.hideMessagePreview)
+    timeFormatSelector.setSelected(DEFAULTS.timeFormat)
+    onChange("timeFormat", DEFAULTS.timeFormat)
+    timeSourceSelector.setSelected(DEFAULTS.timeSource)
+    onChange("timeSource", DEFAULTS.timeSource)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -268,6 +333,11 @@ function GeneralSettings.Create(factory, parent, config, options)
     local activeToggleColors = toggleColorsFor(activeTheme)
     clearOnLogoutToggle.applyThemeColors(activeToggleColors)
     hidePreviewToggle.applyThemeColors(activeToggleColors)
+
+    UIHelpers.setTextColor(timeLabel, activeTheme.COLORS.text_secondary)
+    local activeSelectorColors = selectorColorsFor(activeTheme)
+    timeFormatSelector.applyTheme(activeTheme, activeSelectorColors)
+    timeSourceSelector.applyTheme(activeTheme, activeSelectorColors)
 
     if resetButton.applyThemeColors then
       resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
@@ -289,6 +359,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     retentionMaxLabel = retentionRow.maxLabel,
     clearOnLogoutToggle = clearOnLogoutToggle,
     hidePreviewToggle = hidePreviewToggle,
+    timeFormatSelector = timeFormatSelector,
+    timeSourceSelector = timeSourceSelector,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }

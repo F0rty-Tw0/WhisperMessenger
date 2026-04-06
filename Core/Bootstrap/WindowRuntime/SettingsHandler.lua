@@ -12,6 +12,7 @@ function SettingsHandler.Create(options)
   local accountSettings = options.accountSettings or {}
   local theme = options.theme or {}
   local fonts = options.fonts or {}
+  local timeFormat = options.timeFormat or {}
   local trace = options.trace or function(...)
     local _ = ...
   end
@@ -72,6 +73,9 @@ function SettingsHandler.Create(options)
     if key == "bubbleColorPreset" and theme.SetBubblePreset then
       theme.SetBubblePreset(persistedValue or "default")
     end
+    if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
+      timeFormat.Configure({ [key] = persistedValue })
+    end
     if key == "hideFromDefaultChat" and runtime.syncChatFilters then
       runtime.syncChatFilters()
     end
@@ -83,6 +87,8 @@ function SettingsHandler.Create(options)
         or key == "fontOutline"
         or key == "fontColor"
         or key == "bubbleColorPreset"
+        or key == "timeFormat"
+        or key == "timeSource"
       ) and runtime.refreshWindow
     then
       runtime.refreshWindow()

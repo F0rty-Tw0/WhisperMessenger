@@ -8,7 +8,7 @@
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.1.3
+## Version: v1.1.4
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
@@ -123,8 +123,8 @@ UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/WindowScripts.lua
-UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
+UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings.lua

@@ -110,6 +110,14 @@ function Bootstrap.Initialize(factory, options)
   if Theme.SetBubblePreset then
     Theme.SetBubblePreset(accountState.settings.bubbleColorPreset or "default")
   end
+  -- Initialize time format/source from saved settings
+  local TimeFormat = loadModule("WhisperMessenger.Util.TimeFormat", "TimeFormat")
+  if TimeFormat.Configure then
+    TimeFormat.Configure({
+      timeFormat = accountState.settings.timeFormat or "12h",
+      timeSource = accountState.settings.timeSource or "local",
+    })
+  end
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G["C_Club"], {

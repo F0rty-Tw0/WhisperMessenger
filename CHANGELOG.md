@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [1.1.4] - 2026-04-07
+
+### Added
+
+- **Timestamp format customization** — new "Time Format" selector in General settings lets you switch between 12-hour (2:30 PM) and 24-hour (14:30) time display in chat bubbles.
+- **Local / Server time source** — new "Time Source" selector in General settings lets you choose between your computer's local clock and the game server's clock for all timestamps, including chat bubble times, date separators, and contact preview times.
+
 ## [1.1.3] - 2026-04-06
 
 ### Added
