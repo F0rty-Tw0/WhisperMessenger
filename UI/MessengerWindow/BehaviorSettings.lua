@@ -97,7 +97,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local autoSelectToggle = UIHelpers.createToggleRow(
     factory,
     frame,
-    "Auto-select unread on open",
+    "Jump to unread on open",
     config.autoSelectUnread ~= false,
     toggleColors,
     toggleLayout,
@@ -105,8 +105,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
       onChange("autoSelectUnread", value)
     end,
     {
-      "Auto-select unread on open",
-      "Jumps to the first unread conversation when you open the messenger.",
+      "Jump to unread on open",
+      "Selects the most recent contact with unread messages when you open the messenger.",
     }
   )
   autoSelectToggle.row:SetPoint("TOPLEFT", autoFocusToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
