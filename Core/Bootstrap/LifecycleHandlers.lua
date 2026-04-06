@@ -71,6 +71,28 @@ local function handlePlayerLogout(Bootstrap, deps)
   return true
 end
 
+local COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
+
+local function notifyCompetitiveState(Bootstrap)
+  local isActive = Bootstrap._inCompetitiveContent == true
+    or Bootstrap._inMythicContent == true
+    or Bootstrap._inEncounter == true
+
+  -- Set/clear the messaging notice on the runtime (visible banner in messenger).
+  -- Skip if mythic suspend already owns the notice (its own suspend/resume manages it).
+  if Bootstrap.runtime and not Bootstrap._inMythicContent then
+    if isActive then
+      Bootstrap.runtime.messagingNotice = COMPETITIVE_NOTICE
+    else
+      Bootstrap.runtime.messagingNotice = nil
+    end
+  end
+
+  if type(Bootstrap.onCompetitiveStateChanged) == "function" then
+    Bootstrap.onCompetitiveStateChanged(isActive)
+  end
+end
+
 local function handleChallengeModeEvent(Bootstrap, event, deps)
   if event == "CHALLENGE_MODE_START" then
     Bootstrap._inMythicContent = true
@@ -78,6 +100,7 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
       Bootstrap.runtime.suspend()
     end
     deps.trace("mythic lockdown: M+ started")
+    notifyCompetitiveState(Bootstrap)
     return true
   end
 
@@ -87,6 +110,31 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
       Bootstrap.runtime.resume()
     end
     deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
+    notifyCompetitiveState(Bootstrap)
+    return true
+  end
+
+  return false
+end
+
+local function handleEncounterEvent(Bootstrap, event, deps)
+  if event == "ENCOUNTER_START" then
+    Bootstrap._inEncounter = true
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+    deps.trace("encounter started")
+    notifyCompetitiveState(Bootstrap)
+    return true
+  end
+
+  if event == "ENCOUNTER_END" then
+    Bootstrap._inEncounter = false
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+    deps.trace("encounter ended")
+    notifyCompetitiveState(Bootstrap)
     return true
   end
 
@@ -168,6 +216,7 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
   if Bootstrap.syncChatFilters then
     Bootstrap.syncChatFilters()
   end
+  notifyCompetitiveState(Bootstrap, deps)
 
   if isMythic and not wasMythic then
     if Bootstrap.runtime and Bootstrap.runtime.suspend then
@@ -230,6 +279,10 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps)
   end
 
   if handleChallengeModeEvent(Bootstrap, event, deps) then
+    return true
+  end
+
+  if handleEncounterEvent(Bootstrap, event, deps) then
     return true
   end
 

@@ -137,6 +137,55 @@ return function()
   assert(sentMessages[1].bnetAccountID == 77, "expected bnetAccountID to be forwarded")
   assert(sentMessages[1].text == "hello bn", "expected Battle.net text to be forwarded")
 
+  -- Test 5: Competitive content blocks character whisper sends
+  rawset(runtime, "isChatMessagingLocked", function()
+    return false
+  end)
+  rawset(_G, "InCombatLockdown", function()
+    return false
+  end)
+  runtime.isCompetitiveContent = function()
+    return true
+  end
+  runtime.sendStatusByConversation = {}
+  runtime.pendingOutgoing = {}
+  refreshCalls = 0
+  sentMessages = {}
+
+  local competitiveResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
+  assert(competitiveResult == false, "expected send to be blocked during competitive content")
+  assert(#sentMessages == 0, "should not send during competitive content")
+  assert(refreshCalls == 1, "should refresh to show competitive status")
+
+  local competitiveStatus = runtime.sendStatusByConversation[payload.conversationKey]
+  assert(competitiveStatus ~= nil, "expected competitive status to be set")
+  assert(
+    competitiveStatus.status == "Competitive Content",
+    "expected 'Competitive Content' status, got: " .. tostring(competitiveStatus.status)
+  )
+
+  -- Blocked outgoing message should be recorded
+  local compConversation = runtime.store.conversations[payload.conversationKey]
+  assert(compConversation ~= nil, "expected conversation to exist after competitive block")
+  local lastMsg = compConversation.messages[#compConversation.messages]
+  assert(lastMsg.delivery == "blocked", "expected blocked delivery marker")
+  assert(lastMsg.blockedReason == "Competitive Content", "expected competitive blocked reason")
+
+  -- Test 6: Competitive content does NOT block when isCompetitiveContent returns false
+  runtime.isCompetitiveContent = function()
+    return false
+  end
+  runtime.sendStatusByConversation = {}
+  runtime.pendingOutgoing = {}
+  refreshCalls = 0
+  sentMessages = {}
+
+  local notCompResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
+  assert(notCompResult == true, "expected send to succeed when not in competitive content")
+  assert(#sentMessages == 1, "should send when not in competitive content")
+
+  runtime.isCompetitiveContent = nil
+
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)
 end

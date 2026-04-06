@@ -256,4 +256,102 @@ return function()
         .. tostring(icon.label.desaturated)
     )
   end
+
+  -- -----------------------------------------------------------------------
+  -- test_setCompetitiveContent_method_exists
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(
+      type(icon.setCompetitiveContent) == "function",
+      "test_setCompetitiveContent_method_exists: setCompetitiveContent should be a function"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_competitive_indicator_hidden_by_default
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(
+      icon.competitiveIndicator ~= nil,
+      "test_competitive_indicator_hidden_by_default: competitiveIndicator should exist"
+    )
+    assert(
+      icon.competitiveIndicator.shown == false,
+      "test_competitive_indicator_hidden_by_default: indicator should be hidden by default"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_competitive_indicator_shown_when_active
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    icon.setCompetitiveContent(true)
+
+    assert(
+      icon.competitiveIndicator.shown == true,
+      "test_competitive_indicator_shown_when_active: indicator should show when competitive content is active"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_competitive_indicator_hidden_when_cleared
+  -- -----------------------------------------------------------------------
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    icon.setCompetitiveContent(true)
+    icon.setCompetitiveContent(false)
+
+    assert(
+      icon.competitiveIndicator.shown == false,
+      "test_competitive_indicator_hidden_when_cleared: indicator should hide when competitive content ends"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_competitive_tooltip_includes_status
+  -- -----------------------------------------------------------------------
+  do
+    local tooltipText = ""
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipText = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    icon.setCompetitiveContent(true)
+
+    -- Trigger OnEnter to populate tooltip
+    if icon.frame.scripts and icon.frame.scripts.OnEnter then
+      icon.frame.scripts.OnEnter()
+    end
+
+    assert(
+      string.find(tooltipText, "unavailable", 1, true) ~= nil,
+      "test_competitive_tooltip_includes_status: tooltip should mention unavailable, got: " .. tostring(tooltipText)
+    )
+
+    _G.GameTooltip = nil
+  end
 end

@@ -128,6 +128,17 @@ function Bootstrap.Initialize(factory, options)
     trace = trace,
   })
 
+  runtime.isCompetitiveContent = function()
+    return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
+  end
+
+  Bootstrap.onCompetitiveStateChanged = function(isActive)
+    local ic = windowRuntime.getIcon()
+    if ic and ic.setCompetitiveContent then
+      ic.setCompetitiveContent(isActive)
+    end
+  end
+
   local diagnostics = Diagnostics.Create({
     addonName = addonName,
     runtime = runtime,

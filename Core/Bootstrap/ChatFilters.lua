@@ -53,6 +53,7 @@ function ChatFilters.Configure(Bootstrap, accountState)
     local shouldFilter = accountState.settings.hideFromDefaultChat == true
       and not Bootstrap._inCompetitiveContent
       and not Bootstrap._inMythicContent
+      and not Bootstrap._inEncounter
       and not _G._wmSuspended
 
     if shouldFilter and not Bootstrap._filtersRegistered then

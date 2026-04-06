@@ -34,6 +34,8 @@ local Constants = {
     "CHALLENGE_MODE_START",
     "CHALLENGE_MODE_COMPLETED",
     "CHALLENGE_MODE_RESET",
+    "ENCOUNTER_START",
+    "ENCOUNTER_END",
     "ZONE_CHANGED_NEW_AREA",
   },
 
@@ -45,6 +47,8 @@ local Constants = {
     CHALLENGE_MODE_START = true,
     CHALLENGE_MODE_COMPLETED = true,
     CHALLENGE_MODE_RESET = true,
+    ENCOUNTER_START = true,
+    ENCOUNTER_END = true,
     ZONE_CHANGED_NEW_AREA = true,
   },
 }

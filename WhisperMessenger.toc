@@ -103,6 +103,7 @@ UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/Badge.lua
+UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua

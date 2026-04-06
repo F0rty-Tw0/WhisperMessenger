@@ -93,6 +93,240 @@ return function()
     assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent on zone change out of pvp")
   end
 
+  -- -----------------------------------------------------------------------
+  -- test_encounter_start_sets_in_encounter
+  -- -----------------------------------------------------------------------
+  do
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
+    assert(Bootstrap._inEncounter == true, "should set _inEncounter=true on ENCOUNTER_START")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_clears_in_encounter
+  -- -----------------------------------------------------------------------
+  do
+    local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(Bootstrap._inEncounter == false, "should clear _inEncounter on ENCOUNTER_END")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_start_calls_competitive_state_callback
+  -- -----------------------------------------------------------------------
+  do
+    local callbackCalled = false
+    local callbackValue = nil
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
+      onCompetitiveStateChanged = function(active)
+        callbackCalled = true
+        callbackValue = active
+      end,
+    }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
+    assert(callbackCalled == true, "should call onCompetitiveStateChanged on ENCOUNTER_START")
+    assert(callbackValue == true, "should pass true to onCompetitiveStateChanged on ENCOUNTER_START")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_calls_competitive_state_callback_false
+  -- -----------------------------------------------------------------------
+  do
+    local callbackValue = nil
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = { suspend = function() end, resume = function() end },
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      callbackValue == false,
+      "should pass false to onCompetitiveStateChanged when encounter ends outside competitive content"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_still_competitive_in_bg
+  -- -----------------------------------------------------------------------
+  do
+    local callbackValue = nil
+    local Bootstrap = {
+      _inEncounter = true,
+      _inCompetitiveContent = true,
+      runtime = { suspend = function() end, resume = function() end },
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      callbackValue == true,
+      "should pass true to onCompetitiveStateChanged when encounter ends but still in competitive zone"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_player_entering_world_calls_competitive_state_callback
+  -- -----------------------------------------------------------------------
+  do
+    local callbackValue = nil
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(callbackValue == true, "should call onCompetitiveStateChanged=true when entering BG")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_start_sets_messaging_notice
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end }
+    local Bootstrap = { runtime = runtime }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
+    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice on ENCOUNTER_START")
+    assert(
+      type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "",
+      "messagingNotice should be a non-empty string"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_clears_messaging_notice_outside_competitive
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = { _inEncounter = true, runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      runtime.messagingNotice == nil,
+      "should clear runtime.messagingNotice when encounter ends outside competitive zone"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_keeps_messaging_notice_in_bg
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = { _inEncounter = true, _inCompetitiveContent = true, runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      runtime.messagingNotice ~= nil,
+      "should keep runtime.messagingNotice when encounter ends but still in competitive zone"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_player_entering_world_sets_messaging_notice_in_bg
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end }
+    local Bootstrap = { runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice when entering battleground")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_player_entering_world_clears_messaging_notice_in_open_world
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = { runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when entering open world")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_start_calls_syncChatFilters
+  -- -----------------------------------------------------------------------
+  do
+    local syncCalled = false
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
+      syncChatFilters = function()
+        syncCalled = true
+      end,
+    }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
+    assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_START")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_calls_syncChatFilters
+  -- -----------------------------------------------------------------------
+  do
+    local syncCalled = false
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = { suspend = function() end, resume = function() end },
+      syncChatFilters = function()
+        syncCalled = true
+      end,
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_END")
+  end
+
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
   _G.C_Timer = savedCTimer
 end

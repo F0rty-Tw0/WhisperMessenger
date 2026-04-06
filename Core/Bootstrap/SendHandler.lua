@@ -79,6 +79,13 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     return false
   end
 
+  if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+    appendBlockedOutgoing(runtime, payload, "Competitive Content")
+    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
+    refreshWindow()
+    return false
+  end
+
   local sendAvailable
   if payload.channel == "BN" then
     sendAvailable = payload.bnetAccountID ~= nil and Gateway.CanSendBattleNetWhisper(runtime.bnetApi)

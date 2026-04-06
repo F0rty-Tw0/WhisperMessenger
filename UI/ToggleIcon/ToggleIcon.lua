@@ -8,6 +8,7 @@ local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
+local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 
 local ToggleIcon = {}
 
@@ -140,6 +141,17 @@ function ToggleIcon.Create(factory, options)
   local badgeLabel = badgeResult.badgeLabel
   local innerSetUnreadCount = badgeResult.setUnreadCount
 
+  -- Competitive content indicator via CompetitiveIndicator submodule
+  local competitiveResult = CompetitiveIndicator.Create(factory, frame)
+  local competitiveFrame = competitiveResult.frame
+  local innerSetCompetitiveActive = competitiveResult.setActive
+  local isCompetitiveActive = false
+
+  local function setCompetitiveContent(active)
+    isCompetitiveActive = active == true
+    innerSetCompetitiveActive(isCompetitiveActive)
+  end
+
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getBadgePulse = options.getBadgePulse
   local getIconDesaturated = options.getIconDesaturated
@@ -210,7 +222,11 @@ function ToggleIcon.Create(factory, options)
         if badge:IsShown() then
           unreadText = " — " .. badgeLabel:GetText() .. " unread"
         end
-        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText)
+        local competitiveText = ""
+        if isCompetitiveActive then
+          competitiveText = "\nChat unavailable — in competitive content"
+        end
+        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText)
         _G.GameTooltip:Show()
       end
     end)
@@ -276,7 +292,9 @@ function ToggleIcon.Create(factory, options)
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,
+    competitiveIndicator = competitiveFrame,
     setUnreadCount = setUnreadCount,
+    setCompetitiveContent = setCompetitiveContent,
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,
   }
