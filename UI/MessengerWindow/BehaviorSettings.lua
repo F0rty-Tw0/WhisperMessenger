@@ -69,7 +69,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("dimWhenMoving", value)
-    end
+    end,
+    {
+      "Dim when moving",
+      "Reduces window opacity while your character is moving.",
+    }
   )
   dimToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
@@ -99,7 +103,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("autoSelectUnread", value)
-    end
+    end,
+    {
+      "Auto-select unread on open",
+      "Jumps to the first unread conversation when you open the messenger.",
+    }
   )
   autoSelectToggle.row:SetPoint("TOPLEFT", autoFocusToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
@@ -112,7 +120,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("hideFromDefaultChat", value)
-    end
+    end,
+    {
+      "Hide whispers from default chat",
+      "Prevents whisper messages from appearing in the default WoW chat frame.",
+    }
   )
   hideFromDefaultChatToggle.row:SetPoint("TOPLEFT", autoSelectToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
@@ -128,7 +140,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
       if _G.SetCVar then
         _G.SetCVar("profanityFilter", value and "1" or "0")
       end
-    end
+    end,
+    {
+      "Enable profanity filter",
+      "Uses Blizzard's built-in filter to censor profanity in messages.",
+    }
   )
   profanityFilterToggle.row:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
