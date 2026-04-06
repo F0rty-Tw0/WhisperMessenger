@@ -18,6 +18,8 @@
 - Unread badge size and position adjusted for better alignment.
 - Title color now updates correctly across theme changes.
 - Fixed a parameter name bug in channel event registration.
+- Fixed scrollbar jumping when hovering or dragging in the message list.
+- Removed unused `Theme` import in competitive content indicator.
 
 ## [1.1.2] - 2026-04-05
 
