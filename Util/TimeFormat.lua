@@ -26,8 +26,12 @@ local function computeServerOffset()
   local sCal = _G.C_DateAndTime.GetCurrentCalendarTime()
   local lt = date("*t")
   local sEpoch = time({
-    year = sCal.year, month = sCal.month, day = sCal.monthDay,
-    hour = sCal.hour, min = sCal.minute, sec = sCal.second or 0,
+    year = sCal.year,
+    month = sCal.month,
+    day = sCal.monthDay,
+    hour = sCal.hour,
+    min = sCal.minute,
+    sec = sCal.second or 0,
     isdst = lt.isdst,
   })
   local lEpoch = time(lt)

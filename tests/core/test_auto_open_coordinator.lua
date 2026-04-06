@@ -73,7 +73,8 @@ return function()
     localProfileId = "me",
     accountState = {
       settings = {
-        autoOpenIncoming = true, autoOpenOutgoing = true,
+        autoOpenIncoming = true,
+        autoOpenOutgoing = true,
       },
     },
     store = {

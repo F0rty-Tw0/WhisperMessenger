@@ -81,8 +81,12 @@ local function tests()
     GetCurrentCalendarTime = function()
       local lt = os.date("*t")
       return {
-        year = lt.year, month = lt.month, monthDay = lt.day,
-        hour = lt.hour + 5, minute = lt.min, second = lt.sec,
+        year = lt.year,
+        month = lt.month,
+        monthDay = lt.day,
+        hour = lt.hour + 5,
+        minute = lt.min,
+        second = lt.sec,
       }
     end,
   }
@@ -98,10 +102,7 @@ local function tests()
   local lateNight = os.time({ year = 2026, month = 6, day = 15, hour = 22, min = 0, sec = 0 })
   local justBefore = os.time({ year = 2026, month = 6, day = 15, hour = 20, min = 0, sec = 0 })
   -- Server: 22:00+5=03:00 Jun 16, 20:00+5=01:00 Jun 16 → same server day
-  assert(
-    not TimeFormat.IsDifferentDay(justBefore, lateNight),
-    "Both should be same server day (June 16)"
-  )
+  assert(not TimeFormat.IsDifferentDay(justBefore, lateNight), "Both should be same server day (June 16)")
   -- Compare across local day boundary in server time
   local beforeServerMidnight = os.time({ year = 2026, month = 6, day = 15, hour = 18, min = 0, sec = 0 })
   -- Server: 18:00+5=23:00 Jun 15 vs 22:00+5=03:00 Jun 16 → different server days
@@ -117,10 +118,7 @@ local function tests()
   -- IsDifferentDay in local mode uses local timezone (not UTC epoch division)
   local localDay1 = os.time({ year = 2026, month = 3, day = 18, hour = 23, min = 59, sec = 0 })
   local localDay2 = os.time({ year = 2026, month = 3, day = 19, hour = 0, min = 1, sec = 0 })
-  assert(
-    TimeFormat.IsDifferentDay(localDay1, localDay2),
-    "23:59 and 00:01 should be different local days"
-  )
+  assert(TimeFormat.IsDifferentDay(localDay1, localDay2), "23:59 and 00:01 should be different local days")
 
   print("  All TimeFormat config tests passed")
 end
