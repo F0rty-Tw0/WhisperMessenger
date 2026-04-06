@@ -10,7 +10,7 @@ local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.
 
 local Navigation = {}
 
-function Navigation.Sync(view)
+function Navigation.Sync(view, skipValueSync)
   if view == nil or view.scrollFrame == nil or view.scrollBar == nil then
     return 0
   end
@@ -22,8 +22,6 @@ function Navigation.Sync(view)
   Metrics._applyViewportLayout(view, hasOverflow)
   range = Metrics.GetRange(view)
 
-  local current = clamp(Metrics.GetOffset(view), 0, range)
-
   if view.scrollBar.SetMinMaxValues then
     view.scrollBar:SetMinMaxValues(0, range)
   end
@@ -32,13 +30,21 @@ function Navigation.Sync(view)
     view.scrollBar:SetValueStep(view.step or 1)
   end
 
-  view.syncingScrollBar = true
-  if view.scrollBar.SetValue then
-    view.scrollBar:SetValue(current)
-  else
-    view.scrollBar.value = current
+  -- When called from SetVerticalScroll, skip the value reset — the caller
+  -- will set the correct value immediately after. Without this guard, dragging
+  -- the Slider fights: Sync pushes the thumb to the *old* position while the
+  -- user drags to a *new* one, causing a jump loop.
+  if not skipValueSync then
+    local current = clamp(Metrics.GetOffset(view), 0, range)
+
+    view.syncingScrollBar = true
+    if view.scrollBar.SetValue then
+      view.scrollBar:SetValue(current)
+    else
+      view.scrollBar.value = current
+    end
+    view.syncingScrollBar = false
   end
-  view.syncingScrollBar = false
 
   if hasOverflow then
     if view.scrollBar.Show then
@@ -56,7 +62,7 @@ function Navigation.SetVerticalScroll(view, offset)
     return 0
   end
 
-  local range = Navigation.Sync(view)
+  local range = Navigation.Sync(view, true)
   local clamped = clamp(offset or 0, 0, range)
 
   view.syncingScrollFrame = true

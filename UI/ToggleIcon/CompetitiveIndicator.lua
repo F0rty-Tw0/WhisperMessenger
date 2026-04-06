@@ -2,7 +2,6 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 

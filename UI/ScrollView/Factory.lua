@@ -69,22 +69,18 @@ function Factory.Create(factory, parent, options)
     scrollBar:SetThumbTexture(thumb)
   end
 
-  -- Hover behavior: widen and brighten the thumb
+  -- Hover behavior: brighten and widen the thumb only (never resize the
+  -- Slider frame — resizing a Slider triggers OnValueChanged → Sync which
+  -- resets the size, causing an OnEnter/OnLeave flicker loop).
   if scrollBar.SetScript then
     scrollBar:SetScript("OnEnter", function()
       applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
-      if scrollBar.SetSize then
-        scrollBar:SetSize(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER, height)
-      end
       if thumb.SetWidth then
         thumb:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER)
       end
     end)
     scrollBar:SetScript("OnLeave", function()
       applyColorTexture(thumb, Theme.COLORS.scrollbar)
-      if scrollBar.SetSize then
-        scrollBar:SetSize(SCROLLBAR_WIDTH, height)
-      end
       if thumb.SetWidth then
         thumb:SetWidth(SCROLLBAR_WIDTH)
       end
