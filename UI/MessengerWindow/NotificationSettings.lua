@@ -179,7 +179,11 @@ function NotificationSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("badgePulse", value)
-    end
+    end,
+    {
+      "Badge pulse animation",
+      "Plays a pulsing glow on the unread badge when new whispers arrive.",
+    }
   )
   badgePulseToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
@@ -192,7 +196,11 @@ function NotificationSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("playSoundOnWhisper", value)
-    end
+    end,
+    {
+      "Notification sound",
+      "Plays a sound alert when you receive a new whisper.",
+    }
   )
   playSoundToggle.row:SetPoint("TOPLEFT", badgePulseToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
@@ -227,7 +235,11 @@ function NotificationSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("showUnreadBadge", value)
-    end
+    end,
+    {
+      "Show unread badge",
+      "Displays an unread message count on the toggle icon.",
+    }
   )
   showBadgeToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
@@ -259,7 +271,11 @@ function NotificationSettings.Create(factory, parent, config, options)
     toggleLayout,
     function(value)
       onChange("iconDesaturated", value)
-    end
+    end,
+    {
+      "Desaturate icon when idle",
+      "Greyscales the toggle icon when there are no unread messages.",
+    }
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
