@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
+local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView.ScrollView")
 
 local Buttons = {}
 
@@ -30,6 +31,7 @@ function Buttons.WireButtons(refs, options)
   local optionsPanel = refs.optionsPanel
   local settingsPanels = refs.settingsPanels or {}
   local settingsTabs = refs.settingsTabs or {}
+  local optionsScrollView = refs.optionsScrollView
 
   local function trimPlayerName(value)
     if type(value) ~= "string" then
@@ -235,6 +237,14 @@ function Buttons.WireButtons(refs, options)
             panel:Hide()
           end
         end
+      end
+      -- Reset the shared options scroll position when switching tabs.
+      -- Otherwise, scrolling within a long settings panel (e.g. Appearance)
+      -- and then switching to a shorter panel leaves the new panel's content
+      -- visually offset upward, so it "looks scrolled" even though there is
+      -- nothing to scroll.
+      if optionsScrollView and ScrollView and ScrollView.SetVerticalScroll then
+        ScrollView.SetVerticalScroll(optionsScrollView, 0)
       end
       for i, tab in ipairs(settingsTabs) do
         if tab and tab.bg and tab.SetScript then

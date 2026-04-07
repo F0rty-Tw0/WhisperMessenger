@@ -51,6 +51,7 @@ function LifecycleWiring.Setup(options)
       optionsPanel = layout.optionsPanel,
       settingsTabs = { layout.generalTab, layout.appearanceTab, layout.behaviorTab, layout.notificationsTab },
       settingsPanels = options.settingsPanels,
+      optionsScrollView = layout.optionsScrollView,
     },
     buttonsCallbacks = {
       onClose = options.closeWindow,

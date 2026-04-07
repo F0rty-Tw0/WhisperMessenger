@@ -62,15 +62,18 @@ local function safeHookGlobal(functionName, handler)
 end
 
 --- Wrap ChatFrameUtil.GetActiveWindow / ChatEdit_GetActiveWindow:
---- returns our editbox when visible, defers to original when default chat is open.
+--- returns our editbox ONLY when it currently has keyboard focus, so item /
+--- quest / spell links are only redirected into the messenger composer when
+--- the user has actively clicked into it. Otherwise we defer to the original
+--- (default chat) so Blizzard's normal "no active chat" behavior applies.
 local function wmGetActiveWindow(original)
   return function()
     local result = original and original()
     if result ~= nil then
       return result
     end
-    local input = findInputForInsertion(true)
-    if input ~= nil and isInputShown(input) then
+    local input = findInputForInsertion(false)
+    if input ~= nil and isInputShown(input) and isInputFocused(input) then
       return input
     end
     return nil
@@ -78,9 +81,12 @@ local function wmGetActiveWindow(original)
 end
 
 --- Wrap ChatFrameUtil.InsertLink / ChatEdit_InsertLink:
---- tries original first (default chat), then our editbox as fallback.
+--- tries original first (default chat), then our editbox as fallback — but
+--- ONLY when our composer input is the focused widget. Inserting into a
+--- visible-but-unfocused input would steal links that the user expected to
+--- go to a tooltip / quest log / inspect action.
 --- Returns true when handled so callers (quest log, achievement frame, etc.)
---- do not fall through to their default action (tracking, inspecting).
+--- do not fall through to their default action.
 local function wmInsertLink(original)
   return function(link)
     if original then
@@ -93,7 +99,7 @@ local function wmInsertLink(original)
       return false
     end
     if type(link) == "string" and link ~= "" then
-      local inserted = tryInsertLink(link, { allowVisibleWithoutFocus = true })
+      local inserted = tryInsertLink(link, { allowVisibleWithoutFocus = false })
       if inserted then
         return true
       end
@@ -146,9 +152,11 @@ local function registerLinkHooks()
       linkToInsert = "|H" .. link .. "|h" .. text .. "|h"
     end
 
-    local normalizedInsertedLink = type(linkToInsert) == "string" and string.lower(linkToInsert) or ""
-    local allowVisibleWithoutFocus = string.find(normalizedInsertedLink, "quest:", 1, true) ~= nil
-    tryInsertLink(linkToInsert, { allowVisibleWithoutFocus = allowVisibleWithoutFocus })
+    -- Only insert into the messenger composer when it currently has focus.
+    -- Otherwise clicking a chat-bubble link (or anything routed through
+    -- SetItemRef) would silently dump the link into our editbox even when
+    -- the user expected the default behavior (open quest log, show tooltip).
+    tryInsertLink(linkToInsert, { allowVisibleWithoutFocus = false })
   end)
 
   registeredLinkHooks = true

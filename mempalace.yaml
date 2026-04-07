@@ -1,0 +1,24 @@
+wing: whispermessenger
+rooms:
+- name: core
+  description: Files from Core/
+- name: documentation
+  description: Files from docs/
+- name: model
+  description: Files from Model/
+- name: persistence
+  description: Files from Persistence/
+- name: scripts
+  description: Files from scripts/
+- name: testing
+  description: Files from tests/
+- name: transport
+  description: Files from Transport/
+- name: frontend
+  description: Files from UI/
+- name: util
+  description: Files from Util/
+- name: research
+  description: Files from research/
+- name: general
+  description: Files that don't fit other rooms
