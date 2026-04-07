@@ -94,6 +94,38 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_zone_changed_notifies_when_leaving_competitive_after_mythic
+  -- Regression: returning to a capital city after a Mythic+ run left the
+  -- "Competitive Mode" indicator and banner stuck on, because the zone-
+  -- change handler updated the flag but never called the state callback.
+  -- -----------------------------------------------------------------------
+  do
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    local callbackValue = "unset"
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = {
+      _inCompetitiveContent = true,
+      _inMythicContent = false, -- already cleared by CHALLENGE_MODE_COMPLETED
+      runtime = runtime,
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+
+    LifecycleHandlers.Handle(Bootstrap, "ZONE_CHANGED_NEW_AREA", makeDeps())
+
+    assert(Bootstrap._inCompetitiveContent == false, "flag should be cleared")
+    assert(
+      callbackValue == false,
+      "should fire onCompetitiveStateChanged(false) on exit, got: " .. tostring(callbackValue)
+    )
+    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice on exit")
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_encounter_start_sets_in_encounter
   -- -----------------------------------------------------------------------
   do

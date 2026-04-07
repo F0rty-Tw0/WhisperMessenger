@@ -19,7 +19,12 @@ function ChannelMessageStore.New(config)
 end
 
 local function normalizeKey(name)
-  if name == nil or name == "" then
+  -- WoW marks chat sender names from CHAT_MSG_CHANNEL as "secret" tainted
+  -- strings inside Mythic+ / competitive content. Direct equality comparison
+  -- against a literal (`name == ""`) triggers Blizzard's secrecy protection
+  -- ("attempt to compare ... a secret string value tainted by ..."). Use a
+  -- type + length check so we never compare the string value itself.
+  if type(name) ~= "string" or #name == 0 then
     return ""
   end
   return string.lower(name)

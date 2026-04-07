@@ -147,10 +147,18 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
   -- Update competitive content flag on every zone change so the chat
   -- filter bypasses correctly when entering/leaving PvP or arenas.
   if Bootstrap._inCompetitiveContent or Bootstrap._inMythicContent then
+    local wasCompetitive = Bootstrap._inCompetitiveContent == true
     local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
     Bootstrap._inCompetitiveContent = isCompetitive
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
+    end
+    -- Without this, the indicator and "Competitive Mode" banner stay stuck
+    -- after returning to a capital city from a Mythic+ run, because
+    -- CHALLENGE_MODE_COMPLETED already cleared _inMythicContent and the
+    -- short-circuit below would otherwise return without notifying.
+    if wasCompetitive and not isCompetitive then
+      notifyCompetitiveState(Bootstrap)
     end
   end
 

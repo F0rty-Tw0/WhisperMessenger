@@ -40,6 +40,12 @@ function MythicSuspendController.Attach(runtime, deps)
     if EventBridge and Bootstrap._loadFrame then
       EventBridge.UnregisterLiveEvents(Bootstrap._loadFrame)
       EventBridge.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
+      -- Channel sender names become "secret" tainted strings inside mythic
+      -- content. Stop receiving CHAT_MSG_CHANNEL entirely so no addon code
+      -- touches them and triggers Blizzard's secrecy protection.
+      if EventBridge.UnregisterChannelEvents then
+        EventBridge.UnregisterChannelEvents(Bootstrap._loadFrame)
+      end
     end
 
     -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
@@ -62,6 +68,9 @@ function MythicSuspendController.Attach(runtime, deps)
     if EventBridge and Bootstrap._loadFrame then
       EventBridge.RegisterLiveEvents(Bootstrap._loadFrame)
       EventBridge.RegisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
+      if EventBridge.RegisterChannelEvents then
+        EventBridge.RegisterChannelEvents(Bootstrap._loadFrame)
+      end
     end
 
     if Bootstrap.syncChatFilters then

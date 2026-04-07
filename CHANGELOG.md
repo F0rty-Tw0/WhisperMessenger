@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [Unreleased]
+
+### Fixed
+
+- **Mythic+ taint error** — fixed `attempt to compare ... a secret string value tainted by 'WhisperMessenger'` spam from `ChannelMessageStore` while inside Mythic+ keystones. The channel message recorder used a direct equality compare against a literal, which trips Blizzard's secret-string protection on tainted chat sender names. The recorder is now type-safe, and channel chat events are unregistered for the duration of mythic suspend so no addon code touches them at all.
+- **Stuck "Competitive Mode" after Mythic+** — fixed the toggle-icon lock indicator and the "Whispers paused in competitive content" banner remaining stuck after returning to a capital city from a Mythic+ run. The zone-change handler updated the internal flag but never notified the UI when leaving competitive content via a zone change rather than `CHALLENGE_MODE_COMPLETED`.
+
 ## [1.1.4] - 2026-04-07
 
 ### Added
