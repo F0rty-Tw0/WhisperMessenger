@@ -147,6 +147,7 @@ UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
+Core/Bootstrap/SecretTaintGuard.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/ChatFilters.lua

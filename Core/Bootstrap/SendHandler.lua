@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
@@ -82,6 +83,15 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
     appendBlockedOutgoing(runtime, payload, "Competitive Content")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
+    refreshWindow()
+    return false
+  end
+
+  -- Blizzard's chat-secrecy lockdown (M+, Mythic raid, certain PvP brackets).
+  -- Reuses "Lockdown" status — same semantic: Blizzard blocks outgoing chat.
+  if FlavorCompat.InChatMessagingLockdown() then
+    appendBlockedOutgoing(runtime, payload, "Lockdown")
+    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Lockdown")
     refreshWindow()
     return false
   end

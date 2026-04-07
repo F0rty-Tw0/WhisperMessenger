@@ -3,6 +3,11 @@
 
 ## [Unreleased]
 
+### Added
+
+- **Whispers no longer lost during Mythic+** — whispers that arrive while you're inside a Mythic+ keystone (or any other content where Blizzard locks down chat) are now held safely in the background and delivered to your messenger the moment you finish the run. Previously these messages were dropped entirely.
+- **Smarter lockdown detection** — the messenger now asks the game directly whether chat is locked instead of guessing from the content type. The "chat paused" banner and the lock indicator now trigger correctly across every situation Blizzard restricts whispers in, not just Mythic+ keystones and Mythic raids.
+
 ### Fixed
 
 - **Item / quest / spell links going into the messenger when it isn't focused** — fixed shift-clicking items, quest log links, and chat-bubble link clicks being silently captured by the messenger composer even when its input wasn't the focused widget. Links now only insert into the composer when the messenger input has keyboard focus, matching how Blizzard's default chat editbox behaves.

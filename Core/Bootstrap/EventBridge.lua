@@ -8,6 +8,7 @@ local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
+local SecretTaintGuard = ns.BootstrapSecretTaintGuard or require("WhisperMessenger.Core.Bootstrap.SecretTaintGuard")
 
 local Trace = ns.Trace
 
@@ -188,6 +189,15 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
+  -- Defer-and-sanitize: if any event arg is a Blizzard "secret string" tainted
+  -- by chat-secrecy lockdown (M+/PvP), enqueue a sanitized copy and bail now.
+  -- This must happen BEFORE buildLivePayload reads the varargs.
+  if SecretTaintGuard.TryDefer(runtime, eventName, ...) then
+    if Trace then
+      Trace("EventBridge: deferred " .. eventName .. " (taint)")
+    end
+    return nil
+  end
   local payload = buildLivePayload(runtime, eventName, ...)
   if Trace and TRACE_EVENTS[eventName] then
     Trace(
@@ -264,6 +274,13 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     refreshWindow()
   end
   return result
+end
+
+-- DrainSecretDeferredQueue(runtime, refreshWindow) -> number
+-- Delegates to SecretTaintGuard; exposed here so callers that already hold
+-- EventBridge don't need a second require.
+function EventBridge.DrainSecretDeferredQueue(runtime, refreshWindow)
+  return SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
 end
 
 ns.BootstrapEventBridge = EventBridge

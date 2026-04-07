@@ -111,6 +111,12 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
     end
     deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
     notifyCompetitiveState(Bootstrap)
+    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+        refreshRuntimeWindow(Bootstrap)
+      end)
+    end
     return true
   end
 
@@ -172,6 +178,13 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
     Bootstrap._inMythicContent = false
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
+    end
+
+    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+        refreshRuntimeWindow(Bootstrap)
+      end)
     end
 
     local PresenceCache = deps.getPresenceCache()
