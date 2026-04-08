@@ -7,6 +7,8 @@ local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCom
 
 -- Maximum number of event args WoW whisper events carry (matches WoW's event arg count cap).
 local MAX_EVENT_ARGS = 29
+-- Maximum items held in the deferred queue before FIFO eviction kicks in.
+local MAX_QUEUE_SIZE = 200
 
 local SecretTaintGuard = {}
 
@@ -41,6 +43,12 @@ function SecretTaintGuard.TryDefer(runtime, eventName, ...)
 
   local sanitized = sanitizeArgs(...)
   runtime.secretDeferredQueue = runtime.secretDeferredQueue or {}
+  if #runtime.secretDeferredQueue >= MAX_QUEUE_SIZE then
+    table.remove(runtime.secretDeferredQueue, 1)
+    if ns.Trace then
+      ns.Trace("SecretTaintGuard: queue cap reached, evicted oldest")
+    end
+  end
   table.insert(runtime.secretDeferredQueue, { eventName = eventName, args = sanitized })
   return true
 end
@@ -68,6 +76,9 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     local item = table.remove(q, 1)
     EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, table.unpack(item.args, 1, MAX_EVENT_ARGS))
     count = count + 1
+  end
+  if count > 0 and ns.Trace then
+    ns.Trace("SecretTaintGuard: drained " .. count .. " deferred events")
   end
   return count
 end

@@ -151,6 +151,14 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     end
     deps.trace("encounter ended")
     notifyCompetitiveState(Bootstrap)
+    if not FlavorCompat.InChatMessagingLockdown() then
+      local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+      if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+        EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+          refreshRuntimeWindow(Bootstrap)
+        end)
+      end
+    end
     return true
   end
 
@@ -179,6 +187,14 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
   end
 
   if not Bootstrap._inMythicContent then
+    if not FlavorCompat.InChatMessagingLockdown() then
+      local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+      if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+        EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+          refreshRuntimeWindow(Bootstrap)
+        end)
+      end
+    end
     return true
   end
 
@@ -188,13 +204,6 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
     Bootstrap._inMythicContent = false
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
-    end
-
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-        refreshRuntimeWindow(Bootstrap)
-      end)
     end
 
     local PresenceCache = deps.getPresenceCache()
@@ -210,6 +219,15 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
     end
 
     deps.trace("mythic lockdown: resumed via zone change")
+  end
+
+  if not FlavorCompat.InChatMessagingLockdown() then
+    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+        refreshRuntimeWindow(Bootstrap)
+      end)
+    end
   end
 
   return true
@@ -271,6 +289,15 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
     scheduleAfter(2, function()
       Bootstrap.runtime.refreshWindow()
     end)
+  end
+
+  if not FlavorCompat.InChatMessagingLockdown() then
+    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+        refreshRuntimeWindow(Bootstrap)
+      end)
+    end
   end
 
   return true

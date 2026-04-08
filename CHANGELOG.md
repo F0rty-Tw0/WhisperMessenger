@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Whispers lost during raid encounters and battlegrounds** — whispers received while in raid encounters (any difficulty) or battlegrounds/arenas now reappear in the messenger after the encounter ends or you leave the match, instead of being permanently lost. Includes deferred-queue trace logging (visible in `/wm trace`) for field diagnostics and automatic FIFO eviction at 200 items to prevent unbounded memory growth during long fights.
+
 ## [1.1.5] - 2026-04-08
 
 ### Added
