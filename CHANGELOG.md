@@ -3,6 +3,8 @@
 
 ## [Unreleased]
 
+## [1.1.5] - 2026-04-08
+
 ### Added
 
 - **Whispers no longer lost during Mythic+** — whispers that arrive while you're inside a Mythic+ keystone (or any other content where Blizzard locks down chat) are now held safely in the background and delivered to your messenger the moment you finish the run. Previously these messages were dropped entirely.
