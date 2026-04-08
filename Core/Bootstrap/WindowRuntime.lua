@@ -76,8 +76,8 @@ function WindowRuntime.Create(options)
       return icon
     end,
     trace = trace,
-    isMythicRestricted = function()
-      return bootstrap._inMythicContent == true
+    isLockdownActive = function()
+      return bootstrap.lockdown ~= nil and bootstrap.lockdown.active == true
     end,
     presenceCache = presenceCache,
   })

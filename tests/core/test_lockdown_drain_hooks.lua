@@ -157,7 +157,10 @@ return function()
     local EventBridge = reloadEventBridge()
     local LifecycleHandlers = reloadLifecycleHandlers()
     local runtime = makeRuntime()
-    local Bootstrap = { runtime = runtime, _inCompetitiveContent = true }
+    local Bootstrap = {
+      runtime = runtime,
+      lockdown = { active = true, since = 1, source = "PLAYER_ENTERING_WORLD" },
+    }
 
     enqueueOne(EventBridge, runtime, "secret", "Arthas-Area52")
     assert(#runtime.secretDeferredQueue == 1, "bg_exit_zone_change: expected 1 item queued")

@@ -231,7 +231,11 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps(EventBridge))
 
     assert(_G._wmSuspended == true, "phase2: ENCOUNTER_START should set _wmSuspended when locked")
-    assert(Bootstrap._inEncounter == true, "phase2: _inEncounter should be true after locked ENCOUNTER_START")
+    assert(
+      Bootstrap.lockdown and Bootstrap.lockdown.active == true,
+      "phase2: lockdown.active should be true after locked ENCOUNTER_START"
+    )
+    assert(Bootstrap.lockdown.source == "ENCOUNTER_START", "phase2: lockdown.source should be ENCOUNTER_START")
     _G._wmSuspended, _G.C_ChatInfo = savedSuspended, savedChatInfo
   end
 
@@ -243,11 +247,14 @@ return function()
 
     local EventBridge = reloadEventBridge()
     local LifecycleHandlers = reloadLifecycleHandlers()
-    local Bootstrap = { runtime = makeRuntime(), _inEncounter = true }
+    local Bootstrap = {
+      runtime = makeRuntime(),
+      lockdown = { active = true, since = 1, source = "ENCOUNTER_START" },
+    }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps(EventBridge))
 
     assert(_G._wmSuspended == nil, "phase2: ENCOUNTER_END should clear _wmSuspended")
-    assert(Bootstrap._inEncounter == false, "phase2: _inEncounter should be false after ENCOUNTER_END")
+    assert(Bootstrap.lockdown.active == false, "phase2: lockdown.active should be false after ENCOUNTER_END")
     _G._wmSuspended, _G.C_ChatInfo = savedSuspended, savedChatInfo
   end
 

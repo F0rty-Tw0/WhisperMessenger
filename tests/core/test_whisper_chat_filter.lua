@@ -159,13 +159,10 @@ return function()
     Bootstrap.registerChatFilters()
     assert(Bootstrap._filtersRegistered == true, "filters should be registered before competitive test")
 
-    Bootstrap._inCompetitiveContent = true
+    Bootstrap.lockdown = { active = true, since = 1, source = "ENCOUNTER_START" }
     Bootstrap.syncChatFilters()
-    assert(
-      Bootstrap._filtersRegistered == false,
-      "syncChatFilters should unregister during competitive content (pvp/arena)"
-    )
-    Bootstrap._inCompetitiveContent = nil
+    assert(Bootstrap._filtersRegistered == false, "syncChatFilters should unregister when lockdown is active")
+    Bootstrap.lockdown = { active = false, since = 0, source = "init" }
   end
 
   -- -----------------------------------------------------------------------

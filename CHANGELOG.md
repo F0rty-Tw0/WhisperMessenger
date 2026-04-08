@@ -12,6 +12,7 @@
 ### Changed
 
 - **Chat channel messages during lockdown** — channel traffic (Trade, General, LFG, etc.) received while chat is locked is now safely sanitized via the taint guard instead of being blocked at the event source. These messages are intentionally not replayed into the messenger after the lockdown clears — channel spam would bury the whispers you actually care about.
+- **Unified lockdown detection (internal)** — the addon now uses a single source of truth for chat-secrecy lockdown state (Blizzard's `InChatMessagingLockdown()` API) instead of three scattered boolean flags that each handler set and cleared on different events. The lock indicator, "whispers paused" banner, chat filter suppression, and availability requests all read the same state, eliminating a class of bugs where different parts of the UI could disagree about whether chat was locked. Also fixes a subtle event-router gate that was silently blocking `CHAT_MSG_WHISPER` during Mythic+ runs before the taint guard could defer it — without this fix the Mythic+ whisper recovery above would not actually have worked end-to-end.
 
 ## [1.1.5] - 2026-04-08
 

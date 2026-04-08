@@ -116,10 +116,11 @@ function AddonEventFrame.Install(deps)
       return
     end
 
-    if Bootstrap._inMythicContent then
-      return
-    end
-
+    -- Phase 3: no more OnEvent-level lockdown gate. SecretTaintGuard inside
+    -- RouteLiveEvent handles taint at the bridge layer and defers tainted
+    -- payloads into runtime.secretDeferredQueue. Lifecycle handlers drain the
+    -- queue on lockdown clear. Blocking the route here would swallow the
+    -- tainted events before the guard can defer them, losing messages.
     EventBridge = resolveModule(
       EventBridge,
       "BootstrapEventBridge",

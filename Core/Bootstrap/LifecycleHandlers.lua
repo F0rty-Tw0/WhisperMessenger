@@ -6,6 +6,11 @@ end
 local LifecycleHandlers = {}
 
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local LockdownState = ns.BootstrapLockdownState or require("WhisperMessenger.Core.Bootstrap.LockdownState")
+
+local MYTHIC_PAUSE_NOTICE =
+  "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
+local COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
 
 local function refreshRuntimeWindow(Bootstrap)
   if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
@@ -20,6 +25,46 @@ local function scheduleAfter(delay, callback)
   end
 
   return false
+end
+
+local function drainSecretQueue(Bootstrap, deps)
+  if FlavorCompat.InChatMessagingLockdown() then
+    return
+  end
+  local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
+  if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
+    EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+      refreshRuntimeWindow(Bootstrap)
+    end)
+  end
+end
+
+local function ensureLockdown(Bootstrap)
+  if Bootstrap.lockdown == nil then
+    LockdownState.Initialize(Bootstrap)
+  end
+end
+
+-- Writes runtime.messagingNotice from the current lockdown state. The source
+-- determines which notice string wins: Mythic+ keeps its own "Mythic content"
+-- wording; all other sources fall back to the generic competitive notice.
+-- Skip while MythicSuspendController owns the notice (CHALLENGE_MODE_START),
+-- because its suspend() call writes its own pause string.
+local function notifyCompetitiveState(Bootstrap)
+  ensureLockdown(Bootstrap)
+  local isActive = Bootstrap.lockdown.active == true
+
+  if Bootstrap.runtime and Bootstrap.lockdown.source ~= "CHALLENGE_MODE_START" then
+    if isActive then
+      Bootstrap.runtime.messagingNotice = COMPETITIVE_NOTICE
+    else
+      Bootstrap.runtime.messagingNotice = nil
+    end
+  end
+
+  if type(Bootstrap.onCompetitiveStateChanged) == "function" then
+    Bootstrap.onCompetitiveStateChanged(isActive)
+  end
 end
 
 local function handleBNetFriendEvent(Bootstrap, deps)
@@ -73,33 +118,15 @@ local function handlePlayerLogout(Bootstrap, deps)
   return true
 end
 
-local COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
-
-local function notifyCompetitiveState(Bootstrap)
-  local isActive = Bootstrap._inCompetitiveContent == true
-    or Bootstrap._inMythicContent == true
-    or Bootstrap._inEncounter == true
-
-  -- Set/clear the messaging notice on the runtime (visible banner in messenger).
-  -- Skip if mythic suspend already owns the notice (its own suspend/resume manages it).
-  if Bootstrap.runtime and not Bootstrap._inMythicContent then
-    if isActive then
-      Bootstrap.runtime.messagingNotice = COMPETITIVE_NOTICE
-    else
-      Bootstrap.runtime.messagingNotice = nil
-    end
-  end
-
-  if type(Bootstrap.onCompetitiveStateChanged) == "function" then
-    Bootstrap.onCompetitiveStateChanged(isActive)
-  end
-end
-
 local function handleChallengeModeEvent(Bootstrap, event, deps)
   if event == "CHALLENGE_MODE_START" then
-    Bootstrap._inMythicContent = true
-    if Bootstrap.runtime and Bootstrap.runtime.suspend then
+    ensureLockdown(Bootstrap)
+    local changed, wasActive, isActive = LockdownState.Sync(Bootstrap, "CHALLENGE_MODE_START", deps)
+    if changed and isActive and not wasActive and Bootstrap.runtime and Bootstrap.runtime.suspend then
       Bootstrap.runtime.suspend()
+    end
+    if Bootstrap.runtime and Bootstrap.lockdown.active then
+      Bootstrap.runtime.messagingNotice = MYTHIC_PAUSE_NOTICE
     end
     deps.trace("mythic lockdown: M+ started")
     notifyCompetitiveState(Bootstrap)
@@ -107,18 +134,14 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
   end
 
   if event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
-    Bootstrap._inMythicContent = false
-    if Bootstrap.runtime and Bootstrap.runtime.resume then
+    ensureLockdown(Bootstrap)
+    local changed, wasActive, isActive = LockdownState.Sync(Bootstrap, event, deps)
+    if changed and wasActive and not isActive and Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
     deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
     notifyCompetitiveState(Bootstrap)
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-        refreshRuntimeWindow(Bootstrap)
-      end)
-    end
+    drainSecretQueue(Bootstrap, deps)
     return true
   end
 
@@ -132,14 +155,15 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     -- encounter as a "competitive lockdown" when Blizzard's chat secrecy
     -- API actually has chat locked — otherwise we'd show the "paused"
     -- banner and lock indicator in regular raids where chat works fine.
-    if not FlavorCompat.InChatMessagingLockdown() then
+    ensureLockdown(Bootstrap)
+    LockdownState.Sync(Bootstrap, "ENCOUNTER_START", deps)
+    if not Bootstrap.lockdown.active then
       return true
     end
     -- Set the global suspend flag so LinkHooks bail during locked raid pulls.
-    -- Mythic raid encounters lock chat via ENCOUNTER_START but don't call
-    -- runtime.suspend(), so _wmSuspended would otherwise stay nil.
+    -- Raid encounters lock chat but do NOT call runtime.suspend(); that keeps
+    -- the window visible and avoids re-showing the full M+ "paused" overlay.
     _G._wmSuspended = true
-    Bootstrap._inEncounter = true
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
@@ -149,21 +173,15 @@ local function handleEncounterEvent(Bootstrap, event, deps)
   end
 
   if event == "ENCOUNTER_END" then
-    Bootstrap._inEncounter = false
+    ensureLockdown(Bootstrap)
+    LockdownState.Sync(Bootstrap, "ENCOUNTER_END", deps)
     _G._wmSuspended = nil
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
     deps.trace("encounter ended")
     notifyCompetitiveState(Bootstrap)
-    if not FlavorCompat.InChatMessagingLockdown() then
-      local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-      if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-        EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-          refreshRuntimeWindow(Bootstrap)
-        end)
-      end
-    end
+    drainSecretQueue(Bootstrap, deps)
     return true
   end
 
@@ -171,76 +189,46 @@ local function handleEncounterEvent(Bootstrap, event, deps)
 end
 
 local function handleZoneChangedNewArea(Bootstrap, deps)
-  local ContentDetector = deps.getContentDetector()
+  ensureLockdown(Bootstrap)
+  local changed, wasActive, isActive = LockdownState.Sync(Bootstrap, "ZONE_CHANGED_NEW_AREA", deps)
 
-  -- Update competitive content flag on every zone change so the chat
-  -- filter bypasses correctly when entering/leaving PvP or arenas.
-  if Bootstrap._inCompetitiveContent or Bootstrap._inMythicContent then
-    local wasCompetitive = Bootstrap._inCompetitiveContent == true
-    local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
-    Bootstrap._inCompetitiveContent = isCompetitive
-    if Bootstrap.syncChatFilters then
-      Bootstrap.syncChatFilters()
-    end
-    -- Without this, the indicator and "Competitive Mode" banner stay stuck
-    -- after returning to a capital city from a Mythic+ run, because
-    -- CHALLENGE_MODE_COMPLETED already cleared _inMythicContent and the
-    -- short-circuit below would otherwise return without notifying.
-    if wasCompetitive and not isCompetitive then
-      notifyCompetitiveState(Bootstrap)
-    end
-  end
-
-  if not Bootstrap._inMythicContent then
-    if not FlavorCompat.InChatMessagingLockdown() then
-      local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-      if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-        EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-          refreshRuntimeWindow(Bootstrap)
-        end)
-      end
-    end
-    return true
-  end
-
-  local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
-  deps.trace("ZONE_CHANGED_NEW_AREA wasMythic=true isMythic=" .. tostring(isMythic))
-  if not isMythic then
-    Bootstrap._inMythicContent = false
+  if changed and wasActive and not isActive then
+    -- Leaving mythic+: resume the runtime and kick the presence cache. Normal
+    -- lockdown exits (raid/BG) don't need suspend/resume; their window state
+    -- was never hidden, only the notice + _wmSuspended flag were managed by
+    -- the encounter handler.
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
-
     local PresenceCache = deps.getPresenceCache()
     if PresenceCache then
       scheduleAfter(2, function()
-        if Bootstrap._inMythicContent then
+        if LockdownState.IsActive(Bootstrap) then
           return
         end
-        deps.trace("PresenceCache: rebuild after mythic exit")
+        deps.trace("PresenceCache: rebuild after lockdown exit")
         PresenceCache.Rebuild()
         refreshRuntimeWindow(Bootstrap)
       end)
     end
-
-    deps.trace("mythic lockdown: resumed via zone change")
+    deps.trace("lockdown: resumed via zone change")
   end
 
-  if not FlavorCompat.InChatMessagingLockdown() then
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-        refreshRuntimeWindow(Bootstrap)
-      end)
-    end
+  if Bootstrap.syncChatFilters then
+    Bootstrap.syncChatFilters()
   end
 
+  if changed then
+    notifyCompetitiveState(Bootstrap)
+  end
+
+  drainSecretQueue(Bootstrap, deps)
   return true
 end
 
 local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
   scheduleAfter(2, function()
-    if Bootstrap._inMythicContent then
+    if LockdownState.IsActive(Bootstrap) then
       return
     end
     deps.trace("PresenceCache: initial rebuild (PLAYER_ENTERING_WORLD +2s)")
@@ -249,7 +237,7 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
   end)
 
   local function presenceTimerLoop()
-    if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
+    if not LockdownState.IsActive(Bootstrap) and PresenceCache.IsStale() then
       deps.trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
       PresenceCache.Rebuild()
     end
@@ -260,30 +248,29 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
 end
 
 local function handlePlayerEnteringWorld(Bootstrap, deps)
-  local ContentDetector = deps.getContentDetector()
-  local wasMythic = Bootstrap._inMythicContent or false
-  local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
-  local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
-  deps.trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
-  Bootstrap._inMythicContent = isMythic
-  Bootstrap._inCompetitiveContent = isCompetitive
+  ensureLockdown(Bootstrap)
+  local changed, wasActive, isActive = LockdownState.Sync(Bootstrap, "PLAYER_ENTERING_WORLD", deps)
+  deps.trace("PLAYER_ENTERING_WORLD wasActive=" .. tostring(wasActive) .. " isActive=" .. tostring(isActive))
+
   if Bootstrap.syncChatFilters then
     Bootstrap.syncChatFilters()
   end
-  notifyCompetitiveState(Bootstrap, deps)
+  notifyCompetitiveState(Bootstrap)
 
-  if isMythic and not wasMythic then
+  if changed and isActive and not wasActive then
     if Bootstrap.runtime and Bootstrap.runtime.suspend then
       Bootstrap.runtime.suspend()
     end
-    deps.trace("mythic lockdown: suspended")
+    deps.trace("lockdown: suspended on PLAYER_ENTERING_WORLD")
     return true
-  elseif wasMythic and not isMythic then
+  end
+
+  if changed and wasActive and not isActive then
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
-    deps.trace("mythic lockdown: resumed")
-  elseif isMythic then
+    deps.trace("lockdown: resumed on PLAYER_ENTERING_WORLD")
+  elseif isActive then
     return true
   end
 
@@ -296,15 +283,7 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
     end)
   end
 
-  if not FlavorCompat.InChatMessagingLockdown() then
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-      EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
-        refreshRuntimeWindow(Bootstrap)
-      end)
-    end
-  end
-
+  drainSecretQueue(Bootstrap, deps)
   return true
 end
 
@@ -321,7 +300,7 @@ local function handlePresenceInvalidation(Bootstrap, event, deps)
     Bootstrap._presenceRebuildPending = true
     scheduleAfter(2, function()
       Bootstrap._presenceRebuildPending = false
-      if Bootstrap._inMythicContent then
+      if LockdownState.IsActive(Bootstrap) then
         return
       end
       deps.trace("PresenceCache: debounced rebuild after " .. event)

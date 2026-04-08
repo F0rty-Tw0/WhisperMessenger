@@ -25,7 +25,7 @@ function WindowCoordinator.Create(options)
   local trace = options.trace or function(...)
     local _ = ...
   end
-  local isMythicRestricted = options.isMythicRestricted or function()
+  local isLockdownActive = options.isLockdownActive or function()
     return false
   end
   local presenceCache = options.presenceCache
@@ -77,7 +77,7 @@ function WindowCoordinator.Create(options)
   function coordinator.refreshContacts()
     local freshContacts = buildContacts()
 
-    if not isMythicRestricted() then
+    if not isLockdownActive() then
       for _, item in ipairs(freshContacts) do
         if
           item.channel == "WOW"

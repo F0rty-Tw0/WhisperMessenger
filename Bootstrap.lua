@@ -57,9 +57,20 @@ function Bootstrap.Initialize(factory, options)
   options = options or {}
   trace("initialize start")
 
+  -- Unified lockdown state. Replaces the legacy _inMythicContent /
+  -- _inCompetitiveContent / _inEncounter flag salad with a single source of
+  -- truth driven by FlavorCompat.InChatMessagingLockdown(). Every lifecycle
+  -- handler that can affect lockdown calls LockdownState.Sync to update it.
+  Bootstrap.lockdown = {
+    active = false,
+    since = 0,
+    source = "init",
+  }
+
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
   local ChatFilters = loadModule("WhisperMessenger.Core.Bootstrap.ChatFilters", "BootstrapChatFilters")
+  loadModule("WhisperMessenger.Core.Bootstrap.LockdownState", "BootstrapLockdownState") -- registers on ns
   local MythicSuspendController =
     loadModule("WhisperMessenger.Core.Bootstrap.MythicSuspendController", "BootstrapMythicSuspendController")
   local WindowRuntime = loadModule("WhisperMessenger.Core.Bootstrap.WindowRuntime", "BootstrapWindowRuntime")
@@ -137,7 +148,7 @@ function Bootstrap.Initialize(factory, options)
   })
 
   runtime.isCompetitiveContent = function()
-    return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
+    return Bootstrap.lockdown.active == true
   end
 
   Bootstrap.onCompetitiveStateChanged = function(isActive)

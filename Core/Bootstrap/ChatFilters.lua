@@ -50,10 +50,9 @@ function ChatFilters.Configure(Bootstrap, accountState)
   end
 
   Bootstrap.syncChatFilters = function()
+    local lockdownActive = Bootstrap.lockdown ~= nil and Bootstrap.lockdown.active == true
     local shouldFilter = accountState.settings.hideFromDefaultChat == true
-      and not Bootstrap._inCompetitiveContent
-      and not Bootstrap._inMythicContent
-      and not Bootstrap._inEncounter
+      and not lockdownActive
       and not _G._wmSuspended
 
     if shouldFilter and not Bootstrap._filtersRegistered then

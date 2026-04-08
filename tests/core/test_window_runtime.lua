@@ -186,7 +186,7 @@ return function()
     characterState = characterState,
     defaultCharacterState = defaultCharacterState,
     uiFactory = {},
-    bootstrap = { _inMythicContent = false },
+    bootstrap = { lockdown = { active = false, since = 0, source = "init" } },
     contactsList = contactsList,
     messengerWindow = messengerWindow,
     toggleIcon = toggleIcon,

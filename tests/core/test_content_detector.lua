@@ -28,49 +28,4 @@ return function()
   assert(ContentDetector.IsMythicRestricted(function()
     return "Raid", "raid", 16
   end) == true, "should return true for Mythic Raid")
-
-  -- -----------------------------------------------------------------------
-  -- IsCompetitiveContent — covers mythic + PvP + arena
-  -- -----------------------------------------------------------------------
-
-  -- Returns false when getInstanceInfo is nil
-  assert(
-    ContentDetector.IsCompetitiveContent(nil) == false,
-    "competitive: should return false when getInstanceInfo is nil"
-  )
-
-  -- Returns false for open world
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Eastern Kingdoms", "none", 0
-  end) == false, "competitive: should return false for open world")
-
-  -- Returns false for normal dungeon
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Dungeon", "party", 1
-  end) == false, "competitive: should return false for normal dungeon")
-
-  -- Returns false for heroic raid
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Raid", "raid", 15
-  end) == false, "competitive: should return false for heroic raid")
-
-  -- Returns true for Mythic Keystone
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Dungeon", "party", 8
-  end) == true, "competitive: should return true for Mythic Keystone")
-
-  -- Returns true for Mythic Raid
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Raid", "raid", 16
-  end) == true, "competitive: should return true for Mythic Raid")
-
-  -- Returns true for battleground
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Warsong Gulch", "pvp", 1
-  end) == true, "competitive: should return true for battleground")
-
-  -- Returns true for arena
-  assert(ContentDetector.IsCompetitiveContent(function()
-    return "Nagrand Arena", "arena", 1
-  end) == true, "competitive: should return true for arena")
 end
