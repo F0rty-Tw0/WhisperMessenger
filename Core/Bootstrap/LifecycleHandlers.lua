@@ -5,6 +5,8 @@ end
 
 local LifecycleHandlers = {}
 
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+
 local function refreshRuntimeWindow(Bootstrap)
   if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
     Bootstrap.runtime.refreshWindow()
@@ -125,6 +127,14 @@ end
 
 local function handleEncounterEvent(Bootstrap, event, deps)
   if event == "ENCOUNTER_START" then
+    -- ENCOUNTER_START fires for ALL raid/dungeon encounters regardless of
+    -- difficulty (LFR/Normal/Heroic/Mythic/M+/dungeons). Only treat the
+    -- encounter as a "competitive lockdown" when Blizzard's chat secrecy
+    -- API actually has chat locked — otherwise we'd show the "paused"
+    -- banner and lock indicator in regular raids where chat works fine.
+    if not FlavorCompat.InChatMessagingLockdown() then
+      return true
+    end
     Bootstrap._inEncounter = true
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()

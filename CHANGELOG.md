@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- **Lock indicator wrongly showing in normal raids** — fixed the "Whispers paused" banner and the lock icon appearing on every boss pull in LFR, Normal, and Heroic raids. The messenger now only shows the lock indicator in content where the game actually restricts whispers.
 - **Item / quest / spell links going into the messenger when it isn't focused** — fixed shift-clicking items, quest log links, and chat-bubble link clicks being silently captured by the messenger composer even when its input wasn't the focused widget. Links now only insert into the composer when the messenger input has keyboard focus, matching how Blizzard's default chat editbox behaves.
 - **Stuck scroll position when switching settings tabs** — fixed the options panel keeping its scroll offset across tab switches. Scrolling down inside a long tab (e.g. Appearance) and then clicking a shorter tab (e.g. Behavior) used to leave the new tab visually scrolled with empty space at the top. The shared options scroll view now resets to the top whenever a new tab is selected.
 - **Mythic+ taint error** — fixed `attempt to compare ... a secret string value tainted by 'WhisperMessenger'` spam from `ChannelMessageStore` while inside Mythic+ keystones. The channel message recorder used a direct equality compare against a literal, which trips Blizzard's secret-string protection on tainted chat sender names. The recorder is now type-safe, and channel chat events are unregistered for the duration of mythic suspend so no addon code touches them at all.

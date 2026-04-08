@@ -129,10 +129,19 @@ return function()
   -- test_encounter_start_sets_in_encounter
   -- -----------------------------------------------------------------------
   do
+    local savedCChatInfo = _G.C_ChatInfo
+    _G.C_ChatInfo = {
+      InChatMessagingLockdown = function()
+        return true
+      end,
+    }
+
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
     assert(Bootstrap._inEncounter == true, "should set _inEncounter=true on ENCOUNTER_START")
+
+    _G.C_ChatInfo = savedCChatInfo
   end
 
   -- -----------------------------------------------------------------------
@@ -149,6 +158,13 @@ return function()
   -- test_encounter_start_calls_competitive_state_callback
   -- -----------------------------------------------------------------------
   do
+    local savedCChatInfo = _G.C_ChatInfo
+    _G.C_ChatInfo = {
+      InChatMessagingLockdown = function()
+        return true
+      end,
+    }
+
     local callbackCalled = false
     local callbackValue = nil
     local Bootstrap = {
@@ -162,6 +178,8 @@ return function()
 
     assert(callbackCalled == true, "should call onCompetitiveStateChanged on ENCOUNTER_START")
     assert(callbackValue == true, "should pass true to onCompetitiveStateChanged on ENCOUNTER_START")
+
+    _G.C_ChatInfo = savedCChatInfo
   end
 
   -- -----------------------------------------------------------------------
@@ -240,6 +258,13 @@ return function()
   -- test_encounter_start_sets_messaging_notice
   -- -----------------------------------------------------------------------
   do
+    local savedCChatInfo = _G.C_ChatInfo
+    _G.C_ChatInfo = {
+      InChatMessagingLockdown = function()
+        return true
+      end,
+    }
+
     local runtime = { suspend = function() end, resume = function() end }
     local Bootstrap = { runtime = runtime }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
@@ -249,6 +274,8 @@ return function()
       type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "",
       "messagingNotice should be a non-empty string"
     )
+
+    _G.C_ChatInfo = savedCChatInfo
   end
 
   -- -----------------------------------------------------------------------
@@ -325,6 +352,13 @@ return function()
   -- test_encounter_start_calls_syncChatFilters
   -- -----------------------------------------------------------------------
   do
+    local savedCChatInfo = _G.C_ChatInfo
+    _G.C_ChatInfo = {
+      InChatMessagingLockdown = function()
+        return true
+      end,
+    }
+
     local syncCalled = false
     local Bootstrap = {
       runtime = { suspend = function() end, resume = function() end },
@@ -335,6 +369,8 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_START")
+
+    _G.C_ChatInfo = savedCChatInfo
   end
 
   -- -----------------------------------------------------------------------
@@ -357,6 +393,38 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_END")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_start_in_normal_raid_does_not_lock
+  -- Regression: ENCOUNTER_START fires for ALL raid/dungeon encounters
+  -- including LFR/Normal/Heroic raids and non-mythic dungeons. The lock
+  -- indicator and "Whispers paused" banner should only appear when Blizzard
+  -- actually has chat locked, not on every boss pull in a normal raid.
+  -- -----------------------------------------------------------------------
+  do
+    local savedCChatInfo = _G.C_ChatInfo
+    _G.C_ChatInfo = {
+      InChatMessagingLockdown = function()
+        return false
+      end,
+    }
+
+    local callbackValue = "unset"
+    local runtime = { suspend = function() end, resume = function() end }
+    local Bootstrap = {
+      runtime = runtime,
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
+    assert(Bootstrap._inEncounter ~= true, "should NOT set _inEncounter in non-locked encounter (e.g. Normal raid)")
+    assert(runtime.messagingNotice == nil, "should NOT set messagingNotice in non-locked encounter")
+    assert(callbackValue == "unset", "should NOT fire onCompetitiveStateChanged in non-locked encounter")
+
+    _G.C_ChatInfo = savedCChatInfo
   end
 
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
