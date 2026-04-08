@@ -33,22 +33,9 @@ function MythicSuspendController.Attach(runtime, deps)
       Bootstrap.unregisterChatFilters()
     end
 
-    -- Unregister live AND non-essential lifecycle events so our OnEvent
-    -- handler doesn't run at all during mythic content — any addon code
-    -- in the event dispatch taints Blizzard's chat frame context.
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and Bootstrap._loadFrame then
-      EventBridge.UnregisterLiveEvents(Bootstrap._loadFrame)
-      EventBridge.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
-      -- Channel sender names become "secret" tainted strings inside mythic
-      -- content. Stop receiving CHAT_MSG_CHANNEL entirely so no addon code
-      -- touches them and triggers Blizzard's secrecy protection.
-      if EventBridge.UnregisterChannelEvents then
-        EventBridge.UnregisterChannelEvents(Bootstrap._loadFrame)
-      end
-    end
-
     -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
+    -- Event registrations stay intact: SecretTaintGuard defers tainted args
+    -- at the EventBridge layer and the drain fires on lockdown clear.
     _G._wmSuspended = true
     local printFn = deps.print or _G.print
     if type(printFn) == "function" then
@@ -62,15 +49,6 @@ function MythicSuspendController.Attach(runtime, deps)
     local printFn = deps.print or _G.print
     if type(printFn) == "function" then
       printFn(RESUME_PRINT_MESSAGE)
-    end
-
-    local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
-    if EventBridge and Bootstrap._loadFrame then
-      EventBridge.RegisterLiveEvents(Bootstrap._loadFrame)
-      EventBridge.RegisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
-      if EventBridge.RegisterChannelEvents then
-        EventBridge.RegisterChannelEvents(Bootstrap._loadFrame)
-      end
     end
 
     if Bootstrap.syncChatFilters then

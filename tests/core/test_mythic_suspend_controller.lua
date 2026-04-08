@@ -16,6 +16,10 @@ return function()
         calls[#calls + 1] = "registerChatFilters"
       end,
     }
+    -- Phase 2: suspend/resume no longer unregister or re-register any events.
+    -- SecretTaintGuard handles taint at the bridge level instead. The stub
+    -- below records any unexpected calls so the assertions below can catch
+    -- regressions if someone re-introduces the unregister path.
     local EventBridge = {
       UnregisterLiveEvents = function(_frame)
         calls[#calls + 1] = "UnregisterLiveEvents"
@@ -23,11 +27,17 @@ return function()
       UnregisterSuspendableLifecycleEvents = function(_frame)
         calls[#calls + 1] = "UnregisterSuspendableLifecycleEvents"
       end,
+      UnregisterChannelEvents = function(_frame)
+        calls[#calls + 1] = "UnregisterChannelEvents"
+      end,
       RegisterLiveEvents = function(_frame)
         calls[#calls + 1] = "RegisterLiveEvents"
       end,
       RegisterSuspendableLifecycleEvents = function(_frame)
         calls[#calls + 1] = "RegisterSuspendableLifecycleEvents"
+      end,
+      RegisterChannelEvents = function(_frame)
+        calls[#calls + 1] = "RegisterChannelEvents"
       end,
     }
     local printed = {}
@@ -67,9 +77,8 @@ return function()
     assert(Bootstrap._wasVisibleBeforeMythic == true, "suspend should capture previous window visibility")
     assert(_G._wmSuspended == true, "suspend should set the global suspended flag")
     assert(
-      table.concat(calls, ",")
-        == "isWindowVisible,setWindowVisible:false,unregisterChatFilters,UnregisterLiveEvents,UnregisterSuspendableLifecycleEvents",
-      "suspend should hide window, unregister chat filters, then unregister event bridge hooks"
+      table.concat(calls, ",") == "isWindowVisible,setWindowVisible:false,unregisterChatFilters",
+      "suspend should hide window and unregister chat filters, NOT unregister any events (Phase 2)"
     )
     assert(
       printed[1] == "|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave.",
@@ -83,9 +92,8 @@ return function()
     assert(_G._wmSuspended == nil, "resume should clear the global suspended flag")
     assert(Bootstrap._wasVisibleBeforeMythic == nil, "resume should clear the remembered visibility flag")
     assert(
-      table.concat(calls, ",")
-        == "RegisterLiveEvents,RegisterSuspendableLifecycleEvents,registerChatFilters,setWindowVisible:true,refreshWindow",
-      "resume should restore event bridge hooks before chat filters, then show and refresh the window"
+      table.concat(calls, ",") == "registerChatFilters,setWindowVisible:true,refreshWindow",
+      "resume should re-register chat filters, then show and refresh the window (no event re-register post-Phase 2)"
     )
     assert(
       printed[2] == "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.",

@@ -135,6 +135,10 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     if not FlavorCompat.InChatMessagingLockdown() then
       return true
     end
+    -- Set the global suspend flag so LinkHooks bail during locked raid pulls.
+    -- Mythic raid encounters lock chat via ENCOUNTER_START but don't call
+    -- runtime.suspend(), so _wmSuspended would otherwise stay nil.
+    _G._wmSuspended = true
     Bootstrap._inEncounter = true
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
@@ -146,6 +150,7 @@ local function handleEncounterEvent(Bootstrap, event, deps)
 
   if event == "ENCOUNTER_END" then
     Bootstrap._inEncounter = false
+    _G._wmSuspended = nil
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end

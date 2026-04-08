@@ -10,6 +10,12 @@ local MAX_EVENT_ARGS = 29
 -- Maximum items held in the deferred queue before FIFO eviction kicks in.
 local MAX_QUEUE_SIZE = 200
 
+-- Channel events: tagged on enqueue so the drain can drop them silently.
+-- Replaying 20 minutes of Trade/LFG after a key ends would bury whispers.
+local CHANNEL_EVENT_NAMES = {
+  CHAT_MSG_CHANNEL = true,
+}
+
 local SecretTaintGuard = {}
 
 -- sanitizeArgs(...) -> table
@@ -49,7 +55,11 @@ function SecretTaintGuard.TryDefer(runtime, eventName, ...)
       ns.Trace("SecretTaintGuard: queue cap reached, evicted oldest")
     end
   end
-  table.insert(runtime.secretDeferredQueue, { eventName = eventName, args = sanitized })
+  table.insert(runtime.secretDeferredQueue, {
+    eventName = eventName,
+    args = sanitized,
+    isChannel = CHANNEL_EVENT_NAMES[eventName] == true,
+  })
   return true
 end
 
@@ -72,13 +82,18 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
   local EventBridge = ns.BootstrapEventBridge or require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
   local count = 0
+  local droppedChannel = 0
   while #q > 0 do
     local item = table.remove(q, 1)
-    EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, table.unpack(item.args, 1, MAX_EVENT_ARGS))
+    if item.isChannel then
+      droppedChannel = droppedChannel + 1
+    else
+      EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, table.unpack(item.args, 1, MAX_EVENT_ARGS))
+    end
     count = count + 1
   end
   if count > 0 and ns.Trace then
-    ns.Trace("SecretTaintGuard: drained " .. count .. " deferred events")
+    ns.Trace("SecretTaintGuard: drained " .. count .. " deferred events (" .. droppedChannel .. " channel dropped)")
   end
   return count
 end

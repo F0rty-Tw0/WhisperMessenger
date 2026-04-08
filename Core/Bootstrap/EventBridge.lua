@@ -141,6 +141,15 @@ function EventBridge.RouteChannelEvent(runtime, eventName, ...)
   if runtime == nil or not CHANNEL_EVENTS[eventName] then
     return nil
   end
+  -- Defer-and-sanitize: tainted channel args (sender name etc.) would crash
+  -- Blizzard's secure path if routed through addon code. Bail before reading
+  -- the varargs.
+  if SecretTaintGuard.TryDefer(runtime, eventName, ...) then
+    if Trace then
+      Trace("EventBridge: deferred " .. eventName .. " (channel taint)")
+    end
+    return nil
+  end
   local store = runtime.channelMessageStore
   if store == nil then
     return nil
