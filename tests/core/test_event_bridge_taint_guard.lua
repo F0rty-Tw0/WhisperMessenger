@@ -81,6 +81,7 @@ return function()
       runtime.secretDeferredQueue[1].eventName == "CHAT_MSG_WHISPER",
       "Test A: queued item should preserve eventName"
     )
+    assert(refreshCalled == false, "Test A: refreshWindow should not be called on the deferred path")
 
     _G.hasanysecretvalues = saved
   end
