@@ -1,11 +1,17 @@
 # Changelog
 
 
-## [Unreleased]
+## [1.1.6] - 2026-04-08
 
 ### Fixed
 
-- **Whispers lost during raid encounters and battlegrounds** — whispers received while in raid encounters (any difficulty) or battlegrounds/arenas now reappear in the messenger after the encounter ends or you leave the match, instead of being permanently lost. Includes deferred-queue trace logging (visible in `/wm trace`) for field diagnostics and automatic FIFO eviction at 200 items to prevent unbounded memory growth during long fights.
+- **Whispers lost during raid encounters and battlegrounds** — whispers received while in raid encounters (any difficulty) or battlegrounds/arenas now reappear in the messenger after the encounter ends or you leave the match, instead of being permanently lost. Includes deferred-queue diagnostic trace logging and automatic FIFO eviction at 200 items to prevent unbounded memory growth during long fights.
+- **Whispers still lost during Mythic+ keys** — whispers received inside a Mythic+ run are now held safely and delivered to the messenger the moment the run ends. The v1.1.5 release added the deferred-queue infrastructure but the addon was still fully disconnected from whisper events during M+. This release keeps the messenger connected to chat events across the entire run and relies on the secret-taint guard added in v1.1.5 to sanitize Blizzard's tainted event args.
+- **Link-taint risk in Mythic raid encounters** — shift-clicking items, quests, or spells into chat mid-fight during a Mythic raid encounter no longer risks a protected-function taint error. The link-insert bailout flag is now set for any encounter where Blizzard's chat-secrecy API is active, matching the Mythic+ behavior.
+
+### Changed
+
+- **Chat channel messages during lockdown** — channel traffic (Trade, General, LFG, etc.) received while chat is locked is now safely sanitized via the taint guard instead of being blocked at the event source. These messages are intentionally not replayed into the messenger after the lockdown clears — channel spam would bury the whispers you actually care about.
 
 ## [1.1.5] - 2026-04-08
 
