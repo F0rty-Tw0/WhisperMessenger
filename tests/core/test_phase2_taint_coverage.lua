@@ -2,6 +2,8 @@
 -- chat events, RouteChannelEvent defers tainted args, channel items are
 -- dropped on drain, and Mythic raid ENCOUNTER_START/END manages _wmSuspended.
 
+local unpack = table.unpack or unpack
+
 local Store = require("WhisperMessenger.Model.ConversationStore")
 
 local EB_KEY = "WhisperMessenger.Core.Bootstrap.EventBridge"
@@ -198,10 +200,10 @@ return function()
     local runtime = makeRuntime()
     runtime.channelMessageStore = { entries = {}, baseIndex = {}, maxEntries = 10, ttl = 1800 }
 
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(whisperArgs("w1", "whisper-sender")))
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpack(whisperArgs("w1", "whisper-sender")))
     EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "c1", "trade-sender", "", "2. Trade - Orgrimmar")
     EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "c2", "trade-sender", "", "2. Trade - Orgrimmar")
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(whisperArgs("w2", "whisper-sender")))
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpack(whisperArgs("w2", "whisper-sender")))
     assert(#runtime.secretDeferredQueue == 4, "phase2: expected 4 queued items")
 
     setTaint(false)

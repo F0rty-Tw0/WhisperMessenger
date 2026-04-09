@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local unpack = table.unpack or unpack
+
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 -- Maximum number of event args WoW whisper events carry (matches WoW's event arg count cap).
@@ -88,7 +90,7 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     if item.isChannel then
       droppedChannel = droppedChannel + 1
     else
-      EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, table.unpack(item.args, 1, MAX_EVENT_ARGS))
+      EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, unpack(item.args, 1, MAX_EVENT_ARGS))
     end
     count = count + 1
   end

@@ -1,6 +1,8 @@
 -- Tests for Phase 1 drain hooks: ENCOUNTER_END, ZONE_CHANGED_NEW_AREA,
 -- PLAYER_ENTERING_WORLD, FIFO ordering, and queue cap eviction.
 
+local unpack = table.unpack or unpack
+
 local Store = require("WhisperMessenger.Model.ConversationStore")
 
 local EB_KEY = "WhisperMessenger.Core.Bootstrap.EventBridge"
@@ -84,7 +86,7 @@ local function makeDeps(EventBridge)
 end
 
 local function enqueueOne(EventBridge, runtime, text, sender)
-  EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(whisperArgs(text, sender)))
+  EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpack(whisperArgs(text, sender)))
 end
 
 return function()

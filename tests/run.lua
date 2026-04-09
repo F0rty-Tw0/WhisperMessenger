@@ -1,3 +1,8 @@
+-- Lua 5.1 compat: plain Lua 5.1 (used by CI) does not provide table.unpack.
+-- WoW's runtime and LuaJIT both do. Polyfill it here so any test file can
+-- use table.unpack regardless of which interpreter run.lua is invoked from.
+table.unpack = table.unpack or unpack
+
 package.path = table.concat({
   "./?.lua",
   "./?/init.lua",
