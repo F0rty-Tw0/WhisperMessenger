@@ -250,8 +250,14 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and runtime.accountState.settings.hideFromDefaultChat == true
       and not _G._wmSuspended
       and type(_G.ChatEdit_SetLastTellTarget) == "function"
-      and payload.playerName
+      and type(payload.playerName) == "string"
+      and payload.playerName ~= ""
     then
+      -- Guard against sanitized (empty-string) playerName values coming from
+      -- drained SecretTaintGuard replays. Setting the last-tell-target to ""
+      -- corrupts reply paths (Blizzard /r, Prat /cw) which resolve the target
+      -- via GetLastTellTarget and pass the empty value straight to
+      -- SendChatMessage, which errors with "Chat type requires a target".
       local tellType = eventName == "CHAT_MSG_BN_WHISPER" and "BN_WHISPER" or "WHISPER"
       _G.ChatEdit_SetLastTellTarget(payload.playerName, tellType)
     end
