@@ -47,6 +47,13 @@ end
 -- Returns true and enqueues a copy when any arg is tainted.
 -- Returns false when args are clean (caller should route normally).
 function SecretTaintGuard.TryDefer(runtime, eventName, ...)
+  -- During an active drain, never re-defer. The stored args may still carry
+  -- Blizzard's secret-string marker even after the lockdown cleared, so
+  -- RouteLiveEvent → HasAnySecretValues would evaluate true again and
+  -- re-enqueue every item we just removed, producing an infinite loop.
+  if runtime and runtime._wmDraining then
+    return false
+  end
   if not FlavorCompat.HasAnySecretValues(...) then
     return false
   end
@@ -85,6 +92,7 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
   -- Require EventBridge lazily to avoid a circular require at module load time.
   local EventBridge = ns.BootstrapEventBridge or require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
+  runtime._wmDraining = true
   local count = 0
   local droppedChannel = 0
   while #q > 0 do
@@ -101,6 +109,7 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     end
     count = count + 1
   end
+  runtime._wmDraining = nil
   if count > 0 and ns.Trace then
     ns.Trace("SecretTaintGuard: drained " .. count .. " deferred events (" .. droppedChannel .. " channel dropped)")
   end

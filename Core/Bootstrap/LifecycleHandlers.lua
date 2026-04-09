@@ -182,6 +182,32 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     deps.trace("encounter ended")
     notifyCompetitiveState(Bootstrap)
     drainSecretQueue(Bootstrap, deps)
+    -- Blizzard's InChatMessagingLockdown() can stay true for a short window
+    -- after ENCOUNTER_END fires. When that happens, the sync above saw no
+    -- transition, the notice stayed stuck, and no other event fires to
+    -- re-check until the player leaves the zone. Poll a few times over
+    -- the next ~5s to catch the delayed clear and run the resume/drain
+    -- path once it flips.
+    if Bootstrap.lockdown.active then
+      local attempts = 0
+      local function retry()
+        attempts = attempts + 1
+        ensureLockdown(Bootstrap)
+        local changed, wasActive, isActive = LockdownState.Sync(Bootstrap, "ENCOUNTER_END_RETRY", deps)
+        if changed and wasActive and not isActive then
+          if Bootstrap.syncChatFilters then
+            Bootstrap.syncChatFilters()
+          end
+          notifyCompetitiveState(Bootstrap)
+          drainSecretQueue(Bootstrap, deps)
+          return
+        end
+        if attempts < 5 then
+          scheduleAfter(1, retry)
+        end
+      end
+      scheduleAfter(1, retry)
+    end
     return true
   end
 
