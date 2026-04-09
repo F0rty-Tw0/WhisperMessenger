@@ -69,12 +69,13 @@ function Metrics.GetRange(view)
     return 0
   end
 
-  -- Always compute the range from the live content/viewport heights we
-  -- control directly via SetSize. WoW's scrollFrame:GetVerticalScrollRange()
-  -- lags when the content shrinks below the viewport after a previous
-  -- overflow — it can return a stale positive value for one or more frames,
-  -- which leaks through as a phantom scrollbar after switching from a long
-  -- conversation to a short one.
+  if type(view.scrollFrame.GetVerticalScrollRange) == "function" then
+    local range = view.scrollFrame:GetVerticalScrollRange()
+    if type(range) == "number" and range > 0 then
+      return range
+    end
+  end
+
   local viewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", 0)
   local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
   return math.max(contentHeight - viewportHeight, 0)
