@@ -20,36 +20,38 @@ local CHANNEL_EVENT_NAMES = {
 
 local SecretTaintGuard = {}
 
--- sanitizeArgs(...) -> table
--- Walks event varargs 1..MAX_EVENT_ARGS and replaces any secret-tainted value
--- with "" (empty string). Returns a plain integer-keyed table so the caller
--- can table.unpack it back into varargs. This mirrors WIM's approach: never
--- pass tainted strings into addon code, replace them with empty strings.
-local function sanitizeArgs(...)
-  local args = {}
+-- packArgs(...) -> table
+-- Captures event varargs with their exact count into a plain table so the
+-- drain path can unpack them back later. Unlike the previous sanitizeArgs
+-- helper we do NOT replace tainted values with empty strings — Blizzard's
+-- secret-string marker only prevents passing a value into certain protected
+-- APIs (SendChatMessage, ChatEdit_SetLastTellTarget, the secure template
+-- path). Reading the value into a Lua table is safe, and by the time the
+-- drain replays these through EventRouter → ConversationStore → UI the
+-- lockdown has cleared, so downstream rendering (FontString:SetText in
+-- chat bubbles) works — the same path Blizzard's own default chat uses to
+-- display the whispers during the lockdown itself. Replacing the values
+-- with "" on enqueue meant drained whispers arrived at the UI as empty
+-- messages from unnamed senders and never surfaced.
+local function packArgs(...)
   local n = select("#", ...)
   local limit = n < MAX_EVENT_ARGS and n or MAX_EVENT_ARGS
+  local args = { n = limit }
   for i = 1, limit do
-    local v = select(i, ...)
-    if FlavorCompat.IsSecretValue(v) then
-      args[i] = ""
-    else
-      args[i] = v
-    end
+    args[i] = select(i, ...)
   end
-  -- Preserve the arg count so table.unpack(args, 1, MAX_EVENT_ARGS) is safe.
   return args
 end
 
 -- TryDefer(runtime, eventName, ...) -> boolean
--- Returns true and enqueues a sanitized copy when any arg is tainted.
+-- Returns true and enqueues a copy when any arg is tainted.
 -- Returns false when args are clean (caller should route normally).
 function SecretTaintGuard.TryDefer(runtime, eventName, ...)
   if not FlavorCompat.HasAnySecretValues(...) then
     return false
   end
 
-  local sanitized = sanitizeArgs(...)
+  local packed = packArgs(...)
   runtime.secretDeferredQueue = runtime.secretDeferredQueue or {}
   if #runtime.secretDeferredQueue >= MAX_QUEUE_SIZE then
     table.remove(runtime.secretDeferredQueue, 1)
@@ -59,7 +61,7 @@ function SecretTaintGuard.TryDefer(runtime, eventName, ...)
   end
   table.insert(runtime.secretDeferredQueue, {
     eventName = eventName,
-    args = sanitized,
+    args = packed,
     isChannel = CHANNEL_EVENT_NAMES[eventName] == true,
   })
   return true
@@ -90,7 +92,12 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     if item.isChannel then
       droppedChannel = droppedChannel + 1
     else
-      EventBridge.RouteLiveEvent(runtime, refreshWindow, item.eventName, unpack(item.args, 1, MAX_EVENT_ARGS))
+      EventBridge.RouteLiveEvent(
+        runtime,
+        refreshWindow,
+        item.eventName,
+        unpack(item.args, 1, item.args.n or MAX_EVENT_ARGS)
+      )
     end
     count = count + 1
   end

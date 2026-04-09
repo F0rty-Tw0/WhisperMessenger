@@ -9,6 +9,7 @@ local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local SecretTaintGuard = ns.BootstrapSecretTaintGuard or require("WhisperMessenger.Core.Bootstrap.SecretTaintGuard")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 local Trace = ns.Trace
 
@@ -252,12 +253,14 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and type(_G.ChatEdit_SetLastTellTarget) == "function"
       and type(payload.playerName) == "string"
       and payload.playerName ~= ""
+      and not FlavorCompat.IsSecretValue(payload.playerName)
     then
-      -- Guard against sanitized (empty-string) playerName values coming from
-      -- drained SecretTaintGuard replays. Setting the last-tell-target to ""
-      -- corrupts reply paths (Blizzard /r, Prat /cw) which resolve the target
-      -- via GetLastTellTarget and pass the empty value straight to
-      -- SendChatMessage, which errors with "Chat type requires a target".
+      -- Skip tainted or empty playerNames. Empty values corrupt /r and
+      -- Prat's /cw (GetLastTellTarget returns "" → SendChatMessage gets
+      -- a nil target → "Chat type requires a target player"). Tainted
+      -- values would re-taint Blizzard's reply-target global if passed
+      -- into this near-secure setter; let Blizzard's own chat handling
+      -- own the reply target for locked-down whispers.
       local tellType = eventName == "CHAT_MSG_BN_WHISPER" and "BN_WHISPER" or "WHISPER"
       _G.ChatEdit_SetLastTellTarget(payload.playerName, tellType)
     end
