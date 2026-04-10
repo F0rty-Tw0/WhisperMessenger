@@ -138,8 +138,7 @@ local CHANNEL_EVENTS = {
   CHAT_MSG_CHANNEL = true,
 }
 
-local TAINT_COMPETITIVE_NOTICE =
-  "Whispers are paused in competitive content. Messages will resume when you leave."
+local TAINT_COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
 
 -- Observing a chat event carrying Blizzard's secret-string marker is a
 -- direct signal that chat-secrecy lockdown is active, even when

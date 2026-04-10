@@ -255,7 +255,10 @@ return function()
   local deactivatedBefore = #deactivated
   pollFrame.scripts.OnUpdate(pollFrame)
   assert(#sendTellCalls == sendTellBefore, "Prat /cw regression: poller must NOT intercept when body is non-empty")
-  assert(#deactivated == deactivatedBefore, "Prat /cw regression: poller must NOT close the edit box when body is non-empty")
+  assert(
+    #deactivated == deactivatedBefore,
+    "Prat /cw regression: poller must NOT close the edit box when body is non-empty"
+  )
   assert(pratEditBox:GetAttribute("tellTarget") == "Oklin", "Prat /cw regression: tellTarget must be preserved")
   assert(pratEditBox:GetText() == "ty", "Prat /cw regression: body text must be preserved")
 

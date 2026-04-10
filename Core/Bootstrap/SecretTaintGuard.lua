@@ -111,11 +111,7 @@ function SecretTaintGuard.TryDefer(runtime, eventName, ...)
   })
   if type(_G.print) == "function" then
     _G.print(
-      "[WM DEBUG] TryDefer: enqueued "
-        .. tostring(eventName)
-        .. " (queue size="
-        .. #runtime.secretDeferredQueue
-        .. ")"
+      "[WM DEBUG] TryDefer: enqueued " .. tostring(eventName) .. " (queue size=" .. #runtime.secretDeferredQueue .. ")"
     )
   end
   return true
