@@ -213,19 +213,51 @@ return function()
   editBox.chatType = "WHISPER"
   editBox.stickyType = "PARTY"
   editBox.tellTarget = "Jaina"
-  editBox:SetText("Need a summon")
+  -- Empty body: poller intercepts the post-/w-parse window before the
+  -- user types anything, redirects into the messenger composer.
+  editBox:SetText("")
   editBox:SetFocus()
   _G.ChatFrame1EditBox = editBox
 
   pollFrame.scripts.OnUpdate(pollFrame)
 
   assert(#sendTellCalls == 1 and sendTellCalls[1] == "Jaina", "expected poller to route whisper target through hooks")
-  assert(#composerTexts == 1 and composerTexts[1] == "Need a summon", "expected draft text moved into composer")
   assert(#deactivated == 1 and deactivated[1] == editBox, "expected edit box to close after interception")
   assert(editBox:GetAttribute("chatType") == "PARTY", "expected sticky chat type restored in secure state")
   assert(editBox:GetAttribute("tellTarget") == nil, "expected tell target cleared in secure state")
   assert(editBox:GetText() == "", "expected intercepted edit box text cleared")
   assert(editBox:HasFocus() == false, "expected intercepted edit box to lose focus")
+
+  -- -----------------------------------------------------------------------
+  -- Regression: poller must NOT intercept when the body is non-empty.
+  -- Non-empty body means either Blizzard hasn't parsed the slash command
+  -- yet, or another addon (e.g. Prat's /cw) has injected text via SetText
+  -- and is mid-send. If we intercepted, closeEditBox would clear
+  -- tellTarget before the impending SendChatMessage and Blizzard would
+  -- error with "Chat type requires a target player".
+  -- -----------------------------------------------------------------------
+  local pratEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+  local pratState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Oklin" }
+  function pratEditBox:GetAttribute(key)
+    return pratState[key]
+  end
+  function pratEditBox:SetAttribute(key, value)
+    pratState[key] = value
+  end
+  pratEditBox.chatType = "WHISPER"
+  pratEditBox.stickyType = "SAY"
+  pratEditBox.tellTarget = "Oklin"
+  pratEditBox:SetText("ty") -- Prat injected the body via SetText
+  pratEditBox:SetFocus()
+  _G.ChatFrame1EditBox = pratEditBox
+
+  local sendTellBefore = #sendTellCalls
+  local deactivatedBefore = #deactivated
+  pollFrame.scripts.OnUpdate(pollFrame)
+  assert(#sendTellCalls == sendTellBefore, "Prat /cw regression: poller must NOT intercept when body is non-empty")
+  assert(#deactivated == deactivatedBefore, "Prat /cw regression: poller must NOT close the edit box when body is non-empty")
+  assert(pratEditBox:GetAttribute("tellTarget") == "Oklin", "Prat /cw regression: tellTarget must be preserved")
+  assert(pratEditBox:GetText() == "ty", "Prat /cw regression: body text must be preserved")
 
   local bnEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
   local bnAttributeState = {
@@ -245,7 +277,9 @@ return function()
   bnEditBox.chatType = "BN_WHISPER"
   bnEditBox.stickyType = "SAY"
   bnEditBox.tellTarget = "Friend#1234"
-  bnEditBox:SetText("BN draft")
+  -- Empty body: poller intercepts the post-/w-parse window before the user
+  -- types anything, redirects into the messenger composer.
+  bnEditBox:SetText("")
   bnEditBox:SetFocus()
   _G.ChatFrame1EditBox = bnEditBox
 
@@ -264,8 +298,7 @@ return function()
     runtime.store.conversations[expectedBnConversationKey].bnetAccountID == 42,
     "expected BN interception to preserve bnetAccountID on the created conversation"
   )
-  assert(#composerTexts == 2 and composerTexts[2] == "BN draft", "expected BN draft text moved into composer")
-  assert(#deactivated == 2 and deactivated[2] == bnEditBox, "expected BN edit box to close after interception")
+  assert(deactivated[#deactivated] == bnEditBox, "expected BN edit box to close after interception")
   assert(bnEditBox:GetAttribute("chatType") == "SAY", "expected BN sticky chat type restored in secure state")
   assert(bnEditBox:GetAttribute("tellTarget") == nil, "expected BN tell target cleared in secure state")
   assert(bnEditBox:GetText() == "", "expected BN intercepted edit box text cleared")

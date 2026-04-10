@@ -29,6 +29,28 @@ function LockdownState.IsActive(Bootstrap)
   return Bootstrap.lockdown ~= nil and Bootstrap.lockdown.active == true
 end
 
+-- ForceActive(Bootstrap, eventName, deps) -> (changed, wasActive, true)
+-- Transitions the lockdown state to active WITHOUT consulting the API.
+-- Used when an out-of-band signal (e.g. a chat event carrying Blizzard's
+-- secret-string marker) proves chat-secrecy is active even though
+-- InChatMessagingLockdown() hasn't flipped yet. Same return shape as Sync.
+function LockdownState.ForceActive(Bootstrap, eventName, deps)
+  if Bootstrap.lockdown == nil then
+    LockdownState.Initialize(Bootstrap)
+  end
+
+  local wasActive = Bootstrap.lockdown.active == true
+  if wasActive then
+    return false, true, true
+  end
+
+  Bootstrap.lockdown.active = true
+  Bootstrap.lockdown.since = resolveNow(deps)
+  Bootstrap.lockdown.source = eventName or "taint-detected"
+
+  return true, false, true
+end
+
 -- Sync(Bootstrap, eventName, deps) -> (changed, wasActive, isActive)
 -- Reads FlavorCompat.InChatMessagingLockdown() and updates Bootstrap.lockdown
 -- when the value differs from the cached state. Does NOT fire side effects —

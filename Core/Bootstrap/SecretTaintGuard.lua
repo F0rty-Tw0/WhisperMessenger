@@ -20,25 +20,63 @@ local CHANNEL_EVENT_NAMES = {
 
 local SecretTaintGuard = {}
 
+-- washString(s) -> string
+-- Produces a new Lua string with the same content but WITHOUT Blizzard's
+-- secret-string marker. Blizzard flags specific string instances as
+-- "secret" during chat-secrecy lockdown; ==, .., and even the # length
+-- operator are blocked on those values from addon code.
+--
+-- We avoid every blocked op (length, compare, concat) and try to probe
+-- the string byte-by-byte via string.byte() until it returns nil for
+-- the past-the-end position. Each byte is a number (untainted), each
+-- string.char(...) returns a fresh allocation, and table.concat joins
+-- them into a clean Lua string.
+--
+-- The whole probe runs inside pcall: if Blizzard also blocks string.byte
+-- on secret values, we return a non-empty placeholder so the drained
+-- replay can still create a stub conversation entry instead of crashing.
+local SECRET_PLACEHOLDER = "<lockdown>"
+
+local function washString(s)
+  if type(s) ~= "string" then
+    return s
+  end
+  local ok, result = pcall(function()
+    local chars = {}
+    local i = 1
+    while true do
+      local b = string.byte(s, i)
+      if b == nil then
+        break
+      end
+      chars[i] = string.char(b)
+      i = i + 1
+    end
+    return table.concat(chars)
+  end)
+  if ok and type(result) == "string" then
+    return result
+  end
+  return SECRET_PLACEHOLDER
+end
+
 -- packArgs(...) -> table
 -- Captures event varargs with their exact count into a plain table so the
--- drain path can unpack them back later. Unlike the previous sanitizeArgs
--- helper we do NOT replace tainted values with empty strings — Blizzard's
--- secret-string marker only prevents passing a value into certain protected
--- APIs (SendChatMessage, ChatEdit_SetLastTellTarget, the secure template
--- path). Reading the value into a Lua table is safe, and by the time the
--- drain replays these through EventRouter → ConversationStore → UI the
--- lockdown has cleared, so downstream rendering (FontString:SetText in
--- chat bubbles) works — the same path Blizzard's own default chat uses to
--- display the whispers during the lockdown itself. Replacing the values
--- with "" on enqueue meant drained whispers arrived at the UI as empty
--- messages from unnamed senders and never surfaced.
+-- drain path can unpack them back later. Any Blizzard secret-string
+-- argument is washed into a clean copy via washString(); the drain then
+-- routes the clean copies through EventRouter → ConversationStore → UI
+-- exactly the same way live (un-tainted) whispers flow.
 local function packArgs(...)
   local n = select("#", ...)
   local limit = n < MAX_EVENT_ARGS and n or MAX_EVENT_ARGS
   local args = { n = limit }
   for i = 1, limit do
-    args[i] = select(i, ...)
+    local v = select(i, ...)
+    if FlavorCompat.IsSecretValue(v) then
+      args[i] = washString(v)
+    else
+      args[i] = v
+    end
   end
   return args
 end
@@ -71,6 +109,15 @@ function SecretTaintGuard.TryDefer(runtime, eventName, ...)
     args = packed,
     isChannel = CHANNEL_EVENT_NAMES[eventName] == true,
   })
+  if type(_G.print) == "function" then
+    _G.print(
+      "[WM DEBUG] TryDefer: enqueued "
+        .. tostring(eventName)
+        .. " (queue size="
+        .. #runtime.secretDeferredQueue
+        .. ")"
+    )
+  end
   return true
 end
 
@@ -82,11 +129,20 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     return 0
   end
   if FlavorCompat.InChatMessagingLockdown() then
+    if type(_G.print) == "function" then
+      _G.print("[WM DEBUG] Drain: bailed (InChatMessagingLockdown==true)")
+    end
     return 0
   end
   local q = runtime.secretDeferredQueue
   if q == nil or #q == 0 then
+    if type(_G.print) == "function" then
+      _G.print("[WM DEBUG] Drain: bailed (queue empty)")
+    end
     return 0
+  end
+  if type(_G.print) == "function" then
+    _G.print("[WM DEBUG] Drain: starting, queue size=" .. #q)
   end
 
   -- Require EventBridge lazily to avoid a circular require at module load time.
@@ -99,7 +155,13 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     local item = table.remove(q, 1)
     if item.isChannel then
       droppedChannel = droppedChannel + 1
+      if type(_G.print) == "function" then
+        _G.print("[WM DEBUG] Drain: dropped channel item " .. tostring(item.eventName))
+      end
     else
+      if type(_G.print) == "function" then
+        _G.print("[WM DEBUG] Drain: routing " .. tostring(item.eventName))
+      end
       EventBridge.RouteLiveEvent(
         runtime,
         refreshWindow,
@@ -110,6 +172,9 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
     count = count + 1
   end
   runtime._wmDraining = nil
+  if type(_G.print) == "function" then
+    _G.print("[WM DEBUG] Drain: done, routed=" .. count .. " droppedChannel=" .. droppedChannel)
+  end
   if count > 0 and ns.Trace then
     ns.Trace("SecretTaintGuard: drained " .. count .. " deferred events (" .. droppedChannel .. " channel dropped)")
   end

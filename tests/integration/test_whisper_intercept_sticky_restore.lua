@@ -163,6 +163,11 @@ return function()
   local pollFrame = findCreatedFrameWithScript("OnUpdate")
   assert(pollFrame ~= nil, "expected whisper interception poll frame")
 
+  -- Empty body: poller intercepts the post-/w-parse window before the
+  -- user types anything, redirects into the messenger composer. Body
+  -- text intentionally empty so the regression added in AutoOpenCoordinator
+  -- (don't intercept when text is non-empty, to avoid clobbering Prat's
+  -- /cw mid-send state) doesn't bail before reaching interceptEditBox.
   local directFieldEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
     chatType = "WHISPER",
     stickyType = "PARTY",
@@ -171,7 +176,7 @@ return function()
     chatType = "WHISPER",
     stickyType = "PARTY",
     tellTarget = "Jaina",
-  }, "Need a summon")
+  }, "")
 
   pollFrame.scripts.OnUpdate(pollFrame)
 
@@ -179,7 +184,7 @@ return function()
   assert(runtime.window.frame.shown == true, "expected whisper interception to show the messenger window")
   assertInterceptedState("direct-field", runtime, directFieldEditBox, {
     displayName = "Jaina",
-    draftText = "Need a summon",
+    draftText = "",
     stickyType = "PARTY",
     deactivateIndex = 1,
   })
@@ -192,13 +197,13 @@ return function()
     chatType = "",
     stickyType = "",
     tellTarget = "",
-  }, "attribute backed whisper")
+  }, "")
 
   pollFrame.scripts.OnUpdate(pollFrame)
 
   assertInterceptedState("attribute-backed", runtime, attributeBackedEditBox, {
     displayName = "Uther",
-    draftText = "attribute backed whisper",
+    draftText = "",
     stickyType = "SAY",
     deactivateIndex = 2,
   })
