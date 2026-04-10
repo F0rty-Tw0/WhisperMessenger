@@ -33,9 +33,22 @@ local function drainSecretQueue(Bootstrap, deps)
   end
   local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
   if EventBridge and EventBridge.DrainSecretDeferredQueue and Bootstrap.runtime then
-    EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, function()
+    local refreshFn = function()
       refreshRuntimeWindow(Bootstrap)
-    end)
+    end
+    local drained = EventBridge.DrainSecretDeferredQueue(Bootstrap.runtime, refreshFn)
+    -- After drain creates stub <lockdown> entries, schedule a delayed
+    -- rescan of the default chat frame to replace placeholders with real
+    -- content. The 2s delay gives Blizzard's chat frame time to finish
+    -- processing the whisper events into its message buffer.
+    if drained and drained > 0 then
+      local STG = ns.BootstrapSecretTaintGuard
+      if STG and type(STG.RescanChatForPlaceholders) == "function" then
+        scheduleAfter(2, function()
+          STG.RescanChatForPlaceholders(Bootstrap.runtime, refreshFn)
+        end)
+      end
+    end
   end
 end
 

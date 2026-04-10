@@ -181,5 +181,94 @@ function SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
   return count
 end
 
+-- RescanChatForPlaceholders(runtime, refreshWindow) -> number
+-- After drain creates stub entries with <lockdown> text/sender, this
+-- function scans the default chat frame's message buffer for the same
+-- lineIDs and replaces placeholders with real content. Blizzard's
+-- secure code formatted those whispers into readable strings when it
+-- added them to the chat frame; GetMessageInfo returns that formatted
+-- text which we can parse for sender name and body.
+--
+-- Call this 2-3 seconds after drain to give Blizzard's chat frame time
+-- to process the messages. If the formatted text is still tainted, the
+-- pcall catches the error and the placeholder stays.
+function SecretTaintGuard.RescanChatForPlaceholders(runtime, refreshWindow)
+  if runtime == nil or runtime.store == nil then
+    return 0
+  end
+
+  local frame = _G.DEFAULT_CHAT_FRAME or _G.ChatFrame1
+  if not frame or type(frame.GetNumMessages) ~= "function" or type(frame.GetMessageInfo) ~= "function" then
+    return 0
+  end
+
+  -- Collect lineIDs from <lockdown> messages across all conversations
+  local targets = {}
+  local targetCount = 0
+  for convKey, conversation in pairs(runtime.store.conversations) do
+    for i, msg in ipairs(conversation.messages or {}) do
+      if
+        type(msg.lineID) == "number"
+        and (msg.text == SECRET_PLACEHOLDER or (msg.playerName and msg.playerName == SECRET_PLACEHOLDER))
+      then
+        targets[msg.lineID] = { convKey = convKey, conv = conversation, idx = i, msg = msg }
+        targetCount = targetCount + 1
+      end
+    end
+  end
+
+  if targetCount == 0 then
+    return 0
+  end
+
+  -- Walk the chat frame backwards (newest first) looking for matching lineIDs
+  local numMessages = frame:GetNumMessages()
+  local replaced = 0
+  for i = numMessages, 1, -1 do
+    if targetCount <= 0 then
+      break
+    end
+    local ok, text, _, _, _, _, _, lineID = pcall(frame.GetMessageInfo, frame, i)
+    if ok and type(lineID) == "number" and targets[lineID] and type(text) == "string" then
+      -- Try to parse sender + body from Blizzard's formatted whisper text.
+      -- Typical format (locale-independent structure):
+      --   |Hplayer:Name-Realm:...|h[Name-Realm]|h whispers: body text|r
+      --   To |Hplayer:Name-Realm:...|h[Name-Realm]|h: body text|r
+      local parseOk, sender, body = pcall(function()
+        local s = string.match(text, "|h%[([^%]]+)%]|h")
+        local b = string.match(text, "|h%[.-%]|h.-:%s*(.*)")
+        if b then
+          b = string.gsub(b, "|r$", "")
+        end
+        return s, b
+      end)
+      if parseOk and type(sender) == "string" and sender ~= "" then
+        local entry = targets[lineID]
+        if type(body) == "string" and body ~= "" then
+          entry.msg.text = body
+        end
+        entry.msg.playerName = sender
+        if entry.conv.displayName == SECRET_PLACEHOLDER then
+          entry.conv.displayName = sender
+        end
+        replaced = replaced + 1
+        targets[lineID] = nil
+        targetCount = targetCount - 1
+      end
+    end
+  end
+
+  if replaced > 0 then
+    if type(_G.print) == "function" then
+      _G.print("[WM DEBUG] RescanChat: replaced " .. replaced .. " placeholder(s) with real content")
+    end
+    if type(refreshWindow) == "function" then
+      refreshWindow()
+    end
+  end
+
+  return replaced
+end
+
 ns.BootstrapSecretTaintGuard = SecretTaintGuard
 return SecretTaintGuard
