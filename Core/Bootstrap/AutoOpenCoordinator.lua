@@ -6,9 +6,9 @@ end
 local AutoOpenHooks = ns.BootstrapAutoOpenHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+    or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
+    or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 
 local AutoOpenCoordinator = {}
 
@@ -19,20 +19,21 @@ local function focusComposer(runtime)
   end
 end
 
-local function shouldInterceptHook(runtime, deps)
+local function shouldInterceptHook(_, deps)
+  -- Explicit whisper actions (R / /r / /w / right-click whisper, or a typed
+  -- draft in the default chat) route into the messenger regardless of the
+  -- autoOpenOutgoing setting — that setting only gates POST-send auto-open.
+  -- This is the user's whisper UI.
   if deps.isSuspended() then
     return false
   end
-
-  if deps.isWindowVisible and deps.isWindowVisible() then
-    return true
-  end
-
-  local settings = runtime.accountState and runtime.accountState.settings
-  if not settings or settings.autoOpenOutgoing ~= true then
-    return false
-  end
-  if deps.isInCombat() then
+  if deps.isInCombat and deps.isInCombat() then
+    -- Combat still blocks a cold-open of the messenger, but if it's already
+    -- visible the user is actively using it — keep routing so typing doesn't
+    -- land in the default chat instead.
+    if deps.isWindowVisible and deps.isWindowVisible() then
+      return true
+    end
     return false
   end
   return true
@@ -238,12 +239,12 @@ function AutoOpenCoordinator.Attach(options)
       end,
       bnetApi = options.bnetApi or _G.C_BattleNet,
       getNumFriends = options.BNGetNumFriends
-        or (
-          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
-          or function()
-            return 0, 0
-          end
-        ),
+          or (
+            type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
+            or function()
+              return 0, 0
+            end
+          ),
       deactivateChat = options.ChatEdit_DeactivateChat or _G.ChatEdit_DeactivateChat,
     })
   end

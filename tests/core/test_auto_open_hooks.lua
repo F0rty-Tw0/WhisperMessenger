@@ -126,7 +126,9 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_on_reply_tell_skipped_when_setting_disabled
+  -- test_on_reply_tell_routes_even_when_auto_open_outgoing_off
+  -- Explicit reply is explicit whisper intent — messenger is the whisper UI
+  -- regardless of the autoOpenOutgoing post-send gate.
   -- -----------------------------------------------------------------------
   do
     local deps = makeDeps({
@@ -141,12 +143,13 @@ return function()
     local hooks = AutoOpenHooks.Create(deps)
     local result = hooks.onReplyTell()
 
-    assert(result == false, "test_on_reply_tell_disabled: should return false when setting off")
-    assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_disabled: should not open window when setting off")
+    assert(result == true, "test_on_reply_tell_disabled: explicit reply should route regardless of setting")
+    assert(deps.calls.ensureWindow == 1, "test_on_reply_tell_disabled: should open window for explicit reply")
+    assert(deps.calls.focusComposer == 1, "test_on_reply_tell_disabled: should focus composer for explicit reply")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_on_reply_tell_skipped_when_only_incoming_enabled
+  -- test_on_reply_tell_routes_when_only_incoming_enabled
   -- -----------------------------------------------------------------------
   do
     local deps = makeDeps({
@@ -161,8 +164,8 @@ return function()
     local hooks = AutoOpenHooks.Create(deps)
     local result = hooks.onReplyTell()
 
-    assert(result == false, "test_on_reply_tell_incoming_only: should return false when only incoming enabled")
-    assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_incoming_only: should not open window")
+    assert(result == true, "test_on_reply_tell_incoming_only: explicit reply should still route")
+    assert(deps.calls.ensureWindow == 1, "test_on_reply_tell_incoming_only: should open window")
   end
 
   -- -----------------------------------------------------------------------
@@ -266,7 +269,9 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_on_send_tell_skipped_when_setting_disabled
+  -- test_on_send_tell_routes_even_when_auto_open_outgoing_off
+  -- Explicit /w and right-click whisper must open the messenger regardless
+  -- of the autoOpenOutgoing post-send gate.
   -- -----------------------------------------------------------------------
   do
     local deps = makeDeps({
@@ -284,8 +289,9 @@ return function()
     local hooks = AutoOpenHooks.Create(deps)
     local result = hooks.onSendTell("Jaina")
 
-    assert(result == false, "test_on_send_tell_disabled: should return false when setting off")
-    assert(deps.calls.ensureWindow == 0, "test_on_send_tell_disabled: should not open window when setting off")
+    assert(result == true, "test_on_send_tell_disabled: explicit /w should route regardless of setting")
+    assert(deps.calls.ensureWindow == 1, "test_on_send_tell_disabled: should open window for explicit /w")
+    assert(deps.calls.focusComposer == 1, "test_on_send_tell_disabled: should focus composer")
   end
 
   -- -----------------------------------------------------------------------
