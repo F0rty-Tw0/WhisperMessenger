@@ -245,16 +245,6 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      if type(_G.print) == "function" then
-        _G.print(
-          "[WM DEBUG] Router: append incoming "
-            .. tostring(eventName)
-            .. " key="
-            .. tostring(conversationKey)
-            .. " text="
-            .. tostring(payload.text)
-        )
-      end
       Store.AppendIncoming(
         state.store,
         conversationKey,
@@ -269,16 +259,6 @@ local function handleUnlockedEvent(state, eventName, payload)
         state.availabilityByGUID[guid] = avail
       end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-      if type(_G.print) == "function" then
-        _G.print(
-          "[WM DEBUG] Router: append outgoing "
-            .. tostring(eventName)
-            .. " key="
-            .. tostring(conversationKey)
-            .. " text="
-            .. tostring(payload.text)
-        )
-      end
       Store.AppendOutgoing(
         state.store,
         conversationKey,

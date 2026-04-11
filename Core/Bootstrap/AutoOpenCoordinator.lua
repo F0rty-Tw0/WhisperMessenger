@@ -134,19 +134,12 @@ local function installPoller(runtime, hooks, deps)
           return
         end
 
-        -- Only intercept the brief window after `/w X` parses, when the
-        -- editbox is in WHISPER chatType with target set and the body is
-        -- still empty. Any non-empty text means Blizzard hasn't parsed
-        -- the command yet, or the user is mid-send via another path —
-        -- e.g. Prat's /cw, which sets `editBox.tellTarget` and replaces
-        -- the typed command with just the body via SetText, then calls
-        -- SendText. If we intercept that flow, closeEditBox's secure
-        -- pcall(SetAttribute, "tellTarget", nil) wipes the target
-        -- before Blizzard's SendText reads it, and SendChatMessage
-        -- fails with "Chat type requires a target player".
         local text = editBox.GetText and editBox:GetText() or ""
-        if text ~= "" then
-          return
+        if string.sub(text, 1, 1) == "/" then
+          local command = string.lower(string.match(text, "^(/[^%s]*)") or "")
+          if command ~= "/w" and command ~= "/whisper" then
+            return
+          end
         end
 
         EditBoxInterop.interceptEditBox(runtime, hooks, {

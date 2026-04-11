@@ -147,13 +147,11 @@ UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
-Core/Bootstrap/SecretTaintGuard.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua
-Core/Bootstrap/LockdownState.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua

@@ -8,8 +8,6 @@ local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
-local SecretTaintGuard = ns.BootstrapSecretTaintGuard or require("WhisperMessenger.Core.Bootstrap.SecretTaintGuard")
-local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 
 local Trace = ns.Trace
 
@@ -138,57 +136,8 @@ local CHANNEL_EVENTS = {
   CHAT_MSG_CHANNEL = true,
 }
 
-local TAINT_COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
-
--- Observing a chat event carrying Blizzard's secret-string marker is a
--- direct signal that chat-secrecy lockdown is active, even when
--- InChatMessagingLockdown() hasn't flipped yet. Push the addon's lockdown
--- state forward and surface the "paused" notice so the messenger's UI
--- reflects reality the moment the first tainted event arrives.
-local function promoteLockdownFromTaint(runtime, eventName)
-  if type(_G.print) == "function" then
-    _G.print("[WM DEBUG] promoteLockdownFromTaint: " .. tostring(eventName))
-  end
-  local Bootstrap = ns.Bootstrap
-  if Bootstrap == nil then
-    return
-  end
-  local LockdownState = ns.BootstrapLockdownState or require("WhisperMessenger.Core.Bootstrap.LockdownState")
-  if LockdownState == nil or type(LockdownState.ForceActive) ~= "function" then
-    return
-  end
-  local changed = LockdownState.ForceActive(Bootstrap, "TAINT_" .. tostring(eventName), {
-    now = runtime and runtime.now or nil,
-  })
-  if not changed then
-    return
-  end
-  if runtime then
-    runtime.messagingNotice = TAINT_COMPETITIVE_NOTICE
-  end
-  if Bootstrap.syncChatFilters then
-    Bootstrap.syncChatFilters()
-  end
-  if type(Bootstrap.onCompetitiveStateChanged) == "function" then
-    Bootstrap.onCompetitiveStateChanged(true)
-  end
-  if runtime and type(runtime.refreshWindow) == "function" then
-    runtime.refreshWindow()
-  end
-end
-
 function EventBridge.RouteChannelEvent(runtime, eventName, ...)
   if runtime == nil or not CHANNEL_EVENTS[eventName] then
-    return nil
-  end
-  -- Defer-and-sanitize: tainted channel args (sender name etc.) would crash
-  -- Blizzard's secure path if routed through addon code. Bail before reading
-  -- the varargs.
-  if SecretTaintGuard.TryDefer(runtime, eventName, ...) then
-    if Trace then
-      Trace("EventBridge: deferred " .. eventName .. " (channel taint)")
-    end
-    promoteLockdownFromTaint(runtime, eventName)
     return nil
   end
   local store = runtime.channelMessageStore
@@ -239,29 +188,6 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
-  -- Defer-and-sanitize: if any event arg is a Blizzard "secret string" tainted
-  -- by chat-secrecy lockdown (M+/PvP), enqueue a sanitized copy and bail now.
-  -- This must happen BEFORE buildLivePayload reads the varargs.
-  if SecretTaintGuard.TryDefer(runtime, eventName, ...) then
-    if Trace then
-      Trace("EventBridge: deferred " .. eventName .. " (taint)")
-    end
-    promoteLockdownFromTaint(runtime, eventName)
-    -- Historically we also pushed a washed copy of the playerName into
-    -- Blizzard's last-tell-target here so /r and Prat's /cw could resolve
-    -- a target during the lockdown. That's been removed because:
-    --   1. washString falls back to a "<lockdown>" placeholder on real
-    --      WoW (string.byte is also blocked on secret strings), polluting
-    --      Blizzard's chatEditLastTell history with a fake entry.
-    --   2. Blizzard's own MessageEventHandler later fires on new tainted
-    --      whispers and calls SetLastTellTarget, which walks the polluted
-    --      history doing strupper / compare ops on the new secret target
-    --      and trips "string conversion on a secret string".
-    --   3. Prat's /cw extracts the target from the typed line inline, so
-    --      the user can still reply even without a last-tell-target set.
-    -- Let Blizzard's own chat handler own chatEditLastTell entirely.
-    return nil
-  end
   local payload = buildLivePayload(runtime, eventName, ...)
   if Trace and TRACE_EVENTS[eventName] then
     Trace(
@@ -305,16 +231,8 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and runtime.accountState.settings.hideFromDefaultChat == true
       and not _G._wmSuspended
       and type(_G.ChatEdit_SetLastTellTarget) == "function"
-      and type(payload.playerName) == "string"
-      and payload.playerName ~= ""
-      and not FlavorCompat.IsSecretValue(payload.playerName)
+      and payload.playerName
     then
-      -- Skip tainted or empty playerNames. Empty values corrupt /r and
-      -- Prat's /cw (GetLastTellTarget returns "" → SendChatMessage gets
-      -- a nil target → "Chat type requires a target player"). Tainted
-      -- values would re-taint Blizzard's reply-target global if passed
-      -- into this near-secure setter; let Blizzard's own chat handling
-      -- own the reply target for locked-down whispers.
       local tellType = eventName == "CHAT_MSG_BN_WHISPER" and "BN_WHISPER" or "WHISPER"
       _G.ChatEdit_SetLastTellTarget(payload.playerName, tellType)
     end
@@ -346,13 +264,6 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     refreshWindow()
   end
   return result
-end
-
--- DrainSecretDeferredQueue(runtime, refreshWindow) -> number
--- Delegates to SecretTaintGuard; exposed here so callers that already hold
--- EventBridge don't need a second require.
-function EventBridge.DrainSecretDeferredQueue(runtime, refreshWindow)
-  return SecretTaintGuard.DrainSecretDeferredQueue(runtime, refreshWindow)
 end
 
 ns.BootstrapEventBridge = EventBridge

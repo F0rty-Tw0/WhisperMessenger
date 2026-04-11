@@ -10,7 +10,6 @@ ignore:
   - scripts
   - docs
   - dist
-  - plans
   - .editorconfig
   - .gitignore
   - .luacheckrc

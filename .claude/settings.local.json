@@ -17,8 +17,7 @@
       "Bash(cp Persistence/SavedState/init.lua Persistence/SavedState/SavedState.lua)",
       "Bash(rtk git:*)",
       "Bash(bash scripts/lint.sh)",
-      "Bash(bash scripts/lint.sh --fix)",
-      "WebFetch(domain:raw.githubusercontent.com)"
+      "Bash(bash scripts/lint.sh --fix)"
     ]
   }
 }

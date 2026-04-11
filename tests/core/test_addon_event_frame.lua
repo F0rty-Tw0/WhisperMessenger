@@ -175,17 +175,12 @@ return function()
   )
   assert(#loadedModules == 0, "expected cached handlers and bridge on later live event routing")
 
-  -- Phase 3: OnEvent no longer short-circuits when lockdown is active.
-  -- SecretTaintGuard inside RouteLiveEvent handles tainted payloads and
-  -- defers them into runtime.secretDeferredQueue. Blocking at this level
-  -- would swallow tainted events before the guard can defer them, losing
-  -- messages when the lockdown clears (this is the bug Phase 3 fixes).
   calls = {}
-  Bootstrap.lockdown = { active = true, since = 1, source = "CHALLENGE_MODE_START" }
-  frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "reach-guard")
+  Bootstrap._inMythicContent = true
+  frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "blocked")
   assert(
-    table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER,RouteLiveEvent:CHAT_MSG_WHISPER:reach-guard",
-    "expected live routing to reach RouteLiveEvent during lockdown so SecretTaintGuard can defer"
+    table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER",
+    "expected mythic guard to stop live routing after lifecycle handling"
   )
 
   local noFrameResult = AddonEventFrame.Install({
@@ -194,7 +189,7 @@ return function()
   assert(noFrameResult == nil, "expected Install to return nil when createFrame is unavailable")
 
   calls = {}
-  Bootstrap.lockdown = { active = false, since = 0, source = "init" }
+  Bootstrap._inMythicContent = false
   Bootstrap.runtime = nil
   frame.scripts.OnEvent(frame, "CHAT_MSG_DND", "without runtime")
   assert(

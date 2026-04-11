@@ -1,10 +1,9 @@
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
-local LockdownState = require("WhisperMessenger.Core.Bootstrap.LockdownState")
+local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
 
 return function()
   local savedGetInstanceInfo = _G.GetInstanceInfo
   local savedCTimer = _G.C_Timer
-  local savedCChatInfo = _G.C_ChatInfo
 
   _G.C_Timer = {
     After = function(_delay, fn)
@@ -12,19 +11,11 @@ return function()
     end,
   }
 
-  local function setLockdown(active)
-    _G.C_ChatInfo = {
-      InChatMessagingLockdown = function()
-        return active
-      end,
-    }
-  end
-
   local function makeDeps(trace)
     return {
       trace = trace or function() end,
       getContentDetector = function()
-        return nil
+        return ContentDetector
       end,
       getPresenceCache = function()
         return nil
@@ -32,150 +23,163 @@ return function()
     }
   end
 
-  local function makeBootstrap(extra)
-    local Bootstrap = extra or {}
-    Bootstrap.runtime = Bootstrap.runtime or { suspend = function() end, resume = function() end }
-    if Bootstrap.lockdown == nil then
-      LockdownState.Initialize(Bootstrap)
-    end
-    return Bootstrap
-  end
-
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_sets_lockdown_active_in_pvp
+  -- test_player_entering_world_sets_competitive_in_pvp
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
-    local Bootstrap = makeBootstrap()
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(Bootstrap.lockdown.active == true, "should set lockdown.active when entering locked BG")
-    assert(Bootstrap.lockdown.source == "PLAYER_ENTERING_WORLD", "source should be PLAYER_ENTERING_WORLD")
+
+    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering battleground")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_clears_lockdown_in_open_world
+  -- test_player_entering_world_sets_competitive_in_arena
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "PLAYER_ENTERING_WORLD" },
-    })
+    rawset(_G, "GetInstanceInfo", function()
+      return "Nagrand Arena", "arena", 1
+    end)
+
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(Bootstrap.lockdown.active == false, "should clear lockdown.active when entering open world")
+
+    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering arena")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_sets_lockdown_in_mythic
+  -- test_player_entering_world_clears_competitive_in_open_world
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
-    local Bootstrap = makeBootstrap()
+    rawset(_G, "GetInstanceInfo", function()
+      return "Eastern Kingdoms", "none", 0
+    end)
+
+    local Bootstrap = { _inCompetitiveContent = true, runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(Bootstrap.lockdown.active == true, "should set lockdown.active when entering mythic keystone")
+
+    assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent when entering open world")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_zone_changed_clears_lockdown_when_leaving_pvp
+  -- test_player_entering_world_sets_competitive_in_mythic
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "PLAYER_ENTERING_WORLD" },
-    })
-    LifecycleHandlers.Handle(Bootstrap, "ZONE_CHANGED_NEW_AREA", makeDeps())
-    assert(Bootstrap.lockdown.active == false, "should clear lockdown.active on zone change out of pvp")
+    rawset(_G, "GetInstanceInfo", function()
+      return "Dungeon", "party", 8
+    end)
+
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true for mythic keystone")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_zone_changed_notifies_when_leaving_competitive_after_mythic
-  -- Regression: returning to a capital city after a Mythic+ run left the
-  -- indicator and banner stuck on, because the zone-change handler updated
-  -- the flag but never called the state callback.
+  -- test_zone_changed_clears_competitive_when_leaving_pvp
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
-    local callbackValue = "unset"
-    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "CHALLENGE_MODE_START" },
-      runtime = runtime,
-      onCompetitiveStateChanged = function(active)
-        callbackValue = active
-      end,
-    })
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
 
+    local Bootstrap = { _inCompetitiveContent = true }
     LifecycleHandlers.Handle(Bootstrap, "ZONE_CHANGED_NEW_AREA", makeDeps())
 
-    assert(Bootstrap.lockdown.active == false, "lockdown should be cleared")
-    assert(
-      callbackValue == false,
-      "should fire onCompetitiveStateChanged(false) on exit, got: " .. tostring(callbackValue)
-    )
-    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice on exit")
+    assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent on zone change out of pvp")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_encounter_start_sets_lockdown_when_locked
+  -- test_encounter_start_sets_in_encounter
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
-    local Bootstrap = makeBootstrap()
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
-    assert(Bootstrap.lockdown.active == true, "should set lockdown.active on locked ENCOUNTER_START")
-    assert(Bootstrap.lockdown.source == "ENCOUNTER_START", "source should be ENCOUNTER_START")
-    _G._wmSuspended = nil
+    assert(Bootstrap._inEncounter == true, "should set _inEncounter=true on ENCOUNTER_START")
   end
 
   -- -----------------------------------------------------------------------
-  -- test_encounter_end_clears_lockdown
+  -- test_encounter_end_clears_in_encounter
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "ENCOUNTER_START" },
-    })
+    local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-    assert(Bootstrap.lockdown.active == false, "should clear lockdown.active on ENCOUNTER_END")
+
+    assert(Bootstrap._inEncounter == false, "should clear _inEncounter on ENCOUNTER_END")
   end
 
   -- -----------------------------------------------------------------------
   -- test_encounter_start_calls_competitive_state_callback
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
     local callbackCalled = false
     local callbackValue = nil
-    local Bootstrap = makeBootstrap({
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
       onCompetitiveStateChanged = function(active)
         callbackCalled = true
         callbackValue = active
       end,
-    })
+    }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
     assert(callbackCalled == true, "should call onCompetitiveStateChanged on ENCOUNTER_START")
     assert(callbackValue == true, "should pass true to onCompetitiveStateChanged on ENCOUNTER_START")
-    _G._wmSuspended = nil
   end
 
   -- -----------------------------------------------------------------------
   -- test_encounter_end_calls_competitive_state_callback_false
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
     local callbackValue = nil
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "ENCOUNTER_START" },
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = { suspend = function() end, resume = function() end },
       onCompetitiveStateChanged = function(active)
         callbackValue = active
       end,
-    })
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
     assert(
       callbackValue == false,
-      "should pass false to onCompetitiveStateChanged when encounter ends and lockdown clears"
+      "should pass false to onCompetitiveStateChanged when encounter ends outside competitive content"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_encounter_end_still_competitive_in_bg
+  -- -----------------------------------------------------------------------
+  do
+    local callbackValue = nil
+    local Bootstrap = {
+      _inEncounter = true,
+      _inCompetitiveContent = true,
+      runtime = { suspend = function() end, resume = function() end },
+      onCompetitiveStateChanged = function(active)
+        callbackValue = active
+      end,
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      callbackValue == true,
+      "should pass true to onCompetitiveStateChanged when encounter ends but still in competitive zone"
     )
   end
 
@@ -183,136 +187,146 @@ return function()
   -- test_player_entering_world_calls_competitive_state_callback
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
     local callbackValue = nil
-    local Bootstrap = makeBootstrap({
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
       onCompetitiveStateChanged = function(active)
         callbackValue = active
       end,
-    })
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(callbackValue == true, "should call onCompetitiveStateChanged=true when entering locked zone")
+
+    assert(callbackValue == true, "should call onCompetitiveStateChanged=true when entering BG")
   end
 
   -- -----------------------------------------------------------------------
   -- test_encounter_start_sets_messaging_notice
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
     local runtime = { suspend = function() end, resume = function() end }
-    local Bootstrap = makeBootstrap({ runtime = runtime })
+    local Bootstrap = { runtime = runtime }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
-    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice on locked ENCOUNTER_START")
+    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice on ENCOUNTER_START")
     assert(
       type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "",
       "messagingNotice should be a non-empty string"
     )
-    _G._wmSuspended = nil
   end
 
   -- -----------------------------------------------------------------------
-  -- test_encounter_end_clears_messaging_notice_when_unlocked
+  -- test_encounter_end_clears_messaging_notice_outside_competitive
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
     local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "ENCOUNTER_START" },
-      runtime = runtime,
-    })
+    local Bootstrap = { _inEncounter = true, runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
     assert(
       runtime.messagingNotice == nil,
-      "should clear runtime.messagingNotice when encounter ends and lockdown clears"
+      "should clear runtime.messagingNotice when encounter ends outside competitive zone"
     )
   end
 
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_sets_messaging_notice_when_locked
+  -- test_encounter_end_keeps_messaging_notice_in_bg
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
-    local runtime = { suspend = function() end, resume = function() end }
-    local Bootstrap = makeBootstrap({ runtime = runtime })
-    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice when entering locked zone")
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = { _inEncounter = true, _inCompetitiveContent = true, runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
+    assert(
+      runtime.messagingNotice ~= nil,
+      "should keep runtime.messagingNotice when encounter ends but still in competitive zone"
+    )
   end
 
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_clears_messaging_notice_when_unlocked
+  -- test_player_entering_world_sets_messaging_notice_in_bg
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
-    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "PLAYER_ENTERING_WORLD" },
-      runtime = runtime,
-    })
+    local runtime = { suspend = function() end, resume = function() end }
+    local Bootstrap = { runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Warsong Gulch", "pvp", 1
+    end)
+
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
-    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when entering unlocked world")
+
+    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice when entering battleground")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_player_entering_world_clears_messaging_notice_in_open_world
+  -- -----------------------------------------------------------------------
+  do
+    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
+    local Bootstrap = { runtime = runtime }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when entering open world")
   end
 
   -- -----------------------------------------------------------------------
   -- test_encounter_start_calls_syncChatFilters
   -- -----------------------------------------------------------------------
   do
-    setLockdown(true)
     local syncCalled = false
-    local Bootstrap = makeBootstrap({
+    local Bootstrap = {
+      runtime = { suspend = function() end, resume = function() end },
       syncChatFilters = function()
         syncCalled = true
       end,
-    })
+    }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
+
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_START")
-    _G._wmSuspended = nil
   end
 
   -- -----------------------------------------------------------------------
   -- test_encounter_end_calls_syncChatFilters
   -- -----------------------------------------------------------------------
   do
-    setLockdown(false)
     local syncCalled = false
-    local Bootstrap = makeBootstrap({
-      lockdown = { active = true, since = 1, source = "ENCOUNTER_START" },
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = { suspend = function() end, resume = function() end },
       syncChatFilters = function()
         syncCalled = true
       end,
-    })
+    }
+
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
+
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_END")
-  end
-
-  -- -----------------------------------------------------------------------
-  -- test_encounter_start_in_normal_raid_does_not_lock
-  -- Regression: ENCOUNTER_START fires for ALL raid/dungeon encounters
-  -- including LFR/Normal/Heroic raids and non-mythic dungeons. The lock
-  -- indicator and "Whispers paused" banner should only appear when Blizzard
-  -- actually has chat locked, not on every boss pull in a normal raid.
-  -- -----------------------------------------------------------------------
-  do
-    setLockdown(false)
-    local callbackValue = "unset"
-    local runtime = { suspend = function() end, resume = function() end }
-    local Bootstrap = makeBootstrap({
-      runtime = runtime,
-      onCompetitiveStateChanged = function(active)
-        callbackValue = active
-      end,
-    })
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
-
-    assert(
-      Bootstrap.lockdown.active == false,
-      "should NOT set lockdown.active in non-locked encounter (e.g. Normal raid)"
-    )
-    assert(runtime.messagingNotice == nil, "should NOT set messagingNotice in non-locked encounter")
-    assert(callbackValue == "unset", "should NOT fire onCompetitiveStateChanged in non-locked encounter")
   end
 
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
   _G.C_Timer = savedCTimer
-  _G.C_ChatInfo = savedCChatInfo
 end

@@ -7,9 +7,8 @@ return function()
   -- test_event_bridge_drops_events_when_caller_guards_mythic
   -- -----------------------------------------------------------------------
   -- RouteLiveEvent no longer checks mythic lockdown itself — the caller
-  -- (Bootstrap OnEvent) previously guarded via Bootstrap._inMythicContent.
-  -- Phase 3 removed that gate entirely; SecretTaintGuard defers tainted
-  -- payloads at the bridge layer. We verify nil-runtime still works.
+  -- (Bootstrap OnEvent) guards via Bootstrap._inMythicContent and never
+  -- calls RouteLiveEvent during mythic. We verify nil-runtime still works.
   do
     local refreshCalls = 0
 
@@ -194,7 +193,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local Constants = require("WhisperMessenger.Core.Constants")
-    assert(Constants.VERSION == "v1.1.6", "VERSION should be v1.1.6, got: " .. tostring(Constants.VERSION))
+    assert(Constants.VERSION == "v1.1.4", "VERSION should be v1.1.4, got: " .. tostring(Constants.VERSION))
   end
 
   -- -----------------------------------------------------------------------
@@ -245,7 +244,7 @@ return function()
     })
 
     -- Simulate mythic lockdown then call refreshWindow
-    Bootstrap.lockdown = { active = true, since = 1, source = "CHALLENGE_MODE_START" }
+    Bootstrap._inMythicContent = true
     availabilityRequests = {}
     buildSelectionCalls = 0
     runtime.refreshWindow()
@@ -260,7 +259,7 @@ return function()
     )
 
     -- Cleanup
-    Bootstrap.lockdown = { active = false, since = 0, source = "init" }
+    Bootstrap._inMythicContent = false
     rawset(ContactEnricher, "BuildWindowSelectionState", originalBuildState)
     if savedRequestCanLocal then
       _G.C_ChatInfo.RequestCanLocalWhisperTarget = savedRequestCanLocal
@@ -305,7 +304,7 @@ return function()
       rebuildCount = rebuildCount + 1
     end)
 
-    Bootstrap.lockdown = { active = true, since = 1, source = "CHALLENGE_MODE_START" }
+    Bootstrap._inMythicContent = true
 
     -- Fire any pending presence rebuild callbacks during mythic
     for _, cb in ipairs(timerCallbacks) do
@@ -321,7 +320,7 @@ return function()
     -- we test that the guard exists by verifying the flag check pattern.
     -- For now verify the flag is respected in the guild/community event path.
 
-    Bootstrap.lockdown = { active = false, since = 0, source = "init" }
+    Bootstrap._inMythicContent = false
 
     -- Cleanup
     rawset(PresenceCache, "Rebuild", savedRebuild)

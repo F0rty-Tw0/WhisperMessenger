@@ -1,20 +1,20 @@
 # Changelog
 
 
-## [1.1.6] - 2026-04-08
-
-### Fixed
-
-- **Whispers lost during raid encounters and battlegrounds** — whispers received while in raid encounters (any difficulty) or battlegrounds/arenas now reappear in the messenger after the encounter ends or you leave the match, instead of being permanently lost. Includes deferred-queue diagnostic trace logging and automatic FIFO eviction at 200 items to prevent unbounded memory growth during long fights.
-- **Whispers still lost during Mythic+ keys** — whispers received inside a Mythic+ run are now held safely and delivered to the messenger the moment the run ends. The v1.1.5 release added the deferred-queue infrastructure but the addon was still fully disconnected from whisper events during M+. This release keeps the messenger connected to chat events across the entire run and relies on the secret-taint guard added in v1.1.5 to sanitize Blizzard's tainted event args.
-- **Link-taint risk in Mythic raid encounters** — shift-clicking items, quests, or spells into chat mid-fight during a Mythic raid encounter no longer risks a protected-function taint error. The link-insert bailout flag is now set for any encounter where Blizzard's chat-secrecy API is active, matching the Mythic+ behavior.
+## [1.1.6] - 2026-04-12
 
 ### Changed
 
-- **Chat channel messages during lockdown** — channel traffic (Trade, General, LFG, etc.) received while chat is locked is now safely sanitized via the taint guard instead of being blocked at the event source. These messages are intentionally not replayed into the messenger after the lockdown clears — channel spam would bury the whispers you actually care about.
-- **Unified lockdown detection (internal)** — the addon now uses a single source of truth for chat-secrecy lockdown state (Blizzard's `InChatMessagingLockdown()` API) instead of three scattered boolean flags that each handler set and cleared on different events. The lock indicator, "whispers paused" banner, chat filter suppression, and availability requests all read the same state, eliminating a class of bugs where different parts of the UI could disagree about whether chat was locked. Also fixes a subtle event-router gate that was silently blocking `CHAT_MSG_WHISPER` during Mythic+ runs before the taint guard could defer it — without this fix the Mythic+ whisper recovery above would not actually have worked end-to-end.
+- **Reverted v1.1.5 taint-guard and deferred-replay rework.** Testing confirmed that Blizzard's chat-secrecy API blocks whispers from reaching any addon while chat is locked — the replay scaffolding added in v1.1.5/v1.1.6 could never see the messages it was trying to recover, so the added complexity served no purpose. The addon is back to the v1.1.4 behavior: during encounters, Mythic+, and other chat-locked content, whispers fall through to the default chat frame as the game intends, and the messenger shows a "Whispers paused in competitive content" banner that clears the moment the fight or run ends.
+
+### Preserved from v1.1.5
+
+- **Links only insert into the composer when its input is focused** — shift-click on items, quests, spells, and chat-bubble links no longer leaks into the messenger when the composer isn't the active edit box.
+
 
 ## [1.1.5] - 2026-04-08
+
+> Rolled back in v1.1.6 — see the v1.1.6 entry above. The items listed here shipped briefly before testing confirmed that Blizzard's chat-secrecy API blocks whispers from ever reaching addons while chat is locked, making the deferred-replay rework unable to do its job.
 
 ### Added
 
@@ -25,9 +25,9 @@
 
 - **Lock indicator wrongly showing in normal raids** — fixed the "Whispers paused" banner and the lock icon appearing on every boss pull in LFR, Normal, and Heroic raids. The messenger now only shows the lock indicator in content where the game actually restricts whispers.
 - **Item / quest / spell links going into the messenger when it isn't focused** — fixed shift-clicking items, quest log links, and chat-bubble link clicks being silently captured by the messenger composer even when its input wasn't the focused widget. Links now only insert into the composer when the messenger input has keyboard focus, matching how Blizzard's default chat editbox behaves.
-- **Stuck scroll position when switching settings tabs** — fixed the options panel keeping its scroll offset across tab switches. Scrolling down inside a long tab (e.g. Appearance) and then clicking a shorter tab (e.g. Behavior) used to leave the new tab visually scrolled with empty space at the top. The shared options scroll view now resets to the top whenever a new tab is selected.
-- **Mythic+ taint error** — fixed `attempt to compare ... a secret string value tainted by 'WhisperMessenger'` spam from `ChannelMessageStore` while inside Mythic+ keystones. The channel message recorder used a direct equality compare against a literal, which trips Blizzard's secret-string protection on tainted chat sender names. The recorder is now type-safe, and channel chat events are unregistered for the duration of mythic suspend so no addon code touches them at all.
-- **Stuck "Competitive Mode" after Mythic+** — fixed the toggle-icon lock indicator and the "Whispers paused in competitive content" banner remaining stuck after returning to a capital city from a Mythic+ run. The zone-change handler updated the internal flag but never notified the UI when leaving competitive content via a zone change rather than `CHALLENGE_MODE_COMPLETED`.
+- **Mythic+ taint error** — fixed `attempt to compare ... a secret string value tainted by 'WhisperMessenger'` spam from `ChannelMessageStore` while inside Mythic+ keystones.
+- **Stuck "Competitive Mode" after Mythic+** — fixed the toggle-icon lock indicator and the "Whispers paused in competitive content" banner remaining stuck after returning to a capital city from a Mythic+ run.
+
 
 ## [1.1.4] - 2026-04-07
 
