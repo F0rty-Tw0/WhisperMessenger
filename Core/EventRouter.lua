@@ -39,12 +39,15 @@ local function buildConversationContact(state, payload)
     return contact, conversationKey
   end
 
-  if payload.playerName == nil or payload.playerName == "" then
+  -- Only a nil-check here: comparing a tainted chat payload against a literal
+  -- string trips Blizzard's secret-string protection. We defer the "empty
+  -- name" rejection to the canonicalName check below — normalizeName pcalls
+  -- Ambiguate/string.lower, so tainted names degrade to "" safely.
+  if payload.playerName == nil then
     return nil, nil
   end
 
   local contact = Identity.FromWhisper(payload.playerName, payload.guid, payload.playerInfo)
-  -- During tainted execution normalizeName degrades to ""; reject degenerate contacts
   if contact.canonicalName == "" then
     return nil, nil
   end
