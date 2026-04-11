@@ -70,16 +70,20 @@ function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
     runtime.setComposerText(typed)
   end
 
-  -- Restore chatType to sticky type and clear tellTarget via secure
-  -- attributes only. Do NOT set direct Lua properties (editBox.chatType,
-  -- editBox.tellTarget) as they persist and shadow WoW's SetAttribute-based
-  -- state updates, breaking chatType detection on subsequent whispers.
+  -- When sticky is a non-whisper mode, restore chatType to that sticky type
+  -- and clear tellTarget — the user's next Enter should land in Say/Party/etc.
+  --
+  -- When sticky IS whisper (WHISPER/BN_WHISPER), leave Blizzard's state alone.
+  -- Clearing tellTarget while chatType stays WHISPER leaves the edit box in
+  -- an invalid state — Blizzard's SendText will then call SendChatMessage
+  -- with target=nil and throw "Chat type requires a target player". Blizzard
+  -- already manages whisper-sticky target cleanup on its own.
   if type(editBox.SetAttribute) == "function" then
     local stickyType = EditBoxInterop.readEditBoxState(editBox, "stickyType")
     if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
       pcall(editBox.SetAttribute, editBox, "chatType", stickyType)
+      pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
     end
-    pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
   end
   editBox:SetText("")
   editBox._wmTypedDuringCombat = nil
