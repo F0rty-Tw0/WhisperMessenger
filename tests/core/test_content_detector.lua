@@ -24,10 +24,10 @@ return function()
     return "Dungeon", "party", 8
   end) == true, "should return true for Mythic Keystone")
 
-  -- Returns true for Mythic Raid (difficultyID = 16)
+  -- Returns false for Mythic Raid (difficultyID = 16) — now encounter-based
   assert(ContentDetector.IsMythicRestricted(function()
     return "Raid", "raid", 16
-  end) == true, "should return true for Mythic Raid")
+  end) == false, "should return false for Mythic Raid (encounter-based lock)")
 
   -- -----------------------------------------------------------------------
   -- IsCompetitiveContent — covers mythic + PvP + arena
@@ -59,10 +59,10 @@ return function()
     return "Dungeon", "party", 8
   end) == true, "competitive: should return true for Mythic Keystone")
 
-  -- Returns true for Mythic Raid
+  -- Returns false for Mythic Raid — now encounter-based, not whole-raid
   assert(ContentDetector.IsCompetitiveContent(function()
     return "Raid", "raid", 16
-  end) == true, "competitive: should return true for Mythic Raid")
+  end) == false, "competitive: should return false for Mythic Raid")
 
   -- Returns true for battleground
   assert(ContentDetector.IsCompetitiveContent(function()

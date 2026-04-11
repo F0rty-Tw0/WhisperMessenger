@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local MYTHIC_KEYSTONE_DIFFICULTY = 8
-local MYTHIC_RAID_DIFFICULTY = 16
 
 local ContentDetector = {}
 
@@ -13,7 +12,7 @@ function ContentDetector.IsMythicRestricted(getInstanceInfo)
     return false
   end
   local _, _, difficultyID = getInstanceInfo()
-  return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY or difficultyID == MYTHIC_RAID_DIFFICULTY
+  return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY
 end
 
 function ContentDetector.IsCompetitiveContent(getInstanceInfo)
@@ -24,7 +23,7 @@ function ContentDetector.IsCompetitiveContent(getInstanceInfo)
   if instanceType == "pvp" or instanceType == "arena" then
     return true
   end
-  return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY or difficultyID == MYTHIC_RAID_DIFFICULTY
+  return difficultyID == MYTHIC_KEYSTONE_DIFFICULTY
 end
 
 ns.ContentDetector = ContentDetector
