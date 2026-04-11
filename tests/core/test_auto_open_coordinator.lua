@@ -552,15 +552,18 @@ return function()
     local prevDeactivatedCount = #deactivated
     pollFrame.scripts.OnUpdate(pollFrame)
 
+    -- Bare empty default chat must never be hijacked into the messenger — the
+    -- user may be pressing Enter to type a plain SAY/PARTY message. Poller
+    -- only intercepts once the user has actually typed a draft.
     assert(
-      #sendTellCalls == prevSendTellCount + 1 and sendTellCalls[#sendTellCalls] == "Arthas",
-      "expected routing to resume once preserved combat draft is cleared"
+      #sendTellCalls == prevSendTellCount,
+      "expected poller to leave an empty default chat edit box alone"
     )
     assert(
-      #deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == resumedBox,
-      "expected poller to close Blizzard chat edit box once preserved draft is cleared"
+      #deactivated == prevDeactivatedCount,
+      "expected poller NOT to deactivate an empty default chat edit box"
     )
-    assert(resumedBox:HasFocus() == false, "expected cleared draft edit box to lose focus once normal routing resumes")
+    assert(resumedBox:HasFocus() == true, "expected empty default chat edit box to keep focus for the user")
   end
 
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)

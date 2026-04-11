@@ -135,6 +135,13 @@ local function installPoller(runtime, hooks, deps)
         end
 
         local text = editBox.GetText and editBox:GetText() or ""
+        -- Bare Enter must not hijack the default chat edit box. Only intercept
+        -- when the user has actually typed something — a draft to route into
+        -- our composer, or an explicit /w /whisper command. Empty text means
+        -- the user just opened the default chat and hasn't committed intent.
+        if text == "" then
+          return
+        end
         if string.sub(text, 1, 1) == "/" then
           local command = string.lower(string.match(text, "^(/[^%s]*)") or "")
           if command ~= "/w" and command ~= "/whisper" then
