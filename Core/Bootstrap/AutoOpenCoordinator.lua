@@ -44,27 +44,49 @@ local function installDirectHooks(runtime, hooks, deps)
     return
   end
 
-  local function handleWhisperHook()
+  local function handleWhisperHook(nameArg)
     if not shouldInterceptHook(runtime, deps) then
       return
     end
-    local editBox = EditBoxInterop.findFocusedEditBox(deps)
+
+    -- ChatFrame_SendTell(name, chatFrame) passes the target name directly —
+    -- prefer it over reading the edit box attribute, which avoids timing and
+    -- custom-chat-addon edge cases. ChatFrame_ReplyTell/ReplyTell2 take no
+    -- args, so fall back to ChatEdit_GetActiveWindow (currently-open edit box,
+    -- focus-independent) or findFocusedEditBox as a last resort.
+    local target = (type(nameArg) == "string" and nameArg ~= "") and nameArg or nil
+
+    local editBox
+    if type(_G.ChatEdit_GetActiveWindow) == "function" then
+      local ok, active = pcall(_G.ChatEdit_GetActiveWindow)
+      if ok then
+        editBox = active
+      end
+    end
     if not editBox then
+      editBox = EditBoxInterop.findFocusedEditBox(deps)
+    end
+
+    local chatType
+    if editBox then
+      if deps.isInCombat and deps.isInCombat() then
+        EditBoxInterop.markCombatDraft(editBox)
+      end
+      if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
+        return
+      end
+      chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
+      if not target then
+        target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
+      end
+    end
+
+    if not target or target == "" then
       return
     end
 
-    if deps.isInCombat and deps.isInCombat() then
-      EditBoxInterop.markCombatDraft(editBox)
-    end
-    if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
-      return
-    end
-
-    local chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
-    local target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
     local opened = false
-
-    if chatType == "BN_WHISPER" and target then
+    if chatType == "BN_WHISPER" then
       pcall(function()
         local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
         if not accountInfo then
@@ -75,11 +97,14 @@ local function installDirectHooks(runtime, hooks, deps)
           opened = true
         end
       end)
-    elseif chatType == "WHISPER" and target and target ~= "" then
+    else
+      -- Default path: ChatFrame_SendTell / ReplyTell / ReplyTell2 all mean
+      -- "WoW whisper to target". chatType may be nil here for ReplyTell before
+      -- attributes propagate; treat as WHISPER.
       opened = hooks.onSendTell(target) == true
     end
 
-    if opened then
+    if opened and editBox then
       -- Defer editbox cleanup to next frame to avoid tainting secure chat
       -- frame state. Writing to editbox attributes during a hooksecurefunc
       -- callback can taint them, causing WoW to fail on subsequent calls.
