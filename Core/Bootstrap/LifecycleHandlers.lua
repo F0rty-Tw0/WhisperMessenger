@@ -125,6 +125,7 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     end
     deps.trace("encounter started")
     notifyCompetitiveState(Bootstrap)
+    refreshRuntimeWindow(Bootstrap)
     return true
   end
 
@@ -135,6 +136,7 @@ local function handleEncounterEvent(Bootstrap, event, deps)
     end
     deps.trace("encounter ended")
     notifyCompetitiveState(Bootstrap)
+    refreshRuntimeWindow(Bootstrap)
     return true
   end
 
