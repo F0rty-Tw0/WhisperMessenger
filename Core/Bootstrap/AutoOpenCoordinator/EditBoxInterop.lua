@@ -5,6 +5,11 @@ end
 
 local EditBoxInterop = {}
 
+-- External tracking table: keyed by edit box reference, never written to the
+-- edit box itself. Writing to Blizzard's secure frame tables from addon code
+-- taints them, causing their OnUpdate to run in a tainted context where
+-- SetText() with WoW's secret values then errors.
+local combatDraftBoxes = {}
 function EditBoxInterop.readEditBoxState(editBox, key)
   local direct = editBox[key]
   if direct ~= nil and direct ~= "" then
@@ -23,7 +28,12 @@ end
 
 local function readEditBoxText(editBox)
   if type(editBox) == "table" and type(editBox.GetText) == "function" then
-    return editBox:GetText() or ""
+    local ok, text = pcall(editBox.GetText, editBox)
+    -- If GetText fails the value is secret (tainted execution); treat as non-empty.
+    if not ok then
+      return nil -- sentinel: secret value present
+    end
+    return text or ""
   end
   return ""
 end
@@ -35,8 +45,9 @@ function EditBoxInterop.markCombatDraft(editBox)
   end
 
   local typed = readEditBoxText(editBox)
-  if typed ~= "" then
-    editBox._wmTypedDuringCombat = true
+  -- nil means secret value (tainted); treat same as non-empty.
+  if typed == nil or typed ~= "" then
+    combatDraftBoxes[editBox] = true
   end
 end
 
@@ -46,12 +57,13 @@ function EditBoxInterop.shouldPreserveCombatDraft(editBox)
   end
 
   local typed = readEditBoxText(editBox)
+  -- nil means secret value (tainted) — text is definitely present.
   if typed == "" then
-    editBox._wmTypedDuringCombat = nil
+    combatDraftBoxes[editBox] = nil
     return false
   end
 
-  if editBox._wmTypedDuringCombat ~= true then
+  if not combatDraftBoxes[editBox] then
     return false
   end
 
@@ -60,13 +72,14 @@ function EditBoxInterop.shouldPreserveCombatDraft(editBox)
     return true
   end
 
-  editBox._wmTypedDuringCombat = nil
+  combatDraftBoxes[editBox] = nil
   return false
 end
 
 function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
   local typed = readEditBoxText(editBox)
-  if typed ~= "" and runtime.setComposerText then
+  -- typed == nil means secret value: skip copying to composer (can't read it).
+  if typed ~= nil and typed ~= "" and runtime.setComposerText then
     runtime.setComposerText(typed)
   end
 
@@ -85,8 +98,13 @@ function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
       pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
     end
   end
-  editBox:SetText("")
-  editBox._wmTypedDuringCombat = nil
+  -- Only clear text when readable (non-secret). When text is secret, skip
+  -- SetText entirely — calling it with a secret value or triggering its
+  -- deferred-apply path crashes Blizzard's own OnUpdate.
+  if typed ~= nil then
+    pcall(editBox.SetText, editBox, "")
+  end
+  combatDraftBoxes[editBox] = nil
 
   if type(deactivateChat) == "function" then
     deactivateChat(editBox)

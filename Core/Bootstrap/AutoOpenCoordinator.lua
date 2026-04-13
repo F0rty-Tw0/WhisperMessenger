@@ -19,7 +19,7 @@ local function focusComposer(runtime)
   end
 end
 
-local function shouldInterceptHook(_, deps)
+local function shouldInterceptHook(runtime, deps)
   -- Explicit whisper actions (R / /r / /w / right-click whisper, or a typed
   -- draft in the default chat) route into the messenger regardless of the
   -- autoOpenOutgoing setting — that setting only gates POST-send auto-open.
@@ -27,11 +27,22 @@ local function shouldInterceptHook(_, deps)
   if deps.isSuspended() then
     return false
   end
+
+  -- If the messenger is in a "soft" lock (competitive content or encounter),
+  -- don't intercept new whisper intents so the default Blizzard chat handles
+  -- them instead. This ensures the user can always communicate even when
+  -- the addon is paused.
+  local isCompetitive = runtime.isCompetitiveContent and runtime.isCompetitiveContent()
+
+  if isCompetitive then
+    return false
+  end
+
   if deps.isInCombat and deps.isInCombat() then
     -- Combat still blocks a cold-open of the messenger, but if it's already
     -- visible the user is actively using it — keep routing so typing doesn't
     -- land in the default chat instead.
-    if deps.isWindowVisible and deps.isWindowVisible() then
+    if isVisible then
       return true
     end
     return false
@@ -161,13 +172,6 @@ local function installPoller(runtime, hooks, deps)
         end
 
         local text = editBox.GetText and editBox:GetText() or ""
-        -- Bare Enter must not hijack the default chat edit box. Only intercept
-        -- when the user has actually typed something — a draft to route into
-        -- our composer, or an explicit /w /whisper command. Empty text means
-        -- the user just opened the default chat and hasn't committed intent.
-        if text == "" then
-          return
-        end
         if string.sub(text, 1, 1) == "/" then
           local command = string.lower(string.match(text, "^(/[^%s]*)") or "")
           if command ~= "/w" and command ~= "/whisper" then
@@ -211,6 +215,9 @@ function AutoOpenCoordinator.Attach(options)
     end,
     isInCombat = options.isInCombat or function()
       return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown()
+    end,
+    isCompetitive = function()
+      return runtime.isCompetitiveContent and runtime.isCompetitiveContent()
     end,
     ensureWindow = runtime.ensureWindow,
     setWindowVisible = runtime.setWindowVisible,

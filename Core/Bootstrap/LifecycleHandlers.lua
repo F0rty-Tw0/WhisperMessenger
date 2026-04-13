@@ -106,6 +106,8 @@ local function handleChallengeModeEvent(Bootstrap, event, deps)
 
   if event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
     Bootstrap._inMythicContent = false
+    Bootstrap._inEncounter = false
+    Bootstrap._inCompetitiveContent = false
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
@@ -154,6 +156,7 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
+    notifyCompetitiveState(Bootstrap)
   end
 
   if not Bootstrap._inMythicContent then
@@ -181,6 +184,7 @@ local function handleZoneChangedNewArea(Bootstrap, deps)
     end
 
     deps.trace("mythic lockdown: resumed via zone change")
+    notifyCompetitiveState(Bootstrap)
   end
 
   return true
@@ -215,10 +219,11 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
   deps.trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
   Bootstrap._inMythicContent = isMythic
   Bootstrap._inCompetitiveContent = isCompetitive
+  Bootstrap._inEncounter = false
   if Bootstrap.syncChatFilters then
     Bootstrap.syncChatFilters()
   end
-  notifyCompetitiveState(Bootstrap, deps)
+  notifyCompetitiveState(Bootstrap)
 
   if isMythic and not wasMythic then
     if Bootstrap.runtime and Bootstrap.runtime.suspend then

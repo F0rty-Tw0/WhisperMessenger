@@ -13,8 +13,13 @@ function AutoOpenHooks.Create(deps)
     -- Explicit whisper intent — route to the messenger regardless of the
     -- auto-open-outgoing setting. Combat blocks a cold-open, but an already
     -- visible messenger keeps routing so the user doesn't get stranded.
+    local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
+
+    if deps.isCompetitive and deps.isCompetitive() and not isVisible then
+      return false
+    end
+
     if deps.isInCombat and deps.isInCombat() then
-      local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
       if isVisible then
         return true
       end

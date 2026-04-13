@@ -140,6 +140,10 @@ function Bootstrap.Initialize(factory, options)
     return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
   end
 
+  runtime.isMythicLockdown = function()
+    return Bootstrap._inMythicContent == true
+  end
+
   Bootstrap.onCompetitiveStateChanged = function(isActive)
     local ic = windowRuntime.getIcon()
     if ic and ic.setCompetitiveContent then

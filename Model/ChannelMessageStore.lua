@@ -19,10 +19,14 @@ function ChannelMessageStore.New(config)
 end
 
 local function normalizeKey(name)
-  if name == nil or name == "" then
-    return ""
-  end
-  return string.lower(name)
+  local ok, result = pcall(function()
+    if name == nil or name == "" then
+      return ""
+    end
+    return string.lower(name)
+  end)
+  -- If name is a secret/tainted value, comparison throws; treat as empty.
+  return ok and result or ""
 end
 
 local function baseName(key)

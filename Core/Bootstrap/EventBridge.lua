@@ -225,10 +225,16 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     -- When we filter whispers from the default chat, WoW's ChatFrame handler
     -- never runs and the reply target is lost. Restore it here (outside the
     -- filter context so we don't taint Blizzard's secure execution path).
+    --
+    -- IMPORTANT: We only do this when we are actually filtering (not in
+    -- competitive content or mythic), otherwise Blizzard's own secure
+    -- handler will set the target safely, avoiding "secret string" taint.
     if
       runtime.accountState
       and runtime.accountState.settings
       and runtime.accountState.settings.hideFromDefaultChat == true
+      and not runtime.isMythicLockdown()
+      and not runtime.isCompetitiveContent()
       and not _G._wmSuspended
       and type(_G.ChatEdit_SetLastTellTarget) == "function"
       and payload.playerName
