@@ -3,6 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local RestrictedActions = ns.BootstrapRestrictedActions
+  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.RestrictedActions"))
+  or nil
+
 local LifecycleHandlers = {}
 
 local function refreshRuntimeWindow(Bootstrap)
@@ -223,6 +227,11 @@ local function handlePlayerEnteringWorld(Bootstrap, deps)
   if Bootstrap.syncChatFilters then
     Bootstrap.syncChatFilters()
   end
+  -- Re-apply the R-key override: other addons often reprocess bindings on
+  -- PLAYER_ENTERING_WORLD and may have cleared our SetOverrideBindingClick.
+  if Bootstrap.runtime and Bootstrap.runtime.syncReplyKey then
+    Bootstrap.runtime.syncReplyKey()
+  end
   notifyCompetitiveState(Bootstrap)
 
   if isMythic and not wasMythic then
@@ -276,7 +285,68 @@ local function handlePresenceInvalidation(Bootstrap, event, deps)
   return true
 end
 
-function LifecycleHandlers.Handle(Bootstrap, event, deps)
+local function handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+  if not RestrictedActions then
+    return true
+  end
+
+  local ra = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
+  if ra and ra.updateFromEvent then
+    ra.updateFromEvent(restrictionType, newState)
+  end
+
+  local isActive = newState == RestrictedActions.STATES.Active or newState == RestrictedActions.STATES.Activating
+
+  if restrictionType == RestrictedActions.TYPES.ChallengeMode then
+    if isActive and not Bootstrap._inMythicContent then
+      Bootstrap._inMythicContent = true
+      if Bootstrap.runtime and Bootstrap.runtime.suspend then
+        Bootstrap.runtime.suspend()
+      end
+      deps.trace("addon restriction: ChallengeMode active (suspend)")
+    elseif not isActive and Bootstrap._inMythicContent then
+      Bootstrap._inMythicContent = false
+      Bootstrap._inEncounter = false
+      Bootstrap._inCompetitiveContent = false
+      if Bootstrap.runtime and Bootstrap.runtime.resume then
+        Bootstrap.runtime.resume()
+      end
+      deps.trace("addon restriction: ChallengeMode inactive (resume)")
+    end
+    notifyCompetitiveState(Bootstrap)
+    return true
+  end
+
+  if restrictionType == RestrictedActions.TYPES.Encounter then
+    Bootstrap._inEncounter = isActive
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+    deps.trace("addon restriction: Encounter " .. (isActive and "active" or "inactive"))
+    notifyCompetitiveState(Bootstrap)
+    refreshRuntimeWindow(Bootstrap)
+    return true
+  end
+
+  if restrictionType == RestrictedActions.TYPES.PvPMatch then
+    Bootstrap._inCompetitiveContent = isActive
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+    deps.trace("addon restriction: PvPMatch " .. (isActive and "active" or "inactive"))
+    notifyCompetitiveState(Bootstrap)
+    return true
+  end
+
+  return true
+end
+
+function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
+  if event == "ADDON_RESTRICTION_STATE_CHANGED" then
+    local restrictionType, newState = ...
+    return handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+  end
+
   if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
     return handleBNetFriendEvent(Bootstrap, deps)
   end

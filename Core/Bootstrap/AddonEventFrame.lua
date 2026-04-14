@@ -111,7 +111,7 @@ function AddonEventFrame.Install(deps)
         getPresenceCache = function()
           return ns.PresenceCache
         end,
-      })
+      }, ...)
     then
       return
     end

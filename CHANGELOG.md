@@ -1,6 +1,33 @@
 # Changelog
 
 
+## [1.1.7] - 2026-04-15
+
+### Fixed
+
+- **`/r` and R-keybind crash during encounters with "Hide whispers from default chat" enabled.** When a whisper arrived while chat was locked (encounter, Mythic+, PvP match) and you hit `/r` or R to reply, WoW would raise `action was blocked... tainted by 'WhisperMessenger'`. Root cause: the addon registered its chat filters via raw `ChatFrame_AddMessageEventFilter`, which tainted Blizzard's filter dispatch table and poisoned `ChatEdit_SetLastTellTarget` on the next whisper. Fixed by routing all register/unregister calls through `securecall` so the mutation happens inside Blizzard's function body.
+- **Stale reply target after leaving a Mythic+ keystone.** We did not capture whispers during M+ (live chat events are unregistered while suspended), so any cached `lastIncomingWhisperKey` was pre-M+ stale and could misroute a post-M+ `/r` to the wrong conversation. Resume now clears it.
+- **Taint bomb from deferred edit-box close.** `ChatFrame_SendTell` routed into the messenger scheduled a one-tick-later cleanup via `C_Timer.After(0, …)`. If `ENCOUNTER_START` fired between the schedule and the callback, the cleanup ran inside the encounter and tainted Blizzard's secure reply path. The deferred callback now re-checks `isCompetitiveContent` at fire time and bails before touching the edit box.
+
+### Added
+
+- **Midnight (12.0) `C_RestrictedActions` integration.** Subscribes to `ADDON_RESTRICTION_STATE_CHANGED` and stores state from the event payload — never re-queries the API during dispatch (the API returns false during its own event). Drives the authoritative competitive-content gate on 12.0+, with full fallback to `InCombatLockdown` / `IsEncounterInProgress` / `C_ChallengeMode.IsChallengeModeActive` on The War Within (11.x) clients. The event is unregistered during Mythic+ suspend so our handler does not run inside Blizzard's restricted event dispatch.
+- **`/wr` and `/wreply` slash commands.** Taint-safe replacement for Blizzard's `/r` during (or after) Mythic+. Opens the messenger focused on your most recent incoming whisper and focuses the composer. Unlike `/r`, it does not go through `ChatEdit_SetLastTellTarget` / `GetLastTellTarget` so it works even after Blizzard's `chatEditLastTell` has been tainted by a during-M+ secret-string sender.
+- **Automatic R-key override when "Hide whispers from default chat" is on.** A hidden `SecureActionButton` with `macrotext=/wr` is created on load; whenever the setting is enabled, we call `SetOverrideBindingClick(button, true, "R", …)` so the R key fires our messenger reply instead of Blizzard's tainted `ReplyTell`. When the setting is turned off, `ClearOverrideBindings` restores Blizzard's default. Users who bound R to something other than REPLY will see it temporarily redirected while hide-whispers is on — toggling the setting off gives them their binding back.
+
+### Fixed (additional)
+
+- **OnUpdate poller no longer reads Blizzard edit boxes during competitive content.** The combat-draft-marking path touched `ChatFrame*EditBox` attributes before the suspend/competitive check, risking cross-frame taint propagation into Blizzard's next call on the same frame. Hard-bail moved to the top of the OnUpdate handler.
+- **Removed `hooksecurefunc` on `ChatFrame_ReplyTell` / `ChatFrame_ReplyTell2`.** When Blizzard's own `ReplyTell` body errored on a tainted `chatEditLastTell` (after receiving a whisper during M+), WoW's taint system attributed the crash to WhisperMessenger for merely having a hook attached — even though our suffix never executed. Hooks removed; reply via `/wr` or the messenger window instead. Blizzard's R-keybind is now cleanly attributed to Blizzard when it crashes on its own tainted state.
+
+### Known limitations
+
+- **`/r` and R-key are incompatible with "Hide whispers from default chat" in Midnight (12.0).** The chat filter closure that suppresses whispers from the default chat runs in Blizzard's event-dispatch stack; 12.0's secret-value propagation marks any subsequent `SetLastTellTarget` write on that stack as tainted by us, so Blizzard's later `GetLastTellTarget` on `/r` or R crashes. There is no taint-safe alternative within the `AddMessageEventFilter` API. Workflow while the setting is on:
+  - Use **`/wr`** (or bind `/wr` to R via macro) to reply — routes through our messenger and `runtime.lastIncomingWhisperKey`, bypassing Blizzard's tainted `chatEditLastTell`.
+  - The Behavior settings tooltip for "Hide whispers from default chat" now carries this disclaimer.
+  - On entering Mythic+ with the setting enabled, the addon prints a one-time `/r and R-key may fail… use /wr` reminder so the limitation is visible in context.
+
+
 ## [1.1.6] - 2026-04-12
 
 ### Changed

@@ -130,4 +130,71 @@ return function()
     assert(a.text == "sell stuff", "Arthas message mismatch")
     assert(j.text == "LFG keys", "Jaina message mismatch")
   end
+
+  -- test_restore_rebuilds_indexes_and_prunes_expired_entries
+  do
+    local restored = ChannelMessageStore.Restore({
+      entries = {
+        ["arthas-area52"] = {
+          text = "fresh post",
+          channelLabel = "Trade",
+          playerName = "Arthas-Area52",
+          sentAt = 5000,
+        },
+        ["jaina-proudmoore"] = {
+          text = "stale post",
+          channelLabel = "General",
+          playerName = "Jaina-Proudmoore",
+          sentAt = 1000,
+        },
+      },
+    }, nil, 6000)
+
+    local fresh = ChannelMessageStore.GetLatest(restored, "arthas")
+    local stale = ChannelMessageStore.GetLatest(restored, "jaina-proudmoore", 6000)
+
+    assert(fresh ~= nil, "fresh entry should survive restore")
+    assert(fresh.text == "fresh post", "restored text mismatch")
+    assert(stale == nil, "expired entry should be pruned during restore")
+  end
+
+  -- test_record_assigns_sequence_for_equal_timestamp_tiebreaks
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Thrall-Area52", "area52 post", "Trade", 1000)
+    ChannelMessageStore.Record(state, "Thrall-Draenor", "draenor post", "Trade", 1000)
+
+    local first = state.entries["thrall-area52"]
+    local second = state.entries["thrall-draenor"]
+    assert(type(first.sequence) == "number", "first entry should record a sequence number")
+    assert(type(second.sequence) == "number", "second entry should record a sequence number")
+    assert(second.sequence > first.sequence, "later entry should have a higher sequence number")
+  end
+
+  -- test_restore_uses_sequence_for_equal_timestamp_base_fallback
+  do
+    local restored = ChannelMessageStore.Restore({
+      nextSequence = 2,
+      entries = {
+        ["thrall-area52"] = {
+          text = "area52 post",
+          channelLabel = "Trade",
+          playerName = "Thrall-Area52",
+          sentAt = 1000,
+          sequence = 1,
+        },
+        ["thrall-draenor"] = {
+          text = "draenor post",
+          channelLabel = "Trade",
+          playerName = "Thrall-Draenor",
+          sentAt = 1000,
+          sequence = 2,
+        },
+      },
+    }, nil, 1000)
+
+    local entry = ChannelMessageStore.GetLatest(restored, "thrall", 1000)
+    assert(entry ~= nil, "expected base-name fallback to survive restore")
+    assert(entry.text == "draenor post", "restore should prefer the higher sequence for equal timestamps")
+  end
 end

@@ -59,7 +59,10 @@ function Bootstrap.Initialize(factory, options)
 
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
+  local RestrictedActions =
+    loadModule("WhisperMessenger.Core.Bootstrap.RestrictedActions", "BootstrapRestrictedActions")
   local ChatFilters = loadModule("WhisperMessenger.Core.Bootstrap.ChatFilters", "BootstrapChatFilters")
+  local ReplyKeyBinder = loadModule("WhisperMessenger.Core.Bootstrap.ReplyKeyBinder", "BootstrapReplyKeyBinder")
   local MythicSuspendController =
     loadModule("WhisperMessenger.Core.Bootstrap.MythicSuspendController", "BootstrapMythicSuspendController")
   local WindowRuntime = loadModule("WhisperMessenger.Core.Bootstrap.WindowRuntime", "BootstrapWindowRuntime")
@@ -136,11 +139,23 @@ function Bootstrap.Initialize(factory, options)
     trace = trace,
   })
 
+  -- 12.0+ authoritative restriction cache, populated from
+  -- ADDON_RESTRICTION_STATE_CHANGED payload. On pre-12.0 clients the
+  -- instance exists but never receives events — isCompetitive falls back
+  -- to the legacy flag model below.
+  runtime.restrictedActions = RestrictedActions.New()
+
   runtime.isCompetitiveContent = function()
+    if runtime.restrictedActions and runtime.restrictedActions.isCompetitive() then
+      return true
+    end
     return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
   end
 
   runtime.isMythicLockdown = function()
+    if runtime.restrictedActions and runtime.restrictedActions.isMythic() then
+      return true
+    end
     return Bootstrap._inMythicContent == true
   end
 
@@ -182,9 +197,69 @@ function Bootstrap.Initialize(factory, options)
 
   runtime.syncChatFilters = Bootstrap.syncChatFilters
 
+  -- Option B: when hideFromDefaultChat is on, override R to fire /wr
+  -- through a SecureActionButton so Blizzard's tainted ReplyTell never runs.
+  local replyKeyBinder = ReplyKeyBinder.New({
+    getSettings = function()
+      return accountState.settings
+    end,
+    isMythic = function()
+      return runtime.isMythicLockdown and runtime.isMythicLockdown() or false
+    end,
+  })
+  runtime.syncReplyKey = replyKeyBinder.sync
+  replyKeyBinder.sync()
+
   SlashCommands.Register({
     toggle = runtime.toggle,
     memoryReport = diagnostics.memoryReport,
+    replyToLast = function()
+      -- Taint-safe /r replacement. Routes through our own messenger instead
+      -- of Blizzard's chatEditLastTell.
+      --
+      -- Priority:
+      --   1. Live lastIncomingWhisperKey via onReplyTell (composer focus).
+      --   2. Most-recent conversation from our store (post-M+ resume,
+      --      fresh session, whispers received before addon loaded).
+      --   3. Fallback: toggle the messenger open so something happens.
+      --
+      -- In competitive content we skip onReplyTell (it bails for focus-
+      -- steal avoidance) and open+select directly so the user at least
+      -- sees the conversation context; composer stays disabled via the
+      -- mythic-pause notice.
+      local hooks = runtime.autoOpenHooks
+      if hooks and hooks.onReplyTell and hooks.onReplyTell() == true then
+        return
+      end
+
+      local key = runtime.lastIncomingWhisperKey
+      if not key and runtime.store and runtime.store.conversations then
+        local latest = -1
+        for k, conv in pairs(runtime.store.conversations) do
+          local activity = conv and conv.lastActivityAt or 0
+          if activity > latest then
+            latest = activity
+            key = k
+          end
+        end
+      end
+
+      if key and runtime.ensureWindow and runtime.setWindowVisible then
+        runtime.ensureWindow()
+        runtime.setWindowVisible(true)
+        if windowRuntime.selectConversation then
+          windowRuntime.selectConversation(key)
+        end
+        return
+      end
+
+      if runtime.toggle then
+        runtime.toggle()
+      end
+      if type(_G.print) == "function" and not key then
+        _G.print("|cff888888[WhisperMessenger]|r No conversations yet — opened the messenger.")
+      end
+    end,
   })
 
   trace("initialize complete")

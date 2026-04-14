@@ -1,5 +1,7 @@
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local Router = require("WhisperMessenger.Core.EventRouter")
+local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
+local ChannelMessageStore = require("WhisperMessenger.Model.ChannelMessageStore")
 local FakeUI = require("tests.helpers.fake_ui")
 
 return function()
@@ -53,6 +55,15 @@ return function()
 
   assert(accountState.conversations["wow::WOW::jaina-proudmoore"].unreadCount == 1)
 
+  EventBridge.RouteChannelEvent(
+    arthasRuntime,
+    "CHAT_MSG_CHANNEL",
+    "WTS [Thunderfury] 50k",
+    "Jaina-Proudmoore",
+    "",
+    "2. Trade - Stormwind City"
+  )
+
   local thrallCharacterState = {
     window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
     icon = { x = 0, y = 0 },
@@ -73,10 +84,12 @@ return function()
   })
 
   assert(thrallRuntime.localProfileId == "thrall-draenor")
+  local leakedChannelEntry =
+    ChannelMessageStore.GetLatest(thrallRuntime.channelMessageStore, "jaina-proudmoore", arthasRuntime.now())
+  assert(leakedChannelEntry == nil, "expected channel context to stay isolated per profile")
   assert(thrallRuntime.icon.badge.shown == true, "expected badge visible before toggle")
   thrallRuntime.ensureWindow()
   assert(#thrallRuntime.window.contacts.rows == 1)
-
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1

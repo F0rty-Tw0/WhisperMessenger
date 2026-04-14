@@ -6,9 +6,9 @@ end
 local AutoOpenHooks = ns.BootstrapAutoOpenHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps
-    or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop
-    or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
+  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 
 local AutoOpenCoordinator = {}
 
@@ -33,6 +33,7 @@ local function shouldInterceptHook(runtime, deps)
   -- them instead. This ensures the user can always communicate even when
   -- the addon is paused.
   local isCompetitive = runtime.isCompetitiveContent and runtime.isCompetitiveContent()
+  local isVisible = deps.isWindowVisible and deps.isWindowVisible() or false
 
   if isCompetitive then
     return false
@@ -62,10 +63,13 @@ local function installDirectHooks(runtime, hooks, deps)
 
     -- ChatFrame_SendTell(name, chatFrame) passes the target name directly —
     -- prefer it over reading the edit box attribute, which avoids timing and
-    -- custom-chat-addon edge cases. ChatFrame_ReplyTell/ReplyTell2 take no
-    -- args, so fall back to ChatEdit_GetActiveWindow (currently-open edit box,
-    -- focus-independent) or findFocusedEditBox as a last resort.
-    local target = (type(nameArg) == "string" and nameArg ~= "") and nameArg or nil
+    -- custom-chat-addon edge cases.
+    --
+    -- ChatFrame_ReplyTell/ReplyTell2 do not carry an explicit target. For those
+    -- hooks we must prefer the tracked `lastIncomingWhisperKey`; falling back to
+    -- editBox.tellTarget can reintroduce ambiguous name-based routing.
+    local isReplyHook = type(nameArg) ~= "string" or nameArg == ""
+    local target = (not isReplyHook) and nameArg or nil
 
     local editBox
     if type(_G.ChatEdit_GetActiveWindow) == "function" then
@@ -87,17 +91,21 @@ local function installDirectHooks(runtime, hooks, deps)
         return
       end
       chatType = EditBoxInterop.readEditBoxState(editBox, "chatType")
-      if not target then
+      if not isReplyHook and not target then
         target = EditBoxInterop.readEditBoxState(editBox, "tellTarget")
       end
     end
 
-    if not target or target == "" then
-      return
-    end
-
     local opened = false
-    if chatType == "BN_WHISPER" then
+    if isReplyHook then
+      if type(hooks.onReplyTell) == "function" then
+        opened = hooks.onReplyTell() == true
+      else
+        return
+      end
+    elseif not target or target == "" then
+      return
+    elseif chatType == "BN_WHISPER" then
       pcall(function()
         local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
         if not accountInfo then
@@ -109,9 +117,7 @@ local function installDirectHooks(runtime, hooks, deps)
         end
       end)
     else
-      -- Default path: ChatFrame_SendTell / ReplyTell / ReplyTell2 all mean
-      -- "WoW whisper to target". chatType may be nil here for ReplyTell before
-      -- attributes propagate; treat as WHISPER.
+      -- Default path: ChatFrame_SendTell and resolved whisper targets route by name.
       opened = hooks.onSendTell(target) == true
     end
 
@@ -122,6 +128,12 @@ local function installDirectHooks(runtime, hooks, deps)
       local timer = _G.C_Timer
       if type(timer) == "table" and type(timer.After) == "function" then
         timer.After(0, function()
+          -- Re-check at fire time: ENCOUNTER_START may have activated between
+          -- schedule and dispatch. Any edit-box cleanup now runs inside
+          -- lockdown and taints Blizzard's secure reply path.
+          if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+            return
+          end
           EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat)
         end)
       end
@@ -134,9 +146,14 @@ local function installDirectHooks(runtime, hooks, deps)
     end
   end
 
+  -- Only hook explicit whisper actions (/w target, right-click-Whisper).
+  -- We intentionally do NOT hook ChatFrame_ReplyTell / ChatFrame_ReplyTell2:
+  -- when Blizzard's `chatEditLastTell` holds a secret-string sender captured
+  -- during M+, Blizzard's body errors before our hook suffix fires, and
+  -- WoW's taint system attributes the crash to us for simply having the
+  -- hook attached. Users should use `/wr` (or a macro-bound key) to reply
+  -- after whispers received in restricted content.
   safeHook("ChatFrame_SendTell")
-  safeHook("ChatFrame_ReplyTell")
-  safeHook("ChatFrame_ReplyTell2")
 
   if deps.trace then
     deps.trace("AutoOpen: direct whisper hooks installed")
@@ -153,6 +170,17 @@ local function installPoller(runtime, hooks, deps)
 
   local pollFrame = createFrame("Frame")
   pollFrame:SetScript("OnUpdate", function()
+    -- HARD BAIL before any Blizzard state read. During M+/encounters/PvP,
+    -- any read of a chat edit box attribute can propagate secret-string
+    -- taint into our OnUpdate context and cross-pollute the next Blizzard
+    -- call in the same frame.
+    if deps.isSuspended() then
+      return
+    end
+    if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+      return
+    end
+
     local inCombat = deps.isInCombat and deps.isInCombat()
     if inCombat then
       local focused = EditBoxInterop.findFocusedEditBox(deps)
@@ -164,30 +192,37 @@ local function installPoller(runtime, hooks, deps)
       return
     end
 
-    for index = 1, deps.getNumChatWindows() do
-      local editBox = deps.getEditBox(index)
-      if editBox and editBox:HasFocus() then
-        if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
-          return
-        end
+    local editBox = EditBoxInterop.findFocusedEditBox(deps)
+    if editBox then
+      if EditBoxInterop.shouldPreserveCombatDraft(editBox) then
+        return
+      end
 
+      -- GetText and string comparisons may also return tainted values
+      -- during lockdown; wrap the slash-command guard in pcall so a taint
+      -- error skips the guard rather than crashing the poller.
+      local isNonWhisperSlash = false
+      pcall(function()
         local text = editBox.GetText and editBox:GetText() or ""
         if string.sub(text, 1, 1) == "/" then
           local command = string.lower(string.match(text, "^(/[^%s]*)") or "")
           if command ~= "/w" and command ~= "/whisper" then
-            return
+            isNonWhisperSlash = true
           end
         end
-
-        EditBoxInterop.interceptEditBox(runtime, hooks, {
-          identity = deps.identity,
-          bnetApi = deps.bnetApi,
-          getNumFriends = deps.getNumFriends,
-          deactivateChat = deps.deactivateChat,
-          ensureBattleNetConversation = ConversationOps.ensureBattleNetConversation,
-        }, editBox)
+      end)
+      if isNonWhisperSlash then
         return
       end
+
+      EditBoxInterop.interceptEditBox(runtime, hooks, {
+        identity = deps.identity,
+        bnetApi = deps.bnetApi,
+        getNumFriends = deps.getNumFriends,
+        deactivateChat = deps.deactivateChat,
+        ensureBattleNetConversation = ConversationOps.ensureBattleNetConversation,
+      }, editBox)
+      return
     end
   end)
 
@@ -271,12 +306,12 @@ function AutoOpenCoordinator.Attach(options)
       end,
       bnetApi = options.bnetApi or _G.C_BattleNet,
       getNumFriends = options.BNGetNumFriends
-          or (
-            type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
-            or function()
-              return 0, 0
-            end
-          ),
+        or (
+          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
+          or function()
+            return 0, 0
+          end
+        ),
       deactivateChat = options.ChatEdit_DeactivateChat or _G.ChatEdit_DeactivateChat,
     })
   end

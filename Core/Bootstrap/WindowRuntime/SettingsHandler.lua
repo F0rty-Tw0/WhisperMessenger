@@ -76,8 +76,13 @@ function SettingsHandler.Create(options)
     if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
       timeFormat.Configure({ [key] = persistedValue })
     end
-    if key == "hideFromDefaultChat" and runtime.syncChatFilters then
-      runtime.syncChatFilters()
+    if key == "hideFromDefaultChat" then
+      if runtime.syncChatFilters then
+        runtime.syncChatFilters()
+      end
+      if runtime.syncReplyKey then
+        runtime.syncReplyKey()
+      end
     end
     if
       (

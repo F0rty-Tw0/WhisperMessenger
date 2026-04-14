@@ -179,8 +179,19 @@ end
 function EditBoxInterop.findFocusedEditBox(deps)
   for index = 1, deps.getNumChatWindows() do
     local editBox = deps.getEditBox(index)
-    if editBox and type(editBox.HasFocus) == "function" and editBox:HasFocus() then
-      return editBox
+    if editBox and type(editBox.HasFocus) == "function" then
+      -- HasFocus() may return a secret (tainted) boolean during Mythic+
+      -- lockdown. The boolean test must happen inside pcall so the taint
+      -- error is caught instead of propagating.
+      local ok, focused = pcall(function()
+        if editBox:HasFocus() then
+          return true
+        end
+        return false
+      end)
+      if ok and focused then
+        return editBox
+      end
     end
   end
   return nil

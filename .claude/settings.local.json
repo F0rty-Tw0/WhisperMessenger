@@ -17,7 +17,15 @@
       "Bash(cp Persistence/SavedState/init.lua Persistence/SavedState/SavedState.lua)",
       "Bash(rtk git:*)",
       "Bash(bash scripts/lint.sh)",
-      "Bash(bash scripts/lint.sh --fix)"
+      "Bash(bash scripts/lint.sh --fix)",
+      "Bash(python scripts/run_test.py tests/core/test_mythic_resume_clears_reply_state.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_mythic_suspend_controller.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_chat_filters_securecall.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_auto_open_deferred_close_guard.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_restricted_actions.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_addon_restriction_event.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_slash_reply_command.lua)",
+      "Bash(python scripts/run_test.py tests/core/test_slash_commands.lua)"
     ]
   }
 }

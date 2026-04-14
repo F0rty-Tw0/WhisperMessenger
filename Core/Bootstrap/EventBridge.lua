@@ -222,26 +222,11 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if INCOMING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
     -- Always track the last incoming whisper for reply (R key), even in combat
     runtime.lastIncomingWhisperKey = result.conversationKey
-    -- When we filter whispers from the default chat, WoW's ChatFrame handler
-    -- never runs and the reply target is lost. Restore it here (outside the
-    -- filter context so we don't taint Blizzard's secure execution path).
-    --
-    -- IMPORTANT: We only do this when we are actually filtering (not in
-    -- competitive content or mythic), otherwise Blizzard's own secure
-    -- handler will set the target safely, avoiding "secret string" taint.
-    if
-      runtime.accountState
-      and runtime.accountState.settings
-      and runtime.accountState.settings.hideFromDefaultChat == true
-      and not runtime.isMythicLockdown()
-      and not runtime.isCompetitiveContent()
-      and not _G._wmSuspended
-      and type(_G.ChatEdit_SetLastTellTarget) == "function"
-      and payload.playerName
-    then
-      local tellType = eventName == "CHAT_MSG_BN_WHISPER" and "BN_WHISPER" or "WHISPER"
-      _G.ChatEdit_SetLastTellTarget(payload.playerName, tellType)
-    end
+    -- Do not touch Blizzard's reply-target helpers here. Under the secret-value
+    -- system, mutating default chat reply state from addon code can taint the
+    -- edit box and later break Blizzard reply UI in combat/instance contexts.
+    -- We only need to track `lastIncomingWhisperKey`; the messenger reply hooks
+    -- consume that key directly.
     if
       runtime.accountState
       and runtime.accountState.settings

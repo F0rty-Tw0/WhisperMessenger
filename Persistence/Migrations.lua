@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Migrations = {
-  CURRENT_VERSION = 2,
+  CURRENT_VERSION = 3,
 }
 
 function Migrations.Apply(accountState, schema)
@@ -24,6 +24,10 @@ function Migrations.Apply(accountState, schema)
 
   if accountState.pendingHydration == nil then
     accountState.pendingHydration = {}
+  end
+
+  if accountState.channelMessages == nil then
+    accountState.channelMessages = {}
   end
 
   -- Strip legacy AFK/DND system messages from saved conversations

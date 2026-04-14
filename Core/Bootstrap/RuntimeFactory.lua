@@ -54,6 +54,8 @@ function RuntimeFactory.ResolveLocalProfileId(options)
 end
 
 function RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
+  local nowFn = options.now or currentTime
+  local nowValue = nowFn()
   local saved = accountState.settings or {}
   local messageMaxAge = options.messageMaxAge or saved.messageMaxAge or 86400
   local store = Store.New({
@@ -66,7 +68,12 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   store.conversations = accountState.conversations or {}
   accountState.conversations = store.conversations
 
-  Store.ExpireAll(store, options.now and options.now() or currentTime())
+  Store.ExpireAll(store, nowValue)
+
+  local channelMessagesByProfile = accountState.channelMessages or {}
+  accountState.channelMessages = channelMessagesByProfile
+  local channelMessageStore = ChannelMessageStore.Restore(channelMessagesByProfile[localProfileId], nil, nowValue)
+  channelMessagesByProfile[localProfileId] = channelMessageStore
 
   return {
     accountState = accountState,
@@ -82,9 +89,9 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     localFaction = options.localFaction
       or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
     store = store,
-    channelMessageStore = ChannelMessageStore.New(),
+    channelMessageStore = channelMessageStore,
     queue = Queue.New(),
-    now = options.now or currentTime,
+    now = nowFn,
     isChatMessagingLocked = options.isChatMessagingLocked or function()
       return false
     end,

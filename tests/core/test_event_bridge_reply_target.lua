@@ -12,13 +12,12 @@ return function()
   rawset(_G, "SetCVar", function() end)
 
   -- -----------------------------------------------------------------------
-  -- test_sets_reply_target_for_character_whisper_when_hide_enabled
+  -- test_does_not_touch_blizzard_reply_target_for_character_whisper
   -- -----------------------------------------------------------------------
   do
-    local lastTarget, lastType
-    rawset(_G, "ChatEdit_SetLastTellTarget", function(target, chatType)
-      lastTarget = target
-      lastType = chatType
+    local setLastTellCalled = false
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
+      setLastTellCalled = true
     end)
 
     local runtime = {
@@ -29,6 +28,12 @@ return function()
       end,
       availabilityByGUID = {},
       accountState = { settings = { hideFromDefaultChat = true } },
+      isMythicLockdown = function()
+        return false
+      end,
+      isCompetitiveContent = function()
+        return false
+      end,
     }
 
     EventBridge.RouteLiveEvent(
@@ -49,18 +54,23 @@ return function()
       "Player-1-ABC"
     )
 
-    assert(lastTarget == "Arthas", "test_sets_reply_target_character: expected 'Arthas', got " .. tostring(lastTarget))
-    assert(lastType == "WHISPER", "test_sets_reply_target_character: expected 'WHISPER', got " .. tostring(lastType))
+    assert(
+      setLastTellCalled == false,
+      "character whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead"
+    )
+    assert(
+      runtime.lastIncomingWhisperKey == "wow::WOW::arthas",
+      "expected character whisper to track the exact conversation key for ReplyTell routing"
+    )
   end
 
   -- -----------------------------------------------------------------------
-  -- test_sets_reply_target_for_bnet_whisper_when_hide_enabled
+  -- test_does_not_touch_blizzard_reply_target_for_bnet_whisper
   -- -----------------------------------------------------------------------
   do
-    local lastTarget, lastType
-    rawset(_G, "ChatEdit_SetLastTellTarget", function(target, chatType)
-      lastTarget = target
-      lastType = chatType
+    local setLastTellCalled = false
+    rawset(_G, "ChatEdit_SetLastTellTarget", function()
+      setLastTellCalled = true
     end)
 
     local runtime = {
@@ -73,6 +83,12 @@ return function()
       bnetApi = {},
       playerInfoByGUID = {},
       accountState = { settings = { hideFromDefaultChat = true } },
+      isMythicLockdown = function()
+        return false
+      end,
+      isCompetitiveContent = function()
+        return false
+      end,
     }
 
     EventBridge.RouteLiveEvent(
@@ -94,8 +110,14 @@ return function()
       42
     )
 
-    assert(lastTarget == "Friend", "test_sets_reply_target_bnet: expected 'Friend', got " .. tostring(lastTarget))
-    assert(lastType == "BN_WHISPER", "test_sets_reply_target_bnet: expected 'BN_WHISPER', got " .. tostring(lastType))
+    assert(
+      setLastTellCalled == false,
+      "bn whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead"
+    )
+    assert(
+      runtime.lastIncomingWhisperKey == "bnet::BN::42",
+      "expected BN whisper to track the exact conversation key for ReplyTell routing"
+    )
   end
 
   -- -----------------------------------------------------------------------

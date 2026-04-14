@@ -5,7 +5,7 @@ end
 
 local Constants = {
   ADDON_NAME = addonName or "WhisperMessenger",
-  VERSION = "v1.1.6",
+  VERSION = "v1.1.7",
 
   LIVE_EVENT_NAMES = {
     "CHAT_MSG_WHISPER",
@@ -37,6 +37,7 @@ local Constants = {
     "ENCOUNTER_START",
     "ENCOUNTER_END",
     "ZONE_CHANGED_NEW_AREA",
+    "ADDON_RESTRICTION_STATE_CHANGED",
   },
 
   -- Lifecycle events that must stay registered during mythic lockdown

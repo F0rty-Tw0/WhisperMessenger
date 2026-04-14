@@ -16,14 +16,15 @@ return function()
     hooksecurefunc = _G.hooksecurefunc,
     ChatFrame_SendTell = _G.ChatFrame_SendTell,
     ChatFrame_ReplyTell = _G.ChatFrame_ReplyTell,
+    ChatFrame_ReplyTell2 = _G.ChatFrame_ReplyTell2,
   }
-
   local factory = FakeUI.NewFactory()
   local createdFrames = {}
   local timerCallbacks = {}
   local deactivated = {}
   local composerTexts = {}
   local sendTellCalls = {}
+  local replyTellCalls = {}
   local outgoingCalls = {}
   local selectedConversationKeys = {}
   local autoOpenHookDeps = nil
@@ -108,6 +109,10 @@ return function()
       sendTellCalls[#sendTellCalls + 1] = target
       return sendTellResult
     end,
+    onReplyTell = function()
+      replyTellCalls[#replyTellCalls + 1] = runtime.lastIncomingWhisperKey
+      return runtime.lastIncomingWhisperKey ~= nil
+    end,
   }
 
   local coordinator = AutoOpenCoordinator.Attach({
@@ -186,7 +191,7 @@ return function()
   end)
   _G.ChatFrame_SendTell = function() end
   _G.ChatFrame_ReplyTell = function() end
-
+  _G.ChatFrame_ReplyTell2 = function() end
   coordinator.installDeferredPoller()
   assert(#timerCallbacks == 1 and timerCallbacks[1].delaySeconds == 0, "expected deferred poller timer callback")
 
@@ -275,7 +280,24 @@ return function()
   -- test_direct_hooks_installed_for_whisper_functions
   -- -----------------------------------------------------------------------
   assert(hookedFunctions["ChatFrame_SendTell"] ~= nil, "expected ChatFrame_SendTell to be hooked")
-  assert(hookedFunctions["ChatFrame_ReplyTell"] ~= nil, "expected ChatFrame_ReplyTell to be hooked")
+  -- ChatFrame_ReplyTell / ChatFrame_ReplyTell2 are intentionally NOT hooked.
+  -- When Blizzard's chatEditLastTell is tainted by a secret-string sender
+  -- captured during Mythic+, Blizzard's ReplyTell body errors before our
+  -- hook suffix fires and WoW's taint system attributes the crash to us for
+  -- merely having the hook attached. /wr slash command is the taint-safe
+  -- reply path.
+  assert(
+    hookedFunctions["ChatFrame_ReplyTell"] == nil,
+    "ChatFrame_ReplyTell must NOT be hooked — causes false WhisperMessenger attribution on Blizzard taint"
+  )
+  assert(
+    hookedFunctions["ChatFrame_ReplyTell2"] == nil,
+    "ChatFrame_ReplyTell2 must NOT be hooked — same false-attribution issue"
+  )
+
+  -- Reply-hook scenarios removed: ChatFrame_ReplyTell / ReplyTell2 are no
+  -- longer hooked. The /wr slash command (covered by its own test file) is
+  -- the taint-safe reply path via runtime.lastIncomingWhisperKey.
 
   -- -----------------------------------------------------------------------
   -- test_direct_hook_intercepts_send_tell_with_deferred_close
@@ -563,6 +585,51 @@ return function()
     assert(resumedBox:HasFocus() == false, "expected cleared draft edit box to lose focus once normal routing resumes")
   end
 
+  -- -----------------------------------------------------------------------
+  -- test_poller_tolerates_tainted_has_focus_during_lockdown
+  -- -----------------------------------------------------------------------
+  do
+    local taintedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local taintedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
+    function taintedBox:GetAttribute(key)
+      return taintedAttrState[key]
+    end
+    function taintedBox:SetAttribute(key, value)
+      taintedAttrState[key] = value
+    end
+    taintedBox.chatType = "WHISPER"
+    taintedBox.tellTarget = "Arthas"
+    taintedBox.stickyType = "SAY"
+    taintedBox:SetText("draft")
+    -- Simulate WoW secret-boolean taint: HasFocus() throws when its return
+    -- value is tested in a boolean context. In our test env we approximate
+    -- this by making the call itself throw, which pcall catches identically.
+    taintedBox.HasFocus = function()
+      error("attempt to perform boolean test on a secret boolean value (tainted by 'WhisperMessenger')")
+    end
+    _G.ChatFrame1EditBox = taintedBox
+
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+
+    -- Combat path: findFocusedEditBox should gracefully return nil
+    inCombat = true
+    windowVisible = false
+    local ok1, err1 = pcall(pollFrame.scripts.OnUpdate, pollFrame)
+    assert(ok1, "expected combat poller to survive tainted HasFocus, got: " .. tostring(err1))
+
+    -- Interception path: visible window during combat
+    windowVisible = true
+    local ok2, err2 = pcall(pollFrame.scripts.OnUpdate, pollFrame)
+    assert(ok2, "expected interception poller to survive tainted HasFocus, got: " .. tostring(err2))
+
+    assert(#sendTellCalls == prevSendTellCount, "expected no whisper routing when HasFocus is tainted")
+    assert(#deactivated == prevDeactivatedCount, "expected no edit box close when HasFocus is tainted")
+
+    inCombat = false
+    windowVisible = false
+  end
+
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
   rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)
@@ -576,4 +643,5 @@ return function()
   rawset(_G, "hooksecurefunc", savedGlobals.hooksecurefunc)
   _G.ChatFrame_SendTell = savedGlobals.ChatFrame_SendTell
   _G.ChatFrame_ReplyTell = savedGlobals.ChatFrame_ReplyTell
+  _G.ChatFrame_ReplyTell2 = savedGlobals.ChatFrame_ReplyTell2
 end

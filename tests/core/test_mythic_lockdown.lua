@@ -193,7 +193,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local Constants = require("WhisperMessenger.Core.Constants")
-    assert(Constants.VERSION == "v1.1.4", "VERSION should be v1.1.4, got: " .. tostring(Constants.VERSION))
+    assert(Constants.VERSION == "v1.1.7", "VERSION should be v1.1.7, got: " .. tostring(Constants.VERSION))
   end
 
   -- -----------------------------------------------------------------------

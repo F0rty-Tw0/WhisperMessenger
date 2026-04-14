@@ -36,7 +36,16 @@ function AutoOpenHooks.Create(deps)
     deps.setWindowVisible(true)
     deps.selectConversation(conversationKey)
     if forceFocus then
-      deps.focusComposer()
+      -- Defer focus to the next frame so the triggering keystroke (e.g. R
+      -- bound to /wr) doesn't leak into the composer as a typed character.
+      local timer = _G.C_Timer
+      if type(timer) == "table" and type(timer.After) == "function" then
+        timer.After(0, function()
+          deps.focusComposer()
+        end)
+      else
+        deps.focusComposer()
+      end
     end
   end
 

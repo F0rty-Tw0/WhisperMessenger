@@ -1,4 +1,7 @@
 local SavedState = require("WhisperMessenger.Persistence.SavedState")
+local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
+local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
+local ChannelMessageStore = require("WhisperMessenger.Model.ChannelMessageStore")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 
 return function()
@@ -39,4 +42,36 @@ return function()
   assert(character.window.width == 900)
   assert(character.window.height == 560)
   assert(reloadedCharacter.activeConversationKey == "wow::WOW::jaina-proudmoore")
+
+  -- test_channel_messages_persist_across_relog
+  do
+    local accountState, characterState = SavedState.Initialize(nil, nil, "arthas-area52")
+    local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, "arthas-area52", {
+      now = function()
+        return 5000
+      end,
+    })
+
+    EventBridge.RouteChannelEvent(
+      runtime,
+      "CHAT_MSG_CHANNEL",
+      "WTS [Thunderfury] 50k",
+      "Arthas-Area52",
+      "",
+      "2. Trade - Stormwind City"
+    )
+
+    local reloadedAccount, reloadedCharacterState = SavedState.Initialize(accountState, characterState, "arthas-area52")
+    local reloadedRuntime =
+      RuntimeFactory.CreateRuntimeState(reloadedAccount, reloadedCharacterState, "arthas-area52", {
+        now = function()
+          return 5000
+        end,
+      })
+
+    local entry = ChannelMessageStore.GetLatest(reloadedRuntime.channelMessageStore, "arthas-area52", 5000)
+    assert(entry ~= nil, "expected channel context to survive relog")
+    assert(entry.text == "WTS [Thunderfury] 50k", "reloaded channel text mismatch")
+    assert(entry.channelLabel == "Trade", "reloaded channel label mismatch")
+  end
 end
