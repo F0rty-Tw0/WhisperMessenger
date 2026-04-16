@@ -6,6 +6,8 @@
 
 A messenger-style whisper UI for World of Warcraft. Replaces the default whisper chat with a modern conversation interface — contact list, chat bubbles, unread badges, and more.
 
+![WhisperMessenger preview](.github/assets/preview.png)
+
 > [!WARNING]
 > **Whispers are disabled by Blizzard during competitive content.**
 > WoW blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds, and raid boss encounters. This is a game-level restriction — not a limitation of WhisperMessenger. The addon automatically detects these situations, suspends itself, and resumes when you're done.
