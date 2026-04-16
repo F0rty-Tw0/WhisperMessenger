@@ -84,9 +84,13 @@ return function()
   })
 
   assert(thrallRuntime.localProfileId == "thrall-draenor")
-  local leakedChannelEntry =
+  local sharedChannelEntry =
     ChannelMessageStore.GetLatest(thrallRuntime.channelMessageStore, "jaina-proudmoore", arthasRuntime.now())
-  assert(leakedChannelEntry == nil, "expected channel context to stay isolated per profile")
+  assert(sharedChannelEntry ~= nil, "expected channel context to persist across character switches")
+  assert(
+    sharedChannelEntry.text == "WTS [Thunderfury] 50k",
+    "shared channel text mismatch: " .. tostring(sharedChannelEntry and sharedChannelEntry.text)
+  )
   assert(thrallRuntime.icon.badge.shown == true, "expected badge visible before toggle")
   thrallRuntime.ensureWindow()
   assert(#thrallRuntime.window.contacts.rows == 1)

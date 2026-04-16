@@ -70,10 +70,8 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
 
   Store.ExpireAll(store, nowValue)
 
-  local channelMessagesByProfile = accountState.channelMessages or {}
-  accountState.channelMessages = channelMessagesByProfile
-  local channelMessageStore = ChannelMessageStore.Restore(channelMessagesByProfile[localProfileId], nil, nowValue)
-  channelMessagesByProfile[localProfileId] = channelMessageStore
+  local channelMessageStore = ChannelMessageStore.Restore(accountState.channelMessages, nil, nowValue)
+  accountState.channelMessages = channelMessageStore
 
   return {
     accountState = accountState,

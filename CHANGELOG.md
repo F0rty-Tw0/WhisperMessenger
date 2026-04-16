@@ -1,6 +1,13 @@
 # Changelog
 
 
+## [Unreleased]
+
+### Fixed
+
+- **Channel context (/1, /2, etc.) no longer disappears when switching characters.** Per-channel "last message" snapshots (used by contact rows and conversation context) are now stored at the account level instead of keyed by character profile. Legacy per-profile data is flattened on load — the newest entry per sender wins.
+
+
 ## [1.1.6] - 2026-04-16
 
 ### Added

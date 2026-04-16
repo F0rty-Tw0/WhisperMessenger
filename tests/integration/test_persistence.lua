@@ -74,4 +74,34 @@ return function()
     assert(entry.text == "WTS [Thunderfury] 50k", "reloaded channel text mismatch")
     assert(entry.channelLabel == "Trade", "reloaded channel label mismatch")
   end
+
+  -- test_channel_messages_persist_across_character_switch
+  do
+    local accountState, arthasCharacterState = SavedState.Initialize(nil, nil, "arthas-area52")
+    local arthasRuntime = RuntimeFactory.CreateRuntimeState(accountState, arthasCharacterState, "arthas-area52", {
+      now = function()
+        return 5000
+      end,
+    })
+
+    EventBridge.RouteChannelEvent(
+      arthasRuntime,
+      "CHAT_MSG_CHANNEL",
+      "WTS [Thunderfury] 50k",
+      "Traderjoe-Area52",
+      "",
+      "2. Trade - Stormwind City"
+    )
+
+    local reloadedAccount, thrallCharacterState = SavedState.Initialize(accountState, nil, "thrall-draenor")
+    local thrallRuntime = RuntimeFactory.CreateRuntimeState(reloadedAccount, thrallCharacterState, "thrall-draenor", {
+      now = function()
+        return 5000
+      end,
+    })
+
+    local entry = ChannelMessageStore.GetLatest(thrallRuntime.channelMessageStore, "traderjoe-area52", 5000)
+    assert(entry ~= nil, "expected channel context to persist across character switch")
+    assert(entry.text == "WTS [Thunderfury] 50k", "cross-character channel text mismatch")
+  end
 end
