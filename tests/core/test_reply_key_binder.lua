@@ -75,6 +75,10 @@ return function()
       stubs.frame._clicks ~= nil,
       "secure action button must call RegisterForClicks (required for override-binding dispatch)"
     )
+    assert(
+      stubs.frame._clicks[1] == "AnyDown",
+      "must register for AnyDown — SetOverrideBindingClick dispatches on key-down; AnyUp would miss the click; both would double-fire"
+    )
     assert(#stubs.overrideBindings == 1, "expected one override binding")
     local binding = stubs.overrideBindings[1]
     assert(binding.key == "R", "must override R key, got " .. tostring(binding.key))
@@ -147,10 +151,13 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_sync_unbinds_in_mythic_even_with_hide_from_default_chat_on
+  -- test_sync_stays_bound_in_mythic_when_hide_from_default_chat_on
   -- -----------------------------------------------------------------------
-  -- In Mythic+, our messenger composer is disabled, so R serves no purpose
-  -- through our override. Fall through to Blizzard's default /r.
+  -- We MUST keep R bound to our override even during M+ — Blizzard's
+  -- default /r would crash on chatEditLastTell slots tainted by
+  -- WhisperMessenger from pre-M+ filter-chain interactions. An always-
+  -- bound override that opens our (composer-disabled) messenger is better
+  -- than a guaranteed Lua error every R-press.
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
@@ -168,17 +175,16 @@ return function()
       end,
     })
 
-    binder.sync() -- binds (not mythic)
+    binder.sync()
     assert(#stubs.overrideBindings == 1, "should bind outside mythic")
 
     mythic = true
-    binder.sync() -- mythic entered — should unbind
+    binder.sync()
 
-    assert(#stubs.clearedFor >= 1, "sync must unbind when entering Mythic+")
-
-    mythic = false
-    binder.sync() -- mythic exited — should rebind
-    assert(#stubs.overrideBindings == 2, "sync must rebind when leaving Mythic+")
+    assert(
+      #stubs.clearedFor == 0,
+      "sync must NOT unbind in Mythic+ — falling through to Blizzard /r crashes on pre-seeded taint"
+    )
   end
 
   -- -----------------------------------------------------------------------

@@ -141,6 +141,12 @@ function FakeUI.NewFactory()
       return self.scripts[eventName]
     end
 
+    function frame:HookScript(eventName, handler)
+      self._hookScripts = self._hookScripts or {}
+      self._hookScripts[eventName] = self._hookScripts[eventName] or {}
+      table.insert(self._hookScripts[eventName], handler)
+    end
+
     function frame:SetAlpha(value)
       self.alpha = value
     end
@@ -157,18 +163,25 @@ function FakeUI.NewFactory()
       return self._hasFocus == true
     end
 
+    local function fireScripts(self, eventName)
+      if self.scripts and self.scripts[eventName] then
+        self.scripts[eventName](self)
+      end
+      if self._hookScripts and self._hookScripts[eventName] then
+        for _, fn in ipairs(self._hookScripts[eventName]) do
+          fn(self)
+        end
+      end
+    end
+
     function frame:SetFocus()
       self._hasFocus = true
-      if self.scripts and self.scripts.OnEditFocusGained then
-        self.scripts.OnEditFocusGained(self)
-      end
+      fireScripts(self, "OnEditFocusGained")
     end
 
     function frame:ClearFocus()
       self._hasFocus = false
-      if self.scripts and self.scripts.OnEditFocusLost then
-        self.scripts.OnEditFocusLost(self)
-      end
+      fireScripts(self, "OnEditFocusLost")
     end
 
     function frame:SetScrollChild(child)

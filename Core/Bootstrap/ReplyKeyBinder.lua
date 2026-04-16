@@ -41,10 +41,13 @@ function ReplyKeyBinder.New(deps)
       button:SetAttribute("macrotext", "/wr")
     end
     -- Secure action buttons need RegisterForClicks to actually receive
-    -- click events from SetOverrideBindingClick. Without this the override
-    -- binding succeeds but pressing the key is a silent no-op.
+    -- click events from SetOverrideBindingClick. SetOverrideBindingClick
+    -- dispatches the virtual click on key-DOWN, so register AnyDown only.
+    -- Registering both AnyUp+AnyDown fires the binding twice per keypress;
+    -- the second fire races the newly-focused composer and leaks the
+    -- trigger character into it.
     if button and button.RegisterForClicks then
-      button:RegisterForClicks("AnyUp", "AnyDown")
+      button:RegisterForClicks("AnyDown")
     end
     return button
   end
@@ -75,13 +78,12 @@ function ReplyKeyBinder.New(deps)
 
   function self.sync()
     local settings = getSettings() or {}
-    local isMythic = deps.isMythic and deps.isMythic() or false
-    -- Bind only when hide-whispers is on AND not in Mythic+. In M+ our
-    -- messenger composer is disabled (whispers suspended), so R serves no
-    -- purpose here — let Blizzard's default /r handle it. If Blizzard's
-    -- lastTell is tainted, /r will crash on their side, but that's the
-    -- explicit trade-off.
-    if settings.hideFromDefaultChat == true and not isMythic then
+    -- Bind R whenever hide-whispers is on — regardless of M+ / suspend.
+    -- Letting Blizzard's default /r run in M+ crashes on chatEditLastTell
+    -- that was seeded with WhisperMessenger-attributed taint by the filter
+    -- chain pre-M+. Our messenger opens even when the composer is disabled
+    -- (mythic pause) — strictly better than a Lua error every R-press.
+    if settings.hideFromDefaultChat == true then
       self.bind()
     else
       self.unbind()

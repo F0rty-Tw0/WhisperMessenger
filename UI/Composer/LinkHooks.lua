@@ -61,70 +61,136 @@ local function safeHookGlobal(functionName, handler)
   return ok
 end
 
---- Wrap ChatFrameUtil.GetActiveWindow / ChatEdit_GetActiveWindow:
---- returns our editbox ONLY when it currently has keyboard focus, so item /
---- quest / spell links are only redirected into the messenger composer when
---- the user has actively clicked into it. Otherwise we defer to the original
---- (default chat) so Blizzard's normal "no active chat" behavior applies.
-local function wmGetActiveWindow(original)
-  return function()
-    local result = original and original()
+-- Snapshot originals at module load so we can restore them when no composer
+-- input has focus. We intentionally do NOT install the overrides here —
+-- leaving our function baked into Blizzard's call graph taints every
+-- internal `ChatEdit_GetActiveWindow` query, including the one on the
+-- `OPENCHAT` binding (Enter) path. That crashed `UpdateHeader` arithmetic
+-- with WhisperMessenger attribution on every Enter press and on `/r` after
+-- a post-M+ BN_WHISPER sticky.
+--
+-- Instead, the overrides install on composer focus-gained and restore on
+-- focus-lost. While the composer is focused (user actively composing), any
+-- Blizzard query routes through us and links insert correctly. While it is
+-- unfocused — which is exactly when OPENCHAT and /r fire — Blizzard sees
+-- its own function and runs untainted.
+local originals = {
+  chatEditGetActiveWindow = nil,
+  chatEditInsertLink = nil,
+  chatFrameUtilGetActiveWindow = nil,
+  chatFrameUtilInsertLink = nil,
+  captured = false,
+}
+
+local function captureOriginals()
+  if originals.captured then
+    return
+  end
+  originals.chatEditGetActiveWindow = _G.ChatEdit_GetActiveWindow
+  originals.chatEditInsertLink = _G.ChatEdit_InsertLink
+  local cfu = _G.ChatFrameUtil
+  if type(cfu) == "table" then
+    originals.chatFrameUtilGetActiveWindow = cfu.GetActiveWindow
+    originals.chatFrameUtilInsertLink = cfu.InsertLink
+  end
+  originals.captured = true
+end
+
+local overrideInstalled = false
+
+local function wmGetActiveWindow()
+  local original = originals.chatEditGetActiveWindow or originals.chatFrameUtilGetActiveWindow
+  if original then
+    local result = original()
     if result ~= nil then
       return result
     end
-    local input = findInputForInsertion(false)
-    if input ~= nil and isInputShown(input) and isInputFocused(input) then
-      return input
-    end
-    return nil
   end
+  local input = findInputForInsertion(false)
+  if input ~= nil and isInputShown(input) and isInputFocused(input) then
+    return input
+  end
+  return nil
 end
 
---- Wrap ChatFrameUtil.InsertLink / ChatEdit_InsertLink:
---- tries original first (default chat), then our editbox as fallback — but
---- ONLY when our composer input is the focused widget. Inserting into a
---- visible-but-unfocused input would steal links that the user expected to
---- go to a tooltip / quest log / inspect action.
---- Returns true when handled so callers (quest log, achievement frame, etc.)
---- do not fall through to their default action.
-local function wmInsertLink(original)
-  return function(link)
-    if original then
-      local handled = original(link)
-      if handled then
-        return true
-      end
+local function wmInsertLink(link)
+  local original = originals.chatEditInsertLink or originals.chatFrameUtilInsertLink
+  if original then
+    local handled = original(link)
+    if handled then
+      return true
     end
-    if _G._wmSuspended then
-      return false
-    end
-    if type(link) == "string" and link ~= "" then
-      local inserted = tryInsertLink(link, { allowVisibleWithoutFocus = false })
-      if inserted then
-        return true
-      end
-    end
+  end
+  if _G._wmSuspended then
     return false
   end
-end
-
---- Install overrides at module load time (TOC startup).
---- Modern retail WoW (11.0+) moved chat functions to ChatFrameUtil.
---- Blizzard frames call ChatFrameUtil.InsertLink / ChatFrameUtil.GetActiveWindow
---- directly — the old ChatEdit_* globals are deprecated aliases.
---- We replace BOTH the ChatFrameUtil table entries AND the globals.
-local function installEarlyOverrides()
-  local chatFrameUtil = _G["ChatFrameUtil"]
-  if type(chatFrameUtil) == "table" then
-    chatFrameUtil.GetActiveWindow = wmGetActiveWindow(chatFrameUtil.GetActiveWindow)
-    chatFrameUtil.InsertLink = wmInsertLink(chatFrameUtil.InsertLink)
+  if type(link) == "string" and link ~= "" then
+    if tryInsertLink(link, { allowVisibleWithoutFocus = false }) then
+      return true
+    end
   end
-
-  _G.ChatEdit_GetActiveWindow = wmGetActiveWindow(_G.ChatEdit_GetActiveWindow)
-  _G.ChatEdit_InsertLink = wmInsertLink(_G.ChatEdit_InsertLink)
+  return false
 end
 
-installEarlyOverrides()
+local function installOverrides()
+  if overrideInstalled then
+    return
+  end
+  captureOriginals()
+  _G.ChatEdit_GetActiveWindow = wmGetActiveWindow
+  _G.ChatEdit_InsertLink = wmInsertLink
+  local cfu = _G.ChatFrameUtil
+  if type(cfu) == "table" then
+    cfu.GetActiveWindow = wmGetActiveWindow
+    cfu.InsertLink = wmInsertLink
+  end
+  overrideInstalled = true
+end
+
+local function anyLinkedInputFocused()
+  for _, input in ipairs(linkedInputs) do
+    if input ~= nil and type(input.HasFocus) == "function" and input:HasFocus() then
+      return true
+    end
+  end
+  return false
+end
+
+local function uninstallOverrides()
+  if not overrideInstalled then
+    return
+  end
+  _G.ChatEdit_GetActiveWindow = originals.chatEditGetActiveWindow
+  _G.ChatEdit_InsertLink = originals.chatEditInsertLink
+  local cfu = _G.ChatFrameUtil
+  if type(cfu) == "table" then
+    cfu.GetActiveWindow = originals.chatFrameUtilGetActiveWindow
+    cfu.InsertLink = originals.chatFrameUtilInsertLink
+  end
+  overrideInstalled = false
+end
+
+local function attachFocusGuards(input)
+  if type(input.HookScript) ~= "function" then
+    return
+  end
+  input:HookScript("OnEditFocusGained", function()
+    installOverrides()
+  end)
+  input:HookScript("OnEditFocusLost", function()
+    if not anyLinkedInputFocused() then
+      uninstallOverrides()
+    end
+  end)
+end
+
+-- Exposed for tests so we can drive focus transitions without a real
+-- EditBox.
+LinkHooks._installOverrides = installOverrides
+LinkHooks._uninstallOverrides = uninstallOverrides
+LinkHooks._isOverrideInstalled = function()
+  return overrideInstalled
+end
 
 local function registerLinkHooks()
   if registeredLinkHooks or type(_G.hooksecurefunc) ~= "function" then
@@ -175,6 +241,7 @@ function LinkHooks.RegisterInput(input)
     end
   end
   table.insert(linkedInputs, 1, input)
+  attachFocusGuards(input)
   registerLinkHooks()
 end
 

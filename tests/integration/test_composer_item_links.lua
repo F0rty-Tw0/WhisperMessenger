@@ -50,11 +50,19 @@ return function()
         return self._hasFocus == true
       end)
 
+      local baseSetFocus = frame.SetFocus
       rawset(frame, "SetFocus", function(self)
         self._hasFocus = true
+        if baseSetFocus then
+          baseSetFocus(self)
+        end
       end)
+      local baseClearFocus = frame.ClearFocus
       rawset(frame, "ClearFocus", function(self)
         self._hasFocus = false
+        if baseClearFocus then
+          baseClearFocus(self)
+        end
       end)
 
       rawset(frame, "Insert", function(self, text)
@@ -67,9 +75,11 @@ return function()
   local parent = factory.CreateFrame("Frame", "ComposerParent", nil)
   parent:SetSize(600, 200)
 
-  -- Early overrides installed at module load time (before Composer.Create)
-  assert(type(_G.ChatEdit_GetActiveWindow) == "function", "expected ChatEdit_GetActiveWindow override at load")
-  assert(type(_G.ChatEdit_InsertLink) == "function", "expected ChatEdit_InsertLink override at load")
+  -- Overrides must NOT be installed at module load — Blizzard's OPENCHAT /
+  -- UpdateHeader arithmetic crashes with WhisperMessenger taint attribution
+  -- otherwise. They install on composer focus-gained, restore on focus-lost.
+  local preLoadGetActiveWindow = _G.ChatEdit_GetActiveWindow
+  local preLoadInsertLink = _G.ChatEdit_InsertLink
 
   local composer = Composer.Create(factory, parent, {
     conversationKey = "me::WOW::arthas-area52",
@@ -77,11 +87,22 @@ return function()
     channel = "WOW",
   }, function() end)
 
-  -- ChatEdit_GetActiveWindow returns our input when shown
+  assert(
+    _G.ChatEdit_GetActiveWindow == preLoadGetActiveWindow,
+    "ChatEdit_GetActiveWindow must not be overridden before focus"
+  )
+  assert(_G.ChatEdit_InsertLink == preLoadInsertLink, "ChatEdit_InsertLink must not be overridden before focus")
+
+  -- ChatEdit_GetActiveWindow returns our input when focused (installs override)
   parent:Show()
   composer.frame:Show()
   composer.input:Show()
   composer.input:SetFocus()
+
+  assert(
+    _G.ChatEdit_GetActiveWindow ~= preLoadGetActiveWindow,
+    "ChatEdit_GetActiveWindow should install on focus-gained"
+  )
 
   local activeWindow = _G.ChatEdit_GetActiveWindow()
   assert(activeWindow == composer.input, "expected ChatEdit_GetActiveWindow to return our composer input when visible")

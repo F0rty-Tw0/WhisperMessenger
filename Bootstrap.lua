@@ -227,8 +227,30 @@ function Bootstrap.Initialize(factory, options)
       -- steal avoidance) and open+select directly so the user at least
       -- sees the conversation context; composer stays disabled via the
       -- mythic-pause notice.
+      local function scrubLeakedR()
+        -- Safety-net for the R-override: on key-up after our macro focused
+        -- the composer, the triggering keystroke can leak in as 'r'. One
+        -- frame later, strip it if and only if the text is exactly "r" or
+        -- "R" — so legitimate drafts are never touched.
+        local timer = _G.C_Timer
+        if type(timer) ~= "table" or type(timer.After) ~= "function" then
+          return
+        end
+        timer.After(0, function()
+          local window = runtime.window
+          local input = window and window.composer and window.composer.input
+          if input and input.GetText and input.SetText then
+            local text = input:GetText() or ""
+            if text == "r" or text == "R" then
+              input:SetText("")
+            end
+          end
+        end)
+      end
+
       local hooks = runtime.autoOpenHooks
       if hooks and hooks.onReplyTell and hooks.onReplyTell() == true then
+        scrubLeakedR()
         return
       end
 
@@ -250,6 +272,7 @@ function Bootstrap.Initialize(factory, options)
         if windowRuntime.selectConversation then
           windowRuntime.selectConversation(key)
         end
+        scrubLeakedR()
         return
       end
 

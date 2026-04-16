@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [1.1.8] - 2026-04-16
+
+### Fixed
+
+- **Enter-to-open-chat (and post-Mythic+ `/r`) crashed on `UpdateHeader` arithmetic with WhisperMessenger taint attribution.** `UI/Composer/LinkHooks.lua` replaced `_G.ChatEdit_GetActiveWindow`, `_G.ChatEdit_InsertLink`, `ChatFrameUtil.GetActiveWindow`, and `ChatFrameUtil.InsertLink` at module-load time so shift-click-from-quest-log / achievement / spellbook / bag would route links into our composer. Global/table-entry replacement put our function on Blizzard's secure call stack for every internal "who is the active chat editbox?" query, including the one traversed by `OPENCHAT` → `ActivateChat` → `SetFocus` → `ActivateChat` → `UpdateHeader`. The resulting taint propagated into UpdateHeader's width arithmetic and aborted with `attempt to perform arithmetic on a secret number value (tainted by 'WhisperMessenger')` on every Enter press, and on `/r` when the editbox sticky was left in BN_WHISPER after a during-M+ whisper. `securecall` does not help here — the taint root is Blizzard calling into an addon-defined function, before our body runs. The overrides now install only while the composer input has keyboard focus and restore the originals on focus-lost, so the taint window exists only during active composition and OPENCHAT / `/r` (both fire while the composer is unfocused) see Blizzard's own function untainted.
+
+### Known limitations
+
+- **Shift-click-from-quest-log (and similar UIs) into the messenger composer only works while the composer is already focused.** Previously the addon could accept links even when the composer was visible but unfocused; that capability depended on the module-load override that is no longer taint-safe on 12.0. Click inside the composer first, then shift-click the link. Chat-bubble link clicks (via `SetItemRef`) continue to work regardless of focus.
+
+
 ## [1.1.7] - 2026-04-15
 
 ### Fixed
