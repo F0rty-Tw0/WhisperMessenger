@@ -66,7 +66,10 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_player_entering_world_sets_competitive_in_mythic
+  -- test_player_entering_world_tracks_mythic_separately
+  -- Mythic+ sets _inMythicContent (not _inCompetitiveContent) so the hard
+  -- lockdown is driven by MythicSuspendController / RestrictedActions and
+  -- fires only when the key is actually started, not on mere zone entry.
   -- -----------------------------------------------------------------------
   do
     rawset(_G, "GetInstanceInfo", function()
@@ -76,7 +79,11 @@ return function()
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
-    assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true for mythic keystone")
+    assert(Bootstrap._inMythicContent == true, "should set _inMythicContent=true for mythic keystone")
+    assert(
+      Bootstrap._inCompetitiveContent == false,
+      "should NOT set _inCompetitiveContent for mythic keystone (mythic is separate)"
+    )
   end
 
   -- -----------------------------------------------------------------------

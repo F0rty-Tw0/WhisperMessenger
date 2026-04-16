@@ -30,7 +30,10 @@ return function()
   end) == false, "should return false for Mythic Raid (encounter-based lock)")
 
   -- -----------------------------------------------------------------------
-  -- IsCompetitiveContent — covers mythic + PvP + arena
+  -- IsCompetitiveContent — PvP + arena only. Mythic+ is driven separately
+  -- by IsMythicRestricted + MythicSuspendController so the hard lockdown
+  -- triggers only when the key is actually started, not on mere presence
+  -- at difficulty 8.
   -- -----------------------------------------------------------------------
 
   -- Returns false when getInstanceInfo is nil
@@ -54,12 +57,13 @@ return function()
     return "Raid", "raid", 15
   end) == false, "competitive: should return false for heroic raid")
 
-  -- Returns true for Mythic Keystone
+  -- Returns false for Mythic Keystone — Mythic+ uses IsMythicRestricted +
+  -- MythicSuspendController (fires only when key is started), not this gate
   assert(ContentDetector.IsCompetitiveContent(function()
     return "Dungeon", "party", 8
-  end) == true, "competitive: should return true for Mythic Keystone")
+  end) == false, "competitive: should return false for Mythic Keystone (handled by IsMythicRestricted)")
 
-  -- Returns false for Mythic Raid — now encounter-based, not whole-raid
+  -- Returns false for Mythic Raid — encounter-based, not whole-raid
   assert(ContentDetector.IsCompetitiveContent(function()
     return "Raid", "raid", 16
   end) == false, "competitive: should return false for Mythic Raid")
