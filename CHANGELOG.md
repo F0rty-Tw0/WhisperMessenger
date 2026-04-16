@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **"Double ESC to close" behavior toggle.** New setting under Behavior (default: off). When on, the first ESC press clears focus from the chat input and the second ESC closes the window (via the standard `UISpecialFrames` path). When off, ESC closes the window immediately as before.
+
 ### Changed
 
 - **Messenger window now drops behind other active windows when it loses focus, and jumps to the front when you interact with it.** The idle strata is now `MEDIUM` (matching Blizzard's default UI panels). Clicking anywhere on the messenger frame promotes it to `HIGH` so it sits above other active windows. When the mouse leaves the window and the composer input has no keyboard focus, strata drops back to `MEDIUM` automatically. Tooltips, popups, and dialogs (which use higher strata) continue to layer above it as expected.

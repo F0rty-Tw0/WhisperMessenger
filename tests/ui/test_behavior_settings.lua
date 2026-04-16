@@ -280,6 +280,69 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
+  -- test_double_escape_toggle_exists_and_defaults_off
+  -- -----------------------------------------------------------------------
+  do
+    local config = {}
+    local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.doubleEscapeToggle ~= nil, "test_double_escape_toggle_exists: should expose doubleEscapeToggle")
+
+    local label = nil
+    local row = result.doubleEscapeToggle.row
+    for _, child in ipairs(row.children) do
+      if child.text and string.find(child.text, "Double ESC", 1, true) then
+        label = child.text
+        break
+      end
+    end
+    assert(label ~= nil, "test_double_escape_toggle_exists: label should say 'Double ESC'")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_double_escape_toggle_fires_on_change
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = {}
+    local result = BehaviorSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local onClick = result.doubleEscapeToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "test_double_escape_fires: dot should have OnClick")
+    onClick(result.doubleEscapeToggle.dot)
+    assert(
+      changes.doubleEscapeToClose ~= nil,
+      "test_double_escape_fires: should fire onChange with 'doubleEscapeToClose' key"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_double_escape_included_in_reset
+  -- -----------------------------------------------------------------------
+  do
+    local changes = {}
+    local config = { doubleEscapeToClose = true }
+    local result = BehaviorSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local resetOnClick = result.resetButton:GetScript("OnClick")
+    assert(resetOnClick ~= nil, "test_double_escape_reset: reset button should have OnClick")
+    resetOnClick(result.resetButton)
+
+    assert(
+      changes.doubleEscapeToClose == false,
+      "test_double_escape_reset: reset should set doubleEscapeToClose to false (default)"
+    )
+  end
+
+  -- -----------------------------------------------------------------------
   -- test_profanity_filter_toggle_writes_cvar_on_change
   -- -----------------------------------------------------------------------
   do

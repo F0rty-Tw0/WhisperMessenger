@@ -48,6 +48,7 @@ function SettingsPanels.Create(factory, options)
     autoOpenIncoming = settingsConfig.autoOpenIncoming,
     autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
     scrollToLatestOnOpen = settingsConfig.scrollToLatestOnOpen,
+    doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
   }, onSettingChanged)
 
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {

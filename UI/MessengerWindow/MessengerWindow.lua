@@ -164,7 +164,9 @@ function MessengerWindow.Create(factory, options)
 
   local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...
-  end, closeWindow)
+  end, closeWindow, function()
+    return settingsConfig.doubleEscapeToClose == true
+  end)
   settingsRuntime.setThemeTargets(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)

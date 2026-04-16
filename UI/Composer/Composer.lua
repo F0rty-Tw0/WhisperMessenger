@@ -13,7 +13,7 @@ local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.
 
 local Composer = {}
 
-function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
+function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose)
   local pane = factory.CreateFrame("Frame", nil, parent)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
@@ -161,6 +161,12 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape)
     submitMessage()
   end)
   input:SetScript("OnEscapePressed", function()
+    if getDoubleEscapeToClose and getDoubleEscapeToClose() then
+      if input.ClearFocus then
+        input:ClearFocus()
+      end
+      return
+    end
     if onEscape then
       onEscape()
       return

@@ -20,6 +20,7 @@ local DEFAULTS = {
   autoOpenIncoming = false,
   autoOpenOutgoing = false,
   scrollToLatestOnOpen = true,
+  doubleEscapeToClose = false,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -201,6 +202,23 @@ function BehaviorSettings.Create(factory, parent, config, options)
   )
   scrollToLatestToggle.row:SetPoint("TOPLEFT", autoOpenOutgoingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
+  local doubleEscapeToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Double ESC to close",
+    config.doubleEscapeToClose == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("doubleEscapeToClose", value)
+    end,
+    {
+      "Double ESC to close",
+      "First Esc clears the chat input; second Esc closes the window.",
+    }
+  )
+  doubleEscapeToggle.row:SetPoint("TOPLEFT", scrollToLatestToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
     return {
@@ -218,7 +236,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", scrollToLatestToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", doubleEscapeToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -234,6 +252,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("autoOpenOutgoing", DEFAULTS.autoOpenOutgoing)
     scrollToLatestToggle.setValue(DEFAULTS.scrollToLatestOnOpen)
     onChange("scrollToLatestOnOpen", DEFAULTS.scrollToLatestOnOpen)
+    doubleEscapeToggle.setValue(DEFAULTS.doubleEscapeToClose)
+    onChange("doubleEscapeToClose", DEFAULTS.doubleEscapeToClose)
     profanityFilterToggle.setValue(true)
     if _G.SetCVar then
       _G.SetCVar("profanityFilter", "1")
@@ -258,6 +278,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoOpenIncomingToggle.applyThemeColors(activeToggleColors)
     autoOpenOutgoingToggle.applyThemeColors(activeToggleColors)
     scrollToLatestToggle.applyThemeColors(activeToggleColors)
+    doubleEscapeToggle.applyThemeColors(activeToggleColors)
 
     if resetButton.applyThemeColors then
       resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
@@ -276,6 +297,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoOpenIncomingToggle = autoOpenIncomingToggle,
     autoOpenOutgoingToggle = autoOpenOutgoingToggle,
     scrollToLatestToggle = scrollToLatestToggle,
+    doubleEscapeToggle = doubleEscapeToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }
