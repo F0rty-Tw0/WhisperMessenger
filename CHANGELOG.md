@@ -3,6 +3,9 @@
 
 ## [Unreleased]
 
+
+## [1.1.7] - 2026-04-16
+
 ### Added
 
 - **"Double ESC to close" behavior toggle.** New setting under Behavior (default: off). When on, the first ESC press clears focus from the chat input and the second ESC closes the window (via the standard `UISpecialFrames` path). When off, ESC closes the window immediately as before.
