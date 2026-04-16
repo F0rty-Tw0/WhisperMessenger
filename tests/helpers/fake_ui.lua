@@ -461,6 +461,26 @@ function FakeUI.NewFactory()
       self.enabled = value
     end
 
+    function frame:RegisterEvent(eventName)
+      self.events = self.events or {}
+      self.events[eventName] = true
+    end
+
+    function frame:UnregisterEvent(eventName)
+      if self.events then
+        self.events[eventName] = nil
+      end
+    end
+
+    function frame:RegisterUnitEvent(eventName, unit)
+      self.events = self.events or {}
+      self.events[eventName] = unit or true
+    end
+
+    function frame:IsEventRegistered(eventName)
+      return self.events ~= nil and self.events[eventName] ~= nil
+    end
+
     return frame
   end
 
@@ -541,5 +561,17 @@ _G.C_Timer = _G.C_Timer
       end
     end,
   }
+
+-- Install a default _G.CreateFrame backed by FakeUI.
+-- run_test.py provides a no-op fallback; tests that load the addon's bootstrap
+-- chain (which calls _G.CreateFrame at top level → :RegisterEvent at install
+-- time) need real frame methods. Tests requiring richer behavior may still
+-- rawset their own override before loading the addon.
+do
+  local _sharedFactory = FakeUI.NewFactory()
+  rawset(_G, "CreateFrame", function(frameType, name, parent, template)
+    return _sharedFactory.CreateFrame(frameType, name, parent, template)
+  end)
+end
 
 return FakeUI

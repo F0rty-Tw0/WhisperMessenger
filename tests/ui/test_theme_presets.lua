@@ -19,6 +19,7 @@ return function()
     assert(found.wow_default == true, "test_list_presets: missing wow_default")
     assert(found.elvui_dark == true, "test_list_presets: missing elvui_dark")
     assert(found.plumber_warm == true, "test_list_presets: missing plumber_warm")
+    assert(found.wow_native == true, "test_list_presets: missing wow_native")
   end
 
   do
@@ -166,6 +167,88 @@ return function()
       colorsMatch(Theme.COLORS.text_title, { 1.0, 0.97, 0.92, 1.0 }),
       "test_set_plumber_warm: text_title did not update"
     )
+  end
+
+  do
+    local colorsRef = Theme.COLORS
+    local accentRef = Theme.COLORS.accent
+
+    local ok = Theme.SetPreset("wow_native")
+    assert(ok == true, "test_set_wow_native: expected SetPreset to return true")
+    assert(Theme.GetPreset() == "wow_native", "test_set_wow_native: expected active preset key")
+    assert(Theme.COLORS == colorsRef, "test_set_wow_native: Theme.COLORS table identity must be preserved")
+    assert(Theme.COLORS.accent == accentRef, "test_set_wow_native: color table identity must be preserved")
+
+    -- Blizzard NORMAL_FONT_COLOR (gold) drives accent + emphasis
+    assert(
+      colorsMatch(Theme.COLORS.accent, { 1.00, 0.82, 0.00, 1.0 }),
+      "test_set_wow_native: accent did not update to NORMAL_FONT_COLOR gold"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.text_title, { 1.00, 0.82, 0.00, 1.0 }),
+      "test_set_wow_native: text_title did not update to NORMAL_FONT_COLOR gold"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.contact_selected_border_right, { 1.00, 0.82, 0.00, 1.0 }),
+      "test_set_wow_native: contact_selected_border_right did not track gold accent"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.option_toggle_on, { 1.00, 0.82, 0.00, 1.0 }),
+      "test_set_wow_native: option_toggle_on did not track gold accent"
+    )
+
+    -- HIGHLIGHT_FONT_COLOR drives primary text
+    assert(
+      colorsMatch(Theme.COLORS.text_primary, { 1.00, 1.00, 1.00, 1.0 }),
+      "test_set_wow_native: text_primary did not update to HIGHLIGHT_FONT_COLOR white"
+    )
+
+    -- GRAY_FONT_COLOR drives timestamps
+    assert(
+      colorsMatch(Theme.COLORS.text_timestamp, { 0.50, 0.50, 0.50, 1.0 }),
+      "test_set_wow_native: text_timestamp did not update to GRAY_FONT_COLOR"
+    )
+
+    -- Blizzard standard status colors
+    assert(
+      colorsMatch(Theme.COLORS.online, { 0.10, 1.00, 0.10, 1.0 }),
+      "test_set_wow_native: online did not update to GREEN_FONT_COLOR"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.away, { 1.00, 0.50, 0.25, 1.0 }),
+      "test_set_wow_native: away did not update to ORANGE_FONT_COLOR"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.dnd, { 1.00, 0.10, 0.10, 1.0 }),
+      "test_set_wow_native: dnd did not update to RED_FONT_COLOR"
+    )
+
+    -- Surfaces: near-black like Blizzard chat default
+    assert(
+      colorsMatch(Theme.COLORS.bg_primary, { 0.04, 0.04, 0.06, 0.96 }),
+      "test_set_wow_native: bg_primary did not update to near-black"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.bg_search_input, { 0.06, 0.06, 0.08, 1.0 }),
+      "test_set_wow_native: bg_search_input did not update"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.bg_message_input, { 0.06, 0.06, 0.08, 1.0 }),
+      "test_set_wow_native: bg_message_input did not update"
+    )
+
+    -- Outgoing whisper bubble carries WHISPER magenta tint
+    assert(
+      colorsMatch(Theme.COLORS.bg_bubble_out, { 0.30, 0.13, 0.36, 0.82 }),
+      "test_set_wow_native: bg_bubble_out did not update to whisper-magenta"
+    )
+
+    -- Removed legacy keys must remain absent
+    assert(
+      Theme.COLORS.message_input_border_top == nil,
+      "test_set_wow_native: message_input_border_top should remain absent"
+    )
+    assert(Theme.COLORS.send_button_border == nil, "test_set_wow_native: send_button_border should remain absent")
   end
 
   do

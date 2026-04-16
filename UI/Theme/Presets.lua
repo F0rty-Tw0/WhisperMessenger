@@ -8,6 +8,7 @@ local Presets = {}
 Presets.WOW_DEFAULT = "wow_default"
 Presets.ELVUI_DARK = "elvui_dark"
 Presets.PLUMBER_WARM = "plumber_warm"
+Presets.WOW_NATIVE = "wow_native"
 
 local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
 
@@ -119,6 +120,7 @@ local tokenRoles = {
 local wowTextSecondaryRgb = rgb(0.55, 0.55, 0.62)
 local elvuiTextSecondaryRgb = rgb(0.72, 0.72, 0.74)
 local plumberTextSecondaryRgb = rgb(0.82, 0.72, 0.62)
+local wowNativeTextSecondaryRgb = rgb(1.00, 0.82, 0.00)
 
 local presetRoles = {
   [Presets.WOW_DEFAULT] = mergeRoleSets(
@@ -238,12 +240,52 @@ local presetRoles = {
     },
     makeDividerRoles(rgb(0.42, 0.29, 0.20), 0.78, 0.90, rgb(0.48, 0.34, 0.24), 0.80, 0.08, rgb(0.48, 0.34, 0.24), 0.24)
   ),
+  [Presets.WOW_NATIVE] = mergeRoleSets(
+    {
+      surface_primary = { 0.04, 0.04, 0.06, 0.96 },
+      surface_secondary = { 0.06, 0.06, 0.08, 0.78 },
+      surface_chrome = { 0.05, 0.05, 0.07, 0.92 },
+      contact_hover = { 0.20, 0.16, 0.06, 0.85 },
+      contact_selected = { 0.36, 0.28, 0.06, 0.95 },
+      contact_selected_hover = { 0.44, 0.34, 0.08, 0.98 },
+      contact_pinned = { 0.16, 0.13, 0.04, 0.78 },
+      bubble_in = { 0.08, 0.08, 0.10, 0.92 },
+      bubble_out = { 0.30, 0.13, 0.36, 0.82 },
+      bubble_system = { 0.10, 0.08, 0.04, 0.78 },
+      input_bg = { 0.06, 0.06, 0.08, 1.0 },
+      text_primary = { 1.00, 1.00, 1.00, 1.0 },
+      text_soft = { 0.95, 0.95, 0.95, 1.0 },
+      text_secondary = withAlpha(wowNativeTextSecondaryRgb, 1.0),
+      text_emphasis = { 1.00, 0.82, 0.00, 1.0 },
+      text_system = { 1.00, 1.00, 0.00, 1.0 },
+      text_timestamp = { 0.50, 0.50, 0.50, 1.0 },
+      accent = { 1.00, 0.82, 0.00, 1.0 },
+      accent_soft = { 0.78, 0.36, 0.96, 0.80 },
+      button_fill = { 0.32, 0.24, 0.06, 1.0 },
+      button_fill_hover = { 0.42, 0.32, 0.08, 1.0 },
+      button_disabled = { 0.18, 0.16, 0.10, 0.65 },
+      status_online = { 0.10, 1.00, 0.10, 1.0 },
+      status_offline = { 0.50, 0.50, 0.50, 1.0 },
+      status_away = { 1.00, 0.50, 0.25, 1.0 },
+      status_dnd = { 1.00, 0.10, 0.10, 1.0 },
+      scrollbar = { 0.40, 0.32, 0.10, 0.55 },
+      scrollbar_hover = { 0.55, 0.44, 0.14, 0.75 },
+      option_bg = { 0.08, 0.08, 0.10, 0.92 },
+      toggle_off = { 0.20, 0.18, 0.12, 0.95 },
+      toggle_border = { 1.00, 0.82, 0.00, 0.85 },
+      danger_bg = { 0.45, 0.12, 0.12, 0.80 },
+      danger_hover = { 0.55, 0.16, 0.16, 0.90 },
+      action_icon = withAlpha(wowNativeTextSecondaryRgb, 0.70),
+    },
+    makeDividerRoles(rgb(0.40, 0.32, 0.10), 0.60, 0.95, rgb(0.55, 0.44, 0.14), 0.72, 0.10, rgb(0.60, 0.48, 0.16), 0.30)
+  ),
 }
 
 local presetOrder = {
   Presets.WOW_DEFAULT,
   Presets.ELVUI_DARK,
   Presets.PLUMBER_WARM,
+  Presets.WOW_NATIVE,
 }
 
 local presetData = {}

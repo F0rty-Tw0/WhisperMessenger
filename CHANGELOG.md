@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- **"Azeroth" theme preset (native WoW look — Phase 1).** A new entry in Appearance → Theme Preset that swaps the messenger's palette to Blizzard's native UI colors: gold accents (`NORMAL_FONT_COLOR`), white primary text (`HIGHLIGHT_FONT_COLOR`), grey timestamps (`GRAY_FONT_COLOR`), green/orange/red status dots (`GREEN/ORANGE/RED_FONT_COLOR`), near-black chat surfaces, and whisper-magenta tinted outgoing bubbles. Phase 2 (full Blizzard chrome — backdrops, atlases, scrollbar template) is planned separately.
+
 
 ## [1.1.7] - 2026-04-16
 
