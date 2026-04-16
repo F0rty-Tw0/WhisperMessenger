@@ -122,15 +122,16 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
           -- CanWhisper + opposite faction = cross-faction guild/community member
           item.availability = Availability.FromStatus("XFaction")
         elseif item.availability.status == "WrongFaction" or item.availability.status == "Offline" then
-          -- API returns WrongFaction for all opposite-faction players;
-          -- Offline may be stale — check guild/community presence to distinguish
+          -- API's WrongFaction/Offline for opposite-faction is ambiguous.
+          -- Guild/community presence disambiguates; otherwise faction is the real blocker.
           local presence = PresenceCache.GetPresence(item.guid)
           if presence == "online" then
             item.availability = Availability.FromStatus("XFaction")
           elseif presence == "offline" then
             item.availability = Availability.FromStatus("Offline")
+          else
+            item.availability = Availability.FromStatus("WrongFaction")
           end
-          -- nil = not a member, keep original status
         end
       else
         -- Same faction or unknown faction: WrongFaction (code 2) is ambiguous —
@@ -166,9 +167,11 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
             item.availability = Availability.FromStatus("CanWhisper")
             resolved = true
           end
-          -- 4. Fallback: Unavailable (we can't determine if online or offline)
+          -- 4. Fallback: CanWhisper (optimistic). API's WrongFaction for same-faction
+          -- means "cross-realm unreachable via whisper-check", not a hard whisper block.
+          -- Whispers can still land even without corroborating online proof.
           if not resolved then
-            item.availability = Availability.FromStatus("Unavailable")
+            item.availability = Availability.FromStatus("CanWhisper")
           end
         end
       end

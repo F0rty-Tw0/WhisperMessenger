@@ -223,6 +223,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       return existing
     end
     state.availabilityByGUID[payload.guid] = avail
+    if (existing == nil or existing.status ~= avail.status) and type(state.onAvailabilityChanged) == "function" then
+      state.onAvailabilityChanged(payload.guid)
+    end
     return avail
   end
 

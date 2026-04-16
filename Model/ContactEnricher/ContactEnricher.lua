@@ -31,23 +31,31 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
   -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
     local cached = runtime.availabilityByGUID[conversation.guid]
-    if cached.status == "WrongFaction" then
-      local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-      if AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction) then
-        -- Opposite faction: check guild/community presence
-        local presence = PresenceCache.GetPresence(conversation.guid)
+    local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+    local isOpposite = AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction)
+    local presence = PresenceCache.GetPresence(conversation.guid)
+
+    if isOpposite then
+      if cached.status == "CanWhisper" then
+        return Availability.FromStatus("XFaction")
+      elseif cached.status == "WrongFaction" or cached.status == "Offline" then
         if presence == "online" then
           return Availability.FromStatus("XFaction")
+        elseif presence == "offline" then
+          return Availability.FromStatus("Offline")
         end
-        return cached
-      else
-        -- Same faction or unknown: WrongFaction means offline unless guild/community says online
-        local presence = PresenceCache.GetPresence(conversation.guid)
-        if presence == "online" then
-          return Availability.FromStatus("CanWhisper")
-        end
+        return Availability.FromStatus("WrongFaction")
+      end
+      return cached
+    end
+
+    if cached.status == "WrongFaction" then
+      if presence == "online" then
+        return Availability.FromStatus("CanWhisper")
+      elseif presence == "offline" then
         return Availability.FromStatus("Offline")
       end
+      return Availability.FromStatus("CanWhisper")
     end
     return cached
   end

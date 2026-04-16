@@ -7,6 +7,10 @@ local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.Co
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 
+local STATUS_REFRESH_INTERVAL = 30
+local AVAILABILITY_THROTTLE_SECONDS = 10
+local AVAILABILITY_REFRESH_DEBOUNCE = 0.15
+
 local WindowCoordinator = {}
 
 function WindowCoordinator.Create(options)
@@ -29,6 +33,10 @@ function WindowCoordinator.Create(options)
     return false
   end
   local presenceCache = options.presenceCache
+  local requestAvailability = options.requestAvailability or WhisperGateway.RequestAvailability
+  local cTimer = options.cTimer or _G.C_Timer
+
+  local statusTicker = nil
 
   local coordinator = {}
 
@@ -43,6 +51,34 @@ function WindowCoordinator.Create(options)
     end
 
     return window.frame.shown == true
+  end
+
+  local function nowSeconds()
+    if type(runtime.now) == "function" then
+      return runtime.now() or 0
+    end
+    return 0
+  end
+
+  local function startStatusTicker()
+    if statusTicker or cTimer == nil or type(cTimer.NewTicker) ~= "function" then
+      return
+    end
+    statusTicker = cTimer.NewTicker(STATUS_REFRESH_INTERVAL, function()
+      if coordinator.isWindowVisible() then
+        coordinator.refreshContacts()
+      end
+    end)
+  end
+
+  local function stopStatusTicker()
+    if statusTicker == nil then
+      return
+    end
+    if type(statusTicker.Cancel) == "function" then
+      statusTicker:Cancel()
+    end
+    statusTicker = nil
   end
 
   function coordinator.setWindowVisible(nextVisible)
@@ -64,9 +100,11 @@ function WindowCoordinator.Create(options)
       if not settings or settings.scrollToLatestOnOpen ~= false then
         coordinator.refreshWindow()
       end
+      startStatusTicker()
       return
     end
 
+    stopStatusTicker()
     window.frame:Hide()
   end
 
@@ -78,13 +116,19 @@ function WindowCoordinator.Create(options)
     local freshContacts = buildContacts()
 
     if not isMythicRestricted() then
+      runtime.availabilityRequestedAt = runtime.availabilityRequestedAt or {}
+      local now = nowSeconds()
       for _, item in ipairs(freshContacts) do
         if
           item.channel == "WOW"
           and item.guid
           and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
         then
-          WhisperGateway.RequestAvailability(runtime.chatApi, item.guid)
+          local lastAt = runtime.availabilityRequestedAt[item.guid] or 0
+          if now - lastAt >= AVAILABILITY_THROTTLE_SECONDS then
+            runtime.availabilityRequestedAt[item.guid] = now
+            requestAvailability(runtime.chatApi, item.guid)
+          end
         end
       end
     end
@@ -107,6 +151,26 @@ function WindowCoordinator.Create(options)
     end
 
     return nextState
+  end
+
+  local refreshScheduled = false
+
+  function coordinator.scheduleAvailabilityRefresh(_guid)
+    if refreshScheduled or not coordinator.isWindowVisible() then
+      return
+    end
+    refreshScheduled = true
+    if cTimer and type(cTimer.After) == "function" then
+      cTimer.After(AVAILABILITY_REFRESH_DEBOUNCE, function()
+        refreshScheduled = false
+        if coordinator.isWindowVisible() then
+          coordinator.refreshWindow()
+        end
+      end)
+    else
+      refreshScheduled = false
+      coordinator.refreshWindow()
+    end
   end
 
   function coordinator.findLatestUnreadKey()

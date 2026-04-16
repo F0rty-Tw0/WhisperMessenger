@@ -13,6 +13,10 @@
 
 ### Fixed
 
+- **Contact statuses now refresh when you open the messenger or click a contact.** Previously, availability (CanWhisper / Offline / WrongFaction / Away / Busy) only updated after you sent a whisper — opening the window or selecting a contact fired the request but never re-rendered when the async response arrived. Status responses now trigger a debounced window refresh when they actually change a contact's state, so the list updates live.
+- **Contact statuses stay fresh while the window is open.** A 30-second background refresh ticks while the messenger is visible and cancels when you close it. Each WoW contact is re-queried at most once every 10 seconds to avoid API thrash. BNet contacts keep their existing push-event path (`BN_FRIEND_INFO_CHANGED`).
+- **Same-faction cross-realm contacts no longer show "Unavailable" when they're actually reachable.** The WoW whisper-availability API returns "WrongFaction" as a generic cross-realm/unreachable signal for same-faction players too. When we have no corroborating presence data (not in guild/community/party/BNet), the contact now defaults to online/CanWhisper instead of a grey "Unavailable" state — whispers will still reach them.
+- **Opposite-faction contacts no longer show as "Offline" when the API response is ambiguous.** When the API returns "Offline" for a known opposite-faction contact and we can't confirm online/offline via guild or community presence, the status now shows "WrongFaction" (the real reason you can't whisper them), not "Offline".
 - **Channel context (/1, /2, etc.) no longer disappears when switching characters.** Per-channel "last message" snapshots (used by contact rows and conversation context) are now stored at the account level instead of keyed by character profile. Legacy per-profile data is flattened on load — the newest entry per sender wins.
 
 

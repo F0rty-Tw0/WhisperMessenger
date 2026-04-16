@@ -82,6 +82,8 @@ function WindowRuntime.Create(options)
     presenceCache = presenceCache,
   })
 
+  runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
+
   local controller = {}
 
   local function setWindowVisible(nextVisible)

@@ -123,8 +123,10 @@ return function()
     assert(result == nil, "should return nil when no status available")
   end
 
-  -- BuildConversationStatus: corrects WrongFaction to Offline for same-faction WoW contact
+  -- BuildConversationStatus: same-faction WrongFaction with no corroboration defaults to CanWhisper (optimistic)
   do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
     local runtime = makeRuntime({
       availabilityByGUID = { ["guid-sf"] = { status = "WrongFaction", canWhisper = false } },
       localFaction = "Horde",
@@ -133,8 +135,26 @@ return function()
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-sf", conversation)
     assert(result ~= nil, "same-faction WrongFaction should return a status")
     assert(
-      result.status == "Offline",
-      "same-faction WrongFaction should be corrected to Offline, got: " .. tostring(result.status)
+      result.status == "CanWhisper",
+      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
+        .. tostring(result.status)
+    )
+  end
+
+  -- BuildConversationStatus: opposite-faction cached Offline without corroboration becomes WrongFaction
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local runtime = makeRuntime({
+      availabilityByGUID = { ["guid-opp-off2"] = { status = "Offline", canWhisper = false } },
+      localFaction = "Alliance",
+    })
+    local conversation = { guid = "guid-opp-off2", factionName = "Horde", channel = "WOW" }
+    local result = ContactEnricher.BuildConversationStatus(runtime, "key-opp", conversation)
+    assert(result ~= nil, "opposite-faction Offline should return a status")
+    assert(
+      result.status == "WrongFaction",
+      "opposite-faction Offline without corroboration should become WrongFaction, got: " .. tostring(result.status)
     )
   end
 
@@ -618,7 +638,8 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: same faction WrongFaction without guild defaults to Unavailable
+  -- EnrichContactsAvailability: same-faction WrongFaction without corroboration defaults to CanWhisper
+  -- (API's WrongFaction for same-faction = cross-realm unreachable; whispers still land, so show optimistic)
   do
     local runtime = makeRuntime({
       localFaction = "Alliance",
@@ -631,8 +652,30 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
-      contacts[1].availability.status == "Unavailable",
-      "same faction WrongFaction without guild should become Unavailable, got: "
+      contacts[1].availability.status == "CanWhisper",
+      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
+        .. tostring(contacts[1].availability.status)
+    )
+  end
+
+  -- EnrichContactsAvailability: opposite-faction Offline without corroboration becomes WrongFaction
+  -- (API's Offline for opposite-faction is ambiguous — faction is the real unreachability reason)
+  do
+    PresenceCache._reset()
+    PresenceCache._setCache({})
+    local runtime = makeRuntime({
+      localFaction = "Alliance",
+      availabilityByGUID = {
+        ["guid-opp-off"] = { status = "Offline", canWhisper = false },
+      },
+    })
+    local contacts = {
+      { guid = "guid-opp-off", channel = "WOW", factionName = "Horde" },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].availability.status == "WrongFaction",
+      "opposite-faction Offline without corroboration should become WrongFaction (not Offline), got: "
         .. tostring(contacts[1].availability.status)
     )
   end
@@ -838,8 +881,8 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: WrongFaction with nil faction defaults to Offline (same-faction path)
-  -- (nil faction treated as unknown/same-faction; WrongFaction → Unavailable when no other data)
+  -- EnrichContactsAvailability: WrongFaction with nil faction defaults to CanWhisper (same-faction path, optimistic)
+  -- (nil faction treated as unknown/same-faction; WrongFaction → CanWhisper when no proof of offline)
   do
     PresenceCache._reset()
     PresenceCache._setCache({})
@@ -858,8 +901,8 @@ return function()
       "WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
     )
     assert(
-      contacts[1].availability.status == "Unavailable",
-      "nil faction WrongFaction should become Unavailable (same-faction path), got: "
+      contacts[1].availability.status == "CanWhisper",
+      "nil faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
         .. tostring(contacts[1].availability.status)
     )
   end

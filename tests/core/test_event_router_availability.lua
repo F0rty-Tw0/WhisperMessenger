@@ -226,6 +226,79 @@ return function()
     assert(conv.unreadCount == 0, "replying should clear unread count, got: " .. tostring(conv.unreadCount))
   end
 
+  -- CAN_LOCAL_WHISPER_TARGET_RESPONSE fires onAvailabilityChanged hook on status change
+  do
+    local state = makeState()
+    local hookCalls = {}
+    state.onAvailabilityChanged = function(guid)
+      table.insert(hookCalls, guid)
+    end
+
+    -- First response establishes initial status → hook fires
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
+      guid = "Player-1084-0ABC0001",
+      status = "CanWhisper",
+      rawStatus = 0,
+    })
+    assert(#hookCalls == 1, "hook should fire on first response, got: " .. tostring(#hookCalls))
+    assert(hookCalls[1] == "Player-1084-0ABC0001", "hook should receive guid")
+
+    -- Repeat response with identical status → hook should NOT re-fire
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
+      guid = "Player-1084-0ABC0001",
+      status = "CanWhisper",
+      rawStatus = 0,
+    })
+    assert(#hookCalls == 1, "hook should not re-fire on identical status, got: " .. tostring(#hookCalls))
+
+    -- Status flip → hook fires again
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
+      guid = "Player-1084-0ABC0001",
+      status = "Offline",
+      rawStatus = 1,
+    })
+    assert(#hookCalls == 2, "hook should fire on status change, got: " .. tostring(#hookCalls))
+    assert(hookCalls[2] == "Player-1084-0ABC0001", "hook should receive guid on change")
+  end
+
+  -- confirmedByWhisper guard short-circuits BEFORE hook fires
+  do
+    local state = makeState()
+    local hookCalls = {}
+    state.onAvailabilityChanged = function(guid)
+      table.insert(hookCalls, guid)
+    end
+    state.availabilityByGUID["Player-1084-0ABC0002"] = {
+      status = "CanWhisper",
+      canWhisper = true,
+      confirmedByWhisper = true,
+    }
+
+    -- Async API returns WrongFaction, but we keep confirmedByWhisper state
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
+      guid = "Player-1084-0ABC0002",
+      status = "WrongFaction",
+      rawStatus = 2,
+    })
+
+    assert(#hookCalls == 0, "hook must not fire when confirmedByWhisper guard keeps existing state")
+  end
+
+  -- Hook absence does not crash the router
+  do
+    local state = makeState()
+    state.onAvailabilityChanged = nil
+
+    Router.HandleEvent(state, "CAN_LOCAL_WHISPER_TARGET_RESPONSE", {
+      guid = "Player-1084-0ABC0003",
+      status = "CanWhisper",
+      rawStatus = 0,
+    })
+
+    local avail = state.availabilityByGUID["Player-1084-0ABC0003"]
+    assert(avail ~= nil and avail.status == "CanWhisper", "availability should still be stored without hook")
+  end
+
   -- BNet outgoing whisper also clears unread count
   do
     local state = makeState()
