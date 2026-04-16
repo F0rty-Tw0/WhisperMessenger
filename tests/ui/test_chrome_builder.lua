@@ -112,6 +112,12 @@ return function()
   assert(tooltipState.hidden == true, "expected tooltip to hide on leave")
   _G.GameTooltip = originalGameTooltip
 
+  assert(
+    chrome.frame.frameStrata == "MEDIUM",
+    "expected window frame strata to be MEDIUM so other active windows can sit on top; got "
+      .. tostring(chrome.frame.frameStrata)
+  )
+
   -- explicit title option overrides Theme.TITLE
   local chrome2 = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, { title = "Custom" })
   assert(chrome2.title.text == "Custom", "expected explicit title override to work")

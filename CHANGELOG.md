@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Messenger window now drops behind other active windows when it loses focus, and jumps to the front when you interact with it.** The idle strata is now `MEDIUM` (matching Blizzard's default UI panels). Clicking anywhere on the messenger frame promotes it to `HIGH` so it sits above other active windows. When the mouse leaves the window and the composer input has no keyboard focus, strata drops back to `MEDIUM` automatically. Tooltips, popups, and dialogs (which use higher strata) continue to layer above it as expected.
+
 ### Fixed
 
 - **Channel context (/1, /2, etc.) no longer disappears when switching characters.** Per-channel "last message" snapshots (used by contact rows and conversation context) are now stored at the account level instead of keyed by character profile. Legacy per-profile data is flattened on load — the newest entry per sender wins.

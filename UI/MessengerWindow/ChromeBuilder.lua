@@ -33,7 +33,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     initialState.y or 0
   )
   if frame.SetFrameStrata then
-    frame:SetFrameStrata("HIGH")
+    frame:SetFrameStrata("MEDIUM")
   end
   frame:SetMovable(true)
   frame:EnableMouse(true)

@@ -17,6 +17,45 @@ function ScriptBindings.Bind(options)
 
   local alphaElapsed = 0
 
+  local function composerHasFocus()
+    local input = options.composerInput
+    if input == nil or type(input.HasFocus) ~= "function" then
+      return false
+    end
+    local ok, focused = pcall(function()
+      return input:HasFocus() == true
+    end)
+    return ok and focused == true
+  end
+
+  local function isMouseOverFrame()
+    if frame == nil or type(frame.IsMouseOver) ~= "function" then
+      return false
+    end
+    local ok, over = pcall(function()
+      return frame:IsMouseOver() == true
+    end)
+    return ok and over == true
+  end
+
+  local function promoteStrata()
+    if frame and type(frame.SetFrameStrata) == "function" then
+      frame:SetFrameStrata("HIGH")
+    end
+    if frame and type(frame.Raise) == "function" then
+      frame:Raise()
+    end
+  end
+
+  local function demoteStrataIfIdle()
+    if composerHasFocus() or isMouseOverFrame() then
+      return
+    end
+    if frame and type(frame.SetFrameStrata) == "function" then
+      frame:SetFrameStrata("MEDIUM")
+    end
+  end
+
   if frame and frame.SetScript then
     frame:SetScript("OnShow", function()
       alphaElapsed = 0
@@ -39,6 +78,10 @@ function ScriptBindings.Bind(options)
       options.trace("window hidden")
     end)
 
+    frame:SetScript("OnMouseDown", function()
+      promoteStrata()
+    end)
+
     frame:SetScript("OnEnter", function()
       if windowResize.isResizing() then
         return
@@ -51,6 +94,7 @@ function ScriptBindings.Bind(options)
         return
       end
       options.refreshWindowAlpha()
+      demoteStrataIfIdle()
     end)
 
     frame:SetScript("OnUpdate", function(_, elapsed)
@@ -58,6 +102,7 @@ function ScriptBindings.Bind(options)
       if not windowResize.isResizing() and alphaElapsed >= options.frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
         alphaElapsed = 0
         options.refreshWindowAlpha()
+        demoteStrataIfIdle()
       end
       contactsResize.updateFromCursor()
       windowResize.updateFromCursor()
