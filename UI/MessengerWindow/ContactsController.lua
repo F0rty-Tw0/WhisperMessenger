@@ -54,7 +54,10 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       currentSelectedKey = selectedKey
     end
     if resetPaging then
-      visibleCount = 10
+      -- Drop prior loadMore() expansions but keep the viewport-based floor
+      -- so tall windows still paint a full first page instead of 10 rows.
+      local liveViewportH = contactsView.viewportHeight or viewportH
+      visibleCount = math.max(10, math.ceil(liveViewportH / rowH) + 1)
       ScrollView.SetVerticalScroll(contactsView, 0)
     end
 
