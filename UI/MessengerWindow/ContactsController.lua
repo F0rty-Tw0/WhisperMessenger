@@ -107,11 +107,17 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   controller.loadMore = loadMore
   controller.fillViewport = fillViewport
 
-  -- Infinite scroll: load more contacts when scrolling near the bottom
+  -- Infinite scroll: load more contacts when scrolling near the bottom.
+  -- Require offset > 0 so the trigger only fires in response to an actual
+  -- user scroll. Without this guard, initial Sync calls (which invoke
+  -- SetValue(0) on the scrollBar to mirror the current offset) satisfy the
+  -- `offset >= range - ROW_HEIGHT` check whenever range is less than one
+  -- row height (the +1 visible-row safety margin produces exactly that),
+  -- pumping visibleCount all the way up to #contacts before any user input.
   local function checkLoadMore()
     local range = ScrollView.GetRange(contactsView)
     local offset = ScrollView.GetOffset(contactsView)
-    if range > 0 and offset >= range - Theme.LAYOUT.CONTACT_ROW_HEIGHT then
+    if range > 0 and offset > 0 and offset >= range - Theme.LAYOUT.CONTACT_ROW_HEIGHT then
       loadMore()
     end
   end

@@ -69,16 +69,33 @@ function Metrics.GetRange(view)
     return 0
   end
 
+  -- Prefer the content-vs-viewport math over WoW's GetVerticalScrollRange.
+  -- The native range can be stale when the scroll child was just resized
+  -- (e.g., switching to a conversation with only one message while the
+  -- content was previously tall), which leaves the scrollbar visible for
+  -- a conversation that has no overflow. Our own SetSize on the content
+  -- is authoritative here, and UpdateScrollChildRect keeps WoW in sync for
+  -- scroll positioning even when we skip its range value.
+  local viewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", 0)
+  -- Guard: if the scrollFrame has no measured height (layout hasn't settled
+  -- yet, or the frame is hidden), report no range. Without this guard every
+  -- non-empty content reads as "overflow" because contentHeight > 0 > 0.
+  if viewportHeight <= 0 then
+    return 0
+  end
+  local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
+  local computed = math.max(contentHeight - viewportHeight, 0)
+  if computed > 0 then
+    return computed
+  end
+
   if type(view.scrollFrame.GetVerticalScrollRange) == "function" then
     local range = view.scrollFrame:GetVerticalScrollRange()
     if type(range) == "number" and range > 0 then
       return range
     end
   end
-
-  local viewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", 0)
-  local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
-  return math.max(contentHeight - viewportHeight, 0)
+  return 0
 end
 
 function Metrics.GetOffset(view)
@@ -107,7 +124,10 @@ function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
 
   local viewportHeight = view.viewportHeight or 0
   local nextContentHeight = math.max(viewportHeight, contentHeight or 0)
-  local hasOverflow = (contentHeight or 0) > viewportHeight
+  -- Only treat as overflow if the viewport itself has a real height; during
+  -- lifecycle moments where GetHeight returns 0 (frame not yet shown) every
+  -- non-empty content would otherwise be flagged as overflowing.
+  local hasOverflow = viewportHeight > 0 and (contentHeight or 0) > viewportHeight
 
   applyViewportLayout(view, hasOverflow)
 

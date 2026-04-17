@@ -137,9 +137,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   if contactsView.scrollFrame and contactsView.scrollFrame.SetPoint then
     contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", 0, 0)
   end
-  if contactsView.scrollBar and contactsView.scrollBar.SetPoint then
-    contactsView.scrollBar:SetPoint("BOTTOMLEFT", contactsView.scrollFrame, "BOTTOMRIGHT", 0, 0)
-  end
 
   local contentParent = frame.Inset or frame
   local contactsDivider = contentParent:CreateTexture(nil, "BORDER")
