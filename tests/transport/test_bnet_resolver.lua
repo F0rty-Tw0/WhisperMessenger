@@ -453,6 +453,28 @@ return function()
     assert(result["HasTag#1234"] ~= nil, "should include friend with battleTag")
   end
 
+  -- Regression: GetAccountInfoByID's second arg is a WoW account GUID, not a
+  -- character GUID. Passing the stored character GUID (Player-XXXX-XXXXX) makes
+  -- the API return filtered data with isOnline=nil when the character is not
+  -- currently logged in, even if the BNet friend is online on a different
+  -- character. Never pass a character GUID as wowAccountGUID.
+  do
+    local capturedArgs = {}
+    local api = {
+      GetAccountInfoByID = function(id, maybeWowAccountGuid)
+        table.insert(capturedArgs, { id = id, guidArg = maybeWowAccountGuid })
+        return { bnetAccountID = id, isOnline = true, battleTag = "MrGank#2355" }
+      end,
+    }
+    local info = BNetResolver.ResolveAccountInfo(api, 8, "Player-1305-0D2826FB", "MrGank#2355")
+    assert(info and info.isOnline == true, "should resolve online friend")
+    assert(#capturedArgs >= 1, "GetAccountInfoByID should have been called")
+    assert(
+      capturedArgs[1].guidArg == nil,
+      "must not forward character GUID to GetAccountInfoByID, got: " .. tostring(capturedArgs[1].guidArg)
+    )
+  end
+
   -- NormalizeAvailabilityStatus
   assert(BNetResolver.NormalizeAvailabilityStatus(nil) == nil, "nil should return nil")
   assert(BNetResolver.NormalizeAvailabilityStatus("CanWhisper") == "CanWhisper", "string should pass through")

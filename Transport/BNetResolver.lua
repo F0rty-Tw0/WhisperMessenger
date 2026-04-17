@@ -8,11 +8,16 @@ local BNetResolver = {}
 
 -- Stage 1: Primary lookup by bnetAccountID.
 -- Returns accountInfo, isStaleId.
-local function lookupByAccountId(bnetApi, bnetAccountID, guid, expectedBattleTag)
+-- NOTE: GetAccountInfoByID's second argument is a WoW *account* GUID, not a
+-- character GUID. Passing a character GUID (Player-XXXX-XXXXX) causes the API
+-- to return filtered data with isOnline=nil when that character is not
+-- currently logged in, hiding the friend's actual presence on other characters.
+-- We always omit the second argument to get the friend's primary account state.
+local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTag)
   if type(bnetApi.GetAccountInfoByID) ~= "function" then
     return nil, false
   end
-  local ok, info = pcall(bnetApi.GetAccountInfoByID, bnetAccountID, guid)
+  local ok, info = pcall(bnetApi.GetAccountInfoByID, bnetAccountID)
   if not ok or not info then
     return nil, false
   end
