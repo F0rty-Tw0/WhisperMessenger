@@ -20,6 +20,7 @@ Core/Trace.lua
 Core/Bindings.lua
 Core/Constants.lua
 Core/ContentDetector.lua
+Core/EventUtils.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 

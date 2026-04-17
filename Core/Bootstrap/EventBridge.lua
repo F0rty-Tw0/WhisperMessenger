@@ -10,6 +10,7 @@ local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
+local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
 
 local EventBridge = {}
 
@@ -58,25 +59,14 @@ local function buildLivePayload(runtime, eventName, ...)
   }
 end
 
-local function isUnknownEventError(err)
-  local message = string.lower(tostring(err or ""))
-  return string.find(message, "unknown event", 1, true) ~= nil
+local function traceSkippedEvent(eventName)
+  if Trace then
+    Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
+  end
 end
 
 local function registerEventIfSupported(frame, eventName)
-  local ok, err = pcall(frame.RegisterEvent, frame, eventName)
-  if ok then
-    return true
-  end
-
-  if isUnknownEventError(err) then
-    if Trace then
-      Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
-    end
-    return false
-  end
-
-  error(err)
+  return EventUtils.RegisterEventIfSupported(frame, eventName, traceSkippedEvent)
 end
 
 local function unregisterEventIfSupported(frame, eventName)
@@ -84,14 +74,10 @@ local function unregisterEventIfSupported(frame, eventName)
   if ok then
     return true
   end
-
-  if isUnknownEventError(err) then
-    if Trace then
-      Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
-    end
+  if EventUtils.IsUnknownEventError(err) then
+    traceSkippedEvent(eventName)
     return false
   end
-
   error(err)
 end
 
