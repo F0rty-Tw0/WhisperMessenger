@@ -8,7 +8,7 @@ return function()
   -- test_auto_focus_toggle_label_says_chat_input
 
   do
-    local config = { dimWhenMoving = true, autoFocusComposer = false, autoSelectUnread = true }
+    local config = { dimWhenMoving = true, autoFocusComposer = false }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
     local label = nil

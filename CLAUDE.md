@@ -93,6 +93,19 @@ Rules:
 - **Keep functions small** — if a function exceeds ~40 lines, extract helpers. Each function should do one thing.
 - **No `table.getn` or `#` on sparse tables** — `#` is only reliable on proper sequences (no nil holes).
 
+## Changelog
+
+`CHANGELOG.md` is **player-facing release notes**, not an engineering log. The audience is WoW players browsing CurseForge / Wago — not other developers.
+
+- **Write in plain English.** A player should understand every bullet without knowing any code, module names, or addon internals.
+- **Describe the in-game effect, not the implementation.** Say what the user will now see / can now do / will no longer be broken — not which file changed, which API was introduced, which refactor happened.
+- **Banned in changelog entries:** file paths, module names (`BehaviorSettings`, `WindowCoordinator`, `MessengerWindow`, etc.), function names, API names (`C_ChatInfo`, `SetCVar`, etc.), Lua terms, test names, "refactor", "introduce", "extract", "wire up", "config key", "token". If a sentence only makes sense to someone reading the diff, it doesn't belong here.
+- **One bullet per user-visible change.** Group related fixes into one line if the user would see them as the same thing.
+- **Fixes start with `Fixed:`.** Features and behavior changes don't need a prefix.
+- **Always update `CHANGELOG.md` when behavior, UI, settings, or fixes change** — in the same turn as the code edit. Put the line under `## [Unreleased]` (or the current version section if release prep is already in flight, like 1.1.8 during this session).
+
+When in doubt, read the existing 1.1.0 - 1.1.7 sections — they are the style guide. Match their voice.
+
 ## Project Structure
 
 ```

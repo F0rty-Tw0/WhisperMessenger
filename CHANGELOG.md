@@ -4,6 +4,10 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.1.9] - 2026-04-18
+
+- The messenger now always jumps to the most recent message when you open it, and auto-selects the contact with new unread whispers. The two Behavior toggles for these are removed — they are simply on.
+
 ## [1.1.8] - 2026-04-17
 
 - New Azeroth theme gives the messenger a more native WoW look, with Blizzard-style colors and window styling.

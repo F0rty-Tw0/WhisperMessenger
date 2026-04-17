@@ -96,10 +96,7 @@ function WindowCoordinator.Create(options)
       window.frame:Show()
       -- Re-render after Show so scroll frame dimensions are settled,
       -- allowing snapToEnd to scroll to the latest message.
-      local settings = runtime.accountState and runtime.accountState.settings
-      if not settings or settings.scrollToLatestOnOpen ~= false then
-        coordinator.refreshWindow()
-      end
+      coordinator.refreshWindow()
       startStatusTicker()
       return
     end

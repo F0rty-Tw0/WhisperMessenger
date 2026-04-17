@@ -14,11 +14,9 @@ local PADDING = Theme.CONTENT_PADDING
 local DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
-  autoSelectUnread = true,
   hideFromDefaultChat = false,
   autoOpenIncoming = false,
   autoOpenOutgoing = false,
-  scrollToLatestOnOpen = true,
   doubleEscapeToClose = false,
 }
 
@@ -76,17 +74,6 @@ function BehaviorSettings.Create(factory, parent, config, options)
       },
     },
     {
-      label = "Jump to unread on open",
-      initial = config.autoSelectUnread ~= false,
-      onChange = function(value)
-        onChange("autoSelectUnread", value)
-      end,
-      tooltipLines = {
-        "Jump to unread on open",
-        "Selects the most recent contact with unread messages when you open the messenger.",
-      },
-    },
-    {
       label = "Hide whispers from default chat",
       initial = config.hideFromDefaultChat == true,
       onChange = function(value)
@@ -135,17 +122,6 @@ function BehaviorSettings.Create(factory, parent, config, options)
       },
     },
     {
-      label = "Scroll to latest on open",
-      initial = config.scrollToLatestOnOpen ~= false,
-      onChange = function(value)
-        onChange("scrollToLatestOnOpen", value)
-      end,
-      tooltipLines = {
-        "Scroll to latest on open",
-        "Automatically scrolls to the most recent message when you open the messenger.",
-      },
-    },
-    {
       label = "Double ESC to close",
       initial = config.doubleEscapeToClose == true,
       onChange = function(value)
@@ -161,13 +137,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
   local dimToggle = toggles[1]
   local autoFocusToggle = toggles[2]
-  local autoSelectToggle = toggles[3]
-  local hideFromDefaultChatToggle = toggles[4]
-  local profanityFilterToggle = toggles[5]
-  local autoOpenIncomingToggle = toggles[6]
-  local autoOpenOutgoingToggle = toggles[7]
-  local scrollToLatestToggle = toggles[8]
-  local doubleEscapeToggle = toggles[9]
+  local hideFromDefaultChatToggle = toggles[3]
+  local profanityFilterToggle = toggles[4]
+  local autoOpenIncomingToggle = toggles[5]
+  local autoOpenOutgoingToggle = toggles[6]
+  local doubleEscapeToggle = toggles[7]
 
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
@@ -183,16 +157,12 @@ function BehaviorSettings.Create(factory, parent, config, options)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
     autoFocusToggle.setValue(DEFAULTS.autoFocusComposer)
     onChange("autoFocusComposer", DEFAULTS.autoFocusComposer)
-    autoSelectToggle.setValue(DEFAULTS.autoSelectUnread)
-    onChange("autoSelectUnread", DEFAULTS.autoSelectUnread)
     hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
     onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
     autoOpenIncomingToggle.setValue(DEFAULTS.autoOpenIncoming)
     onChange("autoOpenIncoming", DEFAULTS.autoOpenIncoming)
     autoOpenOutgoingToggle.setValue(DEFAULTS.autoOpenOutgoing)
     onChange("autoOpenOutgoing", DEFAULTS.autoOpenOutgoing)
-    scrollToLatestToggle.setValue(DEFAULTS.scrollToLatestOnOpen)
-    onChange("scrollToLatestOnOpen", DEFAULTS.scrollToLatestOnOpen)
     doubleEscapeToggle.setValue(DEFAULTS.doubleEscapeToClose)
     onChange("doubleEscapeToClose", DEFAULTS.doubleEscapeToClose)
     profanityFilterToggle.setValue(true)
@@ -226,12 +196,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
     frame = frame,
     dimToggle = dimToggle,
     autoFocusToggle = autoFocusToggle,
-    autoSelectToggle = autoSelectToggle,
     hideFromDefaultChatToggle = hideFromDefaultChatToggle,
     profanityFilterToggle = profanityFilterToggle,
     autoOpenIncomingToggle = autoOpenIncomingToggle,
     autoOpenOutgoingToggle = autoOpenOutgoingToggle,
-    scrollToLatestToggle = scrollToLatestToggle,
     doubleEscapeToggle = doubleEscapeToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,

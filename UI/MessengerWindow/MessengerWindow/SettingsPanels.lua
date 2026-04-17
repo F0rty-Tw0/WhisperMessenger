@@ -44,11 +44,9 @@ function SettingsPanels.Create(factory, options)
   local behaviorPanel, behaviorSettings = createSettingsPanel(factory, parent, options.behaviorCreate, {
     dimWhenMoving = settingsConfig.dimWhenMoving,
     autoFocusComposer = settingsConfig.autoFocusComposer,
-    autoSelectUnread = settingsConfig.autoSelectUnread,
     hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
     autoOpenIncoming = settingsConfig.autoOpenIncoming,
     autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
-    scrollToLatestOnOpen = settingsConfig.scrollToLatestOnOpen,
     doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
   }, onSettingChanged)
 
