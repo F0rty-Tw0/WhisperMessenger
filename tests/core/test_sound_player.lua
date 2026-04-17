@@ -1,7 +1,6 @@
 local SoundPlayer = require("WhisperMessenger.Core.SoundPlayer")
 
 return function()
-
   -- test_play_uses_correct_sound_id_for_key
 
   do

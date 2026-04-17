@@ -8,7 +8,6 @@ local function setGameFont(path, size, flags)
   gameFontNormal:SetFont(path, size, flags)
 end
 return function()
-
   -- test_default_mode_on_init
 
   do

@@ -1,7 +1,6 @@
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 return function()
-
   -- test_type_and_state_constants_match_blizzard_enum
 
   do

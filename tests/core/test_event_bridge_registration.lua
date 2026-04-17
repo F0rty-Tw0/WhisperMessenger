@@ -2,7 +2,6 @@ local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 local Trace = require("WhisperMessenger.Core.Trace")
 
 return function()
-
   -- test_register_live_events_skips_unknown_client_events
 
   do

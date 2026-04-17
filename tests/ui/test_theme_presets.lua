@@ -38,11 +38,11 @@ return function()
     )
     assert(colorsMatch(Theme.COLORS.accent, { 0.34, 0.51, 0.90, 1.0 }), "test_set_elvui_dark: accent did not update")
     assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.14, 0.15, 0.18, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_search_input, { 0.09, 0.10, 0.12, 1.0 }),
       "test_set_elvui_dark: bg_search_input did not update"
     )
     assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.14, 0.15, 0.18, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_message_input, { 0.09, 0.10, 0.12, 1.0 }),
       "test_set_elvui_dark: bg_message_input did not update"
     )
     assert(

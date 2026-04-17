@@ -1,7 +1,6 @@
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 
 return function()
-
   -- test_register_routes_through_securecall
 
   -- Raw ChatFrame_AddMessageEventFilter calls taint Blizzard's filter

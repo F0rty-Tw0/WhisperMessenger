@@ -1,7 +1,6 @@
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 return function()
-
   -- test_get_club_members_returns_non_table_does_not_error
 
   do

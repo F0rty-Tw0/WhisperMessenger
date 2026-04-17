@@ -2,7 +2,6 @@ local FakeUI = require("tests.helpers.fake_ui")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 return function()
-
   -- Helpers: stub globals needed by SoundPlayer (called via EventBridge)
 
   local function stubSoundGlobals()

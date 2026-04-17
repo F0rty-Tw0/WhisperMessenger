@@ -2,7 +2,6 @@ local Skins = require("WhisperMessenger.UI.Theme.Skins")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
-
   -- test_list_skins
 
   do

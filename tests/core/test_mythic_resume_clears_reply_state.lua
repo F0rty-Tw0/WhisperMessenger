@@ -1,7 +1,6 @@
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 
 return function()
-
   -- test_resume_clears_stale_last_incoming_whisper_key
 
   -- We did NOT capture whispers during M+ (LIVE_EVENTS were unregistered),

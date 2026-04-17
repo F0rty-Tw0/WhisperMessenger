@@ -10,7 +10,6 @@ local function colorsMatch(actual, expected)
 end
 
 return function()
-
   -- test_list_bubble_presets_returns_keys
 
   do

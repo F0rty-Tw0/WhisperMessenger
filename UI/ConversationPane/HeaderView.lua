@@ -24,14 +24,11 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   options = options or {}
   local HEADER_HEIGHT = options.HEADER_HEIGHT or 36
 
-
   local headerFrame = HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
-
 
   local classIconResult = HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   local classIconFrame = classIconResult.frame
   local classIcon = classIconResult.texture
-
 
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
@@ -45,18 +42,13 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerName:Hide()
   end
 
-
   local headerFactionIcon = HeaderElements.createFactionIcon(headerFrame, headerName, selectedContact)
-
 
   local headerStatus = HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
 
-
   local statusDot = HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
 
-
   local headerDivider = HeaderElements.createDivider(headerFrame)
-
 
   local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory)
 

@@ -12,14 +12,14 @@ local function withAlpha(baseRgb, alpha)
 end
 
 local function makeDividerRoles(
-    baseRgb,
-    baseAlpha,
-    strongAlpha,
-    hoverRgb,
-    hoverAlpha,
-    fillAlpha,
-    outlineRgb,
-    outlineAlpha
+  baseRgb,
+  baseAlpha,
+  strongAlpha,
+  hoverRgb,
+  hoverAlpha,
+  fillAlpha,
+  outlineRgb,
+  outlineAlpha
 )
   return {
     divider = withAlpha(baseRgb, baseAlpha),
@@ -72,7 +72,7 @@ local roles = {
 }
 
 local dividers =
-    makeDividerRoles(rgb(0.40, 0.32, 0.10), 0.60, 0.95, rgb(0.55, 0.44, 0.14), 0.72, 0.10, rgb(0.60, 0.48, 0.16), 0.30)
+  makeDividerRoles(rgb(0.40, 0.32, 0.10), 0.60, 0.95, rgb(0.55, 0.44, 0.14), 0.72, 0.10, rgb(0.60, 0.48, 0.16), 0.30)
 for k, v in pairs(dividers) do
   roles[k] = v
 end

@@ -1,7 +1,6 @@
 local AutoOpenHooks = require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 
 return function()
-
   -- Helpers
 
   local function makeDeps(overrides)

@@ -3,7 +3,6 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Availability = require("WhisperMessenger.Transport.Availability")
 
 return function()
-
   -- test_event_bridge_drops_events_when_caller_guards_mythic
 
   -- RouteLiveEvent no longer checks mythic lockdown itself — the caller

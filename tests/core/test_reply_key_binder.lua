@@ -76,7 +76,6 @@ local function newBinder(stubs, extra)
 end
 
 return function()
-
   -- test_bind_creates_secure_action_button_with_wr_macro
 
   do
