@@ -131,8 +131,6 @@ UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
-UI/MessengerWindow/MessengerWindow/FacadeBuilder.lua
-UI/MessengerWindow/MessengerWindow/FacadePayload.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
 UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua

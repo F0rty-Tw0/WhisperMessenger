@@ -26,10 +26,6 @@ local WindowAlpha = ns.MessengerWindowWindowAlpha
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
 local WindowGeometry = ns.MessengerWindowWindowGeometry
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
-local FacadeBuilder = ns.MessengerWindowFacadeBuilder
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.FacadeBuilder")
-local FacadePayload = ns.MessengerWindowFacadePayload
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.FacadePayload")
 local ScriptWiring = ns.MessengerWindowScriptWiring
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
 local RelayoutController = ns.MessengerWindowRelayoutController
@@ -254,23 +250,63 @@ function MessengerWindow.Create(factory, options)
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
-  return FacadeBuilder.Build(FacadePayload.Build({
-    chrome = chrome,
-    layout = layout,
-    settings = {
-      general = generalSettings,
-      appearance = appearanceSettings,
-      behavior = behaviorSettings,
-      notifications = notificationSettings,
-    },
+  return {
+    frame = chrome.frame,
+    title = chrome.title,
+    newConversationButton = chrome.newConversationButton,
+    contactsPane = layout.contactsPane,
+    contactsPaneBorder = layout.contactsPaneBorder,
+    contactsDivider = layout.contactsDivider,
+    contactsRightBorder = layout.contactsRightBorder,
+    contactsHeaderDivider = layout.contactsHeaderDivider,
+    contentPane = layout.contentPane,
+    headerDivider = layout.headerDivider,
+    titleBarBorder = chrome.titleBarBorder,
+    titleBarTopBorder = chrome.titleBarTopBorder,
+    threadPane = layout.threadPane,
+    composerPane = layout.composerPane,
+    composerPaneBorder = layout.composerPaneBorder,
+    composerDivider = layout.composerDivider,
+    closeButton = chrome.closeButton,
+    optionsButton = chrome.optionsButton,
+    optionsPanel = layout.optionsPanel,
+    optionsMenu = layout.optionsMenu,
+    optionsContentPane = layout.optionsContentPane,
+    generalTab = layout.generalTab,
+    appearanceTab = layout.appearanceTab,
+    behaviorTab = layout.behaviorTab,
+    notificationsTab = layout.notificationsTab,
+    generalSettings = generalSettings,
+    appearanceSettings = appearanceSettings,
+    behaviorSettings = behaviorSettings,
+    notificationSettings = notificationSettings,
+    optionsHeader = layout.optionsHeader,
+    optionsHint = layout.optionsHint,
+    resetWindowButton = layout.resetWindowButton,
+    resetIconButton = layout.resetIconButton,
+    clearAllChatsButton = layout.clearAllChatsButton,
+    contactsSearchInput = layout.contactsSearchInput,
+    contactsSearchClearButton = layout.contactsSearchClearButton,
+    contactsSearchPlaceholder = layout.contactsSearchPlaceholder,
+    resizeGrip = chrome.resizeGrip,
+    contactsResizeHandle = layout.contactsResizeHandle,
     contacts = contacts,
     conversation = conversation,
     composer = composer,
     refreshContacts = refreshContacts,
     refreshSelection = refreshSelection,
     refreshTheme = refreshThemeVisuals,
-    handleContactSelected = handleContactSelected,
-  }))
+    selectConversation = function(conversationKey)
+      for _, row in ipairs(contacts.rows) do
+        if row.item ~= nil and row.item.conversationKey == conversationKey then
+          handleContactSelected(row.item)
+          return true
+        end
+      end
+      refreshSelection()
+      return false
+    end,
+  }
 end
 
 ns.MessengerWindow = MessengerWindow

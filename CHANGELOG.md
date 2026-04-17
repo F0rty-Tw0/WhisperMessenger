@@ -9,7 +9,6 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: right-clicking a chat bubble no longer crashes on Retail 10.0+ where the old dropdown template was removed — the Copy Text popup appears instead.
 - Fixed: contact-row relative labels (day name, short date, long date) now honor "Server time" like the rest of the UI, so timestamps near midnight no longer show the wrong day.
 - Fixed: whisper availability checks are now safely guarded, so quirky Battle.net API errors (or early-load states) can no longer surface as error popups.
-- Fixed: internal event-bridge tracing now actually emits when `/wm debug on` is active, making it easier to diagnose whisper routing issues.
 
 ## [1.1.7] - 2026-04-16
 
