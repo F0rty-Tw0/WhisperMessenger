@@ -4,6 +4,8 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.1.8] - 2026-04-17
+
 - New Azeroth theme gives the messenger a more native WoW look, with Blizzard-style colors and window styling.
 - Reply now follows your current WoW reply key instead of assuming R, and a broad UI cleanup fixes small annoyances like wrong offline labels, stray scrollbars, and awkward window focus behavior.
 - Fixed: right-clicking a chat bubble no longer crashes on Retail 10.0+ where the old dropdown template was removed — the Copy Text popup appears instead.
