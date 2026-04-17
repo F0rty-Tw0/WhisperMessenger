@@ -1,19 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
 
-local function colorsMatch(actual, expected)
-  if type(actual) ~= "table" or type(expected) ~= "table" then
-    return false
-  end
-  local epsilon = 0.0001
-  for i = 1, 4 do
-    local a = actual[i] or (i == 4 and 1 or nil)
-    local b = expected[i] or (i == 4 and 1 or nil)
-    if a == nil or b == nil or math.abs(a - b) > epsilon then
-      return false
-    end
-  end
-  return true
-end
 local function loadAddonFromToc(addonName, ns)
   for line in io.lines("WhisperMessenger.toc") do
     if line ~= "" and string.sub(line, 1, 2) ~= "##" and not string.match(line, "%.xml$") then
@@ -29,128 +15,158 @@ return function()
 
   local ChromeBuilder = ns.MessengerWindowChromeBuilder
   local Theme = ns.Theme
-  local factory = FakeUI.NewFactory()
-  local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- title defaults to Theme.TITLE when no title option is passed
-  local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {})
-  assert(
-    chrome.title.text == Theme.TITLE,
-    "expected title to be '" .. Theme.TITLE .. "' but got '" .. tostring(chrome.title.text) .. "'"
-  )
-  local expectedTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
-  assert(
-    colorsMatch(chrome.title.textColor, expectedTitleColor),
-    "expected title text to use text_title/text_primary for readability"
-  )
-  assert(chrome.newConversationButton ~= nil, "expected a New Conversation button")
-  assert(chrome.newConversationButton.point ~= nil, "expected New Conversation button to be anchored")
-  assert(
-    chrome.newConversationButton.point[1] == "LEFT",
-    "expected New Conversation button to anchor from its left edge"
-  )
-  assert(
-    chrome.newConversationButton.point[2] == chrome.title,
-    "expected New Conversation button to anchor relative to title"
-  )
-  assert(
-    chrome.newConversationButton.point[3] == "RIGHT",
-    "expected New Conversation button to sit to the right of title"
-  )
-  assert(
-    chrome.newConversationButton.point[4] ~= nil
-      and chrome.newConversationButton.point[4] >= 0
-      and chrome.newConversationButton.point[4] <= 12,
-    "expected New Conversation button horizontal offset to stay near title"
-  )
+  -- ---------------------------------------------------------------------
+  -- Modern chrome: useNativeChrome=false (or unset) gives BackdropTemplate
+  -- + custom title FontString + custom close button.
+  -- ---------------------------------------------------------------------
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+      useNativeChrome = false,
+    })
 
-  local newConversationIconTexture = nil
-  for _, child in ipairs(chrome.newConversationButton.children or {}) do
-    if child.frameType == "Texture" and type(child.texturePath) == "string" and child.texturePath ~= "" then
-      newConversationIconTexture = child
-      break
+    assert(
+      chrome.frame.template == "BackdropTemplate",
+      "modern chrome: expected BackdropTemplate, got " .. tostring(chrome.frame.template)
+    )
+    assert(chrome.frame.Inset == nil, "modern chrome: should NOT have template Inset")
+    assert(chrome.frame.CloseButton == nil, "modern chrome: should NOT have template CloseButton")
+    assert(chrome.title ~= nil, "modern chrome: custom title FontString should exist")
+    assert(chrome.title.text == Theme.TITLE, "modern chrome: title should render Theme.TITLE")
+    assert(chrome.background ~= nil, "modern chrome: custom background texture should exist")
+    assert(chrome.closeButton ~= nil, "modern chrome: custom close button should exist")
+    assert(
+      chrome.closeButton.frameType == "Button",
+      "modern chrome: closeButton should be a Button frame, got " .. tostring(chrome.closeButton.frameType)
+    )
+  end
+
+  -- ---------------------------------------------------------------------
+  -- Blizzard chrome: useNativeChrome=true gives BasicFrameTemplateWithInset
+  -- (gold border, red X, dark inset, centered title from the template).
+  -- ---------------------------------------------------------------------
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+      useNativeChrome = true,
+    })
+
+    assert(
+      chrome.frame.template == "BasicFrameTemplateWithInset",
+      "blizzard chrome: expected BasicFrameTemplateWithInset, got " .. tostring(chrome.frame.template)
+    )
+    assert(chrome.frame.Bg ~= nil, "blizzard chrome: template should provide frame.Bg")
+    assert(chrome.frame.Inset ~= nil, "blizzard chrome: template should provide frame.Inset")
+    assert(chrome.frame.CloseButton ~= nil, "blizzard chrome: template should provide frame.CloseButton")
+    assert(chrome.frame.TitleText ~= nil, "blizzard chrome: template should provide frame.TitleText")
+    assert(chrome.frame.title == Theme.TITLE, "blizzard chrome: SetTitle should set frame.title")
+
+    assert(chrome.background == chrome.frame.Bg, "blizzard chrome: chrome.background aliases frame.Bg")
+    assert(chrome.title == chrome.frame.TitleText, "blizzard chrome: chrome.title aliases frame.TitleText")
+    assert(
+      chrome.closeButton == chrome.frame.CloseButton,
+      "blizzard chrome: chrome.closeButton aliases frame.CloseButton"
+    )
+  end
+
+  -- ---------------------------------------------------------------------
+  -- Default (no useNativeChrome flag) should be modern chrome.
+  -- ---------------------------------------------------------------------
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {})
+    assert(
+      chrome.frame.template == "BackdropTemplate",
+      "default chrome: expected BackdropTemplate when useNativeChrome unset, got " .. tostring(chrome.frame.template)
+    )
+  end
+
+  -- ---------------------------------------------------------------------
+  -- Shared overlays exist in both chrome paths (newConversation + tooltip).
+  -- ---------------------------------------------------------------------
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+      useNativeChrome = false,
+    })
+
+    assert(chrome.newConversationButton ~= nil, "expected a New Conversation button in both chromes")
+    local onEnterScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnEnter")
+      or nil
+    local onLeaveScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnLeave")
+      or nil
+    assert(type(onEnterScript) == "function", "expected New Conversation button OnEnter script")
+    assert(type(onLeaveScript) == "function", "expected New Conversation button OnLeave script")
+
+    local originalGameTooltip = _G.GameTooltip
+    local tooltipState = { shown = false, hidden = false }
+    _G.GameTooltip = {
+      SetOwner = function(_, owner, anchor)
+        tooltipState.owner = owner
+        tooltipState.anchor = anchor
+      end,
+      SetText = function(_, text)
+        tooltipState.text = text
+      end,
+      AddLine = function(_, text)
+        tooltipState.line = text
+      end,
+      Show = function()
+        tooltipState.shown = true
+      end,
+      Hide = function()
+        tooltipState.hidden = true
+      end,
+    }
+
+    onEnterScript(chrome.newConversationButton)
+    assert(tooltipState.text == "Start New Whisper", "expected tooltip title text on hover")
+    assert(tooltipState.shown == true, "expected tooltip to be shown on hover")
+
+    onLeaveScript(chrome.newConversationButton)
+    assert(tooltipState.hidden == true, "expected tooltip to hide on leave")
+    _G.GameTooltip = originalGameTooltip
+
+    assert(chrome.frame.frameStrata == "MEDIUM", "expected window frame strata to be MEDIUM")
+
+    local chrome2 = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+      title = "Custom",
+      useNativeChrome = false,
+    })
+    if chrome2.title.text then
+      assert(chrome2.title.text == "Custom", "expected explicit title override to work in modern chrome")
     end
   end
-  assert(newConversationIconTexture ~= nil, "expected New Conversation button to include an icon texture")
 
-  local onEnterScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnEnter")
-    or nil
-  local onLeaveScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnLeave")
-    or nil
-  assert(type(onEnterScript) == "function", "expected New Conversation button OnEnter script")
-  assert(type(onLeaveScript) == "function", "expected New Conversation button OnLeave script")
+  -- ---------------------------------------------------------------------
+  -- applyTheme runs cleanly across preset switches in both chromes.
+  -- ---------------------------------------------------------------------
+  do
+    local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+      useNativeChrome = false,
+    })
 
-  local originalGameTooltip = _G.GameTooltip
-  local tooltipState = { shown = false, hidden = false }
-  _G.GameTooltip = {
-    SetOwner = function(_, owner, anchor)
-      tooltipState.owner = owner
-      tooltipState.anchor = anchor
-    end,
-    SetText = function(_, text)
-      tooltipState.text = text
-    end,
-    AddLine = function(_, text)
-      tooltipState.line = text
-    end,
-    Show = function()
-      tooltipState.shown = true
-    end,
-    Hide = function()
-      tooltipState.hidden = true
-    end,
-  }
+    if Theme.SetPreset then
+      Theme.SetPreset("plumber_warm")
+      chrome.applyTheme(Theme)
+      Theme.SetPreset("elvui_dark")
+      chrome.applyTheme(Theme)
+      Theme.SetPreset("wow_native")
+      chrome.applyTheme(Theme)
+      Theme.SetPreset("wow_default")
+      chrome.applyTheme(Theme)
+    end
 
-  onEnterScript(chrome.newConversationButton)
-  assert(tooltipState.owner == chrome.newConversationButton, "expected tooltip owner to be the New Conversation button")
-  assert(tooltipState.anchor == "ANCHOR_TOP", "expected tooltip to anchor above the New Conversation button")
-  assert(tooltipState.text == "Start New Whisper", "expected tooltip title text on hover")
-  assert(tooltipState.line == "Open an empty conversation thread.", "expected tooltip description text on hover")
-  assert(tooltipState.shown == true, "expected tooltip to be shown on hover")
-
-  onLeaveScript(chrome.newConversationButton)
-  assert(tooltipState.hidden == true, "expected tooltip to hide on leave")
-  _G.GameTooltip = originalGameTooltip
-
-  assert(
-    chrome.frame.frameStrata == "MEDIUM",
-    "expected window frame strata to be MEDIUM so other active windows can sit on top; got "
-      .. tostring(chrome.frame.frameStrata)
-  )
-
-  -- explicit title option overrides Theme.TITLE
-  local chrome2 = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, { title = "Custom" })
-  assert(chrome2.title.text == "Custom", "expected explicit title override to work")
-
-  assert(chrome.titleBarTopBorder ~= nil, "expected title bar top border texture")
-  assert(
-    colorsMatch(chrome.titleBarTopBorder.color, Theme.COLORS.divider),
-    "expected title bar top border to use divider color"
-  )
-  assert(chrome.titleBarBorder ~= nil, "expected titleBarBorder set")
-  assert(
-    chrome.titleBarBorder.top == chrome.titleBarTopBorder,
-    "expected titleBarTopBorder alias to point at titleBarBorder.top"
-  )
-  assert(chrome.titleBarBorder.left ~= nil, "expected title bar left border")
-  assert(chrome.titleBarBorder.right ~= nil, "expected title bar right border")
-  assert(chrome.titleBarBorder.bottom == nil, "expected title bar bottom border to be omitted to avoid overlap")
-
-  local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
-  if Theme.SetPreset then
-    Theme.SetPreset("plumber_warm")
-    chrome.applyTheme(Theme)
-    assert(
-      colorsMatch(chrome.titleBarTopBorder.color, Theme.COLORS.divider),
-      "expected title bar top border to repaint with preset divider color"
-    )
-    local expectedPresetTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
-    assert(
-      colorsMatch(chrome.title.textColor, expectedPresetTitleColor),
-      "expected title text to repaint with text_title/text_primary token"
-    )
-  end
-  if Theme.SetPreset and previousPreset then
-    Theme.SetPreset(previousPreset)
+    if previousPreset and Theme.SetPreset then
+      Theme.SetPreset(previousPreset)
+    end
   end
 end

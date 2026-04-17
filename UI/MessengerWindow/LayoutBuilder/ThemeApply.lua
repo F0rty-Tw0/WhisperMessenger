@@ -4,8 +4,10 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyPaneBackground = UIHelpers.applyPaneBackground
 local setTextColor = UIHelpers.setTextColor
 
 local ThemeApply = {}
@@ -66,7 +68,11 @@ function ThemeApply.Create(options)
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or fallbackTheme
 
-    applyColorTexture(contactsPaneBg, activeTheme.COLORS.bg_secondary)
+    -- Resolve skin so the contacts pane bg can paint with the Blizzard
+    -- inset texture under wow_native (matches the conversation pane's
+    -- backdrop texture for a unified native panel look).
+    local skinSpec = Skins.Get(Skins.GetActive())
+    applyPaneBackground(contactsPaneBg, activeTheme.COLORS.bg_secondary, skinSpec and skinSpec.pane_inset_texture)
     applyColorTexture(contactsSearchBg, activeTheme.COLORS.bg_search_input or activeTheme.COLORS.bg_input)
 
     local divider = activeTheme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
@@ -101,7 +107,8 @@ function ThemeApply.Create(options)
 
     UIHelpers.applyBorderBoxColor(contactsPaneEdges, strongActiveContactsBorder)
     applyColorTexture(contactsHeaderDivider, divider)
-    UIHelpers.applyBorderBoxColor(composerPaneBorder, strongDividerThemeColor)
+    local composerBorderColor = activeTheme.COLORS.composer_pane_border or strongDividerThemeColor
+    UIHelpers.applyBorderBoxColor(composerPaneBorder, composerBorderColor)
 
     applyColorTexture(optionsMenuBg, activeTheme.COLORS.bg_secondary)
     applyColorTexture(optionsMenuDivider, activeTheme.COLORS.divider)

@@ -89,6 +89,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   themePreset = Theme.DEFAULT_PRESET or "wow_default",
+  nativeChrome = false,
 }
 
 local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
@@ -217,6 +218,34 @@ function AppearanceSettings.Create(factory, parent, config, options)
       textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
     }
   end
+  local function toggleColorsFor(activeTheme)
+    return {
+      text = activeTheme.COLORS.text_primary,
+      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
+      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
+      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
+    }
+  end
+  local toggleColors = toggleColorsFor(Theme)
+  local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
+
+  local nativeChromeToggle = UIHelpers.createToggleRow(
+    factory,
+    frame,
+    "Native WoW HUD",
+    config.nativeChrome == true,
+    toggleColors,
+    toggleLayout,
+    function(value)
+      onChange("nativeChrome", value)
+    end,
+    {
+      "Native WoW HUD",
+      "Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply.",
+    }
+  )
+  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+
   local selectorColors = selectorColorsFor(Theme)
   local themePresetOptions = buildThemePresetOptions()
   local themePresetSelector = createButtonSelector(
@@ -231,7 +260,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("themePreset", value)
     end
   )
-  themePresetSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+  themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
 
   local fontSelector = createButtonSelector(
     factory,
@@ -363,6 +392,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
   resetButton:SetScript("OnClick", function()
     opacityInactiveRow.slider:SetValue(DEFAULTS.windowOpacityInactive)
     opacityActiveRow.slider:SetValue(DEFAULTS.windowOpacityActive)
+    nativeChromeToggle.setValue(DEFAULTS.nativeChrome)
+    onChange("nativeChrome", DEFAULTS.nativeChrome)
     themePresetSelector.setSelected(DEFAULTS.themePreset)
     onChange("themePreset", DEFAULTS.themePreset)
     fontSelector.setSelected(DEFAULTS.fontFamily)
@@ -387,6 +418,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
     local activeSelectorColors = selectorColorsFor(activeTheme)
+    nativeChromeToggle.applyThemeColors(toggleColorsFor(activeTheme))
     themePresetSelector.applyTheme(activeTheme, activeSelectorColors)
     fontSelector.applyTheme(activeTheme, activeSelectorColors)
     fontOutlineSelector.applyTheme(activeTheme, activeSelectorColors)
@@ -406,6 +438,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
 
   return {
     frame = frame,
+    nativeChromeToggle = nativeChromeToggle,
     themePresetSelector = themePresetSelector,
     fontSelector = fontSelector,
     fontSizeSlider = fontSizeRow.slider,

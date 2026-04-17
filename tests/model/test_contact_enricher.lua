@@ -554,8 +554,9 @@ return function()
     assert(contacts[1].availability.canWhisper == false, "WrongFaction should not be whisperable")
   end
 
-  -- EnrichContactsAvailability: BNet contact with isAFK=true but isOnline=nil shows Away
-  -- (isAFK=true implies the account is online — you can't be AFK if not logged in)
+  -- EnrichContactsAvailability: BNet contact with sticky isAFK=true + isOnline=nil
+  -- must NOT be treated as online. isAFK/isDND are sticky flags that persist after
+  -- a friend goes offline. Without positive proof of presence, fall back to BNetOnline.
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -580,13 +581,13 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet AFK with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Away",
-      "BNet isAFK=true with isOnline=nil should be Away, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "BNetOnline",
+      "sticky isAFK with isOnline=nil must fall back to BNetOnline, got: " .. tostring(contacts[1].availability.status)
     )
-    assert(contacts[1].availability.canWhisper == true, "Away contacts should be whisperable")
   end
 
-  -- EnrichContactsAvailability: BNet contact with isDND=true but isOnline=nil shows Busy
+  -- EnrichContactsAvailability: BNet contact with sticky isDND=true + isOnline=nil
+  -- must NOT be treated as online (same sticky-flag reasoning as above).
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -611,10 +612,9 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet DND with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "Busy",
-      "BNet isDND=true with isOnline=nil should be Busy, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "BNetOnline",
+      "sticky isDND with isOnline=nil must fall back to BNetOnline, got: " .. tostring(contacts[1].availability.status)
     )
-    assert(contacts[1].availability.canWhisper == true, "Busy contacts should be whisperable")
   end
 
   -- EnrichContactsAvailability: WoW contact Offline + opposite faction + guild online becomes XFaction

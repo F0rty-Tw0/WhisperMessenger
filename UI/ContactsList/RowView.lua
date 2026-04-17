@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -22,8 +23,10 @@ local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
-  row:SetSize(parentWidth, ROW_HEIGHT)
-  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -((index - 1) * ROW_HEIGHT))
+  -- 3px left inset on each row so contacts sit slightly tighter to the pane's
+  -- left edge while keeping the right edge anchored to the parent.
+  row:SetSize(parentWidth - 2, ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -((index - 1) * ROW_HEIGHT))
   if row.EnableMouse then
     row:EnableMouse(true)
   end
@@ -55,6 +58,28 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
   row.selectedRightBorder:Hide()
+
+  -- Stage 2C: bundled Blizzard chrome paints a hover/selected highlight
+  -- overlay on top of row.bg. The overlay is created unconditionally so the
+  -- shape stays stable across skin switches; only its texture path is
+  -- skin-dependent. RowScripts.applyRowVisualState shows/hides it based on
+  -- hover/selected state when a texture is set; modern skin leaves the
+  -- texture nil so it never paints.
+  if row.skinHighlight == nil then
+    row.skinHighlight = row:CreateTexture(nil, "ARTWORK")
+    row.skinHighlight:SetAllPoints()
+  end
+  local rowSkinSpec = Skins.Get(Skins.GetActive())
+  if rowSkinSpec and rowSkinSpec.contact_row_highlight_texture and row.skinHighlight.SetTexture then
+    row.skinHighlight:SetTexture(rowSkinSpec.contact_row_highlight_texture)
+    if row.skinHighlight.SetBlendMode then
+      row.skinHighlight:SetBlendMode("ADD")
+    end
+  elseif row.skinHighlight.SetTexture then
+    row.skinHighlight:SetTexture(nil)
+  end
+  row.skinHighlight:Hide()
+
   -- Event scripts (hover, click, drag)
   RowScripts.bindHover(row, { rowBaseBg = rowBaseBg })
   RowScripts.bindClick(row, item, options)

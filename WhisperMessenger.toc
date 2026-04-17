@@ -57,6 +57,7 @@ UI/Theme/Fonts.lua
 UI/Theme/Layout.lua
 UI/Theme/Textures.lua
 UI/Theme/Theme.lua
+UI/Theme/Skins.lua
 UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
 UI/Helpers/Controls.lua

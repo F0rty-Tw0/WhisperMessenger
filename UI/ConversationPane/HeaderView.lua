@@ -24,7 +24,7 @@ end
 -- Returns a table with all header widget references.
 function HeaderView.Create(factory, pane, selectedContact, options)
   options = options or {}
-  local HEADER_HEIGHT = options.HEADER_HEIGHT or 56
+  local HEADER_HEIGHT = options.HEADER_HEIGHT or 36
 
   ---------------------------------------------------------------------------
   -- Header container (56px tall, bg_header background)

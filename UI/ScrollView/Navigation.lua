@@ -46,12 +46,25 @@ function Navigation.Sync(view, skipValueSync)
     view.syncingScrollBar = false
   end
 
+  -- Show/hide both the scrollBar and its thumb. Hiding scrollBar should
+  -- propagate to its child thumb in production, but the textured Blizzard
+  -- knob (Stage 2B) was leaking through the parent hide — we now flip the
+  -- thumb explicitly to make the contract unambiguous in both fake_ui and
+  -- live WoW.
   if hasOverflow then
     if view.scrollBar.Show then
       view.scrollBar:Show()
     end
-  elseif view.scrollBar.Hide then
-    view.scrollBar:Hide()
+    if view.scrollBar.thumb and view.scrollBar.thumb.Show then
+      view.scrollBar.thumb:Show()
+    end
+  else
+    if view.scrollBar.Hide then
+      view.scrollBar:Hide()
+    end
+    if view.scrollBar.thumb and view.scrollBar.thumb.Hide then
+      view.scrollBar.thumb:Hide()
+    end
   end
 
   return range

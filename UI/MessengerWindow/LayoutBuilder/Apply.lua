@@ -52,6 +52,22 @@ function Apply.Relayout(layout, relayout, theme)
     layout.contentPane:ClearAllPoints()
   end
   layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", resolvedTheme.DIVIDER_THICKNESS, 0)
+  -- Re-establish the dual-anchor so contentPane stays auto-sized to its
+  -- parent after a resize. Without this the BOTTOMRIGHT anchor is lost on
+  -- every relayout, height/width/margin collapse. Use :GetParent() in
+  -- production WoW; fake_ui falls back to the stored .parent field.
+  local contentParentForAnchor
+  if layout.contactsPane then
+    if type(layout.contactsPane.GetParent) == "function" then
+      contentParentForAnchor = layout.contactsPane:GetParent()
+    end
+    if contentParentForAnchor == nil then
+      contentParentForAnchor = layout.contactsPane.parent
+    end
+  end
+  if contentParentForAnchor then
+    layout.contentPane:SetPoint("BOTTOMRIGHT", contentParentForAnchor, "BOTTOMRIGHT", -5, 10)
+  end
   if layout.contactsHeaderDivider then
     layout.contactsHeaderDivider:SetSize(contactsWidth, resolvedTheme.DIVIDER_THICKNESS)
   end
@@ -59,7 +75,15 @@ function Apply.Relayout(layout, relayout, theme)
     layout.headerDivider:SetSize(contentWidth, resolvedTheme.DIVIDER_THICKNESS)
   end
   layout.threadPane:SetSize(contentWidth, threadHeight)
-  layout.composerPane:SetSize(contentWidth, resolvedTheme.COMPOSER_HEIGHT)
+  -- composerPane width tracks contentPane's *actual* current width (after
+  -- contentPane's dual-anchor settles). Reading live geometry instead of
+  -- `contentWidth` (the precomputed full content width) means the SetSize
+  -- matches the dual-anchor in production WoW where contentPane is 5px
+  -- shorter than `contentWidth` due to its own BOTTOMRIGHT (-5, 5) margin.
+  local contentPaneWidth = (layout.contentPane.GetWidth and layout.contentPane:GetWidth())
+      or layout.contentPane.width
+      or contentWidth
+  layout.composerPane:SetSize(contentPaneWidth, resolvedTheme.COMPOSER_HEIGHT)
   layout.composerDivider:SetSize(contentWidth, resolvedTheme.DIVIDER_THICKNESS)
 
   -- Resize contacts scroll view while preserving its content height and scroll position.
@@ -77,11 +101,16 @@ function Apply.Relayout(layout, relayout, theme)
     Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsListHeight))
   end
 
-  -- Resize options overlay to match new window dimensions.
+  -- Resize options overlay to match new window dimensions. optionsPanel's
+  -- size is fully driven by its dual-anchor (TOPLEFT + BOTTOMRIGHT to
+  -- parent) — DON'T call SetSize on it, that would override the anchor
+  -- with the outer windowWidth (which is wider than Inset under Azeroth)
+  -- and overflow the gold border.
   local optionsHeight = contactsHeight
-  local optionsContentWidth = contentWidth
   local windowWidth = relayout.windowWidth
-  layout.optionsPanel:SetSize(windowWidth, optionsHeight)
+  -- Inner content width matches the shrunk options panel (windowWidth - 20
+  -- for the 10px each side margin) minus the menu column + divider.
+  local optionsContentWidth = (windowWidth - 20) - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
   layout.optionsMenu:SetSize(contactsWidth, optionsHeight)
   layout.optionsMenuDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, optionsHeight)
   layout.optionsContentPane:SetSize(optionsContentWidth, optionsHeight)

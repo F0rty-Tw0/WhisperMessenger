@@ -39,19 +39,20 @@ return function()
     return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
   end
 
-  -- test_unpinned_row_uses_secondary_bg
+  local transparent = { 0, 0, 0, 0 }
+
+  -- test_unpinned_row_is_transparent_by_default
   do
     local row = RowView.bindRow(factory, parent, nil, 1, unpinnedItem, options)
     assert(row.bg ~= nil, "row should have bg texture")
-    assert(colorsMatch(row.bg.color, Theme.COLORS.bg_secondary), "unpinned row should use bg_secondary")
+    assert(colorsMatch(row.bg.color, transparent), "unpinned row should be transparent by default")
+    assert((row.bg.color[4] or 0) == 0, "unpinned row base alpha should be 0")
   end
 
   -- test_pinned_row_uses_pinned_bg
   do
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
-    local expected = Theme.COLORS.bg_contact_pinned
-    assert(expected ~= nil, "Theme should have bg_contact_pinned color")
-    assert(colorsMatch(row.bg.color, expected), "pinned row should use bg_contact_pinned")
+    assert(colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned), "pinned row should use bg_contact_pinned")
   end
 
   -- test_pinned_row_hover_uses_hover_bg
@@ -66,19 +67,18 @@ return function()
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
     row.scripts.OnEnter(row)
     row.scripts.OnLeave(row)
-    local expected = Theme.COLORS.bg_contact_pinned
-    assert(colorsMatch(row.bg.color, expected), "pinned row should revert to bg_contact_pinned after leave")
+    assert(
+      colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned),
+      "pinned row should revert to bg_contact_pinned after leave"
+    )
   end
 
-  -- test_unpinned_row_leave_reverts_to_secondary_bg
+  -- test_unpinned_row_leave_reverts_to_transparent
   do
     local row = RowView.bindRow(factory, parent, nil, 1, unpinnedItem, options)
     row.scripts.OnEnter(row)
     row.scripts.OnLeave(row)
-    assert(
-      colorsMatch(row.bg.color, Theme.COLORS.bg_secondary),
-      "unpinned row should revert to bg_secondary after leave"
-    )
+    assert(colorsMatch(row.bg.color, transparent), "unpinned row should revert to transparent after leave")
   end
 
   print("PASS: test_row_view_pinned_bg")

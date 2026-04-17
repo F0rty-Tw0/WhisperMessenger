@@ -38,6 +38,7 @@ function SettingsPanels.Create(factory, options)
     fontColor = settingsConfig.fontColor,
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
+    nativeChrome = settingsConfig.nativeChrome,
   }, onSettingChanged)
 
   local behaviorPanel, behaviorSettings = createSettingsPanel(factory, parent, options.behaviorCreate, {

@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -11,19 +12,41 @@ local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
 local ChromeBuilder = {}
 
--- Creates the outer frame, background, edge textures, title bar, title label,
--- close button, options button, new conversation button, and resize grip.
+-- ChromeBuilder builds the messenger window with one of two chrome paths
+-- depending on the active skin (resolved from the active theme preset):
 --
--- factory   : frame factory (provides CreateFrame)
--- parent    : parent frame (e.g. UIParent)
--- initialState : { anchorPoint, relativePoint, x, y, width, height }
--- options   : { title, onClose }
+--   * BLIZZARD skin (Azeroth preset): frame uses BasicFrameTemplateWithInset.
+--     Gold border, red close X, dark inset, and centered title come from
+--     the Blizzard template — we don't paint them ourselves.
 --
--- Returns: { frame, background, titleBar, title, newConversationButton, closeButton, optionsButton, resizeGrip }
+--   * MODERN skin (any other preset): frame uses BackdropTemplate. We paint
+--     a custom flat-color background, our own title bar with header bg +
+--     borders, edge highlights, and a custom close button. This is the
+--     pre-Azeroth chrome, restored as an explicit branch so non-native
+--     presets keep their modern minimal look.
+--
+-- Returns: { frame, background, title, newConversationButton, closeButton,
+--   optionsButton, resizeGrip, applyTheme } in both cases. Non-chrome
+-- layout (rows, composer margins, content positioning) is shared and
+-- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
   options = options or {}
 
-  local frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
+  -- Chrome choice is now controlled by an explicit setting passed in
+  -- `options.useNativeChrome` (independent of the color preset). Falls
+  -- back to false (modern chrome) if the caller didn't pass it.
+  local useBlizzardChrome = options.useNativeChrome == true
+
+  local frame
+  if useBlizzardChrome then
+    frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BasicFrameTemplateWithInset")
+  else
+    -- BackdropTemplate mixin makes :SetBackdrop available on Retail 9.0+
+    -- (the modern path doesn't use SetBackdrop today, but keeping the mixin
+    -- lets us paint a backdrop later without recreating the frame).
+    frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BackdropTemplate")
+  end
+
   frame:SetSize(initialState.width or Theme.WINDOW_WIDTH, initialState.height or Theme.WINDOW_HEIGHT)
   frame:SetPoint(
     initialState.anchorPoint or "CENTER",
@@ -70,53 +93,157 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame.alpha = Theme.WINDOW_IDLE_ALPHA
   end
 
-  -- Window background
-  local background = frame:CreateTexture(nil, "BACKGROUND")
-  background:SetAllPoints(frame)
-  applyColorTexture(background, Theme.COLORS.bg_primary)
-  frame.background = background
+  -- Chrome differs by skin. Each branch produces:
+  --   background, title, closeButton, applyChromePaint
+  local background, title, closeButton
+  local applyChromePaint
 
-  -- Subtle edge highlights (1px border)
-  local edgeTextures = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, 1, "BORDER")
+  -- Modern-chrome captures (declared at outer scope so applyChromePaint can
+  -- close over them; nil under blizzard chrome and the closure no-ops).
+  local titleBarBg, titleBarBorder, edgeTextures, closeIcon
 
-  -- Title bar with header background
-  local titleBar = factory.CreateFrame("Frame", nil, frame)
-  titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
-  titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
-  titleBar:SetHeight(Theme.TOP_BAR_HEIGHT)
-  local titleBarBg = titleBar:CreateTexture(nil, "ARTWORK")
-  titleBarBg:SetAllPoints(titleBar)
-  applyColorTexture(titleBarBg, Theme.COLORS.bg_header)
-  local titleBarBorder = UIHelpers.createBorderBox(
-    titleBar,
-    Theme.COLORS.divider,
-    Theme.DIVIDER_THICKNESS,
-    "BORDER",
-    { top = true, left = true, right = true, bottom = false }
-  )
-  local titleBarTopBorder = titleBarBorder and titleBarBorder.top or nil
+  local blizzardTopBarExtension = nil
+  if useBlizzardChrome then
+    local titleText = options.title or Theme.TITLE
+    if frame.SetTitle then
+      frame:SetTitle(titleText)
+    elseif frame.TitleText and frame.TitleText.SetText then
+      frame.TitleText:SetText(titleText)
+    end
+    background = frame.Bg
+    title = frame.TitleText
+    closeButton = frame.CloseButton
 
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", 12, -9)
-  title:SetText(options.title or Theme.TITLE)
-  setTextColor(title, Theme.COLORS.text_title or Theme.COLORS.text_primary)
-  if title.SetShadowColor then
-    title:SetShadowColor(0, 0, 0, 0.85)
+    -- Double the apparent top bar height: fill the space below the
+    -- template's title strip with bg_header, and shift the Inset down
+    -- by the same amount so content starts below the extended bar.
+    local EXTRA_TITLE_HEIGHT = 24
+    blizzardTopBarExtension = frame:CreateTexture(nil, "ARTWORK")
+    blizzardTopBarExtension:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -24)
+    -- -6 right matches the Inset's own BOTTOMRIGHT inset so the top status
+    -- bar extension and the content area share the same right edge (2px
+    -- more padding than the default 4px, giving the corner some breathing
+    -- room away from the resize grip).
+    blizzardTopBarExtension:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -24)
+    blizzardTopBarExtension:SetHeight(EXTRA_TITLE_HEIGHT)
+    applyColorTexture(blizzardTopBarExtension, Theme.COLORS.bg_header)
+
+    if frame.Inset and frame.Inset.ClearAllPoints and frame.Inset.SetPoint then
+      frame.Inset:ClearAllPoints()
+      frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -(24 + EXTRA_TITLE_HEIGHT))
+      -- +8px of chrome visible at the bottom (Inset bottom raised).
+      frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 34)
+    end
+
+    applyChromePaint = function(activeTheme)
+      activeTheme = activeTheme or Theme
+      if blizzardTopBarExtension then
+        applyColorTexture(blizzardTopBarExtension, activeTheme.COLORS.bg_header)
+      end
+    end
+  else
+    -- Modern: custom flat background
+    background = frame:CreateTexture(nil, "BACKGROUND")
+    background:SetAllPoints(frame)
+    applyColorTexture(background, Theme.COLORS.bg_primary)
+    frame.background = background
+
+    -- Subtle edge highlights (1px border)
+    edgeTextures = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, 1, "BORDER")
+
+    -- Title bar with header background
+    local titleBar = factory.CreateFrame("Frame", nil, frame)
+    titleBar:SetPoint("TOPLEFT", frame, "TOPLEFT", 1, -1)
+    titleBar:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -1)
+    titleBar:SetHeight(Theme.TOP_BAR_HEIGHT)
+    titleBarBg = titleBar:CreateTexture(nil, "ARTWORK")
+    titleBarBg:SetAllPoints(titleBar)
+    applyColorTexture(titleBarBg, Theme.COLORS.bg_header)
+    titleBarBorder = UIHelpers.createBorderBox(
+      titleBar,
+      Theme.COLORS.divider,
+      Theme.DIVIDER_THICKNESS,
+      "BORDER",
+      { top = true, left = true, right = true, bottom = false }
+    )
+
+    title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -6)
+    title:SetText(options.title or Theme.TITLE)
+    if title.SetFont then
+      local fontPath, _, flags = title:GetFont()
+      if fontPath then
+        title:SetFont(fontPath, 10, flags)
+      end
+    end
+    setTextColor(title, Theme.COLORS.text_title or Theme.COLORS.text_primary)
+    if title.SetShadowColor then
+      title:SetShadowColor(0, 0, 0, 0.85)
+    end
+    if title.SetShadowOffset then
+      title:SetShadowOffset(1, -1)
+    end
+    frame.title = title
+
+    -- Custom close button (no template)
+    closeButton = factory.CreateFrame("Button", nil, frame)
+    closeButton:SetSize(20, 20)
+    closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
+    local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
+    closeBg:SetAllPoints(closeButton)
+    applyColorTexture(closeBg, { 0, 0, 0, 0 })
+    closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
+    closeIcon:SetSize(14, 14)
+    closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
+    closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
+    closeIcon:SetDesaturated(true)
+    applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
+    if closeButton.SetScript then
+      closeButton:SetScript("OnEnter", function()
+        applyVertexColor(closeIcon, { 0.9, 0.3, 0.3, 1 })
+        applyColorTexture(closeBg, { 0.9, 0.3, 0.3, 0.15 })
+      end)
+      closeButton:SetScript("OnLeave", function()
+        applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
+        applyColorTexture(closeBg, { 0, 0, 0, 0 })
+      end)
+    end
+    closeButton:EnableMouse(true)
+
+    applyChromePaint = function(activeTheme)
+      applyColorTexture(background, activeTheme.COLORS.bg_primary)
+      if titleBarBg then
+        applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
+      end
+      setTextColor(title, activeTheme.COLORS.text_title or activeTheme.COLORS.text_primary)
+      local divider = activeTheme.COLORS.divider
+      if edgeTextures then
+        UIHelpers.applyBorderBoxColor(edgeTextures, { divider[1], divider[2], divider[3], divider[4] or 1 })
+      end
+      if titleBarBorder then
+        UIHelpers.applyBorderBoxColor(titleBarBorder, divider)
+      end
+      if closeIcon then
+        applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
+      end
+    end
   end
-  if title.SetShadowOffset then
-    title:SetShadowOffset(1, -1)
-  end
-  frame.title = title
 
   local newConversationButton = factory.CreateFrame("Button", nil, frame)
-  newConversationButton:SetSize(24, 24)
-  newConversationButton:SetPoint("LEFT", title, "RIGHT", 6, 0)
+  newConversationButton:SetSize(20, 20)
+  if useBlizzardChrome then
+    -- Anchor at the top-left of the template's title bar.
+    newConversationButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, -3)
+  else
+    -- Anchor to the right of the custom title text.
+    newConversationButton:SetPoint("LEFT", title, "RIGHT", 2, 0)
+  end
   local newConversationBg = newConversationButton:CreateTexture(nil, "BACKGROUND")
   newConversationBg:SetAllPoints(newConversationButton)
   local newConversationBase = Theme.COLORS.bg_contact_hover
   applyColorTexture(newConversationBg, { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 })
   local newConversationIcon = newConversationButton:CreateTexture(nil, "ARTWORK")
-  newConversationIcon:SetSize(16, 16)
+  newConversationIcon:SetSize(14, 14)
   newConversationIcon:SetPoint("CENTER", newConversationButton, "CENTER", 0, 0)
   newConversationIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
   newConversationIcon:SetDesaturated(true)
@@ -148,40 +275,20 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   end
   newConversationButton:EnableMouse(true)
 
-  -- Custom close button (no template)
-  local closeButton = factory.CreateFrame("Button", nil, frame)
-  closeButton:SetSize(28, 28)
-  closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -4)
-  local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
-  closeBg:SetAllPoints(closeButton)
-  applyColorTexture(closeBg, { 0, 0, 0, 0 })
-  local closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
-  closeIcon:SetSize(18, 18)
-  closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
-  closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
-  closeIcon:SetDesaturated(true)
-  applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
-  if closeButton.SetScript then
-    closeButton:SetScript("OnEnter", function()
-      applyVertexColor(closeIcon, { 0.9, 0.3, 0.3, 1 })
-      applyColorTexture(closeBg, { 0.9, 0.3, 0.3, 0.15 })
-    end)
-    closeButton:SetScript("OnLeave", function()
-      applyVertexColor(closeIcon, Theme.COLORS.text_secondary)
-      applyColorTexture(closeBg, { 0, 0, 0, 0 })
-    end)
-  end
-  closeButton:EnableMouse(true)
-
-  -- Gear icon for options
+  -- Gear icon for options. Anchor relative to the close button so it sits
+  -- cleanly to its left in both chromes.
   local optionsButton = factory.CreateFrame("Button", nil, frame)
-  optionsButton:SetSize(28, 28)
-  optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -4, 0)
+  optionsButton:SetSize(useBlizzardChrome and 20 or 20, useBlizzardChrome and 20 or 20)
+  if closeButton then
+    optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -2, 0)
+  else
+    optionsButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -28, -4)
+  end
   local optionsBg = optionsButton:CreateTexture(nil, "BACKGROUND")
   optionsBg:SetAllPoints(optionsButton)
   applyColorTexture(optionsBg, { 0, 0, 0, 0 })
   local optionsIcon = optionsButton:CreateTexture(nil, "ARTWORK")
-  optionsIcon:SetSize(18, 18)
+  optionsIcon:SetSize(useBlizzardChrome and 14 or 14, useBlizzardChrome and 14 or 14)
   optionsIcon:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
   optionsIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
   optionsIcon:SetDesaturated(true)
@@ -213,7 +320,6 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   do
     local c = Theme.COLORS.text_secondary
     local gripColor = { c[1], c[2], c[3], 0.4 }
-    -- Three diagonal lines forming a triangle in the corner
     local line1 = resizeGrip:CreateTexture(nil, "OVERLAY")
     line1:SetSize(2, 2)
     line1:SetPoint("BOTTOMRIGHT", resizeGrip, "BOTTOMRIGHT", -1, 1)
@@ -243,17 +349,28 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     resizeLines[#resizeLines + 1] = line3h
   end
 
+  if resizeGrip.SetScript then
+    resizeGrip:SetScript("OnEnter", function()
+      local c = Theme.COLORS.text_primary
+      local hoverColor = { c[1], c[2], c[3], 1 }
+      for _, line in ipairs(resizeLines) do
+        applyColorTexture(line, hoverColor)
+      end
+    end)
+    resizeGrip:SetScript("OnLeave", function()
+      local c = Theme.COLORS.text_secondary
+      local baseColor = { c[1], c[2], c[3], 0.4 }
+      for _, line in ipairs(resizeLines) do
+        applyColorTexture(line, baseColor)
+      end
+    end)
+  end
+
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or Theme
-    applyColorTexture(background, activeTheme.COLORS.bg_primary)
-    applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
-    setTextColor(title, activeTheme.COLORS.text_title or activeTheme.COLORS.text_primary)
 
-    local divider = activeTheme.COLORS.divider
-    UIHelpers.applyBorderBoxColor(edgeTextures, { divider[1], divider[2], divider[3], divider[4] or 1 })
-    UIHelpers.applyBorderBoxColor(titleBarBorder, divider)
+    applyChromePaint(activeTheme)
 
-    applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(optionsIcon, activeTheme.COLORS.text_secondary)
     applyVertexColor(newConversationIcon, activeTheme.COLORS.text_primary)
     local refreshedConversationBase = activeTheme.COLORS.bg_contact_hover
@@ -274,9 +391,6 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   return {
     frame = frame,
     background = background,
-    titleBar = titleBar,
-    titleBarBorder = titleBarBorder,
-    titleBarTopBorder = titleBarTopBorder,
     title = title,
     newConversationButton = newConversationButton,
     closeButton = closeButton,

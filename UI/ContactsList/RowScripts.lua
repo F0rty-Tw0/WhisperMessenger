@@ -75,8 +75,10 @@ local function applyRowVisualState(row)
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
   elseif hovered then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
+  elseif row.item and row.item.pinned then
+    applyColorTexture(row.bg, Theme.COLORS.bg_contact_pinned)
   else
-    applyColorTexture(row.bg, rowBaseColor(row))
+    applyColorTexture(row.bg, { 0, 0, 0, 0 })
   end
   if row.selectedRightBorder then
     applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
@@ -84,6 +86,30 @@ local function applyRowVisualState(row)
       row.selectedRightBorder:Show()
     else
       row.selectedRightBorder:Hide()
+    end
+  end
+
+  -- Stage 2C: bundled Blizzard chrome paints a hover/selected overlay on
+  -- top of row.bg. Only visible when a texture is set (blizzard skin sets
+  -- it via RowView; modern skin leaves it nil so this branch no-ops).
+  if row.skinHighlight then
+    local hasTexture = row.skinHighlight.GetTexture and row.skinHighlight:GetTexture()
+    if hasTexture then
+      if row.selected then
+        if row.skinHighlight.SetAlpha then
+          row.skinHighlight:SetAlpha(0.6)
+        end
+        row.skinHighlight:Show()
+      elseif hovered then
+        if row.skinHighlight.SetAlpha then
+          row.skinHighlight:SetAlpha(0.4)
+        end
+        row.skinHighlight:Show()
+      else
+        row.skinHighlight:Hide()
+      end
+    else
+      row.skinHighlight:Hide()
     end
   end
 end

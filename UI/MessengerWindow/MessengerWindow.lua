@@ -76,8 +76,13 @@ function MessengerWindow.Create(factory, options)
     return target ~= nil and target.shown == true
   end
 
-  -- Build chrome (outer frame, buttons, etc.)
-  local chrome = ChromeBuilder.Build(factory, parent, initialState, { title = options.title })
+  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips
+  -- the frame to BasicFrameTemplateWithInset (gold border, red X) — read
+  -- from saved settings so it persists across reloads.
+  local chrome = ChromeBuilder.Build(factory, parent, initialState, {
+    title = options.title,
+    useNativeChrome = options.settingsConfig and options.settingsConfig.nativeChrome == true,
+  })
   local frame = chrome.frame
   -- Settings config (must be available before layout and alpha wiring)
   local settingsConfig = options.settingsConfig or {}

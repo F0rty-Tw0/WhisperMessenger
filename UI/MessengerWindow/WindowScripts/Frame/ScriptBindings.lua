@@ -38,22 +38,42 @@ function ScriptBindings.Bind(options)
     return ok and over == true
   end
 
+  -- Strata/Raise transitions must never pull keyboard focus away from
+  -- the composer. WoW's click-on-non-EditBox flow and frame:Raise() can
+  -- clear an EditBox's focus as a side effect — when the composer had
+  -- focus before the change, restore it afterwards so mouse-over / click
+  -- promotions don't interrupt the user's typing.
+  local function preserveComposerFocusAround(fn)
+    local hadFocus = composerHasFocus()
+    fn()
+    if hadFocus and not composerHasFocus() then
+      local input = options.composerInput
+      if input and type(input.SetFocus) == "function" then
+        input:SetFocus()
+      end
+    end
+  end
+
   local function promoteStrata()
-    if frame and type(frame.SetFrameStrata) == "function" then
-      frame:SetFrameStrata("HIGH")
-    end
-    if frame and type(frame.Raise) == "function" then
-      frame:Raise()
-    end
+    preserveComposerFocusAround(function()
+      if frame and type(frame.SetFrameStrata) == "function" then
+        frame:SetFrameStrata("HIGH")
+      end
+      if frame and type(frame.Raise) == "function" then
+        frame:Raise()
+      end
+    end)
   end
 
   local function demoteStrataIfIdle()
     if composerHasFocus() or isMouseOverFrame() then
       return
     end
-    if frame and type(frame.SetFrameStrata) == "function" then
-      frame:SetFrameStrata("MEDIUM")
-    end
+    preserveComposerFocusAround(function()
+      if frame and type(frame.SetFrameStrata) == "function" then
+        frame:SetFrameStrata("MEDIUM")
+      end
+    end)
   end
 
   if frame and frame.SetScript then
@@ -94,7 +114,10 @@ function ScriptBindings.Bind(options)
         return
       end
       options.refreshWindowAlpha()
-      demoteStrataIfIdle()
+      -- Intentionally do NOT demote strata here. Mouse-over alone (e.g.
+      -- moving the cursor onto the Auction House or another addon) must
+      -- not send our window to the back — only an explicit click outside
+      -- our frame should, handled via GLOBAL_MOUSE_DOWN below.
     end)
 
     frame:SetScript("OnUpdate", function(_, elapsed)
@@ -102,10 +125,24 @@ function ScriptBindings.Bind(options)
       if not windowResize.isResizing() and alphaElapsed >= options.frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
         alphaElapsed = 0
         options.refreshWindowAlpha()
-        demoteStrataIfIdle()
       end
       contactsResize.updateFromCursor()
       windowResize.updateFromCursor()
+    end)
+
+    -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
+    -- to detect "user engaged with another window" — when they click
+    -- somewhere the messenger isn't, drop our strata so their target
+    -- window comes forward. Clicks on our own frame hit OnMouseDown which
+    -- promotes instead, and here we skip demotion when the cursor is
+    -- still over us.
+    if type(frame.RegisterEvent) == "function" then
+      frame:RegisterEvent("GLOBAL_MOUSE_DOWN")
+    end
+    frame:SetScript("OnEvent", function(self, event)
+      if event == "GLOBAL_MOUSE_DOWN" and not isMouseOverFrame() then
+        demoteStrataIfIdle()
+      end
     end)
 
     frame:SetScript("OnSizeChanged", function(_self, w, h)

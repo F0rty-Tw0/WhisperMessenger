@@ -4,9 +4,11 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColor = UIHelpers.applyColor
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyPaneBackground = UIHelpers.applyPaneBackground
 local createCircularIcon = UIHelpers.createCircularIcon
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
@@ -17,13 +19,17 @@ local HeaderElements = {}
 -- Returns headerFrame.
 function HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
   local headerFrame = factory.CreateFrame("Frame", nil, pane)
-  headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, 0)
-  headerFrame:SetPoint("TOPRIGHT", pane, "TOPRIGHT", 0, 0)
+  headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, -2)
+  -- 4px right margin so the header (contact name + status line) breathes
+  -- away from the pane edge and doesn't touch the chrome border. Top offset
+  -- -2 aligns the contact status bar with the contact list's 2px shift.
+  headerFrame:SetPoint("TOPRIGHT", pane, "TOPRIGHT", 0, -2)
   headerFrame:SetHeight(HEADER_HEIGHT)
 
   local headerBg = headerFrame:CreateTexture(nil, "BACKGROUND")
   headerBg:SetAllPoints(headerFrame)
-  applyColorTexture(headerBg, Theme.COLORS.bg_header)
+  local skinSpec = Skins.Get(Skins.GetActive())
+  applyPaneBackground(headerBg, Theme.COLORS.bg_header, skinSpec and skinSpec.pane_header_texture)
   headerFrame.bg = headerBg
   return headerFrame
 end
@@ -55,12 +61,12 @@ function HeaderElements.createContactName(headerFrame, selectedContact)
     -- anchor requires classIconFrame but we accept headerFrame as anchor for simplicity;
     -- caller wires SetPoint after calling createClassIcon when needed.
     -- Here we set a simple self-relative point so the widget is valid.
-    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -12)
+    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -2)
     headerName:SetText(selectedContact.displayName or "")
     UIHelpers.applyClassColor(headerName, selectedContact.classTag, Theme.COLORS.text_primary)
     headerName:Show()
   else
-    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -12)
+    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -2)
     headerName:SetText("")
     headerName:Hide()
   end
@@ -126,16 +132,17 @@ function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, se
   return statusDot
 end
 
--- Creates the 1px divider line at the bottom of headerFrame.
--- Returns headerDivider texture.
+-- Creates a 4-sided border around headerFrame using full-opacity divider color
+-- for stronger visibility than the base divider alpha. Returns the bottom
+-- texture as the primary handle (backward compat with applyColorTexture calls)
+-- with the full border table stashed on `._headerBorder` for theme refresh.
 function HeaderElements.createDivider(headerFrame)
-  local headerDivider = headerFrame:CreateTexture(nil, "BACKGROUND")
-  headerDivider:SetPoint("BOTTOMLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
-  headerDivider:SetPoint("BOTTOMRIGHT", headerFrame, "BOTTOMRIGHT", 0, 0)
-  headerDivider:SetHeight(1)
-  applyColorTexture(headerDivider, Theme.COLORS.divider)
-
-  return headerDivider
+  local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
+  local strongColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
+  local border = UIHelpers.createBorderBox(headerFrame, strongColor, 1, "OVERLAY")
+  local primary = border and border.bottom or headerFrame:CreateTexture(nil, "OVERLAY")
+  primary._headerBorder = border
+  return primary
 end
 
 -- Creates the centered empty state container with label + "Start New Whisper" button.

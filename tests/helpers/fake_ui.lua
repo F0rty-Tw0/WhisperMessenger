@@ -333,6 +333,10 @@ function FakeUI.NewFactory()
         self.texturePath = path
       end
 
+      function texture:GetTexture()
+        return self.texturePath
+      end
+
       function texture:SetVertexColor(...)
         self.vertexColor = { ... }
       end
@@ -461,6 +465,42 @@ function FakeUI.NewFactory()
       self.enabled = value
     end
 
+    function frame:SetNormalTexture(value)
+      self.normalTexture = value
+    end
+
+    function frame:GetNormalTexture()
+      return self.normalTexture
+    end
+
+    function frame:SetPushedTexture(value)
+      self.pushedTexture = value
+    end
+
+    function frame:SetHighlightTexture(value)
+      self.highlightTexture = value
+    end
+
+    function frame:SetDisabledTexture(value)
+      self.disabledTexture = value
+    end
+
+    function frame:SetBackdrop(spec)
+      self.backdrop = spec
+    end
+
+    function frame:GetBackdrop()
+      return self.backdrop
+    end
+
+    function frame:SetBackdropColor(...)
+      self.backdropColor = { ... }
+    end
+
+    function frame:SetBackdropBorderColor(...)
+      self.backdropBorderColor = { ... }
+    end
+
     function frame:RegisterEvent(eventName)
       self.events = self.events or {}
       self.events[eventName] = true
@@ -479,6 +519,31 @@ function FakeUI.NewFactory()
 
     function frame:IsEventRegistered(eventName)
       return self.events ~= nil and self.events[eventName] ~= nil
+    end
+
+    -- Stage 1 of BasicFrameTemplateWithInset migration: when a frame is
+    -- requested with the Blizzard template, attach the children the
+    -- template auto-creates in production WoW so ChromeBuilder code
+    -- (and tests) can reference them without nil-guards.
+    if template == "BasicFrameTemplateWithInset" then
+      frame.Bg = createFrame("Texture", nil, frame, nil)
+      frame.Inset = createFrame("Frame", nil, frame, nil)
+      frame.NineSlice = createFrame("Frame", nil, frame, nil)
+      frame.CloseButton = createFrame("Button", nil, frame, nil)
+      frame.TitleContainer = createFrame("Frame", nil, frame, nil)
+      frame.TitleContainer.TitleText = frame.TitleContainer:CreateFontString(nil, "OVERLAY")
+      frame.TitleText = frame.TitleContainer.TitleText
+
+      function frame:SetTitle(text)
+        self.title = text
+        if self.TitleContainer and self.TitleContainer.TitleText then
+          self.TitleContainer.TitleText:SetText(text)
+        end
+      end
+
+      function frame:GetTitle()
+        return self.title
+      end
     end
 
     return frame

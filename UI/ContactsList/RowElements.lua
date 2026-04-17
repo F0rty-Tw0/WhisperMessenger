@@ -45,10 +45,10 @@ local function nameLabelWidth(row, parentWidth)
   return math.max(
     0,
     (parentWidth or 0)
-      - Theme.LAYOUT.CONTACT_ICON_SIZE
-      - Theme.LAYOUT.CONTACT_PADDING
-      - NAME_LABEL_LEFT_INSET
-      - timestampReserveWidth(row)
+    - Theme.LAYOUT.CONTACT_ICON_SIZE
+    - Theme.LAYOUT.CONTACT_PADDING
+    - NAME_LABEL_LEFT_INSET
+    - timestampReserveWidth(row)
   )
 end
 
@@ -159,7 +159,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
 
   local inferredFaction = item.raceTag
       and (ns_ref and ns_ref.Identity and ns_ref.Identity.InferFaction and ns_ref.Identity.InferFaction(item.raceTag))
-    or nil
+      or nil
   local factionForIcon = inferredFaction or item.factionName
   local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
 
@@ -167,7 +167,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   local textBudget = titleMaxWidth
   if reliableFaction then
     textBudget =
-      math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
+        math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
     row.title:SetText(fitLabelTextWithEllipsis(row.title, item.displayName or "", textBudget))

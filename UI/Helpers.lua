@@ -11,6 +11,7 @@ local UIHelpers = {
   sizeValue = Base.sizeValue,
   applyColor = Base.applyColor,
   applyColorTexture = Base.applyColorTexture,
+  applyPaneBackground = Base.applyPaneBackground,
   applyBorderBoxColor = Base.applyBorderBoxColor,
   applyVertexColor = Base.applyVertexColor,
   applyClassColor = Base.applyClassColor,

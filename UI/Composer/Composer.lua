@@ -23,6 +23,19 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   paneBg:SetAllPoints(pane)
   applyColorTexture(paneBg, Theme.COLORS.bg_composer)
 
+  -- Thin themed border drawn on the composer's own pane. The
+  -- `composer_pane_border` line created by LayoutBuilder sits on the parent
+  -- composerPane and is covered by this child frame, so without this the
+  -- border is never visible at runtime. Each theme's `composer_pane_border`
+  -- color (gold under Azeroth, navy under wow_default, grey under ElvUI,
+  -- brown under Plumber) shows through here.
+  -- Use the subtle `divider` color (semi-transparent, matches the contacts
+  -- and search dividers) rather than the full-alpha `composer_pane_border`,
+  -- so the composer edge reads as a faint 1px line consistent with the
+  -- rest of the window's chrome instead of a highlighted frame.
+  local composerBorderColor = Theme.COLORS.divider
+  local composerBorder = UIHelpers.createBorderBox(pane, composerBorderColor, Theme.DIVIDER_THICKNESS, "OVERLAY")
+
   -- Input background texture (sits behind the EditBox)
   local inputBg = pane:CreateTexture(nil, "BACKGROUND")
   local buttonW = 44
@@ -38,7 +51,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- Send button (compact rounded pill)
   local createRoundedBackground = UIHelpers.createRoundedBackground
   local button = factory.CreateFrame("Button", nil, pane)
-  button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -inputX, inputY + (inputH - buttonH) / 2)
+  button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -(inputX - 5), inputY + (inputH - buttonH) / 2)
   button:SetSize(buttonW, buttonH)
 
   local sendBg = createRoundedBackground(button, 8)
@@ -180,6 +193,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     frame = pane,
     input = input,
     inputBg = inputBg,
+    paneBg = paneBg,
+    border = composerBorder,
     sendButton = button,
     setEnabled = function(enabled)
       sendDisabled = not enabled
@@ -194,6 +209,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     refreshTheme = function()
       applyColorTexture(paneBg, Theme.COLORS.bg_composer)
       applyColorTexture(inputBg, Theme.COLORS.bg_message_input or Theme.COLORS.bg_input)
+      UIHelpers.applyBorderBoxColor(composerBorder, Theme.COLORS.divider)
       if input.SetTextColor then
         input:SetTextColor(
           Theme.COLORS.text_primary[1],
@@ -211,7 +227,18 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       setTextColor(buttonLabel, sendButtonTextColor())
     end,
     relayout = function(parentW)
-      local newInputW = parentW - 24 - buttonW - buttonGap
+      -- Prefer the pane's live width over the passed-in hint: the caller
+      -- passes the full content width, but composerPane has a right-margin
+      -- anchor (-20 in fake_ui, -8 in production WoW) that makes the pane
+      -- narrower. Using the hint would overflow the right padding.
+      local effectiveW = sizeValue(parent, "GetWidth", "width", parentW)
+      if type(effectiveW) ~= "number" or effectiveW <= 0 then
+        effectiveW = parentW
+      end
+      if type(effectiveW) ~= "number" or effectiveW <= 0 then
+        return
+      end
+      local newInputW = effectiveW - 24 - buttonW - buttonGap
       input:SetSize(newInputW, inputH)
       inputBg:SetSize(newInputW, inputH)
     end,

@@ -108,8 +108,9 @@ local function resolveByGUID(bnetApi, guid, accountInfo, isStaleId)
   if isDifferentPerson then
     -- bnetAccountID has shifted to a different person between sessions;
     -- the GUID-based lookup is authoritative for the stored contact.
+    -- isAFK/isDND are STICKY and persist after offline — do not use them as proof of presence.
     local gameInfo = info.gameAccountInfo
-    if info.isOnline or info.isAFK or info.isDND or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+    if info.isOnline == true or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
       return info
     end
     return nil
@@ -168,8 +169,9 @@ function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
   if guid and type(bnetApi.GetAccountInfoByGUID) == "function" then
     local ok2, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
     if ok2 and info and info.battleTag == battleTag then
+      -- isAFK/isDND are STICKY and persist after offline — not valid proof of presence.
       local gameInfo = info.gameAccountInfo
-      if info.isOnline or info.isAFK or info.isDND or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
+      if info.isOnline == true or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
         return info
       end
     end

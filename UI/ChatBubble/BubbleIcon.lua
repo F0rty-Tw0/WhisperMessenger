@@ -16,10 +16,11 @@ function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction,
   local iconFrame = bubbleIcon.frame
   local icon = bubbleIcon.texture
 
+  local gap = Theme.LAYOUT.BUBBLE_ICON_GAP or 8
   if direction == "in" then
-    iconFrame:SetPoint("TOPRIGHT", bubbleFrame, "TOPLEFT", -8, 0)
+    iconFrame:SetPoint("TOPRIGHT", bubbleFrame, "TOPLEFT", -gap, 0)
   else
-    iconFrame:SetPoint("TOPLEFT", bubbleFrame, "TOPRIGHT", 8, 0)
+    iconFrame:SetPoint("TOPLEFT", bubbleFrame, "TOPRIGHT", gap, 0)
   end
 
   local iconPath

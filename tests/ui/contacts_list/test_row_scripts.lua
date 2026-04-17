@@ -274,9 +274,8 @@ return function()
     assert(row.removeButton:IsShown() == false, "remove button should hide when pointer leaves row")
     assert(row.pinButton:IsShown() == false, "pin button should hide when pointer leaves row")
     for i = 1, 4 do
-      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
-      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
-      assert(math.abs(actual - expected) < 0.0001, "row background should restore base color after leaving row")
+      local actual = row.bg.color and (row.bg.color[i] or 0) or 0
+      assert(math.abs(actual - 0) < 0.0001, "row background should be transparent after leaving row")
     end
   end
 
@@ -309,8 +308,8 @@ return function()
     assert(row.removeButton:IsShown() == false, "remove button should hide even if action OnLeave was skipped")
     assert(row.pinButton:IsShown() == false, "pin button should hide even if action OnLeave was skipped")
     for i = 1, 4 do
-      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
-      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      local actual = row.bg.color and (row.bg.color[i] or 0) or 0
+      local expected = 0
       assert(math.abs(actual - expected) < 0.0001, "row background should clear even if action OnLeave was skipped")
     end
   end
@@ -347,8 +346,8 @@ return function()
     assert(row.removeButton:IsShown() == false, "watchdog should hide remove button when hover is stale")
     assert(row.pinButton:IsShown() == false, "watchdog should hide pin button when hover is stale")
     for i = 1, 4 do
-      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
-      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      local actual = row.bg.color and (row.bg.color[i] or 0) or 0
+      local expected = 0
       assert(math.abs(actual - expected) < 0.0001, "watchdog should restore base row background")
     end
   end
@@ -394,8 +393,8 @@ return function()
     assert(row.removeButton:IsShown() == false, "remove button should hide after leaving list from remove")
     assert(row.pinButton:IsShown() == false, "pin button should hide after leaving list from remove")
     for i = 1, 4 do
-      local actual = row.bg.color and (row.bg.color[i] or (i == 4 and 1) or 0) or 0
-      local expected = Theme.COLORS.bg_secondary[i] or (i == 4 and 1) or 0
+      local actual = row.bg.color and (row.bg.color[i] or 0) or 0
+      local expected = 0
       assert(math.abs(actual - expected) < 0.0001, "row background should clear after pin->remove->leave")
     end
   end

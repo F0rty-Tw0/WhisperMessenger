@@ -51,6 +51,7 @@ def main():
         _G.C_ChatInfo = _G.C_ChatInfo or {}
         _G.GameTooltip = _G.GameTooltip or {
             SetOwner = function() end,
+            SetText = function() end,
             AddLine = function() end,
             Show = function() end,
             Hide = function() end,

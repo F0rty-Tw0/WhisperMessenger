@@ -202,11 +202,10 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       )
       if accountInfo then
         local gameInfo = accountInfo.gameAccountInfo
-        -- isAFK/isDND at account level imply online (you can't be AFK if not logged in)
-        local isOnline = accountInfo.isOnline
-          or accountInfo.isAFK
-          or accountInfo.isDND
-          or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+        -- isAFK/isDND are STICKY on BNetAccountInfo — they persist after a friend
+        -- goes offline. Only isOnline (strict true) or game-account presence prove
+        -- they are actually connected; sticky flags are valid only as sub-status.
+        local isOnline = accountInfo.isOnline == true or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
         if isOnline then
           -- Check AFK/DND first (applies whether in WoW or BNet app)
           local inWoW = gameInfo and (gameInfo.isOnline or gameInfo.characterName)
@@ -256,10 +255,25 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
           if presence == "online" then
             -- Guild/community says online — they're in WoW, BNet API just hasn't caught up
             item.availability = Availability.FromStatus("CanWhisper")
+          elseif presence == "offline" then
+            -- Guild/community explicitly offline — trust the positive signal over the
+            -- ambiguous BNet state; don't fall back to "probably mobile" BNetOnline.
+            item.availability = Availability.FromStatus("Offline")
           else
-            -- Not in guild/community as online — likely on BNet mobile app
+            -- No presence cache entry — no way to disambiguate; likely BNet mobile app.
             item.availability = Availability.FromStatus("BNetOnline")
           end
+        end
+      end
+      -- BNet contact without resolvable accountInfo (API has no data for this friend):
+      -- trust guild/community presence if we have it, otherwise default to Offline so
+      -- the status bar always shows a concrete state instead of leaking stale data.
+      if item.availability == nil then
+        local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil
+        if presence == "online" then
+          item.availability = Availability.FromStatus("CanWhisper")
+        else
+          item.availability = Availability.FromStatus("Offline")
         end
       end
     end

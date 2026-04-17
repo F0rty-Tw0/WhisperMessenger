@@ -108,6 +108,13 @@ function SettingsHandler.Create(options)
       end
     end
 
+    -- nativeChrome flips the messenger frame between BasicFrameTemplateWithInset
+    -- and our custom chrome. Templates can't be added/removed at runtime in
+    -- WoW, so we tell the user a /reload is required to apply.
+    if key == "nativeChrome" and _G.print then
+      _G.print("|cffffd100WhisperMessenger:|r Native WoW HUD change requires |cffffff00/reload|r to apply.")
+    end
+
     local icon = getIcon()
     if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
       local freshContacts = buildContacts()

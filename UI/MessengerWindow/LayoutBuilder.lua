@@ -7,16 +7,16 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local LayoutMetrics = ns.MessengerWindowLayoutMetrics
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local LayoutApply = ns.MessengerWindowLayoutApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Apply")
 local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
+    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
 local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
+    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
+    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
+    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local LayoutBuilder = {}
@@ -37,18 +37,19 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
   local contactsWidth =
-    LayoutBuilder.ClampContactsWidth(initialState.width, _options.contactsWidth or initialState.contactsWidth, Theme)
+      LayoutBuilder.ClampContactsWidth(initialState.width, _options.contactsWidth or initialState.contactsWidth, Theme)
   local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local contentWidth = initialState.width - contactsWidth - Theme.DIVIDER_THICKNESS
   local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
   local threadHeight = contentHeight - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
   local contactsHandleWidth = LayoutMetrics.GetContactsResizeHandleWidth(Theme)
   local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight =
-    LayoutMetrics.ContactsSearchMetrics(Theme)
+      LayoutMetrics.ContactsSearchMetrics(Theme)
   local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
 
   local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
   local strongDividerColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
+  local composerBorderColor = Theme.COLORS.composer_pane_border or strongDividerColor
   local contactsSectionBorderColor = Theme.COLORS.contacts_border_right or Theme.COLORS.contacts_divider or dividerColor
   local strongContactsBorderColor = {
     contactsSectionBorderColor[1],
@@ -57,9 +58,17 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsSectionBorderColor[4] or 1,
   }
 
-  local contactsPane = factory.CreateFrame("Frame", nil, frame)
+  -- Stage 2 + 3 of BasicFrameTemplateWithInset migration: anchor content
+  -- inside the template's Inset frame and dual-anchor (TOPLEFT + BOTTOMLEFT)
+  -- so the contacts pane auto-fills Inset's height. Without dual-anchor the
+  -- pane uses a stale `initialState.height - TOP_BAR_HEIGHT` height that's
+  -- shorter than Inset, leaving a visible gap at the bottom of the window.
+  local contactsPane = factory.CreateFrame("Frame", nil, frame.Inset or frame)
   contactsPane:SetSize(contactsWidth, contactsHeight)
-  contactsPane:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -Theme.TOP_BAR_HEIGHT)
+  -- Same 8px left + 24px top offset under both chromes — only the chrome
+  -- itself is conditional on Azeroth, layout sizes/positions stay uniform.
+  contactsPane:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 6, -24)
+  contactsPane:SetPoint("BOTTOMLEFT", frame.Inset or frame, "BOTTOMLEFT", 7, 6)
 
   -- Contacts pane background and section border
   local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
@@ -109,17 +118,18 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsView = ScrollView.Create(factory, contactsPane, {
     width = contactsWidth,
     height = contactsListHeight,
-    point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight },
+    point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight - 2 },
     step = Theme.LAYOUT.CONTACT_ROW_HEIGHT,
   })
 
-  local contactsDivider = frame:CreateTexture(nil, "BORDER")
+  local contentParent = frame.Inset or frame
+  local contactsDivider = contentParent:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
   contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
   applyColorTexture(contactsDivider, Theme.COLORS.contacts_divider or Theme.COLORS.divider)
 
   -- Drag handle over the contacts divider for contacts-only resizing.
-  local contactsResizeHandle = factory.CreateFrame("Frame", nil, frame)
+  local contactsResizeHandle = factory.CreateFrame("Frame", nil, contentParent)
   contactsResizeHandle:SetSize(contactsHandleWidth, contactsHeight)
   contactsResizeHandle:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", -math.floor(contactsHandleWidth / 2), 0)
   contactsResizeHandle:EnableMouse(true)
@@ -156,9 +166,13 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   end
   contactsResizeHandle.outline = contactsResizeOutline
 
-  local contentPane = factory.CreateFrame("Frame", nil, frame)
+  local contentPane = factory.CreateFrame("Frame", nil, contentParent)
   contentPane:SetSize(contentWidth, contentHeight)
   contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
+  -- Dual-anchor BOTTOMRIGHT to Inset with 5px right + 5px bottom margins
+  -- so neither the composer container nor the conversation header overlap
+  -- the window's border. (-5 right, 5 up from BOTTOMRIGHT.)
+  contentPane:SetPoint("BOTTOMRIGHT", contentParent, "BOTTOMRIGHT", -5, 10)
 
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
@@ -167,12 +181,18 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local composerPane = factory.CreateFrame("Frame", nil, contentPane)
   composerPane:SetSize(contentWidth, Theme.COMPOSER_HEIGHT)
-  composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, 0)
+  composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, -4)
+  -- Dual-anchor both edges flush with contentPane so the composer container
+  -- extends to the window's bottom-right corner. The resize grip sits on
+  -- the outer frame at a higher frame level and visually overlays the
+  -- composer corner instead of pushing the pane inward.
+  composerPane:SetPoint("BOTTOMRIGHT", contentPane, "BOTTOMRIGHT", 0, -4)
+  threadPane:SetPoint("BOTTOMRIGHT", composerPane, "TOPRIGHT", 0, Theme.DIVIDER_THICKNESS)
   local composerPaneBorder =
-    UIHelpers.createBorderBox(composerPane, strongDividerColor, Theme.DIVIDER_THICKNESS, "BORDER")
+      UIHelpers.createBorderBox(composerPane, composerBorderColor, Theme.DIVIDER_THICKNESS, "BORDER")
   local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
-  local optionsPanelLayout = OptionsPanelLayout.Build(factory, frame, initialState, {
+  local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {
     contactsWidth = contactsWidth,
     theme = Theme,
     scrollView = ScrollView,

@@ -87,6 +87,10 @@ return function()
       "test_set_elvui_dark: option_toggle_border did not update"
     )
     assert(
+      colorsMatch(Theme.COLORS.composer_pane_border, { 0.48, 0.50, 0.58, 1.0 }),
+      "test_set_elvui_dark: composer_pane_border should be brighter slate so the composer edge stays visible"
+    )
+    assert(
       colorsMatch(Theme.COLORS.contacts_border_right, { 0.15, 0.16, 0.20, 0.90 }),
       "test_set_elvui_dark: contacts_border_right did not update"
     )
@@ -145,15 +149,15 @@ return function()
     )
     assert(
       colorsMatch(Theme.COLORS.option_toggle_on, { 0.88, 0.56, 0.22, 1.0 }),
-      "test_set_plumber_warm: option_toggle_on did not update"
+      "test_set_plumber_warm: option_toggle_on tracks accent"
     )
     assert(
-      colorsMatch(Theme.COLORS.option_toggle_off, { 0.34, 0.25, 0.19, 0.95 }),
-      "test_set_plumber_warm: option_toggle_off did not update"
+      colorsMatch(Theme.COLORS.option_toggle_off, { 0.30, 0.24, 0.20, 0.95 }),
+      "test_set_plumber_warm: option_toggle_off should be a dull desaturated brown"
     )
     assert(
-      colorsMatch(Theme.COLORS.option_toggle_border, { 0.78, 0.61, 0.46, 0.92 }),
-      "test_set_plumber_warm: option_toggle_border did not update"
+      colorsMatch(Theme.COLORS.option_toggle_border, { 0.42, 0.32, 0.24, 0.75 }),
+      "test_set_plumber_warm: option_toggle_border should be dim so unchecked reads muted vs the vivid on-state"
     )
     assert(
       colorsMatch(Theme.COLORS.contacts_border_right, { 0.42, 0.29, 0.20, 0.90 }),
@@ -194,7 +198,11 @@ return function()
     )
     assert(
       colorsMatch(Theme.COLORS.option_toggle_on, { 1.00, 0.82, 0.00, 1.0 }),
-      "test_set_wow_native: option_toggle_on did not track gold accent"
+      "test_set_wow_native: option_toggle_on tracks gold accent"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.composer_pane_border, { 0.62, 0.50, 0.16, 1.0 }),
+      "test_set_wow_native: composer_pane_border should be brighter gold so the composer edge stays visible over the dialog backdrop"
     )
 
     -- HIGHLIGHT_FONT_COLOR drives primary text
@@ -223,10 +231,19 @@ return function()
       "test_set_wow_native: dnd did not update to RED_FONT_COLOR"
     )
 
-    -- Surfaces: near-black like Blizzard chat default
+    -- Surfaces: uniform near-black, fully opaque (kills the two-tone +
+    -- right-edge bleed reported in-game)
     assert(
-      colorsMatch(Theme.COLORS.bg_primary, { 0.04, 0.04, 0.06, 0.96 }),
-      "test_set_wow_native: bg_primary did not update to near-black"
+      colorsMatch(Theme.COLORS.bg_primary, { 0.04, 0.04, 0.06, 1.0 }),
+      "test_set_wow_native: bg_primary did not update to opaque near-black"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.bg_secondary, { 0.04, 0.04, 0.06, 1.0 }),
+      "test_set_wow_native: bg_secondary should equal bg_primary for native uniformity"
+    )
+    assert(
+      colorsMatch(Theme.COLORS.bg_composer, { 0.04, 0.04, 0.06, 1.0 }),
+      "test_set_wow_native: bg_composer should equal bg_primary for native uniformity"
     )
     assert(
       colorsMatch(Theme.COLORS.bg_search_input, { 0.06, 0.06, 0.08, 1.0 }),

@@ -7,18 +7,20 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
+    or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
+    or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColor = UIHelpers.applyColor
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyPaneBackground = UIHelpers.applyPaneBackground
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
@@ -228,10 +230,20 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     transcript = transcript,
     refreshTheme = function()
       if view.headerFrame and view.headerFrame.bg then
-        applyColorTexture(view.headerFrame.bg, Theme.COLORS.bg_header)
+        local skinSpec = Skins.Get(Skins.GetActive())
+        applyPaneBackground(view.headerFrame.bg, Theme.COLORS.bg_header, skinSpec and skinSpec.pane_header_texture)
       end
       if view.headerDivider then
-        applyColorTexture(view.headerDivider, Theme.COLORS.divider)
+        local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
+        local strongColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
+        local border = view.headerDivider._headerBorder
+        if border then
+          for _, edge in pairs(border) do
+            applyColorTexture(edge, strongColor)
+          end
+        else
+          applyColorTexture(view.headerDivider, strongColor)
+        end
       end
       HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
       if view.headerStatus then
@@ -243,6 +255,9 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
       end
       if view.activeStatusBanner then
         applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
+      end
+      if view.transcript and view.transcript.refreshSkin then
+        view.transcript.refreshSkin()
       end
       if view.transcript and view.transcript._allMessages then
         TranscriptView.RenderTranscript(view.transcript, view.transcript._allMessages)

@@ -35,6 +35,27 @@ function Base.applyColorTexture(region, colorTable)
   end
 end
 
+-- Paint a pane background with either the active skin's Blizzard texture
+-- (if `skinTexturePath` is non-nil) or fall back to the flat color paint.
+-- Caller passes the theme color regardless; helper handles the swap so
+-- live preset switches between skinned and modern paint clear cleanly.
+function Base.applyPaneBackground(region, colorTable, skinTexturePath)
+  if not region then
+    return
+  end
+  if skinTexturePath and region.SetTexture then
+    region:SetTexture(skinTexturePath)
+    if region.SetVertexColor then
+      region:SetVertexColor(1, 1, 1, 1)
+    end
+  else
+    if region.SetTexture then
+      region:SetTexture(nil)
+    end
+    Base.applyColorTexture(region, colorTable)
+  end
+end
+
 function Base.applyBorderBoxColor(border, colorTable)
   if type(border) ~= "table" or not colorTable then
     return

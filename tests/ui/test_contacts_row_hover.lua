@@ -54,11 +54,7 @@ return function()
   row.mouseOver = false
   removeButton.scripts.OnLeave(removeButton)
 
-  assertColorEquals(
-    row.bg.color,
-    Theme.COLORS.bg_secondary,
-    "row should restore base color after leaving action button"
-  )
+  assertColorEquals(row.bg.color, { 0, 0, 0, 0 }, "row should be transparent after leaving action button")
   assert(row.removeButton:IsShown() == false, "remove button should hide after leaving row/actions")
   assert(row.pinButton:IsShown() == false, "pin button should hide after leaving row/actions")
 
