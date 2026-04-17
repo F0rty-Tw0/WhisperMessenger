@@ -19,6 +19,9 @@ function FakeUI.NewFactory()
     }
 
     if parent then
+      -- parent may be a hand-rolled table from run_test.py's _G.UIParent
+      -- fallback which lacks a `children` table; create one on demand.
+      parent.children = parent.children or {}
       table.insert(parent.children, frame)
     end
 
@@ -40,7 +43,15 @@ function FakeUI.NewFactory()
     end
 
     function frame:SetPoint(...)
-      self.point = { ... }
+      -- Track explicit arity via select("#") so middle nils (common when
+      -- relativeFrame is nil, e.g. SetPoint("TOPLEFT", nil, "TOPLEFT", x, y))
+      -- survive through GetPoint() unpack. LuaJIT + lupa may otherwise lose
+      -- positions past the first nil.
+      local pt = { ... }
+      pt.n = select("#", ...)
+      self.point = pt
+      self.points = self.points or {}
+      self.points[#self.points + 1] = pt
     end
 
     function frame:GetPoint()
@@ -48,11 +59,12 @@ function FakeUI.NewFactory()
         return nil
       end
 
-      return table.unpack(self.point)
+      return table.unpack(self.point, 1, self.point.n or #self.point)
     end
 
     function frame:ClearAllPoints()
       self.point = nil
+      self.points = nil
     end
 
     function frame:SetAllPoints(target)

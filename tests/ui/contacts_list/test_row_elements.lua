@@ -109,7 +109,10 @@ return function()
 
     local label = RowElements.createNameLabel(row, item, 260)
     RowElements.updateNameLabel(row, item, 180)
-    local expectedWidth = 180 - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 10 - (4 + 14 + 2)
+    -- Formula mirrors RowElements.nameLabelWidth + timestampReserveWidth:
+    -- parentWidth - CONTACT_ICON_SIZE - CONTACT_PADDING - NAME_LABEL_LEFT_INSET(10)
+    --   - (TIME_LABEL_RIGHT_INSET(6) + TIME_LABEL_FALLBACK_WIDTH(14) + NAME_TO_TIME_GAP(2)).
+    local expectedWidth = 180 - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 10 - (6 + 14 + 2)
     assert(label.width == expectedWidth, "expected name label width to track parent resize")
   end
 

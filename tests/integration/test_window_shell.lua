@@ -36,18 +36,35 @@ return function()
 
   assert(window.frame.parent == _G.UIParent)
   assert(window.frame.point[1] == "CENTER")
-  assert(window.frame.width == 920)
-  assert(window.frame.height == 580)
+  assert(window.frame.width == Theme.WINDOW_WIDTH)
+  assert(window.frame.height == Theme.WINDOW_HEIGHT)
   assert(window.frame.resizeBounds[1] == 640)
   assert(window.frame.resizeBounds[2] == 420)
   assert(window.frame.background ~= nil)
   assert(window.contactsPane ~= nil)
   assert(window.contentPane ~= nil)
-  assert(window.contactsPane.point[1] == "TOPLEFT")
-  assert(window.contactsPane.point[5] < 0)
-  assert(window.contentPane.point[1] == "TOPLEFT")
-  assert(window.contentPane.point[2] == window.contactsPane, "expected content pane to align with contacts pane")
-  assert(window.contentPane.point[5] == 0, "expected content pane vertical offset to match contacts pane")
+  -- contactsPane dual-anchors TOPLEFT + BOTTOMLEFT; verify the TOPLEFT
+  -- entry keeps a negative y-offset (positioned below the top bar).
+  local contactsTopLeft
+  for _, p in ipairs(window.contactsPane.points or {}) do
+    if p[1] == "TOPLEFT" then
+      contactsTopLeft = p
+      break
+    end
+  end
+  assert(contactsTopLeft ~= nil, "expected contactsPane to have a TOPLEFT anchor")
+  assert(contactsTopLeft[5] < 0, "expected contactsPane TOPLEFT y-offset below the top bar")
+  -- contentPane dual-anchors TOPLEFT against contactsPane + BOTTOMRIGHT to Inset.
+  local contentTopLeft
+  for _, p in ipairs(window.contentPane.points or {}) do
+    if p[1] == "TOPLEFT" then
+      contentTopLeft = p
+      break
+    end
+  end
+  assert(contentTopLeft ~= nil, "expected contentPane to have a TOPLEFT anchor")
+  assert(contentTopLeft[2] == window.contactsPane, "expected content pane to align with contacts pane")
+  assert(contentTopLeft[5] == 0, "expected content pane vertical offset to match contacts pane")
   assert(window.contactsDivider ~= nil)
   assert(window.contactsRightBorder ~= nil, "expected contacts right border texture")
   local contactsRightBorderPoint = rawget(window.contactsRightBorder, "point")

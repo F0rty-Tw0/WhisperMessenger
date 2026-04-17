@@ -38,16 +38,13 @@ def main():
         _G.require = require
     """)
 
-    # Provide minimal _G stubs that tests/helpers/fake_ui.lua may not cover
+    # Match tests/run.lua: do NOT pre-install _G.UIParent / _G.CreateFrame
+    # stubs. Those thin stubs break tests that require("WhisperMessenger.Bootstrap")
+    # before fake_ui, because Bootstrap.lua's `if type(_G.CreateFrame) ==
+    # "function"` guard runs Install against an empty-table stub with no
+    # RegisterEvent/SetScript methods. Tests that need these globals load
+    # fake_ui themselves, which rawsets a full-fidelity _G.CreateFrame.
     lua.execute("""
-        _G.UIParent = _G.UIParent or {
-            CreateTexture = function() return {
-                SetTexture = function() end,
-                SetAlpha = function() end,
-                SetSize = function() end,
-            } end,
-        }
-        _G.CreateFrame = _G.CreateFrame or function() return {} end
         _G.C_ChatInfo = _G.C_ChatInfo or {}
         _G.GameTooltip = _G.GameTooltip or {
             SetOwner = function() end,

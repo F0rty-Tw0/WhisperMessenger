@@ -400,6 +400,8 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     optionsButton = optionsButton,
     resizeGrip = resizeGrip,
     applyTheme = applyTheme,
+    titleBarBorder = titleBarBorder,
+    titleBarTopBorder = titleBarBorder and titleBarBorder.top or nil,
   }
 end
 
