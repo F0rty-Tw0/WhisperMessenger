@@ -371,6 +371,15 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     return handlePlayerEnteringWorld(Bootstrap, deps)
   end
 
+  if event == "UPDATE_BINDINGS" then
+    -- User opened the keybindings UI and (possibly) remapped REPLY.
+    -- Re-run syncReplyKey so our override tracks the new key without /reload.
+    if Bootstrap.runtime and Bootstrap.runtime.syncReplyKey then
+      Bootstrap.runtime.syncReplyKey()
+    end
+    return true
+  end
+
   if
     event == "GUILD_ROSTER_UPDATE"
     or event == "CLUB_MEMBER_UPDATED"

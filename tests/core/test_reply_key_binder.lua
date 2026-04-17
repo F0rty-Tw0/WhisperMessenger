@@ -1,6 +1,14 @@
 local ReplyKeyBinder = require("WhisperMessenger.Core.Bootstrap.ReplyKeyBinder")
 
-local function makeStubs()
+-- Default stub: REPLY bound to "R" (Blizzard default). Tests override as needed.
+local function defaultGetBindingKey(action)
+  if action == "REPLY" then
+    return "R"
+  end
+  return nil
+end
+
+local function makeStubs(getBindingKey)
   local created = {}
   local overrideBindings = {}
   local clearedFor = {}
@@ -43,11 +51,28 @@ local function makeStubs()
     createFrame = createFrame,
     setOverride = setOverride,
     clearOverride = clearOverride,
+    getBindingKey = getBindingKey or defaultGetBindingKey,
     created = created,
     overrideBindings = overrideBindings,
     clearedFor = clearedFor,
     frame = frame,
   }
+end
+
+local function newBinder(stubs, extra)
+  local deps = {
+    createFrame = stubs.createFrame,
+    setOverrideBindingClick = stubs.setOverride,
+    clearOverrideBindings = stubs.clearOverride,
+    getBindingKey = stubs.getBindingKey,
+    uiParent = { _name = "UIParent" },
+  }
+  if extra then
+    for k, v in pairs(extra) do
+      deps[k] = v
+    end
+  end
+  return ReplyKeyBinder.New(deps)
 end
 
 return function()
@@ -56,12 +81,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local stubs = makeStubs()
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
-    })
+    local binder = newBinder(stubs)
 
     binder.bind()
 
@@ -81,9 +101,97 @@ return function()
     )
     assert(#stubs.overrideBindings == 1, "expected one override binding")
     local binding = stubs.overrideBindings[1]
-    assert(binding.key == "R", "must override R key, got " .. tostring(binding.key))
+    assert(binding.key == "R", "must override R key (default REPLY binding), got " .. tostring(binding.key))
     assert(binding.isPriority == true, "must use priority=true to beat user bindings")
     assert(binding.owner == stubs.frame, "owner of override binding must be our button")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_bind_uses_user_reply_binding_not_hardcoded_r
+  -- -----------------------------------------------------------------------
+  -- The user may have rebound REPLY to something other than R (e.g. because
+  -- R is bound to an ability). Respect GetBindingKey("REPLY") instead of
+  -- hardcoding R — otherwise we steal a keystroke they assigned to a skill.
+  do
+    local stubs = makeStubs(function(action)
+      if action == "REPLY" then
+        return "T"
+      end
+      return nil
+    end)
+    local binder = newBinder(stubs)
+
+    binder.bind()
+
+    assert(#stubs.overrideBindings == 1, "expected one override binding, got " .. #stubs.overrideBindings)
+    assert(
+      stubs.overrideBindings[1].key == "T",
+      "must override user-bound REPLY key 'T', got " .. tostring(stubs.overrideBindings[1].key)
+    )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_bind_overrides_all_keys_bound_to_reply
+  -- -----------------------------------------------------------------------
+  -- WoW lets users bind up to two keys per action. GetBindingKey returns
+  -- each slot as an additional return value. Override all of them.
+  do
+    local stubs = makeStubs(function(action)
+      if action == "REPLY" then
+        return "R", "NUMPAD0"
+      end
+      return nil
+    end)
+    local binder = newBinder(stubs)
+
+    binder.bind()
+
+    assert(
+      #stubs.overrideBindings == 2,
+      "expected two override bindings (one per REPLY slot), got " .. #stubs.overrideBindings
+    )
+    local seen = {}
+    for _, b in ipairs(stubs.overrideBindings) do
+      seen[b.key] = true
+    end
+    assert(seen["R"], "must override R slot")
+    assert(seen["NUMPAD0"], "must override NUMPAD0 slot")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_bind_skips_when_reply_unbound
+  -- -----------------------------------------------------------------------
+  -- If the user unbound REPLY entirely, we must not grab a random key —
+  -- there's nothing to override. Respect their choice and skip.
+  do
+    local stubs = makeStubs(function()
+      return nil
+    end)
+    local binder = newBinder(stubs)
+
+    binder.bind()
+
+    assert(#stubs.overrideBindings == 0, "must not bind any key when REPLY is unbound, got " .. #stubs.overrideBindings)
+    assert(binder.isBound() == false, "isBound() must report false when REPLY is unbound")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_bind_ignores_empty_string_keys
+  -- -----------------------------------------------------------------------
+  -- Defensive: if GetBindingKey returns "" in a slot, treat as unbound.
+  do
+    local stubs = makeStubs(function(action)
+      if action == "REPLY" then
+        return "", "R"
+      end
+      return nil
+    end)
+    local binder = newBinder(stubs)
+
+    binder.bind()
+
+    assert(#stubs.overrideBindings == 1, "empty-string slots must be skipped, got " .. #stubs.overrideBindings)
+    assert(stubs.overrideBindings[1].key == "R", "expected R, got " .. tostring(stubs.overrideBindings[1].key))
   end
 
   -- -----------------------------------------------------------------------
@@ -91,12 +199,7 @@ return function()
   -- -----------------------------------------------------------------------
   do
     local stubs = makeStubs()
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
-    })
+    local binder = newBinder(stubs)
 
     binder.bind()
     binder.unbind()
@@ -111,11 +214,7 @@ return function()
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
+    local binder = newBinder(stubs, {
       getSettings = function()
         return settings
       end,
@@ -133,11 +232,7 @@ return function()
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
+    local binder = newBinder(stubs, {
       getSettings = function()
         return settings
       end,
@@ -162,11 +257,7 @@ return function()
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
     local mythic = false
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
+    local binder = newBinder(stubs, {
       getSettings = function()
         return settings
       end,
@@ -188,16 +279,12 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- test_sync_idempotent_does_not_rebind_when_already_bound
+  -- test_sync_idempotent_when_reply_key_unchanged
   -- -----------------------------------------------------------------------
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
-    local binder = ReplyKeyBinder.New({
-      createFrame = stubs.createFrame,
-      setOverrideBindingClick = stubs.setOverride,
-      clearOverrideBindings = stubs.clearOverride,
-      uiParent = { _name = "UIParent" },
+    local binder = newBinder(stubs, {
       getSettings = function()
         return settings
       end,
@@ -209,7 +296,66 @@ return function()
 
     assert(
       #stubs.overrideBindings == 1,
-      "repeated sync while hide-whispers stays ON should not re-bind, got " .. #stubs.overrideBindings
+      "repeated sync while REPLY binding unchanged should not re-bind, got " .. #stubs.overrideBindings
     )
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_sync_rebinds_when_user_changes_reply_key
+  -- -----------------------------------------------------------------------
+  -- If the user opens the keybindings UI and changes REPLY from R to T,
+  -- the next sync must clear the stale R override and install T.
+  do
+    local replyKey = "R"
+    local stubs = makeStubs(function(action)
+      if action == "REPLY" then
+        return replyKey
+      end
+      return nil
+    end)
+    local settings = { hideFromDefaultChat = true }
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return settings
+      end,
+    })
+
+    binder.sync()
+    assert(stubs.overrideBindings[1].key == "R", "first sync binds R")
+
+    replyKey = "T"
+    binder.sync()
+
+    assert(#stubs.clearedFor >= 1, "rebinding must clear the prior override before applying the new key")
+    local last = stubs.overrideBindings[#stubs.overrideBindings]
+    assert(last.key == "T", "post-rebind override must target new key T, got " .. tostring(last.key))
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_sync_unbinds_when_user_clears_reply_binding
+  -- -----------------------------------------------------------------------
+  do
+    local replyKey = "R"
+    local stubs = makeStubs(function(action)
+      if action == "REPLY" and replyKey then
+        return replyKey
+      end
+      return nil
+    end)
+    local settings = { hideFromDefaultChat = true }
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return settings
+      end,
+    })
+
+    binder.sync()
+    assert(binder.isBound() == true, "bound after first sync")
+
+    replyKey = nil
+    binder.sync()
+
+    assert(binder.isBound() == false, "sync must unbind when user clears REPLY")
+    assert(#stubs.clearedFor >= 1, "must clear the stale override")
   end
 end
