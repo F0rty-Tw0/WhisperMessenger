@@ -51,6 +51,10 @@ Core/EventRouter.lua
 Core/SlashCommands.lua
 
 UI/Theme/Presets/Builder.lua
+UI/Theme/Presets/Data/WowDefault.lua
+UI/Theme/Presets/Data/ElvuiDark.lua
+UI/Theme/Presets/Data/PlumberWarm.lua
+UI/Theme/Presets/Data/WowNative.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
@@ -109,6 +113,9 @@ UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua
+UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
+UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
+UI/MessengerWindow/ChromeBuilder/Buttons.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
@@ -126,6 +133,7 @@ UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
+UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/BehaviorSettings.lua
@@ -154,10 +162,16 @@ Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua
+Core/Bootstrap/LifecycleHandlers/Common.lua
+Core/Bootstrap/LifecycleHandlers/Competitive.lua
+Core/Bootstrap/LifecycleHandlers/Presence.lua
+Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua
 Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
+Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
+Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/Diagnostics/MemoryReport.lua
 Core/Bootstrap/Diagnostics.lua
@@ -165,4 +179,5 @@ Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
+Core/SlashCommands/ReplyToLast.lua
 Bootstrap.lua

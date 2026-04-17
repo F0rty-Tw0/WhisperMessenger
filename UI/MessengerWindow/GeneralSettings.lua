@@ -5,7 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
+local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
 local createOptionButton = UIHelpers.createOptionButton
 
@@ -35,79 +35,6 @@ local TIME_SOURCE_OPTIONS = {
   { key = "local", label = "Local Time", tooltip = "Use your computer's clock." },
   { key = "server", label = "Server Time", tooltip = "Use the game server's clock." },
 }
-
-local function createSettingRow(factory, parent, label, min, max, step, initial, onChange)
-  local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
-
-  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
-
-  local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
-  UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
-
-  local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
-  if slider.SetOrientation then
-    slider:SetOrientation("HORIZONTAL")
-  end
-  slider:SetMinMaxValues(min, max)
-  slider:SetValueStep(step)
-
-  if slider.SetObeyStepOnDrag then
-    slider:SetObeyStepOnDrag(true)
-  end
-
-  local bg = slider:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(slider)
-  applyColorTexture(bg, Theme.COLORS.option_button_bg)
-
-  if slider.SetThumbTexture then
-    slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-  end
-
-  local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
-  minLabel:SetText(tostring(min))
-  UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
-
-  local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
-  maxLabel:SetText(tostring(max))
-  UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
-
-  slider:SetValue(initial)
-  valueFs:SetText(tostring(initial))
-
-  slider:SetScript("OnValueChanged", function(_self, value)
-    local stepped = math.floor(value / step + 0.5) * step
-    valueFs:SetText(tostring(stepped))
-    if onChange then
-      onChange(stepped)
-    end
-  end)
-
-  return {
-    row = row,
-    label = labelFs,
-    value = valueFs,
-    slider = slider,
-    sliderBg = bg,
-    minLabel = minLabel,
-    maxLabel = maxLabel,
-    applyTheme = function(activeTheme)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
-      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
-      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
-      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
-    end,
-  }
-end
 
 -- Create the General Settings view.
 --
@@ -145,61 +72,47 @@ function GeneralSettings.Create(factory, parent, config, options)
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
   -- Max messages per conversation
-  local messagesRow = createSettingRow(
-    factory,
-    frame,
-    "Max Messages Per Contact",
-    50,
-    500,
-    10,
-    config.maxMessagesPerConversation or 200,
-    function(value)
+  local messagesRow = SettingsControls.CreateSliderRow(factory, frame, {
+    label = "Max Messages Per Contact",
+    min = 50,
+    max = 500,
+    step = 10,
+    initial = config.maxMessagesPerConversation or 200,
+    onChange = function(value)
       onChange("maxMessagesPerConversation", value)
-    end
-  )
+    end,
+  })
   messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Max conversations
-  local conversationsRow = createSettingRow(
-    factory,
-    frame,
-    "Max Contacts",
-    10,
-    100,
-    10,
-    config.maxConversations or 100,
-    function(value)
+  local conversationsRow = SettingsControls.CreateSliderRow(factory, frame, {
+    label = "Max Contacts",
+    min = 10,
+    max = 100,
+    step = 10,
+    initial = config.maxConversations or 100,
+    onChange = function(value)
       onChange("maxConversations", value)
-    end
-  )
+    end,
+  })
   conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Message retention (in hours, converted to/from seconds)
   local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
-  local retentionRow = createSettingRow(
-    factory,
-    frame,
-    "Message Retention (hours)",
-    1,
-    168,
-    1,
-    retentionHours,
-    function(value)
+  local retentionRow = SettingsControls.CreateSliderRow(factory, frame, {
+    label = "Message Retention (hours)",
+    min = 1,
+    max = 168,
+    step = 1,
+    initial = retentionHours,
+    onChange = function(value)
       onChange("messageMaxAge", value * 3600)
-    end
-  )
+    end,
+  })
   retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Privacy toggles
-  local function toggleColorsFor(activeTheme)
-    return {
-      text = activeTheme.COLORS.text_primary,
-      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
-      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
-      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
-    }
-  end
-  local toggleColors = toggleColorsFor(Theme)
+  local toggleColors = SettingsControls.ToggleColors(Theme)
   local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
@@ -242,17 +155,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
 
   -- Time settings
-  local function selectorColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      bgActive = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-      textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
-    }
-  end
-  local selectorColors = selectorColorsFor(Theme)
+  local selectorColors = SettingsControls.SelectorColors(Theme)
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
@@ -294,15 +197,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
 
   -- Reset to Defaults button
-  local function optionButtonColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-    }
-  end
-  local normalColors = optionButtonColorsFor(Theme)
+  local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = createOptionButton(
     factory,
     frame,
@@ -340,17 +235,17 @@ function GeneralSettings.Create(factory, parent, config, options)
     conversationsRow.applyTheme(activeTheme)
     retentionRow.applyTheme(activeTheme)
 
-    local activeToggleColors = toggleColorsFor(activeTheme)
+    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
     clearOnLogoutToggle.applyThemeColors(activeToggleColors)
     hidePreviewToggle.applyThemeColors(activeToggleColors)
 
     UIHelpers.setTextColor(timeLabel, activeTheme.COLORS.text_secondary)
-    local activeSelectorColors = selectorColorsFor(activeTheme)
+    local activeSelectorColors = SettingsControls.SelectorColors(activeTheme)
     timeFormatSelector.applyTheme(activeTheme, activeSelectorColors)
     timeSourceSelector.applyTheme(activeTheme, activeSelectorColors)
 
     if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
     end
   end
 

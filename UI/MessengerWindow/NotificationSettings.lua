@@ -5,7 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
+local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local ButtonSelector = ns.MessengerWindowButtonSelector
   or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
@@ -54,76 +54,8 @@ local function createSoundSelector(factory, parent, initial, colors, onChange)
   })
 end
 
-local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
-  local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
-
-  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
-
-  local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
-  UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
-
-  local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
-  if slider.SetOrientation then
-    slider:SetOrientation("HORIZONTAL")
-  end
-  slider:SetMinMaxValues(min, max)
-  slider:SetValueStep(step)
-  if slider.SetObeyStepOnDrag then
-    slider:SetObeyStepOnDrag(true)
-  end
-
-  local bg = slider:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(slider)
-  applyColorTexture(bg, Theme.COLORS.option_button_bg)
-
-  if slider.SetThumbTexture then
-    slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-  end
-
-  local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
-  minLabel:SetText(formatFn and formatFn(min) or tostring(min))
-  UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
-
-  local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
-  maxLabel:SetText(formatFn and formatFn(max) or tostring(max))
-  UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
-
-  slider:SetValue(initial)
-  valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
-
-  slider:SetScript("OnValueChanged", function(_self, value)
-    local stepped = math.floor(value / step + 0.5) * step
-    valueFs:SetText(formatFn and formatFn(stepped) or tostring(stepped))
-    if onChange then
-      onChange(stepped)
-    end
-  end)
-
-  return {
-    row = row,
-    label = labelFs,
-    value = valueFs,
-    slider = slider,
-    sliderBg = bg,
-    minLabel = minLabel,
-    maxLabel = maxLabel,
-    applyTheme = function(activeTheme)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
-      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
-      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
-      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
-    end,
-  }
+local function pxFormat(v)
+  return tostring(math.floor(v + 0.5)) .. "px"
 end
 
 function NotificationSettings.Create(factory, parent, config, options)
@@ -153,15 +85,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
-  local function toggleColorsFor(activeTheme)
-    return {
-      text = activeTheme.COLORS.text_primary,
-      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
-      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
-      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
-    }
-  end
-  local toggleColors = toggleColorsFor(Theme)
+  local toggleColors = SettingsControls.ToggleColors(Theme)
   local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local badgePulseToggle = UIHelpers.createToggleRow(
@@ -204,17 +128,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
   )
 
-  local function selectorColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      bgActive = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-      textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
-    }
-  end
-  local selectorColors = selectorColorsFor(Theme)
+  local selectorColors = SettingsControls.SelectorColors(Theme)
   local soundSelector = createSoundSelector(
     factory,
     frame,
@@ -243,23 +157,17 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   showBadgeToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
-  local function pxFormat(v)
-    return tostring(math.floor(v + 0.5)) .. "px"
-  end
-
-  local iconSizeRow = createSliderRow(
-    factory,
-    frame,
-    "Icon Size",
-    24,
-    64,
-    2,
-    config.iconSize or DEFAULTS.iconSize,
-    pxFormat,
-    function(value)
+  local iconSizeRow = SettingsControls.CreateSliderRow(factory, frame, {
+    label = "Icon Size",
+    min = 24,
+    max = 64,
+    step = 2,
+    initial = config.iconSize or DEFAULTS.iconSize,
+    formatFn = pxFormat,
+    onChange = function(value)
       onChange("iconSize", value)
-    end
-  )
+    end,
+  })
   iconSizeRow.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
   local iconDesaturatedToggle = UIHelpers.createToggleRow(
@@ -286,15 +194,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
 
   -- Reset button
-  local function optionButtonColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-    }
-  end
-  local normalColors = optionButtonColorsFor(Theme)
+  local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,
     frame,
@@ -327,17 +227,17 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local activeToggleColors = toggleColorsFor(activeTheme)
+    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
     badgePulseToggle.applyThemeColors(activeToggleColors)
     playSoundToggle.applyThemeColors(activeToggleColors)
     showBadgeToggle.applyThemeColors(activeToggleColors)
     iconDesaturatedToggle.applyThemeColors(activeToggleColors)
 
     iconSizeRow.applyTheme(activeTheme)
-    soundSelector.applyTheme(activeTheme, selectorColorsFor(activeTheme))
+    soundSelector.applyTheme(activeTheme, SettingsControls.SelectorColors(activeTheme))
 
     if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
     end
   end
 

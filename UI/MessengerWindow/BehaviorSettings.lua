@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
 local BehaviorSettings = {}
 
@@ -48,227 +49,128 @@ function BehaviorSettings.Create(factory, parent, config, options)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
-  local function toggleColorsFor(activeTheme)
-    return {
-      text = activeTheme.COLORS.text_primary,
-      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
-      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
-      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
-    }
-  end
-  local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
-
-  local dimToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Dim when moving",
-    config.dimWhenMoving ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("dimWhenMoving", value)
-    end,
-    {
-      "Dim when moving",
-      "Reduces window opacity while your character is moving.",
-    }
-  )
-  dimToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
-
-  local autoFocusToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Auto-focus chat input",
-    config.autoFocusComposer == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("autoFocusComposer", value)
-    end,
-    {
-      "Auto-focus chat input",
-      "Places the cursor in the text box when you open the messenger.",
-    }
-  )
-  autoFocusToggle.row:SetPoint("TOPLEFT", dimToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
-
-  local autoSelectToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Jump to unread on open",
-    config.autoSelectUnread ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("autoSelectUnread", value)
-    end,
-    {
-      "Jump to unread on open",
-      "Selects the most recent contact with unread messages when you open the messenger.",
-    }
-  )
-  autoSelectToggle.row:SetPoint(
-    "TOPLEFT",
-    autoFocusToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
-
-  local hideFromDefaultChatToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Hide whispers from default chat",
-    config.hideFromDefaultChat == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("hideFromDefaultChat", value)
-    end,
-    {
-      "Hide whispers from default chat",
-      "Prevents whisper messages from appearing in the default WoW chat frame.",
-      " ",
-      "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely.",
-    }
-  )
-  hideFromDefaultChatToggle.row:SetPoint(
-    "TOPLEFT",
-    autoSelectToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
-
   local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
-  local profanityFilterToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Enable profanity filter",
-    profanityEnabled,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      if _G.SetCVar then
-        _G.SetCVar("profanityFilter", value and "1" or "0")
-      end
-    end,
-    {
-      "Enable profanity filter",
-      "Uses Blizzard's built-in filter to censor profanity in messages.",
-    }
-  )
-  profanityFilterToggle.row:SetPoint(
-    "TOPLEFT",
-    hideFromDefaultChatToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
 
-  local autoOpenIncomingToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Auto-open on incoming whisper",
-    config.autoOpenIncoming == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("autoOpenIncoming", value)
-    end,
+  local toggleSpecs = {
     {
-      "Auto-open on incoming whisper",
-      "Opens the messenger when you receive a whisper. Disabled during combat.",
-    }
-  )
-  autoOpenIncomingToggle.row:SetPoint(
-    "TOPLEFT",
-    profanityFilterToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
+      label = "Dim when moving",
+      initial = config.dimWhenMoving ~= false,
+      onChange = function(value)
+        onChange("dimWhenMoving", value)
+      end,
+      tooltipLines = {
+        "Dim when moving",
+        "Reduces window opacity while your character is moving.",
+      },
+      anchorOffsetY = -24,
+    },
+    {
+      label = "Auto-focus chat input",
+      initial = config.autoFocusComposer == true,
+      onChange = function(value)
+        onChange("autoFocusComposer", value)
+      end,
+      tooltipLines = {
+        "Auto-focus chat input",
+        "Places the cursor in the text box when you open the messenger.",
+      },
+    },
+    {
+      label = "Jump to unread on open",
+      initial = config.autoSelectUnread ~= false,
+      onChange = function(value)
+        onChange("autoSelectUnread", value)
+      end,
+      tooltipLines = {
+        "Jump to unread on open",
+        "Selects the most recent contact with unread messages when you open the messenger.",
+      },
+    },
+    {
+      label = "Hide whispers from default chat",
+      initial = config.hideFromDefaultChat == true,
+      onChange = function(value)
+        onChange("hideFromDefaultChat", value)
+      end,
+      tooltipLines = {
+        "Hide whispers from default chat",
+        "Prevents whisper messages from appearing in the default WoW chat frame.",
+        " ",
+        "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely.",
+      },
+    },
+    {
+      label = "Enable profanity filter",
+      initial = profanityEnabled,
+      onChange = function(value)
+        if _G.SetCVar then
+          _G.SetCVar("profanityFilter", value and "1" or "0")
+        end
+      end,
+      tooltipLines = {
+        "Enable profanity filter",
+        "Uses Blizzard's built-in filter to censor profanity in messages.",
+      },
+    },
+    {
+      label = "Auto-open on incoming whisper",
+      initial = config.autoOpenIncoming == true,
+      onChange = function(value)
+        onChange("autoOpenIncoming", value)
+      end,
+      tooltipLines = {
+        "Auto-open on incoming whisper",
+        "Opens the messenger when you receive a whisper. Disabled during combat.",
+      },
+    },
+    {
+      label = "Auto-open on outgoing whisper",
+      initial = config.autoOpenOutgoing == true,
+      onChange = function(value)
+        onChange("autoOpenOutgoing", value)
+      end,
+      tooltipLines = {
+        "Auto-open on outgoing whisper",
+        "Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
+      },
+    },
+    {
+      label = "Scroll to latest on open",
+      initial = config.scrollToLatestOnOpen ~= false,
+      onChange = function(value)
+        onChange("scrollToLatestOnOpen", value)
+      end,
+      tooltipLines = {
+        "Scroll to latest on open",
+        "Automatically scrolls to the most recent message when you open the messenger.",
+      },
+    },
+    {
+      label = "Double ESC to close",
+      initial = config.doubleEscapeToClose == true,
+      onChange = function(value)
+        onChange("doubleEscapeToClose", value)
+      end,
+      tooltipLines = {
+        "Double ESC to close",
+        "First Esc clears the chat input; second Esc closes the window.",
+      },
+    },
+  }
 
-  local autoOpenOutgoingToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Auto-open on outgoing whisper",
-    config.autoOpenOutgoing == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("autoOpenOutgoing", value)
-    end,
-    {
-      "Auto-open on outgoing whisper",
-      "Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
-    }
-  )
-  autoOpenOutgoingToggle.row:SetPoint(
-    "TOPLEFT",
-    autoOpenIncomingToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
-
-  local scrollToLatestToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Scroll to latest on open",
-    config.scrollToLatestOnOpen ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("scrollToLatestOnOpen", value)
-    end,
-    {
-      "Scroll to latest on open",
-      "Automatically scrolls to the most recent message when you open the messenger.",
-    }
-  )
-  scrollToLatestToggle.row:SetPoint(
-    "TOPLEFT",
-    autoOpenOutgoingToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
-
-  local doubleEscapeToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Double ESC to close",
-    config.doubleEscapeToClose == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("doubleEscapeToClose", value)
-    end,
-    {
-      "Double ESC to close",
-      "First Esc clears the chat input; second Esc closes the window.",
-    }
-  )
-  doubleEscapeToggle.row:SetPoint(
-    "TOPLEFT",
-    scrollToLatestToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
-  )
+  local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
+  local dimToggle = toggles[1]
+  local autoFocusToggle = toggles[2]
+  local autoSelectToggle = toggles[3]
+  local hideFromDefaultChatToggle = toggles[4]
+  local profanityFilterToggle = toggles[5]
+  local autoOpenIncomingToggle = toggles[6]
+  local autoOpenOutgoingToggle = toggles[7]
+  local scrollToLatestToggle = toggles[8]
+  local doubleEscapeToggle = toggles[9]
 
   -- Reset button
-  local function optionButtonColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-    }
-  end
-  local normalColors = optionButtonColorsFor(Theme)
+  local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,
     frame,
@@ -309,19 +211,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local activeToggleColors = toggleColorsFor(activeTheme)
-    dimToggle.applyThemeColors(activeToggleColors)
-    autoFocusToggle.applyThemeColors(activeToggleColors)
-    autoSelectToggle.applyThemeColors(activeToggleColors)
-    hideFromDefaultChatToggle.applyThemeColors(activeToggleColors)
-    profanityFilterToggle.applyThemeColors(activeToggleColors)
-    autoOpenIncomingToggle.applyThemeColors(activeToggleColors)
-    autoOpenOutgoingToggle.applyThemeColors(activeToggleColors)
-    scrollToLatestToggle.applyThemeColors(activeToggleColors)
-    doubleEscapeToggle.applyThemeColors(activeToggleColors)
+    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
+    for _, toggle in ipairs(toggles) do
+      toggle.applyThemeColors(activeToggleColors)
+    end
 
     if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
     end
   end
 

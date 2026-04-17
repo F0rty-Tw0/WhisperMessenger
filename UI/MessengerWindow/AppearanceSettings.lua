@@ -6,7 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
-local applyColorTexture = UIHelpers.applyColorTexture
+local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
 local ButtonSelector = ns.MessengerWindowButtonSelector
   or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
@@ -27,35 +27,12 @@ local OUTLINE_OPTIONS = {
   { key = "THICKOUTLINE", label = "Thick", tooltip = "Thick outline for maximum contrast." },
 }
 
-local function buildFontColorOptions()
-  local presets = Fonts.ListFontColorPresets and Fonts.ListFontColorPresets() or {}
-  local options = {}
-  for _, preset in ipairs(presets) do
-    local tooltip = "Use theme colors"
-    if preset.rgba then
-      tooltip = preset.label .. " text color"
-    end
-    options[#options + 1] = { key = preset.key, label = preset.label, tooltip = tooltip }
-  end
-  return options
-end
-
 local PRESET_LABELS = {
   wow_default = { label = "Midnight", tooltip = "Default colors and contrasts." },
   elvui_dark = { label = "Shadowlands", tooltip = "Dark UI style inspired by ElvUI." },
   plumber_warm = { label = "Draenor", tooltip = "Warm tones with softer contrast." },
   wow_native = { label = "Azeroth", tooltip = "Native WoW colors with gold accents." },
 }
-
-local function buildThemePresetOptions()
-  local keys = Theme.ListPresets and Theme.ListPresets() or { "wow_default", "elvui_dark", "plumber_warm" }
-  local options = {}
-  for _, key in ipairs(keys) do
-    local meta = PRESET_LABELS[key] or { label = key, tooltip = "Theme preset" }
-    options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
-  end
-  return options
-end
 
 local BUBBLE_COLOR_LABELS = {
   default = { label = "Default", tooltip = "Uses your theme's bubble colors." },
@@ -66,14 +43,31 @@ local BUBBLE_COLOR_LABELS = {
   fel = { label = "Fel", tooltip = "Eerie fel-green tones." },
 }
 
-local function buildBubbleColorOptions()
-  local keys = Theme.ListBubblePresets and Theme.ListBubblePresets() or { "default" }
+local function buildFontColorOptions()
+  local presets = Fonts.ListFontColorPresets and Fonts.ListFontColorPresets() or {}
   local options = {}
-  for _, key in ipairs(keys) do
-    local meta = BUBBLE_COLOR_LABELS[key] or { label = key, tooltip = "Bubble color preset" }
-    options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
+  for _, p in ipairs(presets) do
+    options[#options + 1] = {
+      key = p.key,
+      label = p.label,
+      tooltip = p.rgba and (p.label .. " text color") or "Use theme colors",
+    }
   end
   return options
+end
+
+local function buildThemePresetOptions()
+  local keys = Theme.ListPresets and Theme.ListPresets() or { "wow_default", "elvui_dark", "plumber_warm" }
+  return SettingsControls.ProjectLabeledOptions(keys, PRESET_LABELS, function(key)
+    return { label = key, tooltip = "Theme preset" }
+  end)
+end
+
+local function buildBubbleColorOptions()
+  local keys = Theme.ListBubblePresets and Theme.ListBubblePresets() or { "default" }
+  return SettingsControls.ProjectLabeledOptions(keys, BUBBLE_COLOR_LABELS, function(key)
+    return { label = key, tooltip = "Bubble color preset" }
+  end)
 end
 
 local DEFAULTS = {
@@ -88,99 +82,15 @@ local DEFAULTS = {
   nativeChrome = false,
 }
 
-local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
-  local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
-
-  local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-  labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
-
-  local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
-  UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
-
-  local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
-  if slider.SetOrientation then
-    slider:SetOrientation("HORIZONTAL")
-  end
-  slider:SetMinMaxValues(min, max)
-  slider:SetValueStep(step)
-  if slider.SetObeyStepOnDrag then
-    slider:SetObeyStepOnDrag(true)
-  end
-
-  local bg = slider:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(slider)
-  applyColorTexture(bg, Theme.COLORS.option_button_bg)
-
-  if slider.SetThumbTexture then
-    slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-  end
-
-  local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
-  minLabel:SetText(formatFn and formatFn(min) or tostring(min))
-  UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
-
-  local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
-  maxLabel:SetText(formatFn and formatFn(max) or tostring(max))
-  UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
-
-  slider:SetValue(initial)
-  valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
-
-  slider:SetScript("OnValueChanged", function(_self, value)
-    local stepped = math.floor(value / step + 0.5) * step
-    valueFs:SetText(formatFn and formatFn(stepped) or tostring(stepped))
-    if onChange then
-      onChange(stepped)
-    end
-  end)
-
-  return {
-    row = row,
-    label = labelFs,
-    value = valueFs,
-    slider = slider,
-    sliderBg = bg,
-    minLabel = minLabel,
-    maxLabel = maxLabel,
-    applyTheme = function(activeTheme)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
-      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
-      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
-      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
-    end,
-  }
-end
-
-local function createButtonSelector(factory, parent, labelText, optionsList, fallbackKey, initial, colors, onChange)
-  return ButtonSelector.Create(factory, parent, {
-    labelText = labelText,
-    optionsList = optionsList,
-    fallbackKey = fallbackKey,
-    initial = initial,
-    colors = colors,
-    onChange = onChange,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-  })
-end
-
 local function pctFormat(v)
   return tostring(math.floor(v * 100 + 0.5)) .. "%"
 end
+local function pxFormat(v)
+  return tostring(math.floor(v + 0.5)) .. "px"
+end
 
 function AppearanceSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function(...)
-    local _ = ...
-  end
+  local onChange = options.onChange or function() end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
@@ -204,229 +114,153 @@ function AppearanceSettings.Create(factory, parent, config, options)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
-  local function selectorColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      bgActive = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-      textActive = activeTheme.COLORS.option_button_text_active or activeTheme.COLORS.text_primary,
+  local selectorColors = SettingsControls.SelectorColors(Theme)
+  local gap = -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+
+  local function sel(labelText, opts, fallback, initial, onCh, extra)
+    local spec = {
+      labelText = labelText,
+      optionsList = opts,
+      fallbackKey = fallback,
+      initial = initial,
+      colors = selectorColors,
+      onChange = onCh,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
     }
+    if extra then
+      for k, v in pairs(extra) do
+        spec[k] = v
+      end
+    end
+    return ButtonSelector.Create(factory, frame, spec)
   end
-  local function toggleColorsFor(activeTheme)
-    return {
-      text = activeTheme.COLORS.text_primary,
-      on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
-      off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
-      border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
-    }
+
+  local function slider(label, min, max, step, initial, fmt, onCh)
+    return SettingsControls.CreateSliderRow(factory, frame, {
+      label = label,
+      min = min,
+      max = max,
+      step = step,
+      initial = initial,
+      formatFn = fmt,
+      onChange = onCh,
+    })
   end
-  local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local nativeChromeToggle = UIHelpers.createToggleRow(
     factory,
     frame,
     "Native WoW HUD",
     config.nativeChrome == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("nativeChrome", value)
+    SettingsControls.ToggleColors(Theme),
+    { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 },
+    function(v)
+      onChange("nativeChrome", v)
     end,
     {
       "Native WoW HUD",
       "Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply.",
     }
   )
-  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
-  local selectorColors = selectorColorsFor(Theme)
-  local themePresetOptions = buildThemePresetOptions()
-  local themePresetSelector = createButtonSelector(
-    factory,
-    frame,
+  local themePresetSelector = sel(
     "Theme Preset",
-    themePresetOptions,
+    buildThemePresetOptions(),
     DEFAULTS.themePreset,
     config.themePreset or DEFAULTS.themePreset,
-    selectorColors,
-    function(value)
-      onChange("themePreset", value)
+    function(v)
+      onChange("themePreset", v)
     end
   )
-  themePresetSelector.row:SetPoint(
-    "TOPLEFT",
-    nativeChromeToggle.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
 
-  local fontSelector = createButtonSelector(
-    factory,
-    frame,
+  local fontSelector = sel(
     "Font Family",
     FONT_OPTIONS,
     DEFAULTS.fontFamily,
     config.fontFamily or DEFAULTS.fontFamily,
-    selectorColors,
-    function(value)
-      onChange("fontFamily", value)
+    function(v)
+      onChange("fontFamily", v)
     end
   )
-  fontSelector.row:SetPoint(
-    "TOPLEFT",
-    themePresetSelector.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local function pxFormat(v)
-    return tostring(math.floor(v + 0.5)) .. "px"
-  end
+  local fontSizeRow = slider("Font Size", 9, 17, 1, config.fontSize or DEFAULTS.fontSize, pxFormat, function(v)
+    onChange("fontSize", v)
+  end)
+  fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local fontSizeRow = createSliderRow(
-    factory,
-    frame,
-    "Font Size",
-    9,
-    17,
-    1,
-    config.fontSize or DEFAULTS.fontSize,
-    pxFormat,
-    function(value)
-      onChange("fontSize", value)
-    end
-  )
-  fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-
-  local fontOutlineSelector = createButtonSelector(
-    factory,
-    frame,
+  local fontOutlineSelector = sel(
     "Font Outline",
     OUTLINE_OPTIONS,
     DEFAULTS.fontOutline,
     config.fontOutline or DEFAULTS.fontOutline,
-    selectorColors,
-    function(value)
-      onChange("fontOutline", value)
+    function(v)
+      onChange("fontOutline", v)
     end
   )
-  fontOutlineSelector.row:SetPoint(
-    "TOPLEFT",
-    fontSizeRow.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  fontOutlineSelector.row:SetPoint("TOPLEFT", fontSizeRow.row, "BOTTOMLEFT", 0, gap)
 
-  local fontColorOptions = buildFontColorOptions()
-  local fontColorSelector = ButtonSelector.Create(factory, frame, {
-    labelText = "Chat Font Color",
-    optionsList = fontColorOptions,
-    fallbackKey = DEFAULTS.fontColor,
-    initial = config.fontColor or DEFAULTS.fontColor,
-    colors = selectorColors,
-    onChange = function(value)
-      onChange("fontColor", value)
+  local fontColorSelector = sel(
+    "Chat Font Color",
+    buildFontColorOptions(),
+    DEFAULTS.fontColor,
+    config.fontColor or DEFAULTS.fontColor,
+    function(v)
+      onChange("fontColor", v)
     end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    maxPerRow = 3,
-  })
-  fontColorSelector.row:SetPoint(
-    "TOPLEFT",
-    fontOutlineSelector.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+    { maxPerRow = 3 }
   )
+  fontColorSelector.row:SetPoint("TOPLEFT", fontOutlineSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local bubbleColorOptions = buildBubbleColorOptions()
-  local bubbleColorSelector = ButtonSelector.Create(factory, frame, {
-    labelText = "Bubble Colors",
-    optionsList = bubbleColorOptions,
-    fallbackKey = DEFAULTS.bubbleColorPreset,
-    initial = config.bubbleColorPreset or DEFAULTS.bubbleColorPreset,
-    colors = selectorColors,
-    onChange = function(value)
-      onChange("bubbleColorPreset", value)
+  local bubbleColorSelector = sel(
+    "Bubble Colors",
+    buildBubbleColorOptions(),
+    DEFAULTS.bubbleColorPreset,
+    config.bubbleColorPreset or DEFAULTS.bubbleColorPreset,
+    function(v)
+      onChange("bubbleColorPreset", v)
     end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    maxPerRow = 3,
-  })
-  bubbleColorSelector.row:SetPoint(
-    "TOPLEFT",
-    fontColorSelector.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+    { maxPerRow = 3 }
   )
+  bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local opacityInactiveRow = createSliderRow(
-    factory,
-    frame,
+  local opacityInactiveRow = slider(
     "Window Opacity (Inactive)",
     0.3,
     1.0,
     0.05,
     config.windowOpacityInactive or DEFAULTS.windowOpacityInactive,
     pctFormat,
-    function(value)
-      onChange("windowOpacityInactive", value)
+    function(v)
+      onChange("windowOpacityInactive", v)
     end
   )
-  opacityInactiveRow.row:SetPoint(
-    "TOPLEFT",
-    bubbleColorSelector.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  opacityInactiveRow.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local opacityActiveRow = createSliderRow(
-    factory,
-    frame,
+  local opacityActiveRow = slider(
     "Window Opacity (Active)",
     0.5,
     1.0,
     0.05,
     config.windowOpacityActive or DEFAULTS.windowOpacityActive,
     pctFormat,
-    function(value)
-      onChange("windowOpacityActive", value)
+    function(v)
+      onChange("windowOpacityActive", v)
     end
   )
-  opacityActiveRow.row:SetPoint(
-    "TOPLEFT",
-    opacityInactiveRow.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  opacityActiveRow.row:SetPoint("TOPLEFT", opacityInactiveRow.row, "BOTTOMLEFT", 0, gap)
 
-  -- Reset button
-  local function optionButtonColorsFor(activeTheme)
-    return {
-      bg = activeTheme.COLORS.option_button_bg,
-      bgHover = activeTheme.COLORS.option_button_hover,
-      text = activeTheme.COLORS.option_button_text,
-      textHover = activeTheme.COLORS.option_button_text_hover,
-    }
-  end
-  local normalColors = optionButtonColorsFor(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,
     frame,
     "Reset to Defaults",
-    normalColors,
+    SettingsControls.OptionButtonColors(Theme),
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, gap)
   resetButton:SetScript("OnClick", function()
     opacityInactiveRow.slider:SetValue(DEFAULTS.windowOpacityInactive)
     opacityActiveRow.slider:SetValue(DEFAULTS.windowOpacityActive)
@@ -455,20 +289,18 @@ function AppearanceSettings.Create(factory, parent, config, options)
     UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
     UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
 
-    local activeSelectorColors = selectorColorsFor(activeTheme)
-    nativeChromeToggle.applyThemeColors(toggleColorsFor(activeTheme))
+    local activeSelectorColors = SettingsControls.SelectorColors(activeTheme)
+    nativeChromeToggle.applyThemeColors(SettingsControls.ToggleColors(activeTheme))
     themePresetSelector.applyTheme(activeTheme, activeSelectorColors)
     fontSelector.applyTheme(activeTheme, activeSelectorColors)
     fontOutlineSelector.applyTheme(activeTheme, activeSelectorColors)
     fontColorSelector.applyTheme(activeTheme, activeSelectorColors)
     bubbleColorSelector.applyTheme(activeTheme, activeSelectorColors)
-
     fontSizeRow.applyTheme(activeTheme)
     opacityInactiveRow.applyTheme(activeTheme)
     opacityActiveRow.applyTheme(activeTheme)
-
     if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(optionButtonColorsFor(activeTheme))
+      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
     end
   end
 
