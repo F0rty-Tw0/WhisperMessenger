@@ -3,10 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
-
 local Competitive = ns.BootstrapLifecycleHandlersCompetitive
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive"))
   or nil
