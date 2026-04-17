@@ -13,6 +13,25 @@ local function resolveModule(currentValue, namespaceKey, loadModule, moduleName,
   return ns[namespaceKey] or loadModule(moduleName, moduleKey)
 end
 
+-- RegisterEvent throws "Attempt to register unknown event ..." on clients that
+-- lack a given event (e.g. ADDON_RESTRICTION_STATE_CHANGED on pre-12.0 /
+-- Classic flavors). Skip those silently; the rest of the list must still
+-- register.
+local function isUnknownEventError(err)
+  return string.find(string.lower(tostring(err or "")), "unknown event", 1, true) ~= nil
+end
+
+local function registerEventIfSupported(frame, eventName)
+  local ok, err = pcall(frame.RegisterEvent, frame, eventName)
+  if ok then
+    return true
+  end
+  if isUnknownEventError(err) then
+    return false
+  end
+  error(err)
+end
+
 function AddonEventFrame.Install(deps)
   deps = deps or {}
 
@@ -68,7 +87,7 @@ function AddonEventFrame.Install(deps)
 
       local Constants = loadModule("WhisperMessenger.Core.Constants", "Constants")
       for _, eventName in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
-        loadFrame:RegisterEvent(eventName)
+        registerEventIfSupported(loadFrame, eventName)
       end
 
       if loadFrame.UnregisterEvent then
