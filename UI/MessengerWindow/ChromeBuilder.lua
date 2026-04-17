@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -102,7 +101,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- close over them; nil under blizzard chrome and the closure no-ops).
   local titleBarBg, titleBarBorder, edgeTextures, closeIcon
 
-  local blizzardTopBarExtension = nil
+  local blizzardTopBarExtension
   if useBlizzardChrome then
     local titleText = options.title or Theme.TITLE
     if frame.SetTitle then

@@ -60,13 +60,6 @@ local function deferHideActions(row)
   end
 end
 
-local function rowBaseColor(row)
-  if row._wmRowBaseBg then
-    return row._wmRowBaseBg
-  end
-  return (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
-end
-
 local function applyRowVisualState(row)
   local hovered = row._wmRowHover == true
     or (row._wmActionHoverCount or 0) > 0
