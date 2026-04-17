@@ -24,6 +24,10 @@ local skinData = {
     close_button_atlas = nil,
     close_button_texture = nil,
     contact_row_highlight_texture = nil,
+    -- Generic circular ring used for the draggable toggle widget under all
+    -- modern presets. `COMMON\RingBorder` is a soft blue/gray hoop that
+    -- paints cleanly with any vertex-color tint from the preset palette.
+    toggle_icon_ring_texture = "Interface\\COMMON\\RingBorder",
   },
   [Skins.BLIZZARD] = {
     window_backdrop = {
@@ -56,6 +60,10 @@ local skinData = {
     -- the surrounding dark dialog bg. Modern presets leave this nil and
     -- keep the flat `bg_header` color paint.
     pane_header_texture = "Interface\\FriendsFrame\\UI-FriendsFrame-FriendHeader",
+    -- The draggable toggle widget stays on the same generic ring texture
+    -- as modern presets under Azeroth — only its gold color tint carries
+    -- the theme. A Blizzard-native ring texture looked out of place on a
+    -- ~40px floating icon.
   },
 }
 

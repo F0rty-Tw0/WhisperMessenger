@@ -69,6 +69,9 @@ local roles = {
   danger_bg = { 0.45, 0.12, 0.12, 0.80 },
   danger_hover = { 0.55, 0.16, 0.16, 0.90 },
   action_icon = withAlpha(textSecondaryRgb, 0.70),
+  toggle_icon_bg = { 1.00, 0.82, 0.00, 1.0 },
+  toggle_icon_ring = { 1.00, 0.82, 0.00, 0.75 },
+  toggle_icon_glyph = { 1.00, 1.00, 1.00, 1.0 },
 }
 
 local dividers =

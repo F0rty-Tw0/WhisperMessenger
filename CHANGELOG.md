@@ -7,6 +7,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [1.1.9] - 2026-04-18
 
 - The messenger now always jumps to the most recent message when you open it, and auto-selects the contact with new unread whispers. The two Behavior toggles for these are removed — they are simply on.
+- The draggable chat icon now picks up the colors of your chosen theme, and switching themes updates the icon immediately without a reload.
 
 ## [1.1.8] - 2026-04-17
 

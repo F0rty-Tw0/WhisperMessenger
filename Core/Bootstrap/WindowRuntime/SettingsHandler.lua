@@ -103,6 +103,10 @@ function SettingsHandler.Create(options)
       if runtime.window and runtime.window.refreshTheme then
         runtime.window.refreshTheme()
       end
+      local themeIcon = getIcon()
+      if themeIcon and themeIcon.refreshTheme then
+        themeIcon.refreshTheme()
+      end
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end

@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
@@ -42,24 +43,46 @@ function ToggleIcon.Create(factory, options)
   -- Circular background: use the circle texture directly, tinted to desired color
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
+  local function resolveBgColor()
+    return Theme.COLORS.toggle_icon_bg or Theme.COLORS.icon_bg
+  end
+  local function resolveRingColor()
+    local c = Theme.COLORS.toggle_icon_ring
+    if c then
+      return c
+    end
+    local a = Theme.COLORS.accent or { 1, 1, 1, 1 }
+    return { a[1], a[2], a[3], 0.3 }
+  end
+  local function resolveGlyphColor()
+    return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
+  end
+  local function resolveRingTexture()
+    local spec = Skins.Get(Skins.GetActive())
+    return (spec and spec.toggle_icon_ring_texture) or "Interface\\COMMON\\RingBorder"
+  end
+
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   background:SetTexture(CIRCLE_TEX)
-  applyVertexColor(background, Theme.COLORS.icon_bg)
+  applyVertexColor(background, resolveBgColor())
 
-  -- Circular border ring
+  -- Circular border ring. Texture is skin-driven: Modern presets use the
+  -- generic `COMMON\RingBorder` hoop, the Blizzard skin (Azeroth) swaps to
+  -- the classic minimap-tracker rune border so the draggable widget reads
+  -- as a first-party native element.
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture("Interface\\COMMON\\RingBorder")
-  applyVertexColor(border, { Theme.COLORS.accent[1], Theme.COLORS.accent[2], Theme.COLORS.accent[3], 0.3 })
+  border:SetTexture(resolveRingTexture())
+  applyVertexColor(border, resolveRingColor())
 
   -- Chat icon (speech bubble) instead of text label
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
   chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
   chatIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
-  applyVertexColor(chatIcon, Theme.COLORS.text_primary)
+  applyVertexColor(chatIcon, resolveGlyphColor())
 
   local label = chatIcon -- reference kept for return table
 
@@ -166,11 +189,12 @@ function ToggleIcon.Create(factory, options)
 
   local lastUnreadCount = 0
 
-  -- Store original colors for desaturation restore
+  -- Store original colors for desaturation restore. Re-read on every
+  -- theme refresh so preset switches propagate through the desaturate path.
   local originalColors = {
-    chatIcon = Theme.COLORS.text_primary,
-    background = Theme.COLORS.icon_bg,
-    border = { Theme.COLORS.accent[1], Theme.COLORS.accent[2], Theme.COLORS.accent[3], 0.3 },
+    chatIcon = resolveGlyphColor(),
+    background = resolveBgColor(),
+    border = resolveRingColor(),
   }
   local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
   local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
@@ -241,7 +265,7 @@ function ToggleIcon.Create(factory, options)
 
     frame:SetScript("OnLeave", function()
       local isDesat = getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
-      applyVertexColor(background, isDesat and DESAT_BG or Theme.COLORS.icon_bg)
+      applyVertexColor(background, isDesat and DESAT_BG or resolveBgColor())
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -276,6 +300,17 @@ function ToggleIcon.Create(factory, options)
     updateDesaturation(lastUnreadCount)
   end
 
+  local function refreshTheme()
+    border:SetTexture(resolveRingTexture())
+    originalColors.chatIcon = resolveGlyphColor()
+    originalColors.background = resolveBgColor()
+    originalColors.border = resolveRingColor()
+    if glowTexture and glowTexture.SetVertexColor then
+      applyVertexColor(glowTexture, Theme.COLORS.accent)
+    end
+    refreshDesaturation()
+  end
+
   local function applyIconSize(newSize)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
@@ -305,6 +340,7 @@ function ToggleIcon.Create(factory, options)
     setCompetitiveContent = setCompetitiveContent,
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,
+    refreshTheme = refreshTheme,
   }
 end
 
