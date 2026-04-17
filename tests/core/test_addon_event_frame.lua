@@ -183,9 +183,14 @@ return function()
     "expected mythic guard to stop live routing after lifecycle handling"
   )
 
+  -- fake_ui installs a default _G.CreateFrame so the production code can run
+  -- under lupa; suppress it here to exercise the degenerate branch.
+  local savedCreateFrame = _G.CreateFrame
+  _G.CreateFrame = nil
   local noFrameResult = AddonEventFrame.Install({
     createFrame = nil,
   })
+  _G.CreateFrame = savedCreateFrame
   assert(noFrameResult == nil, "expected Install to return nil when createFrame is unavailable")
 
   calls = {}
