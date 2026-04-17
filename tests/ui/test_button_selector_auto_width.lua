@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_buttons_distribute_evenly_across_row
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
@@ -32,9 +31,8 @@ return function()
     end
   end
 
-  -- -----------------------------------------------------------------------
   -- test_two_buttons_fill_row
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
@@ -56,9 +54,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_five_buttons_fill_row
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
@@ -83,9 +80,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_explicit_button_width_overrides_distribution
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
@@ -108,9 +104,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_max_per_row_wraps_to_second_row
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Colors",
@@ -165,9 +160,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_max_per_row_row_height_includes_both_rows
-  -- -----------------------------------------------------------------------
+
   do
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Colors",

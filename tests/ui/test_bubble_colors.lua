@@ -10,9 +10,9 @@ local function colorsMatch(actual, expected)
 end
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_list_bubble_presets_returns_keys
-  -- -----------------------------------------------------------------------
+
   do
     local keys = BubbleColors.ListPresets()
     assert(type(keys) == "table", "test_list: expected table")
@@ -25,16 +25,14 @@ return function()
     assert(found.default == true, "test_list: missing 'default' preset")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_default_preset_is_active_initially
-  -- -----------------------------------------------------------------------
+
   do
     assert(BubbleColors.GetPreset() == "default", "test_initial: expected 'default' as initial preset")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_default_preset_follows_theme_colors
-  -- -----------------------------------------------------------------------
+
   do
     BubbleColors.SetPreset("default")
     Theme.SetPreset("wow_default")
@@ -60,9 +58,8 @@ return function()
     BubbleColors.SetPreset("default")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_custom_preset_overrides_theme
-  -- -----------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
 
@@ -99,9 +96,8 @@ return function()
     BubbleColors.SetPreset("default")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_switching_back_to_default_restores_theme_colors
-  -- -----------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     BubbleColors.SetPreset("default")
@@ -126,9 +122,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_invalid_preset_returns_false
-  -- -----------------------------------------------------------------------
+
   do
     local before = BubbleColors.GetPreset()
     local ok = BubbleColors.SetPreset("nonexistent_preset")
@@ -136,9 +131,8 @@ return function()
     assert(BubbleColors.GetPreset() == before, "test_invalid: preset should remain unchanged")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_custom_preset_updates_all_three_tokens
-  -- -----------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     BubbleColors.SetPreset("default")
@@ -175,9 +169,8 @@ return function()
     BubbleColors.SetPreset("default")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_bubble_color_rgba_returns_current_colors
-  -- -----------------------------------------------------------------------
+
   do
     BubbleColors.SetPreset("default")
     local colors = BubbleColors.GetColors()

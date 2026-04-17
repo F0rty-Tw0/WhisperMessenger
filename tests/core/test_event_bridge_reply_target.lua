@@ -11,9 +11,8 @@ return function()
   end)
   rawset(_G, "SetCVar", function() end)
 
-  -- -----------------------------------------------------------------------
   -- test_does_not_touch_blizzard_reply_target_for_character_whisper
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     rawset(_G, "ChatEdit_SetLastTellTarget", function()
@@ -64,9 +63,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_does_not_touch_blizzard_reply_target_for_bnet_whisper
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     rawset(_G, "ChatEdit_SetLastTellTarget", function()
@@ -120,9 +118,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_does_not_set_reply_target_when_hide_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     rawset(_G, "ChatEdit_SetLastTellTarget", function()
@@ -160,9 +157,8 @@ return function()
     assert(setLastTellCalled == false, "test_no_reply_target_when_hide_disabled: should not call SetLastTellTarget")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_does_not_set_reply_target_for_outgoing
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     rawset(_G, "ChatEdit_SetLastTellTarget", function()
@@ -204,9 +200,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_does_not_set_reply_target_when_suspended
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     rawset(_G, "ChatEdit_SetLastTellTarget", function()

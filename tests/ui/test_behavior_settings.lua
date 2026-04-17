@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_auto_focus_toggle_label_says_chat_input
-  -- -----------------------------------------------------------------------
+
   do
     local config = { dimWhenMoving = true, autoFocusComposer = false, autoSelectUnread = true }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -28,9 +27,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_focus_toggle_has_tooltip
-  -- -----------------------------------------------------------------------
+
   do
     local tooltipTitle = nil
     local addedLines = {}
@@ -60,9 +58,8 @@ return function()
     _G.GameTooltip = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_hide_from_default_chat_toggle_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { hideFromDefaultChat = true }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -84,9 +81,8 @@ return function()
     assert(label ~= nil, "test_hide_from_default_chat_toggle: should have a label with 'default chat'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_hide_from_default_chat_defaults_to_on
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -97,9 +93,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_profanity_filter_toggle_exists
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetCVar", function()
       return "1"
@@ -126,9 +121,8 @@ return function()
     assert(label ~= nil, "test_profanity_filter_toggle_exists: should have a label with 'profanity'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_profanity_filter_toggle_reads_cvar
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetCVar", function(name)
       if name == "profanityFilter" then
@@ -144,9 +138,8 @@ return function()
     assert(result.profanityFilterToggle ~= nil, "test_profanity_filter_toggle_reads_cvar: toggle should exist")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_incoming_toggle_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -181,9 +174,8 @@ return function()
     assert(outgoingLabel ~= nil, "test_auto_open_outgoing_toggle_exists: should have label with 'outgoing'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_toggles_default_to_off
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -192,9 +184,8 @@ return function()
     assert(result.autoOpenOutgoingToggle ~= nil, "test_auto_open_defaults_to_off: outgoing toggle should exist")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_toggles_fire_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {}
@@ -221,9 +212,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_incoming_toggle_has_tooltip
-  -- -----------------------------------------------------------------------
+
   do
     local tooltipTitle = nil
     local addedLines = {}
@@ -253,9 +243,8 @@ return function()
     _G.GameTooltip = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_toggles_included_in_reset
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { autoOpenIncoming = true, autoOpenOutgoing = true }
@@ -279,9 +268,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_double_escape_toggle_exists_and_defaults_off
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
@@ -299,9 +287,8 @@ return function()
     assert(label ~= nil, "test_double_escape_toggle_exists: label should say 'Double ESC'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_double_escape_toggle_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {}
@@ -320,9 +307,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_double_escape_included_in_reset
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { doubleEscapeToClose = true }
@@ -342,9 +328,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_profanity_filter_toggle_writes_cvar_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local cvarWrites = {}
     rawset(_G, "GetCVar", function()

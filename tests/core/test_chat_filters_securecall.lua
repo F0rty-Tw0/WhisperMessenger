@@ -1,9 +1,9 @@
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_register_routes_through_securecall
-  -- -----------------------------------------------------------------------
+
   -- Raw ChatFrame_AddMessageEventFilter calls taint Blizzard's filter
   -- dispatch table. The next CHAT_MSG_WHISPER iteration propagates taint
   -- into ChatEdit_SetLastTellTarget, crashing /r and R-keybind. Fix is to
@@ -80,9 +80,8 @@ return function()
     rawset(_G, "securecall", savedSecurecall)
   end
 
-  -- -----------------------------------------------------------------------
   -- test_register_falls_back_when_securecall_missing
-  -- -----------------------------------------------------------------------
+
   -- Test harness and Classic flavors may not provide _G.securecall. The
   -- ChatFilters module must fall back to direct calls rather than
   -- erroring. Fallback is NOT preferred in Retail (it reintroduces the

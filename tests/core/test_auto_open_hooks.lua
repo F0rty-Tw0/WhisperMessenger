@@ -1,9 +1,9 @@
 local AutoOpenHooks = require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- Helpers
-  -- -----------------------------------------------------------------------
+
   local function makeDeps(overrides)
     overrides = overrides or {}
     local calls = {
@@ -48,9 +48,8 @@ return function()
     }
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_opens_window_and_selects_conversation
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       getLastReplyKey = function()
@@ -77,9 +76,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_reply_tell_opens: should force focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_skipped_in_combat
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isInCombat = function()
@@ -97,9 +95,8 @@ return function()
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_combat: should not open window in combat")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_routes_to_open_window_even_in_combat
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isInCombat = function()
@@ -125,11 +122,10 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_reply_tell_combat_visible: should focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_routes_even_when_auto_open_outgoing_off
   -- Explicit reply is explicit whisper intent — messenger is the whisper UI
   -- regardless of the autoOpenOutgoing post-send gate.
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       getSettings = function()
@@ -148,9 +144,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_reply_tell_disabled: should focus composer for explicit reply")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_routes_when_only_incoming_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       getSettings = function()
@@ -168,9 +163,8 @@ return function()
     assert(deps.calls.ensureWindow == 1, "test_on_reply_tell_incoming_only: should open window")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_reply_tell_skipped_when_no_key
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       getLastReplyKey = function()
@@ -185,9 +179,8 @@ return function()
     assert(deps.calls.ensureWindow == 0, "test_on_reply_tell_no_key: should not open window when no reply key")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_opens_window_and_selects_conversation
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       findConversationKeyByName = function(name)
@@ -214,9 +207,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_opens: should force focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_skipped_in_combat
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isInCombat = function()
@@ -237,9 +229,8 @@ return function()
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_combat: should not open window in combat")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_routes_to_open_window_even_in_combat
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isInCombat = function()
@@ -268,11 +259,10 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_combat_visible: should focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_routes_even_when_auto_open_outgoing_off
   -- Explicit /w and right-click whisper must open the messenger regardless
   -- of the autoOpenOutgoing post-send gate.
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       getSettings = function()
@@ -294,9 +284,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_disabled: should focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_falls_back_to_build_key_when_no_conversation
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       findConversationKeyByName = function(_name)
@@ -321,9 +310,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_fallback: should force focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_send_tell_skipped_when_no_conversation_and_no_builder
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       findConversationKeyByName = function(_name)
@@ -341,9 +329,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_outgoing_whisper_opens_window_with_force_focus
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps()
 
@@ -363,9 +350,8 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_outgoing_whisper: should force focus composer")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_outgoing_whisper_skipped_when_nil_key
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps()
 
@@ -376,9 +362,8 @@ return function()
     assert(deps.calls.ensureWindow == 0, "test_on_outgoing_whisper_nil: should not open when key is nil")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_auto_open_incoming_opens_window_and_selects
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps()
 
@@ -400,9 +385,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_incoming_whisper_does_not_switch_when_window_open_with_active_conversation
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isWindowVisible = function()
@@ -423,9 +407,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_incoming_whisper_selects_when_window_open_but_no_active_conversation
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isWindowVisible = function()
@@ -445,9 +428,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_incoming_whisper_selects_when_window_not_visible
-  -- -----------------------------------------------------------------------
+
   do
     local deps = makeDeps({
       isWindowVisible = function()

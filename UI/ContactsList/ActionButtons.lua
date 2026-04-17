@@ -93,8 +93,6 @@ local function adjustActionHoverCount(row, delta)
   end
 end
 
---- Show action buttons on a row (pin + remove), respecting unread state.
----@param row table row frame with item, pinButton, removeButton fields
 function ActionButtons.showActions(row)
   local hasUnread = row.item and (row.item.unreadCount or 0) > 0
   if hasUnread then
@@ -108,9 +106,6 @@ function ActionButtons.showActions(row)
   end
 end
 
---- Hide action buttons on a row (keeps pin visible for pinned items,
---- keeps all actions visible for selected rows).
----@param row table row frame with item, pinButton, removeButton fields
 function ActionButtons.hideActions(row)
   if row.selected then
     return
@@ -123,12 +118,6 @@ function ActionButtons.hideActions(row)
   end
 end
 
---- Create the remove button and attach it to row.
---- Returns the button frame.
----@param factory table frame factory
----@param row table parent row frame
----@param _parentWidth number width of the parent for layout
----@param options table callbacks: onRemove(item)
 function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
@@ -185,14 +174,6 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   return btn
 end
 
---- Create the pin button and attach it to row.
---- Requires row.removeButton to already exist for anchoring.
---- Returns the button frame.
----@param factory table frame factory
----@param row table parent row frame (must have row.removeButton)
----@param _item table contact item data
----@param _parentWidth number width of the parent for layout
----@param options table callbacks: onPin(item)
 function ActionButtons.createPinButton(factory, row, _item, _parentWidth, options)
   local ACTION_SIZE = Theme.LAYOUT.CONTACT_ACTION_SIZE
   local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING

@@ -6,9 +6,8 @@ return function()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local function noop() end
 
-  -- -----------------------------------------------------------------------
   -- test_tab_switching_shows_correct_panel
-  -- -----------------------------------------------------------------------
+
   do
     local generalPanel = factory.CreateFrame("Frame", nil, parent)
     local appearancePanel = factory.CreateFrame("Frame", nil, parent)

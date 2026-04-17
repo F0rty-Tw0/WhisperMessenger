@@ -3,9 +3,9 @@ local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Availability = require("WhisperMessenger.Transport.Availability")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_event_bridge_drops_events_when_caller_guards_mythic
-  -- -----------------------------------------------------------------------
+
   -- RouteLiveEvent no longer checks mythic lockdown itself — the caller
   -- (Bootstrap OnEvent) guards via Bootstrap._inMythicContent and never
   -- calls RouteLiveEvent during mythic. We verify nil-runtime still works.
@@ -20,9 +20,8 @@ return function()
     assert(refreshCalls == 0, "should not refresh window when runtime is nil")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_event_bridge_processes_events_outside_mythic
-  -- -----------------------------------------------------------------------
+
   do
     local Store = require("WhisperMessenger.Model.ConversationStore")
     local Queue = require("WhisperMessenger.Model.LockdownQueue")
@@ -56,9 +55,8 @@ return function()
     assert(refreshCalls == 1, "should refresh window after processing")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_send_handler_blocks_during_mythic_lockdown
-  -- -----------------------------------------------------------------------
+
   do
     local sentMessages = {}
     local refreshCalls = 0
@@ -105,9 +103,8 @@ return function()
     assert(status ~= nil, "expected mythic lockdown status")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_chat_filters_registered_on_init
-  -- -----------------------------------------------------------------------
+
   -- Chat filters are re-enabled. They are registered on init and
   -- unregistered on mythic suspend, re-registered on resume.
   do
@@ -165,9 +162,8 @@ return function()
     _G.UIParent = savedUIParent
   end
 
-  -- -----------------------------------------------------------------------
   -- test_challenge_mode_reset_clears_mythic_flag
-  -- -----------------------------------------------------------------------
+
   do
     local Constants = require("WhisperMessenger.Core.Constants")
 
@@ -188,17 +184,15 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_version_is_1_1_2
-  -- -----------------------------------------------------------------------
+
   do
     local Constants = require("WhisperMessenger.Core.Constants")
     assert(Constants.VERSION == "v1.1.8", "VERSION should be v1.1.8, got: " .. tostring(Constants.VERSION))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_refresh_contacts_skips_during_mythic
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")
@@ -270,9 +264,8 @@ return function()
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
-  -- -----------------------------------------------------------------------
   -- test_presence_cache_timer_skips_during_mythic
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")
@@ -332,9 +325,8 @@ return function()
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
-  -- -----------------------------------------------------------------------
   -- test_event_bridge_no_api_call_in_mythic_guard
-  -- -----------------------------------------------------------------------
+
   do
     -- The RouteLiveEvent function should NOT call isMythicLockdown()
     -- (which invokes GetInstanceInfo). The caller guards via
@@ -391,9 +383,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_slash_globals_registered
-  -- -----------------------------------------------------------------------
+
   -- Slash commands are re-enabled via SLASH_*/SlashCmdList. The taint
   -- issue was a WoW bug, not caused by our slash registration.
   do
@@ -437,9 +428,8 @@ return function()
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
-  -- -----------------------------------------------------------------------
   -- test_window_suspend_and_resume
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")
@@ -506,9 +496,8 @@ return function()
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
-  -- -----------------------------------------------------------------------
   -- test_window_shows_mythic_notice_when_reopened_during_suspend
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = require("WhisperMessenger.Bootstrap")
     local FakeUI = require("tests.helpers.fake_ui")

@@ -1,9 +1,9 @@
 local SoundPlayer = require("WhisperMessenger.Core.SoundPlayer")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_play_uses_correct_sound_id_for_key
-  -- -----------------------------------------------------------------------
+
   do
     local playedId, playedChannel
     rawset(_G, "PlaySound", function(soundId, channel)
@@ -32,9 +32,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_play_defaults_to_whisper_sound
-  -- -----------------------------------------------------------------------
+
   do
     local playedId
     rawset(_G, "PlaySound", function(soundId, _channel)
@@ -55,9 +54,8 @@ return function()
     assert(playedId == 3081, "test_play_defaults_to_whisper_sound: expected soundId 3081, got " .. tostring(playedId))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_play_does_not_toggle_global_sound_cvars_when_muted
-  -- -----------------------------------------------------------------------
+
   do
     local setCvarCalled = false
     local timerScheduled = false
@@ -89,9 +87,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_play_skips_cvar_when_audio_already_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local setCvarCalled = false
     rawset(_G, "PlaySound", function() end)
@@ -115,9 +112,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_preview_plays_sound_directly_without_cvar_manipulation
-  -- -----------------------------------------------------------------------
+
   do
     local playedId, playedChannel
     local setCvarCalled = false

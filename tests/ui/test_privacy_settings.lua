@@ -14,9 +14,8 @@ return function()
   _G.date = _G.date or os.date
   _G.RAID_CLASS_COLORS = _G.RAID_CLASS_COLORS or {}
 
-  -- -----------------------------------------------------------------------
   -- test_hide_message_preview_blanks_preview_text
-  -- -----------------------------------------------------------------------
+
   do
     local tns = {}
     loadAddonFromToc("WhisperMessenger", tns)
@@ -49,9 +48,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_logout_clears_conversations_when_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local tns = {}
     loadAddonFromToc("WhisperMessenger", tns)
@@ -86,9 +84,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_logout_preserves_conversations_when_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local tns = {}
     loadAddonFromToc("WhisperMessenger", tns)

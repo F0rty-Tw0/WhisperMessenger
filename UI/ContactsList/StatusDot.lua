@@ -40,12 +40,6 @@ function StatusDot.update(dotFrame, availability)
   end
 end
 
---- Create a status dot frame anchored to the bottom-right of anchorFrame.
---- Returns { frame = dotFrame, texture = dotTexture }.
----@param factory table frame factory
----@param parent table parent frame
----@param anchorFrame table frame to anchor to
----@param availability table|nil availability data with canWhisper and status fields
 function StatusDot.create(factory, parent, anchorFrame, availability)
   local statusSize = Theme.LAYOUT.CONTACT_STATUS_SIZE
 

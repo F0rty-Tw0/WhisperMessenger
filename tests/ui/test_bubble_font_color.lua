@@ -9,9 +9,8 @@ return function()
   local parent = factory.CreateFrame("Frame", nil, nil)
   parent:SetSize(400, 600)
 
-  -- -----------------------------------------------------------------------
   -- test_default_font_color_uses_theme_colors
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetFontColor("default")
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
@@ -26,9 +25,8 @@ return function()
     assert(type(b) == "number", "test_default_color: b should be a number")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_gold_font_color_overrides_incoming_text
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetFontColor("gold")
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
@@ -42,9 +40,8 @@ return function()
     assert(b == 0, "test_gold_incoming: b should be 0, got: " .. tostring(b))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_gold_font_color_overrides_outgoing_text
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetFontColor("gold")
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
@@ -58,9 +55,8 @@ return function()
     assert(b == 0, "test_gold_outgoing: b should be 0, got: " .. tostring(b))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_color_does_not_affect_system_messages
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetFontColor("gold")
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
@@ -75,9 +71,8 @@ return function()
     assert(not isGold, "test_system_not_affected: system messages should not use font color override")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_color_reset_to_default_restores_theme
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetFontColor("gold")
     Fonts.SetFontColor("default")

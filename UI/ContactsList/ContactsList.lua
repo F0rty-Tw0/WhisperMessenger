@@ -19,7 +19,6 @@ local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
 local ContactsList = {}
 
--- Re-export data builder functions
 ContactsList.BuildItems = DataBuilder.BuildItems
 ContactsList.BuildItemsForProfile = DataBuilder.BuildItemsForProfile
 

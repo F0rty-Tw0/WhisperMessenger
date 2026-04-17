@@ -65,12 +65,11 @@ return function()
     end
   end
 
-  -- ---------------------------------------------------------------
   -- test_overrides_not_installed_at_module_load
   -- (critical — Blizzard's OPENCHAT / UpdateHeader must see Blizzard's own
   --  function while composer is unfocused, otherwise our taint attribution
   --  crashes arithmetic in ChatFrameEditBox.UpdateHeader.)
-  -- ---------------------------------------------------------------
+
   do
     reset()
     assert(
@@ -81,9 +80,8 @@ return function()
     assert(not LinkHooks._isOverrideInstalled(), "override state should start uninstalled")
   end
 
-  -- ---------------------------------------------------------------
   -- test_focus_gained_installs_overrides
-  -- ---------------------------------------------------------------
+
   do
     reset()
     input.focused = true
@@ -99,9 +97,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------
   -- test_focus_lost_restores_originals
-  -- ---------------------------------------------------------------
+
   do
     reset()
     input.focused = true
@@ -119,9 +116,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------
   -- test_wrapped_get_active_window_returns_input_when_focused
-  -- ---------------------------------------------------------------
+
   do
     reset()
     input.focused = true
@@ -130,9 +126,8 @@ return function()
     assert(active == input, "GetActiveWindow should return our input when focused")
   end
 
-  -- ---------------------------------------------------------------
   -- test_wrapped_insert_link_routes_into_composer_when_focused
-  -- ---------------------------------------------------------------
+
   do
     reset()
     input.focused = true
@@ -145,9 +140,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------
   -- test_set_item_ref_hook_does_nothing_when_unfocused
-  -- ---------------------------------------------------------------
+
   do
     reset()
     assert(#setItemRefHooks > 0, "SetItemRef hook should have been installed")
@@ -157,9 +151,8 @@ return function()
     assert(input.lastInsert == nil, "SetItemRef hook should not insert quest link when unfocused")
   end
 
-  -- ---------------------------------------------------------------
   -- test_set_item_ref_hook_inserts_when_focused
-  -- ---------------------------------------------------------------
+
   do
     reset()
     input.focused = true

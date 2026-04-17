@@ -8,8 +8,6 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local BubbleIcon = {}
 
--- Create a circular icon for a chat bubble.
--- Returns { frame = iconFrame, texture = icon }
 function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction, options)
   options = options or {}
   local bubbleIcon = UIHelpers.createCircularIcon(factory, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)

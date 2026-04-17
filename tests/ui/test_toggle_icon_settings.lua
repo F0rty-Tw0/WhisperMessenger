@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_badge_hidden_when_showUnreadBadge_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -26,9 +25,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_badge_shown_when_showUnreadBadge_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -47,9 +45,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_badge_hidden_when_showUnreadBadge_toggled_off_dynamically
-  -- -----------------------------------------------------------------------
+
   do
     local showBadge = true
     local icon = ToggleIcon.Create(factory, {
@@ -75,9 +72,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_pulse_not_started_when_badgePulse_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local pulseStarted = false
     local icon = ToggleIcon.Create(factory, {
@@ -98,9 +94,8 @@ return function()
     assert(icon.badge.shown == true, "test_pulse_not_started_when_badgePulse_disabled: badge should still show")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_defaults_when_no_getters_provided
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -111,9 +106,8 @@ return function()
     assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_uses_custom_size
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -125,9 +119,8 @@ return function()
     assert(h == 32, "test_icon_uses_custom_size: frame height should be 32, got " .. tostring(h))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_apply_icon_size_resizes_frame
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -152,9 +145,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_desaturated_when_no_unread
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -182,9 +174,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_colorized_on_unread
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -209,9 +200,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_desaturated_when_unread_cleared
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -235,9 +225,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_always_colorized_when_desaturation_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -257,9 +246,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_setCompetitiveContent_method_exists
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -271,9 +259,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_competitive_indicator_hidden_by_default
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -289,9 +276,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_competitive_indicator_shown_when_active
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -305,9 +291,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_competitive_indicator_hidden_when_cleared
-  -- -----------------------------------------------------------------------
+
   do
     local icon = ToggleIcon.Create(factory, {
       parent = parent,
@@ -322,9 +307,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_competitive_tooltip_includes_status
-  -- -----------------------------------------------------------------------
+
   do
     local tooltipText = ""
     _G.GameTooltip = {

@@ -6,9 +6,8 @@ return function()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local function noop() end
 
-  -- -----------------------------------------------------------------------
   -- test_clear_all_chats_shows_confirmation_instead_of_clearing_immediately
-  -- -----------------------------------------------------------------------
+
   do
     local clearCalled = false
     local popupShown = nil
@@ -57,9 +56,8 @@ return function()
     rawset(_G, "StaticPopup_Show", nil)
   end
 
-  -- -----------------------------------------------------------------------
   -- test_confirmation_accept_calls_clear_and_refreshes
-  -- -----------------------------------------------------------------------
+
   do
     local clearCalled = false
     local refreshArgs = nil
@@ -109,9 +107,8 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_confirmation_dialog_has_correct_text
-  -- -----------------------------------------------------------------------
+
   do
     _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
 

@@ -20,27 +20,19 @@ local function headerTextFor(selectedContact)
   return "No conversation selected"
 end
 
--- Create the header widgets inside pane.
--- Returns a table with all header widget references.
 function HeaderView.Create(factory, pane, selectedContact, options)
   options = options or {}
   local HEADER_HEIGHT = options.HEADER_HEIGHT or 36
 
-  ---------------------------------------------------------------------------
-  -- Header container (56px tall, bg_header background)
-  ---------------------------------------------------------------------------
+
   local headerFrame = HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
 
-  ---------------------------------------------------------------------------
-  -- Class icon (32x32)
-  ---------------------------------------------------------------------------
+
   local classIconResult = HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   local classIconFrame = classIconResult.frame
   local classIcon = classIconResult.texture
 
-  ---------------------------------------------------------------------------
-  -- Contact name (class-colored, GameFontHighlightLarge)
-  ---------------------------------------------------------------------------
+
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
 
@@ -53,30 +45,19 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerName:Hide()
   end
 
-  ---------------------------------------------------------------------------
-  -- Faction icon (16x16, right of name)
-  ---------------------------------------------------------------------------
+
   local headerFactionIcon = HeaderElements.createFactionIcon(headerFrame, headerName, selectedContact)
 
-  ---------------------------------------------------------------------------
-  -- Status line text (below name)
-  ---------------------------------------------------------------------------
+
   local headerStatus = HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
 
-  ---------------------------------------------------------------------------
-  -- Status dot (overlay on class icon, bottom-right corner)
-  -- Rendered as a frame so it stacks above the clipping icon frame.
-  ---------------------------------------------------------------------------
+
   local statusDot = HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
 
-  ---------------------------------------------------------------------------
-  -- Header divider (1px line at bottom of header)
-  ---------------------------------------------------------------------------
+
   local headerDivider = HeaderElements.createDivider(headerFrame)
 
-  ---------------------------------------------------------------------------
-  -- Empty state label (centered, shown when no contact selected)
-  ---------------------------------------------------------------------------
+
   local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   return {
@@ -92,12 +73,10 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   }
 end
 
--- Update all header widgets to reflect the current contact and status.
 function HeaderView.Refresh(view, selectedContact, _conversation, status)
   if view.headerFrame then
     local hasContact = selectedContact ~= nil
 
-    -- Update class icon
     if view.headerClassIcon then
       local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
       if iconPath then
@@ -112,7 +91,6 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       view.headerClassIcon:SetShown(hasContact)
     end
 
-    -- Update contact name with class color
     if view.headerName then
       if hasContact then
         view.headerName:SetText(selectedContact.displayName or "")
@@ -124,7 +102,6 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
-    -- Update status line and dot color from availability
     local statusText, dotColorKey = StatusLine.Build(selectedContact, status)
     if view.headerStatus then
       if hasContact then
@@ -148,7 +125,6 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
-    -- Update faction icon
     if view.headerFactionIcon then
       local factionPath = hasContact and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName)
         or nil
@@ -160,7 +136,6 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
-    -- Update empty state visibility
     if view.headerEmpty then
       view.headerEmpty:SetShown(not hasContact)
     end

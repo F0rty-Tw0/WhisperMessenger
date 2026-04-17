@@ -28,9 +28,8 @@ return function()
     }
   end
 
-  -- -----------------------------------------------------------------------
   -- test_addon_restriction_challenge_mode_active_triggers_suspend
-  -- -----------------------------------------------------------------------
+
   do
     local suspendCalls, resumeCalls = 0, 0
     local Bootstrap = {
@@ -65,9 +64,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_addon_restriction_challenge_mode_inactive_triggers_resume
-  -- -----------------------------------------------------------------------
+
   do
     local suspendCalls, resumeCalls = 0, 0
     local Bootstrap = {
@@ -98,9 +96,8 @@ return function()
     assert(resumeCalls == 1, "should call runtime.resume exactly once, got " .. resumeCalls)
   end
 
-  -- -----------------------------------------------------------------------
   -- test_addon_restriction_encounter_active_toggles_filters
-  -- -----------------------------------------------------------------------
+
   do
     local syncCalls = 0
     local Bootstrap = {
@@ -125,9 +122,8 @@ return function()
     assert(syncCalls == 1, "should sync chat filters once on encounter state change")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_addon_restriction_reads_state_from_payload_not_api
-  -- -----------------------------------------------------------------------
+
   -- API returns false during event dispatch — must trust the payload.
   do
     local savedApi = _G.C_RestrictedActions

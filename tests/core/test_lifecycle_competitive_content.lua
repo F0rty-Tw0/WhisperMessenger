@@ -23,9 +23,8 @@ return function()
     }
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_sets_competitive_in_pvp
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetInstanceInfo", function()
       return "Warsong Gulch", "pvp", 1
@@ -37,9 +36,8 @@ return function()
     assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering battleground")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_sets_competitive_in_arena
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetInstanceInfo", function()
       return "Nagrand Arena", "arena", 1
@@ -51,9 +49,8 @@ return function()
     assert(Bootstrap._inCompetitiveContent == true, "should set _inCompetitiveContent=true when entering arena")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_clears_competitive_in_open_world
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetInstanceInfo", function()
       return "Eastern Kingdoms", "none", 0
@@ -65,12 +62,11 @@ return function()
     assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent when entering open world")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_tracks_mythic_separately
   -- Mythic+ sets _inMythicContent (not _inCompetitiveContent) so the hard
   -- lockdown is driven by MythicSuspendController / RestrictedActions and
   -- fires only when the key is actually started, not on mere zone entry.
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetInstanceInfo", function()
       return "Dungeon", "party", 8
@@ -86,9 +82,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_zone_changed_clears_competitive_when_leaving_pvp
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "GetInstanceInfo", function()
       return "Orgrimmar", "none", 0
@@ -100,9 +95,8 @@ return function()
     assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent on zone change out of pvp")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_start_sets_in_encounter
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
@@ -110,9 +104,8 @@ return function()
     assert(Bootstrap._inEncounter == true, "should set _inEncounter=true on ENCOUNTER_START")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_clears_in_encounter
-  -- -----------------------------------------------------------------------
+
   do
     local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
@@ -120,9 +113,8 @@ return function()
     assert(Bootstrap._inEncounter == false, "should clear _inEncounter on ENCOUNTER_END")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_start_calls_competitive_state_callback
-  -- -----------------------------------------------------------------------
+
   do
     local callbackCalled = false
     local callbackValue = nil
@@ -139,9 +131,8 @@ return function()
     assert(callbackValue == true, "should pass true to onCompetitiveStateChanged on ENCOUNTER_START")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_calls_competitive_state_callback_false
-  -- -----------------------------------------------------------------------
+
   do
     local callbackValue = nil
     local Bootstrap = {
@@ -164,9 +155,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_still_competitive_in_bg
-  -- -----------------------------------------------------------------------
+
   do
     local callbackValue = nil
     local Bootstrap = {
@@ -190,9 +180,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_calls_competitive_state_callback
-  -- -----------------------------------------------------------------------
+
   do
     local callbackValue = nil
     local Bootstrap = {
@@ -211,9 +200,8 @@ return function()
     assert(callbackValue == true, "should call onCompetitiveStateChanged=true when entering BG")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_start_sets_messaging_notice
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = { suspend = function() end, resume = function() end }
     local Bootstrap = { runtime = runtime }
@@ -226,9 +214,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_clears_messaging_notice_outside_competitive
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
     local Bootstrap = { _inEncounter = true, runtime = runtime }
@@ -245,9 +232,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_keeps_messaging_notice_in_bg
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
     local Bootstrap = { _inEncounter = true, _inCompetitiveContent = true, runtime = runtime }
@@ -264,9 +250,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_sets_messaging_notice_in_bg
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = { suspend = function() end, resume = function() end }
     local Bootstrap = { runtime = runtime }
@@ -280,9 +265,8 @@ return function()
     assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice when entering battleground")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_player_entering_world_clears_messaging_notice_in_open_world
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
     local Bootstrap = { runtime = runtime }
@@ -296,9 +280,8 @@ return function()
     assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when entering open world")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_start_calls_syncChatFilters
-  -- -----------------------------------------------------------------------
+
   do
     local syncCalled = false
     local Bootstrap = {
@@ -312,9 +295,8 @@ return function()
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_START")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_encounter_end_calls_syncChatFilters
-  -- -----------------------------------------------------------------------
+
   do
     local syncCalled = false
     local Bootstrap = {

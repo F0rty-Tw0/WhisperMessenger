@@ -16,15 +16,9 @@ local TranscriptSetup = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 
---- Configure the EditBox and infinite-scroll wiring on a transcript ScrollView.
--- @param factory  Frame factory (WoW CreateFrame wrapper)
--- @param transcript  ScrollView table returned by ScrollView.Create
--- @param parentWidth  Width of the parent pane (number)
--- @param ConversationPane  The ConversationPane module (passed to avoid circular require)
 function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
-  ---------------------------------------------------------------------------
-  -- EditBox setup
-  ---------------------------------------------------------------------------
+
+
   transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
   transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
   if transcript.text.SetMultiLine then
@@ -58,14 +52,10 @@ function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, C
   transcript.text:SetText("")
   transcript.lines = {}
 
-  ---------------------------------------------------------------------------
-  -- Initial layout
-  ---------------------------------------------------------------------------
+
   TranscriptView._updateTranscriptLayout(transcript, false)
 
-  ---------------------------------------------------------------------------
-  -- Infinite scroll wiring
-  ---------------------------------------------------------------------------
+
   local function checkLoadMoreMessages()
     local offset = ScrollView.GetOffset(transcript)
     if offset <= TRANSCRIPT_SCROLL_STEP and ConversationPane.HasMore(transcript) then

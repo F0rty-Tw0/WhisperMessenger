@@ -193,7 +193,6 @@ function NotificationSettings.Create(factory, parent, config, options)
     -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
   )
 
-  -- Reset button
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,

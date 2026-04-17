@@ -5,7 +5,6 @@ end
 
 local ChatBubble = {}
 
--- Re-export from submodules
 ChatBubble.ShouldGroup = (ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")).ShouldGroup
 ChatBubble.CreateBubble = (ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")).CreateBubble
 ChatBubble.CreateDateSeparator = (ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")).CreateDateSeparator

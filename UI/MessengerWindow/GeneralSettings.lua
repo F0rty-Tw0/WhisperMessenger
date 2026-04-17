@@ -36,14 +36,6 @@ local TIME_SOURCE_OPTIONS = {
   { key = "server", label = "Server Time", tooltip = "Use the game server's clock." },
 }
 
--- Create the General Settings view.
---
--- factory : frame factory
--- parent  : the optionsContentPane frame
--- config  : { maxMessagesPerConversation, maxConversations, messageMaxAge }
--- options : { onChange(key, value) }
---
--- Returns: { frame, maxMessagesSlider, maxConversationsSlider, retentionSlider }
 function GeneralSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
     local _ = ...
@@ -71,7 +63,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
-  -- Max messages per conversation
   local messagesRow = SettingsControls.CreateSliderRow(factory, frame, {
     label = "Max Messages Per Contact",
     min = 50,
@@ -84,7 +75,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   })
   messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  -- Max conversations
   local conversationsRow = SettingsControls.CreateSliderRow(factory, frame, {
     label = "Max Contacts",
     min = 10,
@@ -97,7 +87,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   })
   conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  -- Message retention (in hours, converted to/from seconds)
   local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
   local retentionRow = SettingsControls.CreateSliderRow(factory, frame, {
     label = "Message Retention (hours)",
@@ -111,7 +100,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   })
   retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  -- Privacy toggles
   local toggleColors = SettingsControls.ToggleColors(Theme)
   local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
@@ -154,7 +142,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
 
-  -- Time settings
   local selectorColors = SettingsControls.SelectorColors(Theme)
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
@@ -196,7 +183,6 @@ function GeneralSettings.Create(factory, parent, config, options)
     -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
   )
 
-  -- Reset to Defaults button
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = createOptionButton(
     factory,

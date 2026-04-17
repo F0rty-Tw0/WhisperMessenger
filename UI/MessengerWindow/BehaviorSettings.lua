@@ -169,7 +169,6 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local scrollToLatestToggle = toggles[8]
   local doubleEscapeToggle = toggles[9]
 
-  -- Reset button
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
     factory,

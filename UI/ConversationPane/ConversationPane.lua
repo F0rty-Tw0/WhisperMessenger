@@ -28,7 +28,6 @@ local TRANSCRIPT_BOTTOM_GAP = TranscriptView.TRANSCRIPT_BOTTOM_GAP
 local MESSAGES_PAGE_SIZE = TranscriptView.MESSAGES_PAGE_SIZE
 local ACTIVE_STATUS_BANNER_HEIGHT = 24
 
--- Re-export transcript helpers
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 ConversationPane.HasMore = TranscriptView.HasMore
 ConversationPane.LoadMore = TranscriptView.LoadMore
@@ -82,7 +81,6 @@ local function buildMessagesWithChannelContext(messages, selectedContact)
   return result
 end
 
--- Re-export header refresh
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
   view._selectedContact = selectedContact
   view._conversation = conversation
@@ -170,23 +168,20 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   local parentHeight = sizeValue(parent, "GetHeight", "height", 420)
   pane:SetAllPoints(parent)
 
-  ---------------------------------------------------------------------------
   -- Header
-  ---------------------------------------------------------------------------
+
   local header = HeaderView.Create(factory, pane, selectedContact, { HEADER_HEIGHT = Theme.LAYOUT.HEADER_HEIGHT })
   local headerFrame = header.headerFrame
 
-  ---------------------------------------------------------------------------
   -- Legacy statusBanner (hidden; status is shown in header status line)
-  ---------------------------------------------------------------------------
+
   local statusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   statusBanner:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, 0)
   statusBanner:SetText("")
   statusBanner:Hide()
 
-  ---------------------------------------------------------------------------
   -- Transcript ScrollView (anchored below header)
-  ---------------------------------------------------------------------------
+
   local transcriptHeight = parentHeight - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
   local transcript = ScrollView.Create(factory, pane, {
     width = parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET,
@@ -201,9 +196,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
   TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
 
-  ---------------------------------------------------------------------------
   -- Active status banner (above composer, shown for AFK/DND)
-  ---------------------------------------------------------------------------
+
   local activeStatusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   activeStatusBanner:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 4)
   activeStatusBanner:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 4)

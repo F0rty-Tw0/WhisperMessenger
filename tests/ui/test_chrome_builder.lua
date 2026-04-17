@@ -16,10 +16,9 @@ return function()
   local ChromeBuilder = ns.MessengerWindowChromeBuilder
   local Theme = ns.Theme
 
-  -- ---------------------------------------------------------------------
   -- Modern chrome: useNativeChrome=false (or unset) gives BackdropTemplate
   -- + custom title FontString + custom close button.
-  -- ---------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -43,10 +42,9 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Blizzard chrome: useNativeChrome=true gives BasicFrameTemplateWithInset
   -- (gold border, red X, dark inset, centered title from the template).
-  -- ---------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -72,9 +70,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Default (no useNativeChrome flag) should be modern chrome.
-  -- ---------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -85,9 +82,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Shared overlays exist in both chrome paths (newConversation + tooltip).
-  -- ---------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -143,9 +139,8 @@ return function()
     end
   end
 
-  -- ---------------------------------------------------------------------
   -- applyTheme runs cleanly across preset switches in both chromes.
-  -- ---------------------------------------------------------------------
+
   do
     local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
     local factory = FakeUI.NewFactory()

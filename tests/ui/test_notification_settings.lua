@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_sound_selector_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = NotificationSettings.Create(factory, parent, config, { onChange = function() end })
@@ -20,9 +19,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sound_selector_default_whisper
-  -- -----------------------------------------------------------------------
+
   do
     local config = {}
     local result = NotificationSettings.Create(factory, parent, config, { onChange = function() end })
@@ -34,9 +32,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sound_selector_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {}
@@ -59,9 +56,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_restores_defaults
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {
@@ -90,9 +86,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_size_slider_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {}
@@ -115,9 +110,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_icon_desaturated_toggle_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {}
@@ -143,9 +137,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_restores_icon_defaults
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {

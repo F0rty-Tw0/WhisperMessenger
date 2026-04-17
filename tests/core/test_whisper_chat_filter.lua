@@ -9,9 +9,8 @@ return function()
 
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_chat_filters_registered_on_init_when_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local filters = {}
     rawset(_G, "ChatFrame_AddMessageEventFilter", function(event, fn)
@@ -48,9 +47,8 @@ return function()
     assert(type(Bootstrap.syncChatFilters) == "function", "syncChatFilters should exist")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_filter_always_returns_true (trivial — no addon state access)
-  -- -----------------------------------------------------------------------
+
   do
     local result = Bootstrap._whisperFilter(nil, "CHAT_MSG_WHISPER", "hello", "Arthas")
     assert(result == true, "filter should always return true (registration controls when it runs)")
@@ -59,9 +57,8 @@ return function()
     assert(bnResult == true, "BN filter should always return true")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_filters_not_registered_when_hideFromDefaultChat_is_false
-  -- -----------------------------------------------------------------------
+
   do
     local registered = {}
     rawset(_G, "ChatFrame_AddMessageEventFilter", function(event, fn)
@@ -91,9 +88,8 @@ return function()
     assert(Bootstrap._filtersRegistered == false, "flag should be false")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_filter_does_not_call_SetLastTellTarget
-  -- -----------------------------------------------------------------------
+
   do
     local setLastTellCalled = false
     local savedSetLast = _G.ChatEdit_SetLastTellTarget
@@ -108,9 +104,8 @@ return function()
     rawset(_G, "ChatEdit_SetLastTellTarget", savedSetLast)
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_unregisters_when_suspended
-  -- -----------------------------------------------------------------------
+
   do
     -- Re-initialize with hideFromDefaultChat = true so filters are registered
     rawset(_G, "ChatFrame_AddMessageEventFilter", function() end)
@@ -149,9 +144,8 @@ return function()
     _G._wmSuspended = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_unregisters_during_competitive_content
-  -- -----------------------------------------------------------------------
+
   do
     -- Re-register so we can test unregistration
     Bootstrap._filtersRegistered = false
@@ -168,9 +162,8 @@ return function()
     Bootstrap._inCompetitiveContent = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_re_registers_when_leaving_competitive_content
-  -- -----------------------------------------------------------------------
+
   do
     assert(Bootstrap._filtersRegistered == false, "filters should be unregistered before re-register test")
     Bootstrap.syncChatFilters()

@@ -1,9 +1,9 @@
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_get_club_members_returns_non_table_does_not_error
-  -- -----------------------------------------------------------------------
+
   do
     PresenceCache._reset()
     local api = {
@@ -33,9 +33,8 @@ return function()
     assert(result == nil, "expected nil when guild members is not a table, got: " .. tostring(result))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_club_members_returns_userdata_does_not_error
-  -- -----------------------------------------------------------------------
+
   do
     PresenceCache._reset()
     local fakeUserdata = setmetatable({}, {
@@ -70,9 +69,8 @@ return function()
     assert(ok, "expected no error when GetClubMembers returns unusual value")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_normal_members_table_still_works
-  -- -----------------------------------------------------------------------
+
   do
     PresenceCache._reset()
     local api = {

@@ -29,12 +29,10 @@ return function()
     return "Raid", "raid", 16
   end) == false, "should return false for Mythic Raid (encounter-based lock)")
 
-  -- -----------------------------------------------------------------------
   -- IsCompetitiveContent — PvP + arena only. Mythic+ is driven separately
   -- by IsMythicRestricted + MythicSuspendController so the hard lockdown
   -- triggers only when the key is actually started, not on mere presence
   -- at difficulty 8.
-  -- -----------------------------------------------------------------------
 
   -- Returns false when getInstanceInfo is nil
   assert(

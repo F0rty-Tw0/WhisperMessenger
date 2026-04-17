@@ -76,9 +76,9 @@ local function newBinder(stubs, extra)
 end
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_bind_creates_secure_action_button_with_wr_macro
-  -- -----------------------------------------------------------------------
+
   do
     local stubs = makeStubs()
     local binder = newBinder(stubs)
@@ -106,9 +106,8 @@ return function()
     assert(binding.owner == stubs.frame, "owner of override binding must be our button")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_bind_uses_user_reply_binding_not_hardcoded_r
-  -- -----------------------------------------------------------------------
+
   -- The user may have rebound REPLY to something other than R (e.g. because
   -- R is bound to an ability). Respect GetBindingKey("REPLY") instead of
   -- hardcoding R — otherwise we steal a keystroke they assigned to a skill.
@@ -130,9 +129,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_bind_overrides_all_keys_bound_to_reply
-  -- -----------------------------------------------------------------------
+
   -- WoW lets users bind up to two keys per action. GetBindingKey returns
   -- each slot as an additional return value. Override all of them.
   do
@@ -158,9 +156,8 @@ return function()
     assert(seen["NUMPAD0"], "must override NUMPAD0 slot")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_bind_skips_when_reply_unbound
-  -- -----------------------------------------------------------------------
+
   -- If the user unbound REPLY entirely, we must not grab a random key —
   -- there's nothing to override. Respect their choice and skip.
   do
@@ -175,9 +172,8 @@ return function()
     assert(binder.isBound() == false, "isBound() must report false when REPLY is unbound")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_bind_ignores_empty_string_keys
-  -- -----------------------------------------------------------------------
+
   -- Defensive: if GetBindingKey returns "" in a slot, treat as unbound.
   do
     local stubs = makeStubs(function(action)
@@ -194,9 +190,8 @@ return function()
     assert(stubs.overrideBindings[1].key == "R", "expected R, got " .. tostring(stubs.overrideBindings[1].key))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_unbind_clears_override
-  -- -----------------------------------------------------------------------
+
   do
     local stubs = makeStubs()
     local binder = newBinder(stubs)
@@ -208,9 +203,8 @@ return function()
     assert(stubs.clearedFor[1] == stubs.frame, "must clear bindings on our button")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_binds_when_hide_from_default_chat_true
-  -- -----------------------------------------------------------------------
+
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
@@ -226,9 +220,8 @@ return function()
     assert(#stubs.clearedFor == 0, "sync with hide-whispers ON should not unbind")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_unbinds_when_hide_from_default_chat_false
-  -- -----------------------------------------------------------------------
+
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
@@ -245,9 +238,8 @@ return function()
     assert(#stubs.clearedFor >= 1, "sync with hide-whispers OFF should unbind")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_stays_bound_in_mythic_when_hide_from_default_chat_on
-  -- -----------------------------------------------------------------------
+
   -- We MUST keep R bound to our override even during M+ — Blizzard's
   -- default /r would crash on chatEditLastTell slots tainted by
   -- WhisperMessenger from pre-M+ filter-chain interactions. An always-
@@ -278,9 +270,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_idempotent_when_reply_key_unchanged
-  -- -----------------------------------------------------------------------
+
   do
     local stubs = makeStubs()
     local settings = { hideFromDefaultChat = true }
@@ -300,9 +291,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_rebinds_when_user_changes_reply_key
-  -- -----------------------------------------------------------------------
+
   -- If the user opens the keybindings UI and changes REPLY from R to T,
   -- the next sync must clear the stale R override and install T.
   do
@@ -331,9 +321,8 @@ return function()
     assert(last.key == "T", "post-rebind override must target new key T, got " .. tostring(last.key))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_sync_unbinds_when_user_clears_reply_binding
-  -- -----------------------------------------------------------------------
+
   do
     local replyKey = "R"
     local stubs = makeStubs(function(action)

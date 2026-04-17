@@ -2,9 +2,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_deferred_close_bails_when_competitive_content_activates
-  -- -----------------------------------------------------------------------
+
   -- C_Timer.After(0, cb) schedules on the next tick. If the scheduling
   -- frame fired BEFORE ENCOUNTER_START but the callback runs AFTER, any
   -- edit-box writes in the callback now execute inside a lockdown context

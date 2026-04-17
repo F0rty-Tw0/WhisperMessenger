@@ -29,9 +29,8 @@ return function()
     }
   end
 
-  -------------------------------------------------------------------------
   -- test_configure_creates_edit_box
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -42,9 +41,8 @@ return function()
     assert(transcript.text ~= nil, "test_configure_creates_edit_box: transcript.text should be created")
   end
 
-  -------------------------------------------------------------------------
   -- test_edit_box_is_multiline
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -55,9 +53,8 @@ return function()
     assert(transcript.text.multiline == true, "test_edit_box_is_multiline: SetMultiLine(true) should be called")
   end
 
-  -------------------------------------------------------------------------
   -- test_edit_box_auto_focus_disabled
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -71,9 +68,8 @@ return function()
     )
   end
 
-  -------------------------------------------------------------------------
   -- test_edit_box_hyperlinks_enabled
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -87,9 +83,8 @@ return function()
     )
   end
 
-  -------------------------------------------------------------------------
   -- test_url_hyperlink_click_avoids_protected_launch_and_copies_link
-  -------------------------------------------------------------------------
+
   do
     local savedExternalEventURL = _G.C_ExternalEventURL
     local savedLaunchURL = _G.LaunchURL
@@ -131,9 +126,9 @@ return function()
     _G.LaunchURL = savedLaunchURL
     _G.C_Clipboard = savedClipboardNamespace
   end
-  -------------------------------------------------------------------------
+
   -- test_initial_layout_called
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -149,9 +144,8 @@ return function()
     )
   end
 
-  -------------------------------------------------------------------------
   -- test_scroll_wiring_preserves_original_mouse_wheel_handler
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -203,9 +197,8 @@ return function()
     )
   end
 
-  -------------------------------------------------------------------------
   -- test_scroll_wiring_preserves_original_value_changed_handler
-  -------------------------------------------------------------------------
+
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)

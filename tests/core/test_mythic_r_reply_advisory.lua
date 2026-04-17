@@ -14,9 +14,8 @@ return function()
     }
   end
 
-  -- -----------------------------------------------------------------------
   -- test_suspend_warns_about_r_reply_when_hide_from_default_chat_on
-  -- -----------------------------------------------------------------------
+
   -- When user enters Mythic+ with hideFromDefaultChat=true, the chat filter
   -- chain has already tainted Blizzard's chatEditLastTell from pre-M+
   -- whispers. /r and R-key will crash. Surface that in chat on mythic entry
@@ -55,9 +54,8 @@ return function()
     assert(warned, "suspend must print a /wr advisory when hideFromDefaultChat=true")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_suspend_does_not_warn_when_hide_from_default_chat_off
-  -- -----------------------------------------------------------------------
+
   do
     local runtime = {
       accountState = { settings = { hideFromDefaultChat = false } },

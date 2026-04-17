@@ -15,13 +15,12 @@ end
 return function()
   local previousPreset = Theme.GetPreset()
 
-  -- ---------------------------------------------------------------------
   -- Send button stays as the modern rounded pill regardless of preset.
   -- Native Blizzard UI-Panel-Button textures didn't fit the composer
   -- layout cleanly (cramped at our small button size, awkward when
   -- enlarged), so the rounded pill carries the send button under both
   -- modern and blizzard skins.
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
@@ -55,11 +54,10 @@ return function()
     assert(btn.height == 30, "test_send_no_skin_modern: rounded pill height 30")
   end
 
-  -- ---------------------------------------------------------------------
   -- ScrollView thumb stays as slim color paint under wow_native (knob
   -- texture intentionally dropped — it doesn't render well at our 4px
   -- slider width; the gold-tinted Phase 1 scrollbar palette carries it)
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
@@ -74,9 +72,8 @@ return function()
     assert(view.scrollBar.thumb.color ~= nil, "test_scrollbar_blizzard: should keep slim color paint under blizzard")
   end
 
-  -- ---------------------------------------------------------------------
   -- ScrollView thumb stays slim color under wow_default
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
@@ -91,9 +88,8 @@ return function()
     assert(view.scrollBar.thumb.color ~= nil, "test_scrollbar_modern: should keep slim color paint")
   end
 
-  -- ---------------------------------------------------------------------
   -- ScrollView.refreshSkin re-applies thumb paint on live preset switch
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
@@ -126,10 +122,9 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Re-binding a row re-evaluates skin (matches the runtime.refreshWindow
   -- flow that fires on themePreset change)
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
@@ -167,10 +162,9 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- ScrollView hides the thumb when no overflow (defensive — was leaking
   -- the textured knob in production even though scrollBar was hidden)
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
@@ -189,9 +183,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Contact row gets a Blizzard highlight overlay under wow_native
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
@@ -221,9 +214,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Contact row stays color-only under wow_default (no overlay texture)
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()

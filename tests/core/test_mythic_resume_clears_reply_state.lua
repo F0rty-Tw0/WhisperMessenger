@@ -1,9 +1,9 @@
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_resume_clears_stale_last_incoming_whisper_key
-  -- -----------------------------------------------------------------------
+
   -- We did NOT capture whispers during M+ (LIVE_EVENTS were unregistered),
   -- so any runtime.lastIncomingWhisperKey still set is pre-M+ stale. Resume
   -- must clear it so a post-M+ /r in our messenger does not route to a
@@ -46,9 +46,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_resume_does_not_touch_blizzard_last_tell
-  -- -----------------------------------------------------------------------
+
   -- Writing to ChatEdit_SetLastTellTarget from addon code — even via
   -- securecall — attributes caller taint to the upvalue slots inside
   -- chatEditLastTell and propagates taint into MessageEventHandler on the

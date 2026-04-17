@@ -1,9 +1,9 @@
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_attach_installs_suspend_resume_and_preserves_mythic_flags
-  -- -----------------------------------------------------------------------
+
   do
     local calls = {}
     local runtime = {}

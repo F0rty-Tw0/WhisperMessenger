@@ -2,9 +2,9 @@ local Skins = require("WhisperMessenger.UI.Theme.Skins")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
-  -- ---------------------------------------------------------------------
+
   -- test_list_skins
-  -- ---------------------------------------------------------------------
+
   do
     local keys = Skins.ListKeys()
     local found = {}
@@ -15,9 +15,8 @@ return function()
     assert(found.blizzard == true, "test_list_skins: missing blizzard")
   end
 
-  -- ---------------------------------------------------------------------
   -- test_modern_spec
-  -- ---------------------------------------------------------------------
+
   do
     local spec = Skins.Get("modern")
     assert(type(spec) == "table", "test_modern_spec: should return table")
@@ -29,9 +28,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- test_blizzard_spec
-  -- ---------------------------------------------------------------------
+
   do
     local spec = Skins.Get("blizzard")
     assert(type(spec) == "table", "test_blizzard_spec: should return table")
@@ -91,17 +89,15 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- test_get_unknown_returns_nil
-  -- ---------------------------------------------------------------------
+
   do
     local spec = Skins.Get("nonexistent")
     assert(spec == nil, "test_get_unknown_returns_nil: Get should return nil for unknown key")
   end
 
-  -- ---------------------------------------------------------------------
   -- test_active_skin_follows_preset
-  -- ---------------------------------------------------------------------
+
   do
     local previous = Theme.GetPreset()
 

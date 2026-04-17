@@ -2,9 +2,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- Helpers
-  -- -----------------------------------------------------------------------
+
   local function stubGlobals()
     rawset(_G, "PlaySound", function() end)
     rawset(_G, "GetCVar", function()
@@ -53,9 +53,8 @@ return function()
     "Player-1-ABC",
   }
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_called_on_incoming_whisper_when_enabled
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -75,9 +74,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_not_called_when_setting_disabled
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -96,9 +94,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_not_called_during_combat
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -122,9 +119,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_incoming_not_called_on_outgoing_whisper
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -147,9 +143,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_called_on_whisper_inform
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -170,9 +165,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_not_called_for_tracked_pending_send
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -210,9 +204,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_called_on_bnet_inform
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -249,9 +242,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_not_called_during_combat
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -271,9 +263,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_not_called_when_setting_disabled
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -293,9 +284,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_outgoing_not_called_when_only_incoming_enabled
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -319,9 +309,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_incoming_not_called_when_only_outgoing_enabled
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -344,9 +333,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_called_on_bnet_whisper
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()
@@ -382,9 +370,8 @@ return function()
     cleanupGlobals()
   end
 
-  -- -----------------------------------------------------------------------
   -- test_auto_open_not_called_when_no_callback
-  -- -----------------------------------------------------------------------
+
   do
     stubGlobals()
     rawset(_G, "InCombatLockdown", function()

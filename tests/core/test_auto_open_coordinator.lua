@@ -276,9 +276,8 @@ return function()
   assert(bnEditBox:GetText() == "", "expected BN intercepted edit box text cleared")
   assert(bnEditBox:HasFocus() == false, "expected BN intercepted edit box to lose focus")
 
-  -- -----------------------------------------------------------------------
   -- test_direct_hooks_installed_for_whisper_functions
-  -- -----------------------------------------------------------------------
+
   assert(hookedFunctions["ChatFrame_SendTell"] ~= nil, "expected ChatFrame_SendTell to be hooked")
   -- ChatFrame_ReplyTell / ChatFrame_ReplyTell2 are intentionally NOT hooked.
   -- When Blizzard's chatEditLastTell is tainted by a secret-string sender
@@ -299,9 +298,8 @@ return function()
   -- longer hooked. The /wr slash command (covered by its own test file) is
   -- the taint-safe reply path via runtime.lastIncomingWhisperKey.
 
-  -- -----------------------------------------------------------------------
   -- test_direct_hook_intercepts_send_tell_with_deferred_close
-  -- -----------------------------------------------------------------------
+
   do
     local hookEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local hookAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
@@ -340,9 +338,8 @@ return function()
     assert(hookEditBox:HasFocus() == false, "expected edit box to lose focus after deferred close")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_direct_hook_routes_to_visible_window_during_combat
-  -- -----------------------------------------------------------------------
+
   do
     local combatEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local combatAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
@@ -383,9 +380,8 @@ return function()
     assert(combatEditBox:HasFocus() == false, "expected focused default edit box to blur after combat route")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_direct_hook_does_not_close_editbox_when_send_tell_fails
-  -- -----------------------------------------------------------------------
+
   do
     local failEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local failAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Nobody" }
@@ -414,9 +410,8 @@ return function()
     assert(failEditBox:HasFocus() == true, "expected edit box to keep focus when hook fails")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_poller_does_not_close_editbox_when_send_tell_fails
-  -- -----------------------------------------------------------------------
+
   do
     local pollerFailBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local pollerFailAttr = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Ghost" }
@@ -444,9 +439,8 @@ return function()
     sendTellResult = true
   end
 
-  -- -----------------------------------------------------------------------
   -- test_poller_preserves_combat_typed_draft_after_combat_ends
-  -- -----------------------------------------------------------------------
+
   do
     local carriedDraftBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local carriedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
@@ -495,9 +489,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_direct_hook_preserves_combat_typed_draft_after_combat_ends
-  -- -----------------------------------------------------------------------
+
   do
     local carriedDraftBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local carriedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
@@ -542,9 +535,8 @@ return function()
     assert(carriedDraftBox:HasFocus() == true, "expected direct hook to preserve focus for combat-carried draft")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_poller_routes_again_after_preserved_draft_cleared
-  -- -----------------------------------------------------------------------
+
   do
     local resumedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local resumedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }
@@ -585,9 +577,8 @@ return function()
     assert(resumedBox:HasFocus() == false, "expected cleared draft edit box to lose focus once normal routing resumes")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_poller_tolerates_tainted_has_focus_during_lockdown
-  -- -----------------------------------------------------------------------
+
   do
     local taintedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
     local taintedAttrState = { chatType = "WHISPER", stickyType = "SAY", tellTarget = "Arthas" }

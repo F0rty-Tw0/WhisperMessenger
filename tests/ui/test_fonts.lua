@@ -8,9 +8,9 @@ local function setGameFont(path, size, flags)
   gameFontNormal:SetFont(path, size, flags)
 end
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_default_mode_on_init
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize()
     assert(
@@ -19,9 +19,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_keys_are_wm_objects
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize()
     local fonts = Fonts.GetFonts()
@@ -33,9 +32,8 @@ return function()
     end
   end
 
-  -- -----------------------------------------------------------------------
   -- test_default_mode_inherits_game_font (multilingual via SetFontObject)
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     local fontObj = _G[Fonts.GetFonts().contact_name]
@@ -44,9 +42,8 @@ return function()
     assert(string.find(path, "FRIZQT") ~= nil, "test_default: should inherit game font path, got: " .. tostring(path))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_default_follows_locale_font (multilingual)
-  -- -----------------------------------------------------------------------
+
   do
     setGameFont("Fonts\\FRIZQT___CYR.TTF", 12, "")
     Fonts.SetMode("default")
@@ -59,9 +56,8 @@ return function()
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_system_mode_uses_arialn
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetMode("system")
     local fontObj = _G[Fonts.GetFonts().contact_name]
@@ -69,9 +65,8 @@ return function()
     assert(string.find(path, "ARIALN") ~= nil, "test_system: should use ARIALN, got: " .. tostring(path))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_unknown_mode_falls_back_to_default_behavior
-  -- -----------------------------------------------------------------------
+
   do
     setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
     Fonts.SetMode("custom")
@@ -85,9 +80,8 @@ return function()
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_mode_switch_default_vs_system_on_vanilla_client
-  -- -----------------------------------------------------------------------
+
   do
     -- On a vanilla client (no ElvUI), game fonts are FRIZQT
     Fonts.SetMode("default")
@@ -102,9 +96,8 @@ return function()
     assert(string.find(systemPath, "ARIALN") ~= nil, "test_switch: system should be ARIALN")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_mode_updates_all_font_objects
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetMode("system")
     local fonts = Fonts.GetFonts()
@@ -119,9 +112,8 @@ return function()
     end
   end
 
-  -- -----------------------------------------------------------------------
   -- test_composer_font_matches_ui_font_in_default_mode
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetMode("default")
     local fonts = Fonts.GetFonts()
@@ -139,9 +131,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_initialize_with_mode
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("system")
     assert(
@@ -150,9 +141,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_font_size_scales_all_objects
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetFontSize(14)
@@ -169,9 +159,8 @@ return function()
     assert(largeSize == 18, "test_set_font_size: header_name (large) should be 18, got: " .. tostring(largeSize))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_font_size_returns_current
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     assert(
@@ -185,9 +174,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_outline_applies_to_all_objects
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetOutline("OUTLINE")
@@ -200,9 +188,8 @@ return function()
     assert(smallFlags == "OUTLINE", "test_set_outline: small flags should be OUTLINE, got: " .. tostring(smallFlags))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_outline_thick
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetOutline("THICKOUTLINE")
@@ -211,9 +198,8 @@ return function()
     assert(flags == "THICKOUTLINE", "test_set_outline_thick: flags should be THICKOUTLINE, got: " .. tostring(flags))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_outline_none_clears_flags
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetOutline("OUTLINE")
     Fonts.SetOutline("NONE")
@@ -222,9 +208,8 @@ return function()
     assert(flags == "", "test_set_outline_none: flags should be empty, got: " .. tostring(flags))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_outline_returns_current
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     assert(
@@ -238,9 +223,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_morpheus_mode_uses_morpheus_font
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.SetMode("morpheus")
     local fontObj = _G[Fonts.GetFonts().contact_name]
@@ -251,9 +235,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_size_persists_across_mode_switch
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetFontSize(16)
@@ -266,9 +249,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_outline_persists_across_mode_switch
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetOutline("THICKOUTLINE")
@@ -281,9 +263,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_default_font_color_is_default
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     assert(
@@ -292,9 +273,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_font_color_returns_preset_key
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetFontColor("gold")
@@ -304,18 +284,16 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_font_color_rgba_returns_nil_for_default
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     local rgba = Fonts.GetFontColorRGBA()
     assert(rgba == nil, "test_font_color_rgba_default: should be nil for 'default', got: " .. tostring(rgba))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_get_font_color_rgba_returns_table_for_gold
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetFontColor("gold")
@@ -326,9 +304,8 @@ return function()
     assert(rgba[3] == 0, "test_font_color_rgba_gold: b should be 0, got: " .. tostring(rgba[3]))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_list_font_color_presets
-  -- -----------------------------------------------------------------------
+
   do
     local presets = Fonts.ListFontColorPresets()
     assert(type(presets) == "table", "test_list_presets: should return a table")
@@ -344,9 +321,8 @@ return function()
     assert(found["rose"], "test_list_presets: should include 'rose'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_font_color_unknown_falls_back_to_default
-  -- -----------------------------------------------------------------------
+
   do
     Fonts.Initialize("default")
     Fonts.SetFontColor("nonexistent")

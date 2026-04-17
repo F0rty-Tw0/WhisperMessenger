@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_indicator_hidden_by_default
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 
@@ -19,9 +18,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_indicator_shown_when_set_active_true
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 
@@ -30,9 +28,8 @@ return function()
     assert(result.frame.shown == true, "test_indicator_shown_when_set_active_true: indicator should be visible")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_indicator_hidden_when_set_active_false
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 
@@ -45,9 +42,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_indicator_has_lock_texture
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 
@@ -55,18 +51,16 @@ return function()
     assert(result.icon.texturePath ~= nil, "test_indicator_has_lock_texture: icon should have a texture set")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_indicator_has_background
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 
     assert(result.background ~= nil, "test_indicator_has_background: background texture should exist")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_set_active_is_idempotent
-  -- -----------------------------------------------------------------------
+
   do
     local result = CompetitiveIndicator.Create(factory, parent)
 

@@ -123,8 +123,6 @@ function RowElements.updateNameLabel(row, item, parentWidth)
   applyClassColor(row.title, item and item.classTag or nil, Theme.COLORS.text_primary)
 end
 
---- Create the circular class icon (40x40, left side).
---- Returns { frame, texture }
 function RowElements.createClassIcon(factory, row, item)
   local icon = createCircularIcon(factory, row, Theme.LAYOUT.CONTACT_ICON_SIZE)
   row.classIconFrame = icon.frame
@@ -141,8 +139,6 @@ function RowElements.createClassIcon(factory, row, item)
   return icon
 end
 
---- Create the contact name FontString (top line, class-colored).
---- Returns FontString
 function RowElements.createNameLabel(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
   label:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", NAME_LABEL_LEFT_INSET, -4)
@@ -194,8 +190,6 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   end
 end
 
---- Create the faction icon texture (14x14, after name).
---- Returns texture (visible) or texture (hidden) depending on faction.
 function RowElements.createFactionIcon(_factory, row, item, ns_ref)
   local tex = row:CreateTexture(nil, "ARTWORK")
   tex:SetSize(Theme.LAYOUT.CONTACT_FACTION_SIZE, Theme.LAYOUT.CONTACT_FACTION_SIZE)
@@ -218,8 +212,6 @@ function RowElements.updateTimestamp(row, item, ns_ref)
   end
 end
 
---- Create the timestamp FontString (top-right).
---- Returns FontString
 function RowElements.createTimestamp(row, item, ns_ref)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_time)
   label:SetPoint("TOPRIGHT", row, "TOPRIGHT", -TIME_LABEL_RIGHT_INSET, 0)
@@ -242,8 +234,6 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
   row.preview:SetText(hideMessagePreview and "" or (item.lastPreview or ""))
 end
 
---- Create the preview text FontString (bottom line).
---- Returns FontString
 function RowElements.createPreview(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
   label:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", 10, 2)

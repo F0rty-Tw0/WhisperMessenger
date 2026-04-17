@@ -15,9 +15,8 @@ return function()
     end,
   }
 
-  -- -----------------------------------------------------------------------
   -- test_message_recorded_during_combat
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "InCombatLockdown", function()
       return true
@@ -95,9 +94,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_message_recorded_out_of_combat
-  -- -----------------------------------------------------------------------
+
   do
     rawset(_G, "InCombatLockdown", function()
       return false

@@ -1,9 +1,9 @@
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_type_and_state_constants_match_blizzard_enum
-  -- -----------------------------------------------------------------------
+
   do
     assert(RestrictedActions.TYPES.Combat == 0, "Combat must be 0 per Enum.AddOnRestrictionType")
     assert(RestrictedActions.TYPES.Encounter == 1, "Encounter must be 1")
@@ -16,9 +16,8 @@ return function()
     assert(RestrictedActions.STATES.Active == 2, "Active must be 2")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_update_from_event_persists_state_without_api_call
-  -- -----------------------------------------------------------------------
+
   -- ADDON_RESTRICTION_STATE_CHANGED returns false from IsAddOnRestrictionActive
   -- during event dispatch. Must read from payload, never re-query.
   do
@@ -43,9 +42,8 @@ return function()
     _G.C_RestrictedActions = savedApi
   end
 
-  -- -----------------------------------------------------------------------
   -- test_activating_state_is_treated_as_active
-  -- -----------------------------------------------------------------------
+
   do
     local instance = RestrictedActions.New()
     instance.updateFromEvent(RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Activating)
@@ -55,9 +53,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_inactive_state_resets_cached_activation
-  -- -----------------------------------------------------------------------
+
   do
     local instance = RestrictedActions.New()
     instance.updateFromEvent(RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Active)
@@ -69,9 +66,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_is_competitive_covers_encounter_challenge_pvp
-  -- -----------------------------------------------------------------------
+
   do
     local instance = RestrictedActions.New()
     assert(instance.isCompetitive() == false, "fresh instance should not be competitive")
@@ -90,9 +86,8 @@ return function()
     assert(instance.isMythic() == false, "PvPMatch should NOT flag as mythic")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_falls_back_to_api_when_no_cached_state
-  -- -----------------------------------------------------------------------
+
   do
     local savedApi = _G.C_RestrictedActions
     _G.C_RestrictedActions = {
@@ -111,9 +106,8 @@ return function()
     _G.C_RestrictedActions = savedApi
   end
 
-  -- -----------------------------------------------------------------------
   -- test_is_available_guards_pre_midnight_clients
-  -- -----------------------------------------------------------------------
+
   do
     local savedApi = _G.C_RestrictedActions
     _G.C_RestrictedActions = nil

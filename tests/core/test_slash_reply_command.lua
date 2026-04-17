@@ -1,9 +1,9 @@
 local SlashCommands = require("WhisperMessenger.Core.SlashCommands")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_wr_slash_registered_and_invokes_reply_handler
-  -- -----------------------------------------------------------------------
+
   -- /wr is the taint-safe reply-to-last-whisper command. It bypasses
   -- Blizzard's ChatEdit_SetLastTellTarget (which gets tainted during M+
   -- when a whisper arrives with a secret-string sender). Instead it uses

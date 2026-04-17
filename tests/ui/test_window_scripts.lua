@@ -11,9 +11,8 @@ return function()
   -- Shared stubs
   local function noop() end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_buttons_sets_close_click
-  -- -----------------------------------------------------------------------
+
   do
     local closeButton = factory.CreateFrame("Frame", nil, parent)
     local optionsButton = factory.CreateFrame("Frame", nil, parent)
@@ -51,9 +50,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_buttons_sets_options_click
-  -- -----------------------------------------------------------------------
+
   do
     local closeButton = factory.CreateFrame("Frame", nil, parent)
     local optionsButton = factory.CreateFrame("Frame", nil, parent)
@@ -91,9 +89,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_buttons_sets_new_conversation_click
-  -- -----------------------------------------------------------------------
+
   do
     local closeButton = factory.CreateFrame("Frame", nil, parent)
     local optionsButton = factory.CreateFrame("Frame", nil, parent)
@@ -134,9 +131,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_new_conversation_click_shows_popup
-  -- -----------------------------------------------------------------------
+
   do
     local popupShown = nil
     rawset(_G, "StaticPopup_Show", function(dialogName)
@@ -181,9 +177,8 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_new_conversation_accept_trims_and_invokes_callback
-  -- -----------------------------------------------------------------------
+
   do
     local startedPlayerName = nil
     _G.StaticPopupDialogs = {}
@@ -246,9 +241,8 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_new_conversation_accept_ignores_empty_names
-  -- -----------------------------------------------------------------------
+
   do
     local callbackCount = 0
     _G.StaticPopupDialogs = {}
@@ -299,9 +293,8 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_new_conversation_popup_show_hide_handlers_are_safe
-  -- -----------------------------------------------------------------------
+
   do
     _G.StaticPopupDialogs = {}
 
@@ -424,9 +417,8 @@ return function()
     _G.StaticPopupDialogs = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_frame_sets_on_show
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -454,9 +446,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_frame_sets_on_size_changed
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -484,9 +475,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_frame_sets_drag_scripts
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -518,9 +508,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_show_focuses_composer_when_auto_focus_enabled
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -556,9 +545,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_show_does_not_focus_when_auto_focus_disabled
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -593,9 +581,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_select_tab_sets_active_bg_persists_after_leave
-  -- -----------------------------------------------------------------------
+
   do
     local UIHelpers = require("WhisperMessenger.UI.Helpers")
     local optionsPanel = factory.CreateFrame("Frame", nil, parent)
@@ -677,9 +664,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_wire_frame_sets_resize_grip_scripts
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
@@ -711,9 +697,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_resize_grip_uses_preview_and_commits_on_release
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     frame:SetSize(920, 580)
@@ -789,9 +774,9 @@ return function()
       "expected persisted dimensions to match committed preview"
     )
   end
-  -- -----------------------------------------------------------------------
+
   -- test_wire_frame_wires_contacts_resize_handle_and_persists_width
-  -- -----------------------------------------------------------------------
+
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     frame:SetSize(920, 580)

@@ -21,39 +21,33 @@ return function()
 
   local layout = LayoutBuilder.Build(factory, frame, { width = 920, height = 580 }, {})
 
-  -- -----------------------------------------------------------------------
   -- test_options_menu_sidebar_exists
-  -- -----------------------------------------------------------------------
+
   assert(layout.optionsMenu ~= nil, "optionsMenu sidebar should exist")
 
-  -- -----------------------------------------------------------------------
   -- test_options_content_pane_exists
-  -- -----------------------------------------------------------------------
+
   assert(layout.optionsContentPane ~= nil, "optionsContentPane should exist")
 
-  -- -----------------------------------------------------------------------
   -- test_category_tabs_exist
-  -- -----------------------------------------------------------------------
+
   assert(layout.generalTab ~= nil, "generalTab should exist")
   assert(layout.appearanceTab ~= nil, "appearanceTab should exist")
   assert(layout.behaviorTab ~= nil, "behaviorTab should exist")
   assert(layout.notificationsTab ~= nil, "notificationsTab should exist")
 
-  -- -----------------------------------------------------------------------
   -- test_buttons_are_still_present
-  -- -----------------------------------------------------------------------
+
   assert(layout.resetWindowButton ~= nil, "resetWindowButton should exist")
   assert(layout.resetIconButton ~= nil, "resetIconButton should exist")
   assert(layout.clearAllChatsButton ~= nil, "clearAllChatsButton should exist")
 
-  -- -----------------------------------------------------------------------
   -- test_options_header_still_exists
-  -- -----------------------------------------------------------------------
+
   assert(layout.optionsHeader ~= nil, "optionsHeader should exist")
 
-  -- -----------------------------------------------------------------------
   -- test_tabs_have_labels
-  -- -----------------------------------------------------------------------
+
   do
     local function hasLabel(btn, expected)
       for _, child in ipairs(btn.children) do
@@ -69,9 +63,8 @@ return function()
     assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_buttons_anchored_to_bottom_of_menu
-  -- -----------------------------------------------------------------------
+
   do
     -- The clearAllChatsButton (bottommost) should anchor to BOTTOMLEFT of optionsMenu
     local btn = layout.clearAllChatsButton

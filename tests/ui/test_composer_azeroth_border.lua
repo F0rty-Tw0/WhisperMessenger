@@ -18,12 +18,11 @@ end
 return function()
   local previousPreset = Theme.GetPreset()
 
-  -- ---------------------------------------------------------------------
   -- Composer draws a faint 1px border on its own pane using the theme's
   -- subtle `divider` color — the same color the contacts and search
   -- dividers use — so it reads as a barely-visible chrome line instead of
   -- a highlighted frame, consistent across all presets including Azeroth.
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
@@ -51,9 +50,8 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- Modern presets share the same mechanism and divider color.
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
@@ -67,11 +65,10 @@ return function()
     )
   end
 
-  -- ---------------------------------------------------------------------
   -- refreshTheme repaints to the new theme's divider color on preset
   -- switch so the faint chrome line stays consistent with the rest of the
   -- window.
-  -- ---------------------------------------------------------------------
+
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()

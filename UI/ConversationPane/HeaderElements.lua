@@ -15,8 +15,6 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 
 local HeaderElements = {}
 
--- Creates the header container frame with background texture.
--- Returns headerFrame.
 function HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
   local headerFrame = factory.CreateFrame("Frame", nil, pane)
   headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, -2)
@@ -34,8 +32,6 @@ function HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
   return headerFrame
 end
 
--- Creates circular class/bnet icon inside headerFrame.
--- Returns { frame = classIconFrame, texture = classIcon }.
 function HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   local headerIcon = createCircularIcon(factory, headerFrame, Theme.LAYOUT.HEADER_ICON_SIZE)
   local classIconFrame = headerIcon.frame
@@ -52,8 +48,6 @@ function HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   return { frame = classIconFrame, texture = classIcon }
 end
 
--- Creates the contact name FontString anchored to classIconFrame.
--- Returns headerName FontString.
 function HeaderElements.createContactName(headerFrame, selectedContact)
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   local nameLeft = Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + 10
@@ -75,8 +69,6 @@ function HeaderElements.createContactName(headerFrame, selectedContact)
   return headerName
 end
 
--- Creates the faction icon texture (16x16) positioned right of headerName.
--- Returns headerFactionIcon texture.
 function HeaderElements.createFactionIcon(headerFrame, headerName, selectedContact)
   local headerFactionIcon = headerFrame:CreateTexture(nil, "ARTWORK")
   headerFactionIcon:SetSize(16, 16)
@@ -94,8 +86,6 @@ function HeaderElements.createFactionIcon(headerFrame, headerName, selectedConta
   return headerFactionIcon
 end
 
--- Creates the status line FontString below headerName.
--- Returns headerStatus FontString.
 function HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
   local headerStatus = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
   headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -2)
@@ -112,8 +102,6 @@ function HeaderElements.createStatusLine(headerFrame, headerName, selectedContac
   return headerStatus
 end
 
--- Creates the status dot frame overlaying the class icon (bottom-right corner).
--- Returns statusDot frame.
 function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
   local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE
@@ -152,8 +140,6 @@ function HeaderElements.createDivider(headerFrame)
   return primary
 end
 
--- Creates the centered empty state container with label + "Start New Whisper" button.
--- Returns a Frame with ._label (FontString) and ._newWhisperButton (Button).
 function HeaderElements.createEmptyState(pane, selectedContact, factory)
   local createFrame = (factory and factory.CreateFrame) or _G.CreateFrame
   local container = createFrame("Frame", nil, pane)

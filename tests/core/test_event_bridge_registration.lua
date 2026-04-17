@@ -2,9 +2,9 @@ local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 local Trace = require("WhisperMessenger.Core.Trace")
 
 return function()
-  -- -----------------------------------------------------------------------
+
   -- test_register_live_events_skips_unknown_client_events
-  -- -----------------------------------------------------------------------
+
   do
     local registered = {}
     local frame = {}
@@ -25,9 +25,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_register_and_unregister_lifecycle_events_skip_unknown_events
-  -- -----------------------------------------------------------------------
+
   do
     local registered = {}
     local unregistered = {}
@@ -64,11 +63,10 @@ return function()
     assert(unregistered.CLUB_MEMBER_UPDATED == nil, "unsupported lifecycle unregistration should be skipped")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_trace_is_wired_through_core_trace_when_unknown_event_skipped
   -- Regression: EventBridge previously read ns.Trace (capitalized), so every
   -- Trace(...) call inside the module was a silent no-op.
-  -- -----------------------------------------------------------------------
+
   do
     local printed = {}
     local savedPrint = _G.print

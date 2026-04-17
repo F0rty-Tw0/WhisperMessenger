@@ -22,9 +22,8 @@ return function()
   local parent = factory.CreateFrame("Frame", nil, nil)
   parent:SetSize(600, 500)
 
-  -- -----------------------------------------------------------------------
   -- test_create_returns_settings_refs
-  -- -----------------------------------------------------------------------
+
   do
     local settings = GeneralSettings.Create(factory, parent, {
       maxMessagesPerConversation = 200,
@@ -41,9 +40,8 @@ return function()
     assert(settings.retentionSlider ~= nil, "should have retentionSlider")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_has_labels_for_each_setting
-  -- -----------------------------------------------------------------------
+
   do
     local settings = GeneralSettings.Create(factory, parent, {
       maxMessagesPerConversation = 200,
@@ -64,9 +62,8 @@ return function()
     assert(texts["General Settings"], "should have 'General Settings' title")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_slider_initial_values
-  -- -----------------------------------------------------------------------
+
   do
     local settings = GeneralSettings.Create(factory, parent, {
       maxMessagesPerConversation = 150,
@@ -91,9 +88,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_on_change_fires_with_updated_values
-  -- -----------------------------------------------------------------------
+
   do
     local lastChange = nil
     local settings = GeneralSettings.Create(factory, parent, {
@@ -120,9 +116,8 @@ return function()
     assert(lastChange.value == 172800, "value should be 172800, got: " .. tostring(lastChange.value))
   end
 
-  -- -----------------------------------------------------------------------
   -- test_slider_rows_have_min_max_labels
-  -- -----------------------------------------------------------------------
+
   do
     local settings = GeneralSettings.Create(factory, parent, {
       maxMessagesPerConversation = 200,
@@ -167,9 +162,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_button_exists
-  -- -----------------------------------------------------------------------
+
   do
     local settings = GeneralSettings.Create(factory, parent, {
       maxMessagesPerConversation = 200,
@@ -192,9 +186,8 @@ return function()
     assert(foundLabel, "resetButton should have a label containing 'Reset'")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_button_restores_defaults
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local settings = GeneralSettings.Create(factory, parent, {
@@ -235,9 +228,9 @@ return function()
     assert(changes.maxConversations == 100, "should fire onChange for maxConversations=100")
     assert(changes.messageMaxAge == 86400, "should fire onChange for messageMaxAge=86400")
   end
-  -- -----------------------------------------------------------------------
+
   -- test_toggle_checked_state_uses_option_toggle_theme_tokens
-  -- -----------------------------------------------------------------------
+
   do
     local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
     if Theme.SetPreset then

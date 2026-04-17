@@ -5,9 +5,8 @@ return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
-  -- -----------------------------------------------------------------------
   -- test_theme_preset_selector_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { themePreset = "wow_default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -24,9 +23,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_theme_preset_selector_labels
-  -- -----------------------------------------------------------------------
+
   do
     local config = { themePreset = "wow_default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -56,9 +54,8 @@ return function()
     assert(expected["Azeroth"], "test_theme_preset_selector_labels: should have an 'Azeroth' button")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_theme_preset_selector_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { themePreset = "wow_default" }
@@ -81,9 +78,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_theme_preset_selector_highlights_initial
-  -- -----------------------------------------------------------------------
+
   do
     local config = { themePreset = "elvui_dark" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -100,9 +96,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_selector_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontFamily = "default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -115,9 +110,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_selector_labels
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontFamily = "default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -148,9 +142,8 @@ return function()
     assert(found.morpheus, "test_font_selector_labels: should have a 'Morpheus' button")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_selector_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { fontFamily = "default" }
@@ -173,9 +166,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_selector_default_highlights_initial
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontFamily = "system" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -194,9 +186,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_resets_font_and_theme_to_defaults
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {
@@ -246,9 +237,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_buttons_show_tooltip_on_enter
-  -- -----------------------------------------------------------------------
+
   do
     _G.GameTooltip = {
       _owner = nil,
@@ -297,9 +287,8 @@ return function()
     _G.GameTooltip = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_each_font_button_has_distinct_tooltip
-  -- -----------------------------------------------------------------------
+
   do
     local tooltipTexts = {}
     _G.GameTooltip = {
@@ -337,9 +326,8 @@ return function()
     _G.GameTooltip = nil
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_size_slider_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontSize = 12 }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -347,9 +335,8 @@ return function()
     assert(result.fontSizeSlider ~= nil, "test_font_size_slider_exists: should expose fontSizeSlider")
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_size_slider_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { fontSize = 12 }
@@ -369,9 +356,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_outline_selector_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontOutline = "NONE" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -384,9 +370,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_outline_selector_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { fontOutline = "NONE" }
@@ -407,9 +392,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_color_selector_exists
-  -- -----------------------------------------------------------------------
+
   do
     local config = { fontColor = "default" }
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
@@ -422,9 +406,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_font_color_selector_fires_on_change
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = { fontColor = "default" }
@@ -445,9 +428,8 @@ return function()
     )
   end
 
-  -- -----------------------------------------------------------------------
   -- test_reset_resets_new_font_settings
-  -- -----------------------------------------------------------------------
+
   do
     local changes = {}
     local config = {
