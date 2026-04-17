@@ -129,6 +129,17 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight - 2 },
     step = Theme.LAYOUT.CONTACT_ROW_HEIGHT,
   })
+  -- Dual-anchor the scrollFrame's BOTTOMRIGHT to the pane so the viewport
+  -- stops exactly at the pane border regardless of any mismatch between the
+  -- calculated contactsListHeight and the pane's live dual-anchor height.
+  -- Without this, the scrollFrame extends a few px past the pane bottom and
+  -- the last row paints over the pane border into the window chrome.
+  if contactsView.scrollFrame and contactsView.scrollFrame.SetPoint then
+    contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", 0, 0)
+  end
+  if contactsView.scrollBar and contactsView.scrollBar.SetPoint then
+    contactsView.scrollBar:SetPoint("BOTTOMLEFT", contactsView.scrollFrame, "BOTTOMRIGHT", 0, 0)
+  end
 
   local contentParent = frame.Inset or frame
   local contactsDivider = contentParent:CreateTexture(nil, "BORDER")

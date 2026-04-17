@@ -167,8 +167,12 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
       { top = true, left = true, right = true, bottom = false }
     )
 
-    title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-    title:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -6)
+    -- Title lives on titleBar (not frame) so its OVERLAY layer renders above
+    -- titleBarBg. Child-frame layers paint on top of parent-frame layers at
+    -- the same frame level, so a fontstring on frame would be hidden behind
+    -- any titleBarBg with non-trivial alpha (Shadowlands 0.90, Azeroth 1.0).
+    title = titleBar:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+    title:SetPoint("TOPLEFT", titleBar, "TOPLEFT", 4, -6)
     title:SetText(options.title or Theme.TITLE)
     if title.SetFont then
       local fontPath, _, flags = title:GetFont()

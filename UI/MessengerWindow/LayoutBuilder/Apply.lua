@@ -104,8 +104,15 @@ function Apply.Relayout(layout, relayout, theme)
     if cv.scrollFrame.ClearAllPoints then
       cv.scrollFrame:ClearAllPoints()
     end
+    -- SetSize keeps the calculated height in sync with layout metrics (and
+    -- with our fake_ui harness, which doesn't derive size from anchors).
+    -- The extra BOTTOMRIGHT anchor below is a WoW-only safety net: in the
+    -- live client, dual-anchor pins the viewport to the pane regardless of
+    -- any small mismatch between contactsListHeight and the pane's real
+    -- dual-anchored height, so rows can't paint past the pane border.
     cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
     cv.scrollFrame:SetSize(contactsWidth, contactsListHeight)
+    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", 0, 0)
     cv.scrollBar:SetHeight(contactsListHeight)
     cv.viewportHeight = contactsListHeight
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")

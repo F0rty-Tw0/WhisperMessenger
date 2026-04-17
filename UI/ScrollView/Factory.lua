@@ -31,6 +31,13 @@ function Factory.Create(factory, parent, options)
   local point = options.point or { "TOPLEFT", parent, "TOPLEFT", 0, 0 }
   scrollFrame:SetPoint(unpackValues(point))
   scrollFrame:SetSize(width, height)
+  -- SetScrollChild alone does not force WoW to clip descendant frames to the
+  -- scrollFrame's rect. Contact-row Buttons live inside the scroll child, and
+  -- a partial last row at the bottom paints on top of the pane border and
+  -- window chrome without this call.
+  if scrollFrame.SetClipsChildren then
+    scrollFrame:SetClipsChildren(true)
+  end
 
   local content = factory.CreateFrame("Frame", nil, scrollFrame)
   content:SetPoint("TOPLEFT", scrollFrame, "TOPLEFT", 0, 0)

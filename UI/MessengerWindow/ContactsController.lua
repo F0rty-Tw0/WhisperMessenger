@@ -24,6 +24,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   options = options or {}
 
   local currentContacts = initialContacts or {}
+  local currentSelectedKey = options.initialSelectedKey
   local viewportH = contactsView.viewportHeight or 0
   local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
   local visibleCount = math.max(10, math.ceil(viewportH / rowH) + 1)
@@ -49,13 +50,16 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     if nextContacts ~= nil then
       currentContacts = nextContacts
     end
+    if selectedKey ~= nil then
+      currentSelectedKey = selectedKey
+    end
     if resetPaging then
       visibleCount = 10
       ScrollView.SetVerticalScroll(contactsView, 0)
     end
 
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, {
-      selectedConversationKey = selectedKey,
+      selectedConversationKey = currentSelectedKey,
       visibleCount = visibleCount,
       hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview()
         or options.hideMessagePreview,
