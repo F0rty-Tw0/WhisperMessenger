@@ -65,14 +65,14 @@ return function()
 
   -- Contacts scroll view should update
   local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
-      + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
   local expectedContactsListH = expectedContactsH - searchTotalHeight
   assert(
     window.contacts.scrollFrame.height == expectedContactsListH,
     "expected contacts scrollFrame height "
-    .. expectedContactsListH
-    .. " but got "
-    .. tostring(window.contacts.scrollFrame.height)
+      .. expectedContactsListH
+      .. " but got "
+      .. tostring(window.contacts.scrollFrame.height)
   )
 
   -- Content pane should update
@@ -127,16 +127,16 @@ return function()
   assert(
     window.conversation.transcript.scrollFrame.width == expectedTranscriptW,
     "expected transcript width "
-    .. expectedTranscriptW
-    .. " but got "
-    .. tostring(window.conversation.transcript.scrollFrame.width)
+      .. expectedTranscriptW
+      .. " but got "
+      .. tostring(window.conversation.transcript.scrollFrame.width)
   )
   assert(
     window.conversation.transcript.scrollFrame.height == expectedTranscriptH,
     "expected transcript height "
-    .. expectedTranscriptH
-    .. " but got "
-    .. tostring(window.conversation.transcript.scrollFrame.height)
+      .. expectedTranscriptH
+      .. " but got "
+      .. tostring(window.conversation.transcript.scrollFrame.height)
   )
   -- Contacts-only resize handle should clamp to min width and persist contactsWidth.
   assert(window.contactsResizeHandle ~= nil, "expected contacts resize handle")
@@ -187,16 +187,16 @@ return function()
   assert(
     window.contactsPane.width == expectedMinContactsW,
     "expected contacts pane width to clamp to min "
-    .. tostring(expectedMinContactsW)
-    .. " but got "
-    .. tostring(window.contactsPane.width)
+      .. tostring(expectedMinContactsW)
+      .. " but got "
+      .. tostring(window.contactsPane.width)
   )
   assert(
     window.contentPane.width == expectedNarrowContentW,
     "expected content width to follow contacts resize to "
-    .. tostring(expectedNarrowContentW)
-    .. " but got "
-    .. tostring(window.contentPane.width)
+      .. tostring(expectedNarrowContentW)
+      .. " but got "
+      .. tostring(window.contentPane.width)
   )
   local expectedHintWidth = expectedMinContactsW - ((Theme.CONTENT_PADDING or 0) * 2)
   assert(
@@ -210,9 +210,9 @@ return function()
   assert(
     positionChanged.contactsWidth == expectedMinContactsW,
     "expected persisted contacts width "
-    .. tostring(expectedMinContactsW)
-    .. " but got "
-    .. tostring(positionChanged.contactsWidth)
+      .. tostring(expectedMinContactsW)
+      .. " but got "
+      .. tostring(positionChanged.contactsWidth)
   )
 
   rawset(_G, "GetCursorPosition", originalGetCursorPosition)
@@ -249,7 +249,7 @@ return function()
   assert(
     oversizedWindow.frame.resizeBounds[4] == _G.UIParent:GetHeight(),
     "expected native resize max height to track UIParent height, got "
-    .. tostring(oversizedWindow.frame.resizeBounds[4])
+      .. tostring(oversizedWindow.frame.resizeBounds[4])
   )
 
   local unsizedParent = factory.CreateFrame("Frame", "UnsizedParent", nil)
@@ -273,7 +273,7 @@ return function()
   assert(
     recoveredWindow.frame.height <= Theme.WINDOW_HEIGHT,
     "expected unsized parent fallback to recover height to a sane default, got "
-    .. tostring(recoveredWindow.frame.height)
+      .. tostring(recoveredWindow.frame.height)
   )
 
   local originalGetCursorPositionOversize = _G.GetCursorPosition

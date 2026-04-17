@@ -18,7 +18,12 @@ local NAME_TO_TIME_GAP = 2
 local TIME_LABEL_FALLBACK_WIDTH = 14
 local TIME_LABEL_RIGHT_INSET = 6
 local FACTION_ICON_RIGHT_PADDING = 1
+local PREVIEW_RIGHT_RESERVE = 40 -- name label right reserve (timestamp + padding)
 local UTF8_CHAR_PATTERN = "[%z\1-\127\194-\244][\128-\191]*"
+
+local function previewLabelWidth(parentWidth)
+  return parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - PREVIEW_RIGHT_RESERVE
+end
 
 local function timestampReserveWidth(row)
   local reserve = TIME_LABEL_RIGHT_INSET + TIME_LABEL_FALLBACK_WIDTH + NAME_TO_TIME_GAP
@@ -45,10 +50,10 @@ local function nameLabelWidth(row, parentWidth)
   return math.max(
     0,
     (parentWidth or 0)
-    - Theme.LAYOUT.CONTACT_ICON_SIZE
-    - Theme.LAYOUT.CONTACT_PADDING
-    - NAME_LABEL_LEFT_INSET
-    - timestampReserveWidth(row)
+      - Theme.LAYOUT.CONTACT_ICON_SIZE
+      - Theme.LAYOUT.CONTACT_PADDING
+      - NAME_LABEL_LEFT_INSET
+      - timestampReserveWidth(row)
   )
 end
 
@@ -159,7 +164,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
 
   local inferredFaction = item.raceTag
       and (ns_ref and ns_ref.Identity and ns_ref.Identity.InferFaction and ns_ref.Identity.InferFaction(item.raceTag))
-      or nil
+    or nil
   local factionForIcon = inferredFaction or item.factionName
   local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
 
@@ -167,7 +172,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   local textBudget = titleMaxWidth
   if reliableFaction then
     textBudget =
-        math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
+      math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
     row.title:SetText(fitLabelTextWithEllipsis(row.title, item.displayName or "", textBudget))
@@ -233,7 +238,7 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
     return
   end
 
-  row.preview:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 40)
+  row.preview:SetWidth(previewLabelWidth(parentWidth))
   row.preview:SetText(hideMessagePreview and "" or (item.lastPreview or ""))
 end
 
@@ -243,7 +248,7 @@ function RowElements.createPreview(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
   label:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", 10, 2)
   setTextColor(label, Theme.COLORS.text_secondary)
-  label:SetWidth(parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - 40)
+  label:SetWidth(previewLabelWidth(parentWidth))
   label:SetJustifyH("LEFT")
   label:SetWordWrap(false)
   if label.SetMaxLines then

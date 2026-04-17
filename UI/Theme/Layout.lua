@@ -52,20 +52,42 @@ local Layout = {
 
   -- Composer
   COMPOSER_INPUT_HEIGHT = 36,
-  SEND_BUTTON_SIZE = 36,
 
   -- Toggle icon
   ICON_SIZE = 42,
   ICON_BADGE_SIZE = 20,
 
   -- Header
+  HEADER_HEIGHT = 56,
   HEADER_ICON_SIZE = 32,
   HEADER_STATUS_DOT_SIZE = 8,
+
+  -- Conversation pane transcript
+  TRANSCRIPT_HORIZONTAL_INSET = 32,
+  TRANSCRIPT_LEFT_GUTTER = 16,
+
+  -- Window chrome buttons (close / new conversation / options / empty-state)
+  CHROME_BUTTON_SIZE = 20,
+  CHROME_BUTTON_ICON_SIZE = 14,
+
+  -- Content pane insets (shared between initial Build and Relayout)
+  CONTENT_PANE_RIGHT_INSET = 5,
+  CONTENT_PANE_BOTTOM_INSET = 10,
+
+  -- Status dot corner offset over icon (header + contact row)
+  STATUS_DOT_CORNER_OFFSET = 2,
 
   -- Option buttons
   OPTION_BUTTON_HEIGHT = 30,
   OPTION_BUTTON_SPACING = 8,
   OPTION_BUTTON_RADIUS = 4,
+
+  -- Settings panels (shared across Appearance/General/Behavior/Notification)
+  SETTINGS_CONTROL_WIDTH = 350,
+  SETTINGS_SLIDER_HEIGHT = 16,
+  SETTINGS_LABEL_SPACING = 6,
+  SETTINGS_SLIDER_ROW_SPACING = 32,
+  SETTINGS_TOGGLE_ROW_SPACING = 16,
 
   -- Misc
   MESSAGE_TIMESTAMP_GAP = 6,

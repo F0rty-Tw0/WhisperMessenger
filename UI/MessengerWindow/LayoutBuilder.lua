@@ -7,16 +7,16 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local LayoutMetrics = ns.MessengerWindowLayoutMetrics
-    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local LayoutApply = ns.MessengerWindowLayoutApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Apply")
 local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply
-    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
 local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI
-    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
-    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
-    or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local LayoutBuilder = {}
@@ -36,16 +36,24 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 --   resetWindowButton, resetIconButton, clearAllChatsButton, contactsView
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
-  local contactsWidth =
-      LayoutBuilder.ClampContactsWidth(initialState.width, _options.contactsWidth or initialState.contactsWidth, Theme)
-  local contactsHeight = initialState.height - Theme.TOP_BAR_HEIGHT
-  local contentWidth = initialState.width - contactsWidth - Theme.DIVIDER_THICKNESS
-  local contentHeight = initialState.height - Theme.TOP_BAR_HEIGHT
-  local threadHeight = contentHeight - Theme.COMPOSER_HEIGHT - Theme.DIVIDER_THICKNESS
+  local sizing = LayoutMetrics.CalculateRelayout(
+    {},
+    initialState.width,
+    initialState.height,
+    _options.contactsWidth or initialState.contactsWidth,
+    Theme
+  )
+  local contactsWidth = sizing.contactsWidth
+  local contactsHeight = sizing.contactsHeight
+  local contentWidth = sizing.contentWidth
+  local contentHeight = sizing.contentHeight
+  local threadHeight = sizing.threadHeight
+  local searchHeight = sizing.searchHeight
+  local searchMargin = sizing.searchMargin
+  local searchTotalHeight = sizing.searchTotalHeight
+  local contactsListHeight = sizing.contactsListHeight
   local contactsHandleWidth = LayoutMetrics.GetContactsResizeHandleWidth(Theme)
-  local searchHeight, searchMargin, searchClearButtonSize, searchTotalHeight =
-      LayoutMetrics.ContactsSearchMetrics(Theme)
-  local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
+  local _, _, searchClearButtonSize = LayoutMetrics.ContactsSearchMetrics(Theme)
 
   local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
   local strongDividerColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
@@ -67,7 +75,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   contactsPane:SetSize(contactsWidth, contactsHeight)
   -- Same 8px left + 24px top offset under both chromes — only the chrome
   -- itself is conditional on Azeroth, layout sizes/positions stay uniform.
-  contactsPane:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 6, -24)
+  contactsPane:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 6, -Theme.LAYOUT.TOP_BAR_HEIGHT)
   contactsPane:SetPoint("BOTTOMLEFT", frame.Inset or frame, "BOTTOMLEFT", 7, 6)
 
   -- Contacts pane background and section border
@@ -169,10 +177,16 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contentPane = factory.CreateFrame("Frame", nil, contentParent)
   contentPane:SetSize(contentWidth, contentHeight)
   contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
-  -- Dual-anchor BOTTOMRIGHT to Inset with 5px right + 5px bottom margins
+  -- Dual-anchor BOTTOMRIGHT to Inset with 5px right + 10px bottom margins
   -- so neither the composer container nor the conversation header overlap
-  -- the window's border. (-5 right, 5 up from BOTTOMRIGHT.)
-  contentPane:SetPoint("BOTTOMRIGHT", contentParent, "BOTTOMRIGHT", -5, 10)
+  -- the window's border.
+  contentPane:SetPoint(
+    "BOTTOMRIGHT",
+    contentParent,
+    "BOTTOMRIGHT",
+    -Theme.LAYOUT.CONTENT_PANE_RIGHT_INSET,
+    Theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET
+  )
 
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
@@ -189,7 +203,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   composerPane:SetPoint("BOTTOMRIGHT", contentPane, "BOTTOMRIGHT", 0, -4)
   threadPane:SetPoint("BOTTOMRIGHT", composerPane, "TOPRIGHT", 0, Theme.DIVIDER_THICKNESS)
   local composerPaneBorder =
-      UIHelpers.createBorderBox(composerPane, composerBorderColor, Theme.DIVIDER_THICKNESS, "BORDER")
+    UIHelpers.createBorderBox(composerPane, composerBorderColor, Theme.DIVIDER_THICKNESS, "BORDER")
   local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
   local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {

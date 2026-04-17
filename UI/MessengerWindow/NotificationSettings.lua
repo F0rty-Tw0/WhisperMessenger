@@ -12,12 +12,6 @@ local ButtonSelector = ns.MessengerWindowButtonSelector
 local NotificationSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local TOGGLE_WIDTH = 350
-local ROW_SPACING = 16
-local LABEL_SPACING = 6
-
-local SLIDER_WIDTH = 350
-local SLIDER_HEIGHT = 16
 
 local DEFAULTS = {
   badgePulse = true,
@@ -52,8 +46,8 @@ local function createSoundSelector(factory, parent, initial, colors, onChange)
         SoundPlayer.Preview(value)
       end
     end,
-    rowWidth = TOGGLE_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
     buttonWidth = 50,
     buttonHeight = 26,
     buttonSpacing = 4,
@@ -62,7 +56,7 @@ end
 
 local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
   local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT + 20)
+  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -74,8 +68,8 @@ local function createSliderRow(factory, parent, label, min, max, step, initial, 
   UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
 
   local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
+  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
+  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
   if slider.SetOrientation then
     slider:SetOrientation("HORIZONTAL")
   end
@@ -155,7 +149,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     hint:SetJustifyH("LEFT")
   end
   if hint.SetWidth then
-    hint:SetWidth(TOGGLE_WIDTH)
+    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
@@ -168,7 +162,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     }
   end
   local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = TOGGLE_WIDTH, height = 24 }
+  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local badgePulseToggle = UIHelpers.createToggleRow(
     factory,
@@ -202,7 +196,13 @@ function NotificationSettings.Create(factory, parent, config, options)
       "Plays a sound alert when you receive a new whisper.",
     }
   )
-  playSoundToggle.row:SetPoint("TOPLEFT", badgePulseToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  playSoundToggle.row:SetPoint(
+    "TOPLEFT",
+    badgePulseToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local function selectorColorsFor(activeTheme)
     return {
@@ -224,7 +224,7 @@ function NotificationSettings.Create(factory, parent, config, options)
       onChange("notificationSound", value)
     end
   )
-  soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
   local showBadgeToggle = UIHelpers.createToggleRow(
     factory,
@@ -241,7 +241,7 @@ function NotificationSettings.Create(factory, parent, config, options)
       "Displays an unread message count on the toggle icon.",
     }
   )
-  showBadgeToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  showBadgeToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
   local function pxFormat(v)
     return tostring(math.floor(v + 0.5)) .. "px"
@@ -260,7 +260,7 @@ function NotificationSettings.Create(factory, parent, config, options)
       onChange("iconSize", value)
     end
   )
-  iconSizeRow.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  iconSizeRow.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
   local iconDesaturatedToggle = UIHelpers.createToggleRow(
     factory,
@@ -277,7 +277,13 @@ function NotificationSettings.Create(factory, parent, config, options)
       "Greyscales the toggle icon when there are no unread messages.",
     }
   )
-  iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  iconDesaturatedToggle.row:SetPoint(
+    "TOPLEFT",
+    iconSizeRow.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
@@ -294,7 +300,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     frame,
     "Reset to Defaults",
     normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
+    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
   resetButton:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()

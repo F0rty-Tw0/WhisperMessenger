@@ -9,6 +9,10 @@ local createOptionButton = UIHelpers.createOptionButton
 
 local OptionsMenuButtons = {}
 
+local function optionButtonWidth(contactsWidth, menuPadding)
+  return contactsWidth - (menuPadding * 2)
+end
+
 function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   options = options or {}
 
@@ -23,7 +27,8 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     text = theme.COLORS.option_button_text,
     textHover = theme.COLORS.option_button_text_hover,
   }
-  local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = contactsWidth - (menuPadding * 2) }
+  local tabLayout =
+    { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding) }
   local tabSpacing = 4
 
   local generalTab = optionButtonFactory(factory, optionsMenu, "General", tabColors, tabLayout)
@@ -52,7 +57,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     text = theme.COLORS.option_button_text,
     textHover = theme.COLORS.option_button_text_hover,
   }
-  local btnLayout = { height = btnH, width = contactsWidth - (menuPadding * 2) }
+  local btnLayout = { height = btnH, width = optionButtonWidth(contactsWidth, menuPadding) }
 
   local clearAllChatsButton = optionButtonFactory(factory, optionsMenu, "Clear All Chats", dangerColors, btnLayout)
   clearAllChatsButton:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMLEFT", menuPadding, menuPadding)

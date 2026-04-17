@@ -112,7 +112,7 @@ function WindowResize.New(options)
       previewLeft + previewWidth,
       previewTop
     )
-    windowResizePreview.top:SetHeight(1)
+    windowResizePreview.top:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.bottom.ClearAllPoints then
       windowResizePreview.bottom:ClearAllPoints()
@@ -131,7 +131,7 @@ function WindowResize.New(options)
       previewLeft + previewWidth,
       previewTop - previewHeight
     )
-    windowResizePreview.bottom:SetHeight(1)
+    windowResizePreview.bottom:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.left.ClearAllPoints then
       windowResizePreview.left:ClearAllPoints()
@@ -144,7 +144,7 @@ function WindowResize.New(options)
       previewLeft,
       previewTop - previewHeight
     )
-    windowResizePreview.left:SetWidth(1)
+    windowResizePreview.left:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.right.ClearAllPoints then
       windowResizePreview.right:ClearAllPoints()
@@ -163,7 +163,7 @@ function WindowResize.New(options)
       previewLeft + previewWidth,
       previewTop - previewHeight
     )
-    windowResizePreview.right:SetWidth(1)
+    windowResizePreview.right:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     setPreviewShown(true)
   end

@@ -10,6 +10,14 @@ local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 
+local CHAT_ICON_RATIO = 0.6 -- chat icon scale factor vs ICON_SIZE
+local GLOW_RATIO = 1.8 -- glow frame scale factor vs ICON_SIZE
+local PULSE_MIN_SCALE = 0.75 -- pulse animation from-scale
+local PULSE_MAX_SCALE = 1.1 -- pulse animation to-scale
+local PULSE_FADE_IN = 0.5 -- pulse fade-in duration (seconds)
+local PULSE_FADE_OUT = 1.0 -- pulse fade-out duration (seconds)
+local PULSE_SCALE_SECONDS = 0.75 -- pulse scale animation duration (seconds)
+
 local ToggleIcon = {}
 
 function ToggleIcon.Create(factory, options)
@@ -48,7 +56,7 @@ function ToggleIcon.Create(factory, options)
 
   -- Chat icon (speech bubble) instead of text label
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
-  chatIcon:SetSize(ICON_SIZE * 0.6, ICON_SIZE * 0.6)
+  chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
   chatIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
   applyVertexColor(chatIcon, Theme.COLORS.text_primary)
@@ -59,7 +67,7 @@ function ToggleIcon.Create(factory, options)
   -- Wrap glow in its own frame so AnimationGroup targets it directly
   local glowFrame = factory.CreateFrame("Frame", nil, frame)
   glowFrame:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  glowFrame:SetSize(ICON_SIZE * 1.8, ICON_SIZE * 1.8)
+  glowFrame:SetSize(ICON_SIZE * GLOW_RATIO, ICON_SIZE * GLOW_RATIO)
   glowFrame:SetAlpha(0)
   glowFrame:SetFrameLevel(frame:GetFrameLevel())
 
@@ -84,26 +92,26 @@ function ToggleIcon.Create(factory, options)
     local fadeIn = ag:CreateAnimation("Alpha")
     fadeIn:SetFromAlpha(0)
     fadeIn:SetToAlpha(0.8)
-    fadeIn:SetDuration(0.5)
+    fadeIn:SetDuration(PULSE_FADE_IN)
     fadeIn:SetOrder(1)
 
     local fadeOut = ag:CreateAnimation("Alpha")
     fadeOut:SetFromAlpha(0.8)
     fadeOut:SetToAlpha(0)
-    fadeOut:SetDuration(1.0)
+    fadeOut:SetDuration(PULSE_FADE_OUT)
     fadeOut:SetOrder(2)
 
-    -- Breathe scale 0.75→1.1 over the full cycle
+    -- Breathe scale PULSE_MIN_SCALE→PULSE_MAX_SCALE over the full cycle
     local scaleUp = ag:CreateAnimation("Scale")
-    scaleUp:SetScaleFrom(0.75, 0.75)
-    scaleUp:SetScaleTo(1.1, 1.1)
-    scaleUp:SetDuration(0.75)
+    scaleUp:SetScaleFrom(PULSE_MIN_SCALE, PULSE_MIN_SCALE)
+    scaleUp:SetScaleTo(PULSE_MAX_SCALE, PULSE_MAX_SCALE)
+    scaleUp:SetDuration(PULSE_SCALE_SECONDS)
     scaleUp:SetOrder(1)
 
     local scaleDown = ag:CreateAnimation("Scale")
-    scaleDown:SetScaleFrom(1.1, 1.1)
-    scaleDown:SetScaleTo(0.75, 0.75)
-    scaleDown:SetDuration(0.75)
+    scaleDown:SetScaleFrom(PULSE_MAX_SCALE, PULSE_MAX_SCALE)
+    scaleDown:SetScaleTo(PULSE_MIN_SCALE, PULSE_MIN_SCALE)
+    scaleDown:SetDuration(PULSE_SCALE_SECONDS)
     scaleDown:SetOrder(2)
 
     if ag.SetScript then
@@ -271,8 +279,8 @@ function ToggleIcon.Create(factory, options)
   local function applyIconSize(newSize)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
-    chatIcon:SetSize(math.floor(newSize * 0.6), math.floor(newSize * 0.6))
-    glowFrame:SetSize(newSize * 1.8, newSize * 1.8)
+    chatIcon:SetSize(math.floor(newSize * CHAT_ICON_RATIO), math.floor(newSize * CHAT_ICON_RATIO))
+    glowFrame:SetSize(newSize * GLOW_RATIO, newSize * GLOW_RATIO)
     if border.SetPoint and border.ClearAllPoints then
       border:ClearAllPoints()
       border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)

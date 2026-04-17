@@ -15,10 +15,6 @@ local ButtonSelector = ns.MessengerWindowButtonSelector
 local GeneralSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local SLIDER_WIDTH = 350
-local SLIDER_HEIGHT = 16
-local ROW_SPACING = 32
-local LABEL_SPACING = 6
 
 local DEFAULTS = {
   maxMessagesPerConversation = 200,
@@ -42,7 +38,7 @@ local TIME_SOURCE_OPTIONS = {
 
 local function createSettingRow(factory, parent, label, min, max, step, initial, onChange)
   local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT + 20)
+  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -54,8 +50,8 @@ local function createSettingRow(factory, parent, label, min, max, step, initial,
   UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
 
   local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
+  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
+  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
   if slider.SetOrientation then
     slider:SetOrientation("HORIZONTAL")
   end
@@ -144,7 +140,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     hint:SetJustifyH("LEFT")
   end
   if hint.SetWidth then
-    hint:SetWidth(SLIDER_WIDTH)
+    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
@@ -161,7 +157,7 @@ function GeneralSettings.Create(factory, parent, config, options)
       onChange("maxMessagesPerConversation", value)
     end
   )
-  messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+  messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Max conversations
   local conversationsRow = createSettingRow(
@@ -176,7 +172,7 @@ function GeneralSettings.Create(factory, parent, config, options)
       onChange("maxConversations", value)
     end
   )
-  conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Message retention (in hours, converted to/from seconds)
   local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
@@ -192,7 +188,7 @@ function GeneralSettings.Create(factory, parent, config, options)
       onChange("messageMaxAge", value * 3600)
     end
   )
-  retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   -- Privacy toggles
   local function toggleColorsFor(activeTheme)
@@ -204,10 +200,10 @@ function GeneralSettings.Create(factory, parent, config, options)
     }
   end
   local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
+  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   privacyLabel:SetText("Privacy")
   UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
 
@@ -259,7 +255,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   local selectorColors = selectorColorsFor(Theme)
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   timeLabel:SetText("Time Display")
   UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
 
@@ -272,8 +268,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     onChange = function(value)
       onChange("timeFormat", value)
     end,
-    rowWidth = SLIDER_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
   })
   timeFormatSelector.row:SetPoint("TOPLEFT", timeLabel, "BOTTOMLEFT", 0, -12)
 
@@ -286,10 +282,16 @@ function GeneralSettings.Create(factory, parent, config, options)
     onChange = function(value)
       onChange("timeSource", value)
     end,
-    rowWidth = SLIDER_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
   })
-  timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  timeSourceSelector.row:SetPoint(
+    "TOPLEFT",
+    timeFormatSelector.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   -- Reset to Defaults button
   local function optionButtonColorsFor(activeTheme)
@@ -306,9 +308,9 @@ function GeneralSettings.Create(factory, parent, config, options)
     frame,
     "Reset to Defaults",
     normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = SLIDER_WIDTH }
+    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
     messagesRow.slider:SetValue(DEFAULTS.maxMessagesPerConversation)

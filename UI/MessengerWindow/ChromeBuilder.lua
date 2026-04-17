@@ -119,18 +119,18 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     -- by the same amount so content starts below the extended bar.
     local EXTRA_TITLE_HEIGHT = 24
     blizzardTopBarExtension = frame:CreateTexture(nil, "ARTWORK")
-    blizzardTopBarExtension:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -24)
+    blizzardTopBarExtension:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -Theme.LAYOUT.TOP_BAR_HEIGHT)
     -- -6 right matches the Inset's own BOTTOMRIGHT inset so the top status
     -- bar extension and the content area share the same right edge (2px
     -- more padding than the default 4px, giving the corner some breathing
     -- room away from the resize grip).
-    blizzardTopBarExtension:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -24)
+    blizzardTopBarExtension:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -Theme.LAYOUT.TOP_BAR_HEIGHT)
     blizzardTopBarExtension:SetHeight(EXTRA_TITLE_HEIGHT)
     applyColorTexture(blizzardTopBarExtension, Theme.COLORS.bg_header)
 
     if frame.Inset and frame.Inset.ClearAllPoints and frame.Inset.SetPoint then
       frame.Inset:ClearAllPoints()
-      frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -(24 + EXTRA_TITLE_HEIGHT))
+      frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -(Theme.LAYOUT.TOP_BAR_HEIGHT + EXTRA_TITLE_HEIGHT))
       -- +8px of chrome visible at the bottom (Inset bottom raised).
       frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 34)
     end
@@ -149,7 +149,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame.background = background
 
     -- Subtle edge highlights (1px border)
-    edgeTextures = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, 1, "BORDER")
+    edgeTextures = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, Theme.LAYOUT.DIVIDER_THICKNESS, "BORDER")
 
     -- Title bar with header background
     local titleBar = factory.CreateFrame("Frame", nil, frame)
@@ -187,13 +187,13 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
 
     -- Custom close button (no template)
     closeButton = factory.CreateFrame("Button", nil, frame)
-    closeButton:SetSize(20, 20)
+    closeButton:SetSize(Theme.LAYOUT.CHROME_BUTTON_SIZE, Theme.LAYOUT.CHROME_BUTTON_SIZE)
     closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
     local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
     closeBg:SetAllPoints(closeButton)
     applyColorTexture(closeBg, { 0, 0, 0, 0 })
     closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
-    closeIcon:SetSize(14, 14)
+    closeIcon:SetSize(Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
     closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
     closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
     closeIcon:SetDesaturated(true)
@@ -230,7 +230,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   end
 
   local newConversationButton = factory.CreateFrame("Button", nil, frame)
-  newConversationButton:SetSize(20, 20)
+  newConversationButton:SetSize(Theme.LAYOUT.CHROME_BUTTON_SIZE, Theme.LAYOUT.CHROME_BUTTON_SIZE)
   if useBlizzardChrome then
     -- Anchor at the top-left of the template's title bar.
     newConversationButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, -3)
@@ -243,7 +243,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local newConversationBase = Theme.COLORS.bg_contact_hover
   applyColorTexture(newConversationBg, { newConversationBase[1], newConversationBase[2], newConversationBase[3], 0.35 })
   local newConversationIcon = newConversationButton:CreateTexture(nil, "ARTWORK")
-  newConversationIcon:SetSize(14, 14)
+  newConversationIcon:SetSize(Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
   newConversationIcon:SetPoint("CENTER", newConversationButton, "CENTER", 0, 0)
   newConversationIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
   newConversationIcon:SetDesaturated(true)
@@ -278,7 +278,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- Gear icon for options. Anchor relative to the close button so it sits
   -- cleanly to its left in both chromes.
   local optionsButton = factory.CreateFrame("Button", nil, frame)
-  optionsButton:SetSize(useBlizzardChrome and 20 or 20, useBlizzardChrome and 20 or 20)
+  optionsButton:SetSize(Theme.LAYOUT.CHROME_BUTTON_SIZE, Theme.LAYOUT.CHROME_BUTTON_SIZE)
   if closeButton then
     optionsButton:SetPoint("RIGHT", closeButton, "LEFT", -2, 0)
   else
@@ -288,7 +288,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   optionsBg:SetAllPoints(optionsButton)
   applyColorTexture(optionsBg, { 0, 0, 0, 0 })
   local optionsIcon = optionsButton:CreateTexture(nil, "ARTWORK")
-  optionsIcon:SetSize(useBlizzardChrome and 14 or 14, useBlizzardChrome and 14 or 14)
+  optionsIcon:SetSize(Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
   optionsIcon:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
   optionsIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
   optionsIcon:SetDesaturated(true)

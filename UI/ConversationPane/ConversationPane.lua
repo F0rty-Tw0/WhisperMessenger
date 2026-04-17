@@ -7,10 +7,10 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView
-    or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
+  or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup
-    or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
+  or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -170,12 +170,10 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   local parentHeight = sizeValue(parent, "GetHeight", "height", 420)
   pane:SetAllPoints(parent)
 
-  local HEADER_HEIGHT = 56
-
   ---------------------------------------------------------------------------
   -- Header
   ---------------------------------------------------------------------------
-  local header = HeaderView.Create(factory, pane, selectedContact, { HEADER_HEIGHT = HEADER_HEIGHT })
+  local header = HeaderView.Create(factory, pane, selectedContact, { HEADER_HEIGHT = Theme.LAYOUT.HEADER_HEIGHT })
   local headerFrame = header.headerFrame
 
   ---------------------------------------------------------------------------
@@ -189,16 +187,17 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   ---------------------------------------------------------------------------
   -- Transcript ScrollView (anchored below header)
   ---------------------------------------------------------------------------
-  local transcriptHeight = parentHeight - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
+  local transcriptHeight = parentHeight - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
   local transcript = ScrollView.Create(factory, pane, {
-    width = parentWidth - 32,
+    width = parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET,
     height = transcriptHeight,
-    point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", 16, -8 },
+    point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, -8 },
     step = TRANSCRIPT_SCROLL_STEP,
   })
   transcript.factory = factory
   transcript.point = pointValue(transcript.scrollFrame, nil)
-  transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - 32)
+  transcript.width =
+    sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
   TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
 
@@ -206,8 +205,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   -- Active status banner (above composer, shown for AFK/DND)
   ---------------------------------------------------------------------------
   local activeStatusBanner = pane:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  activeStatusBanner:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 16, 4)
-  activeStatusBanner:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -16, 4)
+  activeStatusBanner:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 4)
+  activeStatusBanner:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 4)
   activeStatusBanner:SetText("")
   applyColor(activeStatusBanner, Theme.COLORS.text_system)
   activeStatusBanner:Hide()
@@ -275,10 +274,9 @@ function ConversationPane.Relayout(view, width, height)
   if view == nil or view.transcript == nil then
     return
   end
-  local HEADER_HEIGHT = 56
   local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
-  local transcriptW = width - 32
-  local transcriptH = height - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
+  local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
+  local transcriptH = height - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
   local t = view.transcript
   t.scrollFrame:SetSize(transcriptW, transcriptH)
   t.content:SetSize(transcriptW, t.content.height or transcriptH)

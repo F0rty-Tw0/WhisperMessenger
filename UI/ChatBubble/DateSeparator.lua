@@ -23,17 +23,17 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
     frame._labelFS = labelFS
 
     local lineLeft = frame:CreateTexture(nil, "ARTWORK")
-    lineLeft:SetHeight(1)
+    lineLeft:SetHeight(Theme.LAYOUT.DIVIDER_THICKNESS)
     applyColorTexture(lineLeft, Theme.COLORS.divider)
-    lineLeft:SetPoint("LEFT", frame, "LEFT", 16, 0)
+    lineLeft:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 0)
     lineLeft:SetPoint("RIGHT", labelFS, "LEFT", -8, 0)
     frame._lineLeft = lineLeft
 
     local lineRight = frame:CreateTexture(nil, "ARTWORK")
-    lineRight:SetHeight(1)
+    lineRight:SetHeight(Theme.LAYOUT.DIVIDER_THICKNESS)
     applyColorTexture(lineRight, Theme.COLORS.divider)
     lineRight:SetPoint("LEFT", labelFS, "RIGHT", 8, 0)
-    lineRight:SetPoint("RIGHT", frame, "RIGHT", -16, 0)
+    lineRight:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 0)
     frame._lineRight = lineRight
   else
     -- Re-show cached regions (hidden during pool release)

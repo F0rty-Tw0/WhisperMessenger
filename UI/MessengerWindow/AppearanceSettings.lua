@@ -14,10 +14,6 @@ local ButtonSelector = ns.MessengerWindowButtonSelector
 local AppearanceSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local SLIDER_WIDTH = 350
-local SLIDER_HEIGHT = 16
-local ROW_SPACING = 32
-local LABEL_SPACING = 6
 
 local FONT_OPTIONS = {
   { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
@@ -94,7 +90,7 @@ local DEFAULTS = {
 
 local function createSliderRow(factory, parent, label, min, max, step, initial, formatFn, onChange)
   local row = factory.CreateFrame("Frame", nil, parent)
-  row:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT + 20)
+  row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
@@ -106,8 +102,8 @@ local function createSliderRow(factory, parent, label, min, max, step, initial, 
   UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
 
   local slider = factory.CreateFrame("Slider", nil, row)
-  slider:SetSize(SLIDER_WIDTH, SLIDER_HEIGHT)
-  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -LABEL_SPACING)
+  slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
+  slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
   if slider.SetOrientation then
     slider:SetOrientation("HORIZONTAL")
   end
@@ -172,8 +168,8 @@ local function createButtonSelector(factory, parent, labelText, optionsList, fal
     initial = initial,
     colors = colors,
     onChange = onChange,
-    rowWidth = SLIDER_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
   })
 end
 
@@ -204,7 +200,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     hint:SetJustifyH("LEFT")
   end
   if hint.SetWidth then
-    hint:SetWidth(SLIDER_WIDTH)
+    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
@@ -227,7 +223,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     }
   end
   local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = SLIDER_WIDTH, height = 24 }
+  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local nativeChromeToggle = UIHelpers.createToggleRow(
     factory,
@@ -244,7 +240,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       "Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply.",
     }
   )
-  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -ROW_SPACING)
+  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local selectorColors = selectorColorsFor(Theme)
   local themePresetOptions = buildThemePresetOptions()
@@ -260,7 +256,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("themePreset", value)
     end
   )
-  themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  themePresetSelector.row:SetPoint(
+    "TOPLEFT",
+    nativeChromeToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local fontSelector = createButtonSelector(
     factory,
@@ -274,7 +276,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("fontFamily", value)
     end
   )
-  fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  fontSelector.row:SetPoint(
+    "TOPLEFT",
+    themePresetSelector.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local function pxFormat(v)
     return tostring(math.floor(v + 0.5)) .. "px"
@@ -293,7 +301,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("fontSize", value)
     end
   )
-  fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local fontOutlineSelector = createButtonSelector(
     factory,
@@ -307,7 +315,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("fontOutline", value)
     end
   )
-  fontOutlineSelector.row:SetPoint("TOPLEFT", fontSizeRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  fontOutlineSelector.row:SetPoint(
+    "TOPLEFT",
+    fontSizeRow.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local fontColorOptions = buildFontColorOptions()
   local fontColorSelector = ButtonSelector.Create(factory, frame, {
@@ -319,11 +333,17 @@ function AppearanceSettings.Create(factory, parent, config, options)
     onChange = function(value)
       onChange("fontColor", value)
     end,
-    rowWidth = SLIDER_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
     maxPerRow = 3,
   })
-  fontColorSelector.row:SetPoint("TOPLEFT", fontOutlineSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  fontColorSelector.row:SetPoint(
+    "TOPLEFT",
+    fontOutlineSelector.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local bubbleColorOptions = buildBubbleColorOptions()
   local bubbleColorSelector = ButtonSelector.Create(factory, frame, {
@@ -335,11 +355,17 @@ function AppearanceSettings.Create(factory, parent, config, options)
     onChange = function(value)
       onChange("bubbleColorPreset", value)
     end,
-    rowWidth = SLIDER_WIDTH,
-    labelSpacing = LABEL_SPACING,
+    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
     maxPerRow = 3,
   })
-  bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  bubbleColorSelector.row:SetPoint(
+    "TOPLEFT",
+    fontColorSelector.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local opacityInactiveRow = createSliderRow(
     factory,
@@ -354,7 +380,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("windowOpacityInactive", value)
     end
   )
-  opacityInactiveRow.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  opacityInactiveRow.row:SetPoint(
+    "TOPLEFT",
+    bubbleColorSelector.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   local opacityActiveRow = createSliderRow(
     factory,
@@ -369,7 +401,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
       onChange("windowOpacityActive", value)
     end
   )
-  opacityActiveRow.row:SetPoint("TOPLEFT", opacityInactiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  opacityActiveRow.row:SetPoint(
+    "TOPLEFT",
+    opacityInactiveRow.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
 
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
@@ -386,9 +424,9 @@ function AppearanceSettings.Create(factory, parent, config, options)
     frame,
     "Reset to Defaults",
     normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = SLIDER_WIDTH }
+    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", opacityActiveRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   resetButton:SetScript("OnClick", function()
     opacityInactiveRow.slider:SetValue(DEFAULTS.windowOpacityInactive)
     opacityActiveRow.slider:SetValue(DEFAULTS.windowOpacityActive)

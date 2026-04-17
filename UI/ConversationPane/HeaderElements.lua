@@ -40,7 +40,7 @@ function HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   local headerIcon = createCircularIcon(factory, headerFrame, Theme.LAYOUT.HEADER_ICON_SIZE)
   local classIconFrame = headerIcon.frame
   local classIcon = headerIcon.texture
-  classIconFrame:SetPoint("LEFT", headerFrame, "LEFT", 16, 0)
+  classIconFrame:SetPoint("LEFT", headerFrame, "LEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 0)
 
   local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
   if iconPath then
@@ -56,17 +56,18 @@ end
 -- Returns headerName FontString.
 function HeaderElements.createContactName(headerFrame, selectedContact)
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+  local nameLeft = Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + 10
 
   if selectedContact then
     -- anchor requires classIconFrame but we accept headerFrame as anchor for simplicity;
     -- caller wires SetPoint after calling createClassIcon when needed.
     -- Here we set a simple self-relative point so the widget is valid.
-    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -2)
+    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", nameLeft, -2)
     headerName:SetText(selectedContact.displayName or "")
     UIHelpers.applyClassColor(headerName, selectedContact.classTag, Theme.COLORS.text_primary)
     headerName:Show()
   else
-    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", 58, -2)
+    headerName:SetPoint("TOPLEFT", headerFrame, "TOPLEFT", nameLeft, -2)
     headerName:SetText("")
     headerName:Hide()
   end
@@ -118,7 +119,13 @@ function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, se
   local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE
   local statusDot = factory.CreateFrame("Frame", nil, headerFrame)
   statusDot:SetSize(dotSize, dotSize)
-  statusDot:SetPoint("BOTTOMRIGHT", classIconFrame, "BOTTOMRIGHT", 2, -2)
+  statusDot:SetPoint(
+    "BOTTOMRIGHT",
+    classIconFrame,
+    "BOTTOMRIGHT",
+    Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET,
+    -Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET
+  )
   if statusDot.SetFrameLevel and classIconFrame.GetFrameLevel then
     statusDot:SetFrameLevel(classIconFrame:GetFrameLevel() + 2)
   end
@@ -170,7 +177,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory)
   applyColorTexture(buttonBg, { baseColor[1], baseColor[2], baseColor[3], 0.35 })
 
   local buttonIcon = button:CreateTexture(nil, "ARTWORK")
-  buttonIcon:SetSize(14, 14)
+  buttonIcon:SetSize(Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, Theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
   buttonIcon:SetPoint("LEFT", button, "LEFT", 8, 0)
   buttonIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
   buttonIcon:SetDesaturated(true)

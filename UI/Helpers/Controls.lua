@@ -9,7 +9,7 @@ local Base = ns.UIHelpersBase or require("WhisperMessenger.UI.Helpers.Base")
 local Controls = {}
 
 function Controls.createOptionButton(factory, parent, label, colors, layout)
-  local btnHeight = layout.height or 30
+  local btnHeight = layout.height or Theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnWidth = layout.width or 200
 
   local button = factory.CreateFrame("Button", nil, parent)

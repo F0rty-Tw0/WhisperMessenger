@@ -9,8 +9,6 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BehaviorSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local TOGGLE_WIDTH = 350
-local ROW_SPACING = 16
 
 local DEFAULTS = {
   dimWhenMoving = true,
@@ -46,7 +44,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     hint:SetJustifyH("LEFT")
   end
   if hint.SetWidth then
-    hint:SetWidth(TOGGLE_WIDTH)
+    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
   end
   UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
 
@@ -59,7 +57,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     }
   end
   local toggleColors = toggleColorsFor(Theme)
-  local toggleLayout = { width = TOGGLE_WIDTH, height = 24 }
+  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
 
   local dimToggle = UIHelpers.createToggleRow(
     factory,
@@ -93,7 +91,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Places the cursor in the text box when you open the messenger.",
     }
   )
-  autoFocusToggle.row:SetPoint("TOPLEFT", dimToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  autoFocusToggle.row:SetPoint("TOPLEFT", dimToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
 
   local autoSelectToggle = UIHelpers.createToggleRow(
     factory,
@@ -110,7 +108,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Selects the most recent contact with unread messages when you open the messenger.",
     }
   )
-  autoSelectToggle.row:SetPoint("TOPLEFT", autoFocusToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  autoSelectToggle.row:SetPoint(
+    "TOPLEFT",
+    autoFocusToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local hideFromDefaultChatToggle = UIHelpers.createToggleRow(
     factory,
@@ -129,7 +133,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely.",
     }
   )
-  hideFromDefaultChatToggle.row:SetPoint("TOPLEFT", autoSelectToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  hideFromDefaultChatToggle.row:SetPoint(
+    "TOPLEFT",
+    autoSelectToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
   local profanityFilterToggle = UIHelpers.createToggleRow(
@@ -149,7 +159,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Uses Blizzard's built-in filter to censor profanity in messages.",
     }
   )
-  profanityFilterToggle.row:SetPoint("TOPLEFT", hideFromDefaultChatToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  profanityFilterToggle.row:SetPoint(
+    "TOPLEFT",
+    hideFromDefaultChatToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local autoOpenIncomingToggle = UIHelpers.createToggleRow(
     factory,
@@ -166,7 +182,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Opens the messenger when you receive a whisper. Disabled during combat.",
     }
   )
-  autoOpenIncomingToggle.row:SetPoint("TOPLEFT", profanityFilterToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  autoOpenIncomingToggle.row:SetPoint(
+    "TOPLEFT",
+    profanityFilterToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local autoOpenOutgoingToggle = UIHelpers.createToggleRow(
     factory,
@@ -183,7 +205,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
     }
   )
-  autoOpenOutgoingToggle.row:SetPoint("TOPLEFT", autoOpenIncomingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  autoOpenOutgoingToggle.row:SetPoint(
+    "TOPLEFT",
+    autoOpenIncomingToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local scrollToLatestToggle = UIHelpers.createToggleRow(
     factory,
@@ -200,7 +228,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "Automatically scrolls to the most recent message when you open the messenger.",
     }
   )
-  scrollToLatestToggle.row:SetPoint("TOPLEFT", autoOpenOutgoingToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  scrollToLatestToggle.row:SetPoint(
+    "TOPLEFT",
+    autoOpenOutgoingToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   local doubleEscapeToggle = UIHelpers.createToggleRow(
     factory,
@@ -217,7 +251,13 @@ function BehaviorSettings.Create(factory, parent, config, options)
       "First Esc clears the chat input; second Esc closes the window.",
     }
   )
-  doubleEscapeToggle.row:SetPoint("TOPLEFT", scrollToLatestToggle.row, "BOTTOMLEFT", 0, -ROW_SPACING)
+  doubleEscapeToggle.row:SetPoint(
+    "TOPLEFT",
+    scrollToLatestToggle.row,
+    "BOTTOMLEFT",
+    0,
+    -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  )
 
   -- Reset button
   local function optionButtonColorsFor(activeTheme)
@@ -234,7 +274,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     frame,
     "Reset to Defaults",
     normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = TOGGLE_WIDTH }
+    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
   resetButton:SetPoint("TOPLEFT", doubleEscapeToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
