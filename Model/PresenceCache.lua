@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Trace = ns.Trace
+local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local PresenceCache = {}
 

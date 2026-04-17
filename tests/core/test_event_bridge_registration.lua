@@ -1,4 +1,5 @@
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
+local Trace = require("WhisperMessenger.Core.Trace")
 
 return function()
   -- -----------------------------------------------------------------------
@@ -61,5 +62,44 @@ return function()
     )
     assert(unregistered.GUILD_ROSTER_UPDATE == true, "supported lifecycle events should still unregister")
     assert(unregistered.CLUB_MEMBER_UPDATED == nil, "unsupported lifecycle unregistration should be skipped")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- test_trace_is_wired_through_core_trace_when_unknown_event_skipped
+  -- Regression: EventBridge previously read ns.Trace (capitalized), so every
+  -- Trace(...) call inside the module was a silent no-op.
+  -- -----------------------------------------------------------------------
+  do
+    local printed = {}
+    local savedPrint = _G.print
+    rawset(_G, "print", function(...)
+      table.insert(printed, { ... })
+    end)
+    Trace.enable()
+
+    local frame = {}
+    function frame:RegisterEvent(eventName)
+      if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
+        error('Attempt to register unknown event "' .. eventName .. '"')
+      end
+    end
+
+    EventBridge.RegisterLiveEvents(frame)
+
+    Trace.disable()
+    rawset(_G, "print", savedPrint)
+
+    local found = false
+    for _, call in ipairs(printed) do
+      if
+        call[1] == "[WM]"
+        and type(call[2]) == "string"
+        and string.find(call[2], "CAN_LOCAL_WHISPER_TARGET_RESPONSE", 1, true)
+      then
+        found = true
+        break
+      end
+    end
+    assert(found, "EventBridge should route trace output through Core.Trace when skipping unsupported events")
   end
 end

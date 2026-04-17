@@ -125,10 +125,10 @@ function TimeFormat.ContactPreview(timestamp)
   end
   -- Within last 7 days: show day name
   if diff < 604800 then
-    return date("%a", timestamp)
+    return date("%a", displayTimestamp(timestamp))
   end
   -- Older: show "Mar 14"
-  return date("%b %d", timestamp)
+  return date("%b %d", displayTimestamp(timestamp))
 end
 
 --- Format a longer relative string for status lines.
@@ -152,7 +152,7 @@ function TimeFormat.Relative(timestamp)
   if timestamp >= todayStart - 86400 and timestamp < todayStart then
     return "yesterday"
   end
-  return date("%b %d, %Y", timestamp)
+  return date("%b %d, %Y", displayTimestamp(timestamp))
 end
 
 --- Check if two timestamps are on different calendar days.

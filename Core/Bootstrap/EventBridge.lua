@@ -9,7 +9,7 @@ local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 
-local Trace = ns.Trace
+local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local EventBridge = {}
 

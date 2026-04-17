@@ -120,6 +120,78 @@ local function tests()
   local localDay2 = os.time({ year = 2026, month = 3, day = 19, hour = 0, min = 1, sec = 0 })
   assert(TimeFormat.IsDifferentDay(localDay1, localDay2), "23:59 and 00:01 should be different local days")
 
+  -- ContactPreview / Relative date labels must honor server offset.
+  -- Install a +1h server offset via C_DateAndTime; then verify that the date()
+  -- formatter receives the offset timestamp, not the raw one.
+  do
+    _G.C_DateAndTime = {
+      GetCurrentCalendarTime = function()
+        local lt = os.date("*t")
+        return {
+          year = lt.year,
+          month = lt.month,
+          monthDay = lt.day,
+          hour = lt.hour + 1,
+          minute = lt.min,
+          second = lt.sec,
+        }
+      end,
+    }
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "server" })
+
+    local fakeNow = os.time({ year = 2026, month = 6, day = 15, hour = 12, min = 0, sec = 0 })
+    _G.GetServerTime = function()
+      return fakeNow
+    end
+
+    local dayNameCalls, shortDateCalls, longDateCalls = {}, {}, {}
+    local originalDate = _G.date
+    _G.date = function(fmt, ts)
+      if fmt == "%a" then
+        table.insert(dayNameCalls, ts)
+      elseif fmt == "%b %d" then
+        table.insert(shortDateCalls, ts)
+      elseif fmt == "%b %d, %Y" then
+        table.insert(longDateCalls, ts)
+      end
+      return originalDate(fmt, ts)
+    end
+
+    local threeDaysAgo = fakeNow - 3 * 86400
+    local twoWeeksAgo = fakeNow - 14 * 86400
+    TimeFormat.ContactPreview(threeDaysAgo) -- %a branch
+    TimeFormat.ContactPreview(twoWeeksAgo) -- %b %d branch
+    TimeFormat.Relative(twoWeeksAgo) -- %b %d, %Y branch
+
+    _G.date = originalDate
+
+    assert(#dayNameCalls == 1, "ContactPreview should have called date('%a', ...) once")
+    assert(
+      dayNameCalls[1] ~= threeDaysAgo,
+      "ContactPreview %a branch should apply server offset, got raw timestamp " .. tostring(dayNameCalls[1])
+    )
+    assert(
+      dayNameCalls[1] == threeDaysAgo + 3600,
+      "ContactPreview %a branch should add +3600s server offset, got diff " .. tostring(dayNameCalls[1] - threeDaysAgo)
+    )
+
+    assert(#shortDateCalls == 1, "ContactPreview should have called date('%b %d', ...) once")
+    assert(
+      shortDateCalls[1] == twoWeeksAgo + 3600,
+      "ContactPreview %b %d branch should add +3600s server offset, got diff "
+        .. tostring(shortDateCalls[1] - twoWeeksAgo)
+    )
+
+    assert(#longDateCalls == 1, "Relative should have called date('%b %d, %Y', ...) once")
+    assert(
+      longDateCalls[1] == twoWeeksAgo + 3600,
+      "Relative %b %d, %Y branch should add +3600s server offset, got diff " .. tostring(longDateCalls[1] - twoWeeksAgo)
+    )
+
+    _G.C_DateAndTime = nil
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
+  end
+
   print("  All TimeFormat config tests passed")
 end
 

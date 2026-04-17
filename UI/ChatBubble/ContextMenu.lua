@@ -41,7 +41,12 @@ local function getMenuFrame()
     return frame
   end
 
-  return _G.CreateFrame("Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
+  -- UIDropDownMenuTemplate was removed in Retail 10.0 — pcall so a throw falls through to CopyText.
+  local ok, created = pcall(_G.CreateFrame, "Frame", MENU_FRAME_NAME, _G.UIParent, "UIDropDownMenuTemplate")
+  if not ok then
+    return nil
+  end
+  return created
 end
 
 function ContextMenu.CopyText(text)

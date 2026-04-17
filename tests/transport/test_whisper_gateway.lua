@@ -68,4 +68,39 @@ return function()
 
   _G.SendChatMessage = savedSendChatMessage
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)
+
+  -- test_request_availability_returns_silently_when_api_is_nil
+  do
+    local ok = pcall(Gateway.RequestAvailability, nil, "guid-1")
+    assert(ok, "RequestAvailability should not throw when api is nil")
+  end
+
+  -- test_request_availability_returns_silently_when_api_missing_method
+  do
+    local ok = pcall(Gateway.RequestAvailability, {}, "guid-1")
+    assert(ok, "RequestAvailability should not throw when api lacks the request method")
+  end
+
+  -- test_request_availability_swallows_errors_from_api_call
+  do
+    local throwingApi = {
+      RequestCanLocalWhisperTarget = function()
+        error("C_ChatInfo exploded")
+      end,
+    }
+    local ok = pcall(Gateway.RequestAvailability, throwingApi, "guid-1")
+    assert(ok, "RequestAvailability should pcall-wrap the WoW API call")
+  end
+
+  -- test_request_availability_forwards_guid_on_success
+  do
+    local captured = nil
+    local api = {
+      RequestCanLocalWhisperTarget = function(guid)
+        captured = guid
+      end,
+    }
+    Gateway.RequestAvailability(api, "Player-123")
+    assert(captured == "Player-123", "RequestAvailability should forward guid to the API")
+  end
 end

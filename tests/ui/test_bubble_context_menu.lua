@@ -56,6 +56,41 @@ return function()
     assert(opened == false, "context menu should fail when menu frame cannot be created")
   end
 
+  -- test_open_falls_back_when_dropdown_template_missing (Retail 10.0+)
+  do
+    local factory = FakeUI.NewFactory()
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    _G.UIParent = uiParent
+    _G[MENU_FRAME_NAME] = nil
+    local savedDropdownTemplate = _G.UIDropDownMenuTemplate
+    _G.UIDropDownMenuTemplate = nil
+    rawset(_G, "CreateFrame", function(frameType, name, parent, template)
+      if template == "UIDropDownMenuTemplate" then
+        error('Unknown template "UIDropDownMenuTemplate"')
+      end
+      return factory.CreateFrame(frameType, name, parent, template)
+    end)
+    rawset(_G, "EasyMenu", nil)
+    _G.UIDropDownMenu_Initialize = nil
+    _G.UIDropDownMenu_CreateInfo = nil
+    _G.UIDropDownMenu_AddButton = nil
+    _G.ToggleDropDownMenu = nil
+    rawset(_G, "CopyToClipboard", nil)
+    _G.C_Clipboard = {
+      SetClipboard = function() end,
+    }
+
+    local ok, opened = pcall(ContextMenu.Open, "fallback when template removed", nil)
+    assert(
+      ok,
+      "ContextMenu.Open must not throw when UIDropDownMenuTemplate has been removed from the client: "
+        .. tostring(opened)
+    )
+    assert(opened == true, "ContextMenu.Open should fall back to CopyText when UIDropDownMenuTemplate is missing")
+
+    _G.UIDropDownMenuTemplate = savedDropdownTemplate
+  end
+
   -- test_open_uses_dropdown_fallback_when_easy_menu_missing
   do
     local factory = FakeUI.NewFactory()

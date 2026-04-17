@@ -50,9 +50,10 @@ function Gateway.SendBattleNetWhisper(api, bnetAccountID, text)
 end
 
 function Gateway.RequestAvailability(api, guid)
-  if api.RequestCanLocalWhisperTarget then
-    api.RequestCanLocalWhisperTarget(guid)
+  if type(api) ~= "table" or type(api.RequestCanLocalWhisperTarget) ~= "function" then
+    return
   end
+  pcall(api.RequestCanLocalWhisperTarget, guid)
 end
 
 ns.WhisperGateway = Gateway
