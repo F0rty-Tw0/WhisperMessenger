@@ -12,14 +12,14 @@ local function withAlpha(baseRgb, alpha)
 end
 
 local function makeDividerRoles(
-  baseRgb,
-  baseAlpha,
-  strongAlpha,
-  hoverRgb,
-  hoverAlpha,
-  fillAlpha,
-  outlineRgb,
-  outlineAlpha
+    baseRgb,
+    baseAlpha,
+    strongAlpha,
+    hoverRgb,
+    hoverAlpha,
+    fillAlpha,
+    outlineRgb,
+    outlineAlpha
 )
   return {
     divider = withAlpha(baseRgb, baseAlpha),
@@ -43,7 +43,7 @@ local roles = {
   bubble_in = { 0.16, 0.17, 0.20, 0.95 },
   bubble_out = { 0.13, 0.16, 0.20, 0.88 },
   bubble_system = { 0.10, 0.10, 0.12, 0.78 },
-  input_bg = { 0.09, 0.10, 0.12, 1.0 },
+  input_bg = { 0.14, 0.15, 0.18, 1.0 },
   text_primary = { 0.96, 0.96, 0.96, 1.0 },
   text_soft = { 0.84, 0.86, 0.90, 1.0 },
   text_secondary = withAlpha(textSecondaryRgb, 1.0),
@@ -53,8 +53,8 @@ local roles = {
   accent = { 0.34, 0.51, 0.90, 1.0 },
   accent_soft = { 0.18, 0.50, 0.76, 0.88 },
   toggle_on = { 0.34, 0.51, 0.90, 1.0 },
-  button_fill = { 0.20, 0.56, 0.84, 1.0 },
-  button_fill_hover = { 0.26, 0.64, 0.92, 1.0 },
+  button_fill = { 0.20, 0.22, 0.26, 1.0 },
+  button_fill_hover = { 0.30, 0.32, 0.38, 1.0 },
   button_disabled = { 0.30, 0.32, 0.36, 0.65 },
   status_online = { 0.30, 0.82, 0.40, 1.0 },
   status_offline = { 0.45, 0.45, 0.50, 1.0 },
@@ -72,7 +72,7 @@ local roles = {
 }
 
 local dividers =
-  makeDividerRoles(rgb(0.15, 0.16, 0.20), 0.75, 0.90, rgb(0.17, 0.18, 0.23), 0.72, 0.07, rgb(0.17, 0.18, 0.23), 0.20)
+    makeDividerRoles(rgb(0.15, 0.16, 0.20), 0.75, 0.90, rgb(0.17, 0.18, 0.23), 0.72, 0.07, rgb(0.17, 0.18, 0.23), 0.20)
 for k, v in pairs(dividers) do
   roles[k] = v
 end

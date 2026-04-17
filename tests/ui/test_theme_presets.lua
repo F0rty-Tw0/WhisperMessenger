@@ -38,11 +38,11 @@ return function()
     )
     assert(colorsMatch(Theme.COLORS.accent, { 0.34, 0.51, 0.90, 1.0 }), "test_set_elvui_dark: accent did not update")
     assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.09, 0.10, 0.12, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_search_input, { 0.14, 0.15, 0.18, 1.0 }),
       "test_set_elvui_dark: bg_search_input did not update"
     )
     assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.09, 0.10, 0.12, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_message_input, { 0.14, 0.15, 0.18, 1.0 }),
       "test_set_elvui_dark: bg_message_input did not update"
     )
     assert(
@@ -54,7 +54,7 @@ return function()
       "test_set_elvui_dark: bg_bubble_in did not update"
     )
     assert(
-      colorsMatch(Theme.COLORS.send_button, { 0.20, 0.56, 0.84, 1.0 }),
+      colorsMatch(Theme.COLORS.send_button, { 0.20, 0.22, 0.26, 1.0 }),
       "test_set_elvui_dark: send_button did not update"
     )
     assert(Theme.COLORS.send_button_border == nil, "test_set_elvui_dark: send_button_border should be removed")
@@ -245,12 +245,15 @@ return function()
       colorsMatch(Theme.COLORS.bg_composer, { 0.04, 0.04, 0.06, 1.0 }),
       "test_set_wow_native: bg_composer should equal bg_primary for native uniformity"
     )
+    -- Inputs sit a warm-bronze step lighter than surface_chrome so the
+    -- EditBox reads as a distinct field against the near-black Azeroth
+    -- panes. Anything closer to bg_primary blends in and goes invisible.
     assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.06, 0.06, 0.08, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_search_input, { 0.14, 0.12, 0.08, 1.0 }),
       "test_set_wow_native: bg_search_input did not update"
     )
     assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.06, 0.06, 0.08, 1.0 }),
+      colorsMatch(Theme.COLORS.bg_message_input, { 0.14, 0.12, 0.08, 1.0 }),
       "test_set_wow_native: bg_message_input did not update"
     )
 

@@ -12,14 +12,14 @@ local function withAlpha(baseRgb, alpha)
 end
 
 local function makeDividerRoles(
-  baseRgb,
-  baseAlpha,
-  strongAlpha,
-  hoverRgb,
-  hoverAlpha,
-  fillAlpha,
-  outlineRgb,
-  outlineAlpha
+    baseRgb,
+    baseAlpha,
+    strongAlpha,
+    hoverRgb,
+    hoverAlpha,
+    fillAlpha,
+    outlineRgb,
+    outlineAlpha
 )
   return {
     divider = withAlpha(baseRgb, baseAlpha),
@@ -33,9 +33,6 @@ end
 local textSecondaryRgb = rgb(1.00, 0.82, 0.00)
 
 local roles = {
-  -- Native WoW frames render as a single uniform near-black surface.
-  -- Equal RGB + alpha 1.0 across primary/secondary/chrome kills the
-  -- two-tone look and the right-edge bleed-through reported in-game.
   surface_primary = { 0.04, 0.04, 0.06, 1.0 },
   surface_secondary = { 0.04, 0.04, 0.06, 1.0 },
   surface_chrome = { 0.04, 0.04, 0.06, 1.0 },
@@ -43,14 +40,10 @@ local roles = {
   contact_selected = { 0.36, 0.28, 0.06, 0.95 },
   contact_selected_hover = { 0.44, 0.34, 0.08, 0.98 },
   contact_pinned = { 0.16, 0.13, 0.04, 0.78 },
-  -- Slate gray with cool tint: the original near-black {0.08, 0.08,
-  -- 0.10} was almost indistinguishable from the now-opaque near-black
-  -- surface. This contrasts clearly while staying in the dark/native
-  -- WoW palette family.
   bubble_in = { 0.18, 0.20, 0.26, 1.0 },
   bubble_out = { 0.30, 0.13, 0.36, 0.82 },
   bubble_system = { 0.10, 0.08, 0.04, 0.78 },
-  input_bg = { 0.06, 0.06, 0.08, 1.0 },
+  input_bg = { 0.14, 0.12, 0.08, 1.0 },
   text_primary = { 1.00, 1.00, 1.00, 1.0 },
   text_soft = { 0.95, 0.95, 0.95, 1.0 },
   text_secondary = withAlpha(textSecondaryRgb, 1.0),
@@ -79,7 +72,7 @@ local roles = {
 }
 
 local dividers =
-  makeDividerRoles(rgb(0.40, 0.32, 0.10), 0.60, 0.95, rgb(0.55, 0.44, 0.14), 0.72, 0.10, rgb(0.60, 0.48, 0.16), 0.30)
+    makeDividerRoles(rgb(0.40, 0.32, 0.10), 0.60, 0.95, rgb(0.55, 0.44, 0.14), 0.72, 0.10, rgb(0.60, 0.48, 0.16), 0.30)
 for k, v in pairs(dividers) do
   roles[k] = v
 end

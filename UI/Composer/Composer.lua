@@ -4,9 +4,11 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyPaneBackground = UIHelpers.applyPaneBackground
 local setTextColor = UIHelpers.setTextColor
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
@@ -18,10 +20,16 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
 
-  -- Pane background
+  -- Pane background. Under the Blizzard skin (Azeroth / wow_native) paint
+  -- with the FriendsFrame banner texture (same one the conversation header
+  -- uses) so the composer reads as a distinct bottom banner. The dark
+  -- `pane_inset_texture` blends into the DialogBox window backdrop and
+  -- makes the composer look like it has no background. Modern presets
+  -- fall back to a flat `bg_composer` color paint.
   local paneBg = pane:CreateTexture(nil, "BACKGROUND")
   paneBg:SetAllPoints(pane)
-  applyColorTexture(paneBg, Theme.COLORS.bg_composer)
+  local skinSpec = Skins.Get(Skins.GetActive())
+  applyPaneBackground(paneBg, Theme.COLORS.bg_composer, skinSpec and skinSpec.pane_header_texture)
 
   -- Thin themed border drawn on the composer's own pane. The
   -- `composer_pane_border` line created by LayoutBuilder sits on the parent
@@ -207,7 +215,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       setTextColor(buttonLabel, sendButtonTextColor())
     end,
     refreshTheme = function()
-      applyColorTexture(paneBg, Theme.COLORS.bg_composer)
+      local refreshedSkin = Skins.Get(Skins.GetActive())
+      applyPaneBackground(paneBg, Theme.COLORS.bg_composer, refreshedSkin and refreshedSkin.pane_header_texture)
       applyColorTexture(inputBg, Theme.COLORS.bg_message_input or Theme.COLORS.bg_input)
       UIHelpers.applyBorderBoxColor(composerBorder, Theme.COLORS.divider)
       if input.SetTextColor then
