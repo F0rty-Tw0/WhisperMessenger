@@ -254,6 +254,26 @@ function NotificationSettings.Create(factory, parent, config, options)
 
   refreshTheme(Theme)
 
+  local function refreshLayout(width)
+    if type(width) ~= "number" or width <= 0 then
+      return
+    end
+    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
+    if hint.SetWidth then
+      hint:SetWidth(effective)
+    end
+    badgePulseToggle.setWidth(effective)
+    playSoundToggle.setWidth(effective)
+    soundSelector.setWidth(effective)
+    showBadgeToggle.setWidth(effective)
+    iconSizeRow.setWidth(effective)
+    iconDesaturatedToggle.setWidth(effective)
+    if resetButton.setWidth then
+      resetButton.setWidth(effective)
+    end
+  end
+
   return {
     frame = frame,
     badgePulseToggle = badgePulseToggle,
@@ -264,6 +284,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     iconDesaturatedToggle = iconDesaturatedToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
+    refreshLayout = refreshLayout,
   }
 end
 

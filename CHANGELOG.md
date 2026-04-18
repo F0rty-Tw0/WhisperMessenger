@@ -6,6 +6,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 - Added eleven more notification sounds to pick from in the Notifications panel.
 - Fixed: the messenger window can now actually be resized narrower than before, down to about 480px wide. Previously a hidden floor ignored the configured minimum.
+- The Options panel now follows the window width. Toggles, sliders, and button rows shrink or wrap so nothing gets clipped off the right edge when the window is narrow.
 
 ## [1.1.9] - 2026-04-18
 

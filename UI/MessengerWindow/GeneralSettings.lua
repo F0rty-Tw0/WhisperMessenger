@@ -237,8 +237,30 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   refreshTheme(Theme)
 
+  local function refreshLayout(width)
+    if type(width) ~= "number" or width <= 0 then
+      return
+    end
+    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
+    if hint.SetWidth then
+      hint:SetWidth(effective)
+    end
+    messagesRow.setWidth(effective)
+    conversationsRow.setWidth(effective)
+    retentionRow.setWidth(effective)
+    clearOnLogoutToggle.setWidth(effective)
+    hidePreviewToggle.setWidth(effective)
+    timeFormatSelector.setWidth(effective)
+    timeSourceSelector.setWidth(effective)
+    if resetButton.setWidth then
+      resetButton.setWidth(effective)
+    end
+  end
+
   return {
     frame = frame,
+    refreshLayout = refreshLayout,
     maxMessagesSlider = messagesRow.slider,
     maxConversationsSlider = conversationsRow.slider,
     retentionSlider = retentionRow.slider,

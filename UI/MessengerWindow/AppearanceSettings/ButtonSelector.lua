@@ -182,6 +182,43 @@ function ButtonSelector.Create(factory, parent, options)
     palette.textActive = nextColors.textActive or palette.textActive
   end
 
+  local function relayoutButtons(nextRowWidth, nextMaxPerRow)
+    local totalButtons = #buttons
+    local effectiveMaxPerRow = nextMaxPerRow
+    if effectiveMaxPerRow == nil or effectiveMaxPerRow <= 0 then
+      effectiveMaxPerRow = totalButtons
+    end
+    local nextNumRows = math.max(1, math.ceil(totalButtons / effectiveMaxPerRow))
+    row:SetSize(nextRowWidth, buttonHeight * nextNumRows + rowGap * math.max(nextNumRows - 1, 0) + 20)
+
+    firstButtonOfRow = {}
+    for i, btn in ipairs(buttons) do
+      local rowIndex = math.ceil(i / effectiveMaxPerRow)
+      local colIndex = ((i - 1) % effectiveMaxPerRow) + 1
+      if btn.ClearAllPoints then
+        btn:ClearAllPoints()
+      end
+      if colIndex == 1 then
+        if rowIndex == 1 then
+          btn:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -labelSpacing)
+        else
+          btn:SetPoint("TOPLEFT", firstButtonOfRow[rowIndex - 1], "BOTTOMLEFT", 0, -rowGap)
+        end
+        firstButtonOfRow[rowIndex] = btn
+      else
+        btn:SetPoint("LEFT", buttons[i - 1], "RIGHT", buttonSpacing, 0)
+      end
+
+      local btnWidth = fixedButtonWidth
+      if not btnWidth then
+        local countInRow = math.min(effectiveMaxPerRow, totalButtons - (rowIndex - 1) * effectiveMaxPerRow)
+        local totalSpacing = buttonSpacing * math.max(countInRow - 1, 0)
+        btnWidth = math.floor((nextRowWidth - totalSpacing) / math.max(countInRow, 1))
+      end
+      btn:SetSize(btnWidth, buttonHeight)
+    end
+  end
+
   return {
     row = row,
     label = labelFs,
@@ -190,6 +227,24 @@ function ButtonSelector.Create(factory, parent, options)
     setColors = function(nextColors)
       mergePalette(nextColors)
       repaintButtons()
+    end,
+    setWidth = function(nextWidth)
+      if type(nextWidth) ~= "number" or nextWidth <= 0 then
+        return
+      end
+      rowWidth = nextWidth
+      if fixedButtonWidth then
+        local perRow = math.floor((nextWidth + buttonSpacing) / (fixedButtonWidth + buttonSpacing))
+        if perRow < 1 then
+          perRow = 1
+        end
+        if maxPerRow and perRow > maxPerRow then
+          perRow = maxPerRow
+        end
+        relayoutButtons(nextWidth, perRow)
+      else
+        relayoutButtons(nextWidth, maxPerRow)
+      end
     end,
     applyTheme = function(activeTheme, nextColors)
       UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)

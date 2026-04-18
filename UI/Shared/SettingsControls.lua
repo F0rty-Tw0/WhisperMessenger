@@ -104,6 +104,8 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     end
   end)
 
+  local sliderHeight = Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT
+
   return {
     row = row,
     label = labelFs,
@@ -112,6 +114,13 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     sliderBg = bg,
     minLabel = minLabel,
     maxLabel = maxLabel,
+    setWidth = function(nextWidth)
+      if type(nextWidth) ~= "number" or nextWidth <= 0 then
+        return
+      end
+      row:SetSize(nextWidth, sliderHeight + 20)
+      slider:SetSize(nextWidth, sliderHeight)
+    end,
     applyTheme = function(activeTheme)
       UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
       UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)

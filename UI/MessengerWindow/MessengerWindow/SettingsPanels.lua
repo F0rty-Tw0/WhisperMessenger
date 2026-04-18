@@ -3,7 +3,20 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+
 local SettingsPanels = {}
+
+local SETTINGS_RIGHT_PADDING_TRIM = 20
+local SETTINGS_SCROLLBAR_RESERVE = 4
+
+local function paneInnerWidth(outerWidth)
+  local padding = (Theme.CONTENT_PADDING or 16) * 2
+  if type(outerWidth) ~= "number" or outerWidth <= 0 then
+    return nil
+  end
+  return outerWidth - padding + SETTINGS_RIGHT_PADDING_TRIM - SETTINGS_SCROLLBAR_RESERVE
+end
 
 local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
   local panel = factory.CreateFrame("Frame", nil, parent)
@@ -11,6 +24,23 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
   local settings = createSettingsView(factory, panel, config, {
     onChange = onSettingChanged,
   })
+  if settings and settings.refreshLayout then
+    if panel.SetScript then
+      panel:SetScript("OnSizeChanged", function(_, w)
+        local inner = paneInnerWidth(w)
+        if inner then
+          settings.refreshLayout(inner)
+        end
+      end)
+    end
+    if parent.GetWidth then
+      local initialWidth = parent:GetWidth()
+      local inner = paneInnerWidth(initialWidth)
+      if inner then
+        settings.refreshLayout(inner)
+      end
+    end
+  end
   return panel, settings
 end
 
@@ -81,6 +111,18 @@ function SettingsPanels.Create(factory, options)
     end
   end
 
+  local function refreshLayout(outerWidth)
+    local inner = paneInnerWidth(outerWidth)
+    if not inner then
+      return
+    end
+    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings }) do
+      if settingsView and settingsView.refreshLayout then
+        settingsView.refreshLayout(inner)
+      end
+    end
+  end
+
   return {
     generalPanel = generalPanel,
     generalSettings = generalSettings,
@@ -91,6 +133,7 @@ function SettingsPanels.Create(factory, options)
     notificationsPanel = notificationsPanel,
     notificationSettings = notificationSettings,
     refreshTheme = refreshTheme,
+    refreshLayout = refreshLayout,
   }
 end
 

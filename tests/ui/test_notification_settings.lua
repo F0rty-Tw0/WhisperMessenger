@@ -165,5 +165,32 @@ return function()
     )
   end
 
+  -- test_refresh_layout_shrinks_toggles_and_wraps_sound_selector
+
+  do
+    local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
+
+    assert(type(result.refreshLayout) == "function", "test_refresh_layout: refreshLayout should be exposed")
+
+    result.refreshLayout(260)
+
+    assert(
+      result.badgePulseToggle.row.width == 260,
+      "test_refresh_layout: badge toggle row should resize to 260, got " .. tostring(result.badgePulseToggle.row.width)
+    )
+    assert(
+      result.soundSelector.row.width == 260,
+      "test_refresh_layout: sound selector row should resize to 260, got " .. tostring(result.soundSelector.row.width)
+    )
+
+    -- Fixed 50px buttons with 4px spacing: floor((260+4)/(50+4)) = 4 per row.
+    -- Button 5 should wrap to start of row 2 (TOPLEFT anchor), not sit beside button 4 (LEFT anchor).
+    assert(
+      result.soundSelector.buttons[5].point[1] == "TOPLEFT",
+      "test_refresh_layout: 5th sound button should anchor TOPLEFT to wrap, got "
+        .. tostring(result.soundSelector.buttons[5].point[1])
+    )
+  end
+
   print("  All notification settings tests passed")
 end

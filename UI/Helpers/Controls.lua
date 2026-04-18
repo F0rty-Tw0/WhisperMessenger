@@ -79,6 +79,13 @@ function Controls.createOptionButton(factory, parent, label, colors, layout)
   button.bg = bg
   button.label = labelFs
 
+  button.setWidth = function(nextWidth)
+    if type(nextWidth) ~= "number" or nextWidth <= 0 then
+      return
+    end
+    button:SetSize(nextWidth, btnHeight)
+  end
+
   return button
 end
 
@@ -167,6 +174,12 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
     setValue = function(val)
       enabled = val == true
       updateVisual()
+    end,
+    setWidth = function(nextWidth)
+      if type(nextWidth) ~= "number" or nextWidth <= 0 then
+        return
+      end
+      row:SetSize(nextWidth, toggleHeight)
     end,
     applyThemeColors = function(nextColors)
       if type(nextColors) == "table" then

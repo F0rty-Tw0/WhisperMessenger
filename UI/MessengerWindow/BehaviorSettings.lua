@@ -192,8 +192,26 @@ function BehaviorSettings.Create(factory, parent, config, options)
 
   refreshTheme(Theme)
 
+  local function refreshLayout(width)
+    if type(width) ~= "number" or width <= 0 then
+      return
+    end
+    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
+    if hint.SetWidth then
+      hint:SetWidth(effective)
+    end
+    for _, toggle in ipairs(toggles) do
+      toggle.setWidth(effective)
+    end
+    if resetButton.setWidth then
+      resetButton.setWidth(effective)
+    end
+  end
+
   return {
     frame = frame,
+    refreshLayout = refreshLayout,
     dimToggle = dimToggle,
     autoFocusToggle = autoFocusToggle,
     hideFromDefaultChatToggle = hideFromDefaultChatToggle,
