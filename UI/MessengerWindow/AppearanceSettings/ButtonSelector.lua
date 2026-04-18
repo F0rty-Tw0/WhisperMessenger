@@ -232,7 +232,6 @@ function ButtonSelector.Create(factory, parent, options)
       if type(nextWidth) ~= "number" or nextWidth <= 0 then
         return
       end
-      rowWidth = nextWidth
       if fixedButtonWidth then
         local perRow = math.floor((nextWidth + buttonSpacing) / (fixedButtonWidth + buttonSpacing))
         if perRow < 1 then
