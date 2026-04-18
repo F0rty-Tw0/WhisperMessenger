@@ -11,10 +11,10 @@ local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop
 local DirectHooks = {}
 
 -- Shared predicate used by both DirectHooks and Poller.
--- Explicit whisper actions (R / /r / /w / right-click whisper, or a typed
--- draft in the default chat) route into the messenger regardless of the
--- autoOpenOutgoing setting — that setting only gates POST-send auto-open.
--- This is the user's whisper UI.
+-- Explicit whisper actions (/w, right-click whisper, or a typed whisper draft in
+-- the default chat) still flow through this intercept path. AutoOpenHooks then
+-- decides whether that action should open the messenger based on settings and
+-- current window visibility.
 function DirectHooks.shouldInterceptHook(runtime, deps)
   if deps.isSuspended() then
     return false

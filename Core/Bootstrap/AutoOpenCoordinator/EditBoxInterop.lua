@@ -11,16 +11,16 @@ local EditBoxInterop = {}
 -- SetText() with WoW's secret values then errors.
 local combatDraftBoxes = {}
 function EditBoxInterop.readEditBoxState(editBox, key)
-  local direct = editBox[key]
-  if direct ~= nil and direct ~= "" then
-    return direct
-  end
-
   if type(editBox.GetAttribute) == "function" then
     local attribute = editBox:GetAttribute(key)
     if attribute ~= nil and attribute ~= "" then
       return attribute
     end
+  end
+
+  local direct = editBox[key]
+  if direct ~= nil and direct ~= "" then
+    return direct
   end
 
   return nil

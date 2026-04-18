@@ -258,9 +258,9 @@ return function()
     assert(deps.calls.focusComposer == 1, "test_on_send_tell_combat_visible: should focus composer")
   end
 
-  -- test_on_send_tell_routes_even_when_auto_open_outgoing_off
-  -- Explicit /w and right-click whisper must open the messenger regardless
-  -- of the autoOpenOutgoing post-send gate.
+  -- test_on_send_tell_skipped_when_auto_open_outgoing_off
+  -- Disabled outgoing auto-open must leave explicit whisper entry in Blizzard
+  -- chat so Enter/whisper-sticky flows do not get pulled into the messenger.
 
   do
     local deps = makeDeps({
@@ -278,10 +278,11 @@ return function()
     local hooks = AutoOpenHooks.Create(deps)
     local result = hooks.onSendTell("Jaina")
 
-    assert(result == true, "test_on_send_tell_disabled: explicit /w should route regardless of setting")
-    assert(deps.calls.ensureWindow == 1, "test_on_send_tell_disabled: should open window for explicit /w")
-    assert(deps.calls.focusComposer == 1, "test_on_send_tell_disabled: should focus composer")
+    assert(result == false, "test_on_send_tell_disabled: should not route when outgoing auto-open is disabled")
+    assert(deps.calls.ensureWindow == 0, "test_on_send_tell_disabled: should not open window when setting is disabled")
+    assert(deps.calls.focusComposer == 0, "test_on_send_tell_disabled: should not focus composer when setting is disabled")
   end
+
 
   -- test_on_send_tell_falls_back_to_build_key_when_no_conversation
 

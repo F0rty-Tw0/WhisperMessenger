@@ -10,9 +10,9 @@ function AutoOpenHooks.Create(deps)
   local log = deps.trace
 
   local function shouldRouteToMessenger()
-    -- Explicit whisper intent — route to the messenger regardless of the
-    -- auto-open-outgoing setting. Combat blocks a cold-open, but an already
-    -- visible messenger keeps routing so the user doesn't get stranded.
+    -- Explicit whisper intent can route through the messenger, but combat still
+    -- blocks a cold-open unless the window is already visible so the user does
+    -- not get stranded mid-conversation.
     local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
 
     if deps.isCompetitive and deps.isCompetitive() and not isVisible then
@@ -28,6 +28,23 @@ function AutoOpenHooks.Create(deps)
       end
       return false
     end
+    return true
+  end
+
+  local function shouldRouteOutgoingToMessenger()
+    if not shouldRouteToMessenger() then
+      return false
+    end
+
+    local settings = deps.getSettings and deps.getSettings() or {}
+    local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
+    if settings.autoOpenOutgoing ~= true and not isVisible then
+      if log then
+        log("AutoOpen: shouldRouteOutgoingToMessenger=false (setting disabled, window hidden)")
+      end
+      return false
+    end
+
     return true
   end
 
@@ -71,7 +88,7 @@ function AutoOpenHooks.Create(deps)
   end
 
   function hooks.onSendTell(playerName)
-    if not shouldRouteToMessenger() then
+    if not shouldRouteOutgoingToMessenger() then
       return false
     end
     if not playerName then
@@ -96,6 +113,9 @@ function AutoOpenHooks.Create(deps)
   end
 
   function hooks.onOutgoingWhisper(conversationKey)
+    if not shouldRouteOutgoingToMessenger() then
+      return false
+    end
     if not conversationKey then
       return false
     end

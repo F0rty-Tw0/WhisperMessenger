@@ -410,6 +410,7 @@ return function()
     assert(failEditBox:HasFocus() == true, "expected edit box to keep focus when hook fails")
   end
 
+
   -- test_poller_does_not_close_editbox_when_send_tell_fails
 
   do

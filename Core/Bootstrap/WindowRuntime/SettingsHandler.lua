@@ -5,6 +5,74 @@ end
 
 local SettingsHandler = {}
 
+local function readEditBoxState(editBox, key)
+  if type(editBox) ~= "table" then
+    return nil
+  end
+
+  if type(editBox.GetAttribute) == "function" then
+    local attribute = editBox:GetAttribute(key)
+    if attribute ~= nil and attribute ~= "" then
+      return attribute
+    end
+  end
+
+  local direct = editBox[key]
+  if direct ~= nil and direct ~= "" then
+    return direct
+  end
+
+  return nil
+end
+
+local function readEditBoxText(editBox)
+  if type(editBox) ~= "table" or type(editBox.GetText) ~= "function" then
+    return ""
+  end
+
+  local ok, text = pcall(editBox.GetText, editBox)
+  if not ok then
+    return nil
+  end
+
+  return text or ""
+end
+
+local function clearStaleWhisperReplyState(getNumChatWindows, getEditBox)
+  if type(getNumChatWindows) ~= "function" or type(getEditBox) ~= "function" then
+    return
+  end
+
+  local chatWindowCount = getNumChatWindows() or 0
+  for index = 1, chatWindowCount do
+    local editBox = getEditBox(index)
+    local chatType = readEditBoxState(editBox, "chatType")
+    local stickyType = readEditBoxState(editBox, "stickyType")
+    local tellTarget = readEditBoxState(editBox, "tellTarget")
+    local text = readEditBoxText(editBox)
+    local isWhisperChat = chatType == "WHISPER" or chatType == "BN_WHISPER"
+    local isWhisperSticky = stickyType == "WHISPER" or stickyType == "BN_WHISPER"
+
+    if
+      type(editBox) == "table"
+      and type(editBox.SetAttribute) == "function"
+      and tellTarget ~= nil
+      and tellTarget ~= ""
+      and text == ""
+      and (isWhisperChat or isWhisperSticky)
+    then
+      local fallbackType = stickyType
+      if fallbackType == nil or fallbackType == "" or fallbackType == "WHISPER" or fallbackType == "BN_WHISPER" then
+        fallbackType = "SAY"
+      end
+
+      pcall(editBox.SetAttribute, editBox, "chatType", fallbackType)
+      pcall(editBox.SetAttribute, editBox, "stickyType", fallbackType)
+      pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
+    end
+  end
+end
+
 function SettingsHandler.Create(options)
   options = options or {}
 
@@ -23,6 +91,12 @@ function SettingsHandler.Create(options)
     return {}
   end
   local tableUtils = options.tableUtils or {}
+  local getNumChatWindows = options.getNumChatWindows or function()
+    return _G.NUM_CHAT_WINDOWS or 10
+  end
+  local getEditBox = options.getEditBox or function(index)
+    return _G["ChatFrame" .. index .. "EditBox"]
+  end
 
   return function(key, value)
     local persistedValue = value
@@ -83,6 +157,9 @@ function SettingsHandler.Create(options)
       if runtime.syncReplyKey then
         runtime.syncReplyKey()
       end
+    end
+    if key == "autoOpenOutgoing" and persistedValue == true then
+      clearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
     if
       (

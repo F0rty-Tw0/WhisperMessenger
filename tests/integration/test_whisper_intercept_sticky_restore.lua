@@ -163,6 +163,63 @@ return function()
   local pollFrame = findCreatedFrameWithScript("OnUpdate")
   assert(pollFrame ~= nil, "expected whisper interception poll frame")
 
+  runtime.accountState.settings.autoOpenOutgoing = false
+  local disabledEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+    chatType = "WHISPER",
+    stickyType = "SAY",
+    tellTarget = "Jaina",
+  }, {
+    chatType = "WHISPER",
+    stickyType = "SAY",
+    tellTarget = "Jaina",
+  }, "stay in default chat")
+
+  local disabledDeactivateCount = #deactivated
+  pollFrame.scripts.OnUpdate(pollFrame)
+
+  assert(#deactivated == disabledDeactivateCount, "expected disabled outgoing auto-open to leave Blizzard chat edit box open")
+  assert(disabledEditBox:GetText() == "stay in default chat", "expected disabled outgoing auto-open to preserve default chat draft")
+  assert(disabledEditBox:HasFocus() == true, "expected disabled outgoing auto-open to preserve Blizzard chat focus")
+  runtime.accountState.settings.autoOpenOutgoing = true
+
+
+  runtime.accountState.settings.autoOpenOutgoing = false
+  runtime.toggle()
+  assert(runtime.window ~= nil, "expected window before toggling outgoing auto-open")
+
+  local staleReplyBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+    chatType = "WHISPER",
+    stickyType = "WHISPER",
+    tellTarget = "Jaina",
+  }, {
+    chatType = "WHISPER",
+    stickyType = "WHISPER",
+    tellTarget = "Jaina",
+  }, "")
+  staleReplyBox:ClearFocus()
+  staleReplyBox:Hide()
+
+  local enableOutgoingClick = runtime.window.behaviorSettings.autoOpenOutgoingToggle.dot:GetScript("OnClick")
+  assert(type(enableOutgoingClick) == "function", "expected outgoing toggle click handler")
+  enableOutgoingClick(runtime.window.behaviorSettings.autoOpenOutgoingToggle.dot)
+
+  assert(runtime.accountState.settings.autoOpenOutgoing == true, "expected outgoing auto-open enabled after toggle")
+
+  staleReplyBox:Show()
+  staleReplyBox:SetFocus()
+  local staleDeactivateCount = #deactivated
+  pollFrame.scripts.OnUpdate(pollFrame)
+
+  assert(
+    #deactivated == staleDeactivateCount,
+    "expected enabling outgoing auto-open to clear stale reply state so Enter does not reopen the messenger loop"
+  )
+  assert(staleReplyBox:HasFocus() == true, "expected stale reply launcher to remain in Blizzard chat after enable scrub")
+  assert(staleReplyBox:GetAttribute("chatType") == "SAY", "expected enable scrub to restore stale reply chatType to SAY")
+  assert(staleReplyBox:GetAttribute("stickyType") == "SAY", "expected enable scrub to restore stale reply stickyType to SAY")
+  assert(staleReplyBox:GetAttribute("tellTarget") == nil, "expected enable scrub to clear stale reply tellTarget")
+
+
   local directFieldEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
     chatType = "WHISPER",
     stickyType = "PARTY",
