@@ -137,6 +137,33 @@ return function()
     )
   end
 
+  -- test_widget_message_preview_toggle_fires_on_change
+
+  do
+    local changes = {}
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    assert(
+      result.widgetMessagePreviewToggle ~= nil,
+      "test_widget_message_preview_toggle_fires_on_change: widgetMessagePreviewToggle should exist"
+    )
+
+    local onClick = result.widgetMessagePreviewToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "widget message preview toggle should have OnClick handler")
+    onClick(result.widgetMessagePreviewToggle.dot)
+
+    assert(
+      changes.showWidgetMessagePreview == false,
+      "test_widget_message_preview_toggle_fires_on_change: expected onChange showWidgetMessagePreview=false, got: "
+        .. tostring(changes.showWidgetMessagePreview)
+    )
+  end
+
   -- test_reset_restores_icon_defaults
 
   do
@@ -144,6 +171,7 @@ return function()
     local config = {
       iconSize = 56,
       iconDesaturated = false,
+      showWidgetMessagePreview = false,
     }
     local result = NotificationSettings.Create(factory, parent, config, {
       onChange = function(key, value)
@@ -162,6 +190,151 @@ return function()
       changes.iconDesaturated == true,
       "test_reset_restores_icon_defaults: iconDesaturated should reset to true, got: "
         .. tostring(changes.iconDesaturated)
+    )
+    assert(
+      changes.showWidgetMessagePreview == true,
+      "test_reset_restores_icon_defaults: showWidgetMessagePreview should reset to true, got: "
+        .. tostring(changes.showWidgetMessagePreview)
+    )
+  end
+
+  -- test_auto_dismiss_slider_defaults_and_fires_on_change
+
+  do
+    local changes = {}
+    local result = NotificationSettings.Create(factory, parent, {}, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    assert(result.autoDismissSlider ~= nil, "autoDismissSlider should be exposed on the panel")
+    assert(
+      result.autoDismissSlider:GetValue() == 30,
+      "auto-dismiss slider should default to 30s, got: " .. tostring(result.autoDismissSlider:GetValue())
+    )
+
+    result.autoDismissSlider:SetValue(0)
+    assert(
+      changes.widgetPreviewAutoDismissSeconds == 0,
+      "setting slider to 0 should fire onChange with widgetPreviewAutoDismissSeconds=0, got: "
+        .. tostring(changes.widgetPreviewAutoDismissSeconds)
+    )
+
+    result.autoDismissSlider:SetValue(60)
+    assert(
+      changes.widgetPreviewAutoDismissSeconds == 60,
+      "setting slider to 60 should fire onChange with widgetPreviewAutoDismissSeconds=60, got: "
+        .. tostring(changes.widgetPreviewAutoDismissSeconds)
+    )
+  end
+
+  -- test_auto_dismiss_slider_respects_config_initial_value
+
+  do
+    local result = NotificationSettings.Create(factory, parent, {
+      widgetPreviewAutoDismissSeconds = 45,
+    }, { onChange = function() end })
+
+    assert(
+      result.autoDismissSlider:GetValue() == 45,
+      "auto-dismiss slider should use config value, got: " .. tostring(result.autoDismissSlider:GetValue())
+    )
+  end
+
+  -- test_position_selector_exists_with_four_options
+
+  do
+    local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
+
+    assert(result.positionSelector ~= nil, "test_position_selector: positionSelector should be exposed")
+    assert(
+      result.positionSelector.buttons ~= nil and #result.positionSelector.buttons == 4,
+      "test_position_selector: should have 4 position buttons, got: "
+        .. tostring(result.positionSelector.buttons and #result.positionSelector.buttons)
+    )
+  end
+
+  -- test_position_selector_default_is_right
+
+  do
+    local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
+    local selectedKey = nil
+    for _, btn in ipairs(result.positionSelector.buttons) do
+      if btn._selected then
+        selectedKey = btn._key
+        break
+      end
+    end
+    assert(
+      selectedKey == "right",
+      "test_position_selector_default: expected 'right' selected, got: " .. tostring(selectedKey)
+    )
+  end
+
+  -- test_position_selector_fires_on_change
+
+  do
+    local changes = {}
+    local result = NotificationSettings.Create(factory, parent, {}, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local leftBtn = nil
+    for _, btn in ipairs(result.positionSelector.buttons) do
+      if btn._key == "left" then
+        leftBtn = btn
+        break
+      end
+    end
+    assert(leftBtn ~= nil, "test_position_selector_fires_on_change: expected a 'left' button")
+    leftBtn:GetScript("OnClick")(leftBtn)
+
+    assert(
+      changes.widgetPreviewPosition == "left",
+      "test_position_selector_fires_on_change: expected onChange widgetPreviewPosition=left, got: "
+        .. tostring(changes.widgetPreviewPosition)
+    )
+  end
+
+  -- test_position_selector_respects_config_initial
+
+  do
+    local result = NotificationSettings.Create(factory, parent, {
+      widgetPreviewPosition = "top",
+    }, { onChange = function() end })
+
+    local selectedKey = nil
+    for _, btn in ipairs(result.positionSelector.buttons) do
+      if btn._selected then
+        selectedKey = btn._key
+        break
+      end
+    end
+    assert(
+      selectedKey == "top",
+      "test_position_selector_respects_config: expected 'top' selected, got: " .. tostring(selectedKey)
+    )
+  end
+
+  -- test_reset_restores_position_to_right
+
+  do
+    local changes = {}
+    local result = NotificationSettings.Create(factory, parent, {
+      widgetPreviewPosition = "bottom",
+    }, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    result.resetButton:GetScript("OnClick")(result.resetButton)
+    assert(
+      changes.widgetPreviewPosition == "right",
+      "test_reset_restores_position: expected reset to fire 'right', got: " .. tostring(changes.widgetPreviewPosition)
     )
   end
 

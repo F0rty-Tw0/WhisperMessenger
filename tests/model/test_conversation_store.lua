@@ -57,6 +57,43 @@ return function()
   Store.MarkRead(state, "me::WOW::arthas-area52")
   assert(conversation.unreadCount == 0)
 
+  -- test_last_incoming_preview_tracks_latest_incoming_only
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::jaina-proudmoore", {
+      id = "in-1",
+      direction = "in",
+      kind = "user",
+      text = "Need assistance?",
+      sentAt = 10,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+    Store.AppendOutgoing(s, "me::WOW::jaina-proudmoore", {
+      id = "out-1",
+      direction = "out",
+      kind = "user",
+      text = "On my way.",
+      sentAt = 11,
+      playerName = "Me",
+    })
+    Store.AppendIncoming(s, "me::WOW::jaina-proudmoore", {
+      id = "in-2",
+      direction = "in",
+      kind = "user",
+      text = "Meet by the summoning stone.",
+      sentAt = 12,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+    local conv = s.conversations["me::WOW::jaina-proudmoore"]
+    assert(conv.lastPreview == "Meet by the summoning stone.", "lastPreview should still reflect latest activity")
+    assert(
+      conv.lastIncomingPreview == "Meet by the summoning stone.",
+      "lastIncomingPreview should track the newest incoming user message"
+    )
+    assert(conv.lastIncomingSender == "Jaina-Proudmoore", "lastIncomingSender should track the incoming sender name")
+    assert(conv.lastIncomingAt == 12, "lastIncomingAt should track the incoming timestamp")
+  end
+
   -- test_battletag_persisted_on_append_incoming
   do
     local s = Store.New({})

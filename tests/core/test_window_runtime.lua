@@ -123,10 +123,20 @@ return function()
       createdIcon.setUnreadCount = function(count)
         createdIcon.lastUnreadCount = count
       end
+      createdIcon.setIncomingPreview = function(senderName, messageText)
+        createdIcon.lastPreviewSender = senderName
+        createdIcon.lastPreviewMessage = messageText
+      end
 
       coordinatorIcon = createdIcon
       createdIcon.onToggle = options.onToggle
+      createdIcon.onDismissPreview = options.onDismissPreview
       createdIcon.onPositionChanged = options.onPositionChanged
+      createdIcon.getPreviewPosition = options.getPreviewPosition
+      createdIcon.lastAppliedPreviewPosition = nil
+      createdIcon.applyPreviewPosition = function(position)
+        createdIcon.lastAppliedPreviewPosition = position
+      end
       return createdIcon
     end,
   }
@@ -166,6 +176,11 @@ return function()
           if icon and icon.setUnreadCount then
             icon.setUnreadCount(contacts[1].unreadCount)
           end
+          if icon and icon.setIncomingPreview and options.buildMessagePreview then
+            local preview = options.buildMessagePreview(contacts)
+            icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil)
+          end
+
           local window = options.getWindow()
           if visible and window and window.refreshSelection then
             window.refreshSelection(nextState)
@@ -180,13 +195,14 @@ return function()
     end,
   }
 
+  local bootstrap = { _inMythicContent = false }
   local controller = WindowRuntime.Create({
     runtime = runtime,
     accountState = accountState,
     characterState = characterState,
     defaultCharacterState = defaultCharacterState,
     uiFactory = {},
-    bootstrap = { _inMythicContent = false },
+    bootstrap = bootstrap,
     contactsList = contactsList,
     messengerWindow = messengerWindow,
     toggleIcon = toggleIcon,
@@ -673,6 +689,104 @@ return function()
   assert(
     selectionRefreshes == refreshesBeforeThemeFallback + 1,
     "expected fallback themePreset apply to refresh the window"
+  )
+
+  local refreshesBeforeWidgetPreview = selectionRefreshes
+  onSettingChanged("showWidgetMessagePreview", false)
+  assert(
+    selectionRefreshes == refreshesBeforeWidgetPreview + 1,
+    "expected showWidgetMessagePreview change to continue refreshing the window"
+  )
+  assert(
+    accountState.settings.showWidgetMessagePreview == false,
+    "expected showWidgetMessagePreview change to persist setting"
+  )
+  assert(coordinatorIcon.lastPreviewSender == nil, "expected disabling widget preview to clear sender text")
+  assert(coordinatorIcon.lastPreviewMessage == nil, "expected disabling widget preview to clear preview text")
+
+  onSettingChanged("showWidgetMessagePreview", true)
+  assert(
+    accountState.settings.showWidgetMessagePreview == true,
+    "expected widget preview setting to re-enable for dismiss test"
+  )
+  runtime.store.conversations[conversationKey].lastIncomingSender = "Arthas-Area52"
+  runtime.store.conversations[conversationKey].lastIncomingPreview = "Need help?"
+  runtime.store.conversations[conversationKey].lastIncomingAt = 50
+  runtime.refreshWindow()
+  assert(coordinatorIcon.lastPreviewMessage == "Need help?", "expected preview to populate before dismiss")
+  assert(
+    type(coordinatorIcon.onDismissPreview) == "function",
+    "expected runtime to pass onDismissPreview into the icon"
+  )
+  coordinatorIcon.onDismissPreview()
+  assert(coordinatorIcon.lastPreviewSender == nil, "expected dismiss callback to clear sender text")
+  assert(coordinatorIcon.lastPreviewMessage == nil, "expected dismiss callback to clear preview text")
+  assert(
+    accountState.widgetPreviewAcknowledgedAt == 50,
+    "expected dismiss to persist acknowledged timestamp on accountState so it survives /reload and re-login"
+  )
+
+  runtime.refreshWindow()
+  assert(
+    coordinatorIcon.lastPreviewMessage == nil,
+    "expected refresh after dismiss to keep the same preview hidden via the persisted acknowledgement"
+  )
+
+  assert(
+    type(coordinatorIcon.getPreviewPosition) == "function",
+    "expected runtime to pass getPreviewPosition into the icon"
+  )
+  assert(
+    coordinatorIcon.getPreviewPosition() == "right",
+    "expected widget preview position to default to 'right' when unset, got: "
+      .. tostring(coordinatorIcon.getPreviewPosition())
+  )
+  accountState.settings.widgetPreviewPosition = "top"
+  assert(
+    coordinatorIcon.getPreviewPosition() == "top",
+    "expected getter to read the persisted widgetPreviewPosition setting"
+  )
+
+  onSettingChanged("widgetPreviewPosition", "left")
+  assert(
+    accountState.settings.widgetPreviewPosition == "left",
+    "expected widgetPreviewPosition change to persist on accountState"
+  )
+  assert(
+    coordinatorIcon.lastAppliedPreviewPosition == "left",
+    "expected widgetPreviewPosition change to invoke icon.applyPreviewPosition with the new value, got: "
+      .. tostring(coordinatorIcon.lastAppliedPreviewPosition)
+  )
+
+  -- Widget preview shows the real sender + body for an incoming whisper and
+  -- stays hidden once the persisted acknowledged timestamp catches up.
+  runtime.store.conversations[conversationKey].lastIncomingSender = "Jaina-Proudmoore"
+  runtime.store.conversations[conversationKey].lastIncomingPreview = "lfg?"
+  runtime.store.conversations[conversationKey].lastIncomingAt = 50000
+  accountState.widgetPreviewAcknowledgedAt = nil
+  coordinatorIcon.lastPreviewSender = nil
+  coordinatorIcon.lastPreviewMessage = nil
+  runtime.refreshWindow()
+  assert(
+    coordinatorIcon.lastPreviewSender == "Jaina-Proudmoore",
+    "expected preview to show the real sender name, got: " .. tostring(coordinatorIcon.lastPreviewSender)
+  )
+  assert(
+    coordinatorIcon.lastPreviewMessage == "lfg?",
+    "expected preview to show the real message body, got: " .. tostring(coordinatorIcon.lastPreviewMessage)
+  )
+
+  coordinatorIcon.onDismissPreview()
+  assert(
+    accountState.widgetPreviewAcknowledgedAt == 50000,
+    "expected dismiss to persist the acknowledged timestamp so it survives /reload and re-login"
+  )
+  coordinatorIcon.lastPreviewSender = nil
+  coordinatorIcon.lastPreviewMessage = nil
+  runtime.refreshWindow()
+  assert(
+    coordinatorIcon.lastPreviewMessage == nil,
+    "expected refresh after dismiss to keep the same preview hidden via the persisted acknowledgement"
   )
 
   local refreshesBeforeHidePreview = selectionRefreshes

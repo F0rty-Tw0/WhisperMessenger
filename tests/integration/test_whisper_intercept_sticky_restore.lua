@@ -177,11 +177,16 @@ return function()
   local disabledDeactivateCount = #deactivated
   pollFrame.scripts.OnUpdate(pollFrame)
 
-  assert(#deactivated == disabledDeactivateCount, "expected disabled outgoing auto-open to leave Blizzard chat edit box open")
-  assert(disabledEditBox:GetText() == "stay in default chat", "expected disabled outgoing auto-open to preserve default chat draft")
+  assert(
+    #deactivated == disabledDeactivateCount,
+    "expected disabled outgoing auto-open to leave Blizzard chat edit box open"
+  )
+  assert(
+    disabledEditBox:GetText() == "stay in default chat",
+    "expected disabled outgoing auto-open to preserve default chat draft"
+  )
   assert(disabledEditBox:HasFocus() == true, "expected disabled outgoing auto-open to preserve Blizzard chat focus")
   runtime.accountState.settings.autoOpenOutgoing = true
-
 
   runtime.accountState.settings.autoOpenOutgoing = false
   runtime.toggle()
@@ -214,11 +219,19 @@ return function()
     #deactivated == staleDeactivateCount,
     "expected enabling outgoing auto-open to clear stale reply state so Enter does not reopen the messenger loop"
   )
-  assert(staleReplyBox:HasFocus() == true, "expected stale reply launcher to remain in Blizzard chat after enable scrub")
-  assert(staleReplyBox:GetAttribute("chatType") == "SAY", "expected enable scrub to restore stale reply chatType to SAY")
-  assert(staleReplyBox:GetAttribute("stickyType") == "SAY", "expected enable scrub to restore stale reply stickyType to SAY")
+  assert(
+    staleReplyBox:HasFocus() == true,
+    "expected stale reply launcher to remain in Blizzard chat after enable scrub"
+  )
+  assert(
+    staleReplyBox:GetAttribute("chatType") == "SAY",
+    "expected enable scrub to restore stale reply chatType to SAY"
+  )
+  assert(
+    staleReplyBox:GetAttribute("stickyType") == "SAY",
+    "expected enable scrub to restore stale reply stickyType to SAY"
+  )
   assert(staleReplyBox:GetAttribute("tellTarget") == nil, "expected enable scrub to clear stale reply tellTarget")
-
 
   local directFieldEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
     chatType = "WHISPER",

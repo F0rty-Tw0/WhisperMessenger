@@ -86,6 +86,7 @@ function SettingsPanels.Create(factory, options)
     showUnreadBadge = settingsConfig.showUnreadBadge,
     iconSize = settingsConfig.iconSize,
     iconDesaturated = settingsConfig.iconDesaturated,
+    showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
   }, onSettingChanged)
 
   local function refreshTheme(theme, context)

@@ -66,6 +66,62 @@ function WindowRuntime.Create(options)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
   end
 
+  local function isMythicRestricted()
+    return bootstrap._inMythicContent == true
+  end
+
+  local function findLatestIncomingPreview(contacts)
+    local storeConversations = runtime.store and runtime.store.conversations or {}
+    local savedConversations = accountState.conversations or {}
+    local latest = nil
+    for _, item in ipairs(contacts or {}) do
+      local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
+      local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
+      local messageText = conversation and conversation.lastIncomingPreview or nil
+      if sentAt and type(messageText) == "string" and messageText ~= "" then
+        local senderName = conversation.lastIncomingSender or item.displayName or conversation.displayName
+        if type(senderName) == "string" and senderName ~= "" then
+          if latest == nil or sentAt > latest.sentAt then
+            latest = {
+              sentAt = sentAt,
+              senderName = senderName,
+              messageText = messageText,
+              classTag = item.classTag or conversation.classTag,
+            }
+          end
+        end
+      end
+    end
+
+    return latest
+  end
+
+  local function buildLatestIncomingPreview(contacts)
+    if accountState.settings and accountState.settings.showWidgetMessagePreview == false then
+      return nil
+    end
+
+    local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt)
+    local latest = findLatestIncomingPreview(contacts)
+    if latest and acknowledgedAt and latest.sentAt <= acknowledgedAt then
+      return nil
+    end
+
+    return latest
+  end
+
+  local function acknowledgeLatestWidgetPreview(contacts)
+    local latest = findLatestIncomingPreview(contacts)
+    if latest == nil then
+      return
+    end
+
+    local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt) or 0
+    if latest.sentAt > acknowledgedAt then
+      accountState.widgetPreviewAcknowledgedAt = latest.sentAt
+    end
+  end
+
   local coordinator = windowCoordinatorModule.Create({
     runtime = runtime,
     buildContacts = buildContacts,
@@ -76,10 +132,9 @@ function WindowRuntime.Create(options)
       return icon
     end,
     trace = trace,
-    isMythicRestricted = function()
-      return bootstrap._inMythicContent == true
-    end,
+    isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
+    buildMessagePreview = buildLatestIncomingPreview,
   })
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
@@ -87,10 +142,18 @@ function WindowRuntime.Create(options)
   local controller = {}
 
   local function setWindowVisible(nextVisible)
+    if nextVisible then
+      acknowledgeLatestWidgetPreview(buildContacts())
+    end
     return coordinator.setWindowVisible(nextVisible)
   end
 
   local function refreshWindow()
+    return coordinator.refreshWindow()
+  end
+
+  local function dismissWidgetPreview()
+    acknowledgeLatestWidgetPreview(buildContacts())
     return coordinator.refreshWindow()
   end
 
@@ -397,6 +460,21 @@ function WindowRuntime.Create(options)
     getIconDesaturated = function()
       return accountState.settings.iconDesaturated ~= false
     end,
+    getPreviewAutoDismissSeconds = function()
+      local value = accountState.settings.widgetPreviewAutoDismissSeconds
+      if value == nil then
+        return 30
+      end
+      return tonumber(value) or 0
+    end,
+    getPreviewPosition = function()
+      local value = accountState.settings.widgetPreviewPosition
+      if type(value) ~= "string" or value == "" then
+        return "right"
+      end
+      return value
+    end,
+    onDismissPreview = dismissWidgetPreview,
   })
 
   runtime.icon = icon
@@ -409,6 +487,14 @@ function WindowRuntime.Create(options)
   local initContacts = buildContacts()
   if icon and icon.setUnreadCount then
     icon.setUnreadCount(tableUtils.sumBy(initContacts, "unreadCount"))
+  end
+  if icon and icon.setIncomingPreview then
+    local preview = buildLatestIncomingPreview(initContacts)
+    icon.setIncomingPreview(
+      preview and preview.senderName or nil,
+      preview and preview.messageText or nil,
+      preview and preview.classTag or nil
+    )
   end
 
   return controller

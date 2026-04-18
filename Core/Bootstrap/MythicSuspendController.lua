@@ -3,6 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChatReplyState = ns.ChatReplyState
+  or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState"))
+  or nil
+
 local MythicSuspendController = {}
 
 local DEFAULT_MYTHIC_PAUSE_NOTICE =
@@ -26,6 +30,8 @@ function MythicSuspendController.Attach(runtime, deps)
   local refreshWindow = deps.refreshWindow or function(...)
     local _ = ...
   end
+  local getNumChatWindows = deps.getNumChatWindows
+  local getEditBox = deps.getEditBox
 
   runtime.suspend = function()
     runtime.messagingNotice = deps.mythicPauseNotice or DEFAULT_MYTHIC_PAUSE_NOTICE
@@ -84,6 +90,16 @@ function MythicSuspendController.Attach(runtime, deps)
     -- whispers during M+ can only be cleared by /reload — document, don't
     -- scrub.
     runtime.lastIncomingWhisperKey = nil
+
+    -- Scrub Blizzard's stale whisper sticky state on the default chat edit
+    -- box. If the user replied via /r or R-key during M+ (Blizzard handled
+    -- the whisper because we were suspended), chatType=WHISPER and
+    -- tellTarget remain set. On the next Enter our auto-open poller would
+    -- intercept that focused edit box and re-open the messenger to that
+    -- conversation — even though the user has not asked for it.
+    if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+      ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
+    end
 
     local EventBridge = deps.getEventBridge and deps.getEventBridge() or ns.BootstrapEventBridge
     if EventBridge and Bootstrap._loadFrame then

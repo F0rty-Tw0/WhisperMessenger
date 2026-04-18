@@ -26,6 +26,9 @@ function WindowCoordinator.Create(options)
   local getIcon = options.getIcon or function()
     return nil
   end
+  local buildMessagePreview = options.buildMessagePreview or function()
+    return nil
+  end
   local trace = options.trace or function(...)
     local _ = ...
   end
@@ -134,6 +137,14 @@ function WindowCoordinator.Create(options)
     local icon = getIcon()
     if icon and icon.setUnreadCount then
       icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
+    end
+    if icon and icon.setIncomingPreview then
+      local preview = buildMessagePreview(freshContacts)
+      icon.setIncomingPreview(
+        preview and preview.senderName or nil,
+        preview and preview.messageText or nil,
+        preview and preview.classTag or nil
+      )
     end
 
     return nextState

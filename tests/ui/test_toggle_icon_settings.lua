@@ -246,6 +246,313 @@ return function()
     )
   end
 
+  -- test_message_preview_hidden_by_default
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(icon.previewFrame ~= nil, "test_message_preview_hidden_by_default: previewFrame should exist")
+    assert(
+      icon.previewFrame.shown == false,
+      "test_message_preview_hidden_by_default: preview should start hidden when no incoming message exists"
+    )
+  end
+
+  -- test_setIncomingPreview_shows_sender_and_message
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(type(icon.setIncomingPreview) == "function", "setIncomingPreview method should exist")
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+
+    assert(icon.previewFrame.shown == true, "preview should show after setting incoming preview")
+    assert(
+      icon.previewSenderLabel.text == "Jaina-Proudmoore",
+      "preview sender should render the sender name, got: " .. tostring(icon.previewSenderLabel.text)
+    )
+    assert(
+      icon.previewMessageLabel.text == "Need assistance?",
+      "preview message should render the latest incoming text, got: " .. tostring(icon.previewMessageLabel.text)
+    )
+  end
+
+  -- test_dismiss_preview_hides_and_calls_handler
+
+  do
+    local dismissed = false
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      onDismissPreview = function()
+        dismissed = true
+      end,
+    })
+
+    assert(icon.previewDismissButton ~= nil, "preview dismiss button should exist")
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+
+    local onClick = icon.previewDismissButton:GetScript("OnClick")
+    assert(onClick ~= nil, "preview dismiss button should have OnClick handler")
+    onClick(icon.previewDismissButton)
+
+    assert(dismissed == true, "dismiss handler should fire when preview dismiss button clicked")
+    assert(icon.previewFrame.shown == false, "preview should hide after dismiss button clicked")
+    assert(icon.previewSenderLabel.text == "", "preview sender should clear after dismiss")
+    assert(icon.previewMessageLabel.text == "", "preview message should clear after dismiss")
+  end
+
+  -- test_setIncomingPreview_clears_when_message_missing
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+    icon.setIncomingPreview(nil, nil)
+
+    assert(icon.previewFrame.shown == false, "preview should hide when cleared")
+    assert(icon.previewSenderLabel.text == "", "preview sender should clear when hidden")
+    assert(icon.previewMessageLabel.text == "", "preview message should clear when hidden")
+  end
+
+  -- test_right_click_on_preview_dismisses
+
+  do
+    local dismissed = false
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      onDismissPreview = function()
+        dismissed = true
+      end,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+
+    local onMouseUp = icon.previewFrame:GetScript("OnMouseUp")
+    assert(onMouseUp ~= nil, "preview frame should have OnMouseUp handler for right-click dismiss")
+    onMouseUp(icon.previewFrame, "RightButton")
+
+    assert(dismissed == true, "right-click on preview should trigger dismiss handler")
+    assert(icon.previewFrame.shown == false, "preview should hide after right-click dismiss")
+  end
+
+  -- test_left_click_on_preview_does_not_dismiss
+
+  do
+    local dismissed = false
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      onDismissPreview = function()
+        dismissed = true
+      end,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+
+    local onMouseUp = icon.previewFrame:GetScript("OnMouseUp")
+    onMouseUp(icon.previewFrame, "LeftButton")
+
+    assert(dismissed == false, "left-click on preview should not dismiss")
+    assert(icon.previewFrame.shown == true, "preview should remain visible on left-click")
+  end
+
+  -- test_preview_class_icon_renders
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?", "MAGE")
+
+    assert(icon.previewClassIcon ~= nil, "preview class icon should exist")
+    assert(
+      type(icon.previewClassIcon.texturePath) == "string" and icon.previewClassIcon.texturePath:find("ClassIcon_MAGE"),
+      "preview class icon texture should resolve from classTag"
+    )
+    assert(icon.previewClassIconFrame.shown == true, "preview class icon frame should show when preview visible")
+  end
+
+  -- test_preview_width_clamped_between_min_and_max
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?", "MAGE")
+
+    local width = icon.previewFrame.width or 0
+    assert(width > 0, "preview width should be set after content populates")
+    assert(width <= 200, "preview width should not exceed max (200), got: " .. tostring(width))
+
+    icon.setIncomingPreview("Arthas", string.rep("A very long incoming message text ", 10), "DEATHKNIGHT")
+    local wideWidth = icon.previewFrame.width or 0
+    assert(wideWidth == 200, "very long content should cap at max width 200, got: " .. tostring(wideWidth))
+  end
+
+  -- test_preview_auto_dismiss_schedules_timer_when_enabled
+
+  do
+    local timers = {}
+    local savedTimer = _G.C_Timer
+    _G.C_Timer = {
+      After = function(_seconds, _callback) end,
+      NewTimer = function(seconds, callback)
+        table.insert(timers, { seconds = seconds, callback = callback })
+        return { Cancel = function() end }
+      end,
+    }
+
+    local dismissed = false
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getPreviewAutoDismissSeconds = function()
+        return 30
+      end,
+      onDismissPreview = function()
+        dismissed = true
+      end,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?", "MAGE")
+
+    assert(#timers == 1, "expected one auto-dismiss timer scheduled")
+    assert(timers[1].seconds == 30, "timer should be scheduled for configured seconds")
+    assert(icon.previewFrame.shown == true, "preview should remain visible before timer fires")
+
+    timers[1].callback()
+    assert(icon.previewFrame.shown == false, "timer callback should dismiss the preview")
+    assert(dismissed == true, "timer dismiss should invoke onDismissPreview handler")
+
+    _G.C_Timer = savedTimer
+  end
+
+  -- test_preview_auto_dismiss_not_scheduled_when_seconds_zero
+
+  do
+    local timers = {}
+    local savedTimer = _G.C_Timer
+    _G.C_Timer = {
+      After = function(_seconds, _callback) end,
+      NewTimer = function(seconds, callback)
+        table.insert(timers, { seconds = seconds, callback = callback })
+        return { Cancel = function() end }
+      end,
+    }
+
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getPreviewAutoDismissSeconds = function()
+        return 0
+      end,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?", "MAGE")
+
+    assert(#timers == 0, "no timer should be scheduled when auto-dismiss is zero")
+    assert(icon.previewFrame.shown == true, "preview should stay shown when auto-dismiss disabled")
+
+    _G.C_Timer = savedTimer
+  end
+
+  -- test_preview_auto_dismiss_cancelled_on_new_preview
+
+  do
+    local timers = {}
+    local savedTimer = _G.C_Timer
+    _G.C_Timer = {
+      After = function(_seconds, _callback) end,
+      NewTimer = function(seconds, callback)
+        table.insert(timers, { seconds = seconds, callback = callback })
+        return { Cancel = function() end }
+      end,
+    }
+
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getPreviewAutoDismissSeconds = function()
+        return 30
+      end,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "First", "MAGE")
+    icon.setIncomingPreview("Arthas", "Second", "DEATHKNIGHT")
+
+    assert(#timers == 2, "expected a timer per preview update")
+    timers[1].callback()
+    assert(icon.previewFrame.shown == true, "stale timer should not dismiss the current preview")
+    assert(icon.previewMessageLabel.text == "Second", "current preview text should be preserved")
+
+    timers[2].callback()
+    assert(icon.previewFrame.shown == false, "latest timer should dismiss the current preview")
+
+    _G.C_Timer = savedTimer
+  end
+
+  -- test_preview_auto_dismiss_keeps_original_timer_when_same_content_resent
+
+  do
+    local timers = {}
+    local cancelCount = 0
+    local savedTimer = _G.C_Timer
+    _G.C_Timer = {
+      After = function() end,
+      NewTimer = function(seconds, callback)
+        local timer = { seconds = seconds, callback = callback }
+        timer.Cancel = function()
+          cancelCount = cancelCount + 1
+        end
+        table.insert(timers, timer)
+        return timer
+      end,
+    }
+
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getPreviewAutoDismissSeconds = function()
+        return 30
+      end,
+    })
+
+    icon.setIncomingPreview("Jaina", "Need help?", "MAGE")
+    icon.setIncomingPreview("Jaina", "Need help?", "MAGE")
+    icon.setIncomingPreview("Jaina", "Need help?", "MAGE")
+
+    assert(
+      #timers == 1,
+      "expected only one auto-dismiss timer when the same preview content is reapplied via refresh, got: "
+        .. tostring(#timers)
+    )
+
+    timers[1].callback()
+    assert(
+      icon.previewFrame.shown == false,
+      "original auto-dismiss timer must still fire and dismiss the preview after repeated same-content refreshes"
+    )
+
+    _G.C_Timer = savedTimer
+  end
+
+  -- test_preview_dismiss_button_hover_changes_color
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+    icon.setIncomingPreview("Jaina-Proudmoore", "Need assistance?")
+
+    local onEnter = icon.previewDismissButton:GetScript("OnEnter")
+    local onLeave = icon.previewDismissButton:GetScript("OnLeave")
+    assert(onEnter ~= nil, "dismiss button should have OnEnter handler")
+    assert(onLeave ~= nil, "dismiss button should have OnLeave handler")
+
+    onEnter(icon.previewDismissButton)
+    local hoverColor = icon.previewDismissLabel.textColor or {}
+    assert(hoverColor[1] and hoverColor[1] > 0.9, "hover should brighten dismiss label red channel")
+
+    onLeave(icon.previewDismissButton)
+    local idleColor = icon.previewDismissLabel.textColor or {}
+    assert(idleColor[1] and idleColor[1] < 0.9, "leave should restore base red tint")
+  end
+
   -- test_setCompetitiveContent_method_exists
 
   do

@@ -4,15 +4,15 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
-- Added eleven more notification sounds to pick from in the Notifications panel.
-- Fixed: the messenger window can now actually be resized narrower than before, down to about 480px wide. Previously a hidden floor ignored the configured minimum.
-- The Options panel now follows the window width. Toggles, sliders, and button rows shrink or wrap so nothing gets clipped off the right edge when the window is narrow.
-
-- Fixed: turning off "Auto-open on outgoing whisper" now actually keeps outgoing whispers in WoW's normal chat box, and turning it back on no longer leaves Enter stuck reopening WhisperMessenger in a reply loop.
 ## [1.1.9] - 2026-04-18
 
-- The messenger now always jumps to the most recent message when you open it, and auto-selects the contact with new unread whispers. The two Behavior toggles for these are removed — they are simply on.
-- The draggable chat icon now picks up the colors of your chosen theme, and switching themes updates the icon immediately without a reload.
+- Fixed: replying to a whisper from WoW's default chat during a Mythic+ or boss fight no longer makes WhisperMessenger pop open on the next Enter after the fight.
+- Fixed: turning off "Auto-open on outgoing whisper" now keeps outgoing whispers in WoW's normal chat box.
+- Fixed: the messenger window can be resized narrower, down to about 480px wide.
+- The incoming whisper popup now shows the sender's class icon, auto-dismisses after 30 seconds (new slider: 0–120s), and can sit to the left, right, above, or below the chat icon. Right-click anywhere on it to dismiss, and the dismissal is remembered across /reload and re-login.
+- The messenger always jumps to the most recent message and auto-selects the contact with new unread whispers. The two old toggles for these are gone.
+- The Options panel reflows as you resize the window, so nothing gets clipped on narrow widths.
+- Added eleven more notification sounds, and the draggable chat icon now picks up the colors of your chosen theme.
 
 ## [1.1.8] - 2026-04-17
 

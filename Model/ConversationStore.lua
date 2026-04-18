@@ -29,6 +29,9 @@ local function ensureConversation(state, key)
       unreadCount = 0,
       lastPreview = nil,
       lastActivityAt = 0,
+      lastIncomingSender = nil,
+      lastIncomingPreview = nil,
+      lastIncomingAt = nil,
       guid = nil,
       bnetAccountID = nil,
       battleTag = nil,
@@ -77,6 +80,10 @@ local function applyMessageCap(state, conversation)
   Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
 end
 
+local function isIncomingUserMessage(message)
+  return message ~= nil and message.kind == "user" and message.direction == "in"
+end
+
 local function applyMessageMetadata(conversation, message)
   conversation.lastPreview = message.text
   conversation.lastActivityAt = message.sentAt
@@ -91,10 +98,15 @@ local function applyMessageMetadata(conversation, message)
   conversation.raceName = message.raceName or conversation.raceName
   conversation.raceTag = message.raceTag or conversation.raceTag
   conversation.factionName = message.factionName or conversation.factionName
+  if isIncomingUserMessage(message) then
+    conversation.lastIncomingSender = message.playerName or conversation.lastIncomingSender
+    conversation.lastIncomingPreview = message.text
+    conversation.lastIncomingAt = message.sentAt
+  end
 end
 
 local function shouldIncrementUnread(message)
-  return message ~= nil and message.kind == "user" and message.direction == "in"
+  return isIncomingUserMessage(message)
 end
 
 function Store.AppendIncoming(state, key, message, isActive)

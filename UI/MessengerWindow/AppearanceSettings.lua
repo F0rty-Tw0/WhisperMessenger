@@ -9,22 +9,22 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
 local ButtonSelector = ns.MessengerWindowButtonSelector
-  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+    or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
 local AppearanceSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
 
 local FONT_OPTIONS = {
-  { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
-  { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
+  { key = "default",  label = "Default",  tooltip = "Inherits your game font. Supports all languages." },
+  { key = "system",   label = "System",   tooltip = "Arial Narrow. Clean sans-serif look." },
   { key = "morpheus", label = "Morpheus", tooltip = "Fantasy decorative font. Great for immersion." },
 }
 
 local OUTLINE_OPTIONS = {
-  { key = "NONE", label = "None", tooltip = "No outline on text." },
-  { key = "OUTLINE", label = "Outline", tooltip = "Thin outline for readability." },
-  { key = "THICKOUTLINE", label = "Thick", tooltip = "Thick outline for maximum contrast." },
+  { key = "NONE",         label = "None",    tooltip = "No outline on text." },
+  { key = "OUTLINE",      label = "Outline", tooltip = "Thin outline for readability." },
+  { key = "THICKOUTLINE", label = "Thick",   tooltip = "Thick outline for maximum contrast." },
 }
 
 local PRESET_LABELS = {

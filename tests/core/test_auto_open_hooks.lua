@@ -280,9 +280,11 @@ return function()
 
     assert(result == false, "test_on_send_tell_disabled: should not route when outgoing auto-open is disabled")
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_disabled: should not open window when setting is disabled")
-    assert(deps.calls.focusComposer == 0, "test_on_send_tell_disabled: should not focus composer when setting is disabled")
+    assert(
+      deps.calls.focusComposer == 0,
+      "test_on_send_tell_disabled: should not focus composer when setting is disabled"
+    )
   end
-
 
   -- test_on_send_tell_falls_back_to_build_key_when_no_conversation
 
