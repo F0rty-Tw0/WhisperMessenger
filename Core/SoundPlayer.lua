@@ -9,6 +9,17 @@ local SOUND_OPTIONS = {
   { key = "chime", label = "Chime", soundId = 6674 },
   { key = "bell", label = "Bell", soundId = 5275 },
   { key = "raid_warning", label = "RW", soundId = 8959 },
+  { key = "ready", label = "Ready", soundId = 23404 },
+  { key = "queue", label = "Queue", soundId = 31578 },
+  { key = "alert", label = "Alert", soundId = 54129 },
+  { key = "sigil", label = "Sigil", soundId = 111370 },
+  { key = "map", label = "Map", soundId = 1210 },
+  { key = "ding", label = "Ding", soundId = 12889 },
+  { key = "glyph", label = "Glyph", soundId = 18019 },
+  { key = "orb", label = "Orb", soundId = 32585 },
+  { key = "spark", label = "Spark", soundId = 38326 },
+  { key = "echo", label = "Echo", soundId = 39516 },
+  { key = "pulse", label = "Pulse", soundId = 40033 },
 }
 
 local SOUND_BY_KEY = {}

@@ -148,7 +148,9 @@ function Frame.WireFrame(refs, options)
   end
 
   local function resolveResizeBounds()
-    local minWidth, minHeight = frameTheme.WINDOW_MIN_WIDTH or 640, frameTheme.WINDOW_MIN_HEIGHT or 420
+    local themeLayout = frameTheme.LAYOUT or {}
+    local minWidth = themeLayout.WINDOW_MIN_WIDTH or frameTheme.WINDOW_MIN_WIDTH or 640
+    local minHeight = themeLayout.WINDOW_MIN_HEIGHT or frameTheme.WINDOW_MIN_HEIGHT or 420
     local maxWidth, maxHeight = nil, nil
 
     if frame and type(frame.resizeBounds) == "table" then

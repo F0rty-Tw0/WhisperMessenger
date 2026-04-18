@@ -14,8 +14,8 @@ return function()
     assert(result.soundSelector ~= nil, "test_sound_selector_exists: soundSelector should not be nil")
     assert(result.soundSelector.buttons ~= nil, "test_sound_selector_exists: soundSelector.buttons should not be nil")
     assert(
-      #result.soundSelector.buttons == 5,
-      "test_sound_selector_exists: should have 5 sound buttons, got: " .. tostring(#result.soundSelector.buttons)
+      #result.soundSelector.buttons == 16,
+      "test_sound_selector_exists: should have 16 sound buttons, got: " .. tostring(#result.soundSelector.buttons)
     )
   end
 

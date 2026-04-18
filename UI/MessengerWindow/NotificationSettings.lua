@@ -28,6 +28,17 @@ local SOUND_OPTIONS = {
   { key = "chime", label = "Chime" },
   { key = "bell", label = "Bell" },
   { key = "raid_warning", label = "RW" },
+  { key = "ready", label = "Ready" },
+  { key = "queue", label = "Queue" },
+  { key = "alert", label = "Alert" },
+  { key = "sigil", label = "Sigil" },
+  { key = "map", label = "Map" },
+  { key = "ding", label = "Ding" },
+  { key = "glyph", label = "Glyph" },
+  { key = "orb", label = "Orb" },
+  { key = "spark", label = "Spark" },
+  { key = "echo", label = "Echo" },
+  { key = "pulse", label = "Pulse" },
 }
 
 local function createSoundSelector(factory, parent, initial, colors, onChange)
@@ -51,6 +62,7 @@ local function createSoundSelector(factory, parent, initial, colors, onChange)
     buttonWidth = 50,
     buttonHeight = 26,
     buttonSpacing = 4,
+    maxPerRow = 6,
   })
 end
 

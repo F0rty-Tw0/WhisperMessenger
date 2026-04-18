@@ -890,4 +890,57 @@ return function()
       "expected persisted contacts width 160, got " .. tostring(persistedState.contactsWidth)
     )
   end
+
+  -- test_resize_grip_honors_layout_min_width_without_resizebounds_field
+
+  do
+    local frame = factory.CreateFrame("Frame", nil, parent)
+    frame:SetSize(920, 580)
+    frame.resizeBounds = nil
+    local resizeGrip = factory.CreateFrame("Frame", nil, parent)
+
+    local originalMinWidth = Theme.LAYOUT.WINDOW_MIN_WIDTH
+    Theme.LAYOUT.WINDOW_MIN_WIDTH = 400
+
+    local relayoutArgs = nil
+    local refs = { frame = frame, resizeGrip = resizeGrip }
+    local options = {
+      refreshWindowAlpha = noop,
+      relayout = function(w, h)
+        relayoutArgs = { width = w, height = h }
+      end,
+      buildState = function(target)
+        return { width = target.width, height = target.height }
+      end,
+      trace = noop,
+      onPositionChanged = noop,
+      Theme = Theme,
+      getCursorX = function()
+        return 300
+      end,
+      getCursorY = function()
+        return 660
+      end,
+      getFrameLeft = function()
+        return 100
+      end,
+      getFrameTop = function()
+        return 760
+      end,
+    }
+
+    WindowScripts.WireFrame(refs, options)
+
+    resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
+    frame.scripts.OnUpdate(frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+    resizeGrip.scripts.OnMouseUp(resizeGrip, "LeftButton")
+
+    Theme.LAYOUT.WINDOW_MIN_WIDTH = originalMinWidth
+
+    assert(relayoutArgs ~= nil, "expected resize to commit when LAYOUT min is used")
+    assert(
+      relayoutArgs.width == 400,
+      "expected committed width clamped to LAYOUT.WINDOW_MIN_WIDTH=400, got " .. tostring(relayoutArgs.width)
+    )
+  end
 end
