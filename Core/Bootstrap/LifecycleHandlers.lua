@@ -15,6 +15,10 @@ local RestrictionState = ns.BootstrapLifecycleHandlersRestrictionState
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState"))
   or nil
 
+local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership
+  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership"))
+  or nil
+
 local LifecycleHandlers = {}
 
 function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
@@ -28,7 +32,14 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   end
 
   if event == "PLAYER_LOGOUT" then
+    -- Group chats (party, raid, instance) are persisted across /reload and
+    -- logout so the user can keep recent history. Membership transitions
+    -- are tracked separately via GROUP_ROSTER_UPDATE.
     return Presence.handlePlayerLogout(Bootstrap, deps)
+  end
+
+  if event == "GROUP_ROSTER_UPDATE" then
+    return GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
   end
 
   if Competitive.handleChallengeModeEvent(Bootstrap, event, deps) then

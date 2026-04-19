@@ -233,4 +233,75 @@ return function()
     local items = DataBuilder.BuildItems(conversations)
     assert(items[1].sortOrder == 7, "item should include sortOrder=7, got: " .. tostring(items[1].sortOrder))
   end
+
+  -- test_group_chats_from_other_characters_are_included_with_owner_annotation
+  do
+    local savedState = {
+      conversations = {
+        -- Current character's own group chats (no owner annotation expected)
+        ["party::arthas-area52"] = {
+          displayName = "Party",
+          channel = "PARTY",
+          lastActivityAt = 300,
+          messages = {},
+        },
+        ["guild::arthas-area52"] = {
+          displayName = "Guild",
+          channel = "GUILD",
+          lastActivityAt = 250,
+          messages = {},
+        },
+        -- Foreign character's history — should still appear with owner tag
+        ["party::jaina-proudmoore"] = {
+          displayName = "Party",
+          channel = "PARTY",
+          lastActivityAt = 200,
+          messages = {},
+        },
+        ["raid::thrall-draenor"] = {
+          displayName = "Raid",
+          channel = "RAID",
+          lastActivityAt = 150,
+          messages = {},
+        },
+        ["guild::jaina-proudmoore"] = {
+          displayName = "Guild",
+          channel = "GUILD",
+          lastActivityAt = 100,
+          messages = {},
+        },
+      },
+    }
+
+    local items = DataBuilder.BuildItemsForProfile(savedState, "arthas-area52")
+
+    local byKey = {}
+    for _, item in ipairs(items) do
+      byKey[item.conversationKey] = item
+    end
+
+    assert(byKey["party::arthas-area52"] ~= nil, "current char party should be included")
+    assert(
+      byKey["party::arthas-area52"].ownerProfileId == nil,
+      "current char party should have no ownerProfileId annotation"
+    )
+
+    assert(byKey["party::jaina-proudmoore"] ~= nil, "foreign party should be included")
+    assert(
+      byKey["party::jaina-proudmoore"].ownerProfileId == "jaina-proudmoore",
+      "foreign party should carry ownerProfileId"
+    )
+
+    assert(byKey["raid::thrall-draenor"] ~= nil, "foreign raid should be included")
+    assert(
+      byKey["raid::thrall-draenor"].ownerProfileId == "thrall-draenor",
+      "foreign raid should carry ownerProfileId"
+    )
+
+    assert(byKey["guild::jaina-proudmoore"] ~= nil, "foreign guild should be included")
+    assert(
+      byKey["guild::jaina-proudmoore"].ownerProfileId == "jaina-proudmoore",
+      "foreign guild should carry ownerProfileId"
+    )
+  end
 end

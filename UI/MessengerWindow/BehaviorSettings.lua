@@ -18,6 +18,7 @@ local DEFAULTS = {
   autoOpenIncoming = false,
   autoOpenOutgoing = false,
   doubleEscapeToClose = false,
+  showGroupChats = true,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -132,6 +133,18 @@ function BehaviorSettings.Create(factory, parent, config, options)
         "First Esc clears the chat input; second Esc closes the window.",
       },
     },
+    {
+      label = "Show group chats",
+      initial = config.showGroupChats ~= false,
+      onChange = function(value)
+        onChange("showGroupChats", value)
+      end,
+      tooltipLines = {
+        "Show group chats",
+        "Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations.",
+        "When off, only whispers appear.",
+      },
+    },
   }
 
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
@@ -142,6 +155,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local autoOpenIncomingToggle = toggles[5]
   local autoOpenOutgoingToggle = toggles[6]
   local doubleEscapeToggle = toggles[7]
+  local showGroupChatsToggle = toggles[8]
 
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = UIHelpers.createOptionButton(
@@ -151,7 +165,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     normalColors,
     { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
   )
-  resetButton:SetPoint("TOPLEFT", doubleEscapeToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", showGroupChatsToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     dimToggle.setValue(DEFAULTS.dimWhenMoving)
     onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
@@ -169,6 +183,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     if _G.SetCVar then
       _G.SetCVar("profanityFilter", "1")
     end
+    showGroupChatsToggle.setValue(DEFAULTS.showGroupChats)
+    onChange("showGroupChats", DEFAULTS.showGroupChats)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -219,6 +235,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoOpenIncomingToggle = autoOpenIncomingToggle,
     autoOpenOutgoingToggle = autoOpenOutgoingToggle,
     doubleEscapeToggle = doubleEscapeToggle,
+    showGroupChatsToggle = showGroupChatsToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
   }

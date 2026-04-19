@@ -45,6 +45,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
   return {
     conversationKey = conversationKey,
     displayName = displayName,
+    title = conversation.title,
     lastPreview = lastPreview,
     searchText = buildSearchText(conversationKey, conversation, displayName, lastPreview),
     unreadCount = conversation.unreadCount or 0,
@@ -61,6 +62,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
     factionName = conversation.factionName,
     pinned = conversation.pinned or false,
     sortOrder = conversation.sortOrder or 0,
+    guildName = conversation.guildName,
   }
 end
 

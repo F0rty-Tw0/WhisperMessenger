@@ -121,11 +121,63 @@ function MessengerWindow.Create(factory, options)
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
   local selectionController = nil
-  local contactsRuntime = ContactsRuntime.Create(factory, {
+  -- Per-tab remembered selection. Each tab remembers its last-selected
+  -- conversation key; switching tabs restores it (or clears when empty).
+  local tabSelections = { whispers = nil, groups = nil }
+  local refreshSelection -- forward declaration (used by swap callback below)
+  -- IMPORTANT: declare before the `= Create(...)` call so the callbacks
+  -- inside the table constructor capture THIS local (not a global/nil).
+  -- Lua local scope begins AFTER the declaration statement completes.
+  local contactsRuntime
+  contactsRuntime = ContactsRuntime.Create(factory, {
+    contactsPane = contactsPane,
     contactsView = contactsView,
     initialContacts = options.contacts or {},
     settingsConfig = settingsConfig,
+    initialTabMode = options.initialTabMode,
+    onTabModeChanged = options.onTabModeChanged,
+    onTabModeSwapSelection = function(oldMode, newMode)
+      -- Save the selection that was active in the old tab as a safety net —
+      -- onSelect below tracks this eagerly, but a snapshot here catches the
+      -- first tab switch in a session where onSelect may not have fired yet.
+      if selectionController then
+        local liveKey = selectionController.getSelectedConversationKey()
+        if liveKey ~= nil then
+          tabSelections[oldMode] = liveKey
+        end
+      end
+      -- Restore the new tab's remembered selection (or clear). Look up the
+      -- full contact from getCurrentContacts() rather than the virtualized
+      -- row set — the remembered selection may be off-screen (below the
+      -- visible-row window) and wouldn't otherwise be findable.
+      local nextKey = tabSelections[newMode]
+      local matched = false
+      if nextKey and contactsRuntime and contactsRuntime.getCurrentContacts then
+        for _, item in ipairs(contactsRuntime.getCurrentContacts() or {}) do
+          if item ~= nil and item.conversationKey == nextKey then
+            if handleContactSelected then
+              handleContactSelected(item)
+            end
+            matched = true
+            break
+          end
+        end
+      end
+      if not matched and refreshSelection then
+        refreshSelection({})
+      end
+    end,
     onSelect = function(item)
+      -- Remember the selection per-tab so tab switches can restore it.
+      -- Tracked on every select (not just tab switch) so the memory stays
+      -- fresh even when the user clicks a different conversation within
+      -- the same tab before switching.
+      if item and item.conversationKey and contactsRuntime and contactsRuntime.getTabMode then
+        local mode = contactsRuntime.getTabMode()
+        if mode == "whispers" or mode == "groups" then
+          tabSelections[mode] = item.conversationKey
+        end
+      end
       if handleContactSelected then
         handleContactSelected(item)
       end
@@ -198,7 +250,7 @@ function MessengerWindow.Create(factory, options)
     getStatus = options.getStatus,
   })
 
-  local function refreshSelection(nextState, resetPaging)
+  refreshSelection = function(nextState, resetPaging)
     selectionController.refresh(nextState, resetPaging)
   end
 
@@ -296,6 +348,9 @@ function MessengerWindow.Create(factory, options)
     refreshContacts = refreshContacts,
     refreshSelection = refreshSelection,
     refreshTheme = refreshThemeVisuals,
+    refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
+    setTabMode = contactsRuntime.setTabMode,
+    getTabMode = contactsRuntime.getTabMode,
     selectConversation = function(conversationKey)
       for _, row in ipairs(contacts.rows) do
         if row.item ~= nil and row.item.conversationKey == conversationKey then

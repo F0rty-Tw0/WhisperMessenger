@@ -85,6 +85,8 @@ read_globals = {
   "ChatFrame_RemoveMessageEventFilter",
   "ChatEdit_SetLastTellTarget",
   "BNGetNumFriends",
+  "BNGetNumConversations",
+  "BNGetConversationInfo",
   "ChatEdit_DeactivateChat",
   "ChatEdit_UpdateHeader",
   "ChatFrameUtil",
@@ -93,6 +95,7 @@ read_globals = {
   "ChatFrame_SendBNetTell",
   "ChatFrame_SendTell",
   "BNSendWhisper",
+  "BNSendConversationMessage",
 
   -- CVar API
   "GetCVar",
@@ -123,6 +126,8 @@ read_globals = {
   "WOW_PROJECT_CATACLYSM_CLASSIC",
   "WOW_PROJECT_MISTS_CLASSIC",
   "LE_EXPANSION_LEVEL_CURRENT",
+  "LE_PARTY_CATEGORY_HOME",
+  "LE_PARTY_CATEGORY_INSTANCE",
 }
 
 -- Test files: allow busted globals and relaxed global access

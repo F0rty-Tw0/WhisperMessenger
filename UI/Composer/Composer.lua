@@ -158,6 +158,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       displayName = selectedContact.displayName,
       channel = selectedContact.channel,
       bnetAccountID = selectedContact.bnetAccountID,
+      conversationID = selectedContact.conversationID,
       guid = selectedContact.guid,
       gameAccountName = selectedContact.gameAccountName,
       text = text,

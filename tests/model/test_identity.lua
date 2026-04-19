@@ -100,4 +100,63 @@ return function()
   assert(taintedWhisper.contactKey ~= nil, "expected non-nil contactKey during tainted execution")
 
   rawset(_G, "Ambiguate", nil)
+
+  -- BuildConversationKey: group chat key shapes (Stage 1 extension)
+
+  -- Singleton group keys (per-character, localProfileId embedded)
+  local profileId = "arthas-area52"
+  assert(
+    Identity.BuildConversationKey(profileId, "GUILD::") == "guild::arthas-area52",
+    "expected guild key, got " .. tostring(Identity.BuildConversationKey(profileId, "GUILD::"))
+  )
+  assert(
+    Identity.BuildConversationKey(profileId, "OFFICER::") == "officer::arthas-area52",
+    "expected officer key, got " .. tostring(Identity.BuildConversationKey(profileId, "OFFICER::"))
+  )
+  assert(
+    Identity.BuildConversationKey(profileId, "PARTY::") == "party::arthas-area52",
+    "expected party key, got " .. tostring(Identity.BuildConversationKey(profileId, "PARTY::"))
+  )
+  assert(
+    Identity.BuildConversationKey(profileId, "RAID::") == "raid::arthas-area52",
+    "expected raid key, got " .. tostring(Identity.BuildConversationKey(profileId, "RAID::"))
+  )
+  assert(
+    Identity.BuildConversationKey(profileId, "INSTANCE::") == "instance::arthas-area52",
+    "expected instance key, got " .. tostring(Identity.BuildConversationKey(profileId, "INSTANCE::"))
+  )
+
+  -- BN Conversation: account-wide, id included in key
+  assert(
+    Identity.BuildConversationKey(profileId, "BNCONV::42") == "bnconv::42",
+    "expected bnconv key, got " .. tostring(Identity.BuildConversationKey(profileId, "BNCONV::42"))
+  )
+
+  -- Channel: per-character, basename included
+  assert(
+    Identity.BuildConversationKey(profileId, "CHANNEL::trade") == "channel::arthas-area52::trade",
+    "expected channel key, got " .. tostring(Identity.BuildConversationKey(profileId, "CHANNEL::trade"))
+  )
+
+  -- Community: account-wide, both ids stable
+  assert(
+    Identity.BuildConversationKey(profileId, "COMMUNITY::1234::5678") == "community::1234::5678",
+    "expected community key, got " .. tostring(Identity.BuildConversationKey(profileId, "COMMUNITY::1234::5678"))
+  )
+
+  -- Existing WOW/BN key shapes are unchanged
+  assert(
+    Identity.BuildConversationKey(profileId, "WOW::thrall-nagrand") == "wow::WOW::thrall-nagrand",
+    "WOW key shape must be unchanged"
+  )
+  assert(
+    Identity.BuildConversationKey(profileId, "BN::jaina#1234") == "bnet::BN::jaina#1234",
+    "BN key shape must be unchanged"
+  )
+
+  -- Unknown contactKey falls back to localProfileId::contactKey
+  assert(
+    Identity.BuildConversationKey(profileId, "UNKNOWN::something") == "arthas-area52::UNKNOWN::something",
+    "unknown contactKey should fall back to profileId::contactKey"
+  )
 end

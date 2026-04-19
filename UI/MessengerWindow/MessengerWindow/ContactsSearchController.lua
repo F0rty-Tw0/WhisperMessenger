@@ -32,12 +32,27 @@ function ContactsSearchController.Create(options)
     end
   end
 
+  local getTabFilter = options.getTabFilter
+  local onAfterFilter = options.onAfterFilter
+
   local function refresh(nextContacts, selectedConversationKey, resetPaging)
     if nextContacts ~= nil then
       currentContacts = nextContacts
     end
 
     local visibleContacts = contactSearch.BuildVisibleContacts(currentContacts, contactsSearchQuery)
+
+    -- Apply tab filter (Whispers / Groups) when provided
+    if type(getTabFilter) == "function" then
+      visibleContacts = getTabFilter(visibleContacts)
+    end
+
+    -- Notify caller after filtering so it can show/hide empty-state UI and
+    -- compute per-tab unread counts from the unfiltered list.
+    if type(onAfterFilter) == "function" then
+      onAfterFilter(visibleContacts, currentContacts)
+    end
+
     local selectedKey = selectedConversationKey
     if selectedKey ~= nil and not contactSearch.IsConversationVisible(visibleContacts, selectedKey) then
       selectedKey = nil

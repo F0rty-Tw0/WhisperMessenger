@@ -62,6 +62,7 @@ function AddonEventFrame.Install(deps)
       )
       EventBridge.RegisterLiveEvents(loadFrame)
       EventBridge.RegisterChannelEvents(loadFrame)
+      EventBridge.RegisterGroupEvents(loadFrame)
 
       local runtime = Bootstrap.runtime
       if runtime and runtime.autoOpenCoordinator then
@@ -91,6 +92,13 @@ function AddonEventFrame.Install(deps)
     if EventBridge and EventBridge.RouteChannelEvent then
       local runtime = Bootstrap.runtime
       if EventBridge.RouteChannelEvent(runtime, event, ...) then
+        return
+      end
+    end
+
+    if EventBridge and EventBridge.RouteGroupEvent then
+      local runtime = Bootstrap.runtime
+      if EventBridge.RouteGroupEvent(runtime, event, ...) then
         return
       end
     end

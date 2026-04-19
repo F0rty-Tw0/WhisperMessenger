@@ -29,6 +29,9 @@ function Schema.NewCharacterState()
     },
     icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },
     activeConversationKey = nil,
+    -- Last-selected Whispers/Groups tab mode, persisted per character.
+    -- (showGroupChats is account-wide — lives in accountState.settings.)
+    contactsTabMode = "whispers",
   }
 end
 

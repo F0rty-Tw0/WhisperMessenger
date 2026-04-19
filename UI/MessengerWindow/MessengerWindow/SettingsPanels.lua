@@ -78,6 +78,7 @@ function SettingsPanels.Create(factory, options)
     autoOpenIncoming = settingsConfig.autoOpenIncoming,
     autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
     doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
+    showGroupChats = settingsConfig.showGroupChats,
   }, onSettingChanged)
 
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {

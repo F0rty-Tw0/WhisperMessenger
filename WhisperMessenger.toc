@@ -26,11 +26,13 @@ Util/TimeFormat.lua
 Util/ChatReplyState.lua
 
 Model/Identity/Factions.lua
+Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
 Model/Retention.lua
 Model/ConversationStore.lua
 Model/ChannelMessageStore.lua
 Model/LockdownQueue.lua
+Model/EphemeralPurge.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
 Model/ContactEnricher/AvailabilityEnricher.lua
@@ -46,8 +48,10 @@ Persistence/SavedState/SavedState.lua
 Transport/Types.lua
 Transport/Availability.lua
 Transport/WhisperGateway.lua
+Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 
+Core/Ingest/GroupChatIngest.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
@@ -99,16 +103,22 @@ UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
+UI/ContactsList/GroupLabel.lua
+UI/ContactsList/ContactsTabFilter.lua
+UI/ContactsList/EmptyState.lua
+UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/StatusLine.lua
 UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
+UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Composer.lua
+UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/Badge.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/ToggleIcon.lua
@@ -167,6 +177,7 @@ Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
+Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/ConversationOps.lua

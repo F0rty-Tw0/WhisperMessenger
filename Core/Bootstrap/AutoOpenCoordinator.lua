@@ -13,8 +13,24 @@ local AutoOpenCoordinator = {}
 
 local function focusComposer(runtime)
   local window = runtime.window
-  if window and window.composer and window.composer.input and window.composer.input.SetFocus then
-    window.composer.input:SetFocus()
+  if not (window and window.composer and window.composer.input and window.composer.input.SetFocus) then
+    return
+  end
+
+  local input = window.composer.input
+  input:SetFocus()
+
+  -- Reissue on the next frame: the synchronous SetFocus above races with
+  -- OnShow → refreshWindow → strata promotion, any of which can steal
+  -- focus before the frame has finished laying out. Reissuing once the
+  -- layout settles makes the reply flow land on the input consistently.
+  local timer = _G.C_Timer
+  if type(timer) == "table" and type(timer.After) == "function" then
+    timer.After(0, function()
+      if input and input.SetFocus then
+        input:SetFocus()
+      end
+    end)
   end
 end
 
@@ -62,6 +78,12 @@ function AutoOpenCoordinator.Attach(options)
     end,
     getActiveConversationKey = function()
       return runtime.activeConversationKey
+    end,
+    setTabMode = function(mode)
+      local window = runtime.window
+      if window and type(window.setTabMode) == "function" then
+        window.setTabMode(mode)
+      end
     end,
   })
 

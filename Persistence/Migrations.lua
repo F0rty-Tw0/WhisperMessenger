@@ -3,8 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+
 local Migrations = {
-  CURRENT_VERSION = 4,
+  CURRENT_VERSION = 5,
 }
 
 local function isFlatChannelShape(channelMessages)
@@ -98,6 +100,19 @@ function Migrations.Apply(accountState, schema)
         end
       end
       conv.messages = filtered
+    end
+  end
+
+  -- Backfill channel type on existing whisper/bnet conversations (v4 -> v5).
+  -- Idempotent: only stamps records where channel is nil.
+  for key, conv in pairs(accountState.conversations) do
+    if conv.channel == nil then
+      if type(key) == "string" and string.find(key, "wow::", 1, true) == 1 then
+        conv.channel = ChannelType.WHISPER
+      elseif type(key) == "string" and string.find(key, "bnet::", 1, true) == 1 then
+        conv.channel = ChannelType.BN_WHISPER
+      end
+      -- Unknown/ambiguous keys: leave channel nil; later-stage ingest will supply it.
     end
   end
 

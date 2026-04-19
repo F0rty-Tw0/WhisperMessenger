@@ -97,6 +97,18 @@ function SettingsHandler.Create(options)
     if key == "autoOpenOutgoing" and persistedValue == true and ChatReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
+    if key == "showGroupChats" then
+      local window = runtime.window
+      if persistedValue == false and window and window.setTabMode then
+        window.setTabMode("whispers")
+      end
+      if window and window.refreshTabToggleVisibility then
+        window.refreshTabToggleVisibility()
+      end
+      if runtime.refreshWindow then
+        runtime.refreshWindow()
+      end
+    end
     if
       (
         key == "hideMessagePreview"

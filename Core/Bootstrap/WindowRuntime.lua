@@ -9,7 +9,10 @@ local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.Presen
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local WindowCoordinator = ns.BootstrapWindowCoordinator or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
+local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
+local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
@@ -75,19 +78,23 @@ function WindowRuntime.Create(options)
     local savedConversations = accountState.conversations or {}
     local latest = nil
     for _, item in ipairs(contacts or {}) do
-      local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
-      local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
-      local messageText = conversation and conversation.lastIncomingPreview or nil
-      if sentAt and type(messageText) == "string" and messageText ~= "" then
-        local senderName = conversation.lastIncomingSender or item.displayName or conversation.displayName
-        if type(senderName) == "string" and senderName ~= "" then
-          if latest == nil or sentAt > latest.sentAt then
-            latest = {
-              sentAt = sentAt,
-              senderName = senderName,
-              messageText = messageText,
-              classTag = item.classTag or conversation.classTag,
-            }
+      -- Group chats never produce a widget preview — per user requirement,
+      -- the popup is reserved for whispers.
+      if not BadgeFilter.IsGroupChannel(item.channel) then
+        local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
+        local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
+        local messageText = conversation and conversation.lastIncomingPreview or nil
+        if sentAt and type(messageText) == "string" and messageText ~= "" then
+          local senderName = conversation.lastIncomingSender or item.displayName or conversation.displayName
+          if type(senderName) == "string" and senderName ~= "" then
+            if latest == nil or sentAt > latest.sentAt then
+              latest = {
+                sentAt = sentAt,
+                senderName = senderName,
+                messageText = messageText,
+                classTag = item.classTag or conversation.classTag,
+              }
+            end
           end
         end
       end
@@ -138,6 +145,92 @@ function WindowRuntime.Create(options)
   })
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
+
+  -- Per-character group key prefixes (excluding guild, which is
+  -- account-wide keyed by guild name — see isForeignCharacterGroup).
+  -- For these, when the trailing profileId on the key isn't the current
+  -- character's, the conversation is an alt's history and sending must
+  -- be blocked — otherwise the composer would forward the message to
+  -- the CURRENT character's group, which is a different channel than
+  -- what the UI is showing.
+  local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::" }
+
+  local function resolvePlayerGuildName()
+    local getGuildInfo = _G.GetGuildInfo
+    if type(getGuildInfo) ~= "function" then
+      return nil
+    end
+    local ok, name = pcall(getGuildInfo, "player")
+    if not ok or type(name) ~= "string" or name == "" then
+      return nil
+    end
+    return name
+  end
+
+  local function isForeignCharacterGroup(conversation)
+    local conversationKey = conversation and conversation.conversationKey
+    if type(conversationKey) ~= "string" then
+      return false
+    end
+
+    -- Guild is account-wide: two alts in the same guild share the
+    -- conversation, so "foreign" is decided by whether the current
+    -- character is in the conversation's stored guild rather than by
+    -- a trailing profileId on the key.
+    if string.find(conversationKey, "guild::", 1, true) == 1 then
+      local storedGuildName = conversation.guildName
+      if type(storedGuildName) == "string" and storedGuildName ~= "" then
+        local playerGuildName = resolvePlayerGuildName()
+        if playerGuildName and string.lower(playerGuildName) == string.lower(storedGuildName) then
+          return false
+        end
+        return true
+      end
+      -- Legacy per-character guild key: fall back to profileId compare.
+      local owner = string.sub(conversationKey, 8)
+      return owner ~= "" and owner ~= runtime.localProfileId
+    end
+
+    for _, prefix in ipairs(FOREIGN_PROFILE_GROUP_PREFIXES) do
+      if string.find(conversationKey, prefix, 1, true) == 1 then
+        local owner = string.sub(conversationKey, #prefix + 1)
+        if owner ~= "" and owner ~= runtime.localProfileId then
+          return true
+        end
+        return false
+      end
+    end
+    return false
+  end
+
+  -- Group membership notice: shown in the composer when the user is no longer
+  -- in the group for the active conversation.
+  -- Legacy whisper channels use "WOW"/"BN"; skip them — they are not group channels.
+  runtime.getGroupSendNotice = function(conversation)
+    if conversation == nil then
+      return nil
+    end
+    local ch = conversation.channel
+    if ch == nil then
+      return nil
+    end
+    -- Skip legacy whisper channel strings and explicit ChannelType whisper constants.
+    if ch == "WOW" or ch == "BN" or ch == ChannelType.WHISPER or ch == ChannelType.BN_WHISPER then
+      return nil
+    end
+    -- COMMUNITY is receive-only but not a group membership issue.
+    if ch == ChannelType.COMMUNITY then
+      return nil
+    end
+    -- Foreign-character group history is read-only from this character.
+    if isForeignCharacterGroup(conversation) then
+      return "Another character's history — read-only."
+    end
+    if not ChatGateway.CanSend(runtime.chatApi, conversation) then
+      return "Not in group — can't send."
+    end
+    return nil
+  end
 
   local controller = {}
 
@@ -249,8 +342,23 @@ function WindowRuntime.Create(options)
   end
 
   local function focusComposerInput()
-    if window and window.composer and window.composer.input and window.composer.input.SetFocus then
-      window.composer.input:SetFocus()
+    if not (window and window.composer and window.composer.input and window.composer.input.SetFocus) then
+      return
+    end
+
+    local input = window.composer.input
+    input:SetFocus()
+
+    -- Reissue on the next frame: OnShow / refresh / strata churn can steal
+    -- focus away between this synchronous SetFocus and the first rendered
+    -- frame. Reissuing once the layout settles keeps the input focused.
+    local timer = _G.C_Timer
+    if type(timer) == "table" and type(timer.After) == "function" then
+      timer.After(0, function()
+        if input and input.SetFocus then
+          input:SetFocus()
+        end
+      end)
     end
   end
 
@@ -275,6 +383,11 @@ function WindowRuntime.Create(options)
       ensureWhisperConversation(conversationKey, normalizedName)
     end
 
+    -- StartConversation always targets a whisper contact; make sure the
+    -- Whispers tab is active so the new/existing conversation is visible.
+    if window and type(window.setTabMode) == "function" then
+      window.setTabMode("whispers")
+    end
     selectConversation(conversationKey)
     focusComposerInput()
     return true
@@ -311,6 +424,10 @@ function WindowRuntime.Create(options)
       conversation = selectedState.conversation,
       status = selectedState.status,
       state = characterState.window,
+      initialTabMode = characterState.contactsTabMode or "whispers",
+      onTabModeChanged = function(mode)
+        characterState.contactsTabMode = mode
+      end,
       onSelectConversation = function(conversationKey)
         return selectConversation(conversationKey)
       end,
@@ -318,6 +435,27 @@ function WindowRuntime.Create(options)
         return startConversation(playerName)
       end,
       onSend = function(payload)
+        local channel = payload and payload.channel
+        -- Legacy whisper channels use "WOW" and "BN"; new group channels use
+        -- ChannelType constants (PARTY, INSTANCE_CHAT, BN_CONVERSATION, etc.).
+        -- Only route through ChatGateway for explicit group channel constants.
+        local isLegacyWhisper = channel == "WOW"
+          or channel == "BN"
+          or channel == ChannelType.WHISPER
+          or channel == ChannelType.BN_WHISPER
+        if channel ~= nil and not isLegacyWhisper then
+          -- Group channel: route through ChatGateway.Send with pcall guard.
+          -- The echo (CHAT_MSG_PARTY / INSTANCE_CHAT / BN_CONVERSATION) will
+          -- arrive via GroupChatIngest and append the message automatically.
+          if not ChatGateway.CanSend(runtime.chatApi, payload) then
+            return false
+          end
+          local ok, err = pcall(ChatGateway.Send, runtime.chatApi, payload, payload.text)
+          if not ok then
+            trace("group send error", tostring(err))
+          end
+          return ok
+        end
         return sendHandler.HandleSend(runtime, payload, refreshWindow)
       end,
       onPositionChanged = function(nextState)
@@ -393,15 +531,38 @@ function WindowRuntime.Create(options)
     runtime.window = window
   end
 
+  local function conversationMatchesTab(conversationKey, tabMode)
+    if tabMode == nil then
+      return true
+    end
+    local conversation = runtime.store and runtime.store.conversations and runtime.store.conversations[conversationKey]
+      or nil
+    if conversation == nil then
+      return true
+    end
+    local isGroup = BadgeFilter.IsGroupChannel(conversation.channel)
+    if tabMode == "groups" then
+      return isGroup
+    end
+    return not isGroup
+  end
+
   local function toggle()
     ensureWindow()
     local nextVisible = not controller.isWindowVisible()
     setWindowVisible(nextVisible)
 
     if nextVisible then
+      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
       local unreadKey = coordinator.findLatestUnreadKey()
+      -- Gate the "jump to unread" shortcut by the current tab: on the Groups
+      -- tab we don't want a freshly-received whisper to steal the selection,
+      -- and on the Whispers tab an unread party message shouldn't.
+      if unreadKey and not conversationMatchesTab(unreadKey, tabMode) then
+        unreadKey = nil
+      end
       local targetKey = unreadKey or runtime.activeConversationKey
-      if targetKey ~= nil then
+      if targetKey ~= nil and conversationMatchesTab(targetKey, tabMode) then
         selectConversation(targetKey)
         return
       end
@@ -486,7 +647,7 @@ function WindowRuntime.Create(options)
 
   local initContacts = buildContacts()
   if icon and icon.setUnreadCount then
-    icon.setUnreadCount(tableUtils.sumBy(initContacts, "unreadCount"))
+    icon.setUnreadCount(BadgeFilter.SumWhisperUnread(initContacts))
   end
   if icon and icon.setIncomingPreview then
     local preview = buildLatestIncomingPreview(initContacts)

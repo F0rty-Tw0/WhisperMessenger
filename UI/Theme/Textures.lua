@@ -31,10 +31,28 @@ local function FactionIcon(factionName)
   return nil
 end
 
+--- Map ChannelType constant to a representative icon texture.
+-- Returns nil for whisper-type channels (the class icon is used instead).
+local CHANNEL_ICONS = {
+  PARTY = "Interface\\LFGFrame\\LFGIcon-Dungeon",
+  INSTANCE_CHAT = "Interface\\LFGFrame\\LFGIcon-Dungeon",
+  RAID = "Interface\\LFGFrame\\LFGIcon-Raid",
+  GUILD = "Interface\\ICONS\\INV_Misc_Tabard_GuildTabard",
+  OFFICER = "Interface\\GossipFrame\\IncomingQuestIcon",
+  BN_CONVERSATION = "Interface\\FriendsFrame\\Battlenet-BattlenetIcon",
+  COMMUNITY = "Interface\\FriendsFrame\\Battlenet-BattlenetIcon",
+  CHANNEL = "Interface\\ChatFrame\\UI-ChatIcon-Channel",
+}
+
+local function ChannelIcon(channel)
+  return CHANNEL_ICONS[channel]
+end
+
 local ThemeTextures = {
   TEXTURES = Textures,
   ClassIcon = ClassIcon,
   FactionIcon = FactionIcon,
+  ChannelIcon = ChannelIcon,
 }
 
 ns.ThemeTextures = ThemeTextures

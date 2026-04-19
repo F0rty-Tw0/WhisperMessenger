@@ -305,4 +305,54 @@ return function()
       "ticker must not refresh while hidden, got delta: " .. tostring(#requestCalls - initial)
     )
   end
+
+  -- refreshContacts suppresses the widget preview while the window is open,
+  -- and restores it once the window is hidden.
+  do
+    local window, runtime = makeBase()
+    local previewCalls = {}
+    local icon = {
+      setUnreadCount = function() end,
+      setIncomingPreview = function(senderName, messageText, classTag)
+        table.insert(previewCalls, { sender = senderName, message = messageText, class = classTag })
+      end,
+    }
+    local previewData = { senderName = "Jaina", messageText = "Need help?", classTag = "MAGE" }
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {}
+      end,
+      getWindow = function()
+        return window
+      end,
+      getIcon = function()
+        return icon
+      end,
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+      buildMessagePreview = function()
+        return previewData
+      end,
+    })
+
+    window.frame:Show()
+    coord.refreshContacts()
+    local lastCall = previewCalls[#previewCalls]
+    assert(lastCall ~= nil, "refreshContacts should call setIncomingPreview even when window is visible")
+    assert(
+      lastCall.sender == nil and lastCall.message == nil and lastCall.class == nil,
+      "while window visible, preview should be cleared (all-nil args)"
+    )
+
+    window.frame:Hide()
+    coord.refreshContacts()
+    lastCall = previewCalls[#previewCalls]
+    assert(
+      lastCall.sender == "Jaina" and lastCall.message == "Need help?" and lastCall.class == "MAGE",
+      "after window hidden, preview should be populated again"
+    )
+  end
 end

@@ -55,8 +55,14 @@ return function()
         evtFrame:RegisterEvent(eventName)
       end
     end,
+    RegisterGroupEvents = function(evtFrame)
+      calls[#calls + 1] = "RegisterGroupEvents"
+    end,
     RouteChannelEvent = function()
       return nil
+    end,
+    RouteGroupEvent = function()
+      return false
     end,
     RouteLiveEvent = function(runtime, refreshWindow, eventName, ...)
       calls[#calls + 1] = "RouteLiveEvent:" .. eventName .. ":" .. tostring((...))
@@ -136,8 +142,9 @@ return function()
 
   frame.scripts.OnEvent(frame, "ADDON_LOADED", "WhisperMessenger")
   assert(
-    table.concat(calls, ",") == "initializeRuntime,RegisterLiveEvents,RegisterChannelEvents,installDeferredPoller",
-    "expected ADDON_LOADED to initialize, register live/channel events, and install deferred poller"
+    table.concat(calls, ",")
+      == "initializeRuntime,RegisterLiveEvents,RegisterChannelEvents,RegisterGroupEvents,installDeferredPoller",
+    "expected ADDON_LOADED to initialize, register live/channel/group events, and install deferred poller"
   )
   assert(
     table.concat(loadedModules, ",") == "WhisperMessenger.Core.Bootstrap.EventBridge,WhisperMessenger.Core.Constants",

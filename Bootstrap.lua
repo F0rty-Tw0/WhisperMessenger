@@ -86,8 +86,26 @@ function Bootstrap.Initialize(factory, options)
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   ns._channelMessageState = runtime.channelMessageStore
   runtime.messagingNotice = nil
+
+  -- Record the current character's class tag under their profileId so
+  -- group-chat rows originating from any character on this account can
+  -- be tinted with the owner's class color (even after switching alts).
+  if type(localProfileId) == "string" and localProfileId ~= "" and type(_G.UnitClass) == "function" then
+    local ok, _, classTag = pcall(_G.UnitClass, "player")
+    if ok and type(classTag) == "string" and classTag ~= "" then
+      accountState.playerClasses = accountState.playerClasses or {}
+      accountState.playerClasses[localProfileId] = classTag
+    end
+  end
   -- Initialize theme/font mode from saved settings
   accountState.settings = accountState.settings or {}
+  -- Group-chat visibility toggle. First-run default is ON. We seed the
+  -- value explicitly so SavedVariables always serializes the current
+  -- choice (absence-treated-as-true is fragile if SavedVariables
+  -- compaction ever drops nil-equivalent fields).
+  if accountState.settings.showGroupChats == nil then
+    accountState.settings.showGroupChats = true
+  end
   if Fonts.Initialize then
     Fonts.Initialize(accountState.settings.fontFamily or "default")
   end

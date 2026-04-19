@@ -111,14 +111,68 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
 end
 
 function Identity.BuildConversationKey(localProfileId, contactKey)
+  if type(contactKey) ~= "string" then
+    return localProfileId .. "::" .. tostring(contactKey)
+  end
+
   -- BNet conversations are account-wide, use a shared prefix
-  if type(contactKey) == "string" and string.find(contactKey, "BN::", 1, true) == 1 then
+  if string.find(contactKey, "BN::", 1, true) == 1 then
     return "bnet::" .. contactKey
   end
-  -- WoW whisper conversations are account-wide, use a shared prefix
-  if type(contactKey) == "string" and string.find(contactKey, "WOW::", 1, true) == 1 then
+  -- WoW whisper conversations are per-character key, use a shared prefix
+  if string.find(contactKey, "WOW::", 1, true) == 1 then
     return "wow::" .. contactKey
   end
+
+  -- BN Conversation: account-wide; key includes the conversation id
+  -- contactKey shape: "BNCONV::<id>"
+  if string.find(contactKey, "BNCONV::", 1, true) == 1 then
+    local id = string.sub(contactKey, 9) -- strip "BNCONV::"
+    return "bnconv::" .. id
+  end
+
+  -- Community: account-wide; both clubId and streamId are stable
+  -- contactKey shape: "COMMUNITY::<clubId>::<streamId>"
+  if string.find(contactKey, "COMMUNITY::", 1, true) == 1 then
+    local rest = string.sub(contactKey, 12) -- strip "COMMUNITY::"
+    return "community::" .. rest
+  end
+
+  -- Guild: account-wide when the ingesting caller supplies a guild name
+  -- (shape "GUILD::<guildName>"). Characters in the same guild share the
+  -- same conversation. Without a name we fall back to the per-character
+  -- key so legacy/bare ingest paths still work.
+  if string.find(contactKey, "GUILD::", 1, true) == 1 then
+    local name = string.sub(contactKey, 8) -- strip "GUILD::"
+    if type(name) == "string" and name ~= "" then
+      local ok, lowered = pcall(string.lower, name)
+      if ok and type(lowered) == "string" and lowered ~= "" then
+        return "guild::" .. lowered
+      end
+    end
+    return "guild::" .. localProfileId
+  end
+  if string.find(contactKey, "OFFICER::", 1, true) == 1 then
+    return "officer::" .. localProfileId
+  end
+  if string.find(contactKey, "PARTY::", 1, true) == 1 then
+    return "party::" .. localProfileId
+  end
+  if string.find(contactKey, "RAID::", 1, true) == 1 then
+    return "raid::" .. localProfileId
+  end
+  if string.find(contactKey, "INSTANCE::", 1, true) == 1 then
+    return "instance::" .. localProfileId
+  end
+
+  -- Channel: per-character; key includes the channel basename
+  -- contactKey shape: "CHANNEL::<basename>"
+  if string.find(contactKey, "CHANNEL::", 1, true) == 1 then
+    local basename = string.sub(contactKey, 10) -- strip "CHANNEL::"
+    return "channel::" .. localProfileId .. "::" .. basename
+  end
+
+  -- Unknown/ambiguous contactKey: fall back to localProfileId::contactKey
   return localProfileId .. "::" .. contactKey
 end
 

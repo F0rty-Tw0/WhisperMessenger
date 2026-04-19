@@ -73,10 +73,24 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   local channelMessageStore = ChannelMessageStore.Restore(accountState.channelMessages, nil, nowValue)
   accountState.channelMessages = channelMessageStore
 
+  -- Resolve local player identity for group-chat direction detection.
+  -- UnitGUID("player") returns nil during very early load or in minimal test
+  -- environments; pcall-guard and let it stay nil — direction falls back to
+  -- "in" for all messages, which matches pre-group-chat behavior.
+  local localPlayerGuid = options.localPlayerGuid
+  if localPlayerGuid == nil and type(_G.UnitGUID) == "function" then
+    local ok, guid = pcall(_G.UnitGUID, "player")
+    if ok and type(guid) == "string" and guid ~= "" then
+      localPlayerGuid = guid
+    end
+  end
+
   return {
     accountState = accountState,
     characterState = characterState,
     localProfileId = localProfileId,
+    localPlayerGuid = localPlayerGuid,
+    localBnetAccountID = options.localBnetAccountID,
     activeConversationKey = characterState.activeConversationKey,
     pendingOutgoing = {},
     sendStatusByConversation = {},

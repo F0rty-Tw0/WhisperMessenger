@@ -6,6 +6,7 @@ end
 local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
+local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
@@ -136,10 +137,13 @@ function WindowCoordinator.Create(options)
     local nextState = coordinator.buildSelectionState(freshContacts)
     local icon = getIcon()
     if icon and icon.setUnreadCount then
-      icon.setUnreadCount(TableUtils.sumBy(freshContacts, "unreadCount"))
+      icon.setUnreadCount(BadgeFilter.SumWhisperUnread(freshContacts))
     end
     if icon and icon.setIncomingPreview then
-      local preview = buildMessagePreview(freshContacts)
+      -- Suppress the widget-anchored preview while the messenger window is
+      -- open: the full conversation is already visible, and the popup ends
+      -- up as redundant noise next to (or behind) the window chrome.
+      local preview = not coordinator.isWindowVisible() and buildMessagePreview(freshContacts) or nil
       icon.setIncomingPreview(
         preview and preview.senderName or nil,
         preview and preview.messageText or nil,

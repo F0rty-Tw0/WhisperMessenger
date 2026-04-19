@@ -267,20 +267,11 @@ function ToggleIcon.Create(factory, options)
   previewDismissLabel:SetText("×")
   setTextColor(previewDismissLabel, DISMISS_COLOR)
 
-  local function overrideFontSize(fontString, size)
-    if not fontString or type(fontString.GetFont) ~= "function" or type(fontString.SetFont) ~= "function" then
-      return
-    end
-    local path, _, flags = fontString:GetFont()
-    if path then
-      fontString:SetFont(path, size, flags or "")
-    end
-  end
-
   local senderLeft = PREVIEW_LEFT_PAD + PREVIEW_CLASS_ICON_SIZE + PREVIEW_ICON_GAP
   local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewSenderLabel, Theme.FONTS.header_name)
-  overrideFontSize(previewSenderLabel, 12)
+  -- Font objects only: a raw SetFont on a FontString overrides the engine's
+  -- Unicode glyph-fallback chain and blanks Cyrillic/Greek characters.
+  setFontObject(previewSenderLabel, Theme.FONTS.message_text)
   previewSenderLabel:SetPoint("TOPLEFT", previewFrame, "TOPLEFT", senderLeft, PREVIEW_SENDER_TOP_OFFSET)
   previewSenderLabel:SetJustifyH("LEFT")
   previewSenderLabel:SetWordWrap(false)
@@ -289,8 +280,7 @@ function ToggleIcon.Create(factory, options)
   end
 
   local previewMessageLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewMessageLabel, Theme.FONTS.message_text)
-  overrideFontSize(previewMessageLabel, 10)
+  setFontObject(previewMessageLabel, Theme.FONTS.system_text)
   previewMessageLabel:SetPoint("TOPLEFT", previewSenderLabel, "BOTTOMLEFT", 0, PREVIEW_MESSAGE_GAP)
   previewMessageLabel:SetJustifyH("LEFT")
   previewMessageLabel:SetWordWrap(false)

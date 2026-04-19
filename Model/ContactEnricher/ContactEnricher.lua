@@ -124,7 +124,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     conversation = conversation,
     status = selectedContact and selectedContact.availability
       or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
-    notice = runtime.messagingNotice,
+    notice = runtime.messagingNotice
+      or (type(runtime.getGroupSendNotice) == "function" and runtime.getGroupSendNotice(conversation) or nil),
   }
 end
 

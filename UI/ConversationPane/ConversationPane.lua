@@ -218,6 +218,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
     headerStatusDot = header.headerStatusDot,
     headerDivider = header.headerDivider,
     headerEmpty = header.headerEmpty,
+    headerChannelChip = header.headerChannelChip,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     transcript = transcript,

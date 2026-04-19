@@ -57,6 +57,7 @@ Theme.LAYOUT = Layout
 Theme.TEXTURES = ThemeTextures.TEXTURES
 Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
+Theme.ChannelIcon = ThemeTextures.ChannelIcon
 
 local BubbleColors = ns.ThemeBubbleColors
 if type(BubbleColors) ~= "table" and type(require) == "function" then

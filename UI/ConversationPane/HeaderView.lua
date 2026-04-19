@@ -9,8 +9,31 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local HeaderElements = ns.ConversationPaneHeaderElements
   or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
+local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel
+  or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 local HeaderView = {}
+
+-- Resolve and cache the current player's class tag for group-chat headers.
+-- Groups are tinted with the player's own class color so the conversation
+-- reads as yours rather than being colored by a sender's class.
+local cachedPlayerClassTag = nil
+local function playerClassTag()
+  if cachedPlayerClassTag ~= nil then
+    return cachedPlayerClassTag
+  end
+  local unitClass = _G.UnitClass
+  if type(unitClass) ~= "function" then
+    return nil
+  end
+  local ok, _, tag = pcall(unitClass, "player")
+  if ok and type(tag) == "string" and tag ~= "" then
+    cachedPlayerClassTag = tag
+    return cachedPlayerClassTag
+  end
+  return nil
+end
 
 local function headerTextFor(selectedContact)
   if selectedContact and selectedContact.displayName then
@@ -29,6 +52,12 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   local classIconResult = HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   local classIconFrame = classIconResult.frame
   local classIcon = classIconResult.texture
+
+  -- Guild crest: native three-layer tabard frame, shown only when the
+  -- selected conversation is the GUILD channel. Falls back to the static
+  -- class-icon (which then carries Theme.ChannelIcon("GUILD")) when the
+  -- template is unavailable in the test harness.
+  local guildCrestFrame = HeaderElements.createGuildCrest(headerFrame, classIconFrame)
 
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
@@ -52,41 +81,99 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory)
 
+  -- Channel chip: small label shown for group conversations to the right of
+  -- the header name. Hidden for whisper conversations.
+  local headerChannelChip = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  headerChannelChip:SetPoint("LEFT", headerName, "RIGHT", 6, 0)
+  UIHelpers.applyColor(headerChannelChip, Theme.COLORS.text_secondary)
+  headerChannelChip:SetText("")
+  headerChannelChip:Hide()
+
   return {
     headerFrame = headerFrame,
     headerClassIcon = classIcon,
     headerClassIconFrame = classIconFrame,
+    headerGuildCrest = guildCrestFrame,
     headerName = headerName,
     headerFactionIcon = headerFactionIcon,
     headerStatus = headerStatus,
     headerStatusDot = statusDot,
     headerDivider = headerDivider,
     headerEmpty = headerEmpty,
+    headerChannelChip = headerChannelChip,
   }
 end
 
-function HeaderView.Refresh(view, selectedContact, _conversation, status)
+function HeaderView.Refresh(view, selectedContact, conversation, status)
   if view.headerFrame then
     local hasContact = selectedContact ~= nil
+    local vm = GroupHeaderViewModel.Build(selectedContact, conversation)
+
+    local isGuildChannel = hasContact and selectedContact.channel == ChannelType.GUILD
+    local useGuildCrest = isGuildChannel and view.headerGuildCrest ~= nil
 
     if view.headerClassIcon then
-      local iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
+      local iconPath = nil
+      if vm and vm.isGroup then
+        -- Group conversation: use the same channel icon as the contact row
+        -- (tabard for GUILD, party/raid/instance glyphs for others).
+        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel)
+          or nil
+      else
+        iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
+      end
       if iconPath then
         view.headerClassIcon:SetTexture(iconPath)
       else
         view.headerClassIcon:SetTexture(Theme.TEXTURES.bnet_icon)
       end
     end
+    -- Always show the icon frame when a contact is selected; for groups it
+    -- carries the channel glyph, for whispers it carries the class icon.
+    -- Hide it only when the native guild crest is taking its place.
+    local showClassIcon = hasContact and not useGuildCrest
     if view.headerClassIconFrame and view.headerClassIconFrame.SetShown then
-      view.headerClassIconFrame:SetShown(hasContact)
+      view.headerClassIconFrame:SetShown(showClassIcon)
     elseif view.headerClassIcon then
-      view.headerClassIcon:SetShown(hasContact)
+      view.headerClassIcon:SetShown(showClassIcon)
+    end
+
+    -- Guild crest: populate from the player's live tabard info and show
+    -- only for GUILD conversations. Falls back to the static channel icon
+    -- (handled above) when the template isn't available.
+    if view.headerGuildCrest then
+      if useGuildCrest then
+        HeaderElements.refreshGuildCrest(view.headerGuildCrest)
+        if view.headerGuildCrest.Show then
+          view.headerGuildCrest:Show()
+        end
+      else
+        if view.headerGuildCrest.Hide then
+          view.headerGuildCrest:Hide()
+        end
+      end
     end
 
     if view.headerName then
       if hasContact then
-        view.headerName:SetText(selectedContact.displayName or "")
-        UIHelpers.applyClassColor(view.headerName, selectedContact.classTag, Theme.COLORS.text_primary)
+        local title = (vm and vm.title) or (selectedContact.displayName or "")
+        view.headerName:SetText(title)
+        -- Groups: tint by the OWNER character's class (= the alt who
+        -- chatted in this group). Current-character rows fall back to
+        -- the live player class so the tint is right before the saved
+        -- player→class map has a chance to record the current login.
+        -- Foreign-owner rows without a stored class stay neutral instead
+        -- of mis-tinting with the current player's class. Whispers keep
+        -- the remote contact's class color.
+        if vm and vm.isGroup then
+          local groupClassTag = selectedContact.ownerClassTag
+          if groupClassTag == nil and not selectedContact.ownerProfileId then
+            groupClassTag = playerClassTag()
+          end
+          UIHelpers.applyClassColor(view.headerName, groupClassTag, Theme.COLORS.text_primary)
+        else
+          UIHelpers.applyClassColor(view.headerName, selectedContact.classTag, Theme.COLORS.text_primary)
+        end
         view.headerName:Show()
       else
         view.headerName:SetText("")
@@ -94,9 +181,22 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
+    -- Channel chip (groups only) — stored on the view for theme refresh
+    if view.headerChannelChip then
+      local chip = vm and vm.channelChip or nil
+      if chip and chip ~= "" then
+        view.headerChannelChip:SetText("[" .. chip .. "]")
+        view.headerChannelChip:Show()
+      else
+        view.headerChannelChip:SetText("")
+        view.headerChannelChip:Hide()
+      end
+    end
+
+    local showStatusLine = hasContact and (vm == nil or vm.showStatusLine)
     local statusText, dotColorKey = StatusLine.Build(selectedContact, status)
     if view.headerStatus then
-      if hasContact then
+      if showStatusLine then
         view.headerStatus:SetText(statusText)
         view.headerStatus:Show()
       else
@@ -105,8 +205,9 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
+    local showDot = hasContact and (vm == nil or vm.showPresenceDot)
     if view.headerStatusDot then
-      if hasContact and dotColorKey and Theme.COLORS[dotColorKey] then
+      if showDot and dotColorKey and Theme.COLORS[dotColorKey] then
         local dc = Theme.COLORS[dotColorKey]
         if view.headerStatusDot.bg and view.headerStatusDot.bg.SetVertexColor then
           view.headerStatusDot.bg:SetVertexColor(dc[1], dc[2], dc[3], dc[4] or 1)
@@ -117,8 +218,9 @@ function HeaderView.Refresh(view, selectedContact, _conversation, status)
       end
     end
 
+    local showFaction = hasContact and (vm == nil or vm.showFactionIcon)
     if view.headerFactionIcon then
-      local factionPath = hasContact and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName)
+      local factionPath = showFaction and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName)
         or nil
       if factionPath then
         view.headerFactionIcon:SetTexture(factionPath)

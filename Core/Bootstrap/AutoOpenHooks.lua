@@ -51,6 +51,15 @@ function AutoOpenHooks.Create(deps)
   local function openAndSelect(conversationKey, forceFocus)
     deps.ensureWindow()
     deps.setWindowVisible(true)
+    -- Every openAndSelect caller targets a whisper conversation (reply,
+    -- send-tell, outgoing, incoming). When the messenger is currently on
+    -- the Groups tab, a whisper would be invisible in the contact list,
+    -- so force-switch to the Whispers tab first. Per-tab selection memory
+    -- handles saving the group selection and will restore it on the next
+    -- tab switch back.
+    if deps.setTabMode then
+      deps.setTabMode("whispers")
+    end
     deps.selectConversation(conversationKey)
     if forceFocus then
       deps.focusComposer()

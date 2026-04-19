@@ -8,6 +8,7 @@ local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
+local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
@@ -168,7 +169,43 @@ local TRACE_EVENTS = {
   CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE = true,
   CHAT_MSG_AFK = true,
   CHAT_MSG_DND = true,
+  -- Group chat events
+  CHAT_MSG_PARTY = true,
+  CHAT_MSG_PARTY_LEADER = true,
+  CHAT_MSG_INSTANCE_CHAT = true,
+  CHAT_MSG_INSTANCE_CHAT_LEADER = true,
+  CHAT_MSG_BN_CONVERSATION = true,
 }
+
+local GROUP_EVENTS = {}
+for _, name in ipairs(Constants.GROUP_EVENT_NAMES) do
+  GROUP_EVENTS[name] = true
+end
+
+-- Attempt to resolve a BN conversation ID by iterating known conversations
+-- and matching on bnSenderID. Returns nil when not resolvable.
+-- pcall-guarded: BNGetNumConversations may be absent on Classic flavors.
+local function resolveBNConversationID(bnSenderID)
+  if bnSenderID == nil then
+    return nil
+  end
+  local ok, numConversations = pcall(function()
+    return _G.BNGetNumConversations and _G.BNGetNumConversations() or 0
+  end)
+  if not ok or type(numConversations) ~= "number" or numConversations < 1 then
+    return nil
+  end
+  for i = 1, numConversations do
+    local convOk, conversationID = pcall(function()
+      local id = _G.BNGetConversationInfo and _G.BNGetConversationInfo(i)
+      return id
+    end)
+    if convOk and conversationID ~= nil then
+      return conversationID
+    end
+  end
+  return nil
+end
 
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
@@ -213,6 +250,9 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     -- edit box and later break Blizzard reply UI in combat/instance contexts.
     -- We only need to track `lastIncomingWhisperKey`; the messenger reply hooks
     -- consume that key directly.
+    local inGroupsTab = runtime.window
+      and type(runtime.window.getTabMode) == "function"
+      and runtime.window.getTabMode() == "groups"
     if
       runtime.accountState
       and runtime.accountState.settings
@@ -220,11 +260,15 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and runtime.onAutoOpen
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()
+      and not inGroupsTab
     then
       runtime.onAutoOpen(result.conversationKey)
     end
   end
   if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
+    local inGroupsTabOut = runtime.window
+      and type(runtime.window.getTabMode) == "function"
+      and runtime.window.getTabMode() == "groups"
     if
       runtime.accountState
       and runtime.accountState.settings
@@ -233,6 +277,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()
       and not (resultMeta and resultMeta.outgoingFromPendingSend == true)
+      and not inGroupsTabOut
     then
       runtime.onAutoOpenOutgoing(result.conversationKey)
     end
@@ -241,6 +286,115 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     refreshWindow()
   end
   return result
+end
+
+function EventBridge.RegisterGroupEvents(frame)
+  for _, eventName in ipairs(Constants.GROUP_EVENT_NAMES) do
+    registerEventIfSupported(frame, eventName)
+  end
+end
+
+function EventBridge.UnregisterGroupEvents(frame)
+  for _, eventName in ipairs(Constants.GROUP_EVENT_NAMES) do
+    if frame.UnregisterEvent then
+      unregisterEventIfSupported(frame, eventName)
+    end
+  end
+end
+
+-- Resolve (clubId, streamId, clubType) for the most recent community chat
+-- line. Blizzard's API takes no args and returns info about the last message —
+-- reliable inside a CHAT_MSG_COMMUNITIES_CHANNEL handler because the event
+-- fires synchronously right after Blizzard records the line.
+-- Returns nil, nil, nil when the API is absent or throws.
+local function resolveCommunityChatSource()
+  local clubApi = _G.C_Club
+  if type(clubApi) ~= "table" or type(clubApi.GetInfoFromLastCommunityChatLine) ~= "function" then
+    return nil, nil, nil
+  end
+  local ok, info = pcall(clubApi.GetInfoFromLastCommunityChatLine)
+  if not ok or type(info) ~= "table" then
+    return nil, nil, nil
+  end
+  return info.clubId, info.streamId, info.clubType
+end
+
+function EventBridge.RouteGroupEvent(runtime, eventName, ...)
+  if runtime == nil or not GROUP_EVENTS[eventName] then
+    return false
+  end
+
+  -- Unpack the 17-arg Blizzard group chat signature
+  local text, playerName, _languageName, channelName, _playerName2, _specialFlags, _zoneChannelID, _channelIndex, channelBaseName, _languageID, lineID, guid, bnSenderID =
+    ...
+
+  local conversationID = nil
+  if eventName == "CHAT_MSG_BN_CONVERSATION" then
+    conversationID = resolveBNConversationID(bnSenderID)
+  end
+
+  -- Community chat resolution. Skip guild-type clubs because they also fire
+  -- CHAT_MSG_GUILD / CHAT_MSG_OFFICER which are already handled, and we do
+  -- not want duplicate threads or messages.
+  local clubId, streamId, streamName = nil, nil, nil
+  if eventName == "CHAT_MSG_COMMUNITIES_CHANNEL" then
+    local cId, sId, clubType = resolveCommunityChatSource()
+    if cId == nil or sId == nil then
+      return false
+    end
+    -- Enum.ClubType.Guild == 2. Deduped with CHAT_MSG_GUILD / CHAT_MSG_OFFICER.
+    if clubType == 2 then
+      return false
+    end
+    clubId = tostring(cId)
+    streamId = tostring(sId)
+    -- Prefer the bare stream base name over the full "Club: Stream" channelName.
+    if type(channelBaseName) == "string" and channelBaseName ~= "" then
+      streamName = channelBaseName
+    elseif type(channelName) == "string" and channelName ~= "" then
+      streamName = channelName
+    end
+  end
+
+  -- Resolve sender class/race/faction from guid so the chat bubble can
+  -- render a class icon and class-colored name. BN_CONVERSATION events
+  -- don't carry a guid (BNet identity instead) — skip for that surface.
+  local playerInfo = nil
+  if guid and eventName ~= "CHAT_MSG_BN_CONVERSATION" then
+    playerInfo = BNetResolver.ResolvePlayerInfo(runtime and runtime.playerInfoByGUID or nil, guid)
+  end
+
+  local payload = {
+    text = text,
+    playerName = playerName,
+    lineID = lineID,
+    guid = guid,
+    bnSenderID = bnSenderID,
+    conversationID = conversationID,
+    clubId = clubId,
+    streamId = streamId,
+    streamName = streamName,
+    playerInfo = playerInfo,
+  }
+
+  if Trace and TRACE_EVENTS[eventName] then
+    Trace(
+      "EventBridge: "
+        .. eventName
+        .. " from="
+        .. tostring(playerName)
+        .. " guid="
+        .. tostring(guid)
+        .. " lineID="
+        .. tostring(lineID)
+    )
+  end
+
+  local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)
+  if handled and type(runtime.refreshWindow) == "function" then
+    runtime.refreshWindow()
+  end
+  return handled
 end
 
 ns.BootstrapEventBridge = EventBridge

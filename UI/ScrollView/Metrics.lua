@@ -81,7 +81,14 @@ function Metrics.GetRange(view)
   -- yet, or the frame is hidden), report no range. Without this guard every
   -- non-empty content reads as "overflow" because contentHeight > 0 > 0.
   if viewportHeight <= 0 then
-    return 0
+    -- WoW occasionally reports 0 mid-refresh (e.g. during incoming-whisper
+    -- refresh while the scrollFrame is being re-laid out). Fall back to the
+    -- last captured viewport so snap-to-end still lands at the bottom
+    -- instead of collapsing to offset 0 (top).
+    viewportHeight = view.viewportHeight or 0
+    if viewportHeight <= 0 then
+      return 0
+    end
   end
   local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
   local computed = math.max(contentHeight - viewportHeight, 0)

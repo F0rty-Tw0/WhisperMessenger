@@ -63,5 +63,31 @@ return function()
     assert(offset == 400, "snapToEnd offset should be 400 (600 - 200), got: " .. tostring(offset))
   end
 
+  -- test_snap_to_end_falls_back_to_captured_viewport_when_live_height_is_zero
+  -- Regression: on incoming whispers, WoW sometimes reports scrollFrame
+  -- height as 0 while it is being re-laid out. Without the fallback,
+  -- Metrics.GetRange returns 0 and snap-to-end collapses to offset 0 (top)
+  -- instead of landing on the latest message.
+
+  do
+    local view = ScrollView.Create(factory, factory.CreateFrame("Frame", nil, nil), {
+      width = 300,
+      height = 200,
+    })
+
+    view.scrollFrame.GetHeight = function()
+      return 0
+    end
+
+    Metrics.RefreshMetrics(view, 600, true)
+
+    local offset = view.scrollFrame:GetVerticalScroll()
+    assert(
+      offset == 400,
+      "snapToEnd should use captured viewport (200) when live height is 0, expected offset 400, got: "
+        .. tostring(offset)
+    )
+  end
+
   print("PASS: test_scroll_snap_to_end")
 end

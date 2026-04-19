@@ -29,7 +29,11 @@ return function()
   local EventBridge = {
     RegisterLiveEvents = function() end,
     RegisterChannelEvents = function() end,
+    RegisterGroupEvents = function() end,
     RouteChannelEvent = function() end,
+    RouteGroupEvent = function()
+      return false
+    end,
     RouteLiveEvent = function() end,
   }
   local LifecycleHandlers = {

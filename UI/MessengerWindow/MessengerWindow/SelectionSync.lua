@@ -10,6 +10,7 @@ function SelectionSync.SyncComposerSelectedContact(target, selectedContact)
   target.displayName = selectedContact and selectedContact.displayName or nil
   target.channel = selectedContact and selectedContact.channel or nil
   target.bnetAccountID = selectedContact and selectedContact.bnetAccountID or nil
+  target.conversationID = selectedContact and selectedContact.conversationID or nil
   target.guid = selectedContact and selectedContact.guid or nil
   target.gameAccountName = selectedContact and selectedContact.gameAccountName or nil
 end
