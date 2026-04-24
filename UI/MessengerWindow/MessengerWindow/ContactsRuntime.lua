@@ -117,7 +117,7 @@ function ContactsRuntime.Create(factory, options)
       return ContactsTabFilter.Apply(items, currentTabMode, getShowGroupChats())
     end,
     onAfterFilter = function(filtered, allContacts)
-      -- Per-tab unread counters on the toggle labels ("Whispers (3)").
+      -- Per-tab unread counters rendered as circular badges next to the labels.
       if tabToggle and tabToggle.setUnreadCounts then
         local source = allContacts or filtered
         tabToggle.setUnreadCounts(BadgeFilter.SumWhisperUnread(source), BadgeFilter.SumGroupUnread(source))

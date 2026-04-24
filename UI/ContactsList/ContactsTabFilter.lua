@@ -25,6 +25,10 @@ local function isGroupChannel(channel)
   return KNOWN_GROUP_CHANNELS[channel] == true
 end
 
+-- IsGroupChannel exposes the predicate for callers that need to classify a
+-- conversation by channel without running a full filter pass.
+ContactsTabFilter.IsGroupChannel = isGroupChannel
+
 -- FilterWhispers returns only items that are NOT in a known group channel.
 -- Nil, "WOW", "BN", "WHISPER", "BN_WHISPER" all pass through as whispers.
 function ContactsTabFilter.FilterWhispers(items)

@@ -58,6 +58,8 @@ function SettingsPanels.Create(factory, options)
     messageMaxAge = storeConfig.messageMaxAge or 86400,
     clearOnLogout = settingsConfig.clearOnLogout,
     hideMessagePreview = settingsConfig.hideMessagePreview,
+    timeFormat = settingsConfig.timeFormat,
+    timeSource = settingsConfig.timeSource,
   }, onSettingChanged)
 
   local appearancePanel, appearanceSettings = createSettingsPanel(factory, parent, options.appearanceCreate, {
@@ -66,6 +68,7 @@ function SettingsPanels.Create(factory, options)
     fontSize = settingsConfig.fontSize,
     fontOutline = settingsConfig.fontOutline,
     fontColor = settingsConfig.fontColor,
+    bubbleColorPreset = settingsConfig.bubbleColorPreset,
     windowOpacityInactive = settingsConfig.windowOpacityInactive,
     windowOpacityActive = settingsConfig.windowOpacityActive,
     nativeChrome = settingsConfig.nativeChrome,
@@ -85,9 +88,12 @@ function SettingsPanels.Create(factory, options)
     badgePulse = settingsConfig.badgePulse,
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
     showUnreadBadge = settingsConfig.showUnreadBadge,
+    notificationSound = settingsConfig.notificationSound,
     iconSize = settingsConfig.iconSize,
     iconDesaturated = settingsConfig.iconDesaturated,
     showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
+    widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
+    widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
   }, onSettingChanged)
 
   local function refreshTheme(theme, context)

@@ -4,30 +4,26 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
-- Fixed: the incoming-message popup next to the chat icon now shows Russian, Greek, and other non-Latin letters correctly instead of blank boxes.
-- Fixed: receiving a new whisper now reliably scrolls the chat to the newest message instead of occasionally jumping to the top.
-- Pressing Reply (or using /wr) now reliably places the cursor in the chat input so you can start typing right away.
-- The incoming-message popup next to the chat icon no longer appears while the messenger window is open — the conversation is already visible, so the popup would just be duplicated noise.
-- The Whispers and Groups tabs each remember their own selected conversation. Switching between tabs keeps your place in both, so you can flip back and forth without losing who you were talking to.
-- Leaving a party, raid, or instance no longer wipes that chat. The conversation stays in the Groups tab with a "Left party." / "Left raid." / "Left instance." note, and sending is blocked until you rejoin.
-- Party, raid, and instance chat history now persists across /reload and logout — you'll see your recent group messages again after relogging.
-- Switching characters no longer hides the party, raid, guild, officer, or instance chats from your other characters. They now show up in the Groups tab prefixed with the character name (for example, "Jaina — Guild"), so you can scroll back through history regardless of who you logged in as last.
-- Guild chat is now shared across characters in the same guild — alts in the same guild see one combined conversation, and the header shows the guild's name. Alts in a *different* guild get their own row labeled with the character name ("Jaina — Guild") and the header shows that guild's name.
-- Group chat rows and headers are now tinted by the class color of the character who actually chatted in that group — so Jaina's guild history shows in a mage's blue, Thrall's raid in a shaman's electric blue, and so on. The first time you log in on a character, the addon remembers that character's class so the right color sticks for that character's group history across relogs. Before a character has logged in once since this update, their rows stay neutral instead of borrowing the current character's color.
-- Fixed: switching between characters no longer spams "Left party." / "Left raid." messages into your alts' group history. Membership transitions are now only recorded on the currently-logged-in character's own group rows; other characters' history is left untouched.
-- Fixed: selecting another character's party, raid, instance, guild, or officer chat no longer lets you type into it. The composer is disabled with an "Another character's history — read-only." notice so you can't accidentally send a message to your current character's group while looking at an alt's history.
-- An incoming whisper no longer takes over your view when you're on the Groups tab. The whisper still arrives quietly in the Whispers tab; your group conversation stays put. Opening the messenger while on the Groups tab also respects that — it won't jump you into a freshly-received whisper.
-- Starting a whisper from the Groups tab (via Reply, /w, Start New Whisper, or any outgoing whisper) now switches you back to the Whispers tab automatically so the new conversation is visible. Your group selection is remembered — flipping back to Groups restores it.
-- Guild chats now show your guild's name in the conversation header, and the header icon renders your actual guild tabard (background, emblem, and border) instead of a static picture. The contact row keeps the compact "Guild" label with a small tabard icon.
-- Party, Raid, and Instance headers no longer repeat themselves (it used to read "Party [Party]"). The channel-type chip now only appears when it adds new information — for example, it stays next to a custom Battle.net group name or your guild's name.
-- The conversation header now carries the channel icon for group chats (party, raid, instance, guild, Battle.net group, community), matching what you see in the contact row.
-- Alliance / Horde faction icons no longer clutter party, raid, instance, guild, or other group chat rows — they only make sense for individual whispers and now only appear there.
-- You can now reply to party, instance, and Battle.net group conversations directly from the messenger window.
-- Party, instance, and Battle.net group conversations now appear in the messenger window alongside your whispers.
-- Use the Whispers / Groups toggle at the bottom of your contacts list to switch between the two views. The tab you last used is remembered across reloads.
-- Group messages never trigger the minimap badge — only whispers do.
-- Turn off "Show group chats" in Behavior settings to hide the Groups tab entirely and keep the window whisper-only.
-- When the Groups tab is empty, a hint now explains how to populate it.
+- Fixed: your chosen notification sound, widget preview position, and widget preview auto-dismiss delay now stay selected when you open settings after a relog. Your actual sound and popup behavior were already using the saved value — the settings panel was just showing the defaults. The time format, time source, and message bubble color choices had the same display issue and are fixed too.
+
+## [1.2.0] - 2026-04-25
+
+- Party, raid, instance, guild, officer, and Battle.net group chats now show up in the messenger. Use the Whispers / Groups toggle at the bottom of the contacts list to switch, or hide Groups entirely in Behavior settings.
+- Group history survives /reload, logout, and character switches. Rows from other characters are labeled with the character name ("Jaina — Guild") in that character's class color, and are read-only so you can't send from the wrong alt.
+- Guild chat is shared across alts in the same guild — one conversation, with the guild tabard and name in the header. Alts in a different guild get their own row.
+- Leaving a party, raid, or instance keeps the chat with a "Left party." note; sending is blocked until you rejoin.
+- Only whispers trigger the minimap badge and the incoming popup. Group messages stay quiet.
+- Unread counts on the Whispers and Groups tabs now show as a circular badge next to the label, matching the style used on contact rows and the chat icon, instead of a number in parentheses.
+- Outgoing messages from other characters keep their original class icon in history, and the sender line reads "You · CharName" so you can tell which alt wrote what.
+- Fixed: pressing Reply (or /wr) while a group is selected now jumps to your latest whisper instead of targeting the group.
+- Sending a whisper while the Groups tab is active now switches the messenger back to the Whispers tab so you can see the new conversation. Incoming whispers still stay quiet when you're viewing groups — only the chat icon popup and unread count update.
+- Fixed: when a whisper arrives while the messenger is open on the Groups tab, the chat icon popup now shows the sender and preview text. Before, the popup was hidden whenever the window was open, so whispers received on the Groups tab had no visible preview.
+- Fixed: the conversation pane no longer pulls a whisper back into view while you're on the Groups tab. An incoming whisper or background refresh would previously re-surface the last-selected whisper on screen even though the tab hadn't changed; now the pane only shows conversations that belong to the current tab.
+- Fixed: no more error popups during Mythic+ or boss fights — both the dim-while-moving check and group chat capture now behave while chat is restricted.
+- Fixed: switching characters no longer spams "Left party." / "Left raid." into alts' group history.
+- Fixed: turning "Auto-open on outgoing whisper" off now keeps outgoing whispers in WoW's chat box, and turning it back on no longer traps Enter in a reply loop.
+- Fixed: the incoming popup renders Russian, Greek, and other non-Latin letters correctly instead of blank boxes.
+- Fixed: new whispers reliably scroll to the newest message.
 
 ## [1.1.9] - 2026-04-18
 

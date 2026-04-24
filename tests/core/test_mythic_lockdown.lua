@@ -187,7 +187,7 @@ return function()
 
   do
     local Constants = require("WhisperMessenger.Core.Constants")
-    assert(Constants.VERSION == "v1.1.9", "VERSION should be v1.1.9, got: " .. tostring(Constants.VERSION))
+    assert(Constants.VERSION == "v1.2.0", "VERSION should be v1.2.0, got: " .. tostring(Constants.VERSION))
   end
 
   -- test_refresh_contacts_skips_during_mythic

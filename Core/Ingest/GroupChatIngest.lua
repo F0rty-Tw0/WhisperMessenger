@@ -41,8 +41,42 @@ local CHANNEL_CONTACT_KEY = {
   [ChannelType.OFFICER] = "OFFICER::",
 }
 
+local function localSenderClassTag()
+  if type(_G.UnitClass) ~= "function" then
+    return nil
+  end
+  local ok, _, classTag = pcall(_G.UnitClass, "player")
+  if ok and type(classTag) == "string" and classTag ~= "" then
+    return classTag
+  end
+  return nil
+end
+
+local function localSenderName()
+  if type(_G.UnitName) ~= "function" then
+    return nil
+  end
+  local ok, name = pcall(_G.UnitName, "player")
+  if ok and type(name) == "string" and name ~= "" then
+    return name
+  end
+  return nil
+end
+
 local function buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
   local playerInfo = payload.playerInfo or {}
+  local senderClassTag
+  local senderName
+  if direction == "out" then
+    -- Freeze the sending character's class and name so the bubble icon and
+    -- "You — <char>" label survive relogging. Prefer already-resolved fields
+    -- from the payload over live API calls.
+    senderClassTag = playerInfo.classTag or localSenderClassTag()
+    -- Use the live player's short name, not payload.playerName. Group chat
+    -- events deliver "Name-Realm"; SenderLabel compares against the live
+    -- UnitName("player") which is the short form, so we normalize here.
+    senderName = localSenderName()
+  end
   local msg = {
     id = tostring(payload.lineID or sentAt),
     eventName = eventName,
@@ -57,6 +91,8 @@ local function buildMessage(eventName, payload, direction, channel, sentAt, isLe
     bnetAccountID = payload.bnSenderID,
     className = playerInfo.className,
     classTag = playerInfo.classTag,
+    senderClassTag = senderClassTag,
+    senderName = senderName,
     raceName = playerInfo.raceName,
     raceTag = playerInfo.raceTag,
     factionName = playerInfo.factionName,
@@ -86,6 +122,54 @@ local function resolveLocalPlayerGuid(state)
   return nil
 end
 
+-- In 12.0 Midnight, event payloads inside encounters / restricted actions
+-- can carry "secret string" values (GUID, sender name, message text). Any
+-- operation on them from an addon-tainted frame (==, string.lower,
+-- table.concat) throws `a secret string value tainted by 'WhisperMessenger'`.
+-- Detect via pcall on a cheap comparison; if it throws the value is secret.
+local function rawStringCompare(value)
+  return value == ""
+end
+
+local function isSecretString(value)
+  if value == nil then
+    return false
+  end
+  if type(value) ~= "string" then
+    return false
+  end
+  local ok = pcall(rawStringCompare, value)
+  return not ok
+end
+
+local function payloadHasSecretFields(payload)
+  -- Dispatch through the module table so tests can swap the detector
+  -- (the real WoW "secret string" type cannot be simulated from plain Lua).
+  local detect = GroupChatIngest._isSecretString or isSecretString
+  if detect(payload.text) then
+    return true
+  end
+  if detect(payload.playerName) then
+    return true
+  end
+  if detect(payload.guid) then
+    return true
+  end
+  return false
+end
+
+local function rawGuidEqual(a, b)
+  return a == b
+end
+
+local function compareGuids(a, b)
+  if a == nil or b == nil then
+    return false
+  end
+  local ok, equal = pcall(rawGuidEqual, a, b)
+  return ok and equal == true
+end
+
 local function resolveDirection(eventName, payload, state)
   if eventName == "CHAT_MSG_BN_CONVERSATION" then
     -- No guid on BN conversation events; use bnetAccountID comparison
@@ -97,7 +181,7 @@ local function resolveDirection(eventName, payload, state)
 
   -- For every other group surface: compare guid to the local player's guid.
   local localGuid = resolveLocalPlayerGuid(state)
-  if payload.guid ~= nil and localGuid ~= nil and payload.guid == localGuid then
+  if compareGuids(payload.guid, localGuid) then
     return "out"
   end
   return "in"
@@ -108,6 +192,14 @@ end
 function GroupChatIngest.HandleEvent(state, eventName, payload)
   local channel = EVENT_TO_CHANNEL[eventName]
   if channel == nil then
+    return false
+  end
+
+  -- Drop messages carrying 12.0 "secret string" fields. Storing them would
+  -- poison every downstream read (ConversationSnapshot search text, bubble
+  -- rendering, etc.). Blizzard's default chat frame still renders the line
+  -- via its secure path, so the user doesn't lose visibility.
+  if payloadHasSecretFields(payload) then
     return false
   end
 
@@ -215,6 +307,10 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
 
   return true
 end
+
+-- Exposed for unit tests that simulate 12.0 "secret string" taint throws.
+GroupChatIngest._compareGuids = compareGuids
+GroupChatIngest._isSecretString = isSecretString
 
 ns.GroupChatIngest = GroupChatIngest
 

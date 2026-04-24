@@ -30,7 +30,32 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
 
   if message.direction == "out" then
     nameFS:SetText("You")
-    nameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
+
+    -- Cross-character outgoing: append a gold "· <CharName>" suffix that
+    -- mirrors the incoming "· via <Channel>" tag. Resolved at render time
+    -- against the current player, so same-character messages stay plain.
+    local attachedCharname = false
+    if type(message.senderName) == "string" and message.senderName ~= "" then
+      local currentPlayerName
+      if type(_G.UnitName) == "function" then
+        local ok, name = pcall(_G.UnitName, "player")
+        if ok and type(name) == "string" and name ~= "" then
+          currentPlayerName = name
+        end
+      end
+      if currentPlayerName and currentPlayerName ~= message.senderName then
+        local charnameFS = frame:CreateFontString(nil, "OVERLAY")
+        setFontObject(charnameFS, Theme.FONTS.message_time)
+        charnameFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- match channel tag gold
+        charnameFS:SetText("\194\183 " .. message.senderName)
+        charnameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
+        nameFS:SetPoint("RIGHT", charnameFS, "LEFT", -4, 0)
+        attachedCharname = true
+      end
+    end
+    if not attachedCharname then
+      nameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
+    end
     timeFS:SetPoint("RIGHT", nameFS, "LEFT", -Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
     frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
   else

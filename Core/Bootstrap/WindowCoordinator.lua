@@ -7,6 +7,7 @@ local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.Co
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
@@ -135,15 +136,36 @@ function WindowCoordinator.Create(options)
     end
 
     local nextState = coordinator.buildSelectionState(freshContacts)
+    -- Guard against a stale `activeConversationKey` bleeding into the pane
+    -- when it doesn't belong to the current tab. Per-tab memory clears the
+    -- pane at the moment of swap, but the persistent key isn't reset — so a
+    -- later refresh (incoming whisper, availability tick) would re-surface
+    -- the off-tab conversation. Match the selection's channel against the
+    -- active tab and drop it on mismatch.
+    do
+      local window = getWindow()
+      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
+      if tabMode and nextState and nextState.selectedContact then
+        local isGroupItem = ContactsTabFilter.IsGroupChannel(nextState.selectedContact.channel)
+        local expectedMode = isGroupItem and "groups" or "whispers"
+        if expectedMode ~= tabMode then
+          nextState = { contacts = nextState.contacts }
+        end
+      end
+    end
     local icon = getIcon()
     if icon and icon.setUnreadCount then
       icon.setUnreadCount(BadgeFilter.SumWhisperUnread(freshContacts))
     end
     if icon and icon.setIncomingPreview then
-      -- Suppress the widget-anchored preview while the messenger window is
-      -- open: the full conversation is already visible, and the popup ends
-      -- up as redundant noise next to (or behind) the window chrome.
-      local preview = not coordinator.isWindowVisible() and buildMessagePreview(freshContacts) or nil
+      -- Suppress the widget-anchored preview only when the Whispers tab is
+      -- actually showing — the full conversation is already on screen and
+      -- the popup would be redundant. On the Groups tab the whisper isn't
+      -- visible in the pane, so the popup is still the user's only surface.
+      local window = getWindow()
+      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or "whispers"
+      local whispersVisibleInPane = coordinator.isWindowVisible() and tabMode == "whispers"
+      local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
       icon.setIncomingPreview(
         preview and preview.senderName or nil,
         preview and preview.messageText or nil,

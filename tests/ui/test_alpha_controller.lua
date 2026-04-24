@@ -56,6 +56,23 @@ return function()
   AlphaController.refreshWindowAlpha(frame2, composerInput, ws2, true, opaqueSettings)
   assert(frame2.alpha == 0.85, "expected forceOpaque to use custom active alpha 0.85, got " .. tostring(frame2.alpha))
 
+  -- Tainted-value safety: comparisons on "secret" values raise errors in 12.0
+  -- Midnight. If GetUnitSpeed/IsMouselooking/IsMouseButtonDown error (or the
+  -- comparison/boolean test errors), isExternalActivityActive must swallow the
+  -- error and return false rather than propagating the taint crash upward.
+  rawset(_G, "GetUnitSpeed", function()
+    error("attempt to compare local 'movementSpeed' (a secret number value)")
+  end)
+  rawset(_G, "IsMouselooking", function()
+    error("attempt to perform boolean test on a secret boolean value")
+  end)
+  rawset(_G, "IsMouseButtonDown", function()
+    error("attempt to perform boolean test on a secret boolean value")
+  end)
+  local ok, result = pcall(AlphaController.isExternalActivityActive)
+  assert(ok, "isExternalActivityActive must not propagate tainted-value errors: " .. tostring(result))
+  assert(result == false, "expected false when all activity probes error, got " .. tostring(result))
+
   rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)
   rawset(_G, "IsMouselooking", savedIsMouselooking)
   rawset(_G, "IsMouseButtonDown", savedIsMouseButtonDown)

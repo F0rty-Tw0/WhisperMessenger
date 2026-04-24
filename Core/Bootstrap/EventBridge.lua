@@ -266,9 +266,11 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end
   end
   if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
-    local inGroupsTabOut = runtime.window
-      and type(runtime.window.getTabMode) == "function"
-      and runtime.window.getTabMode() == "groups"
+    -- Unlike incoming whispers (which stay quiet to avoid yanking the user off
+    -- a group selection they chose), outgoing whispers fire the auto-open path
+    -- even when Groups is active — the user initiated the whisper and expects
+    -- to see the conversation they just started. The openAndSelect handler
+    -- then force-switches to the Whispers tab.
     if
       runtime.accountState
       and runtime.accountState.settings
@@ -277,7 +279,6 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()
       and not (resultMeta and resultMeta.outgoingFromPendingSend == true)
-      and not inGroupsTabOut
     then
       runtime.onAutoOpenOutgoing(result.conversationKey)
     end

@@ -55,7 +55,37 @@ local function buildConversationContact(state, payload)
   return contact, conversationKey
 end
 
+local function localSenderClassTag()
+  if type(_G.UnitClass) ~= "function" then
+    return nil
+  end
+  local ok, _, classTag = pcall(_G.UnitClass, "player")
+  if ok and type(classTag) == "string" and classTag ~= "" then
+    return classTag
+  end
+  return nil
+end
+
+local function localSenderName()
+  if type(_G.UnitName) ~= "function" then
+    return nil
+  end
+  local ok, name = pcall(_G.UnitName, "player")
+  if ok and type(name) == "string" and name ~= "" then
+    return name
+  end
+  return nil
+end
+
 local function buildMessage(eventName, payload, contact, direction, kind, sentAt)
+  local senderClassTag
+  local senderName
+  if direction == "out" then
+    -- Stamp the sending character's class and name so the bubble icon and
+    -- "You — <char>" label survive relogging to another character.
+    senderClassTag = localSenderClassTag()
+    senderName = localSenderName()
+  end
   return {
     id = tostring(payload.lineID or sentAt),
     eventName = eventName,
@@ -72,6 +102,8 @@ local function buildMessage(eventName, payload, contact, direction, kind, sentAt
     gameAccountName = (contact and contact.gameAccountName) or payload.gameAccountName,
     className = (contact and contact.className) or payload.className,
     classTag = (contact and contact.classTag) or payload.classTag,
+    senderClassTag = senderClassTag,
+    senderName = senderName,
     raceName = (contact and contact.raceName) or payload.raceName,
     raceTag = (contact and contact.raceTag) or payload.raceTag,
     factionName = (contact and contact.factionName) or payload.factionName,

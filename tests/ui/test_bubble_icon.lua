@@ -63,6 +63,39 @@ return function()
     )
   end
 
+  -- test_outgoing_prefers_stored_senderClassTag_over_current_player
+  -- Regression: messages sent from Char A must still show Char A's icon after
+  -- relogging to Char B. The stored senderClassTag wins over live UnitClass.
+  do
+    local bubbleFrame = makeBubbleFrame()
+    _G.UnitClass = function()
+      return "Paladin", "PALADIN"
+    end
+    local msg = { direction = "out", senderClassTag = "PRIEST" }
+    local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "out", {})
+    assert(
+      result.texture.texturePath == Theme.ClassIcon("PRIEST"),
+      "expected stored PRIEST icon over live PALADIN, got " .. tostring(result.texture.texturePath)
+    )
+    _G.UnitClass = nil
+  end
+
+  -- test_outgoing_falls_back_to_live_UnitClass_when_no_stored_class
+  -- Back-compat: legacy messages without senderClassTag still get an icon.
+  do
+    local bubbleFrame = makeBubbleFrame()
+    _G.UnitClass = function()
+      return "Paladin", "PALADIN"
+    end
+    local msg = { direction = "out" }
+    local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "out", {})
+    assert(
+      result.texture.texturePath == Theme.ClassIcon("PALADIN"),
+      "expected live PALADIN fallback, got " .. tostring(result.texture.texturePath)
+    )
+    _G.UnitClass = nil
+  end
+
   -- test_icon_positioned_left_of_bubble_for_incoming
   do
     local bubbleFrame = makeBubbleFrame()

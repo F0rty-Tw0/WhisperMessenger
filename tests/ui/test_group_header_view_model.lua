@@ -92,10 +92,7 @@ return function()
     local conversation = { title = "Raid Planning" }
     local vm = GroupHeaderViewModel.Build(contact, conversation)
     assert(vm.title == "Raid Planning", "title should use conversation.title when set")
-    assert(
-      vm.channelChip == "Battle.net Group",
-      "chip adds channel context when title is a custom name"
-    )
+    assert(vm.channelChip == "Battle.net Group", "chip adds channel context when title is a custom name")
   end
 
   -- test_nil_contact_returns_nil

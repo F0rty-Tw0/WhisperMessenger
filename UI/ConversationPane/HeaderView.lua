@@ -117,8 +117,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
       if vm and vm.isGroup then
         -- Group conversation: use the same channel icon as the contact row
         -- (tabard for GUILD, party/raid/instance glyphs for others).
-        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel)
-          or nil
+        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel) or nil
       else
         iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
       end

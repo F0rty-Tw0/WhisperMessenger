@@ -19,6 +19,19 @@ end
 
 local ReplyToLast = {}
 
+local function isWhisperConversation(conv)
+  if type(conv) ~= "table" then
+    return false
+  end
+  local channel = conv.channel
+  -- Legacy conversations predate the channel field; assume whisper so old
+  -- stored history remains reply-reachable.
+  if channel == nil then
+    return true
+  end
+  return channel == "WHISPER" or channel == "BN_WHISPER"
+end
+
 function ReplyToLast.Create(deps)
   local runtime = deps.runtime
   local windowRuntime = deps.windowRuntime
@@ -53,12 +66,17 @@ function ReplyToLast.Create(deps)
 
     local key = runtime.lastIncomingWhisperKey
     if not key and runtime.store and runtime.store.conversations then
+      -- Reply is a whisper-only action. Filter out group conversations so a
+      -- recently-chatty party/guild doesn't hijack the reply target when the
+      -- user hasn't received a whisper yet this session.
       local latest = -1
       for k, conv in pairs(runtime.store.conversations) do
-        local activity = conv and conv.lastActivityAt or 0
-        if activity > latest then
-          latest = activity
-          key = k
+        if isWhisperConversation(conv) then
+          local activity = conv and conv.lastActivityAt or 0
+          if activity > latest then
+            latest = activity
+            key = k
+          end
         end
       end
     end
@@ -66,6 +84,12 @@ function ReplyToLast.Create(deps)
     if key and runtime.ensureWindow and runtime.setWindowVisible then
       runtime.ensureWindow()
       runtime.setWindowVisible(true)
+      -- Force the Whispers tab so the target conversation is actually
+      -- visible when the user was sitting on Groups.
+      local window = runtime.window
+      if window and type(window.setTabMode) == "function" then
+        window.setTabMode("whispers")
+      end
       if windowRuntime.selectConversation then
         windowRuntime.selectConversation(key)
       end
@@ -75,9 +99,6 @@ function ReplyToLast.Create(deps)
 
     if runtime.toggle then
       runtime.toggle()
-    end
-    if type(_G.print) == "function" and not key then
-      _G.print("|cff888888[WhisperMessenger]|r No conversations yet — opened the messenger.")
     end
   end
 end

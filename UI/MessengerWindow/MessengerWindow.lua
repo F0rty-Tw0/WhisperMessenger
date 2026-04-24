@@ -28,6 +28,7 @@ local WindowGeometry = ns.MessengerWindowWindowGeometry
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local ScriptWiring = ns.MessengerWindowScriptWiring
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
+local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local RelayoutController = ns.MessengerWindowRelayoutController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring
@@ -140,10 +141,22 @@ function MessengerWindow.Create(factory, options)
       -- Save the selection that was active in the old tab as a safety net —
       -- onSelect below tracks this eagerly, but a snapshot here catches the
       -- first tab switch in a session where onSelect may not have fired yet.
+      -- Only save if the live contact actually belongs to the old tab — if
+      -- the messenger opens on Groups with a whisper active (persisted-state
+      -- mismatch), we must not leak the whisper into tabSelections["groups"].
       if selectionController then
         local liveKey = selectionController.getSelectedConversationKey()
-        if liveKey ~= nil then
-          tabSelections[oldMode] = liveKey
+        if liveKey ~= nil and contactsRuntime and contactsRuntime.getCurrentContacts then
+          for _, item in ipairs(contactsRuntime.getCurrentContacts() or {}) do
+            if item ~= nil and item.conversationKey == liveKey then
+              local isGroupItem = ContactsTabFilter.IsGroupChannel(item.channel)
+              local expectedMode = isGroupItem and "groups" or "whispers"
+              if expectedMode == oldMode then
+                tabSelections[oldMode] = liveKey
+              end
+              break
+            end
+          end
         end
       end
       -- Restore the new tab's remembered selection (or clear). Look up the
@@ -171,12 +184,13 @@ function MessengerWindow.Create(factory, options)
       -- Remember the selection per-tab so tab switches can restore it.
       -- Tracked on every select (not just tab switch) so the memory stays
       -- fresh even when the user clicks a different conversation within
-      -- the same tab before switching.
-      if item and item.conversationKey and contactsRuntime and contactsRuntime.getTabMode then
-        local mode = contactsRuntime.getTabMode()
-        if mode == "whispers" or mode == "groups" then
-          tabSelections[mode] = item.conversationKey
-        end
+      -- the same tab before switching. Key it by the item's OWN channel
+      -- rather than the current tab mode — whispers always belong to the
+      -- Whispers slot and groups to the Groups slot, regardless of which
+      -- tab the click came from.
+      if item and item.conversationKey then
+        local mode = ContactsTabFilter.IsGroupChannel(item.channel) and "groups" or "whispers"
+        tabSelections[mode] = item.conversationKey
       end
       if handleContactSelected then
         handleContactSelected(item)

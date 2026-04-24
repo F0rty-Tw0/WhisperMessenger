@@ -18,16 +18,12 @@ return function()
       pendingHydration = accountState.pendingHydration,
       schemaVersion = accountState.schemaVersion,
     }
-    local reloadedAccount, reloadedCharacter =
-      SavedState.Initialize(reloaded, characterState, profileId)
-    local reloadedRuntime = RuntimeFactory.CreateRuntimeState(
-      reloadedAccount,
-      reloadedCharacter,
-      profileId,
-      { now = function()
+    local reloadedAccount, reloadedCharacter = SavedState.Initialize(reloaded, characterState, profileId)
+    local reloadedRuntime = RuntimeFactory.CreateRuntimeState(reloadedAccount, reloadedCharacter, profileId, {
+      now = function()
         return 6000
-      end }
-    )
+      end,
+    })
     return reloadedAccount, reloadedCharacter, reloadedRuntime
   end
 
@@ -49,10 +45,7 @@ return function()
   })
 
   local partyKey = "party::" .. profileId
-  assert(
-    accountState.conversations[partyKey] ~= nil,
-    "party conversation should be stored before logout, got nil"
-  )
+  assert(accountState.conversations[partyKey] ~= nil, "party conversation should be stored before logout, got nil")
   local messageCount = #(accountState.conversations[partyKey].messages or {})
   assert(messageCount == 1, "party conversation should have 1 message, got " .. messageCount)
 
@@ -84,15 +77,9 @@ return function()
   -- Simulate WoW serializing + restoring the saved variable.
   local reloadedAccount, _reloadedCharacter, reloadedRuntime = simulateRelog(accountState, characterState, profileId)
 
-  assert(
-    reloadedAccount.conversations[partyKey] ~= nil,
-    "party conversation must be present after relog, got nil"
-  )
+  assert(reloadedAccount.conversations[partyKey] ~= nil, "party conversation must be present after relog, got nil")
   local reloadedMessages = reloadedAccount.conversations[partyKey].messages or {}
-  assert(
-    #reloadedMessages == 1,
-    "party conversation should retain 1 message after relog, got " .. #reloadedMessages
-  )
+  assert(#reloadedMessages == 1, "party conversation should retain 1 message after relog, got " .. #reloadedMessages)
   assert(
     reloadedMessages[1].text == "Ready check!",
     "party message text should round-trip, got " .. tostring(reloadedMessages[1].text)

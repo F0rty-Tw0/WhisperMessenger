@@ -226,6 +226,88 @@ return function()
     assert(conv.unreadCount == 0, "replying should clear unread count, got: " .. tostring(conv.unreadCount))
   end
 
+  -- Outgoing whisper stamps senderClassTag from the current player's class so
+  -- the bubble icon survives a relog to another character.
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    _G.UnitClass = function()
+      return "Priest", "PRIEST"
+    end
+
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", {
+      text = "hi",
+      playerName = "Sylvanas-Silvermoon",
+      lineID = 401,
+      guid = "Player-1084-0D00D0DE",
+    })
+
+    _G.UnitClass = previousUnitClass
+
+    local convKey = "wow::WOW::sylvanas-silvermoon"
+    local conv = state.store.conversations[convKey]
+    assert(conv ~= nil, "outgoing whisper conversation should exist")
+    local msg = conv.messages[1]
+    assert(msg ~= nil and msg.direction == "out", "expected outgoing message in conversation")
+    assert(
+      msg.senderClassTag == "PRIEST",
+      "outgoing message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag)
+    )
+  end
+
+  -- Outgoing whisper stamps senderName with the local player's short name
+  -- so the "You — <char>" label can render after relog.
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    local previousUnitName = _G.UnitName
+    _G.UnitClass = function()
+      return "Priest", "PRIEST"
+    end
+    _G.UnitName = function()
+      return "Jaina"
+    end
+
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", {
+      text = "hi",
+      playerName = "Thrall-Draenor",
+      lineID = 410,
+      guid = "Player-1084-0D00D0E0",
+    })
+
+    _G.UnitClass = previousUnitClass
+    _G.UnitName = previousUnitName
+
+    local conv = state.store.conversations["wow::WOW::thrall-draenor"]
+    local msg = conv.messages[1]
+    assert(msg.senderName == "Jaina", "outgoing message should stamp senderName, got: " .. tostring(msg.senderName))
+  end
+
+  -- Incoming whispers must NOT stamp senderClassTag — that would overwrite
+  -- the sender's class with our own on redisplay.
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    _G.UnitClass = function()
+      return "Priest", "PRIEST"
+    end
+
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+      text = "hey",
+      playerName = "Jaina-Proudmoore",
+      lineID = 402,
+      guid = "Player-3676-0ABC1234",
+    })
+
+    _G.UnitClass = previousUnitClass
+
+    local convKey = "wow::WOW::jaina-proudmoore"
+    local conv = state.store.conversations[convKey]
+    local msg = conv.messages[1]
+    assert(msg.direction == "in", "expected incoming message")
+    assert(msg.senderClassTag == nil, "incoming message must not stamp senderClassTag")
+  end
+
   -- CAN_LOCAL_WHISPER_TARGET_RESPONSE fires onAvailabilityChanged hook on status change
   do
     local state = makeState()

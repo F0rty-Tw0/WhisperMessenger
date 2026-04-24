@@ -293,10 +293,7 @@ return function()
     )
 
     assert(byKey["raid::thrall-draenor"] ~= nil, "foreign raid should be included")
-    assert(
-      byKey["raid::thrall-draenor"].ownerProfileId == "thrall-draenor",
-      "foreign raid should carry ownerProfileId"
-    )
+    assert(byKey["raid::thrall-draenor"].ownerProfileId == "thrall-draenor", "foreign raid should carry ownerProfileId")
 
     assert(byKey["guild::jaina-proudmoore"] ~= nil, "foreign guild should be included")
     assert(

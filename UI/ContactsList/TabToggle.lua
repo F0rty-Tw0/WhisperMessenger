@@ -6,11 +6,38 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
+local applyVertexColor = UIHelpers.applyVertexColor
 
 local TabToggle = {}
 
 local TAB_HEIGHT = 24
 local TAB_PADDING_H = 8
+local BADGE_SIZE = 14
+local BADGE_GAP = 4
+local BADGE_CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+
+local function createBadge(factory, parentButton, anchorLabel)
+  local badge = factory.CreateFrame("Frame", nil, parentButton)
+  badge:SetSize(BADGE_SIZE, BADGE_SIZE)
+  badge:SetPoint("LEFT", anchorLabel, "RIGHT", BADGE_GAP, 0)
+
+  local bg = badge:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(badge)
+  bg:SetTexture(BADGE_CIRCLE_TEX)
+  applyVertexColor(bg, Theme.COLORS.unread_badge or Theme.COLORS.badge_bg)
+
+  local label = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
+  label:SetAllPoints(badge)
+  label:SetJustifyH("CENTER")
+  label:SetJustifyV("MIDDLE")
+  label:SetText("")
+
+  if badge.Hide then
+    badge:Hide()
+  end
+
+  return { frame = badge, bg = bg, label = label }
+end
 
 -- Create builds a two-segment Whispers/Groups toggle control anchored to
 -- the bottom of the parent contacts pane.
@@ -96,12 +123,21 @@ function TabToggle.Create(factory, parent, options)
   local whispersUnread = 0
   local groupsUnread = 0
 
-  local function formatTabLabel(base, count)
+  local whispersBadge = createBadge(factory, whispersBtn, whispersLabel)
+  local groupsBadge = createBadge(factory, groupsBtn, groupsLabel)
+
+  local function updateBadge(badge, count)
     local n = tonumber(count) or 0
     if n <= 0 then
-      return base
+      if badge.frame.Hide then
+        badge.frame:Hide()
+      end
+      return
     end
-    return base .. " (" .. tostring(n) .. ")"
+    badge.label:SetText(n > 99 and "99+" or tostring(n))
+    if badge.frame.Show then
+      badge.frame:Show()
+    end
   end
 
   local function paintTabs()
@@ -110,8 +146,8 @@ function TabToggle.Create(factory, parent, options)
     UIHelpers.setTextColor(whispersLabel, isWhispers and ACTIVE_TEXT or INACTIVE_TEXT)
     applyColorTexture(groupsBg, (not isWhispers) and ACTIVE_BG or INACTIVE_BG)
     UIHelpers.setTextColor(groupsLabel, (not isWhispers) and ACTIVE_TEXT or INACTIVE_TEXT)
-    whispersLabel:SetText(formatTabLabel("Whispers", whispersUnread))
-    groupsLabel:SetText(formatTabLabel("Groups", groupsUnread))
+    updateBadge(whispersBadge, whispersUnread)
+    updateBadge(groupsBadge, groupsUnread)
   end
 
   paintTabs()
@@ -176,6 +212,8 @@ function TabToggle.Create(factory, parent, options)
     groupsBtn = groupsBtn,
     whispersLabel = whispersLabel,
     groupsLabel = groupsLabel,
+    whispersBadge = whispersBadge.frame,
+    groupsBadge = groupsBadge.frame,
   }
 end
 

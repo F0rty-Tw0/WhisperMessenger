@@ -217,6 +217,100 @@ return function()
   end
 
   -- ----------------------------------------------------------------
+  -- 8b. Outgoing group message stamps senderClassTag + senderName so the
+  --     bubble icon and "You — <char>" label survive a relog.
+  -- ----------------------------------------------------------------
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    local previousUnitName = _G.UnitName
+    _G.UnitClass = function()
+      return "Druid", "DRUID"
+    end
+    _G.UnitName = function()
+      return "Arthas"
+    end
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "hello from me",
+      playerName = "Arthas-Area52",
+      lineID = 850,
+      guid = "Player-1084-00000001",
+      -- playerInfo absent: force fallback to live UnitClass/UnitName
+    })
+
+    _G.UnitClass = previousUnitClass
+    _G.UnitName = previousUnitName
+
+    local conv = state.store.conversations["party::arthas-area52"]
+    local msg = conv.messages[1]
+    assert(msg.direction == "out", "expected outgoing")
+    assert(
+      msg.senderClassTag == "DRUID",
+      "outgoing group message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag)
+    )
+    assert(
+      msg.senderName == "Arthas",
+      "outgoing group message should stamp senderName (short form), got: " .. tostring(msg.senderName)
+    )
+  end
+
+  -- ----------------------------------------------------------------
+  -- 8c. Outgoing group message prefers resolved playerInfo.classTag over
+  --     the live UnitClass lookup (avoids a second API call).
+  -- ----------------------------------------------------------------
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    _G.UnitClass = function()
+      return "Druid", "DRUID"
+    end
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "hello again",
+      playerName = "Arthas-Area52",
+      lineID = 851,
+      guid = "Player-1084-00000001",
+      playerInfo = { classTag = "MAGE" },
+    })
+
+    _G.UnitClass = previousUnitClass
+
+    local conv = state.store.conversations["party::arthas-area52"]
+    local msg = conv.messages[1]
+    assert(
+      msg.senderClassTag == "MAGE",
+      "should prefer resolved playerInfo.classTag over UnitClass, got: " .. tostring(msg.senderClassTag)
+    )
+  end
+
+  -- ----------------------------------------------------------------
+  -- 8d. Incoming group message must NOT stamp senderClassTag.
+  -- ----------------------------------------------------------------
+  do
+    local state = makeState()
+    local previousUnitClass = _G.UnitClass
+    _G.UnitClass = function()
+      return "Druid", "DRUID"
+    end
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "someone else",
+      playerName = "OtherPlayer-Realm",
+      lineID = 852,
+      guid = "Player-1084-FFFFFFFF",
+      playerInfo = { classTag = "PRIEST" },
+    })
+
+    _G.UnitClass = previousUnitClass
+
+    local conv = state.store.conversations["party::arthas-area52"]
+    local msg = conv.messages[1]
+    assert(msg.direction == "in", "expected incoming")
+    assert(msg.senderClassTag == nil, "incoming must not stamp senderClassTag")
+  end
+
+  -- ----------------------------------------------------------------
   -- 9. Direction = "in" when payload.guid doesn't match localPlayerGuid
   -- ----------------------------------------------------------------
   do
@@ -317,6 +411,86 @@ return function()
     })
     local convInactive = stateInactive.store.conversations["party::arthas-area52"]
     assert(convInactive.unreadCount == 1, "unreadCount should be 1 for inactive conversation")
+  end
+
+  -- ----------------------------------------------------------------
+  -- 13c. 12.0 Midnight: payloads carrying "secret string" fields must be
+  --      dropped at ingest. Storing them poisons every downstream read
+  --      (ConversationSnapshot.buildSearchText calls value == "",
+  --      string.lower, table.concat — each throws on a secret string).
+  -- ----------------------------------------------------------------
+  do
+    -- Plain Lua can't reproduce WoW's "secret string" type, so swap the
+    -- detector with one that flags a sentinel value. This verifies the
+    -- HandleEvent gate: secret fields → drop (return false, no conversation).
+    local SECRET = "__SECRET__"
+    local originalDetect = GroupChatIngest._isSecretString
+    GroupChatIngest._isSecretString = function(v)
+      return v == SECRET
+    end
+
+    local state = makeState()
+    local ok, handled = pcall(GroupChatIngest.HandleEvent, state, "CHAT_MSG_RAID", {
+      text = SECRET,
+      playerName = "Leader-Realm",
+      lineID = 9999,
+      guid = "Player-1084-OTHER",
+    })
+
+    GroupChatIngest._isSecretString = originalDetect
+
+    assert(ok, "HandleEvent must not crash on a secret-string payload; got: " .. tostring(handled))
+    assert(handled == false, "HandleEvent must return false for secret-string payloads (dropped)")
+
+    local conv = state.store.conversations["raid::arthas-area52"]
+    assert(conv == nil, "no conversation should be created from a secret-string payload")
+
+    -- real detector sanity checks — plain strings/nil/numbers are NOT secret
+    assert(originalDetect(nil) == false, "nil is not secret")
+    assert(originalDetect("hello") == false, "plain string is not secret")
+    assert(originalDetect(42) == false, "number is not secret")
+    assert(originalDetect("") == false, "empty string is not secret")
+  end
+
+  -- ----------------------------------------------------------------
+  -- 13b. 12.0 Midnight: a "secret string" GUID throws on comparison from
+  --      an addon-tainted call stack. resolveDirection must NOT crash —
+  --      it should fall through to direction="in" so the message still
+  --      lands in the conversation instead of erroring the handler.
+  -- ----------------------------------------------------------------
+  do
+    -- compareGuids() unit — throwing __eq simulates the secret-string crash
+    local throwingMt = {
+      __eq = function()
+        error("attempt to compare field 'guid' (a secret string value tainted by 'WhisperMessenger')")
+      end,
+    }
+    local secret = setmetatable({}, throwingMt)
+    local mine = setmetatable({}, throwingMt)
+    assert(
+      GroupChatIngest._compareGuids(secret, mine) == false,
+      "compareGuids must swallow secret-string throws and return false"
+    )
+    assert(GroupChatIngest._compareGuids(nil, "x") == false, "nil guid yields false")
+    assert(GroupChatIngest._compareGuids("x", nil) == false, "nil localGuid yields false")
+    assert(GroupChatIngest._compareGuids("x", "x") == true, "matching plain guids yields true")
+    assert(GroupChatIngest._compareGuids("x", "y") == false, "differing plain guids yield false")
+
+    -- End-to-end: RAID_WARNING with a throwing-on-eq guid must still ingest
+    local state = makeState()
+    state.localPlayerGuid = setmetatable({}, throwingMt) -- bypass the type=="string" guard below
+    -- resolveLocalPlayerGuid only returns a string, so force a string lookup:
+    state.localPlayerGuid = "Player-1084-00000001"
+    local handled = GroupChatIngest.HandleEvent(state, "CHAT_MSG_RAID_WARNING", {
+      text = "pull now",
+      playerName = "Leader-Realm",
+      lineID = 1500,
+      guid = "Player-1305-SECRET", -- plain string path; compareGuids returns false cleanly
+    })
+    assert(handled == true, "RAID_WARNING must be handled without crashing")
+    local conv = state.store.conversations["raid::arthas-area52"]
+    assert(conv ~= nil, "raid conversation should exist")
+    assert(conv.messages[1].direction == "in", "non-matching guid → direction=in")
   end
 
   -- ----------------------------------------------------------------

@@ -65,9 +65,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
   -- fall back to the live PlayerGuildName when the conversation doesn't
   -- carry one yet (legacy per-character key or not-yet-ingested).
   if channel == ChannelType.GUILD then
-    local storedGuildName = contact.guildName
-      or (conversation and conversation.guildName)
-      or nil
+    local storedGuildName = contact.guildName or (conversation and conversation.guildName) or nil
     if storedGuildName and storedGuildName ~= "" then
       label = storedGuildName
     elseif not fromAnotherCharacter then

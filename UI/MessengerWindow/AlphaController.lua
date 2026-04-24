@@ -47,17 +47,40 @@ function AlphaController.isWindowEngaged(frame, composerInput)
   return false
 end
 
-function AlphaController.isExternalActivityActive()
-  if type(_G.GetUnitSpeed) == "function" then
-    local movementSpeed = _G.GetUnitSpeed("player")
-    if type(movementSpeed) == "number" and movementSpeed > 0 then
-      return true
-    end
+-- In 12.0 Midnight, `GetUnitSpeed` / `IsMouselooking` / `IsMouseButtonDown`
+-- can return "secret" values when our execution is tainted — any arithmetic
+-- comparison or boolean test on the result raises. Wrap the probe *inside*
+-- pcall so the error is caught at its source; a raw `pcall(fn)` would return
+-- the secret value unchanged and crash at the caller.
+local function probeIsMoving()
+  if type(_G.GetUnitSpeed) ~= "function" then
+    return false
   end
-  if type(_G.IsMouselooking) == "function" and _G.IsMouselooking() then
+  local ok, moving = pcall(function()
+    local speed = _G.GetUnitSpeed("player")
+    return type(speed) == "number" and speed > 0
+  end)
+  return ok and moving == true
+end
+
+local function probeBoolean(fn)
+  if type(fn) ~= "function" then
+    return false
+  end
+  local ok, value = pcall(function()
+    return fn() == true
+  end)
+  return ok and value == true
+end
+
+function AlphaController.isExternalActivityActive()
+  if probeIsMoving() then
     return true
   end
-  if type(_G.IsMouseButtonDown) == "function" and _G.IsMouseButtonDown() then
+  if probeBoolean(_G.IsMouselooking) then
+    return true
+  end
+  if probeBoolean(_G.IsMouseButtonDown) then
     return true
   end
   return false
