@@ -4,14 +4,13 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-04-25
+
 - Fresh icons for party, raid, guild, and officer chats in the contacts list and conversation header.
 - Hover a message to reveal a small copy button in the corner of the bubble; click it to copy that message's text. Right-click → "Copy Text" still works the same as before.
 - The text field in the manual copy popup now matches the rest of the messenger — flat rounded background, no extra outline.
 - Right-click the class icon or the sender's name above an incoming message to open the standard player menu — invite to group, whisper, ignore, report, and so on, exactly like right-clicking a name in WoW's chat.
 - Fixed: your chosen notification sound, widget preview position, and widget preview auto-dismiss delay now stay selected when you open settings after a relog. Your actual sound and popup behavior were already using the saved value — the settings panel was just showing the defaults. The time format, time source, and message bubble color choices had the same display issue and are fixed too.
-
-## [1.2.0] - 2026-04-25
-
 - Party, raid, instance, guild, officer, and Battle.net group chats now show up in the messenger. Use the Whispers / Groups toggle at the bottom of the contacts list to switch, or hide Groups entirely in Behavior settings.
 - Group history survives /reload, logout, and character switches. Rows from other characters are labeled with the character name ("Jaina — Guild") in that character's class color, and are read-only so you can't send from the wrong alt.
 - Guild chat is shared across alts in the same guild — one conversation, with the guild tabard and name in the header. Alts in a different guild get their own row.

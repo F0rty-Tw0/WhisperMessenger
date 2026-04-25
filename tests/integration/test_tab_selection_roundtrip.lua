@@ -106,7 +106,6 @@ return function()
 
   -- Second scenario: start on Groups tab with nothing selected. Go to
   -- Whispers, select a whisper, come back to Groups. Should still be empty.
-  local activeKey2 = nil
   local paneSelectedKey2 = nil
   local function buildState2(key)
     if key == nil then
@@ -122,7 +121,6 @@ return function()
     conversation = nil,
     initialTabMode = "groups",
     onSelectConversation = function(conversationKey)
-      activeKey2 = conversationKey
       paneSelectedKey2 = conversationKey
       return buildState2(conversationKey)
     end,

@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
-local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")

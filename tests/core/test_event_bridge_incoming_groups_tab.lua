@@ -4,6 +4,9 @@
 
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
+-- lupa harness runs Lua 5.1 where table.unpack doesn't exist.
+local unpackArgs = table.unpack or unpack
+
 local WHISPER_ARGS = {
   "Hello there",
   "Arthas-Area52",
@@ -60,7 +63,7 @@ return function()
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
 
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpackArgs(WHISPER_ARGS))
 
     assert(#autoOpenCalls == 0, "expected zero onAutoOpen calls when on groups tab; got " .. #autoOpenCalls)
     assert(
@@ -100,7 +103,7 @@ return function()
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
 
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpackArgs(WHISPER_ARGS))
 
     assert(
       #autoOpenCalls == 1,

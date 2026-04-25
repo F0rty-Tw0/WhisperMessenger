@@ -325,9 +325,17 @@ function EventBridge.RouteGroupEvent(runtime, eventName, ...)
     return false
   end
 
-  -- Unpack the 17-arg Blizzard group chat signature
-  local text, playerName, _languageName, channelName, _playerName2, _specialFlags, _zoneChannelID, _channelIndex, channelBaseName, _languageID, lineID, guid, bnSenderID =
-    ...
+  -- Pull only the fields we use out of the 17-arg Blizzard group chat
+  -- signature (text, sender, _, channel, _, _, _, _, channelBaseName, _,
+  -- lineID, guid, bnSenderID, ...).
+  local args = { ... }
+  local text = args[1]
+  local playerName = args[2]
+  local channelName = args[4]
+  local channelBaseName = args[9]
+  local lineID = args[11]
+  local guid = args[12]
+  local bnSenderID = args[13]
 
   local conversationID = nil
   if eventName == "CHAT_MSG_BN_CONVERSATION" then

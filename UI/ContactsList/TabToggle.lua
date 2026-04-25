@@ -11,7 +11,6 @@ local applyVertexColor = UIHelpers.applyVertexColor
 local TabToggle = {}
 
 local TAB_HEIGHT = 24
-local TAB_PADDING_H = 8
 local BADGE_SIZE = 14
 local BADGE_GAP = 4
 local BADGE_CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
@@ -60,8 +59,6 @@ function TabToggle.Create(factory, parent, options)
   local INACTIVE_TEXT = Theme.COLORS.text_secondary
   local DIVIDER_COLOR = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
 
-  local parentWidth = UIHelpers.sizeValue(parent, "GetWidth", "width", 260)
-
   -- Container anchored at the bottom of the contacts pane
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetHeight(TAB_HEIGHT)
@@ -80,8 +77,6 @@ function TabToggle.Create(factory, parent, options)
   bg:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -1)
   bg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   applyColorTexture(bg, INACTIVE_BG)
-
-  local halfW = math.floor(parentWidth / 2)
 
   -- Whispers button
   local whispersBtn = factory.CreateFrame("Button", nil, frame)
