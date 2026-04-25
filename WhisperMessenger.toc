@@ -1,5 +1,5 @@
-## Interface: 120005, 11508, 20505, 50503
-## Interface-Mainline: 120001
+## Interface: 120005
+## Interface-Mainline: 120005
 ## Interface-Vanilla: 11508
 ## Interface-TBC: 20505
 ## Interface-Cata: 40402
@@ -8,7 +8,7 @@
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.2.1
+## Version: v1.2.2
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
