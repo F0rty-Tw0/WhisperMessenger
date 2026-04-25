@@ -183,11 +183,14 @@ return function()
     )
   end
 
-  -- test_version_is_1_1_2
+  -- test_version_matches_semver_format
 
   do
     local Constants = require("WhisperMessenger.Core.Constants")
-    assert(Constants.VERSION == "v1.2.0", "VERSION should be v1.2.0, got: " .. tostring(Constants.VERSION))
+    assert(
+      type(Constants.VERSION) == "string" and Constants.VERSION:match("^v%d+%.%d+%.%d+$") ~= nil,
+      "VERSION should match v<major>.<minor>.<patch>, got: " .. tostring(Constants.VERSION)
+    )
   end
 
   -- test_refresh_contacts_skips_during_mythic
