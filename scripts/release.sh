@@ -38,42 +38,57 @@ fi
 
 echo "Releasing WhisperMessenger ${TAG_VERSION}..."
 
-# Fetch live retail TOC interface number from Blizzard's patch CDN. Refuses to
-# release if unreachable so we never ship a stale retail interface after a WoW
-# patch. The other flavor lines (Vanilla, TBC, Cata, Mists) change rarely and
-# are bumped via the CI workflow_dispatch on release.yml (p3lim covers them).
-echo "Fetching live retail TOC interface number from Blizzard CDN..."
-TOC_RETAIL=$(python -c '
+# Fetch live TOC interface numbers from Blizzard's patch CDN, one per flavor
+# product. Refuses to release if any required product is unreachable so we
+# never ship a stale interface after a WoW patch. TBC and Cata Classic are
+# EOL — Blizzard no longer publishes a live `wow_tbc` or `wow_classic_cata`
+# product, so those lines are left at whatever the TOC currently has.
+fetch_toc() {
+  local product="$1"
+  python -c "
 import re, sys, urllib.request
 try:
-    with urllib.request.urlopen("https://us.version.battle.net/v2/products/wow/versions", timeout=15) as r:
-        text = r.read().decode("utf-8", errors="replace")
+    with urllib.request.urlopen('https://us.version.battle.net/v2/products/${product}/versions', timeout=15) as r:
+        text = r.read().decode('utf-8', errors='replace')
 except Exception as e:
-    sys.stderr.write("fetch failed: " + str(e) + "\n")
+    sys.stderr.write('fetch failed for ${product}: ' + str(e) + '\n')
     sys.exit(1)
 for line in text.splitlines():
-    if line.startswith("us|"):
-        m = re.search(r"\b(\d+)\.(\d+)\.(\d+)\.\d+\b", line)
+    if line.startswith('us|'):
+        m = re.search(r'\b(\d+)\.(\d+)\.(\d+)\.\d+\b', line)
         if m:
             a, b, c = m.groups()
-            print(f"{int(a)}{int(b):02d}{int(c):02d}")
+            print(f'{int(a)}{int(b):02d}{int(c):02d}')
             break
-') || {
-  echo "Error: could not reach https://us.version.battle.net/v2/products/wow/versions."
-  echo "       Fix network or release via GitHub Actions (workflow_dispatch on release.yml)."
+"
+}
+
+cdn_die() {
+  echo "Error: could not reach https://us.version.battle.net/ for product '$1'."
+  echo "       Fix network and retry, or release via GitHub Actions."
   exit 1
 }
 
-if [[ -z "$TOC_RETAIL" ]]; then
-  echo "Error: could not parse retail TOC number from Blizzard response."
+echo "Fetching live TOC interface numbers from Blizzard CDN..."
+TOC_RETAIL=$(fetch_toc wow) || cdn_die wow
+TOC_VANILLA=$(fetch_toc wow_classic_era) || cdn_die wow_classic_era
+TOC_MISTS=$(fetch_toc wow_classic) || cdn_die wow_classic
+
+if [[ -z "$TOC_RETAIL" || -z "$TOC_VANILLA" || -z "$TOC_MISTS" ]]; then
+  echo "Error: could not parse one or more TOC numbers from Blizzard response."
+  echo "       retail='${TOC_RETAIL}' vanilla='${TOC_VANILLA}' mists='${TOC_MISTS}'"
   exit 1
 fi
 
-CURRENT_TOC_RETAIL=$(grep -E "^## Interface: " WhisperMessenger.toc | awk '{print $3}')
-echo "Live retail TOC: ${TOC_RETAIL} (current in source: ${CURRENT_TOC_RETAIL})"
+echo "  retail (Mainline): ${TOC_RETAIL}"
+echo "  vanilla:           ${TOC_VANILLA}"
+echo "  mists:             ${TOC_MISTS}"
+echo "  TBC and Cata: skipped (Classic seasons EOL, no live CDN)"
 
 sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mainline: .*/## Interface-Mainline: ${TOC_RETAIL}/" WhisperMessenger.toc
+sed -i "s/^## Interface-Vanilla: .*/## Interface-Vanilla: ${TOC_VANILLA}/" WhisperMessenger.toc
+sed -i "s/^## Interface-Mists: .*/## Interface-Mists: ${TOC_MISTS}/" WhisperMessenger.toc
 
 # Update version in TOC
 sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
@@ -83,7 +98,11 @@ sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
 
 # Commit version + interface bump
 git add WhisperMessenger.toc Core/Constants.lua
-git commit -m "release: ${TAG_VERSION}"
+if git diff --cached --quiet; then
+  echo "No TOC or version changes to commit (already up to date)."
+else
+  git commit -m "release: ${TAG_VERSION}"
+fi
 
 # Create annotated tag
 git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"

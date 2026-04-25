@@ -52,43 +52,28 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update TOC interface numbers (manual dispatch)
-        if: github.event_name == 'workflow_dispatch'
-        uses: p3lim/toc-interface-updater@master
-        with:
-          flavor: |
-            retail
-            vanilla
-            tbc
-            mists
-
-      - name: Bump version and tag (manual dispatch)
+      - name: Bump version, update TOCs, tag (manual dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
+          set -euo pipefail
           INPUT_VERSION="${{ inputs.version }}"
-          if [[ ! "$INPUT_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Invalid version: '$INPUT_VERSION'. Expected 1.0.0 or v1.0.0"
-            exit 1
-          fi
           NORMALIZED_VERSION="${INPUT_VERSION#v}"
           TAG_VERSION="v${NORMALIZED_VERSION}"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
-          sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
-          git add WhisperMessenger.toc Core/Constants.lua
-          if git diff --cached --quiet; then
-            echo "Version already set to ${TAG_VERSION}, skipping commit"
-          else
-            git commit -m "release: ${TAG_VERSION}"
-            git push origin HEAD:master
-          fi
+
           if git show-ref --verify --quiet "refs/tags/${TAG_VERSION}"; then
-            echo "Tag ${TAG_VERSION} already exists, skipping tag creation"
-          else
-            git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
-            git push origin "${TAG_VERSION}"
+            echo "Tag ${TAG_VERSION} already exists; nothing to do."
+            exit 0
           fi
+
+          # Single source of truth for the version + TOC bump.
+          bash scripts/release.sh "$INPUT_VERSION"
+
+          # scripts/release.sh creates the commit + annotated tag locally;
+          # push both so the package step picks up the tag.
+          git push origin HEAD:master
+          git push origin "${TAG_VERSION}"
 
       - name: Package and release
         uses: BigWigsMods/packager@v2
