@@ -4,6 +4,11 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-04-26
+
+- Conversations with people on your ignore list now turn red and the Send button is greyed out, so you can't accidentally whisper them. The status line shows "Ignored". (Note: WoW does not tell the sender when the other person is ignoring them — only the reverse is detectable.)
+- Fixed: when you switched characters and sent a new whisper to someone you'd already messaged on another alt — without them having replied in between — the new message was visually attached to the old character's name and class icon. Each character's messages now correctly show their own name and class.
+
 ## [1.2.2] - 2026-04-25
 
 - Fixed: addon no longer shows as "Out of date" after WoW game updates.

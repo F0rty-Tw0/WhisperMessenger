@@ -17,6 +17,7 @@ StatusLine.AVAILABILITY_DISPLAY = {
   Lockdown = { label = "Unavailable", color = "dnd" },
   ["Send unavailable"] = { label = "Send unavailable", color = "dnd" },
   ["Send failed"] = { label = "Send failed", color = "dnd" },
+  Ignored = { label = "Ignored", color = "dnd" },
 }
 
 function StatusLine.Build(selectedContact, status)

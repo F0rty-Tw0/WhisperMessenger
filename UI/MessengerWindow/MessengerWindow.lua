@@ -255,8 +255,8 @@ function MessengerWindow.Create(factory, options)
     syncComposerSelectedContact = function(selectedContact)
       SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact)
     end,
-    setComposerEnabled = function(selectedContact, noticeText)
-      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
+    setComposerEnabled = function(selectedContact, noticeText, status)
+      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText, status)
     end,
     onSelectConversation = options.onSelectConversation,
     getSelectedContact = options.getSelectedContact,

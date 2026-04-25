@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
+local IgnoreCheck = ns.IgnoreCheck or require("WhisperMessenger.Transport.IgnoreCheck")
 local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
@@ -84,6 +85,20 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
     refreshWindow()
     return false
+  end
+
+  -- Block sends to characters on the player's own ignore list. WoW does not
+  -- expose "is the recipient ignoring me?" to the sender; this only catches
+  -- the symmetric case where the local player has ignored the contact.
+  -- BNet whispers use a separate block system (BNIsBlocked) and are skipped.
+  if payload.channel ~= "BN" then
+    local target = payload.displayName or payload.target
+    if IgnoreCheck.IsContactIgnored(runtime.friendListApi, target, payload.guid) then
+      appendBlockedOutgoing(runtime, payload, "Ignored")
+      runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Ignored")
+      refreshWindow()
+      return false
+    end
   end
 
   local sendAvailable

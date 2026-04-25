@@ -47,6 +47,7 @@ Persistence/SavedState/SavedState.lua
 
 Transport/Types.lua
 Transport/Availability.lua
+Transport/IgnoreCheck.lua
 Transport/WhisperGateway.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua

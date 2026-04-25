@@ -30,7 +30,7 @@ function SelectionController.Create(options)
     )
     refreshConversationPane(currentSelectedContact, currentConversation, currentStatus, currentNotice)
     syncComposerSelectedContact(currentSelectedContact)
-    setComposerEnabled(currentSelectedContact, currentNotice)
+    setComposerEnabled(currentSelectedContact, currentNotice, currentStatus)
   end
 
   local function buildSelectedState(item)

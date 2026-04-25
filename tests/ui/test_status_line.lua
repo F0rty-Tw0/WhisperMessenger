@@ -50,4 +50,13 @@ return function()
     assert(string.find(busyText, "Busy", 1, true), "should show 'Busy' label: " .. busyText)
     assert(busyColor == "dnd", "Busy dot color should be 'dnd', got: " .. tostring(busyColor))
   end
+
+  -- Ignored status should display as "Ignored" with dnd (red) color
+  do
+    local ignoredContact = { displayName = "Sylvanas" }
+    local ignoredStatus = { status = "Ignored", canWhisper = false }
+    local ignoredText, ignoredColor = StatusLine.Build(ignoredContact, ignoredStatus)
+    assert(string.find(ignoredText, "Ignored", 1, true), "should show 'Ignored' label: " .. ignoredText)
+    assert(ignoredColor == "dnd", "Ignored dot color should be 'dnd', got: " .. tostring(ignoredColor))
+  end
 end

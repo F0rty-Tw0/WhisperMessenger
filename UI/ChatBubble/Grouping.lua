@@ -21,6 +21,13 @@ function Grouping.ShouldGroup(prev, current)
   if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then
     return false
   end
+  -- Outgoing messages from different characters (alts) must not group, even
+  -- inside the time window. Otherwise the new character's bubble silently
+  -- inherits the previous group's "· <CharName>" suffix and class icon —
+  -- visible after a relog when no incoming reply has broken the group.
+  if prev.direction == "out" and (prev.senderName or "") ~= (current.senderName or "") then
+    return false
+  end
   if math.abs((current.sentAt or 0) - (prev.sentAt or 0)) > 120 then
     return false
   end

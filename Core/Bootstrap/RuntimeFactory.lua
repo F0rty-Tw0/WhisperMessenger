@@ -97,6 +97,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     availabilityByGUID = {},
     chatApi = options.chatApi or _G.C_ChatInfo or {},
     bnetApi = options.bnetApi or _G.C_BattleNet or {},
+    friendListApi = options.friendListApi or _G.C_FriendList or {},
     playerInfoByGUID = options.playerInfoByGUID or _G.GetPlayerInfoByGUID,
     localFaction = options.localFaction
       or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
