@@ -435,6 +435,53 @@ return function()
       return dialog
     end)
 
+    -- Simulate Blizzard's InputBoxTemplate textures: typical Retail builds
+    -- expose them both as `parentKey` attributes (`editBox.Left` / `.Middle` /
+    -- `.Right`) and as named globals (`StaticPopup1EditBoxLeft`, ...). Both
+    -- forms must be hidden — `GetRegions()` based suppression has been
+    -- observed to miss them in some clients.
+    local leftBorderTex = { shown = true, alpha = 1, frameType = "Texture" }
+    function leftBorderTex:Hide()
+      self.shown = false
+    end
+    function leftBorderTex:Show()
+      self.shown = true
+    end
+    function leftBorderTex:SetAlpha(v)
+      self.alpha = v
+    end
+    function leftBorderTex:GetAlpha()
+      return self.alpha
+    end
+    local middleBorderTex = { shown = true, alpha = 1, frameType = "Texture" }
+    middleBorderTex.Hide = leftBorderTex.Hide
+    middleBorderTex.Show = leftBorderTex.Show
+    middleBorderTex.SetAlpha = leftBorderTex.SetAlpha
+    middleBorderTex.GetAlpha = leftBorderTex.GetAlpha
+    local rightBorderTex = { shown = true, alpha = 1, frameType = "Texture" }
+    rightBorderTex.Hide = leftBorderTex.Hide
+    rightBorderTex.Show = leftBorderTex.Show
+    rightBorderTex.SetAlpha = leftBorderTex.SetAlpha
+    rightBorderTex.GetAlpha = leftBorderTex.GetAlpha
+    editBox.Left = leftBorderTex
+    editBox.Middle = middleBorderTex
+    editBox.Right = rightBorderTex
+    _G.StaticPopup1EditBoxLeft = leftBorderTex
+    _G.StaticPopup1EditBoxMiddle = middleBorderTex
+    _G.StaticPopup1EditBoxRight = rightBorderTex
+
+    -- Track DisableDrawLayer / EnableDrawLayer calls so we can prove the
+    -- editbox's BACKGROUND layer is suppressed while the popup is shown
+    -- (this is the belt to the parentKey suspenders — kills everything at
+    -- BACKGROUND, including border textures whose parentKey doesn't survive).
+    local layerStates = {}
+    function editBox:DisableDrawLayer(layer)
+      layerStates[layer] = "disabled"
+    end
+    function editBox:EnableDrawLayer(layer)
+      layerStates[layer] = "enabled"
+    end
+
     local copied = ContextMenu.CopyText("styled")
     assert(copied == true, "CopyText should open manual popup when clipboard APIs are unavailable")
     assert(dialog._wmRoundedBackground ~= nil, "manual popup should create dialog background styling")
@@ -442,8 +489,28 @@ return function()
       dialog._wmRoundedBackground.fills[1].shown == true,
       "manual popup dialog background should be active while shown"
     )
-    assert(editBox._wmManualCopyBorder ~= nil, "manual popup should add a bordered input style")
-    assert(editBox._wmManualCopyBorder.top.shown == true, "manual popup input border should be active while shown")
+    assert(
+      leftBorderTex.shown == false,
+      "InputBoxTemplate Left texture (parentKey/named global) must be hidden by manual-copy styling"
+    )
+    assert(middleBorderTex.shown == false, "InputBoxTemplate Middle texture must be hidden by manual-copy styling")
+    assert(rightBorderTex.shown == false, "InputBoxTemplate Right texture must be hidden by manual-copy styling")
+    assert(
+      layerStates.BACKGROUND == "disabled",
+      "manual-copy styling must DisableDrawLayer('BACKGROUND') on the editbox to nuke any leftover Blizzard border textures"
+    )
+    assert(
+      editBox._wmManualCopyBackground ~= nil,
+      "manual popup should give the input a flat rounded background (composer-style)"
+    )
+    assert(
+      editBox._wmManualCopyBackground.fills[1].shown == true,
+      "manual popup input background should be active while shown"
+    )
+    assert(
+      editBox._wmManualCopyBorder == nil,
+      "manual popup input must NOT draw a separate border — the rounded background carries the style"
+    )
     assert(editBox.width == 392, "manual popup should stretch editbox to near full dialog width")
     assert(button1._wmManualCopySkin ~= nil, "manual popup should style the OK button")
     assert(button1._wmManualCopySkin.fills[1].shown == true, "manual popup button skin should be active while shown")
@@ -469,7 +536,14 @@ return function()
       dialog._wmRoundedBackground.fills[1].shown == false,
       "manual popup dialog styling should be hidden after close"
     )
-    assert(editBox._wmManualCopyBorder.top.shown == false, "manual popup input border should be hidden after close")
+    assert(
+      editBox._wmManualCopyBackground.fills[1].shown == false,
+      "manual popup input background should be hidden after close"
+    )
+    assert(
+      layerStates.BACKGROUND == "enabled",
+      "manual-copy cleanup must EnableDrawLayer('BACKGROUND') so reused popups get their normal border back"
+    )
     assert(button1._wmManualCopySkin.fills[1].shown == false, "manual popup button skin should be hidden after close")
     assert(
       editBoxDecoration.shown == true,
@@ -490,8 +564,8 @@ return function()
       "manual popup dialog styling should stay inactive for reused generic popups"
     )
     assert(
-      editBox._wmManualCopyBorder.top.shown == false,
-      "manual popup input border should stay inactive for reused generic popups"
+      editBox._wmManualCopyBackground.fills[1].shown == false,
+      "manual popup input background should stay inactive for reused generic popups"
     )
     assert(
       button1._wmManualCopySkin.fills[1].shown == false,

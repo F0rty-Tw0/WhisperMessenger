@@ -175,4 +175,62 @@ return function()
     local result = SenderLabel.CreateSenderLabel(factory, contentFrame, message, 400, 0)
     assert(result.height == 18, "expected returned height to be 18, got " .. tostring(result.height))
   end
+
+  -- test_incoming_sender_label_right_click_opens_player_menu
+  -- Right-clicking the sender's name above an incoming bubble opens the WoW
+  -- context menu for that player.
+  do
+    local opened
+    local message = {
+      direction = "in",
+      kind = "user",
+      text = "yo",
+      sentAt = 4000,
+      playerName = "Sylvanas-Silvermoon",
+      guid = "Player-1-BBBB",
+      channel = "WOW",
+    }
+    local result = SenderLabel.CreateSenderLabel(factory, contentFrame, message, 400, 0, {
+      openPlayerMenu = function(msg, anchor)
+        opened = { message = msg, anchor = anchor }
+        return true
+      end,
+    })
+
+    assert(result.frame.mouseEnabled == true, "expected incoming sender label frame to be mouse-enabled")
+    local handler = result.frame.scripts and result.frame.scripts.OnMouseUp
+    assert(type(handler) == "function", "expected OnMouseUp handler on the sender label frame")
+
+    handler(result.frame, "LeftButton")
+    assert(opened == nil, "left-clicking the sender label must not open the player menu")
+
+    handler(result.frame, "RightButton")
+    assert(opened ~= nil, "right-clicking the sender label should open the player menu")
+    assert(opened.message == message, "expected the original message forwarded to the opener")
+    assert(opened.anchor == result.frame, "expected the label frame to be the menu anchor")
+  end
+
+  -- test_outgoing_sender_label_does_not_open_player_menu
+  do
+    local opened = false
+    local message = {
+      direction = "out",
+      kind = "user",
+      text = "no menu",
+      sentAt = 4100,
+      playerName = "Recipient",
+    }
+    local result = SenderLabel.CreateSenderLabel(factory, contentFrame, message, 400, 0, {
+      openPlayerMenu = function()
+        opened = true
+        return true
+      end,
+    })
+
+    local handler = result.frame.scripts and result.frame.scripts.OnMouseUp
+    if type(handler) == "function" then
+      handler(result.frame, "RightButton")
+    end
+    assert(opened == false, "outgoing sender label must not open a player menu")
+  end
 end

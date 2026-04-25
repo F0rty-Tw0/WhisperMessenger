@@ -48,57 +48,6 @@ function HeaderElements.createClassIcon(factory, headerFrame, selectedContact)
   return { frame = classIconFrame, texture = classIcon }
 end
 
--- Creates a frame rendering the player's actual guild crest (three-layer
--- tabard texture) anchored to the class-icon frame's position. Returns nil
--- when Blizzard's SmallGuildTabardTemplate is unavailable (test harness,
--- extreme Classic flavor), letting callers fall back to a static icon.
-function HeaderElements.createGuildCrest(headerFrame, classIconFrame)
-  if type(_G.CreateFrame) ~= "function" then
-    return nil
-  end
-
-  local ok, frame = pcall(_G.CreateFrame, "Frame", nil, headerFrame, "SmallGuildTabardTemplate")
-  if not ok or frame == nil then
-    return nil
-  end
-
-  if frame.SetSize then
-    frame:SetSize(Theme.LAYOUT.HEADER_ICON_SIZE, Theme.LAYOUT.HEADER_ICON_SIZE)
-  end
-  if frame.ClearAllPoints then
-    frame:ClearAllPoints()
-  end
-  if frame.SetAllPoints then
-    frame:SetAllPoints(classIconFrame)
-  end
-  if frame.SetFrameLevel and classIconFrame.GetFrameLevel then
-    frame:SetFrameLevel(classIconFrame:GetFrameLevel() + 1)
-  end
-  if frame.Hide then
-    frame:Hide()
-  end
-  return frame
-end
-
--- Refreshes the guild crest textures to match the player's current guild.
--- Safe when the crest frame is nil or Blizzard's populator is unavailable.
-function HeaderElements.refreshGuildCrest(crestFrame)
-  if crestFrame == nil then
-    return
-  end
-  local setter = _G.SetSmallGuildTabardTextures
-  if type(setter) ~= "function" then
-    return
-  end
-  local emblem = crestFrame.emblem
-  local background = crestFrame.background
-  local border = crestFrame.border
-  if emblem == nil or background == nil or border == nil then
-    return
-  end
-  pcall(setter, "player", emblem, background, border)
-end
-
 function HeaderElements.createContactName(headerFrame, selectedContact)
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   local nameLeft = Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + 10

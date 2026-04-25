@@ -93,6 +93,7 @@ UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
 UI/ChatBubble/SenderLabel.lua
+UI/ChatBubble/PlayerMenu.lua
 UI/ChatBubble/Layout.lua
 UI/ChatBubble/ChatBubble.lua
 UI/ContactsList/DataBuilder.lua

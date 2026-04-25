@@ -8,6 +8,27 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local BubbleIcon = {}
 
+local function defaultOpenPlayerMenu(message, anchor)
+  local PM = ns.ChatBubblePlayerMenu
+  if type(PM) ~= "table" or type(PM.Open) ~= "function" then
+    return false
+  end
+  return PM.Open(message, anchor)
+end
+
+local function attachPlayerMenuHandler(iconFrame, message, opener)
+  if type(iconFrame.EnableMouse) ~= "function" or type(iconFrame.SetScript) ~= "function" then
+    return
+  end
+  iconFrame:EnableMouse(true)
+  iconFrame:SetScript("OnMouseUp", function(self, button)
+    if button ~= "RightButton" then
+      return
+    end
+    opener(message, self)
+  end)
+end
+
 function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction, options)
   options = options or {}
   local bubbleIcon = UIHelpers.createCircularIcon(factory, parent, Theme.LAYOUT.BUBBLE_ICON_SIZE)
@@ -45,6 +66,10 @@ function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction,
 
   if icon.SetTexture then
     icon:SetTexture(iconPath)
+  end
+
+  if direction == "in" then
+    attachPlayerMenuHandler(iconFrame, message, options.openPlayerMenu or defaultOpenPlayerMenu)
   end
 
   return { frame = iconFrame, texture = icon }

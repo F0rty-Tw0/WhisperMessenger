@@ -34,14 +34,18 @@ end
 --- Map ChannelType constant to a representative icon texture.
 -- Returns nil for whisper-type channels (the class icon is used instead).
 local CHANNEL_ICONS = {
-  PARTY = "Interface\\LFGFrame\\LFGIcon-Dungeon",
-  INSTANCE_CHAT = "Interface\\LFGFrame\\LFGIcon-Dungeon",
-  RAID = "Interface\\LFGFrame\\LFGIcon-Raid",
-  GUILD = "Interface\\ICONS\\INV_Misc_Tabard_GuildTabard",
-  OFFICER = "Interface\\GossipFrame\\IncomingQuestIcon",
-  BN_CONVERSATION = "Interface\\FriendsFrame\\Battlenet-BattlenetIcon",
-  COMMUNITY = "Interface\\FriendsFrame\\Battlenet-BattlenetIcon",
-  CHANNEL = "Interface\\ChatFrame\\UI-ChatIcon-Channel",
+  -- These icons are from achievement / Cata talent art (3.0+ and 4.0+
+  -- respectively). Classic Era 1.15 and TBC Classic 2.5 may not bundle them,
+  -- in which case the missing-texture placeholder shows. Swap to vanilla-safe
+  -- paths (e.g. GROUPFRAME / TargetingFrame / Calendar) if that happens.
+  PARTY = "Interface\\ICONS\\Achievement_BG_winAB_5Cap",
+  INSTANCE_CHAT = "Interface\\ICONS\\Achievement_Arena_2v2_7",
+  RAID = "Interface\\ICONS\\Ability_Hunter_HunterVsWild",
+  GUILD = "Interface\\ICONS\\Achievement_PVP_G_09",
+  OFFICER = "Interface\\ICONS\\Achievement_PVP_O_06",
+  BN_CONVERSATION = "Interface\\ICONS\\Achievement_FeatsOfStrength_Gladiator_09",
+  COMMUNITY = "Interface\\ICONS\\Achievement_Reputation_ArgentChampion",
+  CHANNEL = "Interface\\ICONS\\Achievement_Profession_Fishing_OldManBarlowned",
 }
 
 local function ChannelIcon(channel)

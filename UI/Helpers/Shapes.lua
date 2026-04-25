@@ -83,44 +83,46 @@ function Shapes.createCircularIcon(factory, parent, size)
 end
 
 --- Create a rounded-rectangle background on a frame using fill rects + corner textures.
+--- @param drawLayer? string The DrawLayer for all fill / corner textures (default "BACKGROUND").
 --- Returns { fills = {textures}, corners = {textures}, setColor = function(colorTable) }
-function Shapes.createRoundedBackground(frame, cornerRadius)
+function Shapes.createRoundedBackground(frame, cornerRadius, drawLayer)
   local r = cornerRadius or 8
+  local layer = drawLayer or "BACKGROUND"
 
   local fills = {}
   local corners = {}
 
-  local bgCenter = frame:CreateTexture(nil, "BACKGROUND")
+  local bgCenter = frame:CreateTexture(nil, layer)
   bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", r, -r)
   bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, r)
   fills[#fills + 1] = bgCenter
 
-  local bgTop = frame:CreateTexture(nil, "BACKGROUND")
+  local bgTop = frame:CreateTexture(nil, layer)
   bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", r, 0)
   bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -r, 0)
   bgTop:SetHeight(r)
   fills[#fills + 1] = bgTop
 
-  local bgBottom = frame:CreateTexture(nil, "BACKGROUND")
+  local bgBottom = frame:CreateTexture(nil, layer)
   bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", r, 0)
   bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, 0)
   bgBottom:SetHeight(r)
   fills[#fills + 1] = bgBottom
 
-  local bgLeft = frame:CreateTexture(nil, "BACKGROUND")
+  local bgLeft = frame:CreateTexture(nil, layer)
   bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -r)
   bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, r)
   bgLeft:SetWidth(r)
   fills[#fills + 1] = bgLeft
 
-  local bgRight = frame:CreateTexture(nil, "BACKGROUND")
+  local bgRight = frame:CreateTexture(nil, layer)
   bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -r)
   bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, r)
   bgRight:SetWidth(r)
   fills[#fills + 1] = bgRight
 
   local function makeCorner(point)
-    local c = frame:CreateTexture(nil, "BACKGROUND")
+    local c = frame:CreateTexture(nil, layer)
     c:SetSize(r, r)
     c:SetPoint(point, frame, point, 0, 0)
     if c.SetTexture then

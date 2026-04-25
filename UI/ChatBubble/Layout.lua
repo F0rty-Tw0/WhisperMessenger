@@ -89,6 +89,9 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       isGrouped = grouped,
       fallbackClassTag = fallbackClassTag,
       iconFactory = pooledFactory,
+      -- Persistent (non-pooled) factory for child frames that must outlive
+      -- relayouts and have a stable type — e.g. the hover-copy Button.
+      persistentFactory = factory,
       onRevealCensored = options and options.onRevealCensored or nil,
     })
 

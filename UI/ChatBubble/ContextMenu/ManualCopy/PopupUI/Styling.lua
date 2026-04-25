@@ -15,14 +15,101 @@ local ButtonStyling = ns.ChatBubbleContextMenuManualCopyPopupUIButtonStyling
 local Styling = {}
 local MANUAL_COPY_DIALOG_NAME = "WHISPER_MESSENGER_BUBBLE_COPY_TEXT"
 
+-- Blizzard's `InputBoxTemplate` ships three border textures (Left / Middle /
+-- Right). In some Retail clients they are not returned by `frame:GetRegions()`
+-- — the `suppressFrameTextures` pass alone cannot reach them, and the
+-- thick default-WoW outline keeps showing through our flat rounded
+-- background. We hide them explicitly via `parentKey` and via the named
+-- globals, snapshot the originals, and restore on popup close.
+local INPUT_TEMPLATE_TEXTURE_KEYS = { "Left", "Middle", "Right" }
+
+local function collectInputTemplateTextures(editBox)
+  local found = {}
+  for _, key in ipairs(INPUT_TEMPLATE_TEXTURE_KEYS) do
+    local viaKey = editBox[key]
+    if type(viaKey) == "table" then
+      found[#found + 1] = viaKey
+    end
+    if type(editBox.GetName) == "function" then
+      local name = editBox:GetName()
+      if type(name) == "string" and name ~= "" then
+        local viaGlobal = _G[name .. key]
+        if type(viaGlobal) == "table" and viaGlobal ~= viaKey then
+          found[#found + 1] = viaGlobal
+        end
+      end
+    end
+  end
+  return found
+end
+
+local function suppressInputTemplateTextures(editBox)
+  if type(editBox) ~= "table" then
+    return
+  end
+  if editBox._wmManualCopyTemplateSnapshots ~= nil then
+    return
+  end
+  local snapshots = {}
+  for _, tex in ipairs(collectInputTemplateTextures(editBox)) do
+    local snap = { region = tex }
+    if type(tex.IsShown) == "function" then
+      snap.shown = tex:IsShown() == true
+    else
+      snap.shown = tex.shown == true
+    end
+    if type(tex.GetAlpha) == "function" then
+      snap.alpha = tex:GetAlpha()
+    else
+      snap.alpha = tex.alpha
+    end
+    if type(tex.SetAlpha) == "function" then
+      tex:SetAlpha(0)
+    end
+    if type(tex.Hide) == "function" then
+      tex:Hide()
+    end
+    snapshots[#snapshots + 1] = snap
+  end
+  editBox._wmManualCopyTemplateSnapshots = snapshots
+end
+
+local function restoreInputTemplateTextures(editBox)
+  if type(editBox) ~= "table" then
+    return
+  end
+  local snapshots = editBox._wmManualCopyTemplateSnapshots
+  if type(snapshots) ~= "table" then
+    return
+  end
+  for _, snap in ipairs(snapshots) do
+    local tex = snap.region
+    if type(tex) == "table" then
+      if snap.alpha ~= nil and type(tex.SetAlpha) == "function" then
+        tex:SetAlpha(snap.alpha)
+      end
+      if snap.shown and type(tex.Show) == "function" then
+        tex:Show()
+      elseif not snap.shown and type(tex.Hide) == "function" then
+        tex:Hide()
+      end
+    end
+  end
+  editBox._wmManualCopyTemplateSnapshots = nil
+end
+
 local function restoreManualCopyEditBox(editBox)
   if type(editBox) ~= "table" then
     return
   end
 
   StylingCommon.setPartsShown(editBox._wmManualCopyBackground, false)
-  StylingCommon.setPartsShown(editBox._wmManualCopyBorder, false)
   StylingCommon.restoreSuppressedFrameTextures(editBox, "_wmManualCopySuppressedRegions")
+  restoreInputTemplateTextures(editBox)
+  if editBox._wmManualCopyBgLayerDisabled and type(editBox.EnableDrawLayer) == "function" then
+    editBox:EnableDrawLayer("BACKGROUND")
+    editBox._wmManualCopyBgLayerDisabled = false
+  end
   editBox._wmManualCopyStyleActive = false
 
   local insets = editBox._wmManualCopyOriginalTextInsets
@@ -44,18 +131,21 @@ local function styleManualCopyEditBox(editBox)
     and type(editBox.CreateTexture) == "function"
     and type(UIHelpers.createRoundedBackground) == "function"
   then
-    editBox._wmManualCopyBackground = UIHelpers.createRoundedBackground(editBox, 6)
+    -- Build at "ARTWORK" so we can DisableDrawLayer("BACKGROUND") to nuke
+    -- the InputBoxTemplate's Left / Middle / Right border textures (which
+    -- some Retail clients keep rendering even after we Hide() them).
+    editBox._wmManualCopyBackground = UIHelpers.createRoundedBackground(editBox, 6, "ARTWORK")
     StylingCommon.setPartsShown(editBox._wmManualCopyBackground, false)
-  end
-  if editBox._wmManualCopyBorder == nil and type(UIHelpers.createBorderBox) == "function" then
-    editBox._wmManualCopyBorder = UIHelpers.createBorderBox(editBox, Theme.COLORS.divider, 1, "BORDER")
-    StylingCommon.setPartsShown(editBox._wmManualCopyBorder, false)
   end
 
   if editBox._wmManualCopyStyleActive ~= true then
     local skipSet = StylingCommon.collectTextureParts(editBox._wmManualCopyBackground, {})
-    StylingCommon.collectTextureParts(editBox._wmManualCopyBorder, skipSet)
     StylingCommon.suppressFrameTextures(editBox, "_wmManualCopySuppressedRegions", skipSet)
+    suppressInputTemplateTextures(editBox)
+    if type(editBox.DisableDrawLayer) == "function" then
+      editBox:DisableDrawLayer("BACKGROUND")
+      editBox._wmManualCopyBgLayerDisabled = true
+    end
 
     editBox._wmManualCopyOriginalTextColor = StylingCommon.captureTextColor(editBox)
     if type(editBox.GetTextInsets) == "function" then
@@ -81,10 +171,6 @@ local function styleManualCopyEditBox(editBox)
   if editBox._wmManualCopyBackground and editBox._wmManualCopyBackground.setColor and Theme.COLORS.bg_input then
     editBox._wmManualCopyBackground.setColor(Theme.COLORS.bg_input)
     StylingCommon.setPartsShown(editBox._wmManualCopyBackground, true)
-  end
-  if editBox._wmManualCopyBorder and Theme.COLORS.divider then
-    UIHelpers.applyBorderBoxColor(editBox._wmManualCopyBorder, Theme.COLORS.divider)
-    StylingCommon.setPartsShown(editBox._wmManualCopyBorder, true)
   end
   if editBox.SetTextInsets then
     editBox:SetTextInsets(10, 10, 6, 6)

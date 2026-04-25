@@ -131,4 +131,59 @@ return function()
       "expected TOPRIGHT relative point for outgoing, got " .. tostring(iconFrame.point[3])
     )
   end
+
+  -- test_incoming_icon_right_click_opens_player_menu
+  -- Right-clicking the class icon next to an incoming bubble opens the WoW
+  -- context menu for that player (same menu as right-clicking a name in the
+  -- default chat).
+  do
+    local bubbleFrame = makeBubbleFrame()
+    local opened
+    local msg = {
+      direction = "in",
+      classTag = "MAGE",
+      playerName = "Jaina-Proudmoore",
+      guid = "Player-1-AAAA",
+      channel = "WOW",
+    }
+    local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "in", {
+      openPlayerMenu = function(message, anchor)
+        opened = { message = message, anchor = anchor }
+        return true
+      end,
+    })
+
+    assert(result.frame.mouseEnabled == true, "expected the incoming icon frame to be mouse-enabled")
+    local handler = result.frame.scripts and result.frame.scripts.OnMouseUp
+    assert(type(handler) == "function", "expected OnMouseUp handler on the incoming icon frame")
+
+    handler(result.frame, "LeftButton")
+    assert(opened == nil, "left-clicking the icon must not open the player menu")
+
+    handler(result.frame, "RightButton")
+    assert(opened ~= nil, "right-clicking the icon should open the player menu")
+    assert(opened.message == msg, "expected the original message forwarded to the opener")
+    assert(opened.anchor == result.frame, "expected the icon frame as the menu anchor")
+  end
+
+  -- test_outgoing_icon_does_not_open_player_menu
+  -- The outgoing icon represents you — there is no remote player to target.
+  do
+    local bubbleFrame = makeBubbleFrame()
+    local opened = false
+    _G.UnitClass = nil
+    local msg = { direction = "out" }
+    local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "out", {
+      openPlayerMenu = function()
+        opened = true
+        return true
+      end,
+    })
+
+    local handler = result.frame.scripts and result.frame.scripts.OnMouseUp
+    if type(handler) == "function" then
+      handler(result.frame, "RightButton")
+    end
+    assert(opened == false, "outgoing icon must not open a player menu")
+  end
 end

@@ -11,7 +11,6 @@ local HeaderElements = ns.ConversationPaneHeaderElements
   or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel
   or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
-local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 local HeaderView = {}
 
@@ -53,12 +52,6 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   local classIconFrame = classIconResult.frame
   local classIcon = classIconResult.texture
 
-  -- Guild crest: native three-layer tabard frame, shown only when the
-  -- selected conversation is the GUILD channel. Falls back to the static
-  -- class-icon (which then carries Theme.ChannelIcon("GUILD")) when the
-  -- template is unavailable in the test harness.
-  local guildCrestFrame = HeaderElements.createGuildCrest(headerFrame, classIconFrame)
-
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
 
@@ -93,7 +86,6 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerFrame = headerFrame,
     headerClassIcon = classIcon,
     headerClassIconFrame = classIconFrame,
-    headerGuildCrest = guildCrestFrame,
     headerName = headerName,
     headerFactionIcon = headerFactionIcon,
     headerStatus = headerStatus,
@@ -109,14 +101,9 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     local hasContact = selectedContact ~= nil
     local vm = GroupHeaderViewModel.Build(selectedContact, conversation)
 
-    local isGuildChannel = hasContact and selectedContact.channel == ChannelType.GUILD
-    local useGuildCrest = isGuildChannel and view.headerGuildCrest ~= nil
-
     if view.headerClassIcon then
       local iconPath = nil
       if vm and vm.isGroup then
-        -- Group conversation: use the same channel icon as the contact row
-        -- (tabard for GUILD, party/raid/instance glyphs for others).
         iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel) or nil
       else
         iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
@@ -127,30 +114,10 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerClassIcon:SetTexture(Theme.TEXTURES.bnet_icon)
       end
     end
-    -- Always show the icon frame when a contact is selected; for groups it
-    -- carries the channel glyph, for whispers it carries the class icon.
-    -- Hide it only when the native guild crest is taking its place.
-    local showClassIcon = hasContact and not useGuildCrest
     if view.headerClassIconFrame and view.headerClassIconFrame.SetShown then
-      view.headerClassIconFrame:SetShown(showClassIcon)
+      view.headerClassIconFrame:SetShown(hasContact)
     elseif view.headerClassIcon then
-      view.headerClassIcon:SetShown(showClassIcon)
-    end
-
-    -- Guild crest: populate from the player's live tabard info and show
-    -- only for GUILD conversations. Falls back to the static channel icon
-    -- (handled above) when the template isn't available.
-    if view.headerGuildCrest then
-      if useGuildCrest then
-        HeaderElements.refreshGuildCrest(view.headerGuildCrest)
-        if view.headerGuildCrest.Show then
-          view.headerGuildCrest:Show()
-        end
-      else
-        if view.headerGuildCrest.Hide then
-          view.headerGuildCrest:Hide()
-        end
-      end
+      view.headerClassIcon:SetShown(hasContact)
     end
 
     if view.headerName then

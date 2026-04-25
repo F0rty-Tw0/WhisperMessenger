@@ -10,7 +10,29 @@ local setTextColor = UIHelpers.setTextColor
 
 local SenderLabel = {}
 
-function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth, yOffset)
+local function defaultOpenPlayerMenu(message, anchor)
+  local PM = ns.ChatBubblePlayerMenu
+  if type(PM) ~= "table" or type(PM.Open) ~= "function" then
+    return false
+  end
+  return PM.Open(message, anchor)
+end
+
+local function attachPlayerMenuHandler(frame, message, opener)
+  if type(frame.EnableMouse) ~= "function" or type(frame.SetScript) ~= "function" then
+    return
+  end
+  frame:EnableMouse(true)
+  frame:SetScript("OnMouseUp", function(self, button)
+    if button ~= "RightButton" then
+      return
+    end
+    opener(message, self)
+  end)
+end
+
+function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth, yOffset, options)
+  options = options or {}
   local frame = factory.CreateFrame("Frame", nil, contentFrame)
   frame:SetSize(paneWidth, 16)
   frame:ClearAllPoints()
@@ -76,6 +98,10 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
 
     timeFS:SetPoint("LEFT", channelAnchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
     frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+  end
+
+  if message.direction == "in" then
+    attachPlayerMenuHandler(frame, message, options.openPlayerMenu or defaultOpenPlayerMenu)
   end
 
   return { frame = frame, height = 18 }

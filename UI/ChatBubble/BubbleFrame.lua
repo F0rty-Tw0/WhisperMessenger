@@ -16,6 +16,147 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 
 local BubbleFrame = {}
 
+local COPY_BUTTON_SIZE = 14
+-- Icon floats outside the bubble corner: 5px past the side edge, 3px above
+-- the top edge.
+local COPY_BUTTON_EDGE_OFFSET = -5
+local COPY_BUTTON_TOP_OFFSET = 7
+local COPY_BUTTON_DIM_ALPHA = 0.45
+local COPY_BUTTON_TEXTURE = "Interface\\Buttons\\UI-GuildButton-PublicNote-Up"
+
+local function isMouseOver(region)
+  if region == nil or type(region.IsMouseOver) ~= "function" then
+    return false
+  end
+  local ok, value = pcall(region.IsMouseOver, region)
+  if ok then
+    return value == true
+  end
+  return false
+end
+
+local function ensureCopyButton(persistentFactory, frame)
+  local button = frame._copyButton
+  if button then
+    return button
+  end
+  if type(persistentFactory) ~= "table" or type(persistentFactory.CreateFrame) ~= "function" then
+    return nil
+  end
+
+  -- Must NOT come from the pooled factory: the FramePool reuses arbitrary
+  -- frames by ignoring requested frameType and parent, which would hijack a
+  -- recycled avatar/label and drop a non-Button (no OnClick) into our slot.
+  button = persistentFactory.CreateFrame("Button", nil, frame)
+  button._wmCopyButton = true
+  button:SetSize(COPY_BUTTON_SIZE, COPY_BUTTON_SIZE)
+  if button.SetFrameLevel and frame.GetFrameLevel then
+    local lvl = frame:GetFrameLevel() or 1
+    button:SetFrameLevel(lvl + 1)
+  end
+  if button.EnableMouse then
+    button:EnableMouse(true)
+  end
+
+  local tex = button:CreateTexture(nil, "OVERLAY")
+  if tex.SetAllPoints then
+    tex:SetAllPoints(button)
+  end
+  if tex.SetTexture then
+    tex:SetTexture(COPY_BUTTON_TEXTURE)
+  end
+  if tex.SetVertexColor then
+    tex:SetVertexColor(1, 1, 1, 1)
+  end
+  button._copyTexture = tex
+
+  if button.SetAlpha then
+    button:SetAlpha(COPY_BUTTON_DIM_ALPHA)
+  end
+  if button.Hide then
+    button:Hide()
+  end
+
+  if button.SetScript then
+    button:SetScript("OnEnter", function(self)
+      if self.SetAlpha then
+        self:SetAlpha(1)
+      end
+      local tip = _G.GameTooltip
+      if type(tip) == "table" and type(tip.SetOwner) == "function" and type(tip.SetText) == "function" then
+        tip:SetOwner(self, "ANCHOR_TOP")
+        tip:SetText("Copy text")
+        if type(tip.Show) == "function" then
+          tip:Show()
+        end
+      end
+    end)
+    button:SetScript("OnLeave", function(self)
+      if self.SetAlpha then
+        self:SetAlpha(COPY_BUTTON_DIM_ALPHA)
+      end
+      local tip = _G.GameTooltip
+      if type(tip) == "table" and type(tip.Hide) == "function" then
+        tip:Hide()
+      end
+      -- The user moved off the button; if they're not on the bubble either,
+      -- hide. Mirrors the bubble's own OnLeave guard so the button doesn't
+      -- linger after the cursor has fully left the bubble area.
+      if not isMouseOver(frame) then
+        self:Hide()
+      end
+    end)
+  end
+
+  frame._copyButton = button
+  return button
+end
+
+local function attachHoverCopy(persistentFactory, frame, message, copyText)
+  local button = ensureCopyButton(persistentFactory, frame)
+  if button == nil then
+    return
+  end
+  button:ClearAllPoints()
+  if message.direction == "out" then
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", -COPY_BUTTON_EDGE_OFFSET, COPY_BUTTON_TOP_OFFSET)
+  else
+    button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", COPY_BUTTON_EDGE_OFFSET, COPY_BUTTON_TOP_OFFSET)
+  end
+  if button.SetAlpha then
+    button:SetAlpha(COPY_BUTTON_DIM_ALPHA)
+  end
+  if button.Hide then
+    button:Hide()
+  end
+
+  if button.SetScript then
+    button:SetScript("OnClick", function()
+      local text = message.text
+      if type(text) ~= "string" or text == "" then
+        return
+      end
+      copyText(text)
+    end)
+  end
+
+  if frame.SetScript then
+    frame:SetScript("OnEnter", function()
+      if button.Show then
+        button:Show()
+      end
+    end)
+    frame:SetScript("OnLeave", function()
+      if isMouseOver(button) then
+        return
+      end
+      if button.Hide then
+        button:Hide()
+      end
+    end)
+  end
+end
+
 function BubbleFrame.CreateBubble(factory, parent, message, options)
   options = options or {}
   local paneWidth = options.paneWidth or 400
@@ -172,6 +313,13 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     if options.onRevealCensored then
       options.onRevealCensored()
     end
+  end
+
+  if kind ~= "system" then
+    local copyText = options.copyText or function(text)
+      return ContextMenu.CopyText(text)
+    end
+    attachHoverCopy(options.persistentFactory or factory, frame, message, copyText)
   end
 
   if frame.SetScript then
