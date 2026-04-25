@@ -4,6 +4,10 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-04-25
+
+- Fixed: addon no longer shows as "Out of date" after WoW game updates.
+
 ## [1.2.0] - 2026-04-25
 
 - Fresh icons for party, raid, guild, and officer chats in the contacts list and conversation header.

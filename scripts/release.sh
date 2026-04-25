@@ -38,13 +38,50 @@ fi
 
 echo "Releasing WhisperMessenger ${TAG_VERSION}..."
 
+# Fetch live retail TOC interface number from Blizzard's patch CDN. Refuses to
+# release if unreachable so we never ship a stale retail interface after a WoW
+# patch. The other flavor lines (Vanilla, TBC, Cata, Mists) change rarely and
+# are bumped via the CI workflow_dispatch on release.yml (p3lim covers them).
+echo "Fetching live retail TOC interface number from Blizzard CDN..."
+TOC_RETAIL=$(python -c '
+import re, sys, urllib.request
+try:
+    with urllib.request.urlopen("https://us.version.battle.net/v2/products/wow/versions", timeout=15) as r:
+        text = r.read().decode("utf-8", errors="replace")
+except Exception as e:
+    sys.stderr.write("fetch failed: " + str(e) + "\n")
+    sys.exit(1)
+for line in text.splitlines():
+    if line.startswith("us|"):
+        m = re.search(r"\b(\d+)\.(\d+)\.(\d+)\.\d+\b", line)
+        if m:
+            a, b, c = m.groups()
+            print(f"{int(a)}{int(b):02d}{int(c):02d}")
+            break
+') || {
+  echo "Error: could not reach https://us.version.battle.net/v2/products/wow/versions."
+  echo "       Fix network or release via GitHub Actions (workflow_dispatch on release.yml)."
+  exit 1
+}
+
+if [[ -z "$TOC_RETAIL" ]]; then
+  echo "Error: could not parse retail TOC number from Blizzard response."
+  exit 1
+fi
+
+CURRENT_TOC_RETAIL=$(grep -E "^## Interface: " WhisperMessenger.toc | awk '{print $3}')
+echo "Live retail TOC: ${TOC_RETAIL} (current in source: ${CURRENT_TOC_RETAIL})"
+
+sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}/" WhisperMessenger.toc
+sed -i "s/^## Interface-Mainline: .*/## Interface-Mainline: ${TOC_RETAIL}/" WhisperMessenger.toc
+
 # Update version in TOC
 sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
 
 # Update version in Constants.lua
 sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
 
-# Commit version bump
+# Commit version + interface bump
 git add WhisperMessenger.toc Core/Constants.lua
 git commit -m "release: ${TAG_VERSION}"
 

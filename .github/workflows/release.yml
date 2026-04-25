@@ -52,6 +52,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Update TOC interface numbers (manual dispatch)
+        if: github.event_name == 'workflow_dispatch'
+        uses: p3lim/toc-interface-updater@master
+        with:
+          flavor: |
+            retail
+            vanilla
+            tbc
+            mists
+
       - name: Bump version and tag (manual dispatch)
         if: github.event_name == 'workflow_dispatch'
         run: |
