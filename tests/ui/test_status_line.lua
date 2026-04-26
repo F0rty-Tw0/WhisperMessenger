@@ -50,5 +50,4 @@ return function()
     assert(string.find(busyText, "Busy", 1, true), "should show 'Busy' label: " .. busyText)
     assert(busyColor == "dnd", "Busy dot color should be 'dnd', got: " .. tostring(busyColor))
   end
-
 end

@@ -256,7 +256,10 @@ return function()
     assert(copyBtn ~= nil, "expected a copy button on first render")
     assert(copyBtn.frameStrata == "HIGH", "first render should leave button on HIGH strata")
     local raisedAfterFirst = copyBtn.raisedCount or 0
-    assert(raisedAfterFirst >= 1, "expected the button to be raised on first render, got " .. tostring(raisedAfterFirst))
+    assert(
+      raisedAfterFirst >= 1,
+      "expected the button to be raised on first render, got " .. tostring(raisedAfterFirst)
+    )
 
     -- Simulate a pool-reuse render: someone tampers with the strata between
     -- renders (mirrors the messenger window promoting itself to HIGH/MEDIUM
