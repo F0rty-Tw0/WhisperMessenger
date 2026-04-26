@@ -202,15 +202,15 @@ return function()
     return true
   end)
 
-  local bnPayload = {
+  local bnPayload2 = {
     conversationKey = "me::BN::thrall#1234",
     displayName = "Thrall-Nagrand",
     channel = "BN",
     bnetAccountID = 99,
     text = "bn hello",
   }
-  local bnResult = SendHandler.HandleSend(runtime, bnPayload, refreshWindow)
-  assert(bnResult == true, "expected BN send to go through")
+  local bnResult2 = SendHandler.HandleSend(runtime, bnPayload2, refreshWindow)
+  assert(bnResult2 == true, "expected BN send to go through")
   assert(#sentMessages == 1, "expected BN send to reach the gateway")
 
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
