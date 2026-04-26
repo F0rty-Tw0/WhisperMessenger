@@ -73,13 +73,30 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   optionsContentBg:SetAllPoints(optionsContentPane)
   applyTexture(optionsContentBg, theme.COLORS.bg_primary)
 
-  local OPTIONS_CONTENT_HEIGHT = 420
+  -- Initial content height before the per-tab measurement (in
+  -- WindowScripts/Buttons selectTab) runs. RefreshMetrics floors the
+  -- effective height at the viewport, so this just needs to be large
+  -- enough that the very first show — before the deferred remeasure
+  -- lands — doesn't clip the active tab. Per-tab dynamic sizing takes
+  -- over from there.
+  local OPTIONS_CONTENT_HEIGHT = 800
   local optionsScrollView = scrollView.Create(factory, optionsContentPane, {
     width = optionsContentWidth,
     height = optionsContentH,
     step = 24,
   })
   optionsScrollView.content:SetSize(optionsContentWidth, OPTIONS_CONTENT_HEIGHT)
+
+  -- The scrollview is built while the options panel is hidden, so its
+  -- initial Sync captured a 0 viewport height (hasOverflow=false, scrollbar
+  -- hidden, mouse wheel range=0). Re-Sync on Show so the cached geometry
+  -- reflects the live scrollFrame. The tab-aware sizer in WindowScripts
+  -- runs its own measurement on top of this via HookScript("OnShow").
+  if optionsPanel.SetScript then
+    optionsPanel:SetScript("OnShow", function()
+      scrollView.Sync(optionsScrollView)
+    end)
+  end
 
   return {
     optionsPanel = optionsPanel,

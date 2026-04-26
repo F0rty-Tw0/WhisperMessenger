@@ -15,10 +15,9 @@ function SelectionSync.SyncComposerSelectedContact(target, selectedContact)
   target.gameAccountName = selectedContact and selectedContact.gameAccountName or nil
 end
 
-function SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText, status)
+function SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
   local hasNotice = noticeText and noticeText ~= ""
-  local isIgnored = status and status.status == "Ignored"
-  local enabled = selectedContact ~= nil and not hasNotice and not isIgnored
+  local enabled = selectedContact ~= nil and not hasNotice
   if composer.setEnabled then
     composer.setEnabled(enabled)
   end

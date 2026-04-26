@@ -17,9 +17,10 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local BubbleFrame = {}
 
 local COPY_BUTTON_SIZE = 14
--- Icon floats outside the bubble corner: 5px past the side edge, 3px above
--- the top edge.
-local COPY_BUTTON_EDGE_OFFSET = -5
+-- Inside the bubble's top corner. The HIGH strata below keeps the button on
+-- top of the sender name + time text strip above the bubble even when the
+-- bubble is short and the name extends past the bubble's far edge.
+local COPY_BUTTON_EDGE_INSET = 5
 local COPY_BUTTON_TOP_OFFSET = 7
 local COPY_BUTTON_DIM_ALPHA = 0.45
 local COPY_BUTTON_TEXTURE = "Interface\\Buttons\\UI-GuildButton-PublicNote-Up"
@@ -47,13 +48,17 @@ local function ensureCopyButton(persistentFactory, frame)
   -- Must NOT come from the pooled factory: the FramePool reuses arbitrary
   -- frames by ignoring requested frameType and parent, which would hijack a
   -- recycled avatar/label and drop a non-Button (no OnClick) into our slot.
-  button = persistentFactory.CreateFrame("Button", nil, frame)
+  --
+  -- Parent the button to the bubble's PARENT (contentFrame), not the bubble
+  -- itself. As a sibling of the bubble, the button shares the bubble's draw
+  -- stratum directly — no parent-strata cap can demote it, and a higher
+  -- frame level than any bubble guarantees it always renders on top, even
+  -- when neighbouring bubbles overlap its top edge (grouped messages) or
+  -- the messenger window flips strata on click.
+  local buttonParent = (type(frame.GetParent) == "function" and frame:GetParent()) or frame
+  button = persistentFactory.CreateFrame("Button", nil, buttonParent)
   button._wmCopyButton = true
   button:SetSize(COPY_BUTTON_SIZE, COPY_BUTTON_SIZE)
-  if button.SetFrameLevel and frame.GetFrameLevel then
-    local lvl = frame:GetFrameLevel() or 1
-    button:SetFrameLevel(lvl + 1)
-  end
   if button.EnableMouse then
     button:EnableMouse(true)
   end
@@ -119,9 +124,24 @@ local function attachHoverCopy(persistentFactory, frame, message, copyText)
   end
   button:ClearAllPoints()
   if message.direction == "out" then
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", -COPY_BUTTON_EDGE_OFFSET, COPY_BUTTON_TOP_OFFSET)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", COPY_BUTTON_EDGE_INSET, COPY_BUTTON_TOP_OFFSET)
   else
-    button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", COPY_BUTTON_EDGE_OFFSET, COPY_BUTTON_TOP_OFFSET)
+    button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -COPY_BUTTON_EDGE_INSET, COPY_BUTTON_TOP_OFFSET)
+  end
+  -- Re-assert z-order on EVERY render. The messenger window flips its strata
+  -- between MEDIUM and HIGH on click (see WindowScripts/Frame/ScriptBindings),
+  -- and pool reuse means a recycled bubble frame may carry a stale level from
+  -- a previous role. Setting strata + level + Raise here keeps the icon on
+  -- top regardless of how the surrounding frame stack drifted.
+  if button.SetFrameStrata then
+    button:SetFrameStrata("HIGH")
+  end
+  if button.SetFrameLevel and frame.GetFrameLevel then
+    local lvl = frame:GetFrameLevel() or 1
+    button:SetFrameLevel(lvl + 10)
+  end
+  if button.Raise then
+    button:Raise()
   end
   if button.SetAlpha then
     button:SetAlpha(COPY_BUTTON_DIM_ALPHA)
@@ -150,6 +170,14 @@ local function attachHoverCopy(persistentFactory, frame, message, copyText)
       if isMouseOver(button) then
         return
       end
+      if button.Hide then
+        button:Hide()
+      end
+    end)
+    -- The button is now a sibling of the bubble, not a child — so hiding
+    -- the bubble (e.g. via FramePool.releaseAll) no longer auto-hides the
+    -- button. Wire OnHide so the button always disappears with its bubble.
+    frame:SetScript("OnHide", function()
       if button.Hide then
         button:Hide()
       end

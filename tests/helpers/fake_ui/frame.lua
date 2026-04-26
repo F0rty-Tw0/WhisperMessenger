@@ -379,6 +379,34 @@ local function makeCreateFrame()
       self.frameLevel = level
     end
 
+    function frame:Raise()
+      self.raisedCount = (self.raisedCount or 0) + 1
+    end
+
+    function frame:Lower()
+      self.loweredCount = (self.loweredCount or 0) + 1
+    end
+
+    function frame:GetParent()
+      return self.parent
+    end
+
+    function frame:SetParent(newParent)
+      if self.parent and self.parent.children then
+        for i = #self.parent.children, 1, -1 do
+          if self.parent.children[i] == self then
+            table.remove(self.parent.children, i)
+            break
+          end
+        end
+      end
+      self.parent = newParent
+      if newParent then
+        newParent.children = newParent.children or {}
+        table.insert(newParent.children, self)
+      end
+    end
+
     function frame:EnableMouse(value)
       self.mouseEnabled = value
     end

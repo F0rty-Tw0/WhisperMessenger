@@ -298,6 +298,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
   bottomSpacer:SetSize(1, PADDING)
   bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
+  frame._wmBottomMarker = bottomSpacer
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme

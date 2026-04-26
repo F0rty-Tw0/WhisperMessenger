@@ -7,6 +7,34 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView.ScrollView")
 
+-- Returns the visible tab's content extent (distance from the panel's top
+-- to the last laid-out widget's bottom) so the shared options scrollview
+-- can size its content frame per-tab. Each settings panel exposes a bottom
+-- marker via `frame._wmBottomMarker` — a 1×PADDING spacer anchored under
+-- the last control. The marker's bottom IS the panel's content bottom.
+-- Returns 0 when the frame chain hasn't been laid out yet (GetTop nil) so
+-- the caller can defer to the next frame and leave the previous size in
+-- place rather than collapsing to a clipped state.
+local function measurePanelContentHeight(panel)
+  if type(panel) ~= "table" then
+    return 0
+  end
+  local marker = panel._wmBottomMarker
+  if not marker or type(panel.GetTop) ~= "function" or type(marker.GetBottom) ~= "function" then
+    return 0
+  end
+  local panelTop = panel:GetTop()
+  local markerBottom = marker:GetBottom()
+  if type(panelTop) ~= "number" or type(markerBottom) ~= "number" then
+    return 0
+  end
+  local height = panelTop - markerBottom
+  if height <= 0 then
+    return 0
+  end
+  return height
+end
+
 local Buttons = {}
 
 -- Wire close, options, reset-window, reset-icon, clear-all-chats, and
@@ -228,6 +256,45 @@ function Buttons.WireButtons(refs, options)
     local function activeTextColor()
       return Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary
     end
+    -- Apply the visible tab's measured content height to the shared
+    -- scrollview. Touches HEIGHT only so the responsive width (driven by
+    -- RefreshMetrics on every window resize) stays intact. Returns true if
+    -- the measurement landed; false means layout wasn't resolved yet and
+    -- the caller should retry on the next frame.
+    local function applyVisibleTabContentHeight(visiblePanel)
+      if not visiblePanel or not optionsScrollView or not optionsScrollView.content then
+        return false
+      end
+      if type(optionsScrollView.content.SetHeight) ~= "function" then
+        return false
+      end
+      local contentHeight = measurePanelContentHeight(visiblePanel)
+      if contentHeight <= 0 then
+        return false
+      end
+      optionsScrollView.content:SetHeight(contentHeight)
+      if ScrollView and type(ScrollView.Sync) == "function" then
+        ScrollView.Sync(optionsScrollView)
+      end
+      return true
+    end
+
+    local function scheduleVisibleTabRemeasure(visiblePanel)
+      if not visiblePanel then
+        return
+      end
+      -- WoW resolves frame geometry on the next render frame, so a
+      -- measurement taken right after Show() can read nil GetTop. Schedule
+      -- a follow-up tick that lands after layout settles. C_Timer is
+      -- absent in fake_ui — the synchronous attempt above is the only
+      -- path the tests exercise.
+      if _G.C_Timer and type(_G.C_Timer.After) == "function" then
+        _G.C_Timer.After(0, function()
+          applyVisibleTabContentHeight(visiblePanel)
+        end)
+      end
+    end
+
     local function selectTab(index)
       for i, panel in ipairs(settingsPanels) do
         if panel and panel.Hide and panel.Show then
@@ -238,11 +305,16 @@ function Buttons.WireButtons(refs, options)
           end
         end
       end
+      local visiblePanel = settingsPanels[index]
+      if not applyVisibleTabContentHeight(visiblePanel) then
+        scheduleVisibleTabRemeasure(visiblePanel)
+      end
       -- Reset the shared options scroll position when switching tabs.
       -- Otherwise, scrolling within a long settings panel (e.g. Appearance)
       -- and then switching to a shorter panel leaves the new panel's content
       -- visually offset upward, so it "looks scrolled" even though there is
-      -- nothing to scroll.
+      -- nothing to scroll. SetVerticalScroll also re-Syncs the scrollbar
+      -- range so the new content height takes effect immediately.
       if optionsScrollView and ScrollView and ScrollView.SetVerticalScroll then
         ScrollView.SetVerticalScroll(optionsScrollView, 0)
       end
@@ -309,6 +381,38 @@ function Buttons.WireButtons(refs, options)
 
     -- Default: show first tab (General)
     selectTab(1)
+
+    -- The first selectTab(1) call happens while the options panel is still
+    -- hidden, so GetTop/GetHeight return nil and the measurement falls back
+    -- to the previous size. Re-run it on every OnShow so the first time the
+    -- user opens options the scroll content already matches the active tab.
+    if optionsPanel and type(optionsPanel.HookScript) == "function" then
+      optionsPanel:HookScript("OnShow", function()
+        for i, panel in ipairs(settingsPanels) do
+          if panel and type(panel.IsShown) == "function" and panel:IsShown() then
+            selectTab(i)
+            return
+          end
+        end
+      end)
+    end
+
+    -- Window resizes re-run refreshLayout via the existing OnSizeChanged the
+    -- settings panel sets in SettingsPanels.createSettingsPanel — that can
+    -- re-wrap labels and shift the bottom of content. HookScript stacks on
+    -- top of that handler so we re-measure the visible panel afterwards.
+    for _, panel in ipairs(settingsPanels) do
+      if panel and type(panel.HookScript) == "function" then
+        panel:HookScript("OnSizeChanged", function(self)
+          if type(self.IsShown) == "function" and not self:IsShown() then
+            return
+          end
+          if not applyVisibleTabContentHeight(self) then
+            scheduleVisibleTabRemeasure(self)
+          end
+        end)
+      end
+    end
   end
 end
 

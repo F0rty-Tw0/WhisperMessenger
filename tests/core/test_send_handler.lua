@@ -186,54 +186,13 @@ return function()
 
   runtime.isCompetitiveContent = nil
 
-  -- Test 7: Ignored contact blocks character whisper sends
+  -- Battle.net channel still routes through SendHandler when nothing blocks.
   rawset(runtime, "isChatMessagingLocked", function()
     return false
   end)
   rawset(_G, "InCombatLockdown", function()
     return false
   end)
-  runtime.friendListApi = {
-    IsIgnoredByGuid = function(guid)
-      return guid == "guid-blocked"
-    end,
-    IsIgnored = function(name)
-      return name == "Thrall-Nagrand"
-    end,
-  }
-  runtime.sendStatusByConversation = {}
-  runtime.pendingOutgoing = {}
-  refreshCalls = 0
-  sentMessages = {}
-
-  local ignoredPayload = {
-    conversationKey = "me::WOW::thrall-nagrand",
-    target = "Thrall-Nagrand",
-    displayName = "Thrall-Nagrand",
-    channel = "WOW",
-    text = "you up?",
-  }
-
-  local ignoredResult = SendHandler.HandleSend(runtime, ignoredPayload, refreshWindow)
-  assert(ignoredResult == false, "expected send to be blocked when contact is ignored")
-  assert(#sentMessages == 0, "should not send to ignored contact")
-  assert(refreshCalls == 1, "should refresh to surface ignored status")
-
-  local ignoredStatus = runtime.sendStatusByConversation[ignoredPayload.conversationKey]
-  assert(
-    ignoredStatus ~= nil and ignoredStatus.status == "Ignored",
-    "expected Ignored status, got: " .. tostring(ignoredStatus and ignoredStatus.status)
-  )
-  assert(ignoredStatus.canWhisper ~= true, "Ignored status must not be whisperable")
-
-  local ignoredConv = runtime.store.conversations[ignoredPayload.conversationKey]
-  assert(ignoredConv ~= nil, "expected conversation entry for blocked send")
-  local ignoredMsg = ignoredConv.messages[#ignoredConv.messages]
-  assert(ignoredMsg.delivery == "blocked", "expected blocked delivery marker")
-  assert(ignoredMsg.blockedReason == "Ignored", "expected Ignored blocked reason")
-  assert(ignoredMsg.text == "you up?", "expected blocked text preserved")
-
-  -- Test 8: Battle.net channel skips the character ignore check
   runtime.sendStatusByConversation = {}
   runtime.pendingOutgoing = {}
   refreshCalls = 0
@@ -243,34 +202,16 @@ return function()
     return true
   end)
 
-  local bnIgnoredPayload = {
+  local bnPayload = {
     conversationKey = "me::BN::thrall#1234",
     displayName = "Thrall-Nagrand",
     channel = "BN",
     bnetAccountID = 99,
     text = "bn hello",
   }
-  local bnIgnoredResult = SendHandler.HandleSend(runtime, bnIgnoredPayload, refreshWindow)
-  assert(bnIgnoredResult == true, "BN sends must bypass character ignore list")
-  assert(#sentMessages == 1, "expected BN send to go through")
-
-  -- Test 9: Non-ignored contact passes through normally
-  runtime.sendStatusByConversation = {}
-  runtime.pendingOutgoing = {}
-  refreshCalls = 0
-  sentMessages = {}
-  local cleanPayload = {
-    conversationKey = "me::WOW::jaina-dalaran",
-    target = "Jaina-Dalaran",
-    displayName = "Jaina-Dalaran",
-    channel = "WOW",
-    text = "hi",
-  }
-  local cleanResult = SendHandler.HandleSend(runtime, cleanPayload, refreshWindow)
-  assert(cleanResult == true, "non-ignored contact must send normally")
-  assert(#sentMessages == 1, "expected message to send")
-
-  runtime.friendListApi = nil
+  local bnResult = SendHandler.HandleSend(runtime, bnPayload, refreshWindow)
+  assert(bnResult == true, "expected BN send to go through")
+  assert(#sentMessages == 1, "expected BN send to reach the gateway")
 
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)

@@ -72,4 +72,61 @@ return function()
     assert(region1.shown == false, "expected FontString region to be hidden")
     assert(region2.shown == false, "expected Texture region to be hidden")
   end
+
+  -- test_release_all_clears_interactive_scripts
+  -- Regression: bubble frames wire OnEnter/OnLeave that show the hover copy
+  -- icon via a closure-captured button. When the pool recycles that frame
+  -- into a sender label or class-icon slot, the stale script still fires —
+  -- so hovering the player's name or class icon re-shows the orphaned copy
+  -- icon. releaseAll must null out interactive handlers before pushing the
+  -- frame back to the free list.
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local realFactory = FakeUI.NewFactory()
+
+    local frame = FramePool.acquireFrame(realFactory, contentFrame, "Frame", contentFrame)
+    local enterFired = false
+    local leaveFired = false
+    frame:SetScript("OnEnter", function()
+      enterFired = true
+    end)
+    frame:SetScript("OnLeave", function()
+      leaveFired = true
+    end)
+    frame:SetScript("OnMouseDown", function() end)
+    frame:SetScript("OnMouseUp", function() end)
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(frame:GetScript("OnEnter") == nil, "expected OnEnter cleared after releaseAll")
+    assert(frame:GetScript("OnLeave") == nil, "expected OnLeave cleared after releaseAll")
+    assert(frame:GetScript("OnMouseDown") == nil, "expected OnMouseDown cleared after releaseAll")
+    assert(frame:GetScript("OnMouseUp") == nil, "expected OnMouseUp cleared after releaseAll")
+    assert(enterFired == false and leaveFired == false, "scripts must not fire as a side-effect of release")
+  end
+
+  -- test_release_all_does_not_touch_onclick
+  -- WoW raises a warning when SetScript("OnClick", ...) is called on a
+  -- non-Button frame. Pooled frames are all "Frame" type, so releaseAll must
+  -- not poke OnClick at all — even to clear it.
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local realFactory = FakeUI.NewFactory()
+
+    local frame = FramePool.acquireFrame(realFactory, contentFrame, "Frame", contentFrame)
+    local touched = false
+    local realSetScript = frame.SetScript
+    frame.SetScript = function(self, eventName, handler)
+      if eventName == "OnClick" then
+        touched = true
+      end
+      return realSetScript(self, eventName, handler)
+    end
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(touched == false, "releaseAll must not call SetScript('OnClick', ...) on pooled Frames")
+  end
 end

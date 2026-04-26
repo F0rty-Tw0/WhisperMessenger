@@ -190,6 +190,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
   bottomSpacer:SetSize(1, PADDING)
   bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
+  -- Marker the options scrollview reads to size the scroll content to this
+  -- tab's actual extent. Anchored to the very last control plus a padding
+  -- spacer, so its bottom = panel content bottom.
+  frame._wmBottomMarker = bottomSpacer
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme

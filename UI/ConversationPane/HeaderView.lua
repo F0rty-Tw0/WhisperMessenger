@@ -6,8 +6,6 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
-local IGNORED_TINT = { 0.85, 0.25, 0.25, 1.0 }
-
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local HeaderElements = ns.ConversationPaneHeaderElements
   or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
@@ -122,17 +120,11 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
       view.headerClassIcon:SetShown(hasContact)
     end
 
-    local isIgnored = status and status.status == "Ignored"
-
     if view.headerName then
       if hasContact then
         local title = (vm and vm.title) or (selectedContact.displayName or "")
         view.headerName:SetText(title)
-        -- Ignored: paint the header name red so the conversation reads as
-        -- blocked at a glance. Otherwise tint by class (groups: owner class).
-        if isIgnored then
-          UIHelpers.applyColor(view.headerName, IGNORED_TINT)
-        elseif vm and vm.isGroup then
+        if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag
           if groupClassTag == nil and not selectedContact.ownerProfileId then
             groupClassTag = playerClassTag()
@@ -165,11 +157,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerStatus then
       if showStatusLine then
         view.headerStatus:SetText(statusText)
-        if isIgnored then
-          UIHelpers.applyColor(view.headerStatus, IGNORED_TINT)
-        else
-          UIHelpers.applyColor(view.headerStatus, Theme.COLORS.text_secondary)
-        end
+        UIHelpers.applyColor(view.headerStatus, Theme.COLORS.text_secondary)
         view.headerStatus:Show()
       else
         view.headerStatus:SetText("")

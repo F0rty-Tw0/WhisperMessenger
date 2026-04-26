@@ -19,19 +19,6 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
     return nil
   end
 
-  -- Ignored is an inherent contact state — surface it before the per-send
-  -- status cache or the live API availability so the conversation reads
-  -- as blocked even when the user hasn't tried to send yet. Lazy-require
-  -- because Transport/* loads after Model/* per the TOC.
-  if conversation and conversation.channel ~= "BN" then
-    local IgnoreCheck = ns.IgnoreCheck or require("WhisperMessenger.Transport.IgnoreCheck")
-    local target = conversation.displayName
-    if IgnoreCheck.IsContactIgnored(runtime.friendListApi, target, conversation.guid) then
-      local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-      return Availability.FromStatus("Ignored")
-    end
-  end
-
   if runtime.sendStatusByConversation[conversationKey] ~= nil then
     return runtime.sendStatusByConversation[conversationKey]
   end

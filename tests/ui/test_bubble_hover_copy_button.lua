@@ -2,6 +2,11 @@ local FakeUI = require("tests.helpers.fake_ui")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 
 local function findCopyButton(frame)
+  -- The button is now parented to the bubble's parent (sibling of the
+  -- bubble), but still tracked on the bubble via _copyButton.
+  if frame._copyButton then
+    return frame._copyButton
+  end
   for _, child in ipairs(frame.children) do
     if child._wmCopyButton == true then
       return child
@@ -184,6 +189,102 @@ return function()
     assert(hidden == true, "expected the tooltip to be hidden when leaving the copy button")
 
     _G.GameTooltip = savedTooltip
+  end
+
+  -- test_copy_button_renders_above_sender_name_and_time
+  -- Regression: on short bubbles the copy icon sits inside the bubble's top
+  -- corner, where the sender-name/timestamp strip above the bubble can pass
+  -- through. The button must render on a stratum/level above sibling label
+  -- frames so the name and time text never cover it.
+  do
+    local _, copyText = copySpy()
+    local incoming = BubbleFrame.CreateBubble(factory, parent, {
+      direction = "in",
+      kind = "user",
+      text = "hi",
+    }, { paneWidth = 400, copyText = copyText })
+
+    local inBtn = findCopyButton(incoming.frame)
+    assert(inBtn ~= nil, "expected a copy button on the incoming bubble")
+    -- Inside the bubble's top-right corner.
+    local inPoint, _inRel, inRelPoint, inX = inBtn:GetPoint()
+    assert(inPoint == "TOPRIGHT", "incoming button should anchor by its TOPRIGHT, got " .. tostring(inPoint))
+    assert(
+      inRelPoint == "TOPRIGHT",
+      "incoming button should anchor to the bubble's TOPRIGHT (inside), got " .. tostring(inRelPoint)
+    )
+    assert((inX or 0) <= 0, "expected non-positive X offset to keep the button inside the bubble")
+    assert(
+      inBtn.frameStrata == "HIGH",
+      "expected the copy button to live on the HIGH strata so it renders above the sender label and time text, got "
+        .. tostring(inBtn.frameStrata)
+    )
+
+    local _, copyText2 = copySpy()
+    local outgoing = BubbleFrame.CreateBubble(factory, parent, {
+      direction = "out",
+      kind = "user",
+      text = "hi",
+    }, { paneWidth = 400, copyText = copyText2 })
+
+    local outBtn = findCopyButton(outgoing.frame)
+    assert(outBtn ~= nil, "expected a copy button on the outgoing bubble")
+    local outPoint, _outRel, outRelPoint, outX = outBtn:GetPoint()
+    assert(outPoint == "TOPLEFT", "outgoing button should anchor by its TOPLEFT, got " .. tostring(outPoint))
+    assert(
+      outRelPoint == "TOPLEFT",
+      "outgoing button should anchor to the bubble's TOPLEFT (inside), got " .. tostring(outRelPoint)
+    )
+    assert((outX or 0) >= 0, "expected non-negative X offset to keep the button inside the bubble")
+    assert(outBtn.frameStrata == "HIGH", "expected the outgoing copy button on HIGH strata too")
+  end
+
+  -- test_copy_button_z_order_is_reasserted_every_render
+  -- Regression: every other message had its copy button drawn behind the
+  -- bubble after pool recycling promoted/demoted strata or shuffled levels.
+  -- attachHoverCopy must re-assert the button's strata + level + Raise() on
+  -- every render so the icon is unconditionally on top.
+  do
+    local _, copyText = copySpy()
+    local first = BubbleFrame.CreateBubble(factory, parent, {
+      direction = "in",
+      kind = "user",
+      text = "first render",
+    }, { paneWidth = 400, copyText = copyText })
+
+    local copyBtn = findCopyButton(first.frame)
+    assert(copyBtn ~= nil, "expected a copy button on first render")
+    assert(copyBtn.frameStrata == "HIGH", "first render should leave button on HIGH strata")
+    local raisedAfterFirst = copyBtn.raisedCount or 0
+    assert(raisedAfterFirst >= 1, "expected the button to be raised on first render, got " .. tostring(raisedAfterFirst))
+
+    -- Simulate a pool-reuse render: someone tampers with the strata between
+    -- renders (mirrors the messenger window promoting itself to HIGH/MEDIUM
+    -- when the user clicks on/off the window).
+    copyBtn:SetFrameStrata("MEDIUM")
+
+    -- Re-acquire on the same frame as if the pool returned it. CreateBubble
+    -- with the same parent + frame should call attachHoverCopy again, which
+    -- must re-assert HIGH and call Raise() again.
+    local sameFrameFactory = {
+      CreateFrame = function()
+        return first.frame
+      end,
+    }
+    BubbleFrame.CreateBubble(sameFrameFactory, parent, {
+      direction = "in",
+      kind = "user",
+      text = "second render",
+    }, { paneWidth = 400, copyText = copyText, persistentFactory = factory })
+
+    assert(
+      copyBtn.frameStrata == "HIGH",
+      "expected strata re-asserted to HIGH on every render, got " .. tostring(copyBtn.frameStrata)
+    )
+    assert(
+      (copyBtn.raisedCount or 0) > raisedAfterFirst,
+      "expected Raise() to be called again on re-render, got " .. tostring(copyBtn.raisedCount)
+    )
   end
 
   -- test_copy_button_uses_persistent_factory_not_the_pooled_factory

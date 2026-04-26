@@ -4,6 +4,14 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+## [1.2.4] - 2026-04-26
+
+- Fixed: the small copy button only appears when you hover the message itself. It used to also show when hovering the sender name above the message or the class icon next to it.
+- Fixed: the copy button always draws on top of the sender name, time, and surrounding bubbles — it could previously hide behind them on short messages or, intermittently, on every other message.
+- Fixed: scrolling in the Options panel now works on every tab and matches each tab's actual content. Tall tabs (Appearance, Notifications) scroll all the way to the Reset button at the bottom, and short tabs (General, Behavior) no longer leave empty scroll room below the last control.
+- Fixed: when you switched characters and sent a new whisper to someone you'd already messaged on another alt — without them having replied in between — the new message was visually attached to the old character's name and class icon. Each character's messages now correctly show their own name and class.
+- Removed the "Ignored" status badge and the auto-greyed Send button. The detection wasn't reliable across realms and locales, so the conversation no longer flips colour or blocks sending based on ignore state.
+
 ## [1.2.3] - 2026-04-26
 
 - Conversations with people on your ignore list now turn red and the Send button is greyed out, so you can't accidentally whisper them. The status line shows "Ignored". (Note: WoW does not tell the sender when the other person is ignoring them — only the reverse is detectable.)

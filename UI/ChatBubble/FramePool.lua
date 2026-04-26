@@ -58,12 +58,34 @@ function FramePool.hideAllRegions(frame)
   end
 end
 
+-- Interactive scripts wired by bubble frames (hover copy + right-click menu)
+-- and by sender-label / icon frames (player menu). Cleared on release so a
+-- recycled frame can't replay its old role's handlers in a new role.
+-- OnClick is omitted because pooled frames are all "Frame" type — not Button —
+-- and SetScript("OnClick", ...) on a non-Button raises a WoW warning.
+local POOLED_INTERACTIVE_SCRIPTS = {
+  "OnEnter",
+  "OnLeave",
+  "OnMouseDown",
+  "OnMouseUp",
+}
+
+local function clearInteractiveScripts(frame)
+  if type(frame.SetScript) ~= "function" then
+    return
+  end
+  for _, name in ipairs(POOLED_INTERACTIVE_SCRIPTS) do
+    frame:SetScript(name, nil)
+  end
+end
+
 function FramePool.releaseAll(contentFrame)
   local active = contentFrame._activeFrames
   local free = contentFrame._freeFrames
   for i = #active, 1, -1 do
     local f = active[i]
     FramePool.hideAllRegions(f)
+    clearInteractiveScripts(f)
     if f.Hide then
       f:Hide()
     end
