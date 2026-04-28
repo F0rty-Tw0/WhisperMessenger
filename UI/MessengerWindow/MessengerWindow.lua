@@ -16,8 +16,8 @@ local ContactsRuntime = ns.MessengerWindowContactsRuntime
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
 local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
-local SettingsRuntime = ns.MessengerWindowSettingsRuntime
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
+local SettingsPanelsBootstrap = ns.MessengerWindowSettingsPanelsBootstrap
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
 local SelectionSync = ns.MessengerWindowSelectionSync
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
 local SelectionController = ns.MessengerWindowSelectionController
@@ -101,7 +101,7 @@ function MessengerWindow.Create(factory, options)
   local contactsSearchClearButton = layout.contactsSearchClearButton
   local contactsSearchPlaceholder = layout.contactsSearchPlaceholder
   -- Compose settings panels (each inside its own frame within optionsContentPane)
-  local settingsRuntime = SettingsRuntime.Create(factory, {
+  local settingsRuntime = SettingsPanelsBootstrap.Create(factory, {
     parent = optionsScrollContent,
     settingsConfig = settingsConfig,
     storeConfig = options.storeConfig or {},

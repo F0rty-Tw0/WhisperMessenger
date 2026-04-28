@@ -13,6 +13,8 @@ local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
 local ContactsSection = ns.MessengerWindowLayoutContactsSection
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSection")
+local ContentSection = ns.MessengerWindowLayoutContentSection
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContentSection")
 local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
@@ -44,16 +46,10 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     Theme
   )
   local contactsWidth = sizing.contactsWidth
-  local contentWidth = sizing.contentWidth
-  local contentHeight = sizing.contentHeight
-  local threadHeight = sizing.threadHeight
   local searchHeight = sizing.searchHeight
   local searchMargin = sizing.searchMargin
   local searchTotalHeight = sizing.searchTotalHeight
   local contactsListHeight = sizing.contactsListHeight
-  local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
-  local strongDividerColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
-  local composerBorderColor = Theme.COLORS.composer_pane_border or strongDividerColor
 
   local contactsSection = ContactsSection.Build(factory, frame, sizing, {
     theme = Theme,
@@ -81,37 +77,15 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsHandleWidth = contactsSection.contactsHandleWidth
 
   local contentParent = frame.Inset or frame
-  local contentPane = factory.CreateFrame("Frame", nil, contentParent)
-  contentPane:SetSize(contentWidth, contentHeight)
-  contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)
-  -- Dual-anchor BOTTOMRIGHT to Inset with 5px right + 10px bottom margins
-  -- so neither the composer container nor the conversation header overlap
-  -- the window's border.
-  contentPane:SetPoint(
-    "BOTTOMRIGHT",
-    contentParent,
-    "BOTTOMRIGHT",
-    -Theme.LAYOUT.CONTENT_PANE_RIGHT_INSET,
-    Theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET
-  )
-
-  local threadPane = factory.CreateFrame("Frame", nil, contentPane)
-  threadPane:SetSize(contentWidth, threadHeight)
-  threadPane:SetPoint("TOPLEFT", contentPane, "TOPLEFT", 0, 0)
+  local contentSection = ContentSection.Build(factory, contentParent, contactsPane, sizing, {
+    theme = Theme,
+  })
+  local contentPane = contentSection.contentPane
+  local threadPane = contentSection.threadPane
+  local composerPane = contentSection.composerPane
+  local composerPaneBorder = contentSection.composerPaneBorder
+  local composerDivider = contentSection.composerDivider
   local headerDivider = nil
-
-  local composerPane = factory.CreateFrame("Frame", nil, contentPane)
-  composerPane:SetSize(contentWidth, Theme.COMPOSER_HEIGHT)
-  composerPane:SetPoint("BOTTOMLEFT", contentPane, "BOTTOMLEFT", 0, -4)
-  -- Dual-anchor both edges flush with contentPane so the composer container
-  -- extends to the window's bottom-right corner. The resize grip sits on
-  -- the outer frame at a higher frame level and visually overlays the
-  -- composer corner instead of pushing the pane inward.
-  composerPane:SetPoint("BOTTOMRIGHT", contentPane, "BOTTOMRIGHT", 0, -4)
-  threadPane:SetPoint("BOTTOMRIGHT", composerPane, "TOPRIGHT", 0, Theme.DIVIDER_THICKNESS)
-  local composerPaneBorder =
-    UIHelpers.createBorderBox(composerPane, composerBorderColor, Theme.DIVIDER_THICKNESS, "BORDER")
-  local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
   local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {
     contactsWidth = contactsWidth,
