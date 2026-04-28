@@ -83,10 +83,6 @@ function WindowRuntime.Create(options)
     badgeFilter = BadgeFilter,
   })
 
-  local function findLatestIncomingPreview(contacts)
-    return widgetPreview.findLatestIncomingPreview(contacts)
-  end
-
   local function buildLatestIncomingPreview(contacts)
     return widgetPreview.buildLatestIncomingPreview(contacts)
   end
