@@ -161,6 +161,7 @@ UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
+UI/Shared/SettingsControls/PanelRegistry.lua
 UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
