@@ -122,6 +122,7 @@ UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/Badge.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
+UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua
@@ -135,9 +136,11 @@ UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
 UI/MessengerWindow/LayoutBuilder/OptionsMenuButtons.lua
 UI/MessengerWindow/LayoutBuilder/OptionsPanelLayout.lua
+UI/MessengerWindow/LayoutBuilder/ContactsSection.lua
 UI/MessengerWindow/LayoutBuilder.lua
 UI/MessengerWindow/DragController.lua
 UI/MessengerWindow/ContactsController.lua
+UI/MessengerWindow/WindowScripts/Buttons/SettingsTabs.lua
 UI/MessengerWindow/WindowScripts/Buttons.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
@@ -163,6 +166,7 @@ UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/ScriptWiring.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
+UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
@@ -190,6 +194,7 @@ Core/Bootstrap/Diagnostics/MemoryReport.lua
 Core/Bootstrap/Diagnostics.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
+Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua

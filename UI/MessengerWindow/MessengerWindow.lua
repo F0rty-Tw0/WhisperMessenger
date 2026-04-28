@@ -14,6 +14,8 @@ local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMesseng
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsRuntime = ns.MessengerWindowContactsRuntime
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
+local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
 local SettingsRuntime = ns.MessengerWindowSettingsRuntime
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
 local SelectionSync = ns.MessengerWindowSelectionSync
@@ -28,7 +30,6 @@ local WindowGeometry = ns.MessengerWindowWindowGeometry
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local ScriptWiring = ns.MessengerWindowScriptWiring
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
-local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local RelayoutController = ns.MessengerWindowRelayoutController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring
@@ -122,14 +123,34 @@ function MessengerWindow.Create(factory, options)
   -- Contacts controller (manages rows, paging, scroll hooks)
   local handleContactSelected -- forward declaration
   local selectionController = nil
-  -- Per-tab remembered selection. Each tab remembers its last-selected
-  -- conversation key; switching tabs restores it (or clears when empty).
-  local tabSelections = { whispers = nil, groups = nil }
+  -- Per-tab remembered selection/restore policy. Keep it in a focused helper
+  -- so Create only wires runtime dependencies instead of owning the policy.
   local refreshSelection -- forward declaration (used by swap callback below)
   -- IMPORTANT: declare before the `= Create(...)` call so the callbacks
   -- inside the table constructor capture THIS local (not a global/nil).
   -- Lua local scope begins AFTER the declaration statement completes.
   local contactsRuntime
+  local tabSelectionMemory = TabSelectionMemory.Create({
+    getSelectedConversationKey = function()
+      return selectionController and selectionController.getSelectedConversationKey() or nil
+    end,
+    getCurrentContacts = function()
+      if contactsRuntime and contactsRuntime.getCurrentContacts then
+        return contactsRuntime.getCurrentContacts() or {}
+      end
+      return {}
+    end,
+    handleContactSelected = function(item)
+      if handleContactSelected then
+        handleContactSelected(item)
+      end
+    end,
+    refreshSelection = function(nextState)
+      if refreshSelection then
+        refreshSelection(nextState)
+      end
+    end,
+  })
   contactsRuntime = ContactsRuntime.Create(factory, {
     contactsPane = contactsPane,
     contactsView = contactsView,
@@ -137,65 +158,8 @@ function MessengerWindow.Create(factory, options)
     settingsConfig = settingsConfig,
     initialTabMode = options.initialTabMode,
     onTabModeChanged = options.onTabModeChanged,
-    onTabModeSwapSelection = function(oldMode, newMode)
-      -- Save the selection that was active in the old tab as a safety net —
-      -- onSelect below tracks this eagerly, but a snapshot here catches the
-      -- first tab switch in a session where onSelect may not have fired yet.
-      -- Only save if the live contact actually belongs to the old tab — if
-      -- the messenger opens on Groups with a whisper active (persisted-state
-      -- mismatch), we must not leak the whisper into tabSelections["groups"].
-      if selectionController then
-        local liveKey = selectionController.getSelectedConversationKey()
-        if liveKey ~= nil and contactsRuntime and contactsRuntime.getCurrentContacts then
-          for _, item in ipairs(contactsRuntime.getCurrentContacts() or {}) do
-            if item ~= nil and item.conversationKey == liveKey then
-              local isGroupItem = ContactsTabFilter.IsGroupChannel(item.channel)
-              local expectedMode = isGroupItem and "groups" or "whispers"
-              if expectedMode == oldMode then
-                tabSelections[oldMode] = liveKey
-              end
-              break
-            end
-          end
-        end
-      end
-      -- Restore the new tab's remembered selection (or clear). Look up the
-      -- full contact from getCurrentContacts() rather than the virtualized
-      -- row set — the remembered selection may be off-screen (below the
-      -- visible-row window) and wouldn't otherwise be findable.
-      local nextKey = tabSelections[newMode]
-      local matched = false
-      if nextKey and contactsRuntime and contactsRuntime.getCurrentContacts then
-        for _, item in ipairs(contactsRuntime.getCurrentContacts() or {}) do
-          if item ~= nil and item.conversationKey == nextKey then
-            if handleContactSelected then
-              handleContactSelected(item)
-            end
-            matched = true
-            break
-          end
-        end
-      end
-      if not matched and refreshSelection then
-        refreshSelection({})
-      end
-    end,
-    onSelect = function(item)
-      -- Remember the selection per-tab so tab switches can restore it.
-      -- Tracked on every select (not just tab switch) so the memory stays
-      -- fresh even when the user clicks a different conversation within
-      -- the same tab before switching. Key it by the item's OWN channel
-      -- rather than the current tab mode — whispers always belong to the
-      -- Whispers slot and groups to the Groups slot, regardless of which
-      -- tab the click came from.
-      if item and item.conversationKey then
-        local mode = ContactsTabFilter.IsGroupChannel(item.channel) and "groups" or "whispers"
-        tabSelections[mode] = item.conversationKey
-      end
-      if handleContactSelected then
-        handleContactSelected(item)
-      end
-    end,
+    onTabModeSwapSelection = tabSelectionMemory.onTabModeSwapSelection,
+    onSelect = tabSelectionMemory.onSelect,
     onPin = options.onPin,
     onRemove = options.onRemove,
     onReorder = options.onReorder,

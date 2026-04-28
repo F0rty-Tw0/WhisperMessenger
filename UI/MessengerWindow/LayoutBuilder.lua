@@ -11,8 +11,8 @@ local LayoutMetrics = ns.MessengerWindowLayoutMetrics
 local LayoutApply = ns.MessengerWindowLayoutApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Apply")
 local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
-local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
+local ContactsSection = ns.MessengerWindowLayoutContactsSection
+  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSection")
 local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
@@ -44,7 +44,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     Theme
   )
   local contactsWidth = sizing.contactsWidth
-  local contactsHeight = sizing.contactsHeight
   local contentWidth = sizing.contentWidth
   local contentHeight = sizing.contentHeight
   local threadHeight = sizing.threadHeight
@@ -52,66 +51,20 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local searchMargin = sizing.searchMargin
   local searchTotalHeight = sizing.searchTotalHeight
   local contactsListHeight = sizing.contactsListHeight
-  local contactsHandleWidth = LayoutMetrics.GetContactsResizeHandleWidth(Theme)
-  local _, _, searchClearButtonSize = LayoutMetrics.ContactsSearchMetrics(Theme)
-
   local dividerColor = Theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
   local strongDividerColor = { dividerColor[1], dividerColor[2], dividerColor[3], 1 }
   local composerBorderColor = Theme.COLORS.composer_pane_border or strongDividerColor
-  local contactsSectionBorderColor = Theme.COLORS.contacts_border_right or Theme.COLORS.contacts_divider or dividerColor
-  local strongContactsBorderColor = {
-    contactsSectionBorderColor[1],
-    contactsSectionBorderColor[2],
-    contactsSectionBorderColor[3],
-    contactsSectionBorderColor[4] or 1,
-  }
 
-  -- Stage 2 + 3 of BasicFrameTemplateWithInset migration: anchor content
-  -- inside the template's Inset frame and dual-anchor (TOPLEFT + BOTTOMLEFT)
-  -- so the contacts pane auto-fills Inset's height. Without dual-anchor the
-  -- pane uses a stale `initialState.height - TOP_BAR_HEIGHT` height that's
-  -- shorter than Inset, leaving a visible gap at the bottom of the window.
-  local contactsPane = factory.CreateFrame("Frame", nil, frame.Inset or frame)
-  contactsPane:SetSize(contactsWidth, contactsHeight)
-  -- Same 8px left + 24px top offset under both chromes — only the chrome
-  -- itself is conditional on Azeroth, layout sizes/positions stay uniform.
-  contactsPane:SetPoint("TOPLEFT", frame.Inset or frame, "TOPLEFT", 6, -Theme.LAYOUT.TOP_BAR_HEIGHT)
-  contactsPane:SetPoint("BOTTOMLEFT", frame.Inset or frame, "BOTTOMLEFT", 7, 6)
-
-  -- Contacts pane background and section border
-  local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
-  contactsPaneBg:SetAllPoints(contactsPane)
-  applyColorTexture(contactsPaneBg, Theme.COLORS.bg_secondary)
-  local contactsPaneEdges = UIHelpers.createBorderBox(
-    contactsPane,
-    strongContactsBorderColor,
-    Theme.DIVIDER_THICKNESS,
-    "BORDER",
-    { top = false, left = true, right = true, bottom = true }
-  )
-  local contactsHeaderDivider = contactsPane:CreateTexture(nil, "BORDER")
-  contactsHeaderDivider:SetPoint("TOPLEFT", contactsPane, "TOPLEFT", 0, 0)
-  contactsHeaderDivider:SetPoint("TOPRIGHT", contactsPane, "TOPRIGHT", 0, 0)
-  contactsHeaderDivider:SetHeight(Theme.DIVIDER_THICKNESS)
-  applyColorTexture(contactsHeaderDivider, dividerColor)
-  local contactsPaneBorder = {
-    top = contactsHeaderDivider,
-    left = contactsPaneEdges and contactsPaneEdges.left or nil,
-    right = contactsPaneEdges and contactsPaneEdges.right or nil,
-    bottom = contactsPaneEdges and contactsPaneEdges.bottom or nil,
-  }
-  local contactsRightBorder = contactsPaneBorder.right
-
-  local contactsSearch = ContactsSearchUI.Build(factory, contactsPane, {
-    contactsWidth = contactsWidth,
-    searchMargin = searchMargin,
-    searchHeight = searchHeight,
-    searchClearButtonSize = searchClearButtonSize,
-    dividerColor = dividerColor,
+  local contactsSection = ContactsSection.Build(factory, frame, sizing, {
     theme = Theme,
-    uiHelpers = UIHelpers,
-    applyColorTexture = applyColorTexture,
   })
+  local contactsPane = contactsSection.contactsPane
+  local contactsPaneBg = contactsSection.contactsPaneBg
+  local contactsPaneEdges = contactsSection.contactsPaneEdges
+  local contactsPaneBorder = contactsSection.contactsPaneBorder
+  local contactsRightBorder = contactsSection.contactsRightBorder
+  local contactsHeaderDivider = contactsSection.contactsHeaderDivider
+  local contactsSearch = contactsSection.contactsSearch
   local contactsSearchFrame = contactsSearch.frame
   local contactsSearchBg = contactsSearch.bg
   local searchBorderTop = contactsSearch.borderTop
@@ -122,66 +75,12 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsSearchPlaceholder = contactsSearch.placeholder
   local contactsSearchClearButton = contactsSearch.clearButton
   local contactsSearchClearLabel = contactsSearch.clearLabel
-
-  local contactsView = ScrollView.Create(factory, contactsPane, {
-    width = contactsWidth,
-    height = contactsListHeight,
-    point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight - 2 },
-    step = Theme.LAYOUT.CONTACT_ROW_HEIGHT,
-  })
-  -- Dual-anchor the scrollFrame's BOTTOMRIGHT to the pane so the viewport
-  -- stops exactly at the pane border regardless of any mismatch between the
-  -- calculated contactsListHeight and the pane's live dual-anchor height.
-  -- Without this, the scrollFrame extends a few px past the pane bottom and
-  -- the last row paints over the pane border into the window chrome.
-  if contactsView.scrollFrame and contactsView.scrollFrame.SetPoint then
-    contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", 0, 0)
-  end
+  local contactsView = contactsSection.contactsView
+  local contactsDivider = contactsSection.contactsDivider
+  local contactsResizeHandle = contactsSection.contactsResizeHandle
+  local contactsHandleWidth = contactsSection.contactsHandleWidth
 
   local contentParent = frame.Inset or frame
-  local contactsDivider = contentParent:CreateTexture(nil, "BORDER")
-  contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
-  contactsDivider:SetSize(Theme.DIVIDER_THICKNESS, contactsHeight)
-  applyColorTexture(contactsDivider, Theme.COLORS.contacts_divider or Theme.COLORS.divider)
-
-  -- Drag handle over the contacts divider for contacts-only resizing.
-  local contactsResizeHandle = factory.CreateFrame("Frame", nil, contentParent)
-  contactsResizeHandle:SetSize(contactsHandleWidth, contactsHeight)
-  contactsResizeHandle:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", -math.floor(contactsHandleWidth / 2), 0)
-  contactsResizeHandle:EnableMouse(true)
-  if contactsResizeHandle.SetFrameLevel and frame.GetFrameLevel then
-    contactsResizeHandle:SetFrameLevel(frame:GetFrameLevel() + 15)
-  end
-  local contactsResizeHandleBg = contactsResizeHandle:CreateTexture(nil, "BACKGROUND")
-  contactsResizeHandleBg:SetAllPoints(contactsResizeHandle)
-  applyColorTexture(contactsResizeHandleBg, { 0, 0, 0, 0 })
-  contactsResizeHandle.hoverBg = contactsResizeHandleBg
-
-  local resizeOutlineThickness = 2
-  local contactsResizeOutline = {}
-  contactsResizeOutline.top = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.top:SetPoint("TOPLEFT", contactsResizeHandle, "TOPLEFT", 0, 0)
-  contactsResizeOutline.top:SetPoint("TOPRIGHT", contactsResizeHandle, "TOPRIGHT", 0, 0)
-  contactsResizeOutline.top:SetHeight(resizeOutlineThickness)
-  contactsResizeOutline.bottom = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.bottom:SetPoint("BOTTOMLEFT", contactsResizeHandle, "BOTTOMLEFT", 0, 0)
-  contactsResizeOutline.bottom:SetPoint("BOTTOMRIGHT", contactsResizeHandle, "BOTTOMRIGHT", 0, 0)
-  contactsResizeOutline.bottom:SetHeight(resizeOutlineThickness)
-  contactsResizeOutline.left = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.left:SetPoint("TOPLEFT", contactsResizeHandle, "TOPLEFT", 0, 0)
-  contactsResizeOutline.left:SetPoint("BOTTOMLEFT", contactsResizeHandle, "BOTTOMLEFT", 0, 0)
-  contactsResizeOutline.left:SetWidth(resizeOutlineThickness)
-  contactsResizeOutline.right = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.right:SetPoint("TOPRIGHT", contactsResizeHandle, "TOPRIGHT", 0, 0)
-  contactsResizeOutline.right:SetPoint("BOTTOMRIGHT", contactsResizeHandle, "BOTTOMRIGHT", 0, 0)
-  contactsResizeOutline.right:SetWidth(resizeOutlineThickness)
-
-  for _, edge in pairs(contactsResizeOutline) do
-    applyColorTexture(edge, { 0, 0, 0, 0 })
-    edge:Hide()
-  end
-  contactsResizeHandle.outline = contactsResizeOutline
-
   local contentPane = factory.CreateFrame("Frame", nil, contentParent)
   contentPane:SetSize(contentWidth, contentHeight)
   contentPane:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", Theme.DIVIDER_THICKNESS, 0)

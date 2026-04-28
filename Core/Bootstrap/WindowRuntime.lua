@@ -25,6 +25,8 @@ local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler
 
 local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
+local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
 
 local WindowRuntime = {}
 
@@ -73,60 +75,22 @@ function WindowRuntime.Create(options)
     return bootstrap._inMythicContent == true
   end
 
-  local function findLatestIncomingPreview(contacts)
-    local storeConversations = runtime.store and runtime.store.conversations or {}
-    local savedConversations = accountState.conversations or {}
-    local latest = nil
-    for _, item in ipairs(contacts or {}) do
-      -- Group chats never produce a widget preview — per user requirement,
-      -- the popup is reserved for whispers.
-      if not BadgeFilter.IsGroupChannel(item.channel) then
-        local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
-        local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
-        local messageText = conversation and conversation.lastIncomingPreview or nil
-        if sentAt and type(messageText) == "string" and messageText ~= "" then
-          local senderName = conversation.lastIncomingSender or item.displayName or conversation.displayName
-          if type(senderName) == "string" and senderName ~= "" then
-            if latest == nil or sentAt > latest.sentAt then
-              latest = {
-                sentAt = sentAt,
-                senderName = senderName,
-                messageText = messageText,
-                classTag = item.classTag or conversation.classTag,
-              }
-            end
-          end
-        end
-      end
-    end
+  local widgetPreview = WidgetPreview.Create({
+    accountState = accountState,
+    runtimeStore = runtime.store or {},
+    badgeFilter = BadgeFilter,
+  })
 
-    return latest
+  local function findLatestIncomingPreview(contacts)
+    return widgetPreview.findLatestIncomingPreview(contacts)
   end
 
   local function buildLatestIncomingPreview(contacts)
-    if accountState.settings and accountState.settings.showWidgetMessagePreview == false then
-      return nil
-    end
-
-    local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt)
-    local latest = findLatestIncomingPreview(contacts)
-    if latest and acknowledgedAt and latest.sentAt <= acknowledgedAt then
-      return nil
-    end
-
-    return latest
+    return widgetPreview.buildLatestIncomingPreview(contacts)
   end
 
   local function acknowledgeLatestWidgetPreview(contacts)
-    local latest = findLatestIncomingPreview(contacts)
-    if latest == nil then
-      return
-    end
-
-    local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt) or 0
-    if latest.sentAt > acknowledgedAt then
-      accountState.widgetPreviewAcknowledgedAt = latest.sentAt
-    end
+    return widgetPreview.acknowledgeLatestWidgetPreview(contacts)
   end
 
   local coordinator = windowCoordinatorModule.Create({
