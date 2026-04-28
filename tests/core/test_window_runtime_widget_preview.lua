@@ -45,7 +45,10 @@ return function()
 
   preview.acknowledgeLatestWidgetPreview(contacts)
   assert(accountState.widgetPreviewAcknowledgedAt == 30, "acknowledge should persist the latest preview timestamp")
-  assert(preview.buildLatestIncomingPreview(contacts) == nil, "acknowledged preview should hide until a newer message arrives")
+  assert(
+    preview.buildLatestIncomingPreview(contacts) == nil,
+    "acknowledged preview should hide until a newer message arrives"
+  )
 
   accountState.conversations["wow::jaina"].lastIncomingAt = 31
   accountState.conversations["wow::jaina"].lastIncomingPreview = "Meet by the bank."

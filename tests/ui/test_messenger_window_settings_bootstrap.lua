@@ -1,7 +1,6 @@
 -- focused settings-panels bootstrap regression
 local FakeUI = require("tests.helpers.fake_ui")
-local SettingsPanelsBootstrap =
-  require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
+local SettingsPanelsBootstrap = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
 
 return function()
   local factory = FakeUI.NewFactory()
