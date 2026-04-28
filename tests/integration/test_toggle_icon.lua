@@ -86,10 +86,7 @@ return function()
   assert(runtime.window.frame.shown == true)
   assert(runtime.icon.previewFrame.shown == false, "expected opening chat to clear the preview")
   runtime.refreshWindow()
-  assert(
-    runtime.icon.previewFrame.shown == false,
-    "expected cleared preview to stay hidden until a newer message arrives"
-  )
+  assert(runtime.icon.previewFrame.shown == false, "expected cleared preview to stay hidden until a newer message arrives")
   runtime.icon.frame.scripts.OnClick(runtime.icon.frame)
   assert(runtime.window.frame.shown == false)
 
@@ -115,10 +112,7 @@ return function()
 
   runtime.accountState.settings.showWidgetMessagePreview = false
   runtime.refreshWindow()
-  assert(
-    runtime.icon.previewFrame.shown == false,
-    "expected preview to hide when widget message preview setting is disabled"
-  )
+  assert(runtime.icon.previewFrame.shown == false, "expected preview to hide when widget message preview setting is disabled")
   runtime.accountState.settings.showWidgetMessagePreview = true
   runtime.refreshWindow()
   assert(runtime.icon.previewSenderLabel.text == "Jaina-Proudmoore")
@@ -128,10 +122,7 @@ return function()
   runtime.icon.previewDismissButton.scripts.OnClick(runtime.icon.previewDismissButton)
   assert(runtime.icon.previewFrame.shown == false, "expected dismiss button to hide the preview")
   runtime.refreshWindow()
-  assert(
-    runtime.icon.previewFrame.shown == false,
-    "expected dismissed preview to stay hidden until a newer message arrives"
-  )
+  assert(runtime.icon.previewFrame.shown == false, "expected dismissed preview to stay hidden until a newer message arrives")
   runtime.accountState.conversations["wow::WOW::jaina-proudmoore"].lastIncomingAt = 41
   runtime.refreshWindow()
   assert(runtime.icon.previewSenderLabel.text == "Jaina-Proudmoore")

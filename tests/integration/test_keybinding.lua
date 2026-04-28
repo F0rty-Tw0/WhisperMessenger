@@ -36,10 +36,7 @@ return function()
   local Bootstrap = ns.Bootstrap
 
   -- 1. Binding name is set at file-load time (before Initialize)
-  assert(
-    _G.BINDING_NAME_WHISPERMESSENGER_TOGGLE == "Toggle Window",
-    "expected BINDING_NAME_WHISPERMESSENGER_TOGGLE to be 'Toggle Window'"
-  )
+  assert(_G.BINDING_NAME_WHISPERMESSENGER_TOGGLE == "Toggle Window", "expected BINDING_NAME_WHISPERMESSENGER_TOGGLE to be 'Toggle Window'")
 
   -- 2. Global toggle function exists at file-load time (before Initialize)
   assert(type(_G.WhisperMessenger_Toggle) == "function", "expected global WhisperMessenger_Toggle function")

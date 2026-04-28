@@ -20,10 +20,7 @@ return function()
     assert(result ~= nil, "expected result table")
     assert(result.frame ~= nil, "expected result.frame")
     assert(result.texture ~= nil, "expected result.texture")
-    assert(
-      result.texture.texturePath == Theme.ClassIcon("DRUID"),
-      "expected DRUID class icon, got " .. tostring(result.texture.texturePath)
-    )
+    assert(result.texture.texturePath == Theme.ClassIcon("DRUID"), "expected DRUID class icon, got " .. tostring(result.texture.texturePath))
   end
 
   -- test_creates_icon_for_incoming_without_class_uses_bnet
@@ -32,10 +29,7 @@ return function()
     local msg = { direction = "in" }
     local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "in", {})
     assert(result ~= nil, "expected result")
-    assert(
-      result.texture.texturePath == Theme.TEXTURES.bnet_icon,
-      "expected bnet_icon fallback, got " .. tostring(result.texture.texturePath)
-    )
+    assert(result.texture.texturePath == Theme.TEXTURES.bnet_icon, "expected bnet_icon fallback, got " .. tostring(result.texture.texturePath))
   end
 
   -- test_creates_icon_for_incoming_with_fallback_class_tag
@@ -89,10 +83,7 @@ return function()
     end
     local msg = { direction = "out" }
     local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "out", {})
-    assert(
-      result.texture.texturePath == Theme.ClassIcon("PALADIN"),
-      "expected live PALADIN fallback, got " .. tostring(result.texture.texturePath)
-    )
+    assert(result.texture.texturePath == Theme.ClassIcon("PALADIN"), "expected live PALADIN fallback, got " .. tostring(result.texture.texturePath))
     _G.UnitClass = nil
   end
 
@@ -104,14 +95,8 @@ return function()
     local iconFrame = result.frame
     assert(iconFrame.point ~= nil, "expected point set on icon frame")
     -- point[1]=anchorPoint, point[2]=relativeFrame, point[3]=relativePoint
-    assert(
-      iconFrame.point[1] == "TOPRIGHT",
-      "expected TOPRIGHT anchor for incoming, got " .. tostring(iconFrame.point[1])
-    )
-    assert(
-      iconFrame.point[3] == "TOPLEFT",
-      "expected TOPLEFT relative point for incoming, got " .. tostring(iconFrame.point[3])
-    )
+    assert(iconFrame.point[1] == "TOPRIGHT", "expected TOPRIGHT anchor for incoming, got " .. tostring(iconFrame.point[1]))
+    assert(iconFrame.point[3] == "TOPLEFT", "expected TOPLEFT relative point for incoming, got " .. tostring(iconFrame.point[3]))
   end
 
   -- test_icon_positioned_right_of_bubble_for_outgoing
@@ -122,14 +107,8 @@ return function()
     local result = BubbleIcon.CreateIcon(factory, parent, bubbleFrame, msg, "out", {})
     local iconFrame = result.frame
     assert(iconFrame.point ~= nil, "expected point set on icon frame")
-    assert(
-      iconFrame.point[1] == "TOPLEFT",
-      "expected TOPLEFT anchor for outgoing, got " .. tostring(iconFrame.point[1])
-    )
-    assert(
-      iconFrame.point[3] == "TOPRIGHT",
-      "expected TOPRIGHT relative point for outgoing, got " .. tostring(iconFrame.point[3])
-    )
+    assert(iconFrame.point[1] == "TOPLEFT", "expected TOPLEFT anchor for outgoing, got " .. tostring(iconFrame.point[1]))
+    assert(iconFrame.point[3] == "TOPRIGHT", "expected TOPRIGHT relative point for outgoing, got " .. tostring(iconFrame.point[3]))
   end
 
   -- test_incoming_icon_right_click_opens_player_menu

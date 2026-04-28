@@ -38,29 +38,10 @@ return function()
       accountState = { settings = { playSoundOnWhisper = true } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
     local soundPlayed = getSoundPlayed()
-    assert(
-      soundPlayed == 3081,
-      "test_incoming_whisper_plays_sound_when_enabled: expected sound 3081, got " .. tostring(soundPlayed)
-    )
+    assert(soundPlayed == 3081, "test_incoming_whisper_plays_sound_when_enabled: expected sound 3081, got " .. tostring(soundPlayed))
   end
 
   -- test_incoming_whisper_no_sound_when_disabled
@@ -78,29 +59,10 @@ return function()
       accountState = { settings = { playSoundOnWhisper = false } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
     local soundPlayed = getSoundPlayed()
-    assert(
-      soundPlayed == nil,
-      "test_incoming_whisper_no_sound_when_disabled: expected no sound, got " .. tostring(soundPlayed)
-    )
+    assert(soundPlayed == nil, "test_incoming_whisper_no_sound_when_disabled: expected no sound, got " .. tostring(soundPlayed))
   end
 
   -- test_outgoing_whisper_does_not_play_sound
@@ -119,29 +81,10 @@ return function()
       accountState = { settings = { playSoundOnWhisper = true } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER_INFORM",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
     local soundPlayed = getSoundPlayed()
-    assert(
-      soundPlayed == nil,
-      "test_outgoing_whisper_does_not_play_sound: expected no sound, got " .. tostring(soundPlayed)
-    )
+    assert(soundPlayed == nil, "test_outgoing_whisper_does_not_play_sound: expected no sound, got " .. tostring(soundPlayed))
   end
 
   rawset(_G, "PlaySound", nil)

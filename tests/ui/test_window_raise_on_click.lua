@@ -80,8 +80,7 @@ return function()
     onMouseDown(h.frame, "LeftButton")
     assert(
       h.frame.frameStrata == "HIGH",
-      "expected OnMouseDown to promote strata to HIGH so the window sits above other windows; got "
-        .. tostring(h.frame.frameStrata)
+      "expected OnMouseDown to promote strata to HIGH so the window sits above other windows; got " .. tostring(h.frame.frameStrata)
     )
     assert(h.getRaiseCalls() == 1, "expected OnMouseDown to call frame:Raise() within the promoted strata")
   end
@@ -99,8 +98,7 @@ return function()
     onLeave(h.frame)
     assert(
       h.frame.frameStrata == "HIGH",
-      "expected strata to stay HIGH on mouse-leave — demotion should wait for an outside click; got "
-        .. tostring(h.frame.frameStrata)
+      "expected strata to stay HIGH on mouse-leave — demotion should wait for an outside click; got " .. tostring(h.frame.frameStrata)
     )
   end
 
@@ -117,10 +115,7 @@ return function()
     assert(h.frame.frameStrata == "HIGH", "precondition: window promoted after click")
 
     h.scripts.OnLeave(h.frame)
-    assert(
-      h.frame.frameStrata == "HIGH",
-      "expected strata to stay HIGH while composer retains keyboard focus; got " .. tostring(h.frame.frameStrata)
-    )
+    assert(h.frame.frameStrata == "HIGH", "expected strata to stay HIGH while composer retains keyboard focus; got " .. tostring(h.frame.frameStrata))
   end
 
   -- Mouse-over alone (no click) must NOT demote strata. Hovering over the
@@ -136,8 +131,7 @@ return function()
     h.scripts.OnLeave(h.frame)
     assert(
       h.frame.frameStrata == "HIGH",
-      "expected strata to stay HIGH on mouse-leave alone (demote only on outside click); got "
-        .. tostring(h.frame.frameStrata)
+      "expected strata to stay HIGH on mouse-leave alone (demote only on outside click); got " .. tostring(h.frame.frameStrata)
     )
   end
 
@@ -152,15 +146,9 @@ return function()
     -- Pretend the mouse moved off our frame and the user clicked elsewhere.
     h.frame.mouseOver = false
     assert(type(h.scripts.OnEvent) == "function", "expected OnEvent handler on frame to listen for GLOBAL_MOUSE_DOWN")
-    assert(
-      h.frame:IsEventRegistered("GLOBAL_MOUSE_DOWN"),
-      "expected frame to register GLOBAL_MOUSE_DOWN for outside-click demotion"
-    )
+    assert(h.frame:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "expected frame to register GLOBAL_MOUSE_DOWN for outside-click demotion")
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
-    assert(
-      h.frame.frameStrata == "MEDIUM",
-      "expected outside click to demote strata to MEDIUM; got " .. tostring(h.frame.frameStrata)
-    )
+    assert(h.frame.frameStrata == "MEDIUM", "expected outside click to demote strata to MEDIUM; got " .. tostring(h.frame.frameStrata))
   end
 
   -- Clicks inside our frame must NOT demote — only clicks outside do.
@@ -171,10 +159,7 @@ return function()
 
     h.frame.mouseOver = true
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
-    assert(
-      h.frame.frameStrata == "HIGH",
-      "expected clicks inside our frame to leave strata HIGH; got " .. tostring(h.frame.frameStrata)
-    )
+    assert(h.frame.frameStrata == "HIGH", "expected clicks inside our frame to leave strata HIGH; got " .. tostring(h.frame.frameStrata))
   end
 
   -- OnMouseDown must not steal keyboard focus from the composer, even when
@@ -204,10 +189,7 @@ return function()
     end
 
     h.scripts.OnMouseDown(h.frame, "LeftButton")
-    assert(
-      composerInput._focused == true,
-      "expected composer focus to be restored after promoteStrata, even if Raise cleared it"
-    )
+    assert(composerInput._focused == true, "expected composer focus to be restored after promoteStrata, even if Raise cleared it")
     assert(setFocusCalls == 1, "expected exactly one SetFocus call to restore composer focus; got " .. setFocusCalls)
   end
 end

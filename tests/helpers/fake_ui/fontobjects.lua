@@ -67,14 +67,13 @@ function FontObjects.Install()
     end
   end
 
-  _G.C_Timer = _G.C_Timer
-    or {
-      After = function(_seconds, callback)
-        if callback then
-          callback()
-        end
-      end,
-    }
+  _G.C_Timer = _G.C_Timer or {
+    After = function(_seconds, callback)
+      if callback then
+        callback()
+      end
+    end,
+  }
 end
 
 return FontObjects

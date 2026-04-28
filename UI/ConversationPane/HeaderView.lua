@@ -7,10 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
-local HeaderElements = ns.ConversationPaneHeaderElements
-  or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
-local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel
-  or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
+local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
+local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
 
 local HeaderView = {}
 
@@ -180,8 +178,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
 
     local showFaction = hasContact and (vm == nil or vm.showFactionIcon)
     if view.headerFactionIcon then
-      local factionPath = showFaction and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName)
-        or nil
+      local factionPath = showFaction and selectedContact.factionName and Theme.FactionIcon(selectedContact.factionName) or nil
       if factionPath then
         view.headerFactionIcon:SetTexture(factionPath)
         view.headerFactionIcon:Show()

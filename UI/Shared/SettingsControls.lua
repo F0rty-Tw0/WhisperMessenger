@@ -143,16 +143,7 @@ function SettingsControls.BuildToggleList(factory, parent, anchorFrame, specs)
   local toggles = {}
   local previous = nil
   for i, spec in ipairs(specs) do
-    local toggle = UIHelpers.createToggleRow(
-      factory,
-      parent,
-      spec.label,
-      spec.initial,
-      toggleColors,
-      toggleLayout,
-      spec.onChange,
-      spec.tooltipLines
-    )
+    local toggle = UIHelpers.createToggleRow(factory, parent, spec.label, spec.initial, toggleColors, toggleLayout, spec.onChange, spec.tooltipLines)
     if previous == nil then
       local offsetY = spec.anchorOffsetY or -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
       toggle.row:SetPoint("TOPLEFT", anchorFrame, "BOTTOMLEFT", 0, offsetY)

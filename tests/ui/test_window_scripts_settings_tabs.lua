@@ -51,9 +51,7 @@ return function()
     notificationsTab.scripts.OnLeave(notificationsTab)
   end
 
-  local activeColor = Theme.COLORS.option_button_active
-    or Theme.COLORS.bg_contact_selected
-    or { 0.16, 0.18, 0.28, 0.80 }
+  local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
   assert(
     notificationsTab.bg.color[1] == activeColor[1] and notificationsTab.bg.color[2] == activeColor[2],
     "active tab background should persist after leave"

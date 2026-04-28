@@ -209,12 +209,7 @@ local function registerLinkHooks()
     local linkToInsert = link
     if type(text) == "string" and text ~= "" and string.find(text, "|H", 1, true) then
       linkToInsert = text
-    elseif
-      type(link) == "string"
-      and string.find(link, "quest:", 1, true)
-      and type(text) == "string"
-      and text ~= ""
-    then
+    elseif type(link) == "string" and string.find(link, "quest:", 1, true) and type(text) == "string" and text ~= "" then
       linkToInsert = "|H" .. link .. "|h" .. text .. "|h"
     end
 

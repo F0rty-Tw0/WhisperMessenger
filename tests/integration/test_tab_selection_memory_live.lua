@@ -84,10 +84,7 @@ return function()
   -- the swap callback safety net (onSelect was never fired for the initial
   -- auto-selected contact). Groups has no saved selection, so pane clears.
   window.setTabMode("groups")
-  assert(
-    window.getTabMode() == "groups",
-    "after setTabMode('groups'), getTabMode should be 'groups', got: " .. tostring(window.getTabMode())
-  )
+  assert(window.getTabMode() == "groups", "after setTabMode('groups'), getTabMode should be 'groups', got: " .. tostring(window.getTabMode()))
   -- Pane is cleared on first visit to groups — activeKey intentionally cleared
   -- by refreshSelection({}). But note refreshSelection({}) doesn't run
   -- onSelectConversation, so activeKey (as seen by this test's onSelectConversation
@@ -118,17 +115,11 @@ return function()
   --   - call handleContactSelected(jaina) → onSelectConversation(jaina) → activeKey = jaina
   window.setTabMode("whispers")
   assert(window.getTabMode() == "whispers", "tab mode should be whispers")
-  assert(
-    activeKey == "me::WOW::jaina",
-    "after switching back to whispers, jaina should be re-selected; activeKey=" .. tostring(activeKey)
-  )
+  assert(activeKey == "me::WOW::jaina", "after switching back to whispers, jaina should be re-selected; activeKey=" .. tostring(activeKey))
 
   -- Step 4: switch forward to groups again. Should restore party.
   window.setTabMode("groups")
-  assert(
-    activeKey == "PARTY::1",
-    "after switching back to groups, party should be re-selected; activeKey=" .. tostring(activeKey)
-  )
+  assert(activeKey == "PARTY::1", "after switching back to groups, party should be re-selected; activeKey=" .. tostring(activeKey))
 
   _G.UIParent = savedUIParent
   print("PASS: test_tab_selection_memory_live")

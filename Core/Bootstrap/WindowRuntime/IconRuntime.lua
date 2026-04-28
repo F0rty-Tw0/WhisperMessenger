@@ -32,11 +32,7 @@ local function initializeIconState(icon, contacts, badgeFilter, buildLatestIncom
 
   if icon and icon.setIncomingPreview then
     local preview = buildLatestIncomingPreview(contacts)
-    icon.setIncomingPreview(
-      preview and preview.senderName or nil,
-      preview and preview.messageText or nil,
-      preview and preview.classTag or nil
-    )
+    icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
   end
 end
 

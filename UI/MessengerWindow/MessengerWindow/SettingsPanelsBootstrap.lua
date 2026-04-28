@@ -3,8 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local SettingsRuntime = ns.MessengerWindowSettingsRuntime
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
+local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
 
 local SettingsPanelsBootstrap = {}
 

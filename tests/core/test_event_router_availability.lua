@@ -35,10 +35,7 @@ return function()
 
     local avail = state.availabilityByGUID["Player-1084-0A7E2D88"]
     assert(avail ~= nil, "availability should be set after incoming whisper")
-    assert(
-      avail.status == "CanWhisper",
-      "incoming whisper should set status to CanWhisper, got: " .. tostring(avail.status)
-    )
+    assert(avail.status == "CanWhisper", "incoming whisper should set status to CanWhisper, got: " .. tostring(avail.status))
     assert(avail.canWhisper == true, "incoming whisper should set canWhisper=true")
   end
 
@@ -56,10 +53,7 @@ return function()
 
     local avail = state.availabilityByGUID["Player-1305-0D663D88"]
     assert(avail ~= nil, "availability should be set after outgoing whisper")
-    assert(
-      avail.status == "CanWhisper",
-      "outgoing whisper confirm should set status to CanWhisper, got: " .. tostring(avail.status)
-    )
+    assert(avail.status == "CanWhisper", "outgoing whisper confirm should set status to CanWhisper, got: " .. tostring(avail.status))
   end
 
   -- Outgoing whisper inform with short playerName still matches pending send by guid/name
@@ -104,10 +98,7 @@ return function()
       guid = "Player-3676-0FRESH000",
     })
 
-    assert(
-      meta ~= nil and meta.outgoingFromPendingSend == false,
-      "fresh outgoing inform should not match stale pending send"
-    )
+    assert(meta ~= nil and meta.outgoingFromPendingSend == false, "fresh outgoing inform should not match stale pending send")
     local staleQueue = state.pendingOutgoing["wow::WOW::stale"]
     assert(staleQueue ~= nil and #staleQueue == 0, "stale pending sends should be pruned")
   end
@@ -128,10 +119,7 @@ return function()
 
     local avail = state.availabilityByGUID["Player-1305-0D65D962"]
     assert(avail ~= nil, "BNet whisper with GUID should set availability")
-    assert(
-      avail.status == "CanWhisper",
-      "BNet whisper should set status to CanWhisper, got: " .. tostring(avail.status)
-    )
+    assert(avail.status == "CanWhisper", "BNet whisper should set status to CanWhisper, got: " .. tostring(avail.status))
   end
 
   -- Incoming whisper without GUID does not crash
@@ -192,10 +180,7 @@ return function()
     assert(convKey ~= nil, "conversation should be created")
     local conv = state.store.conversations[convKey]
     local msg = conv.messages[1]
-    assert(
-      msg.battleTag == "Giannis#2964",
-      "message battleTag should be set from accountInfo, got: " .. tostring(msg.battleTag)
-    )
+    assert(msg.battleTag == "Giannis#2964", "message battleTag should be set from accountInfo, got: " .. tostring(msg.battleTag))
   end
 
   -- Outgoing whisper clears unread count (replying means user saw the conversation)
@@ -249,10 +234,7 @@ return function()
     assert(conv ~= nil, "outgoing whisper conversation should exist")
     local msg = conv.messages[1]
     assert(msg ~= nil and msg.direction == "out", "expected outgoing message in conversation")
-    assert(
-      msg.senderClassTag == "PRIEST",
-      "outgoing message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag)
-    )
+    assert(msg.senderClassTag == "PRIEST", "outgoing message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag))
   end
 
   -- Outgoing whisper stamps senderName with the local player's short name

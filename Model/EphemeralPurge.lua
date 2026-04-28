@@ -3,9 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChannelType = ns.ChannelType
-  or (type(require) == "function" and require("WhisperMessenger.Model.Identity.ChannelType"))
-  or nil
+local ChannelType = ns.ChannelType or (type(require) == "function" and require("WhisperMessenger.Model.Identity.ChannelType")) or nil
 
 local EphemeralPurge = {}
 

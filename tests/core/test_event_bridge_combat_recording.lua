@@ -80,18 +80,12 @@ return function()
     local conversationKey = runtime.lastIncomingWhisperKey
     local conversation = store.conversations[conversationKey]
     assert(conversation ~= nil, "test_combat_recording: conversation should exist after combat whisper")
-    assert(
-      #conversation.messages > 0,
-      "test_combat_recording: conversation should have messages, got " .. #conversation.messages
-    )
+    assert(#conversation.messages > 0, "test_combat_recording: conversation should have messages, got " .. #conversation.messages)
     assert(
       conversation.messages[1].text == "Hello from combat!",
       "test_combat_recording: message text should match, got " .. tostring(conversation.messages[1].text)
     )
-    assert(
-      conversation.unreadCount > 0,
-      "test_combat_recording: unreadCount should be > 0, got " .. tostring(conversation.unreadCount)
-    )
+    assert(conversation.unreadCount > 0, "test_combat_recording: unreadCount should be > 0, got " .. tostring(conversation.unreadCount))
   end
 
   -- test_message_recorded_out_of_combat
@@ -123,23 +117,7 @@ return function()
       autoOpenKey = key
     end
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "Hello outside combat!",
-      "Jaina",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      2,
-      "Player-2-DEF"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "Hello outside combat!", "Jaina", "", "", "", "", "", "", "", "", 2, "Player-2-DEF")
 
     -- Auto-open should fire out of combat
     assert(autoOpenKey ~= nil, "test_ooc_recording: auto-open should fire out of combat")

@@ -90,9 +90,7 @@ return function()
 
     assert(
       setLastTellCalls == 0,
-      "resume must NOT call ChatEdit_SetLastTellTarget (direct write from our stack taints chatEditLastTell), got "
-        .. setLastTellCalls
-        .. " calls"
+      "resume must NOT call ChatEdit_SetLastTellTarget (direct write from our stack taints chatEditLastTell), got " .. setLastTellCalls .. " calls"
     )
 
     rawset(_G, "ChatEdit_SetLastTellTarget", savedSetLastTell)
@@ -161,19 +159,14 @@ return function()
     runtime.suspend()
     runtime.resume()
 
-    assert(
-      attributes.tellTarget == nil,
-      "resume must clear stale Blizzard tellTarget so post-M+ Enter does not reopen the messenger"
-    )
+    assert(attributes.tellTarget == nil, "resume must clear stale Blizzard tellTarget so post-M+ Enter does not reopen the messenger")
     assert(
       attributes.chatType == "SAY",
-      "resume must restore stale WHISPER chatType to a non-whisper fallback (SAY), got "
-        .. tostring(attributes.chatType)
+      "resume must restore stale WHISPER chatType to a non-whisper fallback (SAY), got " .. tostring(attributes.chatType)
     )
     assert(
       attributes.stickyType == "SAY",
-      "resume must restore stale WHISPER stickyType to a non-whisper fallback (SAY), got "
-        .. tostring(attributes.stickyType)
+      "resume must restore stale WHISPER stickyType to a non-whisper fallback (SAY), got " .. tostring(attributes.stickyType)
     )
   end
 end

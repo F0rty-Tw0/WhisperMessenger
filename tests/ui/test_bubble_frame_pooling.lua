@@ -53,8 +53,7 @@ return function()
     })
 
     assert(
-      bubble.text:GetText()
-        == "Visit |cff71d5ff|Hurl:https://example.com/docs|hhttps://example.com/docs|h|r for details.",
+      bubble.text:GetText() == "Visit |cff71d5ff|Hurl:https://example.com/docs|hhttps://example.com/docs|h|r for details.",
       "expected BubbleFrame to render plain URLs as clickable hyperlinks"
     )
   end
@@ -125,8 +124,7 @@ return function()
     })
 
     assert(
-      bubble.text:GetText()
-        == "Loot " .. itemLink .. " and |cff71d5ff|Hurl:https://example.com|hhttps://example.com|h|r",
+      bubble.text:GetText() == "Loot " .. itemLink .. " and |cff71d5ff|Hurl:https://example.com|hhttps://example.com|h|r",
       "expected BubbleFrame to preserve existing item hyperlinks while linkifying plain URLs"
     )
   end
@@ -164,34 +162,19 @@ return function()
     local bubbles = collectBubbleFrames(contentFrame)
     assert(#bubbles == 3, "expected three bubble frames after layout, got " .. tostring(#bubbles))
 
-    assert(
-      bubbles[1].point[1] == "TOPLEFT",
-      "expected incoming bubble anchor TOPLEFT, got " .. tostring(bubbles[1].point[1])
-    )
+    assert(bubbles[1].point[1] == "TOPLEFT", "expected incoming bubble anchor TOPLEFT, got " .. tostring(bubbles[1].point[1]))
     assert(
       bubbles[1].point[4] == Layout.MESSAGE_EDGE_INSET,
-      "expected incoming bubble inset "
-        .. tostring(Layout.MESSAGE_EDGE_INSET)
-        .. ", got "
-        .. tostring(bubbles[1].point[4])
+      "expected incoming bubble inset " .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(bubbles[1].point[4])
     )
 
     assert(bubbles[2].point[1] == "TOP", "expected system bubble anchor TOP, got " .. tostring(bubbles[2].point[1]))
-    assert(
-      bubbles[2].point[4] == 200,
-      "expected system bubble centered at pane midpoint, got " .. tostring(bubbles[2].point[4])
-    )
+    assert(bubbles[2].point[4] == 200, "expected system bubble centered at pane midpoint, got " .. tostring(bubbles[2].point[4]))
 
-    assert(
-      bubbles[3].point[1] == "TOPRIGHT",
-      "expected outgoing bubble anchor TOPRIGHT, got " .. tostring(bubbles[3].point[1])
-    )
+    assert(bubbles[3].point[1] == "TOPRIGHT", "expected outgoing bubble anchor TOPRIGHT, got " .. tostring(bubbles[3].point[1]))
     assert(
       bubbles[3].point[4] == -Layout.MESSAGE_EDGE_INSET,
-      "expected outgoing bubble inset -"
-        .. tostring(Layout.MESSAGE_EDGE_INSET)
-        .. ", got "
-        .. tostring(bubbles[3].point[4])
+      "expected outgoing bubble inset -" .. tostring(Layout.MESSAGE_EDGE_INSET) .. ", got " .. tostring(bubbles[3].point[4])
     )
   end
 
@@ -242,11 +225,7 @@ return function()
 
   assert(
     countAfterSecond == 0,
-    "expected zero new CreateFrame calls on re-render, got "
-      .. countAfterSecond
-      .. " (first render: "
-      .. countAfterFirst
-      .. ")"
+    "expected zero new CreateFrame calls on re-render, got " .. countAfterSecond .. " (first render: " .. countAfterFirst .. ")"
   )
 
   -- TEST 3: Growing message count only creates frames for new messages
@@ -275,10 +254,7 @@ return function()
   -- Should create only frames for the 2 additional messages, not all 5
   assert(
     countAfterFirst > 0 and createCount < countAfterFirst,
-    "expected fewer CreateFrame calls for 5 messages after 3 were pooled, got "
-      .. createCount
-      .. " vs first-render "
-      .. countAfterFirst
+    "expected fewer CreateFrame calls for 5 messages after 3 were pooled, got " .. createCount .. " vs first-render " .. countAfterFirst
   )
 
   -- TEST 4: Shrinking message count hides excess frames

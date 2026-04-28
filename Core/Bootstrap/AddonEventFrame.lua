@@ -24,10 +24,9 @@ function AddonEventFrame.Install(deps)
     return nil
   end
 
-  local loadModule = deps.loadModule
-    or function(name, key)
-      error((key or name or "module") .. " module not available")
-    end
+  local loadModule = deps.loadModule or function(name, key)
+    error((key or name or "module") .. " module not available")
+  end
   local initializeRuntime = deps.initializeRuntime or function()
     return Bootstrap.runtime
   end
@@ -53,13 +52,8 @@ function AddonEventFrame.Install(deps)
       trace("ADDON_LOADED", loadedAddonName)
       initializeRuntime()
 
-      EventBridge = resolveModule(
-        EventBridge,
-        "BootstrapEventBridge",
-        loadModule,
-        "WhisperMessenger.Core.Bootstrap.EventBridge",
-        "BootstrapEventBridge"
-      )
+      EventBridge =
+        resolveModule(EventBridge, "BootstrapEventBridge", loadModule, "WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
       EventBridge.RegisterLiveEvents(loadFrame)
       EventBridge.RegisterChannelEvents(loadFrame)
       EventBridge.RegisterGroupEvents(loadFrame)
@@ -82,13 +76,8 @@ function AddonEventFrame.Install(deps)
     end
 
     -- Route channel messages directly to the store (bypass whisper pipeline)
-    EventBridge = resolveModule(
-      EventBridge,
-      "BootstrapEventBridge",
-      loadModule,
-      "WhisperMessenger.Core.Bootstrap.EventBridge",
-      "BootstrapEventBridge"
-    )
+    EventBridge =
+      resolveModule(EventBridge, "BootstrapEventBridge", loadModule, "WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
     if EventBridge and EventBridge.RouteChannelEvent then
       local runtime = Bootstrap.runtime
       if EventBridge.RouteChannelEvent(runtime, event, ...) then
@@ -130,13 +119,8 @@ function AddonEventFrame.Install(deps)
       return
     end
 
-    EventBridge = resolveModule(
-      EventBridge,
-      "BootstrapEventBridge",
-      loadModule,
-      "WhisperMessenger.Core.Bootstrap.EventBridge",
-      "BootstrapEventBridge"
-    )
+    EventBridge =
+      resolveModule(EventBridge, "BootstrapEventBridge", loadModule, "WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
     if EventBridge then
       local runtime = Bootstrap.runtime
       EventBridge.RouteLiveEvent(runtime, runtime and runtime.refreshWindow or nil, event, ...)

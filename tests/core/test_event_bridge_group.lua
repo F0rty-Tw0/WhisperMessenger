@@ -79,22 +79,8 @@ return function()
   -- ----------------------------------------------------------------
   do
     local runtime = makeRuntime()
-    local result = EventBridge.RouteGroupEvent(
-      runtime,
-      "CHAT_MSG_WHISPER",
-      "hi there",
-      "Someone-Realm",
-      "",
-      "",
-      "",
-      "",
-      0,
-      0,
-      "",
-      0,
-      601,
-      "Player-1084-AAAAAAAA"
-    )
+    local result =
+      EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_WHISPER", "hi there", "Someone-Realm", "", "", "", "", 0, 0, "", 0, 601, "Player-1084-AAAAAAAA")
     assert(result == false, "RouteGroupEvent should return false for CHAT_MSG_WHISPER, got: " .. tostring(result))
   end
 
@@ -156,10 +142,7 @@ return function()
       )
     end)
     assert(ok, "RouteGroupEvent for BN_CONVERSATION should not throw: " .. tostring(result))
-    assert(
-      type(result) == "boolean",
-      "RouteGroupEvent should return a boolean for BN_CONVERSATION, got: " .. type(result)
-    )
+    assert(type(result) == "boolean", "RouteGroupEvent should return a boolean for BN_CONVERSATION, got: " .. type(result))
 
     -- Restore globals
     _G.BNGetNumConversations = savedGetNum

@@ -48,10 +48,7 @@ return function()
     local migrated = Migrations.Apply(accountState, Schema)
 
     assert(type(migrated.channelMessages) == "table", "channelMessages should remain a table")
-    assert(
-      type(migrated.channelMessages.entries) == "table",
-      "channelMessages should be flattened to the {entries, nextSequence} shape"
-    )
+    assert(type(migrated.channelMessages.entries) == "table", "channelMessages should be flattened to the {entries, nextSequence} shape")
 
     local flatEntries = migrated.channelMessages.entries
     assert(flatEntries["healjaina-area52"] ~= nil, "expected LFG entry to survive flattening")
@@ -63,10 +60,7 @@ return function()
       "expected newer entry to win merge: got " .. tostring(flatEntries["traderjoe-area52"].text)
     )
 
-    assert(
-      type(migrated.channelMessages.nextSequence) == "number",
-      "expected nextSequence to be copied into flat shape"
-    )
+    assert(type(migrated.channelMessages.nextSequence) == "number", "expected nextSequence to be copied into flat shape")
     assert(
       migrated.channelMessages.nextSequence >= 3,
       "expected nextSequence >= max legacy sequence, got " .. tostring(migrated.channelMessages.nextSequence)

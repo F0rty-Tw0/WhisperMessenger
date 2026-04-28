@@ -117,8 +117,7 @@ return function()
 
     assert(
       #state.conversations[PARTY_KEY].messages == 1,
-      "expected exactly one Left-party message after repeated roster updates, got "
-        .. #state.conversations[PARTY_KEY].messages
+      "expected exactly one Left-party message after repeated roster updates, got " .. #state.conversations[PARTY_KEY].messages
     )
   end
 
@@ -198,14 +197,8 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
 
-    assert(
-      #state.conversations[FOREIGN_PARTY_KEY].messages == 0,
-      "foreign-character party should NOT receive a left message"
-    )
-    assert(
-      state.conversations[FOREIGN_PARTY_KEY].leftGroup == true,
-      "foreign-character leftGroup flag must stay intact"
-    )
+    assert(#state.conversations[FOREIGN_PARTY_KEY].messages == 0, "foreign-character party should NOT receive a left message")
+    assert(state.conversations[FOREIGN_PARTY_KEY].leftGroup == true, "foreign-character leftGroup flag must stay intact")
 
     -- Now the current character joins a party — foreign row must still not move.
     _G.IsInGroup = function(category)

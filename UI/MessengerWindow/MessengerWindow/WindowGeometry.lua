@@ -16,11 +16,8 @@ function WindowGeometry.Create(options)
   local sizeValue = options.sizeValue
   local initialState = options.initialState or {}
 
-  local currentContactsWidth = clampContactsWidth(
-    initialState.width,
-    options.initialContactsWidth or initialState.contactsWidth or theme.CONTACTS_WIDTH,
-    theme
-  )
+  local currentContactsWidth =
+    clampContactsWidth(initialState.width, options.initialContactsWidth or initialState.contactsWidth or theme.CONTACTS_WIDTH, theme)
 
   local function getContactsWidth()
     return currentContactsWidth
@@ -35,8 +32,7 @@ function WindowGeometry.Create(options)
 
   local function applyState(target, nextState)
     local clampedState = clampState(parent, nextState, theme)
-    currentContactsWidth =
-      clampContactsWidth(clampedState.width, clampedState.contactsWidth or theme.CONTACTS_WIDTH, theme)
+    currentContactsWidth = clampContactsWidth(clampedState.width, clampedState.contactsWidth or theme.CONTACTS_WIDTH, theme)
 
     target:SetSize(clampedState.width or theme.WINDOW_WIDTH, clampedState.height or theme.WINDOW_HEIGHT)
     target:SetPoint(

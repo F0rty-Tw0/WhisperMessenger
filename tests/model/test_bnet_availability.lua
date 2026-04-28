@@ -60,21 +60,12 @@ return function()
   -- The status should use the contact's enriched availability (CanWhisper),
   -- not the raw WrongFaction from availabilityByGUID
   assert(result.status ~= nil, "status should not be nil")
-  assert(
-    result.status.status ~= "WrongFaction",
-    "BNet status should not be WrongFaction, got: " .. tostring(result.status.status)
-  )
-  assert(
-    result.status.status == "CanWhisper",
-    "BNet status should be CanWhisper, got: " .. tostring(result.status.status)
-  )
+  assert(result.status.status ~= "WrongFaction", "BNet status should not be WrongFaction, got: " .. tostring(result.status.status))
+  assert(result.status.status == "CanWhisper", "BNet status should be CanWhisper, got: " .. tostring(result.status.status))
 
   -- The contact's availability should also be correct
   local contact = result.selectedContact
   assert(contact ~= nil, "selectedContact should exist")
   assert(contact.availability ~= nil, "contact should have availability")
-  assert(
-    contact.availability.status == "CanWhisper",
-    "contact availability should be CanWhisper, got: " .. tostring(contact.availability.status)
-  )
+  assert(contact.availability.status == "CanWhisper", "contact availability should be CanWhisper, got: " .. tostring(contact.availability.status))
 end

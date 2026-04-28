@@ -133,16 +133,7 @@ function MemoryReport.Create(options)
 
         snapshot.pools = { active = activeCount, free = freeCount, regions = totalRegions }
         trace("  --- Frame Pool ---")
-        trace(
-          "  Frames: "
-            .. activeCount
-            .. " active / "
-            .. freeCount
-            .. " free / "
-            .. totalFrames
-            .. " total  |  regions: "
-            .. totalRegions
-        )
+        trace("  Frames: " .. activeCount .. " active / " .. freeCount .. " free / " .. totalFrames .. " total  |  regions: " .. totalRegions)
       end
     end
 
@@ -151,18 +142,10 @@ function MemoryReport.Create(options)
       local deltaKB = wmKB - prevSnapshot.wmKB
       trace("  WM memory: " .. (deltaKB >= 0 and "+" or "") .. fmt("%.1f", deltaKB) .. " KB")
       if snapshot.pools.active and prevSnapshot.pools.active then
-        local frameDelta = (snapshot.pools.active + snapshot.pools.free)
-          - (prevSnapshot.pools.active + prevSnapshot.pools.free)
+        local frameDelta = (snapshot.pools.active + snapshot.pools.free) - (prevSnapshot.pools.active + prevSnapshot.pools.free)
         local regionDelta = snapshot.pools.regions - prevSnapshot.pools.regions
         if frameDelta ~= 0 or regionDelta ~= 0 then
-          trace(
-            "  Frames: "
-              .. (frameDelta >= 0 and "+" or "")
-              .. frameDelta
-              .. "  regions: "
-              .. (regionDelta >= 0 and "+" or "")
-              .. regionDelta
-          )
+          trace("  Frames: " .. (frameDelta >= 0 and "+" or "") .. frameDelta .. "  regions: " .. (regionDelta >= 0 and "+" or "") .. regionDelta)
         end
       end
     end

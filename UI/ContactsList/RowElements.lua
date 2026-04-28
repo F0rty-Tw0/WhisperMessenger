@@ -49,11 +49,7 @@ end
 local function nameLabelWidth(row, parentWidth)
   return math.max(
     0,
-    (parentWidth or 0)
-      - Theme.LAYOUT.CONTACT_ICON_SIZE
-      - Theme.LAYOUT.CONTACT_PADDING
-      - NAME_LABEL_LEFT_INSET
-      - timestampReserveWidth(row)
+    (parentWidth or 0) - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - NAME_LABEL_LEFT_INSET - timestampReserveWidth(row)
   )
 end
 
@@ -167,8 +163,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
   local titleMaxWidth = row.title and row.title.GetWidth and row.title:GetWidth() or 0
   local textBudget = titleMaxWidth
   if reliableFaction then
-    textBudget =
-      math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
+    textBudget = math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
     row.title:SetText(fitLabelTextWithEllipsis(row.title, item.displayName or "", textBudget))

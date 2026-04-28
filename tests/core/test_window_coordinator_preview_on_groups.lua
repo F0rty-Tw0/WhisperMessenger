@@ -76,8 +76,7 @@ return function()
     assert(#calls == 1, "setIncomingPreview must be called exactly once per refresh; got " .. #calls)
     assert(
       calls[1].messageText == "gg wp",
-      "preview must surface when Groups tab is active and whisper is NOT visible in pane; got "
-        .. tostring(calls[1].messageText)
+      "preview must surface when Groups tab is active and whisper is NOT visible in pane; got " .. tostring(calls[1].messageText)
     )
   end
 
@@ -110,8 +109,7 @@ return function()
     assert(#calls == 1, "setIncomingPreview should still be called; got " .. #calls)
     assert(
       calls[1].messageText == nil,
-      "preview must remain suppressed on Whispers tab since conversation is on screen; got "
-        .. tostring(calls[1].messageText)
+      "preview must remain suppressed on Whispers tab since conversation is on screen; got " .. tostring(calls[1].messageText)
     )
   end
 

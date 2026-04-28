@@ -91,12 +91,6 @@ return function()
   assert(runtime.toggle == controller.toggle, "runtime.toggle should share controller toggle")
   assert(runtime.refreshWindow == controller.refreshWindow, "runtime.refreshWindow should share controller refresh")
   assert(runtime.ensureWindow == controller.ensureWindow, "runtime.ensureWindow should share controller ensure")
-  assert(
-    runtime.setWindowVisible == controller.setWindowVisible,
-    "runtime.setWindowVisible should share controller visibility"
-  )
-  assert(
-    runtime.setComposerText == controller.setComposerText,
-    "runtime.setComposerText should share controller composer setter"
-  )
+  assert(runtime.setWindowVisible == controller.setWindowVisible, "runtime.setWindowVisible should share controller visibility")
+  assert(runtime.setComposerText == controller.setComposerText, "runtime.setComposerText should share controller composer setter")
 end

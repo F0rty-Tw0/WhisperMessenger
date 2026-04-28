@@ -23,11 +23,7 @@ function SelectionController.Create(options)
     currentStatus = nextState.status
     currentNotice = nextState.notice
 
-    refreshContacts(
-      nextState.contacts,
-      currentSelectedContact and currentSelectedContact.conversationKey or nil,
-      resetPaging
-    )
+    refreshContacts(nextState.contacts, currentSelectedContact and currentSelectedContact.conversationKey or nil, resetPaging)
     refreshConversationPane(currentSelectedContact, currentConversation, currentStatus, currentNotice)
     syncComposerSelectedContact(currentSelectedContact)
     setComposerEnabled(currentSelectedContact, currentNotice, currentStatus)

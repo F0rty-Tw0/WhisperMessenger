@@ -189,10 +189,7 @@ return function()
     local api = makeSpyApi()
     local ok, err = pcall(ChatGateway.Send, api, { channel = ChannelType.COMMUNITY }, "x")
     assert(ok == false, "expected Send to error for COMMUNITY")
-    assert(
-      type(err) == "string" and err:find("receive%-only") ~= nil,
-      "expected error to mention 'receive-only', got: " .. tostring(err)
-    )
+    assert(type(err) == "string" and err:find("receive%-only") ~= nil, "expected error to mention 'receive-only', got: " .. tostring(err))
   end
 
   -- ---------------------------------------------------------------------------
@@ -202,10 +199,7 @@ return function()
     local api = makeSpyApi()
     local ok, err = pcall(ChatGateway.Send, api, { channel = "BOGUS" }, "x")
     assert(ok == false, "expected Send to error for unknown channel")
-    assert(
-      type(err) == "string" and err:find("Unknown channel") ~= nil,
-      "expected error to mention 'Unknown channel', got: " .. tostring(err)
-    )
+    assert(type(err) == "string" and err:find("Unknown channel") ~= nil, "expected error to mention 'Unknown channel', got: " .. tostring(err))
   end
 
   -- ---------------------------------------------------------------------------
@@ -215,10 +209,7 @@ return function()
     local api = makeSpyApi()
     local ok, err = pcall(ChatGateway.Send, api, {}, "x")
     assert(ok == false, "expected Send to error for missing channel")
-    assert(
-      type(err) == "string" and err:find("Unknown channel") ~= nil,
-      "expected error to mention 'Unknown channel', got: " .. tostring(err)
-    )
+    assert(type(err) == "string" and err:find("Unknown channel") ~= nil, "expected error to mention 'Unknown channel', got: " .. tostring(err))
   end
 
   -- ---------------------------------------------------------------------------
@@ -244,10 +235,7 @@ return function()
     end
 
     -- COMMUNITY must always return false
-    assert(
-      ChatGateway.CanSend(api, { channel = ChannelType.COMMUNITY }) == false,
-      "expected CanSend false for COMMUNITY"
-    )
+    assert(ChatGateway.CanSend(api, { channel = ChannelType.COMMUNITY }) == false, "expected CanSend false for COMMUNITY")
 
     -- nil conversation must return false
     assert(ChatGateway.CanSend(api, nil) == false, "expected CanSend false for nil conv")

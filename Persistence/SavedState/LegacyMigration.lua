@@ -37,10 +37,7 @@ function LegacyMigration.MigrateCurrentProfile(accountState, characterState, loc
 
   if hasProfileConversations(accountState, localProfileId) then
     local migratedActiveKey = rewriteLegacyConversationKey(characterState.activeConversationKey, localProfileId)
-    if
-      migratedActiveKey ~= characterState.activeConversationKey
-      and accountState.conversations[migratedActiveKey] ~= nil
-    then
+    if migratedActiveKey ~= characterState.activeConversationKey and accountState.conversations[migratedActiveKey] ~= nil then
       characterState.activeConversationKey = migratedActiveKey
     end
     return
@@ -62,9 +59,7 @@ function LegacyMigration.MigrateCurrentProfile(accountState, characterState, loc
   end
 
   local migratedActiveKey = rewriteLegacyConversationKey(characterState.activeConversationKey, localProfileId)
-  if
-    migratedActiveKey ~= characterState.activeConversationKey and accountState.conversations[migratedActiveKey] ~= nil
-  then
+  if migratedActiveKey ~= characterState.activeConversationKey and accountState.conversations[migratedActiveKey] ~= nil then
     characterState.activeConversationKey = migratedActiveKey
   end
 end

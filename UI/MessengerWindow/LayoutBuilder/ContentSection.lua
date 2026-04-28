@@ -26,13 +26,7 @@ function ContentSection.Build(factory, contentParent, contactsPane, sizing, opti
   -- Dual-anchor BOTTOMRIGHT to Inset with 5px right + 10px bottom margins
   -- so neither the composer container nor the conversation header overlap
   -- the window's border.
-  contentPane:SetPoint(
-    "BOTTOMRIGHT",
-    contentParent,
-    "BOTTOMRIGHT",
-    -theme.LAYOUT.CONTENT_PANE_RIGHT_INSET,
-    theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET
-  )
+  contentPane:SetPoint("BOTTOMRIGHT", contentParent, "BOTTOMRIGHT", -theme.LAYOUT.CONTENT_PANE_RIGHT_INSET, theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET)
 
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
@@ -49,8 +43,7 @@ function ContentSection.Build(factory, contentParent, contactsPane, sizing, opti
 
   threadPane:SetPoint("BOTTOMRIGHT", composerPane, "TOPRIGHT", 0, theme.DIVIDER_THICKNESS)
 
-  local composerPaneBorder =
-    UIHelpers.createBorderBox(composerPane, composerBorderColor, theme.DIVIDER_THICKNESS, "BORDER")
+  local composerPaneBorder = UIHelpers.createBorderBox(composerPane, composerBorderColor, theme.DIVIDER_THICKNESS, "BORDER")
   local composerDivider = composerPaneBorder and composerPaneBorder.top or nil
 
   return {

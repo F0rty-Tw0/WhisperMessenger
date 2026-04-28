@@ -52,22 +52,14 @@ return function()
       end,
     })
 
-    EventBridge.RouteChannelEvent(
-      runtime,
-      "CHAT_MSG_CHANNEL",
-      "WTS [Thunderfury] 50k",
-      "Arthas-Area52",
-      "",
-      "2. Trade - Stormwind City"
-    )
+    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "WTS [Thunderfury] 50k", "Arthas-Area52", "", "2. Trade - Stormwind City")
 
     local reloadedAccount, reloadedCharacterState = SavedState.Initialize(accountState, characterState, "arthas-area52")
-    local reloadedRuntime =
-      RuntimeFactory.CreateRuntimeState(reloadedAccount, reloadedCharacterState, "arthas-area52", {
-        now = function()
-          return 5000
-        end,
-      })
+    local reloadedRuntime = RuntimeFactory.CreateRuntimeState(reloadedAccount, reloadedCharacterState, "arthas-area52", {
+      now = function()
+        return 5000
+      end,
+    })
 
     local entry = ChannelMessageStore.GetLatest(reloadedRuntime.channelMessageStore, "arthas-area52", 5000)
     assert(entry ~= nil, "expected channel context to survive relog")
@@ -84,14 +76,7 @@ return function()
       end,
     })
 
-    EventBridge.RouteChannelEvent(
-      arthasRuntime,
-      "CHAT_MSG_CHANNEL",
-      "WTS [Thunderfury] 50k",
-      "Traderjoe-Area52",
-      "",
-      "2. Trade - Stormwind City"
-    )
+    EventBridge.RouteChannelEvent(arthasRuntime, "CHAT_MSG_CHANNEL", "WTS [Thunderfury] 50k", "Traderjoe-Area52", "", "2. Trade - Stormwind City")
 
     local reloadedAccount, thrallCharacterState = SavedState.Initialize(accountState, nil, "thrall-draenor")
     local thrallRuntime = RuntimeFactory.CreateRuntimeState(reloadedAccount, thrallCharacterState, "thrall-draenor", {

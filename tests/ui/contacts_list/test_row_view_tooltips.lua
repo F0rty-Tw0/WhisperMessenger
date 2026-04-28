@@ -67,10 +67,7 @@ return function()
     tooltipState = { text = nil, shown = false }
     row.pinButton.scripts.OnEnter(row.pinButton)
     assert(tooltipState.shown == true, "tooltip should be shown on pin hover")
-    assert(
-      tooltipState.text == "Pin to top",
-      "pin tooltip should say 'Pin to top', got: " .. tostring(tooltipState.text)
-    )
+    assert(tooltipState.text == "Pin to top", "pin tooltip should say 'Pin to top', got: " .. tostring(tooltipState.text))
 
     row.pinButton.scripts.OnLeave(row.pinButton)
     assert(tooltipState.shown == false, "tooltip should hide on pin leave")
@@ -125,10 +122,7 @@ return function()
     tooltipState = { text = nil, shown = false }
     row.pinButton.scripts.OnEnter(row.pinButton)
     assert(tooltipState.shown == true, "tooltip should be shown on reused pin hover")
-    assert(
-      tooltipState.text == "Unpin",
-      "reused pinned row tooltip should say 'Unpin', got: " .. tostring(tooltipState.text)
-    )
+    assert(tooltipState.text == "Unpin", "reused pinned row tooltip should say 'Unpin', got: " .. tostring(tooltipState.text))
   end
 
   -- test_pin_button_updates_tooltip_when_row_reused_pinned_to_unpinned
@@ -158,10 +152,7 @@ return function()
     tooltipState = { text = nil, shown = false }
     row.pinButton.scripts.OnEnter(row.pinButton)
     assert(tooltipState.shown == true, "tooltip should be shown on reused unpin hover")
-    assert(
-      tooltipState.text == "Pin to top",
-      "reused unpinned row tooltip should say 'Pin to top', got: " .. tostring(tooltipState.text)
-    )
+    assert(tooltipState.text == "Pin to top", "reused unpinned row tooltip should say 'Pin to top', got: " .. tostring(tooltipState.text))
   end
 
   -- test_remove_button_restores_current_background_when_row_reused

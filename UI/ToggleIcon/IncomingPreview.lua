@@ -244,9 +244,7 @@ function IncomingPreview.Create(factory, frame, options)
       return
     end
 
-    local isSameContent = senderName == lastPreviewSenderName
-      and messageText == lastPreviewMessageText
-      and classTag == lastPreviewClassTag
+    local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
 
     previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
     previewMessageLabel:SetText(messageText)

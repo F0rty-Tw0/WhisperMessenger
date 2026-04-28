@@ -3,8 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ContactSearch = ns.MessengerWindowContactSearch
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
+local ContactSearch = ns.MessengerWindowContactSearch or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
 
 local ContactsSearchController = {}
 
@@ -67,9 +66,7 @@ function ContactsSearchController.Create(options)
   local function bindInputScripts()
     if contactsSearchInput and contactsSearchInput.SetScript then
       contactsSearchInput:SetScript("OnTextChanged", function()
-        local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText()
-          or contactsSearchInput.text
-          or ""
+        local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
         contactsSearchQuery = contactSearch.NormalizeSearchQuery(searchText)
         refresh(nil, getSelectedConversationKey(), true)
       end)

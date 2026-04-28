@@ -6,6 +6,10 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+-- stylua: ignore start
+local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
+local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
+-- stylua: ignore end
 
 local GroupChatIngest = {}
 
@@ -104,87 +108,24 @@ local function buildMessage(eventName, payload, direction, channel, sentAt, isLe
   return msg
 end
 
--- Resolve the local player's GUID. Prefer the cached state value; fall back
--- to live _G.UnitGUID("player") so direction detection works even when the
--- runtime was created before player identity was available (ADDON_LOADED
--- fires before PLAYER_ENTERING_WORLD on a cold boot).
-local function resolveLocalPlayerGuid(state)
-  if type(state.localPlayerGuid) == "string" and state.localPlayerGuid ~= "" then
-    return state.localPlayerGuid
+-- appendAndStamp resolves direction, builds the message, routes it to the
+-- store, and stamps the conversation record with its key. Returns the
+-- conversation record (may be nil if the store hasn't created it yet).
+local function appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
+  local direction = Direction.Resolve(eventName, payload, state)
+  local sentAt = (state.now and state.now()) or 0
+  local msg = buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+  if direction == "out" then
+    Store.AppendOutgoing(state.store, conversationKey, msg)
+  else
+    local isActive = state.activeConversationKey == conversationKey
+    Store.AppendIncoming(state.store, conversationKey, msg, isActive)
   end
-  if type(_G.UnitGUID) == "function" then
-    local ok, guid = pcall(_G.UnitGUID, "player")
-    if ok and type(guid) == "string" and guid ~= "" then
-      state.localPlayerGuid = guid
-      return guid
-    end
+  local conversation = state.store.conversations[conversationKey]
+  if conversation then
+    conversation.conversationKey = conversationKey
   end
-  return nil
-end
-
--- In 12.0 Midnight, event payloads inside encounters / restricted actions
--- can carry "secret string" values (GUID, sender name, message text). Any
--- operation on them from an addon-tainted frame (==, string.lower,
--- table.concat) throws `a secret string value tainted by 'WhisperMessenger'`.
--- Detect via pcall on a cheap comparison; if it throws the value is secret.
-local function rawStringCompare(value)
-  return value == ""
-end
-
-local function isSecretString(value)
-  if value == nil then
-    return false
-  end
-  if type(value) ~= "string" then
-    return false
-  end
-  local ok = pcall(rawStringCompare, value)
-  return not ok
-end
-
-local function payloadHasSecretFields(payload)
-  -- Dispatch through the module table so tests can swap the detector
-  -- (the real WoW "secret string" type cannot be simulated from plain Lua).
-  local detect = GroupChatIngest._isSecretString or isSecretString
-  if detect(payload.text) then
-    return true
-  end
-  if detect(payload.playerName) then
-    return true
-  end
-  if detect(payload.guid) then
-    return true
-  end
-  return false
-end
-
-local function rawGuidEqual(a, b)
-  return a == b
-end
-
-local function compareGuids(a, b)
-  if a == nil or b == nil then
-    return false
-  end
-  local ok, equal = pcall(rawGuidEqual, a, b)
-  return ok and equal == true
-end
-
-local function resolveDirection(eventName, payload, state)
-  if eventName == "CHAT_MSG_BN_CONVERSATION" then
-    -- No guid on BN conversation events; use bnetAccountID comparison
-    if state.localBnetAccountID ~= nil and payload.bnSenderID == state.localBnetAccountID then
-      return "out"
-    end
-    return "in"
-  end
-
-  -- For every other group surface: compare guid to the local player's guid.
-  local localGuid = resolveLocalPlayerGuid(state)
-  if compareGuids(payload.guid, localGuid) then
-    return "out"
-  end
-  return "in"
+  return conversation
 end
 
 -- HandleEvent processes one of the 5 group chat events.
@@ -199,7 +140,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
   -- poison every downstream read (ConversationSnapshot search text, bubble
   -- rendering, etc.). Blizzard's default chat frame still renders the line
   -- via its secure path, so the user doesn't lose visibility.
-  if payloadHasSecretFields(payload) then
+  if SecretString.PayloadHasSecretFields(payload, GroupChatIngest._isSecretString) then
     return false
   end
 
@@ -208,24 +149,8 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     if payload.conversationID == nil then
       return false
     end
-    local conversationKey =
-      Identity.BuildConversationKey(state.localProfileId, "BNCONV::" .. tostring(payload.conversationID))
-    local direction = resolveDirection(eventName, payload, state)
-    local sentAt = (state.now and state.now()) or 0
-    local msg = buildMessage(eventName, payload, direction, channel, sentAt, nil)
-
-    if direction == "out" then
-      Store.AppendOutgoing(state.store, conversationKey, msg)
-    else
-      local isActive = state.activeConversationKey == conversationKey
-      Store.AppendIncoming(state.store, conversationKey, msg, isActive)
-    end
-
-    -- Stamp the conversation record with its key (mirrors EventRouter pattern)
-    if state.store.conversations[conversationKey] then
-      state.store.conversations[conversationKey].conversationKey = conversationKey
-    end
-
+    local conversationKey = Identity.BuildConversationKey(state.localProfileId, "BNCONV::" .. tostring(payload.conversationID))
+    appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
     return true
   end
 
@@ -237,27 +162,14 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     end
     local contactKey = "COMMUNITY::" .. tostring(payload.clubId) .. "::" .. tostring(payload.streamId)
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKey)
-    local direction = resolveDirection(eventName, payload, state)
-    local sentAt = (state.now and state.now()) or 0
-    local msg = buildMessage(eventName, payload, direction, channel, sentAt, nil)
-
-    if direction == "out" then
-      Store.AppendOutgoing(state.store, conversationKey, msg)
-    else
-      local isActive = state.activeConversationKey == conversationKey
-      Store.AppendIncoming(state.store, conversationKey, msg, isActive)
-    end
-
-    if state.store.conversations[conversationKey] then
-      local conv = state.store.conversations[conversationKey]
-      conv.conversationKey = conversationKey
+    local conv = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
+    if conv then
       -- Use the stream's base name as the sticky title so the row shows
       -- "General" or "Trade" instead of the generic "Community" label.
       if type(payload.streamName) == "string" and payload.streamName ~= "" then
         conv.title = payload.streamName
       end
     end
-
     return true
   end
 
@@ -280,37 +192,24 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
   end
 
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
-  local direction = resolveDirection(eventName, payload, state)
-  local sentAt = (state.now and state.now()) or 0
   local isLeader = LEADER_EVENTS[eventName] == true and true or false
-  local msg = buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+  local conv = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
 
-  if direction == "out" then
-    Store.AppendOutgoing(state.store, conversationKey, msg)
-  else
-    local isActive = state.activeConversationKey == conversationKey
-    Store.AppendIncoming(state.store, conversationKey, msg, isActive)
-  end
-
-  -- Stamp the conversation record with its key, the guild's display name
+  -- Stamp the conversation record with the guild's display name
   -- (so the conversation header can show it even when another character
   -- is logged in), and the last-writing character's profileId (used to
   -- disambiguate "CharName — Guild" for alts not currently in this guild).
-  local conversation = state.store.conversations[conversationKey]
-  if conversation then
-    conversation.conversationKey = conversationKey
-    if channel == ChannelType.GUILD and guildName then
-      conversation.guildName = guildName
-      conversation.ownerProfileId = state.localProfileId
-    end
+  if conv and channel == ChannelType.GUILD and guildName then
+    conv.guildName = guildName
+    conv.ownerProfileId = state.localProfileId
   end
 
   return true
 end
 
 -- Exposed for unit tests that simulate 12.0 "secret string" taint throws.
-GroupChatIngest._compareGuids = compareGuids
-GroupChatIngest._isSecretString = isSecretString
+GroupChatIngest._compareGuids = Direction.CompareGuids
+GroupChatIngest._isSecretString = SecretString.IsSecretString
 
 ns.GroupChatIngest = GroupChatIngest
 

@@ -107,13 +107,7 @@ function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, se
   local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE
   local statusDot = factory.CreateFrame("Frame", nil, headerFrame)
   statusDot:SetSize(dotSize, dotSize)
-  statusDot:SetPoint(
-    "BOTTOMRIGHT",
-    classIconFrame,
-    "BOTTOMRIGHT",
-    Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET,
-    -Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET
-  )
+  statusDot:SetPoint("BOTTOMRIGHT", classIconFrame, "BOTTOMRIGHT", Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET, -Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET)
   if statusDot.SetFrameLevel and classIconFrame.GetFrameLevel then
     statusDot:SetFrameLevel(classIconFrame:GetFrameLevel() + 2)
   end

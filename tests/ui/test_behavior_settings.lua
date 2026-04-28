@@ -21,10 +21,7 @@ return function()
     end
 
     assert(label ~= nil, "test_auto_focus_toggle_label: should have a label with 'focus'")
-    assert(
-      string.find(label, "chat input", 1, true) ~= nil,
-      "test_auto_focus_toggle_label: label should say 'chat input', got: " .. tostring(label)
-    )
+    assert(string.find(label, "chat input", 1, true) ~= nil, "test_auto_focus_toggle_label: label should say 'chat input', got: " .. tostring(label))
   end
 
   -- test_auto_focus_toggle_has_tooltip
@@ -64,10 +61,7 @@ return function()
     local config = { hideFromDefaultChat = true }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(
-      result.hideFromDefaultChatToggle ~= nil,
-      "test_hide_from_default_chat_toggle: should expose hideFromDefaultChatToggle"
-    )
+    assert(result.hideFromDefaultChatToggle ~= nil, "test_hide_from_default_chat_toggle: should expose hideFromDefaultChatToggle")
 
     local label = nil
     local row = result.hideFromDefaultChatToggle.row
@@ -87,10 +81,7 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(
-      result.hideFromDefaultChatToggle ~= nil,
-      "test_hide_from_default_chat_defaults: toggle should exist even with empty config"
-    )
+    assert(result.hideFromDefaultChatToggle ~= nil, "test_hide_from_default_chat_defaults: toggle should exist even with empty config")
   end
 
   -- test_profanity_filter_toggle_exists
@@ -104,10 +95,7 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(
-      result.profanityFilterToggle ~= nil,
-      "test_profanity_filter_toggle_exists: should expose profanityFilterToggle"
-    )
+    assert(result.profanityFilterToggle ~= nil, "test_profanity_filter_toggle_exists: should expose profanityFilterToggle")
 
     local label = nil
     local row = result.profanityFilterToggle.row
@@ -144,14 +132,8 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(
-      result.autoOpenIncomingToggle ~= nil,
-      "test_auto_open_incoming_toggle_exists: should expose autoOpenIncomingToggle"
-    )
-    assert(
-      result.autoOpenOutgoingToggle ~= nil,
-      "test_auto_open_outgoing_toggle_exists: should expose autoOpenOutgoingToggle"
-    )
+    assert(result.autoOpenIncomingToggle ~= nil, "test_auto_open_incoming_toggle_exists: should expose autoOpenIncomingToggle")
+    assert(result.autoOpenOutgoingToggle ~= nil, "test_auto_open_outgoing_toggle_exists: should expose autoOpenOutgoingToggle")
 
     local incomingLabel = nil
     local inRow = result.autoOpenIncomingToggle.row
@@ -198,18 +180,12 @@ return function()
     local inClick = result.autoOpenIncomingToggle.dot:GetScript("OnClick")
     assert(inClick ~= nil, "test_auto_open_incoming_fires: dot should have OnClick")
     inClick(result.autoOpenIncomingToggle.dot)
-    assert(
-      changes.autoOpenIncoming ~= nil,
-      "test_auto_open_incoming_fires: should fire onChange with 'autoOpenIncoming' key"
-    )
+    assert(changes.autoOpenIncoming ~= nil, "test_auto_open_incoming_fires: should fire onChange with 'autoOpenIncoming' key")
 
     local outClick = result.autoOpenOutgoingToggle.dot:GetScript("OnClick")
     assert(outClick ~= nil, "test_auto_open_outgoing_fires: dot should have OnClick")
     outClick(result.autoOpenOutgoingToggle.dot)
-    assert(
-      changes.autoOpenOutgoing ~= nil,
-      "test_auto_open_outgoing_fires: should fire onChange with 'autoOpenOutgoing' key"
-    )
+    assert(changes.autoOpenOutgoing ~= nil, "test_auto_open_outgoing_fires: should fire onChange with 'autoOpenOutgoing' key")
   end
 
   -- test_auto_open_incoming_toggle_has_tooltip
@@ -258,14 +234,8 @@ return function()
     assert(resetOnClick ~= nil, "test_auto_open_included_in_reset: reset button should have OnClick")
     resetOnClick(result.resetButton)
 
-    assert(
-      changes.autoOpenIncoming == false,
-      "test_auto_open_included_in_reset: reset should set autoOpenIncoming to false (default)"
-    )
-    assert(
-      changes.autoOpenOutgoing == false,
-      "test_auto_open_included_in_reset: reset should set autoOpenOutgoing to false (default)"
-    )
+    assert(changes.autoOpenIncoming == false, "test_auto_open_included_in_reset: reset should set autoOpenIncoming to false (default)")
+    assert(changes.autoOpenOutgoing == false, "test_auto_open_included_in_reset: reset should set autoOpenOutgoing to false (default)")
   end
 
   -- test_double_escape_toggle_exists_and_defaults_off
@@ -301,10 +271,7 @@ return function()
     local onClick = result.doubleEscapeToggle.dot:GetScript("OnClick")
     assert(onClick ~= nil, "test_double_escape_fires: dot should have OnClick")
     onClick(result.doubleEscapeToggle.dot)
-    assert(
-      changes.doubleEscapeToClose ~= nil,
-      "test_double_escape_fires: should fire onChange with 'doubleEscapeToClose' key"
-    )
+    assert(changes.doubleEscapeToClose ~= nil, "test_double_escape_fires: should fire onChange with 'doubleEscapeToClose' key")
   end
 
   -- test_double_escape_included_in_reset
@@ -322,10 +289,7 @@ return function()
     assert(resetOnClick ~= nil, "test_double_escape_reset: reset button should have OnClick")
     resetOnClick(result.resetButton)
 
-    assert(
-      changes.doubleEscapeToClose == false,
-      "test_double_escape_reset: reset should set doubleEscapeToClose to false (default)"
-    )
+    assert(changes.doubleEscapeToClose == false, "test_double_escape_reset: reset should set doubleEscapeToClose to false (default)")
   end
 
   -- test_profanity_filter_toggle_writes_cvar_on_change
@@ -347,9 +311,6 @@ return function()
     assert(onClickHandler ~= nil, "test_profanity_filter_toggle_writes_cvar: toggle dot should have OnClick")
     onClickHandler(result.profanityFilterToggle.dot)
 
-    assert(
-      cvarWrites.profanityFilter ~= nil,
-      "test_profanity_filter_toggle_writes_cvar: should have called SetCVar('profanityFilter', ...)"
-    )
+    assert(cvarWrites.profanityFilter ~= nil, "test_profanity_filter_toggle_writes_cvar: should have called SetCVar('profanityFilter', ...)")
   end
 end

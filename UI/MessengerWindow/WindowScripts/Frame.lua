@@ -187,13 +187,7 @@ function Frame.WireFrame(refs, options)
     if frame and frame.SetSize then
       frame:SetSize(nextWidth, nextHeight)
     end
-    if
-      frame
-      and frame.ClearAllPoints
-      and frame.SetPoint
-      and type(stableLeft) == "number"
-      and type(stableTop) == "number"
-    then
+    if frame and frame.ClearAllPoints and frame.SetPoint and type(stableLeft) == "number" and type(stableTop) == "number" then
       frame:ClearAllPoints()
       frame:SetPoint("TOPLEFT", getFrameParent(), "BOTTOMLEFT", stableLeft, stableTop)
     end

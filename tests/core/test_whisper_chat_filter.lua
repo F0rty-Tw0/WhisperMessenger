@@ -81,10 +81,7 @@ return function()
       },
     })
 
-    assert(
-      registered["CHAT_MSG_WHISPER"] == nil,
-      "whisper filter should NOT be registered when hideFromDefaultChat is false"
-    )
+    assert(registered["CHAT_MSG_WHISPER"] == nil, "whisper filter should NOT be registered when hideFromDefaultChat is false")
     assert(Bootstrap._filtersRegistered == false, "flag should be false")
   end
 
@@ -137,10 +134,7 @@ return function()
     assert(removedEvents["CHAT_MSG_WHISPER"] == true, "whisper filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_WHISPER_INFORM"] == true, "whisper inform filter should be removed when suspended")
     assert(removedEvents["CHAT_MSG_BN_WHISPER"] == true, "BN whisper filter should be removed when suspended")
-    assert(
-      removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true,
-      "BN whisper inform filter should be removed when suspended"
-    )
+    assert(removedEvents["CHAT_MSG_BN_WHISPER_INFORM"] == true, "BN whisper inform filter should be removed when suspended")
     _G._wmSuspended = nil
   end
 
@@ -155,10 +149,7 @@ return function()
 
     Bootstrap._inCompetitiveContent = true
     Bootstrap.syncChatFilters()
-    assert(
-      Bootstrap._filtersRegistered == false,
-      "syncChatFilters should unregister during competitive content (pvp/arena)"
-    )
+    assert(Bootstrap._filtersRegistered == false, "syncChatFilters should unregister during competitive content (pvp/arena)")
     Bootstrap._inCompetitiveContent = nil
   end
 
@@ -167,10 +158,7 @@ return function()
   do
     assert(Bootstrap._filtersRegistered == false, "filters should be unregistered before re-register test")
     Bootstrap.syncChatFilters()
-    assert(
-      Bootstrap._filtersRegistered == true,
-      "syncChatFilters should re-register when competitive content ends and setting is on"
-    )
+    assert(Bootstrap._filtersRegistered == true, "syncChatFilters should re-register when competitive content ends and setting is on")
   end
 
   rawset(_G, "ChatFrame_AddMessageEventFilter", savedFilter)

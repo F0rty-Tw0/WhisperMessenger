@@ -9,10 +9,7 @@ local function colorsMatch(a, b)
   local function round(n)
     return math.floor((n or 0) * 1000 + 0.5)
   end
-  return round(a[1]) == round(b[1])
-    and round(a[2]) == round(b[2])
-    and round(a[3]) == round(b[3])
-    and round(a[4] or 1) == round(b[4] or 1)
+  return round(a[1]) == round(b[1]) and round(a[2]) == round(b[2]) and round(a[3]) == round(b[3]) and round(a[4] or 1) == round(b[4] or 1)
 end
 
 return function()
@@ -41,8 +38,7 @@ return function()
     )
     assert(
       composer.border.top.height == Theme.DIVIDER_THICKNESS,
-      "azeroth_composer: border thickness should be 1px (DIVIDER_THICKNESS), got "
-        .. tostring(composer.border.top.height)
+      "azeroth_composer: border thickness should be 1px (DIVIDER_THICKNESS), got " .. tostring(composer.border.top.height)
     )
     assert(
       composer.border.left.width == Theme.DIVIDER_THICKNESS,
@@ -59,10 +55,7 @@ return function()
     parent:SetSize(600, 52)
 
     local composer = Composer.Create(factory, parent, nil, function() end)
-    assert(
-      colorsMatch(composer.border.top.color, Theme.COLORS.divider),
-      "modern_composer: border color should match divider under wow_default"
-    )
+    assert(colorsMatch(composer.border.top.color, Theme.COLORS.divider), "modern_composer: border color should match divider under wow_default")
   end
 
   -- refreshTheme repaints to the new theme's divider color on preset
@@ -76,24 +69,15 @@ return function()
     parent:SetSize(600, 52)
 
     local composer = Composer.Create(factory, parent, nil, function() end)
-    assert(
-      colorsMatch(composer.border.top.color, Theme.COLORS.divider),
-      "refresh: precondition — wow_default divider"
-    )
+    assert(colorsMatch(composer.border.top.color, Theme.COLORS.divider), "refresh: precondition — wow_default divider")
 
     Theme.SetPreset("wow_native")
     composer.refreshTheme()
-    assert(
-      colorsMatch(composer.border.top.color, Theme.COLORS.divider),
-      "refresh: should repaint border to wow_native divider after preset switch"
-    )
+    assert(colorsMatch(composer.border.top.color, Theme.COLORS.divider), "refresh: should repaint border to wow_native divider after preset switch")
 
     Theme.SetPreset("plumber_warm")
     composer.refreshTheme()
-    assert(
-      colorsMatch(composer.border.top.color, Theme.COLORS.divider),
-      "refresh: should repaint border to plumber_warm divider after preset switch"
-    )
+    assert(colorsMatch(composer.border.top.color, Theme.COLORS.divider), "refresh: should repaint border to plumber_warm divider after preset switch")
   end
 
   if previousPreset then

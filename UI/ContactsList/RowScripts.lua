@@ -160,8 +160,7 @@ end
 --- Bind OnEnter / OnLeave hover scripts to a row.
 --- options may include: rowBaseBg (color table for base background)
 function RowScripts.bindHover(row, options)
-  row._wmRowBaseBg = (options and options.rowBaseBg)
-    or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
+  row._wmRowBaseBg = (options and options.rowBaseBg) or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
   row._wmRowHover = false
   row._wmActionHoverCount = 0
   row._wmIsPointerInside = function()

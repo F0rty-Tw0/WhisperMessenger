@@ -4,14 +4,8 @@ return function()
   -- AVAILABILITY_STATUS_BY_CODE (Enum.ChatWhisperTargetStatus: only 3 codes)
   assert(Types.AVAILABILITY_STATUS_BY_CODE[0] == "CanWhisper")
   assert(Types.AVAILABILITY_STATUS_BY_CODE[1] == "Offline")
-  assert(
-    Types.AVAILABILITY_STATUS_BY_CODE[2] == "WrongFaction",
-    "code 2 should map to WrongFaction per Enum.ChatWhisperTargetStatus"
-  )
-  assert(
-    Types.AVAILABILITY_STATUS_BY_CODE[3] == "WrongFaction",
-    "code 3 should map to WrongFaction (observed in-game for opposite-faction players)"
-  )
+  assert(Types.AVAILABILITY_STATUS_BY_CODE[2] == "WrongFaction", "code 2 should map to WrongFaction per Enum.ChatWhisperTargetStatus")
+  assert(Types.AVAILABILITY_STATUS_BY_CODE[3] == "WrongFaction", "code 3 should map to WrongFaction (observed in-game for opposite-faction players)")
 
   -- WHISPERABLE
   assert(Types.WHISPERABLE.CanWhisper == true)

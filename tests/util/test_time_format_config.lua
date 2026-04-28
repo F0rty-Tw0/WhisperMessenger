@@ -166,10 +166,7 @@ local function tests()
     _G.date = originalDate
 
     assert(#dayNameCalls == 1, "ContactPreview should have called date('%a', ...) once")
-    assert(
-      dayNameCalls[1] ~= threeDaysAgo,
-      "ContactPreview %a branch should apply server offset, got raw timestamp " .. tostring(dayNameCalls[1])
-    )
+    assert(dayNameCalls[1] ~= threeDaysAgo, "ContactPreview %a branch should apply server offset, got raw timestamp " .. tostring(dayNameCalls[1]))
     assert(
       dayNameCalls[1] == threeDaysAgo + 3600,
       "ContactPreview %a branch should add +3600s server offset, got diff " .. tostring(dayNameCalls[1] - threeDaysAgo)
@@ -178,8 +175,7 @@ local function tests()
     assert(#shortDateCalls == 1, "ContactPreview should have called date('%b %d', ...) once")
     assert(
       shortDateCalls[1] == twoWeeksAgo + 3600,
-      "ContactPreview %b %d branch should add +3600s server offset, got diff "
-        .. tostring(shortDateCalls[1] - twoWeeksAgo)
+      "ContactPreview %b %d branch should add +3600s server offset, got diff " .. tostring(shortDateCalls[1] - twoWeeksAgo)
     )
 
     assert(#longDateCalls == 1, "Relative should have called date('%b %d, %Y', ...) once")

@@ -192,10 +192,7 @@ return function()
 
     local api = { SendConversationMessage = function() end }
     local conv = { channel = ChannelType.BN_CONVERSATION, conversationID = 5 }
-    assert(
-      ChatGateway.CanSend(api, conv) == false,
-      "CanSend BN_CONVERSATION should be false when BNGetConversationInfo returns nil"
-    )
+    assert(ChatGateway.CanSend(api, conv) == false, "CanSend BN_CONVERSATION should be false when BNGetConversationInfo returns nil")
 
     restoreGlobals(saved)
   end
@@ -211,10 +208,7 @@ return function()
 
     local api = { SendConversationMessage = function() end }
     local conv = { channel = ChannelType.BN_CONVERSATION, conversationID = 5 }
-    assert(
-      ChatGateway.CanSend(api, conv) == true,
-      "CanSend BN_CONVERSATION should be true when BNGetConversationInfo returns non-nil"
-    )
+    assert(ChatGateway.CanSend(api, conv) == true, "CanSend BN_CONVERSATION should be true when BNGetConversationInfo returns non-nil")
 
     restoreGlobals(saved)
   end
@@ -230,10 +224,7 @@ return function()
     local conv = { channel = ChannelType.BN_CONVERSATION, conversationID = 5 }
     -- When BNGetConversationInfo is unavailable we skip the membership check
     -- (the API may not be present on all clients) and fall through to sender check.
-    assert(
-      ChatGateway.CanSend(api, conv) == true,
-      "CanSend BN_CONVERSATION should be true when BNGetConversationInfo is unavailable"
-    )
+    assert(ChatGateway.CanSend(api, conv) == true, "CanSend BN_CONVERSATION should be true when BNGetConversationInfo is unavailable")
 
     restoreGlobals(saved)
   end
@@ -265,10 +256,7 @@ return function()
 
     local api = { SendChatMessage = function() end }
     local conv = { channel = ChannelType.CHANNEL, channelBaseName = "General" }
-    assert(
-      ChatGateway.CanSend(api, conv) == true,
-      "CanSend CHANNEL should be true when GetChannelName returns non-zero"
-    )
+    assert(ChatGateway.CanSend(api, conv) == true, "CanSend CHANNEL should be true when GetChannelName returns non-zero")
 
     restoreGlobals(saved)
   end

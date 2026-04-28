@@ -1,7 +1,6 @@
 -- focused start-conversation dialog regression
 local FakeUI = require("tests.helpers.fake_ui")
-local StartConversationDialog =
-  require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons.StartConversationDialog")
+local StartConversationDialog = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons.StartConversationDialog")
 
 local function noop() end
 

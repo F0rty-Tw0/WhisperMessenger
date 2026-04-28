@@ -11,16 +11,7 @@ local function withAlpha(baseRgb, alpha)
   return { baseRgb[1], baseRgb[2], baseRgb[3], alpha }
 end
 
-local function makeDividerRoles(
-  baseRgb,
-  baseAlpha,
-  strongAlpha,
-  hoverRgb,
-  hoverAlpha,
-  fillAlpha,
-  outlineRgb,
-  outlineAlpha
-)
+local function makeDividerRoles(baseRgb, baseAlpha, strongAlpha, hoverRgb, hoverAlpha, fillAlpha, outlineRgb, outlineAlpha)
   return {
     divider = withAlpha(baseRgb, baseAlpha),
     divider_strong = withAlpha(baseRgb, strongAlpha),
@@ -74,8 +65,7 @@ local roles = {
   action_icon = withAlpha(textSecondaryRgb, 0.70),
 }
 
-local dividers =
-  makeDividerRoles(rgb(0.15, 0.16, 0.22), 0.60, 0.90, rgb(0.18, 0.19, 0.25), 0.72, 0.08, rgb(0.20, 0.22, 0.30), 0.20)
+local dividers = makeDividerRoles(rgb(0.15, 0.16, 0.22), 0.60, 0.90, rgb(0.18, 0.19, 0.25), 0.72, 0.08, rgb(0.20, 0.22, 0.30), 0.20)
 for k, v in pairs(dividers) do
   roles[k] = v
 end

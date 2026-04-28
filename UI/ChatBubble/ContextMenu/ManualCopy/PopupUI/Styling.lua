@@ -210,11 +210,7 @@ function Styling.styleManualCopyDialog(dialog, dialogName)
     return
   end
 
-  if
-    dialog._wmRoundedBackground == nil
-    and type(dialog.CreateTexture) == "function"
-    and type(UIHelpers.createRoundedBackground) == "function"
-  then
+  if dialog._wmRoundedBackground == nil and type(dialog.CreateTexture) == "function" and type(UIHelpers.createRoundedBackground) == "function" then
     dialog._wmRoundedBackground = UIHelpers.createRoundedBackground(dialog, 10)
     StylingCommon.setPartsShown(dialog._wmRoundedBackground, false)
   end

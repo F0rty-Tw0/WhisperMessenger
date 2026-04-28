@@ -64,8 +64,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, {
       selectedConversationKey = currentSelectedKey,
       visibleCount = visibleCount,
-      hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview()
-        or options.hideMessagePreview,
+      hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview() or options.hideMessagePreview,
       onSelect = function(item)
         if options.onSelect then
           options.onSelect(item)

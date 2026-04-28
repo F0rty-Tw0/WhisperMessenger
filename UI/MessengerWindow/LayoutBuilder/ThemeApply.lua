@@ -95,9 +95,7 @@ function ThemeApply.Create(options)
     applyColorTexture(contactsDivider, activeTheme.COLORS.contacts_divider or activeTheme.COLORS.divider)
 
     local strongDividerThemeColor = { divider[1], divider[2], divider[3], 1 }
-    local activeContactsBorder = activeTheme.COLORS.contacts_border_right
-      or activeTheme.COLORS.contacts_divider
-      or divider
+    local activeContactsBorder = activeTheme.COLORS.contacts_border_right or activeTheme.COLORS.contacts_divider or divider
     local strongActiveContactsBorder = {
       activeContactsBorder[1],
       activeContactsBorder[2],

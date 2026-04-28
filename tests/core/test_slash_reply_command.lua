@@ -23,10 +23,7 @@ return function()
 
   assert(_G.SLASH_WHISPERMESSENGER_REPLY1 == "/wr", "SLASH_WHISPERMESSENGER_REPLY1 should be /wr")
   assert(_G.SLASH_WHISPERMESSENGER_REPLY2 == "/wreply", "SLASH_WHISPERMESSENGER_REPLY2 should be /wreply")
-  assert(
-    type(_G.SlashCmdList["WHISPERMESSENGER_REPLY"]) == "function",
-    "SlashCmdList.WHISPERMESSENGER_REPLY should be registered"
-  )
+  assert(type(_G.SlashCmdList["WHISPERMESSENGER_REPLY"]) == "function", "SlashCmdList.WHISPERMESSENGER_REPLY should be registered")
 
   _G.SlashCmdList["WHISPERMESSENGER_REPLY"]("")
   assert(replied == 1, "invoking /wr should call replyToLast handler exactly once, got " .. replied)

@@ -26,10 +26,7 @@ return function()
       useNativeChrome = false,
     })
 
-    assert(
-      chrome.frame.template == "BackdropTemplate",
-      "modern chrome: expected BackdropTemplate, got " .. tostring(chrome.frame.template)
-    )
+    assert(chrome.frame.template == "BackdropTemplate", "modern chrome: expected BackdropTemplate, got " .. tostring(chrome.frame.template))
     assert(chrome.frame.Inset == nil, "modern chrome: should NOT have template Inset")
     assert(chrome.frame.CloseButton == nil, "modern chrome: should NOT have template CloseButton")
     assert(chrome.title ~= nil, "modern chrome: custom title FontString should exist")
@@ -64,10 +61,7 @@ return function()
 
     assert(chrome.background == chrome.frame.Bg, "blizzard chrome: chrome.background aliases frame.Bg")
     assert(chrome.title == chrome.frame.TitleText, "blizzard chrome: chrome.title aliases frame.TitleText")
-    assert(
-      chrome.closeButton == chrome.frame.CloseButton,
-      "blizzard chrome: chrome.closeButton aliases frame.CloseButton"
-    )
+    assert(chrome.closeButton == chrome.frame.CloseButton, "blizzard chrome: chrome.closeButton aliases frame.CloseButton")
   end
 
   -- Default (no useNativeChrome flag) should be modern chrome.
@@ -92,10 +86,8 @@ return function()
     })
 
     assert(chrome.newConversationButton ~= nil, "expected a New Conversation button in both chromes")
-    local onEnterScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnEnter")
-      or nil
-    local onLeaveScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnLeave")
-      or nil
+    local onEnterScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnEnter") or nil
+    local onLeaveScript = chrome.newConversationButton.GetScript and chrome.newConversationButton:GetScript("OnLeave") or nil
     assert(type(onEnterScript) == "function", "expected New Conversation button OnEnter script")
     assert(type(onLeaveScript) == "function", "expected New Conversation button OnLeave script")
 

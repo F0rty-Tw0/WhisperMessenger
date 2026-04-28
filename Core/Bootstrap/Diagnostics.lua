@@ -27,8 +27,9 @@ elseif type(require) == "function" then
   end
 end
 
-local DiagnosticsMemoryReport = ns.BootstrapDiagnosticsMemoryReport
-  or require("WhisperMessenger.Core.Bootstrap.Diagnostics.MemoryReport")
+-- stylua: ignore start
+local DiagnosticsMemoryReport = ns.BootstrapDiagnosticsMemoryReport or require("WhisperMessenger.Core.Bootstrap.Diagnostics.MemoryReport")
+-- stylua: ignore end
 
 local Diagnostics = {}
 ns.BootstrapDiagnostics = Diagnostics
@@ -118,8 +119,7 @@ function Diagnostics.Create(deps)
 
     if isBN and conversation.bnetAccountID then
       local bnetResolver = deps.bnetResolver or loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
-      local accountInfo =
-        bnetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid, conversation.displayName)
+      local accountInfo = bnetResolver.ResolveAccountInfo(runtime.bnetApi, conversation.bnetAccountID, guid, conversation.displayName)
       trace("[live] BNet API (ResolveAccountInfo):")
       if accountInfo then
         local gi = accountInfo.gameAccountInfo
@@ -199,8 +199,7 @@ function Diagnostics.Create(deps)
         bnetAccountID = conversation.bnetAccountID,
       },
     }
-    local contactEnricher = deps.contactEnricher
-      or loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
+    local contactEnricher = deps.contactEnricher or loadModule("WhisperMessenger.Model.ContactEnricher", "ContactEnricher")
     contactEnricher.EnrichContactsAvailability(testContacts, runtime)
     local enriched = testContacts[1].availability
     trace("[enriched] final availability (what the UI displays):")

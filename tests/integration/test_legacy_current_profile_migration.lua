@@ -53,10 +53,7 @@ return function()
 
   local migratedKey = "wow::WOW::jaina-proudmoore"
   assert(runtime.localProfileId == "arthas-area52")
-  assert(
-    accountState.conversations[migratedKey] ~= nil,
-    "expected legacy current conversation to migrate to the resolved profile"
-  )
+  assert(accountState.conversations[migratedKey] ~= nil, "expected legacy current conversation to migrate to the resolved profile")
   assert(
     accountState.conversations["current::WOW::jaina-proudmoore"] == nil,
     "expected legacy current conversation key to be removed after migration"
@@ -64,10 +61,7 @@ return function()
   assert(characterState.activeConversationKey == migratedKey, "expected active conversation to follow the migrated key")
   assert(runtime.icon.badgeLabel.text == "2", "expected migrated unread count to remain visible")
   runtime.ensureWindow()
-  assert(
-    runtime.window.contacts.rows[1].item.conversationKey == migratedKey,
-    "expected migrated conversation to appear in contacts"
-  )
+  assert(runtime.window.contacts.rows[1].item.conversationKey == migratedKey, "expected migrated conversation to appear in contacts")
 
   _G.UIParent = savedUIParent
   _G.SlashCmdList = savedSlashCmdList

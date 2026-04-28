@@ -21,9 +21,7 @@ local function captureLiveGeometry(view)
     return 0, 0
   end
 
-  local fallbackViewportWidth = view.hasOverflow
-      and math.max((view.totalWidth or 0) - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0)
-    or (view.totalWidth or 0)
+  local fallbackViewportWidth = view.hasOverflow and math.max((view.totalWidth or 0) - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0) or (view.totalWidth or 0)
   local liveViewportWidth = sizeValue(view.scrollFrame, "GetWidth", "width", fallbackViewportWidth)
   local liveViewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", view.viewportHeight or 0)
 

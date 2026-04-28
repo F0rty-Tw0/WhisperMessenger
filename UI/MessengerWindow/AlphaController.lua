@@ -109,8 +109,7 @@ end
 
 -- settings (optional): { dimWhenMoving, windowOpacityActive, windowOpacityInactive }
 function AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, settings)
-  local alphaConfig = settings and { active = settings.windowOpacityActive, inactive = settings.windowOpacityInactive }
-    or nil
+  local alphaConfig = settings and { active = settings.windowOpacityActive, inactive = settings.windowOpacityInactive } or nil
   if forceOpaque == true then
     AlphaController.applyWindowAlpha(frame, false, windowState, alphaConfig)
     return

@@ -289,10 +289,7 @@ return function()
     hookedFunctions["ChatFrame_ReplyTell"] == nil,
     "ChatFrame_ReplyTell must NOT be hooked — causes false WhisperMessenger attribution on Blizzard taint"
   )
-  assert(
-    hookedFunctions["ChatFrame_ReplyTell2"] == nil,
-    "ChatFrame_ReplyTell2 must NOT be hooked — same false-attribution issue"
-  )
+  assert(hookedFunctions["ChatFrame_ReplyTell2"] == nil, "ChatFrame_ReplyTell2 must NOT be hooked — same false-attribution issue")
 
   -- Reply-hook scenarios removed: ChatFrame_ReplyTell / ReplyTell2 are no
   -- longer hooked. The /wr slash command (covered by its own test file) is
@@ -471,22 +468,10 @@ return function()
     inCombat = false
     pollFrame.scripts.OnUpdate(pollFrame)
 
-    assert(
-      #sendTellCalls == prevSendTellCount,
-      "expected combat-carried draft to remain in Blizzard chat after combat ends"
-    )
-    assert(
-      #deactivated == prevDeactivatedCount,
-      "expected combat-carried draft edit box to remain open after combat ends"
-    )
-    assert(
-      carriedDraftBox:GetText() == "typed during combat",
-      "expected combat-carried draft text to remain unchanged after combat ends"
-    )
-    assert(
-      carriedDraftBox:HasFocus() == true,
-      "expected combat-carried draft focus to remain in Blizzard chat after combat ends"
-    )
+    assert(#sendTellCalls == prevSendTellCount, "expected combat-carried draft to remain in Blizzard chat after combat ends")
+    assert(#deactivated == prevDeactivatedCount, "expected combat-carried draft edit box to remain open after combat ends")
+    assert(carriedDraftBox:GetText() == "typed during combat", "expected combat-carried draft text to remain unchanged after combat ends")
+    assert(carriedDraftBox:HasFocus() == true, "expected combat-carried draft focus to remain in Blizzard chat after combat ends")
   end
 
   -- test_direct_hook_preserves_combat_typed_draft_after_combat_ends
@@ -519,19 +504,10 @@ return function()
     local prevTimerCount = #timerCallbacks
     hookedFunctions["ChatFrame_SendTell"][1]("Arthas")
 
-    assert(
-      #sendTellCalls == prevSendTellCount,
-      "expected direct hook to keep combat-carried draft in Blizzard chat after combat ends"
-    )
+    assert(#sendTellCalls == prevSendTellCount, "expected direct hook to keep combat-carried draft in Blizzard chat after combat ends")
     assert(#deactivated == prevDeactivatedCount, "expected direct hook not to close combat-carried draft edit box")
-    assert(
-      #timerCallbacks == prevTimerCount,
-      "expected direct hook not to schedule deferred close for combat-carried draft"
-    )
-    assert(
-      carriedDraftBox:GetText() == "typed during combat",
-      "expected direct hook to preserve combat-carried draft text"
-    )
+    assert(#timerCallbacks == prevTimerCount, "expected direct hook not to schedule deferred close for combat-carried draft")
+    assert(carriedDraftBox:GetText() == "typed during combat", "expected direct hook to preserve combat-carried draft text")
     assert(carriedDraftBox:HasFocus() == true, "expected direct hook to preserve focus for combat-carried draft")
   end
 

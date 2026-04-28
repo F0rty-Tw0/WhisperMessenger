@@ -3,12 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ContactsController = ns.MessengerWindowContactsController
-  or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
+local ContactsController = ns.MessengerWindowContactsController or require("WhisperMessenger.UI.MessengerWindow.ContactsController")
 local ContactsSearchController = ns.MessengerWindowContactsSearchController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsSearchController")
-local ContactSearch = ns.MessengerWindowContactSearch
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
+local ContactSearch = ns.MessengerWindowContactSearch or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactSearch")
 local TabToggle = ns.ContactsListTabToggle or require("WhisperMessenger.UI.ContactsList.TabToggle")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local EmptyState = ns.ContactsListEmptyState or require("WhisperMessenger.UI.ContactsList.EmptyState")
@@ -26,8 +24,7 @@ function ContactsRuntime.Create(factory, options)
   end
 
   -- Tab toggle mode — persists in characterState via onTabModeChanged
-  local currentTabMode = (options.initialTabMode and options.initialTabMode ~= "") and options.initialTabMode
-    or "whispers"
+  local currentTabMode = (options.initialTabMode and options.initialTabMode ~= "") and options.initialTabMode or "whispers"
 
   -- Forward-declare so the tab toggle callback can call it after
   -- contactsSearchController is wired below.

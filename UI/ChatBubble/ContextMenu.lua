@@ -4,9 +4,10 @@ if type(ns) ~= "table" then
 end
 
 local ContextMenu = {}
+-- stylua: ignore start
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local ManualCopy = ns.ChatBubbleContextMenuManualCopy
-  or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+-- stylua: ignore end
 
 local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
 
@@ -58,10 +59,7 @@ function ContextMenu.CopyText(text)
 end
 
 function ContextMenu.Open(text, anchorFrame)
-  local normalized = type(ManualCopy) == "table"
-      and type(ManualCopy.NormalizeText) == "function"
-      and ManualCopy.NormalizeText(text)
-    or nil
+  local normalized = type(ManualCopy) == "table" and type(ManualCopy.NormalizeText) == "function" and ManualCopy.NormalizeText(text) or nil
   if normalized == nil then
     return false
   end

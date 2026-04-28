@@ -156,10 +156,7 @@ return function()
       return 1011
     end
     tickerCbs[1]()
-    assert(
-      #requestCalls == initial + 1,
-      "ticker tick should invoke a refresh, got delta: " .. tostring(#requestCalls - initial)
-    )
+    assert(#requestCalls == initial + 1, "ticker tick should invoke a refresh, got delta: " .. tostring(#requestCalls - initial))
   end
 
   -- scheduleAvailabilityRefresh: fires a deferred refreshWindow while visible
@@ -196,10 +193,7 @@ return function()
     })
 
     coord.setWindowVisible(true)
-    assert(
-      type(coord.scheduleAvailabilityRefresh) == "function",
-      "coordinator should expose scheduleAvailabilityRefresh"
-    )
+    assert(type(coord.scheduleAvailabilityRefresh) == "function", "coordinator should expose scheduleAvailabilityRefresh")
 
     refreshSelectionCalls = 0
     coord.scheduleAvailabilityRefresh("g1")
@@ -214,10 +208,7 @@ return function()
 
     -- Fire the scheduled callback → refresh actually happens
     afterCalls[1].cb()
-    assert(
-      refreshSelectionCalls == 1,
-      "deferred callback should trigger refresh, got: " .. tostring(refreshSelectionCalls)
-    )
+    assert(refreshSelectionCalls == 1, "deferred callback should trigger refresh, got: " .. tostring(refreshSelectionCalls))
 
     -- Subsequent schedule after drain enqueues a new After
     coord.scheduleAvailabilityRefresh("g4")
@@ -300,10 +291,7 @@ return function()
       return 1011
     end
     tickerCbs[1]()
-    assert(
-      #requestCalls == initial,
-      "ticker must not refresh while hidden, got delta: " .. tostring(#requestCalls - initial)
-    )
+    assert(#requestCalls == initial, "ticker must not refresh while hidden, got delta: " .. tostring(#requestCalls - initial))
   end
 
   -- refreshContacts suppresses the widget preview while the window is open,

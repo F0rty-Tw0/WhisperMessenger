@@ -46,10 +46,7 @@ return function()
 
     composer.input.scripts.OnEscapePressed(composer.input)
 
-    assert(
-      escapes == 0,
-      "double-escape ON: first ESC should NOT invoke onEscape (only clear focus), got " .. tostring(escapes)
-    )
+    assert(escapes == 0, "double-escape ON: first ESC should NOT invoke onEscape (only clear focus), got " .. tostring(escapes))
     assert(composer.input:HasFocus() == false, "double-escape ON: first ESC should clear composer focus")
   end
 

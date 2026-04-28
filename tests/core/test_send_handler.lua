@@ -101,10 +101,7 @@ return function()
   local combatConversation = runtime.store.conversations[payload.conversationKey]
   assert(combatConversation ~= nil, "expected conversation to exist after InCombatLockdown block")
   assert(#combatConversation.messages == 2, "expected second blocked outgoing message to be recorded")
-  assert(
-    combatConversation.messages[2].blockedReason == "Lockdown",
-    "expected blocked reason Lockdown on InCombatLockdown block"
-  )
+  assert(combatConversation.messages[2].blockedReason == "Lockdown", "expected blocked reason Lockdown on InCombatLockdown block")
 
   -- Test 4: Legacy BNSendWhisper fallback supports Classic/TBC Battle.net sends
   rawset(runtime, "isChatMessagingLocked", function()
@@ -159,10 +156,7 @@ return function()
 
   local competitiveStatus = runtime.sendStatusByConversation[payload.conversationKey]
   assert(competitiveStatus ~= nil, "expected competitive status to be set")
-  assert(
-    competitiveStatus.status == "Competitive Content",
-    "expected 'Competitive Content' status, got: " .. tostring(competitiveStatus.status)
-  )
+  assert(competitiveStatus.status == "Competitive Content", "expected 'Competitive Content' status, got: " .. tostring(competitiveStatus.status))
 
   -- Blocked outgoing message should be recorded
   local compConversation = runtime.store.conversations[payload.conversationKey]

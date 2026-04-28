@@ -17,25 +17,16 @@ function ContactsResize.New(options)
     end
 
     local divider = options.layout and options.layout.contactsDivider or nil
-    local dividerColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_divider or frameTheme.COLORS.divider)
-      or { 0.20, 0.22, 0.28, 1 }
-    local dividerHoverColor = frameTheme.COLORS
-        and (frameTheme.COLORS.contacts_divider_hover or frameTheme.COLORS.accent_primary)
+    local dividerColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_divider or frameTheme.COLORS.divider) or { 0.20, 0.22, 0.28, 1 }
+    local dividerHoverColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_divider_hover or frameTheme.COLORS.accent_primary)
       or { 0.24, 0.32, 0.54, 0.95 }
-    local hoverFillColor = frameTheme.COLORS
-        and (frameTheme.COLORS.contacts_resize_hover_fill or frameTheme.COLORS.bg_contact_hover)
+    local hoverFillColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_resize_hover_fill or frameTheme.COLORS.bg_contact_hover)
       or { 0.24, 0.32, 0.54, 0.22 }
-    local outlineColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_resize_outline or dividerHoverColor)
-      or { 0.24, 0.32, 0.54, 0.62 }
+    local outlineColor = frameTheme.COLORS and (frameTheme.COLORS.contacts_resize_outline or dividerHoverColor) or { 0.24, 0.32, 0.54, 0.62 }
 
     if divider and divider.SetColorTexture then
       if isActive then
-        divider:SetColorTexture(
-          dividerHoverColor[1],
-          dividerHoverColor[2],
-          dividerHoverColor[3],
-          dividerHoverColor[4] or 1
-        )
+        divider:SetColorTexture(dividerHoverColor[1], dividerHoverColor[2], dividerHoverColor[3], dividerHoverColor[4] or 1)
       else
         divider:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], dividerColor[4] or 1)
       end
@@ -43,12 +34,7 @@ function ContactsResize.New(options)
 
     if contactsResizeHandle.hoverBg and contactsResizeHandle.hoverBg.SetColorTexture then
       if isActive then
-        contactsResizeHandle.hoverBg:SetColorTexture(
-          hoverFillColor[1],
-          hoverFillColor[2],
-          hoverFillColor[3],
-          hoverFillColor[4] or 1
-        )
+        contactsResizeHandle.hoverBg:SetColorTexture(hoverFillColor[1], hoverFillColor[2], hoverFillColor[3], hoverFillColor[4] or 1)
       else
         contactsResizeHandle.hoverBg:SetColorTexture(0, 0, 0, 0)
       end

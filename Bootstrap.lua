@@ -51,23 +51,19 @@ end
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
-local MYTHIC_PAUSE_NOTICE =
-  "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
+local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
   trace("initialize start")
 
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
-  local RestrictedActions =
-    loadModule("WhisperMessenger.Core.Bootstrap.RestrictedActions", "BootstrapRestrictedActions")
+  local RestrictedActions = loadModule("WhisperMessenger.Core.Bootstrap.RestrictedActions", "BootstrapRestrictedActions")
   local ChatFilters = loadModule("WhisperMessenger.Core.Bootstrap.ChatFilters", "BootstrapChatFilters")
   local ReplyKeyBinder = loadModule("WhisperMessenger.Core.Bootstrap.ReplyKeyBinder", "BootstrapReplyKeyBinder")
-  local MythicSuspendController =
-    loadModule("WhisperMessenger.Core.Bootstrap.MythicSuspendController", "BootstrapMythicSuspendController")
+  local MythicSuspendController = loadModule("WhisperMessenger.Core.Bootstrap.MythicSuspendController", "BootstrapMythicSuspendController")
   local WindowRuntime = loadModule("WhisperMessenger.Core.Bootstrap.WindowRuntime", "BootstrapWindowRuntime")
-  local AutoOpenCoordinator =
-    loadModule("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator", "BootstrapAutoOpenCoordinator")
+  local AutoOpenCoordinator = loadModule("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator", "BootstrapAutoOpenCoordinator")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
@@ -80,8 +76,7 @@ function Bootstrap.Initialize(factory, options)
 
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
-  local accountState, characterState =
-    SavedState.Initialize(options.accountState, options.characterState, localProfileId)
+  local accountState, characterState = SavedState.Initialize(options.accountState, options.characterState, localProfileId)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   ns._channelMessageState = runtime.channelMessageStore

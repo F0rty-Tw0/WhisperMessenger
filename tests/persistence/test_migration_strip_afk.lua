@@ -69,10 +69,7 @@ return function()
   assert(result == savedState, "migration should preserve the original saved-state table")
   assert(result.conversations == originalConversations, "migration should preserve conversations table identity")
   assert(result.contacts == originalContacts, "migration should preserve contacts table identity")
-  assert(
-    result.pendingHydration == originalPendingHydration,
-    "migration should preserve pendingHydration table identity"
-  )
+  assert(result.pendingHydration == originalPendingHydration, "migration should preserve pendingHydration table identity")
 
   -- AFK and DND messages should be stripped
   local arthasConv = result.conversations["me::WOW::arthas-area52"]

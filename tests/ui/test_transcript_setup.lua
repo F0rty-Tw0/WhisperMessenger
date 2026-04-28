@@ -62,10 +62,7 @@ return function()
 
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
 
-    assert(
-      transcript.text.autoFocus == false,
-      "test_edit_box_auto_focus_disabled: SetAutoFocus(false) should be called"
-    )
+    assert(transcript.text.autoFocus == false, "test_edit_box_auto_focus_disabled: SetAutoFocus(false) should be called")
   end
 
   -- test_edit_box_hyperlinks_enabled
@@ -77,10 +74,7 @@ return function()
 
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
 
-    assert(
-      transcript.text.hyperlinksEnabled == true,
-      "test_edit_box_hyperlinks_enabled: SetHyperlinksEnabled(true) should be called"
-    )
+    assert(transcript.text.hyperlinksEnabled == true, "test_edit_box_hyperlinks_enabled: SetHyperlinksEnabled(true) should be called")
   end
 
   -- test_url_hyperlink_click_avoids_protected_launch_and_copies_link
@@ -112,12 +106,7 @@ return function()
     local stub = makeConversationPaneStub()
 
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
-    transcript.text.scripts.OnHyperlinkClick(
-      transcript.text,
-      "url:https://example.com/help",
-      "https://example.com/help",
-      "LeftButton"
-    )
+    transcript.text.scripts.OnHyperlinkClick(transcript.text, "url:https://example.com/help", "https://example.com/help", "LeftButton")
 
     assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
     assert(copiedUrl == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")
@@ -138,10 +127,7 @@ return function()
 
     -- After ConfigureTranscript, transcript.text should exist and have empty text
     assert(transcript.text ~= nil, "test_initial_layout_called: transcript.text must exist after configure")
-    assert(
-      transcript.text.text == "" or transcript.text.text == nil,
-      "test_initial_layout_called: transcript.text should be set to empty string"
-    )
+    assert(transcript.text.text == "" or transcript.text.text == nil, "test_initial_layout_called: transcript.text should be set to empty string")
   end
 
   -- test_scroll_wiring_preserves_original_mouse_wheel_handler
@@ -174,15 +160,9 @@ return function()
     transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
 
     local wheelHandler = transcript.scrollFrame:GetScript("OnMouseWheel")
-    assert(
-      type(wheelHandler) == "function",
-      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel handler must exist"
-    )
+    assert(type(wheelHandler) == "function", "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel handler must exist")
     wheelHandler(transcript.scrollFrame, -1)
-    assert(
-      wheelOriginalCalled,
-      "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should be called"
-    )
+    assert(wheelOriginalCalled, "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should be called")
     assert(
       wheelDelta == -1,
       "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should receive the wheel delta"
@@ -229,17 +209,11 @@ return function()
     transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
 
     local valueHandler = transcript.scrollBar:GetScript("OnValueChanged")
-    assert(
-      type(valueHandler) == "function",
-      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged handler must exist"
-    )
+    assert(type(valueHandler) == "function", "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged handler must exist")
     valueOriginalCalled = false
     valueSeen = nil
     valueHandler(transcript.scrollBar, TranscriptView.TRANSCRIPT_SCROLL_STEP)
-    assert(
-      valueOriginalCalled,
-      "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should be called"
-    )
+    assert(valueOriginalCalled, "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should be called")
     assert(
       valueSeen == TranscriptView.TRANSCRIPT_SCROLL_STEP,
       "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should receive the scroll value"

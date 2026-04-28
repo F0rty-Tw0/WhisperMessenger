@@ -78,10 +78,7 @@ return function()
 
   local ok, err = pcall(frame.scripts.OnEvent, frame, "ADDON_LOADED", "WhisperMessenger")
   assert(ok, "expected install to tolerate unknown lifecycle events; got error: " .. tostring(err))
-  assert(
-    frame.events["BN_FRIEND_LIST_SIZE_CHANGED"] == true,
-    "expected lifecycle events before the unknown one to register"
-  )
+  assert(frame.events["BN_FRIEND_LIST_SIZE_CHANGED"] == true, "expected lifecycle events before the unknown one to register")
   assert(frame.events["UPDATE_BINDINGS"] == true, "expected lifecycle events after the unknown one to register")
   assert(frame.events["ADDON_RESTRICTION_STATE_CHANGED"] == nil, "expected unknown lifecycle event to be skipped")
 end

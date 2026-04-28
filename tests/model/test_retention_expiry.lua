@@ -150,14 +150,8 @@ return function()
     assert(conv ~= nil, "expected pinned conversation to exist")
     assert(conv.pinned == true, "expected conversation to remain pinned")
     assert(#conv.messages == 2, "expected pinned conversation to stay capped at 2 messages, got " .. #conv.messages)
-    assert(
-      conv.messages[1].id == "2",
-      "expected oldest capped message to be id 2, got " .. tostring(conv.messages[1].id)
-    )
-    assert(
-      conv.messages[2].id == "3",
-      "expected newest capped message to be id 3, got " .. tostring(conv.messages[2].id)
-    )
+    assert(conv.messages[1].id == "2", "expected oldest capped message to be id 2, got " .. tostring(conv.messages[1].id))
+    assert(conv.messages[2].id == "3", "expected newest capped message to be id 3, got " .. tostring(conv.messages[2].id))
   end
 
   -- test_store_expire_all_keeps_old_messages_for_pinned_conversations
@@ -248,24 +242,13 @@ return function()
 
     rawset(_G, "time", savedTime)
 
-    assert(
-      state.conversations["key::unpinned-stale"] == nil,
-      "expected stale pinned conversation to be removed immediately after unpin"
-    )
+    assert(state.conversations["key::unpinned-stale"] == nil, "expected stale pinned conversation to be removed immediately after unpin")
   end
 
   -- test_default_config_has_24h_expiry
   do
-    local runtime = RuntimeFactory.CreateRuntimeState(
-      { conversations = {} },
-      { activeConversationKey = nil },
-      "testplayer",
-      {}
-    )
-    assert(
-      runtime.store.config.messageMaxAge == 86400,
-      "expected default messageMaxAge=86400, got " .. tostring(runtime.store.config.messageMaxAge)
-    )
+    local runtime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, { activeConversationKey = nil }, "testplayer", {})
+    assert(runtime.store.config.messageMaxAge == 86400, "expected default messageMaxAge=86400, got " .. tostring(runtime.store.config.messageMaxAge))
     assert(
       runtime.store.config.conversationMaxAge == 86400,
       "expected default conversationMaxAge=86400, got " .. tostring(runtime.store.config.conversationMaxAge)
@@ -286,8 +269,7 @@ return function()
     )
     assert(
       runtime.store.config.conversationMaxAge == 7200,
-      "expected conversationMaxAge to match messageMaxAge=7200, got "
-        .. tostring(runtime.store.config.conversationMaxAge)
+      "expected conversationMaxAge to match messageMaxAge=7200, got " .. tostring(runtime.store.config.conversationMaxAge)
     )
   end
 
@@ -312,10 +294,7 @@ return function()
 
     Store.ExpireAll(state, now)
 
-    assert(
-      state.conversations["key::stale-contact"] == nil,
-      "expected stale contact (last activity > retention) to be removed"
-    )
+    assert(state.conversations["key::stale-contact"] == nil, "expected stale contact (last activity > retention) to be removed")
     assert(state.conversations["key::recent-contact"] ~= nil, "expected recent contact to be kept")
   end
 end

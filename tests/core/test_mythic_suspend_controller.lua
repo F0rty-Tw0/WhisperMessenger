@@ -59,8 +59,7 @@ return function()
     runtime.suspend()
 
     assert(
-      runtime.messagingNotice
-        == "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave.",
+      runtime.messagingNotice == "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave.",
       "suspend should set the mythic pause notice"
     )
     assert(Bootstrap._wasVisibleBeforeMythic == true, "suspend should capture previous window visibility")
@@ -82,14 +81,10 @@ return function()
     assert(_G._wmSuspended == nil, "resume should clear the global suspended flag")
     assert(Bootstrap._wasVisibleBeforeMythic == nil, "resume should clear the remembered visibility flag")
     assert(
-      table.concat(calls, ",")
-        == "RegisterLiveEvents,RegisterSuspendableLifecycleEvents,registerChatFilters,setWindowVisible:true,refreshWindow",
+      table.concat(calls, ",") == "RegisterLiveEvents,RegisterSuspendableLifecycleEvents,registerChatFilters,setWindowVisible:true,refreshWindow",
       "resume should restore event bridge hooks before chat filters, then show and refresh the window"
     )
-    assert(
-      printed[2] == "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.",
-      "resume should print the existing resume message"
-    )
+    assert(printed[2] == "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.", "resume should print the existing resume message")
 
     _G._wmSuspended = savedSuspended
   end

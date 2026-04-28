@@ -48,10 +48,7 @@ return function()
     local entry = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "arthas-area52")
     assert(entry ~= nil, "should have recorded the message")
     assert(entry.text == "WTS [Thunderfury] 50k", "text mismatch: " .. tostring(entry.text))
-    assert(
-      entry.channelLabel == "Trade",
-      "channelLabel should extract base name, got: " .. tostring(entry.channelLabel)
-    )
+    assert(entry.channelLabel == "Trade", "channelLabel should extract base name, got: " .. tostring(entry.channelLabel))
     assert(entry.playerName == "Arthas-Area52", "playerName mismatch")
     assert(entry.sentAt == 5000, "sentAt should use runtime.now()")
   end
@@ -97,9 +94,6 @@ return function()
     -- "4. LookingForGroup" (no zone suffix) → "4. LookingForGroup" (full string as fallback)
     EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg3", "P3-Realm", "", "4. LookingForGroup")
     local e3 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p3-realm")
-    assert(
-      e3.channelLabel == "4. LookingForGroup",
-      "fallback should use full string, got: " .. tostring(e3.channelLabel)
-    )
+    assert(e3.channelLabel == "4. LookingForGroup", "fallback should use full string, got: " .. tostring(e3.channelLabel))
   end
 end

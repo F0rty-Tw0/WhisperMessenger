@@ -19,25 +19,17 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 
-local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
+local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local ConversationSelector = ns.BootstrapWindowRuntimeConversationSelector
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ConversationSelector")
-local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
-local StartConversation = ns.BootstrapWindowRuntimeStartConversation
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
-local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
-local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
-local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
-local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
-local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings
-  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
+local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
+local StartConversation = ns.BootstrapWindowRuntimeStartConversation or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
+local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
+local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
+local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
+local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 
 local WindowRuntime = {}
 

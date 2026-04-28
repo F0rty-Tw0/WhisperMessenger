@@ -55,14 +55,7 @@ return function()
 
   assert(accountState.conversations["wow::WOW::jaina-proudmoore"].unreadCount == 1)
 
-  EventBridge.RouteChannelEvent(
-    arthasRuntime,
-    "CHAT_MSG_CHANNEL",
-    "WTS [Thunderfury] 50k",
-    "Jaina-Proudmoore",
-    "",
-    "2. Trade - Stormwind City"
-  )
+  EventBridge.RouteChannelEvent(arthasRuntime, "CHAT_MSG_CHANNEL", "WTS [Thunderfury] 50k", "Jaina-Proudmoore", "", "2. Trade - Stormwind City")
 
   local thrallCharacterState = {
     window = { x = 0, y = 0, width = 900, height = 560, minimized = false },
@@ -84,8 +77,7 @@ return function()
   })
 
   assert(thrallRuntime.localProfileId == "thrall-draenor")
-  local sharedChannelEntry =
-    ChannelMessageStore.GetLatest(thrallRuntime.channelMessageStore, "jaina-proudmoore", arthasRuntime.now())
+  local sharedChannelEntry = ChannelMessageStore.GetLatest(thrallRuntime.channelMessageStore, "jaina-proudmoore", arthasRuntime.now())
   assert(sharedChannelEntry ~= nil, "expected channel context to persist across character switches")
   assert(
     sharedChannelEntry.text == "WTS [Thunderfury] 50k",

@@ -26,8 +26,7 @@ return function()
   -- Initial visible count should be based on viewport, not hardcoded 10
   local contactsH = Theme.WINDOW_HEIGHT - Theme.TOP_BAR_HEIGHT
   local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
-  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
-    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
   local contactsListH = math.max(0, contactsH - searchTotalHeight)
   local expectedInitial = math.ceil(contactsListH / rowH) + 1
   if expectedInitial > 20 then
@@ -39,10 +38,7 @@ return function()
       visibleRows = visibleRows + 1
     end
   end
-  assert(
-    visibleRows >= expectedInitial,
-    "expected at least " .. expectedInitial .. " visible contacts but got " .. visibleRows
-  )
+  assert(visibleRows >= expectedInitial, "expected at least " .. expectedInitial .. " visible contacts but got " .. visibleRows)
 
   -- Resize to a taller window and verify more contacts load
   local tallHeight = 1200
@@ -61,10 +57,7 @@ return function()
       visibleAfterResize = visibleAfterResize + 1
     end
   end
-  assert(
-    visibleAfterResize >= expectedTall,
-    "expected at least " .. expectedTall .. " visible contacts after resize but got " .. visibleAfterResize
-  )
+  assert(visibleAfterResize >= expectedTall, "expected at least " .. expectedTall .. " visible contacts after resize but got " .. visibleAfterResize)
 
   _G.UIParent = savedUIParent
 end

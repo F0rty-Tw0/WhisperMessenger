@@ -45,13 +45,9 @@ return function()
 
     assert(
       popupShown == "WHISPER_MESSENGER_CLEAR_ALL_CHATS",
-      "test_clear_all_chats_shows_confirmation: expected StaticPopup_Show to be called with dialog name, got: "
-        .. tostring(popupShown)
+      "test_clear_all_chats_shows_confirmation: expected StaticPopup_Show to be called with dialog name, got: " .. tostring(popupShown)
     )
-    assert(
-      clearCalled == false,
-      "test_clear_all_chats_shows_confirmation: onClearAllChats should NOT be called before confirmation"
-    )
+    assert(clearCalled == false, "test_clear_all_chats_shows_confirmation: onClearAllChats should NOT be called before confirmation")
 
     rawset(_G, "StaticPopup_Show", nil)
   end

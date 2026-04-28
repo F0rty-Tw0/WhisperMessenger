@@ -78,10 +78,7 @@ return function()
   })
 
   -- General: timeFormat and timeSource must round-trip.
-  assert(
-    generalCapture.config.timeFormat == "24h",
-    "expected general config.timeFormat=24h, got: " .. tostring(generalCapture.config.timeFormat)
-  )
+  assert(generalCapture.config.timeFormat == "24h", "expected general config.timeFormat=24h, got: " .. tostring(generalCapture.config.timeFormat))
   assert(
     generalCapture.config.timeSource == "server",
     "expected general config.timeSource=server, got: " .. tostring(generalCapture.config.timeSource)
@@ -90,8 +87,7 @@ return function()
   -- Appearance: bubbleColorPreset must round-trip.
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",
-    "expected appearance config.bubbleColorPreset=azeroth, got: "
-      .. tostring(appearanceCapture.config.bubbleColorPreset)
+    "expected appearance config.bubbleColorPreset=azeroth, got: " .. tostring(appearanceCapture.config.bubbleColorPreset)
   )
 
   -- Notifications: notificationSound, widgetPreviewAutoDismissSeconds, and
@@ -99,17 +95,14 @@ return function()
   -- selection on reopen.
   assert(
     notificationCapture.config.notificationSound == "chime",
-    "expected notification config.notificationSound=chime, got: "
-      .. tostring(notificationCapture.config.notificationSound)
+    "expected notification config.notificationSound=chime, got: " .. tostring(notificationCapture.config.notificationSound)
   )
   assert(
     notificationCapture.config.widgetPreviewAutoDismissSeconds == 15,
-    "expected notification config.widgetPreviewAutoDismissSeconds=15, got: "
-      .. tostring(notificationCapture.config.widgetPreviewAutoDismissSeconds)
+    "expected notification config.widgetPreviewAutoDismissSeconds=15, got: " .. tostring(notificationCapture.config.widgetPreviewAutoDismissSeconds)
   )
   assert(
     notificationCapture.config.widgetPreviewPosition == "top",
-    "expected notification config.widgetPreviewPosition=top, got: "
-      .. tostring(notificationCapture.config.widgetPreviewPosition)
+    "expected notification config.widgetPreviewPosition=top, got: " .. tostring(notificationCapture.config.widgetPreviewPosition)
   )
 end

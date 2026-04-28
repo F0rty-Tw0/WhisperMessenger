@@ -6,15 +6,11 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local LayoutMetrics = ns.MessengerWindowLayoutMetrics
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+local LayoutMetrics = ns.MessengerWindowLayoutMetrics or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local LayoutApply = ns.MessengerWindowLayoutApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Apply")
-local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
-local ContactsSection = ns.MessengerWindowLayoutContactsSection
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSection")
-local ContentSection = ns.MessengerWindowLayoutContentSection
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContentSection")
+local LayoutThemeApply = ns.MessengerWindowLayoutThemeApply or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
+local ContactsSection = ns.MessengerWindowLayoutContactsSection or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSection")
+local ContentSection = ns.MessengerWindowLayoutContentSection or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContentSection")
 local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
@@ -38,13 +34,8 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 --   resetWindowButton, resetIconButton, clearAllChatsButton, contactsView
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
-  local sizing = LayoutMetrics.CalculateRelayout(
-    {},
-    initialState.width,
-    initialState.height,
-    _options.contactsWidth or initialState.contactsWidth,
-    Theme
-  )
+  local sizing =
+    LayoutMetrics.CalculateRelayout({}, initialState.width, initialState.height, _options.contactsWidth or initialState.contactsWidth, Theme)
   local contactsWidth = sizing.contactsWidth
   local searchHeight = sizing.searchHeight
   local searchMargin = sizing.searchMargin

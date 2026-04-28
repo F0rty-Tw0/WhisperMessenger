@@ -30,9 +30,7 @@ return function()
 
   local expectedText = Theme.COLORS.send_button_text or Theme.COLORS.text_primary
   assert(
-    btn.label.textColor[1] == expectedText[1]
-      and btn.label.textColor[2] == expectedText[2]
-      and btn.label.textColor[3] == expectedText[3],
+    btn.label.textColor[1] == expectedText[1] and btn.label.textColor[2] == expectedText[2] and btn.label.textColor[3] == expectedText[3],
     "expected send button label color token"
   )
 
@@ -41,19 +39,13 @@ return function()
 
   local hoverExpected = Theme.COLORS.send_button_hover
   local hc = btn.sendBg.color
-  assert(
-    hc[1] == hoverExpected[1] and hc[2] == hoverExpected[2] and hc[3] == hoverExpected[3],
-    "expected send_button_hover color on hover"
-  )
+  assert(hc[1] == hoverExpected[1] and hc[2] == hoverExpected[2] and hc[3] == hoverExpected[3], "expected send_button_hover color on hover")
 
   assert(btn.scripts.OnLeave ~= nil, "expected OnLeave script")
   btn.scripts.OnLeave(btn)
 
   local lc = btn.sendBg.color
-  assert(
-    lc[1] == expected[1] and lc[2] == expected[2] and lc[3] == expected[3],
-    "expected send_button color after leave"
-  )
+  assert(lc[1] == expected[1] and lc[2] == expected[2] and lc[3] == expected[3], "expected send_button color after leave")
 
   composer.setEnabled(false)
   local disabledExpected = Theme.COLORS.send_button_disabled
@@ -81,14 +73,9 @@ return function()
 
   composer.setEnabled(true)
   local rc = btn.sendBg.color
+  assert(rc[1] == expected[1] and rc[2] == expected[2] and rc[3] == expected[3], "expected send_button color after re-enabling")
   assert(
-    rc[1] == expected[1] and rc[2] == expected[2] and rc[3] == expected[3],
-    "expected send_button color after re-enabling"
-  )
-  assert(
-    btn.label.textColor[1] == expectedText[1]
-      and btn.label.textColor[2] == expectedText[2]
-      and btn.label.textColor[3] == expectedText[3],
+    btn.label.textColor[1] == expectedText[1] and btn.label.textColor[2] == expectedText[2] and btn.label.textColor[3] == expectedText[3],
     "expected send button text color after re-enabling"
   )
 

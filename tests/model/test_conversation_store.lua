@@ -86,10 +86,7 @@ return function()
     }, false)
     local conv = s.conversations["me::WOW::jaina-proudmoore"]
     assert(conv.lastPreview == "Meet by the summoning stone.", "lastPreview should still reflect latest activity")
-    assert(
-      conv.lastIncomingPreview == "Meet by the summoning stone.",
-      "lastIncomingPreview should track the newest incoming user message"
-    )
+    assert(conv.lastIncomingPreview == "Meet by the summoning stone.", "lastIncomingPreview should track the newest incoming user message")
     assert(conv.lastIncomingSender == "Jaina-Proudmoore", "lastIncomingSender should track the incoming sender name")
     assert(conv.lastIncomingAt == 12, "lastIncomingAt should track the incoming timestamp")
   end
@@ -107,10 +104,7 @@ return function()
     }, false)
     local conv = s.conversations["me::BN::16"]
     assert(conv ~= nil, "conversation should exist")
-    assert(
-      conv.battleTag == "Friend#1234",
-      "battleTag should be persisted on conversation, got: " .. tostring(conv.battleTag)
-    )
+    assert(conv.battleTag == "Friend#1234", "battleTag should be persisted on conversation, got: " .. tostring(conv.battleTag))
   end
 
   -- test_battletag_not_overwritten_by_nil
@@ -133,10 +127,7 @@ return function()
       battleTag = nil,
     }, false)
     local conv = s.conversations["me::BN::17"]
-    assert(
-      conv.battleTag == "Keep#5678",
-      "battleTag should not be overwritten by nil, got: " .. tostring(conv.battleTag)
-    )
+    assert(conv.battleTag == "Keep#5678", "battleTag should not be overwritten by nil, got: " .. tostring(conv.battleTag))
   end
 
   -- test_pin_marks_conversation_pinned

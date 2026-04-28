@@ -67,10 +67,7 @@ return function()
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
     row.scripts.OnEnter(row)
     row.scripts.OnLeave(row)
-    assert(
-      colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned),
-      "pinned row should revert to bg_contact_pinned after leave"
-    )
+    assert(colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned), "pinned row should revert to bg_contact_pinned after leave")
   end
 
   -- test_unpinned_row_leave_reverts_to_transparent

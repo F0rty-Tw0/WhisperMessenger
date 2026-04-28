@@ -4,8 +4,9 @@ if type(ns) ~= "table" then
 end
 
 local ManualCopy = {}
-local Clipboard = ns.ChatBubbleContextMenuManualCopyClipboard
-  or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard")
+-- stylua: ignore start
+local Clipboard = ns.ChatBubbleContextMenuManualCopyClipboard or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.Clipboard")
+-- stylua: ignore end
 
 ManualCopy.NormalizeText = Clipboard.NormalizeText
 ManualCopy.CopyText = Clipboard.CopyText

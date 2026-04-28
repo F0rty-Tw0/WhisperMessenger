@@ -230,10 +230,7 @@ return function()
     local result = BNetResolver.ResolveAccountInfo(shiftedApi, 10, "Player-1305-08ACF728")
     assert(result ~= nil, "shifted ID should return ByGUID result")
     -- GUID is authoritative: should return the real person's data
-    assert(
-      result.battleTag == "Nergrom#2503",
-      "shifted ID should return ByGUID person's battleTag, got: " .. tostring(result.battleTag)
-    )
+    assert(result.battleTag == "Nergrom#2503", "shifted ID should return ByGUID person's battleTag, got: " .. tostring(result.battleTag))
     assert(result.isOnline == true, "shifted ID should return ByGUID person's online status")
   end
 
@@ -256,10 +253,7 @@ return function()
     }
     local result = BNetResolver.ResolveAccountInfo(shiftedOfflineApi, 10, "Player-1305-08ACF728")
     assert(result ~= nil, "shifted ID with offline ByGUID should return primary")
-    assert(
-      result.battleTag == "Crowheart#2268",
-      "shifted ID offline should keep primary, got: " .. tostring(result.battleTag)
-    )
+    assert(result.battleTag == "Crowheart#2268", "shifted ID offline should keep primary, got: " .. tostring(result.battleTag))
   end
 
   -- ResolveAccountInfo ByGUID fallback merges same-person data (matching battleTag)
@@ -319,10 +313,7 @@ return function()
     }
     local result = BNetResolver.ResolveAccountInfo(staleApi, 11, nil, "Nergrom#2503")
     assert(result ~= nil, "stale ID with battleTag scan should find correct friend")
-    assert(
-      result.battleTag == "Nergrom#2503",
-      "stale ID should resolve to correct person by battleTag, got: " .. tostring(result.battleTag)
-    )
+    assert(result.battleTag == "Nergrom#2503", "stale ID should resolve to correct person by battleTag, got: " .. tostring(result.battleTag))
     assert(result.isOnline == true, "stale ID should return correct person's online status")
   end
 
@@ -372,10 +363,7 @@ return function()
     }
     local result = BNetResolver.ResolveAccountInfo(staleNotFoundApi, 11, nil, "Nergrom#2503")
     -- Nergrom not found in friend list, and no GUID — should return nil
-    assert(
-      result == nil,
-      "stale ID with friend not found and no GUID should return nil, got: " .. tostring(result and result.battleTag)
-    )
+    assert(result == nil, "stale ID with friend not found and no GUID should return nil, got: " .. tostring(result and result.battleTag))
   end
 
   -- ScanFriendList returns lookup table by battleTag
@@ -469,10 +457,7 @@ return function()
     local info = BNetResolver.ResolveAccountInfo(api, 8, "Player-1305-0D2826FB", "MrGank#2355")
     assert(info and info.isOnline == true, "should resolve online friend")
     assert(#capturedArgs >= 1, "GetAccountInfoByID should have been called")
-    assert(
-      capturedArgs[1].guidArg == nil,
-      "must not forward character GUID to GetAccountInfoByID, got: " .. tostring(capturedArgs[1].guidArg)
-    )
+    assert(capturedArgs[1].guidArg == nil, "must not forward character GUID to GetAccountInfoByID, got: " .. tostring(capturedArgs[1].guidArg))
   end
 
   -- NormalizeAvailabilityStatus

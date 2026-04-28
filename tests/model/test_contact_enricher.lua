@@ -136,8 +136,7 @@ return function()
     assert(result ~= nil, "same-faction WrongFaction should return a status")
     assert(
       result.status == "CanWhisper",
-      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
-        .. tostring(result.status)
+      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: " .. tostring(result.status)
     )
   end
 
@@ -169,10 +168,7 @@ return function()
     local conversation = { guid = "guid-gp", factionName = "Horde", channel = "WOW" }
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-gp", conversation)
     assert(result ~= nil, "same-faction WrongFaction+guild online should return a status")
-    assert(
-      result.status == "CanWhisper",
-      "same-faction WrongFaction+guild online should be CanWhisper, got: " .. tostring(result.status)
-    )
+    assert(result.status == "CanWhisper", "same-faction WrongFaction+guild online should be CanWhisper, got: " .. tostring(result.status))
   end
 
   -- BuildConversationStatus: opposite-faction WrongFaction with guild presence returns XFaction
@@ -186,10 +182,7 @@ return function()
     local conversation = { guid = "guid-xf", factionName = "Horde", channel = "WOW" }
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-xf", conversation)
     assert(result ~= nil, "opposite-faction WrongFaction+guild should return a status")
-    assert(
-      result.status == "XFaction",
-      "opposite-faction WrongFaction+guild online should be XFaction, got: " .. tostring(result.status)
-    )
+    assert(result.status == "XFaction", "opposite-faction WrongFaction+guild online should be XFaction, got: " .. tostring(result.status))
   end
 
   -- BuildConversationStatus: non-WrongFaction status passes through unchanged
@@ -254,8 +247,7 @@ return function()
     assert(contacts[1].availability ~= nil, "BNet online contact should have availability")
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "BNet online contact without characterName should be CanWhisper, got: "
-        .. tostring(contacts[1].availability.status)
+      "BNet online contact without characterName should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -280,10 +272,7 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet away contact should have availability")
-    assert(
-      contacts[1].availability.status == "Away",
-      "BNet AFK contact should be Away, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "Away", "BNet AFK contact should be Away, got: " .. tostring(contacts[1].availability.status))
     assert(contacts[1].availability.canWhisper == true, "Away contacts should be whisperable")
   end
 
@@ -308,10 +297,7 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet busy contact should have availability")
-    assert(
-      contacts[1].availability.status == "Busy",
-      "BNet busy contact should be Busy, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "Busy", "BNet busy contact should be Busy, got: " .. tostring(contacts[1].availability.status))
     assert(contacts[1].availability.canWhisper == true, "Busy contacts should be whisperable")
   end
 
@@ -339,10 +325,7 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet offline contact should have availability")
-    assert(
-      contacts[1].availability.status == "Offline",
-      "BNet offline contact should be Offline, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "Offline", "BNet offline contact should be Offline, got: " .. tostring(contacts[1].availability.status))
   end
 
   -- EnrichContactsAvailability: WoW contact opposite faction with CanWhisper becomes XFaction
@@ -377,10 +360,7 @@ return function()
       { guid = "guid-same-1", channel = "WOW", factionName = "Horde" },
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(
-      contacts[1].availability.status == "CanWhisper",
-      "same faction should stay CanWhisper, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "CanWhisper", "same faction should stay CanWhisper, got: " .. tostring(contacts[1].availability.status))
   end
 
   -- EnrichContactsAvailability: WoW contact with no faction stays CanWhisper (no crash)
@@ -425,10 +405,7 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet AFK contact should have availability")
-    assert(
-      contacts[1].availability.status == "Away",
-      "BNet top-level isAFK should be Away, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "Away", "BNet top-level isAFK should be Away, got: " .. tostring(contacts[1].availability.status))
   end
 
   -- EnrichContactsAvailability: BNet contact DND via top-level isDND shows Busy
@@ -455,10 +432,7 @@ return function()
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet DND contact should have availability")
-    assert(
-      contacts[1].availability.status == "Busy",
-      "BNet top-level isDND should be Busy, got: " .. tostring(contacts[1].availability.status)
-    )
+    assert(contacts[1].availability.status == "Busy", "BNet top-level isDND should be Busy, got: " .. tostring(contacts[1].availability.status))
   end
 
   -- EnrichContactsAvailability: BNet contact opposite faction stays CanWhisper (BNet is cross-faction)
@@ -633,8 +607,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "XFaction",
-      "Offline opposite-faction guild member online should become XFaction, got: "
-        .. tostring(contacts[1].availability.status)
+      "Offline opposite-faction guild member online should become XFaction, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -653,8 +626,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
-        .. tostring(contacts[1].availability.status)
+      "same-faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -675,8 +647,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "WrongFaction",
-      "opposite-faction Offline without corroboration should become WrongFaction (not Offline), got: "
-        .. tostring(contacts[1].availability.status)
+      "opposite-faction Offline without corroboration should become WrongFaction (not Offline), got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -696,8 +667,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "same faction WrongFaction with guild online should become CanWhisper, got: "
-        .. tostring(contacts[1].availability.status)
+      "same faction WrongFaction with guild online should become CanWhisper, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -717,8 +687,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "Offline",
-      "same faction WrongFaction with guild offline should become Offline, got: "
-        .. tostring(contacts[1].availability.status)
+      "same faction WrongFaction with guild offline should become Offline, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -752,8 +721,7 @@ return function()
     assert(contacts[1].availability ~= nil, "BNet offline+guild online should have availability")
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "BNet offline via API but guild online should be CanWhisper (BNet is cross-faction), got: "
-        .. tostring(contacts[1].availability.status)
+      "BNet offline via API but guild online should be CanWhisper (BNet is cross-faction), got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -783,8 +751,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "BNet offline via API but guild online same faction should be CanWhisper, got: "
-        .. tostring(contacts[1].availability.status)
+      "BNet offline via API but guild online same faction should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -896,14 +863,10 @@ return function()
       { guid = "guid-nil-fac", channel = "WOW", factionName = nil },
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(
-      contacts[1].factionName == nil,
-      "WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
-    )
+    assert(contacts[1].factionName == nil, "WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName))
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "nil faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: "
-        .. tostring(contacts[1].availability.status)
+      "nil faction WrongFaction without corroboration should default to CanWhisper (optimistic), got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -924,8 +887,7 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(
       contacts[1].availability.status == "CanWhisper",
-      "nil faction WrongFaction + guild online should become CanWhisper, got: "
-        .. tostring(contacts[1].availability.status)
+      "nil faction WrongFaction + guild online should become CanWhisper, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -943,19 +905,13 @@ return function()
   -- ShouldRequestAvailability: returns true when cached as wrong faction (may go offline)
   do
     local cached = { status = "WrongFaction", canWhisper = false }
-    assert(
-      ContactEnricher.ShouldRequestAvailability(cached) == true,
-      "should re-request WrongFaction (player may have gone offline)"
-    )
+    assert(ContactEnricher.ShouldRequestAvailability(cached) == true, "should re-request WrongFaction (player may have gone offline)")
   end
 
   -- ShouldRequestAvailability: always re-requests to keep statuses fresh
   do
     local cached = { status = "CanWhisper", canWhisper = true }
-    assert(
-      ContactEnricher.ShouldRequestAvailability(cached) == true,
-      "should always re-request to detect offline transitions"
-    )
+    assert(ContactEnricher.ShouldRequestAvailability(cached) == true, "should always re-request to detect offline transitions")
   end
 
   -- EnrichContactsAvailability: WrongFaction with nil faction does NOT infer faction
@@ -974,10 +930,7 @@ return function()
       { guid = "guid-neutral", channel = "WOW", factionName = nil },
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(
-      contacts[1].factionName == nil,
-      "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
-    )
+    assert(contacts[1].factionName == nil, "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName))
   end
 
   -- EnrichContactsAvailability: CanWhisper with nil faction infers same faction as local
@@ -1024,10 +977,7 @@ return function()
       { guid = "guid-neutral2", channel = "WOW", factionName = nil },
     }
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(
-      contacts[1].factionName == nil,
-      "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName)
-    )
+    assert(contacts[1].factionName == nil, "nil faction + WrongFaction should NOT infer faction, got: " .. tostring(contacts[1].factionName))
   end
 
   -- BuildWindowSelectionState: no active conversation returns only contacts
@@ -1088,10 +1038,7 @@ return function()
     local result = ContactEnricher.BuildWindowSelectionState(runtime, contacts, nil)
     assert(result.selectedContact ~= nil, "should build fallback selectedContact")
     assert(result.selectedContact.conversationKey == "k2", "fallback contact key should match")
-    assert(
-      result.selectedContact.displayName == "Jaina-Proudmoore",
-      "fallback contact displayName should fall back to contactDisplayName"
-    )
+    assert(result.selectedContact.displayName == "Jaina-Proudmoore", "fallback contact displayName should fall back to contactDisplayName")
     assert(result.selectedContact.lastPreview == "", "fallback contact should default lastPreview to empty string")
     assert(result.selectedContact.unreadCount == 0, "fallback contact should default unreadCount to 0")
     assert(result.selectedContact.lastActivityAt == 0, "fallback contact should default lastActivityAt to 0")
@@ -1183,10 +1130,7 @@ return function()
     }
     local result = ContactEnricher.BuildWindowSelectionState(runtime, contacts, nil)
     assert(result.selectedContact ~= nil, "should select BNet contact")
-    assert(
-      result.selectedContact.classTag == "MAGE",
-      "selected BNet contact should get classTag, got " .. tostring(result.selectedContact.classTag)
-    )
+    assert(result.selectedContact.classTag == "MAGE", "selected BNet contact should get classTag, got " .. tostring(result.selectedContact.classTag))
   end
 
   -- BuildWindowSelectionState: uses buildContactsFn when contacts is nil

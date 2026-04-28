@@ -34,10 +34,7 @@ return function()
   assert(pane.transcript.text:GetText() == itemLink)
   assert(pane.transcript.text.fontObject ~= nil, "expected transcript text to configure a font object")
   assert(pane.transcript.text.hyperlinksEnabled == true, "expected transcript text to enable hyperlinks")
-  assert(
-    type(pane.transcript.text.scripts.OnHyperlinkClick) == "function",
-    "expected transcript text to handle hyperlink clicks"
-  )
+  assert(type(pane.transcript.text.scripts.OnHyperlinkClick) == "function", "expected transcript text to handle hyperlink clicks")
 
   pane.transcript.text.scripts.OnHyperlinkClick(pane.transcript.text, "item:19019::::::::", itemLink, "LeftButton")
 

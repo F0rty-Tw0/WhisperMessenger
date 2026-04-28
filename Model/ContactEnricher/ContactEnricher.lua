@@ -3,10 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local AvailabilityEnricher = ns.AvailabilityEnricher
-  or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
-local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+-- stylua: ignore start
+local AvailabilityEnricher = ns.AvailabilityEnricher or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
+local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+-- stylua: ignore end
 
 local ContactEnricher = {}
 
@@ -33,29 +34,20 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
     local cached = runtime.availabilityByGUID[conversation.guid]
     local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
     local isOpposite = AvailabilityEnricher.isOppositeFaction(conversation.factionName, runtime.localFaction)
-    local presence = PresenceCache.GetPresence(conversation.guid)
 
     if isOpposite then
       if cached.status == "CanWhisper" then
         return Availability.FromStatus("XFaction")
       elseif cached.status == "WrongFaction" or cached.status == "Offline" then
-        if presence == "online" then
-          return Availability.FromStatus("XFaction")
-        elseif presence == "offline" then
-          return Availability.FromStatus("Offline")
-        end
-        return Availability.FromStatus("WrongFaction")
+        -- Build a minimal item for Disambiguation (only guid needed for presence lookup)
+        return Disambiguation.ResolveWrongFaction({ guid = conversation.guid }, runtime, true)
       end
       return cached
     end
 
     if cached.status == "WrongFaction" then
-      if presence == "online" then
-        return Availability.FromStatus("CanWhisper")
-      elseif presence == "offline" then
-        return Availability.FromStatus("Offline")
-      end
-      return Availability.FromStatus("CanWhisper")
+      -- Build a minimal item for Disambiguation (guid + displayName for group-member check)
+      return Disambiguation.ResolveWrongFaction({ guid = conversation.guid, displayName = conversation.displayName }, runtime, false)
     end
     return cached
   end
@@ -122,10 +114,8 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     contacts = contacts,
     selectedContact = selectedContact,
     conversation = conversation,
-    status = selectedContact and selectedContact.availability
-      or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
-    notice = runtime.messagingNotice
-      or (type(runtime.getGroupSendNotice) == "function" and runtime.getGroupSendNotice(conversation) or nil),
+    status = selectedContact and selectedContact.availability or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
+    notice = runtime.messagingNotice or (type(runtime.getGroupSendNotice) == "function" and runtime.getGroupSendNotice(conversation) or nil),
   }
 end
 

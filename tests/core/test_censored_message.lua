@@ -37,10 +37,7 @@ return function()
     local conversation = state.store.conversations[key]
     assert(conversation ~= nil, "test_censored: expected conversation to exist")
     assert(#conversation.messages == 1, "test_censored: expected 1 message")
-    assert(
-      conversation.messages[1].isCensored == true,
-      "test_censored: expected isCensored=true on message with censored lineID"
-    )
+    assert(conversation.messages[1].isCensored == true, "test_censored: expected isCensored=true on message with censored lineID")
   end
 
   -- test_incoming_whisper_not_marked_censored_when_api_reports_uncensored
@@ -76,10 +73,7 @@ return function()
     local key = "wow::WOW::jaina-proudmoore"
     local conversation = state.store.conversations[key]
     assert(conversation ~= nil, "test_not_censored: expected conversation to exist")
-    assert(
-      conversation.messages[1].isCensored ~= true,
-      "test_not_censored: isCensored should not be true for uncensored message"
-    )
+    assert(conversation.messages[1].isCensored ~= true, "test_not_censored: isCensored should not be true for uncensored message")
   end
 
   -- test_censored_without_api_available_does_not_error
@@ -111,10 +105,7 @@ return function()
     local key = "wow::WOW::thrall-durotan"
     local conversation = state.store.conversations[key]
     assert(conversation ~= nil, "test_no_api: expected conversation to exist")
-    assert(
-      conversation.messages[1].isCensored ~= true,
-      "test_no_api: isCensored should not be true when API unavailable"
-    )
+    assert(conversation.messages[1].isCensored ~= true, "test_no_api: isCensored should not be true when API unavailable")
   end
 
   -- test_bnet_whisper_marked_censored
@@ -160,10 +151,7 @@ return function()
     local key = "bnet::BN::jaina#1234"
     local conversation = state.store.conversations[key]
     assert(conversation ~= nil, "test_bnet_censored: expected conversation to exist")
-    assert(
-      conversation.messages[1].isCensored == true,
-      "test_bnet_censored: expected isCensored=true on BNet censored message"
-    )
+    assert(conversation.messages[1].isCensored == true, "test_bnet_censored: expected isCensored=true on BNet censored message")
   end
 
   _G.C_ChatInfo = nil

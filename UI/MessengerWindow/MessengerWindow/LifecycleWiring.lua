@@ -24,11 +24,7 @@ function LifecycleWiring.Setup(options)
   })
   local relayoutWindow = relayoutController.relayoutWindow
 
-  options.refreshContacts(
-    options.getCurrentContacts(),
-    options.selectedContact and options.selectedContact.conversationKey or nil,
-    true
-  )
+  options.refreshContacts(options.getCurrentContacts(), options.selectedContact and options.selectedContact.conversationKey or nil, true)
 
   options.refreshSelection({
     contacts = options.getCurrentContacts(),

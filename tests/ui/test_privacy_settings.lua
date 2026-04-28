@@ -42,10 +42,7 @@ return function()
     -- With hiding: preview should be empty
     local row2 = RowView.bindRow(factory, parent, nil, 2, item, { hideMessagePreview = true })
     assert(row2.preview ~= nil, "row should have preview element")
-    assert(
-      row2.preview.text == "",
-      "preview should be empty when hideMessagePreview=true, got: " .. tostring(row2.preview.text)
-    )
+    assert(row2.preview.text == "", "preview should be empty when hideMessagePreview=true, got: " .. tostring(row2.preview.text))
   end
 
   -- test_player_logout_clears_conversations_when_enabled
@@ -78,10 +75,7 @@ return function()
       end
     end
 
-    assert(
-      state.conversations["wow::WOW::test-realm"] == nil,
-      "conversation should be cleared after logout with clearOnLogout=true"
-    )
+    assert(state.conversations["wow::WOW::test-realm"] == nil, "conversation should be cleared after logout with clearOnLogout=true")
   end
 
   -- test_player_logout_preserves_conversations_when_disabled
@@ -111,9 +105,6 @@ return function()
       end
     end
 
-    assert(
-      state.conversations["wow::WOW::test-realm"] ~= nil,
-      "conversation should be preserved when clearOnLogout=false"
-    )
+    assert(state.conversations["wow::WOW::test-realm"] ~= nil, "conversation should be preserved when clearOnLogout=false")
   end
 end

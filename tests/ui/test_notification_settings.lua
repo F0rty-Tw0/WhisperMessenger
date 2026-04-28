@@ -26,10 +26,7 @@ return function()
     local result = NotificationSettings.Create(factory, parent, config, { onChange = function() end })
 
     local firstBtn = result.soundSelector.buttons[1]
-    assert(
-      firstBtn._selected == true,
-      "test_sound_selector_default_whisper: first (whisper) button should be selected by default"
-    )
+    assert(firstBtn._selected == true, "test_sound_selector_default_whisper: first (whisper) button should be selected by default")
   end
 
   -- test_sound_selector_fires_on_change
@@ -51,8 +48,7 @@ return function()
 
     assert(
       changes.notificationSound == "ping",
-      "test_sound_selector_fires_on_change: onChange should fire with notificationSound=ping, got: "
-        .. tostring(changes.notificationSound)
+      "test_sound_selector_fires_on_change: onChange should fire with notificationSound=ping, got: " .. tostring(changes.notificationSound)
     )
   end
 
@@ -76,14 +72,10 @@ return function()
 
     assert(
       changes.notificationSound == "whisper",
-      "test_reset_restores_defaults: onChange should fire notificationSound=whisper, got: "
-        .. tostring(changes.notificationSound)
+      "test_reset_restores_defaults: onChange should fire notificationSound=whisper, got: " .. tostring(changes.notificationSound)
     )
     local firstBtn = result.soundSelector.buttons[1]
-    assert(
-      firstBtn._selected == true,
-      "test_reset_restores_defaults: first (whisper) button should be selected after reset"
-    )
+    assert(firstBtn._selected == true, "test_reset_restores_defaults: first (whisper) button should be selected after reset")
   end
 
   -- test_icon_size_slider_fires_on_change
@@ -105,8 +97,7 @@ return function()
 
     assert(
       changes.iconSize == 32,
-      "test_icon_size_slider_fires_on_change: onChange should fire with iconSize=32, got: "
-        .. tostring(changes.iconSize)
+      "test_icon_size_slider_fires_on_change: onChange should fire with iconSize=32, got: " .. tostring(changes.iconSize)
     )
   end
 
@@ -121,20 +112,14 @@ return function()
       end,
     })
 
-    assert(
-      result.iconDesaturatedToggle ~= nil,
-      "test_icon_desaturated_toggle_fires_on_change: iconDesaturatedToggle should exist"
-    )
+    assert(result.iconDesaturatedToggle ~= nil, "test_icon_desaturated_toggle_fires_on_change: iconDesaturatedToggle should exist")
 
     -- Toggle is on by default (iconDesaturated defaults true), click dot to toggle off
     local onClick = result.iconDesaturatedToggle.dot:GetScript("OnClick")
     assert(onClick ~= nil, "dot should have OnClick handler")
     onClick(result.iconDesaturatedToggle.dot)
 
-    assert(
-      changes.iconDesaturated ~= nil,
-      "test_icon_desaturated_toggle_fires_on_change: onChange should fire for iconDesaturated"
-    )
+    assert(changes.iconDesaturated ~= nil, "test_icon_desaturated_toggle_fires_on_change: onChange should fire for iconDesaturated")
   end
 
   -- test_widget_message_preview_toggle_fires_on_change
@@ -148,10 +133,7 @@ return function()
       end,
     })
 
-    assert(
-      result.widgetMessagePreviewToggle ~= nil,
-      "test_widget_message_preview_toggle_fires_on_change: widgetMessagePreviewToggle should exist"
-    )
+    assert(result.widgetMessagePreviewToggle ~= nil, "test_widget_message_preview_toggle_fires_on_change: widgetMessagePreviewToggle should exist")
 
     local onClick = result.widgetMessagePreviewToggle.dot:GetScript("OnClick")
     assert(onClick ~= nil, "widget message preview toggle should have OnClick handler")
@@ -182,19 +164,14 @@ return function()
     local resetClick = result.resetButton:GetScript("OnClick")
     resetClick(result.resetButton)
 
-    assert(
-      changes.iconSize == 42,
-      "test_reset_restores_icon_defaults: iconSize should reset to 42, got: " .. tostring(changes.iconSize)
-    )
+    assert(changes.iconSize == 42, "test_reset_restores_icon_defaults: iconSize should reset to 42, got: " .. tostring(changes.iconSize))
     assert(
       changes.iconDesaturated == true,
-      "test_reset_restores_icon_defaults: iconDesaturated should reset to true, got: "
-        .. tostring(changes.iconDesaturated)
+      "test_reset_restores_icon_defaults: iconDesaturated should reset to true, got: " .. tostring(changes.iconDesaturated)
     )
     assert(
       changes.showWidgetMessagePreview == true,
-      "test_reset_restores_icon_defaults: showWidgetMessagePreview should reset to true, got: "
-        .. tostring(changes.showWidgetMessagePreview)
+      "test_reset_restores_icon_defaults: showWidgetMessagePreview should reset to true, got: " .. tostring(changes.showWidgetMessagePreview)
     )
   end
 
@@ -217,15 +194,13 @@ return function()
     result.autoDismissSlider:SetValue(0)
     assert(
       changes.widgetPreviewAutoDismissSeconds == 0,
-      "setting slider to 0 should fire onChange with widgetPreviewAutoDismissSeconds=0, got: "
-        .. tostring(changes.widgetPreviewAutoDismissSeconds)
+      "setting slider to 0 should fire onChange with widgetPreviewAutoDismissSeconds=0, got: " .. tostring(changes.widgetPreviewAutoDismissSeconds)
     )
 
     result.autoDismissSlider:SetValue(60)
     assert(
       changes.widgetPreviewAutoDismissSeconds == 60,
-      "setting slider to 60 should fire onChange with widgetPreviewAutoDismissSeconds=60, got: "
-        .. tostring(changes.widgetPreviewAutoDismissSeconds)
+      "setting slider to 60 should fire onChange with widgetPreviewAutoDismissSeconds=60, got: " .. tostring(changes.widgetPreviewAutoDismissSeconds)
     )
   end
 
@@ -266,10 +241,7 @@ return function()
         break
       end
     end
-    assert(
-      selectedKey == "right",
-      "test_position_selector_default: expected 'right' selected, got: " .. tostring(selectedKey)
-    )
+    assert(selectedKey == "right", "test_position_selector_default: expected 'right' selected, got: " .. tostring(selectedKey))
   end
 
   -- test_position_selector_fires_on_change
@@ -294,8 +266,7 @@ return function()
 
     assert(
       changes.widgetPreviewPosition == "left",
-      "test_position_selector_fires_on_change: expected onChange widgetPreviewPosition=left, got: "
-        .. tostring(changes.widgetPreviewPosition)
+      "test_position_selector_fires_on_change: expected onChange widgetPreviewPosition=left, got: " .. tostring(changes.widgetPreviewPosition)
     )
   end
 
@@ -313,10 +284,7 @@ return function()
         break
       end
     end
-    assert(
-      selectedKey == "top",
-      "test_position_selector_respects_config: expected 'top' selected, got: " .. tostring(selectedKey)
-    )
+    assert(selectedKey == "top", "test_position_selector_respects_config: expected 'top' selected, got: " .. tostring(selectedKey))
   end
 
   -- test_reset_restores_position_to_right
@@ -360,8 +328,7 @@ return function()
     -- Button 5 should wrap to start of row 2 (TOPLEFT anchor), not sit beside button 4 (LEFT anchor).
     assert(
       result.soundSelector.buttons[5].point[1] == "TOPLEFT",
-      "test_refresh_layout: 5th sound button should anchor TOPLEFT to wrap, got "
-        .. tostring(result.soundSelector.buttons[5].point[1])
+      "test_refresh_layout: 5th sound button should anchor TOPLEFT to wrap, got " .. tostring(result.soundSelector.buttons[5].point[1])
     )
   end
 

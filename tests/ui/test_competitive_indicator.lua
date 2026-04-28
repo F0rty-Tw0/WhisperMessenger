@@ -13,8 +13,7 @@ return function()
     assert(result.frame ~= nil, "test_indicator_hidden_by_default: frame should exist")
     assert(
       result.frame.shown == false,
-      "test_indicator_hidden_by_default: indicator should be hidden by default, got shown="
-        .. tostring(result.frame.shown)
+      "test_indicator_hidden_by_default: indicator should be hidden by default, got shown=" .. tostring(result.frame.shown)
     )
   end
 
@@ -36,10 +35,7 @@ return function()
     result.setActive(true)
     result.setActive(false)
 
-    assert(
-      result.frame.shown == false,
-      "test_indicator_hidden_when_set_active_false: indicator should be hidden after deactivation"
-    )
+    assert(result.frame.shown == false, "test_indicator_hidden_when_set_active_false: indicator should be hidden after deactivation")
   end
 
   -- test_indicator_has_lock_texture

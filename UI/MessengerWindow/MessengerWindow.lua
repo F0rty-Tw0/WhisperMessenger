@@ -6,34 +6,24 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
-local AlphaController = ns.MessengerWindowAlphaController
-  or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
+local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
-local ContactsRuntime = ns.MessengerWindowContactsRuntime
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
-local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
+local ContactsRuntime = ns.MessengerWindowContactsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
+local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
 local SettingsPanelsBootstrap = ns.MessengerWindowSettingsPanelsBootstrap
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
-local SelectionSync = ns.MessengerWindowSelectionSync
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
+local SelectionSync = ns.MessengerWindowSelectionSync or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
 local SelectionController = ns.MessengerWindowSelectionController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionController")
-local WindowVisibility = ns.MessengerWindowWindowVisibility
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
-local WindowAlpha = ns.MessengerWindowWindowAlpha
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
-local WindowGeometry = ns.MessengerWindowWindowGeometry
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
-local ScriptWiring = ns.MessengerWindowScriptWiring
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
-local RelayoutController = ns.MessengerWindowRelayoutController
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
-local LifecycleWiring = ns.MessengerWindowLifecycleWiring
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
+local WindowVisibility = ns.MessengerWindowWindowVisibility or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
+local WindowAlpha = ns.MessengerWindowWindowAlpha or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
+local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
+local ScriptWiring = ns.MessengerWindowScriptWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
+local RelayoutController = ns.MessengerWindowRelayoutController or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
+local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
@@ -94,8 +84,7 @@ function MessengerWindow.Create(factory, options)
   local threadPane = layout.threadPane
   local composerPane = layout.composerPane
   local optionsPanel = layout.optionsPanel
-  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content
-    or layout.optionsContentPane
+  local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or layout.optionsContentPane
   local contactsView = layout.contactsView
   local contactsSearchInput = layout.contactsSearchInput
   local contactsSearchClearButton = layout.contactsSearchClearButton

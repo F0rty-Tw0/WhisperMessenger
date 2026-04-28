@@ -27,24 +27,15 @@ return function()
   do
     local toggle = createToggle()
     toggle.setUnreadCounts(0, 0)
-    assert(
-      toggle.whispersLabel.text == "Whispers",
-      "expected whispers label to be 'Whispers', got " .. tostring(toggle.whispersLabel.text)
-    )
-    assert(
-      toggle.groupsLabel.text == "Groups",
-      "expected groups label to be 'Groups', got " .. tostring(toggle.groupsLabel.text)
-    )
+    assert(toggle.whispersLabel.text == "Whispers", "expected whispers label to be 'Whispers', got " .. tostring(toggle.whispersLabel.text))
+    assert(toggle.groupsLabel.text == "Groups", "expected groups label to be 'Groups', got " .. tostring(toggle.groupsLabel.text))
   end
 
   -- test_labels_stay_plain_when_unread_present
   do
     local toggle = createToggle()
     toggle.setUnreadCounts(3, 5)
-    assert(
-      toggle.whispersLabel.text == "Whispers",
-      "label must not embed count; got " .. tostring(toggle.whispersLabel.text)
-    )
+    assert(toggle.whispersLabel.text == "Whispers", "label must not embed count; got " .. tostring(toggle.whispersLabel.text))
     assert(toggle.groupsLabel.text == "Groups", "label must not embed count; got " .. tostring(toggle.groupsLabel.text))
   end
 

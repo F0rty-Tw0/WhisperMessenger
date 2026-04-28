@@ -83,12 +83,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   UIHelpers.setFontObject(input, Theme.FONTS.composer_input)
   if input.SetTextColor then
-    input:SetTextColor(
-      Theme.COLORS.text_primary[1],
-      Theme.COLORS.text_primary[2],
-      Theme.COLORS.text_primary[3],
-      Theme.COLORS.text_primary[4] or 1
-    )
+    input:SetTextColor(Theme.COLORS.text_primary[1], Theme.COLORS.text_primary[2], Theme.COLORS.text_primary[3], Theme.COLORS.text_primary[4] or 1)
   end
   if input.SetTextInsets then
     input:SetTextInsets(8, 8, 4, 4)

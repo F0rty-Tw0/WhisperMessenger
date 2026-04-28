@@ -92,10 +92,7 @@ return function()
     })
 
     -- Simulate left-click on the bubble
-    assert(
-      bubble.frame.scripts ~= nil and bubble.frame.scripts.OnMouseDown ~= nil,
-      "test_reveal_click: expected OnMouseDown script"
-    )
+    assert(bubble.frame.scripts ~= nil and bubble.frame.scripts.OnMouseDown ~= nil, "test_reveal_click: expected OnMouseDown script")
     bubble.frame.scripts.OnMouseDown(bubble.frame, "LeftButton")
 
     assert(message.isCensored ~= true, "test_reveal_click: expected isCensored to be cleared after click")
@@ -139,10 +136,7 @@ return function()
     bubble.frame.scripts.OnMouseDown(bubble.frame, "LeftButton")
 
     -- Text should remain unchanged when API returns nil
-    assert(
-      message.text == "this is #### still censored",
-      "test_fallback: text should be unchanged when GetChatLineText returns nil"
-    )
+    assert(message.text == "this is #### still censored", "test_fallback: text should be unchanged when GetChatLineText returns nil")
     -- isCensored should still be cleared (we attempted reveal)
     assert(message.isCensored ~= true, "test_fallback: isCensored should be cleared even if text unchanged")
 

@@ -32,76 +32,34 @@ return function()
     assert(Theme.COLORS == colorsRef, "test_set_elvui_dark: Theme.COLORS table identity must be preserved")
     assert(Theme.COLORS.accent == accentRef, "test_set_elvui_dark: color table identity must be preserved")
 
-    assert(
-      colorsMatch(Theme.COLORS.bg_primary, { 0.03, 0.03, 0.03, 0.98 }),
-      "test_set_elvui_dark: bg_primary did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_primary, { 0.03, 0.03, 0.03, 0.98 }), "test_set_elvui_dark: bg_primary did not update")
     assert(colorsMatch(Theme.COLORS.accent, { 0.34, 0.51, 0.90, 1.0 }), "test_set_elvui_dark: accent did not update")
-    assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.09, 0.10, 0.12, 1.0 }),
-      "test_set_elvui_dark: bg_search_input did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.09, 0.10, 0.12, 1.0 }),
-      "test_set_elvui_dark: bg_message_input did not update"
-    )
-    assert(
-      Theme.COLORS.message_input_border_top == nil,
-      "test_set_elvui_dark: message_input_border_top should be removed"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.bg_bubble_in, { 0.16, 0.17, 0.20, 0.95 }),
-      "test_set_elvui_dark: bg_bubble_in did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.send_button, { 0.20, 0.22, 0.26, 1.0 }),
-      "test_set_elvui_dark: send_button did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_search_input, { 0.09, 0.10, 0.12, 1.0 }), "test_set_elvui_dark: bg_search_input did not update")
+    assert(colorsMatch(Theme.COLORS.bg_message_input, { 0.09, 0.10, 0.12, 1.0 }), "test_set_elvui_dark: bg_message_input did not update")
+    assert(Theme.COLORS.message_input_border_top == nil, "test_set_elvui_dark: message_input_border_top should be removed")
+    assert(colorsMatch(Theme.COLORS.bg_bubble_in, { 0.16, 0.17, 0.20, 0.95 }), "test_set_elvui_dark: bg_bubble_in did not update")
+    assert(colorsMatch(Theme.COLORS.send_button, { 0.20, 0.22, 0.26, 1.0 }), "test_set_elvui_dark: send_button did not update")
     assert(Theme.COLORS.send_button_border == nil, "test_set_elvui_dark: send_button_border should be removed")
-    assert(
-      Theme.COLORS.send_button_border_hover == nil,
-      "test_set_elvui_dark: send_button_border_hover should be removed"
-    )
-    assert(
-      Theme.COLORS.send_button_border_disabled == nil,
-      "test_set_elvui_dark: send_button_border_disabled should be removed"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.contacts_divider_hover, { 0.17, 0.18, 0.23, 0.72 }),
-      "test_set_elvui_dark: contacts_divider_hover did not update"
-    )
+    assert(Theme.COLORS.send_button_border_hover == nil, "test_set_elvui_dark: send_button_border_hover should be removed")
+    assert(Theme.COLORS.send_button_border_disabled == nil, "test_set_elvui_dark: send_button_border_disabled should be removed")
+    assert(colorsMatch(Theme.COLORS.contacts_divider_hover, { 0.17, 0.18, 0.23, 0.72 }), "test_set_elvui_dark: contacts_divider_hover did not update")
     assert(
       colorsMatch(Theme.COLORS.contacts_resize_hover_fill, { 0.17, 0.18, 0.23, 0.07 }),
       "test_set_elvui_dark: contacts_resize_hover_fill did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.option_toggle_on, { 0.34, 0.51, 0.90, 1.0 }),
-      "test_set_elvui_dark: option_toggle_on did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.option_toggle_off, { 0.22, 0.23, 0.27, 0.96 }),
-      "test_set_elvui_dark: option_toggle_off did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.option_toggle_border, { 0.50, 0.52, 0.58, 0.90 }),
-      "test_set_elvui_dark: option_toggle_border did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.option_toggle_on, { 0.34, 0.51, 0.90, 1.0 }), "test_set_elvui_dark: option_toggle_on did not update")
+    assert(colorsMatch(Theme.COLORS.option_toggle_off, { 0.22, 0.23, 0.27, 0.96 }), "test_set_elvui_dark: option_toggle_off did not update")
+    assert(colorsMatch(Theme.COLORS.option_toggle_border, { 0.50, 0.52, 0.58, 0.90 }), "test_set_elvui_dark: option_toggle_border did not update")
     assert(
       colorsMatch(Theme.COLORS.composer_pane_border, { 0.48, 0.50, 0.58, 1.0 }),
       "test_set_elvui_dark: composer_pane_border should be brighter slate so the composer edge stays visible"
     )
-    assert(
-      colorsMatch(Theme.COLORS.contacts_border_right, { 0.15, 0.16, 0.20, 0.90 }),
-      "test_set_elvui_dark: contacts_border_right did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.contacts_border_right, { 0.15, 0.16, 0.20, 0.90 }), "test_set_elvui_dark: contacts_border_right did not update")
     assert(
       colorsMatch(Theme.COLORS.contact_selected_border_right, { 0.34, 0.51, 0.90, 1.0 }),
       "test_set_elvui_dark: contact_selected_border_right did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.text_title, { 0.99, 0.99, 1.0, 1.0 }),
-      "test_set_elvui_dark: text_title did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.text_title, { 0.99, 0.99, 1.0, 1.0 }), "test_set_elvui_dark: text_title did not update")
   end
 
   do
@@ -109,36 +67,15 @@ return function()
     assert(ok == true, "test_set_plumber_warm: expected SetPreset to return true")
     assert(Theme.GetPreset() == "plumber_warm", "test_set_plumber_warm: expected active preset key")
 
-    assert(
-      colorsMatch(Theme.COLORS.bg_primary, { 0.12, 0.10, 0.08, 0.97 }),
-      "test_set_plumber_warm: bg_primary did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_primary, { 0.12, 0.10, 0.08, 0.97 }), "test_set_plumber_warm: bg_primary did not update")
     assert(colorsMatch(Theme.COLORS.accent, { 0.88, 0.56, 0.22, 1.0 }), "test_set_plumber_warm: accent did not update")
-    assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.31, 0.22, 0.16, 0.98 }),
-      "test_set_plumber_warm: bg_search_input did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.31, 0.22, 0.16, 0.98 }),
-      "test_set_plumber_warm: bg_message_input did not update"
-    )
-    assert(
-      Theme.COLORS.message_input_border_top == nil,
-      "test_set_plumber_warm: message_input_border_top should be removed"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.send_button, { 0.74, 0.40, 0.20, 1.0 }),
-      "test_set_plumber_warm: send_button did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_search_input, { 0.31, 0.22, 0.16, 0.98 }), "test_set_plumber_warm: bg_search_input did not update")
+    assert(colorsMatch(Theme.COLORS.bg_message_input, { 0.31, 0.22, 0.16, 0.98 }), "test_set_plumber_warm: bg_message_input did not update")
+    assert(Theme.COLORS.message_input_border_top == nil, "test_set_plumber_warm: message_input_border_top should be removed")
+    assert(colorsMatch(Theme.COLORS.send_button, { 0.74, 0.40, 0.20, 1.0 }), "test_set_plumber_warm: send_button did not update")
     assert(Theme.COLORS.send_button_border == nil, "test_set_plumber_warm: send_button_border should be removed")
-    assert(
-      Theme.COLORS.send_button_border_hover == nil,
-      "test_set_plumber_warm: send_button_border_hover should be removed"
-    )
-    assert(
-      Theme.COLORS.send_button_border_disabled == nil,
-      "test_set_plumber_warm: send_button_border_disabled should be removed"
-    )
+    assert(Theme.COLORS.send_button_border_hover == nil, "test_set_plumber_warm: send_button_border_hover should be removed")
+    assert(Theme.COLORS.send_button_border_disabled == nil, "test_set_plumber_warm: send_button_border_disabled should be removed")
     assert(
       colorsMatch(Theme.COLORS.contacts_divider_hover, { 0.48, 0.34, 0.24, 0.80 }),
       "test_set_plumber_warm: contacts_divider_hover did not update"
@@ -147,10 +84,7 @@ return function()
       colorsMatch(Theme.COLORS.contacts_resize_hover_fill, { 0.48, 0.34, 0.24, 0.08 }),
       "test_set_plumber_warm: contacts_resize_hover_fill did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.option_toggle_on, { 0.88, 0.56, 0.22, 1.0 }),
-      "test_set_plumber_warm: option_toggle_on tracks accent"
-    )
+    assert(colorsMatch(Theme.COLORS.option_toggle_on, { 0.88, 0.56, 0.22, 1.0 }), "test_set_plumber_warm: option_toggle_on tracks accent")
     assert(
       colorsMatch(Theme.COLORS.option_toggle_off, { 0.30, 0.24, 0.20, 0.95 }),
       "test_set_plumber_warm: option_toggle_off should be a dull desaturated brown"
@@ -159,18 +93,12 @@ return function()
       colorsMatch(Theme.COLORS.option_toggle_border, { 0.42, 0.32, 0.24, 0.75 }),
       "test_set_plumber_warm: option_toggle_border should be dim so unchecked reads muted vs the vivid on-state"
     )
-    assert(
-      colorsMatch(Theme.COLORS.contacts_border_right, { 0.42, 0.29, 0.20, 0.90 }),
-      "test_set_plumber_warm: contacts_border_right did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.contacts_border_right, { 0.42, 0.29, 0.20, 0.90 }), "test_set_plumber_warm: contacts_border_right did not update")
     assert(
       colorsMatch(Theme.COLORS.contact_selected_border_right, { 0.88, 0.56, 0.22, 1.0 }),
       "test_set_plumber_warm: contact_selected_border_right did not update"
     )
-    assert(
-      colorsMatch(Theme.COLORS.text_title, { 1.0, 0.97, 0.92, 1.0 }),
-      "test_set_plumber_warm: text_title did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.text_title, { 1.0, 0.97, 0.92, 1.0 }), "test_set_plumber_warm: text_title did not update")
   end
 
   do
@@ -184,10 +112,7 @@ return function()
     assert(Theme.COLORS.accent == accentRef, "test_set_wow_native: color table identity must be preserved")
 
     -- Blizzard NORMAL_FONT_COLOR (gold) drives accent + emphasis
-    assert(
-      colorsMatch(Theme.COLORS.accent, { 1.00, 0.82, 0.00, 1.0 }),
-      "test_set_wow_native: accent did not update to NORMAL_FONT_COLOR gold"
-    )
+    assert(colorsMatch(Theme.COLORS.accent, { 1.00, 0.82, 0.00, 1.0 }), "test_set_wow_native: accent did not update to NORMAL_FONT_COLOR gold")
     assert(
       colorsMatch(Theme.COLORS.text_title, { 1.00, 0.82, 0.00, 1.0 }),
       "test_set_wow_native: text_title did not update to NORMAL_FONT_COLOR gold"
@@ -196,10 +121,7 @@ return function()
       colorsMatch(Theme.COLORS.contact_selected_border_right, { 1.00, 0.82, 0.00, 1.0 }),
       "test_set_wow_native: contact_selected_border_right did not track gold accent"
     )
-    assert(
-      colorsMatch(Theme.COLORS.option_toggle_on, { 1.00, 0.82, 0.00, 1.0 }),
-      "test_set_wow_native: option_toggle_on tracks gold accent"
-    )
+    assert(colorsMatch(Theme.COLORS.option_toggle_on, { 1.00, 0.82, 0.00, 1.0 }), "test_set_wow_native: option_toggle_on tracks gold accent")
     assert(
       colorsMatch(Theme.COLORS.composer_pane_border, { 0.62, 0.50, 0.16, 1.0 }),
       "test_set_wow_native: composer_pane_border should be brighter gold so the composer edge stays visible over the dialog backdrop"
@@ -218,25 +140,13 @@ return function()
     )
 
     -- Blizzard standard status colors
-    assert(
-      colorsMatch(Theme.COLORS.online, { 0.10, 1.00, 0.10, 1.0 }),
-      "test_set_wow_native: online did not update to GREEN_FONT_COLOR"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.away, { 1.00, 0.50, 0.25, 1.0 }),
-      "test_set_wow_native: away did not update to ORANGE_FONT_COLOR"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.dnd, { 1.00, 0.10, 0.10, 1.0 }),
-      "test_set_wow_native: dnd did not update to RED_FONT_COLOR"
-    )
+    assert(colorsMatch(Theme.COLORS.online, { 0.10, 1.00, 0.10, 1.0 }), "test_set_wow_native: online did not update to GREEN_FONT_COLOR")
+    assert(colorsMatch(Theme.COLORS.away, { 1.00, 0.50, 0.25, 1.0 }), "test_set_wow_native: away did not update to ORANGE_FONT_COLOR")
+    assert(colorsMatch(Theme.COLORS.dnd, { 1.00, 0.10, 0.10, 1.0 }), "test_set_wow_native: dnd did not update to RED_FONT_COLOR")
 
     -- Surfaces: uniform near-black, fully opaque (kills the two-tone +
     -- right-edge bleed reported in-game)
-    assert(
-      colorsMatch(Theme.COLORS.bg_primary, { 0.04, 0.04, 0.06, 1.0 }),
-      "test_set_wow_native: bg_primary did not update to opaque near-black"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_primary, { 0.04, 0.04, 0.06, 1.0 }), "test_set_wow_native: bg_primary did not update to opaque near-black")
     assert(
       colorsMatch(Theme.COLORS.bg_secondary, { 0.04, 0.04, 0.06, 1.0 }),
       "test_set_wow_native: bg_secondary should equal bg_primary for native uniformity"
@@ -248,14 +158,8 @@ return function()
     -- Inputs sit a warm-bronze step lighter than surface_chrome so the
     -- EditBox reads as a distinct field against the near-black Azeroth
     -- panes. Anything closer to bg_primary blends in and goes invisible.
-    assert(
-      colorsMatch(Theme.COLORS.bg_search_input, { 0.14, 0.12, 0.08, 1.0 }),
-      "test_set_wow_native: bg_search_input did not update"
-    )
-    assert(
-      colorsMatch(Theme.COLORS.bg_message_input, { 0.14, 0.12, 0.08, 1.0 }),
-      "test_set_wow_native: bg_message_input did not update"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_search_input, { 0.14, 0.12, 0.08, 1.0 }), "test_set_wow_native: bg_search_input did not update")
+    assert(colorsMatch(Theme.COLORS.bg_message_input, { 0.14, 0.12, 0.08, 1.0 }), "test_set_wow_native: bg_message_input did not update")
 
     -- Outgoing whisper bubble carries WHISPER magenta tint
     assert(
@@ -264,10 +168,7 @@ return function()
     )
 
     -- Removed legacy keys must remain absent
-    assert(
-      Theme.COLORS.message_input_border_top == nil,
-      "test_set_wow_native: message_input_border_top should remain absent"
-    )
+    assert(Theme.COLORS.message_input_border_top == nil, "test_set_wow_native: message_input_border_top should remain absent")
     assert(Theme.COLORS.send_button_border == nil, "test_set_wow_native: send_button_border should remain absent")
   end
 
@@ -294,24 +195,15 @@ return function()
 
     local resolved, applied = Theme.ResolvePreset("missing_preset", trace)
     assert(applied == true, "test_resolve_fallback: expected fallback apply to succeed")
-    assert(
-      resolved == "wow_default",
-      "test_resolve_fallback: expected wow_default fallback, got: " .. tostring(resolved)
-    )
+    assert(resolved == "wow_default", "test_resolve_fallback: expected wow_default fallback, got: " .. tostring(resolved))
     assert(#traceCalls > 0, "test_resolve_fallback: expected fallback trace to be emitted")
   end
 
   local resetOk = Theme.SetPreset("wow_default")
   assert(resetOk == true, "test_reset_default: expected wow_default preset to apply")
-  assert(
-    Theme.COLORS.message_input_border_top == nil,
-    "test_reset_default: message_input_border_top should remain removed"
-  )
+  assert(Theme.COLORS.message_input_border_top == nil, "test_reset_default: message_input_border_top should remain removed")
   assert(Theme.COLORS.send_button_border == nil, "test_reset_default: send_button_border should remain removed")
-  assert(
-    colorsMatch(Theme.COLORS.accent, { 0.12, 0.72, 0.96, 1.0 }),
-    "test_reset_default: wow_default accent should be the tuned cobalt accent"
-  )
+  assert(colorsMatch(Theme.COLORS.accent, { 0.12, 0.72, 0.96, 1.0 }), "test_reset_default: wow_default accent should be the tuned cobalt accent")
   assert(
     colorsMatch(Theme.COLORS.option_toggle_on, { 0.12, 0.72, 0.96, 1.0 }),
     "test_reset_default: wow_default option_toggle_on should track the tuned accent"

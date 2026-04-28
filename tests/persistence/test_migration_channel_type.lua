@@ -39,10 +39,7 @@ return function()
     assert(migrated.schemaVersion == 5, "expected schemaVersion 5, got " .. tostring(migrated.schemaVersion))
     local conv = migrated.conversations["bnet::BN::jaina#1234"]
     assert(conv ~= nil, "bnet conversation should still exist after migration")
-    assert(
-      conv.channel == "BN_WHISPER",
-      "bnet:: conversation should be stamped BN_WHISPER, got " .. tostring(conv.channel)
-    )
+    assert(conv.channel == "BN_WHISPER", "bnet:: conversation should be stamped BN_WHISPER, got " .. tostring(conv.channel))
   end
 
   -- test_mixed_v4_state_stamps_both_types
@@ -80,8 +77,7 @@ return function()
 
     assert(
       migrated.conversations["wow::WOW::somechar-realm"].channel == "GUILD",
-      "existing channel value should not be overwritten, got "
-        .. tostring(migrated.conversations["wow::WOW::somechar-realm"].channel)
+      "existing channel value should not be overwritten, got " .. tostring(migrated.conversations["wow::WOW::somechar-realm"].channel)
     )
   end
 

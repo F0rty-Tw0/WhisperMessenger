@@ -69,10 +69,7 @@ return function()
 
     local nextState = coord.refreshContacts()
     local key = nextState.selectedContact and nextState.selectedContact.conversationKey
-    assert(
-      key ~= "me::WOW::jaina",
-      "pane must not surface a whisper selection while the Groups tab is active; got " .. tostring(key)
-    )
+    assert(key ~= "me::WOW::jaina", "pane must not surface a whisper selection while the Groups tab is active; got " .. tostring(key))
   end
 
   -- test_whispers_tab_still_selects_whisper_when_active_key_is_whisper

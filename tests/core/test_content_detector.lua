@@ -35,10 +35,7 @@ return function()
   -- at difficulty 8.
 
   -- Returns false when getInstanceInfo is nil
-  assert(
-    ContentDetector.IsCompetitiveContent(nil) == false,
-    "competitive: should return false when getInstanceInfo is nil"
-  )
+  assert(ContentDetector.IsCompetitiveContent(nil) == false, "competitive: should return false when getInstanceInfo is nil")
 
   -- Returns false for open world
   assert(ContentDetector.IsCompetitiveContent(function()

@@ -3,12 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local DirectHooks = ns.BootstrapAutoOpenDirectHooks
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.DirectHooks")
-local ConversationOps = ns.BootstrapAutoOpenConversationOps
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
-local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
+-- stylua: ignore start
+local DirectHooks = ns.BootstrapAutoOpenDirectHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.DirectHooks")
+local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
+-- stylua: ignore end
 
 local Poller = {}
 

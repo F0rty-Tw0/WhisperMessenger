@@ -177,10 +177,7 @@ return function()
     assert(found, "CHALLENGE_MODE_RESET should be in LIFECYCLE_EVENT_NAMES")
 
     -- Verify it's in MYTHIC_ESSENTIAL_EVENTS
-    assert(
-      Constants.MYTHIC_ESSENTIAL_EVENTS.CHALLENGE_MODE_RESET == true,
-      "CHALLENGE_MODE_RESET should be in MYTHIC_ESSENTIAL_EVENTS"
-    )
+    assert(Constants.MYTHIC_ESSENTIAL_EVENTS.CHALLENGE_MODE_RESET == true, "CHALLENGE_MODE_RESET should be in MYTHIC_ESSENTIAL_EVENTS")
   end
 
   -- test_version_matches_semver_format
@@ -245,14 +242,8 @@ return function()
     buildSelectionCalls = 0
     runtime.refreshWindow()
 
-    assert(
-      #availabilityRequests == 0,
-      "should not request availability during mythic, got " .. #availabilityRequests .. " requests"
-    )
-    assert(
-      buildSelectionCalls == 1,
-      "should still rebuild contact selection state during mythic refresh, got " .. buildSelectionCalls
-    )
+    assert(#availabilityRequests == 0, "should not request availability during mythic, got " .. #availabilityRequests .. " requests")
+    assert(buildSelectionCalls == 1, "should still rebuild contact selection state during mythic refresh, got " .. buildSelectionCalls)
 
     -- Cleanup
     Bootstrap._inMythicContent = false
@@ -379,10 +370,7 @@ return function()
       "Player-1-0ABC"
     )
 
-    assert(
-      getInstanceInfoCalled == false,
-      "RouteLiveEvent should NOT call isMythicLockdown() - it introduces taint via GetInstanceInfo()"
-    )
+    assert(getInstanceInfoCalled == false, "RouteLiveEvent should NOT call isMythicLockdown() - it introduces taint via GetInstanceInfo()")
   end
 
   -- test_slash_globals_registered
@@ -419,10 +407,7 @@ return function()
     -- SLASH_* globals should be set
     assert(_G.SLASH_WHISPERMESSENGER1 == "/wmsg", "SLASH_WHISPERMESSENGER1 should be /wmsg")
     assert(_G.SLASH_WHISPERMESSENGER2 == "/whispermessenger", "SLASH_WHISPERMESSENGER2 should be /whispermessenger")
-    assert(
-      type(_G.SlashCmdList["WHISPERMESSENGER"]) == "function",
-      "SlashCmdList.WHISPERMESSENGER should be registered"
-    )
+    assert(type(_G.SlashCmdList["WHISPERMESSENGER"]) == "function", "SlashCmdList.WHISPERMESSENGER should be registered")
 
     _G.UIParent = savedUIParent
     _G.SlashCmdList = savedSlashCmdList
@@ -565,17 +550,11 @@ return function()
       "window should show a mythic pause notice when reopened during suspend"
     )
     assert(runtime.window.conversation.activeStatusBanner.shown == true, "mythic pause notice should be visible")
-    assert(
-      runtime.window.composer.sendButton.disabled == true,
-      "composer should stay disabled while mythic notice is active"
-    )
+    assert(runtime.window.composer.sendButton.disabled == true, "composer should stay disabled while mythic notice is active")
 
     runtime.resume()
     assert(runtime.window.conversation.activeStatusBanner.text == "", "mythic pause notice should clear after resume")
-    assert(
-      runtime.window.conversation.activeStatusBanner.shown == false,
-      "mythic pause notice should hide after resume"
-    )
+    assert(runtime.window.conversation.activeStatusBanner.shown == false, "mythic pause notice should hide after resume")
     assert(runtime.window.composer.sendButton.disabled == false, "composer should re-enable after resume")
 
     _G.UIParent = savedUIParent

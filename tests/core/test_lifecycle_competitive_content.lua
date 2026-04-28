@@ -76,10 +76,7 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(Bootstrap._inMythicContent == true, "should set _inMythicContent=true for mythic keystone")
-    assert(
-      Bootstrap._inCompetitiveContent == false,
-      "should NOT set _inCompetitiveContent for mythic keystone (mythic is separate)"
-    )
+    assert(Bootstrap._inCompetitiveContent == false, "should NOT set _inCompetitiveContent for mythic keystone (mythic is separate)")
   end
 
   -- test_zone_changed_clears_competitive_when_leaving_pvp
@@ -149,10 +146,7 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(
-      callbackValue == false,
-      "should pass false to onCompetitiveStateChanged when encounter ends outside competitive content"
-    )
+    assert(callbackValue == false, "should pass false to onCompetitiveStateChanged when encounter ends outside competitive content")
   end
 
   -- test_encounter_end_still_competitive_in_bg
@@ -174,10 +168,7 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(
-      callbackValue == true,
-      "should pass true to onCompetitiveStateChanged when encounter ends but still in competitive zone"
-    )
+    assert(callbackValue == true, "should pass true to onCompetitiveStateChanged when encounter ends but still in competitive zone")
   end
 
   -- test_player_entering_world_calls_competitive_state_callback
@@ -208,10 +199,7 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
     assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice on ENCOUNTER_START")
-    assert(
-      type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "",
-      "messagingNotice should be a non-empty string"
-    )
+    assert(type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "", "messagingNotice should be a non-empty string")
   end
 
   -- test_encounter_end_clears_messaging_notice_outside_competitive
@@ -226,10 +214,7 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(
-      runtime.messagingNotice == nil,
-      "should clear runtime.messagingNotice when encounter ends outside competitive zone"
-    )
+    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when encounter ends outside competitive zone")
   end
 
   -- test_encounter_end_keeps_messaging_notice_in_bg
@@ -244,10 +229,7 @@ return function()
 
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(
-      runtime.messagingNotice ~= nil,
-      "should keep runtime.messagingNotice when encounter ends but still in competitive zone"
-    )
+    assert(runtime.messagingNotice ~= nil, "should keep runtime.messagingNotice when encounter ends but still in competitive zone")
   end
 
   -- test_player_entering_world_sets_messaging_notice_in_bg

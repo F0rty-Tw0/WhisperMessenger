@@ -69,10 +69,7 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", unpackArgs(WHISPER_INFORM_ARGS))
 
-    assert(
-      #outgoingCalls == 1,
-      "expected onAutoOpenOutgoing to fire when user sends a whisper from the Groups tab; got " .. #outgoingCalls
-    )
+    assert(#outgoingCalls == 1, "expected onAutoOpenOutgoing to fire when user sends a whisper from the Groups tab; got " .. #outgoingCalls)
   end
 
   -- test_outgoing_whisper_on_whispers_tab_still_fires_auto_open_outgoing
@@ -86,9 +83,6 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", unpackArgs(WHISPER_INFORM_ARGS))
 
-    assert(
-      #outgoingCalls == 1,
-      "regression: outgoing auto-open must still fire on the Whispers tab; got " .. #outgoingCalls
-    )
+    assert(#outgoingCalls == 1, "regression: outgoing auto-open must still fire on the Whispers tab; got " .. #outgoingCalls)
   end
 end

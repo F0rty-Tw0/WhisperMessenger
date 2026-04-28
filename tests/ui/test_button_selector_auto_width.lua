@@ -24,10 +24,7 @@ return function()
     -- 3 buttons, 2 gaps of 8 = 16px spacing, (280 - 16) / 3 = 88
     local expected = math.floor((280 - 2 * 8) / 3)
     for i, btn in ipairs(selector.buttons) do
-      assert(
-        btn.width == expected,
-        "test_even_distribute: button " .. i .. " should be " .. expected .. "px, got: " .. tostring(btn.width)
-      )
+      assert(btn.width == expected, "test_even_distribute: button " .. i .. " should be " .. expected .. "px, got: " .. tostring(btn.width))
     end
   end
 
@@ -48,10 +45,7 @@ return function()
 
     -- 2 buttons, 1 gap of 8, (280 - 8) / 2 = 136
     local expected = math.floor((280 - 8) / 2)
-    assert(
-      selector.buttons[1].width == expected,
-      "test_two_buttons: should be " .. expected .. "px, got: " .. tostring(selector.buttons[1].width)
-    )
+    assert(selector.buttons[1].width == expected, "test_two_buttons: should be " .. expected .. "px, got: " .. tostring(selector.buttons[1].width))
   end
 
   -- test_five_buttons_fill_row
@@ -74,10 +68,7 @@ return function()
 
     -- 5 buttons, 4 gaps of 8 = 32, (280 - 32) / 5 = 49
     local expected = math.floor((280 - 4 * 8) / 5)
-    assert(
-      selector.buttons[1].width == expected,
-      "test_five_buttons: should be " .. expected .. "px, got: " .. tostring(selector.buttons[1].width)
-    )
+    assert(selector.buttons[1].width == expected, "test_five_buttons: should be " .. expected .. "px, got: " .. tostring(selector.buttons[1].width))
   end
 
   -- test_explicit_button_width_overrides_distribution
@@ -94,14 +85,8 @@ return function()
       buttonWidth = 50,
     })
 
-    assert(
-      selector.buttons[1].width == 50,
-      "test_explicit_width: should be 50, got: " .. tostring(selector.buttons[1].width)
-    )
-    assert(
-      selector.buttons[2].width == 50,
-      "test_explicit_width: should be 50, got: " .. tostring(selector.buttons[2].width)
-    )
+    assert(selector.buttons[1].width == 50, "test_explicit_width: should be 50, got: " .. tostring(selector.buttons[1].width))
+    assert(selector.buttons[2].width == 50, "test_explicit_width: should be 50, got: " .. tostring(selector.buttons[2].width))
   end
 
   -- test_max_per_row_wraps_to_second_row
@@ -128,12 +113,7 @@ return function()
     for i = 1, 3 do
       assert(
         selector.buttons[i].width == row1Width,
-        "test_max_per_row: row1 button "
-          .. i
-          .. " should be "
-          .. row1Width
-          .. ", got: "
-          .. tostring(selector.buttons[i].width)
+        "test_max_per_row: row1 button " .. i .. " should be " .. row1Width .. ", got: " .. tostring(selector.buttons[i].width)
       )
     end
 
@@ -142,22 +122,14 @@ return function()
     for i = 4, 5 do
       assert(
         selector.buttons[i].width == row2Width,
-        "test_max_per_row: row2 button "
-          .. i
-          .. " should be "
-          .. row2Width
-          .. ", got: "
-          .. tostring(selector.buttons[i].width)
+        "test_max_per_row: row2 button " .. i .. " should be " .. row2Width .. ", got: " .. tostring(selector.buttons[i].width)
       )
     end
 
     -- Row 2 buttons should be anchored below row 1 (TOPLEFT of first row2 button)
     local btn4 = selector.buttons[4]
     assert(btn4.point ~= nil, "test_max_per_row: button 4 should have an anchor point")
-    assert(
-      btn4.point[1] == "TOPLEFT",
-      "test_max_per_row: button 4 anchor should be TOPLEFT, got: " .. tostring(btn4.point[1])
-    )
+    assert(btn4.point[1] == "TOPLEFT", "test_max_per_row: button 4 anchor should be TOPLEFT, got: " .. tostring(btn4.point[1]))
   end
 
   -- test_max_per_row_row_height_includes_both_rows

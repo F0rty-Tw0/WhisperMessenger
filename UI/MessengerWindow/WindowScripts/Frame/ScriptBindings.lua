@@ -80,12 +80,7 @@ function ScriptBindings.Bind(options)
     frame:SetScript("OnShow", function()
       alphaElapsed = 0
       options.refreshWindowAlpha(true)
-      if
-        options.composerInput
-        and options.getAutoFocusChatInput
-        and options.getAutoFocusChatInput()
-        and options.composerInput.SetFocus
-      then
+      if options.composerInput and options.getAutoFocusChatInput and options.getAutoFocusChatInput() and options.composerInput.SetFocus then
         options.composerInput:SetFocus()
       end
       options.trace("window shown")

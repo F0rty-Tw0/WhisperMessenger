@@ -37,14 +37,8 @@ return function()
     ChatFilters.Configure(Bootstrap, accountState)
     Bootstrap.syncChatFilters()
 
-    assert(
-      Bootstrap._filtersRegistered == true,
-      "filters should register when hideFromDefaultChat=true and no restriction active"
-    )
-    assert(
-      #securecallInvocations == 4,
-      "expected 4 securecall invocations (one per whisper event), got " .. #securecallInvocations
-    )
+    assert(Bootstrap._filtersRegistered == true, "filters should register when hideFromDefaultChat=true and no restriction active")
+    assert(#securecallInvocations == 4, "expected 4 securecall invocations (one per whisper event), got " .. #securecallInvocations)
 
     local sawAddTarget = false
     for _, entry in ipairs(securecallInvocations) do
@@ -61,10 +55,7 @@ return function()
     Bootstrap.syncChatFilters()
 
     assert(Bootstrap._filtersRegistered == false, "filters should unregister during encounter")
-    assert(
-      #securecallInvocations == 4,
-      "expected 4 securecall invocations on unregister, got " .. #securecallInvocations
-    )
+    assert(#securecallInvocations == 4, "expected 4 securecall invocations on unregister, got " .. #securecallInvocations)
     local sawRemoveTarget = false
     for _, entry in ipairs(securecallInvocations) do
       if entry.fn == _G.ChatFrame_RemoveMessageEventFilter then

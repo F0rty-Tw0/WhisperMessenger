@@ -60,10 +60,7 @@ return function()
     local result = hooks.onReplyTell()
 
     assert(result == true, "test_on_reply_tell_opens: should return true on success")
-    assert(
-      deps.calls.ensureWindow == 1,
-      "test_on_reply_tell_opens: ensureWindow should be called once, got " .. deps.calls.ensureWindow
-    )
+    assert(deps.calls.ensureWindow == 1, "test_on_reply_tell_opens: ensureWindow should be called once, got " .. deps.calls.ensureWindow)
     assert(
       #deps.calls.setWindowVisible == 1 and deps.calls.setWindowVisible[1] == true,
       "test_on_reply_tell_opens: should call setWindowVisible(true)"
@@ -280,10 +277,7 @@ return function()
 
     assert(result == false, "test_on_send_tell_disabled: should not route when outgoing auto-open is disabled")
     assert(deps.calls.ensureWindow == 0, "test_on_send_tell_disabled: should not open window when setting is disabled")
-    assert(
-      deps.calls.focusComposer == 0,
-      "test_on_send_tell_disabled: should not focus composer when setting is disabled"
-    )
+    assert(deps.calls.focusComposer == 0, "test_on_send_tell_disabled: should not focus composer when setting is disabled")
   end
 
   -- test_on_send_tell_falls_back_to_build_key_when_no_conversation
@@ -301,10 +295,7 @@ return function()
     local hooks = AutoOpenHooks.Create(deps)
     hooks.onSendTell("Unknown")
 
-    assert(
-      deps.calls.ensureWindow == 1,
-      "test_on_send_tell_fallback: ensureWindow should be called when key built from name"
-    )
+    assert(deps.calls.ensureWindow == 1, "test_on_send_tell_fallback: ensureWindow should be called when key built from name")
     assert(
       #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Unknown",
       "test_on_send_tell_fallback: should select conversation from built key"
@@ -325,10 +316,7 @@ return function()
     local result = hooks.onSendTell("Unknown")
 
     assert(result == false, "test_on_send_tell_no_conv: should return false when no key available")
-    assert(
-      deps.calls.ensureWindow == 0,
-      "test_on_send_tell_no_conv: should not open window when no matching conversation and no builder"
-    )
+    assert(deps.calls.ensureWindow == 0, "test_on_send_tell_no_conv: should not open window when no matching conversation and no builder")
   end
 
   -- test_on_outgoing_whisper_opens_window_with_force_focus
@@ -381,10 +369,7 @@ return function()
       #deps.calls.selectConversation == 1 and deps.calls.selectConversation[1] == "wow::WOW::Thrall",
       "test_on_auto_open_incoming: should select Thrall conversation"
     )
-    assert(
-      deps.calls.focusComposer == 0,
-      "test_on_auto_open_incoming: should NOT force focus composer (respects autoFocusComposer)"
-    )
+    assert(deps.calls.focusComposer == 0, "test_on_auto_open_incoming: should NOT force focus composer (respects autoFocusComposer)")
   end
 
   -- test_incoming_whisper_does_not_switch_when_window_open_with_active_conversation
@@ -404,8 +389,7 @@ return function()
 
     assert(
       #deps.calls.selectConversation == 0,
-      "test_incoming_no_switch: should NOT switch conversation when window is open with active conversation, got "
-        .. #deps.calls.selectConversation
+      "test_incoming_no_switch: should NOT switch conversation when window is open with active conversation, got " .. #deps.calls.selectConversation
     )
   end
 

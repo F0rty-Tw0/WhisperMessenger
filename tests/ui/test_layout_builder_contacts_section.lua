@@ -24,10 +24,7 @@ return function()
   assert(section.contactsDivider ~= nil, "contactsDivider should exist")
   assert(section.contactsResizeHandle ~= nil, "contactsResizeHandle should exist")
   assert(section.contactsRightBorder ~= nil, "contactsRightBorder should exist")
-  assert(
-    section.contactsHandleWidth == LayoutMetrics.GetContactsResizeHandleWidth(Theme),
-    "contactsHandleWidth should match layout metrics"
-  )
+  assert(section.contactsHandleWidth == LayoutMetrics.GetContactsResizeHandleWidth(Theme), "contactsHandleWidth should match layout metrics")
   assert(section.contactsPane.parent == frame, "contactsPane should parent to frame when no inset is present")
   assert(section.contactsView.scrollFrame.point ~= nil, "contactsView.scrollFrame should be positioned")
 end

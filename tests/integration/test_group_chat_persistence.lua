@@ -69,10 +69,7 @@ return function()
   })
   _G.IsInGroup = savedIsInGroup
 
-  assert(
-    accountState.conversations[partyKey] ~= nil,
-    "party conversation must survive PLAYER_LOGOUT (persistence contract)"
-  )
+  assert(accountState.conversations[partyKey] ~= nil, "party conversation must survive PLAYER_LOGOUT (persistence contract)")
 
   -- Simulate WoW serializing + restoring the saved variable.
   local reloadedAccount, _reloadedCharacter, reloadedRuntime = simulateRelog(accountState, characterState, profileId)
@@ -80,14 +77,8 @@ return function()
   assert(reloadedAccount.conversations[partyKey] ~= nil, "party conversation must be present after relog, got nil")
   local reloadedMessages = reloadedAccount.conversations[partyKey].messages or {}
   assert(#reloadedMessages == 1, "party conversation should retain 1 message after relog, got " .. #reloadedMessages)
-  assert(
-    reloadedMessages[1].text == "Ready check!",
-    "party message text should round-trip, got " .. tostring(reloadedMessages[1].text)
-  )
-  assert(
-    reloadedRuntime.store.conversations[partyKey] ~= nil,
-    "party conversation should be in runtime store after relog"
-  )
+  assert(reloadedMessages[1].text == "Ready check!", "party message text should round-trip, got " .. tostring(reloadedMessages[1].text))
+  assert(reloadedRuntime.store.conversations[partyKey] ~= nil, "party conversation should be in runtime store after relog")
   assert(
     reloadedRuntime.store.conversations[partyKey].channel == ChannelType.PARTY,
     "party conversation should keep its PARTY channel tag through relog"

@@ -26,10 +26,7 @@ return function()
     assert(ok == true, "expected Open to return true on success")
     assert(opened ~= nil, "expected the contacts ContextMenu.Open to be called")
     assert(opened.item.channel == "WOW", "expected channel WOW, got " .. tostring(opened.item.channel))
-    assert(
-      opened.item.displayName == "Arthas-Area52",
-      "expected displayName 'Arthas-Area52', got " .. tostring(opened.item.displayName)
-    )
+    assert(opened.item.displayName == "Arthas-Area52", "expected displayName 'Arthas-Area52', got " .. tostring(opened.item.displayName))
     assert(opened.item.guid == "Player-3678-0A1B2C3D", "expected guid forwarded, got " .. tostring(opened.item.guid))
     assert(opened.anchor == anchor, "expected the anchor frame to be forwarded")
   end
@@ -55,14 +52,8 @@ return function()
 
     assert(ok == true, "expected BN open to return true")
     assert(opened.item.channel == "BN", "expected channel BN")
-    assert(
-      opened.item.bnetAccountID == 12345,
-      "expected bnetAccountID 12345, got " .. tostring(opened.item.bnetAccountID)
-    )
-    assert(
-      opened.item.battleTag == "Jaina#1234",
-      "expected battleTag forwarded, got " .. tostring(opened.item.battleTag)
-    )
+    assert(opened.item.bnetAccountID == 12345, "expected bnetAccountID 12345, got " .. tostring(opened.item.bnetAccountID))
+    assert(opened.item.battleTag == "Jaina#1234", "expected battleTag forwarded, got " .. tostring(opened.item.battleTag))
   end
 
   -- test_open_refuses_outgoing_messages

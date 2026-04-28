@@ -3,8 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Buttons = ns.MessengerWindowWindowScriptsButtons
-  or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
+local Buttons = ns.MessengerWindowWindowScriptsButtons or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
 local Frame = ns.MessengerWindowWindowScriptsFrame or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame")
 
 local WindowScripts = {

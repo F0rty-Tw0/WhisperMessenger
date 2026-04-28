@@ -23,10 +23,7 @@ return function()
     assert(icon ~= nil, "createClassIcon should return an icon table")
     assert(icon.frame ~= nil, "icon should have a frame")
     assert(icon.texture ~= nil, "icon should have a texture")
-    assert(
-      icon.texture.texturePath ~= nil,
-      "icon texture should be set for known class, got: " .. tostring(icon.texture.texturePath)
-    )
+    assert(icon.texture.texturePath ~= nil, "icon texture should be set for known class, got: " .. tostring(icon.texture.texturePath))
     assert(
       string.find(icon.texture.texturePath, "WARRIOR") ~= nil,
       "icon texture path should contain class tag, got: " .. tostring(icon.texture.texturePath)
@@ -47,10 +44,7 @@ return function()
     local icon = RowElements.createClassIcon(factory, row, item)
     assert(icon ~= nil, "createClassIcon should return an icon table")
     assert(icon.texture ~= nil, "icon should have a texture")
-    assert(
-      icon.texture.texturePath ~= nil,
-      "icon texture should be set for BNet fallback, got: " .. tostring(icon.texture.texturePath)
-    )
+    assert(icon.texture.texturePath ~= nil, "icon texture should be set for BNet fallback, got: " .. tostring(icon.texture.texturePath))
     assert(
       string.find(icon.texture.texturePath, "Toast") ~= nil
         or string.find(icon.texture.texturePath, "bnet") ~= nil
@@ -145,10 +139,7 @@ return function()
     local maxOffset = label.width - Theme.LAYOUT.CONTACT_FACTION_SIZE - 1
     assert(
       tex.point[4] <= maxOffset,
-      "expected faction icon to preserve 1px right margin, got offset "
-        .. tostring(tex.point[4])
-        .. " > "
-        .. tostring(maxOffset)
+      "expected faction icon to preserve 1px right margin, got offset " .. tostring(tex.point[4]) .. " > " .. tostring(maxOffset)
     )
   end
 
@@ -179,10 +170,7 @@ return function()
     local tex = RowElements.createFactionIcon(factory, row, item, ns_stub)
     assert(tex ~= nil, "createFactionIcon should return a texture for Alliance")
     assert(tex.shown == true, "faction icon should be shown for Alliance")
-    assert(
-      string.find(tex.texturePath or "", "Alliance") ~= nil,
-      "faction texture should be Alliance, got: " .. tostring(tex.texturePath)
-    )
+    assert(string.find(tex.texturePath or "", "Alliance") ~= nil, "faction texture should be Alliance, got: " .. tostring(tex.texturePath))
   end
 
   -- test_create_faction_icon_for_horde
@@ -211,10 +199,7 @@ return function()
     local tex = RowElements.createFactionIcon(factory, row, item, ns_stub)
     assert(tex ~= nil, "createFactionIcon should return a texture for Horde")
     assert(tex.shown == true, "faction icon should be shown for Horde")
-    assert(
-      string.find(tex.texturePath or "", "Horde") ~= nil,
-      "faction texture should be Horde, got: " .. tostring(tex.texturePath)
-    )
+    assert(string.find(tex.texturePath or "", "Horde") ~= nil, "faction texture should be Horde, got: " .. tostring(tex.texturePath))
   end
 
   -- test_create_faction_icon_returns_nil_for_unknown
@@ -274,9 +259,6 @@ return function()
     }
     local label = RowElements.createPreview(row, item, 260)
     assert(label ~= nil, "createPreview should return a FontString")
-    assert(
-      label.text == "last message here",
-      "preview label should have lastPreview text, got: " .. tostring(label.text)
-    )
+    assert(label.text == "last message here", "preview label should have lastPreview text, got: " .. tostring(label.text))
   end
 end

@@ -164,10 +164,7 @@ return function()
       ownerProfileId = "thrall-draenor",
     }
     local guildVm = GroupHeaderViewModel.Build(guildContact, nil)
-    assert(
-      guildVm.title == "Thrall — Guild",
-      "foreign-owner guild should NOT use current char's guild name; got: " .. tostring(guildVm.title)
-    )
+    assert(guildVm.title == "Thrall — Guild", "foreign-owner guild should NOT use current char's guild name; got: " .. tostring(guildVm.title))
 
     _G.GetGuildInfo = savedGetGuildInfo
   end

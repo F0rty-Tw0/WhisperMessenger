@@ -82,11 +82,7 @@ return function()
     Metrics.RefreshMetrics(view, 600, true)
 
     local offset = view.scrollFrame:GetVerticalScroll()
-    assert(
-      offset == 400,
-      "snapToEnd should use captured viewport (200) when live height is 0, expected offset 400, got: "
-        .. tostring(offset)
-    )
+    assert(offset == 400, "snapToEnd should use captured viewport (200) when live height is 0, expected offset 400, got: " .. tostring(offset))
   end
 
   print("PASS: test_scroll_snap_to_end")

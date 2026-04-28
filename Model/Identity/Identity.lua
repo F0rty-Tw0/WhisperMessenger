@@ -92,9 +92,7 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
     channel = "BN",
     contactKey = "BN::" .. normalizeName(stableKey),
     canonicalName = normalizeName(stableKey),
-    displayName = (accountInfo and (accountInfo.battleTag or accountInfo.accountName)) or gameAccountName or tostring(
-      bnetAccountID
-    ),
+    displayName = (accountInfo and (accountInfo.battleTag or accountInfo.accountName)) or gameAccountName or tostring(bnetAccountID),
     battleTag = accountInfo and accountInfo.battleTag or nil,
     accountName = accountInfo and accountInfo.accountName or nil,
     bnetAccountID = bnetAccountID,
@@ -104,9 +102,7 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
     classTag = playerInfo.classTag or nil,
     raceName = playerInfo.raceName or (gameAccountInfo and gameAccountInfo.raceName or nil),
     raceTag = playerInfo.raceTag or nil,
-    factionName = (gameAccountInfo and gameAccountInfo.factionName)
-      or (playerInfo.factionName or Factions.InferFaction(playerInfo.raceTag))
-      or nil,
+    factionName = (gameAccountInfo and gameAccountInfo.factionName) or (playerInfo.factionName or Factions.InferFaction(playerInfo.raceTag)) or nil,
   }
 end
 

@@ -76,12 +76,7 @@ return function()
 
     local frame = factory.CreateFrame("Frame", nil, nil)
     BubbleStructure.createStructure(frame)
-    frame.scripts.OnHyperlinkClick(
-      frame,
-      "url:https://example.com/path?q=1",
-      "https://example.com/path?q=1",
-      "LeftButton"
-    )
+    frame.scripts.OnHyperlinkClick(frame, "url:https://example.com/path?q=1", "https://example.com/path?q=1", "LeftButton")
 
     assert(launchAttempted == false, "expected URL click to avoid protected LaunchURL APIs")
     assert(copiedUrl == "https://example.com/path?q=1", "expected URL click to copy URL as safe fallback")

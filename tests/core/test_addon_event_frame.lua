@@ -142,8 +142,7 @@ return function()
 
   frame.scripts.OnEvent(frame, "ADDON_LOADED", "WhisperMessenger")
   assert(
-    table.concat(calls, ",")
-      == "initializeRuntime,RegisterLiveEvents,RegisterChannelEvents,RegisterGroupEvents,installDeferredPoller",
+    table.concat(calls, ",") == "initializeRuntime,RegisterLiveEvents,RegisterChannelEvents,RegisterGroupEvents,installDeferredPoller",
     "expected ADDON_LOADED to initialize, register live/channel/group events, and install deferred poller"
   )
   assert(
@@ -164,10 +163,7 @@ return function()
   calls = {}
   loadedModules = {}
   frame.scripts.OnEvent(frame, "PLAYER_ENTERING_WORLD")
-  assert(
-    table.concat(calls, ",") == "LifecycleHandlers:PLAYER_ENTERING_WORLD",
-    "expected handled lifecycle event to stop before live routing"
-  )
+  assert(table.concat(calls, ",") == "LifecycleHandlers:PLAYER_ENTERING_WORLD", "expected handled lifecycle event to stop before live routing")
   assert(
     table.concat(loadedModules, ",") == "WhisperMessenger.Core.Bootstrap.LifecycleHandlers",
     "expected lifecycle handlers to lazy-load on first non-addon event"
@@ -185,10 +181,7 @@ return function()
   calls = {}
   Bootstrap._inMythicContent = true
   frame.scripts.OnEvent(frame, "CHAT_MSG_WHISPER", "blocked")
-  assert(
-    table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER",
-    "expected mythic guard to stop live routing after lifecycle handling"
-  )
+  assert(table.concat(calls, ",") == "LifecycleHandlers:CHAT_MSG_WHISPER", "expected mythic guard to stop live routing after lifecycle handling")
 
   -- fake_ui installs a default _G.CreateFrame so the production code can run
   -- under lupa; suppress it here to exercise the degenerate branch.

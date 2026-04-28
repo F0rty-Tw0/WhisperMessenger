@@ -98,27 +98,20 @@ return function()
 
     local view = ScrollViewFactory.Create(factory, parent, { width = 380, height = 280 })
     assert(view.refreshSkin ~= nil, "test_scroll_refresh: ScrollView should expose refreshSkin")
-    assert(
-      view.scrollBar.thumb.texturePath == nil,
-      "test_scroll_refresh: precondition — modern skin should not set knob"
-    )
+    assert(view.scrollBar.thumb.texturePath == nil, "test_scroll_refresh: precondition — modern skin should not set knob")
 
     Theme.SetPreset("wow_native")
     view.refreshSkin()
     -- Blizzard skin no longer paints a knob texture (see Skins.lua note);
     -- the slim color thumb continues with the Phase 1 gold-tinted palette.
-    assert(
-      view.scrollBar.thumb.texturePath == nil,
-      "test_scroll_refresh: should not paint knob on switch to wow_native"
-    )
+    assert(view.scrollBar.thumb.texturePath == nil, "test_scroll_refresh: should not paint knob on switch to wow_native")
     assert(view.scrollBar.thumb.color ~= nil, "test_scroll_refresh: slim color paint should remain after refresh")
 
     Theme.SetPreset("wow_default")
     view.refreshSkin()
     assert(
       view.scrollBar.thumb.texturePath == nil,
-      "test_scroll_refresh: should remain nil on switch back to modern, got "
-        .. tostring(view.scrollBar.thumb.texturePath)
+      "test_scroll_refresh: should remain nil on switch back to modern, got " .. tostring(view.scrollBar.thumb.texturePath)
     )
   end
 
@@ -142,10 +135,7 @@ return function()
       pinned = false,
     }
     local row = RowView.bindRow(factory, parent, nil, 1, item, { onSelect = function() end })
-    assert(
-      row.skinHighlight.texturePath == nil,
-      "test_row_rebind: precondition — modern row should have no overlay texture"
-    )
+    assert(row.skinHighlight.texturePath == nil, "test_row_rebind: precondition — modern row should have no overlay texture")
 
     Theme.SetPreset("wow_native")
     row = RowView.bindRow(factory, parent, row, 1, item, { onSelect = function() end })
@@ -156,10 +146,7 @@ return function()
 
     Theme.SetPreset("wow_default")
     row = RowView.bindRow(factory, parent, row, 1, item, { onSelect = function() end })
-    assert(
-      row.skinHighlight.texturePath == nil,
-      "test_row_rebind: re-binding back to modern should clear overlay texture"
-    )
+    assert(row.skinHighlight.texturePath == nil, "test_row_rebind: re-binding back to modern should clear overlay texture")
   end
 
   -- ScrollView hides the thumb when no overflow (defensive — was leaking
@@ -173,14 +160,8 @@ return function()
 
     local view = ScrollViewFactory.Create(factory, parent, { width = 380, height = 280 })
     -- No content added: range is 0, no overflow
-    assert(
-      view.scrollBar.shown == false,
-      "test_scroll_no_overflow: scrollBar should be hidden when there's no overflow"
-    )
-    assert(
-      view.scrollBar.thumb.shown == false,
-      "test_scroll_no_overflow: thumb should be hidden when there's no overflow"
-    )
+    assert(view.scrollBar.shown == false, "test_scroll_no_overflow: scrollBar should be hidden when there's no overflow")
+    assert(view.scrollBar.thumb.shown == false, "test_scroll_no_overflow: thumb should be hidden when there's no overflow")
   end
 
   -- Contact row gets a Blizzard highlight overlay under wow_native
@@ -208,10 +189,7 @@ return function()
       row.skinHighlight.texturePath == "Interface\\QuestFrame\\UI-QuestTitleHighlight",
       "test_row_blizzard_overlay: expected UI-QuestTitleHighlight, got " .. tostring(row.skinHighlight.texturePath)
     )
-    assert(
-      row.skinHighlight.shown == false,
-      "test_row_blizzard_overlay: skinHighlight should be hidden when row is idle"
-    )
+    assert(row.skinHighlight.shown == false, "test_row_blizzard_overlay: skinHighlight should be hidden when row is idle")
   end
 
   -- Contact row stays color-only under wow_default (no overlay texture)
@@ -237,10 +215,7 @@ return function()
     -- skinHighlight may exist (created unconditionally) but must have no
     -- texture path under modern skin so it never paints.
     if row.skinHighlight ~= nil then
-      assert(
-        row.skinHighlight.texturePath == nil,
-        "test_row_modern_overlay: skinHighlight texturePath should be nil under modern skin"
-      )
+      assert(row.skinHighlight.texturePath == nil, "test_row_modern_overlay: skinHighlight texturePath should be nil under modern skin")
     end
   end
 

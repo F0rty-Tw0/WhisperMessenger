@@ -23,9 +23,7 @@ function Common.scheduleAfter(delay, callback)
 end
 
 function Common.notifyCompetitiveState(Bootstrap)
-  local isActive = Bootstrap._inCompetitiveContent == true
-    or Bootstrap._inMythicContent == true
-    or Bootstrap._inEncounter == true
+  local isActive = Bootstrap._inCompetitiveContent == true or Bootstrap._inMythicContent == true or Bootstrap._inEncounter == true
 
   -- Set/clear the messaging notice on the runtime (visible banner in messenger).
   -- Skip if mythic suspend already owns the notice (its own suspend/resume manages it).

@@ -82,10 +82,7 @@ return function()
       "maxConversationsSlider should start at 100, got: " .. tostring(settings.maxConversationsSlider:GetValue())
     )
     -- Retention slider uses hours: 43200 / 3600 = 12
-    assert(
-      settings.retentionSlider:GetValue() == 12,
-      "retentionSlider should start at 12h, got: " .. tostring(settings.retentionSlider:GetValue())
-    )
+    assert(settings.retentionSlider:GetValue() == 12, "retentionSlider should start at 12h, got: " .. tostring(settings.retentionSlider:GetValue()))
   end
 
   -- test_on_change_fires_with_updated_values
@@ -130,36 +127,18 @@ return function()
     -- Each slider row should have min and max labels
     assert(settings.maxMessagesMinLabel ~= nil, "should have maxMessagesMinLabel")
     assert(settings.maxMessagesMaxLabel ~= nil, "should have maxMessagesMaxLabel")
-    assert(
-      settings.maxMessagesMinLabel.text == "50",
-      "min label should be '50', got: " .. tostring(settings.maxMessagesMinLabel.text)
-    )
-    assert(
-      settings.maxMessagesMaxLabel.text == "500",
-      "max label should be '500', got: " .. tostring(settings.maxMessagesMaxLabel.text)
-    )
+    assert(settings.maxMessagesMinLabel.text == "50", "min label should be '50', got: " .. tostring(settings.maxMessagesMinLabel.text))
+    assert(settings.maxMessagesMaxLabel.text == "500", "max label should be '500', got: " .. tostring(settings.maxMessagesMaxLabel.text))
 
     assert(settings.maxConversationsMinLabel ~= nil, "should have maxConversationsMinLabel")
     assert(settings.maxConversationsMaxLabel ~= nil, "should have maxConversationsMaxLabel")
-    assert(
-      settings.maxConversationsMinLabel.text == "10",
-      "min label should be '10', got: " .. tostring(settings.maxConversationsMinLabel.text)
-    )
-    assert(
-      settings.maxConversationsMaxLabel.text == "100",
-      "max label should be '100', got: " .. tostring(settings.maxConversationsMaxLabel.text)
-    )
+    assert(settings.maxConversationsMinLabel.text == "10", "min label should be '10', got: " .. tostring(settings.maxConversationsMinLabel.text))
+    assert(settings.maxConversationsMaxLabel.text == "100", "max label should be '100', got: " .. tostring(settings.maxConversationsMaxLabel.text))
 
     assert(settings.retentionMinLabel ~= nil, "should have retentionMinLabel")
     assert(settings.retentionMaxLabel ~= nil, "should have retentionMaxLabel")
-    assert(
-      settings.retentionMinLabel.text == "1",
-      "min label should be '1', got: " .. tostring(settings.retentionMinLabel.text)
-    )
-    assert(
-      settings.retentionMaxLabel.text == "168",
-      "max label should be '168', got: " .. tostring(settings.retentionMaxLabel.text)
-    )
+    assert(settings.retentionMinLabel.text == "1", "min label should be '1', got: " .. tostring(settings.retentionMinLabel.text))
+    assert(settings.retentionMaxLabel.text == "168", "max label should be '168', got: " .. tostring(settings.retentionMaxLabel.text))
   end
 
   -- test_reset_button_exists
@@ -210,18 +189,12 @@ return function()
     settings.resetButton.scripts.OnClick(settings.resetButton)
 
     -- Sliders should be back to defaults
-    assert(
-      settings.maxMessagesSlider:GetValue() == 200,
-      "maxMessages should reset to 200, got: " .. tostring(settings.maxMessagesSlider:GetValue())
-    )
+    assert(settings.maxMessagesSlider:GetValue() == 200, "maxMessages should reset to 200, got: " .. tostring(settings.maxMessagesSlider:GetValue()))
     assert(
       settings.maxConversationsSlider:GetValue() == 100,
       "maxConversations should reset to 100, got: " .. tostring(settings.maxConversationsSlider:GetValue())
     )
-    assert(
-      settings.retentionSlider:GetValue() == 24,
-      "retention should reset to 24h, got: " .. tostring(settings.retentionSlider:GetValue())
-    )
+    assert(settings.retentionSlider:GetValue() == 24, "retention should reset to 24h, got: " .. tostring(settings.retentionSlider:GetValue()))
 
     -- onChange should have fired for each
     assert(changes.maxMessagesPerConversation == 200, "should fire onChange for maxMessagesPerConversation=200")
@@ -245,25 +218,16 @@ return function()
     })
 
     local offDefault = Theme.COLORS.option_toggle_off
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offDefault),
-      "expected unchecked toggle to use option_toggle_off"
-    )
+    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offDefault), "expected unchecked toggle to use option_toggle_off")
     local borderDefault = Theme.COLORS.option_toggle_border
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderDefault),
-      "expected toggle border to use option_toggle_border"
-    )
+    assert(colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderDefault), "expected toggle border to use option_toggle_border")
 
     local onClick = settings.clearOnLogoutToggle.dot:GetScript("OnClick")
     assert(onClick ~= nil, "expected toggle dot click handler")
     onClick(settings.clearOnLogoutToggle.dot)
 
     local onDefault = Theme.COLORS.option_toggle_on
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onDefault),
-      "expected checked toggle to use option_toggle_on"
-    )
+    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onDefault), "expected checked toggle to use option_toggle_on")
     assert(
       colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onDefault),
       "expected checked toggle border to use option_toggle_on for stronger visibility"
@@ -275,10 +239,7 @@ return function()
     end
 
     local onPlumber = Theme.COLORS.option_toggle_on
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onPlumber),
-      "expected checked toggle to repaint with preset option_toggle_on"
-    )
+    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onPlumber), "expected checked toggle to repaint with preset option_toggle_on")
     assert(
       colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onPlumber),
       "expected checked toggle border to repaint with preset option_toggle_on"
@@ -286,10 +247,7 @@ return function()
 
     onClick(settings.clearOnLogoutToggle.dot)
     local offPlumber = Theme.COLORS.option_toggle_off
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offPlumber),
-      "expected unchecked toggle to repaint with preset option_toggle_off"
-    )
+    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offPlumber), "expected unchecked toggle to repaint with preset option_toggle_off")
     local borderPlumber = Theme.COLORS.option_toggle_border
     assert(
       colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderPlumber),

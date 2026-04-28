@@ -85,10 +85,7 @@ return function()
     Theme.SetPreset("elvui_dark")
     BubbleColors.ApplyPreset()
 
-    assert(
-      colorsMatch(Theme.COLORS.bg_bubble_in, customIn),
-      "test_override: custom bubble preset must survive theme switch"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_bubble_in, customIn), "test_override: custom bubble preset must survive theme switch")
 
     -- Restore
     Theme.SetPreset("wow_default")
@@ -115,10 +112,7 @@ return function()
 
     -- Switch back to default — must restore theme's bubble colors
     BubbleColors.SetPreset("default")
-    assert(
-      colorsMatch(Theme.COLORS.bg_bubble_in, themeIn),
-      "test_restore: switching to default must restore theme bubble colors"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_bubble_in, themeIn), "test_restore: switching to default must restore theme bubble colors")
   end
 
   -- test_set_invalid_preset_returns_false

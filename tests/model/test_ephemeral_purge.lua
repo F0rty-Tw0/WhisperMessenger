@@ -92,10 +92,7 @@ return function()
       activeConversationKey = "whisper::Alice",
     }
     EphemeralPurge.PurgeAll(state)
-    assert(
-      state.activeConversationKey == "whisper::Alice",
-      "activeConversationKey should stay when active conv is kept"
-    )
+    assert(state.activeConversationKey == "whisper::Alice", "activeConversationKey should stay when active conv is kept")
   end
 
   -- test_purge_all_nil_state_is_safe_noop

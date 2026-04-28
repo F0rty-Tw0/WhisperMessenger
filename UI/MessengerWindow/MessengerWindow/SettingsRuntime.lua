@@ -3,13 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local SettingsPanels = ns.MessengerWindowSettingsPanels
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
+local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
 local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
-local NotificationSettings = ns.NotificationSettings
-  or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
+local NotificationSettings = ns.NotificationSettings or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 
 local SettingsRuntime = {}
 

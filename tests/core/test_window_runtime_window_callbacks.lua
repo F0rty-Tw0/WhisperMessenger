@@ -105,19 +105,13 @@ return function()
   callbacks.onTabModeChanged("groups")
   assert(characterState.contactsTabMode == "groups", "tab callback should persist mode")
 
-  assert(
-    callbacks.onSelectConversation("wow::WOW::thrall") == "selected-result",
-    "select callback should return selector result"
-  )
+  assert(callbacks.onSelectConversation("wow::WOW::thrall") == "selected-result", "select callback should return selector result")
   assert(selected == "wow::WOW::thrall", "select callback should pass conversation key")
 
   assert(callbacks.onStartConversation("Jaina") == "started-result", "start callback should return start result")
   assert(started == "Jaina", "start callback should pass player name")
 
-  assert(
-    callbacks.onSend({ channel = "WOW", text = "hello" }) == "legacy-result",
-    "legacy send should use send handler"
-  )
+  assert(callbacks.onSend({ channel = "WOW", text = "hello" }) == "legacy-result", "legacy send should use send handler")
   assert(sentLegacy.text == "hello", "legacy payload should reach send handler")
   assert(refreshes == 1, "legacy send should allow send handler refresh")
 
@@ -138,10 +132,7 @@ return function()
   assert(runtime.store.conversations["wow::WOW::thrall"].sortOrder == 1, "reorder should set Thrall sort order")
 
   callbacks.onPin({ conversationKey = "wow::WOW::thrall", pinned = false })
-  assert(
-    runtime.store.conversations["wow::WOW::thrall"].pinned == true,
-    "pin callback should pin unpinned conversation"
-  )
+  assert(runtime.store.conversations["wow::WOW::thrall"].pinned == true, "pin callback should pin unpinned conversation")
 
   callbacks.onRemove({ conversationKey = "wow::WOW::jaina", displayName = "Jaina" })
   assert(runtime.store.conversations["wow::WOW::jaina"] == nil, "remove callback should delete conversation")

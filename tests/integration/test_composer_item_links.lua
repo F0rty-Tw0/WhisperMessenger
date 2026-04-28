@@ -87,10 +87,7 @@ return function()
     channel = "WOW",
   }, function() end)
 
-  assert(
-    _G.ChatEdit_GetActiveWindow == preLoadGetActiveWindow,
-    "ChatEdit_GetActiveWindow must not be overridden before focus"
-  )
+  assert(_G.ChatEdit_GetActiveWindow == preLoadGetActiveWindow, "ChatEdit_GetActiveWindow must not be overridden before focus")
   assert(_G.ChatEdit_InsertLink == preLoadInsertLink, "ChatEdit_InsertLink must not be overridden before focus")
 
   -- ChatEdit_GetActiveWindow returns our input when focused (installs override)
@@ -99,10 +96,7 @@ return function()
   composer.input:Show()
   composer.input:SetFocus()
 
-  assert(
-    _G.ChatEdit_GetActiveWindow ~= preLoadGetActiveWindow,
-    "ChatEdit_GetActiveWindow should install on focus-gained"
-  )
+  assert(_G.ChatEdit_GetActiveWindow ~= preLoadGetActiveWindow, "ChatEdit_GetActiveWindow should install on focus-gained")
 
   local activeWindow = _G.ChatEdit_GetActiveWindow()
   assert(activeWindow == composer.input, "expected ChatEdit_GetActiveWindow to return our composer input when visible")

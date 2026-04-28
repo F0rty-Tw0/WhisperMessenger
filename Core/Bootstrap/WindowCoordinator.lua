@@ -120,11 +120,7 @@ function WindowCoordinator.Create(options)
       runtime.availabilityRequestedAt = runtime.availabilityRequestedAt or {}
       local now = nowSeconds()
       for _, item in ipairs(freshContacts) do
-        if
-          item.channel == "WOW"
-          and item.guid
-          and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid])
-        then
+        if item.channel == "WOW" and item.guid and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid]) then
           local lastAt = runtime.availabilityRequestedAt[item.guid] or 0
           if now - lastAt >= AVAILABILITY_THROTTLE_SECONDS then
             runtime.availabilityRequestedAt[item.guid] = now
@@ -165,11 +161,7 @@ function WindowCoordinator.Create(options)
       local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or "whispers"
       local whispersVisibleInPane = coordinator.isWindowVisible() and tabMode == "whispers"
       local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
-      icon.setIncomingPreview(
-        preview and preview.senderName or nil,
-        preview and preview.messageText or nil,
-        preview and preview.classTag or nil
-      )
+      icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
     end
 
     return nextState

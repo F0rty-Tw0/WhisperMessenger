@@ -44,11 +44,7 @@ return function()
   removeButton.scripts.OnEnter(removeButton)
   row.scripts.OnLeave(row)
 
-  assertColorEquals(
-    row.bg.color,
-    Theme.COLORS.bg_contact_hover,
-    "row should stay hover-colored while over action button"
-  )
+  assertColorEquals(row.bg.color, Theme.COLORS.bg_contact_hover, "row should stay hover-colored while over action button")
 
   removeButton.mouseOver = false
   row.mouseOver = false

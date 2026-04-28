@@ -80,10 +80,7 @@ return function()
   runtime.activeConversationKey = "missing-key"
   tabMode = "groups"
   flow.toggle()
-  assert(
-    #selected == 4 and selected[4] == "missing-key",
-    "missing active conversation preserves legacy select behavior"
-  )
+  assert(#selected == 4 and selected[4] == "missing-key", "missing active conversation preserves legacy select behavior")
 
   visible = true
   unreadKey = "wow::jaina"

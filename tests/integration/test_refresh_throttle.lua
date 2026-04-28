@@ -82,10 +82,7 @@ return function()
   selectionRefreshCount = 0
   runtime.refreshWindow()
   assert(enricherCallCount >= 1, "expected enricher called when window visible, got " .. enricherCallCount)
-  assert(
-    selectionRefreshCount == 1,
-    "expected visible refreshWindow to push selection once, got " .. selectionRefreshCount
-  )
+  assert(selectionRefreshCount == 1, "expected visible refreshWindow to push selection once, got " .. selectionRefreshCount)
 
   -- TEST 3: hidden refreshWindow still enriches contacts without touching visible selection
   runtime.toggle() -- hide window
@@ -95,10 +92,7 @@ return function()
   selectionRefreshCount = 0
   runtime.refreshWindow()
   assert(enricherCallCount == 1, "expected enricher called even after window hidden again, got " .. enricherCallCount)
-  assert(
-    selectionRefreshCount == 0,
-    "expected hidden refreshWindow to skip pushing selection, got " .. selectionRefreshCount
-  )
+  assert(selectionRefreshCount == 0, "expected hidden refreshWindow to skip pushing selection, got " .. selectionRefreshCount)
   -- Icon badge should still update
   conv.unreadCount = 7
   runtime.refreshWindow()

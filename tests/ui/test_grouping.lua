@@ -48,10 +48,7 @@ return function()
   do
     local prev = out(nil, 100)
     local current = out("CharB", 150)
-    assert(
-      Grouping.ShouldGroup(prev, current) == false,
-      "legacy outgoing followed by stamped sender must break grouping"
-    )
+    assert(Grouping.ShouldGroup(prev, current) == false, "legacy outgoing followed by stamped sender must break grouping")
   end
 
   -- Direction change still breaks regardless.

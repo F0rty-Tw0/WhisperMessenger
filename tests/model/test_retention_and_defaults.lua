@@ -39,10 +39,7 @@ return function()
     "testplayer",
     {} -- no maxMessagesPerConversation specified
   )
-  assert(
-    type(runtime.store.config.maxMessagesPerConversation) == "number",
-    "expected default maxMessagesPerConversation to be set"
-  )
+  assert(type(runtime.store.config.maxMessagesPerConversation) == "number", "expected default maxMessagesPerConversation to be set")
   assert(runtime.store.config.maxMessagesPerConversation > 0, "expected positive default maxMessagesPerConversation")
 
   -- TEST 5: Explicit maxMessagesPerConversation overrides default
@@ -54,8 +51,7 @@ return function()
   )
   assert(
     runtime2.store.config.maxMessagesPerConversation == 50,
-    "expected explicit maxMessagesPerConversation=50, got "
-      .. tostring(runtime2.store.config.maxMessagesPerConversation)
+    "expected explicit maxMessagesPerConversation=50, got " .. tostring(runtime2.store.config.maxMessagesPerConversation)
   )
 
   -- TEST 6: Messages are actually trimmed with the default cap

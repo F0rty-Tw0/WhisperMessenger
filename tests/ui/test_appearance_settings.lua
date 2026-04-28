@@ -12,14 +12,10 @@ return function()
     local result = AppearanceSettings.Create(factory, parent, config, { onChange = function() end })
 
     assert(result.themePresetSelector ~= nil, "test_theme_preset_selector_exists: should expose themePresetSelector")
-    assert(
-      result.themePresetSelector.buttons ~= nil,
-      "test_theme_preset_selector_exists: themePresetSelector should have buttons"
-    )
+    assert(result.themePresetSelector.buttons ~= nil, "test_theme_preset_selector_exists: themePresetSelector should have buttons")
     assert(
       #result.themePresetSelector.buttons == 4,
-      "test_theme_preset_selector_exists: should have 4 preset buttons, got: "
-        .. tostring(#result.themePresetSelector.buttons)
+      "test_theme_preset_selector_exists: should have 4 preset buttons, got: " .. tostring(#result.themePresetSelector.buttons)
     )
   end
 
@@ -73,8 +69,7 @@ return function()
 
     assert(
       changes.themePreset == "plumber_warm",
-      "test_theme_preset_selector_fires_on_change: should fire onChange with themePreset=plumber_warm, got: "
-        .. tostring(changes.themePreset)
+      "test_theme_preset_selector_fires_on_change: should fire onChange with themePreset=plumber_warm, got: " .. tostring(changes.themePreset)
     )
   end
 
@@ -161,8 +156,7 @@ return function()
 
     assert(
       changes.fontFamily == "system",
-      "test_font_selector_fires_on_change: should fire onChange with fontFamily=system, got: "
-        .. tostring(changes.fontFamily)
+      "test_font_selector_fires_on_change: should fire onChange with fontFamily=system, got: " .. tostring(changes.fontFamily)
     )
   end
 
@@ -174,10 +168,7 @@ return function()
 
     -- The system button (index 2) should be the selected one
     local systemBtn = result.fontSelector.buttons[2]
-    assert(
-      systemBtn._selected == true,
-      "test_font_selector_default_highlights_initial: system button should be selected when fontFamily=system"
-    )
+    assert(systemBtn._selected == true, "test_font_selector_default_highlights_initial: system button should be selected when fontFamily=system")
 
     local defaultBtn = result.fontSelector.buttons[1]
     assert(
@@ -209,32 +200,22 @@ return function()
 
     assert(
       changes.themePreset == "wow_default",
-      "test_reset_resets_font_and_theme: reset should fire onChange with themePreset=wow_default, got: "
-        .. tostring(changes.themePreset)
+      "test_reset_resets_font_and_theme: reset should fire onChange with themePreset=wow_default, got: " .. tostring(changes.themePreset)
     )
     assert(
       changes.fontFamily == "default",
-      "test_reset_resets_font_and_theme: reset should fire onChange with fontFamily=default, got: "
-        .. tostring(changes.fontFamily)
+      "test_reset_resets_font_and_theme: reset should fire onChange with fontFamily=default, got: " .. tostring(changes.fontFamily)
     )
     assert(
       math.abs((changes.windowOpacityInactive or 0) - 0.7) < 0.0001,
-      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityInactive=0.7, got: "
-        .. tostring(changes.windowOpacityInactive)
+      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityInactive=0.7, got: " .. tostring(changes.windowOpacityInactive)
     )
     assert(
       math.abs((changes.windowOpacityActive or 0) - 1.0) < 0.0001,
-      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityActive=1.0, got: "
-        .. tostring(changes.windowOpacityActive)
+      "test_reset_resets_font_and_theme: reset should fire onChange with windowOpacityActive=1.0, got: " .. tostring(changes.windowOpacityActive)
     )
-    assert(
-      result.themePresetSelector.buttons[1]._selected == true,
-      "test_reset_resets_font_and_theme: Midnight theme should be selected after reset"
-    )
-    assert(
-      result.fontSelector.buttons[1]._selected == true,
-      "test_reset_resets_font_and_theme: Default font should be selected after reset"
-    )
+    assert(result.themePresetSelector.buttons[1]._selected == true, "test_reset_resets_font_and_theme: Midnight theme should be selected after reset")
+    assert(result.fontSelector.buttons[1]._selected == true, "test_reset_resets_font_and_theme: Default font should be selected after reset")
   end
 
   -- test_font_buttons_show_tooltip_on_enter
@@ -350,10 +331,7 @@ return function()
     assert(onValueChanged ~= nil, "test_font_size_fires: slider should have OnValueChanged")
     onValueChanged(result.fontSizeSlider, 16)
 
-    assert(
-      changes.fontSize == 16,
-      "test_font_size_fires: should fire onChange with fontSize=16, got: " .. tostring(changes.fontSize)
-    )
+    assert(changes.fontSize == 16, "test_font_size_fires: should fire onChange with fontSize=16, got: " .. tostring(changes.fontSize))
   end
 
   -- test_font_outline_selector_exists
@@ -365,8 +343,7 @@ return function()
     assert(result.fontOutlineSelector ~= nil, "test_font_outline_selector_exists: should expose fontOutlineSelector")
     assert(
       #result.fontOutlineSelector.buttons == 3,
-      "test_font_outline_selector_exists: should have 3 outline buttons, got: "
-        .. tostring(#result.fontOutlineSelector.buttons)
+      "test_font_outline_selector_exists: should have 3 outline buttons, got: " .. tostring(#result.fontOutlineSelector.buttons)
     )
   end
 
@@ -401,8 +378,7 @@ return function()
     assert(result.fontColorSelector ~= nil, "test_font_color_selector_exists: should expose fontColorSelector")
     assert(
       #result.fontColorSelector.buttons >= 6,
-      "test_font_color_selector_exists: should have at least 6 color buttons, got: "
-        .. tostring(#result.fontColorSelector.buttons)
+      "test_font_color_selector_exists: should have at least 6 color buttons, got: " .. tostring(#result.fontColorSelector.buttons)
     )
   end
 
@@ -422,10 +398,7 @@ return function()
     local onClick = goldBtn:GetScript("OnClick")
     onClick(goldBtn)
 
-    assert(
-      changes.fontColor == "gold",
-      "test_font_color_fires: should fire onChange with fontColor=gold, got: " .. tostring(changes.fontColor)
-    )
+    assert(changes.fontColor == "gold", "test_font_color_fires: should fire onChange with fontColor=gold, got: " .. tostring(changes.fontColor))
   end
 
   -- test_reset_resets_new_font_settings
@@ -450,18 +423,9 @@ return function()
     local resetClick = result.resetButton:GetScript("OnClick")
     resetClick(result.resetButton)
 
-    assert(
-      changes.fontSize == 12,
-      "test_reset_new_settings: reset should fire fontSize=12, got: " .. tostring(changes.fontSize)
-    )
-    assert(
-      changes.fontOutline == "NONE",
-      "test_reset_new_settings: reset should fire fontOutline=NONE, got: " .. tostring(changes.fontOutline)
-    )
-    assert(
-      changes.fontColor == "default",
-      "test_reset_new_settings: reset should fire fontColor=default, got: " .. tostring(changes.fontColor)
-    )
+    assert(changes.fontSize == 12, "test_reset_new_settings: reset should fire fontSize=12, got: " .. tostring(changes.fontSize))
+    assert(changes.fontOutline == "NONE", "test_reset_new_settings: reset should fire fontOutline=NONE, got: " .. tostring(changes.fontOutline))
+    assert(changes.fontColor == "default", "test_reset_new_settings: reset should fire fontColor=default, got: " .. tostring(changes.fontColor))
   end
 
   print("  All appearance settings tests passed")

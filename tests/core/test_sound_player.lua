@@ -21,14 +21,8 @@ return function()
 
     SoundPlayer.Play({ notificationSound = "ping" })
 
-    assert(
-      playedId == 5274,
-      "test_play_uses_correct_sound_id_for_key: expected soundId 5274, got " .. tostring(playedId)
-    )
-    assert(
-      playedChannel == "Master",
-      "test_play_uses_correct_sound_id_for_key: expected channel Master, got " .. tostring(playedChannel)
-    )
+    assert(playedId == 5274, "test_play_uses_correct_sound_id_for_key: expected soundId 5274, got " .. tostring(playedId))
+    assert(playedChannel == "Master", "test_play_uses_correct_sound_id_for_key: expected channel Master, got " .. tostring(playedChannel))
   end
 
   -- test_play_defaults_to_whisper_sound
@@ -105,10 +99,7 @@ return function()
 
     SoundPlayer.Play({})
 
-    assert(
-      setCvarCalled == false,
-      "test_play_skips_cvar_when_audio_already_enabled: should not call SetCVar when audio is already enabled"
-    )
+    assert(setCvarCalled == false, "test_play_skips_cvar_when_audio_already_enabled: should not call SetCVar when audio is already enabled")
   end
 
   -- test_preview_plays_sound_directly_without_cvar_manipulation

@@ -12,10 +12,7 @@ return function()
 
   do
     Fonts.Initialize()
-    assert(
-      Fonts.GetMode() == "default",
-      "test_default_mode_on_init: mode should be 'default', got: " .. tostring(Fonts.GetMode())
-    )
+    assert(Fonts.GetMode() == "default", "test_default_mode_on_init: mode should be 'default', got: " .. tostring(Fonts.GetMode()))
   end
 
   -- test_font_keys_are_wm_objects
@@ -24,10 +21,7 @@ return function()
     Fonts.Initialize()
     local fonts = Fonts.GetFonts()
     for _, key in ipairs({ "contact_name", "message_text", "composer_input" }) do
-      assert(
-        string.find(fonts[key], "^WM_") ~= nil,
-        "test_font_keys: " .. key .. " should start with WM_, got: " .. tostring(fonts[key])
-      )
+      assert(string.find(fonts[key], "^WM_") ~= nil, "test_font_keys: " .. key .. " should start with WM_, got: " .. tostring(fonts[key]))
     end
   end
 
@@ -48,10 +42,7 @@ return function()
     Fonts.SetMode("default")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
-    assert(
-      string.find(path, "CYR") ~= nil,
-      "test_default_locale: should follow locale game font, got: " .. tostring(path)
-    )
+    assert(string.find(path, "CYR") ~= nil, "test_default_locale: should follow locale game font, got: " .. tostring(path))
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
@@ -71,10 +62,7 @@ return function()
     Fonts.SetMode("custom")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path, size = fontObj:GetFont()
-    assert(
-      string.find(path, "CUSTOM_ELVUI") ~= nil,
-      "test_unknown_mode: should inherit game font, got: " .. tostring(path)
-    )
+    assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_unknown_mode: should inherit game font, got: " .. tostring(path))
     assert(size == 12, "test_unknown_mode: should use controlled size, got: " .. tostring(size))
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
@@ -104,10 +92,7 @@ return function()
       local obj = _G[name]
       assert(obj ~= nil, "test_updates_all: " .. key .. " object should exist")
       local path = obj:GetFont()
-      assert(
-        string.find(path, "ARIALN") ~= nil,
-        "test_updates_all: " .. key .. " should use ARIALN in system mode, got: " .. tostring(path)
-      )
+      assert(string.find(path, "ARIALN") ~= nil, "test_updates_all: " .. key .. " should use ARIALN in system mode, got: " .. tostring(path))
     end
   end
 
@@ -134,10 +119,7 @@ return function()
 
   do
     Fonts.Initialize("system")
-    assert(
-      Fonts.GetMode() == "system",
-      "test_init_mode: should accept initial mode, got: " .. tostring(Fonts.GetMode())
-    )
+    assert(Fonts.GetMode() == "system", "test_init_mode: should accept initial mode, got: " .. tostring(Fonts.GetMode()))
   end
 
   -- test_set_font_size_scales_all_objects
@@ -162,15 +144,9 @@ return function()
 
   do
     Fonts.Initialize("default")
-    assert(
-      Fonts.GetFontSize() == 12,
-      "test_get_font_size: default should be 12, got: " .. tostring(Fonts.GetFontSize())
-    )
+    assert(Fonts.GetFontSize() == 12, "test_get_font_size: default should be 12, got: " .. tostring(Fonts.GetFontSize()))
     Fonts.SetFontSize(16)
-    assert(
-      Fonts.GetFontSize() == 16,
-      "test_get_font_size: after set should be 16, got: " .. tostring(Fonts.GetFontSize())
-    )
+    assert(Fonts.GetFontSize() == 16, "test_get_font_size: after set should be 16, got: " .. tostring(Fonts.GetFontSize()))
   end
 
   -- test_set_outline_applies_to_all_objects
@@ -211,15 +187,9 @@ return function()
 
   do
     Fonts.Initialize("default")
-    assert(
-      Fonts.GetOutline() == "NONE",
-      "test_get_outline: default should be NONE, got: " .. tostring(Fonts.GetOutline())
-    )
+    assert(Fonts.GetOutline() == "NONE", "test_get_outline: default should be NONE, got: " .. tostring(Fonts.GetOutline()))
     Fonts.SetOutline("OUTLINE")
-    assert(
-      Fonts.GetOutline() == "OUTLINE",
-      "test_get_outline: after set should be OUTLINE, got: " .. tostring(Fonts.GetOutline())
-    )
+    assert(Fonts.GetOutline() == "OUTLINE", "test_get_outline: after set should be OUTLINE, got: " .. tostring(Fonts.GetOutline()))
   end
 
   -- test_morpheus_mode_uses_morpheus_font
@@ -228,10 +198,7 @@ return function()
     Fonts.SetMode("morpheus")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
-    assert(
-      string.find(path, "MORPHEUS") ~= nil,
-      "test_morpheus_mode: should use MORPHEUS font, got: " .. tostring(path)
-    )
+    assert(string.find(path, "MORPHEUS") ~= nil, "test_morpheus_mode: should use MORPHEUS font, got: " .. tostring(path))
   end
 
   -- test_font_size_persists_across_mode_switch
@@ -242,10 +209,7 @@ return function()
     Fonts.SetMode("system")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local _, size = fontObj:GetFont()
-    assert(
-      size == 16,
-      "test_size_persists_mode_switch: size should persist as 16 after mode switch, got: " .. tostring(size)
-    )
+    assert(size == 16, "test_size_persists_mode_switch: size should persist as 16 after mode switch, got: " .. tostring(size))
   end
 
   -- test_outline_persists_across_mode_switch
@@ -256,20 +220,14 @@ return function()
     Fonts.SetMode("system")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local _, _, flags = fontObj:GetFont()
-    assert(
-      flags == "THICKOUTLINE",
-      "test_outline_persists_mode_switch: outline should persist after mode switch, got: " .. tostring(flags)
-    )
+    assert(flags == "THICKOUTLINE", "test_outline_persists_mode_switch: outline should persist after mode switch, got: " .. tostring(flags))
   end
 
   -- test_default_font_color_is_default
 
   do
     Fonts.Initialize("default")
-    assert(
-      Fonts.GetFontColor() == "default",
-      "test_default_font_color: should be 'default', got: " .. tostring(Fonts.GetFontColor())
-    )
+    assert(Fonts.GetFontColor() == "default", "test_default_font_color: should be 'default', got: " .. tostring(Fonts.GetFontColor()))
   end
 
   -- test_set_font_color_returns_preset_key
@@ -277,10 +235,7 @@ return function()
   do
     Fonts.Initialize("default")
     Fonts.SetFontColor("gold")
-    assert(
-      Fonts.GetFontColor() == "gold",
-      "test_set_font_color: should be 'gold', got: " .. tostring(Fonts.GetFontColor())
-    )
+    assert(Fonts.GetFontColor() == "gold", "test_set_font_color: should be 'gold', got: " .. tostring(Fonts.GetFontColor()))
   end
 
   -- test_get_font_color_rgba_returns_nil_for_default
@@ -325,10 +280,7 @@ return function()
   do
     Fonts.Initialize("default")
     Fonts.SetFontColor("nonexistent")
-    assert(
-      Fonts.GetFontColor() == "default",
-      "test_font_color_unknown: should fall back to 'default', got: " .. tostring(Fonts.GetFontColor())
-    )
+    assert(Fonts.GetFontColor() == "default", "test_font_color_unknown: should fall back to 'default', got: " .. tostring(Fonts.GetFontColor()))
   end
 
   print("  All font mode tests passed")

@@ -71,10 +71,7 @@ return function()
       "activeConversationKey must remain on the selected group; got " .. tostring(runtime.activeConversationKey)
     )
     -- lastIncomingWhisperKey is still tracked so /wr still works
-    assert(
-      runtime.lastIncomingWhisperKey ~= nil,
-      "lastIncomingWhisperKey should still track the whisper for later reply"
-    )
+    assert(runtime.lastIncomingWhisperKey ~= nil, "lastIncomingWhisperKey should still track the whisper for later reply")
   end
 
   -- test_incoming_whisper_on_whispers_tab_still_auto_opens
@@ -105,9 +102,6 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpackArgs(WHISPER_ARGS))
 
-    assert(
-      #autoOpenCalls == 1,
-      "expected onAutoOpen to fire on whispers tab (with autoOpenIncoming on); got " .. #autoOpenCalls
-    )
+    assert(#autoOpenCalls == 1, "expected onAutoOpen to fire on whispers tab (with autoOpenIncoming on); got " .. #autoOpenCalls)
   end
 end

@@ -340,22 +340,10 @@ return function()
   local invalidActiveKey = runtime.activeConversationKey
   local invalidPersistedKey = characterState.activeConversationKey
   assert(onStartConversation("   \n  ") == false, "expected onStartConversation to reject whitespace-only names")
-  assert(
-    countConversations() == invalidConversationCount,
-    "expected invalid onStartConversation to keep conversations unchanged"
-  )
-  assert(
-    runtime.activeConversationKey == invalidActiveKey,
-    "expected invalid onStartConversation to keep runtime active key"
-  )
-  assert(
-    characterState.activeConversationKey == invalidPersistedKey,
-    "expected invalid onStartConversation to keep persisted active key"
-  )
-  assert(
-    selectionRefreshes == invalidSelectionRefreshes,
-    "expected invalid onStartConversation to skip selection refresh"
-  )
+  assert(countConversations() == invalidConversationCount, "expected invalid onStartConversation to keep conversations unchanged")
+  assert(runtime.activeConversationKey == invalidActiveKey, "expected invalid onStartConversation to keep runtime active key")
+  assert(characterState.activeConversationKey == invalidPersistedKey, "expected invalid onStartConversation to keep persisted active key")
+  assert(selectionRefreshes == invalidSelectionRefreshes, "expected invalid onStartConversation to skip selection refresh")
 
   local reuseConversationCount = countConversations()
   local reuseMarkedReadCount = #markedRead
@@ -363,10 +351,7 @@ return function()
   local reuseAvailabilityCount = #availabilityRequests
   local reuseFocusCount = composerFocuses
   assert(onStartConversation("  Arthas  ") == true, "expected onStartConversation to open an existing WOW conversation")
-  assert(
-    countConversations() == reuseConversationCount,
-    "expected onStartConversation to reuse existing conversation key"
-  )
+  assert(countConversations() == reuseConversationCount, "expected onStartConversation to reuse existing conversation key")
   assert(runtime.activeConversationKey == conversationKey, "expected existing conversation to become active")
   assert(characterState.activeConversationKey == conversationKey, "expected existing conversation to persist as active")
   assert(
@@ -378,33 +363,17 @@ return function()
     "expected existing conversation path to go through diagnostics selector path"
   )
   assert(
-    #availabilityRequests == reuseAvailabilityCount + 1
-      and availabilityRequests[#availabilityRequests] == "Player-1-00000001",
+    #availabilityRequests == reuseAvailabilityCount + 1 and availabilityRequests[#availabilityRequests] == "Player-1-00000001",
     "expected existing WOW conversation path to request availability"
   )
   assert(composerFocuses == reuseFocusCount + 1, "expected existing conversation path to focus composer input")
-  assert(
-    runtime.isConversationOpen(conversationKey) == true,
-    "expected existing conversation to report open when visible and selected"
-  )
+  assert(runtime.isConversationOpen(conversationKey) == true, "expected existing conversation to report open when visible and selected")
 
   local exactMatchConversationCount = countConversations()
-  assert(
-    onStartConversation("  arTHas-ARea52  ") == true,
-    "expected onStartConversation to reuse exact full-name match with mixed casing"
-  )
-  assert(
-    countConversations() == exactMatchConversationCount,
-    "expected exact full-name lookup to avoid creating a new conversation"
-  )
-  assert(
-    runtime.activeConversationKey == conversationKey,
-    "expected exact full-name lookup to keep Arthas-Area52 selected"
-  )
-  assert(
-    characterState.activeConversationKey == conversationKey,
-    "expected exact full-name lookup to persist selected conversation"
-  )
+  assert(onStartConversation("  arTHas-ARea52  ") == true, "expected onStartConversation to reuse exact full-name match with mixed casing")
+  assert(countConversations() == exactMatchConversationCount, "expected exact full-name lookup to avoid creating a new conversation")
+  assert(runtime.activeConversationKey == conversationKey, "expected exact full-name lookup to keep Arthas-Area52 selected")
+  assert(characterState.activeConversationKey == conversationKey, "expected exact full-name lookup to persist selected conversation")
 
   local secondArthasConversationKey = "wow::WOW::arthas-stormrage"
   runtime.store.conversations[secondArthasConversationKey] = {
@@ -421,14 +390,8 @@ return function()
   local ambiguousAvailabilityCount = #availabilityRequests
   local ambiguousFocusCount = composerFocuses
   local ambiguousConversationKey = "wow::WOW::arthas"
-  assert(
-    onStartConversation("  Arthas  ") == true,
-    "expected ambiguous base-name input to open a deterministic non-reused conversation"
-  )
-  assert(
-    countConversations() == ambiguousConversationCount + 1,
-    "expected ambiguous base-name lookup to create a new conversation"
-  )
+  assert(onStartConversation("  Arthas  ") == true, "expected ambiguous base-name input to open a deterministic non-reused conversation")
+  assert(countConversations() == ambiguousConversationCount + 1, "expected ambiguous base-name lookup to create a new conversation")
   assert(
     runtime.store.conversations[ambiguousConversationKey] ~= nil,
     "expected ambiguous base-name lookup to create key derived from typed whisper target"
@@ -455,10 +418,7 @@ return function()
   )
   assert(composerFocuses == ambiguousFocusCount + 1, "expected ambiguous base-name path to focus composer input")
   assert(runtime.store.conversations[conversationKey] ~= nil, "expected Arthas-Area52 conversation to remain available")
-  assert(
-    runtime.store.conversations[secondArthasConversationKey] ~= nil,
-    "expected Arthas-Stormrage conversation to remain available"
-  )
+  assert(runtime.store.conversations[secondArthasConversationKey] ~= nil, "expected Arthas-Stormrage conversation to remain available")
 
   local battleNetConversationKey = "wow::BN::uther#1234"
   runtime.store.conversations[battleNetConversationKey] = {
@@ -477,22 +437,13 @@ return function()
   local bnCollisionFocusCount = composerFocuses
   local bnCollisionConversationKey = "wow::WOW::uther"
   assert(onStartConversation("  Uther  ") == true, "expected whisper start flow to avoid reusing BN conversations")
-  assert(
-    countConversations() == bnCollisionConversationCount + 1,
-    "expected BN name collision to create a WOW whisper conversation"
-  )
+  assert(countConversations() == bnCollisionConversationCount + 1, "expected BN name collision to create a WOW whisper conversation")
   assert(
     runtime.store.conversations[bnCollisionConversationKey] ~= nil,
     "expected BN name collision to create WOW conversation derived from typed name"
   )
-  assert(
-    runtime.activeConversationKey == bnCollisionConversationKey,
-    "expected BN name collision to select WOW conversation key"
-  )
-  assert(
-    characterState.activeConversationKey == bnCollisionConversationKey,
-    "expected BN name collision to persist WOW conversation key"
-  )
+  assert(runtime.activeConversationKey == bnCollisionConversationKey, "expected BN name collision to select WOW conversation key")
+  assert(characterState.activeConversationKey == bnCollisionConversationKey, "expected BN name collision to persist WOW conversation key")
   assert(
     #markedRead == bnCollisionMarkedReadCount + 1 and markedRead[#markedRead] == bnCollisionConversationKey,
     "expected BN name collision path to select created WOW conversation"
@@ -514,27 +465,15 @@ return function()
   local createAvailabilityCount = #availabilityRequests
   local createPresenceCount = #presenceRefreshes
   local createFocusCount = composerFocuses
-  assert(
-    onStartConversation("  " .. createdConversationName .. "  ") == true,
-    "expected onStartConversation to create a missing WOW conversation"
-  )
-  assert(
-    runtime.store.conversations[createdConversationKey] ~= nil,
-    "expected missing conversation key to be created from player name"
-  )
+  assert(onStartConversation("  " .. createdConversationName .. "  ") == true, "expected onStartConversation to create a missing WOW conversation")
+  assert(runtime.store.conversations[createdConversationKey] ~= nil, "expected missing conversation key to be created from player name")
   assert(
     runtime.store.conversations[createdConversationKey].displayName == createdConversationName,
     "expected created conversation to preserve trimmed displayName"
   )
-  assert(
-    runtime.store.conversations[createdConversationKey].channel == "WOW",
-    "expected created conversation channel to default to WOW"
-  )
+  assert(runtime.store.conversations[createdConversationKey].channel == "WOW", "expected created conversation channel to default to WOW")
   assert(runtime.activeConversationKey == createdConversationKey, "expected created conversation to become active")
-  assert(
-    characterState.activeConversationKey == createdConversationKey,
-    "expected created conversation to persist as active"
-  )
+  assert(characterState.activeConversationKey == createdConversationKey, "expected created conversation to persist as active")
   assert(
     #markedRead == createMarkedReadCount + 1 and markedRead[#markedRead] == createdConversationKey,
     "expected created conversation path to route through selectConversation"
@@ -543,19 +482,10 @@ return function()
     #debugCalls == createDebugCount + 1 and debugCalls[#debugCalls] == createdConversationKey,
     "expected created conversation path to invoke diagnostics selector path"
   )
-  assert(
-    #availabilityRequests == createAvailabilityCount,
-    "expected created conversation without guid to skip availability requests"
-  )
-  assert(
-    #presenceRefreshes == createPresenceCount,
-    "expected created conversation without guid to skip presence refresh"
-  )
+  assert(#availabilityRequests == createAvailabilityCount, "expected created conversation without guid to skip availability requests")
+  assert(#presenceRefreshes == createPresenceCount, "expected created conversation without guid to skip presence refresh")
   assert(composerFocuses == createFocusCount + 1, "expected created conversation path to focus composer input")
-  assert(
-    runtime.isConversationOpen(createdConversationKey) == true,
-    "expected created conversation to report open when visible and selected"
-  )
+  assert(runtime.isConversationOpen(createdConversationKey) == true, "expected created conversation to report open when visible and selected")
 
   local deletedConversationKey = "wow::WOW::stale-area52"
   runtime.store.conversations[deletedConversationKey] = {
@@ -586,31 +516,16 @@ return function()
     conversationKey = deletedConversationKey,
     pinned = true,
   })
-  assert(
-    runtime.store.conversations[deletedConversationKey] == nil,
-    "expected test precondition: unpin should remove stale conversation"
-  )
-  assert(
-    runtime.activeConversationKey == nil,
-    "expected onPin to clear runtime activeConversationKey when unpin removes the conversation"
-  )
-  assert(
-    characterState.activeConversationKey == nil,
-    "expected onPin to clear persisted activeConversationKey when unpin removes the conversation"
-  )
-  assert(
-    selectionRefreshes == previousRefreshes + 1,
-    "expected onPin to keep refreshing the window after clearing selection"
-  )
+  assert(runtime.store.conversations[deletedConversationKey] == nil, "expected test precondition: unpin should remove stale conversation")
+  assert(runtime.activeConversationKey == nil, "expected onPin to clear runtime activeConversationKey when unpin removes the conversation")
+  assert(characterState.activeConversationKey == nil, "expected onPin to clear persisted activeConversationKey when unpin removes the conversation")
+  assert(selectionRefreshes == previousRefreshes + 1, "expected onPin to keep refreshing the window after clearing selection")
   rawset(_G, "time", savedTime)
 
   local refreshesBeforeFontChange = selectionRefreshes
   onSettingChanged("fontFamily", "system")
   assert(accountState.settings.fontFamily == "system", "expected fontFamily change to persist setting")
-  assert(
-    fontSetModeCalls[#fontSetModeCalls] == "system",
-    "expected fontFamily change to call fonts.SetMode with the selected mode"
-  )
+  assert(fontSetModeCalls[#fontSetModeCalls] == "system", "expected fontFamily change to call fonts.SetMode with the selected mode")
   assert(selectionRefreshes == refreshesBeforeFontChange + 1, "expected fontFamily change to refresh the window")
 
   -- fontSize setting
@@ -651,73 +566,37 @@ return function()
   onSettingChanged("themePreset", "elvui_dark")
   assert(accountState.settings.themePreset == "elvui_dark", "expected valid themePreset to persist in account settings")
   assert(activeThemePreset == "elvui_dark", "expected valid themePreset to apply to active theme")
-  assert(
-    themeSetPresetCalls[#themeSetPresetCalls] == "elvui_dark",
-    "expected valid themePreset to call Theme.SetPreset"
-  )
-  assert(
-    themeRefreshes == themeRefreshesBeforeApply + 1,
-    "expected valid themePreset change to refresh static window chrome"
-  )
+  assert(themeSetPresetCalls[#themeSetPresetCalls] == "elvui_dark", "expected valid themePreset to call Theme.SetPreset")
+  assert(themeRefreshes == themeRefreshesBeforeApply + 1, "expected valid themePreset change to refresh static window chrome")
   assert(selectionRefreshes == refreshesBeforeThemeApply + 1, "expected valid themePreset change to refresh the window")
 
   local themeCallsBeforeFallback = #themeSetPresetCalls
   local refreshesBeforeThemeFallback = selectionRefreshes
   local themeRefreshesBeforeFallback = themeRefreshes
   onSettingChanged("themePreset", "unknown_preset")
-  assert(
-    #themeSetPresetCalls == themeCallsBeforeFallback + 2,
-    "expected invalid themePreset to attempt requested preset and fallback default"
-  )
-  assert(
-    themeSetPresetCalls[themeCallsBeforeFallback + 1] == "unknown_preset",
-    "expected invalid themePreset to try the requested key first"
-  )
-  assert(
-    themeSetPresetCalls[themeCallsBeforeFallback + 2] == "wow_default",
-    "expected invalid themePreset to fallback to wow_default"
-  )
-  assert(
-    accountState.settings.themePreset == "wow_default",
-    "expected invalid themePreset to persist wow_default fallback"
-  )
+  assert(#themeSetPresetCalls == themeCallsBeforeFallback + 2, "expected invalid themePreset to attempt requested preset and fallback default")
+  assert(themeSetPresetCalls[themeCallsBeforeFallback + 1] == "unknown_preset", "expected invalid themePreset to try the requested key first")
+  assert(themeSetPresetCalls[themeCallsBeforeFallback + 2] == "wow_default", "expected invalid themePreset to fallback to wow_default")
+  assert(accountState.settings.themePreset == "wow_default", "expected invalid themePreset to persist wow_default fallback")
   assert(activeThemePreset == "wow_default", "expected fallback to apply wow_default preset")
-  assert(
-    themeRefreshes == themeRefreshesBeforeFallback + 1,
-    "expected fallback themePreset apply to refresh static window chrome"
-  )
-  assert(
-    selectionRefreshes == refreshesBeforeThemeFallback + 1,
-    "expected fallback themePreset apply to refresh the window"
-  )
+  assert(themeRefreshes == themeRefreshesBeforeFallback + 1, "expected fallback themePreset apply to refresh static window chrome")
+  assert(selectionRefreshes == refreshesBeforeThemeFallback + 1, "expected fallback themePreset apply to refresh the window")
 
   local refreshesBeforeWidgetPreview = selectionRefreshes
   onSettingChanged("showWidgetMessagePreview", false)
-  assert(
-    selectionRefreshes == refreshesBeforeWidgetPreview + 1,
-    "expected showWidgetMessagePreview change to continue refreshing the window"
-  )
-  assert(
-    accountState.settings.showWidgetMessagePreview == false,
-    "expected showWidgetMessagePreview change to persist setting"
-  )
+  assert(selectionRefreshes == refreshesBeforeWidgetPreview + 1, "expected showWidgetMessagePreview change to continue refreshing the window")
+  assert(accountState.settings.showWidgetMessagePreview == false, "expected showWidgetMessagePreview change to persist setting")
   assert(coordinatorIcon.lastPreviewSender == nil, "expected disabling widget preview to clear sender text")
   assert(coordinatorIcon.lastPreviewMessage == nil, "expected disabling widget preview to clear preview text")
 
   onSettingChanged("showWidgetMessagePreview", true)
-  assert(
-    accountState.settings.showWidgetMessagePreview == true,
-    "expected widget preview setting to re-enable for dismiss test"
-  )
+  assert(accountState.settings.showWidgetMessagePreview == true, "expected widget preview setting to re-enable for dismiss test")
   runtime.store.conversations[conversationKey].lastIncomingSender = "Arthas-Area52"
   runtime.store.conversations[conversationKey].lastIncomingPreview = "Need help?"
   runtime.store.conversations[conversationKey].lastIncomingAt = 50
   runtime.refreshWindow()
   assert(coordinatorIcon.lastPreviewMessage == "Need help?", "expected preview to populate before dismiss")
-  assert(
-    type(coordinatorIcon.onDismissPreview) == "function",
-    "expected runtime to pass onDismissPreview into the icon"
-  )
+  assert(type(coordinatorIcon.onDismissPreview) == "function", "expected runtime to pass onDismissPreview into the icon")
   coordinatorIcon.onDismissPreview()
   assert(coordinatorIcon.lastPreviewSender == nil, "expected dismiss callback to clear sender text")
   assert(coordinatorIcon.lastPreviewMessage == nil, "expected dismiss callback to clear preview text")
@@ -732,26 +611,16 @@ return function()
     "expected refresh after dismiss to keep the same preview hidden via the persisted acknowledgement"
   )
 
-  assert(
-    type(coordinatorIcon.getPreviewPosition) == "function",
-    "expected runtime to pass getPreviewPosition into the icon"
-  )
+  assert(type(coordinatorIcon.getPreviewPosition) == "function", "expected runtime to pass getPreviewPosition into the icon")
   assert(
     coordinatorIcon.getPreviewPosition() == "right",
-    "expected widget preview position to default to 'right' when unset, got: "
-      .. tostring(coordinatorIcon.getPreviewPosition())
+    "expected widget preview position to default to 'right' when unset, got: " .. tostring(coordinatorIcon.getPreviewPosition())
   )
   accountState.settings.widgetPreviewPosition = "top"
-  assert(
-    coordinatorIcon.getPreviewPosition() == "top",
-    "expected getter to read the persisted widgetPreviewPosition setting"
-  )
+  assert(coordinatorIcon.getPreviewPosition() == "top", "expected getter to read the persisted widgetPreviewPosition setting")
 
   onSettingChanged("widgetPreviewPosition", "left")
-  assert(
-    accountState.settings.widgetPreviewPosition == "left",
-    "expected widgetPreviewPosition change to persist on accountState"
-  )
+  assert(accountState.settings.widgetPreviewPosition == "left", "expected widgetPreviewPosition change to persist on accountState")
   assert(
     coordinatorIcon.lastAppliedPreviewPosition == "left",
     "expected widgetPreviewPosition change to invoke icon.applyPreviewPosition with the new value, got: "
@@ -791,16 +660,10 @@ return function()
 
   local refreshesBeforeHidePreview = selectionRefreshes
   onSettingChanged("hideMessagePreview", true)
-  assert(
-    selectionRefreshes == refreshesBeforeHidePreview + 1,
-    "expected hideMessagePreview change to continue refreshing the window"
-  )
+  assert(selectionRefreshes == refreshesBeforeHidePreview + 1, "expected hideMessagePreview change to continue refreshing the window")
 
   runtime.setComposerText("draft reply")
-  assert(
-    runtime.window.composer.input:GetText() == "draft reply",
-    "expected setComposerText to write into the composer"
-  )
+  assert(runtime.window.composer.input:GetText() == "draft reply", "expected setComposerText to write into the composer")
 
   runtime.setWindowVisible(false)
   assert(runtime.isConversationOpen(conversationKey) == false, "expected conversation to report closed when hidden")

@@ -8,8 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
-local ButtonSelector = ns.MessengerWindowButtonSelector
-  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
 local AppearanceSettings = {}
 
@@ -176,15 +175,9 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
 
-  local fontSelector = sel(
-    "Font Family",
-    FONT_OPTIONS,
-    DEFAULTS.fontFamily,
-    config.fontFamily or DEFAULTS.fontFamily,
-    function(v)
-      onChange("fontFamily", v)
-    end
-  )
+  local fontSelector = sel("Font Family", FONT_OPTIONS, DEFAULTS.fontFamily, config.fontFamily or DEFAULTS.fontFamily, function(v)
+    onChange("fontFamily", v)
+  end)
   fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
 
   local fontSizeRow = slider("Font Size", 9, 17, 1, config.fontSize or DEFAULTS.fontSize, pxFormat, function(v)
@@ -192,27 +185,14 @@ function AppearanceSettings.Create(factory, parent, config, options)
   end)
   fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local fontOutlineSelector = sel(
-    "Font Outline",
-    OUTLINE_OPTIONS,
-    DEFAULTS.fontOutline,
-    config.fontOutline or DEFAULTS.fontOutline,
-    function(v)
-      onChange("fontOutline", v)
-    end
-  )
+  local fontOutlineSelector = sel("Font Outline", OUTLINE_OPTIONS, DEFAULTS.fontOutline, config.fontOutline or DEFAULTS.fontOutline, function(v)
+    onChange("fontOutline", v)
+  end)
   fontOutlineSelector.row:SetPoint("TOPLEFT", fontSizeRow.row, "BOTTOMLEFT", 0, gap)
 
-  local fontColorSelector = sel(
-    "Chat Font Color",
-    buildFontColorOptions(),
-    DEFAULTS.fontColor,
-    config.fontColor or DEFAULTS.fontColor,
-    function(v)
-      onChange("fontColor", v)
-    end,
-    { maxPerRow = 3 }
-  )
+  local fontColorSelector = sel("Chat Font Color", buildFontColorOptions(), DEFAULTS.fontColor, config.fontColor or DEFAULTS.fontColor, function(v)
+    onChange("fontColor", v)
+  end, { maxPerRow = 3 })
   fontColorSelector.row:SetPoint("TOPLEFT", fontOutlineSelector.row, "BOTTOMLEFT", 0, gap)
 
   local bubbleColorSelector = sel(

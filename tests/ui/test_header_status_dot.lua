@@ -23,8 +23,5 @@ return function()
   assert(dot.point ~= nil, "status dot should have anchor point")
 
   local relativeTo = dot.point[2]
-  assert(
-    relativeTo == header.headerClassIconFrame,
-    "status dot should be anchored to the class icon frame, not the status text"
-  )
+  assert(relativeTo == header.headerClassIconFrame, "status dot should be anchored to the class icon frame, not the status text")
 end

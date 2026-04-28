@@ -3,16 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChatReplyState = ns.ChatReplyState
-  or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState"))
-  or nil
+local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 
 local MythicSuspendController = {}
 
-local DEFAULT_MYTHIC_PAUSE_NOTICE =
-  "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
-local SUSPEND_PRINT_MESSAGE =
-  "|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave."
+local DEFAULT_MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
+local SUSPEND_PRINT_MESSAGE = "|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave."
 local RESUME_PRINT_MESSAGE = "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again."
 local R_REPLY_ADVISORY =
   '|cff888888[WhisperMessenger]|r |cffff8080/r and R-key may fail in Mythic while "Hide whispers from default chat" is on.|r Use |cffffff00/wr|r to reply (or bind it to R via macro).'

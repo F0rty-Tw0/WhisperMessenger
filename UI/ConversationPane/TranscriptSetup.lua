@@ -5,8 +5,7 @@ end
 
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
-local TranscriptView = ns.ConversationPaneTranscriptView
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
+local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")

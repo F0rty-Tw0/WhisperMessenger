@@ -6,12 +6,9 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
-local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard
-  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
-local ModernChrome = ns.MessengerWindowChromeBuilderModern
-  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
-local Buttons = ns.MessengerWindowChromeBuilderButtons
-  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
+local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
+local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
+local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 local ChromeBuilder = {}

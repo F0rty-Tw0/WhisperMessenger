@@ -54,8 +54,7 @@ return function()
   local contentHeightBefore = cv.content:GetHeight()
   assert(contentHeightBefore == 960, "precondition: content taller than viewport")
 
-  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
-    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
 
   -- Relayout to a new height (window grows: 580 -> 700)
   LayoutBuilder.Relayout(layout, 920, 700)

@@ -17,14 +17,8 @@ return function()
     assert(policy.getNotice({ channel = "WOW" }) == nil, "WOW whisper should have no group notice")
     assert(policy.getNotice({ channel = "BN" }) == nil, "BN whisper should have no group notice")
     assert(policy.getNotice({ channel = ChannelType.WHISPER }) == nil, "typed whisper should have no group notice")
-    assert(
-      policy.getNotice({ channel = ChannelType.BN_WHISPER }) == nil,
-      "typed BN whisper should have no group notice"
-    )
-    assert(
-      policy.getNotice({ channel = ChannelType.COMMUNITY }) == nil,
-      "community is receive-only, not membership notice"
-    )
+    assert(policy.getNotice({ channel = ChannelType.BN_WHISPER }) == nil, "typed BN whisper should have no group notice")
+    assert(policy.getNotice({ channel = ChannelType.COMMUNITY }) == nil, "community is receive-only, not membership notice")
   end
 
   -- Foreign-character group histories are read-only.
@@ -39,8 +33,7 @@ return function()
     })
 
     assert(
-      policy.getNotice({ channel = ChannelType.PARTY, conversationKey = "party::thrall-draenor" })
-        == "Another character's history — read-only.",
+      policy.getNotice({ channel = ChannelType.PARTY, conversationKey = "party::thrall-draenor" }) == "Another character's history — read-only.",
       "foreign party history should be read-only"
     )
     assert(
@@ -87,8 +80,7 @@ return function()
     })
 
     assert(
-      policy.getNotice({ channel = ChannelType.PARTY, conversationKey = "party::jaina-area52" })
-        == "Not in group — can't send.",
+      policy.getNotice({ channel = ChannelType.PARTY, conversationKey = "party::jaina-area52" }) == "Not in group — can't send.",
       "missing membership should show send notice"
     )
   end
@@ -113,14 +105,8 @@ return function()
 
     assert(policy.shouldRoutePayload({ channel = "WOW" }) == false, "legacy WOW should not route as group")
     assert(policy.shouldRoutePayload({ channel = ChannelType.PARTY }) == true, "party should route as group")
-    assert(
-      policy.sendPayload({ channel = ChannelType.PARTY, text = "hello party" }, function() end) == true,
-      "party send should succeed"
-    )
+    assert(policy.sendPayload({ channel = ChannelType.PARTY, text = "hello party" }, function() end) == true, "party send should succeed")
     assert(sendCalls == 1, "ChatGateway.Send should be called once")
-    assert(
-      policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }, function() end) == false,
-      "unsendable group should return false"
-    )
+    assert(policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }, function() end) == false, "unsendable group should return false")
   end
 end

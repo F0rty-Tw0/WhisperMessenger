@@ -79,8 +79,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
   -- the header title with that character's short name so the user knows
   -- which alt's history they're looking at.
   if fromAnotherCharacter then
-    local ownerName = GroupLabel.OwnerShortName and GroupLabel.OwnerShortName(contact.ownerProfileId)
-      or contact.ownerProfileId
+    local ownerName = GroupLabel.OwnerShortName and GroupLabel.OwnerShortName(contact.ownerProfileId) or contact.ownerProfileId
     label = ownerName .. " — " .. label
   end
   -- chip shows the canonical channel type only when it adds information —

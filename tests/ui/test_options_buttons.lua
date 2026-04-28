@@ -32,10 +32,7 @@ return function()
     layout.resetWindowButton.template == nil,
     "resetWindowButton should not use a template, got: " .. tostring(layout.resetWindowButton.template)
   )
-  assert(
-    layout.resetIconButton.template == nil,
-    "resetIconButton should not use a template, got: " .. tostring(layout.resetIconButton.template)
-  )
+  assert(layout.resetIconButton.template == nil, "resetIconButton should not use a template, got: " .. tostring(layout.resetIconButton.template))
   assert(
     layout.clearAllChatsButton.template == nil,
     "clearAllChatsButton should not use a template, got: " .. tostring(layout.clearAllChatsButton.template)
@@ -62,22 +59,10 @@ return function()
   assertModernButton(layout.clearAllChatsButton, "Clear All Chats")
 
   -- Buttons should have hover scripts (OnEnter / OnLeave)
-  assert(
-    layout.resetWindowButton.scripts and layout.resetWindowButton.scripts.OnEnter,
-    "resetWindowButton should have OnEnter script"
-  )
-  assert(
-    layout.resetWindowButton.scripts and layout.resetWindowButton.scripts.OnLeave,
-    "resetWindowButton should have OnLeave script"
-  )
-  assert(
-    layout.clearAllChatsButton.scripts and layout.clearAllChatsButton.scripts.OnEnter,
-    "clearAllChatsButton should have OnEnter script"
-  )
-  assert(
-    layout.clearAllChatsButton.scripts and layout.clearAllChatsButton.scripts.OnLeave,
-    "clearAllChatsButton should have OnLeave script"
-  )
+  assert(layout.resetWindowButton.scripts and layout.resetWindowButton.scripts.OnEnter, "resetWindowButton should have OnEnter script")
+  assert(layout.resetWindowButton.scripts and layout.resetWindowButton.scripts.OnLeave, "resetWindowButton should have OnLeave script")
+  assert(layout.clearAllChatsButton.scripts and layout.clearAllChatsButton.scripts.OnEnter, "clearAllChatsButton should have OnEnter script")
+  assert(layout.clearAllChatsButton.scripts and layout.clearAllChatsButton.scripts.OnLeave, "clearAllChatsButton should have OnLeave script")
 
   -- Hint text should mention all three actions
   assert(layout.optionsHint, "optionsHint should exist")

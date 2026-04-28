@@ -54,8 +54,7 @@ function HoverPointer.effectiveActionHoverCount(row)
     return 0
   end
 
-  local overAction = HoverPointer.isPointerOverFrame(row and row.removeButton)
-    or HoverPointer.isPointerOverFrame(row and row.pinButton)
+  local overAction = HoverPointer.isPointerOverFrame(row and row.removeButton) or HoverPointer.isPointerOverFrame(row and row.pinButton)
 
   if overAction then
     return count

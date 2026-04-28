@@ -69,18 +69,12 @@ return function()
     local conversation = conversationKey and runtime.store.conversations[conversationKey] or nil
 
     assert(conversation ~= nil, "expected " .. caseLabel .. " whisper interception to select a conversation")
-    assert(
-      conversation.displayName == expected.displayName,
-      "expected " .. caseLabel .. " whisper interception to target " .. expected.displayName
-    )
+    assert(conversation.displayName == expected.displayName, "expected " .. caseLabel .. " whisper interception to target " .. expected.displayName)
     assert(
       runtime.window.conversation.header.text == expected.displayName,
       "expected messenger header to update for " .. caseLabel .. " whisper target"
     )
-    assert(
-      runtime.window.composer.input:GetText() == expected.draftText,
-      "expected " .. caseLabel .. " draft to transfer into composer"
-    )
+    assert(runtime.window.composer.input:GetText() == expected.draftText, "expected " .. caseLabel .. " draft to transfer into composer")
     assert(
       #deactivated == expected.deactivateIndex and deactivated[expected.deactivateIndex] == editBox,
       "expected " .. caseLabel .. " whisper edit box to close"
@@ -177,14 +171,8 @@ return function()
   local disabledDeactivateCount = #deactivated
   pollFrame.scripts.OnUpdate(pollFrame)
 
-  assert(
-    #deactivated == disabledDeactivateCount,
-    "expected disabled outgoing auto-open to leave Blizzard chat edit box open"
-  )
-  assert(
-    disabledEditBox:GetText() == "stay in default chat",
-    "expected disabled outgoing auto-open to preserve default chat draft"
-  )
+  assert(#deactivated == disabledDeactivateCount, "expected disabled outgoing auto-open to leave Blizzard chat edit box open")
+  assert(disabledEditBox:GetText() == "stay in default chat", "expected disabled outgoing auto-open to preserve default chat draft")
   assert(disabledEditBox:HasFocus() == true, "expected disabled outgoing auto-open to preserve Blizzard chat focus")
   runtime.accountState.settings.autoOpenOutgoing = true
 
@@ -219,18 +207,9 @@ return function()
     #deactivated == staleDeactivateCount,
     "expected enabling outgoing auto-open to clear stale reply state so Enter does not reopen the messenger loop"
   )
-  assert(
-    staleReplyBox:HasFocus() == true,
-    "expected stale reply launcher to remain in Blizzard chat after enable scrub"
-  )
-  assert(
-    staleReplyBox:GetAttribute("chatType") == "SAY",
-    "expected enable scrub to restore stale reply chatType to SAY"
-  )
-  assert(
-    staleReplyBox:GetAttribute("stickyType") == "SAY",
-    "expected enable scrub to restore stale reply stickyType to SAY"
-  )
+  assert(staleReplyBox:HasFocus() == true, "expected stale reply launcher to remain in Blizzard chat after enable scrub")
+  assert(staleReplyBox:GetAttribute("chatType") == "SAY", "expected enable scrub to restore stale reply chatType to SAY")
+  assert(staleReplyBox:GetAttribute("stickyType") == "SAY", "expected enable scrub to restore stale reply stickyType to SAY")
   assert(staleReplyBox:GetAttribute("tellTarget") == nil, "expected enable scrub to clear stale reply tellTarget")
 
   local directFieldEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {

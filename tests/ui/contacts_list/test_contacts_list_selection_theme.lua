@@ -62,51 +62,30 @@ return function()
   local unselectedRow = rows[2]
 
   assert(selectedRow ~= nil and selectedRow.selected == true, "expected first row selected")
-  assert(
-    colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar),
-    "expected selected accent bar to use accent_bar"
-  )
-  assert(
-    selectedRow.selectedRightBorder ~= nil and selectedRow.selectedRightBorder.shown ~= false,
-    "expected selected right border to be shown"
-  )
+  assert(colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar), "expected selected accent bar to use accent_bar")
+  assert(selectedRow.selectedRightBorder ~= nil and selectedRow.selectedRightBorder.shown ~= false, "expected selected right border to be shown")
   assert(
     colorsMatch(selectedRow.selectedRightBorder.color, Theme.COLORS.contact_selected_border_right),
     "expected selected right border to use contact_selected_border_right"
   )
-  assert(
-    colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary),
-    "expected selected preview text to use text_primary"
-  )
-  assert(
-    colorsMatch(unselectedRow.preview.textColor, Theme.COLORS.text_secondary),
-    "expected unselected preview text to use text_secondary"
-  )
+  assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary), "expected selected preview text to use text_primary")
+  assert(colorsMatch(unselectedRow.preview.textColor, Theme.COLORS.text_secondary), "expected unselected preview text to use text_secondary")
 
   if Theme.SetPreset then
     Theme.SetPreset("plumber_warm")
   end
   ContactsList.SetSelected(rows, items[1].conversationKey)
 
-  assert(
-    colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar),
-    "expected selected accent bar to repaint on preset switch"
-  )
+  assert(colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar), "expected selected accent bar to repaint on preset switch")
   assert(
     colorsMatch(selectedRow.selectedRightBorder.color, Theme.COLORS.contact_selected_border_right),
     "expected selected right border to repaint on preset switch"
   )
-  assert(
-    colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary),
-    "expected selected preview text to repaint on preset switch"
-  )
+  assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary), "expected selected preview text to repaint on preset switch")
 
   ContactsList.SetSelected(rows, nil)
   assert(selectedRow.selectedRightBorder.shown == false, "expected selected right border to hide when selection clears")
-  assert(
-    colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_secondary),
-    "expected preview text to restore when selection clears"
-  )
+  assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_secondary), "expected preview text to restore when selection clears")
 
   -- Re-applying selection while hovering another row should not hide that row's actions.
   unselectedRow.mouseOver = true
@@ -116,14 +95,8 @@ return function()
 
   ContactsList.SetSelected(rows, items[1].conversationKey)
 
-  assert(
-    unselectedRow.removeButton:IsShown() == true,
-    "expected hovered unselected row remove action to remain shown after selection refresh"
-  )
-  assert(
-    unselectedRow.pinButton:IsShown() == true,
-    "expected hovered unselected row pin action to remain shown after selection refresh"
-  )
+  assert(unselectedRow.removeButton:IsShown() == true, "expected hovered unselected row remove action to remain shown after selection refresh")
+  assert(unselectedRow.pinButton:IsShown() == true, "expected hovered unselected row pin action to remain shown after selection refresh")
 
   if Theme.SetPreset and previousPreset then
     Theme.SetPreset(previousPreset)

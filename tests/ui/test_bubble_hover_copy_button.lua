@@ -209,15 +209,11 @@ return function()
     -- Inside the bubble's top-right corner.
     local inPoint, _inRel, inRelPoint, inX = inBtn:GetPoint()
     assert(inPoint == "TOPRIGHT", "incoming button should anchor by its TOPRIGHT, got " .. tostring(inPoint))
-    assert(
-      inRelPoint == "TOPRIGHT",
-      "incoming button should anchor to the bubble's TOPRIGHT (inside), got " .. tostring(inRelPoint)
-    )
+    assert(inRelPoint == "TOPRIGHT", "incoming button should anchor to the bubble's TOPRIGHT (inside), got " .. tostring(inRelPoint))
     assert((inX or 0) <= 0, "expected non-positive X offset to keep the button inside the bubble")
     assert(
       inBtn.frameStrata == "HIGH",
-      "expected the copy button to live on the HIGH strata so it renders above the sender label and time text, got "
-        .. tostring(inBtn.frameStrata)
+      "expected the copy button to live on the HIGH strata so it renders above the sender label and time text, got " .. tostring(inBtn.frameStrata)
     )
 
     local _, copyText2 = copySpy()
@@ -231,10 +227,7 @@ return function()
     assert(outBtn ~= nil, "expected a copy button on the outgoing bubble")
     local outPoint, _outRel, outRelPoint, outX = outBtn:GetPoint()
     assert(outPoint == "TOPLEFT", "outgoing button should anchor by its TOPLEFT, got " .. tostring(outPoint))
-    assert(
-      outRelPoint == "TOPLEFT",
-      "outgoing button should anchor to the bubble's TOPLEFT (inside), got " .. tostring(outRelPoint)
-    )
+    assert(outRelPoint == "TOPLEFT", "outgoing button should anchor to the bubble's TOPLEFT (inside), got " .. tostring(outRelPoint))
     assert((outX or 0) >= 0, "expected non-negative X offset to keep the button inside the bubble")
     assert(outBtn.frameStrata == "HIGH", "expected the outgoing copy button on HIGH strata too")
   end
@@ -256,10 +249,7 @@ return function()
     assert(copyBtn ~= nil, "expected a copy button on first render")
     assert(copyBtn.frameStrata == "HIGH", "first render should leave button on HIGH strata")
     local raisedAfterFirst = copyBtn.raisedCount or 0
-    assert(
-      raisedAfterFirst >= 1,
-      "expected the button to be raised on first render, got " .. tostring(raisedAfterFirst)
-    )
+    assert(raisedAfterFirst >= 1, "expected the button to be raised on first render, got " .. tostring(raisedAfterFirst))
 
     -- Simulate a pool-reuse render: someone tampers with the strata between
     -- renders (mirrors the messenger window promoting itself to HIGH/MEDIUM
@@ -280,14 +270,8 @@ return function()
       text = "second render",
     }, { paneWidth = 400, copyText = copyText, persistentFactory = factory })
 
-    assert(
-      copyBtn.frameStrata == "HIGH",
-      "expected strata re-asserted to HIGH on every render, got " .. tostring(copyBtn.frameStrata)
-    )
-    assert(
-      (copyBtn.raisedCount or 0) > raisedAfterFirst,
-      "expected Raise() to be called again on re-render, got " .. tostring(copyBtn.raisedCount)
-    )
+    assert(copyBtn.frameStrata == "HIGH", "expected strata re-asserted to HIGH on every render, got " .. tostring(copyBtn.frameStrata))
+    assert((copyBtn.raisedCount or 0) > raisedAfterFirst, "expected Raise() to be called again on re-render, got " .. tostring(copyBtn.raisedCount))
   end
 
   -- test_copy_button_uses_persistent_factory_not_the_pooled_factory

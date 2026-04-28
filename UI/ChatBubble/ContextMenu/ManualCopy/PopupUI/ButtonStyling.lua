@@ -95,11 +95,7 @@ function ButtonStyling.styleManualCopyButton(button)
     return
   end
 
-  if
-    button._wmManualCopySkin == nil
-    and type(button.CreateTexture) == "function"
-    and type(UIHelpers.createRoundedBackground) == "function"
-  then
+  if button._wmManualCopySkin == nil and type(button.CreateTexture) == "function" and type(UIHelpers.createRoundedBackground) == "function" then
     button._wmManualCopySkin = UIHelpers.createRoundedBackground(button, 6)
     StylingCommon.setPartsShown(button._wmManualCopySkin, false)
   end

@@ -6,11 +6,9 @@ end
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
-local TranscriptView = ns.ConversationPaneTranscriptView
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
+local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
-local TranscriptSetup = ns.ConversationPaneTranscriptSetup
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
+local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -191,8 +189,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
   })
   transcript.factory = factory
   transcript.point = pointValue(transcript.scrollFrame, nil)
-  transcript.width =
-    sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET)
+  transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
   TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
 

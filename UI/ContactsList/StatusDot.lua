@@ -45,13 +45,7 @@ function StatusDot.create(factory, parent, anchorFrame, availability)
 
   local dotFrame = factory.CreateFrame("Frame", nil, parent)
   dotFrame:SetSize(statusSize, statusSize)
-  dotFrame:SetPoint(
-    "BOTTOMRIGHT",
-    anchorFrame,
-    "BOTTOMRIGHT",
-    Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET,
-    -Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET
-  )
+  dotFrame:SetPoint("BOTTOMRIGHT", anchorFrame, "BOTTOMRIGHT", Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET, -Theme.LAYOUT.STATUS_DOT_CORNER_OFFSET)
   if dotFrame.SetFrameLevel and anchorFrame.GetFrameLevel then
     dotFrame:SetFrameLevel(anchorFrame:GetFrameLevel() + 2)
   end

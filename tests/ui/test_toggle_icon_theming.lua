@@ -9,10 +9,7 @@ local function colorsMatch(a, b)
   local function round(n)
     return math.floor((n or 0) * 1000 + 0.5)
   end
-  return round(a[1]) == round(b[1])
-    and round(a[2]) == round(b[2])
-    and round(a[3]) == round(b[3])
-    and round(a[4] or 1) == round(b[4] or 1)
+  return round(a[1]) == round(b[1]) and round(a[2]) == round(b[2]) and round(a[3]) == round(b[3]) and round(a[4] or 1) == round(b[4] or 1)
 end
 
 return function()
@@ -41,18 +38,9 @@ return function()
       icon.border.texturePath == "Interface\\COMMON\\RingBorder",
       "modern_icon: ring should use RingBorder, got: " .. tostring(icon.border.texturePath)
     )
-    assert(
-      colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
-      "modern_icon: ring should be tinted with toggle_icon_ring role"
-    )
-    assert(
-      colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg),
-      "modern_icon: bg should be tinted with toggle_icon_bg role"
-    )
-    assert(
-      colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph),
-      "modern_icon: glyph should be tinted with toggle_icon_glyph role"
-    )
+    assert(colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring), "modern_icon: ring should be tinted with toggle_icon_ring role")
+    assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "modern_icon: bg should be tinted with toggle_icon_bg role")
+    assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "modern_icon: glyph should be tinted with toggle_icon_glyph role")
   end
 
   -- -----------------------------------------------------------------------
@@ -91,18 +79,12 @@ return function()
     Theme.SetPreset("wow_native")
     icon.refreshTheme()
 
-    assert(
-      icon.border.texturePath == "Interface\\COMMON\\RingBorder",
-      "refresh_icon: ring texture stays on RingBorder across preset switch"
-    )
+    assert(icon.border.texturePath == "Interface\\COMMON\\RingBorder", "refresh_icon: ring texture stays on RingBorder across preset switch")
     assert(
       colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
       "refresh_icon: ring tint should match wow_native toggle_icon_ring after refresh"
     )
-    assert(
-      not colorsMatch(icon.border.vertexColor, modernRingColor),
-      "refresh_icon: ring tint should differ between wow_default and wow_native"
-    )
+    assert(not colorsMatch(icon.border.vertexColor, modernRingColor), "refresh_icon: ring tint should differ between wow_default and wow_native")
   end
 
   if previousPreset then

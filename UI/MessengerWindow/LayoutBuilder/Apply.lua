@@ -31,12 +31,8 @@ function Apply.Relayout(layout, relayout, theme)
   end
   layout.contactsDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, contactsHeight)
   if layout.contactsResizeHandle then
-    local handleWidth = sizeValue(
-      layout.contactsResizeHandle,
-      "GetWidth",
-      "width",
-      layout.contactsHandleWidth or Theme.LAYOUT.CONTACTS_RESIZE_HANDLE_WIDTH
-    )
+    local handleWidth =
+      sizeValue(layout.contactsResizeHandle, "GetWidth", "width", layout.contactsHandleWidth or Theme.LAYOUT.CONTACTS_RESIZE_HANDLE_WIDTH)
     layout.contactsResizeHandle:SetSize(handleWidth, contactsHeight)
     if layout.contactsResizeHandle.ClearAllPoints then
       layout.contactsResizeHandle:ClearAllPoints()
@@ -91,9 +87,7 @@ function Apply.Relayout(layout, relayout, theme)
   -- `contentWidth` (the precomputed full content width) means the SetSize
   -- matches the dual-anchor in production WoW where contentPane is 5px
   -- shorter than `contentWidth` due to its own BOTTOMRIGHT (-5, 5) margin.
-  local contentPaneWidth = (layout.contentPane.GetWidth and layout.contentPane:GetWidth())
-    or layout.contentPane.width
-    or contentWidth
+  local contentPaneWidth = (layout.contentPane.GetWidth and layout.contentPane:GetWidth()) or layout.contentPane.width or contentWidth
   layout.composerPane:SetSize(contentPaneWidth, resolvedTheme.COMPOSER_HEIGHT)
   layout.composerDivider:SetSize(contentWidth, resolvedTheme.DIVIDER_THICKNESS)
 

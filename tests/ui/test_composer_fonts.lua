@@ -65,15 +65,9 @@ return function()
   end
 
   assert(placeholder ~= nil, "expected placeholder FontString to exist")
-  assert(
-    placeholder.fontObject == expectedFont,
-    "expected placeholder fontObject to be WM_ChatNormal, got: " .. tostring(placeholder.fontObject)
-  )
+  assert(placeholder.fontObject == expectedFont, "expected placeholder fontObject to be WM_ChatNormal, got: " .. tostring(placeholder.fontObject))
 
   -- The input EditBox should also have fontObject set
   local input = composer.input
-  assert(
-    input.fontObject == expectedFont,
-    "expected input fontObject to be WM_ChatNormal, got: " .. tostring(input.fontObject)
-  )
+  assert(input.fontObject == expectedFont, "expected input fontObject to be WM_ChatNormal, got: " .. tostring(input.fontObject))
 end

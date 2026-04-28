@@ -6,8 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
-local ButtonSelector = ns.MessengerWindowButtonSelector
-  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
 local NotificationSettings = {}
 
@@ -138,15 +137,9 @@ function NotificationSettings.Create(factory, parent, config, options)
   playSoundToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
   local selectorColors = SettingsControls.SelectorColors(Theme)
-  local soundSelector = createSoundSelector(
-    factory,
-    frame,
-    config.notificationSound or DEFAULTS.notificationSound,
-    selectorColors,
-    function(value)
-      onChange("notificationSound", value)
-    end
-  )
+  local soundSelector = createSoundSelector(factory, frame, config.notificationSound or DEFAULTS.notificationSound, selectorColors, function(value)
+    onChange("notificationSound", value)
+  end)
   soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local iconSizeRow = SettingsControls.CreateSliderRow(factory, frame, {

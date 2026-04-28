@@ -3,9 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChatReplyState = ns.ChatReplyState
-  or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState"))
-  or nil
+local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 
 local SettingsHandler = {}
 

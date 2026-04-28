@@ -33,10 +33,7 @@ return function()
     fallbackClassTag = "MAGE",
   })
   assert(bubble2.icon ~= nil, "expected icon on incoming user bubble with fallback")
-  assert(
-    bubble2.icon.texturePath == Theme.ClassIcon("MAGE"),
-    "expected class icon from fallbackClassTag, got " .. tostring(bubble2.icon.texturePath)
-  )
+  assert(bubble2.icon.texturePath == Theme.ClassIcon("MAGE"), "expected class icon from fallbackClassTag, got " .. tostring(bubble2.icon.texturePath))
 
   -- Bubble WITHOUT classTag and WITHOUT fallback gets bnet icon
   local bubble3 = BubbleFrame.CreateBubble(factory, parent, msgNoClass, {

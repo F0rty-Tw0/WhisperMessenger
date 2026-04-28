@@ -4,8 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Clipboard = {}
-local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI
-  or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
+local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
 
 function Clipboard.NormalizeText(text)
   if text == nil then

@@ -35,6 +35,9 @@ Model/LockdownQueue.lua
 Model/EphemeralPurge.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
+Model/ContactEnricher/Disambiguation.lua
+Model/ContactEnricher/WoWStatus.lua
+Model/ContactEnricher/BNetStatus.lua
 Model/ContactEnricher/AvailabilityEnricher.lua
 Model/ContactEnricher/ContactEnricher.lua
 
@@ -51,6 +54,8 @@ Transport/WhisperGateway.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 
+Core/Ingest/GroupChatIngest/SecretString.lua
+Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter.lua
@@ -176,6 +181,9 @@ UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
+Core/Bootstrap/EventBridge/Registration.lua
+Core/Bootstrap/EventBridge/LivePayload.lua
+Core/Bootstrap/EventBridge/GroupRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua

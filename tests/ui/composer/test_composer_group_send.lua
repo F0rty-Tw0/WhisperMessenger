@@ -69,14 +69,9 @@ return function()
   -- ---------------------------------------------------------------------------
   do
     local sent = {}
-    local composer, _ = makeGroupComposer(
-      ChannelType.BN_CONVERSATION,
-      "me::BN_CONVERSATION::7",
-      { conversationID = 7 },
-      function(payload)
-        table.insert(sent, payload)
-      end
-    )
+    local composer, _ = makeGroupComposer(ChannelType.BN_CONVERSATION, "me::BN_CONVERSATION::7", { conversationID = 7 }, function(payload)
+      table.insert(sent, payload)
+    end)
 
     composer.input:SetText("Hi group")
     composer.input.scripts.OnEnterPressed(composer.input)
@@ -219,10 +214,7 @@ return function()
 
     -- COMMUNITY errors in ChatGateway.Send; pcall must catch it without crashing
     assert(#errors == 1, "expected one caught error for COMMUNITY send, got " .. tostring(#errors))
-    assert(
-      type(errors[1]) == "string" and errors[1]:find("receive%-only") ~= nil,
-      "expected 'receive-only' error, got: " .. tostring(errors[1])
-    )
+    assert(type(errors[1]) == "string" and errors[1]:find("receive%-only") ~= nil, "expected 'receive-only' error, got: " .. tostring(errors[1]))
   end
 
   print("PASS: test_composer_group_send")

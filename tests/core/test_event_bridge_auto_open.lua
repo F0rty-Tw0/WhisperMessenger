@@ -111,10 +111,7 @@ return function()
 
     assert(#autoOpenCalls == 0, "test_auto_open_not_called_during_combat: expected 0 calls, got " .. #autoOpenCalls)
     -- But lastIncomingWhisperKey should still be tracked for reply after combat
-    assert(
-      runtime.lastIncomingWhisperKey ~= nil,
-      "test_auto_open_not_called_during_combat: lastIncomingWhisperKey should be set even in combat"
-    )
+    assert(runtime.lastIncomingWhisperKey ~= nil, "test_auto_open_not_called_during_combat: lastIncomingWhisperKey should be set even in combat")
     cleanupGlobals()
   end
 
@@ -135,10 +132,7 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
 
-    assert(
-      #autoOpenCalls == 0,
-      "test_auto_open_incoming_not_called_on_outgoing: expected 0 onAutoOpen calls, got " .. #autoOpenCalls
-    )
+    assert(#autoOpenCalls == 0, "test_auto_open_incoming_not_called_on_outgoing: expected 0 onAutoOpen calls, got " .. #autoOpenCalls)
     cleanupGlobals()
   end
 
@@ -191,15 +185,9 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
 
-    assert(
-      #outgoingCalls == 0,
-      "test_auto_open_outgoing_pending_send: expected 0 calls for tracked pending send, got " .. #outgoingCalls
-    )
+    assert(#outgoingCalls == 0, "test_auto_open_outgoing_pending_send: expected 0 calls for tracked pending send, got " .. #outgoingCalls)
     local pending = runtime.pendingOutgoing["wow::WOW::arthas-area52"]
-    assert(
-      pending ~= nil and #pending == 0,
-      "test_auto_open_outgoing_pending_send: expected pending send to be consumed"
-    )
+    assert(pending ~= nil and #pending == 0, "test_auto_open_outgoing_pending_send: expected pending send to be consumed")
     cleanupGlobals()
   end
 
@@ -300,11 +288,7 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
 
-    assert(
-      #outgoingCalls == 0,
-      "test_auto_open_outgoing_incoming_only: expected 0 outgoing calls when only incoming enabled, got "
-        .. #outgoingCalls
-    )
+    assert(#outgoingCalls == 0, "test_auto_open_outgoing_incoming_only: expected 0 outgoing calls when only incoming enabled, got " .. #outgoingCalls)
     cleanupGlobals()
   end
 
@@ -324,11 +308,7 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
 
-    assert(
-      #autoOpenCalls == 0,
-      "test_auto_open_incoming_outgoing_only: expected 0 incoming calls when only outgoing enabled, got "
-        .. #autoOpenCalls
-    )
+    assert(#autoOpenCalls == 0, "test_auto_open_incoming_outgoing_only: expected 0 incoming calls when only outgoing enabled, got " .. #autoOpenCalls)
     cleanupGlobals()
   end
 
@@ -346,24 +326,7 @@ return function()
       autoOpenCalls[#autoOpenCalls + 1] = conversationKey
     end
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_BN_WHISPER",
-      "hello",
-      "Friend#1234",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-DEF",
-      42
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_BN_WHISPER", "hello", "Friend#1234", "", "", "", "", "", "", "", "", 1, "Player-1-DEF", 42)
 
     assert(#autoOpenCalls == 1, "test_auto_open_called_on_bnet_whisper: expected 1 call, got " .. #autoOpenCalls)
     cleanupGlobals()

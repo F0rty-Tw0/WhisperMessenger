@@ -32,10 +32,7 @@ return function()
   })
 
   assert(bnetContact.channel == "BN")
-  assert(
-    bnetContact.contactKey == "BN::jaina#1234",
-    "expected battleTag-based key, got " .. tostring(bnetContact.contactKey)
-  )
+  assert(bnetContact.contactKey == "BN::jaina#1234", "expected battleTag-based key, got " .. tostring(bnetContact.contactKey))
   assert(bnetContact.displayName == "Jaina#1234")
   assert(bnetContact.bnetAccountID == 99)
   assert(bnetContact.gameAccountName == "Jaina-Proudmoore")
@@ -50,21 +47,12 @@ return function()
 
   -- FromBattleNet without accountInfo falls back to numeric bnetAccountID
   local fallbackContact = Identity.FromBattleNet(11, nil)
-  assert(
-    fallbackContact.contactKey == "BN::11",
-    "expected numeric fallback key, got " .. tostring(fallbackContact.contactKey)
-  )
-  assert(
-    fallbackContact.canonicalName == "11",
-    "expected numeric fallback canonicalName, got " .. tostring(fallbackContact.canonicalName)
-  )
+  assert(fallbackContact.contactKey == "BN::11", "expected numeric fallback key, got " .. tostring(fallbackContact.contactKey))
+  assert(fallbackContact.canonicalName == "11", "expected numeric fallback canonicalName, got " .. tostring(fallbackContact.canonicalName))
 
   -- FromBattleNet with accountInfo missing battleTag also falls back to numeric
   local noBattleTagContact = Identity.FromBattleNet(22, { accountName = "someone" })
-  assert(
-    noBattleTagContact.contactKey == "BN::22",
-    "expected numeric fallback when no battleTag, got " .. tostring(noBattleTagContact.contactKey)
-  )
+  assert(noBattleTagContact.contactKey == "BN::22", "expected numeric fallback when no battleTag, got " .. tostring(noBattleTagContact.contactKey))
 
   -- FromWhisper detaints secret strings via Ambiguate before string ops
   local ambiguateCalled = false
@@ -76,10 +64,7 @@ return function()
 
   local taintedContact = Identity.FromWhisper("Thrall-Nagrand", "Player-11-0ABC", {})
   assert(ambiguateCalled, "expected Ambiguate to be called for whisper names")
-  assert(
-    taintedContact.contactKey == "WOW::thrall-nagrand",
-    "expected detainted contactKey, got " .. tostring(taintedContact.contactKey)
-  )
+  assert(taintedContact.contactKey == "WOW::thrall-nagrand", "expected detainted contactKey, got " .. tostring(taintedContact.contactKey))
   assert(taintedContact.displayName == "Thrall-Nagrand")
 
   rawset(_G, "Ambiguate", nil)
@@ -145,14 +130,8 @@ return function()
   )
 
   -- Existing WOW/BN key shapes are unchanged
-  assert(
-    Identity.BuildConversationKey(profileId, "WOW::thrall-nagrand") == "wow::WOW::thrall-nagrand",
-    "WOW key shape must be unchanged"
-  )
-  assert(
-    Identity.BuildConversationKey(profileId, "BN::jaina#1234") == "bnet::BN::jaina#1234",
-    "BN key shape must be unchanged"
-  )
+  assert(Identity.BuildConversationKey(profileId, "WOW::thrall-nagrand") == "wow::WOW::thrall-nagrand", "WOW key shape must be unchanged")
+  assert(Identity.BuildConversationKey(profileId, "BN::jaina#1234") == "bnet::BN::jaina#1234", "BN key shape must be unchanged")
 
   -- Unknown contactKey falls back to localProfileId::contactKey
   assert(

@@ -32,10 +32,7 @@ return function()
     local instance = RestrictedActions.New()
     instance.updateFromEvent(RestrictedActions.TYPES.ChallengeMode, RestrictedActions.STATES.Active)
 
-    assert(
-      instance.isActive(RestrictedActions.TYPES.ChallengeMode) == true,
-      "ChallengeMode should read as active from cached event payload"
-    )
+    assert(instance.isActive(RestrictedActions.TYPES.ChallengeMode) == true, "ChallengeMode should read as active from cached event payload")
     assert(queryCount == 0, "must NOT call IsAddOnRestrictionActive when cached state exists")
 
     _G.C_RestrictedActions = savedApi
@@ -46,10 +43,7 @@ return function()
   do
     local instance = RestrictedActions.New()
     instance.updateFromEvent(RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Activating)
-    assert(
-      instance.isActive(RestrictedActions.TYPES.Encounter) == true,
-      "Activating state must block addon actions just like Active"
-    )
+    assert(instance.isActive(RestrictedActions.TYPES.Encounter) == true, "Activating state must block addon actions just like Active")
   end
 
   -- test_inactive_state_resets_cached_activation
@@ -59,10 +53,7 @@ return function()
     instance.updateFromEvent(RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Active)
     assert(instance.isActive(RestrictedActions.TYPES.Encounter) == true)
     instance.updateFromEvent(RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Inactive)
-    assert(
-      instance.isActive(RestrictedActions.TYPES.Encounter) == false,
-      "Inactive state must clear previous activation"
-    )
+    assert(instance.isActive(RestrictedActions.TYPES.Encounter) == false, "Inactive state must clear previous activation")
   end
 
   -- test_is_competitive_covers_encounter_challenge_pvp
@@ -97,10 +88,7 @@ return function()
 
     local instance = RestrictedActions.New()
     assert(instance.isActive(RestrictedActions.TYPES.Combat) == true, "fallback query should return true for Combat")
-    assert(
-      instance.isActive(RestrictedActions.TYPES.Encounter) == false,
-      "fallback query should return false for Encounter"
-    )
+    assert(instance.isActive(RestrictedActions.TYPES.Encounter) == false, "fallback query should return false for Encounter")
 
     _G.C_RestrictedActions = savedApi
   end

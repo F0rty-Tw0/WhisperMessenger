@@ -58,10 +58,7 @@ return function()
     assert(handled == true, "Handle should claim the ADDON_RESTRICTION_STATE_CHANGED event")
     assert(Bootstrap._inMythicContent == true, "ChallengeMode active should set _inMythicContent")
     assert(suspendCalls == 1, "should call runtime.suspend exactly once, got " .. suspendCalls)
-    assert(
-      Bootstrap.runtime.restrictedActions.isMythic() == true,
-      "restrictedActions instance must reflect the cached payload state"
-    )
+    assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "restrictedActions instance must reflect the cached payload state")
   end
 
   -- test_addon_restriction_challenge_mode_inactive_triggers_resume
@@ -152,10 +149,7 @@ return function()
       RestrictedActions.STATES.Active
     )
 
-    assert(
-      Bootstrap.runtime.restrictedActions.isMythic() == true,
-      "payload must win over lying IsAddOnRestrictionActive during dispatch"
-    )
+    assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "payload must win over lying IsAddOnRestrictionActive during dispatch")
 
     _G.C_RestrictedActions = savedApi
   end

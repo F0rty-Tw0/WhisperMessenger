@@ -35,28 +35,9 @@ return function()
       end,
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
-    assert(
-      setLastTellCalled == false,
-      "character whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead"
-    )
+    assert(setLastTellCalled == false, "character whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead")
     assert(
       runtime.lastIncomingWhisperKey == "wow::WOW::arthas",
       "expected character whisper to track the exact conversation key for ReplyTell routing"
@@ -89,33 +70,10 @@ return function()
       end,
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_BN_WHISPER",
-      "hello",
-      "Friend",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      2,
-      "Player-2-DEF",
-      42
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_BN_WHISPER", "hello", "Friend", "", "", "", "", "", "", "", "", 2, "Player-2-DEF", 42)
 
-    assert(
-      setLastTellCalled == false,
-      "bn whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead"
-    )
-    assert(
-      runtime.lastIncomingWhisperKey == "bnet::BN::42",
-      "expected BN whisper to track the exact conversation key for ReplyTell routing"
-    )
+    assert(setLastTellCalled == false, "bn whisper should not call ChatEdit_SetLastTellTarget; rely on tracked reply key instead")
+    assert(runtime.lastIncomingWhisperKey == "bnet::BN::42", "expected BN whisper to track the exact conversation key for ReplyTell routing")
   end
 
   -- test_does_not_set_reply_target_when_hide_disabled
@@ -136,23 +94,7 @@ return function()
       accountState = { settings = { hideFromDefaultChat = false } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
     assert(setLastTellCalled == false, "test_no_reply_target_when_hide_disabled: should not call SetLastTellTarget")
   end
@@ -176,28 +118,9 @@ return function()
       accountState = { settings = { hideFromDefaultChat = true } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER_INFORM",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
-    assert(
-      setLastTellCalled == false,
-      "test_no_reply_target_for_outgoing: should not call SetLastTellTarget for outgoing"
-    )
+    assert(setLastTellCalled == false, "test_no_reply_target_for_outgoing: should not call SetLastTellTarget for outgoing")
   end
 
   -- test_does_not_set_reply_target_when_suspended
@@ -220,28 +143,9 @@ return function()
       accountState = { settings = { hideFromDefaultChat = true } },
     }
 
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_WHISPER",
-      "hello",
-      "Arthas",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-ABC"
-    )
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", "hello", "Arthas", "", "", "", "", "", "", "", "", 1, "Player-1-ABC")
 
-    assert(
-      setLastTellCalled == false,
-      "test_no_reply_target_when_suspended: should not call SetLastTellTarget when addon is suspended"
-    )
+    assert(setLastTellCalled == false, "test_no_reply_target_when_suspended: should not call SetLastTellTarget when addon is suspended")
     _G._wmSuspended = nil
   end
 

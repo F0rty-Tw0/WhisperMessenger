@@ -56,10 +56,7 @@ return function()
 
   movementSpeed = 7
   window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
-  assert(
-    window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA,
-    "expected player movement outside the window to dim it"
-  )
+  assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected player movement outside the window to dim it")
 
   movementSpeed = 0
   window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
@@ -75,10 +72,7 @@ return function()
 
   pressedButtons.LeftButton = true
   window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
-  assert(
-    window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA,
-    "expected outside mouse interaction to dim the window"
-  )
+  assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected outside mouse interaction to dim the window")
 
   window.frame.mouseOver = true
   window.frame.scripts.OnEnter(window.frame)
@@ -87,10 +81,7 @@ return function()
   window.frame.mouseOver = false
   pressedButtons.LeftButton = false
   window.frame.scripts.OnLeave(window.frame)
-  assert(
-    window.frame.alpha == Theme.WINDOW_IDLE_ALPHA,
-    "expected leaving the window without activity to keep it opaque"
-  )
+  assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected leaving the window without activity to keep it opaque")
 
   window.composer.input:SetFocus()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focused input to keep the window fully opaque")
@@ -102,10 +93,7 @@ return function()
   movementSpeed = 0
   window.composer.input:ClearFocus()
   window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
-  assert(
-    window.frame.alpha == Theme.WINDOW_IDLE_ALPHA,
-    "expected opacity to return to normal after focus and outside activity end"
-  )
+  assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected opacity to return to normal after focus and outside activity end")
 
   _G.UIParent = savedUIParent
   rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)

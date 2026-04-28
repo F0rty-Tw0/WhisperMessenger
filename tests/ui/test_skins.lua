@@ -21,10 +21,7 @@ return function()
     assert(type(spec) == "table", "test_modern_spec: should return table")
     assert(spec.window_backdrop == nil, "test_modern_spec: window_backdrop should be nil")
     assert(spec.close_button_atlas == nil, "test_modern_spec: close_button_atlas should be nil")
-    assert(
-      spec.pane_header_texture == nil,
-      "test_modern_spec: pane_header_texture should be nil so modern presets keep the flat color header"
-    )
+    assert(spec.pane_header_texture == nil, "test_modern_spec: pane_header_texture should be nil so modern presets keep the flat color header")
   end
 
   -- test_blizzard_spec
@@ -33,10 +30,7 @@ return function()
     local spec = Skins.Get("blizzard")
     assert(type(spec) == "table", "test_blizzard_spec: should return table")
     assert(type(spec.window_backdrop) == "table", "test_blizzard_spec: window_backdrop should be table")
-    assert(
-      spec.window_backdrop.bgFile == "Interface\\DialogFrame\\UI-DialogBox-Background-Dark",
-      "test_blizzard_spec: bgFile mismatch"
-    )
+    assert(spec.window_backdrop.bgFile == "Interface\\DialogFrame\\UI-DialogBox-Background-Dark", "test_blizzard_spec: bgFile mismatch")
     assert(
       spec.window_backdrop.edgeFile == "Interface\\Tooltips\\UI-Tooltip-Border",
       "test_blizzard_spec: edgeFile reverted to UI-Tooltip-Border (DialogBox-Border at edgeSize 32 covered title text)"
@@ -49,10 +43,7 @@ return function()
     -- atlas rendered blank on some clients. ChromeBuilder.applyTheme falls
     -- back to UI-StopButton (the original modern X) which is reliable
     -- across all flavors.
-    assert(
-      spec.close_button_atlas == nil,
-      "test_blizzard_spec: close_button_atlas should be nil (atlas rendered blank in-game)"
-    )
+    assert(spec.close_button_atlas == nil, "test_blizzard_spec: close_button_atlas should be nil (atlas rendered blank in-game)")
 
     -- Send button + scrollbar knob intentionally NOT skinned (see Skins.lua
     -- comment for rationale): the Blizzard textures don't fit our composer

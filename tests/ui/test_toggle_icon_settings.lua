@@ -19,10 +19,7 @@ return function()
       end,
     })
 
-    assert(
-      icon.badge.shown == false,
-      "test_badge_hidden_when_showUnreadBadge_disabled: badge should be hidden when setting is off"
-    )
+    assert(icon.badge.shown == false, "test_badge_hidden_when_showUnreadBadge_disabled: badge should be hidden when setting is off")
   end
 
   -- test_badge_shown_when_showUnreadBadge_enabled
@@ -39,10 +36,7 @@ return function()
       end,
     })
 
-    assert(
-      icon.badge.shown == true,
-      "test_badge_shown_when_showUnreadBadge_enabled: badge should be visible when setting is on"
-    )
+    assert(icon.badge.shown == true, "test_badge_shown_when_showUnreadBadge_enabled: badge should be visible when setting is on")
   end
 
   -- test_badge_hidden_when_showUnreadBadge_toggled_off_dynamically
@@ -66,10 +60,7 @@ return function()
     showBadge = false
     icon.setUnreadCount(3)
 
-    assert(
-      icon.badge.shown == false,
-      "test_badge_hidden_when_showUnreadBadge_toggled_off_dynamically: badge should hide after setting toggled off"
-    )
+    assert(icon.badge.shown == false, "test_badge_hidden_when_showUnreadBadge_toggled_off_dynamically: badge should hide after setting toggled off")
   end
 
   -- test_pulse_not_started_when_badgePulse_disabled
@@ -138,10 +129,7 @@ return function()
     local expectedChatSize = math.floor(56 * 0.6)
     assert(
       chatW == expectedChatSize,
-      "test_apply_icon_size_resizes_frame: chat icon width should be "
-        .. expectedChatSize
-        .. ", got "
-        .. tostring(chatW)
+      "test_apply_icon_size_resizes_frame: chat icon width should be " .. expectedChatSize .. ", got " .. tostring(chatW)
     )
   end
 
@@ -165,8 +153,7 @@ return function()
     )
     assert(
       icon.background.desaturated == true,
-      "test_icon_desaturated_when_no_unread: background should be desaturated, got "
-        .. tostring(icon.background.desaturated)
+      "test_icon_desaturated_when_no_unread: background should be desaturated, got " .. tostring(icon.background.desaturated)
     )
     assert(
       icon.border.desaturated == true,
@@ -190,13 +177,11 @@ return function()
 
     assert(
       icon.label.desaturated == false,
-      "test_icon_colorized_on_unread: chatIcon should be colorized when unread > 0, got "
-        .. tostring(icon.label.desaturated)
+      "test_icon_colorized_on_unread: chatIcon should be colorized when unread > 0, got " .. tostring(icon.label.desaturated)
     )
     assert(
       icon.background.desaturated == false,
-      "test_icon_colorized_on_unread: background should be colorized when unread > 0, got "
-        .. tostring(icon.background.desaturated)
+      "test_icon_colorized_on_unread: background should be colorized when unread > 0, got " .. tostring(icon.background.desaturated)
     )
   end
 
@@ -220,8 +205,7 @@ return function()
 
     assert(
       icon.label.desaturated == true,
-      "test_icon_desaturated_when_unread_cleared: icon should desaturate after unread cleared, got "
-        .. tostring(icon.label.desaturated)
+      "test_icon_desaturated_when_unread_cleared: icon should desaturate after unread cleared, got " .. tostring(icon.label.desaturated)
     )
   end
 
@@ -254,10 +238,7 @@ return function()
     })
 
     assert(icon.previewFrame ~= nil, "test_message_preview_hidden_by_default: previewFrame should exist")
-    assert(
-      icon.previewFrame.shown == false,
-      "test_message_preview_hidden_by_default: preview should start hidden when no incoming message exists"
-    )
+    assert(icon.previewFrame.shown == false, "test_message_preview_hidden_by_default: preview should start hidden when no incoming message exists")
   end
 
   -- test_setIncomingPreview_shows_sender_and_message
@@ -516,11 +497,7 @@ return function()
     icon.setIncomingPreview("Jaina", "Need help?", "MAGE")
     icon.setIncomingPreview("Jaina", "Need help?", "MAGE")
 
-    assert(
-      #timers == 1,
-      "expected only one auto-dismiss timer when the same preview content is reapplied via refresh, got: "
-        .. tostring(#timers)
-    )
+    assert(#timers == 1, "expected only one auto-dismiss timer when the same preview content is reapplied via refresh, got: " .. tostring(#timers))
 
     timers[1].callback()
     assert(
@@ -560,10 +537,7 @@ return function()
       parent = parent,
     })
 
-    assert(
-      type(icon.setCompetitiveContent) == "function",
-      "test_setCompetitiveContent_method_exists: setCompetitiveContent should be a function"
-    )
+    assert(type(icon.setCompetitiveContent) == "function", "test_setCompetitiveContent_method_exists: setCompetitiveContent should be a function")
   end
 
   -- test_competitive_indicator_hidden_by_default
@@ -573,14 +547,8 @@ return function()
       parent = parent,
     })
 
-    assert(
-      icon.competitiveIndicator ~= nil,
-      "test_competitive_indicator_hidden_by_default: competitiveIndicator should exist"
-    )
-    assert(
-      icon.competitiveIndicator.shown == false,
-      "test_competitive_indicator_hidden_by_default: indicator should be hidden by default"
-    )
+    assert(icon.competitiveIndicator ~= nil, "test_competitive_indicator_hidden_by_default: competitiveIndicator should exist")
+    assert(icon.competitiveIndicator.shown == false, "test_competitive_indicator_hidden_by_default: indicator should be hidden by default")
   end
 
   -- test_competitive_indicator_shown_when_active

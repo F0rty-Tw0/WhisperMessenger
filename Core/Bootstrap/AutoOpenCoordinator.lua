@@ -3,11 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+-- stylua: ignore start
 local AutoOpenHooks = ns.BootstrapAutoOpenHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenHooks")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
-local ConversationOps = ns.BootstrapAutoOpenConversationOps
-  or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local Poller = ns.BootstrapAutoOpenPoller or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
+-- stylua: ignore end
 
 local AutoOpenCoordinator = {}
 
@@ -112,13 +113,9 @@ function AutoOpenCoordinator.Attach(options)
         return _G["ChatFrame" .. index .. "EditBox"]
       end,
       bnetApi = options.bnetApi or _G.C_BattleNet,
-      getNumFriends = options.BNGetNumFriends
-        or (
-          type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends
-          or function()
-            return 0, 0
-          end
-        ),
+      getNumFriends = options.BNGetNumFriends or (type(_G.BNGetNumFriends) == "function" and _G.BNGetNumFriends or function()
+        return 0, 0
+      end),
       deactivateChat = options.ChatEdit_DeactivateChat or _G.ChatEdit_DeactivateChat,
     })
   end

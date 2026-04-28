@@ -90,10 +90,7 @@ return function()
     assert(entry.template == "SecureActionButtonTemplate", "must inherit SecureActionButtonTemplate")
     assert(stubs.frame:GetAttribute("type") == "macro", "secure action button must have type=macro attribute")
     assert(stubs.frame:GetAttribute("macrotext") == "/wr", "secure action button macrotext must be /wr")
-    assert(
-      stubs.frame._clicks ~= nil,
-      "secure action button must call RegisterForClicks (required for override-binding dispatch)"
-    )
+    assert(stubs.frame._clicks ~= nil, "secure action button must call RegisterForClicks (required for override-binding dispatch)")
     assert(
       stubs.frame._clicks[1] == "AnyDown",
       "must register for AnyDown — SetOverrideBindingClick dispatches on key-down; AnyUp would miss the click; both would double-fire"
@@ -122,10 +119,7 @@ return function()
     binder.bind()
 
     assert(#stubs.overrideBindings == 1, "expected one override binding, got " .. #stubs.overrideBindings)
-    assert(
-      stubs.overrideBindings[1].key == "T",
-      "must override user-bound REPLY key 'T', got " .. tostring(stubs.overrideBindings[1].key)
-    )
+    assert(stubs.overrideBindings[1].key == "T", "must override user-bound REPLY key 'T', got " .. tostring(stubs.overrideBindings[1].key))
   end
 
   -- test_bind_overrides_all_keys_bound_to_reply
@@ -143,10 +137,7 @@ return function()
 
     binder.bind()
 
-    assert(
-      #stubs.overrideBindings == 2,
-      "expected two override bindings (one per REPLY slot), got " .. #stubs.overrideBindings
-    )
+    assert(#stubs.overrideBindings == 2, "expected two override bindings (one per REPLY slot), got " .. #stubs.overrideBindings)
     local seen = {}
     for _, b in ipairs(stubs.overrideBindings) do
       seen[b.key] = true
@@ -263,10 +254,7 @@ return function()
     mythic = true
     binder.sync()
 
-    assert(
-      #stubs.clearedFor == 0,
-      "sync must NOT unbind in Mythic+ — falling through to Blizzard /r crashes on pre-seeded taint"
-    )
+    assert(#stubs.clearedFor == 0, "sync must NOT unbind in Mythic+ — falling through to Blizzard /r crashes on pre-seeded taint")
   end
 
   -- test_sync_idempotent_when_reply_key_unchanged
@@ -284,10 +272,7 @@ return function()
     binder.sync()
     binder.sync()
 
-    assert(
-      #stubs.overrideBindings == 1,
-      "repeated sync while REPLY binding unchanged should not re-bind, got " .. #stubs.overrideBindings
-    )
+    assert(#stubs.overrideBindings == 1, "repeated sync while REPLY binding unchanged should not re-bind, got " .. #stubs.overrideBindings)
   end
 
   -- test_sync_rebinds_when_user_changes_reply_key

@@ -56,8 +56,7 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local resolvedTheme = theme or Theme
   local layout = resolvedTheme.LAYOUT or {}
 
-  local contactsWidth =
-    Metrics.ClampContactsWidth(width, requestedContactsWidth or layoutState.contactsWidth, resolvedTheme)
+  local contactsWidth = Metrics.ClampContactsWidth(width, requestedContactsWidth or layoutState.contactsWidth, resolvedTheme)
   local contactsHeight = height - resolvedTheme.TOP_BAR_HEIGHT
   local contentWidth = width - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
   local contentHeight = contactsHeight

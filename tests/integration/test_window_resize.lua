@@ -31,10 +31,7 @@ return function()
   window.resizeGrip.scripts.OnMouseDown(window.resizeGrip, "LeftButton")
   assert(window.frame.sizingAnchor == nil, "expected deferred resize mode to avoid native StartSizing during drag")
   assert(window.resizeGrip.preview ~= nil, "expected deferred resize preview textures")
-  assert(
-    window.resizeGrip.preview.bg.parent ~= window.frame,
-    "expected preview overlay to render outside the main frame alpha"
-  )
+  assert(window.resizeGrip.preview.bg.parent ~= window.frame, "expected preview overlay to render outside the main frame alpha")
   assert(window.resizeGrip.preview.bg:IsShown() == true, "expected resize preview to be visible while dragging")
   assert(window.frame:GetAlpha() <= 0.08, "expected window alpha to fade strongly during deferred resize drag")
 
@@ -44,10 +41,7 @@ return function()
   assert(window.resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
   assert(window.frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
   assert(window.frame.point[1] == "TOPLEFT", "expected deferred resize commit to keep top-left anchoring")
-  assert(
-    window.frame.point[4] == 220 and window.frame.point[5] == 680,
-    "expected deferred resize commit to keep top-left position"
-  )
+  assert(window.frame.point[4] == 220 and window.frame.point[5] == 680, "expected deferred resize commit to keep top-left position")
   assert(positionChanged ~= nil, "expected onPositionChanged to fire after resize")
   -- Simulate a resize: change frame size and fire OnSizeChanged
   local newWidth = 1100
@@ -64,15 +58,11 @@ return function()
   )
 
   -- Contacts scroll view should update
-  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30)
-    + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
+  local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
   local expectedContactsListH = expectedContactsH - searchTotalHeight
   assert(
     window.contacts.scrollFrame.height == expectedContactsListH,
-    "expected contacts scrollFrame height "
-      .. expectedContactsListH
-      .. " but got "
-      .. tostring(window.contacts.scrollFrame.height)
+    "expected contacts scrollFrame height " .. expectedContactsListH .. " but got " .. tostring(window.contacts.scrollFrame.height)
   )
 
   -- Content pane should update
@@ -126,29 +116,17 @@ return function()
   local expectedTranscriptH = expectedThreadH - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
   assert(
     window.conversation.transcript.scrollFrame.width == expectedTranscriptW,
-    "expected transcript width "
-      .. expectedTranscriptW
-      .. " but got "
-      .. tostring(window.conversation.transcript.scrollFrame.width)
+    "expected transcript width " .. expectedTranscriptW .. " but got " .. tostring(window.conversation.transcript.scrollFrame.width)
   )
   assert(
     window.conversation.transcript.scrollFrame.height == expectedTranscriptH,
-    "expected transcript height "
-      .. expectedTranscriptH
-      .. " but got "
-      .. tostring(window.conversation.transcript.scrollFrame.height)
+    "expected transcript height " .. expectedTranscriptH .. " but got " .. tostring(window.conversation.transcript.scrollFrame.height)
   )
   -- Contacts-only resize handle should clamp to min width and persist contactsWidth.
   assert(window.contactsResizeHandle ~= nil, "expected contacts resize handle")
   assert(window.contactsResizeHandle.mouseEnabled == true, "expected contacts resize handle to accept mouse input")
-  assert(
-    type(window.contactsResizeHandle.scripts.OnMouseDown) == "function",
-    "expected contacts resize handle OnMouseDown script"
-  )
-  assert(
-    type(window.contactsResizeHandle.scripts.OnMouseUp) == "function",
-    "expected contacts resize handle OnMouseUp script"
-  )
+  assert(type(window.contactsResizeHandle.scripts.OnMouseDown) == "function", "expected contacts resize handle OnMouseDown script")
+  assert(type(window.contactsResizeHandle.scripts.OnMouseUp) == "function", "expected contacts resize handle OnMouseUp script")
 
   assert(window.contactsResizeHandle.hoverBg ~= nil, "expected contacts resize hover background")
   assert(window.contactsResizeHandle.outline ~= nil, "expected contacts resize outline textures")
@@ -186,33 +164,21 @@ return function()
   local expectedNarrowContentW = newWidth - expectedMinContactsW - Theme.DIVIDER_THICKNESS
   assert(
     window.contactsPane.width == expectedMinContactsW,
-    "expected contacts pane width to clamp to min "
-      .. tostring(expectedMinContactsW)
-      .. " but got "
-      .. tostring(window.contactsPane.width)
+    "expected contacts pane width to clamp to min " .. tostring(expectedMinContactsW) .. " but got " .. tostring(window.contactsPane.width)
   )
   assert(
     window.contentPane.width == expectedNarrowContentW,
-    "expected content width to follow contacts resize to "
-      .. tostring(expectedNarrowContentW)
-      .. " but got "
-      .. tostring(window.contentPane.width)
+    "expected content width to follow contacts resize to " .. tostring(expectedNarrowContentW) .. " but got " .. tostring(window.contentPane.width)
   )
   local expectedHintWidth = expectedMinContactsW - ((Theme.CONTENT_PADDING or 0) * 2)
-  assert(
-    window.optionsHint.width == expectedHintWidth,
-    "expected options hint width to compact with resized contacts pane"
-  )
+  assert(window.optionsHint.width == expectedHintWidth, "expected options hint width to compact with resized contacts pane")
   assert(window.optionsHint.wordWrap == true, "expected options hint to keep word wrap after resize")
 
   window.contactsResizeHandle.scripts.OnMouseUp(window.contactsResizeHandle, "LeftButton")
   assert(positionChanged ~= nil, "expected contacts resize to persist window state")
   assert(
     positionChanged.contactsWidth == expectedMinContactsW,
-    "expected persisted contacts width "
-      .. tostring(expectedMinContactsW)
-      .. " but got "
-      .. tostring(positionChanged.contactsWidth)
+    "expected persisted contacts width " .. tostring(expectedMinContactsW) .. " but got " .. tostring(positionChanged.contactsWidth)
   )
 
   rawset(_G, "GetCursorPosition", originalGetCursorPosition)
@@ -248,8 +214,7 @@ return function()
   )
   assert(
     oversizedWindow.frame.resizeBounds[4] == _G.UIParent:GetHeight(),
-    "expected native resize max height to track UIParent height, got "
-      .. tostring(oversizedWindow.frame.resizeBounds[4])
+    "expected native resize max height to track UIParent height, got " .. tostring(oversizedWindow.frame.resizeBounds[4])
   )
 
   local unsizedParent = factory.CreateFrame("Frame", "UnsizedParent", nil)
@@ -272,8 +237,7 @@ return function()
   )
   assert(
     recoveredWindow.frame.height <= Theme.WINDOW_HEIGHT,
-    "expected unsized parent fallback to recover height to a sane default, got "
-      .. tostring(recoveredWindow.frame.height)
+    "expected unsized parent fallback to recover height to a sane default, got " .. tostring(recoveredWindow.frame.height)
   )
 
   local originalGetCursorPositionOversize = _G.GetCursorPosition

@@ -27,8 +27,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     text = theme.COLORS.option_button_text,
     textHover = theme.COLORS.option_button_text_hover,
   }
-  local tabLayout =
-    { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding) }
+  local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding) }
   local tabSpacing = 4
 
   local generalTab = optionButtonFactory(factory, optionsMenu, "General", tabColors, tabLayout)

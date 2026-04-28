@@ -77,14 +77,8 @@ return function()
     "expected contacts right border red channel to match contacts_border_right"
   )
   assert(window.contactsPaneBorder ~= nil, "expected contacts pane border set")
-  assert(
-    window.contactsPaneBorder.right == window.contactsRightBorder,
-    "expected contactsRightBorder alias to point at contactsPaneBorder.right"
-  )
-  assert(
-    window.contactsPaneBorder.top == window.contactsHeaderDivider,
-    "expected contactsHeaderDivider alias to point at contactsPaneBorder.top"
-  )
+  assert(window.contactsPaneBorder.right == window.contactsRightBorder, "expected contactsRightBorder alias to point at contactsPaneBorder.right")
+  assert(window.contactsPaneBorder.top == window.contactsHeaderDivider, "expected contactsHeaderDivider alias to point at contactsPaneBorder.top")
   assert(window.contactsPaneBorder.left ~= nil, "expected contacts pane left border")
   assert(window.contactsPaneBorder.bottom ~= nil, "expected contacts pane bottom border")
   local previousPreset = Theme.GetPreset and Theme.GetPreset() or nil
@@ -97,30 +91,15 @@ return function()
       rawget(window.contactsRightBorder, "color")[1] == Theme.COLORS.contacts_border_right[1],
       "expected contacts right border red channel to repaint with preset"
     )
-    assert(
-      window.contactsHeaderDivider.color[4] == Theme.COLORS.divider[4],
-      "expected contacts top divider alpha to repaint with divider alpha"
-    )
+    assert(window.contactsHeaderDivider.color[4] == Theme.COLORS.divider[4], "expected contacts top divider alpha to repaint with divider alpha")
     local expectedTitleColor = Theme.COLORS.text_title or Theme.COLORS.text_primary
-    assert(
-      window.title.textColor[1] == expectedTitleColor[1],
-      "expected title red channel to repaint with text_title/text_primary token"
-    )
+    assert(window.title.textColor[1] == expectedTitleColor[1], "expected title red channel to repaint with text_title/text_primary token")
   end
   assert(window.headerDivider == nil, "expected chat top divider to be removed")
   assert(window.contactsHeaderDivider ~= nil, "expected contacts top divider texture")
-  assert(
-    window.contactsHeaderDivider.point[2] == window.contactsPane,
-    "expected contacts top divider anchored to contacts pane"
-  )
-  assert(
-    window.contactsHeaderDivider.color[1] == Theme.COLORS.divider[1],
-    "expected contacts top divider red channel to match divider"
-  )
-  assert(
-    window.contactsHeaderDivider.color[4] == Theme.COLORS.divider[4],
-    "expected contacts top divider alpha to match divider"
-  )
+  assert(window.contactsHeaderDivider.point[2] == window.contactsPane, "expected contacts top divider anchored to contacts pane")
+  assert(window.contactsHeaderDivider.color[1] == Theme.COLORS.divider[1], "expected contacts top divider red channel to match divider")
+  assert(window.contactsHeaderDivider.color[4] == Theme.COLORS.divider[4], "expected contacts top divider alpha to match divider")
   assert(window.titleBarTopBorder ~= nil, "expected title bar top border texture")
   assert(window.composerDivider ~= nil, "expected composer divider texture")
   local titleBarTopBorderColor = rawget(window.titleBarTopBorder, "color")
@@ -129,10 +108,7 @@ return function()
   assert(type(titleBarTopBorderColor) == "table", "expected title bar top border color table")
   assert(type(composerDividerPoint) == "table", "expected composer divider point table")
   assert(type(composerDividerColor) == "table", "expected composer divider color table")
-  assert(
-    titleBarTopBorderColor[1] == Theme.COLORS.divider[1],
-    "expected title bar top border red channel to match divider"
-  )
+  assert(titleBarTopBorderColor[1] == Theme.COLORS.divider[1], "expected title bar top border red channel to match divider")
   assert(window.threadPane ~= nil)
   assert(window.composerPane ~= nil)
   assert(window.threadPane.height < window.contentPane.height)
@@ -140,18 +116,12 @@ return function()
   assert(composerDividerColor[1] == Theme.COLORS.divider[1], "expected composer divider red channel to match divider")
   assert(window.threadPaneBorder == nil, "expected thread pane border set to be removed")
   assert(window.composerPaneBorder ~= nil, "expected composer pane border set")
-  assert(
-    window.composerPaneBorder.top == window.composerDivider,
-    "expected composerDivider alias to point at composerPaneBorder.top"
-  )
+  assert(window.composerPaneBorder.top == window.composerDivider, "expected composerDivider alias to point at composerPaneBorder.top")
   assert(window.composerPaneBorder.left ~= nil, "expected composer pane left border")
   assert(window.composerPaneBorder.right ~= nil, "expected composer pane right border")
   assert(window.composerPaneBorder.bottom ~= nil, "expected composer pane bottom border")
   assert(window.titleBarBorder ~= nil, "expected title bar border set on window facade")
-  assert(
-    window.titleBarBorder.top == window.titleBarTopBorder,
-    "expected titleBarTopBorder alias to point at titleBarBorder.top"
-  )
+  assert(window.titleBarBorder.top == window.titleBarTopBorder, "expected titleBarTopBorder alias to point at titleBarBorder.top")
   assert(window.composer.frame.parent == window.composerPane)
   assert(window.conversation.frame.parent == window.threadPane)
   assert(#window.contacts.rows == 2)
@@ -161,23 +131,14 @@ return function()
   assert(window.contacts.scrollBar ~= nil)
   assert(window.contacts.scrollBar.template == nil, "expected contacts scrollbar to avoid Blizzard scrollbar templates")
   assert(window.contacts.scrollBar.shown == false, "expected contacts scrollbar to stay hidden without overflow")
-  assert(
-    window.contacts.scrollFrame.width == window.contactsPane.width,
-    "expected contacts viewport to use full width when scrollbar is hidden"
-  )
+  assert(window.contacts.scrollFrame.width == window.contactsPane.width, "expected contacts viewport to use full width when scrollbar is hidden")
   assert(window.conversation.header ~= nil)
   assert(window.conversation.transcript ~= nil)
   assert(window.conversation.transcript.width ~= nil)
   assert(window.conversation.transcript.height ~= nil)
   assert(window.conversation.transcript.scrollBar ~= nil)
-  assert(
-    window.conversation.transcript.scrollBar.template == nil,
-    "expected transcript scrollbar to avoid Blizzard scrollbar templates"
-  )
-  assert(
-    window.conversation.transcript.scrollBar.shown == false,
-    "expected transcript scrollbar to stay hidden without overflow"
-  )
+  assert(window.conversation.transcript.scrollBar.template == nil, "expected transcript scrollbar to avoid Blizzard scrollbar templates")
+  assert(window.conversation.transcript.scrollBar.shown == false, "expected transcript scrollbar to stay hidden without overflow")
   assert(
     window.conversation.transcript.scrollFrame.width == window.conversation.transcript.width,
     "expected transcript viewport to use full width when scrollbar is hidden"
@@ -190,22 +151,10 @@ return function()
   assert(window.composer.sendButton.sendBorderTop == nil, "expected send button top border tracking to be removed")
   assert(window.composer.inputBg.color ~= nil, "expected composer input background color")
   local expectedComposerInputBg = Theme.COLORS.bg_message_input or Theme.COLORS.bg_input
-  assert(
-    window.composer.inputBg.color[1] == expectedComposerInputBg[1],
-    "composer input red channel should match bg_message_input/bg_input"
-  )
-  assert(
-    window.composer.inputBg.color[2] == expectedComposerInputBg[2],
-    "composer input green channel should match bg_message_input/bg_input"
-  )
-  assert(
-    window.composer.inputBg.color[3] == expectedComposerInputBg[3],
-    "composer input blue channel should match bg_message_input/bg_input"
-  )
-  assert(
-    window.composer.inputBg.color[4] == expectedComposerInputBg[4],
-    "composer input alpha should match bg_message_input/bg_input"
-  )
+  assert(window.composer.inputBg.color[1] == expectedComposerInputBg[1], "composer input red channel should match bg_message_input/bg_input")
+  assert(window.composer.inputBg.color[2] == expectedComposerInputBg[2], "composer input green channel should match bg_message_input/bg_input")
+  assert(window.composer.inputBg.color[3] == expectedComposerInputBg[3], "composer input blue channel should match bg_message_input/bg_input")
+  assert(window.composer.inputBg.color[4] == expectedComposerInputBg[4], "composer input alpha should match bg_message_input/bg_input")
   if Theme.SetPreset and previousPreset then
     Theme.SetPreset(previousPreset)
     if type(window.refreshTheme) == "function" then

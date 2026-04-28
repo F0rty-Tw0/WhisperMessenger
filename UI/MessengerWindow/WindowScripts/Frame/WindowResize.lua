@@ -30,30 +30,10 @@ function WindowResize.New(options)
     }
 
     windowResizePreview.bg:SetColorTexture(fillColor[1], fillColor[2], fillColor[3], options.previewFillAlpha)
-    windowResizePreview.top:SetColorTexture(
-      dividerColor[1],
-      dividerColor[2],
-      dividerColor[3],
-      options.previewBorderAlpha
-    )
-    windowResizePreview.bottom:SetColorTexture(
-      dividerColor[1],
-      dividerColor[2],
-      dividerColor[3],
-      options.previewBorderAlpha
-    )
-    windowResizePreview.left:SetColorTexture(
-      dividerColor[1],
-      dividerColor[2],
-      dividerColor[3],
-      options.previewBorderAlpha
-    )
-    windowResizePreview.right:SetColorTexture(
-      dividerColor[1],
-      dividerColor[2],
-      dividerColor[3],
-      options.previewBorderAlpha
-    )
+    windowResizePreview.top:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], options.previewBorderAlpha)
+    windowResizePreview.bottom:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], options.previewBorderAlpha)
+    windowResizePreview.left:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], options.previewBorderAlpha)
+    windowResizePreview.right:SetColorTexture(dividerColor[1], dividerColor[2], dividerColor[3], options.previewBorderAlpha)
 
     if resizeGrip then
       resizeGrip.preview = windowResizePreview
@@ -105,64 +85,28 @@ function WindowResize.New(options)
       windowResizePreview.top:ClearAllPoints()
     end
     windowResizePreview.top:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
-    windowResizePreview.top:SetPoint(
-      "TOPRIGHT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft + previewWidth,
-      previewTop
-    )
+    windowResizePreview.top:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
     windowResizePreview.top:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.bottom.ClearAllPoints then
       windowResizePreview.bottom:ClearAllPoints()
     end
-    windowResizePreview.bottom:SetPoint(
-      "BOTTOMLEFT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft,
-      previewTop - previewHeight
-    )
-    windowResizePreview.bottom:SetPoint(
-      "BOTTOMRIGHT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft + previewWidth,
-      previewTop - previewHeight
-    )
+    windowResizePreview.bottom:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
+    windowResizePreview.bottom:SetPoint("BOTTOMRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop - previewHeight)
     windowResizePreview.bottom:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.left.ClearAllPoints then
       windowResizePreview.left:ClearAllPoints()
     end
     windowResizePreview.left:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
-    windowResizePreview.left:SetPoint(
-      "BOTTOMLEFT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft,
-      previewTop - previewHeight
-    )
+    windowResizePreview.left:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
     windowResizePreview.left:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     if windowResizePreview.right.ClearAllPoints then
       windowResizePreview.right:ClearAllPoints()
     end
-    windowResizePreview.right:SetPoint(
-      "TOPRIGHT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft + previewWidth,
-      previewTop
-    )
-    windowResizePreview.right:SetPoint(
-      "BOTTOMRIGHT",
-      windowResizePreviewHost,
-      "BOTTOMLEFT",
-      previewLeft + previewWidth,
-      previewTop - previewHeight
-    )
+    windowResizePreview.right:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
+    windowResizePreview.right:SetPoint("BOTTOMRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop - previewHeight)
     windowResizePreview.right:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
 
     setPreviewShown(true)
@@ -177,12 +121,7 @@ function WindowResize.New(options)
     local cursorY = options.getCursorY()
     local frameLeft = options.getFrameLeft()
     local frameTop = options.getFrameTop()
-    if
-      type(cursorX) ~= "number"
-      or type(cursorY) ~= "number"
-      or type(frameLeft) ~= "number"
-      or type(frameTop) ~= "number"
-    then
+    if type(cursorX) ~= "number" or type(cursorY) ~= "number" or type(frameLeft) ~= "number" or type(frameTop) ~= "number" then
       return
     end
 
@@ -204,8 +143,7 @@ function WindowResize.New(options)
       preResizeAlpha = nil
     end
 
-    local nextWidth, nextHeight =
-      options.clampWindowSize(pendingWidth or options.frameWidth(), pendingHeight or options.frameHeight())
+    local nextWidth, nextHeight = options.clampWindowSize(pendingWidth or options.frameWidth(), pendingHeight or options.frameHeight())
     pendingWidth = nil
     pendingHeight = nil
 

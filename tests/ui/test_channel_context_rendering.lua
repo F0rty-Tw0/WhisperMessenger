@@ -16,14 +16,8 @@ return function()
       sentAt = 9010,
     }
 
-    assert(
-      Grouping.ShouldGroup(whisper, channelCtx) == false,
-      "channel_context should not group with preceding whisper"
-    )
-    assert(
-      Grouping.ShouldGroup(channelCtx, whisper) == false,
-      "whisper should not group with preceding channel_context"
-    )
+    assert(Grouping.ShouldGroup(whisper, channelCtx) == false, "channel_context should not group with preceding whisper")
+    assert(Grouping.ShouldGroup(channelCtx, whisper) == false, "whisper should not group with preceding channel_context")
   end
 
   -- test_two_channel_context_messages_do_not_group

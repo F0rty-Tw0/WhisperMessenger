@@ -32,39 +32,24 @@ return function()
   local layout = LayoutBuilder.Build(factory, frame, { width = 920, height = 580 }, {})
   assert(layout.contactsSearchBg ~= nil, "expected layout to expose contactsSearchBg")
   assert(layout.contactsRightBorder ~= nil, "expected layout to expose contactsRightBorder")
-  assert(
-    colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input),
-    "expected search input background to use bg_search_input token"
-  )
+  assert(colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input), "expected search input background to use bg_search_input token")
   assert(
     colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
     "expected contacts right border to use contacts_border_right token"
   )
-  assert(
-    colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary),
-    "expected search input text to use text_primary token"
-  )
+  assert(colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary), "expected search input text to use text_primary token")
   local clearLabel = layout.contactsSearchClearButton.children[1]
   assert(clearLabel ~= nil, "expected search clear button label")
-  assert(
-    colorsMatch(clearLabel.textColor, Theme.COLORS.text_secondary),
-    "expected search clear label to use text_secondary token"
-  )
+  assert(colorsMatch(clearLabel.textColor, Theme.COLORS.text_secondary), "expected search clear label to use text_secondary token")
 
   local composerParent = factory.CreateFrame("Frame", nil, uiParent)
   composerParent:SetSize(600, Theme.COMPOSER_HEIGHT)
   local composer = Composer.Create(factory, composerParent, { conversationKey = "wow::test" }, function() end)
-  assert(
-    colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input),
-    "expected composer input background to use bg_message_input token"
-  )
+  assert(colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input), "expected composer input background to use bg_message_input token")
   assert(composer.inputTopBorder == nil, "expected composer input top border to be removed")
   assert(composer.sendButton.sendBg ~= nil, "expected send button themed state tracking")
   assert(composer.sendButton.sendBorderTop == nil, "expected send button top border to be removed")
-  assert(
-    colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button),
-    "expected send button to use send_button token"
-  )
+  assert(colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button), "expected send button to use send_button token")
 
   local transcriptParent = factory.CreateFrame("Frame", nil, uiParent)
   transcriptParent:SetSize(600, 400)
@@ -76,44 +61,26 @@ return function()
     paneWidth = 600,
     showIcon = false,
   })
-  assert(
-    colorsMatch(incomingBubble.bgFills[1].color, Theme.COLORS.bg_bubble_in),
-    "expected incoming bubble to use bg_bubble_in token"
-  )
+  assert(colorsMatch(incomingBubble.bgFills[1].color, Theme.COLORS.bg_bubble_in), "expected incoming bubble to use bg_bubble_in token")
 
   assert(Theme.SetPreset("elvui_dark"), "expected elvui_dark preset to apply")
   layout.applyTheme(Theme)
   composer.refreshTheme()
 
-  assert(
-    colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input),
-    "expected search input background to update when preset changes"
-  )
-  assert(
-    colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input),
-    "expected composer input background to update when preset changes"
-  )
+  assert(colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input), "expected search input background to update when preset changes")
+  assert(colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input), "expected composer input background to update when preset changes")
   assert(composer.inputTopBorder == nil, "expected composer input top border to stay removed after preset change")
   assert(
     colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
     "expected contacts right border to repaint on preset change"
   )
-  assert(
-    colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button),
-    "expected send button to repaint on preset change"
-  )
-  assert(
-    composer.sendButton.sendBorderTop == nil,
-    "expected send button top border to stay removed after preset change"
-  )
+  assert(colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button), "expected send button to repaint on preset change")
+  assert(composer.sendButton.sendBorderTop == nil, "expected send button top border to stay removed after preset change")
   assert(
     colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary),
     "expected search input text color to update when preset changes"
   )
-  assert(
-    colorsMatch(clearLabel.textColor, Theme.COLORS.text_secondary),
-    "expected search clear label color to update when preset changes"
-  )
+  assert(colorsMatch(clearLabel.textColor, Theme.COLORS.text_secondary), "expected search clear label color to update when preset changes")
 
   local incomingBubbleAfterPreset = BubbleFrame.CreateBubble(factory, transcriptParent, {
     direction = "in",

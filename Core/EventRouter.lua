@@ -160,12 +160,7 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      Store.AppendIncoming(
-        state.store,
-        conversationKey,
-        buildMessage(eventName, payload, contact, "in", "user", sentAt),
-        isActive
-      )
+      Store.AppendIncoming(state.store, conversationKey, buildMessage(eventName, payload, contact, "in", "user", sentAt), isActive)
       -- If someone whispers us, they are clearly online and whisperable
       local guid = payload.guid or (contact and contact.guid or nil)
       if guid then
@@ -174,11 +169,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         state.availabilityByGUID[guid] = avail
       end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-      Store.AppendOutgoing(
-        state.store,
-        conversationKey,
-        buildMessage(eventName, payload, contact, "out", "user", sentAt)
-      )
+      Store.AppendOutgoing(state.store, conversationKey, buildMessage(eventName, payload, contact, "out", "user", sentAt))
       -- Replying means the user saw the conversation; clear unread notification
       Store.MarkRead(state.store, conversationKey)
       -- Our whisper was delivered, so the target is reachable
@@ -195,12 +186,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         text = payload.text,
       })
     else
-      Store.AppendIncoming(
-        state.store,
-        conversationKey,
-        buildMessage(eventName, payload, contact, "in", "system", sentAt),
-        isActive
-      )
+      Store.AppendIncoming(state.store, conversationKey, buildMessage(eventName, payload, contact, "in", "system", sentAt), isActive)
     end
 
     local conversation = state.store.conversations[conversationKey]
@@ -227,20 +213,15 @@ function Router.HandleEvent(state, eventName, payload)
 end
 
 function Router.ReplayQueued(state, hydrate)
-  return Queue.ReplayReady(
-    state.queue,
-    state.isChatMessagingLocked and state.isChatMessagingLocked() or false,
-    function(item)
-      if hydrate then
-        return hydrate(item)
-      end
-
-      return item.payload
-    end,
-    function(message, item)
-      handleUnlockedEvent(state, item.eventName, message)
+  return Queue.ReplayReady(state.queue, state.isChatMessagingLocked and state.isChatMessagingLocked() or false, function(item)
+    if hydrate then
+      return hydrate(item)
     end
-  )
+
+    return item.payload
+  end, function(message, item)
+    handleUnlockedEvent(state, item.eventName, message)
+  end)
 end
 
 ns.EventRouter = Router

@@ -12,8 +12,7 @@ local function conversationMatchesTab(runtime, badgeFilter, conversationKey, tab
     return true
   end
 
-  local conversation = runtime.store and runtime.store.conversations and runtime.store.conversations[conversationKey]
-    or nil
+  local conversation = runtime.store and runtime.store.conversations and runtime.store.conversations[conversationKey] or nil
   if conversation == nil then
     return true
   end

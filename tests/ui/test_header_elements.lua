@@ -11,10 +11,7 @@ return function()
     local HEADER_HEIGHT = 56
     local headerFrame = HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
     assert(headerFrame ~= nil, "createHeaderFrame should return a frame")
-    assert(
-      headerFrame.height == HEADER_HEIGHT,
-      "headerFrame should have correct height, got: " .. tostring(headerFrame.height)
-    )
+    assert(headerFrame.height == HEADER_HEIGHT, "headerFrame should have correct height, got: " .. tostring(headerFrame.height))
   end
 
   -- test_create_class_icon_with_known_class

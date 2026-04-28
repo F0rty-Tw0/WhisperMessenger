@@ -2,18 +2,12 @@ local EventUtils = require("WhisperMessenger.Core.EventUtils")
 
 return function()
   -- IsUnknownEventError: matches Retail / Classic "unknown event" phrasing
-  assert(
-    EventUtils.IsUnknownEventError('Attempt to register unknown event "CLUB_MEMBER_UPDATED"'),
-    "Retail-style unknown-event error should match"
-  )
+  assert(EventUtils.IsUnknownEventError('Attempt to register unknown event "CLUB_MEMBER_UPDATED"'), "Retail-style unknown-event error should match")
   assert(
     EventUtils.IsUnknownEventError('Interface\\AddOns\\Foo\\Bar.lua:12: Attempt to register unknown event "X"'),
     "file-prefixed unknown-event error should match"
   )
-  assert(
-    EventUtils.IsUnknownEventError("UNKNOWN EVENT: X"),
-    "uppercase unknown-event error should match (case-insensitive)"
-  )
+  assert(EventUtils.IsUnknownEventError("UNKNOWN EVENT: X"), "uppercase unknown-event error should match (case-insensitive)")
   assert(EventUtils.IsUnknownEventError(nil) == false, "nil error should not match")
   assert(EventUtils.IsUnknownEventError("some other error") == false, "unrelated error should not match")
   assert(EventUtils.IsUnknownEventError("") == false, "empty string should not match")
@@ -67,9 +61,6 @@ return function()
     }
     local ok, err = pcall(EventUtils.RegisterEventIfSupported, frame, "CHAT_MSG_WHISPER")
     assert(ok == false, "RegisterEventIfSupported should re-raise non-unknown-event errors")
-    assert(
-      string.find(tostring(err), "some other Blizzard failure", 1, true) ~= nil,
-      "original error message should be preserved"
-    )
+    assert(string.find(tostring(err), "some other Blizzard failure", 1, true) ~= nil, "original error message should be preserved")
   end
 end

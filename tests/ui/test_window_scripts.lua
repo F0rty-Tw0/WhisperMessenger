@@ -212,18 +212,9 @@ return function()
 
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
     assert(dialog ~= nil, "test_new_conversation_accept_trims_and_invokes_callback: expected dialog registration")
-    assert(
-      type(dialog.OnAccept) == "function",
-      "test_new_conversation_accept_trims_and_invokes_callback: expected OnAccept"
-    )
-    assert(
-      type(dialog.OnShow) == "function",
-      "test_new_conversation_accept_trims_and_invokes_callback: expected OnShow"
-    )
-    assert(
-      type(dialog.OnHide) == "function",
-      "test_new_conversation_accept_trims_and_invokes_callback: expected OnHide"
-    )
+    assert(type(dialog.OnAccept) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnAccept")
+    assert(type(dialog.OnShow) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnShow")
+    assert(type(dialog.OnHide) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnHide")
 
     dialog.OnAccept({
       editBox = {
@@ -285,10 +276,7 @@ return function()
       },
     })
 
-    assert(
-      callbackCount == 0,
-      "test_new_conversation_accept_ignores_empty_names: expected callback to stay untouched for whitespace input"
-    )
+    assert(callbackCount == 0, "test_new_conversation_accept_ignores_empty_names: expected callback to stay untouched for whitespace input")
 
     _G.StaticPopupDialogs = nil
   end
@@ -325,14 +313,8 @@ return function()
 
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
     assert(dialog ~= nil, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog registration")
-    assert(
-      type(dialog.OnShow) == "function",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow"
-    )
-    assert(
-      type(dialog.OnHide) == "function",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide"
-    )
+    assert(type(dialog.OnShow) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow")
+    assert(type(dialog.OnHide) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide")
 
     local function makePopupButton(name)
       local button = factory.CreateFrame("Button", name, parent)
@@ -356,22 +338,13 @@ return function()
     fakePopup.text = factory.CreateFrame("FontString", nil, fakePopup)
 
     local showOk, showErr = pcall(dialog.OnShow, fakePopup, "Thrall")
-    assert(
-      showOk == true,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to be safe: " .. tostring(showErr)
-    )
-    assert(
-      fakePopup.editBox.text == "Thrall",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to prime editbox text"
-    )
+    assert(showOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to be safe: " .. tostring(showErr))
+    assert(fakePopup.editBox.text == "Thrall", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to prime editbox text")
     assert(
       fakePopup.editBox.width == 392,
       "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to stretch editbox to near full popup width"
     )
-    assert(
-      fakePopup._wmManualCopyStyleActive == true,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to activate"
-    )
+    assert(fakePopup._wmManualCopyStyleActive == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to activate")
     assert(
       fakePopup.button1._wmManualCopyStyleActive == true,
       "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to activate"
@@ -386,18 +359,9 @@ return function()
     )
 
     local hideOk, hideErr = pcall(dialog.OnHide, fakePopup)
-    assert(
-      hideOk == true,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to be safe: " .. tostring(hideErr)
-    )
-    assert(
-      fakePopup.editBox.text == "",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to clear editbox text"
-    )
-    assert(
-      fakePopup._wmManualCopyStyleActive == false,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to restore"
-    )
+    assert(hideOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to be safe: " .. tostring(hideErr))
+    assert(fakePopup.editBox.text == "", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to clear editbox text")
+    assert(fakePopup._wmManualCopyStyleActive == false, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to restore")
     assert(
       fakePopup.button1._wmManualCopyStyleActive == false,
       "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to restore"
@@ -502,10 +466,7 @@ return function()
       type(frame.scripts) == "table" and type(frame.scripts.OnDragStart) == "function",
       "test_wire_frame_sets_drag_scripts: expected frame to have OnDragStart script"
     )
-    assert(
-      type(frame.scripts.OnDragStop) == "function",
-      "test_wire_frame_sets_drag_scripts: expected frame to have OnDragStop script"
-    )
+    assert(type(frame.scripts.OnDragStop) == "function", "test_wire_frame_sets_drag_scripts: expected frame to have OnDragStop script")
   end
 
   -- test_on_show_focuses_composer_when_auto_focus_enabled
@@ -539,10 +500,7 @@ return function()
     -- Trigger OnShow
     frame:Show()
 
-    assert(
-      composerInput._hasFocus == true,
-      "test_on_show_focuses_composer_when_auto_focus_enabled: composer input should have focus"
-    )
+    assert(composerInput._hasFocus == true, "test_on_show_focuses_composer_when_auto_focus_enabled: composer input should have focus")
   end
 
   -- test_on_show_does_not_focus_when_auto_focus_disabled
@@ -575,10 +533,7 @@ return function()
 
     frame:Show()
 
-    assert(
-      composerInput._hasFocus == false,
-      "test_on_show_does_not_focus_when_auto_focus_disabled: composer input should NOT have focus"
-    )
+    assert(composerInput._hasFocus == false, "test_on_show_does_not_focus_when_auto_focus_disabled: composer input should NOT have focus")
   end
 
   -- test_select_tab_sets_active_bg_persists_after_leave
@@ -632,9 +587,7 @@ return function()
 
     assert(tab2.bg ~= nil, "tab2 should have a .bg reference")
 
-    local activeColor = Theme.COLORS.option_button_active
-      or Theme.COLORS.bg_contact_selected
-      or { 0.16, 0.18, 0.28, 0.80 }
+    local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
     local activeHoverColor = Theme.COLORS.option_button_active_hover or activeColor
 
     assert(
@@ -691,10 +644,7 @@ return function()
       type(resizeGrip.scripts) == "table" and type(resizeGrip.scripts.OnMouseDown) == "function",
       "test_wire_frame_sets_resize_grip_scripts: expected resizeGrip to have OnMouseDown script"
     )
-    assert(
-      type(resizeGrip.scripts.OnMouseUp) == "function",
-      "test_wire_frame_sets_resize_grip_scripts: expected resizeGrip to have OnMouseUp script"
-    )
+    assert(type(resizeGrip.scripts.OnMouseUp) == "function", "test_wire_frame_sets_resize_grip_scripts: expected resizeGrip to have OnMouseUp script")
   end
 
   -- test_resize_grip_uses_preview_and_commits_on_release
@@ -744,10 +694,7 @@ return function()
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     assert(frame.sizingAnchor == nil, "expected deferred resize to avoid native StartSizing")
-    assert(
-      resizeGrip.preview ~= nil and resizeGrip.preview.bg:IsShown(),
-      "expected resize preview to be visible during drag"
-    )
+    assert(resizeGrip.preview ~= nil and resizeGrip.preview.bg:IsShown(), "expected resize preview to be visible during drag")
     assert(resizeGrip.preview.bg.parent ~= frame, "expected resize preview to live outside the resized frame")
     assert(frame:GetAlpha() <= 0.08, "expected window alpha to fade during deferred resize drag")
     frame.scripts.OnLeave(frame)
@@ -759,20 +706,11 @@ return function()
     assert(resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
     assert(frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
     assert(relayoutArgs ~= nil, "expected relayout to run when deferred resize commits")
-    assert(
-      relayoutArgs.width == 1100 and relayoutArgs.height == 660,
-      "expected committed resize dimensions from preview"
-    )
+    assert(relayoutArgs.width == 1100 and relayoutArgs.height == 660, "expected committed resize dimensions from preview")
     assert(frame.point[1] == "TOPLEFT", "expected deferred resize commit to preserve top-left anchor")
-    assert(
-      frame.point[4] == 100 and frame.point[5] == 760,
-      "expected deferred resize commit to preserve top-left position"
-    )
+    assert(frame.point[4] == 100 and frame.point[5] == 760, "expected deferred resize commit to preserve top-left position")
     assert(persistedState ~= nil, "expected committed resize to persist state")
-    assert(
-      persistedState.width == 1100 and persistedState.height == 660,
-      "expected persisted dimensions to match committed preview"
-    )
+    assert(persistedState.width == 1100 and persistedState.height == 660, "expected persisted dimensions to match committed preview")
   end
 
   -- test_wire_frame_wires_contacts_resize_handle_and_persists_width
@@ -862,8 +800,7 @@ return function()
       "expected contacts divider to use hover color on handle hover"
     )
     assert(
-      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1]
-        and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
+      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1] and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
       "expected contacts resize hover fill color to apply on handle hover"
     )
     assert(
@@ -885,10 +822,7 @@ return function()
 
     frame.scripts.OnMouseUp(frame, "LeftButton")
     assert(persistedState ~= nil, "expected contacts resize mouseup to persist state")
-    assert(
-      persistedState.contactsWidth == 160,
-      "expected persisted contacts width 160, got " .. tostring(persistedState.contactsWidth)
-    )
+    assert(persistedState.contactsWidth == 160, "expected persisted contacts width 160, got " .. tostring(persistedState.contactsWidth))
   end
 
   -- test_resize_grip_honors_layout_min_width_without_resizebounds_field
@@ -938,9 +872,6 @@ return function()
     Theme.LAYOUT.WINDOW_MIN_WIDTH = originalMinWidth
 
     assert(relayoutArgs ~= nil, "expected resize to commit when LAYOUT min is used")
-    assert(
-      relayoutArgs.width == 400,
-      "expected committed width clamped to LAYOUT.WINDOW_MIN_WIDTH=400, got " .. tostring(relayoutArgs.width)
-    )
+    assert(relayoutArgs.width == 400, "expected committed width clamped to LAYOUT.WINDOW_MIN_WIDTH=400, got " .. tostring(relayoutArgs.width))
   end
 end

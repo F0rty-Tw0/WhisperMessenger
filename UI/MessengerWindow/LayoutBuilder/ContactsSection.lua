@@ -6,10 +6,8 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local LayoutMetrics = ns.MessengerWindowLayoutMetrics
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
-local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI
-  or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
+local LayoutMetrics = ns.MessengerWindowLayoutMetrics or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContactsSection = {}

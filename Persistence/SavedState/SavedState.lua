@@ -6,10 +6,10 @@ end
 local Schema = ns.Schema or require("WhisperMessenger.Persistence.Schema")
 local Migrations = ns.Migrations or require("WhisperMessenger.Persistence.Migrations")
 local Helpers = ns.PersistenceHelpers or require("WhisperMessenger.Persistence.Helpers")
-local LegacyMigration = ns.SavedStateLegacyMigration
-  or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")
-local PrefixMigration = ns.SavedStatePrefixMigration
-  or require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
+-- stylua: ignore start
+local LegacyMigration = ns.SavedStateLegacyMigration or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")
+local PrefixMigration = ns.SavedStatePrefixMigration or require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
+-- stylua: ignore end
 
 local SavedState = {}
 

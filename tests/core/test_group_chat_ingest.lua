@@ -117,10 +117,7 @@ return function()
     local expectedKey = "instance::arthas-area52"
     local conv = state.store.conversations[expectedKey]
     assert(conv ~= nil, "conversation should exist at key " .. expectedKey)
-    assert(
-      conv.channel == ChannelType.INSTANCE_CHAT,
-      "channel should be INSTANCE_CHAT, got: " .. tostring(conv.channel)
-    )
+    assert(conv.channel == ChannelType.INSTANCE_CHAT, "channel should be INSTANCE_CHAT, got: " .. tostring(conv.channel))
     assert(conv.messages[1].channel == ChannelType.INSTANCE_CHAT, "message channel should be INSTANCE_CHAT")
     assert(conv.conversationKey == expectedKey, "conversationKey stamp missing")
   end
@@ -168,10 +165,7 @@ return function()
     local expectedKey = "bnconv::42"
     local conv = state.store.conversations[expectedKey]
     assert(conv ~= nil, "conversation should exist at key " .. expectedKey)
-    assert(
-      conv.channel == ChannelType.BN_CONVERSATION,
-      "channel should be BN_CONVERSATION, got: " .. tostring(conv.channel)
-    )
+    assert(conv.channel == ChannelType.BN_CONVERSATION, "channel should be BN_CONVERSATION, got: " .. tostring(conv.channel))
     assert(conv.messages[1].text == "hey bnet friends", "text mismatch")
     assert(conv.conversationKey == expectedKey, "conversationKey stamp missing")
   end
@@ -245,14 +239,8 @@ return function()
     local conv = state.store.conversations["party::arthas-area52"]
     local msg = conv.messages[1]
     assert(msg.direction == "out", "expected outgoing")
-    assert(
-      msg.senderClassTag == "DRUID",
-      "outgoing group message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag)
-    )
-    assert(
-      msg.senderName == "Arthas",
-      "outgoing group message should stamp senderName (short form), got: " .. tostring(msg.senderName)
-    )
+    assert(msg.senderClassTag == "DRUID", "outgoing group message should stamp senderClassTag, got: " .. tostring(msg.senderClassTag))
+    assert(msg.senderName == "Arthas", "outgoing group message should stamp senderName (short form), got: " .. tostring(msg.senderName))
   end
 
   -- ----------------------------------------------------------------
@@ -278,10 +266,7 @@ return function()
 
     local conv = state.store.conversations["party::arthas-area52"]
     local msg = conv.messages[1]
-    assert(
-      msg.senderClassTag == "MAGE",
-      "should prefer resolved playerInfo.classTag over UnitClass, got: " .. tostring(msg.senderClassTag)
-    )
+    assert(msg.senderClassTag == "MAGE", "should prefer resolved playerInfo.classTag over UnitClass, got: " .. tostring(msg.senderClassTag))
   end
 
   -- ----------------------------------------------------------------
@@ -379,10 +364,7 @@ return function()
 
     assert(state.pendingOutgoing.sentinel == "keep-me", "pendingOutgoing must not be mutated by group ingest")
     assert(state.availabilityByGUID.sentinel == "keep-me-too", "availabilityByGUID must not be mutated by group ingest")
-    assert(
-      state.lastIncomingWhisperKey == "whisper::some-key",
-      "lastIncomingWhisperKey must not be mutated by group ingest"
-    )
+    assert(state.lastIncomingWhisperKey == "whisper::some-key", "lastIncomingWhisperKey must not be mutated by group ingest")
   end
 
   -- ----------------------------------------------------------------
@@ -467,10 +449,7 @@ return function()
     }
     local secret = setmetatable({}, throwingMt)
     local mine = setmetatable({}, throwingMt)
-    assert(
-      GroupChatIngest._compareGuids(secret, mine) == false,
-      "compareGuids must swallow secret-string throws and return false"
-    )
+    assert(GroupChatIngest._compareGuids(secret, mine) == false, "compareGuids must swallow secret-string throws and return false")
     assert(GroupChatIngest._compareGuids(nil, "x") == false, "nil guid yields false")
     assert(GroupChatIngest._compareGuids("x", nil) == false, "nil localGuid yields false")
     assert(GroupChatIngest._compareGuids("x", "x") == true, "matching plain guids yields true")
@@ -507,9 +486,6 @@ return function()
 
     local conv = state.store.conversations["party::arthas-area52"]
     assert(conv ~= nil, "conversation should exist")
-    assert(
-      conv.unreadCount == 0,
-      "outgoing messages must not increment unreadCount, got: " .. tostring(conv.unreadCount)
-    )
+    assert(conv.unreadCount == 0, "outgoing messages must not increment unreadCount, got: " .. tostring(conv.unreadCount))
   end
 end

@@ -254,11 +254,7 @@ end
 
 function BNetResolver.ScanFriendList(bnetApi)
   local byBattleTag = {}
-  if
-    type(bnetApi) ~= "table"
-    or type(bnetApi.GetNumFriends) ~= "function"
-    or type(bnetApi.GetFriendAccountInfo) ~= "function"
-  then
+  if type(bnetApi) ~= "table" or type(bnetApi.GetNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
     return byBattleTag
   end
   local ok, numFriends = pcall(bnetApi.GetNumFriends)

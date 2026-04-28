@@ -9,8 +9,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 
 local createOptionButton = UIHelpers.createOptionButton
 
-local ButtonSelector = ns.MessengerWindowButtonSelector
-  or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 
 local GeneralSettings = {}
 
@@ -175,13 +174,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
     labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
   })
-  timeSourceSelector.row:SetPoint(
-    "TOPLEFT",
-    timeFormatSelector.row,
-    "BOTTOMLEFT",
-    0,
-    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
-  )
+  timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local normalColors = SettingsControls.OptionButtonColors(Theme)
   local resetButton = createOptionButton(

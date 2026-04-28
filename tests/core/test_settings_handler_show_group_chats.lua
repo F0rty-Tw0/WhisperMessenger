@@ -35,10 +35,7 @@ return function()
 
     assert(accountSettings.showGroupChats == false, "accountSettings.showGroupChats should be persisted as false")
     assert(#calls.setTabMode == 1, "setTabMode should be invoked once when disabling, got: " .. #calls.setTabMode)
-    assert(
-      calls.setTabMode[1] == "whispers",
-      'setTabMode should be called with "whispers" when disabling, got: ' .. tostring(calls.setTabMode[1])
-    )
+    assert(calls.setTabMode[1] == "whispers", 'setTabMode should be called with "whispers" when disabling, got: ' .. tostring(calls.setTabMode[1]))
     assert(
       calls.refreshTabToggleVisibility == 1,
       "refreshTabToggleVisibility should be called exactly once, got: " .. calls.refreshTabToggleVisibility
@@ -55,10 +52,7 @@ return function()
     onChange("showGroupChats", true)
 
     assert(accountSettings.showGroupChats == true, "accountSettings.showGroupChats should be persisted as true")
-    assert(
-      #calls.setTabMode == 0,
-      "setTabMode should NOT be called when enabling (user's last mode is preserved), got: " .. #calls.setTabMode
-    )
+    assert(#calls.setTabMode == 0, "setTabMode should NOT be called when enabling (user's last mode is preserved), got: " .. #calls.setTabMode)
     assert(
       calls.refreshTabToggleVisibility == 1,
       "refreshTabToggleVisibility should be called exactly once, got: " .. calls.refreshTabToggleVisibility

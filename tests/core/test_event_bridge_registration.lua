@@ -18,10 +18,7 @@ return function()
     local ok, err = pcall(EventBridge.RegisterLiveEvents, frame)
     assert(ok, "RegisterLiveEvents should skip unsupported events instead of crashing: " .. tostring(err))
     assert(registered.CHAT_MSG_WHISPER == true, "supported whisper events should still register")
-    assert(
-      registered.CAN_LOCAL_WHISPER_TARGET_RESPONSE == nil,
-      "unsupported whisper availability event should be skipped"
-    )
+    assert(registered.CAN_LOCAL_WHISPER_TARGET_RESPONSE == nil, "unsupported whisper availability event should be skipped")
   end
 
   -- test_register_and_unregister_lifecycle_events_skip_unknown_events
@@ -46,18 +43,12 @@ return function()
     end
 
     local registerOk, registerErr = pcall(EventBridge.RegisterSuspendableLifecycleEvents, frame)
-    assert(
-      registerOk,
-      "RegisterSuspendableLifecycleEvents should skip unsupported lifecycle events: " .. tostring(registerErr)
-    )
+    assert(registerOk, "RegisterSuspendableLifecycleEvents should skip unsupported lifecycle events: " .. tostring(registerErr))
     assert(registered.GUILD_ROSTER_UPDATE == true, "supported lifecycle events should still register")
     assert(registered.CLUB_MEMBER_UPDATED == nil, "unsupported lifecycle events should be skipped")
 
     local unregisterOk, unregisterErr = pcall(EventBridge.UnregisterSuspendableLifecycleEvents, frame)
-    assert(
-      unregisterOk,
-      "UnregisterSuspendableLifecycleEvents should skip unsupported lifecycle events: " .. tostring(unregisterErr)
-    )
+    assert(unregisterOk, "UnregisterSuspendableLifecycleEvents should skip unsupported lifecycle events: " .. tostring(unregisterErr))
     assert(unregistered.GUILD_ROSTER_UPDATE == true, "supported lifecycle events should still unregister")
     assert(unregistered.CLUB_MEMBER_UPDATED == nil, "unsupported lifecycle unregistration should be skipped")
   end
@@ -88,11 +79,7 @@ return function()
 
     local found = false
     for _, call in ipairs(printed) do
-      if
-        call[1] == "[WM]"
-        and type(call[2]) == "string"
-        and string.find(call[2], "CAN_LOCAL_WHISPER_TARGET_RESPONSE", 1, true)
-      then
+      if call[1] == "[WM]" and type(call[2]) == "string" and string.find(call[2], "CAN_LOCAL_WHISPER_TARGET_RESPONSE", 1, true) then
         found = true
         break
       end

@@ -78,16 +78,10 @@ return function()
   assert(paneCleared == true, "first switch to Groups with no prior group selection should clear the pane")
 
   window.setTabMode("whispers")
-  assert(
-    paneSelectedKey == "me::WOW::jaina",
-    "switching back to Whispers should restore jaina, got: " .. tostring(paneSelectedKey)
-  )
+  assert(paneSelectedKey == "me::WOW::jaina", "switching back to Whispers should restore jaina, got: " .. tostring(paneSelectedKey))
 
   window.setTabMode("groups")
-  assert(
-    paneCleared == true,
-    "second switch to Groups must clear the pane (no group was ever selected), got key: " .. tostring(paneSelectedKey)
-  )
+  assert(paneCleared == true, "second switch to Groups must clear the pane (no group was ever selected), got key: " .. tostring(paneSelectedKey))
 
   -- Now select a group, roundtrip, and confirm the group is restored.
   assert(window.selectConversation("PARTY::1") == true, "party row should be selectable")
@@ -97,10 +91,7 @@ return function()
   assert(paneSelectedKey == "me::WOW::jaina", "whispers restore: jaina")
 
   window.setTabMode("groups")
-  assert(
-    paneSelectedKey == "PARTY::1",
-    "groups restore: party should be re-shown, not jaina, got: " .. tostring(paneSelectedKey)
-  )
+  assert(paneSelectedKey == "PARTY::1", "groups restore: party should be re-shown, not jaina, got: " .. tostring(paneSelectedKey))
 
   ConversationPane.Refresh = originalRefresh
 
@@ -145,10 +136,7 @@ return function()
   assert(paneSelectedKey2 == "me::WOW::thrall", "thrall should be shown")
 
   window2.setTabMode("groups")
-  assert(
-    paneSelectedKey2 == nil,
-    "groups tab should be empty (no group ever selected), got key: " .. tostring(paneSelectedKey2)
-  )
+  assert(paneSelectedKey2 == nil, "groups tab should be empty (no group ever selected), got key: " .. tostring(paneSelectedKey2))
 
   ConversationPane.Refresh = originalRefresh
 
@@ -195,10 +183,7 @@ return function()
     paneSelectedKey3 ~= "me::WOW::jaina",
     "Groups tab must not restore the whisper after a roundtrip — whisper should never leak into the groups-tab memory"
   )
-  assert(
-    paneSelectedKey3 == nil,
-    "Groups tab should be empty after roundtrip with no group ever selected, got: " .. tostring(paneSelectedKey3)
-  )
+  assert(paneSelectedKey3 == nil, "Groups tab should be empty after roundtrip with no group ever selected, got: " .. tostring(paneSelectedKey3))
 
   ConversationPane.Refresh = originalRefresh
   _G.UIParent = savedUIParent
