@@ -163,8 +163,10 @@ UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
 UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua
+UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/BehaviorSettings.lua
+UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua

@@ -40,6 +40,48 @@ function SettingsControls.OptionButtonColors(activeTheme)
   }
 end
 
+-- Settings panel header (title + hint) ----------------------------------------
+
+function SettingsControls.CreateHeader(frame, opts)
+  opts = opts or {}
+  local PADDING = Theme.CONTENT_PADDING
+  local CONTROL_WIDTH = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+
+  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+  title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
+  title:SetText(opts.title or "")
+  UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
+
+  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+  hint:SetText(opts.hint or "")
+  if hint.SetWordWrap then
+    hint:SetWordWrap(true)
+  end
+  if hint.SetJustifyH then
+    hint:SetJustifyH("LEFT")
+  end
+  if hint.SetWidth then
+    hint:SetWidth(CONTROL_WIDTH)
+  end
+  UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
+
+  return {
+    title = title,
+    hint = hint,
+    refreshTheme = function(activeTheme)
+      activeTheme = activeTheme or Theme
+      UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
+      UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
+    end,
+    refreshLayout = function(width)
+      if hint.SetWidth and type(width) == "number" and width > 0 then
+        hint:SetWidth(width)
+      end
+    end,
+  }
+end
+
 -- Slider row ------------------------------------------------------------------
 
 function SettingsControls.CreateSliderRow(factory, parent, spec)
@@ -167,6 +209,112 @@ function SettingsControls.ProjectLabeledOptions(keys, labelMap, fallback)
     options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
   end
   return options
+end
+
+-- Panel registry --------------------------------------------------------------
+--
+-- Owns the lifecycle wiring shared by every settings panel:
+--   * reset      — on the panel's "Reset to Defaults" button
+--   * refreshTheme — when the active theme/preset changes
+--   * refreshLayout — when the panel width changes
+--
+-- A panel binds each control once with its widget type, config key, and
+-- default value; the registry then iterates them. Adding a new control no
+-- longer requires touching three or four sibling code paths — it just gets
+-- picked up by every iterator that already exists.
+--
+-- Bind options:
+--   type        — "toggle" | "slider" | "selector" | "optionButton" | "custom"
+--   key         — config key passed to onChange on reset (omit for non-resetting)
+--   default     — default value used by reset (omit for non-resetting)
+--   reset       — function(control, onChange) override for non-standard resets
+--                 (e.g. profanity filter writes a CVar instead of onChange)
+
+local function defaultReset(item, onChange)
+  if item.key == nil or item.default == nil then
+    return
+  end
+  local control = item.control
+  if item.type == "slider" then
+    -- Slider:SetValue triggers OnValueChanged, which in turn invokes the
+    -- per-row onChange callback registered in CreateSliderRow. Calling
+    -- onChange manually here would double-fire it.
+    if control.slider and control.slider.SetValue then
+      control.slider:SetValue(item.default)
+    end
+    return
+  end
+  if item.type == "toggle" then
+    control.setValue(item.default)
+  elseif item.type == "selector" then
+    control.setSelected(item.default)
+  end
+  if onChange then
+    onChange(item.key, item.default)
+  end
+end
+
+function SettingsControls.NewPanelRegistry()
+  local registry = { items = {} }
+
+  function registry:bind(control, opts)
+    opts = opts or {}
+    self.items[#self.items + 1] = {
+      control = control,
+      type = opts.type or "custom",
+      key = opts.key,
+      default = opts.default,
+      reset = opts.reset,
+    }
+    return control
+  end
+
+  function registry:reset(onChange)
+    for _, item in ipairs(self.items) do
+      if item.reset then
+        item.reset(item.control, onChange)
+      else
+        defaultReset(item, onChange)
+      end
+    end
+  end
+
+  function registry:refreshTheme(activeTheme)
+    local toggleColors = SettingsControls.ToggleColors(activeTheme)
+    local selectorColors = SettingsControls.SelectorColors(activeTheme)
+    local optionButtonColors = SettingsControls.OptionButtonColors(activeTheme)
+    for _, item in ipairs(self.items) do
+      local control = item.control
+      if item.type == "toggle" then
+        if control.applyThemeColors then
+          control.applyThemeColors(toggleColors)
+        end
+      elseif item.type == "slider" then
+        if control.applyTheme then
+          control.applyTheme(activeTheme)
+        end
+      elseif item.type == "selector" then
+        if control.applyTheme then
+          control.applyTheme(activeTheme, selectorColors)
+        end
+      elseif item.type == "optionButton" then
+        if control.applyThemeColors then
+          control.applyThemeColors(optionButtonColors)
+        end
+      end
+    end
+  end
+
+  function registry:refreshLayout(width)
+    for _, item in ipairs(self.items) do
+      local control = item.control
+      if type(control.setWidth) == "function" then
+        control.setWidth(width)
+      end
+    end
+  end
+
+  return registry
 end
 
 ns.SettingsControls = SettingsControls

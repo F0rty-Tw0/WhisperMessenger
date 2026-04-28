@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local SoundSelector = ns.NotificationSettingsSoundSelector or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings.SoundSelector")
 
 local NotificationSettings = {}
 
@@ -16,7 +17,7 @@ local DEFAULTS = {
   badgePulse = true,
   playSoundOnWhisper = false,
   showUnreadBadge = true,
-  notificationSound = "whisper",
+  notificationSound = SoundSelector.DEFAULT_SOUND,
   iconSize = 42,
   iconDesaturated = true,
   showWidgetMessagePreview = true,
@@ -30,50 +31,6 @@ local POSITION_OPTIONS = {
   { key = "top", label = "Above" },
   { key = "bottom", label = "Below" },
 }
-
-local SOUND_OPTIONS = {
-  { key = "whisper", label = "Whisper" },
-  { key = "ping", label = "Ping" },
-  { key = "chime", label = "Chime" },
-  { key = "bell", label = "Bell" },
-  { key = "raid_warning", label = "RW" },
-  { key = "ready", label = "Ready" },
-  { key = "queue", label = "Queue" },
-  { key = "alert", label = "Alert" },
-  { key = "sigil", label = "Sigil" },
-  { key = "map", label = "Map" },
-  { key = "ding", label = "Ding" },
-  { key = "glyph", label = "Glyph" },
-  { key = "orb", label = "Orb" },
-  { key = "spark", label = "Spark" },
-  { key = "echo", label = "Echo" },
-  { key = "pulse", label = "Pulse" },
-}
-
-local function createSoundSelector(factory, parent, initial, colors, onChange)
-  return ButtonSelector.Create(factory, parent, {
-    labelText = "Notification sound",
-    optionsList = SOUND_OPTIONS,
-    fallbackKey = DEFAULTS.notificationSound,
-    initial = initial,
-    colors = colors,
-    onChange = function(value)
-      if onChange then
-        onChange(value)
-      end
-      local SoundPlayer = ns.SoundPlayer
-      if SoundPlayer and SoundPlayer.Preview then
-        SoundPlayer.Preview(value)
-      end
-    end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    buttonWidth = 50,
-    buttonHeight = 26,
-    buttonSpacing = 4,
-    maxPerRow = 6,
-  })
-end
 
 local function pxFormat(v)
   return tostring(math.floor(v + 0.5)) .. "px"
@@ -95,131 +52,125 @@ function NotificationSettings.Create(factory, parent, config, options)
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
 
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
-  title:SetText("Notifications")
-  UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
-
-  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText("Configure alerts for incoming messages.")
-  if hint.SetWordWrap then
-    hint:SetWordWrap(true)
-  end
-  if hint.SetJustifyH then
-    hint:SetJustifyH("LEFT")
-  end
-  if hint.SetWidth then
-    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
-  end
-  UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
+  local header = SettingsControls.CreateHeader(frame, {
+    title = "Notifications",
+    hint = "Configure alerts for incoming messages.",
+  })
+  local hint = header.hint
 
   local toggleColors = SettingsControls.ToggleColors(Theme)
   local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
-
+  local selectorColors = SettingsControls.SelectorColors(Theme)
   local rowSpacing = -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  local panel = SettingsControls.NewPanelRegistry()
 
-  local playSoundToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Play sound on new whisper",
-    config.playSoundOnWhisper == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("playSoundOnWhisper", value)
-    end,
-    {
+  local playSoundToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
       "Play sound on new whisper",
-      "Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound.",
-    }
+      config.playSoundOnWhisper == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("playSoundOnWhisper", value)
+      end,
+      {
+        "Play sound on new whisper",
+        "Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound.",
+      }
+    ),
+    { type = "toggle", key = "playSoundOnWhisper", default = DEFAULTS.playSoundOnWhisper }
   )
   playSoundToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
-  local selectorColors = SettingsControls.SelectorColors(Theme)
-  local soundSelector = createSoundSelector(factory, frame, config.notificationSound or DEFAULTS.notificationSound, selectorColors, function(value)
-    onChange("notificationSound", value)
-  end)
+  local soundSelector = panel:bind(
+    SoundSelector.Create(factory, frame, {
+      initial = config.notificationSound or DEFAULTS.notificationSound,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("notificationSound", value)
+      end,
+    }),
+    { type = "selector", key = "notificationSound", default = DEFAULTS.notificationSound }
+  )
   soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local iconSizeRow = SettingsControls.CreateSliderRow(factory, frame, {
-    label = "Icon Size",
-    min = 24,
-    max = 64,
-    step = 2,
-    initial = config.iconSize or DEFAULTS.iconSize,
-    formatFn = pxFormat,
-    onChange = function(value)
-      onChange("iconSize", value)
-    end,
-  })
+  local iconSizeRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = "Icon Size",
+      min = 24,
+      max = 64,
+      step = 2,
+      initial = config.iconSize or DEFAULTS.iconSize,
+      formatFn = pxFormat,
+      onChange = function(value)
+        onChange("iconSize", value)
+      end,
+    }),
+    { type = "slider", key = "iconSize", default = DEFAULTS.iconSize }
+  )
   iconSizeRow.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local iconDesaturatedToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Desaturate icon when idle",
-    config.iconDesaturated ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("iconDesaturated", value)
-    end,
-    {
+  local iconDesaturatedToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
       "Desaturate icon when idle",
-      "Greyscales the toggle icon when there are no unread messages.",
-    }
+      config.iconDesaturated ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("iconDesaturated", value)
+      end,
+      {
+        "Desaturate icon when idle",
+        "Greyscales the toggle icon when there are no unread messages.",
+      }
+    ),
+    { type = "toggle", key = "iconDesaturated", default = DEFAULTS.iconDesaturated }
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local showBadgeToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Show unread badge",
-    config.showUnreadBadge ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
+  local showBadgeToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, "Show unread badge", config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
       onChange("showUnreadBadge", value)
-    end,
-    {
+    end, {
       "Show unread badge",
       "Displays an unread message count on the toggle icon.",
-    }
+    }),
+    { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
   )
   showBadgeToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local badgePulseToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Badge pulse animation",
-    config.badgePulse ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
+  local badgePulseToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, "Badge pulse animation", config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
       onChange("badgePulse", value)
-    end,
-    {
+    end, {
       "Badge pulse animation",
       "Plays a pulsing glow on the unread badge when new whispers arrive.",
-    }
+    }),
+    { type = "toggle", key = "badgePulse", default = DEFAULTS.badgePulse }
   )
   badgePulseToggle.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local widgetMessagePreviewToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Show widget message preview",
-    config.showWidgetMessagePreview ~= false,
-    toggleColors,
-    toggleLayout,
-    function(value)
-      onChange("showWidgetMessagePreview", value)
-    end,
-    {
+  local widgetMessagePreviewToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
       "Show widget message preview",
-      "Shows sender name and the latest incoming whisper preview on the draggable widget.",
-    }
+      config.showWidgetMessagePreview ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("showWidgetMessagePreview", value)
+      end,
+      {
+        "Show widget message preview",
+        "Shows sender name and the latest incoming whisper preview on the draggable widget.",
+      }
+    ),
+    { type = "toggle", key = "showWidgetMessagePreview", default = DEFAULTS.showWidgetMessagePreview }
   )
   widgetMessagePreviewToggle.row:SetPoint("TOPLEFT", badgePulseToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
@@ -227,65 +178,56 @@ function NotificationSettings.Create(factory, parent, config, options)
   if initialAutoDismiss == nil then
     initialAutoDismiss = DEFAULTS.widgetPreviewAutoDismissSeconds
   end
-  local autoDismissRow = SettingsControls.CreateSliderRow(factory, frame, {
-    label = "Auto-dismiss widget preview",
-    min = 0,
-    max = 120,
-    step = 5,
-    initial = initialAutoDismiss,
-    formatFn = secondsFormat,
-    onChange = function(value)
-      onChange("widgetPreviewAutoDismissSeconds", value)
-    end,
-  })
+  local autoDismissRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = "Auto-dismiss widget preview",
+      min = 0,
+      max = 120,
+      step = 5,
+      initial = initialAutoDismiss,
+      formatFn = secondsFormat,
+      onChange = function(value)
+        onChange("widgetPreviewAutoDismissSeconds", value)
+      end,
+    }),
+    { type = "slider", key = "widgetPreviewAutoDismissSeconds", default = DEFAULTS.widgetPreviewAutoDismissSeconds }
+  )
   autoDismissRow.row:SetPoint("TOPLEFT", widgetMessagePreviewToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local positionSelector = ButtonSelector.Create(factory, frame, {
-    labelText = "Widget preview position",
-    optionsList = POSITION_OPTIONS,
-    fallbackKey = DEFAULTS.widgetPreviewPosition,
-    initial = config.widgetPreviewPosition or DEFAULTS.widgetPreviewPosition,
-    colors = selectorColors,
-    onChange = function(value)
-      onChange("widgetPreviewPosition", value)
-    end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    buttonWidth = 60,
-    buttonHeight = 26,
-    buttonSpacing = 4,
-    maxPerRow = 4,
-  })
+  local positionSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = "Widget preview position",
+      optionsList = POSITION_OPTIONS,
+      fallbackKey = DEFAULTS.widgetPreviewPosition,
+      initial = config.widgetPreviewPosition or DEFAULTS.widgetPreviewPosition,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("widgetPreviewPosition", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 60,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 4,
+    }),
+    { type = "selector", key = "widgetPreviewPosition", default = DEFAULTS.widgetPreviewPosition }
+  )
   positionSelector.row:SetPoint("TOPLEFT", autoDismissRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local normalColors = SettingsControls.OptionButtonColors(Theme)
-  local resetButton = UIHelpers.createOptionButton(
-    factory,
-    frame,
-    "Reset to Defaults",
-    normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+  local resetButton = panel:bind(
+    UIHelpers.createOptionButton(
+      factory,
+      frame,
+      "Reset to Defaults",
+      SettingsControls.OptionButtonColors(Theme),
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+    ),
+    { type = "optionButton" }
   )
   resetButton:SetPoint("TOPLEFT", positionSelector.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    playSoundToggle.setValue(DEFAULTS.playSoundOnWhisper)
-    onChange("playSoundOnWhisper", DEFAULTS.playSoundOnWhisper)
-    soundSelector.setSelected(DEFAULTS.notificationSound)
-    onChange("notificationSound", DEFAULTS.notificationSound)
-    iconSizeRow.slider:SetValue(DEFAULTS.iconSize)
-    onChange("iconSize", DEFAULTS.iconSize)
-    iconDesaturatedToggle.setValue(DEFAULTS.iconDesaturated)
-    onChange("iconDesaturated", DEFAULTS.iconDesaturated)
-    showBadgeToggle.setValue(DEFAULTS.showUnreadBadge)
-    onChange("showUnreadBadge", DEFAULTS.showUnreadBadge)
-    badgePulseToggle.setValue(DEFAULTS.badgePulse)
-    onChange("badgePulse", DEFAULTS.badgePulse)
-    widgetMessagePreviewToggle.setValue(DEFAULTS.showWidgetMessagePreview)
-    onChange("showWidgetMessagePreview", DEFAULTS.showWidgetMessagePreview)
-    autoDismissRow.slider:SetValue(DEFAULTS.widgetPreviewAutoDismissSeconds)
-    onChange("widgetPreviewAutoDismissSeconds", DEFAULTS.widgetPreviewAutoDismissSeconds)
-    positionSelector.setSelected(DEFAULTS.widgetPreviewPosition)
-    onChange("widgetPreviewPosition", DEFAULTS.widgetPreviewPosition)
+    panel:reset(onChange)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -295,24 +237,8 @@ function NotificationSettings.Create(factory, parent, config, options)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
-    UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
-    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
-
-    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
-    badgePulseToggle.applyThemeColors(activeToggleColors)
-    playSoundToggle.applyThemeColors(activeToggleColors)
-    showBadgeToggle.applyThemeColors(activeToggleColors)
-    iconDesaturatedToggle.applyThemeColors(activeToggleColors)
-    widgetMessagePreviewToggle.applyThemeColors(activeToggleColors)
-
-    iconSizeRow.applyTheme(activeTheme)
-    autoDismissRow.applyTheme(activeTheme)
-    soundSelector.applyTheme(activeTheme, SettingsControls.SelectorColors(activeTheme))
-    positionSelector.applyTheme(activeTheme, SettingsControls.SelectorColors(activeTheme))
-
-    if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
-    end
+    header.refreshTheme(activeTheme)
+    panel:refreshTheme(activeTheme)
   end
 
   refreshTheme(Theme)
@@ -323,21 +249,8 @@ function NotificationSettings.Create(factory, parent, config, options)
     end
     local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
-    if hint.SetWidth then
-      hint:SetWidth(effective)
-    end
-    playSoundToggle.setWidth(effective)
-    soundSelector.setWidth(effective)
-    iconSizeRow.setWidth(effective)
-    iconDesaturatedToggle.setWidth(effective)
-    showBadgeToggle.setWidth(effective)
-    badgePulseToggle.setWidth(effective)
-    widgetMessagePreviewToggle.setWidth(effective)
-    autoDismissRow.setWidth(effective)
-    positionSelector.setWidth(effective)
-    if resetButton.setWidth then
-      resetButton.setWidth(effective)
-    end
+    header.refreshLayout(effective)
+    panel:refreshLayout(effective)
   end
 
   return {

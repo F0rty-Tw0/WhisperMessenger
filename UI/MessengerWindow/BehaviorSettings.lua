@@ -29,24 +29,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
 
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
-  title:SetText("Behavior")
-  UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
-
-  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText("Control how the messenger window behaves.")
-  if hint.SetWordWrap then
-    hint:SetWordWrap(true)
-  end
-  if hint.SetJustifyH then
-    hint:SetJustifyH("LEFT")
-  end
-  if hint.SetWidth then
-    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
-  end
-  UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
+  local header = SettingsControls.CreateHeader(frame, {
+    title = "Behavior",
+    hint = "Control how the messenger window behaves.",
+  })
+  local hint = header.hint
 
   local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
 
@@ -157,34 +144,38 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local doubleEscapeToggle = toggles[7]
   local showGroupChatsToggle = toggles[8]
 
-  local normalColors = SettingsControls.OptionButtonColors(Theme)
-  local resetButton = UIHelpers.createOptionButton(
-    factory,
-    frame,
-    "Reset to Defaults",
-    normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+  local panel = SettingsControls.NewPanelRegistry()
+  panel:bind(dimToggle, { type = "toggle", key = "dimWhenMoving", default = DEFAULTS.dimWhenMoving })
+  panel:bind(autoFocusToggle, { type = "toggle", key = "autoFocusComposer", default = DEFAULTS.autoFocusComposer })
+  panel:bind(hideFromDefaultChatToggle, { type = "toggle", key = "hideFromDefaultChat", default = DEFAULTS.hideFromDefaultChat })
+  -- Profanity filter writes a CVar instead of routing through onChange.
+  panel:bind(profanityFilterToggle, {
+    type = "toggle",
+    reset = function(control)
+      control.setValue(true)
+      if _G.SetCVar then
+        _G.SetCVar("profanityFilter", "1")
+      end
+    end,
+  })
+  panel:bind(autoOpenIncomingToggle, { type = "toggle", key = "autoOpenIncoming", default = DEFAULTS.autoOpenIncoming })
+  panel:bind(autoOpenOutgoingToggle, { type = "toggle", key = "autoOpenOutgoing", default = DEFAULTS.autoOpenOutgoing })
+  panel:bind(doubleEscapeToggle, { type = "toggle", key = "doubleEscapeToClose", default = DEFAULTS.doubleEscapeToClose })
+  panel:bind(showGroupChatsToggle, { type = "toggle", key = "showGroupChats", default = DEFAULTS.showGroupChats })
+
+  local resetButton = panel:bind(
+    UIHelpers.createOptionButton(
+      factory,
+      frame,
+      "Reset to Defaults",
+      SettingsControls.OptionButtonColors(Theme),
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+    ),
+    { type = "optionButton" }
   )
   resetButton:SetPoint("TOPLEFT", showGroupChatsToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    dimToggle.setValue(DEFAULTS.dimWhenMoving)
-    onChange("dimWhenMoving", DEFAULTS.dimWhenMoving)
-    autoFocusToggle.setValue(DEFAULTS.autoFocusComposer)
-    onChange("autoFocusComposer", DEFAULTS.autoFocusComposer)
-    hideFromDefaultChatToggle.setValue(DEFAULTS.hideFromDefaultChat)
-    onChange("hideFromDefaultChat", DEFAULTS.hideFromDefaultChat)
-    autoOpenIncomingToggle.setValue(DEFAULTS.autoOpenIncoming)
-    onChange("autoOpenIncoming", DEFAULTS.autoOpenIncoming)
-    autoOpenOutgoingToggle.setValue(DEFAULTS.autoOpenOutgoing)
-    onChange("autoOpenOutgoing", DEFAULTS.autoOpenOutgoing)
-    doubleEscapeToggle.setValue(DEFAULTS.doubleEscapeToClose)
-    onChange("doubleEscapeToClose", DEFAULTS.doubleEscapeToClose)
-    profanityFilterToggle.setValue(true)
-    if _G.SetCVar then
-      _G.SetCVar("profanityFilter", "1")
-    end
-    showGroupChatsToggle.setValue(DEFAULTS.showGroupChats)
-    onChange("showGroupChats", DEFAULTS.showGroupChats)
+    panel:reset(onChange)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -197,17 +188,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
-    UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
-    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
-
-    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
-    for _, toggle in ipairs(toggles) do
-      toggle.applyThemeColors(activeToggleColors)
-    end
-
-    if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
-    end
+    header.refreshTheme(activeTheme)
+    panel:refreshTheme(activeTheme)
   end
 
   refreshTheme(Theme)
@@ -218,15 +200,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     end
     local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
-    if hint.SetWidth then
-      hint:SetWidth(effective)
-    end
-    for _, toggle in ipairs(toggles) do
-      toggle.setWidth(effective)
-    end
-    if resetButton.setWidth then
-      resetButton.setWidth(effective)
-    end
+    header.refreshLayout(effective)
+    panel:refreshLayout(effective)
   end
 
   return {

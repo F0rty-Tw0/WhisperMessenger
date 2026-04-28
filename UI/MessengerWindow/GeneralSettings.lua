@@ -43,161 +43,150 @@ function GeneralSettings.Create(factory, parent, config, options)
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
 
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
-  title:SetText("General Settings")
-  UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
-
-  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText("Configure message storage and retention limits.")
-  if hint.SetWordWrap then
-    hint:SetWordWrap(true)
-  end
-  if hint.SetJustifyH then
-    hint:SetJustifyH("LEFT")
-  end
-  if hint.SetWidth then
-    hint:SetWidth(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH)
-  end
-  UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
-
-  local messagesRow = SettingsControls.CreateSliderRow(factory, frame, {
-    label = "Max Messages Per Contact",
-    min = 50,
-    max = 500,
-    step = 10,
-    initial = config.maxMessagesPerConversation or 200,
-    onChange = function(value)
-      onChange("maxMessagesPerConversation", value)
-    end,
+  local header = SettingsControls.CreateHeader(frame, {
+    title = "General Settings",
+    hint = "Configure message storage and retention limits.",
   })
-  messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-
-  local conversationsRow = SettingsControls.CreateSliderRow(factory, frame, {
-    label = "Max Contacts",
-    min = 10,
-    max = 100,
-    step = 10,
-    initial = config.maxConversations or 100,
-    onChange = function(value)
-      onChange("maxConversations", value)
-    end,
-  })
-  conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-
-  local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
-  local retentionRow = SettingsControls.CreateSliderRow(factory, frame, {
-    label = "Message Retention (hours)",
-    min = 1,
-    max = 168,
-    step = 1,
-    initial = retentionHours,
-    onChange = function(value)
-      onChange("messageMaxAge", value * 3600)
-    end,
-  })
-  retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  local hint = header.hint
 
   local toggleColors = SettingsControls.ToggleColors(Theme)
   local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
+  local selectorColors = SettingsControls.SelectorColors(Theme)
+  local panel = SettingsControls.NewPanelRegistry()
+
+  local messagesRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = "Max Messages Per Contact",
+      min = 50,
+      max = 500,
+      step = 10,
+      initial = config.maxMessagesPerConversation or 200,
+      onChange = function(value)
+        onChange("maxMessagesPerConversation", value)
+      end,
+    }),
+    { type = "slider", key = "maxMessagesPerConversation", default = DEFAULTS.maxMessagesPerConversation }
+  )
+  messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+
+  local conversationsRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = "Max Contacts",
+      min = 10,
+      max = 100,
+      step = 10,
+      initial = config.maxConversations or 100,
+      onChange = function(value)
+        onChange("maxConversations", value)
+      end,
+    }),
+    { type = "slider", key = "maxConversations", default = DEFAULTS.maxConversations }
+  )
+  conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+
+  local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
+  -- Retention slider stores hours in the UI but the config is seconds; reset
+  -- has to convert the seconds-based default back to hours before SetValue.
+  local retentionRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = "Message Retention (hours)",
+      min = 1,
+      max = 168,
+      step = 1,
+      initial = retentionHours,
+      onChange = function(value)
+        onChange("messageMaxAge", value * 3600)
+      end,
+    }),
+    {
+      type = "slider",
+      reset = function(control)
+        control.slider:SetValue(math.floor(DEFAULTS.messageMaxAge / 3600 + 0.5))
+      end,
+    }
+  )
+  retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   privacyLabel:SetText("Privacy")
   UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
 
-  local clearOnLogoutToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Clear on logout",
-    config.clearOnLogout == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
+  local clearOnLogoutToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, "Clear on logout", config.clearOnLogout == true, toggleColors, toggleLayout, function(value)
       onChange("clearOnLogout", value)
-    end,
-    {
+    end, {
       "Clear on logout",
       "Deletes all saved conversations and contacts when you log out.",
-    }
+    }),
+    { type = "toggle", key = "clearOnLogout", default = DEFAULTS.clearOnLogout }
   )
   clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
 
-  local hidePreviewToggle = UIHelpers.createToggleRow(
-    factory,
-    frame,
-    "Hide message preview",
-    config.hideMessagePreview == true,
-    toggleColors,
-    toggleLayout,
-    function(value)
+  local hidePreviewToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, "Hide message preview", config.hideMessagePreview == true, toggleColors, toggleLayout, function(value)
       onChange("hideMessagePreview", value)
-    end,
-    {
+    end, {
       "Hide message preview",
       "Hides the last message preview text in the contacts list for privacy.",
-    }
+    }),
+    { type = "toggle", key = "hideMessagePreview", default = DEFAULTS.hideMessagePreview }
   )
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
-
-  local selectorColors = SettingsControls.SelectorColors(Theme)
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   timeLabel:SetText("Time Display")
   UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
 
-  local timeFormatSelector = ButtonSelector.Create(factory, frame, {
-    labelText = "Time Format",
-    optionsList = TIME_FORMAT_OPTIONS,
-    fallbackKey = DEFAULTS.timeFormat,
-    initial = config.timeFormat or DEFAULTS.timeFormat,
-    colors = selectorColors,
-    onChange = function(value)
-      onChange("timeFormat", value)
-    end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-  })
+  local timeFormatSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = "Time Format",
+      optionsList = TIME_FORMAT_OPTIONS,
+      fallbackKey = DEFAULTS.timeFormat,
+      initial = config.timeFormat or DEFAULTS.timeFormat,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("timeFormat", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+    }),
+    { type = "selector", key = "timeFormat", default = DEFAULTS.timeFormat }
+  )
   timeFormatSelector.row:SetPoint("TOPLEFT", timeLabel, "BOTTOMLEFT", 0, -12)
 
-  local timeSourceSelector = ButtonSelector.Create(factory, frame, {
-    labelText = "Time Source",
-    optionsList = TIME_SOURCE_OPTIONS,
-    fallbackKey = DEFAULTS.timeSource,
-    initial = config.timeSource or DEFAULTS.timeSource,
-    colors = selectorColors,
-    onChange = function(value)
-      onChange("timeSource", value)
-    end,
-    rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-    labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-  })
+  local timeSourceSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = "Time Source",
+      optionsList = TIME_SOURCE_OPTIONS,
+      fallbackKey = DEFAULTS.timeSource,
+      initial = config.timeSource or DEFAULTS.timeSource,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("timeSource", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+    }),
+    { type = "selector", key = "timeSource", default = DEFAULTS.timeSource }
+  )
   timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  local normalColors = SettingsControls.OptionButtonColors(Theme)
-  local resetButton = createOptionButton(
-    factory,
-    frame,
-    "Reset to Defaults",
-    normalColors,
-    { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+  local resetButton = panel:bind(
+    createOptionButton(
+      factory,
+      frame,
+      "Reset to Defaults",
+      SettingsControls.OptionButtonColors(Theme),
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+    ),
+    { type = "optionButton" }
   )
   resetButton:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
-    messagesRow.slider:SetValue(DEFAULTS.maxMessagesPerConversation)
-    conversationsRow.slider:SetValue(DEFAULTS.maxConversations)
-    retentionRow.slider:SetValue(math.floor(DEFAULTS.messageMaxAge / 3600 + 0.5))
-    clearOnLogoutToggle.setValue(DEFAULTS.clearOnLogout)
-    onChange("clearOnLogout", DEFAULTS.clearOnLogout)
-    hidePreviewToggle.setValue(DEFAULTS.hideMessagePreview)
-    onChange("hideMessagePreview", DEFAULTS.hideMessagePreview)
-    timeFormatSelector.setSelected(DEFAULTS.timeFormat)
-    onChange("timeFormat", DEFAULTS.timeFormat)
-    timeSourceSelector.setSelected(DEFAULTS.timeSource)
-    onChange("timeSource", DEFAULTS.timeSource)
+    panel:reset(onChange)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -207,26 +196,10 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
-    UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
-    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
+    header.refreshTheme(activeTheme)
     UIHelpers.setTextColor(privacyLabel, activeTheme.COLORS.text_secondary)
-
-    messagesRow.applyTheme(activeTheme)
-    conversationsRow.applyTheme(activeTheme)
-    retentionRow.applyTheme(activeTheme)
-
-    local activeToggleColors = SettingsControls.ToggleColors(activeTheme)
-    clearOnLogoutToggle.applyThemeColors(activeToggleColors)
-    hidePreviewToggle.applyThemeColors(activeToggleColors)
-
     UIHelpers.setTextColor(timeLabel, activeTheme.COLORS.text_secondary)
-    local activeSelectorColors = SettingsControls.SelectorColors(activeTheme)
-    timeFormatSelector.applyTheme(activeTheme, activeSelectorColors)
-    timeSourceSelector.applyTheme(activeTheme, activeSelectorColors)
-
-    if resetButton.applyThemeColors then
-      resetButton.applyThemeColors(SettingsControls.OptionButtonColors(activeTheme))
-    end
+    panel:refreshTheme(activeTheme)
   end
 
   refreshTheme(Theme)
@@ -237,19 +210,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     end
     local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
-    if hint.SetWidth then
-      hint:SetWidth(effective)
-    end
-    messagesRow.setWidth(effective)
-    conversationsRow.setWidth(effective)
-    retentionRow.setWidth(effective)
-    clearOnLogoutToggle.setWidth(effective)
-    hidePreviewToggle.setWidth(effective)
-    timeFormatSelector.setWidth(effective)
-    timeSourceSelector.setWidth(effective)
-    if resetButton.setWidth then
-      resetButton.setWidth(effective)
-    end
+    header.refreshLayout(effective)
+    panel:refreshLayout(effective)
   end
 
   return {
