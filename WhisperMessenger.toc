@@ -78,6 +78,7 @@ UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
 UI/ScrollView/Navigation.lua
@@ -95,6 +96,7 @@ UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
 UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
+UI/ChatBubble/HoverCopy.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
