@@ -52,6 +52,7 @@ Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 
 Core/Ingest/GroupChatIngest.lua
+Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
@@ -200,6 +201,11 @@ Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime/StartConversation.lua
+Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
+Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
+Core/Bootstrap/WindowRuntime/IconRuntime.lua
+Core/Bootstrap/WindowRuntime/ToggleFlow.lua
+Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua

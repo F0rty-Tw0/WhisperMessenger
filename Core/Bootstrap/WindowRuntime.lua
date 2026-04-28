@@ -10,7 +10,6 @@ local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.
 local WindowCoordinator = ns.BootstrapWindowCoordinator or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
-local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
@@ -29,6 +28,16 @@ local WidgetPreview = ns.BootstrapWindowRuntimeWidgetPreview
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
 local StartConversation = ns.BootstrapWindowRuntimeStartConversation
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.StartConversation")
+local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
+local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
+local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
+local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 
 local WindowRuntime = {}
 
@@ -108,91 +117,12 @@ function WindowRuntime.Create(options)
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
 
-  -- Per-character group key prefixes (excluding guild, which is
-  -- account-wide keyed by guild name — see isForeignCharacterGroup).
-  -- For these, when the trailing profileId on the key isn't the current
-  -- character's, the conversation is an alt's history and sending must
-  -- be blocked — otherwise the composer would forward the message to
-  -- the CURRENT character's group, which is a different channel than
-  -- what the UI is showing.
-  local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::" }
+  local groupSendPolicy = GroupSendPolicy.Create({
+    runtime = runtime,
+    chatGateway = ChatGateway,
+  })
 
-  local function resolvePlayerGuildName()
-    local getGuildInfo = _G.GetGuildInfo
-    if type(getGuildInfo) ~= "function" then
-      return nil
-    end
-    local ok, name = pcall(getGuildInfo, "player")
-    if not ok or type(name) ~= "string" or name == "" then
-      return nil
-    end
-    return name
-  end
-
-  local function isForeignCharacterGroup(conversation)
-    local conversationKey = conversation and conversation.conversationKey
-    if type(conversationKey) ~= "string" then
-      return false
-    end
-
-    -- Guild is account-wide: two alts in the same guild share the
-    -- conversation, so "foreign" is decided by whether the current
-    -- character is in the conversation's stored guild rather than by
-    -- a trailing profileId on the key.
-    if string.find(conversationKey, "guild::", 1, true) == 1 then
-      local storedGuildName = conversation.guildName
-      if type(storedGuildName) == "string" and storedGuildName ~= "" then
-        local playerGuildName = resolvePlayerGuildName()
-        if playerGuildName and string.lower(playerGuildName) == string.lower(storedGuildName) then
-          return false
-        end
-        return true
-      end
-      -- Legacy per-character guild key: fall back to profileId compare.
-      local owner = string.sub(conversationKey, 8)
-      return owner ~= "" and owner ~= runtime.localProfileId
-    end
-
-    for _, prefix in ipairs(FOREIGN_PROFILE_GROUP_PREFIXES) do
-      if string.find(conversationKey, prefix, 1, true) == 1 then
-        local owner = string.sub(conversationKey, #prefix + 1)
-        if owner ~= "" and owner ~= runtime.localProfileId then
-          return true
-        end
-        return false
-      end
-    end
-    return false
-  end
-
-  -- Group membership notice: shown in the composer when the user is no longer
-  -- in the group for the active conversation.
-  -- Legacy whisper channels use "WOW"/"BN"; skip them — they are not group channels.
-  runtime.getGroupSendNotice = function(conversation)
-    if conversation == nil then
-      return nil
-    end
-    local ch = conversation.channel
-    if ch == nil then
-      return nil
-    end
-    -- Skip legacy whisper channel strings and explicit ChannelType whisper constants.
-    if ch == "WOW" or ch == "BN" or ch == ChannelType.WHISPER or ch == ChannelType.BN_WHISPER then
-      return nil
-    end
-    -- COMMUNITY is receive-only but not a group membership issue.
-    if ch == ChannelType.COMMUNITY then
-      return nil
-    end
-    -- Foreign-character group history is read-only from this character.
-    if isForeignCharacterGroup(conversation) then
-      return "Another character's history — read-only."
-    end
-    if not ChatGateway.CanSend(runtime.chatApi, conversation) then
-      return "Not in group — can't send."
-    end
-    return nil
-  end
+  runtime.getGroupSendNotice = groupSendPolicy.getNotice
 
   local controller = {}
 
@@ -204,11 +134,6 @@ function WindowRuntime.Create(options)
   end
 
   local function refreshWindow()
-    return coordinator.refreshWindow()
-  end
-
-  local function dismissWidgetPreview()
-    acknowledgeLatestWidgetPreview(buildContacts())
     return coordinator.refreshWindow()
   end
 
@@ -264,6 +189,24 @@ function WindowRuntime.Create(options)
       tableUtils = tableUtils,
     })
 
+    local windowCallbacks = WindowCallbacks.Create({
+      runtime = runtime,
+      characterState = characterState,
+      defaultCharacterState = defaultCharacterState,
+      uiParent = uiParent,
+      getIcon = function()
+        return icon
+      end,
+      tableUtils = tableUtils,
+      groupSendPolicy = groupSendPolicy,
+      sendHandler = sendHandler,
+      refreshWindow = refreshWindow,
+      selectConversation = selectConversation,
+      startConversation = startConversation,
+      setWindowVisible = setWindowVisible,
+      trace = trace,
+    })
+
     window = messengerWindow.Create(uiFactory, {
       contacts = contacts,
       selectedContact = selectedState.selectedContact,
@@ -271,100 +214,18 @@ function WindowRuntime.Create(options)
       status = selectedState.status,
       state = characterState.window,
       initialTabMode = characterState.contactsTabMode or "whispers",
-      onTabModeChanged = function(mode)
-        characterState.contactsTabMode = mode
-      end,
-      onSelectConversation = function(conversationKey)
-        return selectConversation(conversationKey)
-      end,
-      onStartConversation = function(playerName)
-        return startConversation(playerName)
-      end,
-      onSend = function(payload)
-        local channel = payload and payload.channel
-        -- Legacy whisper channels use "WOW" and "BN"; new group channels use
-        -- ChannelType constants (PARTY, INSTANCE_CHAT, BN_CONVERSATION, etc.).
-        -- Only route through ChatGateway for explicit group channel constants.
-        local isLegacyWhisper = channel == "WOW"
-          or channel == "BN"
-          or channel == ChannelType.WHISPER
-          or channel == ChannelType.BN_WHISPER
-        if channel ~= nil and not isLegacyWhisper then
-          -- Group channel: route through ChatGateway.Send with pcall guard.
-          -- The echo (CHAT_MSG_PARTY / INSTANCE_CHAT / BN_CONVERSATION) will
-          -- arrive via GroupChatIngest and append the message automatically.
-          if not ChatGateway.CanSend(runtime.chatApi, payload) then
-            return false
-          end
-          local ok, err = pcall(ChatGateway.Send, runtime.chatApi, payload, payload.text)
-          if not ok then
-            trace("group send error", tostring(err))
-          end
-          return ok
-        end
-        return sendHandler.HandleSend(runtime, payload, refreshWindow)
-      end,
-      onPositionChanged = function(nextState)
-        characterState.window = tableUtils.copyState(nextState)
-      end,
-      onClose = function()
-        setWindowVisible(false)
-      end,
-      onResetWindowPosition = function()
-        local nextState = tableUtils.copyState(defaultCharacterState.window)
-        characterState.window = nextState
-        return nextState
-      end,
-      onClearAllChats = function()
-        for key in pairs(runtime.store.conversations) do
-          runtime.store.conversations[key] = nil
-        end
-        runtime.activeConversationKey = nil
-        characterState.activeConversationKey = nil
-      end,
-      onPin = function(item)
-        local key = item.conversationKey
-        trace("onPin", "key=" .. tostring(key), "wasPinned=" .. tostring(item.pinned))
-        if Store.IsPinned(runtime.store, key) then
-          Store.Unpin(runtime.store, key)
-          if runtime.store.conversations[key] == nil and runtime.activeConversationKey == key then
-            runtime.activeConversationKey = nil
-            characterState.activeConversationKey = nil
-          end
-        else
-          Store.Pin(runtime.store, key)
-        end
-        refreshWindow()
-      end,
-      onRemove = function(item)
-        local key = item.conversationKey
-        trace("onRemove", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
-        Store.Remove(runtime.store, key)
-        if runtime.activeConversationKey == key then
-          runtime.activeConversationKey = nil
-          characterState.activeConversationKey = nil
-        end
-        refreshWindow()
-      end,
-      onReorder = function(orders)
-        trace("onReorder", "keys=" .. tostring(#orders or 0))
-        for key, order in pairs(orders) do
-          Store.SetSortOrder(runtime.store, key, order)
-          trace("  sortOrder", "key=" .. tostring(key), "order=" .. tostring(order))
-        end
-        refreshWindow()
-      end,
-      onResetIconPosition = function()
-        local nextState = tableUtils.copyState(defaultCharacterState.icon)
-        characterState.icon = nextState
-
-        if icon and icon.frame and icon.frame.SetPoint then
-          local iconParent = icon.frame.parent or uiParent
-          icon.frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
-        end
-
-        return nextState
-      end,
+      onTabModeChanged = windowCallbacks.onTabModeChanged,
+      onSelectConversation = windowCallbacks.onSelectConversation,
+      onStartConversation = windowCallbacks.onStartConversation,
+      onSend = windowCallbacks.onSend,
+      onPositionChanged = windowCallbacks.onPositionChanged,
+      onClose = windowCallbacks.onClose,
+      onResetWindowPosition = windowCallbacks.onResetWindowPosition,
+      onClearAllChats = windowCallbacks.onClearAllChats,
+      onPin = windowCallbacks.onPin,
+      onRemove = windowCallbacks.onRemove,
+      onReorder = windowCallbacks.onReorder,
+      onResetIconPosition = windowCallbacks.onResetIconPosition,
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,
       onSettingChanged = onSettingChanged,
@@ -377,132 +238,60 @@ function WindowRuntime.Create(options)
     runtime.window = window
   end
 
-  local function conversationMatchesTab(conversationKey, tabMode)
-    if tabMode == nil then
-      return true
-    end
-    local conversation = runtime.store and runtime.store.conversations and runtime.store.conversations[conversationKey]
-      or nil
-    if conversation == nil then
-      return true
-    end
-    local isGroup = BadgeFilter.IsGroupChannel(conversation.channel)
-    if tabMode == "groups" then
-      return isGroup
-    end
-    return not isGroup
-  end
+  local toggleFlow = ToggleFlow.Create({
+    runtime = runtime,
+    badgeFilter = BadgeFilter,
+    ensureWindow = ensureWindow,
+    isWindowVisible = function()
+      return controller.isWindowVisible()
+    end,
+    setWindowVisible = setWindowVisible,
+    getWindow = function()
+      return window
+    end,
+    findLatestUnreadKey = coordinator.findLatestUnreadKey,
+    selectConversation = selectConversation,
+    refreshWindow = refreshWindow,
+  })
+  local toggle = toggleFlow.toggle
 
-  local function toggle()
-    ensureWindow()
-    local nextVisible = not controller.isWindowVisible()
-    setWindowVisible(nextVisible)
-
-    if nextVisible then
-      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
-      local unreadKey = coordinator.findLatestUnreadKey()
-      -- Gate the "jump to unread" shortcut by the current tab: on the Groups
-      -- tab we don't want a freshly-received whisper to steal the selection,
-      -- and on the Whispers tab an unread party message shouldn't.
-      if unreadKey and not conversationMatchesTab(unreadKey, tabMode) then
-        unreadKey = nil
-      end
-      local targetKey = unreadKey or runtime.activeConversationKey
-      if targetKey ~= nil and conversationMatchesTab(targetKey, tabMode) then
-        selectConversation(targetKey)
-        return
-      end
-    end
-
-    refreshWindow()
-  end
-
-  local function setComposerText(text)
-    if window and window.composer and window.composer.input and window.composer.input.SetText then
-      window.composer.input:SetText(text or "")
-    end
-  end
-
-  function controller.getWindow()
-    return window
-  end
-
-  function controller.getIcon()
-    return icon
-  end
-
-  function controller.isWindowVisible()
-    return coordinator.isWindowVisible()
-  end
-
-  function controller.setDiagnostics(nextDiagnostics)
-    diagnostics = nextDiagnostics or {}
-  end
-
-  controller.buildContacts = buildContacts
-  controller.ensureWindow = ensureWindow
-  controller.refreshWindow = refreshWindow
-  controller.selectConversation = selectConversation
-  controller.setWindowVisible = setWindowVisible
-  controller.setComposerText = setComposerText
-  controller.toggle = toggle
-
-  runtime.isConversationOpen = function(conversationKey)
-    return controller.isWindowVisible() and runtime.activeConversationKey == conversationKey
-  end
-
-  icon = toggleIcon.Create(uiFactory, {
-    state = characterState.icon,
-    iconSize = accountState.settings.iconSize,
+  icon = IconRuntime.Create({
+    accountState = accountState,
+    characterState = characterState,
+    uiFactory = uiFactory,
+    toggleIcon = toggleIcon,
+    tableUtils = tableUtils,
+    badgeFilter = BadgeFilter,
+    buildContacts = buildContacts,
+    buildLatestIncomingPreview = buildLatestIncomingPreview,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+    refreshWindow = refreshWindow,
     onToggle = toggle,
-    onPositionChanged = function(nextState)
-      characterState.icon = tableUtils.copyState(nextState)
-    end,
-    getShowUnreadBadge = function()
-      return accountState.settings.showUnreadBadge ~= false
-    end,
-    getBadgePulse = function()
-      return accountState.settings.badgePulse ~= false
-    end,
-    getIconDesaturated = function()
-      return accountState.settings.iconDesaturated ~= false
-    end,
-    getPreviewAutoDismissSeconds = function()
-      local value = accountState.settings.widgetPreviewAutoDismissSeconds
-      if value == nil then
-        return 30
-      end
-      return tonumber(value) or 0
-    end,
-    getPreviewPosition = function()
-      local value = accountState.settings.widgetPreviewPosition
-      if type(value) ~= "string" or value == "" then
-        return "right"
-      end
-      return value
-    end,
-    onDismissPreview = dismissWidgetPreview,
   })
 
-  runtime.icon = icon
-  runtime.toggle = toggle
-  runtime.refreshWindow = refreshWindow
-  runtime.ensureWindow = ensureWindow
-  runtime.setWindowVisible = setWindowVisible
-  runtime.setComposerText = setComposerText
-
-  local initContacts = buildContacts()
-  if icon and icon.setUnreadCount then
-    icon.setUnreadCount(BadgeFilter.SumWhisperUnread(initContacts))
-  end
-  if icon and icon.setIncomingPreview then
-    local preview = buildLatestIncomingPreview(initContacts)
-    icon.setIncomingPreview(
-      preview and preview.senderName or nil,
-      preview and preview.messageText or nil,
-      preview and preview.classTag or nil
-    )
-  end
+  RuntimeBindings.Apply({
+    runtime = runtime,
+    controller = controller,
+    icon = icon,
+    getWindow = function()
+      return window
+    end,
+    getIcon = function()
+      return icon
+    end,
+    isWindowVisible = function()
+      return coordinator.isWindowVisible()
+    end,
+    setDiagnostics = function(nextDiagnostics)
+      diagnostics = nextDiagnostics
+    end,
+    buildContacts = buildContacts,
+    ensureWindow = ensureWindow,
+    refreshWindow = refreshWindow,
+    selectConversation = selectConversation,
+    setWindowVisible = setWindowVisible,
+    toggle = toggle,
+  })
 
   return controller
 end
