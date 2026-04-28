@@ -7,7 +7,14 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
+local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
+
+local UNREAD_BADGE_SIZE = 16
+local UNREAD_BADGE_RIGHT_OFFSET = 4 -- relative to -CONTACT_PADDING
+local UNREAD_BADGE_BOTTOM_OFFSET = 12
+local UNREAD_BADGE_TEXTURE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+local UNREAD_BADGE_OVERFLOW = 99
 
 local RowElements = {}
 
@@ -242,6 +249,36 @@ function RowElements.createPreview(row, item, parentWidth)
   row.preview = label
   RowElements.updatePreview(row, item, parentWidth, false)
   return label
+end
+
+function RowElements.updateUnreadBadge(row, item)
+  if row.unreadBadge == nil then
+    return
+  end
+  local count = (item and item.unreadCount) or 0
+  if count > 0 then
+    local badgeText = count > UNREAD_BADGE_OVERFLOW and (tostring(UNREAD_BADGE_OVERFLOW) .. "+") or tostring(count)
+    row.unreadBadge.label:SetText(badgeText)
+    row.unreadBadge:Show()
+  else
+    row.unreadBadge:Hide()
+  end
+end
+
+function RowElements.createUnreadBadge(factory, row)
+  local badge = factory.CreateFrame("Frame", nil, row)
+  badge:SetSize(UNREAD_BADGE_SIZE, UNREAD_BADGE_SIZE)
+  badge:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -Theme.LAYOUT.CONTACT_PADDING + UNREAD_BADGE_RIGHT_OFFSET, UNREAD_BADGE_BOTTOM_OFFSET)
+  badge.bg = badge:CreateTexture(nil, "BACKGROUND")
+  badge.bg:SetAllPoints()
+  badge.bg:SetTexture(UNREAD_BADGE_TEXTURE)
+  applyVertexColor(badge.bg, Theme.COLORS.unread_badge)
+  badge.label = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
+  badge.label:SetAllPoints()
+  badge.label:SetJustifyH("CENTER")
+  badge.label:SetJustifyV("MIDDLE")
+  row.unreadBadge = badge
+  return badge
 end
 
 ns.ContactsListRowElements = RowElements

@@ -124,6 +124,7 @@ UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
+UI/ConversationPane/ChannelContextMerger.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Composer.lua
@@ -132,6 +133,7 @@ UI/ToggleIcon/Badge.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
+UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua

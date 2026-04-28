@@ -12,6 +12,7 @@ local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badg
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 
 local CHAT_ICON_RATIO = 0.6 -- chat icon scale factor vs ICON_SIZE
 
@@ -127,44 +128,21 @@ function ToggleIcon.Create(factory, options)
   local getBadgePulse = options.getBadgePulse
   local getIconDesaturated = options.getIconDesaturated
 
-  local lastUnreadCount = 0
-
-  -- Store original colors for desaturation restore. Re-read on every
-  -- theme refresh so preset switches propagate through the desaturate path.
-  local originalColors = {
-    chatIcon = resolveGlyphColor(),
-    background = resolveBgColor(),
-    border = resolveRingColor(),
-  }
-  local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
-  local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
-
-  local function updateDesaturation(unreadCount)
-    local desaturateEnabled = getIconDesaturated and getIconDesaturated()
-    local shouldDesaturate = desaturateEnabled and unreadCount == 0
-
-    for _, tex in ipairs({ chatIcon, background, border }) do
-      if tex.SetDesaturated then
-        tex:SetDesaturated(shouldDesaturate)
-      end
-    end
-
-    if shouldDesaturate then
-      applyVertexColor(chatIcon, DESAT_GREY)
-      applyVertexColor(background, DESAT_BG)
-      applyVertexColor(border, DESAT_GREY)
-    else
-      applyVertexColor(chatIcon, originalColors.chatIcon)
-      applyVertexColor(background, originalColors.background)
-      applyVertexColor(border, originalColors.border)
-    end
-  end
+  local desaturation = Desaturation.Create({
+    textures = { chatIcon = chatIcon, background = background, border = border },
+    resolveColors = {
+      chatIcon = resolveGlyphColor,
+      background = resolveBgColor,
+      border = resolveRingColor,
+    },
+    getIconDesaturated = getIconDesaturated,
+    applyVertexColor = applyVertexColor,
+  })
 
   local function setUnreadCount(count)
     local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
     local allowPulse = not getBadgePulse or getBadgePulse()
     local unreadCount = tonumber(count) or 0
-    lastUnreadCount = unreadCount
 
     if showBadge then
       innerSetUnreadCount(count)
@@ -178,14 +156,13 @@ function ToggleIcon.Create(factory, options)
       stopPulse()
     end
 
-    updateDesaturation(unreadCount)
+    desaturation.update(unreadCount)
   end
 
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      local isDesat = getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
-      if not isDesat then
+      if not desaturation.isActive() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
@@ -204,8 +181,8 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      local isDesat = getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
-      applyVertexColor(background, isDesat and DESAT_BG or resolveBgColor())
+      local isDesat = desaturation.isActive()
+      applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -236,15 +213,11 @@ function ToggleIcon.Create(factory, options)
     end)
   end
 
-  local function refreshDesaturation()
-    updateDesaturation(lastUnreadCount)
-  end
+  local refreshDesaturation = desaturation.refresh
 
   local function refreshTheme()
     border:SetTexture(resolveRingTexture())
-    originalColors.chatIcon = resolveGlyphColor()
-    originalColors.background = resolveBgColor()
-    originalColors.border = resolveRingColor()
+    desaturation.refreshOriginalColors()
     pulseGlow.applyTheme(Theme)
     incomingPreview.applyTheme(Theme)
     refreshDesaturation()

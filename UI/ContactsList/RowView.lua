@@ -267,27 +267,9 @@ local function bindRow(factory, parent, row, index, item, options)
 
   -- Unread badge (create once, update every bind)
   if row.unreadBadge == nil then
-    row.unreadBadge = factory.CreateFrame("Frame", nil, row)
-    row.unreadBadge:SetSize(16, 16)
-    row.unreadBadge:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -Theme.LAYOUT.CONTACT_PADDING + 4, 12)
-    row.unreadBadge.bg = row.unreadBadge:CreateTexture(nil, "BACKGROUND")
-    row.unreadBadge.bg:SetAllPoints()
-    row.unreadBadge.bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-    UIHelpers.applyVertexColor(row.unreadBadge.bg, Theme.COLORS.unread_badge)
-    row.unreadBadge.label = row.unreadBadge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
-    row.unreadBadge.label:SetAllPoints()
-    row.unreadBadge.label:SetJustifyH("CENTER")
-    row.unreadBadge.label:SetJustifyV("MIDDLE")
+    RowElements.createUnreadBadge(factory, row)
   end
-
-  local count = item.unreadCount or 0
-  if count > 0 then
-    local badgeText = count > 99 and "99+" or tostring(count)
-    row.unreadBadge.label:SetText(badgeText)
-    row.unreadBadge:Show()
-  else
-    row.unreadBadge:Hide()
-  end
+  RowElements.updateUnreadBadge(row, item)
 
   if row.Show then
     row:Show()
