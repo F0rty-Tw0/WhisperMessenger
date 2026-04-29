@@ -1,5 +1,8 @@
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
+-- Lua 5.1 (CI) has no `table.unpack`; Lua 5.3+ has no global `unpack`.
+local unpackArgs = table.unpack or unpack
+
 -- Auto-open behavior splits across two callbacks:
 --   * onAutoOpen          - incoming whispers (CHAT_MSG_WHISPER, CHAT_MSG_BN_WHISPER)
 --   * onAutoOpenOutgoing  - outgoing replies  (CHAT_MSG_WHISPER_INFORM, CHAT_MSG_BN_WHISPER_INFORM)
@@ -93,7 +96,7 @@ local function makeScenario(opts)
     incomingCalls = incomingCalls,
     outgoingCalls = outgoingCalls,
     dispatch = function(eventName, args)
-      EventBridge.RouteLiveEvent(runtime, nil, eventName or "CHAT_MSG_WHISPER", table.unpack(args or WHISPER_ARGS))
+      EventBridge.RouteLiveEvent(runtime, nil, eventName or "CHAT_MSG_WHISPER", unpackArgs(args or WHISPER_ARGS))
     end,
   }
 end

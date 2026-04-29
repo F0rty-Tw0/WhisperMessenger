@@ -54,7 +54,6 @@ function Disambiguation.ResolveWrongFaction(item, runtime, isOpposite)
   end
 
   -- 2. BNet friend check (covers cross-realm BNet friends)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local function findBNetFriendByGUID(guid, bnetApi)
     if guid == nil or type(bnetApi) ~= "table" then
       return nil

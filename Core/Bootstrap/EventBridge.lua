@@ -3,15 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
-local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
-local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
 
 -- stylua: ignore start
 local Registration = ns.BootstrapEventBridgeRegistration or require("WhisperMessenger.Core.Bootstrap.EventBridge.Registration")
