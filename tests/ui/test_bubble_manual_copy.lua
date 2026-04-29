@@ -246,10 +246,6 @@ return function()
 
   -- ===== PopupUI / Styling: apply, restore, reuse =====
 
-  -- The big composite test owns the full scoped-styling lifecycle. It's split
-  -- into focused do-blocks that share a single styled-popup builder so each
-  -- assertion stays close to the behavior it covers.
-
   local function buildStyledPopupScaffold()
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -294,18 +290,19 @@ return function()
     end
     local left, mid, right = newBorder(), newBorder(), newBorder()
     editBox.Left, editBox.Middle, editBox.Right = left, mid, right
+
+    local highlightColor = { 0, 0, 1, 0.4 }
+    function editBox:GetHighlightColor()
+      return highlightColor[1], highlightColor[2], highlightColor[3], highlightColor[4]
+    end
+    function editBox:SetHighlightColor(r, g, b, a)
+      highlightColor[1], highlightColor[2], highlightColor[3], highlightColor[4] = r, g, b, a
+    end
+
     _G.StaticPopup1 = dialog
     _G.StaticPopup1EditBox = editBox
     _G.StaticPopup1Button1 = button1
     _G.StaticPopup1EditBoxLeft, _G.StaticPopup1EditBoxMiddle, _G.StaticPopup1EditBoxRight = left, mid, right
-
-    local layerStates = {}
-    function editBox:DisableDrawLayer(layer)
-      layerStates[layer] = "disabled"
-    end
-    function editBox:EnableDrawLayer(layer)
-      layerStates[layer] = "enabled"
-    end
 
     rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
@@ -335,12 +332,11 @@ return function()
       buttonDecoration = buttonDecoration,
       originalButtonTextColor = originalButtonTextColor,
       borders = { left = left, mid = mid, right = right },
-      layerStates = layerStates,
+      highlightColor = highlightColor,
     }
   end
 
-  -- Open: applies scoped styling, hides Blizzard input borders, disables the
-  -- editbox BACKGROUND draw layer, and restyles the OK button.
+  -- Open: applies scoped styling, hides Blizzard input borders, and restyles the OK button.
   do
     local s = buildStyledPopupScaffold()
     assert(ContextMenu.CopyText("styled") == true, "manual popup should open when no clipboard is available")
@@ -349,10 +345,13 @@ return function()
     assert(s.borders.left.shown == false, "InputBoxTemplate Left border must be hidden")
     assert(s.borders.mid.shown == false, "InputBoxTemplate Middle border must be hidden")
     assert(s.borders.right.shown == false, "InputBoxTemplate Right border must be hidden")
-    assert(s.layerStates.BACKGROUND == "disabled", "editbox BACKGROUND draw layer must be disabled")
     assert(s.editBox._wmManualCopyBackground ~= nil, "editbox should get a flat rounded background")
     assert(s.editBox._wmManualCopyBackground.fills[1].shown == true, "editbox background should be active while shown")
     assert(s.editBox._wmManualCopyBorder == nil, "editbox must NOT draw a separate border")
+    assert(
+      s.highlightColor[1] == 1 and s.highlightColor[2] == 1 and s.highlightColor[3] == 1 and s.highlightColor[4] == 0.25,
+      "selection highlight must be set to white/25% so it is visible against the dark input background"
+    )
     assert(s.editBox.width == 392, "editbox should stretch to near full dialog width")
     assert(s.button1._wmManualCopySkin ~= nil, "OK button should be skinned")
     assert(s.editBoxDecoration.shown == false, "default editbox decoration should be hidden")
@@ -365,8 +364,7 @@ return function()
     )
   end
 
-  -- OnHide restores the original dialog appearance: borders, layer, decorations,
-  -- and label color.
+  -- OnHide restores the original dialog appearance: borders, decorations, and label color.
   do
     local s = buildStyledPopupScaffold()
     ContextMenu.CopyText("styled-restore")
@@ -376,8 +374,11 @@ return function()
     s.dialog:Hide()
     assert(s.dialog._wmRoundedBackground.fills[1].shown == false, "dialog styling should hide on close")
     assert(s.editBox._wmManualCopyBackground.fills[1].shown == false, "editbox background should hide on close")
-    assert(s.layerStates.BACKGROUND == "enabled", "editbox BACKGROUND must be re-enabled")
     assert(s.button1._wmManualCopySkin.fills[1].shown == false, "button skin should hide on close")
+    assert(
+      s.highlightColor[1] == 0 and s.highlightColor[2] == 0 and s.highlightColor[3] == 1 and s.highlightColor[4] == 0.4,
+      "selection highlight color must be restored to original on close"
+    )
     assert(s.editBoxDecoration.shown == true, "default editbox decoration should restore")
     assert(s.buttonDecoration.shown == true, "default button decoration should restore")
     assert(

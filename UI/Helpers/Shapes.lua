@@ -84,45 +84,46 @@ end
 
 --- Create a rounded-rectangle background on a frame using fill rects + corner textures.
 --- @param drawLayer? string The DrawLayer for all fill / corner textures (default "BACKGROUND").
+--- @param subLayer? number WoW texture sublayer (-8 to 7). Higher = on top within the layer.
 --- Returns { fills = {textures}, corners = {textures}, setColor = function(colorTable) }
-function Shapes.createRoundedBackground(frame, cornerRadius, drawLayer)
+function Shapes.createRoundedBackground(frame, cornerRadius, drawLayer, subLayer)
   local r = cornerRadius or 8
   local layer = drawLayer or "BACKGROUND"
 
   local fills = {}
   local corners = {}
 
-  local bgCenter = frame:CreateTexture(nil, layer)
+  local bgCenter = frame:CreateTexture(nil, layer, nil, subLayer)
   bgCenter:SetPoint("TOPLEFT", frame, "TOPLEFT", r, -r)
   bgCenter:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, r)
   fills[#fills + 1] = bgCenter
 
-  local bgTop = frame:CreateTexture(nil, layer)
+  local bgTop = frame:CreateTexture(nil, layer, nil, subLayer)
   bgTop:SetPoint("TOPLEFT", frame, "TOPLEFT", r, 0)
   bgTop:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -r, 0)
   bgTop:SetHeight(r)
   fills[#fills + 1] = bgTop
 
-  local bgBottom = frame:CreateTexture(nil, layer)
+  local bgBottom = frame:CreateTexture(nil, layer, nil, subLayer)
   bgBottom:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", r, 0)
   bgBottom:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -r, 0)
   bgBottom:SetHeight(r)
   fills[#fills + 1] = bgBottom
 
-  local bgLeft = frame:CreateTexture(nil, layer)
+  local bgLeft = frame:CreateTexture(nil, layer, nil, subLayer)
   bgLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -r)
   bgLeft:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, r)
   bgLeft:SetWidth(r)
   fills[#fills + 1] = bgLeft
 
-  local bgRight = frame:CreateTexture(nil, layer)
+  local bgRight = frame:CreateTexture(nil, layer, nil, subLayer)
   bgRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -r)
   bgRight:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, r)
   bgRight:SetWidth(r)
   fills[#fills + 1] = bgRight
 
   local function makeCorner(point)
-    local c = frame:CreateTexture(nil, layer)
+    local c = frame:CreateTexture(nil, layer, nil, subLayer)
     c:SetSize(r, r)
     c:SetPoint(point, frame, point, 0, 0)
     if c.SetTexture then
@@ -149,13 +150,11 @@ function Shapes.createRoundedBackground(frame, cornerRadius, drawLayer)
   corners[#corners + 1] = cBR
 
   local function setColor(colorTable)
-    local cr, cg, cb, ca = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
-    local normalizedColor = { cr, cg, cb, ca }
     for _, part in ipairs(fills) do
-      Base.applyColorTexture(part, normalizedColor)
+      Base.applyColorTexture(part, colorTable)
     end
     for _, part in ipairs(corners) do
-      Base.applyVertexColor(part, normalizedColor)
+      Base.applyVertexColor(part, colorTable)
     end
   end
 

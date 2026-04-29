@@ -14,6 +14,10 @@ local ButtonStyling = ns.ChatBubbleContextMenuManualCopyPopupUIButtonStyling
 
 local Styling = {}
 local MANUAL_COPY_DIALOG_NAME = "WHISPER_MESSENGER_BUBBLE_COPY_TEXT"
+-- Sublayer 7 (max within BORDER) keeps our fill above InputBoxTemplate border
+-- textures so they stay covered even on clients where Hide/SetAlpha isn't enough.
+-- Selection highlight renders between BORDER and ARTWORK — still visible above us.
+local INPUT_FILL_SUBLAYER = 7
 
 -- Blizzard's `InputBoxTemplate` ships three border textures (Left / Middle /
 -- Right). In some Retail clients they are not returned by `frame:GetRegions()`
@@ -106,10 +110,6 @@ local function restoreManualCopyEditBox(editBox)
   StylingCommon.setPartsShown(editBox._wmManualCopyBackground, false)
   StylingCommon.restoreSuppressedFrameTextures(editBox, "_wmManualCopySuppressedRegions")
   restoreInputTemplateTextures(editBox)
-  if editBox._wmManualCopyBgLayerDisabled and type(editBox.EnableDrawLayer) == "function" then
-    editBox:EnableDrawLayer("BACKGROUND")
-    editBox._wmManualCopyBgLayerDisabled = false
-  end
   editBox._wmManualCopyStyleActive = false
 
   local insets = editBox._wmManualCopyOriginalTextInsets
@@ -119,6 +119,11 @@ local function restoreManualCopyEditBox(editBox)
   if insets and editBox.SetTextInsets then
     editBox:SetTextInsets(insets[1] or 0, insets[2] or 0, insets[3] or 0, insets[4] or 0)
   end
+  local hc = editBox._wmManualCopyOriginalHighlightColor
+  if hc and type(editBox.SetHighlightColor) == "function" then
+    editBox:SetHighlightColor(hc[1], hc[2], hc[3], hc[4])
+  end
+  editBox._wmManualCopyOriginalHighlightColor = nil
 end
 
 local function styleManualCopyEditBox(editBox)
@@ -131,10 +136,7 @@ local function styleManualCopyEditBox(editBox)
     and type(editBox.CreateTexture) == "function"
     and type(UIHelpers.createRoundedBackground) == "function"
   then
-    -- Build at "ARTWORK" so we can DisableDrawLayer("BACKGROUND") to nuke
-    -- the InputBoxTemplate's Left / Middle / Right border textures (which
-    -- some Retail clients keep rendering even after we Hide() them).
-    editBox._wmManualCopyBackground = UIHelpers.createRoundedBackground(editBox, 6, "ARTWORK")
+    editBox._wmManualCopyBackground = UIHelpers.createRoundedBackground(editBox, 6, "BORDER", INPUT_FILL_SUBLAYER)
     StylingCommon.setPartsShown(editBox._wmManualCopyBackground, false)
   end
 
@@ -142,12 +144,12 @@ local function styleManualCopyEditBox(editBox)
     local skipSet = StylingCommon.collectTextureParts(editBox._wmManualCopyBackground, {})
     StylingCommon.suppressFrameTextures(editBox, "_wmManualCopySuppressedRegions", skipSet)
     suppressInputTemplateTextures(editBox)
-    if type(editBox.DisableDrawLayer) == "function" then
-      editBox:DisableDrawLayer("BACKGROUND")
-      editBox._wmManualCopyBgLayerDisabled = true
-    end
 
     editBox._wmManualCopyOriginalTextColor = StylingCommon.captureTextColor(editBox)
+    if type(editBox.GetHighlightColor) == "function" then
+      local r, g, b, a = editBox:GetHighlightColor()
+      editBox._wmManualCopyOriginalHighlightColor = { r or 0, g or 0, b or 1, a or 0.4 }
+    end
     if type(editBox.GetTextInsets) == "function" then
       local left, right, top, bottom = editBox:GetTextInsets()
       editBox._wmManualCopyOriginalTextInsets = { left, right, top, bottom }
@@ -174,6 +176,9 @@ local function styleManualCopyEditBox(editBox)
   end
   if editBox.SetTextInsets then
     editBox:SetTextInsets(10, 10, 6, 6)
+  end
+  if type(editBox.SetHighlightColor) == "function" then
+    editBox:SetHighlightColor(1, 1, 1, 0.25)
   end
 end
 

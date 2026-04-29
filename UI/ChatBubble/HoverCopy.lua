@@ -91,7 +91,15 @@ local function ensureCopyButton(persistentFactory, frame)
       end
       local tip = _G.GameTooltip
       if type(tip) == "table" and type(tip.Hide) == "function" then
-        tip:Hide()
+        -- Only dismiss the tooltip if it still belongs to us. The bubble's
+        -- OnHyperlinkEnter may have re-anchored it to show an item / spell
+        -- tooltip while the cursor moved across the corner — hiding it
+        -- here would make linked-item tooltips disappear under custom
+        -- fonts where text wraps closer to the button.
+        local owner = type(tip.GetOwner) == "function" and tip:GetOwner() or nil
+        if owner == nil or owner == self then
+          tip:Hide()
+        end
       end
       -- The user moved off the button; if they're not on the bubble either,
       -- hide. Mirrors the bubble's own OnLeave guard so the button doesn't

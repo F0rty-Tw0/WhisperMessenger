@@ -191,6 +191,65 @@ return function()
     _G.GameTooltip = savedTooltip
   end
 
+  -- test_button_leave_does_not_hide_unrelated_tooltip
+  -- Regression: hovering an item link inside a chat bubble shows the WoW
+  -- item tooltip via the bubble's OnHyperlinkEnter. While that tooltip is
+  -- visible, the cursor can briefly cross over (or end up under) the hover
+  -- copy button at the bubble corner — especially under custom fonts
+  -- (System / Morpheus) where text wraps differently and links land near
+  -- the corner. When the button's OnLeave fires, it must NOT dismiss a
+  -- tooltip owned by anything other than the button itself; otherwise the
+  -- item tooltip vanishes the moment the cursor moves between the link and
+  -- the button.
+  do
+    local savedTooltip = _G.GameTooltip
+    local currentOwner, hidden, anchor
+    _G.GameTooltip = {
+      SetOwner = function(self, o, a)
+        currentOwner, anchor = o, a
+        hidden = false
+      end,
+      GetOwner = function()
+        return currentOwner
+      end,
+      SetText = function() end,
+      SetHyperlink = function() end,
+      Show = function()
+        hidden = false
+      end,
+      Hide = function()
+        hidden = true
+      end,
+    }
+
+    local _, copyText = copySpy()
+    local bubble = BubbleFrame.CreateBubble(factory, parent, {
+      direction = "in",
+      kind = "user",
+      text = "|Hitem:6948|h[Hearthstone]|h",
+    }, { paneWidth = 400, copyText = copyText })
+
+    local copyBtn = findCopyButton(bubble.frame)
+    assert(copyBtn ~= nil, "expected a copy button on the bubble")
+    local btnLeave = copyBtn.scripts and copyBtn.scripts.OnLeave
+    assert(type(btnLeave) == "function", "expected OnLeave on the copy button")
+
+    -- Simulate the bubble's hyperlink handler claiming the tooltip first.
+    _G.GameTooltip:SetOwner(bubble.frame, "ANCHOR_CURSOR")
+    _G.GameTooltip:Show()
+    assert(hidden == false, "sanity: bubble's hyperlink tooltip must be visible")
+
+    -- Cursor moves to the button area, then leaves it. The button's OnLeave
+    -- must not yank the bubble's tooltip out from under the cursor.
+    bubble.frame.mouseOver = false
+    btnLeave(copyBtn)
+    assert(hidden == false, "button OnLeave must not hide a tooltip owned by another frame (the bubble's hyperlink hover)")
+    assert(currentOwner == bubble.frame, "tooltip owner should remain the bubble after button OnLeave")
+    assert(anchor == "ANCHOR_CURSOR", "tooltip anchor should remain ANCHOR_CURSOR")
+
+    _G.GameTooltip = savedTooltip
+  end
+
   -- test_copy_button_renders_above_sender_name_and_time
   -- Regression: on short bubbles the copy icon sits inside the bubble's top
   -- corner, where the sender-name/timestamp strip above the bubble can pass
