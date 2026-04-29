@@ -6,6 +6,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 - Fixed: selected text in the manual copy dialog is now clearly highlighted. The selection was invisible because the styled dark input background made WoW's default blue selection blend in completely.
 - Fixed: hovering an item link in a message no longer makes the item tooltip vanish when the System or Morpheus font is selected. The small copy button in the bubble corner could dismiss the tooltip as the cursor crossed over it; it now leaves other tooltips alone.
+- Fixed: Reply now selects the messenger text box again, including replies after a raid boss fight where WoW had temporarily handled whispers in the default chat.
 
 ## [1.2.4] - 2026-04-26
 

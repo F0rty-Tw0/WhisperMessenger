@@ -11,7 +11,8 @@ return function()
     end,
   }
 
-  local function makeDeps(trace)
+  local function makeDeps(trace, extra)
+    extra = extra or {}
     return {
       trace = trace or function() end,
       getContentDetector = function()
@@ -20,6 +21,8 @@ return function()
       getPresenceCache = function()
         return nil
       end,
+      getNumChatWindows = extra.getNumChatWindows,
+      getEditBox = extra.getEditBox,
     }
   end
 
@@ -108,6 +111,48 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
     assert(Bootstrap._inEncounter == false, "should clear _inEncounter on ENCOUNTER_END")
+  end
+
+  -- test_encounter_end_scrubs_default_chat_whisper_reply_state
+
+  do
+    local attributes = {
+      chatType = "WHISPER",
+      stickyType = "WHISPER",
+      tellTarget = "Jaina",
+    }
+    local editBox = {
+      GetAttribute = function(self, key)
+        return attributes[key]
+      end,
+      SetAttribute = function(self, key, value)
+        attributes[key] = value
+      end,
+      GetText = function()
+        return ""
+      end,
+    }
+    local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
+
+    LifecycleHandlers.Handle(
+      Bootstrap,
+      "ENCOUNTER_END",
+      makeDeps(nil, {
+        getNumChatWindows = function()
+          return 1
+        end,
+        getEditBox = function(index)
+          if index == 1 then
+            return editBox
+          end
+          return nil
+        end,
+      })
+    )
+
+    assert(attributes.tellTarget == nil, "encounter end must clear stale Blizzard tellTarget after boss-fight reply")
+    assert(attributes.chatType == "SAY", "encounter end must restore stale whisper chatType to SAY, got " .. tostring(attributes.chatType))
+    assert(attributes.stickyType == "SAY", "encounter end must restore stale whisper stickyType to SAY, got " .. tostring(attributes.stickyType))
   end
 
   -- test_encounter_start_calls_competitive_state_callback

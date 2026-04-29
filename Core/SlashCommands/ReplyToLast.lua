@@ -36,6 +36,25 @@ function ReplyToLast.Create(deps)
   local runtime = deps.runtime
   local windowRuntime = deps.windowRuntime
 
+  local function focusComposerInput()
+    local window = runtime.window
+    local input = window and window.composer and window.composer.input
+    if not (input and input.SetFocus) then
+      return
+    end
+
+    input:SetFocus()
+
+    local timer = _G.C_Timer
+    if type(timer) == "table" and type(timer.After) == "function" then
+      timer.After(0, function()
+        if input and input.SetFocus then
+          input:SetFocus()
+        end
+      end)
+    end
+  end
+
   return function()
     local function scrubLeakedR()
       -- Safety-net for the R-override: on key-up after our macro focused
@@ -93,6 +112,7 @@ function ReplyToLast.Create(deps)
       if windowRuntime.selectConversation then
         windowRuntime.selectConversation(key)
       end
+      focusComposerInput()
       scrubLeakedR()
       return
     end

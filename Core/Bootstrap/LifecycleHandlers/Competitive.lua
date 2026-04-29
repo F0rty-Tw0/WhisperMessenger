@@ -6,6 +6,7 @@ end
 local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
+local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 
 local Competitive = {}
 
@@ -51,6 +52,9 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
     Bootstrap._inEncounter = false
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
+    end
+    if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+      ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
     deps.trace("encounter ended")
     Common.notifyCompetitiveState(Bootstrap)
