@@ -1,350 +1,233 @@
-local FakeUI = require("tests.helpers.fake_ui")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
-return function()
-  -- Helpers
+-- Auto-open behavior splits across two callbacks:
+--   * onAutoOpen          - incoming whispers (CHAT_MSG_WHISPER, CHAT_MSG_BN_WHISPER)
+--   * onAutoOpenOutgoing  - outgoing replies  (CHAT_MSG_WHISPER_INFORM, CHAT_MSG_BN_WHISPER_INFORM)
+--
+-- Each callback is gated by:
+--   * its own setting (autoOpenIncoming / autoOpenOutgoing)
+--   * combat lockdown (InCombatLockdown == true suppresses both)
+--   * for outgoing: tracked pending sends are silent (the user just hit send,
+--     no need to surface the window again).
 
-  local function stubGlobals()
-    rawset(_G, "PlaySound", function() end)
-    rawset(_G, "GetCVar", function()
-      return "1"
-    end)
-    rawset(_G, "SetCVar", function() end)
-    _G.C_Timer = {
-      After = function(_delay, fn)
-        fn()
-      end,
-    }
-  end
+local WHISPER_ARGS = {
+  "hello",
+  "Arthas",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  1,
+  "Player-1-ABC",
+}
 
-  local function cleanupGlobals()
-    rawset(_G, "PlaySound", nil)
-    rawset(_G, "GetCVar", nil)
-    rawset(_G, "SetCVar", nil)
-    _G.C_Timer = nil
-    rawset(_G, "InCombatLockdown", nil)
-  end
+local BNET_ARGS = {
+  "hello",
+  "Friend#1234",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  1,
+  "Player-1-DEF",
+  42,
+}
 
-  local function makeRuntime(settings)
-    return {
-      store = { conversations = {}, config = {} },
-      localProfileId = "me",
-      now = function()
-        return 100
-      end,
-      availabilityByGUID = {},
-      accountState = { settings = settings or {} },
-    }
-  end
+-- Stand up a minimal runtime + global stubs and run a single RouteLiveEvent
+-- call. Callers see only what they care about: the runtime, the recorded
+-- callback args, and a `dispatch` they can fire (defaulting to one
+-- CHAT_MSG_WHISPER for ergonomics).
+local function makeScenario(opts)
+  opts = opts or {}
+  local settings = opts.settings or { autoOpenIncoming = true, autoOpenOutgoing = true }
+  local inCombat = opts.inCombat == true
 
-  local WHISPER_ARGS = {
-    "hello",
-    "Arthas",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    "",
-    1,
-    "Player-1-ABC",
+  rawset(_G, "PlaySound", function() end)
+  rawset(_G, "GetCVar", function()
+    return "1"
+  end)
+  rawset(_G, "SetCVar", function() end)
+  _G.C_Timer = {
+    After = function(_delay, fn)
+      fn()
+    end,
+  }
+  rawset(_G, "InCombatLockdown", function()
+    return inCombat
+  end)
+
+  local runtime = {
+    store = { conversations = {}, config = {} },
+    localProfileId = "me",
+    now = function()
+      return 100
+    end,
+    availabilityByGUID = {},
+    accountState = { settings = settings },
+    pendingOutgoing = opts.pendingOutgoing or {},
   }
 
-  -- test_auto_open_called_on_incoming_whisper_when_enabled
-
-  do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
+  local incomingCalls = {}
+  local outgoingCalls = {}
+  if not opts.skipIncomingCallback then
     runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
+      incomingCalls[#incomingCalls + 1] = conversationKey
     end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
-
-    assert(#autoOpenCalls == 1, "test_auto_open_called_on_incoming_whisper: expected 1 call, got " .. #autoOpenCalls)
-    assert(autoOpenCalls[1] ~= nil, "test_auto_open_called_on_incoming_whisper: conversationKey should not be nil")
-    cleanupGlobals()
   end
-
-  -- test_auto_open_not_called_when_setting_disabled
-
-  do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = false })
-    runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
-
-    assert(#autoOpenCalls == 0, "test_auto_open_not_called_when_disabled: expected 0 calls, got " .. #autoOpenCalls)
-    cleanupGlobals()
-  end
-
-  -- test_auto_open_not_called_during_combat
-
-  do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return true
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
-
-    assert(#autoOpenCalls == 0, "test_auto_open_not_called_during_combat: expected 0 calls, got " .. #autoOpenCalls)
-    -- But lastIncomingWhisperKey should still be tracked for reply after combat
-    assert(runtime.lastIncomingWhisperKey ~= nil, "test_auto_open_not_called_during_combat: lastIncomingWhisperKey should be set even in combat")
-    cleanupGlobals()
-  end
-
-  -- test_auto_open_incoming_not_called_on_outgoing_whisper
-
-  do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.pendingOutgoing = {}
-    runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#autoOpenCalls == 0, "test_auto_open_incoming_not_called_on_outgoing: expected 0 onAutoOpen calls, got " .. #autoOpenCalls)
-    cleanupGlobals()
-  end
-
-  -- test_auto_open_outgoing_called_on_whisper_inform
-
-  do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.pendingOutgoing = {}
+  if not opts.skipOutgoingCallback then
     runtime.onAutoOpenOutgoing = function(conversationKey)
       outgoingCalls[#outgoingCalls + 1] = conversationKey
     end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#outgoingCalls == 1, "test_auto_open_outgoing_on_inform: expected 1 call, got " .. #outgoingCalls)
-    assert(outgoingCalls[1] ~= nil, "test_auto_open_outgoing_on_inform: conversationKey should not be nil")
-    cleanupGlobals()
   end
 
-  -- test_auto_open_outgoing_not_called_for_tracked_pending_send
+  return {
+    runtime = runtime,
+    incomingCalls = incomingCalls,
+    outgoingCalls = outgoingCalls,
+    dispatch = function(eventName, args)
+      EventBridge.RouteLiveEvent(runtime, nil, eventName or "CHAT_MSG_WHISPER", table.unpack(args or WHISPER_ARGS))
+    end,
+  }
+end
 
+local function teardown()
+  rawset(_G, "PlaySound", nil)
+  rawset(_G, "GetCVar", nil)
+  rawset(_G, "SetCVar", nil)
+  _G.C_Timer = nil
+  rawset(_G, "InCombatLockdown", nil)
+end
+
+return function()
+  -- Incoming whisper with both settings on -> onAutoOpen fires once.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
+    local s = makeScenario()
+    s.dispatch()
+    assert(#s.incomingCalls == 1, "expected 1 incoming auto-open, got " .. #s.incomingCalls)
+    assert(s.incomingCalls[1] ~= nil, "incoming auto-open should receive a conversationKey")
+    teardown()
+  end
 
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.pendingOutgoing = {
-      ["wow::WOW::arthas-area52"] = {
-        {
-          text = "hello",
-          createdAt = 99,
-          channel = "WOW",
-          guid = "Player-1-ABC",
-          displayName = "Arthas-Area52",
+  -- Both settings off -> onAutoOpen does not fire on incoming whisper.
+  do
+    local s = makeScenario({ settings = { autoOpenIncoming = false, autoOpenOutgoing = false } })
+    s.dispatch()
+    assert(#s.incomingCalls == 0, "expected no incoming auto-open when setting disabled")
+    teardown()
+  end
+
+  -- Combat lockdown suppresses incoming auto-open but still records the
+  -- conversation key so the user can /reply once combat ends.
+  do
+    local s = makeScenario({ inCombat = true })
+    s.dispatch()
+    assert(#s.incomingCalls == 0, "expected no incoming auto-open during combat")
+    assert(s.runtime.lastIncomingWhisperKey ~= nil, "lastIncomingWhisperKey should be tracked even during combat")
+    teardown()
+  end
+
+  -- Only-incoming-enabled does NOT fire onAutoOpen for OUTGOING messages.
+  do
+    local s = makeScenario({ settings = { autoOpenIncoming = true, autoOpenOutgoing = true } })
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.incomingCalls == 0, "outgoing inform should not invoke onAutoOpen")
+    teardown()
+  end
+
+  -- Outgoing inform with both settings on -> onAutoOpenOutgoing fires once.
+  do
+    local s = makeScenario()
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.outgoingCalls == 1, "expected 1 outgoing auto-open, got " .. #s.outgoingCalls)
+    teardown()
+  end
+
+  -- Outgoing inform that matches a tracked pending send is silent: the user
+  -- just clicked send, no need to surface the window again. The pending send
+  -- is also consumed.
+  do
+    local s = makeScenario({
+      pendingOutgoing = {
+        ["wow::WOW::arthas-area52"] = {
+          {
+            text = "hello",
+            createdAt = 99,
+            channel = "WOW",
+            guid = "Player-1-ABC",
+            displayName = "Arthas-Area52",
+          },
         },
       },
-    }
-    runtime.onAutoOpenOutgoing = function(conversationKey)
-      outgoingCalls[#outgoingCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#outgoingCalls == 0, "test_auto_open_outgoing_pending_send: expected 0 calls for tracked pending send, got " .. #outgoingCalls)
-    local pending = runtime.pendingOutgoing["wow::WOW::arthas-area52"]
-    assert(pending ~= nil and #pending == 0, "test_auto_open_outgoing_pending_send: expected pending send to be consumed")
-    cleanupGlobals()
+    })
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.outgoingCalls == 0, "tracked pending send should suppress outgoing auto-open")
+    local consumed = s.runtime.pendingOutgoing["wow::WOW::arthas-area52"]
+    assert(consumed and #consumed == 0, "matched pending send should be consumed")
+    teardown()
   end
 
-  -- test_auto_open_outgoing_called_on_bnet_inform
-
+  -- BNet outgoing inform also fires onAutoOpenOutgoing.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.pendingOutgoing = {}
-    runtime.onAutoOpenOutgoing = function(conversationKey)
-      outgoingCalls[#outgoingCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(
-      runtime,
-      nil,
-      "CHAT_MSG_BN_WHISPER_INFORM",
-      "hello",
-      "Friend#1234",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      "",
-      1,
-      "Player-1-DEF",
-      42
-    )
-
-    assert(#outgoingCalls == 1, "test_auto_open_outgoing_on_bnet_inform: expected 1 call, got " .. #outgoingCalls)
-    cleanupGlobals()
+    local s = makeScenario()
+    s.dispatch("CHAT_MSG_BN_WHISPER_INFORM", BNET_ARGS)
+    assert(#s.outgoingCalls == 1, "BNet outgoing inform should fire onAutoOpenOutgoing")
+    teardown()
   end
 
-  -- test_auto_open_outgoing_not_called_during_combat
-
+  -- Combat lockdown also suppresses outgoing auto-open.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return true
-    end)
-
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.pendingOutgoing = {}
-    runtime.onAutoOpenOutgoing = function(conversationKey)
-      outgoingCalls[#outgoingCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#outgoingCalls == 0, "test_auto_open_outgoing_combat: expected 0 calls, got " .. #outgoingCalls)
-    cleanupGlobals()
+    local s = makeScenario({ inCombat = true })
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.outgoingCalls == 0, "outgoing auto-open should be suppressed during combat")
+    teardown()
   end
 
-  -- test_auto_open_outgoing_not_called_when_setting_disabled
-
+  -- Outgoing setting off -> outgoing inform is silent.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = false })
-    runtime.pendingOutgoing = {}
-    runtime.onAutoOpenOutgoing = function(conversationKey)
-      outgoingCalls[#outgoingCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#outgoingCalls == 0, "test_auto_open_outgoing_disabled: expected 0 calls, got " .. #outgoingCalls)
-    cleanupGlobals()
+    local s = makeScenario({ settings = { autoOpenIncoming = false, autoOpenOutgoing = false } })
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.outgoingCalls == 0, "outgoing auto-open should respect the setting")
+    teardown()
   end
 
-  -- test_auto_open_outgoing_not_called_when_only_incoming_enabled
-
+  -- Only-outgoing-enabled keeps incoming auto-open silent.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local outgoingCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = false })
-    runtime.pendingOutgoing = {}
-    runtime.onAutoOpenOutgoing = function(conversationKey)
-      outgoingCalls[#outgoingCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER_INFORM", table.unpack(WHISPER_ARGS))
-
-    assert(#outgoingCalls == 0, "test_auto_open_outgoing_incoming_only: expected 0 outgoing calls when only incoming enabled, got " .. #outgoingCalls)
-    cleanupGlobals()
+    local s = makeScenario({ settings = { autoOpenIncoming = false, autoOpenOutgoing = true } })
+    s.dispatch()
+    assert(#s.incomingCalls == 0, "incoming should stay silent when only outgoing is enabled")
+    teardown()
   end
 
-  -- test_auto_open_incoming_not_called_when_only_outgoing_enabled
-
+  -- Incoming-only setting still fires the OUTGOING setting independently:
+  -- this is a separate gate from the above (verifies they don't share state).
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = false, autoOpenOutgoing = true })
-    runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
-
-    assert(#autoOpenCalls == 0, "test_auto_open_incoming_outgoing_only: expected 0 incoming calls when only outgoing enabled, got " .. #autoOpenCalls)
-    cleanupGlobals()
+    local s = makeScenario({ settings = { autoOpenIncoming = true, autoOpenOutgoing = false } })
+    s.dispatch("CHAT_MSG_WHISPER_INFORM")
+    assert(#s.outgoingCalls == 0, "outgoing should stay silent when only incoming is enabled")
+    teardown()
   end
 
-  -- test_auto_open_called_on_bnet_whisper
-
+  -- BNet whisper triggers incoming auto-open.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local autoOpenCalls = {}
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    runtime.onAutoOpen = function(conversationKey)
-      autoOpenCalls[#autoOpenCalls + 1] = conversationKey
-    end
-
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_BN_WHISPER", "hello", "Friend#1234", "", "", "", "", "", "", "", "", 1, "Player-1-DEF", 42)
-
-    assert(#autoOpenCalls == 1, "test_auto_open_called_on_bnet_whisper: expected 1 call, got " .. #autoOpenCalls)
-    cleanupGlobals()
+    local s = makeScenario()
+    s.dispatch("CHAT_MSG_BN_WHISPER", BNET_ARGS)
+    assert(#s.incomingCalls == 1, "BNet incoming whisper should trigger onAutoOpen")
+    teardown()
   end
 
-  -- test_auto_open_not_called_when_no_callback
-
+  -- No callbacks at all - dispatch must not error.
   do
-    stubGlobals()
-    rawset(_G, "InCombatLockdown", function()
-      return false
-    end)
-
-    local runtime = makeRuntime({ autoOpenIncoming = true, autoOpenOutgoing = true })
-    -- No onAutoOpen callback set — should not error
-    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", table.unpack(WHISPER_ARGS))
-
-    -- If we get here without error, the test passes
-    cleanupGlobals()
+    local s = makeScenario({ skipIncomingCallback = true, skipOutgoingCallback = true })
+    local ok = pcall(s.dispatch)
+    assert(ok, "RouteLiveEvent should not error when callbacks are absent")
+    teardown()
   end
 end

@@ -122,4 +122,92 @@ return function()
     assert(windowState.tabMode == "whispers", "expected whispers tab to be forced")
     assert((windowState.focusCount or 0) >= 1, "expected composer input to be focused at least once")
   end
+
+  -- Case 5: typed name colliding with a BN conversation creates a new WOW conversation.
+  -- Lookup ignores BN entries so a typed "Uther" never re-uses "Uther#1234".
+  do
+    local runtime = makeRuntime()
+    runtime.store.conversations["wow::BN::uther#1234"] = {
+      conversationKey = "wow::BN::uther#1234",
+      displayName = "Uther",
+      channel = "BN",
+      battleTag = "Uther#1234",
+      messages = {},
+    }
+    local selectedKey = nil
+    local result = StartConversation.Create({
+      runtime = runtime,
+      getWindow = function()
+        return makeWindow({})
+      end,
+      selectConversation = function(key)
+        selectedKey = key
+      end,
+    })
+
+    assert(result.startConversation("Uther") == true, "expected typed name to create a new WOW conversation")
+    assert(selectedKey ~= "wow::BN::uther#1234", "expected typed name to skip BN conversation")
+    assert(runtime.store.conversations[selectedKey].channel == "WOW", "expected new conversation to be a WOW whisper")
+    assert(runtime.store.conversations["wow::BN::uther#1234"] ~= nil, "BN conversation should remain intact")
+  end
+
+  -- Case 6: ambiguous base-name with multiple matches creates a new conversation rather than
+  -- guessing which existing realm the user meant.
+  do
+    local runtime = makeRuntime()
+    runtime.store.conversations["Player-1234::Arthas-Area52"] = {
+      conversationKey = "Player-1234::Arthas-Area52",
+      displayName = "Arthas-Area52",
+      channel = "WOW",
+      messages = {},
+    }
+    runtime.store.conversations["Player-1234::Arthas-Stormrage"] = {
+      conversationKey = "Player-1234::Arthas-Stormrage",
+      displayName = "Arthas-Stormrage",
+      channel = "WOW",
+      messages = {},
+    }
+    local selectedKey = nil
+    local result = StartConversation.Create({
+      runtime = runtime,
+      getWindow = function()
+        return makeWindow({})
+      end,
+      selectConversation = function(key)
+        selectedKey = key
+      end,
+    })
+
+    assert(result.startConversation("Arthas") == true, "ambiguous base-name should still succeed")
+    assert(
+      selectedKey ~= "Player-1234::Arthas-Area52" and selectedKey ~= "Player-1234::Arthas-Stormrage",
+      "ambiguous base-name should not pick an existing conversation arbitrarily, got: " .. tostring(selectedKey)
+    )
+    assert(runtime.store.conversations["Player-1234::Arthas-Area52"] ~= nil, "existing Area52 conversation should remain")
+    assert(runtime.store.conversations["Player-1234::Arthas-Stormrage"] ~= nil, "existing Stormrage conversation should remain")
+  end
+
+  -- Case 7: exact full-name match (case-insensitive, trimmed) reuses the existing conversation.
+  do
+    local runtime = makeRuntime()
+    runtime.store.conversations["Player-1234::Arthas-Area52"] = {
+      conversationKey = "Player-1234::Arthas-Area52",
+      displayName = "Arthas-Area52",
+      channel = "WOW",
+      messages = {},
+    }
+    local selectedKey = nil
+    local result = StartConversation.Create({
+      runtime = runtime,
+      getWindow = function()
+        return makeWindow({})
+      end,
+      selectConversation = function(key)
+        selectedKey = key
+      end,
+    })
+
+    assert(result.startConversation("  arTHas-ARea52  ") == true, "case-insensitive full-name match should succeed")
+    assert(selectedKey == "Player-1234::Arthas-Area52", "expected exact full-name match to reuse existing key")
+  end
 end
