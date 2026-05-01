@@ -7,6 +7,8 @@ local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
 
+local TimeFormat = ns.TimeFormat or (type(require) == "function" and require("WhisperMessenger.Util.TimeFormat")) or nil
+
 local GroupMembership = {}
 
 -- Label shown as a system message when the player leaves a given group type.
@@ -26,6 +28,10 @@ end
 local function appendLeftMessage(conversation, channel, now)
   conversation.messages = conversation.messages or {}
   local text = LEFT_LABEL[channel] or "Left group."
+  local timeStr = TimeFormat and TimeFormat.MessageTime and TimeFormat.MessageTime(now) or ""
+  if timeStr ~= "" then
+    text = text .. " · " .. timeStr
+  end
   table.insert(conversation.messages, {
     id = tostring(now) .. "-left-" .. channel,
     kind = "system",

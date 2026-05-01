@@ -2,8 +2,9 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
-## [Unreleased]
+## [1.2.5] - 2026-05-01
 
+- Leaving a party, raid, or instance now shows the time alongside the "Left party." note in the conversation, so you know exactly when the group ended.
 - Fixed: pressing the reply key (R by default) no longer inserts the letter "r" into the composer input when the messenger opens.
 - Fixed: pressing Enter after leaving combat no longer unexpectedly opens the messenger when WoW's chat box still had a whisper reply target set from the fight.
 - Fixed: typing `/w` to a character after a Battle.net whisper no longer gets pulled into the previous Battle.net conversation. The messenger now opens the character chat and carries over only the message text you typed.
