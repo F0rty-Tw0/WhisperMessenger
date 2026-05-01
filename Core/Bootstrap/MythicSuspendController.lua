@@ -87,6 +87,13 @@ function MythicSuspendController.Attach(runtime, deps)
     -- scrub.
     runtime.lastIncomingWhisperKey = nil
 
+    -- If Blizzard handled a whisper while we were suspended, its default chat
+    -- edit box may still hold the latest reply target. Capture it into our own
+    -- taint-safe reply state before scrubbing Blizzard's sticky attributes.
+    if ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+      ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
+    end
+
     -- Scrub Blizzard's stale whisper sticky state on the default chat edit
     -- box. If the user replied via /r or R-key during M+ (Blizzard handled
     -- the whisper because we were suspended), chatType=WHISPER and

@@ -11,6 +11,31 @@ local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMes
 
 local Poller = {}
 
+local WHISPER_SLASH_COMMANDS = {
+  w = true,
+  whisper = true,
+  t = true,
+  tell = true,
+}
+
+local function parseSlashCommandText(text)
+  if type(text) ~= "string" or string.match(text, "^%s*/") == nil then
+    return false, nil, nil
+  end
+
+  local command, target, body = string.match(text, "^%s*/([^%s]+)%s+([^%s]+)%s*(.-)%s*$")
+  if command == nil then
+    return true, nil, nil
+  end
+
+  command = string.lower(command)
+  if not WHISPER_SLASH_COMMANDS[command] then
+    return true, nil, nil
+  end
+
+  return true, target, body or ""
+end
+
 function Poller.Install(runtime, hooks, deps)
   local createFrame = deps.createFrame
   if type(createFrame) ~= "function" then
@@ -50,19 +75,25 @@ function Poller.Install(runtime, hooks, deps)
       end
 
       -- GetText and string comparisons may also return tainted values
-      -- during lockdown; wrap the slash-command guard in pcall so a taint
-      -- error skips the guard rather than crashing the poller.
-      local isNonWhisperSlash = false
-      pcall(function()
+      -- during lockdown. If text cannot be read safely, do not trust
+      -- potentially stale edit-box attributes for auto-open routing.
+      local slashCommandSeen = false
+      local slashWhisperTarget = nil
+      local slashWhisperBody = nil
+      local textReadable = pcall(function()
         local text = editBox.GetText and editBox:GetText() or ""
-        if string.sub(text, 1, 1) == "/" then
-          local command = string.lower(string.match(text, "^(/[^%s]*)") or "")
-          if command ~= "/w" and command ~= "/whisper" then
-            isNonWhisperSlash = true
-          end
-        end
+        slashCommandSeen, slashWhisperTarget, slashWhisperBody = parseSlashCommandText(text)
       end)
-      if isNonWhisperSlash then
+      if not textReadable then
+        return
+      end
+      if slashWhisperTarget ~= nil and slashWhisperTarget ~= "" then
+        if hooks.onSendTell(slashWhisperTarget) then
+          EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat, slashWhisperBody or "")
+        end
+        return
+      end
+      if slashCommandSeen then
         return
       end
 

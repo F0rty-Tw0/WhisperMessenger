@@ -276,6 +276,78 @@ return function()
   assert(bnEditBox:GetText() == "", "expected BN intercepted edit box text cleared")
   assert(bnEditBox:HasFocus() == false, "expected BN intercepted edit box to lose focus")
 
+  -- test_stale_bn_state_does_not_hijack_explicit_character_whisper
+  do
+    local staleBnBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local staleBnAttrState = { chatType = "BN_WHISPER", stickyType = "SAY", tellTarget = "Friend#1234" }
+    function staleBnBox:GetAttribute(key)
+      return staleBnAttrState[key]
+    end
+
+    function staleBnBox:SetAttribute(key, value)
+      staleBnAttrState[key] = value
+    end
+
+    staleBnBox.chatType = "BN_WHISPER"
+    staleBnBox.tellTarget = "Friend#1234"
+    staleBnBox.stickyType = "SAY"
+    staleBnBox:SetText("/w Thrall hello")
+    staleBnBox:SetFocus()
+    _G.ChatFrame1EditBox = staleBnBox
+
+    local prevSendTellCount = #sendTellCalls
+    local prevOutgoingCount = #outgoingCalls
+    local prevDeactivatedCount = #deactivated
+    local prevComposerTextCount = #composerTexts
+    pollFrame.scripts.OnUpdate(pollFrame)
+
+    assert(#sendTellCalls == prevSendTellCount + 1, "expected slash whisper draft to route through character whisper")
+    assert(sendTellCalls[#sendTellCalls] == "Thrall", "expected slash whisper target parsed from /w command")
+    assert(#outgoingCalls == prevOutgoingCount, "expected stale BN state not to open BNet conversation while typing /w")
+    assert(#deactivated == prevDeactivatedCount + 1, "expected routed slash whisper draft to close Blizzard edit box")
+    assert(composerTexts[#composerTexts] == "hello", "expected only slash whisper message body copied into composer")
+    assert(#composerTexts == prevComposerTextCount + 1, "expected slash command prefix not to be copied into composer")
+    assert(staleBnBox:GetText() == "", "expected routed slash whisper draft to clear default edit box")
+    assert(staleBnBox:HasFocus() == false, "expected routed slash whisper draft to lose focus")
+
+    local taintedTextBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local taintedTextAttrState = { chatType = "BN_WHISPER", stickyType = "SAY", tellTarget = "Friend#1234" }
+    function taintedTextBox:GetAttribute(key)
+      return taintedTextAttrState[key]
+    end
+
+    function taintedTextBox:SetAttribute(key, value)
+      taintedTextAttrState[key] = value
+    end
+
+    taintedTextBox.chatType = "BN_WHISPER"
+    taintedTextBox.tellTarget = "Friend#1234"
+    taintedTextBox.stickyType = "SAY"
+    taintedTextBox.GetText = function()
+      error("attempt to read secret string value (tainted by 'WhisperMessenger')")
+    end
+    taintedTextBox:SetFocus()
+    _G.ChatFrame1EditBox = taintedTextBox
+
+    prevOutgoingCount = #outgoingCalls
+    prevDeactivatedCount = #deactivated
+    pollFrame.scripts.OnUpdate(pollFrame)
+
+    assert(#outgoingCalls == prevOutgoingCount, "expected unreadable slash draft state not to route stale BNet conversation")
+    assert(#deactivated == prevDeactivatedCount, "expected unreadable slash draft state to stay in Blizzard edit box")
+    assert(taintedTextBox:HasFocus() == true, "expected unreadable slash draft state to keep focus")
+
+    prevSendTellCount = #sendTellCalls
+    prevOutgoingCount = #outgoingCalls
+    local prevTimerCount = #timerCallbacks
+    hookedFunctions["ChatFrame_SendTell"][1]("Thrall")
+
+    assert(#sendTellCalls == prevSendTellCount + 1, "expected explicit SendTell target to route as character whisper")
+    assert(sendTellCalls[#sendTellCalls] == "Thrall", "expected explicit SendTell target preserved")
+    assert(#outgoingCalls == prevOutgoingCount, "expected explicit character whisper not to route through BNet conversation")
+    assert(#timerCallbacks == prevTimerCount + 1, "expected explicit character whisper to schedule deferred close")
+  end
+
   -- test_direct_hooks_installed_for_whisper_functions
 
   assert(hookedFunctions["ChatFrame_SendTell"] ~= nil, "expected ChatFrame_SendTell to be hooked")

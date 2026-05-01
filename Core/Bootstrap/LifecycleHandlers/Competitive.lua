@@ -53,6 +53,9 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
+    if Bootstrap.runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+      ChatReplyState.CaptureStaleWhisperReplyTarget(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
+    end
     if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
@@ -63,6 +66,16 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   end
 
   return false
+end
+
+function Competitive.handleCombatEnd(Bootstrap, deps)
+  if Bootstrap.runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+    ChatReplyState.CaptureStaleWhisperReplyTarget(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
+  end
+  if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
+  end
+  return true
 end
 
 function Competitive.handleZoneChangedNewArea(Bootstrap, deps)

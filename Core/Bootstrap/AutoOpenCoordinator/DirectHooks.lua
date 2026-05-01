@@ -62,6 +62,7 @@ function DirectHooks.Install(runtime, hooks, deps)
     -- editBox.tellTarget can reintroduce ambiguous name-based routing.
     local isReplyHook = type(nameArg) ~= "string" or nameArg == ""
     local target = (not isReplyHook) and nameArg or nil
+    local hasExplicitSendTellTarget = target ~= nil
 
     local editBox
     if type(_G.ChatEdit_GetActiveWindow) == "function" then
@@ -97,7 +98,7 @@ function DirectHooks.Install(runtime, hooks, deps)
       end
     elseif not target or target == "" then
       return
-    elseif chatType == "BN_WHISPER" then
+    elseif chatType == "BN_WHISPER" and not hasExplicitSendTellTarget then
       pcall(function()
         local accountInfo = EditBoxInterop.findBattleNetAccountInfo(target, deps.bnetApi, deps.getNumFriends)
         if not accountInfo then

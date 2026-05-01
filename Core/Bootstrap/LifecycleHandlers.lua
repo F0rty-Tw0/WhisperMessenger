@@ -50,6 +50,10 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     return true
   end
 
+  if event == "PLAYER_REGEN_ENABLED" then
+    return Competitive.handleCombatEnd(Bootstrap, deps)
+  end
+
   if event == "ZONE_CHANGED_NEW_AREA" then
     return Competitive.handleZoneChangedNewArea(Bootstrap, deps)
   end

@@ -76,11 +76,16 @@ function EditBoxInterop.shouldPreserveCombatDraft(editBox)
   return false
 end
 
-function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat)
+function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat, composerTextOverride)
   local typed = readEditBoxText(editBox)
-  -- typed == nil means secret value: skip copying to composer (can't read it).
-  if typed ~= nil and typed ~= "" and runtime.setComposerText then
-    runtime.setComposerText(typed)
+  local composerText = typed
+  if composerTextOverride ~= nil then
+    composerText = composerTextOverride
+  end
+  -- typed == nil means secret value: skip copying to composer unless caller
+  -- supplied safe parsed text from already-readable input.
+  if composerText ~= nil and composerText ~= "" and runtime.setComposerText then
+    runtime.setComposerText(composerText)
   end
 
   -- When sticky is a non-whisper mode, restore chatType to that sticky type

@@ -29,7 +29,7 @@ local function isWhisperConversation(conv)
   if channel == nil then
     return true
   end
-  return channel == "WHISPER" or channel == "BN_WHISPER"
+  return channel == "WOW" or channel == "BN" or channel == "WHISPER" or channel == "BN_WHISPER"
 end
 
 function ReplyToLast.Create(deps)
@@ -57,15 +57,11 @@ function ReplyToLast.Create(deps)
 
   return function()
     local function scrubLeakedR()
-      -- Safety-net for the R-override: on key-up after our macro focused
-      -- the composer, the triggering keystroke can leak in as 'r'. One
-      -- frame later, strip it if and only if the text is exactly "r" or
-      -- "R" — so legitimate drafts are never touched.
       local timer = _G.C_Timer
       if type(timer) ~= "table" or type(timer.After) ~= "function" then
         return
       end
-      timer.After(0, function()
+      local function doScrub()
         local window = runtime.window
         local input = window and window.composer and window.composer.input
         if input and input.GetText and input.SetText then
@@ -74,6 +70,13 @@ function ReplyToLast.Create(deps)
             input:SetText("")
           end
         end
+      end
+      -- C_Timer.After(0) fires at frame start, before WoW's OnChar dispatch.
+      -- The leaked 'r' arrives during frame N+1's input phase (after timer
+      -- callbacks), so a single defer misses it. Double-defer runs on frame
+      -- N+2, after the char is already in the box.
+      timer.After(0, function()
+        timer.After(0, doScrub)
       end)
     end
 

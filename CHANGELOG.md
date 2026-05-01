@@ -4,9 +4,12 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+- Fixed: pressing the reply key (R by default) no longer inserts the letter "r" into the composer input when the messenger opens.
+- Fixed: pressing Enter after leaving combat no longer unexpectedly opens the messenger when WoW's chat box still had a whisper reply target set from the fight.
+- Fixed: typing `/w` to a character after a Battle.net whisper no longer gets pulled into the previous Battle.net conversation. The messenger now opens the character chat and carries over only the message text you typed.
+- Fixed: Reply after Mythic+ or a raid boss fight now uses the last whispered character when WoW handled the whisper in default chat during the fight.
 - Fixed: selected text in the manual copy dialog is now clearly highlighted. The selection was invisible because the styled dark input background made WoW's default blue selection blend in completely.
 - Fixed: hovering an item link in a message no longer makes the item tooltip vanish when the System or Morpheus font is selected. The small copy button in the bubble corner could dismiss the tooltip as the cursor crossed over it; it now leaves other tooltips alone.
-- Fixed: Reply now selects the messenger text box again, including replies after a raid boss fight where WoW had temporarily handled whispers in the default chat.
 
 ## [1.2.4] - 2026-04-26
 

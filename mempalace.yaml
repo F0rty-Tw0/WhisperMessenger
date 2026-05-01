@@ -18,6 +18,8 @@ rooms:
   description: Files from UI/
 - name: util
   description: Files from Util/
+- name: design
+  description: Files from assets/
 - name: research
   description: Files from research/
 - name: general

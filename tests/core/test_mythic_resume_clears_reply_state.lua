@@ -104,7 +104,14 @@ return function()
   -- ends our auto-open poller would see that focused edit box on the next
   -- Enter and re-open the messenger to that conversation.
   do
-    local runtime = { lastIncomingWhisperKey = nil }
+    local runtime = {
+      lastIncomingWhisperKey = nil,
+      localProfileId = "me",
+      store = { conversations = {} },
+      now = function()
+        return 200
+      end,
+    }
     local Bootstrap = {
       _loadFrame = {},
       unregisterChatFilters = function() end,
@@ -168,5 +175,8 @@ return function()
       attributes.stickyType == "SAY",
       "resume must restore stale WHISPER stickyType to a non-whisper fallback (SAY), got " .. tostring(attributes.stickyType)
     )
+    assert(runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "resume must capture default chat tellTarget as reply target")
+    assert(runtime.store.conversations["wow::WOW::jaina"] ~= nil, "resume must ensure a conversation for captured reply target")
+    assert(runtime.store.conversations["wow::WOW::jaina"].channel == "WOW", "captured reply target must be a character whisper conversation")
   end
 end

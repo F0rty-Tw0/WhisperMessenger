@@ -64,8 +64,8 @@ return function()
     local conversations = {
       ["party::arthas-area52"] = { lastActivityAt = 2000, channel = "PARTY" },
       ["guild::MyGuild"] = { lastActivityAt = 1500, channel = "GUILD" },
-      ["wow::WOW::jaina-proudmoore"] = { lastActivityAt = 1000, channel = "WHISPER" },
-      ["wow::WOW::thrall-draenor"] = { lastActivityAt = 800, channel = "WHISPER" },
+      ["wow::WOW::jaina-proudmoore"] = { lastActivityAt = 1000, channel = "WOW" },
+      ["wow::WOW::thrall-draenor"] = { lastActivityAt = 800, channel = "WOW" },
     }
     local deps = makeDeps({ conversations = conversations })
     local replyFn = ReplyToLast.Create(deps)
@@ -86,7 +86,7 @@ return function()
   do
     local conversations = {
       ["party::arthas-area52"] = { lastActivityAt = 9999, channel = "PARTY" },
-      ["wow::WOW::jaina-proudmoore"] = { lastActivityAt = 500, channel = "WHISPER" },
+      ["wow::WOW::jaina-proudmoore"] = { lastActivityAt = 500, channel = "WOW" },
     }
     local deps = makeDeps({
       conversations = conversations,

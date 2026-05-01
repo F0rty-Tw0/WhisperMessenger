@@ -132,7 +132,18 @@ return function()
         return ""
       end,
     }
-    local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = {
+        localProfileId = "me",
+        store = { conversations = {} },
+        now = function()
+          return 300
+        end,
+        suspend = function() end,
+        resume = function() end,
+      },
+    }
 
     LifecycleHandlers.Handle(
       Bootstrap,
@@ -153,6 +164,12 @@ return function()
     assert(attributes.tellTarget == nil, "encounter end must clear stale Blizzard tellTarget after boss-fight reply")
     assert(attributes.chatType == "SAY", "encounter end must restore stale whisper chatType to SAY, got " .. tostring(attributes.chatType))
     assert(attributes.stickyType == "SAY", "encounter end must restore stale whisper stickyType to SAY, got " .. tostring(attributes.stickyType))
+    assert(Bootstrap.runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "encounter end must capture default chat tellTarget as reply target")
+    assert(Bootstrap.runtime.store.conversations["wow::WOW::jaina"] ~= nil, "encounter end must ensure a conversation for captured reply target")
+    assert(
+      Bootstrap.runtime.store.conversations["wow::WOW::jaina"].channel == "WOW",
+      "captured encounter reply target must be a character whisper conversation"
+    )
   end
 
   -- test_encounter_start_calls_competitive_state_callback
@@ -341,6 +358,59 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
     assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_END")
+  end
+
+  -- test_player_regen_enabled_scrubs_stale_whisper_reply_state
+
+  do
+    local attributes = {
+      chatType = "WHISPER",
+      stickyType = "WHISPER",
+      tellTarget = "Jaina",
+    }
+    local editBox = {
+      GetAttribute = function(self, key)
+        return attributes[key]
+      end,
+      SetAttribute = function(self, key, value)
+        attributes[key] = value
+      end,
+      GetText = function()
+        return ""
+      end,
+    }
+    local Bootstrap = {
+      runtime = {
+        localProfileId = "me",
+        store = { conversations = {} },
+        now = function()
+          return 300
+        end,
+        suspend = function() end,
+        resume = function() end,
+      },
+    }
+
+    LifecycleHandlers.Handle(
+      Bootstrap,
+      "PLAYER_REGEN_ENABLED",
+      makeDeps(nil, {
+        getNumChatWindows = function()
+          return 1
+        end,
+        getEditBox = function(index)
+          if index == 1 then
+            return editBox
+          end
+          return nil
+        end,
+      })
+    )
+
+    assert(attributes.tellTarget == nil, "combat end must clear stale Blizzard tellTarget so Enter does not re-open messenger post-combat")
+    assert(attributes.chatType == "SAY", "combat end must restore stale whisper chatType to SAY, got " .. tostring(attributes.chatType))
+    assert(attributes.stickyType == "SAY", "combat end must restore stale whisper stickyType to SAY, got " .. tostring(attributes.stickyType))
+    assert(Bootstrap.runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "combat end must capture stale reply target before clearing")
   end
 
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)

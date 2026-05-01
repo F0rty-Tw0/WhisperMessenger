@@ -29,7 +29,7 @@ if (-not $hasHererocks) {
 
 Write-Host "[2/6] Ensuring local Lua + LuaRocks environment..."
 if (-not (Test-Path $luarocksBat)) {
-  & python -m hererocks $hererocksRoot -l5.4 -rlatest
+  & python -m hererocks $hererocksRoot -l 5.4 -r latest
 }
 
 $configPath = Join-Path $hererocksRoot "luarocks/config-5.4.lua"
