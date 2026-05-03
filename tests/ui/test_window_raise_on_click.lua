@@ -216,14 +216,8 @@ return function()
       handler(composerInput)
     end
 
-    assert(
-      h.frame.frameStrata == "HIGH",
-      "expected composer input focus to promote strata to HIGH; got " .. tostring(h.frame.frameStrata)
-    )
-    assert(
-      h.getRaiseCalls() >= prevRaiseCalls + 1,
-      "expected composer input focus to call frame:Raise() within the promoted strata"
-    )
+    assert(h.frame.frameStrata == "HIGH", "expected composer input focus to promote strata to HIGH; got " .. tostring(h.frame.frameStrata))
+    assert(h.getRaiseCalls() >= prevRaiseCalls + 1, "expected composer input focus to call frame:Raise() within the promoted strata")
   end
 
   -- OnMouseDown must not steal keyboard focus from the composer, even when

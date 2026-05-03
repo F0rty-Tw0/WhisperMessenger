@@ -699,14 +699,8 @@ return function()
       partialBox:SetText(draft)
       partialBox:SetFocus()
       pollFrame.scripts.OnUpdate(pollFrame)
-      assert(
-        #sendTellCalls == prevSendTellCount,
-        "expected partial '/w' draft '" .. draft .. "' not to route through onSendTell"
-      )
-      assert(
-        #deactivated == prevDeactivatedCount,
-        "expected partial '/w' draft '" .. draft .. "' to remain in Blizzard chat edit box"
-      )
+      assert(#sendTellCalls == prevSendTellCount, "expected partial '/w' draft '" .. draft .. "' not to route through onSendTell")
+      assert(#deactivated == prevDeactivatedCount, "expected partial '/w' draft '" .. draft .. "' to remain in Blizzard chat edit box")
       assert(partialBox:GetText() == draft, "expected partial '/w' draft text preserved while typing")
       assert(partialBox:HasFocus() == true, "expected partial '/w' draft to keep focus while typing")
     end
