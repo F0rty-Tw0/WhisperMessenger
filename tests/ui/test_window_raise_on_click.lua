@@ -71,6 +71,25 @@ local function buildHarness(options)
 end
 
 return function()
+  -- OnShow must promote strata so the messenger sits above other windows
+  -- the user already has open (Auction House, World Map, etc.). Without
+  -- this, opening the messenger while AH or the map is up would leave our
+  -- window stuck behind those HIGH-strata frames at MEDIUM.
+  do
+    local h = buildHarness({})
+    assert(h.frame.frameStrata == "MEDIUM", "precondition: window starts at MEDIUM strata")
+
+    local onShow = h.scripts.OnShow
+    assert(type(onShow) == "function", "expected frame to have OnShow handler")
+    onShow(h.frame)
+
+    assert(
+      h.frame.frameStrata == "HIGH",
+      "expected OnShow to promote strata to HIGH so the window sits above AH/Map; got " .. tostring(h.frame.frameStrata)
+    )
+    assert(h.getRaiseCalls() >= 1, "expected OnShow to call frame:Raise() within the promoted strata")
+  end
+
   -- OnMouseDown promotes strata to HIGH and raises within strata.
   do
     local h = buildHarness({})
@@ -160,6 +179,51 @@ return function()
     h.frame.mouseOver = true
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(h.frame.frameStrata == "HIGH", "expected clicks inside our frame to leave strata HIGH; got " .. tostring(h.frame.frameStrata))
+  end
+
+  -- Clicking (or otherwise focusing) the composer input must promote the
+  -- window the same way clicking the frame chrome does. Without this, the
+  -- user can type into the composer while the window stays behind AH/Map
+  -- because the EditBox swallows the click and the frame's OnMouseDown
+  -- never fires.
+  do
+    local hookedScripts = {}
+    local composerInput = {
+      _focused = false,
+      HasFocus = function(self)
+        return self._focused
+      end,
+      SetFocus = function(self)
+        self._focused = true
+      end,
+      HookScript = function(self, scriptName, handler)
+        hookedScripts[scriptName] = hookedScripts[scriptName] or {}
+        hookedScripts[scriptName][#hookedScripts[scriptName] + 1] = handler
+      end,
+    }
+    local h = buildHarness({ composerInput = composerInput })
+    assert(h.frame.frameStrata == "MEDIUM", "precondition: window starts at MEDIUM strata")
+
+    local focusHandlers = hookedScripts["OnEditFocusGained"]
+    assert(
+      type(focusHandlers) == "table" and #focusHandlers >= 1,
+      "expected ScriptBindings to hook OnEditFocusGained on composer input so clicks into the input promote the window"
+    )
+
+    local prevRaiseCalls = h.getRaiseCalls()
+    composerInput._focused = true
+    for _, handler in ipairs(focusHandlers) do
+      handler(composerInput)
+    end
+
+    assert(
+      h.frame.frameStrata == "HIGH",
+      "expected composer input focus to promote strata to HIGH; got " .. tostring(h.frame.frameStrata)
+    )
+    assert(
+      h.getRaiseCalls() >= prevRaiseCalls + 1,
+      "expected composer input focus to call frame:Raise() within the promoted strata"
+    )
   end
 
   -- OnMouseDown must not steal keyboard focus from the composer, even when

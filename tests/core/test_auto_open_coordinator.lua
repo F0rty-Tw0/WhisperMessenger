@@ -669,6 +669,57 @@ return function()
     windowVisible = false
   end
 
+  -- test_poller_does_not_route_partial_slash_whisper_target_while_typing
+  -- Regression: typing `/w` followed by a name in default chat must not auto-open
+  -- the messenger on every keystroke. The auto-open should only fire after the
+  -- user finishes typing the target name (signalled by trailing whitespace before
+  -- the body), so `/w S`, `/w Sh`, `/w Shalomonk` all stay in the default chat box.
+
+  do
+    local partialBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local partialAttrState = { chatType = "OPENCHAT", stickyType = "SAY" }
+    function partialBox:GetAttribute(key)
+      return partialAttrState[key]
+    end
+    function partialBox:SetAttribute(key, value)
+      partialAttrState[key] = value
+    end
+    partialBox.chatType = "OPENCHAT"
+    partialBox.stickyType = "SAY"
+    partialBox:SetFocus()
+    _G.ChatFrame1EditBox = partialBox
+
+    sendTellResult = true
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+
+    local partialDrafts = { "/w S", "/w Sh", "/w Shalomonk" }
+    for index = 1, #partialDrafts do
+      local draft = partialDrafts[index]
+      partialBox:SetText(draft)
+      partialBox:SetFocus()
+      pollFrame.scripts.OnUpdate(pollFrame)
+      assert(
+        #sendTellCalls == prevSendTellCount,
+        "expected partial '/w' draft '" .. draft .. "' not to route through onSendTell"
+      )
+      assert(
+        #deactivated == prevDeactivatedCount,
+        "expected partial '/w' draft '" .. draft .. "' to remain in Blizzard chat edit box"
+      )
+      assert(partialBox:GetText() == draft, "expected partial '/w' draft text preserved while typing")
+      assert(partialBox:HasFocus() == true, "expected partial '/w' draft to keep focus while typing")
+    end
+
+    -- Once the user types a space after the name (commit signal), the poller routes.
+    partialBox:SetText("/w Shalomonk ")
+    partialBox:SetFocus()
+    pollFrame.scripts.OnUpdate(pollFrame)
+    assert(#sendTellCalls == prevSendTellCount + 1, "expected committed '/w name ' draft to route through onSendTell")
+    assert(sendTellCalls[#sendTellCalls] == "Shalomonk", "expected committed slash whisper target preserved")
+    assert(#deactivated == prevDeactivatedCount + 1, "expected committed slash whisper draft to close Blizzard edit box")
+  end
+
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
   rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)

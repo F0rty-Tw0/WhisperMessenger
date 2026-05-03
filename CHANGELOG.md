@@ -2,6 +2,11 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.6] - 2026-05-03
+
+- Fixed: typing `/w Name` in WoW's chat box no longer pops the messenger open on the first letter of the name. The messenger now waits until you finish typing the name (and add a space) before taking over, so you can type `/w Name` without the window jumping in mid-name.
+- Opening the messenger while the Auction House, World Map, or another window is up now brings it to the front instead of leaving it stuck behind. Clicking the message input also lifts the window forward, just like clicking the window's frame or title bar.
+
 ## [1.2.5] - 2026-05-01
 
 - Leaving a party, raid, or instance now shows the time alongside the "Left party." note in the conversation, so you know exactly when the group ended.

@@ -23,7 +23,9 @@ local function parseSlashCommandText(text)
     return false, nil, nil
   end
 
-  local command, target, body = string.match(text, "^%s*/([^%s]+)%s+([^%s]+)%s*(.-)%s*$")
+  -- Require whitespace after the target name; otherwise the pattern matches
+  -- mid-typing `/w S` and routes the half-typed name on the first keystroke.
+  local command, target, body = string.match(text, "^%s*/([^%s]+)%s+([^%s]+)%s+(.-)%s*$")
   if command == nil then
     return true, nil, nil
   end

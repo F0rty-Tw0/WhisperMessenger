@@ -80,6 +80,9 @@ function ScriptBindings.Bind(options)
     frame:SetScript("OnShow", function()
       alphaElapsed = 0
       options.refreshWindowAlpha(true)
+      -- Promote on Show so we sit above HIGH-strata frames the user already
+      -- has open (Auction House, World Map). Outside-click still demotes.
+      promoteStrata()
       if options.composerInput and options.getAutoFocusChatInput and options.getAutoFocusChatInput() and options.composerInput.SetFocus then
         options.composerInput:SetFocus()
       end
@@ -170,6 +173,15 @@ function ScriptBindings.Bind(options)
       end
       windowResize.stop(button)
       contactsResize.stop(button)
+    end)
+  end
+
+  -- The composer EditBox swallows clicks, so OnMouseDown on the frame
+  -- doesn't fire when the user clicks into the input. Hook focus-gained on
+  -- the input so clicking it also brings the window above AH/Map.
+  if options.composerInput and type(options.composerInput.HookScript) == "function" then
+    options.composerInput:HookScript("OnEditFocusGained", function()
+      promoteStrata()
     end)
   end
 
