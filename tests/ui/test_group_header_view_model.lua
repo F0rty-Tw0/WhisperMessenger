@@ -153,7 +153,7 @@ return function()
       ownerProfileId = "jaina-proudmoore",
     }
     local vm = GroupHeaderViewModel.Build(partyContact, nil)
-    assert(vm.title == "Jaina — Party", "foreign-owner party title should be prefixed; got: " .. tostring(vm.title))
+    assert(vm.title == "Jaina - Party", "foreign-owner party title should be prefixed; got: " .. tostring(vm.title))
 
     -- Foreign guild must NOT adopt the current char's live guild name —
     -- it's another character's guild history. Title should be the
@@ -164,7 +164,7 @@ return function()
       ownerProfileId = "thrall-draenor",
     }
     local guildVm = GroupHeaderViewModel.Build(guildContact, nil)
-    assert(guildVm.title == "Thrall — Guild", "foreign-owner guild should NOT use current char's guild name; got: " .. tostring(guildVm.title))
+    assert(guildVm.title == "Thrall - Guild", "foreign-owner guild should NOT use current char's guild name; got: " .. tostring(guildVm.title))
 
     _G.GetGuildInfo = savedGetGuildInfo
   end

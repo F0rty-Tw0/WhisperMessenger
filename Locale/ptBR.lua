@@ -226,7 +226,7 @@ local Portuguese = {
   -- Dungeon/competitive chat log messages
   ["Suspended for mythic content. Whispers will resume when you leave."] = "Pausado por conteúdo mítico. Os sussurros voltarão ao sair.",
   ["Resumed. Whispers are active again."] = "Retomado. Os sussurros estão ativos novamente.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = "/r e a tecla R podem falhar em Mítico+ enquanto \"Ocultar sussurros do chat padrão\" estiver ativo. Use |cffffff00/wr|r para responder (ou atribua a R via macro).",
+  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r e a tecla R podem falhar em Mítico+ enquanto "Ocultar sussurros do chat padrão" estiver ativo. Use |cffffff00/wr|r para responder (ou atribua a R via macro).',
   ["Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."] = "Os sussurros estão pausados em conteúdo mítico. Mensagens recebidas e enviadas voltarão ao sair.",
   ["Whispers are paused in competitive content. Messages will resume when you leave."] = "Os sussurros estão pausados em conteúdo competitivo. As mensagens voltarão ao sair.",
   ["Left party"] = "Saiu do grupo",

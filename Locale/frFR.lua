@@ -226,7 +226,7 @@ local French = {
   -- Dungeon/competitive chat log messages
   ["Suspended for mythic content. Whispers will resume when you leave."] = "En pause pour contenu mythique. Les chuchotements reprendront à votre sortie.",
   ["Resumed. Whispers are active again."] = "Reprise. Les chuchotements sont à nouveau actifs.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = "/r et la touche R peuvent échouer en Mythique tant que \"Masquer les chuchotements du chat par défaut\" est actif. Utilisez |cffffff00/wr|r pour répondre (ou liez-le à R via une macro).",
+  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r et la touche R peuvent échouer en Mythique tant que "Masquer les chuchotements du chat par défaut" est actif. Utilisez |cffffff00/wr|r pour répondre (ou liez-le à R via une macro).',
   ["Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."] = "Les chuchotements sont en pause en contenu mythique. Les messages entrants et sortants reprendront à votre sortie.",
   ["Whispers are paused in competitive content. Messages will resume when you leave."] = "Les chuchotements sont en pause en contenu compétitif. Les messages reprendront à votre sortie.",
   ["Left party"] = "Groupe quitté",

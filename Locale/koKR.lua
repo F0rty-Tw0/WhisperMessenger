@@ -226,7 +226,7 @@ local Korean = {
   -- Dungeon/competitive chat log messages
   ["Suspended for mythic content. Whispers will resume when you leave."] = "신화 콘텐츠를 위해 일시 중지됨. 나가면 귓속말이 재개됩니다.",
   ["Resumed. Whispers are active again."] = "재개됨. 귓속말이 다시 활성화되었습니다.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = "\"기본 채팅에서 귓속말 숨기기\"가 켜져 있는 동안 신화+에서 /r 및 R 키가 실패할 수 있습니다. 응답에는 |cffffff00/wr|r을 사용하세요 (또는 매크로로 R에 바인딩).",
+  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '"기본 채팅에서 귓속말 숨기기"가 켜져 있는 동안 신화+에서 /r 및 R 키가 실패할 수 있습니다. 응답에는 |cffffff00/wr|r을 사용하세요 (또는 매크로로 R에 바인딩).',
   ["Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."] = "신화 콘텐츠에서 귓속말이 일시 중지되었습니다. 나가면 수신 및 발신 메시지가 재개됩니다.",
   ["Whispers are paused in competitive content. Messages will resume when you leave."] = "경쟁 콘텐츠에서 귓속말이 일시 중지되었습니다. 나가면 메시지가 재개됩니다.",
   ["Left party"] = "파티 떠남",
