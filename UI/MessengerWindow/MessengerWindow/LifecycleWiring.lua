@@ -35,7 +35,7 @@ function LifecycleWiring.Setup(options)
 
   options.setOptionsVisible(false)
 
-  options.scriptWiring.Wire({
+  local scriptResult = options.scriptWiring.Wire({
     windowScripts = options.windowScripts,
     buttonsRefs = {
       closeButton = chrome.closeButton,
@@ -84,7 +84,7 @@ function LifecycleWiring.Setup(options)
     },
   })
 
-  return relayoutWindow
+  return relayoutWindow, scriptResult or {}
 end
 
 ns.MessengerWindowLifecycleWiring = LifecycleWiring

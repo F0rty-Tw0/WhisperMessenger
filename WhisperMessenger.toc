@@ -23,6 +23,8 @@ Core/ContentDetector.lua
 Core/EventUtils.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
+Locale/ruRU.lua
+Locale/Localization.lua
 Util/ChatReplyState.lua
 
 Model/Identity/Factions.lua

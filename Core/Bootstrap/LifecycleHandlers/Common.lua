@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local function L(key) return Localization and Localization.Text(key) or key end
 local Common = {}
 
 Common.COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
@@ -29,7 +31,7 @@ function Common.notifyCompetitiveState(Bootstrap)
   -- Skip if mythic suspend already owns the notice (its own suspend/resume manages it).
   if Bootstrap.runtime and not Bootstrap._inMythicContent then
     if isActive then
-      Bootstrap.runtime.messagingNotice = Common.COMPETITIVE_NOTICE
+      Bootstrap.runtime.messagingNotice = L(Common.COMPETITIVE_NOTICE)
     else
       Bootstrap.runtime.messagingNotice = nil
     end

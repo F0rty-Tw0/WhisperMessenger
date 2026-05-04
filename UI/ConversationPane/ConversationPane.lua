@@ -104,6 +104,20 @@ function ConversationPane.RefreshActiveStatus(view, activeStatus)
   refreshBottomBanner(view)
 end
 
+function ConversationPane.SetLanguage(view)
+  if view == nil then
+    return
+  end
+  HeaderView.SetLanguage(view)
+  -- Re-running Refresh re-resolves the localized status line (StatusLine.Build
+  -- routes availability/class/faction labels through Localization on each call)
+  -- so the header reflects the new language without waiting for the next
+  -- selection change.
+  if view._selectedContact ~= nil or view._conversation ~= nil then
+    HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
+  end
+end
+
 function ConversationPane.SetStatus(view, status)
   if view.statusBanner == nil then
     return nil

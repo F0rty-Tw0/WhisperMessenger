@@ -5,6 +5,7 @@ end
 
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 
 local GroupSendPolicy = {}
 
@@ -94,11 +95,11 @@ function GroupSendPolicy.Create(options)
 
     -- Foreign-character group history is read-only from this character.
     if isForeignCharacterGroup(runtime, conversation, getPlayerGuildName) then
-      return "Another character's history — read-only."
+      return Localization and Localization.Text("Another character's history — read-only.") or "Another character's history — read-only."
     end
 
     if not chatGateway.CanSend(runtime.chatApi, conversation) then
-      return "Not in group — can't send."
+      return Localization and Localization.Text("Not in group — can't send.") or "Not in group — can't send."
     end
 
     return nil

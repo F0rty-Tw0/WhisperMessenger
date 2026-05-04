@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Factions = {}
 
 local ALLIANCE_RACES = {
@@ -43,13 +44,13 @@ function Factions.InferFaction(raceTag)
     return ALLIANCE_RACES[raceTag]
   end)
   if ok and isAlliance then
-    return "Alliance"
+    return Localization.Text("Alliance")
   end
   local ok2, isHorde = pcall(function()
     return HORDE_RACES[raceTag]
   end)
   if ok2 and isHorde then
-    return "Horde"
+    return Localization.Text("Horde")
   end
   -- Pandaren, Dracthyr, Earthen, unknown future neutral races, or tainted values.
   return nil

@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Composer = require("WhisperMessenger.UI.Composer.Composer")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 return function()
   Fonts.Initialize("default")
@@ -67,6 +68,13 @@ return function()
   assert(placeholder ~= nil, "expected placeholder FontString to exist")
   assert(placeholder.fontObject == expectedFont, "expected placeholder fontObject to be WM_ChatNormal, got: " .. tostring(placeholder.fontObject))
 
+
+  -- Composer text should localize when Russian is configured.
+  Localization.Configure({ language = "ruRU" })
+  local localizedComposer = Composer.Create(factory, parent, selectedContact, function() end, function() end)
+  assert(localizedComposer.sendButton.label.text == "Отпр.", "expected localized send button label")
+  assert(localizedComposer.placeholder.text == "Введите сообщение и нажмите Enter", "expected localized composer placeholder")
+  Localization.Configure({ language = "enUS" })
   -- The input EditBox should also have fontObject set
   local input = composer.input
   assert(input.fontObject == expectedFont, "expected input fontObject to be WM_ChatNormal, got: " .. tostring(input.fontObject))

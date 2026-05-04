@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local SoundSelector = ns.NotificationSettingsSoundSelector or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings.SoundSelector")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local NotificationSettings = {}
 
@@ -25,12 +26,24 @@ local DEFAULTS = {
   widgetPreviewPosition = "right",
 }
 
-local POSITION_OPTIONS = {
+local POSITION_OPTION_SPECS = {
   { key = "right", label = "Right" },
   { key = "left", label = "Left" },
   { key = "top", label = "Above" },
   { key = "bottom", label = "Below" },
 }
+
+local function text(key)
+  return Localization.Text(key)
+end
+
+local function buildPositionOptions()
+  local options = {}
+  for _, spec in ipairs(POSITION_OPTION_SPECS) do
+    options[#options + 1] = { key = spec.key, label = text(spec.label) }
+  end
+  return options
+end
 
 local function pxFormat(v)
   return tostring(math.floor(v + 0.5)) .. "px"
@@ -39,7 +52,7 @@ end
 local function secondsFormat(v)
   local n = math.floor(v + 0.5)
   if n <= 0 then
-    return "Off"
+    return text("Off")
   end
   return tostring(n) .. "s"
 end
@@ -53,8 +66,8 @@ function NotificationSettings.Create(factory, parent, config, options)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = "Notifications",
-    hint = "Configure alerts for incoming messages.",
+    title = text("Notifications"),
+    hint = text("Configure alerts for incoming messages."),
   })
   local hint = header.hint
 
@@ -68,7 +81,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.createToggleRow(
       factory,
       frame,
-      "Play sound on new whisper",
+      text("Play sound on new whisper"),
       config.playSoundOnWhisper == true,
       toggleColors,
       toggleLayout,
@@ -76,8 +89,8 @@ function NotificationSettings.Create(factory, parent, config, options)
         onChange("playSoundOnWhisper", value)
       end,
       {
-        "Play sound on new whisper",
-        "Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound.",
+        text("Play sound on new whisper"),
+        text("Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."),
       }
     ),
     { type = "toggle", key = "playSoundOnWhisper", default = DEFAULTS.playSoundOnWhisper }
@@ -98,7 +111,7 @@ function NotificationSettings.Create(factory, parent, config, options)
 
   local iconSizeRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = "Icon Size",
+      label = text("Icon Size"),
       min = 24,
       max = 64,
       step = 2,
@@ -116,7 +129,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.createToggleRow(
       factory,
       frame,
-      "Desaturate icon when idle",
+      text("Desaturate icon when idle"),
       config.iconDesaturated ~= false,
       toggleColors,
       toggleLayout,
@@ -124,8 +137,8 @@ function NotificationSettings.Create(factory, parent, config, options)
         onChange("iconDesaturated", value)
       end,
       {
-        "Desaturate icon when idle",
-        "Greyscales the toggle icon when there are no unread messages.",
+        text("Desaturate icon when idle"),
+        text("Greyscales the toggle icon when there are no unread messages."),
       }
     ),
     { type = "toggle", key = "iconDesaturated", default = DEFAULTS.iconDesaturated }
@@ -133,22 +146,22 @@ function NotificationSettings.Create(factory, parent, config, options)
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local showBadgeToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, "Show unread badge", config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
+    UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
       onChange("showUnreadBadge", value)
     end, {
-      "Show unread badge",
-      "Displays an unread message count on the toggle icon.",
+      text("Show unread badge"),
+      text("Displays an unread message count on the toggle icon."),
     }),
     { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
   )
   showBadgeToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local badgePulseToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, "Badge pulse animation", config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
+    UIHelpers.createToggleRow(factory, frame, text("Badge pulse animation"), config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
       onChange("badgePulse", value)
     end, {
-      "Badge pulse animation",
-      "Plays a pulsing glow on the unread badge when new whispers arrive.",
+      text("Badge pulse animation"),
+      text("Plays a pulsing glow on the unread badge when new whispers arrive."),
     }),
     { type = "toggle", key = "badgePulse", default = DEFAULTS.badgePulse }
   )
@@ -158,7 +171,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.createToggleRow(
       factory,
       frame,
-      "Show widget message preview",
+      text("Show widget message preview"),
       config.showWidgetMessagePreview ~= false,
       toggleColors,
       toggleLayout,
@@ -166,8 +179,8 @@ function NotificationSettings.Create(factory, parent, config, options)
         onChange("showWidgetMessagePreview", value)
       end,
       {
-        "Show widget message preview",
-        "Shows sender name and the latest incoming whisper preview on the draggable widget.",
+        text("Show widget message preview"),
+        text("Shows sender name and the latest incoming whisper preview on the draggable widget."),
       }
     ),
     { type = "toggle", key = "showWidgetMessagePreview", default = DEFAULTS.showWidgetMessagePreview }
@@ -180,7 +193,7 @@ function NotificationSettings.Create(factory, parent, config, options)
   end
   local autoDismissRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = "Auto-dismiss widget preview",
+      label = text("Auto-dismiss widget preview"),
       min = 0,
       max = 120,
       step = 5,
@@ -196,8 +209,8 @@ function NotificationSettings.Create(factory, parent, config, options)
 
   local positionSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
-      labelText = "Widget preview position",
-      optionsList = POSITION_OPTIONS,
+      labelText = text("Widget preview position"),
+      optionsList = buildPositionOptions(),
       fallbackKey = DEFAULTS.widgetPreviewPosition,
       initial = config.widgetPreviewPosition or DEFAULTS.widgetPreviewPosition,
       colors = selectorColors,
@@ -219,7 +232,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     UIHelpers.createOptionButton(
       factory,
       frame,
-      "Reset to Defaults",
+      text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
       { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
     ),
@@ -242,6 +255,23 @@ function NotificationSettings.Create(factory, parent, config, options)
   end
 
   refreshTheme(Theme)
+
+  local function setLanguage()
+    header.title:SetText(text("Notifications"))
+    header.hint:SetText(text("Configure alerts for incoming messages."))
+    playSoundToggle.label:SetText(text("Play sound on new whisper"))
+    soundSelector.label:SetText(text("Notification sound"))
+    soundSelector.setOptionsList(SoundSelector.Options())
+    iconSizeRow.label:SetText(text("Icon Size"))
+    iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    showBadgeToggle.label:SetText(text("Show unread badge"))
+    badgePulseToggle.label:SetText(text("Badge pulse animation"))
+    widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))
+    autoDismissRow.label:SetText(text("Auto-dismiss widget preview"))
+    positionSelector.label:SetText(text("Widget preview position"))
+    positionSelector.setOptionsList(buildPositionOptions())
+    resetButton.label:SetText(text("Reset to Defaults"))
+  end
 
   local function refreshLayout(width)
     if type(width) ~= "number" or width <= 0 then
@@ -267,6 +297,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     resetButton = resetButton,
     refreshTheme = refreshTheme,
     refreshLayout = refreshLayout,
+    setLanguage = setLanguage,
   }
 end
 

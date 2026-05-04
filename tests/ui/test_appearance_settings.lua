@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -428,5 +429,29 @@ return function()
     assert(changes.fontColor == "default", "test_reset_new_settings: reset should fire fontColor=default, got: " .. tostring(changes.fontColor))
   end
 
+
+  -- test_russian_localizes_appearance_panel
+
+  do
+    Localization.Configure({ language = "ruRU" })
+    local result = AppearanceSettings.Create(factory, parent, { themePreset = "wow_default", fontFamily = "default" }, { onChange = function() end })
+
+    local texts = {}
+    for _, child in ipairs(result.frame.children) do
+      if child.text then
+        texts[child.text] = true
+      end
+    end
+
+    assert(texts["Внешний вид"], "Russian appearance panel should translate title")
+    assert(texts["Настройте темы, шрифты и прозрачность окна."], "Russian appearance panel should translate hint")
+    assert(result.themePresetSelector.label.text == "Профиль темы", "Theme Preset label should be localized")
+    assert(result.fontSelector.label.text == "Шрифт", "Font Family label should be localized")
+    assert(result.fontSelector.buttons[1].label.text == "По умолчанию", "Default font option should be localized")
+    assert(result.fontOutlineSelector.label.text == "Обводка шрифта", "Font Outline label should be localized")
+    assert(result.bubbleColorSelector.label.text == "Цвета пузырей", "Bubble Colors label should be localized")
+    assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
+    Localization.Configure({ language = "enUS" })
+  end
   print("  All appearance settings tests passed")
 end

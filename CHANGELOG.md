@@ -2,6 +2,10 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [Unreleased]
+
+- Added Russian localization.
+
 ## [1.2.6] - 2026-05-03
 
 - Fixed: typing `/w Name` in WoW's chat box no longer pops the messenger open on the first letter of the name. The messenger now waits until you finish typing the name (and add a space) before taking over, so you can type `/w Name` without the window jumping in mid-name.

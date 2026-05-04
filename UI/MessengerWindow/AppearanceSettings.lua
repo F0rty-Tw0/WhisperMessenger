@@ -9,12 +9,14 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local Options = ns.AppearanceSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.Options")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local AppearanceSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local FONT_OPTIONS = Options.FONT_OPTIONS
-local OUTLINE_OPTIONS = Options.OUTLINE_OPTIONS
+local function text(key)
+  return Localization.Text(key)
+end
 
 local DEFAULTS = {
   windowOpacityInactive = 0.72,
@@ -42,8 +44,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = "Appearance",
-    hint = "Customize theme presets, fonts, and window opacity.",
+    title = text("Appearance"),
+    hint = text("Customize theme presets, fonts, and window opacity."),
   })
   local hint = header.hint
 
@@ -83,21 +85,21 @@ function AppearanceSettings.Create(factory, parent, config, options)
   end
 
   local nativeChromeToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, "Native WoW HUD", config.nativeChrome == true, SettingsControls.ToggleColors(Theme), {
+    UIHelpers.createToggleRow(factory, frame, text("Native WoW HUD"), config.nativeChrome == true, SettingsControls.ToggleColors(Theme), {
       width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
       height = 24,
     }, function(v)
       onChange("nativeChrome", v)
     end, {
-      "Native WoW HUD",
-      "Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply.",
+      text("Native WoW HUD"),
+      text("Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply."),
     }),
     { type = "toggle", key = "nativeChrome", default = DEFAULTS.nativeChrome }
   )
   nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
   local themePresetSelector = panel:bind(
-    sel("Theme Preset", Options.BuildThemePresetOptions(), DEFAULTS.themePreset, config.themePreset or DEFAULTS.themePreset, function(v)
+    sel(text("Theme Preset"), Options.BuildThemePresetOptions(), DEFAULTS.themePreset, config.themePreset or DEFAULTS.themePreset, function(v)
       onChange("themePreset", v)
     end),
     { type = "selector", key = "themePreset", default = DEFAULTS.themePreset }
@@ -105,7 +107,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
 
   local fontSelector = panel:bind(
-    sel("Font Family", FONT_OPTIONS, DEFAULTS.fontFamily, config.fontFamily or DEFAULTS.fontFamily, function(v)
+    sel(text("Font Family"), Options.BuildFontOptions(), DEFAULTS.fontFamily, config.fontFamily or DEFAULTS.fontFamily, function(v)
       onChange("fontFamily", v)
     end),
     { type = "selector", key = "fontFamily", default = DEFAULTS.fontFamily }
@@ -113,7 +115,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
 
   local fontSizeRow = panel:bind(
-    slider("Font Size", 9, 17, 1, config.fontSize or DEFAULTS.fontSize, pxFormat, function(v)
+    slider(text("Font Size"), 9, 17, 1, config.fontSize or DEFAULTS.fontSize, pxFormat, function(v)
       onChange("fontSize", v)
     end),
     { type = "slider", key = "fontSize", default = DEFAULTS.fontSize }
@@ -121,7 +123,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   fontSizeRow.row:SetPoint("TOPLEFT", fontSelector.row, "BOTTOMLEFT", 0, gap)
 
   local fontOutlineSelector = panel:bind(
-    sel("Font Outline", OUTLINE_OPTIONS, DEFAULTS.fontOutline, config.fontOutline or DEFAULTS.fontOutline, function(v)
+    sel(text("Font Outline"), Options.BuildOutlineOptions(), DEFAULTS.fontOutline, config.fontOutline or DEFAULTS.fontOutline, function(v)
       onChange("fontOutline", v)
     end),
     { type = "selector", key = "fontOutline", default = DEFAULTS.fontOutline }
@@ -129,7 +131,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   fontOutlineSelector.row:SetPoint("TOPLEFT", fontSizeRow.row, "BOTTOMLEFT", 0, gap)
 
   local fontColorSelector = panel:bind(
-    sel("Chat Font Color", Options.BuildFontColorOptions(), DEFAULTS.fontColor, config.fontColor or DEFAULTS.fontColor, function(v)
+    sel(text("Chat Font Color"), Options.BuildFontColorOptions(), DEFAULTS.fontColor, config.fontColor or DEFAULTS.fontColor, function(v)
       onChange("fontColor", v)
     end, { maxPerRow = 3 }),
     { type = "selector", key = "fontColor", default = DEFAULTS.fontColor }
@@ -138,7 +140,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
 
   local bubbleColorSelector = panel:bind(
     sel(
-      "Bubble Colors",
+      text("Bubble Colors"),
       Options.BuildBubbleColorOptions(),
       DEFAULTS.bubbleColorPreset,
       config.bubbleColorPreset or DEFAULTS.bubbleColorPreset,
@@ -152,7 +154,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, gap)
 
   local opacityInactiveRow = panel:bind(
-    slider("Window Opacity (Inactive)", 0.3, 1.0, 0.05, config.windowOpacityInactive or DEFAULTS.windowOpacityInactive, pctFormat, function(v)
+    slider(text("Window Opacity (Inactive)"), 0.3, 1.0, 0.05, config.windowOpacityInactive or DEFAULTS.windowOpacityInactive, pctFormat, function(v)
       onChange("windowOpacityInactive", v)
     end),
     { type = "slider", key = "windowOpacityInactive", default = DEFAULTS.windowOpacityInactive }
@@ -160,7 +162,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   opacityInactiveRow.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
 
   local opacityActiveRow = panel:bind(
-    slider("Window Opacity (Active)", 0.5, 1.0, 0.05, config.windowOpacityActive or DEFAULTS.windowOpacityActive, pctFormat, function(v)
+    slider(text("Window Opacity (Active)"), 0.5, 1.0, 0.05, config.windowOpacityActive or DEFAULTS.windowOpacityActive, pctFormat, function(v)
       onChange("windowOpacityActive", v)
     end),
     { type = "slider", key = "windowOpacityActive", default = DEFAULTS.windowOpacityActive }
@@ -171,7 +173,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     UIHelpers.createOptionButton(
       factory,
       frame,
-      "Reset to Defaults",
+      text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
       { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
     ),
@@ -194,6 +196,26 @@ function AppearanceSettings.Create(factory, parent, config, options)
   end
 
   refreshTheme(Theme)
+
+  local function setLanguage()
+    header.title:SetText(text("Appearance"))
+    header.hint:SetText(text("Customize theme presets, fonts, and window opacity."))
+    nativeChromeToggle.label:SetText(text("Native WoW HUD"))
+    themePresetSelector.label:SetText(text("Theme Preset"))
+    themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
+    fontSelector.label:SetText(text("Font Family"))
+    fontSelector.setOptionsList(Options.BuildFontOptions())
+    fontSizeRow.label:SetText(text("Font Size"))
+    fontOutlineSelector.label:SetText(text("Font Outline"))
+    fontOutlineSelector.setOptionsList(Options.BuildOutlineOptions())
+    fontColorSelector.label:SetText(text("Chat Font Color"))
+    fontColorSelector.setOptionsList(Options.BuildFontColorOptions())
+    bubbleColorSelector.label:SetText(text("Bubble Colors"))
+    bubbleColorSelector.setOptionsList(Options.BuildBubbleColorOptions())
+    opacityInactiveRow.label:SetText(text("Window Opacity (Inactive)"))
+    opacityActiveRow.label:SetText(text("Window Opacity (Active)"))
+    resetButton.label:SetText(text("Reset to Defaults"))
+  end
 
   local function refreshLayout(width)
     if type(width) ~= "number" or width <= 0 then
@@ -219,6 +241,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     opacityActiveSlider = opacityActiveRow.slider,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
+    setLanguage = setLanguage,
   }
 end
 

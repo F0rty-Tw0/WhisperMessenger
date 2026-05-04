@@ -202,7 +202,7 @@ local function bindRow(factory, parent, row, index, item, options)
     -- ("Jaina — Guild") so the player can tell which alt's history this is.
     local ownerName = GroupLabel.OwnerShortName and GroupLabel.OwnerShortName(item.ownerProfileId) or nil
     if ownerName then
-      groupName = ownerName .. " — " .. groupName
+      groupName = ownerName .. " - " .. groupName
     end
     if row.title.SetText then
       row.title:SetText(groupName)

@@ -223,7 +223,7 @@ function MessengerWindow.Create(factory, options)
 
   handleContactSelected = selectionController.handleContactSelected
 
-  LifecycleWiring.Setup({
+  local _relayoutWindow, scriptResult = LifecycleWiring.Setup({
     relayoutFactory = RelayoutController,
     layoutBuilder = LayoutBuilder,
     layout = layout,
@@ -268,6 +268,51 @@ function MessengerWindow.Create(factory, options)
   })
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
+
+  local function refreshLanguage(lang)
+    -- GeneralSettings.applyLanguage uses `nextLanguage or DEFAULTS.interfaceLanguage`,
+    -- so calling it with nil silently resets the panel to "auto" and unselects
+    -- the user's choice in the language selector. Resolve the live setting
+    -- when the caller doesn't pass an explicit language.
+    local effectiveLang = lang or settingsConfig.interfaceLanguage
+    -- Each child widget owns the labels it created and re-resolves them from
+    -- the active Localization catalog. Call them in dependency order so a
+    -- StatusLine.Build() that runs during the contacts refresh sees fresh
+    -- catalog state.
+    if layout.setLanguage then
+      layout.setLanguage()
+    end
+    if composer.setLanguage then
+      composer.setLanguage()
+    end
+    if generalSettings and generalSettings.setLanguage then
+      generalSettings.setLanguage(effectiveLang)
+    end
+    if appearanceSettings and appearanceSettings.setLanguage then
+      appearanceSettings.setLanguage()
+    end
+    if behaviorSettings and behaviorSettings.setLanguage then
+      behaviorSettings.setLanguage()
+    end
+    if notificationSettings and notificationSettings.setLanguage then
+      notificationSettings.setLanguage()
+    end
+    if contactsRuntime and contactsRuntime.tabToggle and contactsRuntime.tabToggle.setLanguage then
+      contactsRuntime.tabToggle.setLanguage()
+    end
+    if conversation then
+      ConversationPane.SetLanguage(conversation)
+    end
+    if scriptResult and scriptResult.setLanguage then
+      scriptResult.setLanguage()
+    end
+    -- Force a contacts refresh so dynamic labels (group channel labels,
+    -- the "no group chats yet" empty state, contact preview timestamps)
+    -- pick up the new locale.
+    if refreshContacts then
+      refreshContacts(getCurrentContacts(), selectionController and selectionController.getSelectedConversationKey() or nil, false)
+    end
+  end
 
   return {
     frame = chrome.frame,
@@ -315,6 +360,7 @@ function MessengerWindow.Create(factory, options)
     refreshContacts = refreshContacts,
     refreshSelection = refreshSelection,
     refreshTheme = refreshThemeVisuals,
+    refreshLanguage = refreshLanguage,
     refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,

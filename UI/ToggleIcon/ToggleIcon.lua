@@ -14,6 +14,7 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local CHAT_ICON_RATIO = 0.6 -- chat icon scale factor vs ICON_SIZE
 
 local ToggleIcon = {}
@@ -169,11 +170,11 @@ function ToggleIcon.Create(factory, options)
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         local unreadText = ""
         if badge:IsShown() then
-          unreadText = " — " .. badgeLabel:GetText() .. " unread"
+          unreadText = " — " .. badgeLabel:GetText() .. " " .. Localization.Text("unread")
         end
         local competitiveText = ""
         if isCompetitiveActive then
-          competitiveText = "\nChat unavailable — in competitive content"
+          competitiveText = "\n" .. Localization.Text("Paused in M+")
         end
         _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText)
         _G.GameTooltip:Show()

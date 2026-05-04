@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+
 local HoverCopy = {}
 
 local COPY_BUTTON_SIZE = 14
@@ -79,7 +81,7 @@ local function ensureCopyButton(persistentFactory, frame)
       local tip = _G.GameTooltip
       if type(tip) == "table" and type(tip.SetOwner) == "function" and type(tip.SetText) == "function" then
         tip:SetOwner(self, "ANCHOR_TOP")
-        tip:SetText("Copy text")
+        tip:SetText(Localization.Text("Copy text"))
         if type(tip.Show) == "function" then
           tip:Show()
         end

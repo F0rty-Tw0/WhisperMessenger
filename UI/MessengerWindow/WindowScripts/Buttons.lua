@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local SettingsTabs = ns.MessengerWindowWindowScriptsButtonsSettingsTabs
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons.SettingsTabs")
 local StartConversationDialog = ns.MessengerWindowWindowScriptsButtonsStartConversationDialog
@@ -66,35 +67,43 @@ function Buttons.WireButtons(refs, options)
     end)
   end
 
-  StartConversationDialog.Wire(newConversationButton, {
+  local startConversationResult = StartConversationDialog.Wire(newConversationButton, {
     onStartConversation = options.onStartConversation,
-  })
+  }) or {}
 
+  local clearAllPopupSetLanguage = function() end
   if clearAllChatsButton and clearAllChatsButton.SetScript then
     local dialogName = "WHISPER_MESSENGER_CLEAR_ALL_CHATS"
     if not _G.StaticPopupDialogs then
       _G.StaticPopupDialogs = {}
     end
-    _G.StaticPopupDialogs[dialogName] = {
-      text = "Are you sure you want to clear all chats?\n\nThis will permanently delete all conversation history.",
-      button1 = "Clear All",
-      button2 = "Cancel",
-      OnAccept = function()
-        if options.onClearAllChats then
-          options.onClearAllChats()
-          options.refreshSelection({
-            contacts = {},
-            selectedContact = nil,
-            conversation = nil,
-            status = nil,
-          }, true)
-        end
-      end,
-      timeout = 0,
-      whileDead = true,
-      hideOnEscape = true,
-      preferredIndex = 3,
-    }
+    -- Build (or rebuild) the dialog table from current Localization. Stored
+    -- as a function so a runtime language switch can re-register without a
+    -- /reload — the StaticPopupDialogs entry is read literally each Show.
+    local function registerPopup()
+      _G.StaticPopupDialogs[dialogName] = {
+        text = Localization.Text("Are you sure you want to clear all chats?\n\nThis will permanently delete all conversation history."),
+        button1 = Localization.Text("Clear All"),
+        button2 = Localization.Text("Cancel"),
+        OnAccept = function()
+          if options.onClearAllChats then
+            options.onClearAllChats()
+            options.refreshSelection({
+              contacts = {},
+              selectedContact = nil,
+              conversation = nil,
+              status = nil,
+            }, true)
+          end
+        end,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+      }
+    end
+    registerPopup()
+    clearAllPopupSetLanguage = registerPopup
 
     clearAllChatsButton:SetScript("OnClick", function()
       _G.StaticPopup_Show(dialogName)
@@ -107,6 +116,15 @@ function Buttons.WireButtons(refs, options)
     settingsTabs = settingsTabs,
     settingsPanels = settingsPanels,
   })
+
+  return {
+    setLanguage = function()
+      clearAllPopupSetLanguage()
+      if startConversationResult.setLanguage then
+        startConversationResult.setLanguage()
+      end
+    end,
+  }
 end
 
 ns.MessengerWindowWindowScriptsButtons = Buttons

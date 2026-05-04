@@ -80,7 +80,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
   -- which alt's history they're looking at.
   if fromAnotherCharacter then
     local ownerName = GroupLabel.OwnerShortName and GroupLabel.OwnerShortName(contact.ownerProfileId) or contact.ownerProfileId
-    label = ownerName .. " — " .. label
+    label = ownerName .. " - " .. label
   end
   -- chip shows the canonical channel type only when it adds information —
   -- i.e. when the resolved title is different (custom BN group name,

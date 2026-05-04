@@ -12,6 +12,7 @@ local applyPaneBackground = UIHelpers.applyPaneBackground
 local setTextColor = UIHelpers.setTextColor
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local Composer = {}
 
@@ -72,7 +73,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local buttonLabel = button:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(buttonLabel, Theme.FONTS.composer_input)
   buttonLabel:SetPoint("CENTER", button, "CENTER", 0, 0)
-  buttonLabel:SetText("Send")
+  buttonLabel:SetText(Localization.Text("Send"))
   button.label = buttonLabel
 
   -- Plain EditBox (no template)
@@ -102,7 +103,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local placeholder = pane:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, Theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
-  placeholder:SetText("Type a message and press Enter")
+  placeholder:SetText(Localization.Text("Type a message and press Enter"))
   setTextColor(placeholder, Theme.COLORS.text_secondary)
   placeholder:Show()
 
@@ -200,6 +201,11 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     paneBg = paneBg,
     border = composerBorder,
     sendButton = button,
+    placeholder = placeholder,
+    setLanguage = function()
+      buttonLabel:SetText(Localization.Text("Send"))
+      placeholder:SetText(Localization.Text("Type a message and press Enter"))
+    end,
     setEnabled = function(enabled)
       sendDisabled = not enabled
       button.disabled = not enabled

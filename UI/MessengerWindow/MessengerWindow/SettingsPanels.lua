@@ -68,6 +68,7 @@ function SettingsPanels.Create(factory, options)
     hideMessagePreview = settingsConfig.hideMessagePreview,
     timeFormat = settingsConfig.timeFormat,
     timeSource = settingsConfig.timeSource,
+    interfaceLanguage = settingsConfig.interfaceLanguage,
   }, onSettingChanged)
 
   local appearancePanel, appearanceSettings = createSettingsPanel(factory, parent, options.appearanceCreate, {

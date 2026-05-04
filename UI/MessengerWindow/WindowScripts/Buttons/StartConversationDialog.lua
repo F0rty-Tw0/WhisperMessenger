@@ -4,10 +4,18 @@ if type(ns) ~= "table" then
 end
 
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 
 local StartConversationDialog = {}
 
 local DIALOG_NAME = "WHISPER_MESSENGER_START_CONVERSATION"
+
+local function L(key)
+  if Localization and Localization.Text then
+    return Localization.Text(key)
+  end
+  return key
+end
 
 local function trimPlayerName(value)
   if type(value) ~= "string" then
@@ -61,13 +69,22 @@ local function restoreStartConversationDialog(popup, dialogName)
   })
 end
 
+local function applyDialogText(dialog)
+  if type(dialog) ~= "table" then
+    return
+  end
+  dialog.text = L("Start a new conversation")
+  dialog.button1 = L("Start")
+  dialog.button2 = L("Cancel")
+end
+
 function StartConversationDialog.Wire(newConversationButton, options)
   options = options or {}
   if not newConversationButton or type(newConversationButton.SetScript) ~= "function" then
-    return
+    return { setLanguage = function() end }
   end
   if type(options.onStartConversation) ~= "function" then
-    return
+    return { setLanguage = function() end }
   end
 
   if type(_G.StaticPopupDialogs) ~= "table" then
@@ -77,9 +94,6 @@ function StartConversationDialog.Wire(newConversationButton, options)
   local dialog = _G.StaticPopupDialogs[DIALOG_NAME]
   if type(dialog) ~= "table" then
     dialog = {
-      text = "Start a new conversation",
-      button1 = "Start",
-      button2 = "Cancel",
       hasEditBox = true,
       editBoxWidth = 340,
       maxLetters = 255,
@@ -90,6 +104,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
     }
     _G.StaticPopupDialogs[DIALOG_NAME] = dialog
   end
+  applyDialogText(dialog)
 
   dialog.OnAccept = function(popup)
     local editBox = resolveConversationPopupEditBox(popup, DIALOG_NAME)
@@ -123,6 +138,12 @@ function StartConversationDialog.Wire(newConversationButton, options)
       editBox:SetFocus()
     end
   end)
+
+  return {
+    setLanguage = function()
+      applyDialogText(_G.StaticPopupDialogs and _G.StaticPopupDialogs[DIALOG_NAME])
+    end,
+  }
 end
 
 ns.MessengerWindowWindowScriptsButtonsStartConversationDialog = StartConversationDialog

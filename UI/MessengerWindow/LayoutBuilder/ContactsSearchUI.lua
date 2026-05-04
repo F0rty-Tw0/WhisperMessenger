@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContactsSearchUI = {}
@@ -76,7 +77,7 @@ function ContactsSearchUI.Build(factory, contactsPane, options)
 
   local contactsSearchPlaceholder = contactsSearchFrame:CreateFontString(nil, "OVERLAY", theme.FONTS.contact_preview)
   contactsSearchPlaceholder:SetPoint("LEFT", contactsSearchInput, "LEFT", 0, 0)
-  contactsSearchPlaceholder:SetText("Search chats")
+  contactsSearchPlaceholder:SetText(Localization.Text("Search chats"))
   uiHelpers.setTextColor(contactsSearchPlaceholder, theme.COLORS.text_secondary)
 
   local contactsSearchClearButton = factory.CreateFrame("Button", nil, contactsSearchFrame)
@@ -98,6 +99,10 @@ function ContactsSearchUI.Build(factory, contactsPane, options)
     uiHelpers.setTextColor(contactsSearchClearLabel, theme.COLORS.text_secondary)
   end)
 
+  local function setLanguage()
+    contactsSearchPlaceholder:SetText(Localization.Text("Search chats"))
+  end
+
   return {
     frame = contactsSearchFrame,
     bg = contactsSearchBg,
@@ -109,6 +114,7 @@ function ContactsSearchUI.Build(factory, contactsPane, options)
     placeholder = contactsSearchPlaceholder,
     clearButton = contactsSearchClearButton,
     clearLabel = contactsSearchClearLabel,
+    setLanguage = setLanguage,
   }
 end
 

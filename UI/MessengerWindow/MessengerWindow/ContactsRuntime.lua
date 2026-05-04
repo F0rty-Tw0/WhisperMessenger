@@ -11,6 +11,7 @@ local TabToggle = ns.ContactsListTabToggle or require("WhisperMessenger.UI.Conta
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local EmptyState = ns.ContactsListEmptyState or require("WhisperMessenger.UI.ContactsList.EmptyState")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local ContactsRuntime = {}
 
@@ -99,7 +100,10 @@ function ContactsRuntime.Create(factory, options)
     emptyStateFrame = EmptyState.Create(contentParent)
   end
 
-  local GROUPS_EMPTY_MSG = "No group chats yet.\nJoin a party or instance to see messages here."
+  -- Re-resolved on every filter so a live language switch picks up the new
+  -- locale without requiring /reload. Caching at create time meant the empty
+  -- state stayed in the previous language until reload.
+  local GROUPS_EMPTY_KEY = "No group chats yet.\nJoin a party or instance to see messages here."
 
   local contactsSearchController = ContactsSearchController.Create({
     contacts = contacts,
@@ -123,7 +127,7 @@ function ContactsRuntime.Create(factory, options)
         return
       end
       if currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
-        EmptyState.Show(emptyStateFrame, GROUPS_EMPTY_MSG)
+        EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
       else
         EmptyState.Hide(emptyStateFrame)
       end

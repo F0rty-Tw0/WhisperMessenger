@@ -4,14 +4,15 @@ if type(ns) ~= "table" then
 end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local function L(key) return Localization and Localization.Text(key) or key end
 
 local MythicSuspendController = {}
+local DEFAULT_MYTHIC_PAUSE_NOTICE_KEY = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
+local SUSPEND_PRINT_KEY  = "Suspended for mythic content. Whispers will resume when you leave."
+local RESUME_PRINT_KEY   = "Resumed. Whispers are active again."
+local R_REPLY_ADVISORY_KEY = '/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'
 
-local DEFAULT_MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
-local SUSPEND_PRINT_MESSAGE = "|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave."
-local RESUME_PRINT_MESSAGE = "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again."
-local R_REPLY_ADVISORY =
-  '|cff888888[WhisperMessenger]|r |cffff8080/r and R-key may fail in Mythic while "Hide whispers from default chat" is on.|r Use |cffffff00/wr|r to reply (or bind it to R via macro).'
 
 function MythicSuspendController.Attach(runtime, deps)
   deps = deps or {}
@@ -30,7 +31,7 @@ function MythicSuspendController.Attach(runtime, deps)
   local getEditBox = deps.getEditBox
 
   runtime.suspend = function()
-    runtime.messagingNotice = deps.mythicPauseNotice or DEFAULT_MYTHIC_PAUSE_NOTICE
+    runtime.messagingNotice = deps.mythicPauseNotice or L(DEFAULT_MYTHIC_PAUSE_NOTICE_KEY)
     Bootstrap._wasVisibleBeforeMythic = isWindowVisible()
     setWindowVisible(false)
     if Bootstrap.unregisterChatFilters then
@@ -58,10 +59,10 @@ function MythicSuspendController.Attach(runtime, deps)
 
     local printFn = deps.print or _G.print
     if type(printFn) == "function" then
-      printFn(SUSPEND_PRINT_MESSAGE)
+      printFn("|cff888888[WhisperMessenger]|r " .. L(SUSPEND_PRINT_KEY))
       local settings = runtime.accountState and runtime.accountState.settings
       if settings and settings.hideFromDefaultChat == true then
-        printFn(R_REPLY_ADVISORY)
+        printFn("|cff888888[WhisperMessenger]|r " .. L(R_REPLY_ADVISORY_KEY))
       end
     end
   end
@@ -71,7 +72,7 @@ function MythicSuspendController.Attach(runtime, deps)
     _G._wmSuspended = nil
     local printFn = deps.print or _G.print
     if type(printFn) == "function" then
-      printFn(RESUME_PRINT_MESSAGE)
+      printFn("|cff888888[WhisperMessenger]|r " .. L(RESUME_PRINT_KEY))
     end
 
     -- Clear our own stale reply key. We did NOT receive whispers during M+

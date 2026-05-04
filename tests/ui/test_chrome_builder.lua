@@ -13,6 +13,7 @@ return function()
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
 
+  local Localization = ns.Localization
   local ChromeBuilder = ns.MessengerWindowChromeBuilder
   local Theme = ns.Theme
 
@@ -119,6 +120,32 @@ return function()
     onLeaveScript(chrome.newConversationButton)
     assert(tooltipState.hidden == true, "expected tooltip to hide on leave")
     _G.GameTooltip = originalGameTooltip
+
+    Localization.Configure({ language = "ruRU" })
+    tooltipState = { shown = false, hidden = false }
+    _G.GameTooltip = {
+      SetOwner = function(_, owner, anchor)
+        tooltipState.owner = owner
+        tooltipState.anchor = anchor
+      end,
+      SetText = function(_, text)
+        tooltipState.text = text
+      end,
+      AddLine = function(_, text)
+        tooltipState.line = text
+      end,
+      Show = function()
+        tooltipState.shown = true
+      end,
+      Hide = function()
+        tooltipState.hidden = true
+      end,
+    }
+    onEnterScript(chrome.newConversationButton)
+    assert(tooltipState.text == "Начать новый шепот", "expected localized new whisper tooltip title")
+    assert(tooltipState.line == "Открыть пустую переписку.", "expected localized new whisper tooltip line")
+    _G.GameTooltip = originalGameTooltip
+    Localization.Configure({ language = "enUS" })
 
     assert(chrome.frame.frameStrata == "MEDIUM", "expected window frame strata to be MEDIUM")
 

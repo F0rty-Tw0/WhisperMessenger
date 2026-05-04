@@ -330,6 +330,39 @@ return function()
     assert(configCalls[2].timeSource == "server", "TimeFormat.Configure received timeSource")
   end
 
+  -- interfaceLanguage configures localization, persists, and refreshes the window.
+  do
+    local runtime, calls = makeRuntime()
+    local configCalls = {}
+    local refreshLanguageCalls = {}
+    runtime.window.refreshLanguage = function(language)
+      refreshLanguageCalls[#refreshLanguageCalls + 1] = language
+    end
+    local localization = {
+      Configure = function(opts)
+        configCalls[#configCalls + 1] = opts
+      end,
+    }
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({ runtime = runtime, accountSettings = accountSettings, localization = localization })
+
+    onChange("interfaceLanguage", "ruRU")
+
+    assert(accountSettings.interfaceLanguage == "ruRU", "interfaceLanguage persists")
+    assert(configCalls[1].language == "ruRU", "Localization.Configure received interfaceLanguage")
+    assert(calls.refreshWindow == 1, "interfaceLanguage refreshes the window once")
+    -- Regression: the language must propagate as an argument so the
+    -- General settings panel keeps the user's selection. Calling
+    -- refreshLanguage with no argument resets GeneralSettings' internal
+    -- interfaceLanguage to the "auto" default, which deselects the user's
+    -- choice in the selector and rebuilds option labels via auto-detect.
+    assert(#refreshLanguageCalls == 1, "refreshLanguage fired exactly once")
+    assert(
+      refreshLanguageCalls[1] == "ruRU",
+      "refreshLanguage must receive the new language; got: " .. tostring(refreshLanguageCalls[1])
+    )
+  end
+
   -- hideFromDefaultChat triggers chat filter and reply-key sync.
   do
     local runtime, calls = makeRuntime()

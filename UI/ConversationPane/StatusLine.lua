@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -15,6 +16,8 @@ StatusLine.AVAILABILITY_DISPLAY = {
   Unavailable = { label = "Unavailable", color = "offline" },
   WrongFaction = { label = "Wrong Faction", color = "dnd" },
   Lockdown = { label = "Unavailable", color = "dnd" },
+  ["Mythic Lockdown"] = { label = "Mythic Lockdown", color = "dnd" },
+  ["Competitive Content"] = { label = "Competitive Content", color = "dnd" },
   ["Send unavailable"] = { label = "Send unavailable", color = "dnd" },
   ["Send failed"] = { label = "Send failed", color = "dnd" },
 }
@@ -31,7 +34,7 @@ function StatusLine.Build(selectedContact, status)
   local statusKey = status and status.status or nil
   local avail = statusKey and StatusLine.AVAILABILITY_DISPLAY[statusKey] or nil
   if avail then
-    table.insert(parts, avail.label)
+    table.insert(parts, Localization.Text(avail.label))
     dotColor = avail.color
   end
 
@@ -52,16 +55,16 @@ function StatusLine.Build(selectedContact, status)
   end
 
   if selectedContact.className and selectedContact.className ~= "" then
-    table.insert(parts, selectedContact.className)
+    table.insert(parts, Localization.Text(selectedContact.className))
   end
 
   -- Show faction (inferred from race, or direct from BNet API)
   local factionName = selectedContact.factionName
   if factionName and factionName ~= "" then
-    table.insert(parts, factionName)
+    table.insert(parts, Localization.Text(factionName))
   end
 
-  local sep = "  " .. string.char(194, 183) .. "  "
+  local sep = "  -  "
   return table.concat(parts, sep), dotColor
 end
 

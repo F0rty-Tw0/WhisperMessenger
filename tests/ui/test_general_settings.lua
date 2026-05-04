@@ -62,6 +62,52 @@ return function()
     assert(texts["General Settings"], "should have 'General Settings' title")
   end
 
+  -- test_language_selector_supports_russian_setting
+
+  do
+    local lastChange = nil
+    local settings = GeneralSettings.Create(factory, parent, {
+      interfaceLanguage = "ruRU",
+    }, {
+      onChange = function(key, value)
+        lastChange = { key = key, value = value }
+      end,
+    })
+
+    assert(settings.languageSelector ~= nil, "should expose languageSelector")
+    assert(settings.languageSelector.buttons ~= nil, "languageSelector should expose buttons")
+    assert(settings.languageSelector.buttons[3]._key == "ruRU", "third language option should be ruRU")
+    assert(settings.languageSelector.buttons[3]._selected == true, "ruRU option should be selected")
+
+    local texts = {}
+    for _, child in ipairs(settings.frame.children) do
+      if child.text then
+        texts[child.text] = true
+      end
+    end
+    assert(texts["Общие настройки"], "Russian language should translate the General Settings header")
+
+    local englishButton = settings.languageSelector.buttons[2]
+    assert(englishButton.scripts and englishButton.scripts.OnClick, "English language button needs OnClick")
+    englishButton.scripts.OnClick(englishButton)
+    assert(lastChange ~= nil, "language selector click should fire onChange")
+    assert(lastChange.key == "interfaceLanguage", "language selector should persist interfaceLanguage")
+    assert(lastChange.value == "enUS", "language selector should select enUS")
+
+    settings.setLanguage("enUS")
+    assert(settings.languageSelector.buttons[2]._selected == true, "setLanguage should select enUS")
+    assert(settings.languageSelector.buttons[2].label.text == "English", "setLanguage should update English button label")
+    assert(settings.languageSelector.buttons[3].label.text == "Russian", "setLanguage should update Russian button label")
+
+    texts = {}
+    for _, child in ipairs(settings.frame.children) do
+      if child.text then
+        texts[child.text] = true
+      end
+    end
+    assert(texts["General Settings"], "setLanguage should update the existing General Settings header")
+  end
+
   -- test_slider_initial_values
 
   do

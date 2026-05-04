@@ -17,6 +17,38 @@ local config = {
 
 local serverOffset = nil
 
+-- date("*t").wday is 1..7 with 1 = Sunday. Indexed lookups so the strings
+-- can be routed through Localization without scraping the C-locale output of
+-- date("%a") / date("%b") / date("%B"), which is not translated.
+local WEEKDAY_KEYS = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" }
+local MONTH_ABBR_KEYS = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
+local MONTH_FULL_KEYS = {
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+}
+
+-- Lazy translator: TimeFormat must not hard-require Localization because
+-- some tests load it directly without a locale namespace. When the
+-- Localization module is unavailable (or the key is missing) we return the
+-- English source key, preserving the previous behavior.
+local function L(key)
+  local Localization = ns.Localization
+  if Localization and Localization.Text then
+    return Localization.Text(key)
+  end
+  return key
+end
+
 --- Compute the display offset between server time and local time.
 --- Uses C_DateAndTime.GetCurrentCalendarTime when available.
 local function computeServerOffset()
@@ -91,7 +123,11 @@ function TimeFormat.MessageTime(timestamp)
   if config.timeFormat == "24h" then
     return date("%H:%M", ts)
   end
-  return date("%I:%M %p", ts)
+  -- 12h: format the digits via date(), append the localized AM/PM marker
+  -- so Russian users see "ДП"/"ПП" instead of the C-locale "AM"/"PM".
+  local t = date("*t", ts)
+  local meridiem = (t.hour >= 12) and L("PM") or L("AM")
+  return date("%I:%M", ts) .. " " .. meridiem
 end
 
 --- Format a timestamp as "March 18, 2026" for date separators.
@@ -100,7 +136,9 @@ function TimeFormat.DateSeparator(timestamp)
   if not timestamp or timestamp == 0 then
     return ""
   end
-  return date("%B %d, %Y", displayTimestamp(timestamp))
+  local t = date("*t", displayTimestamp(timestamp))
+  local monthName = L(MONTH_FULL_KEYS[t.month] or MONTH_FULL_KEYS[1])
+  return monthName .. " " .. t.day .. ", " .. t.year
 end
 
 --- Format a timestamp as a short relative string for contact row timestamps.
@@ -112,47 +150,49 @@ function TimeFormat.ContactPreview(timestamp)
   local current = now()
   local diff = current - timestamp
   if diff < 60 then
-    return "now"
+    return L("now")
   elseif diff < 3600 then
-    return floor(diff / 60) .. "m"
+    return floor(diff / 60) .. L("m")
   elseif diff < 86400 then
-    return floor(diff / 3600) .. "h"
+    return floor(diff / 3600) .. L("h")
   end
   -- Check if yesterday
   local todayStart = current - (current % 86400)
   if timestamp >= todayStart - 86400 and timestamp < todayStart then
-    return "Yesterday"
+    return L("Yesterday")
   end
+  local t = date("*t", displayTimestamp(timestamp))
   -- Within last 7 days: show day name
   if diff < 604800 then
-    return date("%a", displayTimestamp(timestamp))
+    return L(WEEKDAY_KEYS[t.wday] or WEEKDAY_KEYS[1])
   end
-  -- Older: show "Mar 14"
-  return date("%b %d", displayTimestamp(timestamp))
+  -- Older: localized "Mar 14"
+  return L(MONTH_ABBR_KEYS[t.month] or MONTH_ABBR_KEYS[1]) .. " " .. t.day
 end
 
 --- Format a longer relative string for status lines.
 --- Returns: "just now", "2 minutes ago", "1 hour ago", "yesterday", "Mar 14, 2026"
 function TimeFormat.Relative(timestamp)
   if not timestamp or timestamp == 0 then
-    return "unknown"
+    return L("unknown")
   end
   local current = now()
   local diff = current - timestamp
   if diff < 60 then
-    return "just now"
+    return L("just now")
   elseif diff < 3600 then
     local mins = floor(diff / 60)
-    return mins .. (mins == 1 and " minute ago" or " minutes ago")
+    return mins .. (mins == 1 and L(" minute ago") or L(" minutes ago"))
   elseif diff < 86400 then
     local hours = floor(diff / 3600)
-    return hours .. (hours == 1 and " hour ago" or " hours ago")
+    return hours .. (hours == 1 and L(" hour ago") or L(" hours ago"))
   end
   local todayStart = current - (current % 86400)
   if timestamp >= todayStart - 86400 and timestamp < todayStart then
-    return "yesterday"
+    return L("yesterday")
   end
-  return date("%b %d, %Y", displayTimestamp(timestamp))
+  local t = date("*t", displayTimestamp(timestamp))
+  return L(MONTH_ABBR_KEYS[t.month] or MONTH_ABBR_KEYS[1]) .. " " .. t.day .. ", " .. t.year
 end
 
 --- Check if two timestamps are on different calendar days.

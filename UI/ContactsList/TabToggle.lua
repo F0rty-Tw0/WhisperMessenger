@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 
@@ -90,7 +91,7 @@ function TabToggle.Create(factory, parent, options)
 
   local whispersLabel = whispersBtn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   whispersLabel:SetPoint("CENTER", whispersBtn, "CENTER", 0, 0)
-  whispersLabel:SetText("Whispers")
+  whispersLabel:SetText(Localization.Text("Whispers"))
   UIHelpers.setTextColor(whispersLabel, INACTIVE_TEXT)
 
   -- Groups button
@@ -105,7 +106,7 @@ function TabToggle.Create(factory, parent, options)
 
   local groupsLabel = groupsBtn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   groupsLabel:SetPoint("CENTER", groupsBtn, "CENTER", 0, 0)
-  groupsLabel:SetText("Groups")
+  groupsLabel:SetText(Localization.Text("Groups"))
   UIHelpers.setTextColor(groupsLabel, INACTIVE_TEXT)
 
   -- Center divider between tabs
@@ -197,12 +198,18 @@ function TabToggle.Create(factory, parent, options)
     paintTabs()
   end
 
+  local function setLanguage()
+    whispersLabel:SetText(Localization.Text("Whispers"))
+    groupsLabel:SetText(Localization.Text("Groups"))
+  end
+
   return {
     frame = frame,
     setMode = setMode,
     getMode = getMode,
     setShown = setShown,
     setUnreadCounts = setUnreadCounts,
+    setLanguage = setLanguage,
     whispersBtn = whispersBtn,
     groupsBtn = groupsBtn,
     whispersLabel = whispersLabel,

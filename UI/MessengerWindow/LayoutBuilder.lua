@@ -139,6 +139,21 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local applyTheme = layoutTheme.applyTheme
   applyTheme(Theme)
 
+  -- Live-language refresh: each sub-builder owns the labels it created and
+  -- exposes its own setLanguage. Aggregating here keeps callers from having
+  -- to know which builder owns which strings.
+  local function setLanguage()
+    if optionsPanelLayout.setLanguage then
+      optionsPanelLayout.setLanguage()
+    end
+    if optionsMenuButtons.setLanguage then
+      optionsMenuButtons.setLanguage()
+    end
+    if contactsSearch.setLanguage then
+      contactsSearch.setLanguage()
+    end
+  end
+
   return {
     contactsPane = contactsPane,
     contactsPaneBorder = contactsPaneBorder,
@@ -180,6 +195,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
     applyTheme = applyTheme,
+    setLanguage = setLanguage,
   }
 end
 

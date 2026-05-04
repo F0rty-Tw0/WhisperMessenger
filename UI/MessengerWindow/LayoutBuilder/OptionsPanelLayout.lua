@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local OptionsPanelLayout = {}
@@ -48,7 +49,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local optionsHeader = optionsMenu:CreateFontString(nil, "OVERLAY", theme.FONTS.header_name)
   optionsHeader:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
-  optionsHeader:SetText("Options")
+  optionsHeader:SetText(Localization.Text("Options"))
 
   local optionsMenuDivider = optionsPanel:CreateTexture(nil, "BORDER")
   optionsMenuDivider:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", 0, 0)
@@ -98,6 +99,10 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     end)
   end
 
+  local function setLanguage()
+    optionsHeader:SetText(Localization.Text("Options"))
+  end
+
   return {
     optionsPanel = optionsPanel,
     optionsMenu = optionsMenu,
@@ -109,6 +114,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     optionsContentBg = optionsContentBg,
     optionsScrollView = optionsScrollView,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
+    setLanguage = setLanguage,
   }
 end
 

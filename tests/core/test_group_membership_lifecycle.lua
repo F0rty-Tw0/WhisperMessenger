@@ -89,9 +89,9 @@ return function()
     assert(state.conversations[INSTANCE_KEY].leftGroup == true, "INSTANCE should be marked as left")
     assert(state.conversations[RAID_KEY].leftGroup == true, "RAID should be marked as left")
 
-    assert(string.find(lastMessage(state.conversations[PARTY_KEY]).text, "Left party.", 1, true) == 1, "PARTY left message text")
-    assert(string.find(lastMessage(state.conversations[INSTANCE_KEY]).text, "Left instance.", 1, true) == 1, "INSTANCE left message text")
-    assert(string.find(lastMessage(state.conversations[RAID_KEY]).text, "Left raid.", 1, true) == 1, "RAID left message text")
+    assert(string.find(lastMessage(state.conversations[PARTY_KEY]).text, "Left party", 1, true) == 1, "PARTY left message text")
+    assert(string.find(lastMessage(state.conversations[INSTANCE_KEY]).text, "Left instance", 1, true) == 1, "INSTANCE left message text")
+    assert(string.find(lastMessage(state.conversations[RAID_KEY]).text, "Left raid", 1, true) == 1, "RAID left message text")
     assert(lastMessage(state.conversations[PARTY_KEY]).kind == "system", "left message should be system")
 
     assert(state.conversations["whisper::Carol"].leftGroup == nil, "WHISPER should not get a leftGroup flag")
@@ -175,7 +175,7 @@ return function()
     assert(state.conversations[PARTY_KEY].leftGroup == nil, "PARTY should NOT be marked left while in home group")
     assert(#state.conversations[PARTY_KEY].messages == 0, "PARTY should not receive a left-message")
     assert(state.conversations[INSTANCE_KEY].leftGroup == true, "INSTANCE should be marked left")
-    assert(string.find(lastMessage(state.conversations[INSTANCE_KEY]).text, "Left instance.", 1, true) == 1, "INSTANCE left message")
+    assert(string.find(lastMessage(state.conversations[INSTANCE_KEY]).text, "Left instance", 1, true) == 1, "INSTANCE left message")
     assert(state.conversations["whisper::Carol"].leftGroup == nil, "WHISPER unaffected")
   end
 

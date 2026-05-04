@@ -203,11 +203,14 @@ end
 -- labelMap : { [key] = { label, tooltip } }
 -- keys     : ordered list of keys (array)
 -- fallback : default { label, tooltip } used when a key is missing from labelMap
-function SettingsControls.ProjectLabeledOptions(keys, labelMap, fallback)
+function SettingsControls.ProjectLabeledOptions(keys, labelMap, fallback, localize)
   local options = {}
+  local translate = localize or function(value)
+    return value
+  end
   for _, key in ipairs(keys) do
     local meta = labelMap[key] or fallback(key)
-    options[#options + 1] = { key = key, label = meta.label, tooltip = meta.tooltip }
+    options[#options + 1] = { key = key, label = translate(meta.label), tooltip = translate(meta.tooltip) }
   end
   return options
 end

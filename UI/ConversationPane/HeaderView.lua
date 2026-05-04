@@ -9,6 +9,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local HeaderView = {}
 
@@ -37,7 +38,7 @@ local function headerTextFor(selectedContact)
     return selectedContact.displayName
   end
 
-  return "No conversation selected"
+  return Localization.Text("No conversation selected")
 end
 
 function HeaderView.Create(factory, pane, selectedContact, options)
@@ -92,6 +93,12 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerEmpty = headerEmpty,
     headerChannelChip = headerChannelChip,
   }
+end
+
+function HeaderView.SetLanguage(view)
+  if view and view.headerEmpty and view.headerEmpty.setLanguage then
+    view.headerEmpty.setLanguage()
+  end
 end
 
 function HeaderView.Refresh(view, selectedContact, conversation, status)

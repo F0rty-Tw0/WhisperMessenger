@@ -7,8 +7,27 @@ local PopupUI = {}
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Resolvers = ns.ChatBubbleContextMenuManualCopyPopupUIResolvers
   or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.Resolvers")
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 
 local MANUAL_COPY_DIALOG_NAME = "WHISPER_MESSENGER_BUBBLE_COPY_TEXT"
+
+local function L(key)
+  if Localization and Localization.Text then
+    return Localization.Text(key)
+  end
+  return key
+end
+
+-- Refresh the dialog's localized strings every time it's about to show so a
+-- runtime language switch picks up immediately. The StaticPopupDialogs entry
+-- is read each Show, so writing to it before StaticPopup_Show is sufficient.
+local function applyDialogText(dialog)
+  if type(dialog) ~= "table" then
+    return
+  end
+  dialog.text = L("Press Ctrl+C to copy the message text.")
+  dialog.button1 = L("OK")
+end
 
 local function isFrameShown(frame)
   if type(frame) ~= "table" then
@@ -39,8 +58,6 @@ function PopupUI.ShowManualCopyDialog(text)
 
   if _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] == nil then
     _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] = {
-      text = "Press Ctrl+C to copy the message text.",
-      button1 = _G["OKAY"] or "OK",
       hasEditBox = true,
       editBoxWidth = 340,
       timeout = 0,
@@ -69,6 +86,7 @@ function PopupUI.ShowManualCopyDialog(text)
       end,
     }
   end
+  applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME])
 
   local dialog = _G.StaticPopup_Show(MANUAL_COPY_DIALOG_NAME, nil, nil, text)
   if dialog == nil then

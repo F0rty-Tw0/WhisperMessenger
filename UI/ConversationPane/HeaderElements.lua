@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColor = UIHelpers.applyColor
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyPaneBackground = UIHelpers.applyPaneBackground
@@ -142,7 +143,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   local label = container:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
   label:SetPoint("TOP", container, "TOP", 0, 0)
-  label:SetText("Select a conversation or")
+  label:SetText(Localization.Text("Select a conversation or"))
   applyColor(label, Theme.COLORS.text_secondary)
   container._label = label
 
@@ -165,7 +166,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   local buttonText = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   buttonText:SetPoint("LEFT", buttonIcon, "RIGHT", 4, 0)
-  buttonText:SetText("Start New Whisper")
+  buttonText:SetText(Localization.Text("Start New Whisper"))
   applyColor(buttonText, Theme.COLORS.text_primary)
 
   if button.SetScript then
@@ -186,6 +187,12 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory)
 
   button:Show()
   container._newWhisperButton = button
+  container._label = label
+  container._buttonText = buttonText
+  container.setLanguage = function()
+    label:SetText(Localization.Text("Select a conversation or"))
+    buttonText:SetText(Localization.Text("Start New Whisper"))
+  end
   container:SetShown(selectedContact == nil)
 
   return container

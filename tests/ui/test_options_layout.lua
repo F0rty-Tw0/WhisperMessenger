@@ -63,6 +63,31 @@ return function()
     assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
   end
 
+  -- test_russian_options_menu_labels
+
+  do
+    ns.Localization.Configure({ language = "ruRU" })
+    local localizedLayout = LayoutBuilder.Build(factory, frame, { width = 920, height = 580 }, {})
+
+    local function hasLabel(btn, expected)
+      for _, child in ipairs(btn.children) do
+        if child.text and string.find(child.text, expected, 1, true) then
+          return true
+        end
+      end
+      return false
+    end
+
+    assert(localizedLayout.optionsHeader.text == "Параметры", "options header should be localized")
+    assert(hasLabel(localizedLayout.generalTab, "Общие"), "general tab should be localized")
+    assert(hasLabel(localizedLayout.appearanceTab, "Внешний вид"), "appearance tab should be localized")
+    assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")
+    assert(hasLabel(localizedLayout.notificationsTab, "Уведомления"), "notifications tab should be localized")
+    assert(hasLabel(localizedLayout.clearAllChatsButton, "Очистить все чаты"), "clear all chats button should be localized")
+    assert(localizedLayout.optionsHint.text == "Сбросьте позиции или очистите всю историю переписок.", "options hint should be localized")
+    ns.Localization.Configure({ language = "enUS" })
+  end
+
   -- test_buttons_anchored_to_bottom_of_menu
 
   do

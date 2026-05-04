@@ -10,6 +10,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 local createOptionButton = UIHelpers.createOptionButton
 
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local GeneralSettings = {}
 
@@ -23,29 +24,43 @@ local DEFAULTS = {
   hideMessagePreview = false,
   timeFormat = "12h",
   timeSource = "local",
+  interfaceLanguage = "auto",
 }
 
-local TIME_FORMAT_OPTIONS = {
-  { key = "12h", label = "12-hour", tooltip = "Display times as 2:30 PM." },
-  { key = "24h", label = "24-hour", tooltip = "Display times as 14:30." },
-}
+local function buildTimeFormatOptions(language)
+  return {
+    { key = "12h", label = Localization.Text("12-hour", language), tooltip = Localization.Text("Display times as 2:30 PM.", language) },
+    { key = "24h", label = Localization.Text("24-hour", language), tooltip = Localization.Text("Display times as 14:30.", language) },
+  }
+end
 
-local TIME_SOURCE_OPTIONS = {
-  { key = "local", label = "Local Time", tooltip = "Use your computer's clock." },
-  { key = "server", label = "Server Time", tooltip = "Use the game server's clock." },
-}
+local function buildTimeSourceOptions(language)
+  return {
+    { key = "local", label = Localization.Text("Local Time", language), tooltip = Localization.Text("Use your computer's clock.", language) },
+    { key = "server", label = Localization.Text("Server Time", language), tooltip = Localization.Text("Use the game server's clock.", language) },
+  }
+end
 
 function GeneralSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
     local _ = ...
   end
 
+  local interfaceLanguage = config.interfaceLanguage or DEFAULTS.interfaceLanguage
+  local function text(key)
+    return Localization.Text(key, interfaceLanguage)
+  end
+
+  local timeFormatOptions = buildTimeFormatOptions(interfaceLanguage)
+  local timeSourceOptions = buildTimeSourceOptions(interfaceLanguage)
+  local languageOptions = Localization.LanguageOptions(interfaceLanguage)
+
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = "General Settings",
-    hint = "Configure message storage and retention limits.",
+    title = text("General Settings"),
+    hint = text("Configure message storage, retention, and interface language."),
   })
   local hint = header.hint
 
@@ -56,7 +71,7 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local messagesRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = "Max Messages Per Contact",
+      label = text("Max Messages Per Contact"),
       min = 50,
       max = 500,
       step = 10,
@@ -71,7 +86,7 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local conversationsRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = "Max Contacts",
+      label = text("Max Contacts"),
       min = 10,
       max = 100,
       step = 10,
@@ -89,7 +104,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   -- has to convert the seconds-based default back to hours before SetValue.
   local retentionRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = "Message Retention (hours)",
+      label = text("Message Retention (hours)"),
       min = 1,
       max = 168,
       step = 1,
@@ -109,26 +124,26 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-  privacyLabel:SetText("Privacy")
+  privacyLabel:SetText(text("Privacy"))
   UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
 
   local clearOnLogoutToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, "Clear on logout", config.clearOnLogout == true, toggleColors, toggleLayout, function(value)
+    UIHelpers.createToggleRow(factory, frame, text("Clear on logout"), config.clearOnLogout == true, toggleColors, toggleLayout, function(value)
       onChange("clearOnLogout", value)
     end, {
-      "Clear on logout",
-      "Deletes all saved conversations and contacts when you log out.",
+      text("Clear on logout"),
+      text("Deletes all saved conversations and contacts when you log out."),
     }),
     { type = "toggle", key = "clearOnLogout", default = DEFAULTS.clearOnLogout }
   )
   clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
 
   local hidePreviewToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, "Hide message preview", config.hideMessagePreview == true, toggleColors, toggleLayout, function(value)
+    UIHelpers.createToggleRow(factory, frame, text("Hide message preview"), config.hideMessagePreview == true, toggleColors, toggleLayout, function(value)
       onChange("hideMessagePreview", value)
     end, {
-      "Hide message preview",
-      "Hides the last message preview text in the contacts list for privacy.",
+      text("Hide message preview"),
+      text("Hides the last message preview text in the contacts list for privacy."),
     }),
     { type = "toggle", key = "hideMessagePreview", default = DEFAULTS.hideMessagePreview }
   )
@@ -136,13 +151,13 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-  timeLabel:SetText("Time Display")
+  timeLabel:SetText(text("Time Display"))
   UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
 
   local timeFormatSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
-      labelText = "Time Format",
-      optionsList = TIME_FORMAT_OPTIONS,
+      labelText = text("Time Format"),
+      optionsList = timeFormatOptions,
       fallbackKey = DEFAULTS.timeFormat,
       initial = config.timeFormat or DEFAULTS.timeFormat,
       colors = selectorColors,
@@ -158,8 +173,8 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local timeSourceSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
-      labelText = "Time Source",
-      optionsList = TIME_SOURCE_OPTIONS,
+      labelText = text("Time Source"),
+      optionsList = timeSourceOptions,
       fallbackKey = DEFAULTS.timeSource,
       initial = config.timeSource or DEFAULTS.timeSource,
       colors = selectorColors,
@@ -173,21 +188,59 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   timeSourceSelector.row:SetPoint("TOPLEFT", timeFormatSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
+  local languageSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Interface Language"),
+      optionsList = languageOptions,
+      fallbackKey = DEFAULTS.interfaceLanguage,
+      initial = interfaceLanguage,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("interfaceLanguage", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+    }),
+    { type = "selector", key = "interfaceLanguage", default = DEFAULTS.interfaceLanguage }
+  )
+  languageSelector.row:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+
   local resetButton = panel:bind(
     createOptionButton(
       factory,
       frame,
-      "Reset to Defaults",
+      text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
       { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", timeSourceSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  resetButton:SetPoint("TOPLEFT", languageSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
   end)
+
+  local function applyLanguage(nextLanguage)
+    interfaceLanguage = nextLanguage or DEFAULTS.interfaceLanguage
+    header.title:SetText(text("General Settings"))
+    header.hint:SetText(text("Configure message storage, retention, and interface language."))
+    messagesRow.label:SetText(text("Max Messages Per Contact"))
+    conversationsRow.label:SetText(text("Max Contacts"))
+    retentionRow.label:SetText(text("Message Retention (hours)"))
+    privacyLabel:SetText(text("Privacy"))
+    clearOnLogoutToggle.label:SetText(text("Clear on logout"))
+    hidePreviewToggle.label:SetText(text("Hide message preview"))
+    timeLabel:SetText(text("Time Display"))
+    timeFormatSelector.label:SetText(text("Time Format"))
+    timeFormatSelector.setOptionsList(buildTimeFormatOptions(interfaceLanguage))
+    timeSourceSelector.label:SetText(text("Time Source"))
+    timeSourceSelector.setOptionsList(buildTimeSourceOptions(interfaceLanguage))
+    languageSelector.label:SetText(text("Interface Language"))
+    languageSelector.setOptionsList(Localization.LanguageOptions(interfaceLanguage))
+    languageSelector.setSelected(interfaceLanguage)
+    resetButton.label:SetText(text("Reset to Defaults"))
+  end
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
   bottomSpacer:SetSize(1, PADDING)
@@ -230,8 +283,10 @@ function GeneralSettings.Create(factory, parent, config, options)
     hidePreviewToggle = hidePreviewToggle,
     timeFormatSelector = timeFormatSelector,
     timeSourceSelector = timeSourceSelector,
+    languageSelector = languageSelector,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
+    setLanguage = applyLanguage,
   }
 end
 

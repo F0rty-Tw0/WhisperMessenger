@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local NotificationSettings = require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -330,6 +331,30 @@ return function()
       result.soundSelector.buttons[5].point[1] == "TOPLEFT",
       "test_refresh_layout: 5th sound button should anchor TOPLEFT to wrap, got " .. tostring(result.soundSelector.buttons[5].point[1])
     )
+  end
+
+  -- test_russian_localizes_notification_panel
+
+  do
+    Localization.Configure({ language = "ruRU" })
+    local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
+
+    local texts = {}
+    for _, child in ipairs(result.frame.children) do
+      if child.text then
+        texts[child.text] = true
+      end
+    end
+
+    assert(texts["Уведомления"], "Russian notifications panel should translate title")
+    assert(texts["Настройте оповещения о входящих сообщениях."], "Russian notifications panel should translate hint")
+    assert(result.soundSelector.label.text == "Звук уведомления", "Notification sound label should be localized")
+    assert(result.playSoundToggle.label.text == "Звук при новом шепоте", "Play sound toggle should be localized")
+    assert(result.iconDesaturatedToggle.label.text == "Обесцвечивать значок в покое", "Icon desaturation toggle should be localized")
+    assert(result.positionSelector.label.text == "Позиция предпросмотра виджета", "Preview position label should be localized")
+    assert(result.positionSelector.buttons[1].label.text == "Справа", "Preview position option should be localized")
+    assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
+    Localization.Configure({ language = "enUS" })
   end
 
   print("  All notification settings tests passed")

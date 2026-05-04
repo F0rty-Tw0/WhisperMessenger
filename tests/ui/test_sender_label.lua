@@ -90,8 +90,8 @@ return function()
     local youFS = findChildWithText(result.frame, "You")
     assert(youFS ~= nil, "expected plain 'You' fontstring")
 
-    local suffixFS = findChildWithText(result.frame, "\194\183 Arthas")
-    assert(suffixFS ~= nil, "expected separate '· Arthas' suffix fontstring (middle-dot, gold), mirroring '· via <Channel>'")
+    local suffixFS = findChildWithText(result.frame, "- Arthas")
+    assert(suffixFS ~= nil, "expected separate '- Arthas' suffix fontstring (dash, gold), mirroring '- via <Channel>'")
     -- Same gold tint the channel tag uses: 0.96, 0.78, 0.24, 1.0.
     local tc = suffixFS.textColor
     assert(

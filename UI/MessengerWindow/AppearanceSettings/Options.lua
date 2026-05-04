@@ -6,16 +6,17 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local Options = {}
 
-Options.FONT_OPTIONS = {
+local FONT_OPTION_SPECS = {
   { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
   { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
   { key = "morpheus", label = "Morpheus", tooltip = "Fantasy decorative font. Great for immersion." },
 }
 
-Options.OUTLINE_OPTIONS = {
+local OUTLINE_OPTION_SPECS = {
   { key = "NONE", label = "None", tooltip = "No outline on text." },
   { key = "OUTLINE", label = "Outline", tooltip = "Thin outline for readability." },
   { key = "THICKOUTLINE", label = "Thick", tooltip = "Thick outline for maximum contrast." },
@@ -40,14 +41,37 @@ local BUBBLE_COLOR_LABELS = {
   fel = { label = "Fel", tooltip = "Eerie fel-green tones." },
 }
 
+local function localizeOptionSpecs(specs)
+  local localized = {}
+  for _, spec in ipairs(specs) do
+    localized[#localized + 1] = {
+      key = spec.key,
+      label = Localization.Text(spec.label),
+      tooltip = Localization.Text(spec.tooltip),
+    }
+  end
+  return localized
+end
+
+function Options.BuildFontOptions()
+  return localizeOptionSpecs(FONT_OPTION_SPECS)
+end
+
+function Options.BuildOutlineOptions()
+  return localizeOptionSpecs(OUTLINE_OPTION_SPECS)
+end
+
+Options.FONT_OPTIONS = Options.BuildFontOptions()
+Options.OUTLINE_OPTIONS = Options.BuildOutlineOptions()
+
 function Options.BuildFontColorOptions()
   local presets = Fonts.ListFontColorPresets and Fonts.ListFontColorPresets() or {}
   local result = {}
   for _, p in ipairs(presets) do
     result[#result + 1] = {
       key = p.key,
-      label = p.label,
-      tooltip = p.rgba and (p.label .. " text color") or "Use theme colors",
+      label = Localization.Text(p.label),
+      tooltip = p.rgba and (Localization.Text(p.label) .. Localization.Text(" text color")) or Localization.Text("Use theme colors"),
     }
   end
   return result
@@ -57,14 +81,14 @@ function Options.BuildThemePresetOptions()
   local keys = Theme.ListPresets and Theme.ListPresets() or { "wow_default", "elvui_dark", "plumber_warm" }
   return SettingsControls.ProjectLabeledOptions(keys, PRESET_LABELS, function(key)
     return { label = key, tooltip = "Theme preset" }
-  end)
+  end, Localization.Text)
 end
 
 function Options.BuildBubbleColorOptions()
   local keys = Theme.ListBubblePresets and Theme.ListBubblePresets() or { "default" }
   return SettingsControls.ProjectLabeledOptions(keys, BUBBLE_COLOR_LABELS, function(key)
     return { label = key, tooltip = "Bubble color preset" }
-  end)
+  end, Localization.Text)
 end
 
 ns.AppearanceSettingsOptions = Options

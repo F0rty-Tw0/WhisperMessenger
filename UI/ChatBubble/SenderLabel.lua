@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -51,7 +52,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   timeFS:SetText(timeStr)
 
   if message.direction == "out" then
-    nameFS:SetText("You")
+    nameFS:SetText(Localization.Text("You"))
 
     -- Cross-character outgoing: append a gold "· <CharName>" suffix that
     -- mirrors the incoming "· via <Channel>" tag. Resolved at render time
@@ -69,7 +70,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
         local charnameFS = frame:CreateFontString(nil, "OVERLAY")
         setFontObject(charnameFS, Theme.FONTS.message_time)
         charnameFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- match channel tag gold
-        charnameFS:SetText("\194\183 " .. message.senderName)
+        charnameFS:SetText("- " .. message.senderName)
         charnameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
         nameFS:SetPoint("RIGHT", charnameFS, "LEFT", -4, 0)
         attachedCharname = true
@@ -91,7 +92,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
       local tagFS = frame:CreateFontString(nil, "OVERLAY")
       setFontObject(tagFS, Theme.FONTS.message_time)
       tagFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- hardcoded gold
-      tagFS:SetText("\194\183 via " .. message.channelLabel)
+      tagFS:SetText("- " .. Localization.Text("via ") .. Localization.Text(message.channelLabel))
       tagFS:SetPoint("LEFT", nameFS, "RIGHT", 4, 0)
       channelAnchor = tagFS
     end

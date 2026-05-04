@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -312,5 +313,27 @@ return function()
     onClickHandler(result.profanityFilterToggle.dot)
 
     assert(cvarWrites.profanityFilter ~= nil, "test_profanity_filter_toggle_writes_cvar: should have called SetCVar('profanityFilter', ...)")
+  end
+
+  -- test_russian_localizes_behavior_panel
+
+  do
+    Localization.Configure({ language = "ruRU" })
+    local result = BehaviorSettings.Create(factory, parent, {}, { onChange = function() end })
+
+    local texts = {}
+    for _, child in ipairs(result.frame.children) do
+      if child.text then
+        texts[child.text] = true
+      end
+    end
+
+    assert(texts["Поведение"], "Russian behavior panel should translate title")
+    assert(texts["Настройте поведение окна мессенджера."], "Russian behavior panel should translate hint")
+    assert(result.autoFocusToggle.label.text == "Автофокус ввода чата", "Auto-focus toggle should be localized")
+    assert(result.hideFromDefaultChatToggle.label.text == "Скрывать шепот из стандартного чата", "Default chat toggle should be localized")
+    assert(result.showGroupChatsToggle.label.text == "Показывать групповые чаты", "Group chats toggle should be localized")
+    assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
+    Localization.Configure({ language = "enUS" })
   end
 end

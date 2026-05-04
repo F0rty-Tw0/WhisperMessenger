@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local createOptionButton = UIHelpers.createOptionButton
 
 local OptionsMenuButtons = {}
@@ -30,16 +31,16 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding) }
   local tabSpacing = 4
 
-  local generalTab = optionButtonFactory(factory, optionsMenu, "General", tabColors, tabLayout)
+  local generalTab = optionButtonFactory(factory, optionsMenu, Localization.Text("General"), tabColors, tabLayout)
   generalTab:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
 
-  local appearanceTab = optionButtonFactory(factory, optionsMenu, "Appearance", tabColors, tabLayout)
+  local appearanceTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Appearance"), tabColors, tabLayout)
   appearanceTab:SetPoint("TOPLEFT", generalTab, "BOTTOMLEFT", 0, -tabSpacing)
 
-  local behaviorTab = optionButtonFactory(factory, optionsMenu, "Behavior", tabColors, tabLayout)
+  local behaviorTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Behavior"), tabColors, tabLayout)
   behaviorTab:SetPoint("TOPLEFT", appearanceTab, "BOTTOMLEFT", 0, -tabSpacing)
 
-  local notificationsTab = optionButtonFactory(factory, optionsMenu, "Notifications", tabColors, tabLayout)
+  local notificationsTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Notifications"), tabColors, tabLayout)
   notificationsTab:SetPoint("TOPLEFT", behaviorTab, "BOTTOMLEFT", 0, -tabSpacing)
 
   local btnH = theme.LAYOUT.OPTION_BUTTON_HEIGHT
@@ -58,18 +59,18 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   }
   local btnLayout = { height = btnH, width = optionButtonWidth(contactsWidth, menuPadding) }
 
-  local clearAllChatsButton = optionButtonFactory(factory, optionsMenu, "Clear All Chats", dangerColors, btnLayout)
+  local clearAllChatsButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Clear All Chats"), dangerColors, btnLayout)
   clearAllChatsButton:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMLEFT", menuPadding, menuPadding)
 
-  local resetIconButton = optionButtonFactory(factory, optionsMenu, "Reset Icon Position", normalColors, btnLayout)
+  local resetIconButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Icon Position"), normalColors, btnLayout)
   resetIconButton:SetPoint("BOTTOMLEFT", clearAllChatsButton, "TOPLEFT", 0, btnSpacing)
 
-  local resetWindowButton = optionButtonFactory(factory, optionsMenu, "Reset Window Position", normalColors, btnLayout)
+  local resetWindowButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Window Position"), normalColors, btnLayout)
   resetWindowButton:SetPoint("BOTTOMLEFT", resetIconButton, "TOPLEFT", 0, btnSpacing)
 
   local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", theme.FONTS.system_text)
   optionsHint:SetPoint("BOTTOMLEFT", resetWindowButton, "TOPLEFT", 0, menuPadding)
-  optionsHint:SetText("Reset positions or clear all conversation history.")
+  optionsHint:SetText(Localization.Text("Reset positions or clear all conversation history."))
 
   if optionsHint.SetJustifyH then
     optionsHint:SetJustifyH("LEFT")
@@ -81,6 +82,24 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     optionsHint:SetWidth(btnLayout.width)
   end
 
+  local function setButtonText(button, key)
+    local label = button and button.label
+    if label and label.SetText then
+      label:SetText(Localization.Text(key))
+    end
+  end
+
+  local function setLanguage()
+    setButtonText(generalTab, "General")
+    setButtonText(appearanceTab, "Appearance")
+    setButtonText(behaviorTab, "Behavior")
+    setButtonText(notificationsTab, "Notifications")
+    setButtonText(clearAllChatsButton, "Clear All Chats")
+    setButtonText(resetIconButton, "Reset Icon Position")
+    setButtonText(resetWindowButton, "Reset Window Position")
+    optionsHint:SetText(Localization.Text("Reset positions or clear all conversation history."))
+  end
+
   return {
     generalTab = generalTab,
     appearanceTab = appearanceTab,
@@ -90,6 +109,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
     optionsHint = optionsHint,
+    setLanguage = setLanguage,
   }
 end
 

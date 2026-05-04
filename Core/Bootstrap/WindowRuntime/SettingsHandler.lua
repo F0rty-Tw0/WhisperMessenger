@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 
 local SettingsHandler = {}
 
@@ -15,6 +16,7 @@ function SettingsHandler.Create(options)
   local theme = options.theme or {}
   local fonts = options.fonts or {}
   local timeFormat = options.timeFormat or {}
+  local localization = options.localization or Localization or {}
   local trace = options.trace or function(...)
     local _ = ...
   end
@@ -84,6 +86,18 @@ function SettingsHandler.Create(options)
     if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
       timeFormat.Configure({ [key] = persistedValue })
     end
+    if key == "interfaceLanguage" then
+      if localization.Configure then
+        localization.Configure({ language = persistedValue })
+      end
+      -- Configure() must run first so child widgets re-resolve from the new
+      -- catalog. refreshLanguage carries the explicit language so the
+      -- General panel's languageOverride-based text() helper sees the user's
+      -- choice instead of the "auto" default.
+      if runtime.window and runtime.window.refreshLanguage then
+        runtime.window.refreshLanguage(persistedValue)
+      end
+    end
     if key == "hideFromDefaultChat" then
       if runtime.syncChatFilters then
         runtime.syncChatFilters()
@@ -118,6 +132,7 @@ function SettingsHandler.Create(options)
         or key == "bubbleColorPreset"
         or key == "timeFormat"
         or key == "timeSource"
+        or key == "interfaceLanguage"
       ) and runtime.refreshWindow
     then
       runtime.refreshWindow()
@@ -140,7 +155,7 @@ function SettingsHandler.Create(options)
     -- and our custom chrome. Templates can't be added/removed at runtime in
     -- WoW, so we tell the user a /reload is required to apply.
     if key == "nativeChrome" and _G.print then
-      _G.print("|cffffd100WhisperMessenger:|r Native WoW HUD change requires |cffffff00/reload|r to apply.")
+      _G.print("|cffffd100WhisperMessenger:|r " .. (Localization and Localization.Text("Native chrome change requires reload") or "Native WoW HUD change requires |cffffff00/reload|r to apply."))
     end
 
     local icon = getIcon()

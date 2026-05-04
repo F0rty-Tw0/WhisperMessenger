@@ -144,44 +144,38 @@ local function tests()
       return fakeNow
     end
 
-    local dayNameCalls, shortDateCalls, longDateCalls = {}, {}, {}
+    -- TimeFormat now extracts day/month/weekday components via date("*t", ts)
+    -- and routes the resulting names through Localization, so the spy tracks
+    -- "*t" calls instead of legacy "%a"/"%b %d"/"%b %d, %Y" format strings.
+    local tCalls = {}
     local originalDate = _G.date
     _G.date = function(fmt, ts)
-      if fmt == "%a" then
-        table.insert(dayNameCalls, ts)
-      elseif fmt == "%b %d" then
-        table.insert(shortDateCalls, ts)
-      elseif fmt == "%b %d, %Y" then
-        table.insert(longDateCalls, ts)
+      if fmt == "*t" then
+        table.insert(tCalls, ts)
       end
       return originalDate(fmt, ts)
     end
 
     local threeDaysAgo = fakeNow - 3 * 86400
     local twoWeeksAgo = fakeNow - 14 * 86400
-    TimeFormat.ContactPreview(threeDaysAgo) -- %a branch
-    TimeFormat.ContactPreview(twoWeeksAgo) -- %b %d branch
-    TimeFormat.Relative(twoWeeksAgo) -- %b %d, %Y branch
+    TimeFormat.ContactPreview(threeDaysAgo) -- weekday branch
+    TimeFormat.ContactPreview(twoWeeksAgo) -- month-abbrev branch
+    TimeFormat.Relative(twoWeeksAgo) -- month-abbrev + year branch
 
     _G.date = originalDate
 
-    assert(#dayNameCalls == 1, "ContactPreview should have called date('%a', ...) once")
-    assert(dayNameCalls[1] ~= threeDaysAgo, "ContactPreview %a branch should apply server offset, got raw timestamp " .. tostring(dayNameCalls[1]))
+    assert(#tCalls == 3, "expected three date('*t', ...) calls, got " .. tostring(#tCalls))
     assert(
-      dayNameCalls[1] == threeDaysAgo + 3600,
-      "ContactPreview %a branch should add +3600s server offset, got diff " .. tostring(dayNameCalls[1] - threeDaysAgo)
+      tCalls[1] == threeDaysAgo + 3600,
+      "ContactPreview weekday branch should add +3600s server offset, got diff " .. tostring(tCalls[1] - threeDaysAgo)
     )
-
-    assert(#shortDateCalls == 1, "ContactPreview should have called date('%b %d', ...) once")
     assert(
-      shortDateCalls[1] == twoWeeksAgo + 3600,
-      "ContactPreview %b %d branch should add +3600s server offset, got diff " .. tostring(shortDateCalls[1] - twoWeeksAgo)
+      tCalls[2] == twoWeeksAgo + 3600,
+      "ContactPreview month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[2] - twoWeeksAgo)
     )
-
-    assert(#longDateCalls == 1, "Relative should have called date('%b %d, %Y', ...) once")
     assert(
-      longDateCalls[1] == twoWeeksAgo + 3600,
-      "Relative %b %d, %Y branch should add +3600s server offset, got diff " .. tostring(longDateCalls[1] - twoWeeksAgo)
+      tCalls[3] == twoWeeksAgo + 3600,
+      "Relative month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[3] - twoWeeksAgo)
     )
 
     _G.C_DateAndTime = nil

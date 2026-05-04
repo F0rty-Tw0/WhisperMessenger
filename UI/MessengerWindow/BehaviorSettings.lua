@@ -6,10 +6,15 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local BehaviorSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
+
+local function text(key)
+  return Localization.Text(key)
+end
 
 local DEFAULTS = {
   dimWhenMoving = true,
@@ -30,8 +35,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
   frame:SetAllPoints(parent)
 
   local header = SettingsControls.CreateHeader(frame, {
-    title = "Behavior",
-    hint = "Control how the messenger window behaves.",
+    title = text("Behavior"),
+    hint = text("Control how the messenger window behaves."),
   })
   local hint = header.hint
 
@@ -39,43 +44,43 @@ function BehaviorSettings.Create(factory, parent, config, options)
 
   local toggleSpecs = {
     {
-      label = "Dim when moving",
+      label = text("Dim when moving"),
       initial = config.dimWhenMoving ~= false,
       onChange = function(value)
         onChange("dimWhenMoving", value)
       end,
       tooltipLines = {
-        "Dim when moving",
-        "Reduces window opacity while your character is moving.",
+        text("Dim when moving"),
+        text("Reduces window opacity while your character is moving."),
       },
       anchorOffsetY = -24,
     },
     {
-      label = "Auto-focus chat input",
+      label = text("Auto-focus chat input"),
       initial = config.autoFocusComposer == true,
       onChange = function(value)
         onChange("autoFocusComposer", value)
       end,
       tooltipLines = {
-        "Auto-focus chat input",
-        "Places the cursor in the text box when you open the messenger.",
+        text("Auto-focus chat input"),
+        text("Places the cursor in the text box when you open the messenger."),
       },
     },
     {
-      label = "Hide whispers from default chat",
+      label = text("Hide whispers from default chat"),
       initial = config.hideFromDefaultChat == true,
       onChange = function(value)
         onChange("hideFromDefaultChat", value)
       end,
       tooltipLines = {
-        "Hide whispers from default chat",
-        "Prevents whisper messages from appearing in the default WoW chat frame.",
+        text("Hide whispers from default chat"),
+        text("Prevents whisper messages from appearing in the default WoW chat frame."),
         " ",
-        "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely.",
+        text("|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."),
       },
     },
     {
-      label = "Enable profanity filter",
+      label = text("Enable profanity filter"),
       initial = profanityEnabled,
       onChange = function(value)
         if _G.SetCVar then
@@ -83,53 +88,53 @@ function BehaviorSettings.Create(factory, parent, config, options)
         end
       end,
       tooltipLines = {
-        "Enable profanity filter",
-        "Uses Blizzard's built-in filter to censor profanity in messages.",
+        text("Enable profanity filter"),
+        text("Uses Blizzard's built-in filter to censor profanity in messages."),
       },
     },
     {
-      label = "Auto-open on incoming whisper",
+      label = text("Auto-open on incoming whisper"),
       initial = config.autoOpenIncoming == true,
       onChange = function(value)
         onChange("autoOpenIncoming", value)
       end,
       tooltipLines = {
-        "Auto-open on incoming whisper",
-        "Opens the messenger when you receive a whisper. Disabled during combat.",
+        text("Auto-open on incoming whisper"),
+        text("Opens the messenger when you receive a whisper. Disabled during combat."),
       },
     },
     {
-      label = "Auto-open on outgoing whisper",
+      label = text("Auto-open on outgoing whisper"),
       initial = config.autoOpenOutgoing == true,
       onChange = function(value)
         onChange("autoOpenOutgoing", value)
       end,
       tooltipLines = {
-        "Auto-open on outgoing whisper",
-        "Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat.",
+        text("Auto-open on outgoing whisper"),
+        text("Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."),
       },
     },
     {
-      label = "Double ESC to close",
+      label = text("Double ESC to close"),
       initial = config.doubleEscapeToClose == true,
       onChange = function(value)
         onChange("doubleEscapeToClose", value)
       end,
       tooltipLines = {
-        "Double ESC to close",
-        "First Esc clears the chat input; second Esc closes the window.",
+        text("Double ESC to close"),
+        text("First Esc clears the chat input; second Esc closes the window."),
       },
     },
     {
-      label = "Show group chats",
+      label = text("Show group chats"),
       initial = config.showGroupChats ~= false,
       onChange = function(value)
         onChange("showGroupChats", value)
       end,
       tooltipLines = {
-        "Show group chats",
-        "Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations.",
-        "When off, only whispers appear.",
+        text("Show group chats"),
+        text("Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."),
+        text("When off, only whispers appear."),
       },
     },
   }
@@ -167,7 +172,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     UIHelpers.createOptionButton(
       factory,
       frame,
-      "Reset to Defaults",
+      text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
       { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
     ),
@@ -194,6 +199,24 @@ function BehaviorSettings.Create(factory, parent, config, options)
 
   refreshTheme(Theme)
 
+  local function setLanguage()
+    header.title:SetText(text("Behavior"))
+    header.hint:SetText(text("Control how the messenger window behaves."))
+    dimToggle.label:SetText(text("Dim when moving"))
+    autoFocusToggle.label:SetText(text("Auto-focus chat input"))
+    hideFromDefaultChatToggle.label:SetText(text("Hide whispers from default chat"))
+    profanityFilterToggle.label:SetText(text("Enable profanity filter"))
+    autoOpenIncomingToggle.label:SetText(text("Auto-open on incoming whisper"))
+    autoOpenOutgoingToggle.label:SetText(text("Auto-open on outgoing whisper"))
+    doubleEscapeToggle.label:SetText(text("Double ESC to close"))
+    showGroupChatsToggle.label:SetText(text("Show group chats"))
+    resetButton.label:SetText(text("Reset to Defaults"))
+    -- Tooltip lines were captured into closure-frozen arrays at construction
+    -- and stay in the previous language until the toggle is re-hovered after
+    -- a /reload. Live-refreshing them would require restructuring the toggle
+    -- helper to read keys at hover time; deferred until the codebase needs it.
+  end
+
   local function refreshLayout(width)
     if type(width) ~= "number" or width <= 0 then
       return
@@ -217,6 +240,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     showGroupChatsToggle = showGroupChatsToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
+    setLanguage = setLanguage,
   }
 end
 

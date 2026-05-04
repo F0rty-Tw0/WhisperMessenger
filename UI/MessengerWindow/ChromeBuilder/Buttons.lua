@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 
@@ -45,9 +46,9 @@ function Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome,
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(newConversationButton, "ANCHOR_TOP")
-        _G.GameTooltip:SetText("Start New Whisper")
+        _G.GameTooltip:SetText(Localization.Text("Start New Whisper"))
         if _G.GameTooltip.AddLine then
-          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, "Open an empty conversation thread.", 1, 1, 1)
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, Localization.Text("Open an empty conversation thread."), 1, 1, 1)
         end
         _G.GameTooltip:Show()
       end

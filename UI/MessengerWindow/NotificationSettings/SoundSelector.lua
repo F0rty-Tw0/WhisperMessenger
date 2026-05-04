@@ -5,12 +5,13 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local SoundSelector = {}
 
 SoundSelector.DEFAULT_SOUND = "whisper"
 
-SoundSelector.OPTIONS = {
+local SOUND_OPTION_SPECS = {
   { key = "whisper", label = "Whisper" },
   { key = "ping", label = "Ping" },
   { key = "chime", label = "Chime" },
@@ -29,12 +30,22 @@ SoundSelector.OPTIONS = {
   { key = "pulse", label = "Pulse" },
 }
 
+function SoundSelector.Options()
+  local options = {}
+  for _, spec in ipairs(SOUND_OPTION_SPECS) do
+    options[#options + 1] = { key = spec.key, label = Localization.Text(spec.label) }
+  end
+  return options
+end
+
+SoundSelector.OPTIONS = SoundSelector.Options()
+
 function SoundSelector.Create(factory, parent, opts)
   opts = opts or {}
   local onChange = opts.onChange
   return ButtonSelector.Create(factory, parent, {
-    labelText = "Notification sound",
-    optionsList = SoundSelector.OPTIONS,
+    labelText = Localization.Text("Notification sound"),
+    optionsList = SoundSelector.Options(),
     fallbackKey = SoundSelector.DEFAULT_SOUND,
     initial = opts.initial,
     colors = opts.colors,

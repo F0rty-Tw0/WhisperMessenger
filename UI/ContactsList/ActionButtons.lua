@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
@@ -40,7 +41,7 @@ end
 
 local function pinTooltipText(row)
   local item = row and row.item or nil
-  return item and item.pinned and "Unpin" or "Pin to top"
+  return item and item.pinned and Localization.Text("Unpin") or Localization.Text("Pin to top")
 end
 
 local function isPointerInsideRow(row)
@@ -144,7 +145,7 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
       adjustActionHoverCount(row, 1)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        _G.GameTooltip:SetText("Remove")
+        _G.GameTooltip:SetText(Localization.Text("Remove"))
         _G.GameTooltip:Show()
       end
     end)

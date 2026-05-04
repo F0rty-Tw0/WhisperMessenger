@@ -32,6 +32,7 @@ return function()
     hideMessagePreview = true,
     timeFormat = "24h",
     timeSource = "server",
+    interfaceLanguage = "ruRU",
     -- appearance
     themePreset = "elvui_dark",
     fontFamily = "friz",
@@ -82,6 +83,10 @@ return function()
   assert(
     generalCapture.config.timeSource == "server",
     "expected general config.timeSource=server, got: " .. tostring(generalCapture.config.timeSource)
+  )
+  assert(
+    generalCapture.config.interfaceLanguage == "ruRU",
+    "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)
   )
 
   -- Appearance: bubbleColorPreset must round-trip.

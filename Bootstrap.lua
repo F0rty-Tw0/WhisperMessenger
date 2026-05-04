@@ -135,6 +135,12 @@ function Bootstrap.Initialize(factory, options)
       timeSource = accountState.settings.timeSource or "local",
     })
   end
+  local Localization = loadModule("WhisperMessenger.Locale.Localization", "Localization")
+  if Localization.Configure then
+    Localization.Configure({
+      language = accountState.settings.interfaceLanguage or "auto",
+    })
+  end
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G["C_Club"], {

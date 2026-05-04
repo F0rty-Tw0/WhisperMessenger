@@ -136,6 +136,8 @@ function ButtonSelector.Create(factory, parent, options)
     btn._hovered = false
     btn.bg = bg
     btn.label = btnLabel
+    btn._tooltipTitle = opt.label
+    btn._tooltipText = opt.tooltip
 
     btn:SetScript("OnClick", function()
       updateSelection(opt.key)
@@ -147,11 +149,11 @@ function ButtonSelector.Create(factory, parent, options)
     btn:SetScript("OnEnter", function()
       btn._hovered = true
       paintButton(btn, true)
-      if opt.tooltip and _G.GameTooltip and _G.GameTooltip.SetOwner then
+      if btn._tooltipText and _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(btn, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(opt.label)
+        _G.GameTooltip:SetText(btn._tooltipTitle or opt.label)
         if _G.GameTooltip.AddLine then
-          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, opt.tooltip, 1, 1, 1, true)
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, btn._tooltipText, 1, 1, 1, true)
         end
         _G.GameTooltip:Show()
       end
@@ -243,6 +245,21 @@ function ButtonSelector.Create(factory, parent, options)
         relayoutButtons(nextWidth, perRow)
       else
         relayoutButtons(nextWidth, maxPerRow)
+      end
+    end,
+    setOptionsList = function(nextOptions)
+      if type(nextOptions) ~= "table" then
+        return
+      end
+      for i, opt in ipairs(nextOptions) do
+        local btn = buttons[i]
+        if btn then
+          if btn.label and btn.label.SetText then
+            btn.label:SetText(opt.label)
+          end
+          btn._tooltipTitle = opt.label
+          btn._tooltipText = opt.tooltip
+        end
       end
     end,
     applyTheme = function(activeTheme, nextColors)

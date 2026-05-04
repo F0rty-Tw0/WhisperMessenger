@@ -14,8 +14,7 @@ return function()
   assert(not string.find(text, "xC2xB7"), "separator should be UTF-8 middle dot, not literal hex: " .. text)
 
   -- Should contain the actual middle dot character (U+00B7 = bytes 0xC2 0xB7)
-  local dot = string.char(194, 183)
-  assert(string.find(text, dot, 1, true), "separator should contain UTF-8 middle dot: " .. text)
+  assert(string.find(text, " - ", 1, true), "separator should contain ' - ': " .. text)
 
   -- WrongFaction should display as "Wrong Faction" label
   assert(string.find(text, "Wrong Faction", 1, true), "should show 'Wrong Faction' label: " .. text)

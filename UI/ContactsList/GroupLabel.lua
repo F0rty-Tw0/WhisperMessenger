@@ -5,6 +5,7 @@ end
 
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local GroupLabel = {}
 
 local CHANNEL_LABELS = {
@@ -24,7 +25,7 @@ function GroupLabel.LabelForChannel(channel)
   if channel == nil then
     return ""
   end
-  return CHANNEL_LABELS[channel] or ""
+  return Localization.Text(CHANNEL_LABELS[channel]) or ""
 end
 
 -- Extract a short display-friendly character name from a profileId like
@@ -70,7 +71,7 @@ function GroupLabel.LabelForChannelAndTitle(channel, title)
     if type(title) == "string" and title ~= "" then
       return title
     end
-    return "Battle.net Group"
+    return Localization.Text("Battle.net Group")
   end
   if channel == ChannelType.COMMUNITY then
     if type(title) == "string" and title ~= "" then

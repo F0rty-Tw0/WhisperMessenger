@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 local function findChildFontString(frame, predicate)
   for _, child in ipairs(frame.children or {}) do
@@ -37,6 +38,16 @@ return function()
     toggle.setUnreadCounts(3, 5)
     assert(toggle.whispersLabel.text == "Whispers", "label must not embed count; got " .. tostring(toggle.whispersLabel.text))
     assert(toggle.groupsLabel.text == "Groups", "label must not embed count; got " .. tostring(toggle.groupsLabel.text))
+  end
+
+  -- test_russian_tab_labels
+  do
+    Localization.Configure({ language = "ruRU" })
+    local toggle = createToggle()
+    toggle.setUnreadCounts(0, 0)
+    assert(toggle.whispersLabel.text == "Шепот", "expected localized whispers label")
+    assert(toggle.groupsLabel.text == "Группы", "expected localized groups label")
+    Localization.Configure({ language = "enUS" })
   end
 
   -- test_badge_shown_with_count_when_unread_positive

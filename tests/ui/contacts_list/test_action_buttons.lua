@@ -1,5 +1,6 @@
 local ActionButtons = require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local FakeUI = require("tests.helpers.fake_ui")
+local Localization = require("WhisperMessenger.Locale.Localization")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -139,6 +140,42 @@ return function()
     ActionButtons.hideActions(row)
     assert(row.removeButton:IsShown() == false, "hideActions should hide removeButton when not selected")
     assert(row.pinButton:IsShown() == false, "hideActions should hide pinButton when not selected")
+  end
+
+  -- test_russian_action_tooltips
+  do
+    Localization.Configure({ language = "ruRU" })
+    local tooltipText = nil
+    local originalTooltip = _G.GameTooltip
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipText = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local row = makeRow()
+    local options = makeOptions({})
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, options)
+    row.pinButton = ActionButtons.createPinButton(factory, row, item, 260, options)
+
+    row.removeButton:GetScript("OnEnter")(row.removeButton)
+    assert(tooltipText == "Удалить", "remove tooltip should be localized")
+
+    tooltipText = nil
+    row.pinButton:GetScript("OnEnter")(row.pinButton)
+    assert(tooltipText == "Закрепить сверху", "pin tooltip should be localized")
+
+    row.item.pinned = true
+    tooltipText = nil
+    row.pinButton:GetScript("OnEnter")(row.pinButton)
+    assert(tooltipText == "Открепить", "unpin tooltip should be localized")
+
+    _G.GameTooltip = originalTooltip
+    row.item.pinned = false
+    Localization.Configure({ language = "enUS" })
   end
 
   print("PASS: test_action_buttons")
