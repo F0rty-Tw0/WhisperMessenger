@@ -4,7 +4,9 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
-- Added Russian localization.
+## [1.2.7] - 2026-05-05
+
+- Added localization in German, Spanish, French, Italian, Portuguese, Russian, Korean, Simplified Chinese, and Traditional Chinese.
 
 ## [1.2.6] - 2026-05-03
 

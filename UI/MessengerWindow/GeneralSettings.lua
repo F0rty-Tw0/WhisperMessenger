@@ -200,6 +200,9 @@ function GeneralSettings.Create(factory, parent, config, options)
       end,
       rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
       labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      -- 12 options (Auto + 11 languages) wrap into a 3-column grid so each
+      -- button stays wide enough to render its native autonym.
+      maxPerRow = 3,
     }),
     { type = "selector", key = "interfaceLanguage", default = DEFAULTS.interfaceLanguage }
   )

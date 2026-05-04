@@ -76,8 +76,16 @@ return function()
 
     assert(settings.languageSelector ~= nil, "should expose languageSelector")
     assert(settings.languageSelector.buttons ~= nil, "languageSelector should expose buttons")
-    assert(settings.languageSelector.buttons[3]._key == "ruRU", "third language option should be ruRU")
-    assert(settings.languageSelector.buttons[3]._selected == true, "ruRU option should be selected")
+
+    local ruRUButton = nil
+    for _, button in ipairs(settings.languageSelector.buttons) do
+      if button._key == "ruRU" then
+        ruRUButton = button
+        break
+      end
+    end
+    assert(ruRUButton ~= nil, "should expose Russian language option")
+    assert(ruRUButton._selected == true, "ruRU option should be selected")
 
     local texts = {}
     for _, child in ipairs(settings.frame.children) do
@@ -97,7 +105,16 @@ return function()
     settings.setLanguage("enUS")
     assert(settings.languageSelector.buttons[2]._selected == true, "setLanguage should select enUS")
     assert(settings.languageSelector.buttons[2].label.text == "English", "setLanguage should update English button label")
-    assert(settings.languageSelector.buttons[3].label.text == "Russian", "setLanguage should update Russian button label")
+
+    ruRUButton = nil
+    for _, button in ipairs(settings.languageSelector.buttons) do
+      if button._key == "ruRU" then
+        ruRUButton = button
+        break
+      end
+    end
+    assert(ruRUButton ~= nil, "should still expose Russian option after setLanguage")
+    assert(ruRUButton.label.text == "Русский", "setLanguage should keep the Russian autonym label")
 
     texts = {}
     for _, child in ipairs(settings.frame.children) do

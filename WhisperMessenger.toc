@@ -8,7 +8,7 @@
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.2.6
+## Version: v1.2.7
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
@@ -24,6 +24,15 @@ Core/EventUtils.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 Locale/ruRU.lua
+Locale/deDE.lua
+Locale/frFR.lua
+Locale/esES.lua
+Locale/esMX.lua
+Locale/itIT.lua
+Locale/ptBR.lua
+Locale/koKR.lua
+Locale/zhCN.lua
+Locale/zhTW.lua
 Locale/Localization.lua
 Util/ChatReplyState.lua
 
