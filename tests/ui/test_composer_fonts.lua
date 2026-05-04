@@ -68,7 +68,6 @@ return function()
   assert(placeholder ~= nil, "expected placeholder FontString to exist")
   assert(placeholder.fontObject == expectedFont, "expected placeholder fontObject to be WM_ChatNormal, got: " .. tostring(placeholder.fontObject))
 
-
   -- Composer text should localize when Russian is configured.
   Localization.Configure({ language = "ruRU" })
   local localizedComposer = Composer.Create(factory, parent, selectedContact, function() end, function() end)

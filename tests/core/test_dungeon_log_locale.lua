@@ -9,7 +9,7 @@ local function makeRuntime()
     accountState = { settings = {} },
     syncReplyKey = nil,
     suspend = nil,
-    resume  = nil,
+    resume = nil,
   }
 end
 
@@ -30,10 +30,11 @@ return function()
 
     Common.notifyCompetitiveState(Bootstrap)
 
-    assert(type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "",
-      "messagingNotice should be a non-empty string")
-    assert(string.find(runtime.messagingNotice, "соревновательном", 1, true),
-      "competitive notice should be in Russian, got: " .. tostring(runtime.messagingNotice))
+    assert(type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "", "messagingNotice should be a non-empty string")
+    assert(
+      string.find(runtime.messagingNotice, "соревновательном", 1, true),
+      "competitive notice should be in Russian, got: " .. tostring(runtime.messagingNotice)
+    )
 
     Localization.Configure({ language = "enUS" })
   end
@@ -49,18 +50,26 @@ return function()
 
     MythicSuspendController.Attach(runtime, {
       Bootstrap = Bootstrap,
-      print = function(msg) table.insert(printed, msg) end,
-      getEventBridge = function() return nil end,
+      print = function(msg)
+        table.insert(printed, msg)
+      end,
+      getEventBridge = function()
+        return nil
+      end,
       mythicPauseNotice = nil,
     })
 
     runtime.suspend()
 
     assert(#printed >= 1, "suspend should print at least one message")
-    assert(string.find(printed[1], "мифическ", 1, true) or string.find(printed[1], "Приостановлено", 1, true),
-      "suspend print should be in Russian, got: " .. tostring(printed[1]))
-    assert(string.find(runtime.messagingNotice, "мифическ", 1, true),
-      "messagingNotice should be in Russian after suspend, got: " .. tostring(runtime.messagingNotice))
+    assert(
+      string.find(printed[1], "мифическ", 1, true) or string.find(printed[1], "Приостановлено", 1, true),
+      "suspend print should be in Russian, got: " .. tostring(printed[1])
+    )
+    assert(
+      string.find(runtime.messagingNotice, "мифическ", 1, true),
+      "messagingNotice should be in Russian after suspend, got: " .. tostring(runtime.messagingNotice)
+    )
 
     Localization.Configure({ language = "enUS" })
   end
@@ -76,15 +85,18 @@ return function()
 
     MythicSuspendController.Attach(runtime, {
       Bootstrap = Bootstrap,
-      print = function(msg) table.insert(printed, msg) end,
-      getEventBridge = function() return nil end,
+      print = function(msg)
+        table.insert(printed, msg)
+      end,
+      getEventBridge = function()
+        return nil
+      end,
     })
 
     runtime.resume()
 
     assert(#printed >= 1, "resume should print at least one message")
-    assert(string.find(printed[1], "Возобновлено", 1, true),
-      "resume print should be in Russian, got: " .. tostring(printed[1]))
+    assert(string.find(printed[1], "Возобновлено", 1, true), "resume print should be in Russian, got: " .. tostring(printed[1]))
 
     Localization.Configure({ language = "enUS" })
   end
@@ -104,11 +116,17 @@ return function()
       settings = {},
     }
 
-    rawset(_G, "IsInGroup", function(_cat) return false end)
-    rawset(_G, "IsInRaid", function() return false end)
+    rawset(_G, "IsInGroup", function(_cat)
+      return false
+    end)
+    rawset(_G, "IsInRaid", function()
+      return false
+    end)
     rawset(_G, "LE_PARTY_CATEGORY_HOME", 1)
     rawset(_G, "LE_PARTY_CATEGORY_INSTANCE", 2)
-    rawset(_G, "time", function() return 0 end)
+    rawset(_G, "time", function()
+      return 0
+    end)
 
     local Bootstrap = {
       runtime = {

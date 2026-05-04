@@ -30,11 +30,17 @@ return function()
 
     icon.setUnreadCount(3)
     onEnter(icon.frame)
-    assert(string.find(tooltipText, "3 непрочитанных", 1, true), "tooltip should have localized unread count, got: " .. tostring(tooltipText))
+    assert(
+      string.find(tooltipText, "3 непрочитанных", 1, true),
+      "tooltip should have localized unread count, got: " .. tostring(tooltipText)
+    )
 
     icon.setCompetitiveContent(true)
     onEnter(icon.frame)
-    assert(string.find(tooltipText, "Пауза в M+", 1, true), "tooltip should have localized competitive indicator, got: " .. tostring(tooltipText))
+    assert(
+      string.find(tooltipText, "Пауза в M+", 1, true),
+      "tooltip should have localized competitive indicator, got: " .. tostring(tooltipText)
+    )
 
     _G.GameTooltip = originalTooltip
     Localization.Configure({ language = "enUS" })

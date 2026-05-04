@@ -15,11 +15,17 @@ return function()
     -- Check availability states in StatusLine
     local status = { status = "BNetOnline" }
     local text, _ = StatusLine.Build({ displayName = "Bob" }, status)
-    assert(string.find(text, "В сети %(прил.%)", 1, false), "BNetOnline should localize to 'В сети (прил.)', got: " .. tostring(text))
+    assert(
+      string.find(text, "В сети %(прил.%)", 1, false),
+      "BNetOnline should localize to 'В сети (прил.)', got: " .. tostring(text)
+    )
 
     status = { status = "WrongFaction" }
     text, _ = StatusLine.Build({ displayName = "Bob" }, status)
-    assert(string.find(text, "Другая фракция", 1, true), "WrongFaction should localize to 'Другая фракция', got: " .. tostring(text))
+    assert(
+      string.find(text, "Другая фракция", 1, true),
+      "WrongFaction should localize to 'Другая фракция', got: " .. tostring(text)
+    )
 
     Localization.Configure({ language = "enUS" })
   end

@@ -5,14 +5,16 @@ end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
-local function L(key) return Localization and Localization.Text(key) or key end
+local function L(key)
+  return Localization and Localization.Text(key) or key
+end
 
 local MythicSuspendController = {}
 local DEFAULT_MYTHIC_PAUSE_NOTICE_KEY = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
-local SUSPEND_PRINT_KEY  = "Suspended for mythic content. Whispers will resume when you leave."
-local RESUME_PRINT_KEY   = "Resumed. Whispers are active again."
-local R_REPLY_ADVISORY_KEY = '/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'
-
+local SUSPEND_PRINT_KEY = "Suspended for mythic content. Whispers will resume when you leave."
+local RESUME_PRINT_KEY = "Resumed. Whispers are active again."
+local R_REPLY_ADVISORY_KEY =
+  '/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'
 
 function MythicSuspendController.Attach(runtime, deps)
   deps = deps or {}

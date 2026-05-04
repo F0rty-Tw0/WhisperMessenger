@@ -429,7 +429,6 @@ return function()
     assert(changes.fontColor == "default", "test_reset_new_settings: reset should fire fontColor=default, got: " .. tostring(changes.fontColor))
   end
 
-
   -- test_russian_localizes_appearance_panel
 
   do

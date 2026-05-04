@@ -155,7 +155,13 @@ function SettingsHandler.Create(options)
     -- and our custom chrome. Templates can't be added/removed at runtime in
     -- WoW, so we tell the user a /reload is required to apply.
     if key == "nativeChrome" and _G.print then
-      _G.print("|cffffd100WhisperMessenger:|r " .. (Localization and Localization.Text("Native chrome change requires reload") or "Native WoW HUD change requires |cffffff00/reload|r to apply."))
+      _G.print(
+        "|cffffd100WhisperMessenger:|r "
+          .. (
+            Localization and Localization.Text("Native chrome change requires reload")
+            or "Native WoW HUD change requires |cffffff00/reload|r to apply."
+          )
+      )
     end
 
     local icon = getIcon()

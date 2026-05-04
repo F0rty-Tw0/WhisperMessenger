@@ -4,7 +4,9 @@ if type(ns) ~= "table" then
 end
 
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
-local function L(key) return Localization and Localization.Text(key) or key end
+local function L(key)
+  return Localization and Localization.Text(key) or key
+end
 local Common = {}
 
 Common.COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."

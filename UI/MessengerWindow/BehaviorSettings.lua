@@ -76,7 +76,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
         text("Hide whispers from default chat"),
         text("Prevents whisper messages from appearing in the default WoW chat frame."),
         " ",
-        text("|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."),
+        text(
+          "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."
+        ),
       },
     },
     {

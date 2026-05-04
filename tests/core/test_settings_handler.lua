@@ -357,10 +357,7 @@ return function()
     -- interfaceLanguage to the "auto" default, which deselects the user's
     -- choice in the selector and rebuilds option labels via auto-detect.
     assert(#refreshLanguageCalls == 1, "refreshLanguage fired exactly once")
-    assert(
-      refreshLanguageCalls[1] == "ruRU",
-      "refreshLanguage must receive the new language; got: " .. tostring(refreshLanguageCalls[1])
-    )
+    assert(refreshLanguageCalls[1] == "ruRU", "refreshLanguage must receive the new language; got: " .. tostring(refreshLanguageCalls[1]))
   end
 
   -- hideFromDefaultChat triggers chat filter and reply-key sync.

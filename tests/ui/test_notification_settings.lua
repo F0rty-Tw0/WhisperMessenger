@@ -347,11 +347,20 @@ return function()
     end
 
     assert(texts["Уведомления"], "Russian notifications panel should translate title")
-    assert(texts["Настройте оповещения о входящих сообщениях."], "Russian notifications panel should translate hint")
+    assert(
+      texts["Настройте оповещения о входящих сообщениях."],
+      "Russian notifications panel should translate hint"
+    )
     assert(result.soundSelector.label.text == "Звук уведомления", "Notification sound label should be localized")
     assert(result.playSoundToggle.label.text == "Звук при новом шепоте", "Play sound toggle should be localized")
-    assert(result.iconDesaturatedToggle.label.text == "Обесцвечивать значок в покое", "Icon desaturation toggle should be localized")
-    assert(result.positionSelector.label.text == "Позиция предпросмотра виджета", "Preview position label should be localized")
+    assert(
+      result.iconDesaturatedToggle.label.text == "Обесцвечивать значок в покое",
+      "Icon desaturation toggle should be localized"
+    )
+    assert(
+      result.positionSelector.label.text == "Позиция предпросмотра виджета",
+      "Preview position label should be localized"
+    )
     assert(result.positionSelector.buttons[1].label.text == "Справа", "Preview position option should be localized")
     assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })

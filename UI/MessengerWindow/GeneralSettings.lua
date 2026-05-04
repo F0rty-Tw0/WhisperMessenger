@@ -139,12 +139,21 @@ function GeneralSettings.Create(factory, parent, config, options)
   clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
 
   local hidePreviewToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, text("Hide message preview"), config.hideMessagePreview == true, toggleColors, toggleLayout, function(value)
-      onChange("hideMessagePreview", value)
-    end, {
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
       text("Hide message preview"),
-      text("Hides the last message preview text in the contacts list for privacy."),
-    }),
+      config.hideMessagePreview == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("hideMessagePreview", value)
+      end,
+      {
+        text("Hide message preview"),
+        text("Hides the last message preview text in the contacts list for privacy."),
+      }
+    ),
     { type = "toggle", key = "hideMessagePreview", default = DEFAULTS.hideMessagePreview }
   )
   hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)

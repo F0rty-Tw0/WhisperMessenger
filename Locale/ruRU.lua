@@ -226,7 +226,7 @@ local Russian = {
   -- Dungeon/competitive chat log messages
   ["Suspended for mythic content. Whispers will resume when you leave."] = "Приостановлено для мифического контента. Шепоты возобновятся после выхода.",
   ["Resumed. Whispers are active again."] = "Возобновлено. Шепоты снова активны.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = "/r и клавиша R могут не работать в Мифик+, пока включено \"Скрывать шепоты из чата по умолчанию\". Используйте |cffffff00/wr|r для ответа.",
+  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r и клавиша R могут не работать в Мифик+, пока включено "Скрывать шепоты из чата по умолчанию". Используйте |cffffff00/wr|r для ответа.',
   ["Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."] = "Шепоты приостановлены в мифическом контенте. Входящие и исходящие сообщения возобновятся после выхода.",
   ["Whispers are paused in competitive content. Messages will resume when you leave."] = "Шепоты приостановлены в соревновательном контенте. Сообщения возобновятся после выхода.",
   ["Left party"] = "Покинул группу",

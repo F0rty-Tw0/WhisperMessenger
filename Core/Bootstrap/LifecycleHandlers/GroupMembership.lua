@@ -9,7 +9,9 @@ local Common = ns.BootstrapLifecycleHandlersCommon
 
 local TimeFormat = ns.TimeFormat or (type(require) == "function" and require("WhisperMessenger.Util.TimeFormat")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
-local function L(key) return Localization and Localization.Text(key) or key end
+local function L(key)
+  return Localization and Localization.Text(key) or key
+end
 
 local GroupMembership = {}
 

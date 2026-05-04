@@ -607,8 +607,8 @@ return function()
     end
 
     assert(
-      string.find(tooltipText, "unavailable", 1, true) ~= nil,
-      "test_competitive_tooltip_includes_status: tooltip should mention unavailable, got: " .. tostring(tooltipText)
+      string.find(tooltipText, "Paused in M+", 1, true) ~= nil,
+      "test_competitive_tooltip_includes_status: tooltip should mention the M+ pause status, got: " .. tostring(tooltipText)
     )
 
     _G.GameTooltip = nil

@@ -331,7 +331,10 @@ return function()
     assert(texts["Поведение"], "Russian behavior panel should translate title")
     assert(texts["Настройте поведение окна мессенджера."], "Russian behavior panel should translate hint")
     assert(result.autoFocusToggle.label.text == "Автофокус ввода чата", "Auto-focus toggle should be localized")
-    assert(result.hideFromDefaultChatToggle.label.text == "Скрывать шепот из стандартного чата", "Default chat toggle should be localized")
+    assert(
+      result.hideFromDefaultChatToggle.label.text == "Скрывать шепот из стандартного чата",
+      "Default chat toggle should be localized"
+    )
     assert(result.showGroupChatsToggle.label.text == "Показывать групповые чаты", "Group chats toggle should be localized")
     assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })

@@ -84,7 +84,10 @@ return function()
     assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")
     assert(hasLabel(localizedLayout.notificationsTab, "Уведомления"), "notifications tab should be localized")
     assert(hasLabel(localizedLayout.clearAllChatsButton, "Очистить все чаты"), "clear all chats button should be localized")
-    assert(localizedLayout.optionsHint.text == "Сбросьте позиции или очистите всю историю переписок.", "options hint should be localized")
+    assert(
+      localizedLayout.optionsHint.text == "Сбросьте позиции или очистите всю историю переписок.",
+      "options hint should be localized"
+    )
     ns.Localization.Configure({ language = "enUS" })
   end
 
