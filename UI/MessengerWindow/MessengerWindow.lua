@@ -223,7 +223,7 @@ function MessengerWindow.Create(factory, options)
 
   handleContactSelected = selectionController.handleContactSelected
 
-  local _relayoutWindow, scriptResult = LifecycleWiring.Setup({
+  local _, scriptResult = LifecycleWiring.Setup({
     relayoutFactory = RelayoutController,
     layoutBuilder = LayoutBuilder,
     layout = layout,
