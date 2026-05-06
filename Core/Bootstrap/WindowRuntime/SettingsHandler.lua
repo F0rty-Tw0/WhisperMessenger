@@ -90,6 +90,13 @@ function SettingsHandler.Create(options)
       if localization.Configure then
         localization.Configure({ language = persistedValue })
       end
+      -- Korean and Chinese locales need a CJK-capable font path; the
+      -- default FRIZQT / ARIALN / MORPHEUS files contain no CJK glyphs
+      -- and render as squares. Update the font swap before refreshing
+      -- so the next paint uses the correct face.
+      if fonts.SetLanguage then
+        fonts.SetLanguage(persistedValue)
+      end
       -- Configure() must run first so child widgets re-resolve from the new
       -- catalog. refreshLanguage carries the explicit language so the
       -- General panel's languageOverride-based text() helper sees the user's

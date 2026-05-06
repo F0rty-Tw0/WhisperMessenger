@@ -90,6 +90,7 @@ UI/Helpers/Shapes.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
 UI/Hyperlinks/UrlFormatter.lua
+UI/Hyperlinks/QuestLinkClassic.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
 UI/ScrollView/Navigation.lua

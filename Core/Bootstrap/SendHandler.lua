@@ -7,6 +7,7 @@ local Availability = ns.Availability or require("WhisperMessenger.Transport.Avai
 local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
 
 local SendHandler = {}
 
@@ -64,6 +65,13 @@ end
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   runtime.sendStatusByConversation[payload.conversationKey] = nil
+
+  -- Convert Classic plain-text quest links (`[Name (id)]`) into real
+  -- hyperlinks before send so the recipient gets a clickable link and the
+  -- echoed CHAT_MSG_*_INFORM event matches what we recorded.
+  if type(payload.text) == "string" then
+    payload.text = QuestLinkClassic.Rewrite(payload.text)
+  end
 
   if isCombatSendLocked(runtime) then
     appendBlockedOutgoing(runtime, payload, "Lockdown")

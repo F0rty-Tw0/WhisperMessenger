@@ -45,6 +45,10 @@ function FontObjects.Install()
   -- Stub standard WoW font objects used as sources by Fonts.lua
   local DEFAULT_FONT = "Fonts\\FRIZQT__.TTF"
   local SYSTEM_FONT = "Fonts\\ARIALN.TTF"
+  -- Real WoW FontObjects for tooltip text carry a multi-script FontFamily
+  -- chain with CJK fallback fonts. Fake the same shape so tests can assert
+  -- that the addon inherits from this object on CJK locales.
+  local TOOLTIP_FONT = "Fonts\\TOOLTIP_FAMILY.TTF"
   local standardFonts = {
     -- GameFont family (Friz Quadrata / locale equivalent)
     { "GameFontNormal", DEFAULT_FONT, 12 },
@@ -58,6 +62,8 @@ function FontObjects.Install()
     { "SystemFont_Med1", SYSTEM_FONT, 12 },
     { "SystemFont_Med3", SYSTEM_FONT, 14 },
     { "SystemFont_Large", SYSTEM_FONT, 16 },
+    -- Tooltip text FontObject — addons treat this as a known CJK-fallback source
+    { "GameTooltipText", TOOLTIP_FONT, 12 },
   }
   for _, def in ipairs(standardFonts) do
     local name, path, size = def[1], def[2], def[3]

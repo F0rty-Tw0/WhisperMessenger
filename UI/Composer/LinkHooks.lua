@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+
 local LinkHooks = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
@@ -52,7 +54,15 @@ local function tryInsertLink(link, options)
     return false
   end
 
-  input:Insert(link)
+  -- Classic vanilla shift-click of a quest produces plain `[Name (id)]` text
+  -- with no |H...|h envelope. Rewrite to a real hyperlink so the link is
+  -- clickable in the composer and survives transmission to the recipient.
+  local insertable = link
+  if type(insertable) == "string" then
+    insertable = QuestLinkClassic.Rewrite(insertable)
+  end
+
+  input:Insert(insertable)
   return true
 end
 

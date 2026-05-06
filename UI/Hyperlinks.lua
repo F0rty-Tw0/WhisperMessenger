@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
+local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
 
 local Hyperlinks = {}
 
@@ -34,7 +35,7 @@ local function copyExternalUrl(url)
 end
 
 function Hyperlinks.FormatTextForDisplay(text)
-  local value = tostring(text or "")
+  local value = QuestLinkClassic.Rewrite(tostring(text or ""))
   if value == "" then
     return ""
   end

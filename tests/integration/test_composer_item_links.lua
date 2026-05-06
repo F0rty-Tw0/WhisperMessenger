@@ -122,6 +122,19 @@ return function()
   assert(questResult == true, "expected ChatEdit_InsertLink to return true for quest link")
   assert(composer.input:GetText() == questLink, "expected quest link inserted into our composer")
 
+  -- Classic vanilla shift-click inserts plain `[Name (id)]` text. Our composer
+  -- must rewrite that on the way in to a real quest hyperlink, so the
+  -- recipient gets a clickable link and the user's bubble shows it correctly.
+  composer.input:SetText("")
+  local classicShiftClick = "[Apprentice's Duties (471)]"
+  local classicResult = _G.ChatEdit_InsertLink(classicShiftClick)
+  assert(classicResult == true, "expected ChatEdit_InsertLink to return true for classic plain-text quest")
+  local expectedClassic = "|cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
+  assert(
+    composer.input:GetText() == expectedClassic,
+    "expected classic quest text to be rewritten to hyperlink, got: " .. tostring(composer.input:GetText())
+  )
+
   -- ChatEdit_InsertLink returns false when composer is hidden (no target)
   composer.input:Hide()
   assert(_G.ChatEdit_InsertLink(itemLink) == false, "expected false when no visible input")

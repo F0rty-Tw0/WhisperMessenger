@@ -109,6 +109,17 @@ return function()
   end
 
   ----------------------------------------------------------------------------
+  -- Classic quest-log shift-click format `[Name (questID)]` is plain text in
+  -- vanilla Classic. Convert to a real quest hyperlink so the bubble is
+  -- clickable and tooltips work.
+  ----------------------------------------------------------------------------
+  do
+    local out = Hyperlinks.FormatTextForDisplay("look at [Apprentice's Duties (471)] please")
+    local expected = "look at |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r please"
+    assert(out == expected, "classic quest format must be rewritten, got: " .. out)
+  end
+
+  ----------------------------------------------------------------------------
   -- HandleClick on a Blizzard (non-url) link delegates to _G.SetItemRef.
   ----------------------------------------------------------------------------
   do

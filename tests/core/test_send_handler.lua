@@ -55,6 +55,25 @@ return function()
   assert(sentMessages[1].text == "hello")
   assert(sentMessages[1].target == "Thrall-Nagrand")
 
+  -- Test 1b: Classic plain-text quest links get rewritten before transmission
+  -- so the recipient receives a real hyperlink.
+  local classicPayload = {
+    conversationKey = "me::WOW::thrall-nagrand",
+    target = "Thrall-Nagrand",
+    displayName = "Thrall-Nagrand",
+    channel = "WOW",
+    text = "check [Apprentice's Duties (471)]",
+  }
+  local classicResult = SendHandler.HandleSend(runtime, classicPayload, refreshWindow)
+  assert(classicResult == true, "expected classic-quest send to succeed")
+  local sentClassic = sentMessages[#sentMessages].text
+  local expectedClassic = "check |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
+  assert(sentClassic == expectedClassic, "expected classic quest text rewritten on send, got: " .. tostring(sentClassic))
+  assert(
+    classicPayload.text == expectedClassic,
+    "expected payload.text mutated so the bubble matches what we sent, got: " .. tostring(classicPayload.text)
+  )
+
   -- Test 2: Combat lockdown blocks character whisper sends
   rawset(runtime, "isChatMessagingLocked", function()
     return true

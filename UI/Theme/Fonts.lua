@@ -13,6 +13,33 @@ local FRIZQT_PATH = "Fonts\\FRIZQT__.TTF"
 local ARIALN_PATH = "Fonts\\ARIALN.TTF"
 local MORPHEUS_PATH = "Fonts\\MORPHEUS.TTF"
 
+-- Languages whose script may not be present in the user's locale-specific
+-- primary font (FRIZQT__.TTF on an English Classic client lacks CJK glyphs
+-- AND lacks Cyrillic). For these we inherit from a Blizzard FontObject
+-- whose FontFamily chain includes the script as a fallback — the same
+-- chain GameTooltip uses, which is why tooltip text renders correctly on
+-- any client. We do NOT call SetFont(path, size, flags) here because that
+-- would replace the chain with a single path and the engine renders
+-- fallback glyphs at the fallback font's natural size — the size slider
+-- would only move glyphs covered by the primary path, leaving the rest
+-- frozen. Trade-off: font-size and outline customization don't apply
+-- when the addon's display language differs from the WoW client locale.
+local MULTI_SCRIPT_LANGUAGES = {
+  koKR = true,
+  zhCN = true,
+  zhTW = true,
+  ruRU = true,
+}
+
+-- Probed in order. The first FontObject that exists wins. GameTooltipText
+-- is the most reliable on Classic — its FontFamily chain carries CJK
+-- and Cyrillic fallback on every flavor we support.
+local MULTI_SCRIPT_FONT_OBJECT_NAMES = {
+  "GameTooltipText",
+  "SystemFont_Med1",
+  "GameFontNormal",
+}
+
 local DEFAULT_BASE_SIZE = 12
 
 -- { wmName, gameFont, sizeOffset }
@@ -57,6 +84,7 @@ local currentMode = "default"
 local currentFontSize = DEFAULT_BASE_SIZE
 local currentOutline = "NONE"
 local currentFontColor = "default"
+local currentLanguage = "auto"
 
 local function resolveOutlineFlags(outline)
   if outline == "OUTLINE" or outline == "THICKOUTLINE" then
@@ -65,11 +93,59 @@ local function resolveOutlineFlags(outline)
   return ""
 end
 
+local function effectiveLanguage()
+  if currentLanguage ~= "auto" and currentLanguage ~= nil then
+    return currentLanguage
+  end
+  local getLocale = _G and _G.GetLocale
+  if type(getLocale) == "function" then
+    local ok, locale = pcall(getLocale)
+    if ok and type(locale) == "string" then
+      return locale
+    end
+  end
+  return nil
+end
+
+local function clientLocale()
+  local getLocale = _G and _G.GetLocale
+  if type(getLocale) == "function" then
+    local ok, locale = pcall(getLocale)
+    if ok and type(locale) == "string" then
+      return locale
+    end
+  end
+  return nil
+end
+
+local function resolveInheritedSourceFontObject()
+  local language = effectiveLanguage()
+  if language == nil or not MULTI_SCRIPT_LANGUAGES[language] then
+    return nil
+  end
+  -- When the WoW client's locale matches the addon language, the
+  -- locale-specific primary fonts already cover the script natively, so
+  -- SetFont with a customized size works without losing any glyphs.
+  -- Skip the inheritance override and keep size customization for users
+  -- on a matched client.
+  if clientLocale() == language then
+    return nil
+  end
+  for _, name in ipairs(MULTI_SCRIPT_FONT_OBJECT_NAMES) do
+    local obj = _G[name]
+    if obj then
+      return obj
+    end
+  end
+  return nil
+end
+
 local function applyFonts()
   local mode = currentMode
   local baseSize = currentFontSize
   local flags = resolveOutlineFlags(currentOutline)
   local CreateFont = _G.CreateFont
+  local inheritedSource = resolveInheritedSourceFontObject()
 
   for _, def in ipairs(FONT_DEFS) do
     local wmName, gameFont, sizeOffset = def[1], def[2], def[3]
@@ -79,7 +155,14 @@ local function applyFonts()
       fontObj = CreateFont(wmName)
     end
 
-    if mode == "system" then
+    if inheritedSource then
+      -- Inherit the multi-script FontFamily chain so the engine can fall
+      -- back to a glyph file that covers the locale's script. Calling
+      -- SetFont after this would replace the chain with a single path
+      -- and we'd be back to squares (CJK) or frozen-size fallback glyphs
+      -- (Cyrillic on a non-Russian client).
+      fontObj:SetFontObject(inheritedSource)
+    elseif mode == "system" then
       fontObj:SetFont(ARIALN_PATH, size, flags)
     elseif mode == "morpheus" then
       fontObj:SetFont(MORPHEUS_PATH, size, flags)
@@ -101,7 +184,17 @@ function Fonts.Initialize(mode)
   currentFontSize = DEFAULT_BASE_SIZE
   currentOutline = "NONE"
   currentFontColor = "default"
+  currentLanguage = "auto"
   applyFonts()
+end
+
+function Fonts.SetLanguage(language)
+  currentLanguage = language or "auto"
+  applyFonts()
+end
+
+function Fonts.GetLanguage()
+  return currentLanguage
 end
 
 function Fonts.SetMode(mode)

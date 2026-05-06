@@ -50,6 +50,9 @@ local function makeFonts()
     SetFontColor = function(color)
       log[#log + 1] = { "fontColor", color }
     end,
+    SetLanguage = function(language)
+      log[#log + 1] = { "language", language }
+    end,
   },
     log
 end
@@ -343,13 +346,26 @@ return function()
         configCalls[#configCalls + 1] = opts
       end,
     }
+    local fonts, fontLog = makeFonts()
     local accountSettings = {}
-    local onChange = SettingsHandler.Create({ runtime = runtime, accountSettings = accountSettings, localization = localization })
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      localization = localization,
+      fonts = fonts,
+    })
 
     onChange("interfaceLanguage", "ruRU")
 
     assert(accountSettings.interfaceLanguage == "ruRU", "interfaceLanguage persists")
     assert(configCalls[1].language == "ruRU", "Localization.Configure received interfaceLanguage")
+    -- Regression: Korean / Chinese require a CJK-capable font path. The
+    -- handler must propagate the language to Fonts so the swap happens
+    -- before the upcoming refresh paints text in the new locale.
+    assert(
+      fontLog[1] and fontLog[1][1] == "language" and fontLog[1][2] == "ruRU",
+      "interfaceLanguage routes to Fonts.SetLanguage"
+    )
     assert(calls.refreshWindow == 1, "interfaceLanguage refreshes the window once")
     -- Regression: the language must propagate as an argument so the
     -- General settings panel keeps the user's selection. Calling

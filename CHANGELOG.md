@@ -4,6 +4,9 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 ## [Unreleased]
 
+- Shift-clicking a quest from the quest log in WoW Classic now produces a real, clickable link in the messenger. The link is clickable for the recipient too, instead of arriving as plain text like `[Apprentice's Duties (471)]`.
+- Fixed: Korean, Chinese, and Russian text no longer renders as squares ("tofu") or stays at the wrong size when the messenger is set to those languages on a WoW client running in a different language. The addon now inherits a script-appropriate font from the game so glyphs render correctly. Note: when your addon language differs from your WoW client's language, the font size and outline sliders won't apply to that text — the addon uses the game's default size for those scripts to keep them readable. On a Korean / Chinese / Russian WoW client the sliders still work as before.
+
 ## [1.2.7] - 2026-05-05
 
 - Added localization in German, Spanish, French, Italian, Portuguese, Russian, Korean, Simplified Chinese, and Traditional Chinese.
