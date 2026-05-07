@@ -32,10 +32,7 @@ return function()
     Fonts.SetLanguage("koKR")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
-    assert(
-      string.find(path, "TOOLTIP_FAMILY") ~= nil,
-      "koKR on enUS client should inherit GameTooltipText, got: " .. tostring(path)
-    )
+    assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "koKR on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
 
   -- Same for Chinese (Simplified)
@@ -63,10 +60,7 @@ return function()
     Fonts.SetLanguage("ruRU")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
-    assert(
-      string.find(path, "TOOLTIP_FAMILY") ~= nil,
-      "ruRU on enUS client should inherit GameTooltipText, got: " .. tostring(path)
-    )
+    assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "ruRU on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
 
   -- The inheritance override beats explicit font modes that lack the script
@@ -75,17 +69,11 @@ return function()
     Fonts.SetLanguage("koKR")
     local fontObj = _G[Fonts.GetFonts().contact_name]
     local path = fontObj:GetFont()
-    assert(
-      string.find(path, "TOOLTIP_FAMILY") ~= nil,
-      "koKR override should beat morpheus mode, got: " .. tostring(path)
-    )
+    assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "koKR override should beat morpheus mode, got: " .. tostring(path))
 
     Fonts.SetMode("system")
     local sysPath = fontObj:GetFont()
-    assert(
-      string.find(sysPath, "TOOLTIP_FAMILY") ~= nil,
-      "koKR override should beat system mode, got: " .. tostring(sysPath)
-    )
+    assert(string.find(sysPath, "TOOLTIP_FAMILY") ~= nil, "koKR override should beat system mode, got: " .. tostring(sysPath))
   end)
 
   -- Latin languages keep the existing default behavior (FRIZQT-inherited)

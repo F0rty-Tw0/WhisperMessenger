@@ -362,10 +362,7 @@ return function()
     -- Regression: Korean / Chinese require a CJK-capable font path. The
     -- handler must propagate the language to Fonts so the swap happens
     -- before the upcoming refresh paints text in the new locale.
-    assert(
-      fontLog[1] and fontLog[1][1] == "language" and fontLog[1][2] == "ruRU",
-      "interfaceLanguage routes to Fonts.SetLanguage"
-    )
+    assert(fontLog[1] and fontLog[1][1] == "language" and fontLog[1][2] == "ruRU", "interfaceLanguage routes to Fonts.SetLanguage")
     assert(calls.refreshWindow == 1, "interfaceLanguage refreshes the window once")
     -- Regression: the language must propagate as an argument so the
     -- General settings panel keeps the user's selection. Calling
