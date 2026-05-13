@@ -9,6 +9,12 @@ local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue"
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 
+-- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
+local function getQuestLinkClassic()
+  return ns.UIHyperlinksQuestLinkClassic
+    or (rawget(_G, "require") and require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic"))
+end
+
 local Router = {}
 
 local function checkCensored(lineID)
@@ -87,12 +93,24 @@ local function buildMessage(eventName, payload, contact, direction, kind, sentAt
     senderClassTag = localSenderClassTag()
     senderName = localSenderName()
   end
+  -- WoW Classic's character-whisper protocol strips real quest hyperlinks
+  -- on the wire, so CHAT_MSG_WHISPER and CHAT_MSG_WHISPER_INFORM can arrive
+  -- carrying plain `[Name (id)]` text even when the original outgoing
+  -- message was a hyperlink. Rewrite here so bubbles always render a
+  -- clickable link. Idempotent on already-hyperlinked text.
+  local messageText = payload.text
+  if type(messageText) == "string" then
+    local questLinks = getQuestLinkClassic()
+    if questLinks and type(questLinks.Rewrite) == "function" then
+      messageText = questLinks.Rewrite(messageText)
+    end
+  end
   return {
     id = tostring(payload.lineID or sentAt),
     eventName = eventName,
     direction = direction,
     kind = kind,
-    text = payload.text,
+    text = messageText,
     sentAt = sentAt,
     lineID = payload.lineID,
     guid = payload.guid or (contact and contact.guid or nil),
@@ -169,7 +187,23 @@ local function handleUnlockedEvent(state, eventName, payload)
         state.availabilityByGUID[guid] = avail
       end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-      Store.AppendOutgoing(state.store, conversationKey, buildMessage(eventName, payload, contact, "out", "user", sentAt))
+      -- WoW Classic's character whisper protocol can strip outgoing hyperlinks
+      -- down to a bare label by the time CHAT_MSG_WHISPER_INFORM echoes back,
+      -- losing the brackets, id, and `|H...|h` envelope. Resolve against the
+      -- pending queue (strict first, then soft target+timing match) to get
+      -- BOTH the locally captured text for the bubble AND a consumed entry,
+      -- so subsequent sends don't surface stale pending text.
+      local fromPending, pendingText = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
+      outgoingFromPendingSend = fromPending
+      local informPayload = payload
+      if pendingText ~= nil and pendingText ~= payload.text then
+        informPayload = {}
+        for k, v in pairs(payload) do
+          informPayload[k] = v
+        end
+        informPayload.text = pendingText
+      end
+      Store.AppendOutgoing(state.store, conversationKey, buildMessage(eventName, informPayload, contact, "out", "user", sentAt))
       -- Replying means the user saw the conversation; clear unread notification
       Store.MarkRead(state.store, conversationKey)
       -- Our whisper was delivered, so the target is reachable
@@ -179,7 +213,6 @@ local function handleUnlockedEvent(state, eventName, payload)
         avail.confirmedByWhisper = true
         state.availabilityByGUID[guid] = avail
       end
-      outgoingFromPendingSend = PendingOutgoing.Consume(state, conversationKey, payload, sentAt)
     elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
       Store.SetActiveStatus(state.store, conversationKey, {
         eventName = eventName,

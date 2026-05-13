@@ -2,6 +2,10 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.9] - 2026-05-13
+
+- Fixed: quest links in WoW Classic character whispers now work end-to-end. Shift-clicking a quest inserts a clickable link in the composer, and your own message bubble shows it as a clickable link too. Battle.net whispers already worked.
+
 ## [1.2.8] - 2026-05-06
 
 - Shift-clicking a quest from the quest log in WoW Classic now sends a real clickable link instead of plain text like `[Apprentice's Duties (471)]`.

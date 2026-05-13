@@ -124,9 +124,18 @@ local function wmGetActiveWindow()
 end
 
 local function wmInsertLink(link)
+  -- Rewrite Classic plain-text quest links BEFORE delegating to the original.
+  -- Otherwise Blizzard's `ChatEdit_InsertLink` sees our composer via our
+  -- `wmGetActiveWindow` override, calls `editbox:Insert(plainText)` directly,
+  -- and returns true — short-circuiting the rewrite path below.
+  local insertable = link
+  if type(insertable) == "string" then
+    insertable = QuestLinkClassic.Rewrite(insertable)
+  end
+
   local original = originals.chatEditInsertLink or originals.chatFrameUtilInsertLink
   if original then
-    local handled = original(link)
+    local handled = original(insertable)
     if handled then
       return true
     end
@@ -134,8 +143,8 @@ local function wmInsertLink(link)
   if _G._wmSuspended then
     return false
   end
-  if type(link) == "string" and link ~= "" then
-    if tryInsertLink(link, { allowVisibleWithoutFocus = false }) then
+  if type(insertable) == "string" and insertable ~= "" then
+    if tryInsertLink(insertable, { allowVisibleWithoutFocus = false }) then
       return true
     end
   end

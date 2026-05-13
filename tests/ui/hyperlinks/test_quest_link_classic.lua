@@ -7,6 +7,10 @@ local function buildExpectedLink(name, questId)
   return QUEST_PREFIX .. tostring(questId) .. ":0|h[" .. name .. "]" .. QUEST_END
 end
 
+local function buildExpectedLinkWithLevel(name, questId, level)
+  return QUEST_PREFIX .. tostring(questId) .. ":" .. tostring(level) .. "|h[" .. name .. "]" .. QUEST_END
+end
+
 return function()
   -- nil / empty / non-string passthrough
   assert(QuestLinkClassic.Rewrite(nil) == nil, "nil should pass through")
@@ -41,6 +45,22 @@ return function()
     local mixed = existing .. " also [Apprentice's Duties (471)]"
     local expectedMixed = existing .. " also " .. buildExpectedLink("Apprentice's Duties", 471)
     assert(QuestLinkClassic.Rewrite(mixed) == expectedMixed, "mixed: link kept, plain rewritten")
+  end
+
+  -- Classic with-level shift-click format: [[L] Name (id)]
+  do
+    local input = "look at [[2] Cutting Teeth (788)]"
+    local expected = "look at " .. buildExpectedLinkWithLevel("Cutting Teeth", 788, 2)
+    local out = QuestLinkClassic.Rewrite(input)
+    assert(out == expected, "expected level-prefixed rewrite, got: " .. tostring(out))
+  end
+
+  do
+    local input = "[[1] Vile Familiars (1485)] and [[2] Cutting Teeth (788)]"
+    local expected = buildExpectedLinkWithLevel("Vile Familiars", 1485, 1)
+      .. " and "
+      .. buildExpectedLinkWithLevel("Cutting Teeth", 788, 2)
+    assert(QuestLinkClassic.Rewrite(input) == expected, "expected multi level-prefixed rewrite")
   end
 
   -- Item links should not be touched even if they contain digits

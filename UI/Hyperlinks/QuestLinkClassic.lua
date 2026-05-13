@@ -5,21 +5,28 @@ end
 
 local QuestLinkClassic = {}
 
--- Classic shift-click of a quest from the quest log inserts a plain string of
--- the form `[Quest Name (questID)]` (no |H...|h hyperlink envelope). Detect
--- that pattern and rewrite to a real quest hyperlink so the link is clickable
+-- Classic shift-click of a quest from the quest log inserts a plain string in
+-- one of two forms (no `|H...|h` envelope):
+--   1. `[Quest Name (questID)]`           — older Classic
+--   2. `[[level] Quest Name (questID)]`   — Anniversary / SoD / recent Classic
+-- Detect both and rewrite to a real quest hyperlink so the link is clickable
 -- both in the composer (sender side) and in the recipient's chat.
 --
--- The pattern intentionally rejects nested brackets and pipes so an existing
--- `|H...|h[Label]|h|r` envelope is never a candidate. We additionally walk
--- |H...|h...|h envelopes as opaque so anything inside a real hyperlink is
--- left untouched.
+-- Pattern (1) intentionally rejects nested brackets and pipes so an existing
+-- `|H...|h[Label]|h|r` envelope is never a candidate. Pattern (2) is matched
+-- first so the level-prefixed form is not greedy-consumed by pattern (1).
+-- We additionally walk `|H...|h...|h` envelopes as opaque so anything inside a
+-- real hyperlink is left untouched.
+local CLASSIC_QUEST_LEVEL_PATTERN = "%[%[(%d+)%]%s+([^%[%]|]+) %((%d+)%)%]"
 local CLASSIC_QUEST_PATTERN = "%[([^%[%]|]+) %((%d+)%)%]"
-local QUEST_HYPERLINK_FORMAT = "|cffffff00|Hquest:%s:0|h[%s]|h|r"
+local QUEST_HYPERLINK_FORMAT = "|cffffff00|Hquest:%s:%s|h[%s]|h|r"
 
 local function rewriteSegment(segment)
-  local rewritten = string.gsub(segment, CLASSIC_QUEST_PATTERN, function(name, questId)
-    return string.format(QUEST_HYPERLINK_FORMAT, questId, name)
+  local withLevel = string.gsub(segment, CLASSIC_QUEST_LEVEL_PATTERN, function(level, name, questId)
+    return string.format(QUEST_HYPERLINK_FORMAT, questId, level, name)
+  end)
+  local rewritten = string.gsub(withLevel, CLASSIC_QUEST_PATTERN, function(name, questId)
+    return string.format(QUEST_HYPERLINK_FORMAT, questId, "0", name)
   end)
   return rewritten
 end

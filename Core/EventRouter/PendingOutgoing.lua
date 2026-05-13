@@ -36,16 +36,13 @@ local function namesLikelySame(leftName, leftGuid, rightName, rightGuid)
   return baseName(leftCanonical) == baseName(rightCanonical)
 end
 
-local function pendingMatchesOutgoing(pending, payload, sentAt)
+local function pendingTargetMatches(pending, payload, sentAt)
   if type(pending) ~= "table" then
     return false
   end
 
   local payloadChannel = payload.channel or "WOW"
   if (pending.channel or "WOW") ~= payloadChannel then
-    return false
-  end
-  if pending.text ~= nil and payload.text ~= nil and pending.text ~= payload.text then
     return false
   end
 
@@ -68,6 +65,16 @@ local function pendingMatchesOutgoing(pending, payload, sentAt)
   return namesLikelySame(pending.displayName or pending.target, pending.guid, payload.playerName, payload.guid)
 end
 
+local function pendingMatchesOutgoing(pending, payload, sentAt)
+  if not pendingTargetMatches(pending, payload, sentAt) then
+    return false
+  end
+  if pending.text ~= nil and payload.text ~= nil and pending.text ~= payload.text then
+    return false
+  end
+  return true
+end
+
 local function isPendingExpired(pending, sentAt)
   if type(sentAt) ~= "number" or type(pending) ~= "table" or type(pending.createdAt) ~= "number" then
     return false
@@ -75,9 +82,9 @@ local function isPendingExpired(pending, sentAt)
   return sentAt - pending.createdAt > PENDING_MATCH_WINDOW_SECONDS
 end
 
-local function consumeFromQueue(queue, payload, sentAt)
+local function consumeFromQueue(queue, payload, sentAt, matchFn)
   if type(queue) ~= "table" or #queue == 0 then
-    return false
+    return nil
   end
 
   for index = #queue, 1, -1 do
@@ -87,13 +94,30 @@ local function consumeFromQueue(queue, payload, sentAt)
   end
 
   for index = 1, #queue do
-    if pendingMatchesOutgoing(queue[index], payload, sentAt) then
-      table.remove(queue, index)
-      return true
+    if matchFn(queue[index], payload, sentAt) then
+      return table.remove(queue, index)
     end
   end
 
-  return false
+  return nil
+end
+
+-- Try a matcher (strict or soft) across the conversation's queue first, then
+-- spill into other queues. Returns the consumed entry or nil.
+local function consumeWithMatcher(state, conversationKey, payload, sentAt, matchFn)
+  local entry = consumeFromQueue(state.pendingOutgoing[conversationKey], payload, sentAt, matchFn)
+  if entry ~= nil then
+    return entry
+  end
+  for key, candidateQueue in pairs(state.pendingOutgoing) do
+    if key ~= conversationKey then
+      entry = consumeFromQueue(candidateQueue, payload, sentAt, matchFn)
+      if entry ~= nil then
+        return entry
+      end
+    end
+  end
+  return nil
 end
 
 function PendingOutgoing.Record(state, target, text)
@@ -120,19 +144,37 @@ function PendingOutgoing.Record(state, target, text)
   return conversationKey
 end
 
+-- Resolve a CHAT_MSG_*_INFORM event against the pending queue.
+--
+-- WoW Classic's character whisper protocol can strip a real outgoing quest
+-- hyperlink down to a bare label (no envelope, no brackets, no id) by the
+-- time it echoes back, so the echo text alone can't be matched against the
+-- pending text. We try a strict (text-equal) match first, then fall back to
+-- a soft (channel + target + timing) match. In both cases the matched entry
+-- is removed so a later INFORM doesn't surface a stale pending entry.
+--
+-- Returns `(fromPending, pendingText)`:
+--   * `fromPending` — whether ANY pending entry matched (used to suppress
+--     auto-open noise for outgoing-from-pending sends).
+--   * `pendingText` — the locally captured text we tried to send, so the
+--     bubble can render the rich version even when the echo was stripped.
+function PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
+  local entry = consumeWithMatcher(state, conversationKey, payload, sentAt, pendingMatchesOutgoing)
+  if entry == nil then
+    entry = consumeWithMatcher(state, conversationKey, payload, sentAt, pendingTargetMatches)
+  end
+  if entry == nil then
+    return false, nil
+  end
+  return true, entry.text
+end
+
+-- Backwards-compat wrapper: strict (text-equal) match only. Resolve is the
+-- preferred entry point; this helper exists for callers that only need the
+-- boolean "was-from-pending" signal and don't want soft-match behavior.
 function PendingOutgoing.Consume(state, conversationKey, payload, sentAt)
-  local queue = state.pendingOutgoing[conversationKey]
-  if consumeFromQueue(queue, payload, sentAt) then
-    return true
-  end
-
-  for key, candidateQueue in pairs(state.pendingOutgoing) do
-    if key ~= conversationKey and consumeFromQueue(candidateQueue, payload, sentAt) then
-      return true
-    end
-  end
-
-  return false
+  local entry = consumeWithMatcher(state, conversationKey, payload, sentAt, pendingMatchesOutgoing)
+  return entry ~= nil
 end
 
 ns.EventRouterPendingOutgoing = PendingOutgoing
