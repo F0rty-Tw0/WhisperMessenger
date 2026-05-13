@@ -33,10 +33,8 @@ local function makeState()
 end
 
 local function firstConversation(state)
-  for _, conv in pairs(state.store.conversations) do
-    return conv
-  end
-  return nil
+  local _, conv = next(state.store.conversations)
+  return conv
 end
 
 return function()
