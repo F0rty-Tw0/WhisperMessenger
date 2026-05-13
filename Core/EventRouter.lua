@@ -11,8 +11,7 @@ local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMesseng
 
 -- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
 local function getQuestLinkClassic()
-  return ns.UIHyperlinksQuestLinkClassic
-    or (rawget(_G, "require") and require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic"))
+  return ns.UIHyperlinksQuestLinkClassic or (rawget(_G, "require") and require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic"))
 end
 
 local Router = {}

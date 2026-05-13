@@ -55,10 +55,7 @@ return function()
   local message = conversation.messages[1]
   assert(message ~= nil, "expected outgoing message stored")
   local expected = "check this |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r please"
-  assert(
-    message.text == expected,
-    "expected plain-text quest in echo to be rewritten to hyperlink, got: " .. tostring(message.text)
-  )
+  assert(message.text == expected, "expected plain-text quest in echo to be rewritten to hyperlink, got: " .. tostring(message.text))
 
   -- Incoming character whisper containing plain-text quest link is also
   -- rewritten so the bubble renders a clickable link.
@@ -74,10 +71,7 @@ return function()
   assert(incomingConversation ~= nil, "expected conversation recorded for incoming whisper")
   local incomingMessage = incomingConversation.messages[1]
   local incomingExpected = "help with |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r?"
-  assert(
-    incomingMessage.text == incomingExpected,
-    "expected incoming plain-text quest to be rewritten, got: " .. tostring(incomingMessage.text)
-  )
+  assert(incomingMessage.text == incomingExpected, "expected incoming plain-text quest to be rewritten, got: " .. tostring(incomingMessage.text))
 
   -- WoW Classic's character-whisper server can strip a real outgoing quest
   -- hyperlink down to a bare label ("Cutting Teeth") with no brackets or id,
@@ -141,10 +135,7 @@ return function()
   local successiveConv = firstConversation(state)
   assert(successiveConv ~= nil, "expected conversation recorded for successive sends")
   assert(#successiveConv.messages == 2, "expected exactly two messages, got: " .. tostring(#successiveConv.messages))
-  assert(
-    successiveConv.messages[1].text == firstLink,
-    "first bubble should keep first link, got: " .. tostring(successiveConv.messages[1].text)
-  )
+  assert(successiveConv.messages[1].text == firstLink, "first bubble should keep first link, got: " .. tostring(successiveConv.messages[1].text))
   assert(
     successiveConv.messages[2].text == secondLink,
     "second bubble should use second link (not stale first), got: " .. tostring(successiveConv.messages[2].text)

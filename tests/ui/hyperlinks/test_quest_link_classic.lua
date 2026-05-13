@@ -57,9 +57,7 @@ return function()
 
   do
     local input = "[[1] Vile Familiars (1485)] and [[2] Cutting Teeth (788)]"
-    local expected = buildExpectedLinkWithLevel("Vile Familiars", 1485, 1)
-      .. " and "
-      .. buildExpectedLinkWithLevel("Cutting Teeth", 788, 2)
+    local expected = buildExpectedLinkWithLevel("Vile Familiars", 1485, 1) .. " and " .. buildExpectedLinkWithLevel("Cutting Teeth", 788, 2)
     assert(QuestLinkClassic.Rewrite(input) == expected, "expected multi level-prefixed rewrite")
   end
 
