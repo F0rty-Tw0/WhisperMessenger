@@ -7,7 +7,12 @@ local Availability = ns.Availability or require("WhisperMessenger.Transport.Avai
 local Router = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local Gateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
+local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
+
+local QUEST_LINK_ADDON_PREFIX = "WMQL"
 
 local SendHandler = {}
 
@@ -66,11 +71,21 @@ end
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   runtime.sendStatusByConversation[payload.conversationKey] = nil
 
-  -- Convert Classic plain-text quest links (`[Name (id)]`) into real
-  -- hyperlinks before send so the recipient gets a clickable link and the
-  -- echoed CHAT_MSG_*_INFORM event matches what we recorded.
+  -- Normalize quest links into the form that survives transmission on this
+  -- flavor + channel:
+  --   * Classic character whisper: `|H...|h` is stripped server-side, so we
+  --     serialize hyperlinks back to plain `[Name (id)]` — the only form the
+  --     wire preserves intact. Recipients running our addon re-link from the
+  --     plain form; recipients without it still see the name and id.
+  --   * Retail and Battle.net: keep the rich hyperlink so addon-less
+  --     recipients get a clickable link directly from Blizzard's chat frame.
   if type(payload.text) == "string" then
-    payload.text = QuestLinkClassic.Rewrite(payload.text)
+    local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
+    if isClassicCharacterWhisper then
+      payload.text = QuestLinkClassic.Serialize(payload.text)
+    else
+      payload.text = QuestLinkClassic.Rewrite(payload.text)
+    end
   end
 
   if isCombatSendLocked(runtime) then
@@ -111,6 +126,19 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local callOk, sendOk
   if payload.channel == "BN" then
     callOk, sendOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
+
+    -- Classic Battle.net character whispers also strip the `(id)` from
+    -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
+    -- channel as the WoW whisper path, but via BNSendGameData so it routes
+    -- over Battle.net to the friend's bnetAccountID. Receivers with our
+    -- addon splice the link back in on BN_CHAT_MSG_ADDON.
+    if callOk and sendOk ~= false and FlavorCompat.isClassic and payload.bnetAccountID ~= nil then
+      local encoded = QuestLinkExchange.Encode(payload.text)
+      if encoded ~= nil then
+        AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
+        AddonComm.SendBNet(runtime.bnetApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.bnetAccountID)
+      end
+    end
   else
     -- SendChatMessage is hardware-event-protected; pcall breaks the
     -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
@@ -118,6 +146,20 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     Gateway.SendCharacterWhisper(runtime.chatApi, payload.target, payload.text)
     callOk = true
     sendOk = true
+
+    -- Side channel: on Classic the chat protocol strips both the `|H`
+    -- envelope AND the `(id)` from `[Name (id)]` patterns, leaving the
+    -- recipient with just `[Name]`. We ship the id+name pairs over the
+    -- addon-message wire so a recipient running our addon can splice the
+    -- clickable link back in. Best-effort — failure here doesn't fail the
+    -- whisper itself.
+    if FlavorCompat.isClassic then
+      local encoded = QuestLinkExchange.Encode(payload.text)
+      if encoded ~= nil and payload.target ~= nil and payload.target ~= "" then
+        AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
+        AddonComm.Send(runtime.chatApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.target)
+      end
+    end
   end
 
   if not callOk or sendOk == false then

@@ -88,7 +88,9 @@ echo "  TBC and Cata: skipped (Classic seasons EOL, no live CDN)"
 sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mainline: .*/## Interface-Mainline: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Vanilla: .*/## Interface-Vanilla: ${TOC_VANILLA}/" WhisperMessenger.toc
+sed -i "s/^## Interface-Classic: .*/## Interface-Classic: ${TOC_VANILLA}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mists: .*/## Interface-Mists: ${TOC_MISTS}/" WhisperMessenger.toc
+sed -i "s/^## Interface-MoP: .*/## Interface-MoP: ${TOC_MISTS}/" WhisperMessenger.toc
 
 # Update version in TOC
 sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc

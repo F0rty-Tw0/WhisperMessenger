@@ -2,6 +2,12 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.10] - 2026-05-23
+
+- Fixed: when you whisper a quest link in WoW Classic to someone else who also has the messenger installed, they now see it as a fully clickable link in their conversation, instead of just the quest name with no way to open it. This works the same way for regular whispers and Battle.net whispers. Whispering to players who don't have the addon still shows only the quest name — that part is decided by WoW Classic's chat itself and can't be worked around.
+- The composer now caps your message at 255 characters as you type, matching WoW's chat limit, so nothing you write is silently cut off when you press Send.
+- New setting in the Notifications tab: lock the chat icon in place so you can't drag it by accident. While the icon is locked, hovering it shows a small padlock and adds "Locked" to its tooltip. Translated into every language the addon supports.
+
 ## [1.2.9] - 2026-05-13
 
 - Fixed: quest links in WoW Classic character whispers now work end-to-end. Shift-clicking a quest inserts a clickable link in the composer, and your own message bubble shows it as a clickable link too. Battle.net whispers already worked.

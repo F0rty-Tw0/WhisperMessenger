@@ -358,12 +358,95 @@ return function()
       "Icon desaturation toggle should be localized"
     )
     assert(
+      result.lockToggleIconToggle.label.text == "Закрепить позицию значка",
+      "Lock icon toggle should be localized"
+    )
+    assert(
       result.positionSelector.label.text == "Позиция предпросмотра виджета",
       "Preview position label should be localized"
     )
     assert(result.positionSelector.buttons[1].label.text == "Справа", "Preview position option should be localized")
     assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })
+  end
+
+  -- test_lock_toggle_icon_exists_with_label
+
+  do
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, { onChange = function() end })
+
+    assert(result.lockToggleIconToggle ~= nil, "test_lock_toggle_icon_exists_with_label: should expose lockToggleIconToggle")
+    assert(
+      result.lockToggleIconToggle.label.text == "Lock icon position",
+      "test_lock_toggle_icon_exists_with_label: label should say 'Lock icon position', got: " .. tostring(result.lockToggleIconToggle.label.text)
+    )
+  end
+
+  -- test_lock_toggle_icon_fires_on_change
+
+  do
+    local changes = {}
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local onClick = result.lockToggleIconToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "test_lock_toggle_icon_fires: dot should have OnClick")
+    onClick(result.lockToggleIconToggle.dot)
+    assert(changes.lockToggleIcon ~= nil, "test_lock_toggle_icon_fires: should fire onChange with 'lockToggleIcon' key")
+  end
+
+  -- test_lock_toggle_icon_included_in_reset
+
+  do
+    local changes = {}
+    local config = { lockToggleIcon = true }
+    local result = NotificationSettings.Create(factory, parent, config, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    local resetOnClick = result.resetButton:GetScript("OnClick")
+    assert(resetOnClick ~= nil, "test_lock_toggle_icon_reset: reset button should have OnClick")
+    resetOnClick(result.resetButton)
+
+    assert(changes.lockToggleIcon == false, "test_lock_toggle_icon_reset: reset should set lockToggleIcon to false (default)")
+  end
+
+  -- test_lock_toggle_icon_has_tooltip
+
+  do
+    local tooltipTitle = nil
+    local addedLines = {}
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipTitle = text
+      end,
+      AddLine = function(_self, text)
+        addedLines[#addedLines + 1] = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local config = {}
+    local result = NotificationSettings.Create(factory, parent, config, { onChange = function() end })
+
+    local row = result.lockToggleIconToggle.row
+    local onEnter = row:GetScript("OnEnter")
+    assert(onEnter ~= nil, "test_lock_toggle_icon_has_tooltip: row should have OnEnter script")
+
+    onEnter(row)
+    assert(tooltipTitle ~= nil, "test_lock_toggle_icon_has_tooltip: tooltip title should be set on hover")
+    assert(#addedLines > 0, "test_lock_toggle_icon_has_tooltip: tooltip should have a description line")
+
+    _G.GameTooltip = nil
   end
 
   print("  All notification settings tests passed")

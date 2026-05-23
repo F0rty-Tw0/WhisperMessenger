@@ -55,23 +55,146 @@ return function()
   assert(sentMessages[1].text == "hello")
   assert(sentMessages[1].target == "Thrall-Nagrand")
 
-  -- Test 1b: Classic plain-text quest links get rewritten before transmission
-  -- so the recipient receives a real hyperlink.
+  -- Test 1b: On Classic flavors, real quest hyperlinks in the composer get
+  -- serialized back to plain `[Name (id)]` before transmission. Classic's
+  -- character-whisper protocol strips the `|H...|h` envelope on the wire, so
+  -- the plain bracketed form is the only one that survives intact and lets
+  -- the recipient's addon re-link it.
   local classicPayload = {
     conversationKey = "me::WOW::thrall-nagrand",
     target = "Thrall-Nagrand",
     displayName = "Thrall-Nagrand",
     channel = "WOW",
-    text = "check [Apprentice's Duties (471)]",
+    text = "check |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r",
   }
   local classicResult = SendHandler.HandleSend(runtime, classicPayload, refreshWindow)
   assert(classicResult == true, "expected classic-quest send to succeed")
   local sentClassic = sentMessages[#sentMessages].text
-  local expectedClassic = "check |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
-  assert(sentClassic == expectedClassic, "expected classic quest text rewritten on send, got: " .. tostring(sentClassic))
+  local expectedClassic = "check [Apprentice's Duties (471)]"
+  assert(sentClassic == expectedClassic, "expected classic quest hyperlink serialized on send, got: " .. tostring(sentClassic))
   assert(
     classicPayload.text == expectedClassic,
     "expected payload.text mutated so the bubble matches what we sent, got: " .. tostring(classicPayload.text)
+  )
+
+  -- Test 1b+: Classic sends ship a paired addon-message side channel with
+  -- the id+name pairs so a recipient running the addon can splice the
+  -- clickable link back in after Blizzard strips the chat text.
+  do
+    local addonCalls = {}
+    local registeredPrefixes = {}
+    runtime.chatApi.RegisterAddonMessagePrefix = function(prefix)
+      table.insert(registeredPrefixes, prefix)
+    end
+    runtime.chatApi.SendAddonMessage = function(prefix, message, channel, target)
+      table.insert(addonCalls, { prefix = prefix, message = message, channel = channel, target = target })
+    end
+
+    sentMessages = {}
+    local sideChannelPayload = {
+      conversationKey = "me::WOW::thrall-nagrand",
+      target = "Thrall-Nagrand",
+      displayName = "Thrall-Nagrand",
+      channel = "WOW",
+      text = "go do |cffffff00|Hquest:4641:0|h[Your Place In The World]|h|r",
+    }
+    SendHandler.HandleSend(runtime, sideChannelPayload, refreshWindow)
+
+    assert(#registeredPrefixes >= 1, "expected addon prefix registered for the side channel")
+    assert(registeredPrefixes[1] == "WMQL", "expected WMQL prefix")
+    assert(#addonCalls == 1, "expected one paired addon-message dispatch, got: " .. tostring(#addonCalls))
+    assert(addonCalls[1].prefix == "WMQL", "addon prefix forwarded")
+    assert(addonCalls[1].channel == "WHISPER", "addon channel is WHISPER")
+    assert(addonCalls[1].target == "Thrall-Nagrand", "addon target forwarded")
+    assert(addonCalls[1].message == "4641:Your Place In The World", "encoded payload forwarded")
+
+    -- A whisper without any quest references must NOT emit an addon message.
+    addonCalls = {}
+    SendHandler.HandleSend(runtime, {
+      conversationKey = "me::WOW::thrall-nagrand",
+      target = "Thrall-Nagrand",
+      displayName = "Thrall-Nagrand",
+      channel = "WOW",
+      text = "just saying hi",
+    }, refreshWindow)
+    assert(#addonCalls == 0, "no addon message when no quest links present")
+
+    runtime.chatApi.RegisterAddonMessagePrefix = nil
+    runtime.chatApi.SendAddonMessage = nil
+  end
+
+  -- Test 1d: Classic Battle.net sends ship the same paired addon side
+  -- channel via BNSendGameData so an addon-equipped BNet friend can splice
+  -- the clickable link back in.
+  do
+    local savedBNSendWhisper = _G.BNSendWhisper
+    rawset(_G, "BNSendWhisper", function() return true end)
+
+    local gameDataCalls = {}
+    local registeredPrefixes = {}
+    runtime.chatApi.RegisterAddonMessagePrefix = function(prefix)
+      table.insert(registeredPrefixes, prefix)
+    end
+    runtime.bnetApi.SendGameData = function(bnetAccountID, prefix, payload)
+      table.insert(gameDataCalls, { bnetAccountID = bnetAccountID, prefix = prefix, payload = payload })
+      return true
+    end
+
+    rawset(runtime, "isChatMessagingLocked", function() return false end)
+    runtime.isCompetitiveContent = function() return false end
+    runtime.sendStatusByConversation = {}
+    runtime.pendingOutgoing = {}
+
+    SendHandler.HandleSend(runtime, {
+      conversationKey = "me::BN::jaina#1234",
+      displayName = "Jaina#1234",
+      channel = "BN",
+      bnetAccountID = 77,
+      text = "go do |cffffff00|Hquest:4641:0|h[Your Place In The World]|h|r",
+    }, refreshWindow)
+
+    assert(#gameDataCalls == 1, "expected one BNSendGameData side-channel call, got: " .. tostring(#gameDataCalls))
+    assert(gameDataCalls[1].bnetAccountID == 77, "BN target forwarded")
+    assert(gameDataCalls[1].prefix == "WMQL", "WMQL prefix used for BN side channel")
+    assert(
+      gameDataCalls[1].payload == "4641:Your Place In The World",
+      "encoded quest payload forwarded, got: " .. tostring(gameDataCalls[1].payload)
+    )
+    -- Prefix-registration is asserted in test 1b+ (above). AddonComm caches
+    -- the registered set process-wide, so the second send won't re-call the
+    -- RegisterAddonMessagePrefix stub — that's not a defect, it's the cache.
+
+    -- A BN whisper with no quest references must NOT emit a game-data side channel.
+    gameDataCalls = {}
+    SendHandler.HandleSend(runtime, {
+      conversationKey = "me::BN::jaina#1234",
+      displayName = "Jaina#1234",
+      channel = "BN",
+      bnetAccountID = 77,
+      text = "hi friend",
+    }, refreshWindow)
+    assert(#gameDataCalls == 0, "no BN side channel when no quest links present")
+
+    runtime.chatApi.RegisterAddonMessagePrefix = nil
+    runtime.bnetApi.SendGameData = nil
+    rawset(_G, "BNSendWhisper", savedBNSendWhisper)
+  end
+
+  -- Test 1c: Plain `[Name (id)]` text typed manually (or inserted without our
+  -- LinkHooks rewrite) passes through untouched on classic — it is already
+  -- the wire form.
+  local plainClassicPayload = {
+    conversationKey = "me::WOW::thrall-nagrand",
+    target = "Thrall-Nagrand",
+    displayName = "Thrall-Nagrand",
+    channel = "WOW",
+    text = "[Apprentice's Duties (471)] please",
+  }
+  local plainResult = SendHandler.HandleSend(runtime, plainClassicPayload, refreshWindow)
+  assert(plainResult == true, "expected plain-quest classic send to succeed")
+  assert(
+    sentMessages[#sentMessages].text == "[Apprentice's Duties (471)] please",
+    "expected plain bracketed text untouched on classic, got: " .. tostring(sentMessages[#sentMessages].text)
   )
 
   -- Test 2: Combat lockdown blocks character whisper sends

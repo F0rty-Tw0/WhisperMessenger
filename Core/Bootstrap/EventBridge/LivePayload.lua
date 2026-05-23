@@ -17,6 +17,28 @@ function LivePayload.Build(runtime, eventName, ...)
     }
   end
 
+  if eventName == "CHAT_MSG_ADDON" then
+    local prefix, message, channel, sender = ...
+    return {
+      prefix = prefix,
+      text = message,
+      channel = channel,
+      playerName = sender,
+    }
+  end
+
+  if eventName == "BN_CHAT_MSG_ADDON" then
+    -- Args: prefix, message, channel, presenceID. presenceID === bnetAccountID
+    -- for game-data delivery.
+    local prefix, message, channel, presenceID = ...
+    return {
+      prefix = prefix,
+      text = message,
+      channel = channel,
+      bnetAccountID = presenceID,
+    }
+  end
+
   if eventName == "CHAT_MSG_BN_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE" then
     local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, bnetAccountID = ...
     local accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid)

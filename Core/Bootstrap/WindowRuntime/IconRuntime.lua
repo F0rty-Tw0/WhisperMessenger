@@ -77,6 +77,9 @@ function IconRuntime.Create(options)
     getIconDesaturated = function()
       return settings.iconDesaturated ~= false
     end,
+    getIsLocked = function()
+      return settings.lockToggleIcon == true
+    end,
     getPreviewAutoDismissSeconds = function()
       return resolveAutoDismissSeconds(settings)
     end,

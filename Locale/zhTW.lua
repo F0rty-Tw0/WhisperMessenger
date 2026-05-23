@@ -146,6 +146,9 @@ local TraditionalChinese = {
   ["Show group chats"] = "顯示群組聊天",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "在聯絡人列表中顯示群組標籤,包括小隊、副本與戰網群組對話。",
   ["When off, only whispers appear."] = "關閉時僅顯示密語。",
+  ["Lock icon position"] = "鎖定圖示位置",
+  ["Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."] = "防止聊天圖示被拖曳。鎖定時圖示上會顯示一個小鎖。",
+  ["Locked"] = "已鎖定",
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "設定收到訊息時的提醒。",

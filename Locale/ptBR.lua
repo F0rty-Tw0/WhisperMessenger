@@ -146,6 +146,9 @@ local Portuguese = {
   ["Show group chats"] = "Mostrar chats de grupo",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Mostra uma aba Grupos com conversas de grupo, instância e Battle.net.",
   ["When off, only whispers appear."] = "Se desativado, apenas sussurros aparecem.",
+  ["Lock icon position"] = "Bloquear posição do ícone",
+  ["Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."] = "Impede que o ícone do chat seja arrastado. Um pequeno cadeado aparece no ícone enquanto estiver bloqueado.",
+  ["Locked"] = "Bloqueado",
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "Configure alertas para mensagens recebidas.",

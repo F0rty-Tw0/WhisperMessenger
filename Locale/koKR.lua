@@ -146,6 +146,9 @@ local Korean = {
   ["Show group chats"] = "그룹 채팅 표시",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "연락처 목록에 파티, 인스턴스, Battle.net 그룹 대화의 그룹 탭을 표시합니다.",
   ["When off, only whispers appear."] = "꺼져 있으면 귓속말만 표시됩니다.",
+  ["Lock icon position"] = "아이콘 위치 잠금",
+  ["Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."] = "채팅 아이콘을 드래그할 수 없도록 합니다. 잠겨 있는 동안 아이콘에 작은 자물쇠가 표시됩니다.",
+  ["Locked"] = "잠김",
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "수신 메시지에 대한 알림을 설정합니다.",

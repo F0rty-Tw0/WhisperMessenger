@@ -185,6 +185,10 @@ function SettingsHandler.Create(options)
       icon.refreshDesaturation()
     end
 
+    if key == "lockToggleIcon" and icon and icon.refreshLockGlyph then
+      icon.refreshLockGlyph()
+    end
+
     if key == "widgetPreviewPosition" and icon and icon.applyPreviewPosition then
       icon.applyPreviewPosition(persistedValue)
     end

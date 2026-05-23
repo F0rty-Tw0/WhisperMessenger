@@ -21,6 +21,7 @@ local DEFAULTS = {
   notificationSound = SoundSelector.DEFAULT_SOUND,
   iconSize = 42,
   iconDesaturated = true,
+  lockToggleIcon = false,
   showWidgetMessagePreview = true,
   widgetPreviewAutoDismissSeconds = 30,
   widgetPreviewPosition = "right",
@@ -145,6 +146,26 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local lockToggleIconToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Lock icon position"),
+      config.lockToggleIcon == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("lockToggleIcon", value)
+      end,
+      {
+        text("Lock icon position"),
+        text("Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."),
+      }
+    ),
+    { type = "toggle", key = "lockToggleIcon", default = DEFAULTS.lockToggleIcon }
+  )
+  lockToggleIconToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local showBadgeToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
       onChange("showUnreadBadge", value)
@@ -154,7 +175,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     }),
     { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
   )
-  showBadgeToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  showBadgeToggle.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local badgePulseToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Badge pulse animation"), config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
@@ -264,6 +285,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     soundSelector.setOptionsList(SoundSelector.Options())
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    lockToggleIconToggle.label:SetText(text("Lock icon position"))
     showBadgeToggle.label:SetText(text("Show unread badge"))
     badgePulseToggle.label:SetText(text("Badge pulse animation"))
     widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))
@@ -291,6 +313,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     showBadgeToggle = showBadgeToggle,
     iconSizeSlider = iconSizeRow.slider,
     iconDesaturatedToggle = iconDesaturatedToggle,
+    lockToggleIconToggle = lockToggleIconToggle,
     widgetMessagePreviewToggle = widgetMessagePreviewToggle,
     autoDismissSlider = autoDismissRow.slider,
     positionSelector = positionSelector,

@@ -100,6 +100,7 @@ function SettingsPanels.Create(factory, options)
     notificationSound = settingsConfig.notificationSound,
     iconSize = settingsConfig.iconSize,
     iconDesaturated = settingsConfig.iconDesaturated,
+    lockToggleIcon = settingsConfig.lockToggleIcon,
     showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
     widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
     widgetPreviewPosition = settingsConfig.widgetPreviewPosition,

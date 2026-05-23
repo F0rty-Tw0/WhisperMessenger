@@ -31,6 +31,37 @@ local function rewriteSegment(segment)
   return rewritten
 end
 
+-- Reverse of Rewrite: turn `|cffffff00|Hquest:ID:...|h[NAME]|h|r` (with or
+-- without the color envelope) back into plain `[NAME (ID)]`. This is the
+-- format that survives WoW Classic Era's character-whisper protocol, which
+-- detects ANY `|H...|h` envelope in an outgoing whisper and strips the id
+-- from the visible label. Leaving even a partial envelope behind triggers
+-- that sanitization, so the pattern must consume the entire envelope.
+--
+-- The fields after the questID are intentionally consumed as opaque (any
+-- non-pipe characters) — Classic Era variants can append extra colon
+-- separated fields beyond the level (anniversary realms, Hardcore, etc.),
+-- and a too-strict pattern would leave the envelope half-stripped.
+local QUEST_LINK_WITH_COLOR_PATTERN = "|c%x+|Hquest:(%d+)[^|]*|h%[([^%]]+)%]|h|r"
+local QUEST_LINK_BARE_PATTERN = "|Hquest:(%d+)[^|]*|h%[([^%]]+)%]|h"
+
+function QuestLinkClassic.Serialize(text)
+  if type(text) ~= "string" then
+    return text
+  end
+  if string.find(text, "|Hquest:", 1, true) == nil then
+    return text
+  end
+
+  local result = string.gsub(text, QUEST_LINK_WITH_COLOR_PATTERN, function(questId, name)
+    return string.format("[%s (%s)]", name, questId)
+  end)
+  result = string.gsub(result, QUEST_LINK_BARE_PATTERN, function(questId, name)
+    return string.format("[%s (%s)]", name, questId)
+  end)
+  return result
+end
+
 function QuestLinkClassic.Rewrite(text)
   if type(text) ~= "string" then
     return text

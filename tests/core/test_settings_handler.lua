@@ -62,6 +62,7 @@ local function makeIcon()
     unreadCount = nil,
     appliedSize = nil,
     refreshDesaturationCalls = 0,
+    refreshLockGlyphCalls = 0,
     appliedPreviewPosition = nil,
   }
   return {
@@ -73,6 +74,9 @@ local function makeIcon()
     end,
     refreshDesaturation = function()
       state.refreshDesaturationCalls = state.refreshDesaturationCalls + 1
+    end,
+    refreshLockGlyph = function()
+      state.refreshLockGlyphCalls = state.refreshLockGlyphCalls + 1
     end,
     applyPreviewPosition = function(position)
       state.appliedPreviewPosition = position
@@ -241,6 +245,30 @@ return function()
 
     assert(accountSettings.iconDesaturated == true, "iconDesaturated persists")
     assert(iconState.refreshDesaturationCalls == 1, "icon.refreshDesaturation called once")
+  end
+
+  -- lockToggleIcon forwards to icon.refreshLockGlyph so the padlock indicator
+  -- and the SetMovable state stay in sync with the persisted setting.
+  do
+    local runtime = makeRuntime()
+    local icon, iconState = makeIcon()
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      getIcon = function()
+        return icon
+      end,
+    })
+
+    onChange("lockToggleIcon", true)
+
+    assert(accountSettings.lockToggleIcon == true, "lockToggleIcon persists")
+    assert(iconState.refreshLockGlyphCalls == 1, "icon.refreshLockGlyph called once on lock")
+
+    onChange("lockToggleIcon", false)
+    assert(accountSettings.lockToggleIcon == false, "lockToggleIcon persists when toggled off")
+    assert(iconState.refreshLockGlyphCalls == 2, "icon.refreshLockGlyph called again on unlock")
   end
 
   -- widgetPreviewPosition forwards to icon.applyPreviewPosition.

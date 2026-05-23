@@ -146,6 +146,9 @@ local French = {
   ["Show group chats"] = "Afficher les chats de groupe",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Affiche un onglet Groupes dans la liste avec les chats de groupe, instance et Battle.net.",
   ["When off, only whispers appear."] = "Désactivé, seuls les chuchotements apparaissent.",
+  ["Lock icon position"] = "Verrouiller la position de l'icône",
+  ["Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."] = "Empêche le déplacement de l'icône de discussion. Un petit cadenas apparaît sur l'icône lorsqu'elle est verrouillée.",
+  ["Locked"] = "Verrouillé",
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "Configurez les alertes pour les messages entrants.",

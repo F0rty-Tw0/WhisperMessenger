@@ -5,7 +5,7 @@ end
 
 local Constants = {
   ADDON_NAME = addonName or "WhisperMessenger",
-  VERSION = "v1.2.9",
+  VERSION = "v1.2.10",
 
   LIVE_EVENT_NAMES = {
     "CHAT_MSG_WHISPER",
@@ -16,6 +16,8 @@ local Constants = {
     "CHAT_MSG_BN_WHISPER",
     "CHAT_MSG_BN_WHISPER_INFORM",
     "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
+    "CHAT_MSG_ADDON",
+    "BN_CHAT_MSG_ADDON",
   },
 
   CHANNEL_EVENT_NAMES = {

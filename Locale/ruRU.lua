@@ -146,6 +146,9 @@ local Russian = {
   ["Show group chats"] = "Показывать групповые чаты",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Показывает вкладку «Группы» со связью группы, подземелья и групп Battle.net.",
   ["When off, only whispers appear."] = "Если выключено, отображается только шепот.",
+  ["Lock icon position"] = "Закрепить позицию значка",
+  ["Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."] = "Запрещает перетаскивание значка чата. Пока значок закреплён, на нём отображается небольшой замок.",
+  ["Locked"] = "Закреплено",
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "Настройте оповещения о входящих сообщениях.",

@@ -613,4 +613,151 @@ return function()
 
     _G.GameTooltip = nil
   end
+
+  -- test_lock_glyph_hidden_when_unlocked
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return false
+      end,
+    })
+
+    assert(icon.lockGlyph ~= nil, "test_lock_glyph_hidden_when_unlocked: lockGlyph should exist")
+    assert(icon.lockGlyph.shown == false, "test_lock_glyph_hidden_when_unlocked: glyph should be hidden when not locked")
+  end
+
+  -- test_lock_glyph_hidden_until_hover_when_locked
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return true
+      end,
+    })
+
+    assert(icon.lockGlyph.shown == false, "test_lock_glyph_hidden_until_hover_when_locked: glyph stays hidden when not hovering")
+  end
+
+  -- test_lock_glyph_shown_on_hover_when_locked
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return true
+      end,
+    })
+
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.lockGlyph.shown == true, "test_lock_glyph_shown_on_hover_when_locked: hovering a locked icon should reveal the padlock")
+
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(icon.lockGlyph.shown == false, "test_lock_glyph_shown_on_hover_when_locked: leaving hover should hide the padlock again")
+  end
+
+  -- test_lock_glyph_not_shown_on_hover_when_unlocked
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return false
+      end,
+    })
+
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.lockGlyph.shown == false, "test_lock_glyph_not_shown_on_hover_when_unlocked: hovering an unlocked icon should not reveal the padlock")
+  end
+
+  -- test_lock_glyph_hides_immediately_when_unlocked_while_hovering
+
+  do
+    local locked = true
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return locked
+      end,
+    })
+
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.lockGlyph.shown == true, "glyph should show while locked + hovering")
+
+    locked = false
+    icon.refreshLockGlyph()
+    assert(icon.lockGlyph.shown == false, "test_lock_glyph_hides_immediately_when_unlocked_while_hovering: glyph should disappear once unlocked even while hover is still active")
+  end
+
+  -- test_drag_start_blocked_when_locked
+
+  do
+    local locked = true
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return locked
+      end,
+    })
+
+    -- Reset any movement state that the fake frame may track.
+    icon.frame.moving = false
+
+    local onDragStart = icon.frame:GetScript("OnDragStart")
+    assert(onDragStart ~= nil, "test_drag_start_blocked_when_locked: OnDragStart should be bound")
+    onDragStart(icon.frame)
+
+    assert(icon.frame.moving ~= true, "drag must not start while locked")
+  end
+
+  -- test_drag_start_allowed_when_unlocked
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return false
+      end,
+    })
+
+    icon.frame.moving = false
+    local onDragStart = icon.frame:GetScript("OnDragStart")
+    onDragStart(icon.frame)
+
+    assert(icon.frame.moving == true, "drag should start normally when unlocked")
+  end
+
+  -- test_tooltip_includes_locked_when_locked
+
+  do
+    local tooltipText = ""
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipText = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIsLocked = function()
+        return true
+      end,
+    })
+
+    if icon.frame.scripts and icon.frame.scripts.OnEnter then
+      icon.frame.scripts.OnEnter()
+    end
+
+    assert(
+      string.find(tooltipText, "Locked", 1, true) ~= nil,
+      "test_tooltip_includes_locked_when_locked: tooltip should mention 'Locked', got: " .. tostring(tooltipText)
+    )
+
+    _G.GameTooltip = nil
+  end
 end

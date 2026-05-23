@@ -68,4 +68,66 @@ return function()
     -- in the canonical sense), and the bracket lives inside |H...|h envelope.
     assert(QuestLinkClassic.Rewrite(item) == item, "item link untouched")
   end
+
+  -- Serialize: convert real quest hyperlinks back to plain [Name (id)] so the
+  -- form survives Classic Era's character-whisper protocol (which strips the
+  -- |H envelope on the wire).
+  do
+    assert(QuestLinkClassic.Serialize(nil) == nil, "nil passes through")
+    assert(QuestLinkClassic.Serialize("") == "", "empty passes through")
+    assert(QuestLinkClassic.Serialize(42) == 42, "non-string passes through")
+    assert(QuestLinkClassic.Serialize("hello world") == "hello world", "plain text untouched")
+    assert(
+      QuestLinkClassic.Serialize("[Apprentice's Duties (471)]") == "[Apprentice's Duties (471)]",
+      "already-serialized text idempotent"
+    )
+
+    local colorWrapped = "look at |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r please"
+    assert(
+      QuestLinkClassic.Serialize(colorWrapped) == "look at [Apprentice's Duties (471)] please",
+      "color-wrapped hyperlink serialized to plain"
+    )
+
+    local bareEnvelope = "ping |Hquest:1485:1|h[Vile Familiars]|h done"
+    assert(
+      QuestLinkClassic.Serialize(bareEnvelope) == "ping [Vile Familiars (1485)] done",
+      "bare envelope (no color) serialized to plain"
+    )
+
+    local negativeLevel = "|cffffff00|Hquest:9999:-1|h[Mystery Quest]|h|r"
+    assert(
+      QuestLinkClassic.Serialize(negativeLevel) == "[Mystery Quest (9999)]",
+      "negative-level field serialized cleanly"
+    )
+
+    local multi = "|cffffff00|Hquest:471:0|h[A]|h|r and |cffffff00|Hquest:788:2|h[B]|h|r"
+    assert(
+      QuestLinkClassic.Serialize(multi) == "[A (471)] and [B (788)]",
+      "multiple quest links all serialized"
+    )
+
+    local itemLink = "|cff0070dd|Hitem:19019::::::::|h[Thunderfury (Blessed)]|h|r"
+    assert(QuestLinkClassic.Serialize(itemLink) == itemLink, "non-quest hyperlink untouched")
+
+    local mixed = itemLink .. " plus |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
+    assert(
+      QuestLinkClassic.Serialize(mixed) == itemLink .. " plus [Apprentice's Duties (471)]",
+      "item link preserved, quest link serialized"
+    )
+
+    -- Classic Era / Anniversary variants can append extra colon-separated
+    -- fields after the level. The whole envelope must be consumed — any
+    -- leftover `|H` fragment triggers Blizzard's whisper sanitizer.
+    local extraFields = "|cffffff00|Hquest:471:60:1:42|h[Apprentice's Duties]|h|r"
+    assert(
+      QuestLinkClassic.Serialize(extraFields) == "[Apprentice's Duties (471)]",
+      "envelope with extra fields fully consumed"
+    )
+
+    local extraFieldsBare = "|Hquest:788:2:0|h[Cutting Teeth]|h"
+    assert(
+      QuestLinkClassic.Serialize(extraFieldsBare) == "[Cutting Teeth (788)]",
+      "bare envelope with extra fields fully consumed"
+    )
+  end
 end

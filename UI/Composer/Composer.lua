@@ -98,6 +98,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   if input.SetHyperlinksEnabled then
     input:SetHyperlinksEnabled(true)
   end
+  -- WoW's chat protocol caps a single whisper at 255 bytes server-side;
+  -- past that the message is silently truncated. Enforce the cap at the
+  -- keystroke so users see the limit instead of finding out from a
+  -- truncated send.
+  if input.SetMaxBytes then
+    input:SetMaxBytes(255)
+  end
 
   -- Placeholder text
   local placeholder = pane:CreateFontString(nil, "OVERLAY")

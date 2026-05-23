@@ -52,6 +52,7 @@ return function()
     doubleEscapeToClose = true,
     showGroupChats = false,
     -- notifications
+    lockToggleIcon = true,
     badgePulse = false,
     playSoundOnWhisper = true,
     showUnreadBadge = false,
@@ -93,6 +94,13 @@ return function()
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",
     "expected appearance config.bubbleColorPreset=azeroth, got: " .. tostring(appearanceCapture.config.bubbleColorPreset)
+  )
+
+  -- Notifications: lockToggleIcon must round-trip so the lock state persists
+  -- across /reload (without this the icon would unlock every session).
+  assert(
+    notificationCapture.config.lockToggleIcon == true,
+    "expected notification config.lockToggleIcon=true, got: " .. tostring(notificationCapture.config.lockToggleIcon)
   )
 
   -- Notifications: notificationSound, widgetPreviewAutoDismissSeconds, and

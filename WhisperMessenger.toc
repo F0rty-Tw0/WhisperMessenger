@@ -1,14 +1,19 @@
 ## Interface: 120005
 ## Interface-Mainline: 120005
 ## Interface-Vanilla: 11508
+## Interface-Classic: 11508
 ## Interface-TBC: 20505
+## Interface-BCC: 20505
+## Interface-Wrath: 30403
+## Interface-WOTLKC: 30403
 ## Interface-Cata: 40402
 ## Interface-Mists: 50503
+## Interface-MoP: 50503
 ## Title: WhisperMessenger
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.2.9
+## Version: v1.2.10
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
@@ -46,6 +51,7 @@ Model/LockdownQueue.lua
 Model/EphemeralPurge.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
+Model/QuestLinkExchange.lua
 Model/ContactEnricher/Disambiguation.lua
 Model/ContactEnricher/WoWStatus.lua
 Model/ContactEnricher/BNetStatus.lua
@@ -61,6 +67,7 @@ Persistence/SavedState/SavedState.lua
 
 Transport/Types.lua
 Transport/Availability.lua
+Transport/AddonComm.lua
 Transport/WhisperGateway.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua

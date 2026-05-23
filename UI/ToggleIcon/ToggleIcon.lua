@@ -16,6 +16,8 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local CHAT_ICON_RATIO = 0.6 -- chat icon scale factor vs ICON_SIZE
+local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
+local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 
 local ToggleIcon = {}
 
@@ -128,6 +130,51 @@ function ToggleIcon.Create(factory, options)
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getBadgePulse = options.getBadgePulse
   local getIconDesaturated = options.getIconDesaturated
+  local getIsLocked = options.getIsLocked
+
+  local function isLocked()
+    return type(getIsLocked) == "function" and getIsLocked() == true
+  end
+
+  -- Lock glyph overlay: small padlock texture pinned to the bottom-right of
+  -- the icon. Hidden by default; shown only while the icon is locked AND the
+  -- cursor is hovering it, so the indicator stays out of sight otherwise.
+  local lockGlyph = frame:CreateTexture(nil, "OVERLAY")
+  local function applyLockGlyphLayout(size)
+    local s = math.max(8, math.floor((tonumber(size) or ICON_SIZE) * LOCK_GLYPH_RATIO))
+    lockGlyph:SetSize(s, s)
+    if lockGlyph.ClearAllPoints then
+      lockGlyph:ClearAllPoints()
+    end
+    lockGlyph:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 2, -2)
+  end
+  applyLockGlyphLayout(ICON_SIZE)
+  lockGlyph:SetTexture(LOCK_GLYPH_TEXTURE)
+  if lockGlyph.Hide then
+    lockGlyph:Hide()
+  end
+
+  local isHoveringIcon = false
+
+  local function syncLockGlyphVisibility()
+    local show = isHoveringIcon and isLocked()
+    if show then
+      if lockGlyph.Show then
+        lockGlyph:Show()
+      end
+    else
+      if lockGlyph.Hide then
+        lockGlyph:Hide()
+      end
+    end
+  end
+
+  local function refreshLockGlyph()
+    if frame.SetMovable then
+      frame:SetMovable(not isLocked())
+    end
+    syncLockGlyphVisibility()
+  end
 
   local desaturation = Desaturation.Create({
     textures = { chatIcon = chatIcon, background = background, border = border },
@@ -163,6 +210,8 @@ function ToggleIcon.Create(factory, options)
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
+      isHoveringIcon = true
+      syncLockGlyphVisibility()
       if not desaturation.isActive() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
       end
@@ -176,12 +225,18 @@ function ToggleIcon.Create(factory, options)
         if isCompetitiveActive then
           competitiveText = "\n" .. Localization.Text("Paused in M+")
         end
-        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText)
+        local lockedText = ""
+        if isLocked() then
+          lockedText = "\n" .. Localization.Text("Locked")
+        end
+        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText .. lockedText)
         _G.GameTooltip:Show()
       end
     end)
 
     frame:SetScript("OnLeave", function()
+      isHoveringIcon = false
+      syncLockGlyphVisibility()
       local isDesat = desaturation.isActive()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if _G.GameTooltip and _G.GameTooltip.Hide then
@@ -197,6 +252,10 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnDragStart", function(self)
+      if isLocked() then
+        trace("icon drag blocked: locked")
+        return
+      end
       if self.IsMovable == nil or self:IsMovable() then
         self:StartMoving()
         trace("icon drag start")
@@ -234,11 +293,13 @@ function ToggleIcon.Create(factory, options)
       border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
       border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
     end
+    applyLockGlyphLayout(newSize)
   end
 
   setUnreadCount(options.unreadCount)
   setIncomingPreview(options.previewSenderName, options.previewMessageText, options.previewClassTag)
   refreshTheme()
+  refreshLockGlyph()
 
   trace("icon created", anchorPoint, x, y)
 
@@ -265,6 +326,8 @@ function ToggleIcon.Create(factory, options)
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,
     refreshTheme = refreshTheme,
+    lockGlyph = lockGlyph,
+    refreshLockGlyph = refreshLockGlyph,
   }
 end
 
