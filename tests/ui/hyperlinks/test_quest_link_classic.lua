@@ -86,39 +86,24 @@ return function()
     assert(QuestLinkClassic.Serialize(bareEnvelope) == "ping [Vile Familiars (1485)] done", "bare envelope (no color) serialized to plain")
 
     local negativeLevel = "|cffffff00|Hquest:9999:-1|h[Mystery Quest]|h|r"
-    assert(
-      QuestLinkClassic.Serialize(negativeLevel) == "[Mystery Quest (9999)]",
-      "negative-level field serialized cleanly"
-    )
+    assert(QuestLinkClassic.Serialize(negativeLevel) == "[Mystery Quest (9999)]", "negative-level field serialized cleanly")
 
     local multi = "|cffffff00|Hquest:471:0|h[A]|h|r and |cffffff00|Hquest:788:2|h[B]|h|r"
-    assert(
-      QuestLinkClassic.Serialize(multi) == "[A (471)] and [B (788)]",
-      "multiple quest links all serialized"
-    )
+    assert(QuestLinkClassic.Serialize(multi) == "[A (471)] and [B (788)]", "multiple quest links all serialized")
 
     local itemLink = "|cff0070dd|Hitem:19019::::::::|h[Thunderfury (Blessed)]|h|r"
     assert(QuestLinkClassic.Serialize(itemLink) == itemLink, "non-quest hyperlink untouched")
 
     local mixed = itemLink .. " plus |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r"
-    assert(
-      QuestLinkClassic.Serialize(mixed) == itemLink .. " plus [Apprentice's Duties (471)]",
-      "item link preserved, quest link serialized"
-    )
+    assert(QuestLinkClassic.Serialize(mixed) == itemLink .. " plus [Apprentice's Duties (471)]", "item link preserved, quest link serialized")
 
     -- Classic Era / Anniversary variants can append extra colon-separated
     -- fields after the level. The whole envelope must be consumed — any
     -- leftover `|H` fragment triggers Blizzard's whisper sanitizer.
     local extraFields = "|cffffff00|Hquest:471:60:1:42|h[Apprentice's Duties]|h|r"
-    assert(
-      QuestLinkClassic.Serialize(extraFields) == "[Apprentice's Duties (471)]",
-      "envelope with extra fields fully consumed"
-    )
+    assert(QuestLinkClassic.Serialize(extraFields) == "[Apprentice's Duties (471)]", "envelope with extra fields fully consumed")
 
     local extraFieldsBare = "|Hquest:788:2:0|h[Cutting Teeth]|h"
-    assert(
-      QuestLinkClassic.Serialize(extraFieldsBare) == "[Cutting Teeth (788)]",
-      "bare envelope with extra fields fully consumed"
-    )
+    assert(QuestLinkClassic.Serialize(extraFieldsBare) == "[Cutting Teeth (788)]", "bare envelope with extra fields fully consumed")
   end
 end

@@ -688,7 +688,10 @@ return function()
 
     locked = false
     icon.refreshLockGlyph()
-    assert(icon.lockGlyph.shown == false, "test_lock_glyph_hides_immediately_when_unlocked_while_hovering: glyph should disappear once unlocked even while hover is still active")
+    assert(
+      icon.lockGlyph.shown == false,
+      "test_lock_glyph_hides_immediately_when_unlocked_while_hovering: glyph should disappear once unlocked even while hover is still active"
+    )
   end
 
   -- test_drag_start_blocked_when_locked

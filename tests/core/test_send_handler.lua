@@ -128,7 +128,9 @@ return function()
   -- the clickable link back in.
   do
     local savedBNSendWhisper = _G.BNSendWhisper
-    rawset(_G, "BNSendWhisper", function() return true end)
+    rawset(_G, "BNSendWhisper", function()
+      return true
+    end)
 
     local gameDataCalls = {}
     local registeredPrefixes = {}
@@ -140,8 +142,12 @@ return function()
       return true
     end
 
-    rawset(runtime, "isChatMessagingLocked", function() return false end)
-    runtime.isCompetitiveContent = function() return false end
+    rawset(runtime, "isChatMessagingLocked", function()
+      return false
+    end)
+    runtime.isCompetitiveContent = function()
+      return false
+    end
     runtime.sendStatusByConversation = {}
     runtime.pendingOutgoing = {}
 

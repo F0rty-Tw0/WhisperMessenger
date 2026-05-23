@@ -357,10 +357,7 @@ return function()
       result.iconDesaturatedToggle.label.text == "Обесцвечивать значок в покое",
       "Icon desaturation toggle should be localized"
     )
-    assert(
-      result.lockToggleIconToggle.label.text == "Закрепить позицию значка",
-      "Lock icon toggle should be localized"
-    )
+    assert(result.lockToggleIconToggle.label.text == "Закрепить позицию значка", "Lock icon toggle should be localized")
     assert(
       result.positionSelector.label.text == "Позиция предпросмотра виджета",
       "Preview position label should be localized"

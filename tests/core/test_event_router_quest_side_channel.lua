@@ -109,10 +109,7 @@ return function()
     })
     local conversation = firstConversation(state)
     local message = conversation.messages[1]
-    assert(
-      message.text == "do [Your Place In The World] now",
-      "no addon message -> text unchanged, got: " .. tostring(message.text)
-    )
+    assert(message.text == "do [Your Place In The World] now", "no addon message -> text unchanged, got: " .. tostring(message.text))
   end
 
   -- 6. BN_CHAT_MSG_ADDON buffers ids+names keyed by `bn:<accountID>` so a
