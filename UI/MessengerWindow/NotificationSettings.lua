@@ -147,21 +147,12 @@ function NotificationSettings.Create(factory, parent, config, options)
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local lockToggleIconToggle = panel:bind(
-    UIHelpers.createToggleRow(
-      factory,
-      frame,
+    UIHelpers.createToggleRow(factory, frame, text("Lock icon position"), config.lockToggleIcon == true, toggleColors, toggleLayout, function(value)
+      onChange("lockToggleIcon", value)
+    end, {
       text("Lock icon position"),
-      config.lockToggleIcon == true,
-      toggleColors,
-      toggleLayout,
-      function(value)
-        onChange("lockToggleIcon", value)
-      end,
-      {
-        text("Lock icon position"),
-        text("Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."),
-      }
-    ),
+      text("Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."),
+    }),
     { type = "toggle", key = "lockToggleIcon", default = DEFAULTS.lockToggleIcon }
   )
   lockToggleIconToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)

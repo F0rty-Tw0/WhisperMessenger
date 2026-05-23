@@ -77,22 +77,13 @@ return function()
     assert(QuestLinkClassic.Serialize("") == "", "empty passes through")
     assert(QuestLinkClassic.Serialize(42) == 42, "non-string passes through")
     assert(QuestLinkClassic.Serialize("hello world") == "hello world", "plain text untouched")
-    assert(
-      QuestLinkClassic.Serialize("[Apprentice's Duties (471)]") == "[Apprentice's Duties (471)]",
-      "already-serialized text idempotent"
-    )
+    assert(QuestLinkClassic.Serialize("[Apprentice's Duties (471)]") == "[Apprentice's Duties (471)]", "already-serialized text idempotent")
 
     local colorWrapped = "look at |cffffff00|Hquest:471:0|h[Apprentice's Duties]|h|r please"
-    assert(
-      QuestLinkClassic.Serialize(colorWrapped) == "look at [Apprentice's Duties (471)] please",
-      "color-wrapped hyperlink serialized to plain"
-    )
+    assert(QuestLinkClassic.Serialize(colorWrapped) == "look at [Apprentice's Duties (471)] please", "color-wrapped hyperlink serialized to plain")
 
     local bareEnvelope = "ping |Hquest:1485:1|h[Vile Familiars]|h done"
-    assert(
-      QuestLinkClassic.Serialize(bareEnvelope) == "ping [Vile Familiars (1485)] done",
-      "bare envelope (no color) serialized to plain"
-    )
+    assert(QuestLinkClassic.Serialize(bareEnvelope) == "ping [Vile Familiars (1485)] done", "bare envelope (no color) serialized to plain")
 
     local negativeLevel = "|cffffff00|Hquest:9999:-1|h[Mystery Quest]|h|r"
     assert(

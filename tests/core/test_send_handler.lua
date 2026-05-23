@@ -156,10 +156,7 @@ return function()
     assert(#gameDataCalls == 1, "expected one BNSendGameData side-channel call, got: " .. tostring(#gameDataCalls))
     assert(gameDataCalls[1].bnetAccountID == 77, "BN target forwarded")
     assert(gameDataCalls[1].prefix == "WMQL", "WMQL prefix used for BN side channel")
-    assert(
-      gameDataCalls[1].payload == "4641:Your Place In The World",
-      "encoded quest payload forwarded, got: " .. tostring(gameDataCalls[1].payload)
-    )
+    assert(gameDataCalls[1].payload == "4641:Your Place In The World", "encoded quest payload forwarded, got: " .. tostring(gameDataCalls[1].payload))
     -- Prefix-registration is asserted in test 1b+ (above). AddonComm caches
     -- the registered set process-wide, so the second send won't re-call the
     -- RegisterAddonMessagePrefix stub — that's not a defect, it's the cache.

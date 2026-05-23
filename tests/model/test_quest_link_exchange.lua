@@ -67,10 +67,7 @@ return function()
     QuestLinkExchange.RecordIncoming(state, "Thrall-Nagrand", "471:Apprentice's Duties", 1000)
     QuestLinkExchange.Splice(state, "Thrall-Nagrand", "[Apprentice's Duties] hi", 1001)
     local out2 = QuestLinkExchange.Splice(state, "Thrall-Nagrand", "[Apprentice's Duties] again", 1002)
-    assert(
-      out2 == "[Apprentice's Duties] again",
-      "expected no second splice after buffer consumed, got: " .. tostring(out2)
-    )
+    assert(out2 == "[Apprentice's Duties] again", "expected no second splice after buffer consumed, got: " .. tostring(out2))
   end
 
   -- 9. Splice ignores buffer entries older than 15 seconds (drift / mismatch).
