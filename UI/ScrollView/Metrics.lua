@@ -64,7 +64,6 @@ end
 Metrics._captureLiveGeometry = captureLiveGeometry
 Metrics._applyViewportLayout = applyViewportLayout
 
-
 local function normalizeRange(range)
   if type(range) ~= "number" or range <= MICRO_OVERFLOW_TOLERANCE then
     return 0

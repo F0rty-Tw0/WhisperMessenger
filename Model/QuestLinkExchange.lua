@@ -128,7 +128,6 @@ function QuestLinkExchange.RecordIncoming(state, sender, payload, now)
   end
 end
 
-
 local function buildHyperlink(id, name)
   return string.format("|cffffff00|Hquest:%s:0|h[%s]|h|r", id, name)
 end

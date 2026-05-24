@@ -13,7 +13,7 @@
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
 ## Category: Chat
-## Version: v1.2.10
+## Version: v1.2.11
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
