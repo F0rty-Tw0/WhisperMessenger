@@ -82,6 +82,25 @@ local function isPendingExpired(pending, sentAt)
   return sentAt - pending.createdAt > PENDING_MATCH_WINDOW_SECONDS
 end
 
+local function pruneExpiredQueues(state, sentAt)
+  if type(state) ~= "table" or type(state.pendingOutgoing) ~= "table" then
+    return
+  end
+
+  for key, queue in pairs(state.pendingOutgoing) do
+    if type(queue) == "table" then
+      for index = #queue, 1, -1 do
+        if isPendingExpired(queue[index], sentAt) then
+          table.remove(queue, index)
+        end
+      end
+      if #queue == 0 then
+        state.pendingOutgoing[key] = nil
+      end
+    end
+  end
+end
+
 local function consumeFromQueue(queue, payload, sentAt, matchFn)
   if type(queue) ~= "table" or #queue == 0 then
     return nil
@@ -129,11 +148,13 @@ function PendingOutgoing.Record(state, target, text)
   end
 
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
+  local now = state.now()
+  pruneExpiredQueues(state, now)
 
   state.pendingOutgoing[conversationKey] = state.pendingOutgoing[conversationKey] or {}
   table.insert(state.pendingOutgoing[conversationKey], {
     text = text,
-    createdAt = state.now(),
+    createdAt = now,
     channel = target.channel or "WOW",
     guid = target.guid,
     bnetAccountID = target.bnetAccountID,

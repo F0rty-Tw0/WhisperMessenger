@@ -85,11 +85,38 @@ function QuestLinkExchange.Encode(text)
   return table.concat(parts, ";")
 end
 
+local function purgeExpired(inbox, now)
+  for index = #inbox, 1, -1 do
+    if (now - inbox[index].recordedAt) > INBOX_TTL_SECONDS then
+      table.remove(inbox, index)
+    end
+  end
+end
+
+local function purgeExpiredInbox(state, now)
+  local inboxBySender = state.questLinkInbox
+  if type(inboxBySender) ~= "table" then
+    return
+  end
+
+  for sender, inbox in pairs(inboxBySender) do
+    if type(inbox) == "table" then
+      purgeExpired(inbox, now)
+      if #inbox == 0 then
+        inboxBySender[sender] = nil
+      end
+    else
+      inboxBySender[sender] = nil
+    end
+  end
+end
+
 function QuestLinkExchange.RecordIncoming(state, sender, payload, now)
   if type(state) ~= "table" or type(sender) ~= "string" or type(payload) ~= "string" then
     return
   end
   state.questLinkInbox = state.questLinkInbox or {}
+  purgeExpiredInbox(state, type(now) == "number" and now or 0)
   state.questLinkInbox[sender] = state.questLinkInbox[sender] or {}
 
   local inbox = state.questLinkInbox[sender]
@@ -101,13 +128,6 @@ function QuestLinkExchange.RecordIncoming(state, sender, payload, now)
   end
 end
 
-local function purgeExpired(inbox, now)
-  for index = #inbox, 1, -1 do
-    if (now - inbox[index].recordedAt) > INBOX_TTL_SECONDS then
-      table.remove(inbox, index)
-    end
-  end
-end
 
 local function buildHyperlink(id, name)
   return string.format("|cffffff00|Hquest:%s:0|h[%s]|h|r", id, name)

@@ -80,4 +80,30 @@ return function()
     assert(matched == false, "stale pending outgoing should not match fresh payload")
     assert(#state.pendingOutgoing["wow::WOW::stale"] == 0, "stale pending outgoing should be pruned")
   end
+  -- Record prunes old pending sends even if no outgoing inform arrives.
+  do
+    local now = 100
+    local state = {
+      localProfileId = "me",
+      pendingOutgoing = {},
+      now = function()
+        return now
+      end,
+    }
+
+    local firstKey = PendingOutgoing.Record(state, {
+      channel = "WOW",
+      displayName = "Arthas-Area52",
+      guid = "Player-1",
+    }, "old")
+
+    now = 116
+    PendingOutgoing.Record(state, {
+      channel = "WOW",
+      displayName = "Jaina-Proudmoore",
+      guid = "Player-2",
+    }, "fresh")
+
+    assert(state.pendingOutgoing[firstKey] == nil, "stale pending queue should be removed during later records")
+  end
 end

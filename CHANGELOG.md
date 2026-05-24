@@ -2,6 +2,11 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.11] - 2026-05-24
+
+- Fixed: keeping the messenger open through loading screens, zone changes, and long whisper sessions no longer lets stale background refreshes, temporary message-tracking data, or invisible leftover bits from re-drawing your conversations build up over time. After many hours with the window open, the game now stays as smooth as when you first opened it.
+- Fixed: short conversations with only one or two message bubbles no longer show a tiny scrollbar that moves by a few pixels. New incoming messages also snap back to the latest message more reliably after WoW finishes updating the chat layout, instead of sometimes landing in the middle of the thread.
+
 ## [1.2.10] - 2026-05-23
 
 - Fixed: when you whisper a quest link in WoW Classic to someone else who also has the messenger installed, they now see it as a fully clickable link in their conversation, instead of just the quest name with no way to open it. This works the same way for regular whispers and Battle.net whispers. Whispering to players who don't have the addon still shows only the quest name — that part is decided by WoW Classic's chat itself and can't be worked around.

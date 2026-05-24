@@ -343,4 +343,35 @@ return function()
       "after window hidden, preview should be populated again"
     )
   end
+  -- refreshContacts prunes availability caches for contacts no longer retained by the store.
+  do
+    local window, runtime = makeBase()
+    runtime.availabilityByGUID.old = { status = "CanWhisper" }
+    runtime.availabilityRequestedAt.old = 990
+    runtime.availabilityByGUID.keep = { status = "WrongFaction" }
+    runtime.availabilityRequestedAt.keep = 995
+
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {
+          { channel = "WOW", guid = "keep", conversationKey = "k1" },
+        }
+      end,
+      getWindow = function()
+        return window
+      end,
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+    })
+
+    coord.refreshContacts()
+
+    assert(runtime.availabilityByGUID.old == nil, "stale availability cache entries should be pruned")
+    assert(runtime.availabilityRequestedAt.old == nil, "stale availability throttle entries should be pruned")
+    assert(runtime.availabilityByGUID.keep ~= nil, "active contact availability must be retained")
+    assert(runtime.availabilityRequestedAt.keep ~= nil, "active contact throttle must be retained")
+  end
 end

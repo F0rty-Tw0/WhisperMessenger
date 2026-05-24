@@ -64,6 +64,31 @@ function WindowCoordinator.Create(options)
     return 0
   end
 
+  local function contactsContainGUID(contacts, guid)
+    for _, item in ipairs(contacts) do
+      if item.guid == guid then
+        return true
+      end
+    end
+    return false
+  end
+
+  local function pruneGUIDCache(cache, contacts)
+    if type(cache) ~= "table" then
+      return
+    end
+    for guid in pairs(cache) do
+      if not contactsContainGUID(contacts, guid) then
+        cache[guid] = nil
+      end
+    end
+  end
+
+  local function pruneAvailabilityCaches(contacts)
+    pruneGUIDCache(runtime.availabilityByGUID, contacts)
+    pruneGUIDCache(runtime.availabilityRequestedAt, contacts)
+  end
+
   local function startStatusTicker()
     if statusTicker or cTimer == nil or type(cTimer.NewTicker) ~= "function" then
       return
@@ -115,6 +140,7 @@ function WindowCoordinator.Create(options)
 
   function coordinator.refreshContacts()
     local freshContacts = buildContacts()
+    pruneAvailabilityCaches(freshContacts)
 
     if not isMythicRestricted() then
       runtime.availabilityRequestedAt = runtime.availabilityRequestedAt or {}

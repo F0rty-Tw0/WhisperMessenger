@@ -9,12 +9,14 @@ local sizeValue = UIHelpers.sizeValue
 
 local SCROLLBAR_WIDTH = Theme.LAYOUT.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = 0
+local MICRO_OVERFLOW_TOLERANCE = 5
 
 local Metrics = {}
 
 -- Export constants for other submodules
 Metrics.SCROLLBAR_WIDTH = SCROLLBAR_WIDTH
 Metrics.SCROLLBAR_INSET = SCROLLBAR_INSET
+Metrics.MICRO_OVERFLOW_TOLERANCE = MICRO_OVERFLOW_TOLERANCE
 
 local function captureLiveGeometry(view)
   if view == nil or view.scrollFrame == nil then
@@ -62,6 +64,15 @@ end
 Metrics._captureLiveGeometry = captureLiveGeometry
 Metrics._applyViewportLayout = applyViewportLayout
 
+
+local function normalizeRange(range)
+  if type(range) ~= "number" or range <= MICRO_OVERFLOW_TOLERANCE then
+    return 0
+  end
+  return range
+end
+Metrics._normalizeRange = normalizeRange
+
 function Metrics.GetRange(view)
   if view == nil or view.scrollFrame == nil then
     return 0
@@ -89,14 +100,15 @@ function Metrics.GetRange(view)
     end
   end
   local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
-  local computed = math.max(contentHeight - viewportHeight, 0)
+  local computed = normalizeRange(contentHeight - viewportHeight)
   if computed > 0 then
     return computed
   end
 
   if type(view.scrollFrame.GetVerticalScrollRange) == "function" then
     local range = view.scrollFrame:GetVerticalScrollRange()
-    if type(range) == "number" and range > 0 then
+    range = normalizeRange(range)
+    if range > 0 then
       return range
     end
   end
@@ -118,6 +130,36 @@ function Metrics.GetOffset(view)
   return view.scrollFrame.verticalScroll or 0
 end
 
+local function scheduleSnapToEndRetry(view, Navigation, targetOffset)
+  if targetOffset <= 0 or view._snapToEndRetryPending then
+    return
+  end
+
+  local timer = _G.C_Timer
+  if type(timer) ~= "table" or type(timer.After) ~= "function" then
+    return
+  end
+
+  local actualOffset = Metrics.GetOffset(view)
+  if actualOffset >= targetOffset then
+    return
+  end
+
+  local clampedOffset = actualOffset
+  view._snapToEndRetryPending = true
+  timer.After(0, function()
+    view._snapToEndRetryPending = false
+    if Metrics.GetOffset(view) ~= clampedOffset then
+      return
+    end
+
+    local retryTarget = Metrics.GetRange(view)
+    if retryTarget >= targetOffset then
+      Navigation.SetVerticalScroll(view, retryTarget)
+    end
+  end)
+end
+
 -- RefreshMetrics calls SetVerticalScroll which lives in Navigation.
 -- To avoid a circular require, Navigation is resolved lazily at call time.
 function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
@@ -132,7 +174,7 @@ function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
   -- Only treat as overflow if the viewport itself has a real height; during
   -- lifecycle moments where GetHeight returns 0 (frame not yet shown) every
   -- non-empty content would otherwise be flagged as overflowing.
-  local hasOverflow = viewportHeight > 0 and (contentHeight or 0) > viewportHeight
+  local hasOverflow = viewportHeight > 0 and normalizeRange((contentHeight or 0) - viewportHeight) > 0
 
   applyViewportLayout(view, hasOverflow)
 
@@ -149,6 +191,9 @@ function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
   local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
   local targetOffset = snapToEnd and Metrics.GetRange(view) or Metrics.GetOffset(view)
   Navigation.SetVerticalScroll(view, targetOffset)
+  if snapToEnd then
+    scheduleSnapToEndRetry(view, Navigation, targetOffset)
+  end
   return nextContentHeight
 end
 

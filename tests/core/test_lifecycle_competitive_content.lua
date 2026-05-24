@@ -413,6 +413,53 @@ return function()
     assert(Bootstrap.runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "combat end must capture stale reply target before clearing")
   end
 
+  -- test_player_entering_world_does_not_start_duplicate_presence_timer_loops
+
+  do
+    rawset(_G, "GetInstanceInfo", function()
+      return "Orgrimmar", "none", 0
+    end)
+
+    local scheduled = {}
+    _G.C_Timer = {
+      After = function(delay, fn)
+        scheduled[#scheduled + 1] = { delay = delay, fn = fn }
+      end,
+    }
+
+    local PresenceCache = {
+      Rebuild = function() end,
+      IsStale = function()
+        return false
+      end,
+      GetTTL = function()
+        return 30
+      end,
+    }
+
+    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local deps = {
+      trace = function() end,
+      getContentDetector = function()
+        return ContentDetector
+      end,
+      getPresenceCache = function()
+        return PresenceCache
+      end,
+    }
+
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", deps)
+
+    local timerLoopSchedules = 0
+    for _, call in ipairs(scheduled) do
+      if call.delay == 30 then
+        timerLoopSchedules = timerLoopSchedules + 1
+      end
+    end
+
+    assert(timerLoopSchedules == 1, "PLAYER_ENTERING_WORLD must not start duplicate presence timer loops")
+  end
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
   _G.C_Timer = savedCTimer
 end

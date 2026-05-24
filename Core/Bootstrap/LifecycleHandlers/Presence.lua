@@ -60,6 +60,9 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
 end
 
 local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
+  if Common == nil then
+    return
+  end
   Common.scheduleAfter(2, function()
     if Bootstrap._inMythicContent then
       return
@@ -69,6 +72,10 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
     Common.refreshRuntimeWindow(Bootstrap)
   end)
 
+  if Bootstrap._presenceTimerLoopStarted then
+    return
+  end
+
   local function presenceTimerLoop()
     if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
       deps.trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
@@ -77,7 +84,7 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
     Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop)
   end
 
-  Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop)
+  Bootstrap._presenceTimerLoopStarted = Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop) == true
 end
 
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)

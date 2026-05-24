@@ -93,4 +93,13 @@ return function()
     local out = QuestLinkExchange.Splice(state, "Sender", already, 1001)
     assert(out == already, "real link unchanged, got: " .. tostring(out))
   end
+  -- 12. RecordIncoming prunes expired unmatched side-channel buffers.
+  do
+    local state = { questLinkInbox = {} }
+    QuestLinkExchange.RecordIncoming(state, "OldSender", "471:Apprentice's Duties", 1000)
+    QuestLinkExchange.RecordIncoming(state, "NewSender", "42:Bar Baz", 1016)
+
+    assert(state.questLinkInbox.OldSender == nil, "expired unmatched sender buffer should be pruned")
+    assert(state.questLinkInbox.NewSender ~= nil, "new sender buffer should be retained")
+  end
 end

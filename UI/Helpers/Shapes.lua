@@ -72,11 +72,22 @@ function Shapes.createCircularIcon(factory, parent, size)
   end
 
   local zoom = math.floor(size * ICON_ZOOM + 0.5)
-  local texture = frame:CreateTexture(nil, "ARTWORK")
+  -- Cache the texture on the frame. The factory may be pooled (chat-bubble
+  -- icons reuse frames across renders), and WoW cannot GC textures parented
+  -- to a frame — creating a new one each render leaks indefinitely.
+  local texture = frame._wmCircularIconTexture
+  if not texture then
+    texture = frame:CreateTexture(nil, "ARTWORK")
+    if texture.SetMask then
+      texture:SetMask(CIRCLE_MASK)
+    end
+    frame._wmCircularIconTexture = texture
+  end
   texture:SetSize(zoom, zoom)
+  texture:ClearAllPoints()
   texture:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  if texture.SetMask then
-    texture:SetMask(CIRCLE_MASK)
+  if texture.Show then
+    texture:Show()
   end
 
   return { frame = frame, texture = texture }

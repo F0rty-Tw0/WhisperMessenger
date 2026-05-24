@@ -261,4 +261,72 @@ return function()
   createCount = 0
   Layout.LayoutMessages(factory, contentFrame, { messages3[1] }, 400)
   assert(createCount == 0, "expected zero new CreateFrame calls when shrinking, got " .. createCount)
+
+  -- TEST 5: Re-render must not leak FontStrings or Textures on pool-recycled frames.
+  -- Regression for the chat-bubble memory leak: SenderLabel created 2-4 new
+  -- FontStrings and the icon helper created 1 new Texture on every render,
+  -- accumulating on the same recycled bubble frames over hours of usage.
+  do
+    local frameCount, fontStringCount, textureCount = 0, 0, 0
+    local instrumentedBase = FakeUI.NewFactory()
+    local function instrumentFrame(frame)
+      if frame._wmInstrumented then
+        return frame
+      end
+      frame._wmInstrumented = true
+      local origCreateFontString = frame.CreateFontString
+      frame.CreateFontString = function(self, ...)
+        fontStringCount = fontStringCount + 1
+        local fs = origCreateFontString(self, ...)
+        return instrumentFrame(fs)
+      end
+      local origCreateTexture = frame.CreateTexture
+      frame.CreateTexture = function(self, ...)
+        textureCount = textureCount + 1
+        local tex = origCreateTexture(self, ...)
+        return instrumentFrame(tex)
+      end
+      return frame
+    end
+    local instrumentedFactory = {
+      CreateFrame = function(frameType, name, parent, template)
+        frameCount = frameCount + 1
+        return instrumentFrame(instrumentedBase.CreateFrame(frameType, name, parent, template))
+      end,
+    }
+
+    local pooledContent = instrumentFrame(instrumentedBase.CreateFrame("Frame", nil, nil))
+    pooledContent:SetSize(400, 600)
+
+    local messagesWithIcons = {
+      {
+        direction = "in",
+        kind = "user",
+        text = "first",
+        sentAt = 1000,
+        playerName = "Arthas",
+      },
+      {
+        direction = "out",
+        kind = "user",
+        text = "second",
+        sentAt = 1010,
+        playerName = "Me",
+      },
+    }
+
+    -- First render: populate the pool and the cached regions.
+    Layout.LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
+
+    frameCount, fontStringCount, textureCount = 0, 0, 0
+
+    -- Second render with identical messages: every frame is pool-recycled,
+    -- so no new CreateFrame, no new CreateFontString, no new CreateTexture
+    -- should be issued. Anything > 0 leaks on the recycled frames.
+    Layout.LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
+
+    assert(frameCount == 0, "expected zero new CreateFrame on re-render, got " .. frameCount)
+    assert(fontStringCount == 0, "expected zero new CreateFontString on re-render (sender label leak), got " .. fontStringCount)
+    assert(textureCount == 0, "expected zero new CreateTexture on re-render (icon texture leak), got " .. textureCount)
+  end
 end
