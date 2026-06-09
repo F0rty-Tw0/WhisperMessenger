@@ -2,6 +2,10 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.12] - 2026-06-10
+
+- WhisperMessenger now shows its own icon next to its name in the in-game AddOn list.
+
 ## [1.2.11] - 2026-05-24
 
 - Fixed: keeping the messenger open through loading screens, zone changes, and long whisper sessions no longer lets stale background refreshes, temporary message-tracking data, or invisible leftover bits from re-drawing your conversations build up over time. After many hours with the window open, the game now stays as smooth as when you first opened it.
