@@ -7,8 +7,8 @@
 ## Interface-Wrath: 30403
 ## Interface-WOTLKC: 30403
 ## Interface-Cata: 40402
-## Interface-Mists: 50503
-## Interface-MoP: 50503
+## Interface-Mists: 50504
+## Interface-MoP: 50504
 ## Title: WhisperMessenger
 ## Notes: Messenger-style whisper UI for World of Warcraft
 ## Author: F0rty_tw0
