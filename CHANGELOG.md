@@ -2,6 +2,10 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.13] - 2026-06-18
+
+- Updated for World of Warcraft patch 12.0.7 (Midnight).
+
 ## [1.2.12] - 2026-06-10
 
 - WhisperMessenger now shows its own icon next to its name in the in-game AddOn list.
