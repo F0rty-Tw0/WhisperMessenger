@@ -118,6 +118,8 @@ local function makeRuntimeOptions()
         frame = {
           parent = {},
           SetPoint = function() end,
+          Show = function() end,
+          Hide = function() end,
         },
         setUnreadCount = function() end,
         setIncomingPreview = function() end,
