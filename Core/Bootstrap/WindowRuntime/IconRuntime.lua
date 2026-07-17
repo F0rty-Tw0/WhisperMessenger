@@ -25,6 +25,10 @@ local function resolvePreviewPosition(settings)
   return value
 end
 
+-- Shared with MinimapIconRuntime so preview defaults live in one place.
+IconRuntime.ResolveAutoDismissSeconds = resolveAutoDismissSeconds
+IconRuntime.ResolvePreviewPosition = resolvePreviewPosition
+
 local function initializeIconState(icon, contacts, badgeFilter, buildLatestIncomingPreview)
   if icon and icon.setUnreadCount then
     icon.setUnreadCount(badgeFilter.SumWhisperUnread(contacts))

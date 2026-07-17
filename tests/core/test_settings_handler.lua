@@ -290,12 +290,23 @@ return function()
     assert(iconState.appliedPreviewPosition == "left", "icon.applyPreviewPosition received new value")
   end
 
-  -- showUnreadBadge / badgePulse rebuild contacts and feed the icon a fresh sum.
+  -- showUnreadBadge / badgePulse rebuild contacts and feed BOTH icons a
+  -- whisper-only sum — group-channel unread must not inflate the badge.
   do
     local runtime = makeRuntime()
     local icon, iconState = makeIcon()
+    local minimapUnread
+    local minimap = {
+      setUnreadCount = function(count)
+        minimapUnread = count
+      end,
+    }
     local accountSettings = {}
-    local builtContacts = { { unreadCount = 2 }, { unreadCount = 5 } }
+    local builtContacts = {
+      { unreadCount = 2 },
+      { unreadCount = 5 },
+      { channel = "PARTY", unreadCount = 10 },
+    }
     local builds = 0
     local onChange = SettingsHandler.Create({
       runtime = runtime,
@@ -303,27 +314,67 @@ return function()
       getIcon = function()
         return icon
       end,
+      getMinimapIcon = function()
+        return minimap
+      end,
       buildContacts = function()
         builds = builds + 1
         return builtContacts
       end,
-      tableUtils = {
-        sumBy = function(items, key)
-          local total = 0
-          for _, item in ipairs(items) do
-            total = total + (item[key] or 0)
-          end
-          return total
-        end,
-      },
     })
 
     onChange("showUnreadBadge", true)
     assert(builds == 1, "showUnreadBadge rebuilt contacts once")
-    assert(iconState.unreadCount == 7, "icon received summed unread count")
+    assert(iconState.unreadCount == 7, "icon received whisper-only sum; got: " .. tostring(iconState.unreadCount))
+    assert(minimapUnread == 7, "minimap icon received the same sum; got: " .. tostring(minimapUnread))
 
     onChange("badgePulse", false)
     assert(builds == 2, "badgePulse rebuilt contacts again")
+  end
+
+  -- The minimap badge resyncs even when no widget icon exists.
+  do
+    local runtime = makeRuntime()
+    local minimapUnread
+    local minimap = {
+      setUnreadCount = function(count)
+        minimapUnread = count
+      end,
+    }
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = {},
+      getMinimapIcon = function()
+        return minimap
+      end,
+      buildContacts = function()
+        return { { unreadCount = 3 } }
+      end,
+    })
+
+    onChange("showUnreadBadge", false)
+    assert(minimapUnread == 3, "minimap badge resyncs without a widget icon; got: " .. tostring(minimapUnread))
+  end
+
+  -- iconMode persists and applies icon visibility via applyIconMode.
+  do
+    local runtime = makeRuntime()
+    local accountSettings = {}
+    local applied = 0
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      applyIconMode = function()
+        applied = applied + 1
+      end,
+    })
+
+    onChange("iconMode", "minimap")
+    assert(accountSettings.iconMode == "minimap", "iconMode persists")
+    assert(applied == 1, "iconMode change applies icon visibility")
+
+    onChange("iconSize", 48)
+    assert(applied == 1, "unrelated keys do not re-apply icon visibility")
   end
 
   -- hideMessagePreview / showWidgetMessagePreview persist and refresh the window.
