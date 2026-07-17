@@ -147,6 +147,7 @@ local function makeRuntimeOptions()
           Hide = function() end,
           Show = function() end,
           SetParent = function() end,
+          GetFrameLevel = function() return 1 end,
           CreateTexture = function()
             return {
               SetAllPoints = function() end,
