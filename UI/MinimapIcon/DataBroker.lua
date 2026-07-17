@@ -41,7 +41,7 @@ function DataBroker.Register(options)
       icon = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
       label = "Whisper Messenger",
       text = "Whisper Messenger",
-      OnClick = function(_, button)
+      OnClick = function(_)
         if options.onToggle then
           options.onToggle()
         end

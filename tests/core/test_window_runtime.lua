@@ -136,7 +136,7 @@ local function makeRuntimeOptions()
       window = { x = 10, y = 20, width = 920, height = 580 },
       icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },
     },
-    uiFactory = {},
+    uiFactory = { CreateFrame = _G.CreateFrame },
     bootstrap = { _inMythicContent = false },
     contactsList = {
       BuildItemsForProfile = function()
