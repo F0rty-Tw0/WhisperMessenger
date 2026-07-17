@@ -141,14 +141,26 @@ local function makeRuntimeOptions()
         return {
           SetSize = function() end,
           SetFrameStrata = function() end,
+          SetFrameLevel = function() end,
           EnableMouse = function() end,
           RegisterForDrag = function() end,
+          Hide = function() end,
+          Show = function() end,
+          SetParent = function() end,
           CreateTexture = function()
             return {
               SetAllPoints = function() end,
               SetTexture = function() end,
               SetPoint = function() end,
               SetDesaturated = function() end,
+            }
+          end,
+          CreateFontString = function()
+            return {
+              SetPoint = function() end,
+              SetText = function() end,
+              SetWidth = function() end,
+              SetJustifyH = function() end,
             }
           end,
           ClearAllPoints = function() end,
