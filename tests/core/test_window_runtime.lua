@@ -125,6 +125,20 @@ local function makeRuntimeOptions()
     end,
   }
 
+  local function _noop() end
+  local _childMt = {
+    __index = function()
+      return _noop
+    end,
+  }
+  local function _child()
+    return setmetatable({}, _childMt)
+  end
+  local function _num(n)
+    return function()
+      return n
+    end
+  end
   local options = {
     runtime = runtime,
     accountState = runtime.accountState,
@@ -138,41 +152,30 @@ local function makeRuntimeOptions()
     },
     uiFactory = {
       CreateFrame = function()
-        local _noop = function() end
-        local _childMt = {
-          __index = function()
-            return _noop
-          end,
-        }
-        local function _child()
-          return setmetatable({}, _childMt)
-        end
-        return setmetatable({
-          CreateTexture = _child,
+        return {
+          ClearAllPoints = _noop,
           CreateFontString = _child,
-          GetCenter = function()
-            return 0, 0
-          end,
-          GetEffectiveScale = function()
-            return 1
-          end,
-          GetFrameLevel = function()
-            return 1
-          end,
-          GetHeight = function()
-            return 140
-          end,
-          GetWidth = function()
-            return 140
-          end,
+          CreateTexture = _child,
+          EnableMouse = _noop,
+          GetCenter = _num(0), -- returns 0, 0 (second return is nil → 0)
+          GetEffectiveScale = _num(1),
+          GetFrameLevel = _num(1),
+          GetHeight = _num(140),
+          GetWidth = _num(140),
+          Hide = _noop,
           IsShown = function()
             return false
           end,
-        }, {
-          __index = function()
-            return _noop
-          end,
-        })
+          RegisterForDrag = _noop,
+          SetClipsChildren = _noop,
+          SetFrameLevel = _noop,
+          SetFrameStrata = _noop,
+          SetParent = _noop,
+          SetPoint = _noop,
+          SetScript = _noop,
+          SetSize = _noop,
+          Show = _noop,
+        }
       end,
     },
     bootstrap = { _inMythicContent = false },
