@@ -1,6 +1,9 @@
 # Changelog
 
-Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
+## [1.2.14] - 2026-07-17
+
+- WhisperMessenger now has its own icon around the minimap ring. You can drag it to any angle, and the icon snaps to the minimap's edge even on non-round minimap shapes. Switch between the free-floating widget icon and the minimap icon in the General settings tab.
+- Added support for LibDataBroker displays like Bazooka and ChocolateBar - see the unread count and addon name right on your broker bar, and click to open the messenger.
 
 ## [1.2.13] - 2026-06-18
 
@@ -188,3 +191,4 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [0.1.0] - 2025-01-01
 
 - First public version of WhisperMessenger: a dedicated whisper window with chat bubbles, contacts, unread badges, Battle.net support, saved history, settings, and drag-to-reorder contacts.
+

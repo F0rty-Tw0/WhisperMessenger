@@ -196,7 +196,9 @@ function WindowRuntime.Create(options)
       rawOnSettingChanged(key, value)
       if key == "iconMode" then
         local fn = runtime._applyIconMode
-        if fn then fn() end
+        if fn then
+          fn()
+        end
       end
     end
 
@@ -281,7 +283,6 @@ function WindowRuntime.Create(options)
   })
 
   -- Minimap icon
-
 
   minimapIcon = MinimapIcon.Create(uiFactory, {
     state = characterState.minimapIcon,

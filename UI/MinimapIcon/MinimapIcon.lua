@@ -26,20 +26,20 @@ local ICON_RADIUS_OFFSET = 5
 -- Quadrant indices: 1=TL, 2=BL, 3=TR, 4=BR (x<0→+1, y>0→+2).
 -- Mirrors LibDBIcon-1.0's minimapShapes table for compatibility.
 local MINIMAP_SHAPES = {
-  ["ROUND"]              = { true,  true,  true,  true  },
-  ["SQUARE"]             = { false, false, false, false },
-  ["CORNER-TOPLEFT"]     = { false, false, false, true  },
-  ["CORNER-TOPRIGHT"]    = { false, false, true,  false },
-  ["CORNER-BOTTOMLEFT"]  = { false, true,  false, false },
-  ["CORNER-BOTTOMRIGHT"] = { true,  false, false, false },
-  ["SIDE-LEFT"]          = { false, true,  false, true  },
-  ["SIDE-RIGHT"]         = { true,  false, true,  false },
-  ["SIDE-TOP"]           = { false, false, true,  true  },
-  ["SIDE-BOTTOM"]        = { true,  true,  false, false },
-  ["TRICORNER-TOPLEFT"]     = { false, true,  true,  true  },
-  ["TRICORNER-TOPRIGHT"]    = { true,  false, true,  true  },
-  ["TRICORNER-BOTTOMLEFT"]  = { true,  true,  false, true  },
-  ["TRICORNER-BOTTOMRIGHT"] = { true,  true,  true,  false },
+  ["ROUND"] = { true, true, true, true },
+  ["SQUARE"] = { false, false, false, false },
+  ["CORNER-TOPLEFT"] = { false, false, false, true },
+  ["CORNER-TOPRIGHT"] = { false, false, true, false },
+  ["CORNER-BOTTOMLEFT"] = { false, true, false, false },
+  ["CORNER-BOTTOMRIGHT"] = { true, false, false, false },
+  ["SIDE-LEFT"] = { false, true, false, true },
+  ["SIDE-RIGHT"] = { true, false, true, false },
+  ["SIDE-TOP"] = { false, false, true, true },
+  ["SIDE-BOTTOM"] = { true, true, false, false },
+  ["TRICORNER-TOPLEFT"] = { false, true, true, true },
+  ["TRICORNER-TOPRIGHT"] = { true, false, true, true },
+  ["TRICORNER-BOTTOMLEFT"] = { true, true, false, true },
+  ["TRICORNER-BOTTOMRIGHT"] = { true, true, true, false },
 }
 
 -- Module-local helpers
@@ -61,8 +61,12 @@ local function updatePosition(button, parent, positionDegrees, radiusOffset)
   local x, y = cos(angle), sin(angle)
   -- Quadrant: 1=TL, 2=BL, 3=TR, 4=BR
   local q = 1
-  if x < 0 then q = q + 1 end
-  if y > 0 then q = q + 2 end
+  if x < 0 then
+    q = q + 1
+  end
+  if y > 0 then
+    q = q + 2
+  end
 
   local shape = getMinimapShape()
   local quadTable = MINIMAP_SHAPES[shape] or MINIMAP_SHAPES["ROUND"]
@@ -91,7 +95,7 @@ end
 function MinimapIcon.Create(factory, options)
   options = options or {}
 
-  local parent = options.parent or _G.Minimap
+  local parent = options.parent or _G.Minimap or _G.UIParent
   local state = options.state or {}
   local degrees = state.degrees or DEFAULT_DEGREES
 

@@ -210,7 +210,6 @@ function SettingsHandler.Create(options)
         minimap.applyPreviewPosition(persistedValue)
       end
     end
-
   end
 end
 
