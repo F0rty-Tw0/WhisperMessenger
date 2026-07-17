@@ -24,6 +24,9 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
   character.icon = character.icon or defaults.icon
   Helpers.applyDefaults(character.icon, defaults.icon)
 
+  character.minimapIcon = character.minimapIcon or defaults.minimapIcon
+  Helpers.applyDefaults(character.minimapIcon, defaults.minimapIcon)
+
   LegacyMigration.MigrateCurrentProfile(account, character, localProfileId)
   PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", false, character)
   PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", true, character)

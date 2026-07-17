@@ -7,6 +7,7 @@ local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.Co
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
+local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
 
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
@@ -25,6 +26,12 @@ function WindowCoordinator.Create(options)
     return nil
   end
   local getIcon = options.getIcon or function()
+    return nil
+  end
+  local getMinimapIcon = options.getMinimapIcon or function()
+    return nil
+  end
+  local getLdbObject = options.getLdbObject or function()
     return nil
   end
   local buildMessagePreview = options.buildMessagePreview or function()
@@ -188,6 +195,23 @@ function WindowCoordinator.Create(options)
       local whispersVisibleInPane = coordinator.isWindowVisible() and tabMode == "whispers"
       local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
       icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
+    end
+
+    -- Sync minimap icon badge and preview
+    local minimap = getMinimapIcon()
+    if minimap and minimap.setUnreadCount then
+      minimap.setUnreadCount(BadgeFilter.SumWhisperUnread(freshContacts))
+    end
+    if minimap and minimap.setIncomingPreview then
+      local preview = buildMessagePreview(freshContacts)
+      minimap.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
+    end
+    local ldb = getLdbObject()
+    if ldb then
+      local unread = BadgeFilter.SumWhisperUnread(freshContacts)
+      ldb.text = DataBroker.FormatText(unread)
+    elseif type(getLdbObject) == "function" then
+      trace("LDB sync skipped: ldbObject is nil")
     end
 
     return nextState

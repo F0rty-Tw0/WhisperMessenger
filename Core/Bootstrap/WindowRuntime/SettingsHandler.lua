@@ -153,6 +153,10 @@ function SettingsHandler.Create(options)
       if themeIcon and themeIcon.refreshTheme then
         themeIcon.refreshTheme()
       end
+      local minimapIcon = options.getMinimapIcon and options.getMinimapIcon()
+      if minimapIcon and minimapIcon.refreshTheme then
+        minimapIcon.refreshTheme()
+      end
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end
@@ -172,26 +176,41 @@ function SettingsHandler.Create(options)
     end
 
     local icon = getIcon()
+    local minimap = options.getMinimapIcon and options.getMinimapIcon()
     if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
       local freshContacts = buildContacts()
-      icon.setUnreadCount(tableUtils.sumBy(freshContacts, "unreadCount"))
+      local unread = tableUtils.sumBy(freshContacts, "unreadCount")
+      icon.setUnreadCount(unread)
+      if minimap and minimap.setUnreadCount then
+        minimap.setUnreadCount(unread)
+      end
     end
 
     if key == "iconSize" and icon and icon.applyIconSize then
       icon.applyIconSize(persistedValue)
     end
 
-    if key == "iconDesaturated" and icon and icon.refreshDesaturation then
-      icon.refreshDesaturation()
+    if key == "iconDesaturated" then
+      if icon and icon.refreshDesaturation then
+        icon.refreshDesaturation()
+      end
+      if minimap and minimap.refreshDesaturation then
+        minimap.refreshDesaturation()
+      end
     end
-
     if key == "lockToggleIcon" and icon and icon.refreshLockGlyph then
       icon.refreshLockGlyph()
     end
 
-    if key == "widgetPreviewPosition" and icon and icon.applyPreviewPosition then
-      icon.applyPreviewPosition(persistedValue)
+    if key == "widgetPreviewPosition" then
+      if icon and icon.applyPreviewPosition then
+        icon.applyPreviewPosition(persistedValue)
+      end
+      if minimap and minimap.applyPreviewPosition then
+        minimap.applyPreviewPosition(persistedValue)
+      end
     end
+
   end
 end
 

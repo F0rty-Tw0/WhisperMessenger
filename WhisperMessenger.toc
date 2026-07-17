@@ -155,6 +155,8 @@ UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/ToggleIcon.lua
+UI/MinimapIcon/MinimapIcon.lua
+UI/MinimapIcon/DataBroker.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua

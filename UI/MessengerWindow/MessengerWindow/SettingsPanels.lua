@@ -104,6 +104,7 @@ function SettingsPanels.Create(factory, options)
     showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
     widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
     widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
+    iconMode = settingsConfig.iconMode,
   }, onSettingChanged)
 
   local function refreshTheme(theme, context)

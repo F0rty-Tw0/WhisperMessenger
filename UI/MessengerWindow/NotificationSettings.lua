@@ -25,6 +25,7 @@ local DEFAULTS = {
   showWidgetMessagePreview = true,
   widgetPreviewAutoDismissSeconds = 30,
   widgetPreviewPosition = "right",
+  iconMode = "widget",
 }
 
 local POSITION_OPTION_SPECS = {
@@ -157,6 +158,35 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   lockToggleIconToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local function buildIconModeOptions()
+    return {
+      { key = "widget", label = text("Widget") },
+      { key = "minimap", label = text("Minimap") },
+      { key = "both", label = text("Both") },
+    }
+  end
+
+  local iconModeSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Icon Mode"),
+      optionsList = buildIconModeOptions(),
+      fallbackKey = DEFAULTS.iconMode,
+      initial = config.iconMode or DEFAULTS.iconMode,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("iconMode", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 60,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 3,
+    }),
+    { type = "selector", key = "iconMode", default = DEFAULTS.iconMode }
+  )
+  iconModeSelector.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local showBadgeToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
       onChange("showUnreadBadge", value)
@@ -166,7 +196,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     }),
     { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
   )
-  showBadgeToggle.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  showBadgeToggle.row:SetPoint("TOPLEFT", iconModeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local badgePulseToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Badge pulse animation"), config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
@@ -277,6 +307,8 @@ function NotificationSettings.Create(factory, parent, config, options)
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
+    iconModeSelector.label:SetText(text("Icon Mode"))
+    iconModeSelector.setOptionsList(buildIconModeOptions())
     showBadgeToggle.label:SetText(text("Show unread badge"))
     badgePulseToggle.label:SetText(text("Badge pulse animation"))
     widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))
@@ -304,6 +336,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     showBadgeToggle = showBadgeToggle,
     iconSizeSlider = iconSizeRow.slider,
     iconDesaturatedToggle = iconDesaturatedToggle,
+    iconModeSelector = iconModeSelector,
     lockToggleIconToggle = lockToggleIconToggle,
     widgetMessagePreviewToggle = widgetMessagePreviewToggle,
     autoDismissSlider = autoDismissRow.slider,
