@@ -146,8 +146,9 @@ function MinimapIcon.Create(factory, options)
   local function applyRadialPosition(d)
     updatePosition(frame, parent, d or degrees, ICON_RADIUS_OFFSET)
   end
-
-  applyRadialPosition()
+  if parent then
+    applyRadialPosition()
+  end
 
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getIconDesaturated = options.getIconDesaturated
@@ -158,8 +159,7 @@ function MinimapIcon.Create(factory, options)
   -- frame during drag so the icon stays snapped to the minimap ring.
   -- OnClick only fires when the button was not dragged, giving clean
   -- click-vs-drag separation without manual state tracking.
-
-  if frame.SetScript then
+  if parent and frame.SetScript then
     frame:SetScript("OnDragStart", function(self)
       self:SetScript("OnUpdate", function()
         local mx, my = parent:GetCenter()
