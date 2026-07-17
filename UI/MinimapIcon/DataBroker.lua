@@ -67,8 +67,7 @@ function DataBroker.Register(options)
     trace("LDB data object registered: WhisperMessenger")
     return dataobj ~= nil
   end
-
-  if not tryRegister() then
+  if not tryRegister() and type(_G.CreateFrame) == "function" then
     local loginFrame = _G.CreateFrame("Frame")
     loginFrame:RegisterEvent("PLAYER_LOGIN")
     loginFrame:SetScript("OnEvent", function()
