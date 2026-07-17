@@ -150,6 +150,7 @@ function MinimapIcon.Create(factory, options)
   applyRadialPosition()
 
   local getShowUnreadBadge = options.getShowUnreadBadge
+  local getIconDesaturated = options.getIconDesaturated
 
   -- Drag: orbit around minimap center with live radial constraint.
   -- Uses RegisterForDrag + OnDragStart/OnDragStop (no StartMoving,

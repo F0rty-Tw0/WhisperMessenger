@@ -136,7 +136,42 @@ local function makeRuntimeOptions()
       window = { x = 10, y = 20, width = 920, height = 580 },
       icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },
     },
-    uiFactory = { CreateFrame = _G.CreateFrame },
+    uiFactory = {
+      CreateFrame = function()
+        return {
+          SetSize = function() end,
+          SetFrameStrata = function() end,
+          EnableMouse = function() end,
+          RegisterForDrag = function() end,
+          CreateTexture = function()
+            return {
+              SetAllPoints = function() end,
+              SetTexture = function() end,
+              SetPoint = function() end,
+              SetDesaturated = function() end,
+            }
+          end,
+          ClearAllPoints = function() end,
+          SetPoint = function() end,
+          SetScript = function() end,
+          IsShown = function()
+            return false
+          end,
+          GetCenter = function()
+            return 0, 0
+          end,
+          GetEffectiveScale = function()
+            return 1
+          end,
+          GetWidth = function()
+            return 140
+          end,
+          GetHeight = function()
+            return 140
+          end,
+        }
+      end,
+    },
     bootstrap = { _inMythicContent = false },
     contactsList = {
       BuildItemsForProfile = function()
