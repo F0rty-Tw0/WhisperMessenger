@@ -59,6 +59,13 @@ read_globals = {
   -- Core frame/widget API
   "CreateFrame",
   "UIParent",
+  "Minimap",
+  "GameTooltip",
+  "GetMinimapShape",
+  "GetCursorPosition",
+
+  -- Library loader (optional dependency for LibDataBroker displays)
+  "LibStub",
 
   -- Namespaced C_ APIs (used by WhisperMessenger)
   "C_ChatInfo",

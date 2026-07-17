@@ -1,9 +1,15 @@
 # Changelog
 
+Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
+
 ## [1.2.14] - 2026-07-17
 
-- WhisperMessenger now has its own icon around the minimap ring. You can drag it to any angle, and the icon snaps to the minimap's edge even on non-round minimap shapes. Switch between the free-floating widget icon and the minimap icon in the General settings tab.
-- Added support for LibDataBroker displays like Bazooka and ChocolateBar - see the unread count and addon name right on your broker bar, and click to open the messenger.
+- WhisperMessenger now has its own icon around the minimap ring. You can drag it to any angle, and the icon snaps to the minimap's edge even on non-round minimap shapes. Switch between the free-floating widget icon and the minimap icon in the Notifications settings tab.
+- Added support for display bars like Bazooka and ChocolateBar - see the unread count and addon name right on your bar, and click to open the messenger.
+- Fixed: with "Desaturate icon when idle" on, the minimap icon now lights back up when unread whispers arrive instead of staying grey.
+- Fixed: message preview popups no longer float next to the minimap while the minimap icon is turned off, and no longer pop up while you're already reading that conversation.
+- Fixed: the unread badge pulse animation now works on the minimap icon too.
+- Fixed: flipping badge settings no longer briefly shows an inflated unread count that included group chats.
 
 ## [1.2.13] - 2026-06-18
 
