@@ -138,51 +138,41 @@ local function makeRuntimeOptions()
     },
     uiFactory = {
       CreateFrame = function()
-        return {
-          SetSize = function() end,
-          SetFrameStrata = function() end,
-          SetFrameLevel = function() end,
-          EnableMouse = function() end,
-          RegisterForDrag = function() end,
-          Hide = function() end,
-          Show = function() end,
-          SetParent = function() end,
-          GetFrameLevel = function() return 1 end,
-          CreateTexture = function()
-            return {
-              SetAllPoints = function() end,
-              SetTexture = function() end,
-              SetPoint = function() end,
-              SetDesaturated = function() end,
-            }
+        local _noop = function() end
+        local _childMt = {
+          __index = function()
+            return _noop
           end,
-          CreateFontString = function()
-            return {
-              SetPoint = function() end,
-              SetText = function() end,
-              SetWidth = function() end,
-              SetJustifyH = function() end,
-            }
-          end,
-          ClearAllPoints = function() end,
-          SetPoint = function() end,
-          SetScript = function() end,
-          IsShown = function()
-            return false
-          end,
+        }
+        local function _child()
+          return setmetatable({}, _childMt)
+        end
+        return setmetatable({
+          CreateTexture = _child,
+          CreateFontString = _child,
           GetCenter = function()
             return 0, 0
           end,
           GetEffectiveScale = function()
             return 1
           end,
-          GetWidth = function()
-            return 140
+          GetFrameLevel = function()
+            return 1
           end,
           GetHeight = function()
             return 140
           end,
-        }
+          GetWidth = function()
+            return 140
+          end,
+          IsShown = function()
+            return false
+          end,
+        }, {
+          __index = function()
+            return _noop
+          end,
+        })
       end,
     },
     bootstrap = { _inMythicContent = false },
