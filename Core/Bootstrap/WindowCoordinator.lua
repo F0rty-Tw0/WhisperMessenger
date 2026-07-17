@@ -181,37 +181,46 @@ function WindowCoordinator.Create(options)
         end
       end
     end
+    -- One unread sum and one preview feed every icon surface. Suppress the
+    -- icon-anchored previews only when the Whispers tab is actually showing —
+    -- the full conversation is already on screen and the popup would be
+    -- redundant. On the Groups tab the whisper isn't visible in the pane, so
+    -- the popup is still the user's only surface.
+    local unread = BadgeFilter.SumWhisperUnread(freshContacts)
+    local previewWindow = getWindow()
+    local previewTabMode = previewWindow and type(previewWindow.getTabMode) == "function" and previewWindow.getTabMode() or "whispers"
+    local whispersVisibleInPane = coordinator.isWindowVisible() and previewTabMode == "whispers"
+    local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
+    local previewSender = preview and preview.senderName or nil
+    local previewText = preview and preview.messageText or nil
+    local previewClass = preview and preview.classTag or nil
+
     local icon = getIcon()
     if icon and icon.setUnreadCount then
-      icon.setUnreadCount(BadgeFilter.SumWhisperUnread(freshContacts))
+      icon.setUnreadCount(unread)
     end
     if icon and icon.setIncomingPreview then
-      -- Suppress the widget-anchored preview only when the Whispers tab is
-      -- actually showing — the full conversation is already on screen and
-      -- the popup would be redundant. On the Groups tab the whisper isn't
-      -- visible in the pane, so the popup is still the user's only surface.
-      local window = getWindow()
-      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or "whispers"
-      local whispersVisibleInPane = coordinator.isWindowVisible() and tabMode == "whispers"
-      local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
-      icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
+      icon.setIncomingPreview(previewSender, previewText, previewClass)
     end
 
-    -- Sync minimap icon badge and preview
     local minimap = getMinimapIcon()
     if minimap and minimap.setUnreadCount then
-      minimap.setUnreadCount(BadgeFilter.SumWhisperUnread(freshContacts))
+      minimap.setUnreadCount(unread)
     end
     if minimap and minimap.setIncomingPreview then
-      local preview = buildMessagePreview(freshContacts)
-      minimap.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
+      -- The minimap preview floats on UIParent, so it must not pop (or
+      -- linger) while the minimap icon itself is hidden (icon mode "widget").
+      if not minimap.isShown or minimap.isShown() then
+        minimap.setIncomingPreview(previewSender, previewText, previewClass)
+      else
+        minimap.setIncomingPreview(nil, nil, nil)
+      end
     end
+
     local ldb = getLdbObject()
     if ldb then
-      local unread = BadgeFilter.SumWhisperUnread(freshContacts)
+      ldb.unread = unread
       ldb.text = DataBroker.FormatText(unread)
-    elseif type(getLdbObject) == "function" then
-      trace("LDB sync skipped: ldbObject is nil")
     end
 
     return nextState

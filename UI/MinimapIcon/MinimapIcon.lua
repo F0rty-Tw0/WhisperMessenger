@@ -9,6 +9,8 @@ local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badg
 local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
+local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 
 local MinimapIcon = {}
 
@@ -16,6 +18,11 @@ local MinimapIcon = {}
 -- badge is legible, but small enough to not dominate the minimap ring.
 local ICON_SIZE = 30
 local ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
+local BADGE_SIZE = 14
+
+local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
+local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
+local ICON_COLOR = { 1, 1, 1, 1 }
 
 -- Default radial position: top-right quadrant, 45 degrees.
 local DEFAULT_DEGREES = 45
@@ -45,6 +52,9 @@ local MINIMAP_SHAPES = {
 -- Module-local helpers
 
 local rad, deg, cos, sin, sqrt, max, min = math.rad, math.deg, math.cos, math.sin, math.sqrt, math.max, math.min
+-- WoW runs Lua 5.1 (atan2 exists); the test harness runs newer Lua where
+-- atan2 was folded into two-argument atan.
+local atan2 = math.atan2 or math.atan
 
 local function getMinimapShape()
   if type(_G.GetMinimapShape) == "function" then
@@ -109,7 +119,7 @@ function MinimapIcon.Create(factory, options)
   local bg = frame:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints(frame)
   bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-  applyVertexColor(bg, { 0.08, 0.08, 0.08, 0.85 })
+  applyVertexColor(bg, BG_COLOR)
 
   -- Addon icon texture (fills the button)
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
@@ -120,16 +130,21 @@ function MinimapIcon.Create(factory, options)
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
   border:SetTexture("Interface\\COMMON\\RingBorder")
-  applyVertexColor(border, { 0.3, 0.3, 0.3, 0.4 })
+  applyVertexColor(border, BORDER_COLOR)
 
-  -- Unread badge (scaled down for minimap size)
+  -- Glow pulse for unread messages (same animation as the widget icon)
+  local pulseGlow = PulseGlow.Create(factory, frame, {
+    theme = Theme,
+    accent = Theme.COLORS.accent,
+  })
+
+  -- Unread badge, scaled down from widget size to minimap size
   local badgeResult = Badge.Create(factory, frame)
   local badge = badgeResult.badge
   local badgeBackground = badgeResult.badgeBackground
   local badgeLabel = badgeResult.badgeLabel
   local innerSetUnreadCount = badgeResult.setUnreadCount
-  -- Scale badge from widget size (20px) down to minimap size (~14px)
-  badge:SetSize(14, 14)
+  badge:SetSize(BADGE_SIZE, BADGE_SIZE)
   badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 4, 4)
 
   -- Incoming message preview (reuses the same module as the widget icon)
@@ -141,17 +156,56 @@ function MinimapIcon.Create(factory, options)
   })
   -- Reparent to UIParent so the preview isn't clipped by the Minimap.
   incomingPreview.frame:SetParent(_G.UIParent)
+  local setIncomingPreview = incomingPreview.setIncomingPreview
 
-  -- Initial radial placement
-  local function applyRadialPosition(d)
-    updatePosition(frame, parent, d or degrees, ICON_RADIUS_OFFSET)
+  local function applyRadialPosition()
+    updatePosition(frame, parent, degrees, ICON_RADIUS_OFFSET)
   end
   if parent then
     applyRadialPosition()
   end
 
   local getShowUnreadBadge = options.getShowUnreadBadge
-  local getIconDesaturated = options.getIconDesaturated
+  local getBadgePulse = options.getBadgePulse
+
+  -- Idle-desaturation shared with the widget icon: grey only when the
+  -- setting is on AND there are no unread whispers.
+  local desaturation = Desaturation.Create({
+    textures = { chatIcon = iconTex, background = bg, border = border },
+    resolveColors = {
+      chatIcon = function()
+        return ICON_COLOR
+      end,
+      background = function()
+        return BG_COLOR
+      end,
+      border = function()
+        return BORDER_COLOR
+      end,
+    },
+    getIconDesaturated = options.getIconDesaturated,
+    applyVertexColor = applyVertexColor,
+  })
+
+  local function setUnreadCount(count)
+    local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
+    local allowPulse = not getBadgePulse or getBadgePulse()
+    local unreadCount = tonumber(count) or 0
+
+    if showBadge then
+      innerSetUnreadCount(count)
+    else
+      innerSetUnreadCount(0)
+    end
+
+    if unreadCount > 0 and allowPulse and showBadge then
+      pulseGlow.start()
+    else
+      pulseGlow.stop()
+    end
+
+    desaturation.update(unreadCount)
+  end
 
   -- Drag: orbit around minimap center with live radial constraint.
   -- Uses RegisterForDrag + OnDragStart/OnDragStop (no StartMoving,
@@ -166,7 +220,7 @@ function MinimapIcon.Create(factory, options)
         local px, py = _G.GetCursorPosition()
         local scale = parent:GetEffectiveScale() or 1
         px, py = px / scale, py / scale
-        degrees = deg(math.atan2(py - my, px - mx)) % 360
+        degrees = deg(atan2(py - my, px - mx)) % 360
         updatePosition(self, parent, degrees, ICON_RADIUS_OFFSET)
       end)
     end)
@@ -192,7 +246,7 @@ function MinimapIcon.Create(factory, options)
         _G.GameTooltip:SetText("WhisperMessenger")
         local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
         if showBadge and badge:IsShown() then
-          _G.GameTooltip:AddLine(badgeLabel:GetText() .. " " .. (Localization and Localization.Text("unread") or "unread"))
+          _G.GameTooltip:AddLine((badgeLabel:GetText() or "") .. " " .. (Localization and Localization.Text("unread") or "unread"))
         end
         _G.GameTooltip:Show()
       end
@@ -205,43 +259,25 @@ function MinimapIcon.Create(factory, options)
     end)
   end
 
-  local function setUnreadCount(count)
-    local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
-
-    if showBadge then
-      innerSetUnreadCount(count)
-    else
-      innerSetUnreadCount(0)
+  -- Icon-mode visibility. The preview frame floats on UIParent, so hiding
+  -- the button alone would leave an orphaned popup — clear it too.
+  local function setShown(shown)
+    if shown then
+      frame:Show()
+      return
     end
+    frame:Hide()
+    setIncomingPreview(nil, nil, nil)
   end
 
-  local setIncomingPreview = incomingPreview.setIncomingPreview
-
-  -- Desaturation: grey out the icon when no unread messages.
-  local function setDesaturated(active)
-    if active then
-      iconTex:SetDesaturated(true)
-      border:SetDesaturated(true)
-    else
-      iconTex:SetDesaturated(false)
-      border:SetDesaturated(false)
-    end
+  local function isShown()
+    return frame.IsShown and frame:IsShown() == true
   end
 
-  local function refreshDesaturation()
-    if type(getIconDesaturated) == "function" and getIconDesaturated() then
-      setDesaturated(true)
-    else
-      setDesaturated(false)
-    end
-  end
-
-  refreshDesaturation()
-
-  -- Theme refresh
   local function refreshTheme()
     incomingPreview.applyTheme(Theme)
-    refreshDesaturation()
+    pulseGlow.applyTheme(Theme)
+    desaturation.refresh()
   end
 
   setUnreadCount(options.unreadCount or 0)
@@ -257,14 +293,15 @@ function MinimapIcon.Create(factory, options)
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,
+    previewFrame = incomingPreview.frame,
     setUnreadCount = setUnreadCount,
     setIncomingPreview = setIncomingPreview,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
-    refreshDesaturation = refreshDesaturation,
+    refreshDesaturation = desaturation.refresh,
     refreshTheme = refreshTheme,
-    applyRadialPosition = function()
-      return applyRadialPosition(degrees)
-    end,
+    applyRadialPosition = applyRadialPosition,
+    setShown = setShown,
+    isShown = isShown,
   }
 end
 
