@@ -15,6 +15,7 @@
 -- window is lazy, and the cross-module wires (setWindowVisible -> widget ack,
 -- toggle -> selector, onSettingChanged -> SettingsHandler) survive composition.
 
+local FakeUI = require("tests.helpers.fake_ui")
 local WindowRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime")
 
 local function makeRuntimeOptions()
@@ -114,33 +115,40 @@ local function makeRuntimeOptions()
     Create = function(_uiFactory, options)
       trackers.iconCreates = trackers.iconCreates + 1
       trackers.capturedIconOptions = options
+      local iconFrame = {
+        parent = {},
+        shown = true,
+        SetPoint = function() end,
+        Show = function(self)
+          self.shown = true
+        end,
+        Hide = function(self)
+          self.shown = false
+        end,
+      }
+      trackers.iconFrame = iconFrame
       return {
-        frame = {
-          parent = {},
-          SetPoint = function() end,
-          Show = function() end,
-          Hide = function() end,
-        },
+        frame = iconFrame,
         setUnreadCount = function() end,
         setIncomingPreview = function() end,
       }
     end,
   }
 
-  local function _noop() end
-  local _childMt = {
-    __index = function()
-      return _noop
-    end,
-  }
-  local function _child()
-    return setmetatable({}, _childMt)
-  end
-  local function _num(n)
-    return function()
-      return n
+  -- Real fake frames (stateful Show/Hide/IsShown) so icon-mode visibility is
+  -- observable; a wrapper records created frames by name for lookup.
+  local fakeFactory = FakeUI.NewFactory()
+  local innerCreateFrame = fakeFactory.CreateFrame
+  fakeFactory.CreateFrame = function(frameType, name, parent, template)
+    local frame = innerCreateFrame(frameType, name, parent, template)
+    frame.shown = true -- WoW frames start shown
+    if name then
+      trackers.framesByName = trackers.framesByName or {}
+      trackers.framesByName[name] = frame
     end
+    return frame
   end
+
   local options = {
     runtime = runtime,
     accountState = runtime.accountState,
@@ -152,34 +160,7 @@ local function makeRuntimeOptions()
       window = { x = 10, y = 20, width = 920, height = 580 },
       icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },
     },
-    uiFactory = {
-      CreateFrame = function()
-        return {
-          ClearAllPoints = _noop,
-          CreateFontString = _child,
-          CreateTexture = _child,
-          EnableMouse = _noop,
-          GetCenter = _num(0), -- returns 0, 0 (second return is nil → 0)
-          GetEffectiveScale = _num(1),
-          GetFrameLevel = _num(1),
-          GetHeight = _num(140),
-          GetWidth = _num(140),
-          Hide = _noop,
-          IsShown = function()
-            return false
-          end,
-          RegisterForDrag = _noop,
-          SetClipsChildren = _noop,
-          SetFrameLevel = _noop,
-          SetFrameStrata = _noop,
-          SetParent = _noop,
-          SetPoint = _noop,
-          SetScript = _noop,
-          SetSize = _noop,
-          Show = _noop,
-        }
-      end,
-    },
+    uiFactory = fakeFactory,
     bootstrap = { _inMythicContent = false },
     contactsList = {
       BuildItemsForProfile = function()
@@ -202,13 +183,6 @@ local function makeRuntimeOptions()
     tableUtils = {
       copyState = function(value)
         return value
-      end,
-      sumBy = function(items, key)
-        local total = 0
-        for _, item in ipairs(items) do
-          total = total + (item[key] or 0)
-        end
-        return total
       end,
     },
     presenceCache = { RefreshPresence = function() end },
@@ -338,4 +312,19 @@ return function()
   windowOptions.onSettingChanged("themePreset", "elvui_dark")
   assert(runtime.accountState.settings.themePreset == "elvui_dark", "settings handler should persist theme change")
   assert((runtime.window._refreshThemeCalls or 0) == 1, "theme change should refresh static chrome via real handler")
+
+  -- Composition wire: iconMode drives icon visibility. Default mode is
+  -- "widget": the widget icon stays visible, the minimap icon is hidden.
+  local minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]
+  assert(minimapFrame ~= nil, "the minimap icon should be created eagerly")
+  assert(minimapFrame:IsShown() == false, "minimap icon should start hidden in default widget mode")
+  assert(trackers.iconFrame.shown == true, "widget icon should start visible in default widget mode")
+
+  windowOptions.onSettingChanged("iconMode", "minimap")
+  assert(trackers.iconFrame.shown == false, "widget icon should hide in minimap mode")
+  assert(minimapFrame:IsShown() == true, "minimap icon should show in minimap mode")
+
+  windowOptions.onSettingChanged("iconMode", "both")
+  assert(trackers.iconFrame.shown == true, "widget icon should show in both mode")
+  assert(minimapFrame:IsShown() == true, "minimap icon should stay shown in both mode")
 end

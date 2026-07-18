@@ -13,8 +13,6 @@ local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGa
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
-local MinimapIcon = ns.MinimapIcon or require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
-local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
 local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.MessengerWindow")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
@@ -30,6 +28,7 @@ local StartConversation = ns.BootstrapWindowRuntimeStartConversation or require(
 local GroupSendPolicy = ns.BootstrapWindowRuntimeGroupSendPolicy or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
 local WindowCallbacks = ns.BootstrapWindowRuntimeWindowCallbacks or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
 local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
+local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.MinimapIconRuntime")
 local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 
@@ -70,11 +69,29 @@ function WindowRuntime.Create(options)
   local window
   local icon
   local minimapIcon
-  local ldbObject
+  local minimapRuntime
   local diagnostics = options.diagnostics or {}
 
   local function buildContacts()
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
+  end
+
+  -- Show the icon surfaces matching the iconMode setting ("widget",
+  -- "minimap", or "both"). Called at startup and whenever the setting
+  -- changes (via SettingsHandler).
+  local function applyIconMode()
+    local settings = accountState.settings or {}
+    local mode = settings.iconMode or "widget"
+    if icon and icon.frame then
+      if mode == "minimap" then
+        icon.frame:Hide()
+      else
+        icon.frame:Show()
+      end
+    end
+    if minimapIcon and minimapIcon.setShown then
+      minimapIcon.setShown(mode ~= "widget")
+    end
   end
 
   local function isMythicRestricted()
@@ -108,7 +125,7 @@ function WindowRuntime.Create(options)
       return minimapIcon
     end,
     getLdbObject = function()
-      return ldbObject
+      return minimapRuntime and minimapRuntime.getLdbObject() or nil
     end,
     trace = trace,
     isMythicRestricted = isMythicRestricted,
@@ -176,7 +193,7 @@ function WindowRuntime.Create(options)
       accountState.settings = accountState.settings or {}
       return accountState.settings
     end)()
-    local rawOnSettingChanged = SettingsHandler.Create({
+    local onSettingChanged = SettingsHandler.Create({
       runtime = runtime,
       accountSettings = settingsState,
       theme = theme,
@@ -190,17 +207,8 @@ function WindowRuntime.Create(options)
         return minimapIcon
       end,
       buildContacts = buildContacts,
-      tableUtils = tableUtils,
+      applyIconMode = applyIconMode,
     })
-    local function onSettingChanged(key, value)
-      rawOnSettingChanged(key, value)
-      if key == "iconMode" then
-        local fn = runtime._applyIconMode
-        if fn then
-          fn()
-        end
-      end
-    end
 
     local windowCallbacks = WindowCallbacks.Create({
       runtime = runtime,
@@ -282,78 +290,18 @@ function WindowRuntime.Create(options)
     onToggle = toggle,
   })
 
-  -- Minimap icon
-
-  minimapIcon = MinimapIcon.Create(uiFactory, {
-    state = characterState.minimapIcon,
+  minimapRuntime = MinimapIconRuntime.Create({
+    accountState = accountState,
+    characterState = characterState,
+    uiFactory = uiFactory,
+    tableUtils = tableUtils,
+    badgeFilter = BadgeFilter,
+    buildContacts = buildContacts,
+    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+    refreshWindow = refreshWindow,
     onToggle = toggle,
-    onPositionChanged = function(nextState)
-      characterState.minimapIcon = tableUtils.copyState(nextState)
-    end,
-    getShowUnreadBadge = function()
-      local s = accountState.settings or {}
-      return s.showUnreadBadge ~= false
-    end,
-    getBadgePulse = function()
-      local s = accountState.settings or {}
-      return s.badgePulse ~= false
-    end,
-    getIconDesaturated = function()
-      local s = accountState.settings or {}
-      return s.iconDesaturated ~= false
-    end,
-    getPreviewPosition = function()
-      local settings = accountState.settings or {}
-      local value = settings.widgetPreviewPosition
-      return (type(value) == "string" and value ~= "") and value or "right"
-    end,
-    getPreviewAutoDismissSeconds = function()
-      local settings = accountState.settings or {}
-      local value = settings.widgetPreviewAutoDismissSeconds
-      return value == nil and 30 or (tonumber(value) or 0)
-    end,
-    onDismissPreview = function()
-      acknowledgeLatestWidgetPreview(buildContacts())
-      refreshWindow()
-    end,
-    unreadCount = BadgeFilter.SumWhisperUnread(buildContacts()),
   })
-
-  -- LibDataBroker launcher
-  ldbObject = DataBroker.Register({
-    onToggle = toggle,
-    getUnreadCount = function()
-      return BadgeFilter.SumWhisperUnread(buildContacts())
-    end,
-    onRegistered = function(obj)
-      ldbObject = obj
-      local unread = BadgeFilter.SumWhisperUnread(buildContacts())
-      obj.text = DataBroker.FormatText(unread)
-    end,
-  })
-
-  -- Icon mode visibility
-
-  local function applyIconMode()
-    local settings = accountState.settings or {}
-    local mode = settings.iconMode or "widget"
-    if icon and icon.frame then
-      if mode == "minimap" then
-        icon.frame:Hide()
-      else
-        icon.frame:Show()
-      end
-    end
-    if minimapIcon and minimapIcon.frame then
-      if mode == "widget" then
-        minimapIcon.frame:Hide()
-      else
-        minimapIcon.frame:Show()
-      end
-    end
-  end
-
-  runtime._applyIconMode = applyIconMode
+  minimapIcon = minimapRuntime.minimapIcon
 
   applyIconMode()
 

@@ -20,10 +20,14 @@ function DataBroker.FormatText(unread)
   return "Whisper Messenger"
 end
 
+--- Register the launcher data object with LibDataBroker.
+-- Reports the object exclusively through options.onRegistered — the callback
+-- fires on both the immediate path and the deferred PLAYER_LOGIN retry, so
+-- callers only wire one path. The refresh loop keeps `obj.text` and
+-- `obj.unread` up to date; the tooltip reads the cached `unread` attribute
+-- instead of rebuilding the contacts list on every hover.
 function DataBroker.Register(options)
   options = options or {}
-
-  local dataobj = nil
 
   local function tryRegister()
     if type(_G.LibStub) ~= "table" then
@@ -36,7 +40,7 @@ function DataBroker.Register(options)
 
     -- text is a plain string — Bazooka requires it. Dynamic updates
     -- happen by assigning ldb.text directly from refreshContacts.
-    dataobj = ldb:NewDataObject("WhisperMessenger", {
+    local dataobj = ldb:NewDataObject("WhisperMessenger", {
       type = "launcher",
       icon = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
       label = "Whisper Messenger",
@@ -46,28 +50,34 @@ function DataBroker.Register(options)
           options.onToggle()
         end
       end,
-      OnTooltipShow = function(tt)
-        if not tt or not tt.AddLine then
-          return
-        end
-        tt:AddLine("Whisper Messenger")
-        if options.getUnreadCount then
-          local count = options.getUnreadCount()
-          if count and count > 0 then
-            tt:AddLine(tostring(count) .. " unread")
-          end
-        end
-      end,
+      OnTooltipShow = nil, -- assigned below so it can read the data object
     })
 
-    if dataobj and options.onRegistered then
+    if dataobj == nil then
+      return false
+    end
+
+    dataobj.OnTooltipShow = function(tt)
+      if not tt or not tt.AddLine then
+        return
+      end
+      tt:AddLine("Whisper Messenger")
+      local count = tonumber(dataobj.unread) or 0
+      if count > 0 then
+        tt:AddLine(DataBroker.FormatText(count))
+      end
+    end
+
+    if options.onRegistered then
       options.onRegistered(dataobj)
     end
 
     trace("LDB data object registered: WhisperMessenger")
-    return dataobj ~= nil
+    return true
   end
+
   if not tryRegister() and type(_G.CreateFrame) == "function" then
+    trace("LDB not available; deferring registration to PLAYER_LOGIN")
     local loginFrame = _G.CreateFrame("Frame")
     loginFrame:RegisterEvent("PLAYER_LOGIN")
     loginFrame:SetScript("OnEvent", function()
@@ -75,8 +85,6 @@ function DataBroker.Register(options)
       loginFrame:UnregisterEvent("PLAYER_LOGIN")
     end)
   end
-
-  return dataobj
 end
 
 ns.MinimapIconDataBroker = DataBroker

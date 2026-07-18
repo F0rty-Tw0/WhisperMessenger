@@ -5,6 +5,7 @@ end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 
 local SettingsHandler = {}
 
@@ -26,7 +27,7 @@ function SettingsHandler.Create(options)
   local buildContacts = options.buildContacts or function()
     return {}
   end
-  local tableUtils = options.tableUtils or {}
+  local badgeFilter = options.badgeFilter or BadgeFilter
   local getNumChatWindows = options.getNumChatWindows or function()
     return _G.NUM_CHAT_WINDOWS or 10
   end
@@ -177,13 +178,25 @@ function SettingsHandler.Create(options)
 
     local icon = getIcon()
     local minimap = options.getMinimapIcon and options.getMinimapIcon()
-    if (key == "showUnreadBadge" or key == "badgePulse") and icon and icon.setUnreadCount then
-      local freshContacts = buildContacts()
-      local unread = tableUtils.sumBy(freshContacts, "unreadCount")
-      icon.setUnreadCount(unread)
-      if minimap and minimap.setUnreadCount then
-        minimap.setUnreadCount(unread)
+    if key == "showUnreadBadge" or key == "badgePulse" then
+      -- Same whisper-only sum as every other badge path — group-channel
+      -- unread must not inflate the icon badges. Each icon resyncs
+      -- independently so a missing widget icon can't starve the minimap.
+      local iconWantsBadge = icon and icon.setUnreadCount
+      local minimapWantsBadge = minimap and minimap.setUnreadCount
+      if (iconWantsBadge or minimapWantsBadge) and badgeFilter then
+        local unread = badgeFilter.SumWhisperUnread(buildContacts())
+        if iconWantsBadge then
+          icon.setUnreadCount(unread)
+        end
+        if minimapWantsBadge then
+          minimap.setUnreadCount(unread)
+        end
       end
+    end
+
+    if key == "iconMode" and options.applyIconMode then
+      options.applyIconMode()
     end
 
     if key == "iconSize" and icon and icon.applyIconSize then
