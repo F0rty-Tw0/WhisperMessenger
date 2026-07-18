@@ -1,9 +1,33 @@
 # Changelog
 
+Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
+
 ## [1.2.14] - 2026-07-17
 
-- WhisperMessenger now has its own icon around the minimap ring. You can drag it to any angle, and the icon snaps to the minimap's edge even on non-round minimap shapes. Switch between the free-floating widget icon and the minimap icon in the General settings tab.
-- Added support for LibDataBroker displays like Bazooka and ChocolateBar - see the unread count and addon name right on your broker bar, and click to open the messenger.
+- WhisperMessenger now has its own icon around the minimap ring. You can drag it to any angle, and the icon snaps to the minimap's edge even on non-round minimap shapes. Switch between the free-floating widget icon and the minimap icon in the Notifications settings tab.
+- Added support for display bars like Bazooka and ChocolateBar - see the unread count and addon name right on your bar, and click to open the messenger.
+- Fixed: with "Desaturate icon when idle" on, the minimap icon now lights back up when unread whispers arrive instead of staying grey.
+- Fixed: message preview popups no longer float next to the minimap while the minimap icon is turned off, and no longer pop up while you're already reading that conversation.
+- Fixed: the unread badge pulse animation now works on the minimap icon too.
+- Fixed: flipping badge settings no longer briefly shows an inflated unread count that included group chats.
+- Fixed: messages in Battle.net group conversations now land in the right conversation instead of all piling into the first one.
+- Fixed: a Battle.net friend logging out of WoW no longer blanks out their character name in your contact list.
+- Fixed: the whisper notification sound no longer plays for messages that couldn't be delivered to the messenger.
+- Fixed: starting a Mythic+ key no longer forgets that the messenger window was open, so it reopens correctly when the key ends, and whispers resume more reliably after restricted content ends.
+- Fixed: pinned conversations can no longer be silently deleted when the conversation limit is reached.
+- Fixed: Battle.net whispers received right after logging in, before your friend list loads, now end up in the same conversation as the rest of that friend's messages instead of a separate orphaned thread.
+- Fixed: older saved conversations merged from multiple characters now show their messages in the right order.
+- Fixed: brand-new conversations are no longer at risk of being cleaned up by history pruning before their first message arrives.
+- Fixed: the icon mode switch and its choices are now translated in all supported languages.
+- Fixed: date separators now show the proper full month name for May in Spanish, Italian, Russian and other languages.
+- Fixed: the "Yesterday" label now follows your local midnight instead of flipping at odd hours depending on your timezone, and 12-hour timestamps no longer show a leading zero (2:30 PM instead of 02:30 PM).
+- Fixed: the Raid conversation no longer claims you can send to it while you're only in a battleground or dungeon-finder group.
+- Smoother gameplay in raids and with large friend lists — the addon now does far less background work when other addons chatter or your Battle.net friends change status.
+- Fixed: switching themes now also recolors the date separator lines in open conversations.
+- Fixed: unpinning a contact no longer leaves its row occasionally swallowing clicks.
+- Fixed: "Reset to Defaults" in Behavior settings no longer switches on the game-wide mature language filter.
+- Fixed: resizing the contacts pane now lands exactly where you release the divider, and resetting appearance settings restores the inactive window opacity consistently.
+- Fixed: contacts with unrecognized class data now show the Battle.net icon instead of an empty circle.
 
 ## [1.2.13] - 2026-06-18
 

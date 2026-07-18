@@ -58,21 +58,59 @@ read_globals = {
 
   -- Core frame/widget API
   "CreateFrame",
+  "CreateFont",
   "UIParent",
+  "Minimap",
+  "GameTooltip",
+  "GetMinimapShape",
+  "GetCursorPosition",
+  "GetMouseFocus",
+  "IsMouseButtonDown",
+  "IsMouselooking",
+  "UISpecialFrames",
+
+  -- Library loader (optional dependency for LibDataBroker displays)
+  "LibStub",
+
+  -- Dropdown / popup / menu API
+  "EasyMenu",
+  "ToggleDropDownMenu",
+  "UIDropDownMenu_AddButton",
+  "UIDropDownMenu_CreateInfo",
+  "UIDropDownMenu_Initialize",
+  "UnitPopup_OpenMenu",
+  "StaticPopupDialogs",
+  "StaticPopup_Show",
+  "StaticPopup1EditBox",
+  "FriendsFrame_ShowBNDropdown",
+  "FriendsFrame_ShowDropdown",
+
+  -- Key bindings
+  "GetBindingKey",
+  "SetOverrideBindingClick",
+  "ClearOverrideBindings",
 
   -- Namespaced C_ APIs (used by WhisperMessenger)
   "C_ChatInfo",
   "C_BattleNet",
   "C_Timer",
   "C_FriendList",
+  "C_Club",
+  "C_Clipboard",
+  "C_DateAndTime",
+  "C_RestrictedActions",
 
   -- Unit and player info
   "UnitName",
   "UnitFullName",
   "UnitGUID",
+  "UnitClass",
+  "UnitFactionGroup",
+  "UnitIsConnected",
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",
   "GetRealmName",
+  "GetUnitSpeed",
   "Ambiguate",
   "IsLoggedIn",
 
@@ -94,8 +132,16 @@ read_globals = {
   "ChatFrame_ReplyTell",
   "ChatFrame_SendBNetTell",
   "ChatFrame_SendTell",
+  "ChatEdit_GetActiveWindow",
+  "ChatEdit_InsertLink",
+  "SetItemRef",
+  "SendChatMessage",
   "BNSendWhisper",
   "BNSendConversationMessage",
+  "BNSendGameData",
+  "BNGetNumConversationMembers",
+  "BNGetConversationMemberInfo",
+  "NUM_CHAT_WINDOWS",
 
   -- CVar API
   "GetCVar",
@@ -105,11 +151,19 @@ read_globals = {
   "GetTime",
   "GetServerTime",
   "GetAddOnMetadata",
+  "GetInstanceInfo",
+  "GetLocale",
+  "GetChannelName",
+  "GetGuildInfo",
+  "GetNumGroupMembers",
   "InCombatLockdown",
   "IsInGroup",
   "IsInRaid",
+  "IsInGuild",
   "PlaySound",
   "print",
+  "UpdateAddOnMemoryUsage",
+  "GetAddOnMemoryUsage",
 
   -- UI constants
   "RAID_CLASS_COLORS",
