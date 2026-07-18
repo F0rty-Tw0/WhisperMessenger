@@ -82,16 +82,22 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
   local payload = LivePayload.Build(runtime, eventName, ...)
   if Trace and TRACE_EVENTS[eventName] then
-    Trace(
-      "EventBridge: "
-        .. eventName
-        .. " from="
-        .. tostring(payload.playerName)
-        .. " guid="
-        .. tostring(payload.guid)
-        .. " lineID="
-        .. tostring(payload.lineID)
-    )
+    -- pcall: 12.0 secret-string payload values throw on concatenation. The
+    -- router drops such payloads cleanly; the trace line must not error
+    -- first. (Not unit-testable: real secret strings cannot be simulated
+    -- from plain Lua — see SecretString.lua.)
+    pcall(function()
+      Trace(
+        "EventBridge: "
+          .. eventName
+          .. " from="
+          .. tostring(payload.playerName)
+          .. " guid="
+          .. tostring(payload.guid)
+          .. " lineID="
+          .. tostring(payload.lineID)
+      )
+    end)
   end
   local result, resultMeta = EventRouter.HandleEvent(runtime, eventName, payload)
   if Trace and TRACE_EVENTS[eventName] then

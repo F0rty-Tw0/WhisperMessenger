@@ -163,7 +163,13 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
   }
 
   if Trace and traceEvents and traceEvents[eventName] then
-    Trace("EventBridge: " .. eventName .. " from=" .. tostring(playerName) .. " guid=" .. tostring(guid) .. " lineID=" .. tostring(lineID))
+    -- pcall: 12.0 secret-string payload values throw on concatenation. The
+    -- ingest guard below drops such payloads cleanly; the trace line must
+    -- not error first. (Not unit-testable: real secret strings cannot be
+    -- simulated from plain Lua — see SecretString.lua.)
+    pcall(function()
+      Trace("EventBridge: " .. eventName .. " from=" .. tostring(playerName) .. " guid=" .. tostring(guid) .. " lineID=" .. tostring(lineID))
+    end)
   end
 
   local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)
