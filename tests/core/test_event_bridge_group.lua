@@ -91,38 +91,35 @@ return function()
   do
     local runtime = makeRuntime()
 
-    -- Stub BN conversation lookup globals
+    -- Stub BN conversation lookup globals: two conversations (55 and 56);
+    -- the sender (presenceID 99001) is a member of conversation 56 only.
     local savedGetNum = _G.BNGetNumConversations
     local savedGetInfo = _G.BNGetConversationInfo
+    local savedGetNumMembers = _G.BNGetNumConversationMembers
+    local savedGetMemberInfo = _G.BNGetConversationMemberInfo
     _G.BNGetNumConversations = function()
       return 2
     end
-    -- BNGetConversationInfo(index) returns: conversationID, subject, numMembers, ...
-    -- We only need conversationID and enough info to check membership.
-    -- For simplicity: conversation 1 has bnSenderID 99001 as its participant.
-    -- The spec says to find a conversation whose membership includes bnSenderID.
-    -- EventBridge's resolveBNConversationID iterates conversations.
-    -- We return conversationID=55 for index 1, and conversationID=56 for index 2.
-    -- We also need BNGetConversationInfo to expose membership; actual Blizzard API:
-    --   BNGetConversationInfo(conversationID) → not by index in all versions.
-    -- EventBridge iterates 1..BNGetNumConversations() and calls BNGetConversationInfo(i).
-    -- Return value: conversationID (first return).
     _G.BNGetConversationInfo = function(idx)
       if idx == 1 then
-        -- conversationID=55, subject, numMembers, leader, bnSenderID of first member
         return 55, "subject", 1
       elseif idx == 2 then
         return 56, "subject2", 1
       end
       return nil
     end
+    _G.BNGetNumConversationMembers = function(_conversationID)
+      return 1
+    end
+    _G.BNGetConversationMemberInfo = function(conversationID, _memberIndex)
+      -- accountName, toonName, toonID, presenceID
+      if conversationID == 56 then
+        return "Battle#1234", "Char", 1, 99001
+      end
+      return "Other#5678", "Other", 2, 88002
+    end
 
-    -- For BN_CONVERSATION, bnSenderID is arg 13 in the 17-arg signature.
-    -- conversationID will be resolved from index iteration.
-    -- Since our stub doesn't provide membership lookup by bnSenderID,
-    -- the resolution may return nil → HandleEvent returns false.
-    -- The important thing is: RouteGroupEvent does NOT crash, and returns a bool.
-    local ok, result = pcall(function()
+    local function routeBNMessage()
       return EventBridge.RouteGroupEvent(
         runtime,
         "CHAT_MSG_BN_CONVERSATION",
@@ -140,13 +137,85 @@ return function()
         nil, -- guid
         99001 -- bnSenderID
       )
-    end)
+    end
+
+    local ok, result = pcall(routeBNMessage)
     assert(ok, "RouteGroupEvent for BN_CONVERSATION should not throw: " .. tostring(result))
-    assert(type(result) == "boolean", "RouteGroupEvent should return a boolean for BN_CONVERSATION, got: " .. type(result))
+    assert(result == true, "RouteGroupEvent should route the BN conversation message, got: " .. tostring(result))
+
+    -- The message must land in the SENDER'S conversation (56), not the
+    -- first conversation in the list (55).
+    local foundKey
+    for key in pairs(runtime.store.conversations) do
+      foundKey = key
+    end
+    assert(foundKey ~= nil, "a BN conversation thread should exist")
+    assert(string.find(foundKey, "56", 1, true) ~= nil, "message must be keyed to the sender's conversation 56; got key: " .. tostring(foundKey))
+    assert(string.find(foundKey, "55", 1, true) == nil, "message must not be keyed to the first conversation 55; got key: " .. tostring(foundKey))
+
+    -- Sender provably in NO conversation: filing into an arbitrary thread
+    -- would corrupt histories, so the message is dropped.
+    local absentRuntime = makeRuntime()
+    local absentResult = EventBridge.RouteGroupEvent(
+      absentRuntime,
+      "CHAT_MSG_BN_CONVERSATION",
+      "who am i",
+      "Stranger#9999",
+      "",
+      "",
+      "",
+      "",
+      0,
+      0,
+      "",
+      0,
+      703,
+      nil,
+      77123 -- presenceID not a member of conversation 55 or 56
+    )
+    assert(absentResult == false, "message from a sender in no known conversation is dropped; got: " .. tostring(absentResult))
+    assert(next(absentRuntime.store.conversations) == nil, "no thread is created for an unmatched sender")
+
+    -- Membership API missing entirely: fall back to the first conversation
+    -- so the message is still captured rather than dropped.
+    local fallbackRuntime = makeRuntime()
+    _G.BNGetNumConversationMembers = nil
+    _G.BNGetConversationMemberInfo = nil
+    local fallbackOk, fallbackResult = pcall(function()
+      return EventBridge.RouteGroupEvent(
+        fallbackRuntime,
+        "CHAT_MSG_BN_CONVERSATION",
+        "hey again",
+        "Battle#1234",
+        "",
+        "",
+        "",
+        "",
+        0,
+        0,
+        "",
+        0,
+        702,
+        nil,
+        99001
+      )
+    end)
+    assert(fallbackOk, "fallback routing should not throw: " .. tostring(fallbackResult))
+    assert(fallbackResult == true, "fallback routing should still capture the message")
+    local fallbackKey
+    for key in pairs(fallbackRuntime.store.conversations) do
+      fallbackKey = key
+    end
+    assert(
+      fallbackKey and string.find(fallbackKey, "55", 1, true) ~= nil,
+      "without membership APIs the first conversation is used; got key: " .. tostring(fallbackKey)
+    )
 
     -- Restore globals
     _G.BNGetNumConversations = savedGetNum
     _G.BNGetConversationInfo = savedGetInfo
+    _G.BNGetNumConversationMembers = savedGetNumMembers
+    _G.BNGetConversationMemberInfo = savedGetMemberInfo
   end
 
   -- ----------------------------------------------------------------

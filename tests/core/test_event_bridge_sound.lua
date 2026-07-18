@@ -65,6 +65,28 @@ return function()
     assert(soundPlayed == nil, "test_incoming_whisper_no_sound_when_disabled: expected no sound, got " .. tostring(soundPlayed))
   end
 
+  -- test_unrouted_whisper_does_not_play_sound
+  -- A BN whisper without a bnetAccountID cannot be stored anywhere; playing
+  -- the notification would be a phantom alert with no visible message.
+  do
+    local getSoundPlayed = stubSoundGlobals()
+
+    local runtime = {
+      store = { conversations = {}, config = {} },
+      localProfileId = "me",
+      now = function()
+        return 100
+      end,
+      availabilityByGUID = {},
+      accountState = { settings = { playSoundOnWhisper = true } },
+    }
+
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_BN_WHISPER", "hello", "Battle#1234", "", "", "", "", "", "", "", "", 1, nil)
+
+    local soundPlayed = getSoundPlayed()
+    assert(soundPlayed == nil, "test_unrouted_whisper_does_not_play_sound: expected no sound, got " .. tostring(soundPlayed))
+  end
+
   -- test_outgoing_whisper_does_not_play_sound
 
   do
