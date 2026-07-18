@@ -42,4 +42,9 @@ return function()
   })
   assert(bubble3.icon ~= nil, "expected icon on incoming user bubble without class")
   assert(bubble3.icon.texturePath == Theme.TEXTURES.bnet_icon, "expected bnet fallback icon when no classTag")
+
+  -- Unknown class tags return nil so callers fall back to the bnet icon
+  -- instead of pointing SetTexture at a nonexistent path.
+  assert(Theme.ClassIcon("NOTACLASS") == nil, "unknown class tag should resolve to nil")
+  assert(Theme.ClassIcon("EVOKER") ~= nil, "every real class token should resolve to an icon path")
 end
