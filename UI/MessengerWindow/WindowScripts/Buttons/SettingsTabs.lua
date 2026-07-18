@@ -177,10 +177,14 @@ function SettingsTabs.Wire(options)
         applyTabVisual(tab._wmIsHoveredTab)
         tab:SetScript("OnEnter", function()
           tab._wmIsHoveredTab = true
+          -- Keep the shared hover flag in sync: theme repaints key off
+          -- _wmHovered, and these handlers replace the ones that set it.
+          tab._wmHovered = true
           applyTabVisual(true)
         end)
         tab:SetScript("OnLeave", function()
           tab._wmIsHoveredTab = false
+          tab._wmHovered = false
           applyTabVisual(false)
         end)
       end

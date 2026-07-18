@@ -79,8 +79,10 @@ function ContactsResize.New(options)
       return
     end
 
-    resizing = false
+    -- Commit the exact release position BEFORE clearing the flag —
+    -- updateFromCursor early-returns once resizing is false.
     updateFromCursor()
+    resizing = false
     setHighlight(false)
 
     local nextState = options.buildState(options.frame)
