@@ -70,6 +70,9 @@ local Constants = {
     ENCOUNTER_START = true,
     ENCOUNTER_END = true,
     ZONE_CHANGED_NEW_AREA = true,
+    -- The authoritative 12.0 restriction signal: the Inactive transition is
+    -- what triggers resume, so it must keep flowing while suspended.
+    ADDON_RESTRICTION_STATE_CHANGED = true,
   },
 }
 

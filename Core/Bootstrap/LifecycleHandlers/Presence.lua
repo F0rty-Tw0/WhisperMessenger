@@ -47,8 +47,9 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
           if gameInfo.raceName and gameInfo.raceName ~= "" then
             conversation.raceName = gameInfo.raceName
           end
-          if gameInfo.characterName then
-            conversation.gameAccountName = gameInfo.characterName .. (gameInfo.realmName and ("-" .. gameInfo.realmName) or "")
+          if gameInfo.characterName and gameInfo.characterName ~= "" then
+            local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
+            conversation.gameAccountName = gameInfo.characterName .. realmSuffix
           end
         end
       end

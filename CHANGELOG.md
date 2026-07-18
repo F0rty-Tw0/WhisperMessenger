@@ -10,6 +10,10 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: message preview popups no longer float next to the minimap while the minimap icon is turned off, and no longer pop up while you're already reading that conversation.
 - Fixed: the unread badge pulse animation now works on the minimap icon too.
 - Fixed: flipping badge settings no longer briefly shows an inflated unread count that included group chats.
+- Fixed: messages in Battle.net group conversations now land in the right conversation instead of all piling into the first one.
+- Fixed: a Battle.net friend logging out of WoW no longer blanks out their character name in your contact list.
+- Fixed: the whisper notification sound no longer plays for messages that couldn't be delivered to the messenger.
+- Fixed: starting a Mythic+ key no longer forgets that the messenger window was open, so it reopens correctly when the key ends, and whispers resume more reliably after restricted content ends.
 
 ## [1.2.13] - 2026-06-18
 

@@ -105,6 +105,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
   if
     INCOMING_WHISPER_EVENTS[eventName]
+    and result -- only alert for messages that were actually stored
     and runtime.accountState
     and runtime.accountState.settings
     and runtime.accountState.settings.playSoundOnWhisper == true

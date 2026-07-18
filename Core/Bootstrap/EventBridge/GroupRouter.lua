@@ -20,8 +20,36 @@ end
 -- so neither module duplicates the constant nor couples to the other.
 -- The caller (EventBridge facade) passes its local TRACE_EVENTS table.
 
+-- True when the conversation's member list contains bnSenderID, false when
+-- it provably does not, nil when the membership APIs are unavailable or
+-- throw. The sender's presenceID can sit at different return positions
+-- across client flavors, so every return value is compared.
+local function conversationIncludesSender(conversationID, bnSenderID)
+  local ok, matched = pcall(function()
+    if type(_G.BNGetNumConversationMembers) ~= "function" or type(_G.BNGetConversationMemberInfo) ~= "function" then
+      return nil
+    end
+    local numMembers = _G.BNGetNumConversationMembers(conversationID) or 0
+    for memberIndex = 1, numMembers do
+      local returns = { _G.BNGetConversationMemberInfo(conversationID, memberIndex) }
+      for _, value in ipairs(returns) do
+        if value == bnSenderID then
+          return true
+        end
+      end
+    end
+    return false
+  end)
+  if not ok then
+    return nil
+  end
+  return matched
+end
+
 -- Attempt to resolve a BN conversation ID by iterating known conversations
--- and matching on bnSenderID. Returns nil when not resolvable.
+-- and matching on bnSenderID. Falls back to the first conversation when the
+-- membership APIs can't answer (so the message is captured rather than
+-- dropped); returns nil when no conversations are resolvable at all.
 -- pcall-guarded: BNGetNumConversations may be absent on Classic flavors.
 local function resolveBNConversationID(bnSenderID)
   if bnSenderID == nil then
@@ -33,16 +61,22 @@ local function resolveBNConversationID(bnSenderID)
   if not ok or type(numConversations) ~= "number" or numConversations < 1 then
     return nil
   end
+  local firstConversationID = nil
   for i = 1, numConversations do
     local convOk, conversationID = pcall(function()
       local id = _G.BNGetConversationInfo and _G.BNGetConversationInfo(i)
       return id
     end)
     if convOk and conversationID ~= nil then
-      return conversationID
+      if firstConversationID == nil then
+        firstConversationID = conversationID
+      end
+      if conversationIncludesSender(conversationID, bnSenderID) == true then
+        return conversationID
+      end
     end
   end
-  return nil
+  return firstConversationID
 end
 
 -- Resolve (clubId, streamId, clubType) for the most recent community chat
