@@ -23,13 +23,72 @@ function Presence.handlePlayerLogout(Bootstrap, deps)
   return true
 end
 
-function Presence.handleBNetFriendEvent(Bootstrap, deps)
+local function sortBySentAt(a, b)
+  return (a.sentAt or 0) < (b.sentAt or 0)
+end
+
+-- BN whispers that arrived before the friend list resolved are keyed by the
+-- session-scoped numeric account ID (no battleTag was available). Once the
+-- friend list is readable, fold those orphans into the stable battleTag
+-- conversation so history isn't split — and isn't stranded next session
+-- when the numeric ID changes.
+local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity)
+  local tagById = {}
+  for battleTag, friend in pairs(friendMap) do
+    if friend.bnetAccountID ~= nil then
+      tagById[friend.bnetAccountID] = battleTag
+    end
+  end
+
+  local moves = {}
+  for key, conversation in pairs(conversations) do
+    if conversation.channel == "BN" and conversation.battleTag == nil then
+      local battleTag = conversation.bnetAccountID and tagById[conversation.bnetAccountID]
+      if battleTag then
+        local contact = Identity.FromBattleNet(conversation.bnetAccountID, { battleTag = battleTag })
+        local newKey = Identity.BuildConversationKey(nil, contact.contactKey)
+        if newKey ~= key then
+          moves[key] = { newKey = newKey, battleTag = battleTag }
+        end
+      end
+    end
+  end
+
+  for oldKey, move in pairs(moves) do
+    local conversation = conversations[oldKey]
+    conversation.battleTag = move.battleTag
+    if conversation.displayName == nil or conversation.displayName == tostring(conversation.bnetAccountID) then
+      conversation.displayName = move.battleTag
+    end
+    local existing = conversations[move.newKey]
+    if existing then
+      existing.messages = existing.messages or {}
+      for _, msg in ipairs(conversation.messages or {}) do
+        table.insert(existing.messages, msg)
+      end
+      table.sort(existing.messages, sortBySentAt)
+      existing.unreadCount = (existing.unreadCount or 0) + (conversation.unreadCount or 0)
+      if (conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
+        existing.lastActivityAt = conversation.lastActivityAt
+        existing.lastPreview = conversation.lastPreview
+      end
+    else
+      conversations[move.newKey] = conversation
+    end
+    conversations[oldKey] = nil
+  end
+end
+
+local function refreshBNetConversations(Bootstrap, deps)
   if Bootstrap.runtime == nil then
-    return true
+    return
   end
 
   local BNetResolver = deps.loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
   local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
+
+  local Identity = deps.loadModule("WhisperMessenger.Model.Identity", "Identity")
+  rekeyOrphanedBNetConversations(Bootstrap.runtime.store.conversations, friendMap, Identity)
 
   for _, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
@@ -47,8 +106,9 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
           if gameInfo.raceName and gameInfo.raceName ~= "" then
             conversation.raceName = gameInfo.raceName
           end
-          if gameInfo.characterName then
-            conversation.gameAccountName = gameInfo.characterName .. (gameInfo.realmName and ("-" .. gameInfo.realmName) or "")
+          if gameInfo.characterName and gameInfo.characterName ~= "" then
+            local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
+            conversation.gameAccountName = gameInfo.characterName .. realmSuffix
           end
         end
       end
@@ -56,6 +116,31 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
   end
 
   Common.refreshRuntimeWindow(Bootstrap)
+end
+
+function Presence.handleBNetFriendEvent(Bootstrap, deps)
+  if Bootstrap.runtime == nil then
+    return true
+  end
+
+  -- BN_FRIEND_INFO_CHANGED fires in bursts (one per presence change, often
+  -- several per second with a large friend list), and each scan walks every
+  -- friend and every conversation. Debounce into one deferred scan, same as
+  -- handlePresenceInvalidation; run synchronously when timers are
+  -- unavailable so nothing is dropped.
+  if Bootstrap._bnetFriendRefreshPending then
+    return true
+  end
+  Bootstrap._bnetFriendRefreshPending = true
+  local scheduled = Common ~= nil
+    and Common.scheduleAfter(2, function()
+      Bootstrap._bnetFriendRefreshPending = false
+      refreshBNetConversations(Bootstrap, deps)
+    end)
+  if not scheduled then
+    Bootstrap._bnetFriendRefreshPending = false
+    refreshBNetConversations(Bootstrap, deps)
+  end
   return true
 end
 

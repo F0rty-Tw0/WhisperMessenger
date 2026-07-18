@@ -41,6 +41,20 @@ function AddonEventFrame.Install(deps)
   local EventBridge = ns.BootstrapEventBridge
   local LifecycleHandlers = ns.BootstrapLifecycleHandlers
 
+  -- Built once: the OnEvent dispatcher runs for every live chat/addon-comm
+  -- event, so allocating this table and its closures per event would be
+  -- steady GC churn in raids.
+  local lifecycleDeps = {
+    loadModule = loadModule,
+    trace = trace,
+    getContentDetector = function()
+      return ns.ContentDetector
+    end,
+    getPresenceCache = function()
+      return ns.PresenceCache
+    end,
+  }
+
   loadFrame:RegisterEvent("ADDON_LOADED")
   loadFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
@@ -99,19 +113,7 @@ function AddonEventFrame.Install(deps)
       "WhisperMessenger.Core.Bootstrap.LifecycleHandlers",
       "BootstrapLifecycleHandlers"
     )
-    if
-      LifecycleHandlers
-      and LifecycleHandlers.Handle(Bootstrap, event, {
-        loadModule = loadModule,
-        trace = trace,
-        getContentDetector = function()
-          return ns.ContentDetector
-        end,
-        getPresenceCache = function()
-          return ns.PresenceCache
-        end,
-      }, ...)
-    then
+    if LifecycleHandlers and LifecycleHandlers.Handle(Bootstrap, event, lifecycleDeps, ...) then
       return
     end
 

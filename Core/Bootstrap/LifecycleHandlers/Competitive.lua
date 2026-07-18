@@ -12,23 +12,30 @@ local Competitive = {}
 
 function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
   if event == "CHALLENGE_MODE_START" then
-    Bootstrap._inMythicContent = true
-    if Bootstrap.runtime and Bootstrap.runtime.suspend then
-      Bootstrap.runtime.suspend()
+    -- Guard against double-suspend (ADDON_RESTRICTION_STATE_CHANGED may have
+    -- suspended already): a second suspend() would clobber the saved
+    -- window-visibility state with the already-hidden window.
+    if not Bootstrap._inMythicContent then
+      Bootstrap._inMythicContent = true
+      if Bootstrap.runtime and Bootstrap.runtime.suspend then
+        Bootstrap.runtime.suspend()
+      end
+      deps.trace("mythic lockdown: M+ started")
     end
-    deps.trace("mythic lockdown: M+ started")
     Common.notifyCompetitiveState(Bootstrap)
     return true
   end
 
   if event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET" then
-    Bootstrap._inMythicContent = false
-    Bootstrap._inEncounter = false
-    Bootstrap._inCompetitiveContent = false
-    if Bootstrap.runtime and Bootstrap.runtime.resume then
-      Bootstrap.runtime.resume()
+    if Bootstrap._inMythicContent then
+      Bootstrap._inMythicContent = false
+      Bootstrap._inEncounter = false
+      Bootstrap._inCompetitiveContent = false
+      if Bootstrap.runtime and Bootstrap.runtime.resume then
+        Bootstrap.runtime.resume()
+      end
+      deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
     end
-    deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
     Common.notifyCompetitiveState(Bootstrap)
     return true
   end
