@@ -28,8 +28,8 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
   Helpers.applyDefaults(character.minimapIcon, defaults.minimapIcon)
 
   LegacyMigration.MigrateCurrentProfile(account, character, localProfileId)
-  PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", false, character)
-  PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", true, character)
+  PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", character)
+  PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", character)
 
   return account, character
 end

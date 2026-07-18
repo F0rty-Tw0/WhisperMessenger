@@ -17,7 +17,21 @@ local function updateActiveConversationKey(characterState, conversations, matchP
   end
 end
 
-function PrefixMigration.MigratePrefix(conversations, matchPattern, newPrefix, sortMessages, characterState)
+local function sortBySentAt(a, b)
+  return (a.sentAt or 0) < (b.sentAt or 0)
+end
+
+-- Combine loser's messages into winner's, restoring chronological order.
+-- Guarded against missing messages tables (partial SavedVariables).
+local function mergeMessages(winner, loser)
+  winner.messages = winner.messages or {}
+  for _, msg in ipairs(loser.messages or {}) do
+    table.insert(winner.messages, msg)
+  end
+  table.sort(winner.messages, sortBySentAt)
+end
+
+function PrefixMigration.MigratePrefix(conversations, matchPattern, newPrefix, characterState)
   local migrations = {}
   for conversationKey, conversation in pairs(conversations or {}) do
     local pos = string.find(conversationKey, matchPattern, 1, true)
@@ -32,24 +46,10 @@ function PrefixMigration.MigratePrefix(conversations, matchPattern, newPrefix, s
     if existing then
       -- Merge: keep the one with more recent activity, combine messages
       if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
-        for _, msg in ipairs(existing.messages or {}) do
-          table.insert(entry.conversation.messages, msg)
-        end
-        if sortMessages then
-          table.sort(entry.conversation.messages, function(a, b)
-            return (a.sentAt or 0) < (b.sentAt or 0)
-          end)
-        end
+        mergeMessages(entry.conversation, existing)
         conversations[entry.newKey] = entry.conversation
       else
-        for _, msg in ipairs(entry.conversation.messages or {}) do
-          table.insert(existing.messages, msg)
-        end
-        if sortMessages then
-          table.sort(existing.messages, function(a, b)
-            return (a.sentAt or 0) < (b.sentAt or 0)
-          end)
-        end
+        mergeMessages(existing, entry.conversation)
       end
     else
       conversations[entry.newKey] = entry.conversation
