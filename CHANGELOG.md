@@ -14,6 +14,10 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: a Battle.net friend logging out of WoW no longer blanks out their character name in your contact list.
 - Fixed: the whisper notification sound no longer plays for messages that couldn't be delivered to the messenger.
 - Fixed: starting a Mythic+ key no longer forgets that the messenger window was open, so it reopens correctly when the key ends, and whispers resume more reliably after restricted content ends.
+- Fixed: pinned conversations can no longer be silently deleted when the conversation limit is reached.
+- Fixed: Battle.net whispers received right after logging in, before your friend list loads, now end up in the same conversation as the rest of that friend's messages instead of a separate orphaned thread.
+- Fixed: older saved conversations merged from multiple characters now show their messages in the right order.
+- Fixed: brand-new conversations are no longer at risk of being cleaned up by history pruning before their first message arrives.
 
 ## [1.2.13] - 2026-06-18
 

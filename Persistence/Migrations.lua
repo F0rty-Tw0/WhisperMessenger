@@ -104,12 +104,14 @@ function Migrations.Apply(accountState, schema)
   end
 
   -- Backfill channel type on existing whisper/bnet conversations (v4 -> v5).
-  -- Idempotent: only stamps records where channel is nil.
+  -- Idempotent: only stamps records where channel is nil. Matches both the
+  -- shared-prefix keys AND the legacy per-character shapes ("alice::WOW::bob"),
+  -- because this runs BEFORE PrefixMigration renames them.
   for key, conv in pairs(accountState.conversations) do
-    if conv.channel == nil then
-      if type(key) == "string" and string.find(key, "wow::", 1, true) == 1 then
+    if conv.channel == nil and type(key) == "string" then
+      if string.find(key, "wow::", 1, true) == 1 or string.find(key, "::WOW::", 1, true) then
         conv.channel = ChannelType.WHISPER
-      elseif type(key) == "string" and string.find(key, "bnet::", 1, true) == 1 then
+      elseif string.find(key, "bnet::", 1, true) == 1 or string.find(key, "::BN::", 1, true) then
         conv.channel = ChannelType.BN_WHISPER
       end
       -- Unknown/ambiguous keys: leave channel nil; later-stage ingest will supply it.

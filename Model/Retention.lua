@@ -22,8 +22,14 @@ function Retention.IsExpired(timestamp, maxAgeSeconds, now)
     return false
   end
 
+  -- A record with no timestamp yet (freshly ensured conversation, message
+  -- missing sentAt) is unknown-age, not infinitely old — keep it.
+  if timestamp == nil or timestamp == 0 then
+    return false
+  end
+
   now = resolveNow(now)
-  return now - (timestamp or 0) > maxAgeSeconds
+  return now - timestamp > maxAgeSeconds
 end
 
 function Retention.TrimMessages(messages, maxMessages)

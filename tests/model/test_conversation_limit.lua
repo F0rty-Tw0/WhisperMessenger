@@ -84,4 +84,31 @@ return function()
     unlimitedCount = unlimitedCount + 1
   end
   assert(unlimitedCount == 10, "expected 10 without limit, got " .. unlimitedCount)
+
+  -- TEST 5: Eviction never removes a pinned conversation — pinning exempts a
+  -- conversation from every other retention path, so the cap must skip it too.
+  local pinnedState = Store.New({ maxMessagesPerConversation = 50, maxConversations = 3 })
+  for i = 1, 3 do
+    Store.AppendIncoming(pinnedState, "p-" .. i, {
+      id = tostring(i),
+      direction = "in",
+      kind = "user",
+      text = "msg " .. i,
+      sentAt = i * 100,
+    }, false)
+  end
+  -- p-1 is the oldest but pinned; p-2 becomes the eviction candidate.
+  pinnedState.conversations["p-1"].pinned = true
+
+  Store.AppendIncoming(pinnedState, "p-4", {
+    id = "4",
+    direction = "in",
+    kind = "user",
+    text = "msg 4",
+    sentAt = 400,
+  }, false)
+
+  assert(pinnedState.conversations["p-1"] ~= nil, "pinned conversation must survive eviction")
+  assert(pinnedState.conversations["p-2"] == nil, "oldest unpinned conversation is evicted instead")
+  assert(pinnedState.conversations["p-4"] ~= nil, "new conversation exists")
 end

@@ -116,4 +116,28 @@ return function()
     local migrated = Migrations.Apply(nil, Schema)
     assert(migrated.schemaVersion == 5, "fresh state should be at version 5, got " .. tostring(migrated.schemaVersion))
   end
+
+  -- test_legacy_prefixed_keys_get_channel_backfill
+  -- Migrations.Apply runs BEFORE PrefixMigration renames legacy per-character
+  -- keys, so the backfill must recognize the pre-rename key shapes too —
+  -- otherwise upgraded conversations run a whole session with channel=nil.
+  do
+    local accountState = {
+      schemaVersion = 4,
+      conversations = {
+        ["alice-stormrage::WOW::bob-stormrage"] = { messages = {} },
+        ["alice-stormrage::BN::jaina#1234"] = { messages = {} },
+      },
+      contacts = {},
+      pendingHydration = {},
+      channelMessages = {},
+    }
+
+    local migrated = Migrations.Apply(accountState, Schema)
+
+    local wowConv = migrated.conversations["alice-stormrage::WOW::bob-stormrage"]
+    assert(wowConv.channel == "WHISPER", "legacy ::WOW:: key should be stamped WHISPER, got " .. tostring(wowConv.channel))
+    local bnConv = migrated.conversations["alice-stormrage::BN::jaina#1234"]
+    assert(bnConv.channel == "BN_WHISPER", "legacy ::BN:: key should be stamped BN_WHISPER, got " .. tostring(bnConv.channel))
+  end
 end
