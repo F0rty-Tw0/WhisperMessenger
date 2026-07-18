@@ -18,6 +18,11 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: Battle.net whispers received right after logging in, before your friend list loads, now end up in the same conversation as the rest of that friend's messages instead of a separate orphaned thread.
 - Fixed: older saved conversations merged from multiple characters now show their messages in the right order.
 - Fixed: brand-new conversations are no longer at risk of being cleaned up by history pruning before their first message arrives.
+- Fixed: the icon mode switch and its choices are now translated in all supported languages.
+- Fixed: date separators now show the proper full month name for May in Spanish, Italian, Russian and other languages.
+- Fixed: the "Yesterday" label now follows your local midnight instead of flipping at odd hours depending on your timezone, and 12-hour timestamps no longer show a leading zero (2:30 PM instead of 02:30 PM).
+- Fixed: the Raid conversation no longer claims you can send to it while you're only in a battleground or dungeon-finder group.
+- Smoother gameplay in raids and with large friend lists — the addon now does far less background work when other addons chatter or your Battle.net friends change status.
 
 ## [1.2.13] - 2026-06-18
 

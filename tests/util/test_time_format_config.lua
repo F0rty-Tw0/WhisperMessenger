@@ -164,18 +164,21 @@ local function tests()
 
     _G.date = originalDate
 
-    assert(#tCalls == 3, "expected three date('*t', ...) calls, got " .. tostring(#tCalls))
+    -- Each call makes two date('*t', ...) calls: first the local-midnight
+    -- "Yesterday" boundary from the current time (no display offset), then
+    -- the rendered message timestamp with the +3600s server offset applied.
+    assert(#tCalls == 6, "expected six date('*t', ...) calls (boundary + render per call), got " .. tostring(#tCalls))
     assert(
-      tCalls[1] == threeDaysAgo + 3600,
-      "ContactPreview weekday branch should add +3600s server offset, got diff " .. tostring(tCalls[1] - threeDaysAgo)
+      tCalls[2] == threeDaysAgo + 3600,
+      "ContactPreview weekday branch should add +3600s server offset, got diff " .. tostring(tCalls[2] - threeDaysAgo)
     )
     assert(
-      tCalls[2] == twoWeeksAgo + 3600,
-      "ContactPreview month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[2] - twoWeeksAgo)
+      tCalls[4] == twoWeeksAgo + 3600,
+      "ContactPreview month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[4] - twoWeeksAgo)
     )
     assert(
-      tCalls[3] == twoWeeksAgo + 3600,
-      "Relative month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[3] - twoWeeksAgo)
+      tCalls[6] == twoWeeksAgo + 3600,
+      "Relative month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[6] - twoWeeksAgo)
     )
 
     _G.C_DateAndTime = nil

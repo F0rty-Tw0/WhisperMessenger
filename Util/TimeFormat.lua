@@ -22,12 +22,16 @@ local serverOffset = nil
 -- date("%a") / date("%b") / date("%B"), which is not translated.
 local WEEKDAY_KEYS = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" }
 local MONTH_ABBR_KEYS = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
+-- "May" is both the abbreviation and the full name in English, but not in
+-- other languages (esES "may"/"mayo", itIT "mag"/"maggio"). The full form
+-- uses a distinct catalog key; the English fallback maps it back to "May".
+local MAY_FULL_KEY = "May (full)"
 local MONTH_FULL_KEYS = {
   "January",
   "February",
   "March",
   "April",
-  "May",
+  MAY_FULL_KEY,
   "June",
   "July",
   "August",
@@ -44,9 +48,22 @@ local MONTH_FULL_KEYS = {
 local function L(key)
   local Localization = ns.Localization
   if Localization and Localization.Text then
-    return Localization.Text(key)
+    local translated = Localization.Text(key)
+    if translated ~= key then
+      return translated
+    end
+  end
+  if key == MAY_FULL_KEY then
+    return "May"
   end
   return key
+end
+
+-- Local-calendar midnight for the day containing ts. `ts - (ts % 86400)` is
+-- midnight UTC, which mislabels "Yesterday" for anyone not in UTC.
+local function startOfLocalDay(ts)
+  local t = date("*t", ts)
+  return time({ year = t.year, month = t.month, day = t.day, hour = 0, min = 0, sec = 0 })
 end
 
 --- Compute the display offset between server time and local time.
@@ -127,7 +144,9 @@ function TimeFormat.MessageTime(timestamp)
   -- so Russian users see "ДП"/"ПП" instead of the C-locale "AM"/"PM".
   local t = date("*t", ts)
   local meridiem = (t.hour >= 12) and L("PM") or L("AM")
-  return date("%I:%M", ts) .. " " .. meridiem
+  -- %I zero-pads ("02:30"); the documented format is "2:30 PM".
+  local digits = string.gsub(date("%I:%M", ts), "^0", "")
+  return digits .. " " .. meridiem
 end
 
 --- Format a timestamp as "March 18, 2026" for date separators.
@@ -157,7 +176,7 @@ function TimeFormat.ContactPreview(timestamp)
     return floor(diff / 3600) .. L("h")
   end
   -- Check if yesterday
-  local todayStart = current - (current % 86400)
+  local todayStart = startOfLocalDay(current)
   if timestamp >= todayStart - 86400 and timestamp < todayStart then
     return L("Yesterday")
   end
@@ -187,7 +206,7 @@ function TimeFormat.Relative(timestamp)
     local hours = floor(diff / 3600)
     return hours .. (hours == 1 and L(" hour ago") or L(" hours ago"))
   end
-  local todayStart = current - (current % 86400)
+  local todayStart = startOfLocalDay(current)
   if timestamp >= todayStart - 86400 and timestamp < todayStart then
     return L("yesterday")
   end
