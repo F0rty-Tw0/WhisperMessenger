@@ -240,7 +240,11 @@ function RowScripts.bindDrag(row, item, options)
       end)
     end
   else
-    row.dragButtons = nil
+    if row.RegisterForDrag then
+      -- No arguments = unregister. Drag registration is sticky on pooled
+      -- row Buttons, and a registered-but-handlerless drag swallows clicks.
+      row:RegisterForDrag()
+    end
     if row.SetScript then
       row:SetScript("OnDragStart", nil)
       row:SetScript("OnDragStop", nil)

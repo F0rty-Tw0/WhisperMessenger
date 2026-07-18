@@ -23,6 +23,11 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: the "Yesterday" label now follows your local midnight instead of flipping at odd hours depending on your timezone, and 12-hour timestamps no longer show a leading zero (2:30 PM instead of 02:30 PM).
 - Fixed: the Raid conversation no longer claims you can send to it while you're only in a battleground or dungeon-finder group.
 - Smoother gameplay in raids and with large friend lists — the addon now does far less background work when other addons chatter or your Battle.net friends change status.
+- Fixed: switching themes now also recolors the date separator lines in open conversations.
+- Fixed: unpinning a contact no longer leaves its row occasionally swallowing clicks.
+- Fixed: "Reset to Defaults" in Behavior settings no longer switches on the game-wide mature language filter.
+- Fixed: resizing the contacts pane now lands exactly where you release the divider, and resetting appearance settings restores the inactive window opacity consistently.
+- Fixed: contacts with unrecognized class data now show the Battle.net icon instead of an empty circle.
 
 ## [1.2.13] - 2026-06-18
 

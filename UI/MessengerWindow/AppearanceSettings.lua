@@ -19,7 +19,10 @@ local function text(key)
 end
 
 local DEFAULTS = {
-  windowOpacityInactive = 0.72,
+  -- Must sit on the slider's 0.05 step grid: the slider rounds to steps, so
+  -- an off-grid default (previously 0.72) made "Reset to Defaults" persist a
+  -- different value (0.70) than the declared default.
+  windowOpacityInactive = 0.7,
   windowOpacityActive = 1.0,
   fontFamily = "default",
   fontSize = 12,

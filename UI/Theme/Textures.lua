@@ -13,9 +13,28 @@ local Textures = {
   remove_icon = "Interface\\Buttons\\UI-StopButton",
 }
 
+-- Class tokens with a matching ClassIcon_* texture. Unknown tags must
+-- return nil so callers fall back to the BNet icon instead of silently
+-- pointing SetTexture at a nonexistent path (renders as an empty circle).
+local KNOWN_CLASS_TAGS = {
+  WARRIOR = true,
+  PALADIN = true,
+  HUNTER = true,
+  ROGUE = true,
+  PRIEST = true,
+  DEATHKNIGHT = true,
+  SHAMAN = true,
+  MAGE = true,
+  WARLOCK = true,
+  MONK = true,
+  DRUID = true,
+  DEMONHUNTER = true,
+  EVOKER = true,
+}
+
 --- Map classTag to atlas icon path
 local function ClassIcon(classTag)
-  if not classTag or classTag == "" then
+  if not classTag or not KNOWN_CLASS_TAGS[classTag] then
     return nil
   end
   return Textures.class_icon_prefix .. classTag

@@ -159,10 +159,11 @@ function BehaviorSettings.Create(factory, parent, config, options)
   panel:bind(profanityFilterToggle, {
     type = "toggle",
     reset = function(control)
-      control.setValue(true)
-      if _G.SetCVar then
-        _G.SetCVar("profanityFilter", "1")
-      end
+      -- Blizzard's game-wide mature-language CVar has no addon default;
+      -- "Reset to Defaults" must not silently flip it. Just re-sync the
+      -- toggle display to the live value.
+      local live = _G.GetCVar and _G.GetCVar("profanityFilter") == "1"
+      control.setValue(live == true)
     end,
   })
   panel:bind(autoOpenIncomingToggle, { type = "toggle", key = "autoOpenIncoming", default = DEFAULTS.autoOpenIncoming })

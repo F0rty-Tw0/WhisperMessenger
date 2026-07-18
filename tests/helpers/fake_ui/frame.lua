@@ -412,7 +412,12 @@ local function makeCreateFrame()
     end
 
     function frame:RegisterForDrag(...)
-      self.dragButtons = { ... }
+      -- WoW semantics: no arguments unregisters drag entirely.
+      if select("#", ...) == 0 then
+        self.dragButtons = nil
+      else
+        self.dragButtons = { ... }
+      end
     end
 
     function frame:SetResizable(value)

@@ -136,7 +136,9 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   end
 
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
-  local viewport = parent and parent.parent or nil
+  -- GetParent() works on both real WoW frames and test fakes; the bare
+  -- `.parent` field only exists on fakes, which left this path dead in-game.
+  local viewport = parent and ((type(parent.GetParent) == "function" and parent:GetParent()) or parent.parent) or nil
   local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * ROW_HEIGHT)
   local contentHeight = math.max(viewportHeight, visibleCount * ROW_HEIGHT)
 
