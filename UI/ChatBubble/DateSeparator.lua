@@ -50,6 +50,15 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
 
   setFontObject(labelFS, Theme.FONTS.date_separator)
   setTextColor(labelFS, Theme.COLORS.text_timestamp)
+  -- Re-apply divider colors on every render, not just creation: pooled
+  -- frames outlive theme-preset switches, and SetColorTexture snapshots
+  -- the RGBA values at call time.
+  if frame._lineLeft then
+    applyColorTexture(frame._lineLeft, Theme.COLORS.divider)
+  end
+  if frame._lineRight then
+    applyColorTexture(frame._lineRight, Theme.COLORS.divider)
+  end
 
   local dateStr = ""
   if ns.TimeFormat and ns.TimeFormat.DateSeparator then
