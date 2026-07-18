@@ -206,6 +206,26 @@ return function()
     assert(row.scripts == nil or row.scripts.OnDragStart == nil, "non-pinned row should not have OnDragStart script")
     assert(row.scripts == nil or row.scripts.OnDragStop == nil, "non-pinned row should not have OnDragStop script")
   end
+
+  -- test_bind_drag_unregisters_when_pooled_row_is_rebound_unpinned
+  -- Drag registration is sticky on reused row Buttons; a pinned→non-pinned
+  -- rebind must actively unregister or clicks get swallowed by a
+  -- handler-less drag.
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local pinnedItem = { conversationKey = "me::WOW::pin", displayName = "Pin", pinned = true, unreadCount = 0 }
+    local plainItem = { conversationKey = "me::WOW::plain", displayName = "Plain", pinned = false, unreadCount = 0 }
+    local options = { onDragStart = function() end, onDragStop = function() end }
+
+    row.item = pinnedItem
+    row.rowIndex = 1
+    RowScripts.bindDrag(row, pinnedItem, options)
+    assert(row.dragButtons ~= nil, "precondition: pinned bind registers for drag")
+
+    row.item = plainItem
+    RowScripts.bindDrag(row, plainItem, options)
+    assert(row.dragButtons == nil, "rebinding a pooled row to a non-pinned item must unregister drag")
+  end
   -- test_action_hover_does_not_hide_buttons_when_pointer_returns_to_row
   do
     local row = factory.CreateFrame("Button", nil, parent)
