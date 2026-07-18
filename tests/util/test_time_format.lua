@@ -45,6 +45,40 @@ local function tests()
   assert(not TimeFormat.IsDifferentDay(day1, day1b), "Same day should return false")
   assert(TimeFormat.IsDifferentDay(day1, day2), "Different days should return true")
 
+  -- MessageTime strips the leading zero in 12h mode ("2:30 PM", not "02:30 PM")
+  local pmTs = os.time({ year = 2026, month = 3, day = 19, hour = 14, min = 30, sec = 0 })
+  Assert.equal(TimeFormat.MessageTime(pmTs), "2:30 PM")
+  local amTs = os.time({ year = 2026, month = 3, day = 19, hour = 9, min = 5, sec = 0 })
+  Assert.equal(TimeFormat.MessageTime(amTs), "9:05 AM")
+  local noonTs = os.time({ year = 2026, month = 3, day = 19, hour = 12, min = 15, sec = 0 })
+  Assert.equal(TimeFormat.MessageTime(noonTs), "12:15 PM")
+
+  -- DateSeparator renders the full English month for May (the full-name
+  -- catalog key falls back to "May", never the raw key)
+  local mayTs = os.time({ year = 2026, month = 5, day = 10, hour = 12, min = 0, sec = 0 })
+  Assert.equal(TimeFormat.DateSeparator(mayTs), "May 10, 2026")
+
+  -- "Yesterday" is based on local calendar midnight, not UTC midnight
+  do
+    local fixedNow = os.time({ year = 2026, month = 7, day = 18, hour = 23, min = 30, sec = 0 })
+    local savedTime = _G.time
+    _G.time = function(t)
+      if t then
+        return os.time(t)
+      end
+      return fixedNow
+    end
+
+    local yesterdayMorning = os.time({ year = 2026, month = 7, day = 17, hour = 10, min = 0, sec = 0 })
+    Assert.equal(TimeFormat.ContactPreview(yesterdayMorning), "Yesterday")
+    Assert.equal(TimeFormat.Relative(yesterdayMorning), "yesterday")
+
+    local twoDaysAgo = os.time({ year = 2026, month = 7, day = 16, hour = 22, min = 0, sec = 0 })
+    assert(TimeFormat.ContactPreview(twoDaysAgo) ~= "Yesterday", "two days ago must not be labeled Yesterday")
+
+    _G.time = savedTime
+  end
+
   -- Edge cases
   Assert.equal(TimeFormat.MessageTime(nil), "")
   Assert.equal(TimeFormat.MessageTime(0), "")
