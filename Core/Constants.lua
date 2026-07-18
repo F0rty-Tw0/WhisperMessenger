@@ -5,7 +5,7 @@ end
 
 local Constants = {
   ADDON_NAME = addonName or "WhisperMessenger",
-  VERSION = "v1.2.14",
+  VERSION = "v1.2.13",
 
   LIVE_EVENT_NAMES = {
     "CHAT_MSG_WHISPER",
@@ -70,6 +70,9 @@ local Constants = {
     ENCOUNTER_START = true,
     ENCOUNTER_END = true,
     ZONE_CHANGED_NEW_AREA = true,
+    -- The authoritative 12.0 restriction signal: the Inactive transition is
+    -- what triggers resume, so it must keep flowing while suspended.
+    ADDON_RESTRICTION_STATE_CHANGED = true,
   },
 }
 

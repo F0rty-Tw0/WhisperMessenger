@@ -12,4 +12,11 @@ return function()
     assert(found["BN_FRIEND_INFO_CHANGED"], "should include BN_FRIEND_INFO_CHANGED")
     assert(found["PLAYER_ENTERING_WORLD"], "should include PLAYER_ENTERING_WORLD")
   end
+
+  -- ADDON_RESTRICTION_STATE_CHANGED is the authoritative resume signal on
+  -- 12.0 clients — it must survive the mythic suspension unregister sweep,
+  -- or a restriction ending while suspended is never noticed.
+  do
+    assert(Constants.MYTHIC_ESSENTIAL_EVENTS.ADDON_RESTRICTION_STATE_CHANGED == true, "ADDON_RESTRICTION_STATE_CHANGED should be mythic-essential")
+  end
 end
