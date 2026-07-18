@@ -40,6 +40,22 @@ return function()
     assert(conversations.b ~= nil, "expected conversation b to be kept")
   end
 
+  -- test_missing_timestamp_is_not_expired
+  -- A record with no timestamp yet (freshly ensured conversation, message
+  -- missing sentAt) must be kept conservatively, not treated as infinitely old.
+  do
+    assert(Retention.IsExpired(nil, 100, 99999) == false, "nil timestamp must not count as expired")
+    assert(Retention.IsExpired(0, 100, 99999) == false, "zero timestamp must not count as expired")
+
+    local conversations = {
+      fresh = { lastActivityAt = 0 },
+      old = { lastActivityAt = 100 },
+    }
+    Retention.ExpireConversations(conversations, 150, 99999)
+    assert(conversations.fresh ~= nil, "freshly-created conversation (lastActivityAt=0) must be kept")
+    assert(conversations.old == nil, "genuinely old conversation is still expired")
+  end
+
   -- test_expire_conversations_keeps_pinned
   do
     local conversations = {

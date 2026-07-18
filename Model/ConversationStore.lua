@@ -64,10 +64,15 @@ local function evictOldestConversation(state)
   local oldestKey = nil
   local oldestTime = math.huge
   for key, conv in pairs(state.conversations) do
-    local activity = conv.lastActivityAt or 0
-    if activity < oldestTime then
-      oldestTime = activity
-      oldestKey = key
+    -- Pinned conversations are exempt from every retention path, including
+    -- the cap: the user explicitly asked to keep them. The cap may soft-
+    -- overflow if everything is pinned; that beats silent data loss.
+    if conv.pinned ~= true then
+      local activity = conv.lastActivityAt or 0
+      if activity < oldestTime then
+        oldestTime = activity
+        oldestKey = key
+      end
     end
   end
 
