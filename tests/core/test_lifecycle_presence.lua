@@ -39,6 +39,11 @@ local function makeHarness(gameAccountInfo)
 end
 
 return function()
+  -- Force the synchronous fallback path: without C_Timer the debounce runs
+  -- the scan immediately, which the assertions below rely on.
+  local savedCTimer = rawget(_G, "C_Timer")
+  rawset(_G, "C_Timer", nil)
+
   -- test_bnet_friend_update_applies_real_character_name
   do
     local Bootstrap, deps, conversation = makeHarness({
@@ -156,4 +161,50 @@ return function()
     assert(moved.battleTag == "Solo#5678", "battleTag is stamped on the moved conversation")
     assert(moved.displayName == "Solo#5678", "numeric display name upgrades to the battleTag")
   end
+
+  -- test_bnet_friend_events_debounce_into_one_scan
+  -- BN_FRIEND_INFO_CHANGED fires in bursts; the full friend-list scan must
+  -- coalesce into one deferred pass instead of running per event.
+  do
+    local scans = 0
+    local deps = {
+      trace = function() end,
+      loadModule = function(modulePath)
+        if string.find(modulePath, "BNetResolver", 1, true) then
+          return {
+            ScanFriendList = function()
+              scans = scans + 1
+              return {}
+            end,
+          }
+        end
+        return require(modulePath)
+      end,
+    }
+    local Bootstrap = { runtime = { bnetApi = {}, store = { conversations = {} } } }
+
+    local capturedCallbacks = {}
+    rawset(_G, "C_Timer", {
+      After = function(_seconds, callback)
+        table.insert(capturedCallbacks, callback)
+      end,
+    })
+
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+
+    assert(scans == 0, "scan is deferred, not run per event; got " .. tostring(scans))
+    assert(#capturedCallbacks == 1, "burst coalesces into one timer; got " .. tostring(#capturedCallbacks))
+
+    capturedCallbacks[1]()
+    assert(scans == 1, "deferred callback runs exactly one scan; got " .. tostring(scans))
+
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+    assert(#capturedCallbacks == 2, "a later event schedules a fresh scan")
+
+    rawset(_G, "C_Timer", nil)
+  end
+
+  rawset(_G, "C_Timer", savedCTimer)
 end

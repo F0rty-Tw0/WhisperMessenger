@@ -153,6 +153,29 @@ return function()
     assert(string.find(foundKey, "56", 1, true) ~= nil, "message must be keyed to the sender's conversation 56; got key: " .. tostring(foundKey))
     assert(string.find(foundKey, "55", 1, true) == nil, "message must not be keyed to the first conversation 55; got key: " .. tostring(foundKey))
 
+    -- Sender provably in NO conversation: filing into an arbitrary thread
+    -- would corrupt histories, so the message is dropped.
+    local absentRuntime = makeRuntime()
+    local absentResult = EventBridge.RouteGroupEvent(
+      absentRuntime,
+      "CHAT_MSG_BN_CONVERSATION",
+      "who am i",
+      "Stranger#9999",
+      "",
+      "",
+      "",
+      "",
+      0,
+      0,
+      "",
+      0,
+      703,
+      nil,
+      77123 -- presenceID not a member of conversation 55 or 56
+    )
+    assert(absentResult == false, "message from a sender in no known conversation is dropped; got: " .. tostring(absentResult))
+    assert(next(absentRuntime.store.conversations) == nil, "no thread is created for an unmatched sender")
+
     -- Membership API missing entirely: fall back to the first conversation
     -- so the message is still captured rather than dropped.
     local fallbackRuntime = makeRuntime()

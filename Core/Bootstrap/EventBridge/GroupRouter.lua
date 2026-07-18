@@ -62,6 +62,7 @@ local function resolveBNConversationID(bnSenderID)
     return nil
   end
   local firstConversationID = nil
+  local sawUnknownMembership = false
   for i = 1, numConversations do
     local convOk, conversationID = pcall(function()
       local id = _G.BNGetConversationInfo and _G.BNGetConversationInfo(i)
@@ -71,12 +72,23 @@ local function resolveBNConversationID(bnSenderID)
       if firstConversationID == nil then
         firstConversationID = conversationID
       end
-      if conversationIncludesSender(conversationID, bnSenderID) == true then
+      local matched = conversationIncludesSender(conversationID, bnSenderID)
+      if matched == true then
         return conversationID
+      end
+      if matched == nil then
+        sawUnknownMembership = true
       end
     end
   end
-  return firstConversationID
+  -- Fall back to the first conversation only when membership was UNKNOWN
+  -- somewhere (API missing/throwing). When every conversation positively
+  -- answered "not a member", filing the message into an arbitrary thread
+  -- would corrupt histories — drop it instead.
+  if sawUnknownMembership then
+    return firstConversationID
+  end
+  return nil
 end
 
 -- Resolve (clubId, streamId, clubType) for the most recent community chat

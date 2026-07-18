@@ -118,6 +118,25 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
+  -- 6b. RAID: membership is checked for the HOME category only — instance
+  -- raid groups (battlegrounds, LFR) use INSTANCE_CHAT, not RAID.
+  -- ---------------------------------------------------------------------------
+  do
+    local saved = saveGlobals({ "IsInRaid", "LE_PARTY_CATEGORY_HOME" })
+    rawset(_G, "LE_PARTY_CATEGORY_HOME", 1)
+    rawset(_G, "IsInRaid", function(category)
+      -- Simulate a battleground: instance raid yes, home raid no.
+      return category ~= 1
+    end)
+
+    local api = { SendChatMessage = function() end }
+    local conv = { channel = ChannelType.RAID }
+    assert(ChatGateway.CanSend(api, conv) == false, "CanSend RAID must be false in an instance-only raid group")
+
+    restoreGlobals(saved)
+  end
+
+  -- ---------------------------------------------------------------------------
   -- 7. GUILD: CanSend false when IsInGuild returns false
   -- ---------------------------------------------------------------------------
   do

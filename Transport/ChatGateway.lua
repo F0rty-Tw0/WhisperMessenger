@@ -165,7 +165,10 @@ local senderAvailability = {
       return false
     end
     if type(_G.IsInRaid) == "function" then
-      return checkMembership(_G.IsInRaid)
+      -- Home category only: instance raid groups (battlegrounds, LFR) speak
+      -- INSTANCE_CHAT, not RAID — a bare IsInRaid() is true there too.
+      local category = type(_G.LE_PARTY_CATEGORY_HOME) == "number" and _G.LE_PARTY_CATEGORY_HOME or 1
+      return checkMembership(_G.IsInRaid, category)
     end
     return true
   end,

@@ -79,9 +79,9 @@ local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity
   end
 end
 
-function Presence.handleBNetFriendEvent(Bootstrap, deps)
+local function refreshBNetConversations(Bootstrap, deps)
   if Bootstrap.runtime == nil then
-    return true
+    return
   end
 
   local BNetResolver = deps.loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
@@ -116,6 +116,31 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
   end
 
   Common.refreshRuntimeWindow(Bootstrap)
+end
+
+function Presence.handleBNetFriendEvent(Bootstrap, deps)
+  if Bootstrap.runtime == nil then
+    return true
+  end
+
+  -- BN_FRIEND_INFO_CHANGED fires in bursts (one per presence change, often
+  -- several per second with a large friend list), and each scan walks every
+  -- friend and every conversation. Debounce into one deferred scan, same as
+  -- handlePresenceInvalidation; run synchronously when timers are
+  -- unavailable so nothing is dropped.
+  if Bootstrap._bnetFriendRefreshPending then
+    return true
+  end
+  Bootstrap._bnetFriendRefreshPending = true
+  local scheduled = Common ~= nil
+    and Common.scheduleAfter(2, function()
+      Bootstrap._bnetFriendRefreshPending = false
+      refreshBNetConversations(Bootstrap, deps)
+    end)
+  if not scheduled then
+    Bootstrap._bnetFriendRefreshPending = false
+    refreshBNetConversations(Bootstrap, deps)
+  end
   return true
 end
 

@@ -167,12 +167,22 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local autoDismissGeneration = 0
+  local autoDismissTimer = nil
   local lastPreviewSenderName = nil
   local lastPreviewMessageText = nil
   local lastPreviewClassTag = nil
 
   local function cancelAutoDismiss()
     autoDismissGeneration = autoDismissGeneration + 1
+    -- Cancel the live timer instead of letting stale ones pile up under
+    -- whisper bursts; the generation counter stays as a safety net for
+    -- timers that cannot be cancelled (older stubs without Cancel).
+    if autoDismissTimer ~= nil then
+      if type(autoDismissTimer.Cancel) == "function" then
+        pcall(autoDismissTimer.Cancel, autoDismissTimer)
+      end
+      autoDismissTimer = nil
+    end
   end
 
   local function clearIncomingPreview()
@@ -206,7 +216,7 @@ function IncomingPreview.Create(factory, frame, options)
       return
     end
     local scheduledGeneration = autoDismissGeneration
-    cTimer.NewTimer(seconds, function()
+    autoDismissTimer = cTimer.NewTimer(seconds, function()
       if scheduledGeneration ~= autoDismissGeneration then
         return
       end
