@@ -2,7 +2,7 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
-## [1.2.15] - Unreleased
+## [1.2.15] - 2026-07-24
 
 - Fixed: with "Desaturate icon when idle" on, the minimap icon now lights back up when unread whispers arrive instead of staying grey.
 - Fixed: message preview popups no longer float next to the minimap while the minimap icon is turned off, and no longer pop up while you're already reading that conversation.
