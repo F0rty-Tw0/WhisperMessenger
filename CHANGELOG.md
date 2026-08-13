@@ -2,6 +2,10 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [1.2.16] - 2026-08-13
+
+- Updated for World of Warcraft patch 12.1.0 (Curse of Ula'tek).
+
 ## [1.2.15] - 2026-07-24
 
 - Fixed: with "Desaturate icon when idle" on, the minimap icon now lights back up when unread whispers arrive instead of staying grey.
