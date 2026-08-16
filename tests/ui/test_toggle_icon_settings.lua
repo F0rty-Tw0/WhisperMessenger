@@ -97,6 +97,19 @@ return function()
     assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
 
+  -- test_icon_uses_addon_logo_texture
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(
+      icon.label.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
+      "test_icon_uses_addon_logo_texture: foreground should use addon icon texture, got " .. tostring(icon.label.texturePath)
+    )
+  end
+
   -- test_icon_uses_custom_size
 
   do
@@ -124,9 +137,9 @@ return function()
     assert(w == 56, "test_apply_icon_size_resizes_frame: frame width should be 56 after resize, got " .. tostring(w))
     assert(h == 56, "test_apply_icon_size_resizes_frame: frame height should be 56 after resize, got " .. tostring(h))
 
-    -- Chat icon should be 60% of new size
+    -- Chat icon should be 90% of new size
     local chatW, _chatH = icon.label:GetSize()
-    local expectedChatSize = math.floor(56 * 0.6)
+    local expectedChatSize = math.floor(56 * 0.9)
     assert(
       chatW == expectedChatSize,
       "test_apply_icon_size_resizes_frame: chat icon width should be " .. expectedChatSize .. ", got " .. tostring(chatW)
@@ -227,6 +240,31 @@ return function()
       icon.label.desaturated == false,
       "test_icon_always_colorized_when_desaturation_disabled: icon should never desaturate when setting is off, got "
         .. tostring(icon.label.desaturated)
+    )
+  end
+
+  -- test_icon_dims_on_hover_and_restores_glyph_color
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getIconDesaturated = function()
+        return false
+      end,
+    })
+    local normalColor = icon.label.vertexColor
+
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    local hoverColor = icon.label.vertexColor
+    assert(hoverColor[1] == 1 and hoverColor[2] == 1 and hoverColor[3] == 1, "hover should preserve white glyph RGB")
+    assert(hoverColor[4] < 1, "hover should dim the logo with reduced alpha")
+
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    local restoredColor = icon.label.vertexColor
+    assert(
+      restoredColor[1] == normalColor[1] and restoredColor[2] == normalColor[2] and restoredColor[3] == normalColor[3]
+        and restoredColor[4] == normalColor[4],
+      "leaving hover should restore the normal glyph color"
     )
   end
 

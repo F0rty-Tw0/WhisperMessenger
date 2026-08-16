@@ -15,7 +15,10 @@ local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleI
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local CHAT_ICON_RATIO = 0.6 -- chat icon scale factor vs ICON_SIZE
+local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
+
+local CHAT_ICON_RATIO = 0.9   -- chat icon scale factor vs ICON_SIZE
+local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 
@@ -81,7 +84,7 @@ function ToggleIcon.Create(factory, options)
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
   chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  chatIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
+  chatIcon:SetTexture(ADDON_ICON_TEXTURE)
   applyVertexColor(chatIcon, resolveGlyphColor())
 
   local label = chatIcon -- reference kept for return table
@@ -214,6 +217,7 @@ function ToggleIcon.Create(factory, options)
       syncLockGlyphVisibility()
       if not desaturation.isActive() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
+        applyVertexColor(chatIcon, HOVER_ICON_COLOR)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -239,6 +243,9 @@ function ToggleIcon.Create(factory, options)
       syncLockGlyphVisibility()
       local isDesat = desaturation.isActive()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
+      if not isDesat then
+        applyVertexColor(chatIcon, resolveGlyphColor())
+      end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
