@@ -63,6 +63,7 @@ local Spanish = {
   ["Appearance"] = "Apariencia",
   ["Behavior"] = "Comportamiento",
   ["Notifications"] = "Notificaciones",
+  ["Icons"] = "Iconos",
   ["Clear All Chats"] = "Borrar todos los chats",
   ["Reset Icon Position"] = "Restablecer posición del icono",
   ["Reset Window Position"] = "Restablecer posición de la ventana",
@@ -162,6 +163,8 @@ local Spanish = {
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "Configura las alertas para mensajes entrantes.",
+  -- Icons settings
+  ["Configure icon and widget settings."] = "Configura los ajustes de iconos y widgets.",
   ["Play sound on new whisper"] = "Sonido al recibir un susurro",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Reproduce un sonido cuando recibes un susurro. Elige el sonido a continuación.",
   ["Notification sound"] = "Sonido de notificación",

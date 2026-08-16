@@ -38,6 +38,7 @@ function ThemeApply.Create(options)
   local appearanceTab = options.appearanceTab
   local behaviorTab = options.behaviorTab
   local notificationsTab = options.notificationsTab
+  local iconsTab = options.iconsTab
   local resetWindowButton = options.resetWindowButton
   local resetIconButton = options.resetIconButton
   local clearAllChatsButton = options.clearAllChatsButton
@@ -122,7 +123,7 @@ function ThemeApply.Create(options)
     local inactiveTabText = activeTheme.COLORS.option_button_text
     local inactiveTabHoverText = activeTheme.COLORS.option_button_text_hover
 
-    for _, tab in ipairs({ generalTab, appearanceTab, behaviorTab, notificationsTab }) do
+    for _, tab in ipairs({ generalTab, appearanceTab, behaviorTab, notificationsTab, iconsTab }) do
       if tab and tab._wmIsActiveTab then
         paintOptionButton(tab, activeTabBg, activeTabText, activeTabHoverBg, activeTabText)
       else

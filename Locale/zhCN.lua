@@ -59,6 +59,7 @@ local SimplifiedChinese = {
   ["Appearance"] = "外观",
   ["Behavior"] = "行为",
   ["Notifications"] = "通知",
+  ["Icons"] = "图标",
   ["Clear All Chats"] = "清除所有对话",
   ["Reset Icon Position"] = "重置图标位置",
   ["Reset Window Position"] = "重置窗口位置",
@@ -158,6 +159,8 @@ local SimplifiedChinese = {
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "配置收到消息时的提醒。",
+  -- Icons settings
+  ["Configure icon and widget settings."] = "配置图标和小部件设置。",
   ["Play sound on new whisper"] = "新密语时播放声音",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "收到新密语时播放提示音。在下方选择音效。",
   ["Notification sound"] = "通知音效",

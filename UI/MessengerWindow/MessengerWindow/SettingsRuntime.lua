@@ -8,6 +8,7 @@ local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.Messe
 local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
 local NotificationSettings = ns.NotificationSettings or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
+local IconSettings = ns.IconSettings or require("WhisperMessenger.UI.MessengerWindow.IconSettings")
 
 local SettingsRuntime = {}
 
@@ -19,6 +20,7 @@ function SettingsRuntime.Create(factory, options)
   local appearanceCreate = options.appearanceCreate or AppearanceSettings.Create
   local behaviorCreate = options.behaviorCreate or BehaviorSettings.Create
   local notificationCreate = options.notificationCreate or NotificationSettings.Create
+  local iconCreate = options.iconCreate or IconSettings.Create
 
   local currentConversation = nil
   local currentComposer = nil
@@ -41,6 +43,7 @@ function SettingsRuntime.Create(factory, options)
     appearanceCreate = appearanceCreate,
     behaviorCreate = behaviorCreate,
     notificationCreate = notificationCreate,
+    iconCreate = iconCreate,
   })
 
   refreshThemeVisuals = function()
@@ -62,6 +65,8 @@ function SettingsRuntime.Create(factory, options)
     behaviorSettings = settingsPanels.behaviorSettings,
     notificationsPanel = settingsPanels.notificationsPanel,
     notificationSettings = settingsPanels.notificationSettings,
+    iconsPanel = settingsPanels.iconsPanel,
+    iconSettings = settingsPanels.iconSettings,
     refreshThemeVisuals = refreshThemeVisuals,
     setThemeTargets = function(conversation, composer)
       currentConversation = conversation

@@ -95,10 +95,13 @@ function SettingsPanels.Create(factory, options)
   }, onSettingChanged)
 
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {
-    badgePulse = settingsConfig.badgePulse,
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
-    showUnreadBadge = settingsConfig.showUnreadBadge,
     notificationSound = settingsConfig.notificationSound,
+  }, onSettingChanged)
+
+  local iconsPanel, iconSettings = createSettingsPanel(factory, parent, options.iconCreate, {
+    badgePulse = settingsConfig.badgePulse,
+    showUnreadBadge = settingsConfig.showUnreadBadge,
     iconSize = settingsConfig.iconSize,
     iconDesaturated = settingsConfig.iconDesaturated,
     lockToggleIcon = settingsConfig.lockToggleIcon,
@@ -124,7 +127,7 @@ function SettingsPanels.Create(factory, options)
       context.composer.refreshTheme()
     end
 
-    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings }) do
+    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings, iconSettings }) do
       if settingsView and settingsView.refreshTheme then
         settingsView.refreshTheme(theme)
       end
@@ -136,7 +139,7 @@ function SettingsPanels.Create(factory, options)
     if not inner then
       return
     end
-    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings }) do
+    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings, iconSettings }) do
       if settingsView and settingsView.refreshLayout then
         settingsView.refreshLayout(inner)
       end
@@ -152,6 +155,8 @@ function SettingsPanels.Create(factory, options)
     behaviorSettings = behaviorSettings,
     notificationsPanel = notificationsPanel,
     notificationSettings = notificationSettings,
+    iconsPanel = iconsPanel,
+    iconSettings = iconSettings,
     refreshTheme = refreshTheme,
     refreshLayout = refreshLayout,
   }

@@ -59,6 +59,7 @@ local Russian = {
   ["Appearance"] = "Внешний вид",
   ["Behavior"] = "Поведение",
   ["Notifications"] = "Уведомления",
+  ["Icons"] = "Значки",
   ["Clear All Chats"] = "Очистить все чаты",
   ["Reset Icon Position"] = "Сбросить позицию значка",
   ["Reset Window Position"] = "Сбросить позицию окна",
@@ -158,6 +159,8 @@ local Russian = {
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "Настройте оповещения о входящих сообщениях.",
+  -- Icons settings
+  ["Configure icon and widget settings."] = "Настройте параметры значков и виджета.",
   ["Play sound on new whisper"] = "Звук при новом шепоте",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Проигрывает звук при новом шепоте. Выберите звук ниже.",
   ["Notification sound"] = "Звук уведомления",

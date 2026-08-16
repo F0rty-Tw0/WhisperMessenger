@@ -107,6 +107,8 @@ function MessengerWindow.Create(factory, options)
   local behaviorSettings = settingsRuntime.behaviorSettings
   local notificationsPanel = settingsRuntime.notificationsPanel
   local notificationSettings = settingsRuntime.notificationSettings
+  local iconsPanel = settingsRuntime.iconsPanel
+  local iconSettings = settingsRuntime.iconSettings
   local refreshThemeVisuals = settingsRuntime.refreshThemeVisuals
 
   -- Contacts controller (manages rows, paging, scroll hooks)
@@ -248,7 +250,7 @@ function MessengerWindow.Create(factory, options)
     scriptWiring = ScriptWiring,
     windowScripts = WindowScripts,
     chrome = chrome,
-    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel },
+    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel, iconsPanel },
     closeWindow = closeWindow,
     onResetWindowPosition = options.onResetWindowPosition,
     onResetIconPosition = options.onResetIconPosition,
@@ -297,6 +299,9 @@ function MessengerWindow.Create(factory, options)
     if notificationSettings and notificationSettings.setLanguage then
       notificationSettings.setLanguage()
     end
+    if iconSettings and iconSettings.setLanguage then
+      iconSettings.setLanguage()
+    end
     if contactsRuntime and contactsRuntime.tabToggle and contactsRuntime.tabToggle.setLanguage then
       contactsRuntime.tabToggle.setLanguage()
     end
@@ -340,10 +345,12 @@ function MessengerWindow.Create(factory, options)
     appearanceTab = layout.appearanceTab,
     behaviorTab = layout.behaviorTab,
     notificationsTab = layout.notificationsTab,
+    iconsTab = layout.iconsTab,
     generalSettings = generalSettings,
     appearanceSettings = appearanceSettings,
     behaviorSettings = behaviorSettings,
     notificationSettings = notificationSettings,
+    iconSettings = iconSettings,
     optionsHeader = layout.optionsHeader,
     optionsHint = layout.optionsHint,
     resetWindowButton = layout.resetWindowButton,

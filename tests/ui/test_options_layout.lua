@@ -35,6 +35,7 @@ return function()
   assert(layout.appearanceTab ~= nil, "appearanceTab should exist")
   assert(layout.behaviorTab ~= nil, "behaviorTab should exist")
   assert(layout.notificationsTab ~= nil, "notificationsTab should exist")
+  assert(layout.iconsTab ~= nil, "iconsTab should exist")
 
   -- test_buttons_are_still_present
 
@@ -61,6 +62,7 @@ return function()
     assert(hasLabel(layout.appearanceTab, "Appearance"), "appearanceTab should have 'Appearance' label")
     assert(hasLabel(layout.behaviorTab, "Behavior"), "behaviorTab should have 'Behavior' label")
     assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
+    assert(hasLabel(layout.iconsTab, "Icons"), "iconsTab should have 'Icons' label")
   end
 
   -- test_russian_options_menu_labels
@@ -83,6 +85,7 @@ return function()
     assert(hasLabel(localizedLayout.appearanceTab, "Внешний вид"), "appearance tab should be localized")
     assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")
     assert(hasLabel(localizedLayout.notificationsTab, "Уведомления"), "notifications tab should be localized")
+    assert(hasLabel(localizedLayout.iconsTab, "Значки"), "icons tab should be localized")
     assert(hasLabel(localizedLayout.clearAllChatsButton, "Очистить все чаты"), "clear all chats button should be localized")
     assert(
       localizedLayout.optionsHint.text == "Сбросьте позиции или очистите всю историю переписок.",

@@ -1,11 +1,5 @@
 -- Regression: SettingsPanels.Create must forward every persisted settings key
--- into the per-panel config so that the UI displays the user's saved choice
--- after /reload or relog. Previously `notificationSound`,
--- `widgetPreviewAutoDismissSeconds`, `widgetPreviewPosition`,
--- `bubbleColorPreset`, `timeFormat` and `timeSource` were persisted to
--- accountState.settings but never passed back into the panels, so the panel
--- fell back to its built-in defaults at open time and the player thought the
--- setting had been reset.
+-- to its owning panel so saved choices survive /reload or relog.
 
 local FakeUI = require("tests.helpers.fake_ui")
 local SettingsPanels = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
@@ -25,6 +19,7 @@ return function()
   local appearanceCapture = {}
   local behaviorCapture = {}
   local notificationCapture = {}
+  local iconsCapture = {}
 
   local settingsConfig = {
     -- general
@@ -51,7 +46,7 @@ return function()
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
     showGroupChats = false,
-    -- notifications
+    -- notifications and icons
     lockToggleIcon = true,
     badgePulse = false,
     playSoundOnWhisper = true,
@@ -61,6 +56,7 @@ return function()
     iconDesaturated = false,
     showWidgetMessagePreview = false,
     widgetPreviewAutoDismissSeconds = 15,
+    iconMode = "both",
     widgetPreviewPosition = "top",
   }
 
@@ -77,6 +73,7 @@ return function()
     appearanceCreate = captureCreate(appearanceCapture),
     behaviorCreate = captureCreate(behaviorCapture),
     notificationCreate = captureCreate(notificationCapture),
+    iconCreate = captureCreate(iconsCapture),
   })
 
   -- General: timeFormat and timeSource must round-trip.
@@ -96,26 +93,34 @@ return function()
     "expected appearance config.bubbleColorPreset=azeroth, got: " .. tostring(appearanceCapture.config.bubbleColorPreset)
   )
 
-  -- Notifications: lockToggleIcon must round-trip so the lock state persists
-  -- across /reload (without this the icon would unlock every session).
+  -- Notifications owns sound settings only.
   assert(
-    notificationCapture.config.lockToggleIcon == true,
-    "expected notification config.lockToggleIcon=true, got: " .. tostring(notificationCapture.config.lockToggleIcon)
+    notificationCapture.config.playSoundOnWhisper == true,
+    "expected notification config.playSoundOnWhisper=true, got: " .. tostring(notificationCapture.config.playSoundOnWhisper)
   )
-
-  -- Notifications: notificationSound, widgetPreviewAutoDismissSeconds, and
-  -- widgetPreviewPosition must round-trip so the panel shows the persisted
-  -- selection on reopen.
   assert(
     notificationCapture.config.notificationSound == "chime",
     "expected notification config.notificationSound=chime, got: " .. tostring(notificationCapture.config.notificationSound)
   )
+  assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
+  assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
+
+  assert(iconsCapture.config.iconMode == "both", "expected icons config.iconMode=both, got: " .. tostring(iconsCapture.config.iconMode))
+  assert(iconsCapture.config.iconSize == 56, "expected icons config.iconSize=56, got: " .. tostring(iconsCapture.config.iconSize))
+  assert(iconsCapture.config.iconDesaturated == false, "expected icons config.iconDesaturated=false, got: " .. tostring(iconsCapture.config.iconDesaturated))
+  assert(iconsCapture.config.lockToggleIcon == true, "expected icons config.lockToggleIcon=true, got: " .. tostring(iconsCapture.config.lockToggleIcon))
+  assert(iconsCapture.config.showUnreadBadge == false, "expected icons config.showUnreadBadge=false, got: " .. tostring(iconsCapture.config.showUnreadBadge))
+  assert(iconsCapture.config.badgePulse == false, "expected icons config.badgePulse=false, got: " .. tostring(iconsCapture.config.badgePulse))
   assert(
-    notificationCapture.config.widgetPreviewAutoDismissSeconds == 15,
-    "expected notification config.widgetPreviewAutoDismissSeconds=15, got: " .. tostring(notificationCapture.config.widgetPreviewAutoDismissSeconds)
+    iconsCapture.config.showWidgetMessagePreview == false,
+    "expected icons config.showWidgetMessagePreview=false, got: " .. tostring(iconsCapture.config.showWidgetMessagePreview)
   )
   assert(
-    notificationCapture.config.widgetPreviewPosition == "top",
-    "expected notification config.widgetPreviewPosition=top, got: " .. tostring(notificationCapture.config.widgetPreviewPosition)
+    iconsCapture.config.widgetPreviewAutoDismissSeconds == 15,
+    "expected icons config.widgetPreviewAutoDismissSeconds=15, got: " .. tostring(iconsCapture.config.widgetPreviewAutoDismissSeconds)
+  )
+  assert(
+    iconsCapture.config.widgetPreviewPosition == "top",
+    "expected icons config.widgetPreviewPosition=top, got: " .. tostring(iconsCapture.config.widgetPreviewPosition)
   )
 end

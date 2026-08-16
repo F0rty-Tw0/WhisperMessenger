@@ -1,0 +1,312 @@
+local addonName, ns = ...
+if type(ns) ~= "table" then
+  ns = {}
+end
+
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+
+local IconSettings = {}
+
+local PADDING = Theme.CONTENT_PADDING
+
+local DEFAULTS = {
+  badgePulse = true,
+  showUnreadBadge = true,
+  iconSize = 42,
+  iconDesaturated = true,
+  lockToggleIcon = false,
+  showWidgetMessagePreview = true,
+  widgetPreviewAutoDismissSeconds = 30,
+  widgetPreviewPosition = "right",
+  iconMode = "widget",
+}
+
+local POSITION_OPTION_SPECS = {
+  { key = "right", label = "Right" },
+  { key = "left", label = "Left" },
+  { key = "top", label = "Above" },
+  { key = "bottom", label = "Below" },
+}
+
+local function text(key)
+  return Localization.Text(key)
+end
+
+local function buildPositionOptions()
+  local options = {}
+  for _, spec in ipairs(POSITION_OPTION_SPECS) do
+    options[#options + 1] = { key = spec.key, label = text(spec.label) }
+  end
+  return options
+end
+
+local function pxFormat(v)
+  return tostring(math.floor(v + 0.5)) .. "px"
+end
+
+local function secondsFormat(v)
+  local n = math.floor(v + 0.5)
+  if n <= 0 then
+    return text("Off")
+  end
+  return tostring(n) .. "s"
+end
+
+function IconSettings.Create(factory, parent, config, options)
+  local onChange = options.onChange or function(...)
+    local _ = ...
+  end
+
+  local frame = factory.CreateFrame("Frame", nil, parent)
+  frame:SetAllPoints(parent)
+
+  local header = SettingsControls.CreateHeader(frame, {
+    title = text("Icons"),
+    hint = text("Configure icon and widget settings."),
+  })
+  local hint = header.hint
+
+  local toggleColors = SettingsControls.ToggleColors(Theme)
+  local toggleLayout = { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 }
+  local selectorColors = SettingsControls.SelectorColors(Theme)
+  local rowSpacing = -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING
+  local panel = SettingsControls.NewPanelRegistry()
+
+  local iconSizeRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = text("Icon Size"),
+      min = 24,
+      max = 64,
+      step = 2,
+      initial = config.iconSize or DEFAULTS.iconSize,
+      formatFn = pxFormat,
+      onChange = function(value)
+        onChange("iconSize", value)
+      end,
+    }),
+    { type = "slider", key = "iconSize", default = DEFAULTS.iconSize }
+  )
+  iconSizeRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
+
+  local iconDesaturatedToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Desaturate icon when idle"),
+      config.iconDesaturated ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("iconDesaturated", value)
+      end,
+      {
+        text("Desaturate icon when idle"),
+        text("Greyscales the toggle icon when there are no unread messages."),
+      }
+    ),
+    { type = "toggle", key = "iconDesaturated", default = DEFAULTS.iconDesaturated }
+  )
+  iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local lockToggleIconToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, text("Lock icon position"), config.lockToggleIcon == true, toggleColors, toggleLayout, function(value)
+      onChange("lockToggleIcon", value)
+    end, {
+      text("Lock icon position"),
+      text("Prevents the chat icon from being dragged. A small padlock appears on the icon while locked."),
+    }),
+    { type = "toggle", key = "lockToggleIcon", default = DEFAULTS.lockToggleIcon }
+  )
+  lockToggleIconToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local function buildIconModeOptions()
+    return {
+      { key = "widget", label = text("Widget") },
+      { key = "minimap", label = text("Minimap") },
+      { key = "both", label = text("Both") },
+    }
+  end
+
+  local iconModeSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Icon Mode"),
+      optionsList = buildIconModeOptions(),
+      fallbackKey = DEFAULTS.iconMode,
+      initial = config.iconMode or DEFAULTS.iconMode,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("iconMode", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 60,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 3,
+    }),
+    { type = "selector", key = "iconMode", default = DEFAULTS.iconMode }
+  )
+  iconModeSelector.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local showBadgeToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
+      onChange("showUnreadBadge", value)
+    end, {
+      text("Show unread badge"),
+      text("Displays an unread message count on the toggle icon."),
+    }),
+    { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
+  )
+  showBadgeToggle.row:SetPoint("TOPLEFT", iconModeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local badgePulseToggle = panel:bind(
+    UIHelpers.createToggleRow(factory, frame, text("Badge pulse animation"), config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
+      onChange("badgePulse", value)
+    end, {
+      text("Badge pulse animation"),
+      text("Plays a pulsing glow on the unread badge when new whispers arrive."),
+    }),
+    { type = "toggle", key = "badgePulse", default = DEFAULTS.badgePulse }
+  )
+  badgePulseToggle.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local widgetMessagePreviewToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Show widget message preview"),
+      config.showWidgetMessagePreview ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("showWidgetMessagePreview", value)
+      end,
+      {
+        text("Show widget message preview"),
+        text("Shows sender name and the latest incoming whisper preview on the draggable widget."),
+      }
+    ),
+    { type = "toggle", key = "showWidgetMessagePreview", default = DEFAULTS.showWidgetMessagePreview }
+  )
+  widgetMessagePreviewToggle.row:SetPoint("TOPLEFT", badgePulseToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local initialAutoDismiss = tonumber(config.widgetPreviewAutoDismissSeconds)
+  if initialAutoDismiss == nil then
+    initialAutoDismiss = DEFAULTS.widgetPreviewAutoDismissSeconds
+  end
+  local autoDismissRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = text("Auto-dismiss widget preview"),
+      min = 0,
+      max = 120,
+      step = 5,
+      initial = initialAutoDismiss,
+      formatFn = secondsFormat,
+      onChange = function(value)
+        onChange("widgetPreviewAutoDismissSeconds", value)
+      end,
+    }),
+    { type = "slider", key = "widgetPreviewAutoDismissSeconds", default = DEFAULTS.widgetPreviewAutoDismissSeconds }
+  )
+  autoDismissRow.row:SetPoint("TOPLEFT", widgetMessagePreviewToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local positionSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Widget preview position"),
+      optionsList = buildPositionOptions(),
+      fallbackKey = DEFAULTS.widgetPreviewPosition,
+      initial = config.widgetPreviewPosition or DEFAULTS.widgetPreviewPosition,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("widgetPreviewPosition", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 60,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 4,
+    }),
+    { type = "selector", key = "widgetPreviewPosition", default = DEFAULTS.widgetPreviewPosition }
+  )
+  positionSelector.row:SetPoint("TOPLEFT", autoDismissRow.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local resetButton = panel:bind(
+    UIHelpers.createOptionButton(
+      factory,
+      frame,
+      text("Reset to Defaults"),
+      SettingsControls.OptionButtonColors(Theme),
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+    ),
+    { type = "optionButton" }
+  )
+  resetButton:SetPoint("TOPLEFT", positionSelector.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetScript("OnClick", function()
+    panel:reset(onChange)
+  end)
+
+  local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
+  bottomSpacer:SetSize(1, PADDING)
+  bottomSpacer:SetPoint("TOPLEFT", resetButton, "BOTTOMLEFT", 0, 0)
+  frame._wmBottomMarker = bottomSpacer
+
+  local function refreshTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+    header.refreshTheme(activeTheme)
+    panel:refreshTheme(activeTheme)
+  end
+
+  refreshTheme(Theme)
+
+  local function setLanguage()
+    header.title:SetText(text("Icons"))
+    header.hint:SetText(text("Configure icon and widget settings."))
+    iconSizeRow.label:SetText(text("Icon Size"))
+    iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    lockToggleIconToggle.label:SetText(text("Lock icon position"))
+    iconModeSelector.label:SetText(text("Icon Mode"))
+    iconModeSelector.setOptionsList(buildIconModeOptions())
+    showBadgeToggle.label:SetText(text("Show unread badge"))
+    badgePulseToggle.label:SetText(text("Badge pulse animation"))
+    widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))
+    autoDismissRow.label:SetText(text("Auto-dismiss widget preview"))
+    positionSelector.label:SetText(text("Widget preview position"))
+    positionSelector.setOptionsList(buildPositionOptions())
+    resetButton.label:SetText(text("Reset to Defaults"))
+  end
+
+  local function refreshLayout(width)
+    if type(width) ~= "number" or width <= 0 then
+      return
+    end
+    local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+    local effective = math.min(maxWidth, math.max(160, math.floor(width)))
+    header.refreshLayout(effective)
+    panel:refreshLayout(effective)
+  end
+
+  return {
+    frame = frame,
+    badgePulseToggle = badgePulseToggle,
+    showBadgeToggle = showBadgeToggle,
+    iconSizeSlider = iconSizeRow.slider,
+    iconDesaturatedToggle = iconDesaturatedToggle,
+    iconModeSelector = iconModeSelector,
+    lockToggleIconToggle = lockToggleIconToggle,
+    widgetMessagePreviewToggle = widgetMessagePreviewToggle,
+    autoDismissSlider = autoDismissRow.slider,
+    positionSelector = positionSelector,
+    resetButton = resetButton,
+    refreshTheme = refreshTheme,
+    refreshLayout = refreshLayout,
+    setLanguage = setLanguage,
+  }
+end
+
+ns.IconSettings = IconSettings
+return IconSettings

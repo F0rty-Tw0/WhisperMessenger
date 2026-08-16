@@ -59,6 +59,7 @@ local Korean = {
   ["Appearance"] = "외형",
   ["Behavior"] = "동작",
   ["Notifications"] = "알림",
+  ["Icons"] = "아이콘",
   ["Clear All Chats"] = "모든 대화 삭제",
   ["Reset Icon Position"] = "아이콘 위치 초기화",
   ["Reset Window Position"] = "창 위치 초기화",
@@ -158,6 +159,8 @@ local Korean = {
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "수신 메시지에 대한 알림을 설정합니다.",
+  -- Icons settings
+  ["Configure icon and widget settings."] = "아이콘 및 위젯 설정을 구성합니다.",
   ["Play sound on new whisper"] = "새 귓속말 시 소리 재생",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "새 귓속말을 받으면 알림 소리를 재생합니다. 아래에서 소리를 선택하세요.",
   ["Notification sound"] = "알림 소리",

@@ -59,6 +59,7 @@ local TraditionalChinese = {
   ["Appearance"] = "外觀",
   ["Behavior"] = "行為",
   ["Notifications"] = "通知",
+  ["Icons"] = "圖示",
   ["Clear All Chats"] = "清除所有對話",
   ["Reset Icon Position"] = "重設圖示位置",
   ["Reset Window Position"] = "重設視窗位置",
@@ -158,6 +159,8 @@ local TraditionalChinese = {
 
   -- Notifications
   ["Configure alerts for incoming messages."] = "設定收到訊息時的提醒。",
+  -- Icons settings
+  ["Configure icon and widget settings."] = "設定圖示和小工具選項。",
   ["Play sound on new whisper"] = "新密語時播放音效",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "收到新密語時播放提示音。在下方選擇音效。",
   ["Notification sound"] = "通知音效",
