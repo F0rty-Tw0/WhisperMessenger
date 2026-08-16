@@ -19,4 +19,12 @@ return function()
   do
     assert(Constants.MYTHIC_ESSENTIAL_EVENTS.ADDON_RESTRICTION_STATE_CHANGED == true, "ADDON_RESTRICTION_STATE_CHANGED should be mythic-essential")
   end
+  -- PLAYER_REGEN_DISABLED must reach lifecycle dispatch for combat-start visibility handling.
+  do
+    local found = {}
+    for _, name in ipairs(Constants.LIFECYCLE_EVENT_NAMES) do
+      found[name] = true
+    end
+    assert(found["PLAYER_REGEN_DISABLED"], "should include PLAYER_REGEN_DISABLED")
+  end
 end

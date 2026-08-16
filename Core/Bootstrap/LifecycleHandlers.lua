@@ -50,6 +50,10 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     return true
   end
 
+  if event == "PLAYER_REGEN_DISABLED" then
+    return Competitive.handleCombatStart(Bootstrap, deps)
+  end
+
   if event == "PLAYER_REGEN_ENABLED" then
     return Competitive.handleCombatEnd(Bootstrap, deps)
   end

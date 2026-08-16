@@ -89,6 +89,7 @@ function SettingsPanels.Create(factory, options)
     hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
     autoOpenIncoming = settingsConfig.autoOpenIncoming,
     autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
+    hideOnCombat = settingsConfig.hideOnCombat,
     doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
     showGroupChats = settingsConfig.showGroupChats,
   }, onSettingChanged)

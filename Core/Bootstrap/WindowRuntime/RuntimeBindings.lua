@@ -63,6 +63,7 @@ function RuntimeBindings.Apply(options)
   runtime.toggle = controller.toggle
   runtime.refreshWindow = controller.refreshWindow
   runtime.ensureWindow = controller.ensureWindow
+  runtime.isWindowVisible = controller.isWindowVisible
   runtime.setWindowVisible = controller.setWindowVisible
   runtime.setComposerText = controller.setComposerText
 

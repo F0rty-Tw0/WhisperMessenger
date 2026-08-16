@@ -1,6 +1,10 @@
 # Changelog
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
+## [Unreleased]
+
+- Added an opt-in Behavior setting to hide the messenger when combat starts. You can reopen it manually during combat, and it will not reopen automatically after combat.
+
 
 ## [1.2.16] - 2026-08-13
 

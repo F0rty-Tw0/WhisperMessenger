@@ -75,6 +75,15 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   return false
 end
 
+function Competitive.handleCombatStart(Bootstrap, deps)
+  local runtime = Bootstrap.runtime
+  local settings = runtime and runtime.accountState and runtime.accountState.settings
+  if settings and settings.hideOnCombat == true and runtime and runtime.isWindowVisible and runtime.setWindowVisible and runtime.isWindowVisible() then
+    runtime.setWindowVisible(false)
+  end
+  return true
+end
+
 function Competitive.handleCombatEnd(Bootstrap, deps)
   if Bootstrap.runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
     ChatReplyState.CaptureStaleWhisperReplyTarget(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)

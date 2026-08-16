@@ -24,6 +24,7 @@ local DEFAULTS = {
   autoOpenOutgoing = false,
   doubleEscapeToClose = false,
   showGroupChats = true,
+  hideOnCombat = false,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -117,6 +118,17 @@ function BehaviorSettings.Create(factory, parent, config, options)
       },
     },
     {
+      label = text("Hide on entering combat"),
+      initial = config.hideOnCombat == true,
+      onChange = function(value)
+        onChange("hideOnCombat", value)
+      end,
+      tooltipLines = {
+        text("Hide on entering combat"),
+        text("Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."),
+      },
+    },
+    {
       label = text("Double ESC to close"),
       initial = config.doubleEscapeToClose == true,
       onChange = function(value)
@@ -148,8 +160,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local profanityFilterToggle = toggles[4]
   local autoOpenIncomingToggle = toggles[5]
   local autoOpenOutgoingToggle = toggles[6]
-  local doubleEscapeToggle = toggles[7]
-  local showGroupChatsToggle = toggles[8]
+  local hideOnCombatToggle = toggles[7]
+  local doubleEscapeToggle = toggles[8]
+  local showGroupChatsToggle = toggles[9]
 
   local panel = SettingsControls.NewPanelRegistry()
   panel:bind(dimToggle, { type = "toggle", key = "dimWhenMoving", default = DEFAULTS.dimWhenMoving })
@@ -168,6 +181,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   })
   panel:bind(autoOpenIncomingToggle, { type = "toggle", key = "autoOpenIncoming", default = DEFAULTS.autoOpenIncoming })
   panel:bind(autoOpenOutgoingToggle, { type = "toggle", key = "autoOpenOutgoing", default = DEFAULTS.autoOpenOutgoing })
+  panel:bind(hideOnCombatToggle, { type = "toggle", key = "hideOnCombat", default = DEFAULTS.hideOnCombat })
   panel:bind(doubleEscapeToggle, { type = "toggle", key = "doubleEscapeToClose", default = DEFAULTS.doubleEscapeToClose })
   panel:bind(showGroupChatsToggle, { type = "toggle", key = "showGroupChats", default = DEFAULTS.showGroupChats })
 
@@ -212,6 +226,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoOpenIncomingToggle.label:SetText(text("Auto-open on incoming whisper"))
     autoOpenOutgoingToggle.label:SetText(text("Auto-open on outgoing whisper"))
     doubleEscapeToggle.label:SetText(text("Double ESC to close"))
+    hideOnCombatToggle.label:SetText(text("Hide on entering combat"))
     showGroupChatsToggle.label:SetText(text("Show group chats"))
     resetButton.label:SetText(text("Reset to Defaults"))
     -- Tooltip lines were captured into closure-frozen arrays at construction
@@ -240,6 +255,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     autoOpenIncomingToggle = autoOpenIncomingToggle,
     autoOpenOutgoingToggle = autoOpenOutgoingToggle,
     doubleEscapeToggle = doubleEscapeToggle,
+    hideOnCombatToggle = hideOnCombatToggle,
     showGroupChatsToggle = showGroupChatsToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,

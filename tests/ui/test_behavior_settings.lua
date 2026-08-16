@@ -315,6 +315,55 @@ return function()
     assert(cvarWrites.profanityFilter ~= nil, "test_profanity_filter_toggle_writes_cvar: should have called SetCVar('profanityFilter', ...)")
   end
 
+  -- test_hide_on_combat_toggle_defaults_off_and_persists
+  do
+    local changes = {}
+    local tooltipTitle = nil
+    local tooltipLines = {}
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_, value)
+        tooltipTitle = value
+      end,
+      AddLine = function(_, value)
+        tooltipLines[#tooltipLines + 1] = value
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    local result = BehaviorSettings.Create(factory, parent, {}, {
+      onChange = function(key, value)
+        changes[key] = value
+      end,
+    })
+
+    assert(result.hideOnCombatToggle ~= nil, "hideOnCombat toggle should be exposed")
+    assert(result.hideOnCombatToggle.getValue() == false, "hideOnCombat should default off")
+    assert(result.hideOnCombatToggle.label.text == "Hide on entering combat", "hideOnCombat should use its label")
+
+    local onEnter = result.hideOnCombatToggle.row:GetScript("OnEnter")
+    assert(onEnter ~= nil, "hideOnCombat row should have a tooltip")
+    onEnter(result.hideOnCombatToggle.row)
+    assert(tooltipTitle == "Hide on entering combat", "hideOnCombat tooltip should use its label")
+    assert(
+      tooltipLines[1] == "Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat.",
+      "hideOnCombat tooltip should explain its one-shot behavior"
+    )
+
+    local onClick = result.hideOnCombatToggle.dot:GetScript("OnClick")
+    assert(onClick ~= nil, "hideOnCombat dot should have OnClick")
+    onClick(result.hideOnCombatToggle.dot)
+    assert(changes.hideOnCombat == true, "hideOnCombat should persist enabled value")
+
+    local resetOnClick = result.resetButton:GetScript("OnClick")
+    assert(resetOnClick ~= nil, "hideOnCombat reset button should have OnClick")
+    resetOnClick(result.resetButton)
+    assert(changes.hideOnCombat == false, "hideOnCombat reset should restore default off")
+
+    _G.GameTooltip = nil
+  end
+
   -- test_russian_localizes_behavior_panel
 
   do
