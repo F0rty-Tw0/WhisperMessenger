@@ -128,6 +128,7 @@ function IconSettings.Create(factory, parent, config, options)
       { key = "widget", label = text("Widget") },
       { key = "minimap", label = text("Minimap") },
       { key = "both", label = text("Both") },
+      { key = "none", label = text("None") },
     }
   end
 
@@ -146,7 +147,7 @@ function IconSettings.Create(factory, parent, config, options)
       buttonWidth = 60,
       buttonHeight = 26,
       buttonSpacing = 4,
-      maxPerRow = 3,
+      maxPerRow = 4,
     }),
     { type = "selector", key = "iconMode", default = DEFAULTS.iconMode }
   )

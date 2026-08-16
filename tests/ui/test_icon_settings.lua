@@ -25,6 +25,8 @@ return function()
     )
 
     assert(result.iconModeSelector ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconModeSelector should exist")
+    assert(#result.iconModeSelector.buttons == 4, "test_icons_owns_all_icon_and_widget_controls: iconModeSelector should expose four modes")
+    assert(result.iconModeSelector.buttons[4]._key == "none", "test_icons_owns_all_icon_and_widget_controls: fourth mode should be none")
     assert(result.iconSizeSlider ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconSizeSlider should exist")
     assert(result.iconDesaturatedToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconDesaturatedToggle should exist")
     assert(result.lockToggleIconToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: lockToggleIconToggle should exist")
@@ -67,6 +69,22 @@ return function()
     assert(changes.showWidgetMessagePreview == false, "test_icon_and_widget_controls_fire_existing_keys: showWidgetMessagePreview should be false")
     assert(changes.widgetPreviewAutoDismissSeconds == 60, "test_icon_and_widget_controls_fire_existing_keys: auto-dismiss should be 60")
     assert(changes.widgetPreviewPosition == "left", "test_icon_and_widget_controls_fire_existing_keys: position should be left")
+  end
+
+  -- test_none_icon_mode_fires_none_key
+
+  do
+    local selectedMode
+    local result = IconSettings.Create(factory, parent, {}, {
+      onChange = function(key, value)
+        if key == "iconMode" then
+          selectedMode = value
+        end
+      end,
+    })
+
+    result.iconModeSelector.buttons[4]:GetScript("OnClick")(result.iconModeSelector.buttons[4])
+    assert(selectedMode == "none", "test_none_icon_mode_fires_none_key: iconMode should be none")
   end
 
   -- test_icons_reset_emits_only_icon_and_widget_defaults

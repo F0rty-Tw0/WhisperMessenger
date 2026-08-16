@@ -42,11 +42,14 @@ local function makeRuntimeOptions()
 
   local trackers = {
     iconCreates = 0,
+    minimapCreates = 0,
     windowCreates = 0,
     coordinatorVisible = false,
     capturedWindowOptions = nil,
     capturedIconOptions = nil,
     coordinator = nil,
+    widgetPreviewInputs = {},
+    minimapPreviewInputs = {},
   }
 
   local fakeCoordinatorModule = {
@@ -130,7 +133,9 @@ local function makeRuntimeOptions()
       return {
         frame = iconFrame,
         setUnreadCount = function() end,
-        setIncomingPreview = function() end,
+        setIncomingPreview = function(senderName, messageText, classTag)
+          trackers.widgetPreviewInputs[#trackers.widgetPreviewInputs + 1] = { senderName, messageText, classTag }
+        end,
       }
     end,
   }
@@ -148,6 +153,34 @@ local function makeRuntimeOptions()
     end
     return frame
   end
+
+  local fakeMinimapIconRuntime = {
+    Create = function(_options)
+      trackers.minimapCreates = trackers.minimapCreates + 1
+      local minimapFrame = fakeFactory.CreateFrame("Button", "WhisperMessengerMinimapIcon", nil)
+      local minimapIcon = {
+        frame = minimapFrame,
+        setShown = function(shown)
+          if shown then
+            minimapFrame:Show()
+          else
+            minimapFrame:Hide()
+            trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs + 1] = { nil, nil, nil }
+          end
+        end,
+        setIncomingPreview = function(senderName, messageText, classTag)
+          trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs + 1] = { senderName, messageText, classTag }
+        end,
+        setUnreadCount = function() end,
+      }
+      return {
+        minimapIcon = minimapIcon,
+        getLdbObject = function()
+          return nil
+        end,
+      }
+    end,
+  }
 
   local options = {
     runtime = runtime,
@@ -178,6 +211,7 @@ local function makeRuntimeOptions()
     },
     messengerWindow = fakeMessengerWindow,
     toggleIcon = fakeToggleIcon,
+    minimapIconRuntime = fakeMinimapIconRuntime,
     windowCoordinator = fakeCoordinatorModule,
     sendHandler = { HandleSend = function() end },
     tableUtils = {
@@ -313,18 +347,36 @@ return function()
   assert(runtime.accountState.settings.themePreset == "elvui_dark", "settings handler should persist theme change")
   assert((runtime.window._refreshThemeCalls or 0) == 1, "theme change should refresh static chrome via real handler")
 
-  -- Composition wire: iconMode drives icon visibility. Default mode is
-  -- "widget": the widget icon stays visible, the minimap icon is hidden.
+  -- Composition wire: iconMode drives icon visibility and lazy creation.
+  -- Default mode is "widget": only the widget icon exists and is visible.
   local minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]
-  assert(minimapFrame ~= nil, "the minimap icon should be created eagerly")
-  assert(minimapFrame:IsShown() == false, "minimap icon should start hidden in default widget mode")
+  assert(minimapFrame == nil, "the minimap icon should not be created in widget mode")
+  assert(trackers.minimapCreates == 0, "minimap runtime should stay uncreated in widget mode")
   assert(trackers.iconFrame.shown == true, "widget icon should start visible in default widget mode")
 
   windowOptions.onSettingChanged("iconMode", "minimap")
+  minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]
+  assert(trackers.minimapCreates == 1, "minimap runtime should be created when minimap mode is selected")
   assert(trackers.iconFrame.shown == false, "widget icon should hide in minimap mode")
   assert(minimapFrame:IsShown() == true, "minimap icon should show in minimap mode")
 
   windowOptions.onSettingChanged("iconMode", "both")
   assert(trackers.iconFrame.shown == true, "widget icon should show in both mode")
   assert(minimapFrame:IsShown() == true, "minimap icon should stay shown in both mode")
+
+  windowOptions.onSettingChanged("iconMode", "none")
+  assert(trackers.iconFrame.shown == false, "widget icon should hide in none mode")
+  assert(minimapFrame:IsShown() == false, "minimap icon should hide in none mode")
+  assert(trackers.widgetPreviewInputs[#trackers.widgetPreviewInputs][1] == nil, "none mode should clear widget preview")
+
+  -- Startup none mode must not allocate either icon surface.
+  do
+    local noneOptions, noneRuntime, noneTrackers = makeRuntimeOptions()
+    noneOptions.accountState.settings.iconMode = "none"
+    WindowRuntime.Create(noneOptions)
+    assert(noneTrackers.iconCreates == 0, "none mode should not create the widget icon at startup")
+    assert(noneTrackers.minimapCreates == 0, "none mode should not create the minimap icon at startup")
+    assert(noneRuntime.icon == nil, "none mode should leave runtime.icon unset")
+  end
+  assert(trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs][1] == nil, "none mode should clear minimap preview")
 end

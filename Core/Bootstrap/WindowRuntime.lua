@@ -58,6 +58,8 @@ function WindowRuntime.Create(options)
   local fonts = options.fonts or Fonts
   local theme = options.theme or Theme
 
+  local iconRuntimeModule = options.iconRuntime or IconRuntime
+  local minimapIconRuntimeModule = options.minimapIconRuntime or MinimapIconRuntime
   local markConversationRead = options.markConversationRead
     or function(store, conversationKey)
       return Store.MarkRead(store, conversationKey)
@@ -76,21 +78,43 @@ function WindowRuntime.Create(options)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
   end
 
-  -- Show the icon surfaces matching the iconMode setting ("widget",
-  -- "minimap", or "both"). Called at startup and whenever the setting
-  -- changes (via SettingsHandler).
+  -- Create and show only the icon surfaces selected by iconMode. Called at
+  -- startup and whenever the setting changes through SettingsHandler.
+  local function resolveIconMode()
+    local mode = accountState.settings and accountState.settings.iconMode
+    if mode == "minimap" or mode == "both" or mode == "none" then
+      return mode
+    end
+    return "widget"
+  end
+
+  local ensureIcon
+  local ensureMinimap
+
   local function applyIconMode()
-    local settings = accountState.settings or {}
-    local mode = settings.iconMode or "widget"
+    local mode = resolveIconMode()
+    local showWidget = mode == "widget" or mode == "both"
+    local showMinimap = mode == "minimap" or mode == "both"
+
+    if showWidget then
+      ensureIcon()
+    end
+    if showMinimap then
+      ensureMinimap()
+    end
+
     if icon and icon.frame then
-      if mode == "minimap" then
-        icon.frame:Hide()
-      else
+      if showWidget then
         icon.frame:Show()
+      else
+        icon.frame:Hide()
+        if icon.setIncomingPreview then
+          icon.setIncomingPreview(nil, nil, nil)
+        end
       end
     end
     if minimapIcon and minimapIcon.setShown then
-      minimapIcon.setShown(mode ~= "widget")
+      minimapIcon.setShown(showMinimap)
     end
   end
 
@@ -119,12 +143,23 @@ function WindowRuntime.Create(options)
       return window
     end,
     getIcon = function()
+      if resolveIconMode() == "minimap" or resolveIconMode() == "none" then
+        return nil
+      end
       return icon
     end,
     getMinimapIcon = function()
+      local mode = resolveIconMode()
+      if mode == "widget" or mode == "none" then
+        return nil
+      end
       return minimapIcon
     end,
     getLdbObject = function()
+      local mode = resolveIconMode()
+      if mode == "widget" or mode == "none" then
+        return nil
+      end
       return minimapRuntime and minimapRuntime.getLdbObject() or nil
     end,
     trace = trace,
@@ -277,32 +312,44 @@ function WindowRuntime.Create(options)
   })
   local toggle = toggleFlow.toggle
 
-  icon = IconRuntime.Create({
-    accountState = accountState,
-    characterState = characterState,
-    uiFactory = uiFactory,
-    toggleIcon = toggleIcon,
-    tableUtils = tableUtils,
-    badgeFilter = BadgeFilter,
-    buildContacts = buildContacts,
-    buildLatestIncomingPreview = buildLatestIncomingPreview,
-    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-    refreshWindow = refreshWindow,
-    onToggle = toggle,
-  })
+  ensureIcon = function()
+    if icon then
+      return icon
+    end
+    icon = iconRuntimeModule.Create({
+      accountState = accountState,
+      characterState = characterState,
+      uiFactory = uiFactory,
+      toggleIcon = toggleIcon,
+      tableUtils = tableUtils,
+      badgeFilter = BadgeFilter,
+      buildContacts = buildContacts,
+      buildLatestIncomingPreview = buildLatestIncomingPreview,
+      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+      refreshWindow = refreshWindow,
+      onToggle = toggle,
+    })
+    return icon
+  end
 
-  minimapRuntime = MinimapIconRuntime.Create({
-    accountState = accountState,
-    characterState = characterState,
-    uiFactory = uiFactory,
-    tableUtils = tableUtils,
-    badgeFilter = BadgeFilter,
-    buildContacts = buildContacts,
-    acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
-    refreshWindow = refreshWindow,
-    onToggle = toggle,
-  })
-  minimapIcon = minimapRuntime.minimapIcon
+  ensureMinimap = function()
+    if minimapRuntime then
+      return minimapRuntime
+    end
+    minimapRuntime = minimapIconRuntimeModule.Create({
+      accountState = accountState,
+      characterState = characterState,
+      uiFactory = uiFactory,
+      tableUtils = tableUtils,
+      badgeFilter = BadgeFilter,
+      buildContacts = buildContacts,
+      acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+      refreshWindow = refreshWindow,
+      onToggle = toggle,
+    })
+    minimapIcon = minimapRuntime.minimapIcon
+    return minimapRuntime
+  end
 
   applyIconMode()
 
