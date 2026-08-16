@@ -217,6 +217,7 @@ local German = {
   ["Pin to top"] = "Oben anheften",
   ["Unpin"] = "Lösen",
   ["Remove"] = "Entfernen",
+  ["Mark last messages as unread"] = "Letzte Nachrichten als ungelesen markieren",
   ["Copy text"] = "Text kopieren",
   ["Search chats"] = "Chats durchsuchen",
   ["Select a conversation or"] = "Wähle eine Unterhaltung oder",

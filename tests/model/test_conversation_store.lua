@@ -56,6 +56,90 @@ return function()
 
   Store.MarkRead(state, "me::WOW::arthas-area52")
   assert(conversation.unreadCount == 0)
+  -- test_mark_unread_keeps_numeric_count
+  do
+    Store.MarkUnread(state, "me::WOW::arthas-area52")
+    assert(conversation.unreadCount == 2, "MarkUnread should count post-answer incoming messages")
+
+    Store.MarkUnread(state, "me::WOW::arthas-area52")
+    assert(conversation.unreadCount == 2, "MarkUnread should be stable when repeated")
+  end
+  -- test_mark_unread_count_includes_new_unanswered_message
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::jaina", {
+      id = "in-1",
+      direction = "in",
+      kind = "user",
+      text = "first",
+      sentAt = 1,
+    }, false)
+    Store.MarkUnread(s, "me::WOW::jaina")
+    assert(s.conversations["me::WOW::jaina"].unreadCount == 1, "MarkUnread should set numeric count")
+
+    Store.AppendIncoming(s, "me::WOW::jaina", {
+      id = "in-2",
+      direction = "in",
+      kind = "user",
+      text = "second",
+      sentAt = 2,
+    }, false)
+    assert(s.conversations["me::WOW::jaina"].unreadCount == 2, "new incoming message should increment unread count")
+  end
+  -- test_mark_unread_counts_only_messages_after_last_answer
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::jaina", {
+      id = "old-in",
+      direction = "in",
+      kind = "user",
+      text = "old",
+      sentAt = 1,
+    }, false)
+    Store.AppendOutgoing(s, "me::WOW::jaina", {
+      id = "answer",
+      direction = "out",
+      kind = "user",
+      text = "answer",
+      sentAt = 2,
+    })
+    Store.AppendIncoming(s, "me::WOW::jaina", {
+      id = "new-in",
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 3,
+    }, false)
+    assert(Store.CountUnansweredIncoming(s.conversations["me::WOW::jaina"]) == 1, "unanswered count should expose post-answer messages")
+
+    Store.MarkUnread(s, "me::WOW::jaina")
+    assert(s.conversations["me::WOW::jaina"].unreadCount == 1, "MarkUnread should count only messages after last answer")
+  end
+  -- test_mark_unread_with_no_post_answer_messages_has_no_hidden_badge
+  do
+    local s = Store.New({})
+    Store.AppendIncoming(s, "me::WOW::jaina", {
+      id = "old-in",
+      direction = "in",
+      kind = "user",
+      text = "old",
+      sentAt = 1,
+    }, false)
+    Store.AppendOutgoing(s, "me::WOW::jaina", {
+      id = "answer",
+      direction = "out",
+      kind = "user",
+      text = "answer",
+      sentAt = 2,
+    })
+
+    Store.MarkUnread(s, "me::WOW::jaina")
+    local conversation = s.conversations["me::WOW::jaina"]
+    assert(conversation.unreadCount == 0, "no post-answer messages should produce zero unread count")
+    assert(conversation.unreadCountHidden == nil, "hidden-count state should be removed")
+  end
+
+
 
   -- test_last_incoming_preview_tracks_latest_incoming_only
   do

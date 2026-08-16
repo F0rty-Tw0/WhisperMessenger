@@ -217,6 +217,7 @@ local French = {
   ["Pin to top"] = "Épingler en haut",
   ["Unpin"] = "Désépingler",
   ["Remove"] = "Supprimer",
+  ["Mark last messages as unread"] = "Marquer les derniers messages comme non lus",
   ["Copy text"] = "Copier le texte",
   ["Search chats"] = "Rechercher des chats",
   ["Select a conversation or"] = "Sélectionnez une conversation ou",

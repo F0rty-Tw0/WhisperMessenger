@@ -8,6 +8,84 @@ return function()
   local savedShowDropdown = _G.FriendsFrame_ShowDropdown
   local savedShowBNDropdown = _G.FriendsFrame_ShowBNDropdown
   local savedUnitPopupOpenMenu = _G.UnitPopup_OpenMenu
+  local savedMenu = _G.Menu
+
+  -- test_open_modern_menu_adds_mark_unread_action
+  do
+    local modifiers = {}
+    local openedWhich = nil
+    local openedContext = nil
+    local markedItem = nil
+
+    _G.FriendsFrame_ShowDropdown = nil
+    _G.FriendsFrame_ShowBNDropdown = nil
+    _G.Menu = {
+      ModifyMenu = function(tag, callback)
+        modifiers[tag] = callback
+      end,
+    }
+    rawset(_G, "UnitPopup_OpenMenu", function(which, contextData)
+      openedWhich = which
+      openedContext = contextData
+    end)
+
+    local item = {
+      channel = "WOW",
+      displayName = "Arthas-Area52",
+      unansweredCount = 1,
+      conversationKey = "me::WOW::arthas-area52",
+    }
+    local opened = ContextMenu.Open(item, anchor, function(marked)
+      markedItem = marked
+    end)
+
+    assert(opened == true, "modern contact menu should open")
+    assert(openedWhich == "FRIEND", "modern WoW menu should use FRIEND")
+    assert(openedContext.whisperMessengerItem == item, "menu context should retain clicked item")
+    local modifier = modifiers["MENU_UNIT_FRIEND"]
+    assert(modifier ~= nil, "modern menu should register FRIEND modifier")
+    assert(modifiers["MENU_UNIT_BN_FRIEND"] ~= nil, "modern menu should register BN_FRIEND modifier")
+
+    local buttonText
+    local buttonCallback
+    local buttonEnabled
+    modifier(anchor, {
+      CreateButton = function(_, text, callback)
+        buttonText = text
+        buttonCallback = callback
+        return {
+          SetEnabled = function(_, enabled)
+            buttonEnabled = enabled
+          end,
+        }
+      end,
+    }, openedContext)
+    assert(buttonText == "Mark last messages as unread", "modern menu should add renamed unread entry")
+    assert(buttonEnabled == true, "menu entry should be enabled with unanswered messages")
+    buttonCallback()
+    assert(markedItem == item, "renamed unread entry should invoke clicked item callback")
+
+    local disabled
+    modifier(anchor, {
+      CreateButton = function()
+        return {
+          SetEnabled = function(_, enabled)
+            disabled = not enabled
+          end,
+        }
+      end,
+    }, {
+      whisperMessengerItem = { unansweredCount = 0 },
+      whisperMessengerOnMarkUnread = function()
+        error("disabled renamed unread entry should not be invoked")
+      end,
+    })
+    assert(disabled == true, "menu entry should be disabled without unanswered messages")
+  end
+
+  _G.Menu = savedMenu
+  _G.UnitPopup_OpenMenu = savedUnitPopupOpenMenu
+
 
   -- test_open_wow_contact_uses_friends_dropdown
   do

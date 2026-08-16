@@ -95,6 +95,16 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
+    onMarkUnread = function(item)
+      local key = item and item.conversationKey
+      if key == nil then
+        return
+      end
+      trace("onMarkUnread", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
+      Store.MarkUnread(runtime.store, key)
+      refreshWindow()
+    end,
+
     onReorder = function(orders)
       trace("onReorder", "keys=" .. tostring(#orders or 0))
       for key, order in pairs(orders) do

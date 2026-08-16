@@ -217,6 +217,7 @@ local Spanish = {
   ["Pin to top"] = "Anclar arriba",
   ["Unpin"] = "Desanclar",
   ["Remove"] = "Eliminar",
+  ["Mark last messages as unread"] = "Marcar los últimos mensajes como no leídos",
   ["Copy text"] = "Copiar texto",
   ["Search chats"] = "Buscar chats",
   ["Select a conversation or"] = "Selecciona una conversación o",

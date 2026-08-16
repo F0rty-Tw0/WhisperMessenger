@@ -5,6 +5,8 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 
 - Added an opt-in Behavior setting to hide the messenger when combat starts. You can reopen it manually during combat, and it will not reopen automatically after combat.
 - Moved widget and minimap icon settings into a dedicated Icons page, making icon mode, badge, and preview controls easier to find.
+- Added a right-click `Mark last messages as unread` action for conversations with unanswered messages.
+- Fixed unread badges so they keep showing the numeric count, while conversations with no unanswered messages cannot be marked unread.
 
 
 ## [1.2.16] - 2026-08-13

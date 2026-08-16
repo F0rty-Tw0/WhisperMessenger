@@ -245,6 +245,7 @@ function WindowRuntime.Create(options)
       onClearAllChats = windowCallbacks.onClearAllChats,
       onPin = windowCallbacks.onPin,
       onRemove = windowCallbacks.onRemove,
+      onMarkUnread = windowCallbacks.onMarkUnread,
       onReorder = windowCallbacks.onReorder,
       onResetIconPosition = windowCallbacks.onResetIconPosition,
       storeConfig = runtime.store.config,

@@ -207,7 +207,7 @@ function RowScripts.bindClick(row, _item, options)
       end
 
       if button == "RightButton" then
-        if ContextMenu.Open(row.item, self or row) then
+        if ContextMenu.Open(row.item, self or row, options and options.onMarkUnread) then
           return
         end
       end

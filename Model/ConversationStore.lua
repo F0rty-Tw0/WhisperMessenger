@@ -89,6 +89,10 @@ local function isIncomingUserMessage(message)
   return message ~= nil and message.kind == "user" and message.direction == "in"
 end
 
+local function isOutgoingUserMessage(message)
+  return message ~= nil and message.kind == "user" and message.direction == "out"
+end
+
 local function applyMessageMetadata(conversation, message)
   conversation.lastPreview = message.text
   conversation.lastActivityAt = message.sentAt
@@ -153,6 +157,30 @@ end
 function Store.MarkRead(state, key)
   local conversation = ensureConversation(state, key)
   conversation.unreadCount = 0
+end
+
+function Store.CountUnansweredIncoming(conversation)
+  if type(conversation) ~= "table" then
+    return 0
+  end
+
+  local count = 0
+  local messages = conversation.messages or {}
+  for index = #messages, 1, -1 do
+    local message = messages[index]
+    if isOutgoingUserMessage(message) then
+      break
+    end
+    if isIncomingUserMessage(message) then
+      count = count + 1
+    end
+  end
+  return count
+end
+
+function Store.MarkUnread(state, key)
+  local conversation = ensureConversation(state, key)
+  conversation.unreadCount = Store.CountUnansweredIncoming(conversation)
 end
 
 function Store.Pin(state, key)

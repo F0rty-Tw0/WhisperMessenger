@@ -2,6 +2,7 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local ConversationSnapshot = {}
 
@@ -49,6 +50,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
     lastPreview = lastPreview,
     searchText = buildSearchText(conversationKey, conversation, displayName, lastPreview),
     unreadCount = conversation.unreadCount or 0,
+    unansweredCount = Store.CountUnansweredIncoming(conversation),
     lastActivityAt = conversation.lastActivityAt or 0,
     channel = conversation.channel or "WOW",
     guid = conversation.guid,

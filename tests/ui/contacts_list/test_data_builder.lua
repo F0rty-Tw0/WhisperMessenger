@@ -32,6 +32,7 @@ return function()
     assert(string.find(snapshot.searchText, "frostbolt ready", 1, true) ~= nil, "searchText should include message text")
     assert(string.find(snapshot.searchText, "khadgar", 1, true) ~= nil, "searchText should include sender names")
     assert(snapshot.unreadCount == 0, "unreadCount should default to 0")
+    assert(snapshot.unansweredCount == 0, "unansweredCount should default to 0")
     assert(snapshot.lastActivityAt == 0, "lastActivityAt should default to 0")
     assert(snapshot.channel == "BN", "channel should be preserved")
     assert(snapshot.guid == "Player-1-00000042", "guid should be preserved")
@@ -285,5 +286,20 @@ return function()
 
     assert(byKey["guild::jaina-proudmoore"] ~= nil, "foreign guild should be included")
     assert(byKey["guild::jaina-proudmoore"].ownerProfileId == "jaina-proudmoore", "foreign guild should carry ownerProfileId")
+  end
+  -- test_items_expose_unanswered_count
+  do
+    local items = DataBuilder.BuildItems({
+      ["me::WOW::jaina"] = {
+        displayName = "Jaina",
+        channel = "WOW",
+        messages = {
+          { direction = "in", kind = "user", text = "old", sentAt = 1 },
+          { direction = "out", kind = "user", text = "answer", sentAt = 2 },
+          { direction = "in", kind = "user", text = "new", sentAt = 3 },
+        },
+      },
+    })
+    assert(items[1].unansweredCount == 1, "contact item should expose unanswered count")
   end
 end

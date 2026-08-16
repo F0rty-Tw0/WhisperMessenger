@@ -217,6 +217,7 @@ local Italian = {
   ["Pin to top"] = "Fissa in alto",
   ["Unpin"] = "Sblocca",
   ["Remove"] = "Rimuovi",
+  ["Mark last messages as unread"] = "Segna gli ultimi messaggi come non letti",
   ["Copy text"] = "Copia testo",
   ["Search chats"] = "Cerca chat",
   ["Select a conversation or"] = "Seleziona una conversazione o",

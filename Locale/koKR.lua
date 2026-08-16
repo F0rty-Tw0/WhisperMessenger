@@ -217,6 +217,7 @@ local Korean = {
   ["Pin to top"] = "위에 고정",
   ["Unpin"] = "고정 해제",
   ["Remove"] = "제거",
+  ["Mark last messages as unread"] = "최근 메시지를 읽지 않음으로 표시",
   ["Copy text"] = "텍스트 복사",
   ["Search chats"] = "채팅 검색",
   ["Select a conversation or"] = "대화를 선택하거나",

@@ -257,11 +257,13 @@ function RowElements.updateUnreadBadge(row, item)
   end
   local count = (item and item.unreadCount) or 0
   if count > 0 then
+    row.unreadBadge:Show()
     local badgeText = count > UNREAD_BADGE_OVERFLOW and (tostring(UNREAD_BADGE_OVERFLOW) .. "+") or tostring(count)
     row.unreadBadge.label:SetText(badgeText)
-    row.unreadBadge:Show()
+    row.unreadBadge.label:Show()
   else
     row.unreadBadge:Hide()
+    row.unreadBadge.label:Hide()
   end
 end
 

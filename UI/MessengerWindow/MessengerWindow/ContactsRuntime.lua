@@ -78,6 +78,11 @@ function ContactsRuntime.Create(factory, options)
         options.onRemove(item)
       end
     end,
+    onMarkUnread = function(item)
+      if options.onMarkUnread then
+        options.onMarkUnread(item)
+      end
+    end,
     onReorder = function(orders)
       if options.onReorder then
         options.onReorder(orders)

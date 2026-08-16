@@ -153,6 +153,7 @@ function MessengerWindow.Create(factory, options)
     onSelect = tabSelectionMemory.onSelect,
     onPin = options.onPin,
     onRemove = options.onRemove,
+    onMarkUnread = options.onMarkUnread,
     onReorder = options.onReorder,
     contactsSearchInput = contactsSearchInput,
     contactsSearchClearButton = contactsSearchClearButton,

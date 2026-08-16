@@ -1,5 +1,7 @@
 local BadgeFilter = require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local ConversationSnapshot = require("WhisperMessenger.Model.ConversationSnapshot")
 
 local function makeContact(channel, unreadCount)
   return { channel = channel, unreadCount = unreadCount or 0, conversationKey = "k" }
@@ -71,5 +73,34 @@ return function()
     }
     local sum = BadgeFilter.SumWhisperUnread(contacts)
     assert(sum == 120, "sum should be exact 120, not capped; got: " .. tostring(sum))
+  end
+
+  -- test_sum_uses_only_messages_after_last_answer
+  do
+    local state = Store.New({})
+    Store.AppendIncoming(state, "me::WOW::jaina", {
+      direction = "in",
+      kind = "user",
+      text = "old",
+      sentAt = 1,
+    }, false)
+    Store.AppendOutgoing(state, "me::WOW::jaina", {
+      direction = "out",
+      kind = "user",
+      text = "answer",
+      sentAt = 2,
+    })
+    Store.AppendIncoming(state, "me::WOW::jaina", {
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 3,
+    }, false)
+    Store.MarkUnread(state, "me::WOW::jaina")
+
+    local contacts = {
+      ConversationSnapshot.Build("me::WOW::jaina", state.conversations["me::WOW::jaina"]),
+    }
+    assert(BadgeFilter.SumWhisperUnread(contacts) == 1, "badge should count only post-answer unread messages")
   end
 end

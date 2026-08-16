@@ -80,6 +80,11 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
           options.onRemove(item)
         end
       end,
+      onMarkUnread = function(item)
+        if options.onMarkUnread then
+          options.onMarkUnread(item)
+        end
+      end,
       onDragStart = handleDragStart,
       onDragStop = handleDragStop,
     })

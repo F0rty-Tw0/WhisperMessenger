@@ -261,4 +261,19 @@ return function()
     assert(label ~= nil, "createPreview should return a FontString")
     assert(label.text == "last message here", "preview label should have lastPreview text, got: " .. tostring(label.text))
   end
+  -- test_unread_badge_always_shows_numeric_count
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local badge = RowElements.createUnreadBadge(factory, row)
+    RowElements.updateUnreadBadge(row, { unreadCount = 3 })
+
+    assert(badge.bg ~= nil, "unread badge should retain its circular background")
+    assert(badge.shown == true, "unread badge should show when messages are unread")
+    assert(badge.label.shown == true, "unread badge should show the numeric label")
+    assert(badge.label.text == "3", "numeric label should show current unread count")
+
+    RowElements.updateUnreadBadge(row, { unreadCount = 0 })
+    assert(badge.shown == false, "unread badge should hide when no messages are unread")
+  end
+
 end

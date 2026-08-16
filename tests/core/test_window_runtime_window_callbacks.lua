@@ -26,7 +26,10 @@ return function()
     conversationKey = "wow::WOW::thrall",
     displayName = "Thrall",
     channel = "WOW",
-    messages = {},
+    messages = {
+      { kind = "user", direction = "in", text = "hello" },
+    },
+    unreadCount = 0,
   }
 
   local characterState = {
@@ -133,6 +136,9 @@ return function()
 
   callbacks.onPin({ conversationKey = "wow::WOW::thrall", pinned = false })
   assert(runtime.store.conversations["wow::WOW::thrall"].pinned == true, "pin callback should pin unpinned conversation")
+  callbacks.onMarkUnread({ conversationKey = "wow::WOW::thrall", displayName = "Thrall" })
+  assert(runtime.store.conversations["wow::WOW::thrall"].unreadCount == 1, "mark unread should restore retained incoming count")
+  assert(refreshes == 4, "mark unread should refresh the window")
 
   callbacks.onRemove({ conversationKey = "wow::WOW::jaina", displayName = "Jaina" })
   assert(runtime.store.conversations["wow::WOW::jaina"] == nil, "remove callback should delete conversation")
