@@ -164,6 +164,41 @@ return function()
   assert(sendCalls[1].bnetAccountID == 99)
   assert(sendCalls[1].text == "reply over bn")
 
+  -- A BNet API return value is not a delivery acknowledgement. Once the API
+  -- accepts the invocation without throwing, Composer must clear the sent draft.
+  do
+    local exactDraft = " keep this exact BNet draft "
+    local sendsBeforeFalseReturn = #sendCalls
+    local messagesBeforeFalseReturn = #conversation.messages
+
+    runtime.window.composer.input:SetText(exactDraft)
+    runtime.window.composer.input:SetFocus()
+    runtime.window.closeButton.scripts.OnClick()
+    assert(runtime.window.frame.shown == false, "close button should hide the selected conversation")
+
+    _G.SlashCmdList.WHISPERMESSENGER()
+    assert(runtime.window.frame.shown == true, "slash command should reopen the selected conversation")
+    assert(runtime.activeConversationKey == conversationKey, "close and reopen should retain the selected conversation")
+    assert(runtime.window.composer.input:GetText() == exactDraft, "close and reopen should preserve the exact unsent draft")
+
+    _G.C_BattleNet.SendWhisper = function(bnetAccountID, text)
+      table.insert(sendCalls, { bnetAccountID = bnetAccountID, text = text, transport = "BN" })
+      return false
+    end
+
+    runtime.window.composer.sendButton.scripts.OnClick()
+
+    assert(#sendCalls == sendsBeforeFalseReturn + 1, "false-returning BNet API should dispatch exactly once")
+    assert(sendCalls[#sendCalls].bnetAccountID == 99, "false-returning BNet API should receive the selected account")
+    assert(sendCalls[#sendCalls].text == exactDraft, "false-returning BNet API should receive the exact draft")
+    assert(runtime.window.composer.input:GetText() == "", "non-throwing BNet dispatch should clear the composer draft")
+    assert(#conversation.messages == messagesBeforeFalseReturn, "dispatch should not append an outgoing delivered bubble before its event")
+
+    runtime.window.closeButton.scripts.OnClick()
+    _G.SlashCmdList.WHISPERMESSENGER()
+    assert(runtime.window.composer.input:GetText() == "", "accepted BNet draft should not return after close and reopen")
+  end
+
   eventFrame.scripts.OnEvent(
     eventFrame,
     "CHAT_MSG_BN_WHISPER_INFORM",

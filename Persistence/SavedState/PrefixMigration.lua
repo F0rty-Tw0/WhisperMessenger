@@ -5,59 +5,33 @@ end
 
 local PrefixMigration = {}
 
-local function updateActiveConversationKey(characterState, conversations, matchPattern, newPrefix, guardPrefix)
-  if characterState.activeConversationKey then
-    local pos = string.find(characterState.activeConversationKey, matchPattern, 1, true)
-    if pos and string.find(characterState.activeConversationKey, guardPrefix, 1, true) ~= 1 then
-      local newActiveKey = newPrefix .. string.sub(characterState.activeConversationKey, pos)
-      if conversations[newActiveKey] then
-        characterState.activeConversationKey = newActiveKey
-      end
-    end
+local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
+
+local function updateActiveConversationKey(characterState, mappings)
+  if characterState and characterState.activeConversationKey then
+    characterState.activeConversationKey = mappings[characterState.activeConversationKey] or characterState.activeConversationKey
   end
 end
 
-local function sortBySentAt(a, b)
-  return (a.sentAt or 0) < (b.sentAt or 0)
-end
-
--- Combine loser's messages into winner's, restoring chronological order.
--- Guarded against missing messages tables (partial SavedVariables).
-local function mergeMessages(winner, loser)
-  winner.messages = winner.messages or {}
-  for _, msg in ipairs(loser.messages or {}) do
-    table.insert(winner.messages, msg)
-  end
-  table.sort(winner.messages, sortBySentAt)
-end
-
-function PrefixMigration.MigratePrefix(conversations, matchPattern, newPrefix, characterState)
+function PrefixMigration.MigratePrefix(conversations, matchPattern, newPrefix, characterState, maxMessages)
   local migrations = {}
-  for conversationKey, conversation in pairs(conversations or {}) do
+  for conversationKey in pairs(conversations or {}) do
     local pos = string.find(conversationKey, matchPattern, 1, true)
     if pos and string.find(conversationKey, newPrefix .. "::", 1, true) ~= 1 then
-      local newKey = newPrefix .. string.sub(conversationKey, pos)
-      migrations[conversationKey] = { newKey = newKey, conversation = conversation }
+      migrations[conversationKey] = newPrefix .. string.sub(conversationKey, pos)
     end
   end
 
-  for oldKey, entry in pairs(migrations) do
-    local existing = conversations[entry.newKey]
-    if existing then
-      -- Merge: keep the one with more recent activity, combine messages
-      if (entry.conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
-        mergeMessages(entry.conversation, existing)
-        conversations[entry.newKey] = entry.conversation
-      else
-        mergeMessages(existing, entry.conversation)
-      end
-    else
-      conversations[entry.newKey] = entry.conversation
+  local mappings = {}
+  for oldKey, newKey in pairs(migrations) do
+    local rekeyed = ConversationMerge.Rekey(conversations, oldKey, newKey, maxMessages)
+    for sourceKey, destinationKey in pairs(rekeyed) do
+      mappings[sourceKey] = destinationKey
     end
-    conversations[oldKey] = nil
   end
 
-  updateActiveConversationKey(characterState, conversations, matchPattern, newPrefix, newPrefix .. "::")
+  updateActiveConversationKey(characterState, mappings)
+  return mappings
 end
 
 ns.SavedStatePrefixMigration = PrefixMigration

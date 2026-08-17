@@ -83,6 +83,27 @@ return function()
       end,
     })
     assert(disabled == true, "menu entry should be disabled without unanswered messages")
+
+    local liveEnabled
+    modifier(anchor, {
+      CreateButton = function()
+        return {
+          SetEnabled = function(_, enabled)
+            liveEnabled = enabled
+          end,
+        }
+      end,
+    }, {
+      whisperMessengerItem = {
+        conversation = {
+          messages = {
+            { direction = "in", kind = "user", text = "unanswered" },
+          },
+        },
+      },
+      whisperMessengerOnMarkUnread = function() end,
+    })
+    assert(liveEnabled == true, "menu entry should derive unanswered status from the transient conversation")
   end
 
   _G.Menu = savedMenu

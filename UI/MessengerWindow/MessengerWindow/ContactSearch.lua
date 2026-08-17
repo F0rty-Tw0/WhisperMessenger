@@ -13,6 +13,10 @@ local function buildSearchTerms(normalizedQuery)
   return terms
 end
 
+local function containsTerm(value, term)
+  return type(value) == "string" and string.find(string.lower(value), term, 1, true) ~= nil
+end
+
 local function itemMatchesSearch(item, terms)
   if #terms == 0 then
     return true
@@ -21,18 +25,45 @@ local function itemMatchesSearch(item, terms)
     return false
   end
 
-  local haystack = item.searchText or item.displayName or ""
-  if haystack == "" then
-    return false
+  local unmatched = {}
+  local remaining = #terms
+  for index in ipairs(terms) do
+    unmatched[index] = true
   end
 
-  local loweredHaystack = string.lower(haystack)
-  for _, term in ipairs(terms) do
-    if string.find(loweredHaystack, term, 1, true) == nil then
-      return false
+  local function match(value)
+    for index, term in ipairs(terms) do
+      if unmatched[index] and containsTerm(value, term) then
+        unmatched[index] = nil
+        remaining = remaining - 1
+      end
     end
   end
-  return true
+
+  match(item.displayName)
+  match(item.contactDisplayName)
+  match(item.conversationKey)
+  match(item.battleTag)
+  match(item.gameAccountName)
+  match(item.className)
+  match(item.raceName)
+  match(item.factionName)
+  match(item.lastPreview)
+  if remaining == 0 then
+    return true
+  end
+
+  for _, message in ipairs((item.conversation or {}).messages or {}) do
+    if type(message) == "table" then
+      match(message.text)
+      match(message.playerName)
+      if remaining == 0 then
+        return true
+      end
+    end
+  end
+
+  return false
 end
 
 function ContactSearch.NormalizeSearchQuery(rawText)

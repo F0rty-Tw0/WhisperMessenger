@@ -12,22 +12,18 @@
 -- channel echoed the outgoing message.
 
 local Store = require("WhisperMessenger.Model.ConversationStore")
-local Queue = require("WhisperMessenger.Model.LockdownQueue")
+
 local Router = require("WhisperMessenger.Core.EventRouter")
 
 local function makeState()
   return {
     localProfileId = "me",
     store = Store.New({ maxMessagesPerConversation = 10 }),
-    queue = Queue.New(),
     activeConversationKey = nil,
     availabilityByGUID = {},
     pendingOutgoing = {},
     now = function()
       return 1000
-    end,
-    isChatMessagingLocked = function()
-      return false
     end,
   }
 end

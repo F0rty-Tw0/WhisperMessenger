@@ -1,16 +1,17 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
+local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
 
 -- Load GroupChatIngest under test
 local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
 return function()
+  local savedBNGetInfo = _G.BNGetInfo
   local function makeState(overrides)
     overrides = overrides or {}
     local s = {
       localProfileId = "arthas-area52",
       localPlayerGuid = "Player-1084-00000001",
-      localBnetAccountID = 12345,
       store = Store.New({ maxMessagesPerConversation = 50 }),
       activeConversationKey = nil,
       -- Whisper-specific state (must NOT be mutated by group ingest)
@@ -168,6 +169,7 @@ return function()
     assert(conv.channel == ChannelType.BN_CONVERSATION, "channel should be BN_CONVERSATION, got: " .. tostring(conv.channel))
     assert(conv.messages[1].text == "hey bnet friends", "text mismatch")
     assert(conv.conversationKey == expectedKey, "conversationKey stamp missing")
+    assert(conv.conversationID == 42, "BN conversation must persist its conversationID")
   end
 
   -- ----------------------------------------------------------------
@@ -312,23 +314,60 @@ return function()
   end
 
   -- ----------------------------------------------------------------
-  -- 10. BN_CONVERSATION: direction="out" when bnSenderID matches
-  --     state.localBnetAccountID
+  -- 10. BN_CONVERSATION resolves the local BNet identity from the live API.
   -- ----------------------------------------------------------------
   do
+    rawset(_G, "BNGetInfo", function()
+      return 12345
+    end)
     local state = makeState()
     GroupChatIngest.HandleEvent(state, "CHAT_MSG_BN_CONVERSATION", {
       text = "I said this in bnet conv",
       playerName = "Me#1234",
       lineID = 1001,
       guid = nil,
-      bnSenderID = 12345, -- matches state.localBnetAccountID
+      bnSenderID = 12345,
       conversationID = 7,
     })
 
     local conv = state.store.conversations["bnconv::7"]
     assert(conv ~= nil, "conversation should exist")
-    assert(conv.messages[1].direction == "out", "direction should be out when bnSenderID matches localBnetAccountID")
+    assert(state.localBnetAccountID == 12345, "lazy lookup should cache the live BNet account ID")
+    assert(conv.messages[1].direction == "out", "direction should be out when bnSenderID matches the lazily resolved local BNet ID")
+
+    local runtime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, { activeConversationKey = nil }, "arthas-area52", {
+      now = function()
+        return 1
+      end,
+    })
+    assert(runtime.localBnetAccountID == 12345, "runtime factory should initialize the available local BNet account ID")
+  end
+
+  -- A missing early API result must not be cached as absence: the next event
+  -- may arrive after the BNet identity API becomes available.
+  do
+    rawset(_G, "BNGetInfo", nil)
+    local state = makeState()
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_BN_CONVERSATION", {
+      text = "unknown local identity",
+      playerName = "Friend#1234",
+      lineID = 1002,
+      bnSenderID = 12345,
+      conversationID = 8,
+    })
+    assert(state.store.conversations["bnconv::8"].messages[1].direction == "in", "missing BNet API must degrade to incoming")
+
+    rawset(_G, "BNGetInfo", function()
+      return 12345
+    end)
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_BN_CONVERSATION", {
+      text = "identity available",
+      playerName = "Me#1234",
+      lineID = 1003,
+      bnSenderID = 12345,
+      conversationID = 9,
+    })
+    assert(state.store.conversations["bnconv::9"].messages[1].direction == "out", "later BNet API availability must resolve the local echo")
   end
 
   -- ----------------------------------------------------------------
@@ -530,4 +569,5 @@ return function()
     assert(instance.ownerProfileId == "arthas-area52", "GUID session should stamp ownerProfileId")
     assert(instance.groupCategory == 2 and instance.partyGUID == instanceGuid, "GUID session should stamp category and partyGUID")
   end
+  rawset(_G, "BNGetInfo", savedBNGetInfo)
 end

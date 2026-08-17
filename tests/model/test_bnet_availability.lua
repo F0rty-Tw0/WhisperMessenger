@@ -36,9 +36,6 @@ return function()
       end,
     },
     playerInfoByGUID = nil,
-    isChatMessagingLocked = function()
-      return false
-    end,
   }
 
   -- Build contacts list with the BNet contact

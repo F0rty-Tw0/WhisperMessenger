@@ -218,6 +218,72 @@ return function()
     _G.BNGetConversationMemberInfo = savedGetMemberInfo
   end
 
+  -- Hidden group messages are stored but do not rebuild contacts or transcript.
+  do
+    local refreshes = 0
+    local runtime = makeRuntime({
+      isWindowVisible = function()
+        return false
+      end,
+      refreshWindow = function()
+        refreshes = refreshes + 1
+      end,
+    })
+
+    local handled = EventBridge.RouteGroupEvent(
+      runtime,
+      "CHAT_MSG_PARTY",
+      "stored while hidden",
+      "Thrall-Aggamaggan",
+      "",
+      "",
+      "",
+      "",
+      0,
+      0,
+      "",
+      0,
+      801,
+      "Player-1084-00000099"
+    )
+
+    assert(handled == true, "hidden group event should still persist")
+    assert(runtime.store.conversations["party::arthas-area52"] ~= nil, "hidden group event should create its conversation")
+    assert(refreshes == 0, "hidden group event must not render contacts or transcript")
+  end
+
+  -- A visible group surface is refreshed after the group mutation.
+  do
+    local refreshes = 0
+    local runtime = makeRuntime({
+      isWindowVisible = function()
+        return true
+      end,
+      refreshWindow = function()
+        refreshes = refreshes + 1
+      end,
+    })
+
+    EventBridge.RouteGroupEvent(
+      runtime,
+      "CHAT_MSG_PARTY",
+      "render while visible",
+      "Thrall-Aggamaggan",
+      "",
+      "",
+      "",
+      "",
+      0,
+      0,
+      "",
+      0,
+      802,
+      "Player-1084-00000099"
+    )
+
+    assert(refreshes == 1, "visible group event should refresh its current surface")
+  end
+
   -- ----------------------------------------------------------------
   -- 4. RegisterGroupEvents calls frame:RegisterEvent for each of the
   --    5 group event names

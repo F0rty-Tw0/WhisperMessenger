@@ -3,40 +3,12 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ConversationOps = {}
 
 function ConversationOps.findConversationKeyByName(runtime, name)
-  if not name or not runtime.store or not runtime.store.conversations then
-    return nil
-  end
-
-  local lowerName = string.lower(name)
-  local inputBase = string.match(name, "^([^%-]+)")
-  for key, conv in pairs(runtime.store.conversations) do
-    local displayName = conv.displayName or conv.contactDisplayName or ""
-    if string.lower(displayName) == lowerName then
-      return key
-    end
-
-    local baseName = string.match(displayName, "^([^%-]+)")
-    if baseName and string.lower(baseName) == lowerName then
-      return key
-    end
-
-    if inputBase and string.lower(displayName) == string.lower(inputBase) then
-      return key
-    end
-
-    if conv.battleTag and string.lower(conv.battleTag) == lowerName then
-      return key
-    end
-
-    if conv.gameAccountName and string.lower(conv.gameAccountName) == lowerName then
-      return key
-    end
-  end
-
-  return nil
+  return Identity.ResolveWhisperConversation(runtime, name, "WOW")
 end
 
 function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
@@ -49,23 +21,13 @@ function ConversationOps.buildConversationKeyFromName(runtime, identity, name)
 end
 
 function ConversationOps.ensureConversation(runtime, conversationKey, displayName)
-  if not runtime.store then
-    runtime.store = {}
-  end
-  runtime.store.conversations = runtime.store.conversations or {}
-
-  if runtime.store.conversations[conversationKey] then
-    return
-  end
-
-  runtime.store.conversations[conversationKey] = {
-    displayName = displayName,
+  runtime.store = runtime.store or {}
+  local now = type(runtime.now) == "function" and runtime.now() or 0
+  return Store.EnsureConversation(runtime.store, conversationKey, {
     channel = "WOW",
-    messages = {},
-    unreadCount = 0,
-    lastActivityAt = runtime.now(),
-    conversationKey = conversationKey,
-  }
+    displayName = displayName,
+    lastActivityAt = now,
+  })
 end
 
 function ConversationOps.ensureBattleNetConversation(runtime, identity, accountInfo)
@@ -73,16 +35,9 @@ function ConversationOps.ensureBattleNetConversation(runtime, identity, accountI
   if not bnetAccountID then
     return nil
   end
-
-  if not runtime.store then
-    runtime.store = {}
-  end
-  runtime.store.conversations = runtime.store.conversations or {}
-  local conversations = runtime.store.conversations
-  for key, conversation in pairs(conversations) do
-    if conversation.bnetAccountID == bnetAccountID then
-      return key
-    end
+  local existingKey = Identity.ResolveWhisperConversation(runtime, bnetAccountID, "BN")
+  if existingKey ~= nil then
+    return existingKey
   end
 
   local contact = identity.FromBattleNet(bnetAccountID, accountInfo)
@@ -91,17 +46,15 @@ function ConversationOps.ensureBattleNetConversation(runtime, identity, accountI
   end
 
   local conversationKey = identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
-  conversations[conversationKey] = {
-    displayName = accountInfo.battleTag or accountInfo.accountName or tostring(bnetAccountID),
+  local now = type(runtime.now) == "function" and runtime.now() or 0
+  Store.EnsureConversation(runtime.store, conversationKey, {
     channel = "BN",
+    displayName = accountInfo.battleTag or accountInfo.accountName or tostring(bnetAccountID),
     bnetAccountID = bnetAccountID,
     battleTag = accountInfo.battleTag,
     gameAccountName = accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.characterName,
-    messages = {},
-    unreadCount = 0,
-    lastActivityAt = runtime.now(),
-    conversationKey = conversationKey,
-  }
+    lastActivityAt = now,
+  })
 
   return conversationKey
 end

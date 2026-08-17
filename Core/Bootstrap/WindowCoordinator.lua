@@ -71,29 +71,31 @@ function WindowCoordinator.Create(options)
     return 0
   end
 
-  local function contactsContainGUID(contacts, guid)
+  local function buildPresentGUIDs(contacts)
+    local presentGUIDs = {}
     for _, item in ipairs(contacts) do
-      if item.guid == guid then
-        return true
+      if item.guid then
+        presentGUIDs[item.guid] = true
       end
     end
-    return false
+    return presentGUIDs
   end
 
-  local function pruneGUIDCache(cache, contacts)
+  local function pruneGUIDCache(cache, presentGUIDs)
     if type(cache) ~= "table" then
       return
     end
     for guid in pairs(cache) do
-      if not contactsContainGUID(contacts, guid) then
+      if not presentGUIDs[guid] then
         cache[guid] = nil
       end
     end
   end
 
   local function pruneAvailabilityCaches(contacts)
-    pruneGUIDCache(runtime.availabilityByGUID, contacts)
-    pruneGUIDCache(runtime.availabilityRequestedAt, contacts)
+    local presentGUIDs = buildPresentGUIDs(contacts)
+    pruneGUIDCache(runtime.availabilityByGUID, presentGUIDs)
+    pruneGUIDCache(runtime.availabilityRequestedAt, presentGUIDs)
   end
 
   local function startStatusTicker()
@@ -125,7 +127,7 @@ function WindowCoordinator.Create(options)
 
     trace("set visible=" .. tostring(nextVisible))
     if nextVisible then
-      if presenceCache and presenceCache.Rebuild then
+      if presenceCache and type(presenceCache.IsStale) == "function" and presenceCache.IsStale() and presenceCache.Rebuild then
         trace("PresenceCache: rebuild on window open")
         presenceCache.Rebuild()
       end
@@ -225,35 +227,65 @@ function WindowCoordinator.Create(options)
 
     return nextState
   end
-
-  function coordinator.refreshWindow()
+  function coordinator.refreshWindow(affectedConversationKey)
     local nextState = coordinator.refreshContacts()
     local window = getWindow()
 
-    if coordinator.isWindowVisible() and window and window.refreshSelection then
-      window.refreshSelection(nextState)
+    if coordinator.isWindowVisible() and window then
+      local selectedConversationKey = nextState.selectedContact and nextState.selectedContact.conversationKey or nil
+      if affectedConversationKey and selectedConversationKey and selectedConversationKey ~= affectedConversationKey and window.refreshContacts then
+        window.refreshContacts(nextState.contacts, selectedConversationKey)
+      elseif window.refreshSelection then
+        window.refreshSelection(nextState)
+      end
     end
 
     return nextState
   end
 
-  local refreshScheduled = false
+  local function refreshAvailabilitySurfaces(changedGUIDs)
+    local nextState = coordinator.refreshContacts()
+    local window = getWindow()
+    if not coordinator.isWindowVisible() or window == nil then
+      return
+    end
 
-  function coordinator.scheduleAvailabilityRefresh(_guid)
-    if refreshScheduled or not coordinator.isWindowVisible() then
+    local selectedContact = nextState.selectedContact
+    if selectedContact and selectedContact.guid and changedGUIDs[selectedContact.guid] and window.refreshSelection then
+      window.refreshSelection(nextState)
+    elseif window.refreshContacts then
+      window.refreshContacts(nextState.contacts, selectedContact and selectedContact.conversationKey or nil)
+    elseif window.refreshSelection then
+      window.refreshSelection(nextState)
+    end
+  end
+
+  local refreshScheduled = false
+  local pendingAvailabilityGUIDs = {}
+
+  function coordinator.scheduleAvailabilityRefresh(guid)
+    if not coordinator.isWindowVisible() then
+      return
+    end
+    if guid ~= nil then
+      pendingAvailabilityGUIDs[guid] = true
+    end
+    if refreshScheduled then
       return
     end
     refreshScheduled = true
-    if cTimer and type(cTimer.After) == "function" then
-      cTimer.After(AVAILABILITY_REFRESH_DEBOUNCE, function()
-        refreshScheduled = false
-        if coordinator.isWindowVisible() then
-          coordinator.refreshWindow()
-        end
-      end)
-    else
+    local function refresh()
       refreshScheduled = false
-      coordinator.refreshWindow()
+      local changedGUIDs = pendingAvailabilityGUIDs
+      pendingAvailabilityGUIDs = {}
+      if coordinator.isWindowVisible() then
+        refreshAvailabilitySurfaces(changedGUIDs)
+      end
+    end
+    if cTimer and type(cTimer.After) == "function" then
+      cTimer.After(AVAILABILITY_REFRESH_DEBOUNCE, refresh)
+    else
+      refresh()
     end
   end
 

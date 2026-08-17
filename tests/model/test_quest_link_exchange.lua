@@ -102,4 +102,31 @@ return function()
     assert(state.questLinkInbox.OldSender == nil, "expired unmatched sender buffer should be pruned")
     assert(state.questLinkInbox.NewSender ~= nil, "new sender buffer should be retained")
   end
+  -- 13. Expired inbox entries are purged by one coalesced timer without later traffic.
+  do
+    local savedTimer = _G.C_Timer
+    local scheduled = {}
+    local now = 1000
+    _G.C_Timer = {
+      After = function(delay, callback)
+        scheduled[#scheduled + 1] = { delay = delay, callback = callback }
+      end,
+    }
+
+    local state = {
+      questLinkInbox = {},
+      now = function()
+        return now
+      end,
+    }
+    QuestLinkExchange.RecordIncoming(state, "OldSender", "471:Apprentice's Duties", now)
+    assert(#scheduled == 1, "expected one cleanup timer")
+
+    now = 1016
+    scheduled[1].callback()
+    assert(state.questLinkInbox.OldSender == nil, "timer should purge expired entries without later traffic")
+    assert(state.questLinkCleanupScheduled == nil, "cleanup flag should clear after final purge")
+
+    _G.C_Timer = savedTimer
+  end
 end

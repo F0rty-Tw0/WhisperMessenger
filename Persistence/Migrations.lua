@@ -3,10 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
-
 local Migrations = {
-  CURRENT_VERSION = 5,
+  CURRENT_VERSION = 6,
 }
 
 local function isFlatChannelShape(channelMessages)
@@ -103,18 +101,22 @@ function Migrations.Apply(accountState, schema)
     end
   end
 
-  -- Backfill channel type on existing whisper/bnet conversations (v4 -> v5).
-  -- Idempotent: only stamps records where channel is nil. Matches both the
-  -- shared-prefix keys AND the legacy per-character shapes ("alice::WOW::bob"),
-  -- because this runs BEFORE PrefixMigration renames them.
+  -- Whisper records use WOW and BN everywhere outside the group-channel
+  -- model. Convert the v5 typed values on every load because users who
+  -- already reached v5 still need this repair.
   for key, conv in pairs(accountState.conversations) do
-    if conv.channel == nil and type(key) == "string" then
-      if string.find(key, "wow::", 1, true) == 1 or string.find(key, "::WOW::", 1, true) then
-        conv.channel = ChannelType.WHISPER
-      elseif string.find(key, "bnet::", 1, true) == 1 or string.find(key, "::BN::", 1, true) then
-        conv.channel = ChannelType.BN_WHISPER
+    if type(conv) == "table" then
+      if conv.channel == "WHISPER" then
+        conv.channel = "WOW"
+      elseif conv.channel == "BN_WHISPER" then
+        conv.channel = "BN"
+      elseif conv.channel == nil and type(key) == "string" then
+        if string.find(key, "wow::", 1, true) == 1 or string.find(key, "::WOW::", 1, true) then
+          conv.channel = "WOW"
+        elseif string.find(key, "bnet::", 1, true) == 1 or string.find(key, "::BN::", 1, true) then
+          conv.channel = "BN"
+        end
       end
-      -- Unknown/ambiguous keys: leave channel nil; later-stage ingest will supply it.
     end
   end
 

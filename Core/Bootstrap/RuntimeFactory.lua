@@ -6,8 +6,8 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
-local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
 local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.ContentDetector")
+local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -85,12 +85,16 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     end
   end
 
+  local getBNetInfo = options.getBNetInfo or _G.BNGetInfo
+  local localBnetAccountID = BNetIdentity.ResolveLocalAccountID(options.localBnetAccountID, getBNetInfo)
+
   return {
     accountState = accountState,
     characterState = characterState,
     localProfileId = localProfileId,
     localPlayerGuid = localPlayerGuid,
-    localBnetAccountID = options.localBnetAccountID,
+    localBnetAccountID = localBnetAccountID,
+    getBNetInfo = getBNetInfo,
     activeConversationKey = characterState.activeConversationKey,
     pendingOutgoing = {},
     sendStatusByConversation = {},
@@ -102,11 +106,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     localFaction = options.localFaction or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
     store = store,
     channelMessageStore = channelMessageStore,
-    queue = Queue.New(),
     now = nowFn,
-    isChatMessagingLocked = options.isChatMessagingLocked or function()
-      return false
-    end,
     isMythicLockdown = options.isMythicLockdown or function()
       return ContentDetector.IsMythicRestricted(_G.GetInstanceInfo)
     end,

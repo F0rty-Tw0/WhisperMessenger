@@ -1,5 +1,5 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
-local Queue = require("WhisperMessenger.Model.LockdownQueue")
+
 local Router = require("WhisperMessenger.Core.EventRouter")
 local fixture = dofile("tests/fixtures/whispers.lua")
 
@@ -7,15 +7,11 @@ return function()
   local state = {
     localProfileId = "me",
     store = Store.New({ maxMessagesPerConversation = 10 }),
-    queue = Queue.New(),
     activeConversationKey = nil,
     availabilityByGUID = {},
     pendingOutgoing = {},
     now = function()
       return 500
-    end,
-    isChatMessagingLocked = function()
-      return false
     end,
   }
 

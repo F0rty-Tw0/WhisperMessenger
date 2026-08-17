@@ -40,12 +40,15 @@ local function buildMessagesWithChannelContext(messages, selectedContact)
 end
 
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
+  local selectedConversationKey = selectedContact and selectedContact.conversationKey or nil
+  if view._selectedConversationKey ~= selectedConversationKey then
+    view.transcript._visibleCount = MESSAGES_PAGE_SIZE
+  end
+  view._selectedConversationKey = selectedConversationKey
   view._selectedContact = selectedContact
   view._conversation = conversation
   view._status = status
   HeaderView.Refresh(view, selectedContact, conversation, status)
-  -- Reset visible count when conversation changes
-  view.transcript._visibleCount = MESSAGES_PAGE_SIZE
   -- Pass classTag from selected contact so chat bubbles can use it as fallback
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil

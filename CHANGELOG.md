@@ -3,6 +3,9 @@
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
 ## [Unreleased]
+- Fixed messages, replies, and saved conversations so they stay with the right contact and are not lost during history loading or cleanup.
+- Fixed drafts so they remain available when you return to a conversation.
+- Reduced unnecessary refreshes and search work while the messenger is open.
 
 ## [1.3.0] - 2026-08-17
 

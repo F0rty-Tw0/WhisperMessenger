@@ -261,6 +261,63 @@ return function()
     assert(state.conversations["key::unpinned-stale"] == nil, "expected stale pinned conversation to be removed immediately after unpin")
   end
 
+  -- test_apply_retention_trims_messages_expires_unpinned_and_reports_removals
+  do
+    local now = 10000
+    local state = Store.New({
+      maxMessagesPerConversation = 2,
+      maxConversations = 10,
+      messageMaxAge = 3600,
+      conversationMaxAge = 3600,
+    })
+    state.conversations["key::recent"] = {
+      messages = {
+        { id = "old", sentAt = now - 7200 },
+        { id = "middle", sentAt = now - 200 },
+        { id = "new", sentAt = now - 100 },
+      },
+      lastActivityAt = now - 100,
+    }
+    state.conversations["key::pinned"] = {
+      pinned = true,
+      messages = {
+        { id = "old", sentAt = now - 7200 },
+        { id = "middle", sentAt = now - 200 },
+        { id = "new", sentAt = now - 100 },
+      },
+      lastActivityAt = now - 7200,
+    }
+    state.conversations["key::stale"] = {
+      messages = {},
+      lastActivityAt = now - 7200,
+    }
+    state.conversations["key::oldest"] = {
+      messages = {},
+      lastActivityAt = now - 300,
+    }
+    state.conversations["key::active"] = {
+      messages = {},
+      lastActivityAt = now - 400,
+    }
+
+    local removed = Store.ApplyRetention(state, now)
+
+    assert(state.conversations["key::stale"] == nil, "expired unpinned conversation must be removed immediately")
+    assert(removed["key::stale"] == true, "removed keys must report expired conversations")
+    assert(#state.conversations["key::recent"].messages == 2, "recent conversation must honor lowered message cap")
+    assert(state.conversations["key::recent"].messages[1].id == "middle", "message cap must retain recent messages")
+    assert(state.conversations["key::pinned"] ~= nil, "pinned conversation must ignore age expiry")
+    assert(#state.conversations["key::pinned"].messages == 2, "pinned conversation must still honor message cap")
+    assert(state.conversations["key::pinned"].messages[1].id == "middle", "pinned cap must retain recent messages")
+    state.config.maxConversations = 2
+    local capRemoved = Store.ApplyRetention(state, now, "key::active")
+
+    assert(state.conversations["key::oldest"] == nil, "lower contact cap must remove oldest eligible conversation")
+    assert(state.conversations["key::recent"] == nil, "contact cap must use activity then key deterministically")
+    assert(state.conversations["key::active"] ~= nil, "protected active conversation must survive contact cap")
+    assert(capRemoved["key::oldest"] == true and capRemoved["key::recent"] == true, "removed keys must report cap evictions")
+  end
+
   -- test_default_config_has_24h_expiry
   do
     local runtime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, { activeConversationKey = nil }, "testplayer", {})

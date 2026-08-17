@@ -527,6 +527,51 @@ return function()
     assert(calls.syncReplyKey == 1, "syncReplyKey fired")
   end
 
+  -- Retention setting changes apply their lower bounds and clear a stale active selection.
+  do
+    local runtime, calls = makeRuntime()
+    runtime.now = function()
+      return 10000
+    end
+    runtime.activeConversationKey = "key::stale"
+    runtime.characterState = { activeConversationKey = "key::stale" }
+    runtime.store.config = {
+      maxMessagesPerConversation = 3,
+      maxConversations = 3,
+      messageMaxAge = 7200,
+      conversationMaxAge = 7200,
+    }
+    runtime.store.conversations = {
+      ["key::stale"] = { messages = {}, lastActivityAt = 1 },
+      ["key::pinned"] = {
+        pinned = true,
+        messages = {
+          { id = "1", sentAt = 1 },
+          { id = "2", sentAt = 2 },
+          { id = "3", sentAt = 3 },
+        },
+        lastActivityAt = 1,
+      },
+    }
+    local onChange = SettingsHandler.Create({ runtime = runtime, accountSettings = {} })
+
+    onChange("messageMaxAge", 3600)
+    assert(runtime.store.conversations["key::stale"] == nil, "lower age limit must remove stale unpinned conversation")
+    assert(#runtime.store.conversations["key::pinned"].messages == 3, "pinned history must remain age-exempt")
+    assert(runtime.activeConversationKey == nil, "active selection must clear when retention removes it")
+    assert(runtime.characterState.activeConversationKey == nil, "persisted active selection must clear when retention removes it")
+    assert(calls.refreshWindow == 1, "retention change refreshes the visible state once")
+
+    onChange("maxMessagesPerConversation", 2)
+    assert(#runtime.store.conversations["key::pinned"].messages == 2, "lower message limit must trim pinned conversation immediately")
+    assert(calls.refreshWindow == 2, "each committed retention change refreshes once")
+
+    runtime.store.conversations["key::other"] = { messages = {}, lastActivityAt = 9999 }
+    onChange("maxConversations", 1)
+    assert(runtime.store.conversations["key::other"] == nil, "lower contact limit must prune eligible conversation immediately")
+    assert(calls.refreshWindow == 3, "each committed retention setting refreshes once")
+  end
+
   -- messageMaxAge mirrors into store.config.conversationMaxAge.
   do
     local runtime = makeRuntime()

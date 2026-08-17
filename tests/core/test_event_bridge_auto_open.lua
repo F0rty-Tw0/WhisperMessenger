@@ -59,9 +59,7 @@ local function makeScenario(opts)
   end)
   rawset(_G, "SetCVar", function() end)
   _G.C_Timer = {
-    After = function(_delay, fn)
-      fn()
-    end,
+    After = function() end,
   }
   rawset(_G, "InCombatLockdown", function()
     return inCombat
@@ -80,6 +78,18 @@ local function makeScenario(opts)
 
   local incomingCalls = {}
   local outgoingCalls = {}
+
+  local refreshCalls = 0
+  local availabilityChanges = 0
+  local refreshWindow = opts.refreshWindow or function()
+    refreshCalls = refreshCalls + 1
+  end
+  local onAvailabilityChanged = opts.onAvailabilityChanged or function()
+    availabilityChanges = availabilityChanges + 1
+  end
+
+  runtime.onAvailabilityChanged = onAvailabilityChanged
+
   if not opts.skipIncomingCallback then
     runtime.onAutoOpen = function(conversationKey)
       incomingCalls[#incomingCalls + 1] = conversationKey
@@ -95,8 +105,14 @@ local function makeScenario(opts)
     runtime = runtime,
     incomingCalls = incomingCalls,
     outgoingCalls = outgoingCalls,
+    refreshCalls = function()
+      return refreshCalls
+    end,
+    availabilityChanges = function()
+      return availabilityChanges
+    end,
     dispatch = function(eventName, args)
-      EventBridge.RouteLiveEvent(runtime, nil, eventName or "CHAT_MSG_WHISPER", unpackArgs(args or WHISPER_ARGS))
+      EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName or "CHAT_MSG_WHISPER", unpackArgs(args or WHISPER_ARGS))
     end,
   }
 end
@@ -223,6 +239,25 @@ return function()
     local s = makeScenario()
     s.dispatch("CHAT_MSG_BN_WHISPER", BNET_ARGS)
     assert(#s.incomingCalls == 1, "BNet incoming whisper should trigger onAutoOpen")
+    teardown()
+  end
+
+  -- Classic quest-link addon traffic is side-channel only: it must not
+  -- rebuild the window when no conversation changed.
+  do
+    local s = makeScenario()
+    s.dispatch("CHAT_MSG_ADDON", { "WMQL", "1:Quest", "WHISPER", "Arthas" })
+    assert(s.refreshCalls() == 0, "addon side-channel event must not refresh the window")
+    teardown()
+  end
+
+  -- Availability changes schedule their debounced refresh but must not also
+  -- invoke the live-event refresh callback immediately.
+  do
+    local s = makeScenario()
+    s.dispatch("CAN_LOCAL_WHISPER_TARGET_RESPONSE", { "Player-1-ABC", "WrongFaction" })
+    assert(s.availabilityChanges() == 1, "changed availability should schedule one refresh")
+    assert(s.refreshCalls() == 0, "availability event must not bypass its debounced refresh")
     teardown()
   end
 

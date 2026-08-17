@@ -24,9 +24,6 @@ return function()
       end,
     },
     bnetApi = {},
-    isChatMessagingLocked = function()
-      return false
-    end,
     -- Stub fields used by EventRouter.RecordPendingSend
     store = Store.New({
       maxMessagesPerConversation = 20,
@@ -142,9 +139,6 @@ return function()
       return true
     end
 
-    rawset(runtime, "isChatMessagingLocked", function()
-      return false
-    end)
     runtime.isCompetitiveContent = function()
       return false
     end
@@ -200,33 +194,8 @@ return function()
     "expected plain bracketed text untouched on classic, got: " .. tostring(sentMessages[#sentMessages].text)
   )
 
-  -- Test 2: Combat lockdown blocks character whisper sends
-  rawset(runtime, "isChatMessagingLocked", function()
-    return true
-  end)
-  runtime.sendStatusByConversation = {}
-  runtime.pendingOutgoing = {}
-  refreshCalls = 0
-  sentMessages = {}
-
-  local lockedResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
-  assert(lockedResult == false, "expected send to be blocked during lockdown")
-  assert(#sentMessages == 0, "should not send during lockdown")
-  assert(refreshCalls == 1, "should refresh to show lockdown status")
-
-  local status = runtime.sendStatusByConversation[payload.conversationKey]
-  assert(status ~= nil, "expected lockdown status to be set")
-  assert(status.status == "Lockdown", "expected Lockdown status, got: " .. tostring(status.status))
-  local blockedConversation = runtime.store.conversations[payload.conversationKey]
-  assert(blockedConversation ~= nil, "expected blocked send to be recorded in conversation")
-  assert(#blockedConversation.messages == 1, "expected one blocked outgoing message")
-  assert(blockedConversation.messages[1].delivery == "blocked", "expected blocked outgoing delivery marker")
-  assert(blockedConversation.messages[1].text == "hello", "expected blocked outgoing text to be preserved")
-
   -- Test 3: Global InCombatLockdown blocks character whisper sends
-  rawset(runtime, "isChatMessagingLocked", function()
-    return false
-  end)
+
   rawset(_G, "InCombatLockdown", function()
     return true
   end)
@@ -245,13 +214,11 @@ return function()
   assert(combatStatus.status == "Lockdown", "expected Lockdown status during InCombatLockdown")
   local combatConversation = runtime.store.conversations[payload.conversationKey]
   assert(combatConversation ~= nil, "expected conversation to exist after InCombatLockdown block")
-  assert(#combatConversation.messages == 2, "expected second blocked outgoing message to be recorded")
-  assert(combatConversation.messages[2].blockedReason == "Lockdown", "expected blocked reason Lockdown on InCombatLockdown block")
+  assert(#combatConversation.messages == 1, "expected blocked outgoing message to be recorded")
+  assert(combatConversation.messages[1].blockedReason == "Lockdown", "expected blocked reason Lockdown on InCombatLockdown block")
 
   -- Test 4: Legacy BNSendWhisper fallback supports Classic/TBC Battle.net sends
-  rawset(runtime, "isChatMessagingLocked", function()
-    return false
-  end)
+
   rawset(_G, "InCombatLockdown", function()
     return false
   end)
@@ -280,9 +247,7 @@ return function()
   assert(sentMessages[1].text == "hello bn", "expected Battle.net text to be forwarded")
 
   -- Test 5: Competitive content blocks character whisper sends
-  rawset(runtime, "isChatMessagingLocked", function()
-    return false
-  end)
+
   rawset(_G, "InCombatLockdown", function()
     return false
   end)
@@ -326,9 +291,7 @@ return function()
   runtime.isCompetitiveContent = nil
 
   -- Battle.net channel still routes through SendHandler when nothing blocks.
-  rawset(runtime, "isChatMessagingLocked", function()
-    return false
-  end)
+
   rawset(_G, "InCombatLockdown", function()
     return false
   end)

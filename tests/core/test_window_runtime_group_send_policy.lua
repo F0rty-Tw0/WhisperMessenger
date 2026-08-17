@@ -16,8 +16,6 @@ return function()
     assert(policy.getNotice(nil) == nil, "nil conversation should have no notice")
     assert(policy.getNotice({ channel = "WOW" }) == nil, "WOW whisper should have no group notice")
     assert(policy.getNotice({ channel = "BN" }) == nil, "BN whisper should have no group notice")
-    assert(policy.getNotice({ channel = ChannelType.WHISPER }) == nil, "typed whisper should have no group notice")
-    assert(policy.getNotice({ channel = ChannelType.BN_WHISPER }) == nil, "typed BN whisper should have no group notice")
     assert(policy.getNotice({ channel = ChannelType.COMMUNITY }) == nil, "community is receive-only, not membership notice")
   end
 
@@ -152,5 +150,44 @@ return function()
     assert(policy.sendPayload({ channel = ChannelType.PARTY, text = "hello party" }, function() end) == true, "party send should succeed")
     assert(sendCalls == 1, "ChatGateway.Send should be called once")
     assert(policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }, function() end) == false, "unsendable group should return false")
+  end
+
+  -- A non-throwing Blizzard group dispatch is accepted even when its return
+  -- value is false; dispatch itself is the acceptance boundary.
+  do
+    local traces = {}
+    local falseReturnCalls = 0
+    local policy = GroupSendPolicy.Create({
+      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      chatGateway = {
+        CanSend = function()
+          return true
+        end,
+        Send = function()
+          falseReturnCalls = falseReturnCalls + 1
+          return false
+        end,
+      },
+    })
+    assert(policy.sendPayload({ channel = ChannelType.PARTY, text = "dispatched" }, function(...)
+      traces[#traces + 1] = { ... }
+    end) == true, "non-throwing group API false must accept the dispatch")
+    assert(falseReturnCalls == 1, "group API false return must dispatch exactly once")
+
+    local errorPolicy = GroupSendPolicy.Create({
+      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      chatGateway = {
+        CanSend = function()
+          return true
+        end,
+        Send = function()
+          error("group API error")
+        end,
+      },
+    })
+    assert(errorPolicy.sendPayload({ channel = ChannelType.PARTY, text = "error" }, function(...)
+      traces[#traces + 1] = { ... }
+    end) == false, "group API error must reject the send")
+    assert(#traces == 1 and traces[1][1] == "group send error", "group API error should be traced once")
   end
 end

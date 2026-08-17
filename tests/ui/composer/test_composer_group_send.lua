@@ -8,6 +8,10 @@ local Composer = require("WhisperMessenger.UI.Composer")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
 local ChatGateway = require("WhisperMessenger.Transport.ChatGateway")
 local FakeUI = require("tests.helpers.fake_ui")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local ConversationSnapshot = require("WhisperMessenger.Model.ConversationSnapshot")
+local GroupSendPolicy = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPolicy")
 
 local function makeGroupComposer(channel, conversationKey, extraContact, onSend)
   local factory = FakeUI.NewFactory()
@@ -65,25 +69,92 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 3. BN_CONVERSATION: onSend receives conversationID
+  -- 3. BN_CONVERSATION flows from ingest through snapshot into the composer.
   -- ---------------------------------------------------------------------------
   do
+    local state = {
+      localProfileId = "me",
+      store = Store.New({ maxMessagesPerConversation = 50 }),
+      activeConversationKey = nil,
+    }
+    assert(GroupChatIngest.HandleEvent(state, "CHAT_MSG_BN_CONVERSATION", {
+      text = "received",
+      playerName = "Friend#1234",
+      lineID = 7,
+      bnSenderID = 99,
+      conversationID = 7,
+    }) == true, "expected BNet conversation ingest")
+    local selectedContact = ConversationSnapshot.Build("bnconv::7", state.store.conversations["bnconv::7"])
     local sent = {}
-    local composer, _ = makeGroupComposer(ChannelType.BN_CONVERSATION, "me::BN_CONVERSATION::7", { conversationID = 7 }, function(payload)
-      table.insert(sent, payload)
-    end)
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "parent", nil)
+    parent:SetSize(600, 50)
+    local composer = Composer.Create(factory, parent, selectedContact, function(payload)
+      sent[#sent + 1] = payload
+    end, function() end, nil)
 
     composer.input:SetText("Hi group")
     composer.input.scripts.OnEnterPressed(composer.input)
 
     assert(#sent == 1, "expected one send for BN_CONVERSATION, got " .. tostring(#sent))
     assert(sent[1].channel == ChannelType.BN_CONVERSATION, "expected BN_CONVERSATION channel in payload")
-    assert(sent[1].conversationID == 7, "expected conversationID forwarded")
+    assert(sent[1].conversationID == 7, "expected persisted conversationID forwarded")
     assert(sent[1].text == "Hi group", "expected text forwarded")
   end
 
   -- ---------------------------------------------------------------------------
-  -- 4. WHISPER regression: onSend still fires with WHISPER channel
+  -- 4. Explicit false preserves the exact draft and focus.
+  -- ---------------------------------------------------------------------------
+  do
+    local composer = makeGroupComposer(ChannelType.PARTY, "me::PARTY::1", nil, function()
+      return false
+    end)
+    composer.input:SetText(" keep exact draft ")
+    composer.input:SetFocus()
+    composer.input.scripts.OnEnterPressed(composer.input)
+    assert(composer.input.text == " keep exact draft ", "explicit false must preserve the exact draft")
+    assert(composer.input:HasFocus() == true, "explicit false must preserve input focus")
+  end
+
+  -- Nil and true are accepted sends because WoW APIs commonly return nil on success.
+  do
+    local trueComposer = makeGroupComposer(ChannelType.PARTY, "me::PARTY::1", nil, function()
+      return true
+    end)
+    trueComposer.input:SetText("true success")
+    trueComposer.input.scripts.OnEnterPressed(trueComposer.input)
+    assert(trueComposer.input.text == "", "true success should clear the draft")
+
+    local nilComposer = makeGroupComposer(ChannelType.PARTY, "me::PARTY::1", nil, function() end)
+    nilComposer.input:SetText("nil success")
+    nilComposer.input.scripts.OnEnterPressed(nilComposer.input)
+    assert(nilComposer.input.text == "", "nil success should clear the draft")
+  end
+
+  -- Group gateway errors are converted to false so the composer retains a retryable draft.
+  do
+    local policy = GroupSendPolicy.Create({
+      runtime = { chatApi = {} },
+      chatGateway = {
+        CanSend = function()
+          return true
+        end,
+        Send = function()
+          error("group API failure")
+        end,
+      },
+    })
+    local composer = makeGroupComposer(ChannelType.PARTY, "me::PARTY::1", nil, function(payload)
+      return policy.sendPayload(payload, function() end)
+    end)
+    composer.input:SetText("preserve after group error")
+    composer.input:SetFocus()
+    composer.input.scripts.OnEnterPressed(composer.input)
+    assert(composer.input.text == "preserve after group error", "group API error must preserve the draft")
+    assert(composer.input:HasFocus() == true, "group API error must preserve focus")
+  end
+  -- ---------------------------------------------------------------------------
+  -- 5. WOW whisper regression: onSend keeps canonical WOW channel.
   -- ---------------------------------------------------------------------------
   do
     local sent = {}
@@ -91,9 +162,9 @@ return function()
     local parent = factory.CreateFrame("Frame", "parent", nil)
     parent:SetSize(600, 50)
     local selectedContact = {
-      conversationKey = "me::WHISPER::arthas-area52",
+      conversationKey = "me::WOW::arthas-area52",
       displayName = "Arthas-Area52",
-      channel = ChannelType.WHISPER,
+      channel = "WOW",
       target = "Arthas-Area52",
     }
     local composer = Composer.Create(factory, parent, selectedContact, function(payload)
@@ -103,8 +174,8 @@ return function()
     composer.input:SetText("Hey there")
     composer.input.scripts.OnEnterPressed(composer.input)
 
-    assert(#sent == 1, "expected one send for WHISPER, got " .. tostring(#sent))
-    assert(sent[1].channel == ChannelType.WHISPER, "expected WHISPER channel in payload")
+    assert(#sent == 1, "expected one send for WOW whisper, got " .. tostring(#sent))
+    assert(sent[1].channel == "WOW", "expected canonical WOW channel in payload")
     assert(sent[1].target == "Arthas-Area52", "expected target forwarded")
     assert(sent[1].text == "Hey there", "expected text forwarded")
   end

@@ -4,8 +4,16 @@ if type(ns) ~= "table" then
 end
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local ContextMenu = {}
+
+local function hasUnansweredIncoming(item)
+  if type(item.conversation) == "table" then
+    return Store.CountUnansweredIncoming(item.conversation) > 0
+  end
+  return (tonumber(item.unansweredCount) or 0) > 0
+end
 
 local registeredModernMenu = nil
 
@@ -25,7 +33,7 @@ local function addMarkUnreadEntry(_owner, rootDescription, contextData)
     contextData.whisperMessengerOnMarkUnread(item)
   end)
   if button and type(button.SetEnabled) == "function" then
-    button:SetEnabled((tonumber(item.unansweredCount) or 0) > 0)
+    button:SetEnabled(hasUnansweredIncoming(item))
   end
 end
 

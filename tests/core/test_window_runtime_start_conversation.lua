@@ -210,4 +210,30 @@ return function()
     assert(result.startConversation("  arTHas-ARea52  ") == true, "case-insensitive full-name match should succeed")
     assert(selectedKey == "Player-1234::Arthas-Area52", "expected exact full-name match to reuse existing key")
   end
+  -- Case 8: manual creation uses the store retention path.
+  do
+    local runtime = makeRuntime()
+    runtime.store.config = { maxConversations = 1 }
+    runtime.store.conversations.existing = {
+      displayName = "Existing-Realm",
+      channel = "WOW",
+      messages = {},
+      unreadCount = 0,
+      lastActivityAt = 1,
+    }
+    local selectedKey = nil
+    local result = StartConversation.Create({
+      runtime = runtime,
+      getWindow = function()
+        return makeWindow({})
+      end,
+      selectConversation = function(key)
+        selectedKey = key
+      end,
+    })
+
+    assert(result.startConversation("New-Realm") == true, "expected capped manual conversation start to succeed")
+    assert(runtime.store.conversations.existing == nil, "manual creation must evict the eligible oldest conversation")
+    assert(runtime.store.conversations[selectedKey] ~= nil, "manual creation must retain the selected conversation")
+  end
 end

@@ -27,6 +27,7 @@ Core/Bindings.lua
 Core/Constants.lua
 Core/ContentDetector.lua
 Core/EventUtils.lua
+Core/BNetIdentity.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 Locale/ruRU.lua
@@ -46,10 +47,9 @@ Model/Identity/Factions.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
 Model/Retention.lua
+Model/ConversationMerge.lua
 Model/ConversationStore.lua
 Model/ChannelMessageStore.lua
-Model/LockdownQueue.lua
-Model/EphemeralPurge.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua

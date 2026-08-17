@@ -68,4 +68,11 @@ return function()
   end
   local conv = runtime.store.conversations[key]
   assert(#conv.messages == cap, "expected messages capped at " .. cap .. ", got " .. #conv.messages)
+
+  -- TEST 7: Runtime has no disconnected lockdown queue contract.
+  do
+    local queueFreeRuntime = RuntimeFactory.CreateRuntimeState({ conversations = {} }, { activeConversationKey = nil }, "testplayer", {})
+    assert(queueFreeRuntime.queue == nil, "runtime should not allocate a lockdown queue")
+    assert(queueFreeRuntime.isChatMessagingLocked == nil, "runtime should not expose test-only chat lock state")
+  end
 end

@@ -1,5 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local ConversationOps = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 
 return function()
   local savedGlobals = {
@@ -81,9 +83,11 @@ return function()
     store = {
       conversations = {
         ["wow::WOW::arthas-area52"] = {
+          channel = "WOW",
           displayName = "Arthas-Area52",
         },
         ["wow::WOW::friend"] = {
+          channel = "BN",
           displayName = "Friend#1234",
           battleTag = "Friend#1234",
           gameAccountName = "Thrall",
@@ -159,9 +163,9 @@ return function()
   assert(type(autoOpenHookDeps) == "table", "expected auto-open hook deps table")
   local findConversationKeyByName = rawget(autoOpenHookDeps, "findConversationKeyByName")
   assert(type(findConversationKeyByName) == "function", "expected findConversationKeyByName helper")
-  assert(findConversationKeyByName("Arthas") == "wow::WOW::arthas-area52", "expected base-name conversation lookup")
-  assert(findConversationKeyByName("Friend#1234") == "wow::WOW::friend", "expected battleTag conversation lookup")
-  assert(findConversationKeyByName("Thrall") == "wow::WOW::friend", "expected gameAccountName conversation lookup")
+  assert(findConversationKeyByName("Arthas") == "wow::WOW::arthas-area52", "expected unique base-name WOW conversation lookup")
+  assert(findConversationKeyByName("Friend#1234") == nil, "WOW lookup must not select a Battle.net conversation by battleTag")
+  assert(findConversationKeyByName("Thrall") == nil, "WOW lookup must not select a Battle.net conversation by game account name")
 
   _G.C_BattleNet = {
     GetFriendAccountInfo = function(friendIndex)
@@ -714,6 +718,59 @@ return function()
     assert(#deactivated == prevDeactivatedCount + 1, "expected committed slash whisper draft to close Blizzard edit box")
   end
 
+  -- Direct auto-open operations use store retention instead of bypassing the cap.
+  do
+    local whisperStore = Store.New({ maxConversations = 1 })
+    whisperStore.conversations.existing = {
+      displayName = "Existing-Realm",
+      channel = "WOW",
+      messages = {},
+      unreadCount = 0,
+      lastActivityAt = 1,
+    }
+    local whisperRuntime = {
+      localProfileId = "me",
+      store = whisperStore,
+      now = function()
+        return 100
+      end,
+    }
+    ConversationOps.ensureConversation(whisperRuntime, "me::WOW::new", "New-Realm")
+    assert(whisperStore.conversations.existing == nil, "auto-open WOW creation must evict the eligible oldest conversation")
+    assert(whisperStore.conversations["me::WOW::new"] ~= nil, "auto-open WOW creation must retain its requested key")
+
+    local bnetStore = Store.New({ maxConversations = 1 })
+    bnetStore.conversations.existing = {
+      displayName = "Existing-Realm",
+      channel = "WOW",
+      messages = {},
+      unreadCount = 0,
+      lastActivityAt = 1,
+    }
+    local bnetRuntime = {
+      localProfileId = "me",
+      store = bnetStore,
+      now = function()
+        return 100
+      end,
+    }
+    local bnetKey = ConversationOps.ensureBattleNetConversation(bnetRuntime, {
+      FromBattleNet = function(bnetAccountID)
+        return {
+          canonicalName = tostring(bnetAccountID),
+          contactKey = "BN::" .. tostring(bnetAccountID),
+        }
+      end,
+      BuildConversationKey = function(profileId, contactKey)
+        return profileId .. "::" .. contactKey
+      end,
+    }, {
+      bnetAccountID = 42,
+      battleTag = "Friend#1234",
+    })
+    assert(bnetStore.conversations.existing == nil, "auto-open BNet creation must evict the eligible oldest conversation")
+    assert(bnetStore.conversations[bnetKey] ~= nil, "auto-open BNet creation must retain its requested key")
+  end
   rawset(_G, "CreateFrame", savedGlobals.CreateFrame)
   _G.C_Timer = savedGlobals.C_Timer
   rawset(_G, "ChatEdit_DeactivateChat", savedGlobals.ChatEdit_DeactivateChat)

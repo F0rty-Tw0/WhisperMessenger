@@ -1,31 +1,101 @@
 local PrefixMigration = require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
 
 return function()
-  -- test_merge_sorts_combined_messages_chronologically
+  -- test_collision_merge_preserves_pinned_order_cap_key_references_and_idempotence
   do
+    local oldKey = "alice-realm::BN::foo#1234"
+    local canonicalKey = "bnet::BN::foo#1234"
     local conversations = {
-      ["alice-realm::BN::foo#1234"] = {
-        lastActivityAt = 200,
-        messages = { { sentAt = 150, text = "late-a" }, { sentAt = 200, text = "late-b" } },
-      },
-      ["bnet::BN::foo#1234"] = {
+      [oldKey] = {
+        pinned = true,
+        sortOrder = 7,
+        unreadCount = 2,
         lastActivityAt = 100,
-        messages = { { sentAt = 50, text = "early-a" }, { sentAt = 100, text = "early-b" } },
+        lastPreview = "old preview",
+        lastIncomingAt = 100,
+        lastIncomingSender = "Alice",
+        lastIncomingPreview = "old preview",
+        activeStatus = { text = "Away", eventName = "CHAT_MSG_AFK" },
+        messages = {
+          { id = "shared", kind = "user", direction = "in", sentAt = 50, text = "shared" },
+          { id = "old", kind = "user", direction = "in", sentAt = 150, text = "old" },
+        },
+      },
+      [canonicalKey] = {
+        pinned = false,
+        sortOrder = 0,
+        unreadCount = 2,
+        lastActivityAt = 200,
+        lastPreview = "latest",
+        lastIncomingAt = 200,
+        lastIncomingSender = "Canonical",
+        lastIncomingPreview = "latest",
+        activeStatus = { text = "Busy", eventName = "CHAT_MSG_DND" },
+        messages = {
+          { id = "shared", kind = "user", direction = "in", sentAt = 50, text = "shared" },
+          { id = "canonical", kind = "user", direction = "in", sentAt = 100, text = "canonical" },
+          { id = "latest", kind = "user", direction = "in", sentAt = 200, text = "latest" },
+        },
+      },
+    }
+    local characterState = { activeConversationKey = oldKey }
+
+    local mappings = PrefixMigration.MigratePrefix(conversations, "::BN::", "bnet", characterState, 3)
+
+    local merged = conversations[canonicalKey]
+    assert(merged ~= nil, "merged conversation should exist under the canonical key")
+    assert(conversations[oldKey] == nil, "legacy key should be removed")
+    assert(mappings[oldKey] == canonicalKey, "migration should return the old-to-new key mapping")
+    assert(characterState.activeConversationKey == canonicalKey, "active selection should follow the canonical key")
+    assert(merged.pinned == true, "pinned legacy collision loser must stay pinned")
+    assert(merged.sortOrder == 7, "pinned collision loser keeps its deliberate order")
+    assert(merged.conversationKey == canonicalKey, "embedded key should match the canonical table key")
+    assert(#merged.messages == 3, "deduplicated merged history must respect the configured cap")
+    assert(
+      merged.messages[1].id == "canonical" and merged.messages[2].id == "old" and merged.messages[3].id == "latest",
+      "stable chronological merge should retain the newest capped history"
+    )
+    assert(merged.unreadCount == 3, "unread count must not exceed the retained unique incoming messages")
+    assert(merged.lastActivityAt == 200 and merged.lastPreview == "latest", "latest activity metadata should stay coherent")
+    assert(merged.lastIncomingAt == 200 and merged.lastIncomingSender == "Canonical", "latest incoming metadata should stay coherent")
+    assert(merged.activeStatus.text == "Busy", "latest valid active status should survive")
+
+    local secondMappings = PrefixMigration.MigratePrefix(conversations, "::BN::", "bnet", characterState, 3)
+    assert(next(secondMappings) == nil, "second migration should be a no-op")
+    assert(conversations[canonicalKey] == merged and #merged.messages == 3, "second migration must not change the merge result")
+  end
+
+  -- test_collision_merge_keeps_newest_activity_and_newest_incoming_metadata_separately
+  do
+    local oldKey = "alice-realm::BN::metadata#1234"
+    local canonicalKey = "bnet::BN::metadata#1234"
+    local conversations = {
+      [oldKey] = {
+        lastActivityAt = 200,
+        lastPreview = "new outgoing",
+        lastIncomingAt = 50,
+        lastIncomingSender = "Old",
+        lastIncomingPreview = "old incoming",
+        messages = { { id = "old", kind = "user", direction = "out", sentAt = 200, text = "new outgoing" } },
+      },
+      [canonicalKey] = {
+        lastActivityAt = 150,
+        lastPreview = "new incoming",
+        lastIncomingAt = 150,
+        lastIncomingSender = "Canonical",
+        lastIncomingPreview = "new incoming",
+        messages = { { id = "canonical", kind = "user", direction = "in", sentAt = 150, text = "new incoming" } },
       },
     }
 
-    PrefixMigration.MigratePrefix(conversations, "::BN::", "bnet", {})
+    PrefixMigration.MigratePrefix(conversations, "::BN::", "bnet", {}, 10)
 
-    local merged = conversations["bnet::BN::foo#1234"]
-    assert(merged ~= nil, "merged conversation should exist under the new key")
-    assert(conversations["alice-realm::BN::foo#1234"] == nil, "legacy key should be removed")
-    assert(#merged.messages == 4, "all messages survive the merge; got " .. tostring(#merged.messages))
-    for i = 2, #merged.messages do
-      assert(
-        (merged.messages[i - 1].sentAt or 0) <= (merged.messages[i].sentAt or 0),
-        "merged messages must be chronological; position " .. i .. " is out of order"
-      )
-    end
+    local merged = conversations[canonicalKey]
+    assert(merged.lastActivityAt == 200 and merged.lastPreview == "new outgoing", "latest activity and preview must stay paired")
+    assert(
+      merged.lastIncomingAt == 150 and merged.lastIncomingSender == "Canonical" and merged.lastIncomingPreview == "new incoming",
+      "latest incoming sender, preview, and time must stay paired"
+    )
   end
 
   -- test_merge_survives_missing_messages_table

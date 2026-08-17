@@ -13,6 +13,7 @@ function ChannelMessageStore.New(config)
   return {
     entries = {},
     baseIndex = {},
+    entryCount = 0,
     maxEntries = config.maxEntries or DEFAULT_MAX_ENTRIES,
     ttl = config.ttl or DEFAULT_TTL_SECONDS,
     nextSequence = tonumber(config.nextSequence) or 0,
@@ -35,11 +36,7 @@ local function baseName(key)
 end
 
 local function countEntries(state)
-  local count = 0
-  for _ in pairs(state.entries) do
-    count = count + 1
-  end
-  return count
+  return tonumber(state.entryCount) or 0
 end
 
 local function entrySequence(entry)
@@ -75,6 +72,20 @@ local function rebuildBaseIndex(state)
   end
 end
 
+local function removeEntry(state, key)
+  local entry = state.entries[key]
+  if entry == nil then
+    return false
+  end
+
+  state.entries[key] = nil
+  state.entryCount = math.max(0, countEntries(state) - 1)
+  if state.baseIndex[baseName(key)] == entry then
+    rebuildBaseIndex(state)
+  end
+  return true
+end
+
 local function pruneExpiredEntries(state, now)
   local expiredKeys = {}
   for key, entry in pairs(state.entries) do
@@ -84,7 +95,7 @@ local function pruneExpiredEntries(state, now)
   end
 
   for _, key in ipairs(expiredKeys) do
-    state.entries[key] = nil
+    removeEntry(state, key)
   end
 end
 
@@ -126,12 +137,7 @@ local function evictOldest(state)
   end
 
   if oldestKey then
-    local evicted = state.entries[oldestKey]
-    state.entries[oldestKey] = nil
-    local base = baseName(oldestKey)
-    if state.baseIndex[base] == evicted then
-      rebuildBaseIndex(state)
-    end
+    removeEntry(state, oldestKey)
   end
 end
 
@@ -150,6 +156,9 @@ function ChannelMessageStore.Restore(savedState, config, now)
     local normalizedKey = normalizeKey(key)
     local normalizedEntry = normalizeEntry(entry)
     if normalizedKey ~= "" and normalizedEntry ~= nil then
+      if restored.entries[normalizedKey] == nil then
+        restored.entryCount = restored.entryCount + 1
+      end
       restored.entries[normalizedKey] = normalizedEntry
       restored.nextSequence = math.max(restored.nextSequence, entrySequence(normalizedEntry))
     end
@@ -188,6 +197,9 @@ function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentA
   }
 
   state.entries[key] = entry
+  if existing == nil then
+    state.entryCount = countEntries(state) + 1
+  end
   rememberBaseEntry(state, key, entry)
 
   evictOldest(state)
@@ -200,10 +212,19 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
   end
 
   local entry = state.entries[key]
+  local entryKey = key
   if not entry then
     -- Fallback: try base name match
     local base = baseName(key)
     entry = state.baseIndex[base]
+    if entry then
+      for candidateKey, candidateEntry in pairs(state.entries) do
+        if candidateEntry == entry then
+          entryKey = candidateKey
+          break
+        end
+      end
+    end
   end
 
   if not entry then
@@ -212,6 +233,7 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
 
   -- Expiry check
   if now and (now - entry.sentAt) > state.ttl then
+    removeEntry(state, entryKey)
     return nil
   end
 

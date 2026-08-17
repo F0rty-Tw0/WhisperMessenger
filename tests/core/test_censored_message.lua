@@ -1,5 +1,5 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
-local Queue = require("WhisperMessenger.Model.LockdownQueue")
+
 local Router = require("WhisperMessenger.Core.EventRouter")
 
 return function()
@@ -14,15 +14,11 @@ return function()
     local state = {
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
       now = function()
         return 1000
-      end,
-      isChatMessagingLocked = function()
-        return false
       end,
     }
 
@@ -51,15 +47,11 @@ return function()
     local state = {
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
       now = function()
         return 1001
-      end,
-      isChatMessagingLocked = function()
-        return false
       end,
     }
 
@@ -83,15 +75,11 @@ return function()
     local state = {
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
       now = function()
         return 1002
-      end,
-      isChatMessagingLocked = function()
-        return false
       end,
     }
 
@@ -119,15 +107,11 @@ return function()
     local state = {
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
       now = function()
         return 1003
-      end,
-      isChatMessagingLocked = function()
-        return false
       end,
     }
 

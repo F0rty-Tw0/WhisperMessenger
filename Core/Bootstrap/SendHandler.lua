@@ -16,13 +16,7 @@ local QUEST_LINK_ADDON_PREFIX = "WMQL"
 
 local SendHandler = {}
 
-local function isCombatSendLocked(runtime)
-  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
-    return true
-  end
-
-  -- Guard direct SendChatMessage usage during combat even when runtime-level
-  -- lockdown queueing is disabled; insecure addon calls are blocked here.
+local function isCombatSendLocked()
   return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
 end
 
@@ -123,16 +117,16 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   end
 
   local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text)
-  local callOk, sendOk
+  local callOk
   if payload.channel == "BN" then
-    callOk, sendOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
+    callOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
 
     -- Classic Battle.net character whispers also strip the `(id)` from
     -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
     -- channel as the WoW whisper path, but via BNSendGameData so it routes
     -- over Battle.net to the friend's bnetAccountID. Receivers with our
     -- addon splice the link back in on BN_CHAT_MSG_ADDON.
-    if callOk and sendOk ~= false and FlavorCompat.isClassic and payload.bnetAccountID ~= nil then
+    if callOk and FlavorCompat.isClassic and payload.bnetAccountID ~= nil then
       local encoded = QuestLinkExchange.Encode(payload.text)
       if encoded ~= nil then
         AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
@@ -145,7 +139,6 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     -- and let WoW's error handler surface failures instead.
     Gateway.SendCharacterWhisper(runtime.chatApi, payload.target, payload.text)
     callOk = true
-    sendOk = true
 
     -- Side channel: on Classic the chat protocol strips both the `|H`
     -- envelope AND the `(id)` from `[Name (id)]` patterns, leaving the
@@ -162,7 +155,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     end
   end
 
-  if not callOk or sendOk == false then
+  if not callOk then
     local pending = runtime.pendingOutgoing[pendingConversationKey]
     if pending and #pending > 0 then
       table.remove(pending, #pending)

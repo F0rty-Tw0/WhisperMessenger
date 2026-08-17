@@ -22,32 +22,30 @@ function Store.New(config)
   }
 end
 
-local function ensureConversation(state, key)
-  state.conversations[key] = state.conversations[key]
-    or {
-      messages = {},
-      unreadCount = 0,
-      lastPreview = nil,
-      lastActivityAt = 0,
-      lastIncomingSender = nil,
-      lastIncomingPreview = nil,
-      lastIncomingAt = nil,
-      guid = nil,
-      bnetAccountID = nil,
-      battleTag = nil,
-      gameAccountName = nil,
-      className = nil,
-      classTag = nil,
-      raceName = nil,
-      raceTag = nil,
-      factionName = nil,
-    }
-
-  return state.conversations[key]
+local function newConversation(key)
+  return {
+    messages = {},
+    unreadCount = 0,
+    lastPreview = nil,
+    lastActivityAt = 0,
+    lastIncomingSender = nil,
+    lastIncomingPreview = nil,
+    lastIncomingAt = nil,
+    guid = nil,
+    bnetAccountID = nil,
+    battleTag = nil,
+    gameAccountName = nil,
+    className = nil,
+    classTag = nil,
+    raceName = nil,
+    raceTag = nil,
+    factionName = nil,
+    conversationKey = key,
+  }
 end
 
-local function evictOldestConversation(state)
-  local maxConversations = state.config.maxConversations
+local function evictOldestConversation(state, protectedKey)
+  local maxConversations = state.config and state.config.maxConversations
   if type(maxConversations) ~= "number" or maxConversations < 1 then
     return
   end
@@ -64,12 +62,12 @@ local function evictOldestConversation(state)
   local oldestKey = nil
   local oldestTime = math.huge
   for key, conv in pairs(state.conversations) do
-    -- Pinned conversations are exempt from every retention path, including
-    -- the cap: the user explicitly asked to keep them. The cap may soft-
-    -- overflow if everything is pinned; that beats silent data loss.
-    if conv.pinned ~= true then
+    -- Pinned conversations are exempt from every retention path. The key
+    -- currently being appended is also protected so all-pinned histories
+    -- soft-overflow instead of dropping the new message.
+    if key ~= protectedKey and conv.pinned ~= true then
       local activity = conv.lastActivityAt or 0
-      if activity < oldestTime then
+      if activity < oldestTime or (activity == oldestTime and (oldestKey == nil or key < oldestKey)) then
         oldestTime = activity
         oldestKey = key
       end
@@ -78,7 +76,46 @@ local function evictOldestConversation(state)
 
   if oldestKey then
     state.conversations[oldestKey] = nil
+    return oldestKey
   end
+  return nil
+end
+
+local CONVERSATION_METADATA_FIELDS = {
+  "channel",
+  "displayName",
+  "contactDisplayName",
+  "guid",
+  "bnetAccountID",
+  "battleTag",
+  "gameAccountName",
+  "className",
+  "classTag",
+  "raceName",
+  "raceTag",
+  "factionName",
+  "conversationID",
+  "lastActivityAt",
+}
+
+function Store.EnsureConversation(state, key, metadata)
+  state.conversations = state.conversations or {}
+  local conversation = state.conversations[key]
+  if conversation ~= nil then
+    return conversation, false
+  end
+
+  conversation = newConversation(key)
+  if type(metadata) == "table" then
+    for _, field in ipairs(CONVERSATION_METADATA_FIELDS) do
+      if metadata[field] ~= nil then
+        conversation[field] = metadata[field]
+      end
+    end
+  end
+  state.conversations[key] = conversation
+  evictOldestConversation(state, key)
+  return conversation, true
 end
 
 local function applyMessageCap(state, conversation)
@@ -119,11 +156,10 @@ local function shouldIncrementUnread(message)
 end
 
 function Store.AppendIncoming(state, key, message, isActive)
-  local conversation = ensureConversation(state, key)
+  local conversation = Store.EnsureConversation(state, key)
   table.insert(conversation.messages, message)
   applyMessageCap(state, conversation)
   applyMessageMetadata(conversation, message)
-  evictOldestConversation(state)
 
   if message.kind == "user" and message.direction == "in" then
     conversation.activeStatus = nil
@@ -135,15 +171,14 @@ function Store.AppendIncoming(state, key, message, isActive)
 end
 
 function Store.AppendOutgoing(state, key, message)
-  local conversation = ensureConversation(state, key)
+  local conversation = Store.EnsureConversation(state, key)
   table.insert(conversation.messages, message)
   applyMessageCap(state, conversation)
   applyMessageMetadata(conversation, message)
-  evictOldestConversation(state)
 end
 
 function Store.SetActiveStatus(state, key, status)
-  local conversation = ensureConversation(state, key)
+  local conversation = Store.EnsureConversation(state, key)
   conversation.activeStatus = status
 end
 
@@ -155,7 +190,7 @@ function Store.ClearActiveStatus(state, key)
 end
 
 function Store.MarkRead(state, key)
-  local conversation = ensureConversation(state, key)
+  local conversation = Store.EnsureConversation(state, key)
   conversation.unreadCount = 0
 end
 
@@ -168,7 +203,7 @@ function Store.CountUnansweredIncoming(conversation)
   local messages = conversation.messages or {}
   for index = #messages, 1, -1 do
     local message = messages[index]
-    if isOutgoingUserMessage(message) then
+    if isOutgoingUserMessage(message) and message.delivery ~= "blocked" then
       break
     end
     if isIncomingUserMessage(message) then
@@ -178,8 +213,37 @@ function Store.CountUnansweredIncoming(conversation)
   return count
 end
 
+function Store.ApplyRetention(state, now, protectedKey)
+  state.conversations = state.conversations or {}
+  local removed = {}
+
+  for key, conversation in pairs(state.conversations) do
+    if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
+      state.conversations[key] = nil
+      removed[key] = true
+    else
+      local messages = conversation.messages
+      if messages then
+        Retention.TrimMessages(messages, state.config.maxMessagesPerConversation)
+        if not conversation.pinned then
+          Retention.ExpireMessages(messages, state.config.messageMaxAge, now)
+        end
+      end
+    end
+  end
+
+  while true do
+    local key = evictOldestConversation(state, protectedKey)
+    if key == nil then
+      break
+    end
+    removed[key] = true
+  end
+
+  return removed
+end
 function Store.MarkUnread(state, key)
-  local conversation = ensureConversation(state, key)
+  local conversation = Store.EnsureConversation(state, key)
   conversation.unreadCount = Store.CountUnansweredIncoming(conversation)
 end
 
@@ -195,6 +259,7 @@ function Store.Unpin(state, key)
   if conversation then
     conversation.pinned = false
     Store.ExpireAll(state)
+    evictOldestConversation(state)
   end
 end
 

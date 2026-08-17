@@ -28,8 +28,9 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
   Helpers.applyDefaults(character.minimapIcon, defaults.minimapIcon)
 
   LegacyMigration.MigrateCurrentProfile(account, character, localProfileId)
-  PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", character)
-  PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", character)
+  local maxMessages = (account.settings and account.settings.maxMessagesPerConversation) or 200
+  PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", character, maxMessages)
+  PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", character, maxMessages)
 
   return account, character
 end

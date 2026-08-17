@@ -111,6 +111,46 @@ local function purgeExpiredInbox(state, now)
   end
 end
 
+local function hasInboxEntries(state)
+  for _, inbox in pairs(state.questLinkInbox or {}) do
+    if type(inbox) == "table" and #inbox > 0 then
+      return true
+    end
+  end
+  return false
+end
+
+local function cleanupNow(state, fallback)
+  if type(state.now) == "function" then
+    local ok, now = pcall(state.now)
+    if ok and type(now) == "number" then
+      return now
+    end
+  end
+  return fallback
+end
+
+local function scheduleCleanup(state, recordedAt)
+  if state.questLinkCleanupScheduled then
+    return
+  end
+
+  local timer = _G.C_Timer
+  if type(timer) ~= "table" or type(timer.After) ~= "function" then
+    return
+  end
+
+  state.questLinkCleanupScheduled = true
+  timer.After(INBOX_TTL_SECONDS + 1, function()
+    state.questLinkCleanupScheduled = nil
+    local now = cleanupNow(state, recordedAt + INBOX_TTL_SECONDS + 1)
+    purgeExpiredInbox(state, now)
+    if hasInboxEntries(state) then
+      scheduleCleanup(state, now)
+    end
+  end)
+end
+
 function QuestLinkExchange.RecordIncoming(state, sender, payload, now)
   if type(state) ~= "table" or type(sender) ~= "string" or type(payload) ~= "string" then
     return
@@ -120,11 +160,17 @@ function QuestLinkExchange.RecordIncoming(state, sender, payload, now)
   state.questLinkInbox[sender] = state.questLinkInbox[sender] or {}
 
   local inbox = state.questLinkInbox[sender]
+  local recorded = false
   for entry in string.gmatch(payload, "[^;]+") do
     local id, name = string.match(entry, "^(%d+):(.+)$")
     if id and name then
       table.insert(inbox, { id = id, name = name, recordedAt = now })
+      recorded = true
     end
+  end
+
+  if recorded then
+    scheduleCleanup(state, type(now) == "number" and now or 0)
   end
 end
 

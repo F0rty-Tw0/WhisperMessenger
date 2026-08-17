@@ -5,7 +5,6 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
-local Queue = ns.LockdownQueue or require("WhisperMessenger.Model.LockdownQueue")
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
@@ -273,28 +272,7 @@ local function handleUnlockedEvent(state, eventName, payload)
 end
 
 function Router.HandleEvent(state, eventName, payload)
-  if state.isChatMessagingLocked and state.isChatMessagingLocked() and payload.lineID ~= nil then
-    Queue.Enqueue(state.queue, {
-      eventName = eventName,
-      lineID = payload.lineID,
-      payload = payload,
-    })
-    return { queued = true }
-  end
-
   return handleUnlockedEvent(state, eventName, payload)
-end
-
-function Router.ReplayQueued(state, hydrate)
-  return Queue.ReplayReady(state.queue, state.isChatMessagingLocked and state.isChatMessagingLocked() or false, function(item)
-    if hydrate then
-      return hydrate(item)
-    end
-
-    return item.payload
-  end, function(message, item)
-    handleUnlockedEvent(state, item.eventName, message)
-  end)
 end
 
 ns.EventRouter = Router

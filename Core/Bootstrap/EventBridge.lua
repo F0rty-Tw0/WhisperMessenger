@@ -81,7 +81,8 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     return nil
   end
   local payload = LivePayload.Build(runtime, eventName, ...)
-  if Trace and TRACE_EVENTS[eventName] then
+  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
+  if traceEnabled and TRACE_EVENTS[eventName] then
     -- pcall: 12.0 secret-string payload values throw on concatenation. The
     -- router drops such payloads cleanly; the trace line must not error
     -- first. (Not unit-testable: real secret strings cannot be simulated
@@ -100,7 +101,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end)
   end
   local result, resultMeta = EventRouter.HandleEvent(runtime, eventName, payload)
-  if Trace and TRACE_EVENTS[eventName] then
+  if traceEnabled and TRACE_EVENTS[eventName] then
     if result and result.queued then
       Trace("EventBridge: queued (chat locked)")
     elseif result then
@@ -157,8 +158,8 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       runtime.onAutoOpenOutgoing(result.conversationKey)
     end
   end
-  if refreshWindow then
-    refreshWindow()
+  if refreshWindow and result and result.conversationKey then
+    refreshWindow(result.conversationKey)
   end
   return result
 end

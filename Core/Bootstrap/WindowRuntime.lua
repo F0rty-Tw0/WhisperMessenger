@@ -193,8 +193,8 @@ function WindowRuntime.Create(options)
     return coordinator.setWindowVisible(nextVisible)
   end
 
-  local function refreshWindow()
-    return coordinator.refreshWindow()
+  local function refreshWindow(affectedConversationKey)
+    return coordinator.refreshWindow(affectedConversationKey)
   end
 
   local conversationSelector = ConversationSelector.Create({

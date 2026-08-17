@@ -111,4 +111,89 @@ return function()
   assert(pinnedState.conversations["p-1"] ~= nil, "pinned conversation must survive eviction")
   assert(pinnedState.conversations["p-2"] == nil, "oldest unpinned conversation is evicted instead")
   assert(pinnedState.conversations["p-4"] ~= nil, "new conversation exists")
+
+  -- TEST 6: all pinned conversations soft-overflow rather than dropping a new incoming thread.
+  local allPinnedIncoming = Store.New({ maxMessagesPerConversation = 50, maxConversations = 3 })
+  for i = 1, 3 do
+    Store.AppendIncoming(allPinnedIncoming, "in-" .. i, {
+      id = tostring(i),
+      direction = "in",
+      kind = "user",
+      text = "pinned " .. i,
+      sentAt = i,
+    }, false)
+    Store.Pin(allPinnedIncoming, "in-" .. i)
+  end
+  Store.AppendIncoming(allPinnedIncoming, "new-incoming", {
+    id = "new",
+    direction = "in",
+    kind = "user",
+    text = "must survive",
+    sentAt = 4,
+  }, false)
+  assert(allPinnedIncoming.conversations["new-incoming"] ~= nil, "all-pinned cap must retain a new incoming conversation")
+  local incomingCount = 0
+  for _ in pairs(allPinnedIncoming.conversations) do
+    incomingCount = incomingCount + 1
+  end
+  assert(incomingCount == 4, "all-pinned cap should soft-overflow to four conversations")
+
+  -- TEST 7: the same protection applies to a new outgoing thread.
+  local allPinnedOutgoing = Store.New({ maxMessagesPerConversation = 50, maxConversations = 3 })
+  for i = 1, 3 do
+    Store.AppendIncoming(allPinnedOutgoing, "out-" .. i, {
+      id = tostring(i),
+      direction = "in",
+      kind = "user",
+      text = "pinned " .. i,
+      sentAt = i,
+    }, false)
+    Store.Pin(allPinnedOutgoing, "out-" .. i)
+  end
+  Store.AppendOutgoing(allPinnedOutgoing, "new-outgoing", {
+    id = "new",
+    direction = "out",
+    kind = "user",
+    text = "must survive",
+    sentAt = 4,
+  })
+  assert(allPinnedOutgoing.conversations["new-outgoing"] ~= nil, "all-pinned cap must retain a new outgoing conversation")
+
+  -- TEST 8: equally old eligible records evict by key, not table iteration order.
+  local deterministicState = Store.New({ maxMessagesPerConversation = 50, maxConversations = 3 })
+  for _, key in ipairs({ "a", "b", "c" }) do
+    Store.AppendIncoming(deterministicState, key, {
+      id = key,
+      direction = "in",
+      kind = "user",
+      text = key,
+      sentAt = 1,
+    }, false)
+  end
+  Store.Pin(deterministicState, "c")
+  Store.AppendIncoming(deterministicState, "new", {
+    id = "new",
+    direction = "in",
+    kind = "user",
+    text = "new",
+    sentAt = 2,
+  }, false)
+  assert(deterministicState.conversations.a == nil, "lexically first equally-old eligible conversation should evict")
+  assert(
+    deterministicState.conversations.b ~= nil and deterministicState.conversations.c ~= nil,
+    "other existing conversations should survive deterministic eviction"
+  )
+  assert(deterministicState.conversations.new ~= nil, "protected new conversation should survive deterministic eviction")
+
+  -- TEST 9: a soft overflow is persisted until a user deliberately unpins.
+  local reloadedState = Store.New({ maxMessagesPerConversation = 50, maxConversations = 3 })
+  reloadedState.conversations = allPinnedIncoming.conversations
+  local reloadedCount = 0
+  for _ in pairs(reloadedState.conversations) do
+    reloadedCount = reloadedCount + 1
+  end
+  assert(reloadedCount == 4, "reload must retain an all-pinned soft overflow")
+
+  Store.Unpin(allPinnedIncoming, "new-incoming")
+  assert(allPinnedIncoming.conversations["new-incoming"] == nil, "unpinning the only eligible overflow conversation should converge to the cap")
 end

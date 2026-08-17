@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local StartConversation = {}
 
@@ -21,50 +22,11 @@ local function normalizePlayerName(playerName)
 end
 
 local function findExistingConversationKeyByName(runtime, playerName)
-  if type(runtime.store) ~= "table" or type(runtime.store.conversations) ~= "table" then
-    return nil
-  end
-
-  local lowerName = string.lower(playerName)
-  local inputBase = string.match(playerName, "^([^%-]+)")
-  local lowerInputBase = inputBase and string.lower(inputBase) or nil
-  local baseMatchKey = nil
-  local baseMatchCount = 0
-
-  for key, conversation in pairs(runtime.store.conversations) do
-    if type(conversation) == "table" and conversation.channel == "WOW" then
-      local displayName = conversation.displayName or conversation.contactDisplayName or ""
-      local lowerDisplayName = string.lower(displayName)
-
-      if lowerDisplayName == lowerName then
-        return key
-      end
-
-      local baseName = string.match(displayName, "^([^%-]+)")
-      if baseName and string.lower(baseName) == lowerName then
-        baseMatchCount = baseMatchCount + 1
-        baseMatchKey = key
-      elseif lowerInputBase and lowerDisplayName == lowerInputBase then
-        baseMatchCount = baseMatchCount + 1
-        baseMatchKey = key
-      end
-    end
-  end
-
-  if baseMatchCount == 1 then
-    return baseMatchKey
-  end
-
-  return nil
+  return Identity.ResolveWhisperConversation(runtime, playerName, "WOW")
 end
 
 local function ensureWhisperConversation(runtime, conversationKey, displayName)
   runtime.store = runtime.store or {}
-  runtime.store.conversations = runtime.store.conversations or {}
-
-  if runtime.store.conversations[conversationKey] ~= nil then
-    return
-  end
 
   local now = 0
   if type(runtime.now) == "function" then
@@ -73,14 +35,11 @@ local function ensureWhisperConversation(runtime, conversationKey, displayName)
     now = _G.time()
   end
 
-  runtime.store.conversations[conversationKey] = {
-    displayName = displayName,
+  return Store.EnsureConversation(runtime.store, conversationKey, {
     channel = "WOW",
-    messages = {},
-    unreadCount = 0,
+    displayName = displayName,
     lastActivityAt = now,
-    conversationKey = conversationKey,
-  }
+  })
 end
 
 local function focusComposerInput(window, timer)

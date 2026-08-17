@@ -155,7 +155,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       return
     end
 
-    onSend({
+    local accepted = onSend({
       conversationKey = selectedContact.conversationKey,
       target = selectedContact.displayName,
       displayName = selectedContact.displayName,
@@ -167,7 +167,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       text = text,
     })
 
-    input:SetText("")
+    if accepted ~= false then
+      input:SetText("")
+    end
   end
 
   input:SetScript("OnTextChanged", function()

@@ -6,6 +6,13 @@ end
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
+local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+
+local RETENTION_SETTING_KEYS = {
+  maxMessagesPerConversation = true,
+  maxConversations = true,
+  messageMaxAge = true,
+}
 
 local SettingsHandler = {}
 
@@ -66,6 +73,21 @@ function SettingsHandler.Create(options)
     end
     if key == "messageMaxAge" then
       runtime.store.config.conversationMaxAge = persistedValue
+    end
+
+    if RETENTION_SETTING_KEYS[key] and Store and Store.ApplyRetention then
+      local activeKey = runtime.activeConversationKey
+      local now = runtime.now and runtime.now() or nil
+      local removed = Store.ApplyRetention(runtime.store, now, activeKey)
+      if activeKey ~= nil and removed[activeKey] then
+        runtime.activeConversationKey = nil
+        if runtime.characterState then
+          runtime.characterState.activeConversationKey = nil
+        end
+      end
+      if runtime.refreshWindow then
+        runtime.refreshWindow()
+      end
     end
 
     trace("setting changed", key, tostring(persistedValue))

@@ -6,16 +6,23 @@ end
 local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
+local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 
 local Presence = {}
 
 function Presence.handlePlayerLogout(Bootstrap, deps)
   if Bootstrap.runtime then
-    local settings = Bootstrap.runtime.accountState and Bootstrap.runtime.accountState.settings
+    local runtime = Bootstrap.runtime
+    local settings = runtime.accountState and runtime.accountState.settings
     if settings and settings.clearOnLogout then
-      for key in pairs(Bootstrap.runtime.store.conversations) do
-        Bootstrap.runtime.store.conversations[key] = nil
+      for key in pairs(runtime.store.conversations) do
+        runtime.store.conversations[key] = nil
       end
+      runtime.activeConversationKey = nil
+      if runtime.characterState then
+        runtime.characterState.activeConversationKey = nil
+      end
+      runtime.lastIncomingWhisperKey = nil
       deps.trace("clear on logout")
     end
   end
@@ -23,16 +30,12 @@ function Presence.handlePlayerLogout(Bootstrap, deps)
   return true
 end
 
-local function sortBySentAt(a, b)
-  return (a.sentAt or 0) < (b.sentAt or 0)
-end
-
 -- BN whispers that arrived before the friend list resolved are keyed by the
 -- session-scoped numeric account ID (no battleTag was available). Once the
 -- friend list is readable, fold those orphans into the stable battleTag
 -- conversation so history isn't split — and isn't stranded next session
 -- when the numeric ID changes.
-local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity)
+local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity, maxMessages)
   local tagById = {}
   for battleTag, friend in pairs(friendMap) do
     if friend.bnetAccountID ~= nil then
@@ -54,28 +57,34 @@ local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity
     end
   end
 
+  local mappings = {}
   for oldKey, move in pairs(moves) do
     local conversation = conversations[oldKey]
-    conversation.battleTag = move.battleTag
-    if conversation.displayName == nil or conversation.displayName == tostring(conversation.bnetAccountID) then
-      conversation.displayName = move.battleTag
-    end
-    local existing = conversations[move.newKey]
-    if existing then
-      existing.messages = existing.messages or {}
-      for _, msg in ipairs(conversation.messages or {}) do
-        table.insert(existing.messages, msg)
+    if conversation then
+      conversation.battleTag = move.battleTag
+      if conversation.displayName == nil or conversation.displayName == tostring(conversation.bnetAccountID) then
+        conversation.displayName = move.battleTag
       end
-      table.sort(existing.messages, sortBySentAt)
-      existing.unreadCount = (existing.unreadCount or 0) + (conversation.unreadCount or 0)
-      if (conversation.lastActivityAt or 0) > (existing.lastActivityAt or 0) then
-        existing.lastActivityAt = conversation.lastActivityAt
-        existing.lastPreview = conversation.lastPreview
+      local rekeyed = ConversationMerge.Rekey(conversations, oldKey, move.newKey, maxMessages)
+      for sourceKey, destinationKey in pairs(rekeyed) do
+        mappings[sourceKey] = destinationKey
       end
-    else
-      conversations[move.newKey] = conversation
     end
-    conversations[oldKey] = nil
+  end
+
+  return mappings
+end
+
+local function applyRekeyMappings(runtime, mappings)
+  if runtime.activeConversationKey ~= nil then
+    runtime.activeConversationKey = mappings[runtime.activeConversationKey] or runtime.activeConversationKey
+  end
+  if runtime.characterState and runtime.characterState.activeConversationKey ~= nil then
+    runtime.characterState.activeConversationKey = mappings[runtime.characterState.activeConversationKey]
+      or runtime.characterState.activeConversationKey
+  end
+  if runtime.lastIncomingWhisperKey ~= nil then
+    runtime.lastIncomingWhisperKey = mappings[runtime.lastIncomingWhisperKey] or runtime.lastIncomingWhisperKey
   end
 end
 
@@ -88,7 +97,9 @@ local function refreshBNetConversations(Bootstrap, deps)
   local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
 
   local Identity = deps.loadModule("WhisperMessenger.Model.Identity", "Identity")
-  rekeyOrphanedBNetConversations(Bootstrap.runtime.store.conversations, friendMap, Identity)
+  local maxMessages = Bootstrap.runtime.store.config and Bootstrap.runtime.store.config.maxMessagesPerConversation
+  local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store.conversations, friendMap, Identity, maxMessages)
+  applyRekeyMappings(Bootstrap.runtime, mappings)
 
   for _, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then

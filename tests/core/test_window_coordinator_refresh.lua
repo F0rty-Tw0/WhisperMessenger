@@ -374,4 +374,199 @@ return function()
     assert(runtime.availabilityByGUID.keep ~= nil, "active contact availability must be retained")
     assert(runtime.availabilityRequestedAt.keep ~= nil, "active contact throttle must be retained")
   end
+
+  -- Cache pruning builds one membership set from contacts instead of scanning
+  -- every contact once per cached GUID.
+  do
+    local window, runtime = makeBase()
+    local guidReads = 0
+    local contacts = {}
+    for index = 1, 20 do
+      contacts[index] = setmetatable({ channel = "BN", conversationKey = "k" .. index }, {
+        __index = function(_, key)
+          if key == "guid" then
+            guidReads = guidReads + 1
+            return "keep-" .. index
+          end
+        end,
+      })
+    end
+    for index = 1, 100 do
+      runtime.availabilityByGUID["stale-" .. index] = {}
+      runtime.availabilityRequestedAt["stale-" .. index] = 0
+    end
+
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return contacts
+      end,
+      getWindow = function()
+        return window
+      end,
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+    })
+
+    coord.refreshContacts()
+    assert(guidReads < 500, "cache pruning should use linear GUID membership checks, got " .. tostring(guidReads) .. " GUID reads")
+  end
+
+  -- Opening a window keeps already-fresh presence data instead of repeating
+  -- full guild/community enumeration.
+  do
+    local window, runtime = makeBase()
+    local rebuilds = 0
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {}
+      end,
+      getWindow = function()
+        return window
+      end,
+      presenceCache = {
+        IsStale = function()
+          return false
+        end,
+        Rebuild = function()
+          rebuilds = rebuilds + 1
+        end,
+      },
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+    })
+
+    coord.setWindowVisible(true)
+    assert(rebuilds == 0, "opening with fresh presence must not rebuild")
+  end
+
+  -- Stale presence is rebuilt before the first visible render.
+  do
+    local window, runtime = makeBase()
+    local rebuilds = 0
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {}
+      end,
+      getWindow = function()
+        return window
+      end,
+      presenceCache = {
+        IsStale = function()
+          return true
+        end,
+        Rebuild = function()
+          rebuilds = rebuilds + 1
+        end,
+      },
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+    })
+
+    coord.setWindowVisible(true)
+    assert(rebuilds == 1, "opening with stale presence must rebuild once")
+  end
+  -- A visible mutation in an unselected conversation refreshes contact rows
+  -- without rebuilding the active transcript.
+  do
+    local window, runtime = makeBase()
+    local selectionRefreshes = 0
+    local contactRefreshes = 0
+    window.refreshSelection = function()
+      selectionRefreshes = selectionRefreshes + 1
+    end
+    window.refreshContacts = function()
+      contactRefreshes = contactRefreshes + 1
+    end
+    runtime.activeConversationKey = "selected"
+    runtime.sendStatusByConversation = {}
+    runtime.store.conversations.selected = { channel = "WOW", guid = "selected-guid" }
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {
+          { channel = "WOW", guid = "selected-guid", conversationKey = "selected" },
+          { channel = "WOW", guid = "other-guid", conversationKey = "other" },
+        }
+      end,
+      getWindow = function()
+        return window
+      end,
+      isMythicRestricted = function()
+        return true
+      end,
+      requestAvailability = function() end,
+    })
+
+    window.frame:Show()
+    coord.refreshWindow("other")
+    assert(contactRefreshes == 1, "unselected mutation should refresh contact rows")
+    assert(selectionRefreshes == 0, "unselected mutation must not rebuild active transcript")
+  end
+
+  -- Availability updates refresh only contact rows unless the changed GUID
+  -- belongs to the active conversation, which also needs send-state refresh.
+  do
+    local window, runtime = makeBase()
+    local afterCalls = {}
+    local contactRefreshes = 0
+    local selectionRefreshes = 0
+    window.refreshContacts = function()
+      contactRefreshes = contactRefreshes + 1
+    end
+    window.refreshSelection = function()
+      selectionRefreshes = selectionRefreshes + 1
+    end
+    runtime.activeConversationKey = "selected"
+    runtime.sendStatusByConversation = {}
+    runtime.store.conversations.selected = { channel = "WOW", guid = "selected-guid" }
+    local coord = WindowCoordinator.Create({
+      runtime = runtime,
+      buildContacts = function()
+        return {
+          { channel = "WOW", guid = "selected-guid", conversationKey = "selected" },
+          { channel = "WOW", guid = "other-guid", conversationKey = "other" },
+        }
+      end,
+      getWindow = function()
+        return window
+      end,
+      cTimer = {
+        After = function(_, callback)
+          afterCalls[#afterCalls + 1] = callback
+        end,
+      },
+      isMythicRestricted = function()
+        return true
+      end,
+      requestAvailability = function() end,
+    })
+
+    window.frame:Show()
+    coord.scheduleAvailabilityRefresh("other-guid")
+    afterCalls[1]()
+    assert(contactRefreshes == 1, "unselected availability should refresh contact rows")
+    assert(selectionRefreshes == 0, "unselected availability must not refresh the active transcript")
+
+    coord.scheduleAvailabilityRefresh("selected-guid")
+    afterCalls[2]()
+    assert(contactRefreshes == 1, "selected availability should not separately refresh rows")
+    assert(selectionRefreshes == 1, "selected availability should refresh its active pane")
+
+    contactRefreshes = 0
+    selectionRefreshes = 0
+    coord.scheduleAvailabilityRefresh("other-guid")
+    coord.scheduleAvailabilityRefresh("selected-guid")
+    afterCalls[3]()
+    assert(contactRefreshes == 0, "coalesced updates including the selected GUID should skip row-only refresh")
+    assert(selectionRefreshes == 1, "coalesced updates including the selected GUID should refresh its active pane once")
+  end
 end

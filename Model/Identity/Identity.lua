@@ -106,6 +106,86 @@ function Identity.FromBattleNet(bnetAccountID, accountInfo, playerInfo)
   }
 end
 
+local function conversationDisplayName(conversation)
+  if type(conversation) ~= "table" then
+    return nil
+  end
+  return conversation.displayName or conversation.contactDisplayName
+end
+
+local function findUniqueConversation(conversations, channel, matches)
+  local matchedKey = nil
+  local matchCount = 0
+
+  for key, conversation in pairs(conversations) do
+    if type(conversation) == "table" and conversation.channel == channel and matches(conversation) then
+      matchCount = matchCount + 1
+      matchedKey = key
+    end
+  end
+
+  if matchCount == 1 then
+    return matchedKey
+  end
+
+  return nil
+end
+
+local function normalizedValue(value)
+  if type(value) == "number" then
+    value = tostring(value)
+  end
+  if type(value) ~= "string" then
+    return ""
+  end
+  return normalizeName(value)
+end
+
+function Identity.ResolveWhisperConversation(runtime, target, channel)
+  local store = runtime and runtime.store
+  local conversations = store and store.conversations
+  local targetCanonical = normalizedValue(target)
+  if type(conversations) ~= "table" or targetCanonical == "" then
+    return nil
+  end
+
+  if channel == "WOW" then
+    local exactKey = findUniqueConversation(conversations, "WOW", function(conversation)
+      return normalizedValue(conversationDisplayName(conversation)) == targetCanonical
+    end)
+    if exactKey ~= nil then
+      return exactKey
+    end
+
+    if string.find(targetCanonical, "-", 1, true) ~= nil then
+      return nil
+    end
+
+    return findUniqueConversation(conversations, "WOW", function(conversation)
+      local canonicalName = normalizedValue(conversationDisplayName(conversation))
+      local baseName = string.match(canonicalName, "^([^%-]+)")
+      return baseName == targetCanonical
+    end)
+  end
+
+  if channel == "BN" then
+    local byAccountID = findUniqueConversation(conversations, "BN", function(conversation)
+      return normalizedValue(conversation.bnetAccountID) == targetCanonical
+    end)
+    if byAccountID ~= nil then
+      return byAccountID
+    end
+
+    return findUniqueConversation(conversations, "BN", function(conversation)
+      return normalizedValue(conversation.battleTag) == targetCanonical
+        or normalizedValue(conversation.gameAccountName) == targetCanonical
+        or normalizedValue(conversationDisplayName(conversation)) == targetCanonical
+    end)
+  end
+
+  return nil
+end
+
 function Identity.BuildConversationKey(localProfileId, contactKey)
   if type(contactKey) ~= "string" then
     return localProfileId .. "::" .. tostring(contactKey)

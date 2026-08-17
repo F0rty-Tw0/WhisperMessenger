@@ -413,6 +413,51 @@ return function()
     assert(Bootstrap.runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "combat end must capture stale reply target before clearing")
   end
 
+  -- test_player_regen_enabled_keeps_unresolved_battle_net_reply_state
+  do
+    local attributes = {
+      chatType = "BN_WHISPER",
+      stickyType = "BN_WHISPER",
+      tellTarget = 999,
+    }
+    local editBox = {
+      GetAttribute = function(_, key)
+        return attributes[key]
+      end,
+      SetAttribute = function(_, key, value)
+        attributes[key] = value
+      end,
+      GetText = function()
+        return ""
+      end,
+    }
+    local Bootstrap = {
+      runtime = {
+        localProfileId = "me",
+        store = { conversations = {} },
+        suspend = function() end,
+        resume = function() end,
+      },
+    }
+
+    LifecycleHandlers.Handle(
+      Bootstrap,
+      "PLAYER_REGEN_ENABLED",
+      makeDeps(nil, {
+        getNumChatWindows = function()
+          return 1
+        end,
+        getEditBox = function()
+          return editBox
+        end,
+      })
+    )
+
+    assert(attributes.chatType == "BN_WHISPER", "combat end must not scrub an unresolved Battle.net reply")
+    assert(attributes.stickyType == "BN_WHISPER", "combat end must preserve unresolved Battle.net sticky state")
+    assert(attributes.tellTarget == 999, "combat end must preserve unresolved Battle.net target")
+  end
+
   -- test_player_entering_world_does_not_start_duplicate_presence_timer_loops
 
   do

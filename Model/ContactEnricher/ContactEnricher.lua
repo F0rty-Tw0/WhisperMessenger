@@ -24,11 +24,6 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
     return runtime.sendStatusByConversation[conversationKey]
   end
 
-  if runtime.isChatMessagingLocked and runtime.isChatMessagingLocked() then
-    local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
-    return Availability.FromStatus("Lockdown")
-  end
-
   -- WoW contacts: use cached availability from CAN_LOCAL_WHISPER_TARGET_RESPONSE
   if conversation and conversation.guid and runtime.availabilityByGUID[conversation.guid] then
     local cached = runtime.availabilityByGUID[conversation.guid]

@@ -174,7 +174,8 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
     playerInfo = playerInfo,
   }
 
-  if Trace and traceEvents and traceEvents[eventName] then
+  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
+  if traceEnabled and traceEvents and traceEvents[eventName] then
     -- pcall: 12.0 secret-string payload values throw on concatenation. The
     -- ingest guard below drops such payloads cleanly; the trace line must
     -- not error first. (Not unit-testable: real secret strings cannot be
@@ -185,7 +186,7 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
   end
 
   local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)
-  if handled and type(runtime.refreshWindow) == "function" then
+  if handled and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
     runtime.refreshWindow()
   end
   return handled

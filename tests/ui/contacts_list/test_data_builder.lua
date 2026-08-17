@@ -27,12 +27,10 @@ return function()
     assert(snapshot.conversationKey == "bnet::BN::jaina#1234", "conversationKey should be preserved")
     assert(snapshot.displayName == "Jaina#1234", "displayName should fall back to contactDisplayName")
     assert(snapshot.lastPreview == "", "lastPreview should default to empty string")
-    assert(type(snapshot.searchText) == "string", "searchText should be a string")
-    assert(string.find(snapshot.searchText, "jaina#1234", 1, true) ~= nil, "searchText should include lowercased display name")
-    assert(string.find(snapshot.searchText, "frostbolt ready", 1, true) ~= nil, "searchText should include message text")
-    assert(string.find(snapshot.searchText, "khadgar", 1, true) ~= nil, "searchText should include sender names")
+    assert(snapshot.searchText == nil, "snapshots must not retain derived full-history search text")
+    assert(snapshot.conversation ~= nil, "snapshot should retain its transient conversation reference")
     assert(snapshot.unreadCount == 0, "unreadCount should default to 0")
-    assert(snapshot.unansweredCount == 0, "unansweredCount should default to 0")
+    assert(snapshot.unansweredCount == nil, "snapshot must not scan history for a derived unanswered count")
     assert(snapshot.lastActivityAt == 0, "lastActivityAt should default to 0")
     assert(snapshot.channel == "BN", "channel should be preserved")
     assert(snapshot.guid == "Player-1-00000042", "guid should be preserved")
@@ -315,7 +313,7 @@ return function()
     assert(byKey["guild::jaina-proudmoore"] ~= nil, "foreign guild should be included")
     assert(byKey["guild::jaina-proudmoore"].ownerProfileId == "jaina-proudmoore", "foreign guild should carry ownerProfileId")
   end
-  -- test_items_expose_unanswered_count
+  -- test_items_defer_unanswered_count_to_the_menu
   do
     local items = DataBuilder.BuildItems({
       ["me::WOW::jaina"] = {
@@ -328,6 +326,7 @@ return function()
         },
       },
     })
-    assert(items[1].unansweredCount == 1, "contact item should expose unanswered count")
+    assert(items[1].unansweredCount == nil, "contact item should not scan history for unanswered count during refresh")
+    assert(items[1].conversation ~= nil, "contact item should retain the conversation for lazy menu-time derivation")
   end
 end

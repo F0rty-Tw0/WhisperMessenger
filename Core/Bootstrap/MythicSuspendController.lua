@@ -93,8 +93,10 @@ function MythicSuspendController.Attach(runtime, deps)
     -- If Blizzard handled a whisper while we were suspended, its default chat
     -- edit box may still hold the latest reply target. Capture it into our own
     -- taint-safe reply state before scrubbing Blizzard's sticky attributes.
+    local staleReplyResolved = true
     if ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
-      ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
+      local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
+      staleReplyResolved = resolved ~= false
     end
 
     -- Scrub Blizzard's stale whisper sticky state on the default chat edit
@@ -103,7 +105,7 @@ function MythicSuspendController.Attach(runtime, deps)
     -- tellTarget remain set. On the next Enter our auto-open poller would
     -- intercept that focused edit box and re-open the messenger to that
     -- conversation — even though the user has not asked for it.
-    if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    if staleReplyResolved and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
 

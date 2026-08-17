@@ -172,13 +172,16 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     return false
   end
 
-  -- BN_CONVERSATION requires a conversationID to build a stable key
+  -- BN_CONVERSATION requires a conversationID to build a stable key.
   if channel == ChannelType.BN_CONVERSATION then
     if payload.conversationID == nil then
       return false
     end
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, "BNCONV::" .. tostring(payload.conversationID))
-    appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
+    local conversation = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
+    if conversation then
+      conversation.conversationID = payload.conversationID
+    end
     return true
   end
 

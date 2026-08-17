@@ -197,4 +197,33 @@ return function()
     assert(entry ~= nil, "expected base-name fallback to survive restore")
     assert(entry.text == "draenor post", "restore should prefer the higher sequence for equal timestamps")
   end
+  -- test_entry_count_tracks_replacement_restore_expiry_and_eviction
+  do
+    local state = ChannelMessageStore.New({ maxEntries = 2 })
+    assert(state.entryCount == 0, "new store should start with zero entries")
+
+    ChannelMessageStore.Record(state, "Arthas-Area52", "first", "Trade", 100)
+    assert(state.entryCount == 1, "insert should increment entry count")
+
+    ChannelMessageStore.Record(state, "Arthas-Area52", "replacement", "Trade", 200)
+    assert(state.entryCount == 1, "replacement should not increment entry count")
+
+    ChannelMessageStore.Record(state, "Jaina-Proudmoore", "second", "Trade", 300)
+    assert(state.entryCount == 2, "second sender should increment entry count")
+
+    ChannelMessageStore.Record(state, "Thrall-Draenor", "third", "Trade", 400)
+    assert(state.entryCount == 2, "overflow eviction should decrement entry count")
+    assert(ChannelMessageStore.GetLatest(state, "arthas-area52") == nil, "overflow should evict oldest entry")
+
+    ChannelMessageStore.GetLatest(state, "jaina-proudmoore", 2200)
+    assert(state.entryCount == 1, "lazy expiry should decrement entry count")
+
+    local restored = ChannelMessageStore.Restore({
+      entries = {
+        ["fresh-realm"] = { sentAt = 5000 },
+        ["expired-realm"] = { sentAt = 1000 },
+      },
+    }, nil, 6000)
+    assert(restored.entryCount == 1, "restore expiry should retain exact entry count")
+  end
 end

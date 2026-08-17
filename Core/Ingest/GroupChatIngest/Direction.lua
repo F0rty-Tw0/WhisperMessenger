@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
 local Direction = {}
 
 local function rawGuidEqual(a, b)
@@ -35,12 +36,22 @@ local function resolveLocalPlayerGuid(state)
   return nil
 end
 
+local function resolveLocalBnetAccountID(state)
+  local accountID = BNetIdentity.ResolveLocalAccountID(state.localBnetAccountID, state.getBNetInfo or _G.BNGetInfo)
+  if accountID ~= nil then
+    state.localBnetAccountID = accountID
+  end
+  return accountID
+end
+
 -- Resolve returns "out" when the message was sent by the local player,
 -- "in" otherwise.
 function Direction.Resolve(eventName, payload, state)
   if eventName == "CHAT_MSG_BN_CONVERSATION" then
-    -- No guid on BN conversation events; use bnetAccountID comparison
-    if state.localBnetAccountID ~= nil and payload.bnSenderID == state.localBnetAccountID then
+    -- No guid on BN conversation events; use the cached or lazily resolved
+    -- local BNet account ID. A missing early API result remains retryable.
+    local localBnetAccountID = resolveLocalBnetAccountID(state)
+    if localBnetAccountID ~= nil and payload.bnSenderID == localBnetAccountID then
       return "out"
     end
     return "in"

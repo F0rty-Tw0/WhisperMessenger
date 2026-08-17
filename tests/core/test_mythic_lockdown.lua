@@ -23,19 +23,14 @@ return function()
 
   do
     local Store = require("WhisperMessenger.Model.ConversationStore")
-    local Queue = require("WhisperMessenger.Model.LockdownQueue")
 
     local refreshCalls = 0
     local runtime = {
       isMythicLockdown = function()
         return false
       end,
-      isChatMessagingLocked = function()
-        return false
-      end,
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
@@ -72,9 +67,6 @@ return function()
         end,
       },
       bnetApi = {},
-      isChatMessagingLocked = function()
-        return false
-      end,
       isMythicLockdown = function()
         return true
       end,
@@ -327,7 +319,6 @@ return function()
     -- during mythic. Verify isMythicLockdown is never invoked even
     -- when present on the runtime.
     local Store = require("WhisperMessenger.Model.ConversationStore")
-    local Queue = require("WhisperMessenger.Model.LockdownQueue")
 
     local getInstanceInfoCalled = false
     local runtime = {
@@ -335,12 +326,8 @@ return function()
         getInstanceInfoCalled = true
         return false
       end,
-      isChatMessagingLocked = function()
-        return false
-      end,
       localProfileId = "me",
       store = Store.New({ maxMessagesPerConversation = 10 }),
-      queue = Queue.New(),
       activeConversationKey = nil,
       availabilityByGUID = {},
       pendingOutgoing = {},
@@ -463,10 +450,10 @@ return function()
     runtime.suspend()
     assert(runtime.window.frame.shown == false, "window should be hidden after suspend")
 
-    -- Resume should restore the window and rebuild presence on reopen
+    -- Resume should restore the window without rebuilding already-fresh presence
     runtime.resume()
     assert(runtime.window.frame.shown == true, "window should be visible after resume")
-    assert(rebuildCount == 2, "window resume should rebuild presence once more, got " .. rebuildCount)
+    assert(rebuildCount == 1, "window resume should keep fresh presence without rebuilding, got " .. rebuildCount)
 
     -- If window was closed before suspend, resume should not open it
     runtime.toggle() -- close
@@ -474,7 +461,7 @@ return function()
     runtime.suspend()
     runtime.resume()
     assert(runtime.window.frame.shown == false, "window should stay closed if it was closed before suspend")
-    assert(rebuildCount == 2, "closed window should not rebuild presence on resume, got " .. rebuildCount)
+    assert(rebuildCount == 1, "closed window should not rebuild presence on resume, got " .. rebuildCount)
 
     rawset(PresenceCache, "Rebuild", savedRebuild)
     _G.UIParent = savedUIParent

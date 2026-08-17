@@ -212,6 +212,32 @@ return function()
     assert(conv.battleTag == "Keep#5678", "battleTag should not be overwritten by nil, got: " .. tostring(conv.battleTag))
   end
 
+  -- test_blocked_outgoing_does_not_answer_incoming_messages
+  do
+    local s = Store.New({})
+    local key = "me::WOW::blocked-answer"
+    Store.AppendIncoming(s, key, {
+      id = "incoming",
+      direction = "in",
+      kind = "user",
+      text = "still waiting",
+      sentAt = 1,
+    }, false)
+    Store.AppendOutgoing(s, key, {
+      id = "blocked",
+      direction = "out",
+      kind = "user",
+      text = "not delivered",
+      sentAt = 2,
+      delivery = "blocked",
+    })
+
+    assert(Store.CountUnansweredIncoming(s.conversations[key]) == 1, "blocked outgoing must not answer incoming messages")
+
+    s.conversations[key].messages[2].delivery = nil
+    assert(Store.CountUnansweredIncoming(s.conversations[key]) == 0, "normal outgoing must answer incoming messages")
+  end
+
   -- test_pin_marks_conversation_pinned
   do
     local s = Store.New({})
@@ -328,5 +354,31 @@ return function()
     local s = Store.New({})
     Store.SetSortOrder(s, "me::WOW::ghost", 3)
     -- should not error
+  end
+  -- test_ensure_conversation_constructs_metadata_once_and_enforces_the_cap
+  do
+    local s = Store.New({ maxConversations = 1 })
+    local first, created = Store.EnsureConversation(s, "me::WOW::old", {
+      channel = "WOW",
+      displayName = "Old-Realm",
+      conversationKey = "me::WOW::old",
+      lastActivityAt = 1,
+    })
+    assert(created == true, "first ensure should report creation")
+    assert(first.channel == "WOW" and first.displayName == "Old-Realm", "ensure should stamp supplied canonical metadata")
+    assert(type(first.messages) == "table" and first.unreadCount == 0, "ensure should construct conversation defaults")
+
+    local same, createdAgain = Store.EnsureConversation(s, "me::WOW::old", { displayName = "Ignored" })
+    assert(same == first and createdAgain == false, "existing ensure should retain the existing record")
+    assert(first.displayName == "Old-Realm", "existing ensure must not overwrite metadata")
+
+    local newest, newestCreated = Store.EnsureConversation(s, "me::WOW::new", {
+      channel = "WOW",
+      displayName = "New-Realm",
+      lastActivityAt = 2,
+    })
+    assert(newestCreated == true and newest ~= nil, "new key should be created")
+    assert(s.conversations["me::WOW::old"] == nil, "ensure should evict the oldest eligible key")
+    assert(s.conversations["me::WOW::new"] == newest, "ensure should protect and retain the requested key")
   end
 end

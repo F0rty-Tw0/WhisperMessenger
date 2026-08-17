@@ -1,6 +1,7 @@
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local Metrics = require("WhisperMessenger.UI.ScrollView.Metrics")
 local FakeUI = require("tests.helpers.fake_ui")
+local ConversationPane = require("WhisperMessenger.UI.ConversationPane.ConversationPane")
 
 local function withCapturedTimer(callback)
   local savedTimer = _G.C_Timer
@@ -265,6 +266,74 @@ return function()
 
       assert(view.scrollFrame:GetVerticalScroll() == 100, "deferred snap should not override a changed scroll offset")
     end)
+  end
+
+  local function makeMessages(count, prefix)
+    local messages = {}
+    for index = 1, count do
+      messages[index] = {
+        direction = "in",
+        text = prefix .. index,
+      }
+    end
+    return messages
+  end
+
+  local function makeConversationPaneView()
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    parent:SetSize(300, 200)
+    return {
+      header = parent:CreateFontString(nil, "OVERLAY"),
+      transcript = ScrollView.Create(factory, parent, {
+        width = 300,
+        height = 200,
+      }),
+    }
+  end
+
+  -- test_conversation_refresh_preserves_loaded_depth_for_same_selection
+
+  do
+    local view = makeConversationPaneView()
+    local contact = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
+    local conversation = { messages = makeMessages(30, "message ") }
+
+    ConversationPane.Refresh(view, contact, conversation)
+    assert(ConversationPane.LoadMore(view.transcript), "expected load-more to reveal an older page")
+    assert(view.transcript._visibleCount == 20, "load-more should reveal two pages")
+
+    ConversationPane.Refresh(view, contact, conversation)
+    assert(view.transcript._visibleCount == 20, "same-conversation refresh should retain loaded depth")
+
+    ConversationPane.Refresh(view, contact, conversation, { status = "offline" })
+    assert(view.transcript._visibleCount == 20, "availability refresh should retain loaded depth")
+  end
+
+  -- test_conversation_refresh_resets_loaded_depth_for_different_selection
+
+  do
+    local view = makeConversationPaneView()
+    local arthas = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
+    local jaina = { conversationKey = "me::WOW::jaina", displayName = "Jaina" }
+
+    ConversationPane.Refresh(view, arthas, { messages = makeMessages(30, "arthas ") })
+    assert(ConversationPane.LoadMore(view.transcript), "expected load-more before switching conversations")
+    ConversationPane.Refresh(view, jaina, { messages = makeMessages(30, "jaina ") })
+
+    assert(view.transcript._visibleCount == 10, "different conversation should reset to initial page size")
+  end
+
+  -- test_conversation_refresh_clamps_loaded_depth_after_history_shrinks
+
+  do
+    local view = makeConversationPaneView()
+    local contact = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
+
+    ConversationPane.Refresh(view, contact, { messages = makeMessages(30, "old ") })
+    assert(ConversationPane.LoadMore(view.transcript), "expected load-more before retained history shrinks")
+    ConversationPane.Refresh(view, contact, { messages = makeMessages(15, "retained ") })
+
+    assert(view.transcript._visibleCount == 15, "refresh should clamp retained depth to available history")
   end
 
   print("PASS: test_scroll_snap_to_end")

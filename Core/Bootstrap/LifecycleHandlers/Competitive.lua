@@ -10,6 +10,14 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 
 local Competitive = {}
 
+local function canClearStaleWhisperReplyState(runtime, deps)
+  if runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
+    local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, deps.getNumChatWindows, deps.getEditBox)
+    return resolved ~= false
+  end
+  return true
+end
+
 function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
   if event == "CHALLENGE_MODE_START" then
     -- Guard against double-suspend (ADDON_RESTRICTION_STATE_CHANGED may have
@@ -60,10 +68,7 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
-    if Bootstrap.runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
-      ChatReplyState.CaptureStaleWhisperReplyTarget(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
-    end
-    if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+    if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
     deps.trace("encounter ended")
@@ -92,10 +97,7 @@ function Competitive.handleCombatStart(Bootstrap, _deps)
 end
 
 function Competitive.handleCombatEnd(Bootstrap, deps)
-  if Bootstrap.runtime and ChatReplyState and ChatReplyState.CaptureStaleWhisperReplyTarget then
-    ChatReplyState.CaptureStaleWhisperReplyTarget(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
-  end
-  if ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
+  if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
     ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
   end
   return true

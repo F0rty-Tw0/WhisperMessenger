@@ -25,8 +25,8 @@ local function defaultPlayerGuildName()
   return name
 end
 
-local function isLegacyWhisperChannel(channel)
-  return channel == "WOW" or channel == "BN" or channel == ChannelType.WHISPER or channel == ChannelType.BN_WHISPER
+local function isWhisperChannel(channel)
+  return channel == "WOW" or channel == "BN"
 end
 
 local function isForeignCharacterGroup(runtime, conversation, getPlayerGuildName)
@@ -83,8 +83,8 @@ function GroupSendPolicy.Create(options)
       return nil
     end
 
-    -- Legacy whisper channels use "WOW"/"BN"; skip them — they are not group channels.
-    if isLegacyWhisperChannel(channel) then
+    -- Whisper records use WOW and BN; all other values are group channels.
+    if isWhisperChannel(channel) then
       return nil
     end
 
@@ -113,7 +113,7 @@ function GroupSendPolicy.Create(options)
 
   local function shouldRoutePayload(payload)
     local channel = payload and payload.channel
-    return channel ~= nil and not isLegacyWhisperChannel(channel)
+    return channel ~= nil and not isWhisperChannel(channel)
   end
 
   local function sendPayload(payload, trace)
@@ -121,11 +121,14 @@ function GroupSendPolicy.Create(options)
       return false
     end
 
-    local ok, err = pcall(chatGateway.Send, runtime.chatApi, payload, payload.text)
-    if not ok and type(trace) == "function" then
-      trace("group send error", tostring(err))
+    local ok, result = pcall(chatGateway.Send, runtime.chatApi, payload, payload.text)
+    if not ok then
+      if type(trace) == "function" then
+        trace("group send error", tostring(result))
+      end
+      return false
     end
-    return ok
+    return true
   end
 
   return {

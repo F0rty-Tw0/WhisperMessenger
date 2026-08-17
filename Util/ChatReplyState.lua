@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Identity = ns.Identity or (type(require) == "function" and require("WhisperMessenger.Model.Identity")) or nil
+local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local ChatReplyState = {}
 
 local function readEditBoxState(editBox, key)
@@ -71,43 +73,47 @@ local function staleWhisperReplyTarget(editBox)
   local isWhisperSticky = stickyType == "WHISPER" or stickyType == "BN_WHISPER"
 
   if type(editBox) == "table" and tellTarget ~= nil and tellTarget ~= "" and text == "" and (isWhisperChat or isWhisperSticky) then
-    return tellTarget
+    local channel = (chatType == "BN_WHISPER" or stickyType == "BN_WHISPER") and "BN" or "WOW"
+    return tellTarget, channel
   end
 
   return nil
 end
 
-local function ensureWhisperConversation(runtime, target)
-  if type(runtime) ~= "table" or target == nil or target == "" then
-    return nil
+local function ensureWhisperConversation(runtime, target, channel)
+  if type(runtime) ~= "table" or target == nil or target == "" or Identity == nil then
+    return nil, channel ~= "BN"
   end
 
-  local Identity = ns.Identity or (type(require) == "function" and require("WhisperMessenger.Model.Identity")) or nil
+  local conversationKey = Identity.ResolveWhisperConversation(runtime, target, channel)
+  if conversationKey ~= nil then
+    runtime.lastIncomingWhisperKey = conversationKey
+    return conversationKey, true
+  end
+
+  if channel == "BN" then
+    return nil, false
+  end
+
   local contact = Identity.FromWhisper(target, nil, {})
   if contact.canonicalName == "" then
-    return nil
+    return nil, true
   end
 
-  local conversationKey = Identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
-  if type(conversationKey) ~= "string" or conversationKey == "" then
-    return nil
+  conversationKey = Identity.BuildConversationKey(runtime.localProfileId, contact.contactKey)
+  if type(conversationKey) ~= "string" or conversationKey == "" or Store == nil then
+    return nil, true
   end
 
   runtime.store = runtime.store or {}
-  runtime.store.conversations = runtime.store.conversations or {}
-  if runtime.store.conversations[conversationKey] == nil then
-    runtime.store.conversations[conversationKey] = {
-      displayName = target,
-      channel = "WOW",
-      messages = {},
-      unreadCount = 0,
-      lastActivityAt = currentTime(runtime),
-      conversationKey = conversationKey,
-    }
-  end
+  Store.EnsureConversation(runtime.store, conversationKey, {
+    channel = "WOW",
+    displayName = target,
+    lastActivityAt = currentTime(runtime),
+  })
 
   runtime.lastIncomingWhisperKey = conversationKey
-  return conversationKey
+  return conversationKey, true
 end
 function ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
   getNumChatWindows = getNumChatWindows or defaultGetNumChatWindows
@@ -117,15 +123,20 @@ function ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindow
     return nil
   end
 
+  local capturedKey = nil
   local chatWindowCount = getNumChatWindows() or 0
   for index = 1, chatWindowCount do
-    local target = staleWhisperReplyTarget(getEditBox(index))
+    local target, channel = staleWhisperReplyTarget(getEditBox(index))
     if target ~= nil then
-      return ensureWhisperConversation(runtime, target)
+      local conversationKey, resolved = ensureWhisperConversation(runtime, target, channel)
+      capturedKey = capturedKey or conversationKey
+      if resolved == false then
+        return capturedKey, false
+      end
     end
   end
 
-  return nil
+  return capturedKey, true
 end
 
 function ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)

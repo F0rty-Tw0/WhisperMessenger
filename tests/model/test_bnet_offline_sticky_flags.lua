@@ -27,9 +27,6 @@ return function()
           }
         end,
       },
-      isChatMessagingLocked = function()
-        return false
-      end,
     }
 
     local contacts = {
@@ -68,9 +65,6 @@ return function()
           }
         end,
       },
-      isChatMessagingLocked = function()
-        return false
-      end,
     }
 
     local contacts = {
@@ -114,9 +108,6 @@ return function()
           }
         end,
       },
-      isChatMessagingLocked = function()
-        return false
-      end,
     }
 
     local contacts = {
@@ -156,9 +147,6 @@ return function()
           }
         end,
       },
-      isChatMessagingLocked = function()
-        return false
-      end,
     }
 
     local contacts = {
@@ -198,9 +186,6 @@ return function()
           return nil
         end,
       },
-      isChatMessagingLocked = function()
-        return false
-      end,
     }
 
     local contacts = {

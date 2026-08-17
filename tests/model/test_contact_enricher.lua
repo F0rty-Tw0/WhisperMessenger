@@ -5,9 +5,6 @@ local function makeRuntime(overrides)
   local r = {
     availabilityByGUID = {},
     sendStatusByConversation = {},
-    isChatMessagingLocked = function()
-      return false
-    end,
     activeConversationKey = nil,
     bnetApi = {},
     store = { conversations = {} },
@@ -91,18 +88,6 @@ return function()
     })
     local result = ContactEnricher.BuildConversationStatus(runtime, "key-1", nil)
     assert(result == status, "should return cached send status")
-  end
-
-  -- BuildConversationStatus: returns Lockdown when messaging is locked
-  do
-    local runtime = makeRuntime({
-      isChatMessagingLocked = function()
-        return true
-      end,
-    })
-    local result = ContactEnricher.BuildConversationStatus(runtime, "key-1", nil)
-    assert(result ~= nil, "should return a status when locked")
-    assert(result.status == "Lockdown", "status should be Lockdown")
   end
 
   -- BuildConversationStatus: returns cached guid availability for conversation
