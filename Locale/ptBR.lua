@@ -176,6 +176,7 @@ local Portuguese = {
   ["Party"] = "Grupo",
   ["Raid"] = "Raide",
   ["Instance (BG)"] = "Instância (CdB)",
+  ["Current"] = "Atual",
   ["Guild"] = "Guilda",
   ["Officer"] = "Oficial",
   ["Battle.net Group"] = "Grupo Battle.net",
@@ -312,6 +313,7 @@ local Portuguese = {
 
   -- Group send notices
   ["Another character's history — read-only."] = "Histórico de outro personagem — somente leitura.",
+  ["Historical group chat — read-only."] = "Chat de grupo histórico — somente leitura.",
   ["Not in group — can't send."] = "Você não está no grupo — não é possível enviar.",
   ["Mythic Lockdown"] = "Bloqueio Mítico",
   ["Competitive Content"] = "Conteúdo competitivo",

@@ -124,7 +124,7 @@ return function()
       conversationKey = "party::jaina-area52::1::Party-0-0000000000000001",
       ownerProfileId = "jaina-area52",
       leftGroup = true,
-    }) == "Not in group — can't send.", "closed GUID party history must remain blocked after another party join")
+    }) == "Historical group chat — read-only.", "closed GUID party history must remain read-only after another party join")
   end
 
   -- Group payloads route through ChatGateway; legacy whispers stay with SendHandler.

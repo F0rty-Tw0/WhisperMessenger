@@ -18,6 +18,7 @@ return function()
       factionName = "Alliance",
       pinned = true,
       sortOrder = 7,
+      leftGroup = true,
       messages = {
         { text = "Frostbolt ready", playerName = "Jaina" },
         { text = "Meet at Dalaran", playerName = "Khadgar" },
@@ -32,6 +33,7 @@ return function()
     assert(snapshot.unreadCount == 0, "unreadCount should default to 0")
     assert(snapshot.unansweredCount == nil, "snapshot must not scan history for a derived unanswered count")
     assert(snapshot.lastActivityAt == 0, "lastActivityAt should default to 0")
+    assert(snapshot.leftGroup == true, "leftGroup should be preserved")
     assert(snapshot.channel == "BN", "channel should be preserved")
     assert(snapshot.guid == "Player-1-00000042", "guid should be preserved")
     assert(snapshot.bnetAccountID == 42, "bnetAccountID should be preserved")

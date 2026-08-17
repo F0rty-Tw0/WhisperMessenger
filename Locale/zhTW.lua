@@ -176,6 +176,7 @@ local TraditionalChinese = {
   ["Party"] = "小隊",
   ["Raid"] = "團隊",
   ["Instance (BG)"] = "副本(戰場)",
+  ["Current"] = "目前",
   ["Guild"] = "公會",
   ["Officer"] = "幹部",
   ["Battle.net Group"] = "戰網群組",
@@ -312,6 +313,7 @@ local TraditionalChinese = {
 
   -- Group send notices
   ["Another character's history — read-only."] = "其他角色的紀錄 — 唯讀。",
+  ["Historical group chat — read-only."] = "歷史群組聊天 — 唯讀。",
   ["Not in group — can't send."] = "不在隊伍中 — 無法傳送。",
   ["Mythic Lockdown"] = "傳奇鎖定",
   ["Competitive Content"] = "競技內容",

@@ -1,6 +1,10 @@
+rawset(_G, "time", os.time)
+_G.date = os.date
+
 local RowView = require("WhisperMessenger.UI.ContactsList.RowView")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
+local TimeFormat = require("WhisperMessenger.Util.TimeFormat")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -187,5 +191,34 @@ return function()
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
     -- Pinned items should always show the pin icon
     assert(row.pinButton:IsShown() == true, "pinButton should be visible for pinned items")
+  end
+  -- test_session_labels_preserve_owner_prefix
+  do
+    local timestamp = os.time({ year = 2026, month = 12, day = 9, hour = 23, min = 33, sec = 0 })
+    TimeFormat.Configure({ timeFormat = "24h", timeSource = "local" })
+
+    local currentRow = RowView.bindRow(factory, parent, nil, 1, {
+      conversationKey = "party::arthas-area52",
+      displayName = "Party",
+      lastPreview = "",
+      lastActivityAt = 0,
+      channel = "PARTY",
+      leftGroup = false,
+      pinned = false,
+    }, options)
+    assert(currentRow.title.text == "Party - Current", "current PARTY row should include Current")
+
+    local foreignRow = RowView.bindRow(factory, parent, nil, 1, {
+      conversationKey = "party::jaina-proudmoore",
+      displayName = "Party",
+      lastPreview = "",
+      lastActivityAt = timestamp,
+      channel = "PARTY",
+      leftGroup = false,
+      ownerProfileId = "jaina-proudmoore",
+      pinned = false,
+    }, options)
+    assert(foreignRow.title.text == "Jaina - Party - 23:33 09/12", "foreign PARTY row should preserve owner prefix before historical session label")
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
   end
 end

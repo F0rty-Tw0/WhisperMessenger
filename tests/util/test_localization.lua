@@ -32,4 +32,40 @@ return function()
   })
   assert(Localization.GetConfiguredLanguage() == "auto", "invalid language should normalize to auto")
   assert(Localization.GetEffectiveLanguage() == "ruRU", "invalid explicit language should fall back to supported auto-detected locale")
+
+  local currentTranslations = {
+    deDE = "Aktuell",
+    esES = "Actual",
+    esMX = "Actual",
+    frFR = "Actuel",
+    itIT = "Attuale",
+    koKR = "현재",
+    ptBR = "Atual",
+    ruRU = "Текущая",
+    zhCN = "当前",
+    zhTW = "目前",
+  }
+
+  for language, expected in pairs(currentTranslations) do
+    Localization.Configure({ language = language })
+    assert(Localization.Text("Current") == expected, language .. " catalog should translate Current")
+  end
+
+  local historicalGroupChatTranslations = {
+    deDE = "Historischer Gruppenchat — nur lesbar.",
+    esES = "Chat de grupo histórico — solo lectura.",
+    esMX = "Chat de grupo histórico — solo lectura.",
+    frFR = "Chat de groupe historique — lecture seule.",
+    itIT = "Chat di gruppo storico — sola lettura.",
+    koKR = "이전 그룹 채팅 — 읽기 전용.",
+    ptBR = "Chat de grupo histórico — somente leitura.",
+    ruRU = "Исторический групповой чат — только чтение.",
+    zhCN = "历史群组聊天 — 只读。",
+    zhTW = "歷史群組聊天 — 唯讀。",
+  }
+
+  for language, expected in pairs(historicalGroupChatTranslations) do
+    Localization.Configure({ language = language })
+    assert(Localization.Text("Historical group chat — read-only.") == expected, language .. " catalog should translate historical group chat")
+  end
 end

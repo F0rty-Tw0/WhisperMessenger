@@ -101,7 +101,7 @@ function GroupSendPolicy.Create(options)
     -- A GUID-scoped conversation stays closed after the character joins a
     -- later group of the same channel type.
     if conversation.leftGroup then
-      return Localization and Localization.Text("Not in group — can't send.") or "Not in group — can't send."
+      return Localization and Localization.Text("Historical group chat — read-only.") or "Historical group chat — read-only."
     end
 
     if not chatGateway.CanSend(runtime.chatApi, conversation) then

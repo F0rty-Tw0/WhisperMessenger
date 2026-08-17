@@ -148,6 +148,21 @@ function TimeFormat.MessageTime(timestamp)
   local digits = string.gsub(date("%I:%M", ts), "^0", "")
   return digits .. " " .. meridiem
 end
+--- Format a group-session timestamp as configured time plus "DD/MM".
+--- Returns "" for an absent or zero timestamp.
+function TimeFormat.GroupSessionTimestamp(timestamp)
+  if not timestamp or timestamp == 0 then
+    return ""
+  end
+  local ts = displayTimestamp(timestamp)
+  if config.timeFormat == "24h" then
+    return date("%H:%M %d/%m", ts)
+  end
+  local t = date("*t", ts)
+  local meridiem = (t.hour >= 12) and L("PM") or L("AM")
+  local digits = string.gsub(date("%I:%M", ts), "^0", "")
+  return digits .. " " .. meridiem .. " " .. date("%d/%m", ts)
+end
 
 --- Format a timestamp as "March 18, 2026" for date separators.
 --- Respects the configured time source.

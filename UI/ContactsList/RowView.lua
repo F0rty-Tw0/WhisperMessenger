@@ -193,8 +193,12 @@ local function bindRow(factory, parent, row, index, item, options)
   -- For group rows, override the display name with the channel label so the
   -- row shows "Party", "Instance (BG)", etc. rather than the internal key.
   if isGroup and row.title then
-    local convTitle = item.title or nil
-    local groupName = GroupLabel.LabelForChannelAndTitle(item.channel, convTitle)
+    local groupName
+    if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
+      groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
+    else
+      groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title)
+    end
     if groupName == "" then
       groupName = item.displayName or ""
     end

@@ -19,6 +19,7 @@ return function()
   local savedBattleNet = _G.C_BattleNet
   local savedUnitFullName = _G.UnitFullName
   local savedGetNormalizedRealmName = _G.GetNormalizedRealmName
+  local savedInCombatLockdown = _G.InCombatLockdown
 
   local createdFrames = {}
   local sendCalls = {}
@@ -31,6 +32,9 @@ return function()
 
   rawset(_G, "GetNormalizedRealmName", function()
     return "Area52"
+  end)
+  rawset(_G, "InCombatLockdown", function()
+    return false
   end)
 
   _G.require = nil
@@ -164,6 +168,29 @@ return function()
   assert(sendCalls[1].bnetAccountID == 99)
   assert(sendCalls[1].text == "reply over bn")
 
+  -- Ordinary combat must preserve the actual composer -> SendHandler ->
+  -- Battle.net transport chain. Only restricted content blocks sending.
+  do
+    local combatDraft = "reply during ordinary combat"
+    local sendsBeforeCombat = #sendCalls
+
+    rawset(_G, "InCombatLockdown", function()
+      return true
+    end)
+    runtime.window.composer.input:SetText(combatDraft)
+    runtime.window.composer.sendButton.scripts.OnClick()
+
+    assert(#sendCalls == sendsBeforeCombat + 1, "ordinary combat should dispatch one Battle.net whisper")
+    assert(sendCalls[#sendCalls].transport == "BN", "ordinary combat should keep Battle.net transport")
+    assert(sendCalls[#sendCalls].bnetAccountID == 99, "ordinary combat should retain Battle.net recipient")
+    assert(sendCalls[#sendCalls].text == combatDraft, "ordinary combat should dispatch the composer draft")
+    assert(runtime.window.composer.input:GetText() == "", "ordinary combat dispatch should clear the composer draft")
+
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+  end
+
   -- A BNet API return value is not a delivery acknowledgement. Once the API
   -- accepts the invocation without throwing, Composer must clear the sent draft.
   do
@@ -281,4 +308,5 @@ return function()
   _G.C_BattleNet = savedBattleNet
   rawset(_G, "UnitFullName", savedUnitFullName)
   rawset(_G, "GetNormalizedRealmName", savedGetNormalizedRealmName)
+  rawset(_G, "InCombatLockdown", savedInCombatLockdown)
 end

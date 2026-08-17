@@ -184,6 +184,35 @@ local function tests()
     _G.C_DateAndTime = nil
     TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
   end
+  -- Group-session labels use the configured clock and always append DD/MM.
+  do
+    local timestamp = os.time({ year = 2026, month = 12, day = 9, hour = 23, min = 33, sec = 0 })
+
+    TimeFormat.Configure({ timeFormat = "24h", timeSource = "local" })
+    Assert.equal(TimeFormat.GroupSessionTimestamp(timestamp), "23:33 09/12")
+
+    TimeFormat.Configure({ timeFormat = "12h" })
+    Assert.equal(TimeFormat.GroupSessionTimestamp(timestamp), "11:33 PM 09/12")
+
+    _G.C_DateAndTime = {
+      GetCurrentCalendarTime = function()
+        local serverTime = os.date("*t", os.time() + 3600)
+        return {
+          year = serverTime.year,
+          month = serverTime.month,
+          monthDay = serverTime.day,
+          hour = serverTime.hour,
+          minute = serverTime.min,
+          second = serverTime.sec,
+        }
+      end,
+    }
+    TimeFormat.Configure({ timeFormat = "24h", timeSource = "server" })
+    Assert.equal(TimeFormat.GroupSessionTimestamp(timestamp), "00:33 10/12")
+
+    _G.C_DateAndTime = nil
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
+  end
 
   print("  All TimeFormat config tests passed")
 end

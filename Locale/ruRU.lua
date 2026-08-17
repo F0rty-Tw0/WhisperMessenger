@@ -176,6 +176,7 @@ local Russian = {
   ["Party"] = "Группа",
   ["Raid"] = "Рейд",
   ["Instance (BG)"] = "Подземелье (Поле боя)",
+  ["Current"] = "Текущая",
   ["Guild"] = "Гильдия",
   ["Officer"] = "Офицер",
   ["Battle.net Group"] = "Группа Battle.net",
@@ -312,6 +313,7 @@ local Russian = {
 
   -- Group send notices
   ["Another character's history — read-only."] = "История другого персонажа — только чтение.",
+  ["Historical group chat — read-only."] = "Исторический групповой чат — только чтение.",
   ["Not in group — can't send."] = "Вы не в группе — отправка невозможна.",
   ["Mythic Lockdown"] = "Мифическая блокировка",
   ["Competitive Content"] = "Соревновательный режим",

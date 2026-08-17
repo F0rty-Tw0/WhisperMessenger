@@ -11,14 +11,11 @@ local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCom
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
+local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 
 local SendHandler = {}
-
-local function isCombatSendLocked()
-  return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
-end
 
 local function appendBlockedOutgoing(runtime, payload, reason)
   if runtime == nil or runtime.store == nil or payload == nil or payload.conversationKey == nil then
@@ -82,16 +79,19 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     end
   end
 
-  if isCombatSendLocked(runtime) then
-    appendBlockedOutgoing(runtime, payload, "Lockdown")
-    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Lockdown")
-    refreshWindow()
-    return false
+  local inCombat = type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
+  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
+  if traceEnabled then
+    Trace("SendHandler: entry channel=" .. tostring(payload.channel) .. " inCombat=" .. tostring(inCombat))
   end
 
   if runtime.isMythicLockdown and runtime.isMythicLockdown() then
     appendBlockedOutgoing(runtime, payload, "Mythic Lockdown")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")
+    if traceEnabled then
+      Trace("SendHandler: reject reason=Mythic Lockdown")
+      Trace("SendHandler: return result=false")
+    end
     refreshWindow()
     return false
   end
@@ -99,6 +99,10 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
     appendBlockedOutgoing(runtime, payload, "Competitive Content")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
+    if traceEnabled then
+      Trace("SendHandler: reject reason=Competitive Content")
+      Trace("SendHandler: return result=false")
+    end
     refreshWindow()
     return false
   end
@@ -112,6 +116,10 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
 
   if not sendAvailable then
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send unavailable")
+    if traceEnabled then
+      Trace("SendHandler: reject reason=Send unavailable")
+      Trace("SendHandler: return result=false")
+    end
     refreshWindow()
     return false
   end
@@ -119,7 +127,13 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text)
   local callOk
   if payload.channel == "BN" then
+    if traceEnabled then
+      Trace("SendHandler: dispatch transport=BN")
+    end
     callOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
+    if traceEnabled then
+      Trace("SendHandler: bnet-pcall ok=" .. tostring(callOk))
+    end
 
     -- Classic Battle.net character whispers also strip the `(id)` from
     -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
@@ -134,6 +148,9 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
       end
     end
   else
+    if traceEnabled then
+      Trace("SendHandler: dispatch transport=WOW")
+    end
     -- SendChatMessage is hardware-event-protected; pcall breaks the
     -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
     -- and let WoW's error handler surface failures instead.
@@ -165,10 +182,17 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     end
 
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send failed")
+    if traceEnabled then
+      Trace("SendHandler: reject reason=Send failed")
+      Trace("SendHandler: return result=false")
+    end
     refreshWindow()
     return false
   end
 
+  if traceEnabled then
+    Trace("SendHandler: return result=true")
+  end
   refreshWindow()
   return true
 end

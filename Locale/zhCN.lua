@@ -176,6 +176,7 @@ local SimplifiedChinese = {
   ["Party"] = "小队",
   ["Raid"] = "团队",
   ["Instance (BG)"] = "副本(战场)",
+  ["Current"] = "当前",
   ["Guild"] = "公会",
   ["Officer"] = "官员",
   ["Battle.net Group"] = "战网群组",
@@ -312,6 +313,7 @@ local SimplifiedChinese = {
 
   -- Group send notices
   ["Another character's history — read-only."] = "其他角色的历史 — 只读。",
+  ["Historical group chat — read-only."] = "历史群组聊天 — 只读。",
   ["Not in group — can't send."] = "不在队伍中 — 无法发送。",
   ["Mythic Lockdown"] = "史诗锁定",
   ["Competitive Content"] = "竞技内容",

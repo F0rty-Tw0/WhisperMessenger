@@ -176,6 +176,7 @@ local Korean = {
   ["Party"] = "파티",
   ["Raid"] = "공격대",
   ["Instance (BG)"] = "인스턴스 (전장)",
+  ["Current"] = "현재",
   ["Guild"] = "길드",
   ["Officer"] = "관리자",
   ["Battle.net Group"] = "Battle.net 그룹",
@@ -312,6 +313,7 @@ local Korean = {
 
   -- Group send notices
   ["Another character's history — read-only."] = "다른 캐릭터의 기록 — 읽기 전용.",
+  ["Historical group chat — read-only."] = "이전 그룹 채팅 — 읽기 전용.",
   ["Not in group — can't send."] = "그룹에 속해 있지 않음 — 보낼 수 없습니다.",
   ["Mythic Lockdown"] = "신화 잠금",
   ["Competitive Content"] = "경쟁 콘텐츠",

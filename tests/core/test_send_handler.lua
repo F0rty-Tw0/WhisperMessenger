@@ -1,6 +1,7 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Availability = require("WhisperMessenger.Transport.Availability")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local Trace = require("WhisperMessenger.Core.Trace")
 
 return function()
   local sentMessages = {}
@@ -194,8 +195,7 @@ return function()
     "expected plain bracketed text untouched on classic, got: " .. tostring(sentMessages[#sentMessages].text)
   )
 
-  -- Test 3: Global InCombatLockdown blocks character whisper sends
-
+  -- Test 3: Ordinary combat still dispatches character whispers directly.
   rawset(_G, "InCombatLockdown", function()
     return true
   end)
@@ -203,19 +203,13 @@ return function()
   runtime.pendingOutgoing = {}
   refreshCalls = 0
   sentMessages = {}
-
   local combatResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
-  assert(combatResult == false, "expected send to be blocked when InCombatLockdown is true")
-  assert(#sentMessages == 0, "should not send while InCombatLockdown is true")
-  assert(refreshCalls == 1, "should refresh to show lockdown status when InCombatLockdown is true")
-
-  local combatStatus = runtime.sendStatusByConversation[payload.conversationKey]
-  assert(combatStatus ~= nil, "expected lockdown status while InCombatLockdown is true")
-  assert(combatStatus.status == "Lockdown", "expected Lockdown status during InCombatLockdown")
-  local combatConversation = runtime.store.conversations[payload.conversationKey]
-  assert(combatConversation ~= nil, "expected conversation to exist after InCombatLockdown block")
-  assert(#combatConversation.messages == 1, "expected blocked outgoing message to be recorded")
-  assert(combatConversation.messages[1].blockedReason == "Lockdown", "expected blocked reason Lockdown on InCombatLockdown block")
+  assert(combatResult == true, "expected character whisper to send during ordinary combat")
+  assert(#sentMessages == 1, "expected direct character transport call during ordinary combat")
+  assert(sentMessages[1].text == "hello", "expected direct character transport to receive text")
+  assert(sentMessages[1].target == "Thrall-Nagrand", "expected direct character transport to receive target")
+  assert(runtime.sendStatusByConversation[payload.conversationKey] == nil, "ordinary combat should not set a blocked send status")
+  assert(refreshCalls == 1, "expected successful ordinary-combat send to refresh")
 
   -- Test 4: Legacy BNSendWhisper fallback supports Classic/TBC Battle.net sends
 
@@ -291,6 +285,8 @@ return function()
   runtime.isCompetitiveContent = nil
 
   -- Battle.net channel still routes through SendHandler when nothing blocks.
+  local traceLines = {}
+  local savedPrint = _G.print
 
   rawset(_G, "InCombatLockdown", function()
     return false
@@ -303,6 +299,10 @@ return function()
     table.insert(sentMessages, { bnetAccountID = bnetAccountID, text = text, channel = "BN" })
     return true
   end)
+  rawset(_G, "print", function(_, line)
+    table.insert(traceLines, line)
+  end)
+  Trace.enable()
 
   local bnPayload2 = {
     conversationKey = "me::BN::thrall#1234",
@@ -314,6 +314,25 @@ return function()
   local bnResult2 = SendHandler.HandleSend(runtime, bnPayload2, refreshWindow)
   assert(bnResult2 == true, "expected BN send to go through")
   assert(#sentMessages == 1, "expected BN send to reach the gateway")
+
+  rawset(_G, "InCombatLockdown", function()
+    return true
+  end)
+  local combatTraceResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
+  assert(combatTraceResult == true, "expected ordinary-combat send to return true with tracing enabled")
+  Trace.disable()
+  rawset(_G, "print", savedPrint)
+  assert(traceLines[1] == "SendHandler: entry channel=BN inCombat=false")
+  assert(traceLines[2] == "SendHandler: dispatch transport=BN")
+  assert(traceLines[3] == "SendHandler: bnet-pcall ok=true")
+  assert(traceLines[4] == "SendHandler: return result=true")
+  assert(traceLines[5] == "SendHandler: entry channel=WOW inCombat=true")
+  assert(traceLines[6] == "SendHandler: dispatch transport=WOW")
+  assert(traceLines[7] == "SendHandler: return result=true")
+  local traceOutput = table.concat(traceLines, "\n")
+  assert(not string.find(traceOutput, "bn hello", 1, true), "trace must not log Battle.net message text")
+  assert(not string.find(traceOutput, "Thrall-Nagrand", 1, true), "trace must not log recipient identity")
+  assert(not string.find(traceOutput, "99", 1, true), "trace must not log Battle.net account IDs")
 
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)

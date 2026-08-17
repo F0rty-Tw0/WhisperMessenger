@@ -1,5 +1,9 @@
+rawset(_G, "time", os.time)
+_G.date = os.date
+
 local GroupLabel = require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
+local TimeFormat = require("WhisperMessenger.Util.TimeFormat")
 
 return function()
   -- test_party_returns_Party
@@ -84,5 +88,44 @@ return function()
   do
     local label = GroupLabel.LabelForChannelAndTitle(ChannelType.BN_CONVERSATION, nil)
     assert(label == "Battle.net Group", "BN_CONVERSATION with nil title should fall back, got: " .. tostring(label))
+  end
+  -- Current sessions are distinguished only for the current character.
+  do
+    assert(GroupLabel.LabelForSession(ChannelType.PARTY, false, nil, 0) == "Party - Current", "active current-character PARTY should include Current")
+    assert(GroupLabel.LabelForSession(ChannelType.RAID, false, nil, 0) == "Raid - Current", "active current-character RAID should include Current")
+    assert(
+      GroupLabel.LabelForSession(ChannelType.INSTANCE_CHAT, false, nil, 0) == "Instance (BG) - Current",
+      "active current-character INSTANCE_CHAT should include Current"
+    )
+  end
+
+  -- Closed sessions use the configured timestamp, without a suffix when unavailable.
+  do
+    local timestamp = os.time({ year = 2026, month = 12, day = 9, hour = 23, min = 33, sec = 0 })
+    TimeFormat.Configure({ timeFormat = "24h", timeSource = "local" })
+    assert(
+      GroupLabel.LabelForSession(ChannelType.PARTY, true, nil, timestamp) == "Party - 23:33 09/12",
+      "closed PARTY should include a 24h timestamp"
+    )
+
+    TimeFormat.Configure({ timeFormat = "12h" })
+    assert(
+      GroupLabel.LabelForSession(ChannelType.RAID, true, nil, timestamp) == "Raid - 11:33 PM 09/12",
+      "closed RAID should include a 12h timestamp"
+    )
+    assert(
+      GroupLabel.LabelForSession(ChannelType.INSTANCE_CHAT, true, nil, 0) == "Instance (BG)",
+      "closed INSTANCE_CHAT without activity should retain its base label"
+    )
+    TimeFormat.Configure({ timeFormat = "12h", timeSource = "local" })
+  end
+
+  -- Non-session group channels retain their existing labels.
+  do
+    assert(GroupLabel.LabelForSession(ChannelType.GUILD, false, nil, 123) == "Guild", "GUILD must stay unchanged")
+    assert(GroupLabel.LabelForSession(ChannelType.OFFICER, false, nil, 123) == "Officer", "OFFICER must stay unchanged")
+    assert(GroupLabel.LabelForSession(ChannelType.CHANNEL, false, nil, 123) == "Channel", "CHANNEL must stay unchanged")
+    assert(GroupLabel.LabelForSession(ChannelType.COMMUNITY, false, nil, 123) == "Community", "COMMUNITY must stay unchanged")
+    assert(GroupLabel.LabelForSession(ChannelType.BN_CONVERSATION, false, nil, 123) == "Battle.net Group", "BN_CONVERSATION must stay unchanged")
   end
 end

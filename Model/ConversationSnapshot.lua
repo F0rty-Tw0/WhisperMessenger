@@ -19,6 +19,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
     lastPreview = lastPreview,
     unreadCount = conversation.unreadCount or 0,
     lastActivityAt = conversation.lastActivityAt or 0,
+    leftGroup = conversation.leftGroup,
     channel = conversation.channel or "WOW",
     guid = conversation.guid,
     bnetAccountID = conversation.bnetAccountID,

@@ -6,6 +6,8 @@ end
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
+
 local GroupLabel = {}
 
 local CHANNEL_LABELS = {
@@ -19,6 +21,12 @@ local CHANNEL_LABELS = {
   [ChannelType.COMMUNITY] = "Community",
 }
 
+local SESSION_CHANNELS = {
+  [ChannelType.PARTY] = true,
+  [ChannelType.RAID] = true,
+  [ChannelType.INSTANCE_CHAT] = true,
+}
+
 -- LabelForChannel returns the display label for a group channel type.
 -- Returns "" for whisper channels (WHISPER, BN_WHISPER) and nil.
 function GroupLabel.LabelForChannel(channel)
@@ -26,6 +34,26 @@ function GroupLabel.LabelForChannel(channel)
     return ""
   end
   return Localization.Text(CHANNEL_LABELS[channel]) or ""
+end
+
+-- LabelForSession adds state only to Party, Raid, and Instance Chat rows.
+function GroupLabel.LabelForSession(channel, leftGroup, ownerProfileId, lastActivityAt)
+  local label = GroupLabel.LabelForChannel(channel)
+  if not SESSION_CHANNELS[channel] then
+    return label
+  end
+
+  local suffix
+  if ownerProfileId == nil and leftGroup ~= true then
+    suffix = Localization.Text("Current")
+  elseif lastActivityAt and lastActivityAt ~= 0 then
+    suffix = TimeFormat.GroupSessionTimestamp(lastActivityAt)
+  end
+
+  if type(suffix) ~= "string" or suffix == "" then
+    return label
+  end
+  return label .. " - " .. suffix
 end
 
 -- Extract a short display-friendly character name from a profileId like
