@@ -75,7 +75,7 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   return false
 end
 
-function Competitive.handleCombatStart(Bootstrap, deps)
+function Competitive.handleCombatStart(Bootstrap, _deps)
   local runtime = Bootstrap.runtime
   local settings = runtime and runtime.accountState and runtime.accountState.settings
   if
