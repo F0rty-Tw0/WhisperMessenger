@@ -27,12 +27,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install StyLua
-        uses: JohnnyMorganz/stylua-action@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          version: 2.4.0
-          args: --check .
+      - name: Run StyLua
+        run: npx --yes @johnnymorganz/stylua-bin@2.4.0 --check .
 
       - name: Run Luacheck
         uses: lunarmodules/luacheck@v1
