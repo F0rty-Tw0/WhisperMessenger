@@ -211,6 +211,9 @@ function SettingsHandler.Create(options)
         minimap.refreshDesaturation()
       end
     end
+    if key == "widgetTransparency" and icon and icon.refreshTransparency then
+      icon.refreshTransparency()
+    end
     if key == "lockToggleIcon" and icon and icon.refreshLockGlyph then
       icon.refreshLockGlyph()
     end

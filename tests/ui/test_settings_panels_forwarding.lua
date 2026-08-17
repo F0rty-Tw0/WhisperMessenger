@@ -55,6 +55,8 @@ return function()
     iconSize = 56,
     iconDesaturated = false,
     showWidgetMessagePreview = false,
+    transparentWidget = true,
+    widgetTransparency = 0.4,
     widgetPreviewAutoDismissSeconds = 15,
     iconMode = "both",
     widgetPreviewPosition = "top",
@@ -123,6 +125,11 @@ return function()
   assert(
     iconsCapture.config.showWidgetMessagePreview == false,
     "expected icons config.showWidgetMessagePreview=false, got: " .. tostring(iconsCapture.config.showWidgetMessagePreview)
+  )
+  assert(iconsCapture.config.transparentWidget == nil, "Icons config should not include transparentWidget")
+  assert(
+    iconsCapture.config.widgetTransparency == 0.4,
+    "expected icons config.widgetTransparency=0.4, got: " .. tostring(iconsCapture.config.widgetTransparency)
   )
   assert(
     iconsCapture.config.widgetPreviewAutoDismissSeconds == 15,

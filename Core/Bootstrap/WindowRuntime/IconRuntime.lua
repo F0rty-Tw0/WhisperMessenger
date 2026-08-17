@@ -81,6 +81,12 @@ function IconRuntime.Create(options)
     getIconDesaturated = function()
       return settings.iconDesaturated ~= false
     end,
+    getWidgetTransparency = function()
+      if settings.widgetTransparency == nil and settings.transparentWidget == true then
+        return 1
+      end
+      return settings.widgetTransparency or 0
+    end,
     getIsLocked = function()
       return settings.lockToggleIcon == true
     end,

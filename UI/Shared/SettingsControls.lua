@@ -93,6 +93,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local initial = spec.initial
   local formatFn = spec.formatFn
   local onChange = spec.onChange
+  local tooltip = spec.tooltip
 
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
@@ -146,6 +147,27 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
       onChange(stepped)
     end
   end)
+
+  if tooltip and row.SetScript then
+    local lines = type(tooltip) == "table" and tooltip or { tooltip }
+    row:SetScript("OnEnter", function()
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(row, "ANCHOR_TOP")
+        _G.GameTooltip:SetText(lines[1])
+        for i = 2, #lines do
+          if _G.GameTooltip.AddLine then
+            pcall(_G.GameTooltip.AddLine, _G.GameTooltip, lines[i], 1, 1, 1)
+          end
+        end
+        _G.GameTooltip:Show()
+      end
+    end)
+    row:SetScript("OnLeave", function()
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
+    end)
+  end
 
   local sliderHeight = Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT
 

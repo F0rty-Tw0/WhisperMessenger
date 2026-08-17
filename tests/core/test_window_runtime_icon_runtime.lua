@@ -19,6 +19,8 @@ return function()
       showUnreadBadge = false,
       badgePulse = false,
       iconDesaturated = true,
+      transparentWidget = true,
+      widgetTransparency = 0.4,
       widgetPreviewAutoDismissSeconds = "12",
       widgetPreviewPosition = "left",
     },
@@ -87,6 +89,8 @@ return function()
   assert(createOptions.getShowUnreadBadge() == false, "showUnreadBadge=false should hide badge")
   assert(createOptions.getBadgePulse() == false, "badgePulse=false should disable pulse")
   assert(createOptions.getIconDesaturated() == true, "iconDesaturated=true should desaturate icon")
+  assert(createOptions.getTransparentWidget == nil, "IconRuntime should not expose getTransparentWidget")
+  assert(createOptions.getWidgetTransparency() == 0.4, "widgetTransparency should use saved numeric setting")
   assert(createOptions.getPreviewAutoDismissSeconds() == 12, "auto-dismiss should parse numeric setting")
   assert(createOptions.getPreviewPosition() == "left", "preview position should use saved string")
   assert(createOptions.onToggle() == "toggled" and toggles == 1, "icon toggle should call supplied toggle")
@@ -106,9 +110,13 @@ return function()
 
   accountState.settings.widgetPreviewAutoDismissSeconds = nil
   accountState.settings.widgetPreviewPosition = ""
+  accountState.settings.widgetTransparency = nil
   assert(createOptions.getPreviewAutoDismissSeconds() == 30, "nil auto-dismiss should default to 30")
   assert(createOptions.getPreviewPosition() == "right", "blank preview position should default right")
+  assert(createOptions.getWidgetTransparency() == 1, "legacy transparentWidget=true should keep fully transparent widget")
 
   accountState.settings.widgetPreviewAutoDismissSeconds = "bad"
   assert(createOptions.getPreviewAutoDismissSeconds() == 0, "invalid auto-dismiss should coerce to 0")
+  accountState.settings.transparentWidget = false
+  assert(createOptions.getWidgetTransparency() == 0, "fresh settings should default widget transparency to 0")
 end

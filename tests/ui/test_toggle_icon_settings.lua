@@ -270,6 +270,42 @@ return function()
     )
   end
 
+  -- test_widget_transparency_maps_to_idle_alpha
+
+  do
+    local widgetTransparency = 0.4
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+      getWidgetTransparency = function()
+        return widgetTransparency
+      end,
+    })
+
+    assert(icon.frame.alpha == 0.6, "40% widget transparency should start at 60% alpha")
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.frame.alpha == 1, "widget should become fully visible on hover")
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(icon.frame.alpha == 0.6, "widget should restore configured alpha on leave")
+
+    widgetTransparency = 1.5
+    icon.refreshTransparency()
+    assert(icon.frame.alpha == 0, "widget transparency above 100% should clamp to invisible")
+
+    widgetTransparency = -0.5
+    icon.refreshTransparency()
+    assert(icon.frame.alpha == 1, "widget transparency below 0% should clamp to opaque")
+  end
+
+  -- test_widget_transparency_defaults_to_opaque
+
+  do
+    local icon = ToggleIcon.Create(factory, {
+      parent = parent,
+    })
+
+    assert(icon.frame.alpha == 1, "widget transparency should default to opaque")
+  end
+
   -- test_message_preview_hidden_by_default
 
   do

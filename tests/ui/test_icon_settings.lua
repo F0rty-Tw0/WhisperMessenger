@@ -30,6 +30,65 @@ return function()
     assert(result.showBadgeToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: showBadgeToggle should exist")
     assert(result.badgePulseToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: badgePulseToggle should exist")
     assert(result.widgetMessagePreviewToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: widgetMessagePreviewToggle should exist")
+    assert(result.transparentWidgetToggle == nil, "test_icons_owns_all_icon_and_widget_controls: transparentWidgetToggle should not exist")
+    assert(result.widgetTransparencySlider ~= nil, "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider should exist")
+    assert(
+      result.widgetTransparencySlider.minValue == 0,
+      "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider minimum should be 0"
+    )
+    assert(
+      result.widgetTransparencySlider.maxValue == 1,
+      "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider maximum should be 1"
+    )
+    assert(
+      result.widgetTransparencySlider.valueStep == 0.05,
+      "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider step should be 0.05"
+    )
+    assert(result.widgetTransparencySlider.value == 0, "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider should default to 0%")
+    assert(
+      result.widgetTransparencySlider.parent.children[1].text == "Widget transparency",
+      "test_icons_owns_all_icon_and_widget_controls: widgetTransparencySlider should use the transparency label"
+    )
+
+    local savedTooltip = _G.GameTooltip
+    local tooltipState = { lines = {}, shown = false, hidden = false }
+    _G.GameTooltip = {
+      SetOwner = function(_, owner, anchor)
+        tooltipState.owner = owner
+        tooltipState.anchor = anchor
+      end,
+      SetText = function(_, value)
+        tooltipState.title = value
+      end,
+      AddLine = function(_, value)
+        tooltipState.lines[#tooltipState.lines + 1] = value
+      end,
+      Show = function()
+        tooltipState.shown = true
+      end,
+      Hide = function()
+        tooltipState.hidden = true
+      end,
+    }
+
+    local tooltipRow = result.widgetTransparencySlider.parent
+    local onEnter = tooltipRow:GetScript("OnEnter")
+    assert(onEnter ~= nil, "test_widget_transparency_tooltip: slider row should have OnEnter script")
+    onEnter(tooltipRow)
+    assert(tooltipState.owner == tooltipRow, "test_widget_transparency_tooltip: tooltip should use the slider row as owner")
+    assert(tooltipState.anchor == "ANCHOR_TOP", "test_widget_transparency_tooltip: tooltip should anchor above the slider row")
+    assert(tooltipState.title == "Widget transparency", "test_widget_transparency_tooltip: tooltip should use the transparency title")
+    assert(
+      tooltipState.lines[1] == "Controls how transparent the widget is when not hovered.",
+      "test_widget_transparency_tooltip: tooltip should explain widget transparency"
+    )
+    assert(tooltipState.shown == true, "test_widget_transparency_tooltip: tooltip should show on enter")
+
+    local onLeave = tooltipRow:GetScript("OnLeave")
+    assert(onLeave ~= nil, "test_widget_transparency_tooltip: slider row should have OnLeave script")
+    onLeave(tooltipRow)
+    assert(tooltipState.hidden == true, "test_widget_transparency_tooltip: tooltip should hide on leave")
+    _G.GameTooltip = savedTooltip
     assert(result.autoDismissSlider ~= nil, "test_icons_owns_all_icon_and_widget_controls: autoDismissSlider should exist")
     assert(result.positionSelector ~= nil, "test_icons_owns_all_icon_and_widget_controls: positionSelector should exist")
     assert(result.playSoundToggle == nil, "test_icons_owns_all_icon_and_widget_controls: Icons should not expose playSoundToggle")
@@ -54,6 +113,12 @@ return function()
     result.showBadgeToggle.dot:GetScript("OnClick")(result.showBadgeToggle.dot)
     result.badgePulseToggle.dot:GetScript("OnClick")(result.badgePulseToggle.dot)
     result.widgetMessagePreviewToggle.dot:GetScript("OnClick")(result.widgetMessagePreviewToggle.dot)
+    assert(result.transparentWidgetToggle == nil, "test_icon_and_widget_controls_fire_existing_keys: transparentWidgetToggle should not exist")
+    result.widgetTransparencySlider:SetValue(0.4)
+    assert(
+      result.widgetTransparencySlider.parent.children[2].text == "40%",
+      "test_icon_and_widget_controls_fire_existing_keys: widget transparency should display a percent"
+    )
     result.autoDismissSlider:SetValue(60)
     result.positionSelector.buttons[2]:GetScript("OnClick")(result.positionSelector.buttons[2])
 
@@ -64,6 +129,8 @@ return function()
     assert(changes.showUnreadBadge == false, "test_icon_and_widget_controls_fire_existing_keys: showUnreadBadge should be false")
     assert(changes.badgePulse == false, "test_icon_and_widget_controls_fire_existing_keys: badgePulse should be false")
     assert(changes.showWidgetMessagePreview == false, "test_icon_and_widget_controls_fire_existing_keys: showWidgetMessagePreview should be false")
+    assert(changes.transparentWidget == nil, "test_icon_and_widget_controls_fire_existing_keys: transparentWidget should not be emitted")
+    assert(changes.widgetTransparency == 0.4, "test_icon_and_widget_controls_fire_existing_keys: widget transparency should be 0.4")
     assert(changes.widgetPreviewAutoDismissSeconds == 60, "test_icon_and_widget_controls_fire_existing_keys: auto-dismiss should be 60")
     assert(changes.widgetPreviewPosition == "left", "test_icon_and_widget_controls_fire_existing_keys: position should be left")
   end
@@ -96,6 +163,7 @@ return function()
       showUnreadBadge = false,
       badgePulse = false,
       showWidgetMessagePreview = false,
+      widgetTransparency = 0.25,
       widgetPreviewAutoDismissSeconds = 60,
       widgetPreviewPosition = "top",
     }, {
@@ -114,6 +182,7 @@ return function()
       showUnreadBadge = true,
       badgePulse = true,
       showWidgetMessagePreview = true,
+      widgetTransparency = 0,
       widgetPreviewAutoDismissSeconds = 30,
       widgetPreviewPosition = "right",
     }
@@ -125,7 +194,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 9, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit nine icon/widget keys")
+    assert(resetCount == 10, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit ten icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language

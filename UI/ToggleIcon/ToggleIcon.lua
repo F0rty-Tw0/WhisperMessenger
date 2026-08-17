@@ -134,6 +134,7 @@ function ToggleIcon.Create(factory, options)
   local getBadgePulse = options.getBadgePulse
   local getIconDesaturated = options.getIconDesaturated
   local getIsLocked = options.getIsLocked
+  local getWidgetTransparency = options.getWidgetTransparency
 
   local function isLocked()
     return type(getIsLocked) == "function" and getIsLocked() == true
@@ -158,6 +159,21 @@ function ToggleIcon.Create(factory, options)
   end
 
   local isHoveringIcon = false
+
+  local function resolveWidgetTransparency()
+    local value = type(getWidgetTransparency) == "function" and tonumber(getWidgetTransparency()) or nil
+    if value == nil or value ~= value then
+      return 0
+    end
+    return math.min(1, math.max(0, value))
+  end
+
+  local function refreshTransparency()
+    if frame.SetAlpha then
+      local alpha = not isHoveringIcon and (1 - resolveWidgetTransparency()) or 1
+      frame:SetAlpha(alpha)
+    end
+  end
 
   local function syncLockGlyphVisibility()
     local show = isHoveringIcon and isLocked()
@@ -215,6 +231,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetScript("OnEnter", function()
       isHoveringIcon = true
       syncLockGlyphVisibility()
+      refreshTransparency()
       if not desaturation.isActive() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
         applyVertexColor(chatIcon, HOVER_ICON_COLOR)
@@ -241,6 +258,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetScript("OnLeave", function()
       isHoveringIcon = false
       syncLockGlyphVisibility()
+      refreshTransparency()
       local isDesat = desaturation.isActive()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if not isDesat then
@@ -307,6 +325,7 @@ function ToggleIcon.Create(factory, options)
   setIncomingPreview(options.previewSenderName, options.previewMessageText, options.previewClassTag)
   refreshTheme()
   refreshLockGlyph()
+  refreshTransparency()
 
   trace("icon created", anchorPoint, x, y)
 
@@ -335,6 +354,7 @@ function ToggleIcon.Create(factory, options)
     refreshTheme = refreshTheme,
     lockGlyph = lockGlyph,
     refreshLockGlyph = refreshLockGlyph,
+    refreshTransparency = refreshTransparency,
   }
 end
 

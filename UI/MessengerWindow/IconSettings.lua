@@ -19,6 +19,7 @@ local DEFAULTS = {
   iconSize = 42,
   iconDesaturated = true,
   lockToggleIcon = false,
+  widgetTransparency = 0,
   showWidgetMessagePreview = true,
   widgetPreviewAutoDismissSeconds = 30,
   widgetPreviewPosition = "right",
@@ -46,6 +47,10 @@ end
 
 local function pxFormat(v)
   return tostring(math.floor(v + 0.5)) .. "px"
+end
+
+local function percentFormat(v)
+  return tostring(math.floor(v * 100 + 0.5)) .. "%"
 end
 
 local function secondsFormat(v)
@@ -112,6 +117,30 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local initialWidgetTransparency = tonumber(config.widgetTransparency)
+  if initialWidgetTransparency == nil then
+    initialWidgetTransparency = DEFAULTS.widgetTransparency
+  end
+  local widgetTransparencyRow = panel:bind(
+    SettingsControls.CreateSliderRow(factory, frame, {
+      label = text("Widget transparency"),
+      tooltip = {
+        text("Widget transparency"),
+        text("Controls how transparent the widget is when not hovered."),
+      },
+      min = 0,
+      max = 1,
+      step = 0.05,
+      initial = initialWidgetTransparency,
+      formatFn = percentFormat,
+      onChange = function(value)
+        onChange("widgetTransparency", value)
+      end,
+    }),
+    { type = "slider", key = "widgetTransparency", default = DEFAULTS.widgetTransparency }
+  )
+  widgetTransparencyRow.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local lockToggleIconToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Lock icon position"), config.lockToggleIcon == true, toggleColors, toggleLayout, function(value)
       onChange("lockToggleIcon", value)
@@ -121,7 +150,7 @@ function IconSettings.Create(factory, parent, config, options)
     }),
     { type = "toggle", key = "lockToggleIcon", default = DEFAULTS.lockToggleIcon }
   )
-  lockToggleIconToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  lockToggleIconToggle.row:SetPoint("TOPLEFT", widgetTransparencyRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local function buildIconModeOptions()
     return {
@@ -269,6 +298,7 @@ function IconSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure icon and widget settings."))
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(buildIconModeOptions())
@@ -299,6 +329,7 @@ function IconSettings.Create(factory, parent, config, options)
     iconDesaturatedToggle = iconDesaturatedToggle,
     iconModeSelector = iconModeSelector,
     lockToggleIconToggle = lockToggleIconToggle,
+    widgetTransparencySlider = widgetTransparencyRow.slider,
     widgetMessagePreviewToggle = widgetMessagePreviewToggle,
     autoDismissSlider = autoDismissRow.slider,
     positionSelector = positionSelector,

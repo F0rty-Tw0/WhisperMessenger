@@ -63,6 +63,7 @@ local function makeIcon()
     appliedSize = nil,
     refreshDesaturationCalls = 0,
     refreshLockGlyphCalls = 0,
+    refreshTransparencyCalls = 0,
     appliedPreviewPosition = nil,
   }
   return {
@@ -77,6 +78,9 @@ local function makeIcon()
     end,
     refreshLockGlyph = function()
       state.refreshLockGlyphCalls = state.refreshLockGlyphCalls + 1
+    end,
+    refreshTransparency = function()
+      state.refreshTransparencyCalls = state.refreshTransparencyCalls + 1
     end,
     applyPreviewPosition = function(position)
       state.appliedPreviewPosition = position
@@ -245,6 +249,43 @@ return function()
 
     assert(accountSettings.iconDesaturated == true, "iconDesaturated persists")
     assert(iconState.refreshDesaturationCalls == 1, "icon.refreshDesaturation called once")
+  end
+
+  -- widget transparency persists and refreshes the widget idle alpha.
+  do
+    local runtime = makeRuntime()
+    local icon, iconState = makeIcon()
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      getIcon = function()
+        return icon
+      end,
+    })
+
+    onChange("widgetTransparency", 0.4)
+
+    assert(accountSettings.widgetTransparency == 0.4, "widgetTransparency persists")
+    assert(iconState.refreshTransparencyCalls == 1, "icon.refreshTransparency called once")
+  end
+
+  -- Legacy transparentWidget changes no longer refresh widget alpha.
+  do
+    local runtime = makeRuntime()
+    local icon, iconState = makeIcon()
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      getIcon = function()
+        return icon
+      end,
+    })
+
+    onChange("transparentWidget", true)
+
+    assert(iconState.refreshTransparencyCalls == 0, "transparentWidget should not refresh transparency")
   end
 
   -- lockToggleIcon forwards to icon.refreshLockGlyph so the padlock indicator
