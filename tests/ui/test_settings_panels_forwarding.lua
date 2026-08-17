@@ -107,9 +107,18 @@ return function()
 
   assert(iconsCapture.config.iconMode == "both", "expected icons config.iconMode=both, got: " .. tostring(iconsCapture.config.iconMode))
   assert(iconsCapture.config.iconSize == 56, "expected icons config.iconSize=56, got: " .. tostring(iconsCapture.config.iconSize))
-  assert(iconsCapture.config.iconDesaturated == false, "expected icons config.iconDesaturated=false, got: " .. tostring(iconsCapture.config.iconDesaturated))
-  assert(iconsCapture.config.lockToggleIcon == true, "expected icons config.lockToggleIcon=true, got: " .. tostring(iconsCapture.config.lockToggleIcon))
-  assert(iconsCapture.config.showUnreadBadge == false, "expected icons config.showUnreadBadge=false, got: " .. tostring(iconsCapture.config.showUnreadBadge))
+  assert(
+    iconsCapture.config.iconDesaturated == false,
+    "expected icons config.iconDesaturated=false, got: " .. tostring(iconsCapture.config.iconDesaturated)
+  )
+  assert(
+    iconsCapture.config.lockToggleIcon == true,
+    "expected icons config.lockToggleIcon=true, got: " .. tostring(iconsCapture.config.lockToggleIcon)
+  )
+  assert(
+    iconsCapture.config.showUnreadBadge == false,
+    "expected icons config.showUnreadBadge=false, got: " .. tostring(iconsCapture.config.showUnreadBadge)
+  )
   assert(iconsCapture.config.badgePulse == false, "expected icons config.badgePulse=false, got: " .. tostring(iconsCapture.config.badgePulse))
   assert(
     iconsCapture.config.showWidgetMessagePreview == false,

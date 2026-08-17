@@ -86,7 +86,6 @@ return function()
   _G.Menu = savedMenu
   _G.UnitPopup_OpenMenu = savedUnitPopupOpenMenu
 
-
   -- test_open_wow_contact_uses_friends_dropdown
   do
     local called = nil

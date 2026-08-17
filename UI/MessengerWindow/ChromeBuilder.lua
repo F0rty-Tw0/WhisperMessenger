@@ -9,8 +9,6 @@ local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
 local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
 local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
-local applyColorTexture = UIHelpers.applyColorTexture
-local applyVertexColor = UIHelpers.applyVertexColor
 local ChromeBuilder = {}
 
 -- ChromeBuilder builds the messenger window with one of two chrome paths
@@ -27,7 +25,7 @@ local ChromeBuilder = {}
 --     presets keep their modern minimal look.
 --
 -- Returns: { frame, background, title, newConversationButton, closeButton,
---   optionsButton, resizeGrip, applyTheme } in both cases. Non-chrome
+--   optionsButton, backButton, resizeGrip, applyTheme, setOptionsActive } in both cases. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
@@ -102,23 +100,27 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
 
   local newConv = Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome, Theme)
   local options_ = Buttons.CreateOptions(factory, frame, closeButton, Theme)
+  local back = Buttons.CreateBack(factory, frame, options_.button, Theme)
   local resize = Buttons.CreateResizeGrip(factory, frame, Theme)
 
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or Theme
     applyChromePaint(activeTheme)
-    applyVertexColor(options_.icon, activeTheme.COLORS.text_secondary)
-    applyVertexColor(newConv.icon, activeTheme.COLORS.text_primary)
-    local hover = activeTheme.COLORS.bg_contact_hover
-    applyColorTexture(newConv.bg, { hover[1], hover[2], hover[3], 0.35 })
-    local secondary = activeTheme.COLORS.text_secondary
-    local gripColor = { secondary[1], secondary[2], secondary[3], 0.4 }
-    for _, line in ipairs(resize.lines) do
-      applyColorTexture(line, gripColor)
-    end
+    options_.applyTheme(activeTheme)
+    back.applyTheme(activeTheme)
+    newConv.applyTheme(activeTheme)
+    resize.applyTheme(activeTheme)
   end
 
   applyTheme(Theme)
+  local function setOptionsActive(active)
+    options_.setActive(active)
+    if active then
+      back.button:Show()
+    else
+      back.button:Hide()
+    end
+  end
 
   return {
     frame = frame,
@@ -127,8 +129,10 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     newConversationButton = newConv.button,
     closeButton = closeButton,
     optionsButton = options_.button,
+    backButton = back.button,
     resizeGrip = resize.grip,
     applyTheme = applyTheme,
+    setOptionsActive = setOptionsActive,
     titleBarBorder = chrome.titleBarBorder,
     titleBarTopBorder = chrome.titleBarBorder and chrome.titleBarBorder.top or nil,
   }

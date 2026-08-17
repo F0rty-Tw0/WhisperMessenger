@@ -209,6 +209,8 @@ local Korean = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "새 귓속말",
   ["Open an empty conversation thread."] = "빈 대화를 엽니다.",
+  ["Back"] = "뒤로",
+  ["Close"] = "닫기",
   ["Whispers"] = "귓속말",
   ["Groups"] = "그룹",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "아직 그룹 채팅이 없습니다.\n파티나 인스턴스에 참여하면 여기에 메시지가 표시됩니다.",

@@ -87,8 +87,5 @@ return function()
   end
 
   local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
-  assert(
-    iconsTab.bg.color[1] == activeColor[1] and iconsTab.bg.color[2] == activeColor[2],
-    "active fifth-tab background should persist after leave"
-  )
+  assert(iconsTab.bg.color[1] == activeColor[1] and iconsTab.bg.color[2] == activeColor[2], "active fifth-tab background should persist after leave")
 end

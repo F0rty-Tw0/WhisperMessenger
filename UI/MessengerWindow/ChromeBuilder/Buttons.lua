@@ -9,6 +9,20 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 
+local function showTooltip(button, textKey)
+  if _G.GameTooltip and _G.GameTooltip.SetOwner then
+    _G.GameTooltip:SetOwner(button, "ANCHOR_TOP")
+    _G.GameTooltip:SetText(Localization.Text(textKey))
+    _G.GameTooltip:Show()
+  end
+end
+
+local function hideTooltip()
+  if _G.GameTooltip and _G.GameTooltip.Hide then
+    _G.GameTooltip:Hide()
+  end
+end
+
 local Buttons = {}
 
 -- Creates the "New Whisper" button. Anchors differently per chrome: pinned
@@ -37,13 +51,26 @@ function Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome,
   newConversationIcon:SetTexture("Interface\\CHATFRAME\\UI-ChatWhisperIcon")
   newConversationIcon:SetDesaturated(true)
   applyVertexColor(newConversationIcon, theme.COLORS.text_primary)
+  local function applyVisuals(hovered)
+    if hovered then
+      applyVertexColor(newConversationIcon, theme.COLORS.text_title or theme.COLORS.text_primary)
+      local bc = theme.COLORS.bg_contact_hover
+      applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.75 })
+      return
+    end
+
+    applyVertexColor(newConversationIcon, theme.COLORS.text_primary)
+    local bc = theme.COLORS.bg_contact_hover
+    applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.35 })
+  end
+
+  local function isHovered()
+    return newConversationButton.IsMouseOver and newConversationButton:IsMouseOver()
+  end
+
   if newConversationButton.SetScript then
     newConversationButton:SetScript("OnEnter", function()
-      applyVertexColor(newConversationIcon, theme.COLORS.text_title or theme.COLORS.text_primary)
-      do
-        local bc = theme.COLORS.bg_contact_hover
-        applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.75 })
-      end
+      applyVisuals(true)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(newConversationButton, "ANCHOR_TOP")
         _G.GameTooltip:SetText(Localization.Text("Start New Whisper"))
@@ -54,9 +81,7 @@ function Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome,
       end
     end)
     newConversationButton:SetScript("OnLeave", function()
-      applyVertexColor(newConversationIcon, theme.COLORS.text_primary)
-      local bc = theme.COLORS.bg_contact_hover
-      applyColorTexture(newConversationBg, { bc[1], bc[2], bc[3], 0.35 })
+      applyVisuals(false)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -68,12 +93,15 @@ function Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome,
     button = newConversationButton,
     bg = newConversationBg,
     icon = newConversationIcon,
+    applyTheme = function(nextTheme)
+      theme = nextTheme or Theme
+      applyVisuals(isHovered())
+    end,
   }
 end
 
--- Creates the gear/options button. Anchors to the left of the close button
--- when present; otherwise pins near the top-right of the frame. Returns the
--- button plus the textures applyTheme needs to repaint.
+-- Creates the gear/options button. Its active state is kept locally so hover
+-- never overwrites the selection paint while the options pane is visible.
 function Buttons.CreateOptions(factory, frame, closeButton, theme)
   theme = theme or Theme
 
@@ -86,32 +114,121 @@ function Buttons.CreateOptions(factory, frame, closeButton, theme)
   end
   local optionsBg = optionsButton:CreateTexture(nil, "BACKGROUND")
   optionsBg:SetAllPoints(optionsButton)
-  applyColorTexture(optionsBg, { 0, 0, 0, 0 })
   local optionsIcon = optionsButton:CreateTexture(nil, "ARTWORK")
   optionsIcon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
   optionsIcon:SetPoint("CENTER", optionsButton, "CENTER", 0, 0)
   optionsIcon:SetTexture("Interface\\Buttons\\UI-OptionsButton")
   optionsIcon:SetDesaturated(true)
-  applyVertexColor(optionsIcon, theme.COLORS.text_secondary)
+
+  local active = false
+  local function applyVisuals(hovered)
+    local colors = theme.COLORS
+    if active then
+      applyColorTexture(
+        optionsBg,
+        hovered and (colors.option_button_active_hover or colors.option_button_active or colors.bg_contact_selected)
+          or (colors.option_button_active or colors.bg_contact_selected)
+      )
+      applyVertexColor(optionsIcon, colors.option_button_text_active or colors.text_primary)
+      return
+    end
+
+    if hovered then
+      applyColorTexture(optionsBg, colors.option_button_hover or colors.bg_contact_hover)
+      applyVertexColor(optionsIcon, colors.option_button_text_hover or colors.text_primary)
+      return
+    end
+
+    applyColorTexture(optionsBg, colors.option_button_bg or { 0, 0, 0, 0 })
+    applyVertexColor(optionsIcon, colors.option_button_text or colors.text_secondary)
+  end
+
+  local function isHovered()
+    return optionsButton.IsMouseOver and optionsButton:IsMouseOver()
+  end
+
+  local function setActive(nextActive)
+    active = nextActive == true
+    applyVisuals(isHovered())
+  end
+
   if optionsButton.SetScript then
     optionsButton:SetScript("OnEnter", function()
-      applyVertexColor(optionsIcon, theme.COLORS.text_primary)
-      do
-        local bc = theme.COLORS.bg_contact_hover
-        applyColorTexture(optionsBg, { bc[1], bc[2], bc[3], 0.5 })
-      end
+      applyVisuals(true)
+      showTooltip(optionsButton, "Options")
     end)
     optionsButton:SetScript("OnLeave", function()
-      applyVertexColor(optionsIcon, theme.COLORS.text_secondary)
-      applyColorTexture(optionsBg, { 0, 0, 0, 0 })
+      applyVisuals(false)
+      hideTooltip()
     end)
   end
   optionsButton:EnableMouse(true)
+  applyVisuals(false)
 
   return {
     button = optionsButton,
     bg = optionsBg,
     icon = optionsIcon,
+    setActive = setActive,
+    applyTheme = function(nextTheme)
+      theme = nextTheme or Theme
+      applyVisuals(isHovered())
+    end,
+  }
+end
+
+function Buttons.CreateBack(factory, frame, optionsButton, theme)
+  theme = theme or Theme
+
+  local backButton = factory.CreateFrame("Button", nil, frame)
+  backButton:SetSize(theme.LAYOUT.CHROME_BUTTON_SIZE, theme.LAYOUT.CHROME_BUTTON_SIZE)
+  backButton:SetPoint("RIGHT", optionsButton, "LEFT", -2, 0)
+  local backBg = backButton:CreateTexture(nil, "BACKGROUND")
+  backBg:SetAllPoints(backButton)
+  local backIcon = backButton:CreateTexture(nil, "ARTWORK")
+  backIcon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
+  backIcon:SetPoint("CENTER", backButton, "CENTER", 0, 0)
+  backIcon:SetTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
+  backIcon:SetDesaturated(true)
+
+  local function applyVisuals(hovered)
+    local colors = theme.COLORS
+    if hovered then
+      applyColorTexture(backBg, colors.option_button_hover or colors.bg_contact_hover)
+      applyVertexColor(backIcon, colors.option_button_text_hover or colors.text_primary)
+      return
+    end
+
+    applyColorTexture(backBg, colors.option_button_bg or { 0, 0, 0, 0 })
+    applyVertexColor(backIcon, colors.option_button_text or colors.text_secondary)
+  end
+
+  local function isHovered()
+    return backButton.IsMouseOver and backButton:IsMouseOver()
+  end
+
+  if backButton.SetScript then
+    backButton:SetScript("OnEnter", function()
+      applyVisuals(true)
+      showTooltip(backButton, "Back")
+    end)
+    backButton:SetScript("OnLeave", function()
+      applyVisuals(false)
+      hideTooltip()
+    end)
+  end
+  backButton:EnableMouse(true)
+  backButton:Hide()
+  applyVisuals(false)
+
+  return {
+    button = backButton,
+    bg = backBg,
+    icon = backIcon,
+    applyTheme = function(nextTheme)
+      theme = nextTheme or Theme
+      applyVisuals(isHovered())
+    end,
   }
 end
 
@@ -161,26 +278,34 @@ function Buttons.CreateResizeGrip(factory, frame, theme)
     resizeLines[#resizeLines + 1] = line3h
   end
 
+  local function applyVisuals(hovered)
+    local c = theme.COLORS[hovered and "text_primary" or "text_secondary"]
+    local color = { c[1], c[2], c[3], hovered and 1 or 0.4 }
+    for _, line in ipairs(resizeLines) do
+      applyColorTexture(line, color)
+    end
+  end
+
+  local function isHovered()
+    return resizeGrip.IsMouseOver and resizeGrip:IsMouseOver()
+  end
+
   if resizeGrip.SetScript then
     resizeGrip:SetScript("OnEnter", function()
-      local c = theme.COLORS.text_primary
-      local hoverColor = { c[1], c[2], c[3], 1 }
-      for _, line in ipairs(resizeLines) do
-        applyColorTexture(line, hoverColor)
-      end
+      applyVisuals(true)
     end)
     resizeGrip:SetScript("OnLeave", function()
-      local c = theme.COLORS.text_secondary
-      local baseColor = { c[1], c[2], c[3], 0.4 }
-      for _, line in ipairs(resizeLines) do
-        applyColorTexture(line, baseColor)
-      end
+      applyVisuals(false)
     end)
   end
 
   return {
     grip = resizeGrip,
     lines = resizeLines,
+    applyTheme = function(nextTheme)
+      theme = nextTheme or Theme
+      applyVisuals(isHovered())
+    end,
   }
 end
 

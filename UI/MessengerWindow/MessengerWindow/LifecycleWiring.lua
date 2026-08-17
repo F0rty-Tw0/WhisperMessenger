@@ -40,6 +40,7 @@ function LifecycleWiring.Setup(options)
     buttonsRefs = {
       closeButton = chrome.closeButton,
       optionsButton = chrome.optionsButton,
+      backButton = chrome.backButton,
       newConversationButton = chrome.newConversationButton,
       resetWindowButton = layout.resetWindowButton,
       resetIconButton = layout.resetIconButton,

@@ -17,7 +17,7 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
-local CHAT_ICON_RATIO = 0.9   -- chat icon scale factor vs ICON_SIZE
+local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
 local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"

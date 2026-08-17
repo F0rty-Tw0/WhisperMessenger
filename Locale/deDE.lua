@@ -209,6 +209,8 @@ local German = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Neues Flüstern beginnen",
   ["Open an empty conversation thread."] = "Leere Unterhaltung öffnen.",
+  ["Back"] = "Zurück",
+  ["Close"] = "Schließen",
   ["Whispers"] = "Flüstern",
   ["Groups"] = "Gruppen",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "Noch keine Gruppenchats.\nTritt einer Gruppe oder Instanz bei, um hier Nachrichten zu sehen.",

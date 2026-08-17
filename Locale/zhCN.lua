@@ -209,6 +209,8 @@ local SimplifiedChinese = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "新密语",
   ["Open an empty conversation thread."] = "打开空白对话。",
+  ["Back"] = "返回",
+  ["Close"] = "关闭",
   ["Whispers"] = "密语",
   ["Groups"] = "群组",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "暂无群组聊天。\n加入小队或副本即可在此查看消息。",

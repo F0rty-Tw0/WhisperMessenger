@@ -19,10 +19,7 @@ return function()
       end
     end
     assert(texts["Icons"], "test_icons_owns_all_icon_and_widget_controls: English title should use the fallback key")
-    assert(
-      texts["Configure icon and widget settings."],
-      "test_icons_owns_all_icon_and_widget_controls: English hint should use the fallback key"
-    )
+    assert(texts["Configure icon and widget settings."], "test_icons_owns_all_icon_and_widget_controls: English hint should use the fallback key")
 
     assert(result.iconModeSelector ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconModeSelector should exist")
     assert(#result.iconModeSelector.buttons == 4, "test_icons_owns_all_icon_and_widget_controls: iconModeSelector should expose four modes")
@@ -148,8 +145,14 @@ return function()
       end
     end
     assert(texts["Значки"], "test_icons_refresh_layout_and_language: Icons title should be localized")
-    assert(texts["Настройте параметры значков и виджета."], "test_icons_refresh_layout_and_language: Icons hint should be localized")
-    assert(result.lockToggleIconToggle.label.text == "Закрепить позицию значка", "test_icons_refresh_layout_and_language: existing labels should remain localized")
+    assert(
+      texts["Настройте параметры значков и виджета."],
+      "test_icons_refresh_layout_and_language: Icons hint should be localized"
+    )
+    assert(
+      result.lockToggleIconToggle.label.text == "Закрепить позицию значка",
+      "test_icons_refresh_layout_and_language: existing labels should remain localized"
+    )
     Localization.Configure({ language = "enUS" })
   end
 

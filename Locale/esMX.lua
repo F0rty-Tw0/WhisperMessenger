@@ -213,6 +213,8 @@ local Spanish = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Nuevo susurro",
   ["Open an empty conversation thread."] = "Abrir una conversación vacía.",
+  ["Back"] = "Atrás",
+  ["Close"] = "Cerrar",
   ["Whispers"] = "Susurros",
   ["Groups"] = "Grupos",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "Aún no hay chats de grupo.\nÚnete a un grupo o instancia para ver mensajes aquí.",

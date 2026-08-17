@@ -18,7 +18,6 @@ local function makeHarness()
   return Bootstrap, deps, calls
 end
 
-
 return function()
   local function makeCombatHarness(hideOnCombat, visible)
     local state = { visible = visible }

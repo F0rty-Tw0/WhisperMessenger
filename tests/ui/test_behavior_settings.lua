@@ -347,7 +347,8 @@ return function()
     onEnter(result.hideOnCombatToggle.row)
     assert(tooltipTitle == "Hide on entering combat", "hideOnCombat tooltip should use its label")
     assert(
-      tooltipLines[1] == "Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat.",
+      tooltipLines[1]
+        == "Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat.",
       "hideOnCombat tooltip should explain its one-shot behavior"
     )
 

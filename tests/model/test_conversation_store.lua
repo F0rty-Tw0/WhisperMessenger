@@ -139,8 +139,6 @@ return function()
     assert(conversation.unreadCountHidden == nil, "hidden-count state should be removed")
   end
 
-
-
   -- test_last_incoming_preview_tracks_latest_incoming_only
   do
     local s = Store.New({})

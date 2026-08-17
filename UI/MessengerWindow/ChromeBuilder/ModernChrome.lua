@@ -9,6 +9,8 @@ local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+
 local ModernChrome = {}
 
 -- Builds the modern (non-Blizzard-template) chrome branch. Paints:
@@ -76,26 +78,41 @@ function ModernChrome.Build(factory, frame, options, theme)
   closeButton:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -2, -2)
   local closeBg = closeButton:CreateTexture(nil, "BACKGROUND")
   closeBg:SetAllPoints(closeButton)
-  applyColorTexture(closeBg, { 0, 0, 0, 0 })
   local closeIcon = closeButton:CreateTexture(nil, "ARTWORK")
   closeIcon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
   closeIcon:SetPoint("CENTER", closeButton, "CENTER", 0, 0)
   closeIcon:SetTexture("Interface\\Buttons\\UI-StopButton")
   closeIcon:SetDesaturated(true)
-  applyVertexColor(closeIcon, theme.COLORS.text_secondary)
-  if closeButton.SetScript then
-    closeButton:SetScript("OnEnter", function()
+  local function applyCloseVisuals(hovered)
+    if hovered then
       applyVertexColor(closeIcon, { 0.9, 0.3, 0.3, 1 })
       applyColorTexture(closeBg, { 0.9, 0.3, 0.3, 0.15 })
-    end)
-    closeButton:SetScript("OnLeave", function()
+    else
       applyVertexColor(closeIcon, theme.COLORS.text_secondary)
       applyColorTexture(closeBg, { 0, 0, 0, 0 })
+    end
+  end
+  applyCloseVisuals(false)
+  if closeButton.SetScript then
+    closeButton:SetScript("OnEnter", function()
+      applyCloseVisuals(true)
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(closeButton, "ANCHOR_TOP")
+        _G.GameTooltip:SetText(Localization.Text("Close"))
+        _G.GameTooltip:Show()
+      end
+    end)
+    closeButton:SetScript("OnLeave", function()
+      applyCloseVisuals(false)
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
     end)
   end
   closeButton:EnableMouse(true)
 
   local function applyChromePaint(activeTheme)
+    theme = activeTheme
     applyColorTexture(background, activeTheme.COLORS.bg_primary)
     if titleBarBg then
       applyColorTexture(titleBarBg, activeTheme.COLORS.bg_header)
@@ -108,9 +125,7 @@ function ModernChrome.Build(factory, frame, options, theme)
     if titleBarBorder then
       UIHelpers.applyBorderBoxColor(titleBarBorder, divider)
     end
-    if closeIcon then
-      applyVertexColor(closeIcon, activeTheme.COLORS.text_secondary)
-    end
+    applyCloseVisuals(closeButton:IsMouseOver())
   end
 
   return {

@@ -9,6 +9,7 @@ function WindowVisibility.Create(options)
   local optionsPanel = options.optionsPanel
   local contactsPane = options.contactsPane
   local contentPane = options.contentPane
+  local onOptionsVisibilityChanged = options.onOptionsVisibilityChanged
   local trace = options.trace or function(...)
     local _ = ...
   end
@@ -18,6 +19,9 @@ function WindowVisibility.Create(options)
       optionsPanel:Show()
       contactsPane:Hide()
       contentPane:Hide()
+      if onOptionsVisibilityChanged then
+        onOptionsVisibilityChanged(true)
+      end
       trace("options shown")
       return
     end
@@ -25,6 +29,9 @@ function WindowVisibility.Create(options)
     optionsPanel:Hide()
     contactsPane:Show()
     contentPane:Show()
+    if onOptionsVisibilityChanged then
+      onOptionsVisibilityChanged(false)
+    end
     trace("options hidden")
   end
 

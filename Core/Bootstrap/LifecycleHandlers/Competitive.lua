@@ -78,7 +78,14 @@ end
 function Competitive.handleCombatStart(Bootstrap, deps)
   local runtime = Bootstrap.runtime
   local settings = runtime and runtime.accountState and runtime.accountState.settings
-  if settings and settings.hideOnCombat == true and runtime and runtime.isWindowVisible and runtime.setWindowVisible and runtime.isWindowVisible() then
+  if
+    settings
+    and settings.hideOnCombat == true
+    and runtime
+    and runtime.isWindowVisible
+    and runtime.setWindowVisible
+    and runtime.isWindowVisible()
+  then
     runtime.setWindowVisible(false)
   end
   return true

@@ -7,6 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+
 local BlizzardChrome = {}
 
 -- Builds the Blizzard-template chrome branch. The outer frame is already
@@ -27,6 +29,29 @@ function BlizzardChrome.Build(_factory, frame, options, theme)
   local background = frame.Bg
   local title = frame.TitleText
   local closeButton = frame.CloseButton
+
+  if closeButton and closeButton.SetScript then
+    local previousOnEnter = closeButton.GetScript and closeButton:GetScript("OnEnter")
+    local previousOnLeave = closeButton.GetScript and closeButton:GetScript("OnLeave")
+    closeButton:SetScript("OnEnter", function(...)
+      if previousOnEnter then
+        previousOnEnter(...)
+      end
+      if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        _G.GameTooltip:SetOwner(closeButton, "ANCHOR_TOP")
+        _G.GameTooltip:SetText(Localization.Text("Close"))
+        _G.GameTooltip:Show()
+      end
+    end)
+    closeButton:SetScript("OnLeave", function(...)
+      if previousOnLeave then
+        previousOnLeave(...)
+      end
+      if _G.GameTooltip and _G.GameTooltip.Hide then
+        _G.GameTooltip:Hide()
+      end
+    end)
+  end
 
   -- Double the apparent top bar height: fill the space below the
   -- template's title strip with bg_header, and shift the Inset down

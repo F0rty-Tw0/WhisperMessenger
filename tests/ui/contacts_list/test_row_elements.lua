@@ -275,5 +275,4 @@ return function()
     RowElements.updateUnreadBadge(row, { unreadCount = 0 })
     assert(badge.shown == false, "unread badge should hide when no messages are unread")
   end
-
 end

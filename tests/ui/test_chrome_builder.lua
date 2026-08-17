@@ -9,6 +9,51 @@ local function loadAddonFromToc(addonName, ns)
   end
 end
 
+local function assertTooltipLifecycle(Localization, button, expectedTitle, label)
+  local onEnterScript = button.GetScript and button:GetScript("OnEnter") or nil
+  local onLeaveScript = button.GetScript and button:GetScript("OnLeave") or nil
+  assert(type(onEnterScript) == "function", label .. ": expected OnEnter script")
+  assert(type(onLeaveScript) == "function", label .. ": expected OnLeave script")
+
+  local originalGameTooltip = _G.GameTooltip
+  local originalLanguage = Localization.GetConfiguredLanguage()
+  local tooltipState = { shown = false, hidden = false }
+  _G.GameTooltip = {
+    SetOwner = function(_, owner, anchor)
+      tooltipState.owner = owner
+      tooltipState.anchor = anchor
+    end,
+    SetText = function(_, text)
+      tooltipState.text = text
+    end,
+    AddLine = function(_, text)
+      tooltipState.line = text
+    end,
+    Show = function()
+      tooltipState.shown = true
+    end,
+    Hide = function()
+      tooltipState.hidden = true
+    end,
+  }
+
+  local ok, err = pcall(function()
+    Localization.Configure({ language = "enUS" })
+    onEnterScript(button)
+    assert(tooltipState.text == expectedTitle, label .. ": expected tooltip title " .. expectedTitle .. ", got " .. tostring(tooltipState.text))
+    assert(tooltipState.shown == true, label .. ": expected tooltip shown on enter")
+
+    onLeaveScript(button)
+    assert(tooltipState.hidden == true, label .. ": expected tooltip hidden on leave")
+  end)
+
+  _G.GameTooltip = originalGameTooltip
+  Localization.Configure({ language = originalLanguage })
+  if not ok then
+    error(err, 0)
+  end
+end
+
 return function()
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
@@ -75,6 +120,25 @@ return function()
       chrome.frame.template == "BackdropTemplate",
       "default chrome: expected BackdropTemplate when useNativeChrome unset, got " .. tostring(chrome.frame.template)
     )
+  end
+
+  -- Options, close, and Back controls expose localized tooltips in both chrome paths.
+
+  do
+    for _, case in ipairs({
+      { name = "modern chrome", useNativeChrome = false },
+      { name = "native chrome", useNativeChrome = true },
+    }) do
+      local factory = FakeUI.NewFactory()
+      local parent = factory.CreateFrame("Frame", "UIParent", nil)
+      local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, {
+        useNativeChrome = case.useNativeChrome,
+      })
+
+      assertTooltipLifecycle(Localization, chrome.optionsButton, "Options", case.name .. " options button")
+      assertTooltipLifecycle(Localization, chrome.closeButton, "Close", case.name .. " close button")
+      assertTooltipLifecycle(Localization, chrome.backButton, "Back", case.name .. " Back button")
+    end
   end
 
   -- Shared overlays exist in both chrome paths (newConversation + tooltip).

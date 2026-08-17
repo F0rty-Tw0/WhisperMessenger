@@ -105,10 +105,7 @@ return function()
     result.refreshLayout(260)
 
     assert(result.soundSelector.row.width == 260, "test_refresh_layout_resizes_sound_selector: selector should resize to 260")
-    assert(
-      result.soundSelector.buttons[5].point[1] == "TOPLEFT",
-      "test_refresh_layout_resizes_sound_selector: 5th button should wrap at 260"
-    )
+    assert(result.soundSelector.buttons[5].point[1] == "TOPLEFT", "test_refresh_layout_resizes_sound_selector: 5th button should wrap at 260")
     assert(result.frame._wmBottomMarker ~= nil, "test_refresh_layout_resizes_sound_selector: panel should retain bottom marker")
   end
 
@@ -126,7 +123,10 @@ return function()
     end
 
     assert(texts["Уведомления"], "Russian notifications panel should translate title")
-    assert(texts["Настройте оповещения о входящих сообщениях."], "Russian notifications panel should translate hint")
+    assert(
+      texts["Настройте оповещения о входящих сообщениях."],
+      "Russian notifications panel should translate hint"
+    )
     assert(result.soundSelector.label.text == "Звук уведомления", "Notification sound label should be localized")
     assert(result.playSoundToggle.label.text == "Звук при новом шепоте", "Play sound toggle should be localized")
     assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")

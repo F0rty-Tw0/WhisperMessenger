@@ -15,9 +15,9 @@ local Buttons = {}
 -- settings tab buttons.
 --
 -- refs:
---   closeButton, optionsButton, newConversationButton, resetWindowButton,
---   resetIconButton, clearAllChatsButton, optionsPanel, settingsPanels,
---   settingsTabs
+--   closeButton, optionsButton, backButton, newConversationButton,
+--   resetWindowButton, resetIconButton, clearAllChatsButton, optionsPanel,
+--   settingsPanels, settingsTabs
 --
 -- options:
 --   onClose, onStartConversation, onResetWindowPosition,
@@ -26,6 +26,7 @@ local Buttons = {}
 function Buttons.WireButtons(refs, options)
   local closeButton = refs.closeButton
   local optionsButton = refs.optionsButton
+  local backButton = refs.backButton
   local newConversationButton = refs.newConversationButton
   local resetWindowButton = refs.resetWindowButton
   local resetIconButton = refs.resetIconButton
@@ -44,6 +45,12 @@ function Buttons.WireButtons(refs, options)
   if optionsButton and optionsButton.SetScript then
     optionsButton:SetScript("OnClick", function()
       options.setOptionsVisible(not options.isShown(optionsPanel))
+    end)
+  end
+
+  if backButton and backButton.SetScript then
+    backButton:SetScript("OnClick", function()
+      options.setOptionsVisible(false)
     end)
   end
 

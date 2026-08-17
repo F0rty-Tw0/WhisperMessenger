@@ -180,6 +180,7 @@ function MessengerWindow.Create(factory, options)
     contentPane = contentPane,
     frame = frame,
     onClose = options.onClose,
+    onOptionsVisibilityChanged = chrome.setOptionsActive,
     trace = trace,
   })
   local setOptionsVisible = windowVisibility.setOptionsVisible
@@ -339,6 +340,7 @@ function MessengerWindow.Create(factory, options)
     composerDivider = layout.composerDivider,
     closeButton = chrome.closeButton,
     optionsButton = chrome.optionsButton,
+    backButton = chrome.backButton,
     optionsPanel = layout.optionsPanel,
     optionsMenu = layout.optionsMenu,
     optionsContentPane = layout.optionsContentPane,

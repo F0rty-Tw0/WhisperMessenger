@@ -262,7 +262,9 @@ return function()
     icon.frame:GetScript("OnLeave")(icon.frame)
     local restoredColor = icon.label.vertexColor
     assert(
-      restoredColor[1] == normalColor[1] and restoredColor[2] == normalColor[2] and restoredColor[3] == normalColor[3]
+      restoredColor[1] == normalColor[1]
+        and restoredColor[2] == normalColor[2]
+        and restoredColor[3] == normalColor[3]
         and restoredColor[4] == normalColor[4],
       "leaving hover should restore the normal glyph color"
     )

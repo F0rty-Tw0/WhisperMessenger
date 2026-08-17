@@ -209,6 +209,8 @@ local Russian = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Начать новый шепот",
   ["Open an empty conversation thread."] = "Открыть пустую переписку.",
+  ["Back"] = "Назад",
+  ["Close"] = "Закрыть",
   ["Whispers"] = "Шепот",
   ["Groups"] = "Группы",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "Групповых чатов пока нет.\nВступите в группу или подземелье, чтобы увидеть сообщения здесь.",

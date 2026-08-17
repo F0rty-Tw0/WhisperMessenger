@@ -209,6 +209,8 @@ local French = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Nouveau chuchotement",
   ["Open an empty conversation thread."] = "Ouvrir une conversation vide.",
+  ["Back"] = "Retour",
+  ["Close"] = "Fermer",
   ["Whispers"] = "Chuchotements",
   ["Groups"] = "Groupes",
   ["No group chats yet.\nJoin a party or instance to see messages here."] = "Aucun chat de groupe pour l'instant.\nRejoignez un groupe ou une instance pour voir des messages ici.",
