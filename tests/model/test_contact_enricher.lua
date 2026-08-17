@@ -275,8 +275,7 @@ return function()
     )
     assert(
       runtime.store.conversations[conversationKey].bnetAccountID == 2,
-      "stale BNet send ID must persist as 2 after friend-list reorder, got: "
-        .. tostring(runtime.store.conversations[conversationKey].bnetAccountID)
+      "stale BNet send ID must persist as 2 after friend-list reorder, got: " .. tostring(runtime.store.conversations[conversationKey].bnetAccountID)
     )
   end
 
