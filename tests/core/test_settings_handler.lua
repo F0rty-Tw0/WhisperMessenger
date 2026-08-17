@@ -397,6 +397,27 @@ return function()
     assert(minimapUnread == 3, "minimap badge resyncs without a widget icon; got: " .. tostring(minimapUnread))
   end
 
+  -- shareWidgetPosition invokes its transition callback after persistence.
+  do
+    local runtime = makeRuntime()
+    local accountSettings = {}
+    local callbackEnabled
+    local persistedDuringCallback
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      onShareWidgetPositionChanged = function(enabled)
+        callbackEnabled = enabled
+        persistedDuringCallback = accountSettings.shareWidgetPosition
+      end,
+    })
+
+    onChange("shareWidgetPosition", true)
+
+    assert(callbackEnabled == true, "shareWidgetPosition should invoke the enabled transition callback")
+    assert(persistedDuringCallback == true, "shareWidgetPosition should persist before invoking its transition callback")
+  end
+
   -- iconMode persists and applies icon visibility via applyIconMode.
   do
     local runtime = makeRuntime()

@@ -48,6 +48,7 @@ return function()
     showGroupChats = false,
     -- notifications and icons
     lockToggleIcon = true,
+    shareWidgetPosition = true,
     badgePulse = false,
     playSoundOnWhisper = true,
     showUnreadBadge = false,
@@ -116,6 +117,10 @@ return function()
   assert(
     iconsCapture.config.lockToggleIcon == true,
     "expected icons config.lockToggleIcon=true, got: " .. tostring(iconsCapture.config.lockToggleIcon)
+  )
+  assert(
+    iconsCapture.config.shareWidgetPosition == true,
+    "expected icons config.shareWidgetPosition=true, got: " .. tostring(iconsCapture.config.shareWidgetPosition)
   )
   assert(
     iconsCapture.config.showUnreadBadge == false,

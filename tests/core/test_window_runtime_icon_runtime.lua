@@ -1,5 +1,29 @@
 local IconRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
 
+local function capturePositionOptions(accountState, characterState)
+  local createOptions
+  IconRuntime.Create({
+    accountState = accountState,
+    characterState = characterState,
+    toggleIcon = {
+      Create = function(_, options)
+        createOptions = options
+        return {}
+      end,
+    },
+    tableUtils = {
+      copyState = function(value)
+        local copy = {}
+        for key, nextValue in pairs(value) do
+          copy[key] = nextValue
+        end
+        return copy
+      end,
+    },
+  })
+  return createOptions
+end
+
 return function()
   local createOptions
   local copiedIconState
@@ -15,6 +39,7 @@ return function()
 
   local accountState = {
     settings = {
+      shareWidgetPosition = false,
       iconSize = 44,
       showUnreadBadge = false,
       badgePulse = false,
@@ -119,4 +144,63 @@ return function()
   assert(createOptions.getPreviewAutoDismissSeconds() == 0, "invalid auto-dismiss should coerce to 0")
   accountState.settings.transparentWidget = false
   assert(createOptions.getWidgetTransparency() == 0, "fresh settings should default widget transparency to 0")
+
+  -- test_startup_with_sharing_uses_the_account_position
+  do
+    local localPosition = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 3, y = 4 }
+    local sharedPosition = { anchorPoint = "TOP", relativePoint = "TOP", x = 30, y = -40 }
+    local sharedAccountState = {
+      settings = { shareWidgetPosition = true },
+      sharedWidgetPosition = sharedPosition,
+    }
+
+    local positionOptions = capturePositionOptions(sharedAccountState, { icon = localPosition })
+
+    assert(positionOptions.state == sharedPosition, "sharing startup should create the widget at the account position")
+  end
+
+  -- test_startup_with_sharing_seeds_a_missing_account_position
+  do
+    local localPosition = { anchorPoint = "BOTTOMRIGHT", relativePoint = "BOTTOMRIGHT", x = -13, y = 17 }
+    local sharedAccountState = {
+      settings = { shareWidgetPosition = true },
+    }
+
+    local positionOptions = capturePositionOptions(sharedAccountState, { icon = localPosition })
+
+    local seededPosition = sharedAccountState.sharedWidgetPosition
+    assert(seededPosition ~= nil, "sharing startup should seed a missing account position")
+    assert(seededPosition ~= localPosition, "sharing startup should copy rather than alias the character position")
+    assert(
+      seededPosition.anchorPoint == "BOTTOMRIGHT"
+        and seededPosition.relativePoint == "BOTTOMRIGHT"
+        and seededPosition.x == -13
+        and seededPosition.y == 17,
+      "sharing startup should seed the exact character position"
+    )
+    assert(positionOptions.state == seededPosition, "sharing startup should create the widget from the seeded account position")
+  end
+
+  -- test_drag_with_sharing_updates_only_the_account_position
+  do
+    local localPosition = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 1, y = 2 }
+    local sharedAccountState = {
+      settings = { shareWidgetPosition = true },
+      sharedWidgetPosition = { anchorPoint = "TOP", relativePoint = "TOP", x = 5, y = -6 },
+    }
+    local positionOptions = capturePositionOptions(sharedAccountState, { icon = localPosition })
+
+    positionOptions.onPositionChanged({ anchorPoint = "LEFT", relativePoint = "LEFT", x = 21, y = 22 })
+
+    local persistedPosition = sharedAccountState.sharedWidgetPosition
+    assert(
+      persistedPosition.anchorPoint == "LEFT"
+        and persistedPosition.relativePoint == "LEFT"
+        and persistedPosition.x == 21
+        and persistedPosition.y == 22,
+      "sharing drag should persist the exact account position"
+    )
+    assert(persistedPosition ~= localPosition, "sharing drag should not replace the character position")
+    assert(localPosition.x == 1 and localPosition.y == 2, "sharing drag should leave the character position untouched")
+  end
 end

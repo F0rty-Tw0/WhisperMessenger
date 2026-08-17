@@ -27,6 +27,15 @@ return function()
     assert(result.iconSizeSlider ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconSizeSlider should exist")
     assert(result.iconDesaturatedToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: iconDesaturatedToggle should exist")
     assert(result.lockToggleIconToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: lockToggleIconToggle should exist")
+    assert(result.shareWidgetPositionToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: shareWidgetPositionToggle should exist")
+    assert(
+      result.shareWidgetPositionToggle.getValue() == false,
+      "test_share_widget_position_toggle_defaults_off: shareWidgetPosition should default off"
+    )
+    assert(
+      result.shareWidgetPositionToggle.label.text == "Share widget position across characters",
+      "test_share_widget_position_toggle_defaults_off: toggle should use the localized label"
+    )
     assert(result.showBadgeToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: showBadgeToggle should exist")
     assert(result.badgePulseToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: badgePulseToggle should exist")
     assert(result.widgetMessagePreviewToggle ~= nil, "test_icons_owns_all_icon_and_widget_controls: widgetMessagePreviewToggle should exist")
@@ -88,6 +97,30 @@ return function()
     assert(onLeave ~= nil, "test_widget_transparency_tooltip: slider row should have OnLeave script")
     onLeave(tooltipRow)
     assert(tooltipState.hidden == true, "test_widget_transparency_tooltip: tooltip should hide on leave")
+
+    tooltipState.lines = {}
+    tooltipState.title = nil
+    tooltipState.shown = false
+    tooltipState.hidden = false
+    local sharePositionRow = result.shareWidgetPositionToggle.row
+    local sharePositionOnEnter = sharePositionRow:GetScript("OnEnter")
+    assert(sharePositionOnEnter ~= nil, "test_share_widget_position_tooltip: toggle row should have OnEnter script")
+    sharePositionOnEnter(sharePositionRow)
+    assert(tooltipState.owner == sharePositionRow, "test_share_widget_position_tooltip: tooltip should use the toggle row as owner")
+    assert(tooltipState.anchor == "ANCHOR_TOP", "test_share_widget_position_tooltip: tooltip should anchor above the toggle row")
+    assert(
+      tooltipState.title == "Share widget position across characters",
+      "test_share_widget_position_tooltip: tooltip should use the localized title"
+    )
+    assert(
+      tooltipState.lines[1] == "Uses one widget position for all characters on this WoW account.",
+      "test_share_widget_position_tooltip: tooltip should explain account-wide sharing"
+    )
+    assert(tooltipState.shown == true, "test_share_widget_position_tooltip: tooltip should show on enter")
+    local sharePositionOnLeave = sharePositionRow:GetScript("OnLeave")
+    assert(sharePositionOnLeave ~= nil, "test_share_widget_position_tooltip: toggle row should have OnLeave script")
+    sharePositionOnLeave(sharePositionRow)
+    assert(tooltipState.hidden == true, "test_share_widget_position_tooltip: tooltip should hide on leave")
     _G.GameTooltip = savedTooltip
     assert(result.autoDismissSlider ~= nil, "test_icons_owns_all_icon_and_widget_controls: autoDismissSlider should exist")
     assert(result.positionSelector ~= nil, "test_icons_owns_all_icon_and_widget_controls: positionSelector should exist")
@@ -110,6 +143,7 @@ return function()
     result.iconSizeSlider:SetValue(32)
     result.iconDesaturatedToggle.dot:GetScript("OnClick")(result.iconDesaturatedToggle.dot)
     result.lockToggleIconToggle.dot:GetScript("OnClick")(result.lockToggleIconToggle.dot)
+    result.shareWidgetPositionToggle.dot:GetScript("OnClick")(result.shareWidgetPositionToggle.dot)
     result.showBadgeToggle.dot:GetScript("OnClick")(result.showBadgeToggle.dot)
     result.badgePulseToggle.dot:GetScript("OnClick")(result.badgePulseToggle.dot)
     result.widgetMessagePreviewToggle.dot:GetScript("OnClick")(result.widgetMessagePreviewToggle.dot)
@@ -126,6 +160,7 @@ return function()
     assert(changes.iconSize == 32, "test_icon_and_widget_controls_fire_existing_keys: iconSize should be 32")
     assert(changes.iconDesaturated == false, "test_icon_and_widget_controls_fire_existing_keys: iconDesaturated should be false")
     assert(changes.lockToggleIcon == true, "test_icon_and_widget_controls_fire_existing_keys: lockToggleIcon should be true")
+    assert(changes.shareWidgetPosition == true, "test_icon_and_widget_controls_fire_existing_keys: shareWidgetPosition should be true")
     assert(changes.showUnreadBadge == false, "test_icon_and_widget_controls_fire_existing_keys: showUnreadBadge should be false")
     assert(changes.badgePulse == false, "test_icon_and_widget_controls_fire_existing_keys: badgePulse should be false")
     assert(changes.showWidgetMessagePreview == false, "test_icon_and_widget_controls_fire_existing_keys: showWidgetMessagePreview should be false")
@@ -179,6 +214,7 @@ return function()
       iconSize = 42,
       iconDesaturated = true,
       lockToggleIcon = false,
+      shareWidgetPosition = false,
       showUnreadBadge = true,
       badgePulse = true,
       showWidgetMessagePreview = true,
@@ -194,7 +230,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 10, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit ten icon/widget keys")
+    assert(resetCount == 11, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit eleven icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language

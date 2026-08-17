@@ -42,6 +42,9 @@ return function()
     window = { x = 10, y = 20 },
     icon = { anchorPoint = "TOPLEFT", relativePoint = "TOPLEFT", x = 25, y = -40 },
   }
+  local accountState = {
+    settings = { shareWidgetPosition = false },
+  }
   local icon = {
     frame = {
       parent = { tag = "ui-parent" },
@@ -53,6 +56,7 @@ return function()
 
   local callbacks = WindowCallbacks.Create({
     runtime = runtime,
+    accountState = accountState,
     characterState = characterState,
     defaultCharacterState = defaultCharacterState,
     uiParent = { tag = "fallback-parent" },
@@ -151,6 +155,32 @@ return function()
   assert(icon.frame.point[1] == "TOPLEFT", "reset icon should move frame")
   assert(icon.frame.point[2].tag == "ui-parent", "reset icon should use frame parent")
 
+  -- test_reset_icon_position_updates_only_shared_state_while_sharing
+  accountState.settings.shareWidgetPosition = true
+  accountState.sharedWidgetPosition = { anchorPoint = "RIGHT", relativePoint = "RIGHT", x = -8, y = 9 }
+  local localIconPosition = { anchorPoint = "BOTTOM", relativePoint = "BOTTOM", x = 11, y = 12 }
+  characterState.icon = localIconPosition
+
+  local resetSharedIcon = callbacks.onResetIconPosition()
+  local sharedIconPosition = accountState.sharedWidgetPosition
+  assert(
+    sharedIconPosition.anchorPoint == "TOPLEFT"
+      and sharedIconPosition.relativePoint == "TOPLEFT"
+      and sharedIconPosition.x == 25
+      and sharedIconPosition.y == -40,
+    "shared reset should persist the exact default icon position"
+  )
+  assert(sharedIconPosition ~= defaultCharacterState.icon, "shared reset should copy rather than alias the default position")
+  assert(resetSharedIcon == sharedIconPosition, "shared reset should return the persisted shared position")
+  assert(characterState.icon == localIconPosition, "shared reset should preserve the character position")
+  assert(
+    icon.frame.point[1] == "TOPLEFT"
+      and icon.frame.point[2].tag == "ui-parent"
+      and icon.frame.point[3] == "TOPLEFT"
+      and icon.frame.point[4] == 25
+      and icon.frame.point[5] == -40,
+    "shared reset should apply the exact default position to the widget frame"
+  )
   callbacks.onClearAllChats()
   local count = 0
   for _ in pairs(runtime.store.conversations) do

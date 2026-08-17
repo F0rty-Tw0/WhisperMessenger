@@ -105,6 +105,7 @@ function SettingsPanels.Create(factory, options)
     iconSize = settingsConfig.iconSize,
     iconDesaturated = settingsConfig.iconDesaturated,
     lockToggleIcon = settingsConfig.lockToggleIcon,
+    shareWidgetPosition = settingsConfig.shareWidgetPosition,
     widgetTransparency = settingsConfig.widgetTransparency,
     showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
     widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,

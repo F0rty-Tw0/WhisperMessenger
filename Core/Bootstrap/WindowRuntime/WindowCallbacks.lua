@@ -8,10 +8,28 @@ local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 
 local WindowCallbacks = {}
 
+function WindowCallbacks.ApplyIconPosition(icon, nextState, uiParent)
+  local frame = icon and icon.frame
+  if frame and type(frame.SetPoint) == "function" then
+    if type(frame.ClearAllPoints) == "function" then
+      frame:ClearAllPoints()
+    end
+    local iconParent
+    if type(frame.GetParent) == "function" then
+      iconParent = frame:GetParent()
+    end
+    iconParent = iconParent or frame.parent or uiParent
+    frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
+  end
+  return nextState
+end
+
 function WindowCallbacks.Create(options)
   options = options or {}
 
   local runtime = options.runtime or {}
+  local accountState = options.accountState or {}
+
   local characterState = options.characterState or {}
   local defaultCharacterState = options.defaultCharacterState or {}
   local uiParent = options.uiParent
@@ -116,15 +134,13 @@ function WindowCallbacks.Create(options)
 
     onResetIconPosition = function()
       local nextState = tableUtils.copyState(defaultCharacterState.icon)
-      characterState.icon = nextState
-
-      local icon = getIcon()
-      if icon and icon.frame and icon.frame.SetPoint then
-        local iconParent = icon.frame.parent or uiParent
-        icon.frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
+      if accountState.settings and accountState.settings.shareWidgetPosition == true then
+        accountState.sharedWidgetPosition = nextState
+      else
+        characterState.icon = nextState
       end
 
-      return nextState
+      return WindowCallbacks.ApplyIconPosition(getIcon(), nextState, uiParent)
     end,
   }
 end

@@ -34,6 +34,7 @@ function SettingsHandler.Create(options)
   local getEditBox = options.getEditBox or function(index)
     return _G["ChatFrame" .. index .. "EditBox"]
   end
+  local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
   return function(key, value)
     local persistedValue = value
@@ -68,6 +69,10 @@ function SettingsHandler.Create(options)
     end
 
     trace("setting changed", key, tostring(persistedValue))
+
+    if key == "shareWidgetPosition" and onShareWidgetPositionChanged then
+      onShareWidgetPositionChanged(persistedValue)
+    end
 
     if key == "fontFamily" and fonts.SetMode then
       fonts.SetMode(persistedValue or "default")

@@ -126,7 +126,9 @@ local function makeRuntimeOptions()
       local iconFrame = {
         parent = {},
         shown = true,
-        SetPoint = function() end,
+        SetPoint = function(self, anchorPoint, parent, relativePoint, x, y)
+          self.point = { anchorPoint, parent, relativePoint, x, y }
+        end,
         Show = function(self)
           self.shown = true
         end,
@@ -221,7 +223,11 @@ local function makeRuntimeOptions()
     sendHandler = { HandleSend = function() end },
     tableUtils = {
       copyState = function(value)
-        return value
+        local copy = {}
+        for key, nextValue in pairs(value) do
+          copy[key] = nextValue
+        end
+        return copy
       end,
     },
     presenceCache = { RefreshPresence = function() end },
@@ -391,6 +397,110 @@ return function()
     noneController.ensureWindow()
     noneTrackers.capturedWindowOptions.onSettingChanged("iconMode", "widget")
     assert(noneRuntime.icon ~= nil, "switching from none to widget should expose the created icon on runtime")
+  end
+
+  -- Startup sharing seeds account storage immediately even when the selected
+  -- mode does not allocate the draggable widget.
+  for _, mode in ipairs({ "none", "minimap" }) do
+    local sharingOptions, sharingRuntime, sharingTrackers = makeRuntimeOptions()
+    local localPosition = sharingOptions.characterState.icon
+    sharingOptions.accountState.settings.iconMode = mode
+    sharingOptions.accountState.settings.shareWidgetPosition = true
+
+    WindowRuntime.Create(sharingOptions)
+
+    local sharedPosition = sharingOptions.accountState.sharedWidgetPosition
+    assert(sharedPosition ~= nil, mode .. " startup should seed the shared widget position immediately")
+    assert(sharedPosition ~= localPosition, mode .. " startup should copy rather than alias the character position")
+    assert(
+      sharedPosition.anchorPoint == "CENTER" and sharedPosition.relativePoint == "CENTER" and sharedPosition.x == 0 and sharedPosition.y == 0,
+      mode .. " startup should seed the exact character position"
+    )
+    assert(sharingTrackers.iconCreates == 0, mode .. " startup sharing should not allocate the draggable widget")
+    assert(sharingRuntime.icon == nil, mode .. " startup sharing should leave runtime.icon unset")
+  end
+
+  -- Enabling sharing seeds the account slot from the current character
+  -- position and reapplies those same coordinates without a visible jump.
+  do
+    local sharingOptions, _, sharingTrackers = makeRuntimeOptions()
+    local localPosition = sharingOptions.characterState.icon
+    local sharingController = WindowRuntime.Create(sharingOptions)
+    sharingController.ensureWindow()
+
+    sharingTrackers.capturedWindowOptions.onSettingChanged("shareWidgetPosition", true)
+
+    local sharedPosition = sharingOptions.accountState.sharedWidgetPosition
+    assert(sharedPosition ~= nil, "enabling sharing should seed the account position")
+    assert(sharedPosition ~= localPosition, "enabling sharing should copy rather than alias the character position")
+    assert(
+      sharedPosition.anchorPoint == "CENTER" and sharedPosition.relativePoint == "CENTER" and sharedPosition.x == 0 and sharedPosition.y == 0,
+      "enabling sharing should seed the exact current character position"
+    )
+    assert(sharingOptions.characterState.icon == localPosition, "enabling sharing should preserve the character position")
+    local appliedPoint = sharingTrackers.iconFrame.point
+    assert(
+      appliedPoint
+        and appliedPoint[1] == "CENTER"
+        and appliedPoint[2] == sharingTrackers.iconFrame.parent
+        and appliedPoint[3] == "CENTER"
+        and appliedPoint[4] == 0
+        and appliedPoint[5] == 0,
+      "enabling sharing should reapply the same position without moving the widget"
+    )
+  end
+
+  -- Disabling sharing restores the untouched character position to the frame.
+  do
+    local sharingOptions, _, sharingTrackers = makeRuntimeOptions()
+    local localPosition = sharingOptions.characterState.icon
+    local sharedPosition = { anchorPoint = "TOP", relativePoint = "TOP", x = 70, y = -80 }
+    sharingOptions.accountState.settings.shareWidgetPosition = true
+    sharingOptions.accountState.sharedWidgetPosition = sharedPosition
+    local sharingController = WindowRuntime.Create(sharingOptions)
+    sharingController.ensureWindow()
+    sharingTrackers.iconFrame:SetPoint(
+      sharedPosition.anchorPoint,
+      sharingTrackers.iconFrame.parent,
+      sharedPosition.relativePoint,
+      sharedPosition.x,
+      sharedPosition.y
+    )
+
+    sharingTrackers.capturedWindowOptions.onSettingChanged("shareWidgetPosition", false)
+
+    local appliedPoint = sharingTrackers.iconFrame.point
+    assert(
+      appliedPoint[1] == "CENTER"
+        and appliedPoint[2] == sharingTrackers.iconFrame.parent
+        and appliedPoint[3] == "CENTER"
+        and appliedPoint[4] == 0
+        and appliedPoint[5] == 0,
+      "disabling sharing should apply the exact character position"
+    )
+    assert(sharingOptions.characterState.icon == localPosition, "disabling sharing should preserve the character position")
+  end
+
+  -- Sharing transitions in none and minimap-only modes update storage without
+  -- allocating the draggable widget.
+  for _, mode in ipairs({ "none", "minimap" }) do
+    local sharingOptions, sharingRuntime, sharingTrackers = makeRuntimeOptions()
+    local localPosition = sharingOptions.characterState.icon
+    sharingOptions.accountState.settings.iconMode = mode
+    local sharingController = WindowRuntime.Create(sharingOptions)
+    sharingController.ensureWindow()
+
+    sharingTrackers.capturedWindowOptions.onSettingChanged("shareWidgetPosition", true)
+
+    local sharedPosition = sharingOptions.accountState.sharedWidgetPosition
+    assert(sharedPosition ~= nil, mode .. " sharing transition should seed the account position")
+    assert(sharedPosition ~= localPosition, mode .. " sharing transition should copy the character position")
+    assert(
+      sharedPosition.anchorPoint == "CENTER" and sharedPosition.relativePoint == "CENTER" and sharedPosition.x == 0 and sharedPosition.y == 0,
+      mode .. " sharing transition should persist the exact character position"
+    )
+    assert(sharingTrackers.iconCreates == 0, mode .. " sharing transition should not create the widget")
+    assert(sharingRuntime.icon == nil, mode .. " sharing transition should leave runtime.icon unset")
   end
   assert(trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs][1] == nil, "none mode should clear minimap preview")
 end

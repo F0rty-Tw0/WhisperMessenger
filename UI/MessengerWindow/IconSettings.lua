@@ -19,6 +19,7 @@ local DEFAULTS = {
   iconSize = 42,
   iconDesaturated = true,
   lockToggleIcon = false,
+  shareWidgetPosition = false,
   widgetTransparency = 0,
   showWidgetMessagePreview = true,
   widgetPreviewAutoDismissSeconds = 30,
@@ -152,6 +153,26 @@ function IconSettings.Create(factory, parent, config, options)
   )
   lockToggleIconToggle.row:SetPoint("TOPLEFT", widgetTransparencyRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local shareWidgetPositionToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Share widget position across characters"),
+      config.shareWidgetPosition == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("shareWidgetPosition", value)
+      end,
+      {
+        text("Share widget position across characters"),
+        text("Uses one widget position for all characters on this WoW account."),
+      }
+    ),
+    { type = "toggle", key = "shareWidgetPosition", default = DEFAULTS.shareWidgetPosition }
+  )
+  shareWidgetPositionToggle.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local function buildIconModeOptions()
     return {
       { key = "widget", label = text("Widget") },
@@ -180,7 +201,7 @@ function IconSettings.Create(factory, parent, config, options)
     }),
     { type = "selector", key = "iconMode", default = DEFAULTS.iconMode }
   )
-  iconModeSelector.row:SetPoint("TOPLEFT", lockToggleIconToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  iconModeSelector.row:SetPoint("TOPLEFT", shareWidgetPositionToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local showBadgeToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
@@ -300,6 +321,7 @@ function IconSettings.Create(factory, parent, config, options)
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
+    shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(buildIconModeOptions())
     showBadgeToggle.label:SetText(text("Show unread badge"))
@@ -329,6 +351,7 @@ function IconSettings.Create(factory, parent, config, options)
     iconDesaturatedToggle = iconDesaturatedToggle,
     iconModeSelector = iconModeSelector,
     lockToggleIconToggle = lockToggleIconToggle,
+    shareWidgetPositionToggle = shareWidgetPositionToggle,
     widgetTransparencySlider = widgetTransparencyRow.slider,
     widgetMessagePreviewToggle = widgetMessagePreviewToggle,
     autoDismissSlider = autoDismissRow.slider,

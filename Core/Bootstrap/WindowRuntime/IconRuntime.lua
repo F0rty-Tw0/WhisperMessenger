@@ -60,17 +60,37 @@ function IconRuntime.Create(options)
   local refreshWindow = options.refreshWindow or function() end
   local onToggle = options.onToggle or function() end
 
+  local function isSharingWidgetPosition()
+    return accountState.settings and accountState.settings.shareWidgetPosition == true
+  end
+
+  local function getActiveIconState()
+    if not isSharingWidgetPosition() then
+      return characterState.icon
+    end
+
+    if accountState.sharedWidgetPosition == nil then
+      accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
+    end
+    return accountState.sharedWidgetPosition
+  end
+
   local function dismissWidgetPreview()
     acknowledgeLatestWidgetPreview(buildContacts())
     return refreshWindow()
   end
 
   local icon = toggleIcon.Create(uiFactory, {
-    state = characterState.icon,
+    state = getActiveIconState(),
     iconSize = settings.iconSize,
     onToggle = onToggle,
     onPositionChanged = function(nextState)
-      characterState.icon = tableUtils.copyState(nextState)
+      local persistedState = tableUtils.copyState(nextState)
+      if isSharingWidgetPosition() then
+        accountState.sharedWidgetPosition = persistedState
+      else
+        characterState.icon = persistedState
+      end
     end,
     getShowUnreadBadge = function()
       return settings.showUnreadBadge ~= false

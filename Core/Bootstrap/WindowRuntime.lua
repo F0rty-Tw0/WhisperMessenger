@@ -178,6 +178,14 @@ function WindowRuntime.Create(options)
 
   local controller = {}
 
+  local function onShareWidgetPositionChanged(enabled)
+    if enabled == true then
+      accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
+      return WindowCallbacks.ApplyIconPosition(icon, accountState.sharedWidgetPosition, uiParent)
+    end
+    return WindowCallbacks.ApplyIconPosition(icon, characterState.icon, uiParent)
+  end
+
   local function setWindowVisible(nextVisible)
     if nextVisible then
       acknowledgeLatestWidgetPreview(buildContacts())
@@ -242,10 +250,12 @@ function WindowRuntime.Create(options)
       end,
       buildContacts = buildContacts,
       applyIconMode = applyIconMode,
+      onShareWidgetPositionChanged = onShareWidgetPositionChanged,
     })
 
     local windowCallbacks = WindowCallbacks.Create({
       runtime = runtime,
+      accountState = accountState,
       characterState = characterState,
       defaultCharacterState = defaultCharacterState,
       uiParent = uiParent,
@@ -349,6 +359,10 @@ function WindowRuntime.Create(options)
     })
     minimapIcon = minimapRuntime.minimapIcon
     return minimapRuntime
+  end
+
+  if accountState.settings and accountState.settings.shareWidgetPosition == true and accountState.sharedWidgetPosition == nil then
+    accountState.sharedWidgetPosition = tableUtils.copyState(characterState.icon)
   end
 
   applyIconMode()
