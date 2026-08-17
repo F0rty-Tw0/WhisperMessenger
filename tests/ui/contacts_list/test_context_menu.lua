@@ -32,6 +32,7 @@ return function()
     local item = {
       channel = "WOW",
       displayName = "Arthas-Area52",
+      guid = "Player-3678-0A1B2C3D",
       unansweredCount = 1,
       conversationKey = "me::WOW::arthas-area52",
     }
@@ -42,6 +43,7 @@ return function()
     assert(opened == true, "modern contact menu should open")
     assert(openedWhich == "FRIEND", "modern WoW menu should use FRIEND")
     assert(openedContext.whisperMessengerItem == item, "menu context should retain clicked item")
+    assert(openedContext.guid == item.guid, "modern WoW menu context should preserve the exact guid")
     local modifier = modifiers["MENU_UNIT_FRIEND"]
     assert(modifier ~= nil, "modern menu should register FRIEND modifier")
     assert(modifiers["MENU_UNIT_BN_FRIEND"] ~= nil, "modern menu should register BN_FRIEND modifier")

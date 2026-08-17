@@ -123,7 +123,10 @@ function MythicSuspendController.Attach(runtime, deps)
     if runtime.syncReplyKey then
       runtime.syncReplyKey()
     end
-    if Bootstrap._wasVisibleBeforeMythic then
+    if
+      Bootstrap._wasVisibleBeforeMythic
+      and not (runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.hideOnCombat == true)
+    then
       setWindowVisible(true)
     end
     refreshWindow()

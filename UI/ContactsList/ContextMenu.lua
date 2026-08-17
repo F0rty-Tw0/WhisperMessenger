@@ -80,6 +80,7 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread)
       chatFrame = anchorFrame,
       bnetAccountID = item.bnetAccountID,
       bnetIDAccount = item.bnetAccountID,
+      guid = item.guid,
       battleTag = item.battleTag,
       communityClubID = item.communityClubID,
       communityStreamID = item.communityStreamID,

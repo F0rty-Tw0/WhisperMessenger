@@ -50,6 +50,7 @@ local function makeRuntimeOptions()
     coordinator = nil,
     widgetPreviewInputs = {},
     minimapPreviewInputs = {},
+    ldbObject = {},
   }
 
   local fakeCoordinatorModule = {
@@ -59,6 +60,10 @@ local function makeRuntimeOptions()
         return { selectedContact = contacts[1], conversation = nil, status = nil }
       end
       function coord.refreshWindow()
+        local ldbObject = coordOptions.getLdbObject()
+        if ldbObject then
+          ldbObject.refreshes = (ldbObject.refreshes or 0) + 1
+        end
         return nil
       end
       function coord.setWindowVisible(nextVisible)
@@ -176,7 +181,7 @@ local function makeRuntimeOptions()
       return {
         minimapIcon = minimapIcon,
         getLdbObject = function()
-          return nil
+          return trackers.ldbObject
         end,
       }
     end,
@@ -347,12 +352,18 @@ return function()
   assert(runtime.accountState.settings.themePreset == "elvui_dark", "settings handler should persist theme change")
   assert((runtime.window._refreshThemeCalls or 0) == 1, "theme change should refresh static chrome via real handler")
 
-  -- Composition wire: iconMode drives icon visibility and lazy creation.
-  -- Default mode is "widget": only the widget icon exists and is visible.
+  -- Composition wire: default widget mode keeps the widget visible and the
+  -- minimap runtime registered for its LDB launcher, but hides its frame.
   local minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]
-  assert(minimapFrame == nil, "the minimap icon should not be created in widget mode")
-  assert(trackers.minimapCreates == 0, "minimap runtime should stay uncreated in widget mode")
+  assert(minimapFrame ~= nil, "the minimap runtime should initialize in default widget mode")
+  assert(trackers.minimapCreates == 1, "default widget mode should register the minimap runtime once")
+  assert(minimapFrame:IsShown() == false, "default widget mode should hide the minimap frame")
   assert(trackers.iconFrame.shown == true, "widget icon should start visible in default widget mode")
+
+  local ldbRefreshes = trackers.ldbObject.refreshes or 0
+  controller.refreshWindow()
+  runtime.refreshWindow()
+  assert(trackers.ldbObject.refreshes == ldbRefreshes + 2, "widget-mode refresh paths should update the registered LDB launcher")
 
   windowOptions.onSettingChanged("iconMode", "minimap")
   minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]
@@ -373,10 +384,13 @@ return function()
   do
     local noneOptions, noneRuntime, noneTrackers = makeRuntimeOptions()
     noneOptions.accountState.settings.iconMode = "none"
-    WindowRuntime.Create(noneOptions)
+    local noneController = WindowRuntime.Create(noneOptions)
     assert(noneTrackers.iconCreates == 0, "none mode should not create the widget icon at startup")
     assert(noneTrackers.minimapCreates == 0, "none mode should not create the minimap icon at startup")
     assert(noneRuntime.icon == nil, "none mode should leave runtime.icon unset")
+    noneController.ensureWindow()
+    noneTrackers.capturedWindowOptions.onSettingChanged("iconMode", "widget")
+    assert(noneRuntime.icon ~= nil, "switching from none to widget should expose the created icon on runtime")
   end
   assert(trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs][1] == nil, "none mode should clear minimap preview")
 end

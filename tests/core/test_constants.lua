@@ -17,8 +17,7 @@ return function()
   -- 12.0 clients — it must survive the mythic suspension unregister sweep,
   -- or a restriction ending while suspended is never noticed.
   do
-    assert(Constants.MYTHIC_ESSENTIAL_EVENTS.ADDON_RESTRICTION_STATE_CHANGED == true,
-      "ADDON_RESTRICTION_STATE_CHANGED should be mythic-essential")
+    assert(Constants.MYTHIC_ESSENTIAL_EVENTS.ADDON_RESTRICTION_STATE_CHANGED == true, "ADDON_RESTRICTION_STATE_CHANGED should be mythic-essential")
   end
   -- PLAYER_REGEN_DISABLED must reach lifecycle dispatch for combat-start visibility handling.
   do

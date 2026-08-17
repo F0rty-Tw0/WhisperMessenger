@@ -78,8 +78,8 @@ function WindowRuntime.Create(options)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
   end
 
-  -- Create and show only the icon surfaces selected by iconMode. Called at
-  -- startup and whenever the setting changes through SettingsHandler.
+  -- Create the selected icon surface and initialize the minimap runtime for
+  -- every non-none icon mode. Called at startup and whenever the setting changes.
   local function resolveIconMode()
     local mode = accountState.settings and accountState.settings.iconMode
     if mode == "minimap" or mode == "both" or mode == "none" then
@@ -99,7 +99,7 @@ function WindowRuntime.Create(options)
     if showWidget then
       ensureIcon()
     end
-    if showMinimap then
+    if mode ~= "none" then
       ensureMinimap()
     end
 
@@ -156,8 +156,7 @@ function WindowRuntime.Create(options)
       return minimapIcon
     end,
     getLdbObject = function()
-      local mode = resolveIconMode()
-      if mode == "widget" or mode == "none" then
+      if resolveIconMode() == "none" then
         return nil
       end
       return minimapRuntime and minimapRuntime.getLdbObject() or nil
@@ -329,6 +328,7 @@ function WindowRuntime.Create(options)
       refreshWindow = refreshWindow,
       onToggle = toggle,
     })
+    runtime.icon = icon
     return icon
   end
 
