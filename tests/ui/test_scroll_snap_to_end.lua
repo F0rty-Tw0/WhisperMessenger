@@ -4,19 +4,24 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 local function withCapturedTimer(callback)
   local savedTimer = _G.C_Timer
-  local scheduled = nil
-  local scheduledDelay = nil
+  local scheduled = {}
 
   _G.C_Timer = {
     After = function(delay, timerCallback)
-      scheduledDelay = delay
-      scheduled = timerCallback
+      table.insert(scheduled, {
+        callback = timerCallback,
+        delay = delay,
+      })
     end,
   }
 
   local ok, err = pcall(function()
     callback(function()
-      return scheduled, scheduledDelay
+      local timer = table.remove(scheduled, 1)
+      if timer == nil then
+        return nil, nil
+      end
+      return timer.callback, timer.delay
     end)
   end)
 
@@ -157,6 +162,78 @@ return function()
       scheduled()
 
       assert(view.scrollFrame:GetVerticalScroll() == 400, "deferred snap should land on latest message after native range settles")
+    end)
+  end
+
+  -- test_snap_to_end_retries_until_native_range_settles_on_third_frame
+  -- Regression: WoW can keep the native range stale through two deferred
+  -- layout frames, then settle on the third.
+
+  do
+    withCapturedTimer(function(getScheduled)
+      local view = ScrollView.Create(factory, factory.CreateFrame("Frame", nil, nil), {
+        width = 300,
+        height = 200,
+      })
+
+      local layoutFrame = 0
+      view.scrollFrame.GetVerticalScrollRange = function()
+        if layoutFrame < 3 then
+          return 200
+        end
+        return 400
+      end
+
+      Metrics.RefreshMetrics(view, 600, true)
+
+      for frame = 1, 3 do
+        layoutFrame = frame
+        local scheduled = getScheduled()
+        if scheduled then
+          scheduled()
+        end
+      end
+
+      local offset = view.scrollFrame:GetVerticalScroll()
+      assert(offset == 400, "snap-to-end should reach 400 after native range settles on the third deferred frame, got: " .. tostring(offset))
+    end)
+  end
+
+  -- test_newer_snap_to_end_request_survives_older_pending_retry
+  -- Regression: a stale callback from an older snap request must not cancel
+  -- or consume the pending retry for a newer request.
+
+  do
+    withCapturedTimer(function(getScheduled)
+      local view = ScrollView.Create(factory, factory.CreateFrame("Frame", nil, nil), {
+        width = 300,
+        height = 200,
+      })
+
+      local nativeRange = 200
+      view.scrollFrame.GetVerticalScrollRange = function()
+        return nativeRange
+      end
+
+      Metrics.RefreshMetrics(view, 600, true)
+
+      nativeRange = 300
+      Metrics.RefreshMetrics(view, 800, true)
+
+      local olderScheduled = getScheduled()
+      if olderScheduled then
+        olderScheduled()
+      end
+
+      nativeRange = 600
+      local scheduled = getScheduled()
+      while scheduled do
+        scheduled()
+        scheduled = getScheduled()
+      end
+
+      local offset = view.scrollFrame:GetVerticalScroll()
+      assert(offset == 600, "newer snap-to-end should reach 600 after native range settles, got: " .. tostring(offset))
     end)
   end
 

@@ -10,6 +10,7 @@ local sizeValue = UIHelpers.sizeValue
 local SCROLLBAR_WIDTH = Theme.LAYOUT.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = 0
 local MICRO_OVERFLOW_TOLERANCE = 5
+local MAX_SNAP_TO_END_RETRY_ATTEMPTS = 3
 
 local Metrics = {}
 
@@ -129,8 +130,14 @@ function Metrics.GetOffset(view)
   return view.scrollFrame.verticalScroll or 0
 end
 
-local function scheduleSnapToEndRetry(view, Navigation, targetOffset)
-  if targetOffset <= 0 or view._snapToEndRetryPending then
+local function scheduleSnapToEndRetry(view, Navigation, targetOffset, generation, retryAttempt)
+  retryAttempt = retryAttempt or 0
+  if
+    type(targetOffset) ~= "number"
+    or targetOffset <= 0
+    or retryAttempt >= MAX_SNAP_TO_END_RETRY_ATTEMPTS
+    or view._snapToEndRetryPendingGeneration == generation
+  then
     return
   end
 
@@ -144,18 +151,27 @@ local function scheduleSnapToEndRetry(view, Navigation, targetOffset)
     return
   end
 
-  local clampedOffset = actualOffset
-  view._snapToEndRetryPending = true
+  view._snapToEndRetryPendingGeneration = generation
   timer.After(0, function()
-    view._snapToEndRetryPending = false
-    if Metrics.GetOffset(view) ~= clampedOffset then
+    if view._snapToEndRetryPendingGeneration == generation then
+      view._snapToEndRetryPendingGeneration = nil
+    end
+
+    if view._snapToEndRetryGeneration ~= generation then
+      return
+    end
+
+    if Metrics.GetOffset(view) ~= actualOffset then
       return
     end
 
     local retryTarget = Metrics.GetRange(view)
-    if retryTarget >= targetOffset then
-      Navigation.SetVerticalScroll(view, retryTarget)
+    if retryTarget <= 0 or Metrics.GetOffset(view) >= retryTarget then
+      return
     end
+
+    Navigation.SetVerticalScroll(view, retryTarget)
+    scheduleSnapToEndRetry(view, Navigation, Metrics.GetRange(view), generation, retryAttempt + 1)
   end)
 end
 
@@ -188,10 +204,16 @@ function Metrics.RefreshMetrics(view, contentHeight, snapToEnd)
 
   -- Late-bind Navigation to avoid circular dependency at module load time
   local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
+  local snapGeneration
+  if snapToEnd then
+    snapGeneration = (view._snapToEndRetryGeneration or 0) + 1
+    view._snapToEndRetryGeneration = snapGeneration
+  end
+
   local targetOffset = snapToEnd and Metrics.GetRange(view) or Metrics.GetOffset(view)
   Navigation.SetVerticalScroll(view, targetOffset)
   if snapToEnd then
-    scheduleSnapToEndRetry(view, Navigation, targetOffset)
+    scheduleSnapToEndRetry(view, Navigation, targetOffset, snapGeneration)
   end
   return nextContentHeight
 end
