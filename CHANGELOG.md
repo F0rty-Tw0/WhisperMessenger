@@ -12,6 +12,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - On Retail, added a right-click `Mark last messages as unread` action for conversations with unanswered messages.
 - Added a Back button beside the options cogwheel, which stays visibly active while options are open; Options, Back, and Close controls now show tooltips.
 - Fixed unread badges so they keep showing the numeric count, while conversations with no unanswered messages cannot be marked unread.
+- Fixed party, raid, and instance chat history so each group you join gets its own conversation instead of mixing messages from different groups together.
 
 ## [1.2.16] - 2026-08-13
 

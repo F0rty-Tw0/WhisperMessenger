@@ -42,6 +42,30 @@ return function()
     )
   end
 
+  -- GUID-scoped current-character histories use their stamped owner rather
+  -- than parsing the suffixed key as a foreign profile.
+  do
+    local policy = GroupSendPolicy.Create({
+      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      chatGateway = {
+        CanSend = function()
+          return true
+        end,
+      },
+    })
+
+    assert(policy.getNotice({
+      channel = ChannelType.PARTY,
+      conversationKey = "party::jaina-area52::1::Party-0-0000000000000001",
+      ownerProfileId = "jaina-area52",
+    }) == nil, "current GUID party history should not be foreign")
+    assert(policy.getNotice({
+      channel = ChannelType.PARTY,
+      conversationKey = "party::thrall-draenor::1::Party-0-0000000000000001",
+      ownerProfileId = "thrall-draenor",
+    }) == "Another character's history — read-only.", "foreign GUID party history should stay read-only")
+  end
+
   -- Guild histories are account-wide and compare against the current live guild.
   do
     local policy = GroupSendPolicy.Create({
@@ -83,6 +107,26 @@ return function()
       policy.getNotice({ channel = ChannelType.PARTY, conversationKey = "party::jaina-area52" }) == "Not in group — can't send.",
       "missing membership should show send notice"
     )
+  end
+
+  -- A closed GUID session remains read-only even if membership for its
+  -- channel is currently true because a different group was joined.
+  do
+    local policy = GroupSendPolicy.Create({
+      runtime = { localProfileId = "jaina-area52", chatApi = {} },
+      chatGateway = {
+        CanSend = function()
+          return true
+        end,
+      },
+    })
+
+    assert(policy.getNotice({
+      channel = ChannelType.PARTY,
+      conversationKey = "party::jaina-area52::1::Party-0-0000000000000001",
+      ownerProfileId = "jaina-area52",
+      leftGroup = true,
+    }) == "Not in group — can't send.", "closed GUID party history must remain blocked after another party join")
   end
 
   -- Group payloads route through ChatGateway; legacy whispers stay with SendHandler.

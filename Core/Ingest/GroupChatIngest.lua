@@ -45,6 +45,34 @@ local CHANNEL_CONTACT_KEY = {
   [ChannelType.OFFICER] = "OFFICER::",
 }
 
+local GROUP_CONVERSATION_KEY_PREFIX = {
+  [ChannelType.PARTY] = "party::",
+  [ChannelType.INSTANCE_CHAT] = "instance::",
+  [ChannelType.RAID] = "raid::",
+}
+
+local function groupCategoryForChannel(channel)
+  if channel == ChannelType.PARTY or channel == ChannelType.RAID then
+    return type(_G.LE_PARTY_CATEGORY_HOME) == "number" and _G.LE_PARTY_CATEGORY_HOME or 1
+  end
+  if channel == ChannelType.INSTANCE_CHAT then
+    return type(_G.LE_PARTY_CATEGORY_INSTANCE) == "number" and _G.LE_PARTY_CATEGORY_INSTANCE or 2
+  end
+  return nil
+end
+
+local function buildGroupSessionKey(state, channel)
+  local prefix = GROUP_CONVERSATION_KEY_PREFIX[channel]
+  local category = groupCategoryForChannel(channel)
+  local partyGUIDs = state.groupPartyGUIDsByCategory
+  local partyGUID = partyGUIDs and partyGUIDs[category]
+  if prefix == nil or type(state.localProfileId) ~= "string" or state.localProfileId == "" or type(partyGUID) ~= "string" or partyGUID == "" then
+    return nil
+  end
+
+  return prefix .. state.localProfileId .. "::" .. category .. "::" .. partyGUID, category, partyGUID
+end
+
 local function localSenderClassTag()
   if type(_G.UnitClass) ~= "function" then
     return nil
@@ -173,11 +201,12 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     return true
   end
 
-  -- PARTY / INSTANCE_CHAT / RAID / OFFICER: singleton per-character.
-  -- GUILD is special: when we can resolve the player's live guild name,
-  -- the key becomes account-wide (all characters in the same guild
-  -- share the same conversation). Falls back to a per-character key
-  -- when the name is unavailable.
+  -- PARTY / INSTANCE_CHAT / RAID use a per-session key when lifecycle
+  -- events supplied a party GUID; otherwise they retain singleton behavior.
+  -- OFFICER is singleton. GUILD is special: when we can resolve the
+  -- player's live guild name, the key becomes account-wide (all characters
+  -- in the same guild share the same conversation). Falls back to a
+  -- per-character key when the name is unavailable.
   local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
   local guildName = nil
   if channel == ChannelType.GUILD then
@@ -191,9 +220,18 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     end
   end
 
-  local conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
+  local conversationKey, groupCategory, partyGUID = buildGroupSessionKey(state, channel)
+  if conversationKey == nil then
+    conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
+  end
   local isLeader = LEADER_EVENTS[eventName] == true and true or false
   local conv = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
+
+  if conv and partyGUID then
+    conv.ownerProfileId = state.localProfileId
+    conv.groupCategory = groupCategory
+    conv.partyGUID = partyGUID
+  end
 
   -- Stamp the conversation record with the guild's display name
   -- (so the conversation header can show it even when another character

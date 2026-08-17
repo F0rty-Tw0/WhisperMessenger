@@ -488,4 +488,46 @@ return function()
     assert(conv ~= nil, "conversation should exist")
     assert(conv.unreadCount == 0, "outgoing messages must not increment unreadCount, got: " .. tostring(conv.unreadCount))
   end
+  -- ----------------------------------------------------------------
+  -- 15. Known group session GUIDs split temporary channels by category.
+  -- ----------------------------------------------------------------
+  do
+    local partyGuid = "Party-0-0000000000000100"
+    local instanceGuid = "Party-0-0000000000000200"
+    local state = makeState({
+      groupPartyGUIDsByCategory = {
+        [1] = partyGuid,
+        [2] = instanceGuid,
+      },
+    })
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "party session",
+      playerName = "Member-Realm",
+      lineID = 1601,
+      guid = "Player-1084-OTHER",
+    })
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_RAID", {
+      text = "raid session",
+      playerName = "Member-Realm",
+      lineID = 1602,
+      guid = "Player-1084-OTHER",
+    })
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_INSTANCE_CHAT", {
+      text = "instance session",
+      playerName = "Member-Realm",
+      lineID = 1603,
+      guid = "Player-1084-OTHER",
+    })
+
+    local partyKey = "party::arthas-area52::1::" .. partyGuid
+    local raidKey = "raid::arthas-area52::1::" .. partyGuid
+    local instanceKey = "instance::arthas-area52::2::" .. instanceGuid
+    assert(state.store.conversations[partyKey] ~= nil, "PARTY should use GUID session key")
+    assert(state.store.conversations[raidKey] ~= nil, "RAID should use GUID session key")
+    local instance = state.store.conversations[instanceKey]
+    assert(instance ~= nil, "INSTANCE_CHAT should use GUID session key")
+    assert(instance.ownerProfileId == "arthas-area52", "GUID session should stamp ownerProfileId")
+    assert(instance.groupCategory == 2 and instance.partyGUID == instanceGuid, "GUID session should stamp category and partyGUID")
+  end
 end

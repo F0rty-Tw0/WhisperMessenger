@@ -48,26 +48,99 @@ local function appendLeftMessage(conversation, channel, now)
   conversation.lastPreview = text
 end
 
--- Conversation keys for per-character group chats look like
--- "<prefix><profileId>" (e.g. "party::jaina-proudmoore"). The GroupRoster
--- event only tells us about the *current* character's party/raid/instance
--- state, so we must only mark transitions on the conversations that
--- belong to the current character. Touching every character's group
--- conversation would mis-flip `leftGroup` on alts' history whenever the
--- current character's group state changed.
+-- Legacy group histories use "<prefix><profileId>". GUID-scoped histories
+-- append "::category::partyGUID" and are stamped during ingest.
 local CHANNEL_KEY_PREFIX = {
   PARTY = "party::",
   RAID = "raid::",
   INSTANCE_CHAT = "instance::",
 }
 
--- handleGroupRosterUpdate fires on GROUP_ROSTER_UPDATE.
--- Instead of purging party/instance/raid conversations when the player leaves,
--- we keep the history, append a "Left <channel>." system message, and mark
--- the conversation so sending is blocked until the next join (ChatGateway.CanSend
--- already returns false for channels the player is no longer in, so the
--- composer notice "Not in group — can't send." surfaces automatically).
--- Classic compat: if IsInGroup is nil, skip entirely.
+local function homeCategory()
+  return type(_G.LE_PARTY_CATEGORY_HOME) == "number" and _G.LE_PARTY_CATEGORY_HOME or 1
+end
+
+local function instanceCategory()
+  return type(_G.LE_PARTY_CATEGORY_INSTANCE) == "number" and _G.LE_PARTY_CATEGORY_INSTANCE or 2
+end
+
+local function categoryForChannel(channel)
+  if channel == "PARTY" or channel == "RAID" then
+    return homeCategory()
+  end
+  if channel == "INSTANCE_CHAT" then
+    return instanceCategory()
+  end
+  return nil
+end
+
+local function validPartyGUID(partyGUID)
+  return type(partyGUID) == "string" and partyGUID ~= ""
+end
+
+local function closeGroupSession(Bootstrap, category, partyGUID, deps)
+  local runtime = Bootstrap and Bootstrap.runtime
+  local state = runtime and (runtime.accountState or runtime.store)
+  local localProfileId = runtime and runtime.localProfileId
+  if state == nil or state.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
+    return true
+  end
+
+  local now = currentTime()
+  local changed = false
+  for channel, prefix in pairs(CHANNEL_KEY_PREFIX) do
+    local key = prefix .. localProfileId .. "::" .. category .. "::" .. partyGUID
+    local conversation = state.conversations[key]
+    if conversation and not conversation.leftGroup then
+      appendLeftMessage(conversation, channel, now)
+      conversation.leftGroup = true
+      changed = true
+    end
+  end
+
+  if changed then
+    if deps and deps.trace then
+      deps.trace("GroupMembership: closed group session")
+    end
+    if Common and Common.refreshRuntimeWindow then
+      Common.refreshRuntimeWindow(Bootstrap)
+    end
+  end
+
+  return true
+end
+
+function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID, deps)
+  local runtime = Bootstrap and Bootstrap.runtime
+  if runtime == nil or type(category) ~= "number" or not validPartyGUID(partyGUID) then
+    return true
+  end
+
+  runtime.groupPartyGUIDsByCategory = runtime.groupPartyGUIDsByCategory or {}
+  local previousPartyGUID = runtime.groupPartyGUIDsByCategory[category]
+  if validPartyGUID(previousPartyGUID) and previousPartyGUID ~= partyGUID then
+    closeGroupSession(Bootstrap, category, previousPartyGUID, deps)
+  end
+  runtime.groupPartyGUIDsByCategory[category] = partyGUID
+  return true
+end
+
+function GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID, deps)
+  local runtime = Bootstrap and Bootstrap.runtime
+  if runtime == nil or type(category) ~= "number" or not validPartyGUID(partyGUID) then
+    return true
+  end
+
+  local partyGUIDs = runtime.groupPartyGUIDsByCategory
+  if partyGUIDs and partyGUIDs[category] == partyGUID then
+    partyGUIDs[category] = nil
+  end
+
+  return closeGroupSession(Bootstrap, category, partyGUID, deps)
+end
+
+-- GROUP_ROSTER_UPDATE is a fallback for legacy rows and clients that cannot
+-- provide party GUID lifecycle events. It must not reopen a closed GUID row.
 function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
   if _G.IsInGroup == nil then
     return true
@@ -87,17 +160,20 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
   end
 
   local inGroup = {
-    PARTY = _G.IsInGroup(_G.LE_PARTY_CATEGORY_HOME) and true or false,
-    INSTANCE_CHAT = _G.IsInGroup(_G.LE_PARTY_CATEGORY_INSTANCE) and true or false,
+    PARTY = _G.IsInGroup(homeCategory()) and true or false,
+    INSTANCE_CHAT = _G.IsInGroup(instanceCategory()) and true or false,
     RAID = (type(_G.IsInRaid) == "function" and _G.IsInRaid()) and true or false,
   }
 
+  local partyGUIDs = runtime.groupPartyGUIDsByCategory
   local now = currentTime()
   local changed = false
 
   for channel, membership in pairs(inGroup) do
-    local prefix = CHANNEL_KEY_PREFIX[channel]
-    if prefix then
+    local category = categoryForChannel(channel)
+    local partyGUID = partyGUIDs and partyGUIDs[category]
+    if not validPartyGUID(partyGUID) then
+      local prefix = CHANNEL_KEY_PREFIX[channel]
       local key = prefix .. localProfileId
       local conversation = state.conversations[key]
       if conversation ~= nil then
@@ -106,12 +182,10 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
             conversation.leftGroup = nil
             changed = true
           end
-        else
-          if not conversation.leftGroup then
-            appendLeftMessage(conversation, channel, now)
-            conversation.leftGroup = true
-            changed = true
-          end
+        elseif not conversation.leftGroup then
+          appendLeftMessage(conversation, channel, now)
+          conversation.leftGroup = true
+          changed = true
         end
       end
     end
@@ -119,7 +193,7 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
 
   if changed then
     if deps and deps.trace then
-      deps.trace("GroupMembership: marked group membership transition(s)")
+      deps.trace("GroupMembership: marked legacy group membership transition(s)")
     end
     if Common and Common.refreshRuntimeWindow then
       Common.refreshRuntimeWindow(Bootstrap)

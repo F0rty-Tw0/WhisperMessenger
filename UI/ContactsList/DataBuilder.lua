@@ -49,10 +49,9 @@ function DataBuilder.BuildItems(conversations)
   return items
 end
 
--- Per-character group key prefixes: the conversation key has the shape
--- "<prefix><localProfileId>", so we match them by joining the prefix with
--- the current character's profile. This keeps other characters' guild /
--- party / raid threads out of this character's contacts list.
+-- Legacy per-character group keys end in "<profileId>". GUID-scoped keys
+-- append category and party GUID, so they use ownerProfileId stamped by
+-- ingest. Both shapes remain visible across characters.
 local PER_CHARACTER_GROUP_PREFIXES = {
   "guild::",
   "officer::",
@@ -154,8 +153,11 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
       for _, prefix in ipairs(PER_CHARACTER_GROUP_PREFIXES) do
         if prefix ~= "guild::" and string.find(conversationKey, prefix, 1, true) == 1 then
           include = true
-          local keyOwner = string.sub(conversationKey, #prefix + 1)
-          if keyOwner ~= nil and keyOwner ~= "" then
+          local keyOwner = conversation and conversation.ownerProfileId
+          if type(keyOwner) ~= "string" or keyOwner == "" then
+            keyOwner = string.sub(conversationKey, #prefix + 1)
+          end
+          if keyOwner ~= "" then
             if keyOwner ~= localProfileId then
               foreignOwner = keyOwner
             end

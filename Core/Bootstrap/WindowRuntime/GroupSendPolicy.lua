@@ -56,11 +56,11 @@ local function isForeignCharacterGroup(runtime, conversation, getPlayerGuildName
 
   for _, prefix in ipairs(FOREIGN_PROFILE_GROUP_PREFIXES) do
     if string.find(conversationKey, prefix, 1, true) == 1 then
-      local owner = string.sub(conversationKey, #prefix + 1)
-      if owner ~= "" and owner ~= runtime.localProfileId then
-        return true
+      local owner = conversation.ownerProfileId
+      if type(owner) ~= "string" or owner == "" then
+        owner = string.sub(conversationKey, #prefix + 1)
       end
-      return false
+      return owner ~= "" and owner ~= runtime.localProfileId
     end
   end
 
@@ -96,6 +96,12 @@ function GroupSendPolicy.Create(options)
     -- Foreign-character group history is read-only from this character.
     if isForeignCharacterGroup(runtime, conversation, getPlayerGuildName) then
       return Localization and Localization.Text("Another character's history — read-only.") or "Another character's history — read-only."
+    end
+
+    -- A GUID-scoped conversation stays closed after the character joins a
+    -- later group of the same channel type.
+    if conversation.leftGroup then
+      return Localization and Localization.Text("Not in group — can't send.") or "Not in group — can't send."
     end
 
     if not chatGateway.CanSend(runtime.chatApi, conversation) then

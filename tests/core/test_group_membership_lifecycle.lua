@@ -1,4 +1,6 @@
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
 return function()
   -- Save and restore WoW globals touched by these tests
@@ -259,6 +261,108 @@ return function()
     assert(state.conversations[INSTANCE_KEY] ~= nil, "INSTANCE survives logout (persistence)")
     assert(state.conversations["whisper::Carol"] ~= nil, "WHISPER survives logout")
     assert(state.conversations["bnconv::1"] ~= nil, "BN_CONVERSATION survives logout")
+  end
+
+  -- test_group_join_closes_replaced_guid_when_leave_was_missed
+  do
+    local store = Store.New({ maxMessagesPerConversation = 50 })
+    local state = makeState(store.conversations)
+    local refreshCalls = 0
+    local Bootstrap = makeBootstrap(state, function()
+      refreshCalls = refreshCalls + 1
+    end)
+    Bootstrap.runtime.store = store
+    Bootstrap.runtime.groupPartyGUIDsByCategory = {}
+
+    local partyGuidA = "Party-0-0000000000000003"
+    local partyGuidB = "Party-0-0000000000000004"
+    local category = _G.LE_PARTY_CATEGORY_HOME
+    local partyKeyA = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidA
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidA)
+    GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
+      text = "group A",
+      playerName = "Member-Realm",
+      lineID = 10003,
+      guid = "Player-1084-00000099",
+    })
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+
+    local conversationA = store.conversations[partyKeyA]
+    assert(conversationA.leftGroup == true, "joining group B must close group A when GROUP_LEFT was missed")
+    assert(#conversationA.messages == 2, "group A should have one message and one Left notice")
+    assert(conversationA.messages[2].kind == "system", "group A should record a Left system message")
+    assert(refreshCalls == 1, "replacing group A should refresh once")
+    assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidB, "group B should become current")
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+
+    assert(#conversationA.messages == 2, "rejoining current group B must not append another Left notice")
+    assert(refreshCalls == 1, "rejoining current group B must not refresh")
+  end
+
+  -- test_group_lifecycle_guid_sessions_remain_separate_after_rejoin
+  do
+    local inHomeGroup = true
+    _G.IsInGroup = function(category)
+      return category == _G.LE_PARTY_CATEGORY_HOME and inHomeGroup
+    end
+    _G.IsInRaid = function()
+      return false
+    end
+
+    local store = Store.New({ maxMessagesPerConversation = 50 })
+    local state = makeState(store.conversations)
+    local Bootstrap = makeBootstrap(state)
+    Bootstrap.runtime.store = store
+    Bootstrap.runtime.groupPartyGUIDsByCategory = {}
+
+    local partyGuidA = "Party-0-0000000000000001"
+    local partyGuidB = "Party-0-0000000000000002"
+    local category = _G.LE_PARTY_CATEGORY_HOME
+    local partyKeyA = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidA
+    local partyKeyB = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidB
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", makeDeps(), category, partyGuidA)
+    assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidA, "GROUP_FORMED should capture group A")
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidA)
+    assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidA, "GROUP_JOINED should retain group A")
+
+    GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
+      text = "group A",
+      playerName = "Member-Realm",
+      lineID = 10001,
+      guid = "Player-1084-00000099",
+    })
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", makeDeps(), category, partyGuidA)
+
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+    GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
+      text = "group B",
+      playerName = "Member-Realm",
+      lineID = 10002,
+      guid = "Player-1084-00000099",
+    })
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+
+    local conversationA = store.conversations[partyKeyA]
+    local conversationB = store.conversations[partyKeyB]
+    assert(conversationA ~= nil, "group A session should exist at " .. partyKeyA)
+    assert(conversationB ~= nil, "group B session should exist at " .. partyKeyB)
+    assert(#conversationA.messages == 2, "group A should retain one message and one Left notice")
+    assert(conversationA.leftGroup == true, "group A should stay closed after joining group B")
+    assert(conversationA.messages[2].kind == "system", "group A should record one Left system message")
+    assert(#conversationB.messages == 1, "roster update should not create another group B thread")
+    assert(conversationB.leftGroup == nil, "active group B should remain open")
+    assert(conversationB.ownerProfileId == LOCAL_PROFILE_ID, "group B should be stamped with current owner")
+    assert(conversationB.groupCategory == category, "group B should retain its party category")
+    assert(conversationB.partyGUID == partyGuidB, "group B should retain its party GUID")
+    assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidB, "stale GROUP_LEFT must not clear group B mapping")
+    assert(store.conversations["party::" .. LOCAL_PROFILE_ID] == nil, "known party GUID must not use singleton key")
   end
 
   -- Restore globals

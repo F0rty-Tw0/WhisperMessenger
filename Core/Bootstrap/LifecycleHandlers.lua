@@ -38,6 +38,16 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     return Presence.handlePlayerLogout(Bootstrap, deps)
   end
 
+  if event == "GROUP_FORMED" or event == "GROUP_JOINED" then
+    local category, partyGUID = ...
+    return GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID, deps)
+  end
+
+  if event == "GROUP_LEFT" then
+    local category, partyGUID = ...
+    return GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID, deps)
+  end
+
   if event == "GROUP_ROSTER_UPDATE" then
     return GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
   end

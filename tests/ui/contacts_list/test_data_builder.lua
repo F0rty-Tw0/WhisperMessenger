@@ -240,6 +240,15 @@ return function()
           lastActivityAt = 300,
           messages = {},
         },
+        ["party::arthas-area52::1::Party-0-0000000000000001"] = {
+          displayName = "Party",
+          channel = "PARTY",
+          lastActivityAt = 290,
+          messages = {},
+          ownerProfileId = "arthas-area52",
+          groupCategory = 1,
+          partyGUID = "Party-0-0000000000000001",
+        },
         ["guild::arthas-area52"] = {
           displayName = "Guild",
           channel = "GUILD",
@@ -252,6 +261,15 @@ return function()
           channel = "PARTY",
           lastActivityAt = 200,
           messages = {},
+        },
+        ["party::jaina-proudmoore::1::Party-0-0000000000000001"] = {
+          displayName = "Party",
+          channel = "PARTY",
+          lastActivityAt = 190,
+          messages = {},
+          ownerProfileId = "jaina-proudmoore",
+          groupCategory = 1,
+          partyGUID = "Party-0-0000000000000001",
         },
         ["raid::thrall-draenor"] = {
           displayName = "Raid",
@@ -277,9 +295,19 @@ return function()
 
     assert(byKey["party::arthas-area52"] ~= nil, "current char party should be included")
     assert(byKey["party::arthas-area52"].ownerProfileId == nil, "current char party should have no ownerProfileId annotation")
+    assert(byKey["party::arthas-area52::1::Party-0-0000000000000001"] ~= nil, "current char GUID party should be included")
+    assert(
+      byKey["party::arthas-area52::1::Party-0-0000000000000001"].ownerProfileId == nil,
+      "current char GUID party should have no owner annotation"
+    )
 
     assert(byKey["party::jaina-proudmoore"] ~= nil, "foreign party should be included")
     assert(byKey["party::jaina-proudmoore"].ownerProfileId == "jaina-proudmoore", "foreign party should carry ownerProfileId")
+    assert(byKey["party::jaina-proudmoore::1::Party-0-0000000000000001"] ~= nil, "foreign GUID party should be included")
+    assert(
+      byKey["party::jaina-proudmoore::1::Party-0-0000000000000001"].ownerProfileId == "jaina-proudmoore",
+      "foreign GUID party should carry stamped ownerProfileId"
+    )
 
     assert(byKey["raid::thrall-draenor"] ~= nil, "foreign raid should be included")
     assert(byKey["raid::thrall-draenor"].ownerProfileId == "thrall-draenor", "foreign raid should carry ownerProfileId")
