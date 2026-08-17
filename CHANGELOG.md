@@ -11,9 +11,11 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Added an opt-in shared widget position across all characters on a WoW account; disabling it restores each character's own position.
 - On Retail, added a right-click `Mark last messages as unread` action for conversations with unanswered messages.
 - Added a Back button beside the options cogwheel, which stays visibly active while options are open; Options, Back, and Close controls now show tooltips.
+
 - Fixed unread badges so they keep showing the numeric count, while conversations with no unanswered messages cannot be marked unread.
 - Fixed party, raid, and instance chat history so each group you join gets its own conversation instead of mixing messages from different groups together.
 - Fixed long conversations sometimes jumping to the top or middle when new messages arrived. The chat now stays on the latest message even when WoW takes several frames to finish updating the conversation layout.
+- Fixed pinned Battle.net conversations sometimes sending whispers to the wrong friend after logging in again or after the Battle.net friend list changed order.
 
 ## [1.2.16] - 2026-08-13
 
@@ -235,4 +237,3 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [0.1.0] - 2025-01-01
 
 - First public version of WhisperMessenger: a dedicated whisper window with chat bubbles, contacts, unread badges, Battle.net support, saved history, settings, and drag-to-reorder contacts.
-
