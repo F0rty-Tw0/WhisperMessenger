@@ -36,6 +36,15 @@ function BNetStatus.Apply(item, runtime)
 
   local accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, item.bnetAccountID, item.guid, item.battleTag or item.displayName)
   if accountInfo then
+    if accountInfo.bnetAccountID then
+      item.bnetAccountID = accountInfo.bnetAccountID
+      if runtime.store and runtime.store.conversations and item.conversationKey then
+        local conversation = runtime.store.conversations[item.conversationKey]
+        if conversation then
+          conversation.bnetAccountID = item.bnetAccountID
+        end
+      end
+    end
     local gameInfo = accountInfo.gameAccountInfo
     -- isAFK/isDND are STICKY on BNetAccountInfo — they persist after a friend
     -- goes offline. Only isOnline (strict true) or game-account presence prove

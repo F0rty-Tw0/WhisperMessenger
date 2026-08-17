@@ -221,6 +221,65 @@ return function()
     assert(contacts[1].availability.canWhisper == true, "BNetOnline should be whisperable")
   end
 
+  -- EnrichContactsAvailability: stale BNet send ID refreshes and persists after friend-list reorder
+  do
+    local conversationKey = "bnet::BN::friend#1234"
+    local friendInfoByIndex = {
+      {
+        bnetAccountID = 1,
+        battleTag = "Other#9999",
+        isOnline = true,
+        gameAccountInfo = { isOnline = true, characterName = "Other" },
+      },
+      {
+        bnetAccountID = 2,
+        battleTag = "Friend#1234",
+        isOnline = true,
+        gameAccountInfo = { isOnline = true, characterName = "Friend" },
+      },
+    }
+    local runtime = makeRuntime({
+      bnetApi = {
+        GetAccountInfoByID = function(_bnetAccountID)
+          return friendInfoByIndex[1]
+        end,
+        GetNumFriends = function()
+          return #friendInfoByIndex
+        end,
+        GetFriendAccountInfo = function(friendIndex)
+          return friendInfoByIndex[friendIndex]
+        end,
+      },
+      store = {
+        conversations = {
+          [conversationKey] = {
+            channel = "BN",
+            battleTag = "Friend#1234",
+            bnetAccountID = 1,
+          },
+        },
+      },
+    })
+    local contacts = {
+      {
+        conversationKey = conversationKey,
+        channel = "BN",
+        battleTag = "Friend#1234",
+        bnetAccountID = 1,
+      },
+    }
+    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+    assert(
+      contacts[1].bnetAccountID == 2,
+      "stale BNet send ID must refresh to 2 after friend-list reorder, got: " .. tostring(contacts[1].bnetAccountID)
+    )
+    assert(
+      runtime.store.conversations[conversationKey].bnetAccountID == 2,
+      "stale BNet send ID must persist as 2 after friend-list reorder, got: "
+        .. tostring(runtime.store.conversations[conversationKey].bnetAccountID)
+    )
+  end
+
   -- EnrichContactsAvailability: BNet contact online via gameAccountInfo.isOnline shows as online
   do
     local runtime = makeRuntime({
