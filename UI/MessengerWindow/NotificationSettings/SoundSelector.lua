@@ -43,6 +43,7 @@ SoundSelector.OPTIONS = SoundSelector.Options()
 function SoundSelector.Create(factory, parent, opts)
   opts = opts or {}
   local onChange = opts.onChange
+  local onPreview = opts.onPreview
   return ButtonSelector.Create(factory, parent, {
     labelText = Localization.Text("Notification sound"),
     optionsList = SoundSelector.Options(),
@@ -53,11 +54,8 @@ function SoundSelector.Create(factory, parent, opts)
       if onChange then
         onChange(value)
       end
-      -- Preview the chosen sound on selection so the user can audition it
-      -- without saving and reloading.
-      local SoundPlayer = ns.SoundPlayer
-      if SoundPlayer and SoundPlayer.Preview then
-        SoundPlayer.Preview(value)
+      if onPreview then
+        onPreview(value)
       end
     end,
     rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,

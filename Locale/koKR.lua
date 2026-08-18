@@ -166,6 +166,7 @@ local Korean = {
   ["Play sound on new whisper"] = "새 귓속말 시 소리 재생",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "새 귓속말을 받으면 알림 소리를 재생합니다. 아래에서 소리를 선택하세요.",
   ["Notification sound"] = "알림 소리",
+  ["Notification volume"] = "알림 음량",
   ["Icon Size"] = "아이콘 크기",
   ["Desaturate icon when idle"] = "비활성 시 아이콘 흑백",
   ["Greyscales the toggle icon when there are no unread messages."] = "읽지 않은 메시지가 없을 때 아이콘을 회색조로 표시합니다.",

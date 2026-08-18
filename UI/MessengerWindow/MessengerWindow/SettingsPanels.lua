@@ -97,6 +97,7 @@ function SettingsPanels.Create(factory, options)
   local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {
     playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
     notificationSound = settingsConfig.notificationSound,
+    notificationVolume = settingsConfig.notificationVolume,
   }, onSettingChanged)
 
   local iconsPanel, iconSettings = createSettingsPanel(factory, parent, options.iconCreate, {

@@ -51,6 +51,24 @@ return function()
     assert(Localization.Text("Current") == expected, language .. " catalog should translate Current")
   end
 
+  local notificationVolumeTranslations = {
+    deDE = "Benachrichtigungslautstärke",
+    esES = "Volumen de notificación",
+    esMX = "Volumen de notificación",
+    frFR = "Volume des notifications",
+    itIT = "Volume notifiche",
+    koKR = "알림 음량",
+    ptBR = "Volume da notificação",
+    ruRU = "Громкость уведомлений",
+    zhCN = "通知音量",
+    zhTW = "通知音量",
+  }
+
+  for language, expected in pairs(notificationVolumeTranslations) do
+    Localization.Configure({ language = language })
+    assert(Localization.Text("Notification volume") == expected, language .. " catalog should translate Notification volume")
+  end
+
   local historicalGroupChatTranslations = {
     deDE = "Historischer Gruppenchat — nur lesbar.",
     esES = "Chat de grupo histórico — solo lectura.",

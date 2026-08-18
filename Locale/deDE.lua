@@ -166,6 +166,7 @@ local German = {
   ["Play sound on new whisper"] = "Ton bei neuem Flüstern",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Spielt einen Ton bei eingehendem Flüstern. Wähle unten den gewünschten Ton.",
   ["Notification sound"] = "Benachrichtigungston",
+  ["Notification volume"] = "Benachrichtigungslautstärke",
   ["Icon Size"] = "Symbolgröße",
   ["Desaturate icon when idle"] = "Symbol entsättigen, wenn ungelesen",
   ["Greyscales the toggle icon when there are no unread messages."] = "Färbt das Symbol grau, wenn keine ungelesenen Nachrichten vorliegen.",

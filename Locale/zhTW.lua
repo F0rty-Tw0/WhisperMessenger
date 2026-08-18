@@ -166,6 +166,7 @@ local TraditionalChinese = {
   ["Play sound on new whisper"] = "新密語時播放音效",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "收到新密語時播放提示音。在下方選擇音效。",
   ["Notification sound"] = "通知音效",
+  ["Notification volume"] = "通知音量",
   ["Icon Size"] = "圖示大小",
   ["Desaturate icon when idle"] = "閒置時圖示灰階",
   ["Greyscales the toggle icon when there are no unread messages."] = "無未讀訊息時將圖示變為灰階。",

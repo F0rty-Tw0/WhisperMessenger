@@ -166,6 +166,7 @@ local Spanish = {
   ["Play sound on new whisper"] = "Sonido al recibir un susurro",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Reproduce un sonido cuando recibes un susurro. Elige el sonido a continuación.",
   ["Notification sound"] = "Sonido de notificación",
+  ["Notification volume"] = "Volumen de notificación",
   ["Icon Size"] = "Tamaño del icono",
   ["Desaturate icon when idle"] = "Desaturar icono inactivo",
   ["Greyscales the toggle icon when there are no unread messages."] = "Pone el icono en gris cuando no hay mensajes sin leer.",

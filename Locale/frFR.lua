@@ -166,6 +166,7 @@ local French = {
   ["Play sound on new whisper"] = "Son lors d'un nouveau chuchotement",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Joue un son lors d'un nouveau chuchotement. Choisissez le son ci-dessous.",
   ["Notification sound"] = "Son de notification",
+  ["Notification volume"] = "Volume des notifications",
   ["Icon Size"] = "Taille de l'icône",
   ["Desaturate icon when idle"] = "Désaturer l'icône au repos",
   ["Greyscales the toggle icon when there are no unread messages."] = "Affiche l'icône en niveaux de gris s'il n'y a pas de messages non lus.",

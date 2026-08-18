@@ -166,6 +166,7 @@ local Russian = {
   ["Play sound on new whisper"] = "Звук при новом шепоте",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "Проигрывает звук при новом шепоте. Выберите звук ниже.",
   ["Notification sound"] = "Звук уведомления",
+  ["Notification volume"] = "Громкость уведомлений",
   ["Icon Size"] = "Размер значка",
   ["Desaturate icon when idle"] = "Обесцвечивать значок в покое",
   ["Greyscales the toggle icon when there are no unread messages."] = "Делает значок серым, когда нет непрочитанных сообщений.",

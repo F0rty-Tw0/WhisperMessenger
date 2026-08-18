@@ -166,6 +166,7 @@ local SimplifiedChinese = {
   ["Play sound on new whisper"] = "新密语时播放声音",
   ["Plays a sound alert when you receive a new whisper. Use the selector below to pick which sound."] = "收到新密语时播放提示音。在下方选择音效。",
   ["Notification sound"] = "通知音效",
+  ["Notification volume"] = "通知音量",
   ["Icon Size"] = "图标大小",
   ["Desaturate icon when idle"] = "空闲时图标灰度",
   ["Greyscales the toggle icon when there are no unread messages."] = "无未读消息时将图标变为灰度。",

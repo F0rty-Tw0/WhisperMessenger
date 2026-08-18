@@ -28,23 +28,135 @@ for _, entry in ipairs(SOUND_OPTIONS) do
 end
 
 local DEFAULT_SOUND_KEY = "whisper"
+local cvarLease
 
 local SoundPlayer = {}
 
 SoundPlayer.SOUND_OPTIONS = SOUND_OPTIONS
 
-function SoundPlayer.Play(settings)
-  local soundKey = settings.notificationSound or DEFAULT_SOUND_KEY
-  local soundId = SOUND_BY_KEY[soundKey] or SOUND_BY_KEY[DEFAULT_SOUND_KEY]
-
-  -- Play on Master channel so notification uses dedicated channel settings.
-  -- Do not toggle global sound CVars; changing them can leak unrelated game audio.
-  _G.PlaySound(soundId, "Master")
+function SoundPlayer.SupportsVolume()
+  local soundApi = _G.C_Sound
+  return type(soundApi) == "table" and type(soundApi.PlaySoundWithOptions) == "function"
 end
 
-function SoundPlayer.Preview(soundKey)
-  local soundId = SOUND_BY_KEY[soundKey] or SOUND_BY_KEY[DEFAULT_SOUND_KEY]
-  _G.PlaySound(soundId, "Master")
+function SoundPlayer.NormalizeVolume(volume)
+  if type(volume) ~= "number" or volume ~= volume or volume == math.huge or volume == -math.huge then
+    return 1
+  end
+
+  if volume < 0 then
+    return 0
+  end
+  if volume > 1 then
+    return 1
+  end
+  return volume
+end
+
+local function getSoundId(soundKey)
+  return SOUND_BY_KEY[soundKey] or SOUND_BY_KEY[DEFAULT_SOUND_KEY]
+end
+
+local function restoreCVarLease(lease)
+  if cvarLease ~= lease then
+    return
+  end
+
+  cvarLease = nil
+  if lease.allSound then
+    _G.SetCVar("Sound_EnableAllSound", lease.allSound)
+  end
+  if lease.sfx then
+    _G.SetCVar("Sound_EnableSFX", lease.sfx)
+  end
+end
+
+local function acquireCVarLease()
+  if cvarLease then
+    return cvarLease, false
+  end
+
+  local allSound = _G.GetCVar("Sound_EnableAllSound")
+  local sfx = _G.GetCVar("Sound_EnableSFX")
+  if allSound ~= "0" and sfx ~= "0" then
+    return nil, false
+  end
+
+  local lease = {
+    allSound = allSound == "0" and allSound or nil,
+    sfx = sfx == "0" and sfx or nil,
+    generation = 0,
+  }
+  cvarLease = lease
+
+  if lease.allSound then
+    _G.SetCVar("Sound_EnableAllSound", "1")
+  end
+  if lease.sfx then
+    _G.SetCVar("Sound_EnableSFX", "1")
+  end
+
+  return lease, true
+end
+
+local function playWithSoundEnabled(play)
+  local lease, acquired = acquireCVarLease()
+  local played, playError = pcall(play)
+  if not played then
+    if acquired then
+      restoreCVarLease(lease)
+    end
+    error(playError, 0)
+  end
+
+  if not lease then
+    return
+  end
+
+  local previousGeneration = lease.generation
+  local generation = previousGeneration + 1
+  lease.generation = generation
+  local scheduled, timerError = pcall(_G.C_Timer.After, 0.5, function()
+    if cvarLease == lease and lease.generation == generation then
+      restoreCVarLease(lease)
+    end
+  end)
+  if not scheduled then
+    lease.generation = previousGeneration
+    if acquired then
+      restoreCVarLease(lease)
+    end
+    error(timerError, 0)
+  end
+end
+
+local function playSound(soundId, notificationVolume)
+  if SoundPlayer.SupportsVolume() then
+    local volume = SoundPlayer.NormalizeVolume(notificationVolume)
+    if volume == 0 then
+      return
+    end
+
+    playWithSoundEnabled(function()
+      _G.C_Sound.PlaySoundWithOptions({
+        soundKitID = soundId,
+        volumeOverride = volume,
+      })
+    end)
+    return
+  end
+
+  playWithSoundEnabled(function()
+    _G.PlaySound(soundId, "Master")
+  end)
+end
+
+function SoundPlayer.Play(settings)
+  playSound(getSoundId(settings.notificationSound), settings.notificationVolume)
+end
+
+function SoundPlayer.Preview(soundKey, notificationVolume)
+  playSound(getSoundId(soundKey), notificationVolume)
 end
 
 ns.SoundPlayer = SoundPlayer

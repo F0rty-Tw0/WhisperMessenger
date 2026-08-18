@@ -7,6 +7,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed Battle.net and character whispers being blocked during ordinary combat; successful sends now clear the draft normally. Mythic+ and restricted-content safety remains unchanged.
 - Reduced unnecessary refreshes and search work while the messenger is open.
 - Party, raid, and instance conversations now mark the active session as `Current`, timestamp older sessions, and clearly identify historical chats as read-only.
+- Added independent notification volume control on Retail. Notifications still play when game sound is disabled; Classic clients retain legacy Master-channel playback without a volume slider.
 
 ## [1.3.0] - 2026-08-17
 
