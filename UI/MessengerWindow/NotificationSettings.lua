@@ -12,17 +12,11 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local NotificationSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
-local VOLUME_STEP = 0.05
 
 local DEFAULTS = {
   playSoundOnWhisper = false,
   notificationSound = SoundSelector.DEFAULT_SOUND,
-  notificationVolume = 1,
 }
-
-local function percentFormat(value)
-  return tostring(math.floor(value * 100 + 0.5)) .. "%"
-end
 
 local function text(key)
   return Localization.Text(key)
@@ -31,14 +25,6 @@ end
 function NotificationSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
     local _ = ...
-  end
-
-  local soundPlayer = options.soundPlayer or ns.SoundPlayer
-  local supportsVolume = soundPlayer and soundPlayer.SupportsVolume and soundPlayer.SupportsVolume()
-  local currentVolume = DEFAULTS.notificationVolume
-  if supportsVolume then
-    currentVolume = soundPlayer.NormalizeVolume(config.notificationVolume or currentVolume)
-    currentVolume = math.floor(currentVolume / VOLUME_STEP + 0.5) * VOLUME_STEP
   end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
@@ -83,34 +69,9 @@ function NotificationSettings.Create(factory, parent, config, options)
       onChange = function(value)
         onChange("notificationSound", value)
       end,
-      onPreview = function(soundKey)
-        if soundPlayer and soundPlayer.Preview then
-          soundPlayer.Preview(soundKey, currentVolume)
-        end
-      end,
     }),
     { type = "selector", key = "notificationSound", default = DEFAULTS.notificationSound }
   )
-
-  local notificationVolumeSlider
-  if supportsVolume then
-    notificationVolumeSlider = panel:bind(
-      SettingsControls.CreateSliderRow(factory, frame, {
-        label = text("Notification volume"),
-        min = 0,
-        max = 1,
-        step = VOLUME_STEP,
-        initial = currentVolume,
-        formatFn = percentFormat,
-        onChange = function(value)
-          currentVolume = value
-          onChange("notificationVolume", value)
-        end,
-      }),
-      { type = "slider", key = "notificationVolume", default = DEFAULTS.notificationVolume }
-    )
-    notificationVolumeSlider.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
-  end
   soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local resetButton = panel:bind(
@@ -123,12 +84,9 @@ function NotificationSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", notificationVolumeSlider and notificationVolumeSlider.row or soundSelector.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
-    if not notificationVolumeSlider then
-      onChange("notificationVolume", DEFAULTS.notificationVolume)
-    end
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -149,9 +107,6 @@ function NotificationSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure alerts for incoming messages."))
     playSoundToggle.label:SetText(text("Play sound on new whisper"))
     soundSelector.label:SetText(text("Notification sound"))
-    if notificationVolumeSlider then
-      notificationVolumeSlider.label:SetText(text("Notification volume"))
-    end
     soundSelector.setOptionsList(SoundSelector.Options())
     resetButton.label:SetText(text("Reset to Defaults"))
   end
@@ -166,7 +121,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     panel:refreshLayout(effective)
   end
 
-  local result = {
+  return {
     frame = frame,
     playSoundToggle = playSoundToggle,
     soundSelector = soundSelector,
@@ -175,10 +130,6 @@ function NotificationSettings.Create(factory, parent, config, options)
     refreshLayout = refreshLayout,
     setLanguage = setLanguage,
   }
-  if notificationVolumeSlider then
-    result.notificationVolumeSlider = notificationVolumeSlider
-  end
-  return result
 end
 
 ns.NotificationSettings = NotificationSettings

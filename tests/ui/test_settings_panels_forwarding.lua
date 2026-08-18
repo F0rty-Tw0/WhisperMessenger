@@ -53,7 +53,6 @@ return function()
     playSoundOnWhisper = true,
     showUnreadBadge = false,
     notificationSound = "chime",
-    notificationVolume = 0.65,
     iconSize = 56,
     iconDesaturated = false,
     showWidgetMessagePreview = false,
@@ -105,10 +104,6 @@ return function()
   assert(
     notificationCapture.config.notificationSound == "chime",
     "expected notification config.notificationSound=chime, got: " .. tostring(notificationCapture.config.notificationSound)
-  )
-  assert(
-    notificationCapture.config.notificationVolume == 0.65,
-    "expected notification config.notificationVolume=0.65, got: " .. tostring(notificationCapture.config.notificationVolume)
   )
   assert(notificationCapture.config.iconMode == nil, "Notifications config should not include iconMode")
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
