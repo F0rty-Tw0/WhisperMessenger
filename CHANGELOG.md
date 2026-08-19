@@ -5,6 +5,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [Unreleased]
 - Fixed messages, replies, and saved conversations so they stay with the right contact and are not lost during history loading or cleanup.
 - Fixed Battle.net and character whispers being blocked during ordinary combat; successful sends now clear the draft normally. Mythic+ and restricted-content safety remains unchanged.
+- Battle.net whispers now verify the selected friend's current account before sending. If the friend list cannot confirm the recipient, the message stays in the draft instead of risking delivery to another contact.
 - Reduced unnecessary refreshes and search work while the messenger is open.
 - Party, raid, and instance conversations now mark the active session as `Current`, timestamp older sessions, and clearly identify historical chats as read-only.
 

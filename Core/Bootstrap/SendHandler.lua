@@ -12,6 +12,7 @@ local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMess
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 
@@ -59,26 +60,51 @@ local function appendBlockedOutgoing(runtime, payload, reason)
   conversation.channel = blockedMessage.channel or conversation.channel
 end
 
-function SendHandler.HandleSend(runtime, payload, refreshWindow)
-  runtime.sendStatusByConversation[payload.conversationKey] = nil
+local function isBattleTag(value)
+  return type(value) == "string" and string.match(value, "^[^#]+#%d+$") ~= nil
+end
 
-  -- Normalize quest links into the form that survives transmission on this
-  -- flavor + channel:
-  --   * Classic character whisper: `|H...|h` is stripped server-side, so we
-  --     serialize hyperlinks back to plain `[Name (id)]` — the only form the
-  --     wire preserves intact. Recipients running our addon re-link from the
-  --     plain form; recipients without it still see the name and id.
-  --   * Retail and Battle.net: keep the rich hyperlink so addon-less
-  --     recipients get a clickable link directly from Blizzard's chat frame.
-  if type(payload.text) == "string" then
-    local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
-    if isClassicCharacterWhisper then
-      payload.text = QuestLinkClassic.Serialize(payload.text)
-    else
-      payload.text = QuestLinkClassic.Rewrite(payload.text)
+local function resolveBattleNetRecipient(runtime, payload)
+  local conversations = runtime.store and runtime.store.conversations
+  local conversation = conversations and conversations[payload.conversationKey]
+  local storedBattleTag = conversation and conversation.battleTag
+  local payloadBattleTag = payload.battleTag
+  if storedBattleTag ~= nil and payloadBattleTag ~= nil and storedBattleTag ~= payloadBattleTag then
+    return nil, "conflict"
+  end
+
+  local expectedBattleTag = storedBattleTag or payloadBattleTag
+  if expectedBattleTag == nil and isBattleTag(payload.displayName) then
+    expectedBattleTag = payload.displayName
+  end
+
+  local oldBnetAccountID = payload.bnetAccountID or (conversation and conversation.bnetAccountID)
+  local guid = payload.guid or (conversation and conversation.guid)
+  local accountInfo
+  if expectedBattleTag and oldBnetAccountID ~= nil and type(BNetResolver.ResolveAccountInfo) == "function" then
+    accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, oldBnetAccountID, guid, expectedBattleTag)
+  end
+
+  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(accountInfo.bnetAccountID) ~= "number" then
+    if expectedBattleTag and type(BNetResolver.ResolveFriendByBattleTag) == "function" then
+      accountInfo = BNetResolver.ResolveFriendByBattleTag(runtime.bnetApi, expectedBattleTag, guid)
     end
   end
 
+  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(accountInfo.bnetAccountID) ~= "number" then
+    return nil, "unresolved"
+  end
+
+  local resolvedBnetAccountID = accountInfo.bnetAccountID
+  payload.bnetAccountID = resolvedBnetAccountID
+  if conversation then
+    conversation.bnetAccountID = resolvedBnetAccountID
+  end
+
+  return resolvedBnetAccountID, resolvedBnetAccountID == oldBnetAccountID and "matched" or "recovered"
+end
+
+function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local inCombat = type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
   local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
   if traceEnabled then
@@ -109,7 +135,11 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
 
   local sendAvailable
   if payload.channel == "BN" then
-    sendAvailable = payload.bnetAccountID ~= nil and Gateway.CanSendBattleNetWhisper(runtime.bnetApi)
+    local resolvedBnetAccountID, outcome = resolveBattleNetRecipient(runtime, payload)
+    if traceEnabled then
+      Trace("SendHandler: bnet-resolve outcome=" .. outcome)
+    end
+    sendAvailable = resolvedBnetAccountID ~= nil and Gateway.CanSendBattleNetWhisper(runtime.bnetApi)
   else
     sendAvailable = Gateway.CanSendCharacterWhisper(runtime.chatApi)
   end
@@ -122,6 +152,24 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     end
     refreshWindow()
     return false
+  end
+  runtime.sendStatusByConversation[payload.conversationKey] = nil
+
+  -- Normalize quest links into the form that survives transmission on this
+  -- flavor + channel:
+  --   * Classic character whisper: `|H...|h` is stripped server-side, so we
+  --     serialize hyperlinks back to plain `[Name (id)]` — the only form the
+  --     wire preserves intact. Recipients running our addon re-link from the
+  --     plain form; recipients without it still see the name and id.
+  --   * Retail and Battle.net: keep the rich hyperlink so addon-less
+  --     recipients get a clickable link directly from Blizzard's chat frame.
+  if type(payload.text) == "string" then
+    local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
+    if isClassicCharacterWhisper then
+      payload.text = QuestLinkClassic.Serialize(payload.text)
+    else
+      payload.text = QuestLinkClassic.Rewrite(payload.text)
+    end
   end
 
   local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text)

@@ -215,7 +215,23 @@ return function()
           characterSends[#characterSends + 1] = { target = target, text = text }
         end,
       },
-      bnetApi = {},
+      bnetApi = {
+        GetAccountInfoByID = function(bnetAccountID)
+          if bnetAccountID == 42 then
+            return { battleTag = "Jaina#1234", bnetAccountID = 42, isOnline = true }
+          end
+          return nil
+        end,
+        GetNumFriends = function()
+          return 1
+        end,
+        GetFriendAccountInfo = function(friendIndex)
+          if friendIndex == 1 then
+            return { battleTag = "Jaina#1234", bnetAccountID = 42, isOnline = true }
+          end
+          return nil
+        end,
+      },
     }
     local callbacks = WindowCallbacks.Create({
       runtime = runtime,

@@ -24,7 +24,20 @@ return function()
         table.insert(sentMessages, { text = text, target = target })
       end,
     },
-    bnetApi = {},
+    bnetApi = {
+      GetNumFriends = function()
+        return 2
+      end,
+      GetFriendAccountInfo = function(friendIndex)
+        if friendIndex == 1 then
+          return { bnetAccountID = 77, battleTag = "Jaina#1234", isOnline = true }
+        end
+        if friendIndex == 2 then
+          return { bnetAccountID = 99, battleTag = "Thrall#1234", isOnline = true }
+        end
+        return nil
+      end,
+    },
     -- Stub fields used by EventRouter.RecordPendingSend
     store = Store.New({
       maxMessagesPerConversation = 20,
@@ -149,6 +162,7 @@ return function()
     SendHandler.HandleSend(runtime, {
       conversationKey = "me::BN::jaina#1234",
       displayName = "Jaina#1234",
+      battleTag = "Jaina#1234",
       channel = "BN",
       bnetAccountID = 77,
       text = "go do |cffffff00|Hquest:4641:0|h[Your Place In The World]|h|r",
@@ -167,6 +181,7 @@ return function()
     SendHandler.HandleSend(runtime, {
       conversationKey = "me::BN::jaina#1234",
       displayName = "Jaina#1234",
+      battleTag = "Jaina#1234",
       channel = "BN",
       bnetAccountID = 77,
       text = "hi friend",
@@ -228,6 +243,7 @@ return function()
   local bnPayload = {
     conversationKey = "me::BN::jaina#1234",
     displayName = "Jaina#1234",
+    battleTag = "Jaina#1234",
     channel = "BN",
     bnetAccountID = 77,
     text = "hello bn",
@@ -239,6 +255,142 @@ return function()
   assert(sentMessages[1].channel == "BN", "expected Battle.net transport marker")
   assert(sentMessages[1].bnetAccountID == 77, "expected bnetAccountID to be forwarded")
   assert(sentMessages[1].text == "hello bn", "expected Battle.net text to be forwarded")
+
+  local function makePinnedBattleNetCase(friendEntries, payloadBattleTag)
+    local sentWhispers = {}
+    local savedRegressionBNSendWhisper = _G.BNSendWhisper
+    local conversationKey = "bnet::BN::mrgank#2355"
+    rawset(_G, "BNSendWhisper", function(bnetAccountID, text)
+      table.insert(sentWhispers, { bnetAccountID = bnetAccountID, text = text })
+      return true
+    end)
+
+    local bnetApi = {
+      GetNumFriends = function()
+        return #friendEntries
+      end,
+      GetFriendAccountInfo = function(friendIndex)
+        return friendEntries[friendIndex]
+      end,
+    }
+    bnetApi.GetAccountInfoByID = function(bnetAccountID)
+      for _, friend in ipairs(friendEntries) do
+        if friend.bnetAccountID == bnetAccountID then
+          return friend
+        end
+      end
+      return nil
+    end
+
+    local regressionRuntime = {
+      sendStatusByConversation = {},
+      pendingOutgoing = {},
+      now = function()
+        return 100
+      end,
+      localProfileId = "me",
+      chatApi = {},
+      bnetApi = bnetApi,
+      store = Store.New({
+        maxMessagesPerConversation = 20,
+        maxConversations = 10,
+        messageMaxAge = 86400,
+        conversationMaxAge = 86400,
+      }),
+      activeConversationKey = conversationKey,
+    }
+    regressionRuntime.store.conversations[conversationKey] = {
+      conversationKey = conversationKey,
+      channel = "BN",
+      displayName = "MrGank#2355",
+      battleTag = "MrGank#2355",
+      bnetAccountID = 12,
+      pinned = true,
+      messages = {},
+    }
+
+    local battleTag = payloadBattleTag or "MrGank#2355"
+    return regressionRuntime,
+      {
+        conversationKey = conversationKey,
+        displayName = battleTag,
+        battleTag = battleTag,
+        channel = "BN",
+        bnetAccountID = 12,
+        text = "hello MrGank",
+      },
+      sentWhispers,
+      function()
+        rawset(_G, "BNSendWhisper", savedRegressionBNSendWhisper)
+      end
+  end
+
+  local recycledIdFriends = {
+    { bnetAccountID = 12, battleTag = "Bananasaur#2885", isOnline = true },
+    { bnetAccountID = 13, battleTag = "MrGank#2355", isOnline = true },
+  }
+
+  -- Regression: a pinned BattleTag must resolve past recycled account ID 12.
+  do
+    local regressionRuntime, pinnedPayload, sentWhispers, restore = makePinnedBattleNetCase(recycledIdFriends)
+    local conversationKey = pinnedPayload.conversationKey
+    local resolvedResult = SendHandler.HandleSend(regressionRuntime, pinnedPayload, function() end)
+    assert(resolvedResult == true, "expected pinned MrGank Battle.net send to succeed")
+    assert(#sentWhispers == 1, "expected one Battle.net whisper, got: " .. tostring(#sentWhispers))
+    assert(
+      sentWhispers[1].bnetAccountID == 13,
+      "expected live MrGank ID13 instead of stale Bananasaur ID12, got: " .. tostring(sentWhispers[1].bnetAccountID)
+    )
+    assert(sentWhispers[1].bnetAccountID ~= 12, "must never dispatch stale Bananasaur ID12")
+    assert(pinnedPayload.bnetAccountID == 13, "expected resolved payload to refresh from stale Bananasaur ID12 to live MrGank ID13")
+    assert(
+      regressionRuntime.store.conversations[conversationKey].bnetAccountID == 13,
+      "expected pinned conversation to refresh from stale Bananasaur ID12 to live MrGank ID13"
+    )
+    local pending = regressionRuntime.pendingOutgoing[conversationKey]
+    assert(pending and #pending == 1, "expected one pending send for stable MrGank conversation")
+    assert(pending[1].bnetAccountID == 13, "expected pending send to target recovered MrGank ID13")
+    assert(regressionRuntime.pendingOutgoing["bnet::BN::bananasaur#2885"] == nil, "must not create a stale Bananasaur ID12 pending queue")
+
+    restore()
+  end
+
+  -- Regression: an unresolved pinned BattleTag must not fall back to recycled ID 12.
+  do
+    local regressionRuntime, unresolvedPayload, sentWhispers, restore = makePinnedBattleNetCase({ recycledIdFriends[1] })
+    local unresolvedResult = SendHandler.HandleSend(regressionRuntime, unresolvedPayload, function() end)
+    assert(unresolvedResult == false, "expected unresolved MrGank#2355 send to fail; stale Bananasaur#2885 ID12 must never receive it")
+    assert(
+      #sentWhispers == 0,
+      "expected no whisper when MrGank#2355 cannot resolve; stale Bananasaur#2885 ID12 received: " .. tostring(#sentWhispers)
+    )
+    assert(next(regressionRuntime.pendingOutgoing) == nil, "unresolved recipient must not create a pending send")
+    local sendStatus = regressionRuntime.sendStatusByConversation[unresolvedPayload.conversationKey]
+    assert(sendStatus ~= nil, "expected unavailable send status for unresolved recipient")
+    assert(sendStatus.status == "Send unavailable", "expected Send unavailable status, got: " .. tostring(sendStatus.status))
+
+    restore()
+  end
+
+  -- Regression: a conflicting payload BattleTag must not replace a pinned identity.
+  do
+    local regressionRuntime, conflictPayload, sentWhispers, restore = makePinnedBattleNetCase(recycledIdFriends, "Bananasaur#2885")
+    local conversation = regressionRuntime.store.conversations[conflictPayload.conversationKey]
+    conversation.bnetAccountID = 13
+    conflictPayload.text = "look at [Apprentice's Duties (471)]"
+    local originalConflictText = conflictPayload.text
+
+    local conflictResult = SendHandler.HandleSend(regressionRuntime, conflictPayload, function() end)
+    assert(conflictResult == false, "expected payload BattleTag conflict with pinned MrGank identity to fail closed")
+    assert(conflictPayload.text == originalConflictText, "conflicting payload quest text must not be rewritten before rejection")
+    assert(#sentWhispers == 0, "conflicting payload must not dispatch a Battle.net whisper")
+    assert(next(regressionRuntime.pendingOutgoing) == nil, "conflicting payload must not create a pending send")
+    assert(conversation.displayName == "MrGank#2355", "pinned display name must not be replaced by payload identity")
+    assert(conversation.battleTag == "MrGank#2355", "pinned BattleTag must not be replaced by payload identity")
+    assert(conversation.bnetAccountID == 13, "pinned MrGank account ID must not be replaced by payload ID12")
+
+    restore()
+  end
 
   -- Test 5: Competitive content blocks character whisper sends
 
@@ -307,6 +459,7 @@ return function()
   local bnPayload2 = {
     conversationKey = "me::BN::thrall#1234",
     displayName = "Thrall-Nagrand",
+    battleTag = "Thrall#1234",
     channel = "BN",
     bnetAccountID = 99,
     text = "bn hello",
@@ -323,16 +476,25 @@ return function()
   Trace.disable()
   rawset(_G, "print", savedPrint)
   assert(traceLines[1] == "SendHandler: entry channel=BN inCombat=false")
-  assert(traceLines[2] == "SendHandler: dispatch transport=BN")
-  assert(traceLines[3] == "SendHandler: bnet-pcall ok=true")
-  assert(traceLines[4] == "SendHandler: return result=true")
-  assert(traceLines[5] == "SendHandler: entry channel=WOW inCombat=true")
-  assert(traceLines[6] == "SendHandler: dispatch transport=WOW")
-  assert(traceLines[7] == "SendHandler: return result=true")
+  assert(traceLines[2] == "SendHandler: bnet-resolve outcome=matched")
+  assert(traceLines[3] == "SendHandler: dispatch transport=BN")
+  assert(traceLines[4] == "SendHandler: bnet-pcall ok=true")
+  assert(traceLines[5] == "SendHandler: return result=true")
+  assert(traceLines[6] == "SendHandler: entry channel=WOW inCombat=true")
+  assert(traceLines[7] == "SendHandler: dispatch transport=WOW")
+  assert(traceLines[8] == "SendHandler: return result=true")
   local traceOutput = table.concat(traceLines, "\n")
-  assert(not string.find(traceOutput, "bn hello", 1, true), "trace must not log Battle.net message text")
-  assert(not string.find(traceOutput, "Thrall-Nagrand", 1, true), "trace must not log recipient identity")
-  assert(not string.find(traceOutput, "99", 1, true), "trace must not log Battle.net account IDs")
+  for _, sensitiveValue in ipairs({
+    "me::BN::thrall#1234",
+    "Thrall#1234",
+    "Thrall-Nagrand",
+    "oldID",
+    "resolvedID",
+    "99",
+    "bn hello",
+  }) do
+    assert(not string.find(traceOutput, sensitiveValue, 1, true), "trace must not identify recipient: " .. sensitiveValue)
+  end
 
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)
