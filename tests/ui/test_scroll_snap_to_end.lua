@@ -279,16 +279,60 @@ return function()
     return messages
   end
 
-  local function makeConversationPaneView()
+  local function makeConversationPaneView(transcriptHeight)
+    transcriptHeight = transcriptHeight or 200
     local parent = factory.CreateFrame("Frame", nil, nil)
-    parent:SetSize(300, 200)
+    parent:SetSize(300, transcriptHeight)
     return {
       header = parent:CreateFontString(nil, "OVERLAY"),
       transcript = ScrollView.Create(factory, parent, {
         width = 300,
-        height = 200,
+        height = transcriptHeight,
       }),
     }
+  end
+
+  -- test_conversation_refresh_exposes_older_history_after_zero_height_incoming_relayout
+  -- Regression: an incoming refresh can occur while WoW reports a transient
+  -- zero scroll-frame height. The captured viewport must still fill older
+  -- history and keep the newest bubble at the bottom.
+
+  do
+    local view = makeConversationPaneView(200)
+    view.transcript.factory = factory
+    local contact = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
+    local conversation = { messages = makeMessages(29, "short ") }
+
+    for index, message in ipairs(conversation.messages) do
+      message.playerName = "Arthas"
+      message.sentAt = index
+    end
+
+    ConversationPane.Refresh(view, contact, conversation)
+    assert(view.transcript._visibleCount == 10, "initial 200px viewport should keep the overflowing newest page")
+
+    -- Incoming messages can arrive during relayout: live size is zero, but
+    -- the next 400px viewport was captured before WoW exposed that transient.
+    view.transcript.viewportHeight = 400
+    view.transcript.scrollFrame.height = nil
+    view.transcript.scrollFrame.GetHeight = function()
+      return 0
+    end
+
+    table.insert(conversation.messages, {
+      direction = "in",
+      playerName = "Arthas",
+      sentAt = 30,
+      text = "short 30",
+    })
+    ConversationPane.Refresh(view, contact, conversation)
+    assert(view.transcript._visibleCount > 10, "incoming refresh should expose older history when the newest page underfills the viewport")
+    local range = Metrics.GetRange(view.transcript)
+    assert(range > 0, "exposed older history should make the transcript overflow the viewport")
+    assert(
+      view.transcript.scrollFrame:GetVerticalScroll() == range,
+      "incoming refresh should snap the latest bubble to the bottom without wheel-triggered relayout"
+    )
   end
 
   -- test_conversation_refresh_preserves_loaded_depth_for_same_selection

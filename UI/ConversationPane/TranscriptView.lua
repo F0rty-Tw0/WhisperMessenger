@@ -126,13 +126,30 @@ function TranscriptView.RenderTranscript(transcript, messages)
 
   -- ChatBubble loaded lazily since it may not be available at module load time
   local ChatBubble = ns.ChatBubble or require("WhisperMessenger.UI.ChatBubble")
-  local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
-  local totalHeight = ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth, {
-    fallbackClassTag = transcript.fallbackClassTag,
-    onRevealCensored = function()
-      TranscriptView.RenderTranscript(transcript, transcript._allMessages)
-    end,
-  })
+  local scrollFrame = transcript.scrollFrame
+  local paneWidth = sizeValue(scrollFrame, "GetWidth", "width", 400)
+  local viewportHeight = sizeValue(scrollFrame, "GetHeight", "height", transcript.viewportHeight or 0)
+  local function layoutVisibleMessages()
+    return ChatBubble.LayoutMessages(transcript.factory, transcript.content, visibleMessages, paneWidth, {
+      fallbackClassTag = transcript.fallbackClassTag,
+      onRevealCensored = function()
+        TranscriptView.RenderTranscript(transcript, transcript._allMessages)
+      end,
+    })
+  end
+
+  local totalHeight = layoutVisibleMessages()
+
+  while totalHeight < viewportHeight and transcript._visibleCount < totalCount do
+    transcript._visibleCount = math.min(transcript._visibleCount + MESSAGES_PAGE_SIZE, totalCount)
+    startIndex = math.max(1, totalCount - transcript._visibleCount + 1)
+    visibleMessages = {}
+    for i = startIndex, totalCount do
+      table.insert(visibleMessages, allMessages[i])
+    end
+
+    totalHeight = layoutVisibleMessages()
+  end
 
   ScrollView.RefreshMetrics(transcript, totalHeight, true)
 

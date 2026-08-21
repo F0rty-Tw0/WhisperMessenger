@@ -317,6 +317,34 @@ return function()
     assert(result.isOnline == true, "stale ID should return correct person's online status")
   end
 
+  -- ResolveAccountInfo detects stale bnetAccountID when primary lookup returns nil
+  do
+    local staleNilApi = {
+      GetAccountInfoByID = function(_id)
+        return nil
+      end,
+      GetNumFriends = function()
+        return 1
+      end,
+      GetFriendAccountInfo = function(_index)
+        return {
+          bnetAccountID = 12,
+          battleTag = "MrGank#2355",
+          isOnline = true,
+          gameAccountInfo = { isOnline = true },
+        }
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return nil
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(staleNilApi, 13, "Player-1305-0D2826FB", "MrGank#2355")
+    assert(result ~= nil, "stale nil ID should find matching friend")
+    assert(result.bnetAccountID == 12, "stale nil ID should return current friend ID")
+    assert(result.battleTag == "MrGank#2355", "stale nil ID should return matching battleTag")
+    assert(result.isOnline == true, "stale nil ID should return online friend")
+  end
+
   -- ResolveAccountInfo with matching expectedBattleTag does not trigger stale detection
   do
     local matchingApi = {

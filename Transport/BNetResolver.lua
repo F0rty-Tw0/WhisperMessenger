@@ -195,8 +195,8 @@ function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedB
     return accountInfo
   end
 
-  -- Stage 2: Stale ID recovery via battleTag scan
-  if isStaleId then
+  -- Stage 2: Stale or missing ID recovery via battleTag scan
+  if expectedBattleTag and (isStaleId or accountInfo == nil) then
     local resolved = BNetResolver.ResolveFriendByBattleTag(bnetApi, expectedBattleTag, guid)
     if resolved then
       return resolved
