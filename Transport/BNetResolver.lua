@@ -37,7 +37,6 @@ local function resolveGetNumFriends(bnetApi)
   end
 end
 
-
 -- Stage 3: Scan friend list to find entry matching bnetAccountID.
 -- Returns accountInfo, friendIndex.
 local function scanFriendListById(bnetApi, bnetAccountID)
