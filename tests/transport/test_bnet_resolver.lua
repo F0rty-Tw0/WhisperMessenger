@@ -317,6 +317,34 @@ return function()
     assert(result.isOnline == true, "stale ID should return correct person's online status")
   end
 
+  -- ResolveAccountInfo recovers stale IDs through legacy global BNGetNumFriends
+  do
+    local originalBNGetNumFriends = _G.BNGetNumFriends
+    _G.BNGetNumFriends = function()
+      return 1
+    end
+    local legacyApi = {
+      GetAccountInfoByID = function(_id)
+        return nil
+      end,
+      GetFriendAccountInfo = function(_index)
+        return {
+          bnetAccountID = 12,
+          battleTag = "MrGank#2355",
+          isOnline = true,
+        }
+      end,
+      GetAccountInfoByGUID = function(_guid)
+        return nil
+      end,
+    }
+    local result = BNetResolver.ResolveAccountInfo(legacyApi, 13, "Player-1305-0D2826FB", "MrGank#2355")
+    _G.BNGetNumFriends = originalBNGetNumFriends
+    assert(result ~= nil, "legacy BNGetNumFriends should recover matching friend")
+    assert(result.bnetAccountID == 12, "legacy recovery should return current friend ID")
+    assert(result.battleTag == "MrGank#2355", "legacy recovery should match battleTag")
+  end
+
   -- ResolveAccountInfo detects stale bnetAccountID when primary lookup returns nil
   do
     local staleNilApi = {
@@ -416,6 +444,22 @@ return function()
     assert(result["Nergrom#2503"].friendIndex == 2, "should have correct friendIndex")
     assert(result["Alpha#1111"] ~= nil, "should find Alpha")
     assert(result["Mentis#2390"] ~= nil, "should find Mentis")
+  end
+
+  -- ScanFriendList supports legacy global BNGetNumFriends
+  do
+    local originalBNGetNumFriends = _G.BNGetNumFriends
+    _G.BNGetNumFriends = function()
+      return 1
+    end
+    local legacyScanApi = {
+      GetFriendAccountInfo = function(_index)
+        return { bnetAccountID = 12, battleTag = "MrGank#2355", isOnline = true }
+      end,
+    }
+    local result = BNetResolver.ScanFriendList(legacyScanApi)
+    _G.BNGetNumFriends = originalBNGetNumFriends
+    assert(result["MrGank#2355"] ~= nil, "legacy BNGetNumFriends should scan friends")
   end
 
   -- ScanFriendList with nil API returns empty table

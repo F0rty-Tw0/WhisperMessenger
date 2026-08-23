@@ -28,13 +28,24 @@ local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTa
   return info, false
 end
 
+local function resolveGetNumFriends(bnetApi)
+  if type(bnetApi.GetNumFriends) == "function" then
+    return bnetApi.GetNumFriends
+  end
+  if type(_G.BNGetNumFriends) == "function" then
+    return _G.BNGetNumFriends
+  end
+end
+
+
 -- Stage 3: Scan friend list to find entry matching bnetAccountID.
 -- Returns accountInfo, friendIndex.
 local function scanFriendListById(bnetApi, bnetAccountID)
-  if type(bnetApi.GetNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+  local getNumFriends = resolveGetNumFriends(bnetApi)
+  if type(getNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
     return nil, nil
   end
-  local ok, numFriends = pcall(bnetApi.GetNumFriends)
+  local ok, numFriends = pcall(getNumFriends)
   if not ok or not numFriends then
     return nil, nil
   end
@@ -145,10 +156,11 @@ local function resolveByGUID(bnetApi, guid, accountInfo, isStaleId)
 end
 
 function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
-  if type(bnetApi.GetNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+  local getNumFriends = resolveGetNumFriends(bnetApi)
+  if type(getNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
     return nil
   end
-  local ok, numFriends = pcall(bnetApi.GetNumFriends)
+  local ok, numFriends = pcall(getNumFriends)
   if not ok or not numFriends then
     return nil
   end
@@ -254,10 +266,14 @@ end
 
 function BNetResolver.ScanFriendList(bnetApi)
   local byBattleTag = {}
-  if type(bnetApi) ~= "table" or type(bnetApi.GetNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+  if type(bnetApi) ~= "table" then
     return byBattleTag
   end
-  local ok, numFriends = pcall(bnetApi.GetNumFriends)
+  local getNumFriends = resolveGetNumFriends(bnetApi)
+  if type(getNumFriends) ~= "function" or type(bnetApi.GetFriendAccountInfo) ~= "function" then
+    return byBattleTag
+  end
+  local ok, numFriends = pcall(getNumFriends)
   if not ok or not numFriends then
     return byBattleTag
   end
