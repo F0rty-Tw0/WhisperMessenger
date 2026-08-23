@@ -3,11 +3,15 @@
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
 ## [Unreleased]
+
+## [1.3.1] - 2026-08-24
+
 - Fixed messages, replies, and saved conversations so they stay with the right contact and are not lost during history loading or cleanup.
 - Fixed Battle.net and character whispers being blocked during ordinary combat; successful sends now clear the draft normally. Mythic+ and restricted-content safety remains unchanged.
 - Battle.net whispers now verify the selected friend's current account before sending. If the friend list cannot confirm the recipient, the message stays in the draft instead of risking delivery to another contact.
 - Reduced unnecessary refreshes and search work while the messenger is open.
 - Party, raid, and instance conversations now mark the active session as `Current`, timestamp older sessions, and clearly identify historical chats as read-only.
+- Fixed pinned Battle.net whispers so they recover after a friend goes offline or their friend-list ID changes.
 
 ## [1.3.0] - 2026-08-17
 
@@ -243,3 +247,4 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [0.1.0] - 2025-01-01
 
 - First public version of WhisperMessenger: a dedicated whisper window with chat bubbles, contacts, unread badges, Battle.net support, saved history, settings, and drag-to-reorder contacts.
+
