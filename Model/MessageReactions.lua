@@ -22,7 +22,7 @@ local function runtimeState(state)
       identityMessages = {},
       operations = {},
       controls = {},
-      nextSequence = 0,
+      senderAliases = {},
     }
   return state.messageReactionRuntime
 end
@@ -72,6 +72,53 @@ local function enforceSenderCap(runtime, senderKey)
       invokeDegrade(evicted)
     end
   end
+end
+
+local function mergeSenderQueue(queues, aliasKey, canonicalKey)
+  local aliasQueue = queues[aliasKey]
+  if aliasQueue == nil then
+    return
+  end
+  local canonicalQueue = queues[canonicalKey]
+  if canonicalQueue == nil then
+    canonicalQueue = aliasQueue
+    queues[canonicalKey] = canonicalQueue
+  else
+    for _, entry in ipairs(aliasQueue) do
+      table.insert(canonicalQueue, entry)
+    end
+  end
+  queues[aliasKey] = nil
+  table.sort(canonicalQueue, function(left, right)
+    if left.recordedAt ~= right.recordedAt then
+      return left.recordedAt < right.recordedAt
+    end
+    return (left.sequence or 0) < (right.sequence or 0)
+  end)
+end
+
+function MessageReactions.ResolveSenderAlias(state, senderKey)
+  local runtime = type(state) == "table" and state.messageReactionRuntime or nil
+  local aliases = type(runtime) == "table" and runtime.senderAliases or nil
+  return type(aliases) == "table" and aliases[senderKey] or senderKey
+end
+
+function MessageReactions.AssociateSenderAlias(state, aliasKey, canonicalKey)
+  if type(state) ~= "table" or type(aliasKey) ~= "string" or type(canonicalKey) ~= "string" or aliasKey == canonicalKey then
+    return false
+  end
+  local runtime = runtimeState(state)
+  runtime.senderAliases = runtime.senderAliases or {}
+  local aliases = runtime.senderAliases
+  if aliases[aliasKey] ~= nil and aliases[aliasKey] ~= canonicalKey then
+    return false
+  end
+  aliases[aliasKey] = canonicalKey
+  for _, field in ipairs(PENDING_QUEUE_FIELDS) do
+    mergeSenderQueue(runtime[field], aliasKey, canonicalKey)
+  end
+  enforceSenderCap(runtime, canonicalKey)
+  return true
 end
 
 local function purgeQueue(queue, now, degradeExpired)
@@ -425,12 +472,12 @@ function MessageReactions.RecordOperation(state, senderKey, conversationKey, act
   local controlQueue = runtime.controls[senderKey]
   if type(controlQueue) == "table" then
     for index, entry in ipairs(controlQueue) do
-      if entry.conversationKey == conversationKey and entry.fallbackFingerprint == operation.fallbackFingerprint then
+      if (conversationKey == nil or entry.conversationKey == conversationKey) and entry.fallbackFingerprint == operation.fallbackFingerprint then
         table.remove(controlQueue, index)
         if #controlQueue == 0 then
           runtime.controls[senderKey] = nil
         end
-        return resolveMatchedControl(state, senderKey, entry, operation, actorName, targetDirection, now, canonicalizeText)
+        return resolveMatchedControl(state, senderKey, entry, operation, entry.actorName, targetDirection, now, canonicalizeText)
       end
     end
   end
@@ -463,11 +510,19 @@ function MessageReactions.ConsumeIncomingControl(
   end
   local runtime = runtimeState(state)
   purgeSender(runtime, senderKey, now)
-  local fallbackFingerprint = Protocol.Fingerprint(type(correlationText) == "string" and correlationText or message.text)
+  local parser = type(parseFallback) == "function" and parseFallback or Protocol.ParseFallback
+  local parsedFallback = parser(message.text)
+  local correlation = type(correlationText) == "string" and correlationText or message.text
+  if parsedFallback ~= nil then
+    correlation = string.gsub(correlation, " +$", "")
+  end
+  local fallbackFingerprint = Protocol.Fingerprint(correlation)
   local operationQueue = runtime.operations[senderKey]
   if type(operationQueue) == "table" then
     for index, entry in ipairs(operationQueue) do
-      if entry.conversationKey == conversationKey and entry.operation.fallbackFingerprint == fallbackFingerprint then
+      if
+        (entry.conversationKey == nil or entry.conversationKey == conversationKey) and entry.operation.fallbackFingerprint == fallbackFingerprint
+      then
         table.remove(operationQueue, index)
         if #operationQueue == 0 then
           runtime.operations[senderKey] = nil
@@ -481,8 +536,7 @@ function MessageReactions.ConsumeIncomingControl(
     end
   end
 
-  local parser = type(parseFallback) == "function" and parseFallback or Protocol.ParseFallback
-  if parser(message.text) == nil then
+  if parsedFallback == nil then
     return nil
   end
   recordPending(state, runtime, runtime.controls, senderKey, {

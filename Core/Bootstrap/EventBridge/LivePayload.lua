@@ -51,6 +51,8 @@ function LivePayload.Build(runtime, eventName, ...)
     if bnetAccountID ~= nil then
       accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid)
     end
+    local gameAccountInfo = accountInfo and accountInfo.gameAccountInfo
+    local gameAccountID = BNetResolver.SanitizeAccountID(gameAccountInfo and gameAccountInfo.gameAccountID)
     -- Resolve classTag/raceTag via GetPlayerInfoByGUID (BNet API only provides localized className)
     local playerGuid = accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.playerGuid or guid
     local playerInfo = BNetResolver.ResolvePlayerInfo(runtime and runtime.playerInfoByGUID or nil, playerGuid)
@@ -63,6 +65,7 @@ function LivePayload.Build(runtime, eventName, ...)
       guid = playerGuid,
       channel = "BN",
       bnetAccountID = bnetAccountID,
+      gameAccountID = gameAccountID,
       accountInfo = accountInfo,
       playerInfo = playerInfo,
     }

@@ -43,6 +43,20 @@ local function canonicalTargetText(text)
   return text
 end
 
+local function battleNetReactionSenderKey(state, payload)
+  if payload.bnetAccountID ~= nil then
+    local canonicalKey = "bn:" .. tostring(payload.bnetAccountID)
+    if payload.gameAccountID ~= nil then
+      MessageReactions.AssociateSenderAlias(state, "bngame:" .. tostring(payload.gameAccountID), canonicalKey)
+    end
+    return canonicalKey
+  end
+  if payload.gameAccountID ~= nil then
+    return MessageReactions.ResolveSenderAlias(state, "bngame:" .. tostring(payload.gameAccountID))
+  end
+  return nil
+end
+
 local Router = {}
 Router._isSecretString = SecretString.IsSecretString
 
@@ -195,15 +209,15 @@ end
 
 local function reactionSenderContext(state, payload, isBattleNet)
   if isBattleNet then
-    if payload.bnetAccountID == nil then
+    local senderKey = battleNetReactionSenderKey(state, payload)
+    if senderKey == nil then
       return nil, nil, nil, nil, nil
     end
-    local senderKey = "bn:" .. tostring(payload.bnetAccountID)
-    local conversationKey = Identity.ResolveWhisperConversation(state, payload.bnetAccountID, "BN")
+    local conversationKey = payload.bnetAccountID ~= nil and Identity.ResolveWhisperConversation(state, payload.bnetAccountID, "BN") or nil
     local conversation = conversationKey and state.store.conversations[conversationKey] or nil
     local actorName = conversation
         and (conversation.displayName or conversation.contactDisplayName or conversation.battleTag or conversation.gameAccountName)
-      or tostring(payload.bnetAccountID)
+      or tostring(payload.bnetAccountID or senderKey)
     return senderKey, conversationKey, actorName, conversationKey, senderKey
   end
 
@@ -237,13 +251,14 @@ local function handleReactionMetadata(state, payload, isBattleNet)
   if metadata.type ~= "reaction" then
     return nil
   end
-  if conversationKey == nil then
-    return nil
-  end
-
   local result = MessageReactions.RecordOperation(state, reactionSenderKey, conversationKey, actorName, metadata, "out", now, canonicalTargetText)
+
   if result and result.converted then
-    local conversation = state.store.conversations[conversationKey]
+    local resolvedConversationKey = result.conversationKey or conversationKey
+    local conversation = resolvedConversationKey and state.store.conversations[resolvedConversationKey] or nil
+    if conversation then
+      conversation.conversationKey = resolvedConversationKey
+    end
     return conversation, {
       reactionControl = true,
       reactionChanged = result.changed == true,
@@ -326,7 +341,12 @@ local function handleUnlockedEvent(state, eventName, payload)
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
       local incomingMessage = buildMessage(state, eventName, payload, contact, "in", "user", sentAt)
       local correlationText = canonicalReactionText(incomingMessage.text)
-      local senderKey = eventName == "CHAT_MSG_BN_WHISPER" and ("bn:" .. tostring(payload.bnetAccountID)) or payload.playerName
+      local senderKey
+      if eventName == "CHAT_MSG_BN_WHISPER" then
+        senderKey = battleNetReactionSenderKey(state, payload)
+      else
+        senderKey = payload.playerName
+      end
       local reactionConversationKey = conversationKey
       local reactionSenderKey = senderKey
       local reactionActorName = contact.displayName or payload.playerName

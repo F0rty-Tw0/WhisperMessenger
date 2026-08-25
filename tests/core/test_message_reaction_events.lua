@@ -112,6 +112,61 @@ return function()
     )
   end
 
+  -- Saved regular-WOW controls retain a trailing space after the canonical fallback.
+  do
+    local fallback = Protocol.BuildFallback("thumbsup", "set", "kk")
+    assert(fallback == "reacted :thumbsup: to: “kk”", "reaction metadata should fingerprint canonical fallback")
+
+    local function runOrder(metadataFirst)
+      local state = newState(function()
+        return 250
+      end)
+      local key = "wow::WOW::catbury"
+      local target = { kind = "user", direction = "out", text = "kk", wireId = "catbury1", sentAt = 240 }
+      local conversation = putOutgoing(state, key, target)
+      local operation = Protocol.EncodeReaction("set", "thumbsup", target.wireId, target.text, fallback)
+      local function routeMetadata()
+        return Router.HandleEvent(state, "CHAT_MSG_ADDON", {
+          prefix = "WMRX",
+          text = operation,
+          channel = "WHISPER",
+          playerName = "Catbury",
+        })
+      end
+      local function routeFallback()
+        return Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+          text = fallback .. " ",
+          playerName = "Catbury",
+          guid = "Player-Catbury",
+          lineID = 4,
+        })
+      end
+
+      if metadataFirst then
+        routeMetadata()
+        local result, meta = routeFallback()
+        assert(
+          result == conversation and meta and meta.reactionControl == true and meta.reactionChanged == true,
+          "trailing-space WOW control should convert after metadata"
+        )
+      else
+        local staged, stagedMeta = routeFallback()
+        assert(
+          staged == nil and stagedMeta and stagedMeta.reactionControl == true and stagedMeta.reactionStaged == true,
+          "trailing-space WOW control should stage before metadata"
+        )
+        local result, meta = routeMetadata()
+        assert(result == conversation and meta and meta.reactionChanged == true, "late metadata should convert trailing-space control")
+      end
+
+      assert(#conversation.messages == 1 and conversation.unreadCount == 0, "converted control should stay hidden")
+      assert(target.reaction and target.reaction.key == "thumbsup" and target.reaction.actorName == "Catbury", "Catbury should be reaction actor")
+    end
+
+    runOrder(true)
+    runOrder(false)
+  end
+
   -- Normal fallback before metadata stages invisibly, then late metadata converts.
   do
     local now = 300
@@ -440,12 +495,12 @@ return function()
     assert(target.reaction.actorName == "Jaina#1234", "BN actor should derive from event-resolved identity")
   end
 
-  -- Live BN addon metadata resolves gameAccountID to bnetAccountID and
-  -- correlates with the matching whisper in either event order.
+  -- Live BN addon metadata and normal whispers correlate in either arrival
+  -- order, including bnet-only and unresolved metadata fallbacks.
   do
-    local function runLiveBNetOrder(metadataFirst)
+    local function runLiveBNetReaction(scenario)
       local state = newState(function()
-        return 525
+        return scenario.now
       end)
       local key = "bnet::BN::jaina#1234"
       local accountInfo = {
@@ -459,36 +514,52 @@ return function()
           realmName = "Proudmoore",
         },
       }
+      local resolutions = {
+        resolved = {
+          gameAccountInfo = accountInfo.gameAccountInfo,
+          accountInfo = accountInfo,
+          reactionKey = "heart",
+          actorName = "Jaina#1234",
+        },
+        unresolved = {
+          reactionKey = "thumbsup",
+          fallback = "reacted :thumbsup: to: “kk”",
+        },
+      }
+      local fallbackAccounts = { resolved = accountInfo, ["bnet-only"] = { bnetAccountID = 77, battleTag = "Jaina#1234", isOnline = true } }
+      local resolution = resolutions[scenario.metadataResolution]
       state.bnetApi = {
         GetGameAccountInfoByID = function(gameAccountID)
           assert(gameAccountID == 9001, "live BN addon should resolve sender gameAccountID")
-          return accountInfo.gameAccountInfo
-        end,
-        GetAccountInfoByGUID = function(guid)
-          assert(guid == "Player-1-JAINA", "live BN addon should resolve game-account player GUID")
-          return accountInfo
+          return resolution.gameAccountInfo
         end,
         GetAccountInfoByID = function(bnetAccountID)
           assert(bnetAccountID == 77, "normal live BN whisper should resolve with bnetAccountID")
-          return accountInfo
+          return fallbackAccounts[scenario.fallbackAccount]
         end,
       }
+      if resolution.accountInfo then
+        state.bnetApi.GetAccountInfoByGUID = function(guid)
+          assert(guid == "Player-1-JAINA", "live BN addon should resolve game-account player GUID")
+          return resolution.accountInfo
+        end
+      end
+
       local target = {
         kind = "user",
         direction = "out",
-        text = metadataFirst and "BN metadata first" or "BN fallback first",
-        wireId = metadataFirst and "bnlive1" or "bnlive2",
-        sentAt = 515,
+        text = scenario.text,
+        wireId = scenario.wireId,
+        sentAt = scenario.now - 10,
         channel = "BN",
       }
-      local conversation = putOutgoing(
-        state,
-        key,
-        target,
-        { channel = "BN", bnetAccountID = 77, battleTag = "Jaina#1234", displayName = "Jaina#1234" }
-      )
-      local fallback = Protocol.BuildFallback("heart", "set", target.text)
-      local metadata = Protocol.EncodeReaction("set", "heart", target.wireId, target.text, fallback)
+      local conversation =
+        putOutgoing(state, key, target, { channel = "BN", bnetAccountID = 77, battleTag = "Jaina#1234", displayName = "Jaina#1234" })
+      local fallback = resolution.fallback or Protocol.BuildFallback(resolution.reactionKey, "set", target.text)
+      if resolution.fallback then
+        assert(Protocol.BuildFallback(resolution.reactionKey, "set", target.text) == fallback, "BN fallback should remain user-visible text")
+      end
+      local metadata = Protocol.EncodeReaction("set", resolution.reactionKey, target.wireId, target.text, fallback)
 
       local function routeMetadata()
         EventBridge.RouteLiveEvent(state, nil, "BN_CHAT_MSG_ADDON", "WMRX", metadata, "WHISPER", 9001)
@@ -508,13 +579,13 @@ return function()
           nil,
           nil,
           nil,
-          metadataFirst and 61 or 62,
+          scenario.lineID,
           "Player-1-JAINA",
           77
         )
       end
 
-      if metadataFirst then
+      if scenario.arrivalOrder == "metadata-first" then
         routeMetadata()
         routeFallback()
       else
@@ -523,14 +594,126 @@ return function()
       end
 
       assert(
-        target.reaction and target.reaction.key == "heart" and target.reaction.actorName == "Jaina#1234",
-        "live BN reaction should apply to original outgoing message with resolved conversation actor"
+        target.reaction
+          and target.reaction.key == resolution.reactionKey
+          and (not resolution.actorName or target.reaction.actorName == resolution.actorName),
+        scenario.name .. " should apply to the original outgoing message"
       )
-      assert(#conversation.messages == 1, "live BN reaction control should remain hidden")
+      assert(
+        #conversation.messages == 1 and (scenario.fallbackAccount ~= "bnet-only" or conversation.messages[1] == target),
+        scenario.name .. " fallback should remain hidden"
+      )
     end
 
-    runLiveBNetOrder(true)
-    runLiveBNetOrder(false)
+    local scenarios = {
+      {
+        name = "resolved metadata before fallback",
+        now = 525,
+        metadataResolution = "resolved",
+        fallbackAccount = "resolved",
+        arrivalOrder = "metadata-first",
+        text = "BN metadata first",
+        wireId = "bnlive1",
+        lineID = 61,
+      },
+      {
+        name = "resolved fallback before metadata",
+        now = 525,
+        metadataResolution = "resolved",
+        fallbackAccount = "resolved",
+        arrivalOrder = "fallback-first",
+        text = "BN fallback first",
+        wireId = "bnlive2",
+        lineID = 62,
+      },
+      {
+        name = "resolved metadata with bnet-only fallback",
+        now = 530,
+        metadataResolution = "resolved",
+        fallbackAccount = "bnet-only",
+        arrivalOrder = "metadata-first",
+        text = "BN resolved metadata target",
+        wireId = "bnresolved",
+        lineID = 63,
+      },
+      {
+        name = "unresolved metadata before fallback",
+        now = 535,
+        metadataResolution = "unresolved",
+        fallbackAccount = "resolved",
+        arrivalOrder = "metadata-first",
+        text = "kk",
+        wireId = "bnunresolved1",
+        lineID = 63,
+      },
+      {
+        name = "unresolved fallback before metadata",
+        now = 535,
+        metadataResolution = "unresolved",
+        fallbackAccount = "resolved",
+        arrivalOrder = "fallback-first",
+        text = "kk",
+        wireId = "bnunresolved2",
+        lineID = 64,
+      },
+    }
+
+    for _, scenario in ipairs(scenarios) do
+      runLiveBNetReaction(scenario)
+    end
+  end
+
+  -- Unresolved game-account metadata must not correlate with an equal-valued
+  -- BNet account ID from a different sender.
+  do
+    local now = 540
+    local state = newState(function()
+      return now
+    end)
+    local key = "bnet::BN::velen#1234"
+    local accountInfo = {
+      bnetAccountID = 77,
+      battleTag = "Velen#1234",
+      isOnline = true,
+      gameAccountInfo = {
+        playerGuid = "Player-1-VELEN",
+        characterName = "Velen",
+        realmName = "Draenor",
+      },
+    }
+    state.bnetApi = {
+      GetGameAccountInfoByID = function(gameAccountID)
+        assert(gameAccountID == 77, "live BN addon should retain unresolved colliding game-account ID")
+        return nil
+      end,
+      GetAccountInfoByID = function(bnetAccountID)
+        assert(bnetAccountID == 77, "normal live BN whisper should resolve colliding BNet account ID")
+        return accountInfo
+      end,
+    }
+    local target = {
+      kind = "user",
+      direction = "out",
+      text = "numeric collision",
+      wireId = "bncollision",
+      sentAt = 530,
+      channel = "BN",
+    }
+    local conversation = putOutgoing(state, key, target, { channel = "BN", bnetAccountID = 77, battleTag = "Velen#1234", displayName = "Velen#1234" })
+    local fallback = Protocol.BuildFallback("heart", "set", target.text)
+    local metadata = Protocol.EncodeReaction("set", "heart", target.wireId, target.text, fallback)
+
+    EventBridge.RouteLiveEvent(state, nil, "BN_CHAT_MSG_ADDON", "WMRX", metadata, "WHISPER", 77)
+    EventBridge.RouteLiveEvent(state, nil, "CHAT_MSG_BN_WHISPER", fallback, "Velen", nil, nil, nil, nil, nil, nil, nil, nil, 65, "Player-1-VELEN", 77)
+
+    assert(target.reaction == nil, "unresolved game-account metadata must not mutate colliding BNet sender")
+    assert(#conversation.messages == 1, "colliding BNet fallback should remain staged pending its own metadata")
+    now = 555
+    MessageReactions.Expire(state, now)
+    assert(
+      target.reaction == nil and conversation.messages[2] and conversation.messages[2].text == fallback,
+      "colliding BNet fallback should become readable without applying game-account metadata"
+    )
   end
 
   -- Group reaction packets on whisper transports are never correlated or

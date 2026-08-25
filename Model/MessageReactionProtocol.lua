@@ -192,10 +192,10 @@ function Protocol.ParseGroupFallback(text)
     return nil
   end
 
-  local key, sourceExcerpt = string.match(text, "^reacted :([a-z]+): to: “(.*)”$")
+  local key, sourceExcerpt = string.match(text, "^reacted :([a-z]+): to: “(.*)” *$")
   local operation = "set"
   if key == nil then
-    key, sourceExcerpt = string.match(text, "^removed :([a-z]+): from: “(.*)”$")
+    key, sourceExcerpt = string.match(text, "^removed :([a-z]+): from: “(.*)” *$")
     operation = "remove"
   end
   if key == nil or not Protocol.IsReactionKey(key) then
