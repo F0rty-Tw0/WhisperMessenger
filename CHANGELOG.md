@@ -3,6 +3,9 @@
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
 ## [Unreleased]
+- Fixed Battle.net whispers causing Secret Value comparison errors during restricted content.
+- Fixed unrestricted and legacy boss fights incorrectly pausing the messenger; encounter locks now follow Blizzard's restricted-content signal.
+- Fixed Mists Classic Challenge Modes incorrectly activating Retail Mythic+ suspension.
 
 ## [1.3.1] - 2026-08-24
 

@@ -1,9 +1,11 @@
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
+local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 return function()
   local savedGetInstanceInfo = _G.GetInstanceInfo
   local savedCTimer = _G.C_Timer
+  local savedHasMythicPlus = FlavorCompat.hasMythicPlus
 
   _G.C_Timer = {
     After = function(_delay, fn)
@@ -71,6 +73,8 @@ return function()
   -- fires only when the key is actually started, not on mere zone entry.
 
   do
+    FlavorCompat.hasMythicPlus = true
+
     rawset(_G, "GetInstanceInfo", function()
       return "Dungeon", "party", 8
     end)
@@ -80,6 +84,28 @@ return function()
 
     assert(Bootstrap._inMythicContent == true, "should set _inMythicContent=true for mythic keystone")
     assert(Bootstrap._inCompetitiveContent == false, "should NOT set _inCompetitiveContent for mythic keystone (mythic is separate)")
+  end
+  -- test_player_entering_world_ignores_mythic_keystone_without_mythic_plus
+  do
+    FlavorCompat.hasMythicPlus = false
+    rawset(_G, "GetInstanceInfo", function()
+      return "Dungeon", "party", 8
+    end)
+
+    local calls = { suspend = 0 }
+    local Bootstrap = {
+      _inMythicContent = false,
+      runtime = {
+        suspend = function()
+          calls.suspend = calls.suspend + 1
+        end,
+        resume = function() end,
+      },
+    }
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
+
+    assert(Bootstrap._inMythicContent == false, "should not set _inMythicContent for Mythic Keystone without Mythic+")
+    assert(calls.suspend == 0, "should not suspend for Mythic Keystone without Mythic+")
   end
 
   -- test_zone_changed_clears_competitive_when_leaving_pvp
@@ -95,25 +121,67 @@ return function()
     assert(Bootstrap._inCompetitiveContent == false, "should clear _inCompetitiveContent on zone change out of pvp")
   end
 
-  -- test_encounter_start_sets_in_encounter
+  -- test_legacy_boss_fight_start_keeps_messaging_active
 
   do
-    local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
+    local callbackCalled = false
+    local syncCalled = false
+    local runtime = {
+      suspend = function() end,
+      resume = function() end,
+    }
+    local Bootstrap = {
+      _inEncounter = false,
+      runtime = runtime,
+      onCompetitiveStateChanged = function()
+        callbackCalled = true
+      end,
+      syncChatFilters = function()
+        syncCalled = true
+      end,
+    }
+
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
 
-    assert(Bootstrap._inEncounter == true, "should set _inEncounter=true on ENCOUNTER_START")
+    assert(Bootstrap._inEncounter == false, "legacy non-restricted boss fights must keep messaging active")
+    assert(runtime.messagingNotice == nil, "legacy non-restricted boss fights must not create a restriction notice")
+    assert(callbackCalled == false, "encounter start must not emit competitive state changes")
+    assert(syncCalled == false, "encounter start must not sync chat filters")
   end
 
-  -- test_encounter_end_clears_in_encounter
+  -- test_legacy_boss_fight_end_keeps_authoritative_restriction_state
 
   do
-    local Bootstrap = { _inEncounter = true, runtime = { suspend = function() end, resume = function() end } }
+    local callbackCalled = false
+    local syncCalled = false
+    local runtime = {
+      suspend = function() end,
+      resume = function() end,
+      messagingNotice = "authoritative restriction state",
+    }
+    local Bootstrap = {
+      _inEncounter = true,
+      runtime = runtime,
+      onCompetitiveStateChanged = function()
+        callbackCalled = true
+      end,
+      syncChatFilters = function()
+        syncCalled = true
+      end,
+    }
+
     LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
 
-    assert(Bootstrap._inEncounter == false, "should clear _inEncounter on ENCOUNTER_END")
+    assert(Bootstrap._inEncounter == true, "encounter end must not clear authoritative restriction state")
+    assert(runtime.messagingNotice == "authoritative restriction state", "encounter end must not clear an authoritative restriction notice")
+    assert(callbackCalled == false, "encounter end must not emit competitive state changes")
+    assert(syncCalled == false, "encounter end must not sync chat filters")
   end
 
   -- test_encounter_end_scrubs_default_chat_whisper_reply_state
+
+  -- Raw encounter end always cleans stale Blizzard reply state; restriction
+  -- state is owned separately by ADDON_RESTRICTION_STATE_CHANGED.
 
   do
     local attributes = {
@@ -133,7 +201,6 @@ return function()
       end,
     }
     local Bootstrap = {
-      _inEncounter = true,
       runtime = {
         localProfileId = "me",
         store = { conversations = {} },
@@ -172,67 +239,6 @@ return function()
     )
   end
 
-  -- test_encounter_start_calls_competitive_state_callback
-
-  do
-    local callbackCalled = false
-    local callbackValue = nil
-    local Bootstrap = {
-      runtime = { suspend = function() end, resume = function() end },
-      onCompetitiveStateChanged = function(active)
-        callbackCalled = true
-        callbackValue = active
-      end,
-    }
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
-
-    assert(callbackCalled == true, "should call onCompetitiveStateChanged on ENCOUNTER_START")
-    assert(callbackValue == true, "should pass true to onCompetitiveStateChanged on ENCOUNTER_START")
-  end
-
-  -- test_encounter_end_calls_competitive_state_callback_false
-
-  do
-    local callbackValue = nil
-    local Bootstrap = {
-      _inEncounter = true,
-      runtime = { suspend = function() end, resume = function() end },
-      onCompetitiveStateChanged = function(active)
-        callbackValue = active
-      end,
-    }
-
-    rawset(_G, "GetInstanceInfo", function()
-      return "Orgrimmar", "none", 0
-    end)
-
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-
-    assert(callbackValue == false, "should pass false to onCompetitiveStateChanged when encounter ends outside competitive content")
-  end
-
-  -- test_encounter_end_still_competitive_in_bg
-
-  do
-    local callbackValue = nil
-    local Bootstrap = {
-      _inEncounter = true,
-      _inCompetitiveContent = true,
-      runtime = { suspend = function() end, resume = function() end },
-      onCompetitiveStateChanged = function(active)
-        callbackValue = active
-      end,
-    }
-
-    rawset(_G, "GetInstanceInfo", function()
-      return "Warsong Gulch", "pvp", 1
-    end)
-
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-
-    assert(callbackValue == true, "should pass true to onCompetitiveStateChanged when encounter ends but still in competitive zone")
-  end
-
   -- test_player_entering_world_calls_competitive_state_callback
 
   do
@@ -251,47 +257,6 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(callbackValue == true, "should call onCompetitiveStateChanged=true when entering BG")
-  end
-
-  -- test_encounter_start_sets_messaging_notice
-
-  do
-    local runtime = { suspend = function() end, resume = function() end }
-    local Bootstrap = { runtime = runtime }
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
-
-    assert(runtime.messagingNotice ~= nil, "should set runtime.messagingNotice on ENCOUNTER_START")
-    assert(type(runtime.messagingNotice) == "string" and runtime.messagingNotice ~= "", "messagingNotice should be a non-empty string")
-  end
-
-  -- test_encounter_end_clears_messaging_notice_outside_competitive
-
-  do
-    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
-    local Bootstrap = { _inEncounter = true, runtime = runtime }
-
-    rawset(_G, "GetInstanceInfo", function()
-      return "Orgrimmar", "none", 0
-    end)
-
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-
-    assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when encounter ends outside competitive zone")
-  end
-
-  -- test_encounter_end_keeps_messaging_notice_in_bg
-
-  do
-    local runtime = { suspend = function() end, resume = function() end, messagingNotice = "paused" }
-    local Bootstrap = { _inEncounter = true, _inCompetitiveContent = true, runtime = runtime }
-
-    rawset(_G, "GetInstanceInfo", function()
-      return "Warsong Gulch", "pvp", 1
-    end)
-
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-
-    assert(runtime.messagingNotice ~= nil, "should keep runtime.messagingNotice when encounter ends but still in competitive zone")
   end
 
   -- test_player_entering_world_sets_messaging_notice_in_bg
@@ -322,42 +287,6 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", makeDeps())
 
     assert(runtime.messagingNotice == nil, "should clear runtime.messagingNotice when entering open world")
-  end
-
-  -- test_encounter_start_calls_syncChatFilters
-
-  do
-    local syncCalled = false
-    local Bootstrap = {
-      runtime = { suspend = function() end, resume = function() end },
-      syncChatFilters = function()
-        syncCalled = true
-      end,
-    }
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_START", makeDeps())
-
-    assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_START")
-  end
-
-  -- test_encounter_end_calls_syncChatFilters
-
-  do
-    local syncCalled = false
-    local Bootstrap = {
-      _inEncounter = true,
-      runtime = { suspend = function() end, resume = function() end },
-      syncChatFilters = function()
-        syncCalled = true
-      end,
-    }
-
-    rawset(_G, "GetInstanceInfo", function()
-      return "Orgrimmar", "none", 0
-    end)
-
-    LifecycleHandlers.Handle(Bootstrap, "ENCOUNTER_END", makeDeps())
-
-    assert(syncCalled == true, "should call syncChatFilters on ENCOUNTER_END")
   end
 
   -- test_player_regen_enabled_scrubs_stale_whisper_reply_state
@@ -506,5 +435,6 @@ return function()
     assert(timerLoopSchedules == 1, "PLAYER_ENTERING_WORLD must not start duplicate presence timer loops")
   end
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
+  FlavorCompat.hasMythicPlus = savedHasMythicPlus
   _G.C_Timer = savedCTimer
 end

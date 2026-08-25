@@ -1,5 +1,6 @@
 local Competitive = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
+local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
@@ -19,6 +20,7 @@ local function makeHarness()
 end
 
 return function()
+  local savedHasMythicPlus = FlavorCompat.hasMythicPlus
   local function makeCombatHarness(hideOnCombat, visible)
     local state = { visible = visible }
     local calls = { setWindowVisible = 0 }
@@ -85,6 +87,8 @@ return function()
     assert(calls.setWindowVisible == 2, "combat end should not change window visibility")
     assert(state.visible == true, "combat end should not automatically reopen or hide window")
   end
+  FlavorCompat.hasMythicPlus = true
+
   -- test_challenge_mode_start_suspends_once
   do
     local Bootstrap, deps, calls = makeHarness()
@@ -111,4 +115,20 @@ return function()
     assert(calls.resume == 1, "COMPLETED after a suspend resumes once")
     assert(Bootstrap._inMythicContent == false, "mythic flag cleared")
   end
+  -- test_challenge_mode_events_are_noops_without_mythic_plus
+  do
+    FlavorCompat.hasMythicPlus = false
+    local Bootstrap, deps, calls = makeHarness()
+
+    for _, event in ipairs({ "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET" }) do
+      local handled = Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
+      assert(handled == true, event .. " should remain claimed without Mythic+")
+      assert(Bootstrap._inMythicContent == false, event .. " should not change mythic state without Mythic+")
+    end
+
+    assert(calls.suspend == 0, "challenge mode events must not suspend without Mythic+")
+    assert(calls.resume == 0, "challenge mode events must not resume without Mythic+")
+  end
+
+  FlavorCompat.hasMythicPlus = savedHasMythicPlus
 end

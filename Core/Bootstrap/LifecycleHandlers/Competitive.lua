@@ -7,6 +7,7 @@ local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local FlavorCompat = ns.FlavorCompat or (type(require) == "function" and require("WhisperMessenger.Core.FlavorCompat")) or nil
 
 local Competitive = {}
 
@@ -19,6 +20,14 @@ local function canClearStaleWhisperReplyState(runtime, deps)
 end
 
 function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
+  if
+    (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET")
+    and (not FlavorCompat or not FlavorCompat.hasMythicPlus)
+  then
+    deps.trace("mythic lockdown: ignored challenge event")
+    return true
+  end
+
   if event == "CHALLENGE_MODE_START" then
     -- Guard against double-suspend (ADDON_RESTRICTION_STATE_CHANGED may have
     -- suspended already): a second suspend() would clobber the saved
@@ -51,29 +60,18 @@ function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
   return false
 end
 
+-- Raw encounter events also fire for unrestricted legacy bosses; ADDON_RESTRICTION_STATE_CHANGED owns Midnight restriction state.
 function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   if event == "ENCOUNTER_START" then
-    Bootstrap._inEncounter = true
-    if Bootstrap.syncChatFilters then
-      Bootstrap.syncChatFilters()
-    end
     deps.trace("encounter started")
-    Common.notifyCompetitiveState(Bootstrap)
-    Common.refreshRuntimeWindow(Bootstrap)
     return true
   end
 
   if event == "ENCOUNTER_END" then
-    Bootstrap._inEncounter = false
-    if Bootstrap.syncChatFilters then
-      Bootstrap.syncChatFilters()
-    end
     if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
     deps.trace("encounter ended")
-    Common.notifyCompetitiveState(Bootstrap)
-    Common.refreshRuntimeWindow(Bootstrap)
     return true
   end
 

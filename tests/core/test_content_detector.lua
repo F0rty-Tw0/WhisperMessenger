@@ -1,6 +1,8 @@
 local ContentDetector = require("WhisperMessenger.Core.ContentDetector")
+local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 
 return function()
+  local savedHasMythicPlus = FlavorCompat.hasMythicPlus
   -- Returns false when getInstanceInfo is nil
   assert(ContentDetector.IsMythicRestricted(nil) == false, "should return false when getInstanceInfo is nil")
 
@@ -19,10 +21,17 @@ return function()
     return "Raid", "raid", 15
   end) == false, "should return false for heroic raid")
 
-  -- Returns true for Mythic Keystone (difficultyID = 8)
+  -- Returns false for Mythic Keystone when Mythic+ is unavailable
+  FlavorCompat.hasMythicPlus = false
   assert(ContentDetector.IsMythicRestricted(function()
     return "Dungeon", "party", 8
-  end) == true, "should return true for Mythic Keystone")
+  end) == false, "should return false for Mythic Keystone without Mythic+")
+
+  -- Returns true for Mythic Keystone when Mythic+ is available
+  FlavorCompat.hasMythicPlus = true
+  assert(ContentDetector.IsMythicRestricted(function()
+    return "Dungeon", "party", 8
+  end) == true, "should return true for Mythic Keystone with Mythic+")
 
   -- Returns false for Mythic Raid (difficultyID = 16) — now encounter-based
   assert(ContentDetector.IsMythicRestricted(function()
@@ -72,4 +81,5 @@ return function()
   assert(ContentDetector.IsCompetitiveContent(function()
     return "Nagrand Arena", "arena", 1
   end) == true, "competitive: should return true for arena")
+  FlavorCompat.hasMythicPlus = savedHasMythicPlus
 end

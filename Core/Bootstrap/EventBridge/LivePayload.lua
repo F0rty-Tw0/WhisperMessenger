@@ -28,20 +28,29 @@ function LivePayload.Build(runtime, eventName, ...)
   end
 
   if eventName == "BN_CHAT_MSG_ADDON" then
-    -- Args: prefix, message, channel, presenceID. presenceID === bnetAccountID
-    -- for game-data delivery.
-    local prefix, message, channel, presenceID = ...
+    local prefix, message, channel, rawGameAccountID = ...
+    local gameAccountID = BNetResolver.SanitizeAccountID(rawGameAccountID)
+    local accountInfo
+    if gameAccountID ~= nil then
+      accountInfo = BNetResolver.ResolveAccountInfoByGameAccountID(runtime and runtime.bnetApi or _G.C_BattleNet or {}, gameAccountID)
+    end
     return {
       prefix = prefix,
       text = message,
       channel = channel,
-      bnetAccountID = presenceID,
+      gameAccountID = gameAccountID,
+      bnetAccountID = accountInfo and accountInfo.bnetAccountID or nil,
+      accountInfo = accountInfo,
     }
   end
 
   if eventName == "CHAT_MSG_BN_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE" then
-    local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, bnetAccountID = ...
-    local accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid)
+    local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, rawBnetAccountID = ...
+    local bnetAccountID = BNetResolver.SanitizeAccountID(rawBnetAccountID)
+    local accountInfo
+    if bnetAccountID ~= nil then
+      accountInfo = BNetResolver.ResolveAccountInfo(runtime and runtime.bnetApi or _G.C_BattleNet or {}, bnetAccountID, guid)
+    end
     -- Resolve classTag/raceTag via GetPlayerInfoByGUID (BNet API only provides localized className)
     local playerGuid = accountInfo and accountInfo.gameAccountInfo and accountInfo.gameAccountInfo.playerGuid or guid
     local playerInfo = BNetResolver.ResolvePlayerInfo(runtime and runtime.playerInfoByGUID or nil, playerGuid)

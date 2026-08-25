@@ -106,4 +106,37 @@ return function()
 
     assert(state.pendingOutgoing[firstKey] == nil, "stale pending queue should be removed during later records")
   end
+  -- A secret BNet ID comparison must be a non-match, not abort event routing.
+  do
+    local secretIdMeta = {
+      __eq = function()
+        error("attempt to compare a secret number value", 0)
+      end,
+    }
+    local pendingId = setmetatable({}, secretIdMeta)
+    local payloadId = setmetatable({}, secretIdMeta)
+    local key = "bnet::BN::secret"
+    local state = {
+      pendingOutgoing = {
+        [key] = {
+          {
+            channel = "BN",
+            bnetAccountID = pendingId,
+            createdAt = 100,
+            text = "hello",
+          },
+        },
+      },
+    }
+
+    local ok, matched = pcall(PendingOutgoing.Consume, state, key, {
+      channel = "BN",
+      bnetAccountID = payloadId,
+      text = "hello",
+    }, 105)
+
+    assert(ok, "secret BNet ID equality must not abort outgoing event routing")
+    assert(matched == false, "failed BNet ID comparison must be a non-match")
+    assert(#state.pendingOutgoing[key] == 1, "non-matching pending entry must remain queued")
+  end
 end

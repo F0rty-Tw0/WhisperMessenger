@@ -69,6 +69,80 @@ return function()
     assert(result.battleTag == "Found#1234", "fallback should return matching friend data")
   end
 
+  -- Secret values are unavailable before any BNet API lookup.
+  do
+    local secretID = 987654
+    local apiCalls = 0
+    local originalIsSecretValue = _G.issecretvalue
+    local secretIdApi = {
+      GetAccountInfoByID = function()
+        apiCalls = apiCalls + 1
+        return { battleTag = "Secret#1234" }
+      end,
+    }
+    _G.issecretvalue = function(value)
+      return value == secretID
+    end
+
+    local sanitizedSecretID = BNetResolver.SanitizeAccountID(secretID)
+    local secretResult = BNetResolver.ResolveAccountInfo(secretIdApi, secretID)
+    local sanitizedNumericID = BNetResolver.SanitizeAccountID(42)
+
+    _G.issecretvalue = originalIsSecretValue
+
+    assert(sanitizedSecretID == nil, "secret bnetAccountID should sanitize to nil")
+    assert(secretResult == nil, "secret bnetAccountID should not resolve")
+    assert(apiCalls == 0, "secret bnetAccountID should not reach BNet APIs")
+    assert(sanitizedNumericID == 42, "ordinary numeric bnetAccountID should remain unchanged")
+  end
+
+  -- Incoming BN addon gameAccountID resolves through game info, then account GUID.
+  do
+    local calls = {}
+    local accountInfo = { bnetAccountID = 77, battleTag = "Jaina#1234" }
+    local gameAccountInfo = { gameAccountID = 9001, playerGuid = "Player-1-JAINA" }
+    local api = {
+      GetGameAccountInfoByID = function(gameAccountID)
+        calls[#calls + 1] = { method = "game", value = gameAccountID }
+        return gameAccountInfo
+      end,
+      GetAccountInfoByGUID = function(guid)
+        calls[#calls + 1] = { method = "account", value = guid }
+        return accountInfo
+      end,
+    }
+
+    local result = BNetResolver.ResolveAccountInfoByGameAccountID(api, 9001)
+    assert(result == accountInfo, "gameAccountID should resolve owning BNet account info")
+    assert(
+      #calls == 2
+        and calls[1].method == "game"
+        and calls[1].value == 9001
+        and calls[2].method == "account"
+        and calls[2].value == "Player-1-JAINA",
+      "game-account resolution should use GetGameAccountInfoByID then GetAccountInfoByGUID"
+    )
+  end
+
+  -- Secret incoming gameAccountID is rejected before game-account lookup.
+  do
+    local secretID = 9002
+    local apiCalls = 0
+    local originalIsSecretValue = _G.issecretvalue
+    _G.issecretvalue = function(value)
+      return value == secretID
+    end
+    local result = BNetResolver.ResolveAccountInfoByGameAccountID({
+      GetGameAccountInfoByID = function()
+        apiCalls = apiCalls + 1
+      end,
+    }, secretID)
+    _G.issecretvalue = originalIsSecretValue
+
+    assert(result == nil, "secret gameAccountID should not resolve")
+    assert(apiCalls == 0, "secret gameAccountID should be rejected before BNet APIs")
+  end
+
   -- ResolveAccountInfo does not fall back when primary returns isOnline=true
   do
     local primaryOkApi = {

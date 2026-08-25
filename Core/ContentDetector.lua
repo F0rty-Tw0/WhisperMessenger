@@ -2,12 +2,16 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
+local FlavorCompat = ns.FlavorCompat or (type(require) == "function" and require("WhisperMessenger.Core.FlavorCompat")) or nil
 
 local MYTHIC_KEYSTONE_DIFFICULTY = 8
 
 local ContentDetector = {}
 
 function ContentDetector.IsMythicRestricted(getInstanceInfo)
+  if not FlavorCompat or not FlavorCompat.hasMythicPlus then
+    return false
+  end
   if type(getInstanceInfo) ~= "function" then
     return false
   end

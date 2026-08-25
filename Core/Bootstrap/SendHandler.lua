@@ -85,18 +85,26 @@ local function resolveBattleNetRecipient(runtime, payload)
     accountInfo = BNetResolver.ResolveAccountInfo(runtime.bnetApi, oldBnetAccountID, guid, expectedBattleTag)
   end
 
-  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(accountInfo.bnetAccountID) ~= "number" then
+  local resolvedBnetAccountID = accountInfo and BNetResolver.SanitizeAccountID(accountInfo.bnetAccountID)
+  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(resolvedBnetAccountID) ~= "number" then
     if expectedBattleTag and type(BNetResolver.ResolveFriendByBattleTag) == "function" then
       accountInfo = BNetResolver.ResolveFriendByBattleTag(runtime.bnetApi, expectedBattleTag, guid)
+      resolvedBnetAccountID = accountInfo and BNetResolver.SanitizeAccountID(accountInfo.bnetAccountID)
     end
   end
 
-  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(accountInfo.bnetAccountID) ~= "number" then
+  if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(resolvedBnetAccountID) ~= "number" then
     return nil, "unresolved"
   end
 
-  local resolvedBnetAccountID = accountInfo.bnetAccountID
+  local gameAccountInfo = accountInfo.gameAccountInfo
+  local resolvedGameAccountID = BNetResolver.SanitizeAccountID(gameAccountInfo and gameAccountInfo.gameAccountID)
+  if type(resolvedGameAccountID) ~= "number" then
+    resolvedGameAccountID = nil
+  end
+
   payload.bnetAccountID = resolvedBnetAccountID
+  payload.gameAccountID = resolvedGameAccountID
   if conversation then
     conversation.bnetAccountID = resolvedBnetAccountID
   end
@@ -185,14 +193,14 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
 
     -- Classic Battle.net character whispers also strip the `(id)` from
     -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
-    -- channel as the WoW whisper path, but via BNSendGameData so it routes
-    -- over Battle.net to the friend's bnetAccountID. Receivers with our
-    -- addon splice the link back in on BN_CHAT_MSG_ADDON.
-    if callOk and FlavorCompat.isClassic and payload.bnetAccountID ~= nil then
+    -- channel as the WoW whisper path, but via SendGameData to the resolved
+    -- game account. Receivers with our addon splice the link back in on
+    -- BN_CHAT_MSG_ADDON.
+    if callOk and FlavorCompat.isClassic and payload.gameAccountID ~= nil then
       local encoded = QuestLinkExchange.Encode(payload.text)
       if encoded ~= nil then
         AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
-        AddonComm.SendBNet(runtime.bnetApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.bnetAccountID)
+        AddonComm.SendBNet(runtime.bnetApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.gameAccountID)
       end
     end
   else

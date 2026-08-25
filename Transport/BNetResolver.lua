@@ -37,6 +37,52 @@ local function resolveGetNumFriends(bnetApi)
   end
 end
 
+function BNetResolver.SanitizeAccountID(value)
+  local issecretvalue = _G.issecretvalue
+  if type(issecretvalue) == "function" then
+    local ok, isSecret = pcall(issecretvalue, value)
+    if not ok or isSecret then
+      return nil
+    end
+  end
+  if value == nil then
+    return nil
+  end
+  return value
+end
+
+function BNetResolver.ResolveAccountInfoByGameAccountID(bnetApi, gameAccountID)
+  if type(bnetApi) ~= "table" then
+    return nil
+  end
+  gameAccountID = BNetResolver.SanitizeAccountID(gameAccountID)
+  if gameAccountID == nil or type(bnetApi.GetGameAccountInfoByID) ~= "function" then
+    return nil
+  end
+
+  local gameCallSucceeded, gameAccountInfo = pcall(bnetApi.GetGameAccountInfoByID, gameAccountID)
+  if not gameCallSucceeded or type(gameAccountInfo) ~= "table" then
+    return nil
+  end
+
+  local playerGuid = BNetResolver.SanitizeAccountID(gameAccountInfo.playerGuid)
+  if playerGuid == nil or type(bnetApi.GetAccountInfoByGUID) ~= "function" then
+    return nil
+  end
+
+  local accountCallSucceeded, accountInfo = pcall(bnetApi.GetAccountInfoByGUID, playerGuid)
+  if not accountCallSucceeded or type(accountInfo) ~= "table" then
+    return nil
+  end
+
+  local bnetAccountID = BNetResolver.SanitizeAccountID(accountInfo.bnetAccountID)
+  if bnetAccountID == nil then
+    return nil
+  end
+  accountInfo.bnetAccountID = bnetAccountID
+  return accountInfo
+end
+
 -- Stage 3: Scan friend list to find entry matching bnetAccountID.
 -- Returns accountInfo, friendIndex.
 local function scanFriendListById(bnetApi, bnetAccountID)
@@ -50,11 +96,14 @@ local function scanFriendListById(bnetApi, bnetAccountID)
   end
   for i = 1, numFriends do
     local ok2, info = pcall(bnetApi.GetFriendAccountInfo, i)
-    if ok2 and info and info.bnetAccountID == bnetAccountID then
-      if info.isOnline ~= nil then
+    if ok2 and info then
+      local candidate = BNetResolver.SanitizeAccountID(info.bnetAccountID)
+      if candidate ~= nil and candidate == bnetAccountID then
+        if info.isOnline ~= nil then
+          return info, i
+        end
         return info, i
       end
-      return info, i
     end
   end
   return nil, nil
@@ -196,7 +245,11 @@ function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
 end
 
 function BNetResolver.ResolveAccountInfo(bnetApi, bnetAccountID, guid, expectedBattleTag)
-  if bnetApi == nil or bnetAccountID == nil then
+  if bnetApi == nil then
+    return nil
+  end
+  bnetAccountID = BNetResolver.SanitizeAccountID(bnetAccountID)
+  if bnetAccountID == nil then
     return nil
   end
 

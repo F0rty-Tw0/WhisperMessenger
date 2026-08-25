@@ -36,6 +36,19 @@ local function namesLikelySame(leftName, leftGuid, rightName, rightGuid)
   return baseName(leftCanonical) == baseName(rightCanonical)
 end
 
+local function compareBNetAccountIDs(left, right)
+  local bothPresent = left ~= nil and right ~= nil
+  return bothPresent, bothPresent and left == right
+end
+
+local function matchBNetAccountIDs(left, right)
+  local ok, bothPresent, matches = pcall(compareBNetAccountIDs, left, right)
+  if not ok then
+    return true, false
+  end
+  return bothPresent, matches
+end
+
 local function pendingTargetMatches(pending, payload, sentAt)
   if type(pending) ~= "table" then
     return false
@@ -53,8 +66,9 @@ local function pendingTargetMatches(pending, payload, sentAt)
   end
 
   if payloadChannel == "BN" then
-    if pending.bnetAccountID ~= nil and payload.bnetAccountID ~= nil then
-      return pending.bnetAccountID == payload.bnetAccountID
+    local bothPresent, matches = matchBNetAccountIDs(pending.bnetAccountID, payload.bnetAccountID)
+    if bothPresent then
+      return matches
     end
     return namesLikelySame(pending.displayName or pending.target, pending.guid, payload.playerName, payload.guid)
   end
