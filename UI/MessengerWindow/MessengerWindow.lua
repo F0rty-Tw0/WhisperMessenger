@@ -169,7 +169,10 @@ function MessengerWindow.Create(factory, options)
   contactsRuntime.bindInputScripts()
 
   -- Conversation pane
-  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation)
+  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
+    onReact = options.onReact,
+    canReact = options.canReact,
+  })
 
   -- Composer (created before wiring alpha so we have composer.input)
   local composerSelectedContact = {}

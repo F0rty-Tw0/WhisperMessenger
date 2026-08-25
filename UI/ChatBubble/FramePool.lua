@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
+
 local FramePool = {}
 
 function FramePool.initPool(contentFrame)
@@ -24,7 +26,14 @@ end
 
 function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent)
   local free = contentFrame._freeFrames
-  local frame = table.remove(free)
+  local frame
+  for index = #free, 1, -1 do
+    local candidate = free[index]
+    if candidate._wmPoolFrameType == frameType or (candidate._wmPoolFrameType == nil and frameType == "Frame") then
+      frame = table.remove(free, index)
+      break
+    end
+  end
   if frame then
     if frame.Show then
       frame:Show()
@@ -34,6 +43,7 @@ function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent)
     end
   else
     frame = realFactory.CreateFrame(frameType, nil, parent)
+    frame._wmPoolFrameType = frameType
   end
   table.insert(contentFrame._activeFrames, frame)
   return frame
@@ -58,11 +68,8 @@ function FramePool.hideAllRegions(frame)
   end
 end
 
--- Interactive scripts wired by bubble frames (hover copy + right-click menu)
--- and by sender-label / icon frames (player menu). Cleared on release so a
--- recycled frame can't replay its old role's handlers in a new role.
--- OnClick is omitted because pooled frames are all "Frame" type — not Button —
--- and SetScript("OnClick", ...) on a non-Button raises a WoW warning.
+-- Interactive scripts wired by pooled chat widgets. Cleared on release so a
+-- recycled frame cannot replay its old role's handlers in a new role.
 local POOLED_INTERACTIVE_SCRIPTS = {
   "OnEnter",
   "OnLeave",
@@ -77,6 +84,44 @@ local function clearInteractiveScripts(frame)
   for _, name in ipairs(POOLED_INTERACTIVE_SCRIPTS) do
     frame:SetScript(name, nil)
   end
+  if frame._wmPoolFrameType == "Button" then
+    frame:SetScript("OnDoubleClick", nil)
+    frame:SetScript("OnClick", nil)
+  end
+end
+local function clearReactionState(frame)
+  local reactionFrame = frame._reactionFrame
+  if reactionFrame then
+    if reactionFrame._reactionTooltipOwned and _G.GameTooltip and type(_G.GameTooltip.Hide) == "function" then
+      _G.GameTooltip:Hide()
+    end
+    reactionFrame._reactionTooltipOwned = nil
+    clearInteractiveScripts(reactionFrame)
+    if reactionFrame.Hide then
+      reactionFrame:Hide()
+    end
+    if reactionFrame.ClearAllPoints then
+      reactionFrame:ClearAllPoints()
+    end
+  end
+  local texture = frame._reactionTexture
+  if texture then
+    if texture.SetTexture then
+      texture:SetTexture(nil)
+    end
+    if texture.SetTexCoord then
+      texture:SetTexCoord(0, 1, 0, 1)
+    end
+    if texture.Hide then
+      texture:Hide()
+    end
+  end
+  frame._reactionKey = nil
+
+  local pickerFrame = type(ReactionPicker.GetFrame) == "function" and ReactionPicker.GetFrame() or nil
+  if pickerFrame and pickerFrame._anchor == frame and type(ReactionPicker.Close) == "function" then
+    ReactionPicker.Close()
+  end
 end
 
 function FramePool.releaseAll(contentFrame)
@@ -86,6 +131,7 @@ function FramePool.releaseAll(contentFrame)
     local f = active[i]
     FramePool.hideAllRegions(f)
     clearInteractiveScripts(f)
+    clearReactionState(f)
     if f.Hide then
       f:Hide()
     end

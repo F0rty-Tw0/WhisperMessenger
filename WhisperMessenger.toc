@@ -99,8 +99,10 @@ UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/Shared/PickerStyles.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
+UI/ChatBubble/ReactionAssets.lua
 UI/Hyperlinks.lua
 UI/ScrollView/Metrics.lua
 UI/ScrollView/Navigation.lua
@@ -109,6 +111,7 @@ UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
 UI/ChatBubble/BubbleIcon.lua
+UI/ChatBubble/ReactionPicker.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/StylingCommon.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/ButtonStyling.lua

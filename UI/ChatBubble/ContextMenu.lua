@@ -7,9 +7,17 @@ local ContextMenu = {}
 -- stylua: ignore start
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 -- stylua: ignore end
 
 local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
+local function reactionsAllowed(message, canReact)
+  if type(canReact) == "function" then
+    return canReact(message)
+  end
+  return MessageReactions.IsEligible(message)
+end
 
 local function colorToHex(color)
   local function component(value)
@@ -58,10 +66,28 @@ function ContextMenu.CopyText(text)
   return ManualCopy.CopyText(text)
 end
 
-function ContextMenu.Open(text, anchorFrame)
+function ContextMenu.Open(text, anchorFrame, options)
   local normalized = type(ManualCopy) == "table" and type(ManualCopy.NormalizeText) == "function" and ManualCopy.NormalizeText(text) or nil
   if normalized == nil then
     return false
+  end
+
+  options = options or {}
+  local reactionsAllowedForMessage = reactionsAllowed(options.message, options.canReact)
+  if not reactionsAllowedForMessage then
+    ReactionPicker.Close()
+  elseif type(options.onReact) == "function" then
+    local factory = options.factory
+    if factory == nil and type(_G.CreateFrame) == "function" then
+      factory = { CreateFrame = _G.CreateFrame }
+    end
+    if
+      ReactionPicker.Open(factory, anchorFrame, options.message, options.onReact, function()
+        return ContextMenu.CopyText(normalized)
+      end, options.canReact)
+    then
+      return true
+    end
   end
 
   local menuFrame = getMenuFrame()

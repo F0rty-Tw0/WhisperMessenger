@@ -1,0 +1,29 @@
+WhisperMessenger reaction atlas — Twemoji attribution
+
+Artwork source: Twemoji
+Upstream repository: https://github.com/jdecked/twemoji
+Pinned revision: b6b55fef1e8636b540a6d016a4729ca8cdf2e60b (Twemoji 17.0.3)
+Pinned source directory:
+https://github.com/jdecked/twemoji/tree/b6b55fef1e8636b540a6d016a4729ca8cdf2e60b/assets/72x72
+
+Source graphics and reaction mapping:
+- heart: U+2764 HEAVY BLACK HEART — assets/72x72/2764.png
+- thumbsup: U+1F44D THUMBS UP SIGN — assets/72x72/1f44d.png
+- laugh: U+1F602 FACE WITH TEARS OF JOY — assets/72x72/1f602.png
+- wow: U+1F62E FACE WITH OPEN MOUTH — assets/72x72/1f62e.png
+- sad: U+1F622 CRYING FACE — assets/72x72/1f622.png
+- angry: U+1F620 ANGRY FACE — assets/72x72/1f620.png
+- question: U+2753 BLACK QUESTION MARK ORNAMENT — assets/72x72/2753.png
+- gg: U+1F91D HANDSHAKE — assets/72x72/1f91d.png
+
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+Upstream license text:
+https://github.com/jdecked/twemoji/blob/b6b55fef1e8636b540a6d016a4729ca8cdf2e60b/LICENSE-GRAPHICS
+Canonical license text: https://creativecommons.org/licenses/by/4.0/legalcode
+
+Modification notice:
+The eight pinned 72x72 PNG graphics were arranged, in the order listed above,
+on a transparent 512x256 power-of-two 4x2 atlas. Transparent padding was added
+around each source graphic and the combined PNG was re-encoded. The original
+72x72 RGBA pixels were copied unchanged; no icon artwork, color, or semantics
+were altered.

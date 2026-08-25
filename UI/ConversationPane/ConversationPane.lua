@@ -137,7 +137,8 @@ function ConversationPane.SetStatus(view, status)
   return view.statusBanner.text
 end
 
-function ConversationPane.Create(factory, parent, selectedContact, conversation)
+function ConversationPane.Create(factory, parent, selectedContact, conversation, options)
+  options = options or {}
   local pane = factory.CreateFrame("Frame", nil, parent)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   local parentHeight = sizeValue(parent, "GetHeight", "height", 420)
@@ -232,6 +233,18 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation)
       end
     end,
   }
+
+  if type(options.onReact) == "function" then
+    transcript.onReact = function(message, reactionKey)
+      return options.onReact(view._selectedContact, message, reactionKey)
+    end
+  end
+
+  if type(options.canReact) == "function" then
+    transcript.canReact = function(message)
+      return options.canReact(view._selectedContact, message)
+    end
+  end
 
   ConversationPane.Refresh(view, selectedContact, conversation)
   return view

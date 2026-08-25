@@ -93,6 +93,8 @@ function Layout.LayoutMessages(factory, contentFrame, messages, paneWidth, optio
       -- relayouts and have a stable type — e.g. the hover-copy Button.
       persistentFactory = factory,
       onRevealCensored = options and options.onRevealCensored or nil,
+      onReact = options and options.onReact or nil,
+      canReact = options and options.canReact or nil,
     })
 
     PlaceBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)

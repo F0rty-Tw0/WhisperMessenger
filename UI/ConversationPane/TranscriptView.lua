@@ -135,6 +135,8 @@ function TranscriptView.RenderTranscript(transcript, messages)
       onRevealCensored = function()
         TranscriptView.RenderTranscript(transcript, transcript._allMessages)
       end,
+      onReact = transcript.onReact,
+      canReact = transcript.canReact,
     })
   end
 

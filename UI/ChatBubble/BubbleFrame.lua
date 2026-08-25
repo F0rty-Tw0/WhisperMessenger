@@ -10,12 +10,110 @@ local BubbleIcon = ns.ChatBubbleBubbleIcon or require("WhisperMessenger.UI.ChatB
 local ContextMenu = ns.ChatBubbleContextMenu or require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 local HoverCopy = ns.ChatBubbleHoverCopy or require("WhisperMessenger.UI.ChatBubble.HoverCopy")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 
 local BubbleFrame = {}
+local function reactionsAllowed(message, canReact)
+  if type(canReact) == "function" then
+    return canReact(message)
+  end
+  return MessageReactions.IsEligible(message)
+end
+
+local function hideReactionTooltip(frame)
+  if frame and frame._reactionTooltipOwned and _G.GameTooltip and type(_G.GameTooltip.Hide) == "function" then
+    _G.GameTooltip:Hide()
+  end
+  if frame then
+    frame._reactionTooltipOwned = nil
+  end
+end
+
+local function resetReactionBadge(frame)
+  local reactionFrame = frame._reactionFrame
+  if reactionFrame then
+    hideReactionTooltip(reactionFrame)
+    if reactionFrame.SetScript then
+      reactionFrame:SetScript("OnEnter", nil)
+      reactionFrame:SetScript("OnLeave", nil)
+    end
+    if reactionFrame.ClearAllPoints then
+      reactionFrame:ClearAllPoints()
+    end
+    if reactionFrame.Hide then
+      reactionFrame:Hide()
+    end
+  end
+  local texture = frame._reactionTexture
+  if texture then
+    if texture.SetTexture then
+      texture:SetTexture(nil)
+    end
+    if texture.SetTexCoord then
+      texture:SetTexCoord(0, 1, 0, 1)
+    end
+    if texture.Hide then
+      texture:Hide()
+    end
+  end
+  frame._reactionKey = nil
+end
+
+local function showReactionBadge(factory, frame, reaction)
+  local reactionFrame = frame._reactionFrame
+  if reactionFrame == nil then
+    reactionFrame = factory.CreateFrame("Frame", nil, frame)
+    if reactionFrame.EnableMouse then
+      reactionFrame:EnableMouse(true)
+    end
+    frame._reactionFrame = reactionFrame
+    local texture = reactionFrame:CreateTexture(nil, "ARTWORK")
+    frame._reactionTexture = texture
+  end
+
+  local iconSize = ReactionAssets.GetIconSize()
+  reactionFrame:SetSize(iconSize, iconSize)
+  local texture = frame._reactionTexture
+  texture:ClearAllPoints()
+  texture:SetPoint("CENTER", reactionFrame, "CENTER", 0, 0)
+  texture:SetSize(iconSize, iconSize)
+  local coords = ReactionAssets.GetTexCoords(reaction.key)
+  texture:SetTexture(ReactionAssets.TEXTURE)
+  texture:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+  if texture.Show then
+    texture:Show()
+  end
+
+  reactionFrame:ClearAllPoints()
+  reactionFrame:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -5, ReactionAssets.BADGE_OFFSET_Y)
+  reactionFrame:SetScript("OnEnter", function(self)
+    local tooltip = _G.GameTooltip
+    if type(tooltip) ~= "table" then
+      return
+    end
+    self._reactionTooltipOwned = true
+    if type(tooltip.SetOwner) == "function" then
+      tooltip:SetOwner(self, "ANCHOR_TOP")
+    end
+    if type(tooltip.SetText) == "function" then
+      tooltip:SetText(":" .. reaction.key .. ":")
+    end
+    if type(tooltip.Show) == "function" then
+      tooltip:Show()
+    end
+  end)
+  reactionFrame:SetScript("OnLeave", function(self)
+    hideReactionTooltip(self)
+  end)
+  reactionFrame:Show()
+  frame._reactionKey = reaction.key
+  return reactionFrame, texture
+end
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
   options = options or {}
@@ -34,8 +132,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     pV = 4
   end
 
-  -- Acquire or create frame
-  local frame = factory.CreateFrame("Frame", nil, parent)
+  -- Button is required for WoW's native OnDoubleClick script.
+  local frame = factory.CreateFrame("Button", nil, parent)
+  if frame.RegisterForClicks then
+    frame:RegisterForClicks("AnyUp", "AnyDown")
+  end
+  resetReactionBadge(frame)
 
   -- Create structure once, reuse on subsequent calls
   local bgFills = frame._bgFills
@@ -187,8 +289,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
     local function openBubbleMenu(anchor)
       local currentText = message.text or ""
-
-      ContextMenu.Open(currentText, anchor or frame)
+      ContextMenu.Open(currentText, anchor or frame, {
+        message = message,
+        onReact = options.onReact,
+        canReact = options.canReact,
+        factory = options.persistentFactory or factory,
+      })
     end
 
     frame:SetScript("OnMouseDown", function(self, button)
@@ -217,6 +323,14 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
 
       openBubbleMenu(self)
     end)
+    frame:SetScript("OnDoubleClick", nil)
+    if type(options.onReact) == "function" and kind == "user" and direction == "in" and message.delivery ~= "blocked" then
+      frame:SetScript("OnDoubleClick", function(_, button)
+        if button == "LeftButton" and reactionsAllowed(message, options.canReact) then
+          options.onReact(message, "heart")
+        end
+      end)
+    end
   end
 
   frame:SetSize(bubbleWidth, bubbleHeight)
@@ -233,6 +347,13 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   end
 
   local totalHeight = bubbleHeight
+  local reactionFrame
+  local reactionIcon
+  local reaction = MessageReactions.VisibleReaction(message)
+  if kind == "user" and reaction and ReactionAssets.GetTexCoords(reaction.key) then
+    reactionFrame, reactionIcon = showReactionBadge(options.persistentFactory or factory, frame, reaction)
+    totalHeight = totalHeight + ReactionAssets.GetBadgeOverflow()
+  end
 
   return {
     frame = frame,
@@ -241,6 +362,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     bgCorners = bgCorners,
     text = textFS,
     icon = icon,
+    reactionFrame = reactionFrame,
+    reactionIcon = reactionIcon,
     kind = kind,
     direction = direction,
     height = totalHeight,
