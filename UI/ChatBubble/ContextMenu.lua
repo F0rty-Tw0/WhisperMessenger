@@ -84,8 +84,11 @@ function ContextMenu.Open(text, anchorFrame)
   }
 
   if type(_G.EasyMenu) == "function" then
-    _G.EasyMenu(menu, menuFrame, menuAnchor, 0, 0, "MENU")
-    return true
+    local ok = pcall(_G.EasyMenu, menu, menuFrame, menuAnchor, 0, 0, "MENU")
+    if ok then
+      return true
+    end
+    return ContextMenu.CopyText(normalized)
   end
 
   if
@@ -94,7 +97,7 @@ function ContextMenu.Open(text, anchorFrame)
     or type(_G.UIDropDownMenu_AddButton) ~= "function"
     or type(_G.ToggleDropDownMenu) ~= "function"
   then
-    return false
+    return ContextMenu.CopyText(normalized)
   end
 
   local function initializeMenu(_, level)
@@ -111,9 +114,15 @@ function ContextMenu.Open(text, anchorFrame)
     end
   end
 
-  pcall(_G.UIDropDownMenu_Initialize, menuFrame, initializeMenu, "MENU")
+  local initialized = pcall(_G.UIDropDownMenu_Initialize, menuFrame, initializeMenu, "MENU")
+  if not initialized then
+    return ContextMenu.CopyText(normalized)
+  end
 
-  _G.ToggleDropDownMenu(1, nil, menuFrame, menuAnchor, 0, 0)
+  local toggled = pcall(_G.ToggleDropDownMenu, 1, nil, menuFrame, menuAnchor, 0, 0)
+  if not toggled then
+    return ContextMenu.CopyText(normalized)
+  end
   return true
 end
 

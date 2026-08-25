@@ -60,19 +60,37 @@ return function()
     assert(ContextMenu.Open("") == false, "Open('') should refuse to open the menu")
   end
 
-  -- Open returns false when neither EasyMenu nor the dropdown API is available.
+  -- Missing dropdown APIs must copy rather than leave Copy Text unavailable.
   do
+    local factory = FakeUI.NewFactory()
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    local copiedText = nil
+    rawset(_G, "CreateFrame", factory.CreateFrame)
+    _G.UIParent = uiParent
+    _G[MENU_FRAME_NAME] = nil
     clearMenuApis()
-    assert(ContextMenu.Open("hello") == false, "Open should fail when no menu API exists")
+    _G.C_Clipboard = {
+      SetClipboard = function(text)
+        copiedText = text
+      end,
+    }
+    assert(ContextMenu.Open("hello") == true, "Open should copy when no menu API exists")
+    assert(copiedText == "hello", "missing menu APIs must fall back to Copy Text")
   end
 
-  -- Open returns false when the menu frame can't be created (no CreateFrame /
-  -- UIParent stand-ins available).
+  -- When the menu frame can't be created, Open must copy the text.
   do
+    local copiedText = nil
     rawset(_G, "EasyMenu", function() end)
     rawset(_G, "CreateFrame", nil)
     _G.UIParent = nil
-    assert(ContextMenu.Open("hello") == false, "Open should fail when no menu frame can be created")
+    _G.C_Clipboard = {
+      SetClipboard = function(text)
+        copiedText = text
+      end,
+    }
+    assert(ContextMenu.Open("hello") == true, "Open should copy when no menu frame can be created")
+    assert(copiedText == "hello", "missing menu frame must fall back to Copy Text")
   end
 
   -- When the UIDropDownMenuTemplate is missing (Retail 10.0+), Open should
@@ -144,6 +162,64 @@ return function()
     entry.func()
     assert(copiedText == "bubble text", "Copy Text callback should copy via C_Clipboard")
     assert(protectedAttempted == false, "Copy Text must not call protected CopyToClipboard")
+  end
+  -- EasyMenu failures must fall back to copying the text.
+  do
+    local factory = FakeUI.NewFactory()
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    local copiedText = nil
+    rawset(_G, "CreateFrame", factory.CreateFrame)
+    _G.UIParent = uiParent
+    _G[MENU_FRAME_NAME] = nil
+    rawset(_G, "EasyMenu", function()
+      error("broken EasyMenu")
+    end)
+    _G.C_Clipboard = {
+      SetClipboard = function(text)
+        copiedText = text
+      end,
+    }
+
+    local ok, opened = pcall(ContextMenu.Open, "easy failure")
+    assert(ok and opened == true, "Open must not throw when EasyMenu fails")
+    assert(copiedText == "easy failure", "EasyMenu failure must fall back to Copy Text")
+  end
+
+  -- Legacy initialization and toggling failures must fall back to copying.
+  do
+    local factory = FakeUI.NewFactory()
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    local copiedText = nil
+    rawset(_G, "CreateFrame", factory.CreateFrame)
+    _G.UIParent = uiParent
+    _G[MENU_FRAME_NAME] = nil
+    rawset(_G, "EasyMenu", nil)
+    _G.UIDropDownMenu_Initialize = function()
+      error("broken initialization")
+    end
+    _G.UIDropDownMenu_CreateInfo = function()
+      return {}
+    end
+    _G.UIDropDownMenu_AddButton = function() end
+    _G.ToggleDropDownMenu = function() end
+    _G.C_Clipboard = {
+      SetClipboard = function(text)
+        copiedText = text
+      end,
+    }
+
+    local ok, opened = pcall(ContextMenu.Open, "initialization failure")
+    assert(ok and opened == true, "Open must not throw when legacy initialization fails")
+    assert(copiedText == "initialization failure", "legacy initialization failure must fall back to Copy Text")
+
+    copiedText = nil
+    _G.UIDropDownMenu_Initialize = function() end
+    _G.ToggleDropDownMenu = function()
+      error("broken toggle")
+    end
+    ok, opened = pcall(ContextMenu.Open, "toggle failure")
+    assert(ok and opened == true, "Open must not throw when dropdown toggle fails")
+    assert(copiedText == "toggle failure", "dropdown toggle failure must fall back to Copy Text")
   end
 
   -- When EasyMenu is absent, Open uses the legacy dropdown API instead.
