@@ -206,12 +206,10 @@ function Bootstrap.Initialize(factory, options)
     windowRuntime = windowRuntime,
   })
 
-  -- Register the addon-message prefix used by the quest-link side channel
-  -- on Classic character whispers. Without this, CHAT_MSG_ADDON events for
-  -- our prefix never reach the receiver and quest links can't be restored.
+  -- Register addon-message prefixes before live events begin routing.
   local AddonComm = loadModule("WhisperMessenger.Transport.AddonComm", "AddonComm")
   AddonComm.RegisterPrefix(_G.C_ChatInfo, "WMQL")
-
+  AddonComm.RegisterPrefix(_G.C_ChatInfo, "WMRX")
   -- Suppress whisper messages from the default chat frame (and their sound).
   -- Our addon provides its own messenger UI for whispers.
   -- We must preserve /r reply targets since the default handler won't run.

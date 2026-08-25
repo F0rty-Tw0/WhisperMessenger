@@ -5,6 +5,8 @@ end
 
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
+local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 
 local WindowCallbacks = {}
 
@@ -39,11 +41,28 @@ function WindowCallbacks.Create(options)
   local tableUtils = options.tableUtils or TableUtils
   local groupSendPolicy = options.groupSendPolicy
   local sendHandler = options.sendHandler
+  local reactionHandler = options.reactionHandler or ReactionHandler
   local refreshWindow = options.refreshWindow or function() end
   local selectConversation = options.selectConversation or function() end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
   local trace = options.trace or function() end
+
+  local function canReact(selectedContact, message)
+    if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
+      return false
+    end
+    if type(selectedContact) ~= "table" or not MessageReactions.IsEligible(message, selectedContact.channel) then
+      return false
+    end
+    if selectedContact.channel == "WOW" or selectedContact.channel == "BN" then
+      return true
+    end
+    if type(groupSendPolicy) ~= "table" or type(groupSendPolicy.getNotice) ~= "function" then
+      return false
+    end
+    return groupSendPolicy.getNotice(selectedContact.conversation or selectedContact) == nil
+  end
 
   return {
     onTabModeChanged = function(mode)
@@ -64,6 +83,10 @@ function WindowCallbacks.Create(options)
       end
       return sendHandler.HandleSend(runtime, payload, refreshWindow)
     end,
+    onReact = function(selectedContact, message, reactionKey)
+      return reactionHandler.HandleReact(runtime, selectedContact, message, reactionKey, refreshWindow, groupSendPolicy)
+    end,
+    canReact = canReact,
 
     onPositionChanged = function(nextState)
       characterState.window = tableUtils.copyState(nextState)
@@ -80,6 +103,7 @@ function WindowCallbacks.Create(options)
     end,
 
     onClearAllChats = function()
+      MessageReactions.ClearAll(runtime)
       for key in pairs(runtime.store.conversations) do
         runtime.store.conversations[key] = nil
       end
@@ -105,6 +129,7 @@ function WindowCallbacks.Create(options)
     onRemove = function(item)
       local key = item.conversationKey
       trace("onRemove", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
+      MessageReactions.ClearConversation(runtime, key)
       Store.Remove(runtime.store, key)
       if runtime.activeConversationKey == key then
         runtime.activeConversationKey = nil

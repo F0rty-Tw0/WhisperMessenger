@@ -106,6 +106,44 @@ return function()
 
     assert(state.pendingOutgoing[firstKey] == nil, "stale pending queue should be removed during later records")
   end
+  -- Resolve preserves its first two return values and also exposes metadata.
+  do
+    local state = {
+      localProfileId = "me",
+      pendingOutgoing = {},
+      now = function()
+        return 100
+      end,
+    }
+    local key = PendingOutgoing.Record(
+      state,
+      {
+        channel = "WOW",
+        displayName = "Arthas-Area52",
+        guid = "Player-1",
+      },
+      "reaction fallback",
+      {
+        wireId = "wire1",
+        reactionControl = {
+          operation = "set",
+          key = "heart",
+        },
+      }
+    )
+
+    local fromPending, pendingText, entry = PendingOutgoing.Resolve(state, key, {
+      channel = "WOW",
+      text = "reaction fallback",
+      playerName = "Arthas",
+      guid = "Player-1",
+    }, 105)
+
+    assert(fromPending == true, "extended pending entry should still resolve")
+    assert(pendingText == "reaction fallback", "Resolve second return should remain pending text")
+    assert(entry and entry.wireId == "wire1", "Resolve should expose consumed wire ID")
+    assert(entry.reactionControl and entry.reactionControl.key == "heart", "Resolve should expose reaction control metadata")
+  end
   -- A secret BNet ID comparison must be a non-match, not abort event routing.
   do
     local secretIdMeta = {

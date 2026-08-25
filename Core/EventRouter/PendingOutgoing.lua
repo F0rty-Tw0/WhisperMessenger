@@ -153,7 +153,7 @@ local function consumeWithMatcher(state, conversationKey, payload, sentAt, match
   return nil
 end
 
-function PendingOutgoing.Record(state, target, text)
+function PendingOutgoing.Record(state, target, text, metadata)
   local contact
   if target.channel == "BN" then
     contact = Identity.FromBattleNet(target.bnetAccountID, target.accountInfo or target)
@@ -165,6 +165,7 @@ function PendingOutgoing.Record(state, target, text)
   local now = state.now()
   pruneExpiredQueues(state, now)
 
+  metadata = type(metadata) == "table" and metadata or {}
   state.pendingOutgoing[conversationKey] = state.pendingOutgoing[conversationKey] or {}
   table.insert(state.pendingOutgoing[conversationKey], {
     text = text,
@@ -174,6 +175,8 @@ function PendingOutgoing.Record(state, target, text)
     bnetAccountID = target.bnetAccountID,
     displayName = target.displayName,
     target = target.target,
+    wireId = metadata.wireId,
+    reactionControl = metadata.reactionControl,
   })
 
   return conversationKey
@@ -188,11 +191,10 @@ end
 -- a soft (channel + target + timing) match. In both cases the matched entry
 -- is removed so a later INFORM doesn't surface a stale pending entry.
 --
--- Returns `(fromPending, pendingText)`:
---   * `fromPending` — whether ANY pending entry matched (used to suppress
---     auto-open noise for outgoing-from-pending sends).
---   * `pendingText` — the locally captured text we tried to send, so the
---     bubble can render the rich version even when the echo was stripped.
+-- Returns `(fromPending, pendingText, entry)`:
+--   * `fromPending` — whether ANY pending entry matched.
+--   * `pendingText` — the locally captured text we tried to send.
+--   * `entry` — the consumed pending record for optional send metadata.
 function PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
   local entry = consumeWithMatcher(state, conversationKey, payload, sentAt, pendingMatchesOutgoing)
   if entry == nil then
@@ -201,7 +203,7 @@ function PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
   if entry == nil then
     return false, nil
   end
-  return true, entry.text
+  return true, entry.text, entry
 end
 
 -- Backwards-compat wrapper: strict (text-equal) match only. Resolve is the

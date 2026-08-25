@@ -53,6 +53,8 @@ Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
+Model/MessageReactionProtocol.lua
+Model/MessageReactions.lua
 Model/ContactEnricher/Disambiguation.lua
 Model/ContactEnricher/WoWStatus.lua
 Model/ContactEnricher/BNetStatus.lua
@@ -218,6 +220,7 @@ Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
 Core/Bootstrap/SendHandler.lua
+Core/Bootstrap/ReactionHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua

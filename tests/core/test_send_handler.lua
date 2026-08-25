@@ -30,7 +30,12 @@ return function()
       end,
       GetFriendAccountInfo = function(friendIndex)
         if friendIndex == 1 then
-          return { bnetAccountID = 77, battleTag = "Jaina#1234", isOnline = true }
+          return {
+            bnetAccountID = 77,
+            gameAccountInfo = { gameAccountID = 9001 },
+            battleTag = "Jaina#1234",
+            isOnline = true,
+          }
         end
         if friendIndex == 2 then
           return { bnetAccountID = 99, battleTag = "Thrall#1234", isOnline = true }
@@ -111,15 +116,21 @@ return function()
     }
     SendHandler.HandleSend(runtime, sideChannelPayload, refreshWindow)
 
-    assert(#registeredPrefixes >= 1, "expected addon prefix registered for the side channel")
-    assert(registeredPrefixes[1] == "WMQL", "expected WMQL prefix")
-    assert(#addonCalls == 1, "expected one paired addon-message dispatch, got: " .. tostring(#addonCalls))
-    assert(addonCalls[1].prefix == "WMQL", "addon prefix forwarded")
-    assert(addonCalls[1].channel == "WHISPER", "addon channel is WHISPER")
-    assert(addonCalls[1].target == "Thrall-Nagrand", "addon target forwarded")
-    assert(addonCalls[1].message == "4641:Your Place In The World", "encoded payload forwarded")
+    assert(#registeredPrefixes >= 2, "expected quest and reaction prefixes registered")
+    local questCall, identityCall
+    for _, call in ipairs(addonCalls) do
+      if call.prefix == "WMQL" then
+        questCall = call
+      elseif call.prefix == "WMRX" then
+        identityCall = call
+      end
+    end
+    assert(questCall ~= nil and identityCall ~= nil, "expected WMQL quest data and WMRX identity data")
+    assert(questCall.channel == "WHISPER", "quest addon channel is WHISPER")
+    assert(questCall.target == "Thrall-Nagrand", "quest addon target forwarded")
+    assert(questCall.message == "4641:Your Place In The World", "encoded quest payload forwarded")
 
-    -- A whisper without any quest references must NOT emit an addon message.
+    -- A whisper without quest references still emits WMRX identity, but no WMQL.
     addonCalls = {}
     SendHandler.HandleSend(runtime, {
       conversationKey = "me::WOW::thrall-nagrand",
@@ -128,7 +139,7 @@ return function()
       channel = "WOW",
       text = "just saying hi",
     }, refreshWindow)
-    assert(#addonCalls == 0, "no addon message when no quest links present")
+    assert(#addonCalls == 1 and addonCalls[1].prefix == "WMRX", "plain whisper should emit only identity metadata")
 
     runtime.chatApi.RegisterAddonMessagePrefix = nil
     runtime.chatApi.SendAddonMessage = nil
@@ -148,8 +159,8 @@ return function()
     runtime.chatApi.RegisterAddonMessagePrefix = function(prefix)
       table.insert(registeredPrefixes, prefix)
     end
-    runtime.bnetApi.SendGameData = function(bnetAccountID, prefix, payload)
-      table.insert(gameDataCalls, { bnetAccountID = bnetAccountID, prefix = prefix, payload = payload })
+    runtime.bnetApi.SendGameData = function(gameAccountID, prefix, payload)
+      table.insert(gameDataCalls, { gameAccountID = gameAccountID, prefix = prefix, payload = payload })
       return true
     end
 
@@ -168,15 +179,23 @@ return function()
       text = "go do |cffffff00|Hquest:4641:0|h[Your Place In The World]|h|r",
     }, refreshWindow)
 
-    assert(#gameDataCalls == 1, "expected one BNSendGameData side-channel call, got: " .. tostring(#gameDataCalls))
-    assert(gameDataCalls[1].bnetAccountID == 77, "BN target forwarded")
-    assert(gameDataCalls[1].prefix == "WMQL", "WMQL prefix used for BN side channel")
-    assert(gameDataCalls[1].payload == "4641:Your Place In The World", "encoded quest payload forwarded, got: " .. tostring(gameDataCalls[1].payload))
+    local questCall, identityCall
+    for _, call in ipairs(gameDataCalls) do
+      if call.prefix == "WMQL" then
+        questCall = call
+      elseif call.prefix == "WMRX" then
+        identityCall = call
+      end
+    end
+    assert(questCall ~= nil and identityCall ~= nil, "expected BN quest and identity side channels")
+    assert(questCall.gameAccountID == 9001, "quest side channel targets game account")
+    assert(identityCall.gameAccountID == 9001, "identity side channel targets game account")
+    assert(questCall.payload == "4641:Your Place In The World", "encoded quest payload forwarded, got: " .. tostring(questCall.payload))
     -- Prefix-registration is asserted in test 1b+ (above). AddonComm caches
     -- the registered set process-wide, so the second send won't re-call the
     -- RegisterAddonMessagePrefix stub — that's not a defect, it's the cache.
 
-    -- A BN whisper with no quest references must NOT emit a game-data side channel.
+    -- A BN whisper without quest references still emits WMRX identity only.
     gameDataCalls = {}
     SendHandler.HandleSend(runtime, {
       conversationKey = "me::BN::jaina#1234",
@@ -186,7 +205,7 @@ return function()
       bnetAccountID = 77,
       text = "hi friend",
     }, refreshWindow)
-    assert(#gameDataCalls == 0, "no BN side channel when no quest links present")
+    assert(#gameDataCalls == 1 and gameDataCalls[1].prefix == "WMRX", "plain BN whisper should emit only identity metadata")
 
     runtime.chatApi.RegisterAddonMessagePrefix = nil
     runtime.bnetApi.SendGameData = nil

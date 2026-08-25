@@ -224,6 +224,27 @@ function WindowRuntime.Create(options)
   })
   local startConversation = startConversationFlow.startConversation
 
+  local windowCallbacks = WindowCallbacks.Create({
+    runtime = runtime,
+    accountState = accountState,
+    characterState = characterState,
+    defaultCharacterState = defaultCharacterState,
+    uiParent = uiParent,
+    getIcon = function()
+      return icon
+    end,
+    tableUtils = tableUtils,
+    groupSendPolicy = groupSendPolicy,
+    sendHandler = sendHandler,
+    reactionHandler = options.reactionHandler,
+    refreshWindow = refreshWindow,
+    selectConversation = selectConversation,
+    startConversation = startConversation,
+    setWindowVisible = setWindowVisible,
+    trace = trace,
+  })
+  runtime.canReact = windowCallbacks.canReact
+
   local function ensureWindow()
     if window then
       return
@@ -253,25 +274,6 @@ function WindowRuntime.Create(options)
       onShareWidgetPositionChanged = onShareWidgetPositionChanged,
     })
 
-    local windowCallbacks = WindowCallbacks.Create({
-      runtime = runtime,
-      accountState = accountState,
-      characterState = characterState,
-      defaultCharacterState = defaultCharacterState,
-      uiParent = uiParent,
-      getIcon = function()
-        return icon
-      end,
-      tableUtils = tableUtils,
-      groupSendPolicy = groupSendPolicy,
-      sendHandler = sendHandler,
-      refreshWindow = refreshWindow,
-      selectConversation = selectConversation,
-      startConversation = startConversation,
-      setWindowVisible = setWindowVisible,
-      trace = trace,
-    })
-
     window = messengerWindow.Create(uiFactory, {
       contacts = contacts,
       selectedContact = selectedState.selectedContact,
@@ -283,6 +285,8 @@ function WindowRuntime.Create(options)
       onSelectConversation = windowCallbacks.onSelectConversation,
       onStartConversation = windowCallbacks.onStartConversation,
       onSend = windowCallbacks.onSend,
+      onReact = windowCallbacks.onReact,
+      canReact = windowCallbacks.canReact,
       onPositionChanged = windowCallbacks.onPositionChanged,
       onClose = windowCallbacks.onClose,
       onResetWindowPosition = windowCallbacks.onResetWindowPosition,

@@ -1,5 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
+local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
+local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
 
 -- Stub dependencies so EventBridge loads cleanly
 local EventBridge
@@ -282,6 +284,92 @@ return function()
     )
 
     assert(refreshes == 1, "visible group event should refresh its current surface")
+  end
+
+  -- Group fallback degradation refreshes only the group surface; it never
+  -- invokes whisper auto-open bookkeeping.
+  do
+    local now = 900
+    local refreshes = 0
+    local runtime = makeRuntime({
+      now = function()
+        return now
+      end,
+      isWindowVisible = function()
+        return true
+      end,
+      refreshWindow = function()
+        refreshes = refreshes + 1
+      end,
+      pendingOutgoing = { sentinel = true },
+      lastIncomingWhisperKey = "whisper-sentinel",
+      groupPartyGUIDsByCategory = { [1] = "Party-0-bridge" },
+    })
+    local key = "party::arthas-area52::1::Party-0-bridge"
+    runtime.store.conversations[key] = {
+      conversationKey = key,
+      channel = "PARTY",
+      messages = {},
+      unreadCount = 0,
+    }
+    local fallback = Protocol.BuildGroupFallback("sad", "set", "late")
+    EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_PARTY", fallback, "Late-Realm", "", "", "", "", 0, 0, "", 0, 900, "Player-late")
+    assert(refreshes == 1, "staged group control should receive normal visible group refresh")
+    now = 915
+    MessageReactions.Expire(runtime, now)
+    assert(refreshes == 2, "expired group control should refresh group surface")
+    assert(
+      runtime.pendingOutgoing.sentinel == true and runtime.lastIncomingWhisperKey == "whisper-sentinel",
+      "group degradation must not mutate whisper state"
+    )
+  end
+
+  -- A UI refresh failure during degradation is isolated, allowing later
+  -- expired controls to purge from the reaction queue.
+  do
+    local now = 950
+    local visible = false
+    local runtime = makeRuntime({
+      now = function()
+        return now
+      end,
+      groupPartyGUIDsByCategory = { [1] = "Party-0-callback-error" },
+      isWindowVisible = function()
+        return visible
+      end,
+      refreshWindow = function()
+        error("refresh failed")
+      end,
+    })
+    local function stage(text, lineID)
+      EventBridge.RouteGroupEvent(
+        runtime,
+        "CHAT_MSG_PARTY",
+        Protocol.BuildGroupFallback("heart", "set", text),
+        "Late-Realm",
+        "",
+        "",
+        "",
+        "",
+        0,
+        0,
+        "",
+        0,
+        lineID,
+        "Player-late"
+      )
+    end
+    stage("first callback error", 951)
+    now = 951
+    stage("second callback error", 952)
+    visible = true
+    now = 966
+    local ok = pcall(MessageReactions.Expire, runtime, now)
+    assert(ok == true, "group degradation callback errors must not escape expiry")
+    assert(
+      runtime.messageReactionRuntime.controls == nil or next(runtime.messageReactionRuntime.controls) == nil,
+      "callback failure must not block later expired group control cleanup"
+    )
   end
 
   -- ----------------------------------------------------------------

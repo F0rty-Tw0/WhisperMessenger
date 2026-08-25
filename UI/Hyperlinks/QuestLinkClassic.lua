@@ -61,6 +61,19 @@ function QuestLinkClassic.Serialize(text)
   end)
   return result
 end
+function QuestLinkClassic.CanonicalizeForTransport(text)
+  if type(text) ~= "string" then
+    return text
+  end
+  local canonical = QuestLinkClassic.Serialize(text)
+  canonical = string.gsub(canonical, CLASSIC_QUEST_LEVEL_PATTERN, function(_, name)
+    return "[" .. name .. "]"
+  end)
+  canonical = string.gsub(canonical, CLASSIC_QUEST_PATTERN, function(name)
+    return "[" .. name .. "]"
+  end)
+  return canonical
+end
 
 function QuestLinkClassic.Rewrite(text)
   if type(text) ~= "string" then

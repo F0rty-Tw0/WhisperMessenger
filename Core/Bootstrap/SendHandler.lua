@@ -11,10 +11,12 @@ local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCom
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
+local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
+local REACTION_ADDON_PREFIX = "WMRX"
 
 local SendHandler = {}
 
@@ -112,6 +114,42 @@ local function resolveBattleNetRecipient(runtime, payload)
   return resolvedBnetAccountID, resolvedBnetAccountID == oldBnetAccountID and "matched" or "recovered"
 end
 
+local function normalizeOutgoingText(payload, text)
+  if type(text) ~= "string" then
+    return text
+  end
+  local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
+  if isClassicCharacterWhisper then
+    return QuestLinkClassic.Serialize(text)
+  end
+  return QuestLinkClassic.Rewrite(text)
+end
+
+local function canonicalReactionText(text)
+  if type(QuestLinkClassic.CanonicalizeForTransport) == "function" then
+    return QuestLinkClassic.CanonicalizeForTransport(text)
+  end
+  return text
+end
+
+local function canonicalTargetText(text)
+  if type(QuestLinkClassic.Serialize) == "function" then
+    return QuestLinkClassic.Serialize(text)
+  end
+  return text
+end
+
+local function dispatchReactionMetadata(runtime, payload, addonPayload)
+  if type(addonPayload) ~= "string" then
+    return false
+  end
+  AddonComm.RegisterPrefix(runtime.chatApi, REACTION_ADDON_PREFIX)
+  if payload.channel == "BN" then
+    return AddonComm.SendBNet(runtime.bnetApi, REACTION_ADDON_PREFIX, addonPayload, payload.gameAccountID)
+  end
+  return AddonComm.Send(runtime.chatApi, REACTION_ADDON_PREFIX, addonPayload, payload.target)
+end
+
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local inCombat = type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
   local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
@@ -163,24 +201,40 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   end
   runtime.sendStatusByConversation[payload.conversationKey] = nil
 
-  -- Normalize quest links into the form that survives transmission on this
-  -- flavor + channel:
-  --   * Classic character whisper: `|H...|h` is stripped server-side, so we
-  --     serialize hyperlinks back to plain `[Name (id)]` — the only form the
-  --     wire preserves intact. Recipients running our addon re-link from the
-  --     plain form; recipients without it still see the name and id.
-  --   * Retail and Battle.net: keep the rich hyperlink so addon-less
-  --     recipients get a clickable link directly from Blizzard's chat frame.
-  if type(payload.text) == "string" then
-    local isClassicCharacterWhisper = FlavorCompat.isClassic and (payload.channel == nil or payload.channel == "WOW")
-    if isClassicCharacterWhisper then
-      payload.text = QuestLinkClassic.Serialize(payload.text)
-    else
-      payload.text = QuestLinkClassic.Rewrite(payload.text)
-    end
+  local reactionControl = type(payload.reactionControl) == "table" and payload.reactionControl or nil
+  if reactionControl then
+    local operation = reactionControl.operation or {}
+    local normalizedSource = canonicalReactionText(normalizeOutgoingText(payload, reactionControl.sourceText or ""))
+    payload.text = MessageReactionProtocol.BuildFallback(operation.key, operation.operation, normalizedSource)
+  else
+    payload.text = normalizeOutgoingText(payload, payload.text)
   end
 
-  local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text)
+  local wireId
+  local reactionAddonPayload
+  if reactionControl then
+    local operation = reactionControl.operation or {}
+    reactionAddonPayload = MessageReactionProtocol.EncodeReaction(
+      operation.operation,
+      operation.key,
+      operation.wireId,
+      canonicalTargetText(reactionControl.sourceText),
+      canonicalReactionText(payload.text)
+    )
+    local encodedOperation = MessageReactionProtocol.Decode(reactionAddonPayload)
+    if encodedOperation then
+      reactionControl.operation = encodedOperation
+    end
+  else
+    wireId = payload.wireId or MessageReactionProtocol.NewWireId(runtime, runtime.now and runtime.now() or 0)
+    payload.wireId = wireId
+    reactionAddonPayload = MessageReactionProtocol.EncodeIdentity(wireId, canonicalReactionText(payload.text))
+  end
+
+  local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text, {
+    wireId = wireId,
+    reactionControl = reactionControl,
+  })
   local callOk
   if payload.channel == "BN" then
     if traceEnabled then
@@ -245,6 +299,8 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     refreshWindow()
     return false
   end
+
+  dispatchReactionMetadata(runtime, payload, reactionAddonPayload)
 
   if traceEnabled then
     Trace("SendHandler: return result=true")

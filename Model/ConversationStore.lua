@@ -169,6 +169,41 @@ function Store.AppendIncoming(state, key, message, isActive)
     conversation.unreadCount = conversation.unreadCount + 1
   end
 end
+function Store.InsertIncomingChronological(state, key, message, isActive)
+  local conversation = Store.EnsureConversation(state, key)
+  local messages = conversation.messages
+  local sentAt = tonumber(message.sentAt) or 0
+  local lineID = tonumber(message.lineID)
+  local insertAt = #messages + 1
+  for index, existing in ipairs(messages) do
+    local existingSentAt = tonumber(existing.sentAt) or 0
+    local existingLineID = tonumber(existing.lineID)
+    if existingSentAt > sentAt or (existingSentAt == sentAt and lineID and existingLineID and existingLineID > lineID) then
+      insertAt = index
+      break
+    end
+  end
+  local isNewest = insertAt == #messages + 1
+  table.insert(messages, insertAt, message)
+  applyMessageCap(state, conversation)
+
+  if isNewest then
+    applyMessageMetadata(conversation, message)
+  end
+  local activeStatus = conversation.activeStatus
+  local statusSentAt = activeStatus and tonumber(activeStatus.sentAt)
+  local statusLineID = activeStatus and tonumber(activeStatus.lineID)
+  local supersedesStatus = statusSentAt == nil
+    or sentAt > statusSentAt
+    or (sentAt == statusSentAt and (lineID == nil or statusLineID == nil or lineID >= statusLineID))
+  if supersedesStatus and message.kind == "user" and message.direction == "in" then
+    conversation.activeStatus = nil
+  end
+  if not isActive and shouldIncrementUnread(message) then
+    conversation.unreadCount = conversation.unreadCount + 1
+  end
+  return conversation
+end
 
 function Store.AppendOutgoing(state, key, message)
   local conversation = Store.EnsureConversation(state, key)

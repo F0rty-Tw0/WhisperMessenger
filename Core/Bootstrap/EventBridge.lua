@@ -76,6 +76,27 @@ local TRACE_EVENTS = {
   CHAT_MSG_BN_CONVERSATION = true,
 }
 
+local function applyIncomingEffects(runtime, result)
+  if runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.playSoundOnWhisper == true then
+    SoundPlayer.Play(runtime.accountState.settings)
+  end
+  if result and result.conversationKey then
+    runtime.lastIncomingWhisperKey = result.conversationKey
+    local inGroupsTab = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode() == "groups"
+    if
+      runtime.accountState
+      and runtime.accountState.settings
+      and runtime.accountState.settings.autoOpenIncoming == true
+      and runtime.onAutoOpen
+      and type(_G.InCombatLockdown) == "function"
+      and not _G.InCombatLockdown()
+      and not inGroupsTab
+    then
+      runtime.onAutoOpen(result.conversationKey)
+    end
+  end
+end
+
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
@@ -100,6 +121,16 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       )
     end)
   end
+  runtime.onReactionFallbackDegraded = function(degradedConversation)
+    if degradedConversation == nil then
+      return
+    end
+    applyIncomingEffects(runtime, degradedConversation)
+    if refreshWindow and degradedConversation.conversationKey then
+      refreshWindow(degradedConversation.conversationKey)
+    end
+  end
+
   local result, resultMeta = EventRouter.HandleEvent(runtime, eventName, payload)
   if traceEnabled and TRACE_EVENTS[eventName] then
     if result and result.queued then
@@ -110,35 +141,9 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
       Trace("EventBridge: result=nil (not processed)")
     end
   end
-  if
-    INCOMING_WHISPER_EVENTS[eventName]
-    and result -- only alert for messages that were actually stored
-    and runtime.accountState
-    and runtime.accountState.settings
-    and runtime.accountState.settings.playSoundOnWhisper == true
-  then
-    SoundPlayer.Play(runtime.accountState.settings)
-  end
-  if INCOMING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
-    -- Always track the last incoming whisper for reply (R key), even in combat
-    runtime.lastIncomingWhisperKey = result.conversationKey
-    -- Do not touch Blizzard's reply-target helpers here. Under the secret-value
-    -- system, mutating default chat reply state from addon code can taint the
-    -- edit box and later break Blizzard reply UI in combat/instance contexts.
-    -- We only need to track `lastIncomingWhisperKey`; the messenger reply hooks
-    -- consume that key directly.
-    local inGroupsTab = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode() == "groups"
-    if
-      runtime.accountState
-      and runtime.accountState.settings
-      and runtime.accountState.settings.autoOpenIncoming == true
-      and runtime.onAutoOpen
-      and type(_G.InCombatLockdown) == "function"
-      and not _G.InCombatLockdown()
-      and not inGroupsTab
-    then
-      runtime.onAutoOpen(result.conversationKey)
-    end
+  local convertedReactionControl = resultMeta and resultMeta.reactionControl == true
+  if INCOMING_WHISPER_EVENTS[eventName] and result and not convertedReactionControl then
+    applyIncomingEffects(runtime, result)
   end
   if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
     -- Unlike incoming whispers (which stay quiet to avoid yanking the user off

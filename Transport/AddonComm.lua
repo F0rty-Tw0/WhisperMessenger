@@ -16,6 +16,14 @@ local AddonComm = {}
 
 local MAX_PAYLOAD_BYTES = 255
 
+local groupChannelSet = {
+  PARTY = true,
+  RAID = true,
+  INSTANCE_CHAT = true,
+  GUILD = true,
+  OFFICER = true,
+}
+
 local registeredPrefixes = {}
 
 local function resolveRegister(api)
@@ -42,6 +50,30 @@ local function resolveSendBNet(api)
   return nil
 end
 
+local function didSendSucceed(callSucceeded, ...)
+  if not callSucceeded then
+    return false
+  end
+  local count = select("#", ...)
+  local result
+  if count > 0 then
+    result = select(count, ...)
+  end
+  return result == nil or result == true or result == 0
+end
+
+local function didRegisterSucceed(callSucceeded, ...)
+  if not callSucceeded then
+    return false
+  end
+  local count = select("#", ...)
+  local result
+  if count > 0 then
+    result = select(count, ...)
+  end
+  return result == nil or result == true or result == 0 or result == 1
+end
+
 function AddonComm.RegisterPrefix(api, prefix)
   if type(prefix) ~= "string" or prefix == "" then
     return false
@@ -58,8 +90,8 @@ function AddonComm.RegisterPrefix(api, prefix)
     return true
   end
 
-  local ok = pcall(register, prefix)
-  if not ok then
+  local registered = didRegisterSucceed(pcall(register, prefix))
+  if not registered then
     return false
   end
 
@@ -86,11 +118,10 @@ function AddonComm.Send(api, prefix, payload, target)
     return false
   end
 
-  local ok = pcall(send, prefix, payload, "WHISPER", target)
-  return ok
+  return didSendSucceed(pcall(send, prefix, payload, "WHISPER", target))
 end
 
-function AddonComm.SendBNet(api, prefix, payload, bnetAccountID)
+function AddonComm.SendGroup(api, prefix, payload, channel)
   if type(prefix) ~= "string" or prefix == "" then
     return false
   end
@@ -100,7 +131,29 @@ function AddonComm.SendBNet(api, prefix, payload, bnetAccountID)
   if #payload > MAX_PAYLOAD_BYTES then
     return false
   end
-  if bnetAccountID == nil then
+  if groupChannelSet[channel] ~= true then
+    return false
+  end
+
+  local send = resolveSend(api)
+  if send == nil then
+    return false
+  end
+
+  return didSendSucceed(pcall(send, prefix, payload, channel))
+end
+
+function AddonComm.SendBNet(api, prefix, payload, gameAccountID)
+  if type(prefix) ~= "string" or prefix == "" then
+    return false
+  end
+  if type(payload) ~= "string" or payload == "" then
+    return false
+  end
+  if #payload > MAX_PAYLOAD_BYTES then
+    return false
+  end
+  if gameAccountID == nil then
     return false
   end
 
@@ -109,7 +162,7 @@ function AddonComm.SendBNet(api, prefix, payload, bnetAccountID)
     return false
   end
 
-  local ok = pcall(send, bnetAccountID, prefix, payload)
+  local ok = pcall(send, gameAccountID, prefix, payload)
   return ok
 end
 

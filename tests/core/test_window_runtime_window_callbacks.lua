@@ -8,6 +8,7 @@ return function()
   local started = nil
   local sentLegacy = nil
   local sentGroup = nil
+  local reacted = nil
   local copiedStates = {}
   local traceCalls = {}
 
@@ -54,6 +55,21 @@ return function()
     },
   }
 
+  local checkedConversation = nil
+  local callbacksGroupSendPolicy = {
+    shouldRoutePayload = function(payload)
+      return payload and payload.channel == "PARTY"
+    end,
+    sendPayload = function(payload)
+      sentGroup = payload
+      return true
+    end,
+    getNotice = function(conversation)
+      checkedConversation = conversation
+      return conversation and conversation.notice or nil
+    end,
+  }
+
   local callbacks = WindowCallbacks.Create({
     runtime = runtime,
     accountState = accountState,
@@ -73,21 +89,26 @@ return function()
         return copy
       end,
     },
-    groupSendPolicy = {
-      shouldRoutePayload = function(payload)
-        return payload and payload.channel == "PARTY"
-      end,
-      sendPayload = function(payload)
-        sentGroup = payload
-        return true
-      end,
-    },
+    groupSendPolicy = callbacksGroupSendPolicy,
     sendHandler = {
       HandleSend = function(nextRuntime, payload, refreshWindow)
         assert(nextRuntime == runtime, "legacy send should receive runtime")
         sentLegacy = payload
         refreshWindow()
         return "legacy-result"
+      end,
+    },
+    reactionHandler = {
+      HandleReact = function(nextRuntime, selectedContact, message, reactionKey, refreshWindow, receivedGroupSendPolicy)
+        assert(nextRuntime == runtime, "reaction callback should receive runtime")
+        assert(receivedGroupSendPolicy == callbacksGroupSendPolicy, "reaction callback should receive group policy")
+        reacted = {
+          selectedContact = selectedContact,
+          message = message,
+          reactionKey = reactionKey,
+        }
+        refreshWindow()
+        return "reaction-result"
       end,
     },
     refreshWindow = function()
@@ -109,6 +130,70 @@ return function()
     end,
   })
 
+  local competitive = false
+  runtime.isCompetitiveContent = function()
+    return competitive
+  end
+  local directMessage = {
+    kind = "user",
+    direction = "in",
+    channel = "WOW",
+    text = "hello",
+  }
+  local groupMessage = {
+    kind = "user",
+    direction = "in",
+    channel = "PARTY",
+    text = "hello group",
+  }
+  local groupConversation = {
+    conversationKey = "party::PARTY::current",
+    channel = "PARTY",
+  }
+  local groupSnapshot = {
+    conversationKey = "party::PARTY::snapshot",
+    channel = "PARTY",
+    conversation = groupConversation,
+  }
+
+  assert(callbacks.canReact({ channel = "WOW" }, directMessage) == true, "WOW reactions should be available outside competitive content")
+  assert(callbacks.canReact({ channel = "BN" }, {
+    kind = "user",
+    direction = "in",
+    channel = "BN",
+    text = "bnet",
+  }) == true, "BN reactions should be available outside competitive content")
+  assert(callbacks.canReact(groupSnapshot, groupMessage) == true, "live PARTY reactions should be available")
+  assert(checkedConversation == groupConversation, "group snapshot availability should check its underlying conversation")
+
+  for _, channel in ipairs({ "RAID", "INSTANCE_CHAT", "GUILD", "OFFICER" }) do
+    assert(callbacks.canReact({ channel = channel }, {
+      kind = "user",
+      direction = "in",
+      channel = channel,
+      text = channel,
+    }) == true, channel .. " reactions should be available")
+  end
+  assert(callbacks.canReact({ channel = "COMMUNITY" }, {
+    kind = "user",
+    direction = "in",
+    channel = "COMMUNITY",
+    text = "community",
+  }) == false, "unsupported channels must not expose reactions")
+
+  groupConversation.notice = "Historical group chat — read-only."
+  assert(callbacks.canReact(groupSnapshot, groupMessage) == false, "left groups should hide reactions")
+  groupConversation.notice = "Another character's history — read-only."
+  assert(callbacks.canReact(groupSnapshot, groupMessage) == false, "foreign groups should hide reactions")
+  groupConversation.notice = "Not in group — can't send."
+  assert(callbacks.canReact(groupSnapshot, groupMessage) == false, "unsendable groups should hide reactions")
+  groupConversation.notice = nil
+
+  competitive = true
+  assert(callbacks.canReact({ channel = "WOW" }, directMessage) == false, "competitive content should dynamically disable direct reactions")
+  assert(callbacks.canReact(groupSnapshot, groupMessage) == false, "competitive content should dynamically disable group reactions")
+  competitive = false
+
   callbacks.onTabModeChanged("groups")
   assert(characterState.contactsTabMode == "groups", "tab callback should persist mode")
 
@@ -125,6 +210,11 @@ return function()
   assert(callbacks.onSend({ channel = "PARTY", text = "group hello" }) == true, "group send should use group policy")
   assert(sentGroup.text == "group hello", "group payload should reach group policy")
 
+  local selectedContact = { conversationKey = "wow::WOW::thrall" }
+  local targetMessage = runtime.store.conversations["wow::WOW::thrall"].messages[1]
+  assert(callbacks.onReact(selectedContact, targetMessage, "heart") == "reaction-result", "reaction callback should delegate")
+  assert(reacted.selectedContact == selectedContact, "reaction callback should preserve selected contact")
+  assert(reacted.message == targetMessage and reacted.reactionKey == "heart", "reaction callback should preserve message and key")
   callbacks.onPositionChanged({ x = 40 })
   assert(characterState.window.x == 40, "position callback should copy window state")
 
@@ -142,7 +232,7 @@ return function()
   assert(runtime.store.conversations["wow::WOW::thrall"].pinned == true, "pin callback should pin unpinned conversation")
   callbacks.onMarkUnread({ conversationKey = "wow::WOW::thrall", displayName = "Thrall" })
   assert(runtime.store.conversations["wow::WOW::thrall"].unreadCount == 1, "mark unread should restore retained incoming count")
-  assert(refreshes == 4, "mark unread should refresh the window")
+  assert(refreshes == 5, "mark unread should refresh the window")
 
   callbacks.onRemove({ conversationKey = "wow::WOW::jaina", displayName = "Jaina" })
   assert(runtime.store.conversations["wow::WOW::jaina"] == nil, "remove callback should delete conversation")

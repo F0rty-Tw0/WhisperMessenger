@@ -288,6 +288,7 @@ return function()
   -- Group send policy and availability refresh are exposed for the event bridge.
   assert(type(runtime.getGroupSendNotice) == "function", "runtime.getGroupSendNotice should be wired")
   assert(type(runtime.onAvailabilityChanged) == "function", "runtime.onAvailabilityChanged should be wired")
+  assert(type(runtime.canReact) == "function", "runtime.canReact should expose dynamic reaction availability")
 
   -- ensureWindow creates exactly once and routes window options through real
   -- WindowCallbacks / SettingsHandler / StartConversation submodules.
@@ -303,6 +304,8 @@ return function()
     "onSelectConversation",
     "onStartConversation",
     "onSend",
+    "onReact",
+    "canReact",
     "onPositionChanged",
     "onClose",
     "onResetWindowPosition",

@@ -1,6 +1,8 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
+local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
+local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
 
 -- Load GroupChatIngest under test
 local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
@@ -568,6 +570,392 @@ return function()
     assert(instance ~= nil, "INSTANCE_CHAT should use GUID session key")
     assert(instance.ownerProfileId == "arthas-area52", "GUID session should stamp ownerProfileId")
     assert(instance.groupCategory == 2 and instance.partyGUID == instanceGuid, "GUID session should stamp category and partyGUID")
+  end
+  -- Identity metadata attaches remote group wire IDs in either arrival order.
+  do
+    local now = 1650
+    local partyGUID = "Party-0-identity"
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      groupPartyGUIDsByCategory = { [1] = partyGUID },
+    })
+    assert(GroupChatIngest.HandleAddonEvent(state, {
+      channel = "PARTY",
+      playerName = "Remote-Realm",
+      text = Protocol.EncodeIdentity("remotewire1", "first remote"),
+    }) == nil, "identity metadata should remain invisible")
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "first remote",
+      playerName = "Remote-Realm",
+      guid = "Player-remote",
+      lineID = 1651,
+    })
+    local conversation = state.store.conversations["party::arthas-area52::1::" .. partyGUID]
+    assert(conversation.messages[1].wireId == "remotewire1", "metadata-first remote identity should attach")
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "second remote",
+      playerName = "Remote-Realm",
+      guid = "Player-remote",
+      lineID = 1652,
+    })
+    GroupChatIngest.HandleAddonEvent(state, {
+      channel = "PARTY",
+      playerName = "Remote-Realm",
+      text = Protocol.EncodeIdentity("remotewire2", "second remote"),
+    })
+    assert(conversation.messages[2].wireId == "remotewire2", "message-first remote identity should attach")
+  end
+
+  -- ----------------------------------------------------------------
+  -- 16. Local group echoes consume pending entries: ordinary echoes retain
+  --     their wire ID and reaction controls mutate their target invisibly.
+  -- ----------------------------------------------------------------
+  do
+    local now = 1700
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      pendingGroupOutgoing = {
+        ["party::arthas-area52"] = {
+          { text = "mine", channel = "PARTY", createdAt = now, wireId = "localwire" },
+        },
+      },
+    })
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "mine",
+      playerName = "Arthas-Area52",
+      lineID = 1701,
+      guid = "Player-1084-00000001",
+    })
+    local conversation = state.store.conversations["party::arthas-area52"]
+    local localMessage = conversation.messages[1]
+    assert(localMessage.wireId == "localwire", "local ordinary echo should keep pending wire ID")
+
+    local target = {
+      kind = "user",
+      direction = "in",
+      channel = "PARTY",
+      text = "target",
+      guid = "Player-target",
+      playerName = "Target-Realm",
+      wireId = "targetwire",
+      _pendingReaction = { token = "pending" },
+    }
+    conversation.messages[#conversation.messages + 1] = target
+    local fallback = Protocol.BuildGroupFallback("heart", "set", target.text)
+    local operation =
+      Protocol.Decode(Protocol.EncodeGroupReaction("set", "heart", target.wireId, target.text, fallback, target.guid, target.playerName))
+    local control = {
+      pendingToken = "pending",
+      operation = operation,
+      targetMessage = target,
+      targetConversation = conversation,
+    }
+    state.pendingGroupOutgoing["party::arthas-area52"] = {
+      { text = fallback, channel = "PARTY", createdAt = now, reactionControl = control },
+    }
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Arthas-Area52",
+      lineID = 1702,
+      guid = "Player-1084-00000001",
+    })
+    assert(#conversation.messages == 2, "local reaction fallback must not append")
+    assert(control.confirmed == true and target._pendingReaction == nil, "local reaction should confirm and clear pending badge")
+    assert(target.reaction and target.reaction.key == "heart", "local reaction should update target")
+    target._pendingReaction = { token = "remove-pending" }
+    fallback = Protocol.BuildGroupFallback("heart", "remove", target.text)
+    operation = Protocol.Decode(Protocol.EncodeGroupReaction("remove", "heart", target.wireId, target.text, fallback, target.guid, target.playerName))
+    control = {
+      pendingToken = "remove-pending",
+      operation = operation,
+      targetMessage = target,
+      targetConversation = conversation,
+    }
+    state.pendingGroupOutgoing["party::arthas-area52"] = {
+      { text = fallback, channel = "PARTY", createdAt = now, reactionControl = control },
+    }
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Arthas-Area52",
+      lineID = 1703,
+      guid = "Player-1084-00000001",
+    })
+    assert(
+      #conversation.messages == 2 and control.confirmed == true and target._pendingReaction == nil,
+      "local remove fallback must stay hidden and confirm"
+    )
+    assert(target.reaction == nil, "local remove should clear target reaction")
+  end
+  -- Group operations pair metadata and actor-free fallback in both orders.
+  do
+    local now = 1800
+    local partyGUID = "Party-0-current"
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      groupPartyGUIDsByCategory = { [1] = partyGUID },
+    })
+    local key = "party::arthas-area52::1::" .. partyGUID
+    local conversation = { conversationKey = key, channel = "PARTY", messages = {}, unreadCount = 0 }
+    state.store.conversations[key] = conversation
+    local outgoing = {
+      kind = "user",
+      direction = "out",
+      channel = "PARTY",
+      text = "same text",
+      guid = "Player-local",
+      playerName = "Arthas-Area52",
+      wireId = "localwire",
+    }
+    conversation.messages[1] = outgoing
+    local fallback = Protocol.BuildGroupFallback("heart", "set", outgoing.text)
+    local operation = assert(Protocol.EncodeGroupReaction("set", "heart", nil, outgoing.text, fallback, outgoing.guid, outgoing.playerName))
+    assert(
+      GroupChatIngest.HandleAddonEvent(state, { channel = "PARTY", playerName = "Reactor-Realm", text = operation }) == nil,
+      "metadata-first operation should wait for fallback"
+    )
+    assert(GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Reactor-Realm",
+      lineID = 1801,
+      guid = "Player-reactor",
+    }) == true, "group fallback should be recognized")
+    assert(
+      #conversation.messages == 1 and outgoing.reaction and outgoing.reaction.actorName == "Reactor-Realm",
+      "original author should see hidden converted control"
+    )
+
+    local incoming = {
+      kind = "user",
+      direction = "in",
+      channel = "PARTY",
+      text = "same text",
+      guid = "Player-peer",
+      playerName = "Peer-Realm",
+      wireId = "peerwire",
+    }
+    conversation.messages[2] = incoming
+    fallback = Protocol.BuildGroupFallback("wow", "set", incoming.text)
+    operation = assert(Protocol.EncodeGroupReaction("set", "wow", nil, incoming.text, fallback, incoming.guid, incoming.playerName))
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Third-Realm",
+      lineID = 1802,
+      guid = "Player-third",
+    })
+    assert(#conversation.messages == 2, "fallback-first control should stage invisibly")
+    GroupChatIngest.HandleAddonEvent(state, { channel = "PARTY", playerName = "Third-Realm", text = operation })
+    assert(#conversation.messages == 2 and incoming.reaction and incoming.reaction.key == "wow", "third peer should update incoming target")
+    assert(outgoing.reaction.key == "heart", "same text from different author must not cross-target")
+
+    local degraded
+    state.onGroupReactionFallbackDegraded = function(result)
+      degraded = result
+    end
+    fallback = Protocol.BuildGroupFallback("sad", "set", "missing metadata")
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Late-Realm",
+      lineID = 1803,
+      guid = "Player-late",
+    })
+    now = now + 15
+    MessageReactions.Expire(state, now)
+    assert(
+      degraded == conversation
+        and #conversation.messages == 3
+        and conversation.messages[3].text == fallback
+        and conversation.unreadCount == 1
+        and conversation.lastPreview == fallback,
+      "missing metadata should degrade through normal group storage effects"
+    )
+
+    local oldKey = "party::arthas-area52::1::Party-0-old"
+    local oldTarget = { kind = "user", direction = "in", text = "old", guid = "Player-old", playerName = "Old-Realm", wireId = "oldwire" }
+    state.store.conversations[oldKey] = { conversationKey = oldKey, channel = "PARTY", messages = { oldTarget } }
+    local oldFallback = Protocol.BuildGroupFallback("heart", "set", oldTarget.text)
+    local oldOperation =
+      Protocol.EncodeGroupReaction("set", "heart", oldTarget.wireId, oldTarget.text, oldFallback, oldTarget.guid, oldTarget.playerName)
+    assert(
+      GroupChatIngest.HandleAddonEvent(state, { channel = "SAY", playerName = "Late-Realm", text = oldOperation }) == nil,
+      "unsupported addon channel must be ignored"
+    )
+    GroupChatIngest.HandleAddonEvent(state, { channel = "PARTY", playerName = "Late-Realm", text = oldOperation })
+    assert(oldTarget.reaction == nil, "current session metadata must not mutate old session")
+    assert(
+      state.pendingOutgoing.sentinel == true and state.lastIncomingWhisperKey == "whisper-sentinel",
+      "group controls must not mutate whisper state"
+    )
+  end
+  -- A delayed group fallback is stored at its original arrival position, so
+  -- later ordinary activity remains the conversation preview and activity.
+  do
+    local now = 1900
+    local partyGUID = "Party-0-chronological"
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      groupPartyGUIDsByCategory = { [1] = partyGUID },
+    })
+    local key = "party::arthas-area52::1::" .. partyGUID
+    local fallback = Protocol.BuildGroupFallback("sad", "set", "earlier")
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Late-Realm",
+      lineID = 1901,
+      guid = "Player-late",
+    })
+    now = 1901
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "later ordinary",
+      playerName = "Member-Realm",
+      lineID = 1902,
+      guid = "Player-member",
+    })
+    now = 1915
+    MessageReactions.Expire(state, now)
+    local conversation = state.store.conversations[key]
+    assert(
+      #conversation.messages == 2 and conversation.messages[1].text == fallback and conversation.messages[2].text == "later ordinary",
+      "expired group fallback must insert before later ordinary message"
+    )
+    assert(
+      conversation.lastPreview == "later ordinary" and conversation.lastActivityAt == 1901 and conversation.unreadCount == 2,
+      "expired group fallback must preserve newer preview, activity, and unread ordering"
+    )
+  end
+  -- A fallback that creates its conversation during expiry carries the same
+  -- session stamps as synchronous group ingest.
+  do
+    local now = 2000
+    local partyGUID = "Party-0-expiry"
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      groupPartyGUIDsByCategory = { [1] = partyGUID },
+    })
+    local key = "party::arthas-area52::1::" .. partyGUID
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = Protocol.BuildGroupFallback("heart", "set", "expiry only"),
+      playerName = "Late-Realm",
+      lineID = 2001,
+      guid = "Player-late",
+    })
+    now = 2015
+    MessageReactions.Expire(state, now)
+    local conversation = state.store.conversations[key]
+    assert(
+      conversation and conversation.ownerProfileId == "arthas-area52" and conversation.groupCategory == 1 and conversation.partyGUID == partyGUID,
+      "expiry-created party conversation must retain session stamps"
+    )
+  end
+  -- Temporary group channels without a live session GUID must not correlate
+  -- remote WMRX metadata; their fallback stays an ordinary readable message.
+  do
+    local now = 2100
+    local identityState = makeState({
+      now = function()
+        return now
+      end,
+    })
+    GroupChatIngest.HandleAddonEvent(identityState, {
+      channel = "PARTY",
+      playerName = "Remote-Realm",
+      text = Protocol.EncodeIdentity("unsafeidentity", "remote ordinary"),
+    })
+    GroupChatIngest.HandleEvent(identityState, "CHAT_MSG_PARTY", {
+      text = "remote ordinary",
+      playerName = "Remote-Realm",
+      lineID = 2101,
+      guid = "Player-remote",
+    })
+    local singleton = identityState.store.conversations["party::arthas-area52"]
+    assert(
+      singleton.messages[1].wireId == nil and identityState.messageReactionRuntime == nil,
+      "missing party GUID must prevent remote identity pairing"
+    )
+
+    local oldTarget = {
+      kind = "user",
+      direction = "in",
+      text = "old session target",
+      guid = "Player-old",
+      playerName = "Old-Realm",
+      wireId = "oldwire",
+    }
+    identityState.store.conversations["party::arthas-area52::1::Party-0-old"] = {
+      messages = { oldTarget },
+    }
+    GroupChatIngest.HandleAddonEvent(identityState, {
+      channel = "PARTY",
+      playerName = "Remote-Realm",
+      text = Protocol.EncodeGroupReaction(
+        "set",
+        "heart",
+        oldTarget.wireId,
+        oldTarget.text,
+        Protocol.BuildGroupFallback("heart", "set", oldTarget.text),
+        oldTarget.guid,
+        oldTarget.playerName
+      ),
+    })
+    assert(
+      oldTarget.reaction == nil and identityState.messageReactionRuntime == nil,
+      "missing party GUID must not retain addon metadata that could correlate against old session history"
+    )
+
+    local fallbackState = makeState({
+      now = function()
+        return now
+      end,
+    })
+    local fallback = Protocol.BuildGroupFallback("heart", "set", "unsafe fallback")
+    local _, _, meta = GroupChatIngest.HandleEvent(fallbackState, "CHAT_MSG_PARTY", {
+      text = fallback,
+      playerName = "Remote-Realm",
+      lineID = 2102,
+      guid = "Player-remote",
+    })
+    singleton = fallbackState.store.conversations["party::arthas-area52"]
+    assert(
+      singleton and singleton.messages[1].text == fallback and meta == nil and fallbackState.messageReactionRuntime == nil,
+      "missing party GUID must store fallback normally instead of unsafe hidden correlation"
+    )
+  end
+  -- A distinct older local echo cannot block a later matching pending echo.
+  do
+    local now = 2200
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      pendingGroupOutgoing = {
+        ["party::arthas-area52"] = {
+          { text = "older distinct", channel = "PARTY", createdAt = now, wireId = "olderwire" },
+          { text = "matching echo", channel = "PARTY", createdAt = now, wireId = "matchingwire" },
+        },
+      },
+    })
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "matching echo",
+      playerName = "Arthas-Area52",
+      lineID = 2201,
+      guid = "Player-1084-00000001",
+    })
+    local conversation = state.store.conversations["party::arthas-area52"]
+    local queue = state.pendingGroupOutgoing["party::arthas-area52"]
+    assert(
+      conversation.messages[1].wireId == "matchingwire" and queue and #queue == 1 and queue[1].text == "older distinct",
+      "matching local echo must scan past a distinct pending head while retaining FIFO duplicates"
+    )
   end
   rawset(_G, "BNGetInfo", savedBNGetInfo)
 end

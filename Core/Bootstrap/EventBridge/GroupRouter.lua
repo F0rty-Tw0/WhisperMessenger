@@ -185,6 +185,17 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
     end)
   end
 
+  runtime.onGroupReactionFallbackDegraded = function(conversation)
+    local ok, err = pcall(function()
+      if conversation and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
+        runtime.refreshWindow()
+      end
+    end)
+    if not ok and Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled() then
+      Trace("EventBridge: group reaction fallback refresh failed: " .. tostring(err))
+    end
+  end
+
   local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)
   if handled and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
     runtime.refreshWindow()

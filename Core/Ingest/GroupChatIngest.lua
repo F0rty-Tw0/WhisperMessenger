@@ -9,6 +9,8 @@ local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.C
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
+local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 -- stylua: ignore end
 
 local GroupChatIngest = {}
@@ -51,6 +53,26 @@ local GROUP_CONVERSATION_KEY_PREFIX = {
   [ChannelType.RAID] = "raid::",
 }
 
+local REACTION_CHANNELS = {
+  PARTY = ChannelType.PARTY,
+  RAID = ChannelType.RAID,
+  INSTANCE_CHAT = ChannelType.INSTANCE_CHAT,
+  GUILD = ChannelType.GUILD,
+  OFFICER = ChannelType.OFFICER,
+}
+
+local SUPPORTED_REACTION_CHANNELS = {
+  [ChannelType.PARTY] = true,
+  [ChannelType.RAID] = true,
+  [ChannelType.INSTANCE_CHAT] = true,
+  [ChannelType.GUILD] = true,
+  [ChannelType.OFFICER] = true,
+}
+
+local function requiresSessionGuid(channel)
+  return GROUP_CONVERSATION_KEY_PREFIX[channel] ~= nil
+end
+
 local function groupCategoryForChannel(channel)
   if channel == ChannelType.PARTY or channel == ChannelType.RAID then
     return type(_G.LE_PARTY_CATEGORY_HOME) == "number" and _G.LE_PARTY_CATEGORY_HOME or 1
@@ -71,6 +93,30 @@ local function buildGroupSessionKey(state, channel)
   end
 
   return prefix .. state.localProfileId .. "::" .. category .. "::" .. partyGUID, category, partyGUID
+end
+
+local function resolveGroupConversation(state, channel)
+  if not SUPPORTED_REACTION_CHANNELS[channel] then
+    return nil
+  end
+  local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
+  local guildName
+  if channel == ChannelType.GUILD and type(_G.GetGuildInfo) == "function" then
+    local ok, name = pcall(_G.GetGuildInfo, "player")
+    if ok and type(name) == "string" and name ~= "" then
+      guildName = name
+      contactKeyPrefix = "GUILD::" .. name
+    end
+  end
+  local conversationKey, groupCategory, partyGUID = buildGroupSessionKey(state, channel)
+  if conversationKey == nil then
+    conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
+  end
+  return conversationKey, groupCategory, partyGUID, guildName
+end
+
+function GroupChatIngest.ResolveCurrentConversation(state, channel)
+  return resolveGroupConversation(state, REACTION_CHANNELS[channel] or channel)
 end
 
 local function localSenderClassTag()
@@ -156,6 +202,158 @@ local function appendAndStamp(state, conversationKey, channel, eventName, payloa
   return conversation
 end
 
+local function groupSenderKey(playerName, conversationKey)
+  if type(playerName) ~= "string" or type(conversationKey) ~= "string" then
+    return nil
+  end
+  local ok, normalized = pcall(string.lower, playerName)
+  return ok and normalized .. "::" .. conversationKey or nil
+end
+
+local function prunePending(state, conversationKey, now)
+  local queues = state.pendingGroupOutgoing
+  local queue = type(queues) == "table" and queues[conversationKey] or nil
+  if type(queue) ~= "table" then
+    return nil
+  end
+  for index = #queue, 1, -1 do
+    local entry = queue[index]
+    if type(entry) ~= "table" or (type(entry.createdAt) == "number" and now - entry.createdAt > 15) then
+      table.remove(queue, index)
+    end
+  end
+  if #queue == 0 then
+    queues[conversationKey] = nil
+    return nil
+  end
+  return queue
+end
+
+local function consumePending(state, conversationKey, channel, text, now)
+  local queue = prunePending(state, conversationKey, now)
+  if type(queue) ~= "table" then
+    return nil
+  end
+  for index, entry in ipairs(queue) do
+    if entry.channel == channel and entry.text == text then
+      table.remove(queue, index)
+      if #queue == 0 then
+        state.pendingGroupOutgoing[conversationKey] = nil
+      end
+      return entry
+    end
+  end
+  return nil
+end
+
+local function appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
+  local direction = Direction.Resolve(eventName, payload, state)
+  local sentAt = (state.now and state.now()) or 0
+  local message = buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+  if direction == "out" then
+    local pending = consumePending(state, conversationKey, channel, message.text, sentAt)
+    if pending and pending.reactionControl then
+      local control = pending.reactionControl
+      local changed, target = MessageReactions.ApplyOperation(state, conversationKey, control.operation, control.actorName, nil, sentAt)
+      if target then
+        control.confirmed = true
+        MessageReactions.ClearPending(target, control.pendingToken)
+        return state.store.conversations[conversationKey], { reactionControl = true, reactionChanged = changed == true }
+      end
+    elseif pending then
+      message.wireId = pending.wireId
+    end
+    Store.AppendOutgoing(state.store, conversationKey, message)
+  else
+    local senderKey = groupSenderKey(payload.playerName, conversationKey)
+    local canCorrelate = not requiresSessionGuid(channel) or (type(partyGUID) == "string" and partyGUID ~= "")
+    if senderKey and canCorrelate then
+      MessageReactions.AttachIncomingIdentity(state, senderKey, conversationKey, message, sentAt)
+      local function appendDegraded(controlMessage)
+        local isActive = state.activeConversationKey == conversationKey
+        Store.InsertIncomingChronological(state.store, conversationKey, controlMessage, isActive)
+        local degraded = state.store.conversations[conversationKey]
+        if degraded then
+          degraded.conversationKey = conversationKey
+          if partyGUID then
+            degraded.ownerProfileId = state.localProfileId
+            degraded.groupCategory = groupCategory
+            degraded.partyGUID = partyGUID
+          end
+        end
+        if type(state.onGroupReactionFallbackDegraded) == "function" then
+          state.onGroupReactionFallbackDegraded(degraded)
+        end
+      end
+      local controlResult = MessageReactions.ConsumeIncomingControl(
+        state,
+        senderKey,
+        conversationKey,
+        payload.playerName,
+        message,
+        nil,
+        sentAt,
+        appendDegraded,
+        nil,
+        Protocol.ParseGroupFallback
+      )
+      if controlResult and controlResult.staged then
+        return nil, { reactionControl = true, reactionStaged = true }
+      end
+      if controlResult and controlResult.converted then
+        return state.store.conversations[conversationKey], { reactionControl = true, reactionChanged = controlResult.changed == true }
+      end
+      if controlResult and controlResult.degraded then
+        return state.store.conversations[conversationKey], { reactionDegraded = true }
+      end
+    end
+    local isActive = state.activeConversationKey == conversationKey
+    Store.AppendIncoming(state.store, conversationKey, message, isActive)
+  end
+  local conversation = state.store.conversations[conversationKey]
+  if conversation then
+    conversation.conversationKey = conversationKey
+  end
+  return conversation
+end
+
+function GroupChatIngest.HandleAddonEvent(state, payload)
+  if type(state) ~= "table" or type(payload) ~= "table" then
+    return nil
+  end
+  local channel = REACTION_CHANNELS[payload.channel]
+  local conversationKey
+  local partyGUID
+  if channel then
+    conversationKey, _, partyGUID = resolveGroupConversation(state, channel)
+  end
+  if requiresSessionGuid(channel) and (type(partyGUID) ~= "string" or partyGUID == "") then
+    return nil
+  end
+  local senderKey = groupSenderKey(payload.playerName, conversationKey)
+  local metadata = Protocol.Decode(payload.text)
+  if senderKey == nil or metadata == nil then
+    return nil
+  end
+  local now = (state.now and state.now()) or 0
+  if metadata.type == "identity" then
+    MessageReactions.RecordIdentity(state, senderKey, conversationKey, metadata, now)
+    return nil
+  end
+  if metadata.type ~= "groupReaction" then
+    return nil
+  end
+  local result = MessageReactions.RecordOperation(state, senderKey, conversationKey, payload.playerName, metadata, nil, now)
+  if result and result.converted then
+    local conversation = state.store.conversations[conversationKey]
+    if conversation then
+      conversation.conversationKey = conversationKey
+    end
+    return conversation, { reactionControl = true, reactionChanged = result.changed == true }
+  end
+  return nil
+end
+
 -- HandleEvent processes one of the 5 group chat events.
 -- Returns true when the event was recognized and routed; false otherwise.
 function GroupChatIngest.HandleEvent(state, eventName, payload)
@@ -206,29 +404,17 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
 
   -- PARTY / INSTANCE_CHAT / RAID use a per-session key when lifecycle
   -- events supplied a party GUID; otherwise they retain singleton behavior.
-  -- OFFICER is singleton. GUILD is special: when we can resolve the
-  -- player's live guild name, the key becomes account-wide (all characters
-  -- in the same guild share the same conversation). Falls back to a
-  -- per-character key when the name is unavailable.
-  local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
-  local guildName = nil
-  if channel == ChannelType.GUILD then
-    local getGuildInfo = _G.GetGuildInfo
-    if type(getGuildInfo) == "function" then
-      local ok, name = pcall(getGuildInfo, "player")
-      if ok and type(name) == "string" and name ~= "" then
-        guildName = name
-        contactKeyPrefix = "GUILD::" .. name
-      end
-    end
-  end
-
-  local conversationKey, groupCategory, partyGUID = buildGroupSessionKey(state, channel)
-  if conversationKey == nil then
-    conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
-  end
+  -- OFFICER is singleton. GUILD resolves to its account-wide guild key when
+  -- the live guild name is available.
+  local conversationKey, groupCategory, partyGUID, guildName = resolveGroupConversation(state, channel)
   local isLeader = LEADER_EVENTS[eventName] == true and true or false
-  local conv = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
+  local conv
+  local resultMeta
+  if SUPPORTED_REACTION_CHANNELS[channel] then
+    conv, resultMeta = appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
+  else
+    conv = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
+  end
 
   if conv and partyGUID then
     conv.ownerProfileId = state.localProfileId
@@ -245,7 +431,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     conv.ownerProfileId = state.localProfileId
   end
 
-  return true
+  return true, conv, resultMeta
 end
 
 -- Exposed for unit tests that simulate 12.0 "secret string" taint throws.

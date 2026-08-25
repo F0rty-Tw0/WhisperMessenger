@@ -8,15 +8,43 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local Availability = ns.Availability or require("WhisperMessenger.Transport.Availability")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
+local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
+local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
+local REACTION_ADDON_PREFIX = "WMRX"
+
+local GROUP_REACTION_CHANNELS = {
+  PARTY = true,
+  RAID = true,
+  INSTANCE_CHAT = true,
+  GUILD = true,
+  OFFICER = true,
+}
 
 -- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
 local function getQuestLinkClassic()
   return ns.UIHyperlinksQuestLinkClassic or (rawget(_G, "require") and require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic"))
 end
+local function canonicalReactionText(text)
+  local questLinks = getQuestLinkClassic()
+  if questLinks and type(questLinks.CanonicalizeForTransport) == "function" then
+    return questLinks.CanonicalizeForTransport(text)
+  end
+  return text
+end
+local function canonicalTargetText(text)
+  local questLinks = getQuestLinkClassic()
+  if questLinks and type(questLinks.Serialize) == "function" then
+    return questLinks.Serialize(text)
+  end
+  return text
+end
 
 local Router = {}
+Router._isSecretString = SecretString.IsSecretString
 
 local function checkCensored(lineID)
   local chatApi = _G.C_ChatInfo
@@ -61,6 +89,16 @@ local function buildConversationContact(state, payload)
   end
   local conversationKey = Identity.BuildConversationKey(state.localProfileId, contact.contactKey)
   return contact, conversationKey
+end
+local function confirmWhisperAvailability(state, payload, contact)
+  local guid = payload.guid or (contact and contact.guid or nil)
+  if guid == nil then
+    return
+  end
+  local availability = Availability.FromStatus("CanWhisper")
+  availability.confirmedByWhisper = true
+  state.availabilityByGUID = state.availabilityByGUID or {}
+  state.availabilityByGUID[guid] = availability
 end
 
 local function localSenderClassTag()
@@ -147,15 +185,84 @@ local function buildMessage(state, eventName, payload, contact, direction, kind,
   }
 end
 
-function Router.RecordPendingSend(state, target, text)
-  return PendingOutgoing.Record(state, target, text)
+function Router.RecordPendingSend(state, target, text, metadata)
+  return PendingOutgoing.Record(state, target, text, metadata)
+end
+
+local function resolveWhisperReactionConversation(state, playerName, computedConversationKey)
+  return Identity.ResolveWhisperConversation(state, playerName, "WOW") or computedConversationKey
+end
+
+local function reactionSenderContext(state, payload, isBattleNet)
+  if isBattleNet then
+    if payload.bnetAccountID == nil then
+      return nil, nil, nil, nil, nil
+    end
+    local senderKey = "bn:" .. tostring(payload.bnetAccountID)
+    local conversationKey = Identity.ResolveWhisperConversation(state, payload.bnetAccountID, "BN")
+    local conversation = conversationKey and state.store.conversations[conversationKey] or nil
+    local actorName = conversation
+        and (conversation.displayName or conversation.contactDisplayName or conversation.battleTag or conversation.gameAccountName)
+      or tostring(payload.bnetAccountID)
+    return senderKey, conversationKey, actorName, conversationKey, senderKey
+  end
+
+  if type(payload.playerName) ~= "string" then
+    return nil, nil, nil, nil, nil
+  end
+  local contact, computedConversationKey = buildConversationContact(state, payload)
+  if contact == nil then
+    return nil, nil, nil, nil, nil
+  end
+  local conversationKey = resolveWhisperReactionConversation(state, payload.playerName, computedConversationKey)
+  local conversation = state.store.conversations[conversationKey]
+  local actorName = conversation and (conversation.displayName or conversation.contactDisplayName) or contact.displayName or payload.playerName
+  return conversationKey, conversationKey, actorName, conversationKey, conversationKey
+end
+
+local function handleReactionMetadata(state, payload, isBattleNet)
+  local metadata = MessageReactionProtocol.Decode(payload.text)
+  if metadata == nil then
+    return nil
+  end
+  local senderKey, conversationKey, actorName, identityConversationKey, reactionSenderKey = reactionSenderContext(state, payload, isBattleNet)
+  if senderKey == nil then
+    return nil
+  end
+  local now = state.now and state.now() or 0
+  if metadata.type == "identity" then
+    MessageReactions.RecordIdentity(state, senderKey, identityConversationKey, metadata, now)
+    return nil
+  end
+  if metadata.type ~= "reaction" then
+    return nil
+  end
+  if conversationKey == nil then
+    return nil
+  end
+
+  local result = MessageReactions.RecordOperation(state, reactionSenderKey, conversationKey, actorName, metadata, "out", now, canonicalTargetText)
+  if result and result.converted then
+    local conversation = state.store.conversations[conversationKey]
+    return conversation, {
+      reactionControl = true,
+      reactionChanged = result.changed == true,
+    }
+  end
+  return nil
 end
 
 local function handleUnlockedEvent(state, eventName, payload)
+  if type(payload) ~= "table" or SecretString.PayloadHasSecretFields(payload, Router._isSecretString) then
+    return nil
+  end
   if eventName == "CHAT_MSG_ADDON" then
-    -- Paired side channel for quest links over Classic character whispers.
-    -- Buffer the (id, name) pairs against the sender so the matching
-    -- CHAT_MSG_WHISPER can splice a clickable link into its bubble.
+    if payload.prefix == REACTION_ADDON_PREFIX and payload.channel == "WHISPER" then
+      return handleReactionMetadata(state, payload, false)
+    end
+    if payload.prefix == REACTION_ADDON_PREFIX and GROUP_REACTION_CHANNELS[payload.channel] then
+      return GroupChatIngest.HandleAddonEvent(state, payload)
+    end
     if payload.prefix == QUEST_LINK_ADDON_PREFIX and payload.channel == "WHISPER" and type(payload.playerName) == "string" then
       local now = state.now and state.now() or 0
       QuestLinkExchange.RecordIncoming(state, payload.playerName, payload.text, now)
@@ -164,9 +271,9 @@ local function handleUnlockedEvent(state, eventName, payload)
   end
 
   if eventName == "BN_CHAT_MSG_ADDON" then
-    -- Same side channel over Battle.net game data, keyed by bnetAccountID
-    -- so the matching CHAT_MSG_BN_WHISPER can splice the link regardless of
-    -- which character the friend is currently on.
+    if payload.prefix == REACTION_ADDON_PREFIX then
+      return handleReactionMetadata(state, payload, true)
+    end
     if payload.prefix == QUEST_LINK_ADDON_PREFIX and payload.bnetAccountID ~= nil then
       local now = state.now and state.now() or 0
       QuestLinkExchange.RecordIncoming(state, "bn:" .. tostring(payload.bnetAccountID), payload.text, now)
@@ -217,22 +324,84 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      Store.AppendIncoming(state.store, conversationKey, buildMessage(state, eventName, payload, contact, "in", "user", sentAt), isActive)
-      -- If someone whispers us, they are clearly online and whisperable
-      local guid = payload.guid or (contact and contact.guid or nil)
-      if guid then
-        local avail = Availability.FromStatus("CanWhisper")
-        avail.confirmedByWhisper = true
-        state.availabilityByGUID[guid] = avail
+      local incomingMessage = buildMessage(state, eventName, payload, contact, "in", "user", sentAt)
+      local correlationText = canonicalReactionText(incomingMessage.text)
+      local senderKey = eventName == "CHAT_MSG_BN_WHISPER" and ("bn:" .. tostring(payload.bnetAccountID)) or payload.playerName
+      local reactionConversationKey = conversationKey
+      local reactionSenderKey = senderKey
+      local reactionActorName = contact.displayName or payload.playerName
+      if eventName == "CHAT_MSG_WHISPER" then
+        reactionConversationKey = resolveWhisperReactionConversation(state, payload.playerName, conversationKey)
+        reactionSenderKey = reactionConversationKey
+        local resolvedConversation = state.store.conversations[reactionConversationKey]
+        reactionActorName = resolvedConversation and (resolvedConversation.displayName or resolvedConversation.contactDisplayName)
+          or reactionActorName
       end
+      confirmWhisperAvailability(state, payload, contact)
+      local routeComplete = false
+      local degradedConversation
+      local function appendDegraded(message)
+        local active = state.activeConversationKey == conversationKey
+        if state.isConversationOpen then
+          active = state.isConversationOpen(conversationKey) == true
+        end
+        degradedConversation = Store.InsertIncomingChronological(state.store, conversationKey, message, active)
+        if degradedConversation then
+          degradedConversation.conversationKey = conversationKey
+        end
+        if routeComplete and type(state.onReactionFallbackDegraded) == "function" then
+          state.onReactionFallbackDegraded(degradedConversation)
+        end
+      end
+
+      local identitySenderKey = senderKey
+      local identityConversationKey = conversationKey
+      if eventName == "CHAT_MSG_WHISPER" then
+        identitySenderKey = reactionSenderKey
+        identityConversationKey = reactionConversationKey
+      end
+
+      MessageReactions.AttachIncomingIdentity(state, identitySenderKey, identityConversationKey, incomingMessage, sentAt, correlationText)
+      local controlResult = MessageReactions.ConsumeIncomingControl(
+        state,
+        reactionSenderKey,
+        reactionConversationKey,
+        reactionActorName,
+        incomingMessage,
+        "out",
+        sentAt,
+        appendDegraded,
+        correlationText
+      )
+      routeComplete = true
+      if controlResult then
+        if controlResult.staged then
+          return nil, {
+            reactionControl = true,
+            reactionStaged = true,
+          }
+        end
+        if controlResult.converted then
+          local conversation = state.store.conversations[reactionConversationKey]
+          if conversation then
+            conversation.conversationKey = reactionConversationKey
+          end
+          return conversation, {
+            reactionControl = true,
+            reactionChanged = controlResult.changed == true,
+          }
+        end
+        if controlResult.degraded then
+          return degradedConversation, {
+            reactionDegraded = true,
+          }
+        end
+      end
+
+      Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
-      -- WoW Classic's character whisper protocol can strip outgoing hyperlinks
-      -- down to a bare label by the time CHAT_MSG_WHISPER_INFORM echoes back,
-      -- losing the brackets, id, and `|H...|h` envelope. Resolve against the
-      -- pending queue (strict first, then soft target+timing match) to get
-      -- BOTH the locally captured text for the bubble AND a consumed entry,
-      -- so subsequent sends don't surface stale pending text.
-      local fromPending, pendingText = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
+      confirmWhisperAvailability(state, payload, contact)
+      local fromPending, pendingText, pendingEntry = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
       outgoingFromPendingSend = fromPending
       local informPayload = payload
       if pendingText ~= nil and pendingText ~= payload.text then
@@ -242,20 +411,44 @@ local function handleUnlockedEvent(state, eventName, payload)
         end
         informPayload.text = pendingText
       end
-      Store.AppendOutgoing(state.store, conversationKey, buildMessage(state, eventName, informPayload, contact, "out", "user", sentAt))
-      -- Replying means the user saw the conversation; clear unread notification
-      Store.MarkRead(state.store, conversationKey)
-      -- Our whisper was delivered, so the target is reachable
-      local guid = payload.guid or (contact and contact.guid or nil)
-      if guid then
-        local avail = Availability.FromStatus("CanWhisper")
-        avail.confirmedByWhisper = true
-        state.availabilityByGUID[guid] = avail
+
+      local reactionControl = pendingEntry and pendingEntry.reactionControl
+      if reactionControl and reactionControl.operation then
+        local changed, target = MessageReactions.ApplyOperation(
+          state,
+          conversationKey,
+          reactionControl.operation,
+          reactionControl.actorName,
+          "in",
+          sentAt,
+          canonicalTargetText
+        )
+        if target then
+          reactionControl.confirmed = true
+          MessageReactions.ClearPending(target, reactionControl.pendingToken)
+          local conversation = state.store.conversations[conversationKey]
+          if conversation then
+            conversation.conversationKey = conversationKey
+          end
+          return conversation,
+            {
+              outgoingFromPendingSend = true,
+              reactionControl = true,
+              reactionChanged = changed == true,
+            }
+        end
       end
+
+      local outgoingMessage = buildMessage(state, eventName, informPayload, contact, "out", "user", sentAt)
+      outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
+      Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
+      Store.MarkRead(state.store, conversationKey)
     elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
       Store.SetActiveStatus(state.store, conversationKey, {
         eventName = eventName,
         text = payload.text,
+        sentAt = sentAt,
+        lineID = payload.lineID,
       })
     else
       Store.AppendIncoming(state.store, conversationKey, buildMessage(state, eventName, payload, contact, "in", "system", sentAt), isActive)
