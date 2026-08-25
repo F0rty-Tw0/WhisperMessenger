@@ -37,6 +37,33 @@ return function()
   end
 
   ----------------------------------------------------------------------------
+  -- Emoji tokens become inline sprites only in plain display segments.
+  ----------------------------------------------------------------------------
+  do
+    local heartSprite = "|TInterface\\AddOns\\WhisperMessenger\\Media\\reactions.png:12:12:0:0:512:256:28:100:28:100|t"
+    assert(Hyperlinks.FormatTextForDisplay("nice :heart:") == "nice " .. heartSprite, "known emoji token should render as a heart sprite")
+    assert(Hyperlinks.FormatTextForDisplay("keep :unknown: literal") == "keep :unknown: literal", "unknown emoji token should remain literal")
+
+    local existing = "|Hitem:6948|h[item :heart:]|h"
+    assert(
+      Hyperlinks.FormatTextForDisplay("before " .. existing .. " after :heart:") == "before " .. existing .. " after " .. heartSprite,
+      "existing hyperlink markup must remain untouched while plain tokens render"
+    )
+
+    ----------------------------------------------------------------------------
+    -- Emoji formatting must not rewrite either target or display of URLs that
+    -- are generated from plain text.
+    ----------------------------------------------------------------------------
+    do
+      local url = "https://example.com/:heart:"
+      assert(
+        Hyperlinks.FormatTextForDisplay(url .. " :heart:") == wrapUrl(url, url) .. " " .. heartSprite,
+        "URL emoji tokens must remain literal while tokens outside the URL render"
+      )
+    end
+  end
+
+  ----------------------------------------------------------------------------
   -- http / https URLs get wrapped in WoW hyperlink syntax
   ----------------------------------------------------------------------------
   do

@@ -96,10 +96,11 @@ return function()
   )
 
   -- Composer input and inputBg scale with the composerPane's actual width.
-  local buttonSize = 44
+  local sendButtonWidth = 44
+  local emojiButtonWidth = 30
   local buttonGap = 8
   local expectedPaneW = expectedContentW
-  local expectedInputW = expectedPaneW - 24 - buttonSize - buttonGap
+  local expectedInputW = expectedPaneW - 24 - sendButtonWidth - emojiButtonWidth - (buttonGap * 2)
   assert(
     window.composer.input.width == expectedInputW,
     "expected composer input width " .. expectedInputW .. " but got " .. tostring(window.composer.input.width)

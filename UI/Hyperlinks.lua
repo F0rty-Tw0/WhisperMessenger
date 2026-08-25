@@ -5,6 +5,55 @@ end
 
 local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+
+local function restoreTrailingEmojiToken(hyperlink)
+  local linkType, target, display = string.match(hyperlink, "^|H([^:]+):(.-)|h(.-)|h$")
+  if linkType ~= "url" then
+    return nil
+  end
+
+  local key = string.match(target, ":([%a%d_]+)$")
+  if key == nil or not string.match(display, ":" .. key .. "$") or ReactionAssets.GetInlineTextureMarkup(key) == nil then
+    return nil
+  end
+
+  return "|H" .. linkType .. ":" .. target .. ":|h" .. display .. ":|h"
+end
+
+local function formatEmojiInPlainSegments(value)
+  local output = {}
+  local cursor = 1
+
+  while cursor <= #value do
+    local hyperlinkStart, hyperlinkEnd = string.find(value, "|H.-|h.-|h", cursor)
+    if hyperlinkStart == nil then
+      table.insert(output, ReactionAssets.FormatTextForDisplay(string.sub(value, cursor)))
+      break
+    end
+
+    if hyperlinkStart > cursor then
+      table.insert(output, ReactionAssets.FormatTextForDisplay(string.sub(value, cursor, hyperlinkStart - 1)))
+    end
+
+    local hyperlink = string.sub(value, hyperlinkStart, hyperlinkEnd)
+    local restored = restoreTrailingEmojiToken(hyperlink)
+    if restored ~= nil and string.sub(value, hyperlinkEnd + 1, hyperlinkEnd + 3) == "|r:" then
+      table.insert(output, restored .. "|r")
+      cursor = hyperlinkEnd + 4
+    else
+      table.insert(output, hyperlink)
+      cursor = hyperlinkEnd + 1
+    end
+  end
+
+  return table.concat(output)
+end
+
+local function formatPlainSegment(segment)
+  return formatEmojiInPlainSegments(UrlFormatter.FormatPlainSegment(segment))
+end
+
 
 local Hyperlinks = {}
 
@@ -46,12 +95,12 @@ function Hyperlinks.FormatTextForDisplay(text)
   while cursor <= #value do
     local hyperlinkStart, hyperlinkEnd = string.find(value, "|H.-|h.-|h", cursor)
     if hyperlinkStart == nil then
-      table.insert(output, UrlFormatter.FormatPlainSegment(string.sub(value, cursor)))
+      table.insert(output, formatPlainSegment(string.sub(value, cursor)))
       break
     end
 
     if hyperlinkStart > cursor then
-      table.insert(output, UrlFormatter.FormatPlainSegment(string.sub(value, cursor, hyperlinkStart - 1)))
+      table.insert(output, formatPlainSegment(string.sub(value, cursor, hyperlinkStart - 1)))
     end
 
     table.insert(output, string.sub(value, hyperlinkStart, hyperlinkEnd))

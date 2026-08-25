@@ -82,6 +82,15 @@ local function makeCreateFrame()
       return self.text
     end
 
+    function frame:SetCursorPosition(position)
+      local textLength = #(self.text or "")
+      self.cursorPosition = math.max(0, math.min(tonumber(position) or textLength, textLength))
+    end
+
+    function frame:GetCursorPosition()
+      return self.cursorPosition or #(self.text or "")
+    end
+
     function frame:SetMultiLine(value)
       self.multiline = value
     end
@@ -304,6 +313,11 @@ local function makeCreateFrame()
       self.maxLines = value
     end
 
+    function frame:SetMaxBytes(value)
+      self.maxBytes = math.max(0, tonumber(value) or 0)
+    end
+
+
     function frame:CreateFontString(childName, layer, inheritedTemplate)
       return createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
     end
@@ -322,7 +336,15 @@ local function makeCreateFrame()
     end
 
     function frame:Insert(text)
-      self.text = (self.text or "") .. (text or "")
+      local value = self.text or ""
+      local cursorPosition = self:GetCursorPosition()
+      local inserted = text or ""
+      local result = string.sub(value, 1, cursorPosition) .. inserted .. string.sub(value, cursorPosition + 1)
+      if self.maxBytes ~= nil then
+        result = string.sub(result, 1, self.maxBytes)
+      end
+      self.text = result
+      self.cursorPosition = math.min(cursorPosition + #inserted, #result)
     end
 
     function frame:GetName()

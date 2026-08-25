@@ -14,11 +14,21 @@ local setTextColor = UIHelpers.setTextColor
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
+local EmojiPicker = ns.ComposerEmojiPicker or require("WhisperMessenger.UI.Composer.EmojiPicker")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
+
+local COMPOSER_MAX_BYTES = 255
 
 local Composer = {}
 
+local TRANSPARENT_COLOR = { 0, 0, 0, 0 }
+
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose)
   local pane = factory.CreateFrame("Frame", nil, parent)
+  pane:SetScript("OnHide", function()
+    PickerStyles.HideTooltip()
+  end)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 600)
   pane:SetAllPoints(parent)
 
@@ -51,9 +61,14 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local buttonW = 44
   local buttonH = 30
   local buttonGap = 8
-  local inputW = parentWidth - 24 - buttonW - buttonGap
   local inputH = Theme.LAYOUT.COMPOSER_INPUT_HEIGHT
   local inputX, inputY = 12, 8
+  local function getLauncherLayout(width)
+    local emojiIconSize = ReactionAssets.GetIconSize() * 2
+    local emojiButtonSize = math.max(30, emojiIconSize)
+    return emojiIconSize, emojiButtonSize, width - 24 - buttonW - emojiButtonSize - (buttonGap * 2)
+  end
+  local emojiIconSize, emojiButtonSize, inputW = getLauncherLayout(parentWidth)
   inputBg:SetSize(inputW, inputH)
   inputBg:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", inputX, inputY)
   applyColorTexture(inputBg, Theme.COLORS.bg_message_input or Theme.COLORS.bg_input)
@@ -64,12 +79,29 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   button:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -(inputX - 5), inputY + (inputH - buttonH) / 2)
   button:SetSize(buttonW, buttonH)
 
+  local emojiButton = factory.CreateFrame("Button", nil, pane)
+  emojiButton:SetPoint("RIGHT", button, "LEFT", -buttonGap, 0)
+  emojiButton:SetSize(emojiButtonSize, emojiButtonSize)
+  local emojiBg = createRoundedBackground(emojiButton, 8)
+  emojiButton.bg = emojiBg
+  local emojiIcon = emojiButton:CreateTexture(nil, "ARTWORK")
+  emojiButton.icon = emojiIcon
+  emojiIcon:SetPoint("CENTER", emojiButton, "CENTER", 0, 0)
+  emojiIcon:SetSize(emojiIconSize, emojiIconSize)
+  emojiIcon:SetTexture(ReactionAssets.TEXTURE)
+  local emojiCoords = ReactionAssets.GetTexCoords("laugh")
+  emojiIcon:SetTexCoord(emojiCoords[1], emojiCoords[2], emojiCoords[3], emojiCoords[4])
+
   local sendBg = createRoundedBackground(button, 8)
 
   local function applySendColor(color)
     sendBg.setColor(color)
     button.sendBg = button.sendBg or {}
     button.sendBg.color = { color[1], color[2], color[3], color[4] or 1 }
+  end
+
+  local function applyEmojiColor(color)
+    emojiBg.setColor(color)
   end
   local buttonLabel = button:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(buttonLabel, Theme.FONTS.composer_input)
@@ -104,8 +136,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- keystroke so users see the limit instead of finding out from a
   -- truncated send.
   if input.SetMaxBytes then
-    input:SetMaxBytes(255)
+    input:SetMaxBytes(COMPOSER_MAX_BYTES)
   end
+
 
   -- Placeholder text
   local placeholder = pane:CreateFontString(nil, "OVERLAY")
@@ -117,8 +150,25 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   LinkHooks.RegisterInput(input)
 
+  local function relayoutLauncher(width)
+    local iconSize, launcherSize, inputWidth = getLauncherLayout(width)
+    emojiIcon:SetSize(iconSize, iconSize)
+    emojiButton:SetSize(launcherSize, launcherSize)
+    input:SetSize(inputWidth, inputH)
+    inputBg:SetSize(inputWidth, inputH)
+  end
+
+  local function currentParentWidth(fallback)
+    local width = sizeValue(parent, "GetWidth", "width", fallback)
+    if type(width) ~= "number" or width <= 0 then
+      return fallback
+    end
+    return width
+  end
+
   local sendDisabled = selectedContact == nil
   button.disabled = sendDisabled
+  emojiButton.disabled = sendDisabled
 
   local function sendButtonTextColor()
     if sendDisabled then
@@ -129,7 +179,22 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   local sendBgColor = sendDisabled and Theme.COLORS.send_button_disabled or Theme.COLORS.send_button
   applySendColor(sendBgColor)
+  applyEmojiColor(TRANSPARENT_COLOR)
   setTextColor(buttonLabel, sendButtonTextColor())
+
+  local emojiPicker = EmojiPicker.Create(factory, pane, emojiButton, function(key)
+    if sendDisabled then
+      return
+    end
+    local token = ":" .. key .. ":"
+    if #(input:GetText() or "") + #token <= COMPOSER_MAX_BYTES then
+      input:Insert(token)
+    end
+    if input.SetFocus then
+      input:SetFocus()
+    end
+  end)
+  emojiPicker:setEnabled(not sendDisabled)
 
   button:SetScript("OnEnter", function()
     if not sendDisabled then
@@ -144,6 +209,23 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       applySendColor(Theme.COLORS.send_button)
     end
     setTextColor(buttonLabel, sendButtonTextColor())
+  end)
+
+  emojiButton:SetScript("OnEnter", function(self)
+    if not sendDisabled then
+      applyEmojiColor(PickerStyles.HighlightColor())
+      PickerStyles.ShowTooltipText(self, Localization.Text("Emojis"))
+    end
+  end)
+  emojiButton:SetScript("OnLeave", function()
+    applyEmojiColor(TRANSPARENT_COLOR)
+    PickerStyles.HideTooltip()
+  end)
+  emojiButton:SetScript("OnClick", function()
+    PickerStyles.HideTooltip()
+    if not sendDisabled then
+      emojiPicker:toggle()
+    end
   end)
 
   local function submitMessage()
@@ -226,6 +308,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     paneBg = paneBg,
     border = composerBorder,
     sendButton = button,
+    emojiButton = emojiButton,
+    emojiPicker = emojiPicker,
     placeholder = placeholder,
     setLanguage = function()
       buttonLabel:SetText(Localization.Text("Send"))
@@ -234,11 +318,15 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     setEnabled = function(enabled)
       sendDisabled = not enabled
       button.disabled = not enabled
+      emojiButton.disabled = not enabled
+      emojiPicker:setEnabled(enabled)
+      PickerStyles.HideTooltip()
       if sendDisabled then
         applySendColor(Theme.COLORS.send_button_disabled)
       else
         applySendColor(Theme.COLORS.send_button)
       end
+      applyEmojiColor(TRANSPARENT_COLOR)
       setTextColor(buttonLabel, sendButtonTextColor())
     end,
     refreshTheme = function()
@@ -260,6 +348,13 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       else
         applySendColor(Theme.COLORS.send_button)
       end
+      if not sendDisabled and emojiButton:IsMouseOver() then
+        applyEmojiColor(PickerStyles.HighlightColor())
+      else
+        applyEmojiColor(TRANSPARENT_COLOR)
+      end
+      relayoutLauncher(currentParentWidth(parentWidth))
+      emojiPicker:refreshTheme()
       setTextColor(buttonLabel, sendButtonTextColor())
     end,
     relayout = function(parentW)
@@ -267,16 +362,11 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       -- passes the full content width, but composerPane has a right-margin
       -- anchor (-20 in fake_ui, -8 in production WoW) that makes the pane
       -- narrower. Using the hint would overflow the right padding.
-      local effectiveW = sizeValue(parent, "GetWidth", "width", parentW)
-      if type(effectiveW) ~= "number" or effectiveW <= 0 then
-        effectiveW = parentW
-      end
+      local effectiveW = currentParentWidth(parentW)
       if type(effectiveW) ~= "number" or effectiveW <= 0 then
         return
       end
-      local newInputW = effectiveW - 24 - buttonW - buttonGap
-      input:SetSize(newInputW, inputH)
-      inputBg:SetSize(newInputW, inputH)
+      relayoutLauncher(effectiveW)
     end,
   }
 end

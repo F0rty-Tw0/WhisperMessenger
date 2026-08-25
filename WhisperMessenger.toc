@@ -152,6 +152,7 @@ UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
+UI/Composer/EmojiPicker.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/Badge.lua

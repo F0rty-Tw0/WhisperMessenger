@@ -29,7 +29,7 @@ function SettingsRuntime.Create(factory, options)
     if options.onSettingChanged then
       options.onSettingChanged(key, value)
     end
-    if key == "themePreset" and refreshThemeVisuals then
+    if (key == "themePreset" or key == "fontSize") and refreshThemeVisuals then
       refreshThemeVisuals()
     end
   end
