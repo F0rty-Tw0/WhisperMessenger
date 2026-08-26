@@ -34,13 +34,16 @@ end
 return function()
   assert(loaded, "MessageReactionProtocol module should load before protocol behavior can pass")
 
-  local expectedKeys = { "heart", "thumbsup", "laugh", "wow", "sad", "angry", "question", "gg" }
-  assert(#Protocol.REACTION_KEYS == #expectedKeys, "protocol should expose exactly eight reaction keys")
+  local expectedKeys = {
+    "heart", "thumbsup", "laugh", "smile", "wink", "clap", "party", "fire", "gg",
+    "wow", "sad", "cry", "angry", "thinking", "eyes", "question", "pray", "skull",
+  }
+  assert(#Protocol.REACTION_KEYS == #expectedKeys, "protocol should expose exactly eighteen reaction keys")
   for index, key in ipairs(expectedKeys) do
-    assert(Protocol.REACTION_KEYS[index] == key, "reaction key order should match picker order")
+    assert(Protocol.REACTION_KEYS[index] == key, "reaction key order should match approved row-major picker order")
     assert(Protocol.IsReactionKey(key) == true, "approved reaction key should validate: " .. key)
   end
-  assert(Protocol.IsReactionKey("fire") == false, "unapproved reaction key should be rejected")
+  assert(Protocol.IsReactionKey("rocket") == false, "unapproved reaction key should be rejected")
 
   do
     local state = {}
@@ -89,7 +92,7 @@ return function()
     assert(parsedRemove and parsedRemove.operation == "remove", "remove fallback should be recognized")
 
     assert(Protocol.ParseFallback("Artio reacted :heart: to: “Ready?”") == nil, "actor-prefixed fallback should not parse")
-    assert(Protocol.ParseFallback("reacted :fire: to: “Ready?”") == nil, "fallback with unknown key should not stage")
+    assert(Protocol.ParseFallback("reacted :rocket: to: “Ready?”") == nil, "fallback with unknown key should not stage")
     assert(Protocol.ParseFallback("not reaction protocol text") == nil, "ordinary whisper should not stage")
   end
 
@@ -117,6 +120,25 @@ return function()
     )
     assert(legacy and legacy.wireId == nil, "legacy reaction payload should allow an empty wire ID")
   end
+  do
+    local addedKeys = { "smile", "wink", "clap", "party", "fire", "cry", "thinking", "eyes", "pray", "skull" }
+    for _, key in ipairs(addedKeys) do
+      local source = "added key " .. key
+      local fallback = Protocol.BuildFallback(key, "set", source)
+      local parsed = Protocol.ParseFallback(fallback)
+      assert(parsed and parsed.key == key and parsed.sourceExcerpt == source, "added key fallback should remain readable: " .. key)
+      assert(#fallback <= Protocol.MAX_WHISPER_BYTES, "added key fallback should fit whisper cap: " .. key)
+
+      local encoded = Protocol.EncodeReaction("set", key, "wire9", source, fallback)
+      assert(type(encoded) == "string" and #encoded <= Protocol.MAX_PAYLOAD_BYTES, "added key payload should fit addon cap: " .. key)
+      local decoded = Protocol.Decode(encoded)
+      assert(decoded and decoded.type == "reaction" and decoded.key == key, "added key reaction should round-trip: " .. key)
+    end
+
+    local groupFallback = Protocol.BuildGroupFallback("skull", "set", "added key skull")
+    local groupParsed = Protocol.ParseGroupFallback(groupFallback)
+    assert(groupParsed and groupParsed.key == "skull", "new group fallback key should remain readable")
+  end
 
   do
     local fallback = Protocol.BuildGroupFallback("heart", "set", "Ready for the next key?")
@@ -132,7 +154,7 @@ return function()
     assert(parsedRemove and parsedRemove.operation == "remove", "group remove fallback should be recognized")
 
     assert(Protocol.ParseGroupFallback("Artio reacted :heart: to: “Ready?”") == nil, "actor fallback should not parse as group fallback")
-    assert(Protocol.ParseGroupFallback("reacted :fire: to: “Ready?”") == nil, "group fallback with unknown key should not stage")
+    assert(Protocol.ParseGroupFallback("reacted :rocket: to: “Ready?”") == nil, "group fallback with unknown key should not stage")
     assert(Protocol.ParseGroupFallback("not reaction protocol text") == nil, "ordinary group chat should not stage")
   end
 
@@ -168,7 +190,7 @@ return function()
       Protocol.EncodeGroupReaction("toggle", "heart", nil, "text", "fallback", "Player-1-ABC", "") == nil,
       "invalid group operation should not encode"
     )
-    assert(Protocol.EncodeGroupReaction("set", "fire", nil, "text", "fallback", "Player-1-ABC", "") == nil, "invalid group key should not encode")
+    assert(Protocol.EncodeGroupReaction("set", "rocket", nil, "text", "fallback", "Player-1-ABC", "") == nil, "invalid group key should not encode")
     assert(
       Protocol.EncodeGroupReaction("set", "heart", "bad id", "text", "fallback", "Player-1-ABC", "") == nil,
       "invalid group wire ID should not encode"
@@ -194,7 +216,7 @@ return function()
 
     assert(Protocol.Decode("1|G|S|heart||12345678|12345678|Player-1-ABC|") ~= nil, "known group payload should decode")
     assert(Protocol.Decode("1|G|X|heart||12345678|12345678|Player-1-ABC|") == nil, "invalid group operation should reject")
-    assert(Protocol.Decode("1|G|S|fire||12345678|12345678|Player-1-ABC|") == nil, "invalid group key should reject")
+    assert(Protocol.Decode("1|G|S|rocket||12345678|12345678|Player-1-ABC|") == nil, "invalid group key should reject")
     assert(Protocol.Decode("1|G|S|heart|bad id|12345678|12345678|Player-1-ABC|") == nil, "invalid group wire ID should reject")
     assert(Protocol.Decode("1|G|S|heart||12345678|12345678||") == nil, "group payload without target should reject")
     assert(Protocol.Decode("1|G|S|heart||12345678|12345678|Player|1|") == nil, "delimiter-expanded group payload should reject")
@@ -210,7 +232,7 @@ return function()
     "1|I|bad id|12345678",
     "1|I|abc|xyz",
     "1|R|X|heart|wire|12345678|12345678",
-    "1|R|S|fire|wire|12345678|12345678",
+    "1|R|S|rocket|wire|12345678|12345678",
     "1|R|S|heart|wire|12345678",
     "1|R|S|heart|bad id|12345678|12345678",
     string.rep("x", Protocol.MAX_PAYLOAD_BYTES + 1),
@@ -221,5 +243,5 @@ return function()
 
   assert(Protocol.EncodeIdentity("bad id", "text") == nil, "invalid identity wire ID should not encode")
   assert(Protocol.EncodeReaction("toggle", "heart", "wire", "text", "fallback") == nil, "invalid operation should not encode")
-  assert(Protocol.EncodeReaction("set", "fire", "wire", "text", "fallback") == nil, "invalid key should not encode")
+  assert(Protocol.EncodeReaction("set", "rocket", "wire", "text", "fallback") == nil, "invalid key should not encode")
 end

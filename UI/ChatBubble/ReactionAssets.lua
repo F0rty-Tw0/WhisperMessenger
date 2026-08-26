@@ -9,16 +9,30 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local ReactionAssets = {}
 local KEYS = Protocol.REACTION_KEYS
 
-local TEX_COORDS = {
-  heart = { 28 / 512, 100 / 512, 28 / 256, 100 / 256 },
-  thumbsup = { 156 / 512, 228 / 512, 28 / 256, 100 / 256 },
-  laugh = { 284 / 512, 356 / 512, 28 / 256, 100 / 256 },
-  wow = { 412 / 512, 484 / 512, 28 / 256, 100 / 256 },
-  sad = { 28 / 512, 100 / 512, 156 / 256, 228 / 256 },
-  angry = { 156 / 512, 228 / 512, 156 / 256, 228 / 256 },
-  question = { 284 / 512, 356 / 512, 156 / 256, 228 / 256 },
-  gg = { 412 / 512, 484 / 512, 156 / 256, 228 / 256 },
-}
+local ATLAS_WIDTH = 1024
+local ATLAS_HEIGHT = 256
+local SLOT_SIZE = 72
+local SLOT_OFFSET_X = 28
+local SLOT_OFFSET_Y = 28
+local SLOT_STRIDE_X = 112
+local SLOT_STRIDE_Y = 128
+local PICKER_COLUMNS = 9
+local PICKER_ROWS = 2
+
+local TEX_COORDS = {}
+for index, key in ipairs(KEYS) do
+  local slot = index - 1
+  local column = slot % PICKER_COLUMNS
+  local row = math.floor(slot / PICKER_COLUMNS)
+  local left = SLOT_OFFSET_X + column * SLOT_STRIDE_X
+  local top = SLOT_OFFSET_Y + row * SLOT_STRIDE_Y
+  TEX_COORDS[key] = {
+    left / ATLAS_WIDTH,
+    (left + SLOT_SIZE) / ATLAS_WIDTH,
+    top / ATLAS_HEIGHT,
+    (top + SLOT_SIZE) / ATLAS_HEIGHT,
+  }
+end
 
 function ReactionAssets.GetTexCoords(key)
   return TEX_COORDS[key]
@@ -30,7 +44,7 @@ function ReactionAssets.GetInlineTextureMarkup(key)
     return nil
   end
 
-  local textureWidth, textureHeight = 512, 256
+  local textureWidth, textureHeight = ATLAS_WIDTH, ATLAS_HEIGHT
   local left = math.floor(coords[1] * textureWidth + 0.5)
   local right = math.floor(coords[2] * textureWidth + 0.5)
   local top = math.floor(coords[3] * textureHeight + 0.5)
@@ -69,10 +83,12 @@ function ReactionAssets.GetPickerLayout()
   return {
     iconSize = iconSize,
     buttonSize = buttonSize,
-    frameWidth = buttonSize * #KEYS + 12,
-    frameHeight = buttonSize + 34,
-    copyWidth = buttonSize * #KEYS,
-    copyOffsetY = -(buttonSize + 8),
+    columns = PICKER_COLUMNS,
+    rows = PICKER_ROWS,
+    frameWidth = buttonSize * PICKER_COLUMNS + 12,
+    frameHeight = buttonSize * PICKER_ROWS + 34,
+    copyWidth = buttonSize * PICKER_COLUMNS,
+    copyOffsetY = -(buttonSize * PICKER_ROWS + 8),
   }
 end
 function ReactionAssets.GetBadgeOverflow()

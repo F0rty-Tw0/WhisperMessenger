@@ -89,7 +89,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   emojiIcon:SetPoint("CENTER", emojiButton, "CENTER", 0, 0)
   emojiIcon:SetSize(emojiIconSize, emojiIconSize)
   emojiIcon:SetTexture(ReactionAssets.TEXTURE)
-  local emojiCoords = ReactionAssets.GetTexCoords("laugh")
+  local emojiCoords = ReactionAssets.GetTexCoords("wink")
   emojiIcon:SetTexCoord(emojiCoords[1], emojiCoords[2], emojiCoords[3], emojiCoords[4])
 
   local sendBg = createRoundedBackground(button, 8)

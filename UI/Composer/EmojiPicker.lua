@@ -46,9 +46,10 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   end
   PickerStyles.ApplyPanelTheme(frame, frame._border)
 
-  local iconSize = Assets.GetPickerIconSize()
-  local buttonSize = iconSize + 6
-  frame:SetSize(buttonSize * #Assets.KEYS + 12, buttonSize + 12)
+  local layout = Assets.GetPickerLayout()
+  local iconSize = layout.iconSize
+  local buttonSize = layout.buttonSize
+  frame:SetSize(layout.frameWidth, buttonSize * layout.rows + 12)
 
   local function close()
     frame:Hide()
@@ -70,14 +71,17 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   end
 
   for index, key in ipairs(Assets.KEYS) do
+    local slot = index - 1
+    local column = slot % layout.columns
+    local row = math.floor(slot / layout.columns)
     local button = factory.CreateFrame("Button", nil, frame)
     button._emojiKey = key
     button:SetSize(buttonSize, buttonSize)
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + (index - 1) * buttonSize, -6)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * buttonSize, -6 - row * buttonSize)
 
     local highlight = button:CreateTexture(nil, "BACKGROUND")
     highlight:SetAllPoints(button)
-    PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor())
+    PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
     highlight:Hide()
     button._highlight = highlight
 
@@ -159,7 +163,7 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
 
   function picker:refreshTheme()
     PickerStyles.ApplyPanelTheme(frame, frame._border)
-    local highlightColor = PickerStyles.HighlightColor()
+    local highlightColor = PickerStyles.HighlightColor(0.35)
     for _, button in ipairs(self.buttons) do
       PickerStyles.ApplyColor(button._highlight, highlightColor)
     end

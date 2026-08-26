@@ -6,15 +6,25 @@ Pinned revision: b6b55fef1e8636b540a6d016a4729ca8cdf2e60b (Twemoji 17.0.3)
 Pinned source directory:
 https://github.com/jdecked/twemoji/tree/b6b55fef1e8636b540a6d016a4729ca8cdf2e60b/assets/72x72
 
-Source graphics and reaction mapping:
+Source graphics and semantic row-major mapping:
 - heart: U+2764 HEAVY BLACK HEART — assets/72x72/2764.png
 - thumbsup: U+1F44D THUMBS UP SIGN — assets/72x72/1f44d.png
 - laugh: U+1F602 FACE WITH TEARS OF JOY — assets/72x72/1f602.png
+- smile: U+1F60A SMILING FACE WITH SMILING EYES — assets/72x72/1f60a.png
+- wink: U+1F609 WINKING FACE — assets/72x72/1f609.png
+- clap: U+1F44F CLAPPING HANDS SIGN — assets/72x72/1f44f.png
+- party: U+1F389 PARTY POPPER — assets/72x72/1f389.png
+- fire: U+1F525 FIRE — assets/72x72/1f525.png
+- gg: U+1F91D HANDSHAKE — assets/72x72/1f91d.png
 - wow: U+1F62E FACE WITH OPEN MOUTH — assets/72x72/1f62e.png
 - sad: U+1F622 CRYING FACE — assets/72x72/1f622.png
+- cry: U+1F62D LOUDLY CRYING FACE — assets/72x72/1f62d.png
 - angry: U+1F620 ANGRY FACE — assets/72x72/1f620.png
+- thinking: U+1F914 THINKING FACE — assets/72x72/1f914.png
+- eyes: U+1F440 EYES — assets/72x72/1f440.png
 - question: U+2753 BLACK QUESTION MARK ORNAMENT — assets/72x72/2753.png
-- gg: U+1F91D HANDSHAKE — assets/72x72/1f91d.png
+- pray: U+1F64F PERSON WITH FOLDED HANDS — assets/72x72/1f64f.png
+- skull: U+1F480 SKULL — assets/72x72/1f480.png
 
 License: Creative Commons Attribution 4.0 International (CC BY 4.0)
 Upstream license text:
@@ -22,8 +32,8 @@ https://github.com/jdecked/twemoji/blob/b6b55fef1e8636b540a6d016a4729ca8cdf2e60b
 Canonical license text: https://creativecommons.org/licenses/by/4.0/legalcode
 
 Modification notice:
-The eight pinned 72x72 PNG graphics were arranged, in the order listed above,
-on a transparent 512x256 power-of-two 4x2 atlas. Transparent padding was added
-around each source graphic and the combined PNG was re-encoded. The original
-72x72 RGBA pixels were copied unchanged; no icon artwork, color, or semantics
-were altered.
+The 18 pinned 72x72 PNG graphics were arranged in the semantic row-major
+order listed above on a transparent 1024x256 power-of-two 9x2 atlas. Each
+source graphic is drawn unscaled in a 112x128 slot with transparent
+padding, starting at pixel offset (28, 28), and the combined PNG was
+re-encoded. No icon artwork, color, or semantics were intentionally altered.

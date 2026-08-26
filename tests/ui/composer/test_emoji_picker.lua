@@ -28,9 +28,24 @@ return function()
 
   assert(composer.emojiButton ~= nil, "expected emoji button beside Send")
   assert(picker ~= nil, "expected composer emoji picker")
-  assert(#picker.buttons == #ReactionAssets.KEYS, "picker should expose every reaction key")
+  assert(#ReactionAssets.KEYS == 18, "reaction assets should expose exactly eighteen reaction keys")
+  assert(#picker.buttons == 18, "picker should expose exactly eighteen reaction keys")
+  local pickerIconSize = ReactionAssets.GetPickerIconSize()
+  local pickerButtonSize = pickerIconSize + 6
+  assert(
+    picker.frame.width == pickerButtonSize * 9 + 12 and picker.frame.height == pickerButtonSize * 2 + 12,
+    "composer picker frame should fit a nine-column by two-row grid"
+  )
   for index, key in ipairs(ReactionAssets.KEYS) do
-    assert(picker.buttons[index]._emojiKey == key, "picker order must come from ReactionAssets.KEYS")
+    local button = picker.buttons[index]
+    local column = (index - 1) % 9
+    local row = math.floor((index - 1) / 9)
+    assert(button._emojiKey == key, "picker order must come from ReactionAssets.KEYS")
+    assert(button.width == pickerButtonSize and button.height == pickerButtonSize, "picker buttons should share the configured size")
+    assert(
+      button.point[4] == 6 + column * pickerButtonSize and button.point[5] == -6 - row * pickerButtonSize,
+      "picker buttons should use row-major nine-column placement"
+    )
   end
 
   local emojiButton = composer.emojiButton
@@ -39,9 +54,9 @@ return function()
   assert(emojiIcon ~= nil, "launcher should expose its icon visual state")
   assert(emojiIcon.width == iconSize and emojiIcon.height == iconSize, "launcher icon should be exactly twice the base reaction size")
   assert(emojiButton.width >= iconSize and emojiButton.height >= iconSize, "launcher hit area should contain the enlarged icon")
-  local laughCoords = ReactionAssets.GetTexCoords("laugh")
+  local winkCoords = ReactionAssets.GetTexCoords("wink")
   for index = 1, 4 do
-    assert(emojiIcon.texCoords[index] == laughCoords[index], "launcher should use laugh atlas coordinates")
+    assert(emojiIcon.texCoords[index] == winkCoords[index], "launcher should use wink atlas coordinates")
   end
   assert(emojiButton.bg.fills[1].color[4] == 0, "launcher should be backgroundless at rest")
   local savedGameTooltip = _G.GameTooltip
@@ -141,8 +156,10 @@ return function()
   assert(
     reactionHighlight[1] == composerHighlight[1]
       and reactionHighlight[2] == composerHighlight[2]
-      and reactionHighlight[3] == composerHighlight[3],
-    "picker highlights should resolve identical theme colors"
+      and reactionHighlight[3] == composerHighlight[3]
+      and reactionHighlight[4] == composerHighlight[4]
+      and reactionHighlight[4] == 0.35,
+    "picker highlights should use identical RGBA with canonical 0.35 hover alpha"
   )
   picker.buttons[1].scripts.OnLeave(picker.buttons[1])
   reactionPicker._reactionButtons[1].scripts.OnLeave(reactionPicker._reactionButtons[1])
@@ -167,8 +184,8 @@ return function()
     activeHighlight.color[1] == refreshedHover[1]
       and activeHighlight.color[2] == refreshedHover[2]
       and activeHighlight.color[3] == refreshedHover[3]
-      and activeHighlight.color[4] == refreshedHover[4],
-    "picker refresh should repaint hovered highlight with current shared color"
+      and activeHighlight.color[4] == 0.35,
+    "picker refresh should repaint hovered highlight with current shared RGB and canonical 0.35 alpha"
   )
   assert(activeHighlight:IsShown(), "picker refresh should preserve visible highlight state")
   assert(not inactiveHighlight:IsShown(), "picker refresh should preserve hidden highlight state")
@@ -186,8 +203,8 @@ return function()
     activeHighlight.color[1] == refreshedHover[1]
       and activeHighlight.color[2] == refreshedHover[2]
       and activeHighlight.color[3] == refreshedHover[3]
-      and activeHighlight.color[4] == refreshedHover[4],
-    "composer refresh should repaint picker hover with current shared color"
+      and activeHighlight.color[4] == 0.35,
+    "composer refresh should repaint picker hover with current shared RGB and canonical 0.35 alpha"
   )
 
   emojiButton.mouseOver = false

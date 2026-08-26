@@ -16,11 +16,21 @@ local REACTION_KEYS = {
   "heart",
   "thumbsup",
   "laugh",
+  "smile",
+  "wink",
+  "clap",
+  "party",
+  "fire",
+  "gg",
   "wow",
   "sad",
+  "cry",
   "angry",
+  "thinking",
+  "eyes",
   "question",
-  "gg",
+  "pray",
+  "skull",
 }
 
 local reactionKeySet = {}

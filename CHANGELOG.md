@@ -2,15 +2,12 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
-## [Unreleased]
-
 ## [1.4.0] - 2026-08-25
 
 - Added message reactions for character and Battle.net whispers plus party, raid, instance, guild, and officer chats. Right-click an incoming message to add or remove a reaction; friends using WhisperMessenger see it attached to the original message, while other players receive a readable fallback.
 - Added an emoji picker beside the message composer. Selected emoji appear inline in sent messages and scale with the configured chat font size.
 - Fixed readable whisper reaction fallbacks showing your character name, bringing them in line with group reactions.
 - Fixed Battle.net reactions from friends not being applied to the original outgoing message.
-- Fixed `Copy Text` disappearing when Blizzard's dropdown menu API is unavailable.
 - Fixed Battle.net whispers causing Secret Value comparison errors during restricted content.
 - Fixed unrestricted and legacy boss fights incorrectly pausing the messenger; encounter locks now follow Blizzard's restricted-content signal.
 - Fixed Mists Classic Challenge Modes incorrectly activating Retail Mythic+ suspension.

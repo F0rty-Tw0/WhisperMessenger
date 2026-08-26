@@ -54,9 +54,12 @@ local function applyPickerLayout(frame)
   local layout = Assets.GetPickerLayout()
   frame:SetSize(layout.frameWidth, layout.frameHeight)
   for index, button in ipairs(frame._reactionButtons) do
+    local slot = index - 1
+    local column = slot % layout.columns
+    local row = math.floor(slot / layout.columns)
     button:SetSize(layout.buttonSize, layout.buttonSize)
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + (index - 1) * layout.buttonSize, -5)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * layout.buttonSize, -5 - row * layout.buttonSize)
     button._icon:SetSize(layout.iconSize, layout.iconSize)
   end
   frame._copyButton:ClearAllPoints()
@@ -137,11 +140,24 @@ local function createPicker(factory)
   end
 
   local copyButton = factory.CreateFrame("Button", nil, frame)
+  local highlight = copyButton:CreateTexture(nil, "BACKGROUND")
+  highlight:SetAllPoints(copyButton)
+  PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
+  highlight:Hide()
+  copyButton._highlight = highlight
+
   local copyLabel = copyButton:CreateFontString(nil, "OVERLAY")
   copyLabel:SetPoint("CENTER", copyButton, "CENTER", 0, 0)
   UIHelpers.setFontObject(copyLabel, Theme.FONTS.icon_label)
   copyLabel:SetText(Localization.Text("Copy text"))
   UIHelpers.setTextColor(copyLabel, Theme.COLORS.option_button_text or Theme.COLORS.text_primary)
+  copyButton:SetScript("OnEnter", function(self)
+    PickerStyles.ApplyColor(self._highlight, PickerStyles.HighlightColor(0.35))
+    self._highlight:Show()
+  end)
+  copyButton:SetScript("OnLeave", function(self)
+    self._highlight:Hide()
+  end)
   copyButton:SetScript("OnClick", function()
     local message = frame._message
     local copyText = frame._copyText

@@ -17,6 +17,7 @@ package.loaded["UI.ChatBubble.ContextMenu.ManualCopy"] = manualCopyStub
 package.loaded["WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy"] = manualCopyStub
 
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
+local ReactionAssets = require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 local URL_PREFIX = "|cff71d5ff|Hurl:"
 local URL_DISPLAY_SEP = "|h"
@@ -40,9 +41,65 @@ return function()
   -- Emoji tokens become inline sprites only in plain display segments.
   ----------------------------------------------------------------------------
   do
-    local heartSprite = "|TInterface\\AddOns\\WhisperMessenger\\Media\\reactions.png:12:12:0:0:512:256:28:100:28:100|t"
+    local expectedRegions = {
+      { key = "heart", left = 28, right = 100, top = 28, bottom = 100 },
+      { key = "thumbsup", left = 140, right = 212, top = 28, bottom = 100 },
+      { key = "laugh", left = 252, right = 324, top = 28, bottom = 100 },
+      { key = "smile", left = 364, right = 436, top = 28, bottom = 100 },
+      { key = "wink", left = 476, right = 548, top = 28, bottom = 100 },
+      { key = "clap", left = 588, right = 660, top = 28, bottom = 100 },
+      { key = "party", left = 700, right = 772, top = 28, bottom = 100 },
+      { key = "fire", left = 812, right = 884, top = 28, bottom = 100 },
+      { key = "gg", left = 924, right = 996, top = 28, bottom = 100 },
+      { key = "wow", left = 28, right = 100, top = 156, bottom = 228 },
+      { key = "sad", left = 140, right = 212, top = 156, bottom = 228 },
+      { key = "cry", left = 252, right = 324, top = 156, bottom = 228 },
+      { key = "angry", left = 364, right = 436, top = 156, bottom = 228 },
+      { key = "thinking", left = 476, right = 548, top = 156, bottom = 228 },
+      { key = "eyes", left = 588, right = 660, top = 156, bottom = 228 },
+      { key = "question", left = 700, right = 772, top = 156, bottom = 228 },
+      { key = "pray", left = 812, right = 884, top = 156, bottom = 228 },
+      { key = "skull", left = 924, right = 996, top = 156, bottom = 228 },
+    }
+    local atlas, openError = io.open("Media/reactions.png", "rb")
+    local ihdr = atlas and atlas:read(26)
+    local closeOk = atlas and atlas:close()
+    assert(atlas ~= nil, "reaction atlas should be readable: " .. tostring(openError))
+    assert(closeOk, "reaction atlas should close after reading IHDR")
+    assert(ihdr and #ihdr == 26, "reaction atlas should contain a complete IHDR")
+    assert(string.sub(ihdr, 1, 8) == "\137PNG\r\n\26\n", "reaction atlas should have a PNG signature")
+    assert(string.sub(ihdr, 9, 16) == "\0\0\0\rIHDR", "reaction atlas should begin with an IHDR chunk")
+    local width = string.byte(ihdr, 17) * 0x1000000 + string.byte(ihdr, 18) * 0x10000 + string.byte(ihdr, 19) * 0x100 + string.byte(ihdr, 20)
+    local height = string.byte(ihdr, 21) * 0x1000000 + string.byte(ihdr, 22) * 0x10000 + string.byte(ihdr, 23) * 0x100 + string.byte(ihdr, 24)
+    assert(width == 1024 and height == 256, "reaction atlas IHDR should be 1024x256")
+    assert(string.byte(ihdr, 25) == 8 and string.byte(ihdr, 26) == 6, "reaction atlas should be 8-bit RGBA")
+
+    for _, region in ipairs(expectedRegions) do
+      local coords = ReactionAssets.GetTexCoords(region.key)
+      assert(coords ~= nil, "reaction key should have texture coordinates: " .. region.key)
+      assert(
+        math.floor(coords[1] * 1024 + 0.5) == region.left
+          and math.floor(coords[2] * 1024 + 0.5) == region.right
+          and math.floor(coords[3] * 256 + 0.5) == region.top
+          and math.floor(coords[4] * 256 + 0.5) == region.bottom,
+        "reaction key should use its exact atlas region: " .. region.key
+      )
+      assert(
+        Hyperlinks.FormatTextForDisplay(":" .. region.key .. ":")
+          == string.format(
+            "|TInterface\\AddOns\\WhisperMessenger\\Media\\reactions.png:12:12:0:0:1024:256:%d:%d:%d:%d|t",
+            region.left,
+            region.right,
+            region.top,
+            region.bottom
+          ),
+        "reaction key should render complete inline atlas markup: " .. region.key
+      )
+    end
+
+    local heartSprite = "|TInterface\\AddOns\\WhisperMessenger\\Media\\reactions.png:12:12:0:0:1024:256:28:100:28:100|t"
     assert(Hyperlinks.FormatTextForDisplay("nice :heart:") == "nice " .. heartSprite, "known emoji token should render as a heart sprite")
-    assert(Hyperlinks.FormatTextForDisplay("keep :unknown: literal") == "keep :unknown: literal", "unknown emoji token should remain literal")
+    assert(Hyperlinks.FormatTextForDisplay("keep :rocket: literal") == "keep :rocket: literal", "unknown emoji token should remain literal")
 
     local existing = "|Hitem:6948|h[item :heart:]|h"
     assert(

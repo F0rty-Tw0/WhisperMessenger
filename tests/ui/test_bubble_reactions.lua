@@ -114,7 +114,7 @@ return function()
     ReactionPicker.Close()
   end
 
-  -- Eligible incoming messages support double-click heart and eight-key picker.
+  -- Eligible incoming messages support double-click heart and eighteen-key picker.
   do
     local parent = factory.CreateFrame("Frame", nil, uiParent)
     parent:SetSize(400, 600)
@@ -160,7 +160,7 @@ return function()
     assert(picker.events and picker.events.GLOBAL_MOUSE_DOWN == true, "picker should register GLOBAL_MOUSE_DOWN while open")
     assert(picker._anchor == bubble.frame, "picker should anchor to clicked bubble")
     assert(picker.clamped == true, "picker should clamp to screen")
-    assert(#picker._reactionButtons == 8, "picker should contain exactly eight reaction buttons")
+    assert(#picker._reactionButtons == 18, "picker should contain exactly eighteen reaction buttons")
     local backgroundColor = Theme.COLORS.bg_header
     assert(
       picker._background.color[1] == backgroundColor[1]
@@ -205,12 +205,20 @@ return function()
     Theme.COLORS.bg_header = savedBackground
     Theme.COLORS.contacts_border_right = savedContactsBorder
     ReactionPicker.Open(factory, bubble.frame, message, recordPickerReaction, function() end)
+    assert(#ReactionAssets.KEYS == 18, "reaction assets should expose every approved reaction key")
     for index, key in ipairs(ReactionAssets.KEYS) do
       local button = picker._reactionButtons[index]
       assert(button._reactionKey == key, "picker order should match approved key order")
       assert(button._icon.texturePath == ReactionAssets.TEXTURE, "picker icon should use bundled atlas")
       local coords = ReactionAssets.GetTexCoords(key)
+      assert(type(coords) == "table" and #coords == 4, "every approved key should have atlas coordinates: " .. key)
+      assert(
+        type(coords[1]) == "number" and type(coords[2]) == "number" and type(coords[3]) == "number" and type(coords[4]) == "number"
+          and coords[1] >= 0 and coords[1] < coords[2] and coords[2] <= 1 and coords[3] >= 0 and coords[3] < coords[4] and coords[4] <= 1,
+        "atlas coordinates should define a normalized region: " .. key
+      )
       for coordIndex = 1, 4 do
+        assert(type(coords[coordIndex]) == "number", "atlas coordinate should be numeric: " .. key)
         assert(button._icon.texCoords[coordIndex] == coords[coordIndex], "picker atlas coordinate should match key")
       end
       button.scripts.OnEnter(button)
@@ -244,6 +252,21 @@ return function()
       hoverColor[1] == hoverTheme[1] and hoverColor[2] == hoverTheme[2] and hoverColor[3] == hoverTheme[3] and hoverColor[4] == 0.35,
       "hover highlight should use hover theme RGB with alpha 0.35"
     )
+    local copyHighlight = picker._copyButton._highlight
+    assert(copyHighlight, "Copy Text should expose a hover highlight")
+    assert(not copyHighlight:IsShown(), "Copy Text highlight should be hidden at rest")
+    picker._copyButton.scripts.OnEnter(picker._copyButton)
+    assert(copyHighlight:IsShown(), "Copy Text hover should show its highlight")
+    local copyColor = copyHighlight.color
+    assert(
+      copyColor[1] == hoverColor[1]
+        and copyColor[2] == hoverColor[2]
+        and copyColor[3] == hoverColor[3]
+        and copyColor[4] == hoverColor[4],
+      "Copy Text hover should use identical reaction-item highlight RGBA"
+    )
+    picker._copyButton.scripts.OnLeave(picker._copyButton)
+    assert(not copyHighlight:IsShown(), "Copy Text leave should hide its highlight")
     picker._reactionButtons[1].scripts.OnLeave(picker._reactionButtons[1])
 
     local savedOptionHover = Theme.COLORS.option_button_hover
@@ -310,14 +333,16 @@ return function()
       local pickerIconSize = math.floor(fontSize * 1.5 + 0.5)
       local buttonSize = pickerIconSize + 6
       assert(ReactionPicker.GetFrame() == picker, "font change should reuse picker singleton")
-      assert(picker.width == buttonSize * 8 + 12 and picker.height == buttonSize + 34, "picker frame should match dynamic geometry")
+      assert(picker.width == buttonSize * 9 + 12 and picker.height == buttonSize * 2 + 34, "picker frame should match two-row dynamic geometry")
       for index, button in ipairs(picker._reactionButtons) do
+        local column = (index - 1) % 9
+        local row = math.floor((index - 1) / 9)
         assert(button.width == buttonSize and button.height == buttonSize, "picker button should be picker icon size plus six")
         assert(button._icon.width == pickerIconSize and button._icon.height == pickerIconSize, "picker icon should be rounded 1.5x font size")
-        assert(button.point[4] == 6 + (index - 1) * buttonSize and button.point[5] == -5, "picker button point should recompute")
+        assert(button.point[4] == 6 + column * buttonSize and button.point[5] == -5 - row * buttonSize, "picker button point should recompute in row-major order")
       end
-      assert(picker._copyButton.width == buttonSize * 8, "Copy Text row width should recompute")
-      assert(picker._copyButton.point[4] == 6 and picker._copyButton.point[5] == -(buttonSize + 8), "Copy Text row point should recompute")
+      assert(picker._copyButton.width == buttonSize * 9, "Copy Text row should span the full reaction grid width")
+      assert(picker._copyButton.point[4] == 6 and picker._copyButton.point[5] == -(buttonSize * 2 + 8), "Copy Text row should sit below the second reaction row")
     end
     assertPickerSize(9)
     assertPickerSize(12)
