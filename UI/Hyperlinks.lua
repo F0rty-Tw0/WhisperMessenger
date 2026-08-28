@@ -54,7 +54,6 @@ local function formatPlainSegment(segment)
   return formatEmojiInPlainSegments(UrlFormatter.FormatPlainSegment(segment))
 end
 
-
 local Hyperlinks = {}
 
 local function resolveManualCopy()

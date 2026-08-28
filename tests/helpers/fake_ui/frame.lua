@@ -317,7 +317,6 @@ local function makeCreateFrame()
       self.maxBytes = math.max(0, tonumber(value) or 0)
     end
 
-
     function frame:CreateFontString(childName, layer, inheritedTemplate)
       return createFrame("FontString", childName or (self.name or "frame") .. "Text", self, inheritedTemplate)
     end

@@ -139,7 +139,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     input:SetMaxBytes(COMPOSER_MAX_BYTES)
   end
 
-
   -- Placeholder text
   local placeholder = pane:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, Theme.FONTS.composer_input)

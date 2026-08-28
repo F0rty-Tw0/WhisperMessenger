@@ -35,8 +35,24 @@ return function()
   assert(loaded, "MessageReactionProtocol module should load before protocol behavior can pass")
 
   local expectedKeys = {
-    "heart", "thumbsup", "laugh", "smile", "wink", "clap", "party", "fire", "gg",
-    "wow", "sad", "cry", "angry", "thinking", "eyes", "question", "pray", "skull",
+    "heart",
+    "thumbsup",
+    "laugh",
+    "smile",
+    "wink",
+    "clap",
+    "party",
+    "fire",
+    "gg",
+    "wow",
+    "sad",
+    "cry",
+    "angry",
+    "thinking",
+    "eyes",
+    "question",
+    "pray",
+    "skull",
   }
   assert(#Protocol.REACTION_KEYS == #expectedKeys, "protocol should expose exactly eighteen reaction keys")
   for index, key in ipairs(expectedKeys) do
@@ -115,9 +131,8 @@ return function()
     assert(decoded.sourceFingerprint == Protocol.Fingerprint("duplicate text"), "reaction source fingerprint should round-trip")
     assert(decoded.fallbackFingerprint == Protocol.Fingerprint(fallback), "reaction fallback fingerprint should round-trip")
 
-    local legacy = Protocol.Decode(
-      Protocol.EncodeReaction("remove", "heart", nil, "legacy text", Protocol.BuildFallback("heart", "remove", "legacy text"))
-    )
+    local legacy =
+      Protocol.Decode(Protocol.EncodeReaction("remove", "heart", nil, "legacy text", Protocol.BuildFallback("heart", "remove", "legacy text")))
     assert(legacy and legacy.wireId == nil, "legacy reaction payload should allow an empty wire ID")
   end
   do

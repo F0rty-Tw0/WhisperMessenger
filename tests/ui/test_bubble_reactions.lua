@@ -213,8 +213,16 @@ return function()
       local coords = ReactionAssets.GetTexCoords(key)
       assert(type(coords) == "table" and #coords == 4, "every approved key should have atlas coordinates: " .. key)
       assert(
-        type(coords[1]) == "number" and type(coords[2]) == "number" and type(coords[3]) == "number" and type(coords[4]) == "number"
-          and coords[1] >= 0 and coords[1] < coords[2] and coords[2] <= 1 and coords[3] >= 0 and coords[3] < coords[4] and coords[4] <= 1,
+        type(coords[1]) == "number"
+          and type(coords[2]) == "number"
+          and type(coords[3]) == "number"
+          and type(coords[4]) == "number"
+          and coords[1] >= 0
+          and coords[1] < coords[2]
+          and coords[2] <= 1
+          and coords[3] >= 0
+          and coords[3] < coords[4]
+          and coords[4] <= 1,
         "atlas coordinates should define a normalized region: " .. key
       )
       for coordIndex = 1, 4 do
@@ -259,10 +267,7 @@ return function()
     assert(copyHighlight:IsShown(), "Copy Text hover should show its highlight")
     local copyColor = copyHighlight.color
     assert(
-      copyColor[1] == hoverColor[1]
-        and copyColor[2] == hoverColor[2]
-        and copyColor[3] == hoverColor[3]
-        and copyColor[4] == hoverColor[4],
+      copyColor[1] == hoverColor[1] and copyColor[2] == hoverColor[2] and copyColor[3] == hoverColor[3] and copyColor[4] == hoverColor[4],
       "Copy Text hover should use identical reaction-item highlight RGBA"
     )
     picker._copyButton.scripts.OnLeave(picker._copyButton)
@@ -339,10 +344,16 @@ return function()
         local row = math.floor((index - 1) / 9)
         assert(button.width == buttonSize and button.height == buttonSize, "picker button should be picker icon size plus six")
         assert(button._icon.width == pickerIconSize and button._icon.height == pickerIconSize, "picker icon should be rounded 1.5x font size")
-        assert(button.point[4] == 6 + column * buttonSize and button.point[5] == -5 - row * buttonSize, "picker button point should recompute in row-major order")
+        assert(
+          button.point[4] == 6 + column * buttonSize and button.point[5] == -5 - row * buttonSize,
+          "picker button point should recompute in row-major order"
+        )
       end
       assert(picker._copyButton.width == buttonSize * 9, "Copy Text row should span the full reaction grid width")
-      assert(picker._copyButton.point[4] == 6 and picker._copyButton.point[5] == -(buttonSize * 2 + 8), "Copy Text row should sit below the second reaction row")
+      assert(
+        picker._copyButton.point[4] == 6 and picker._copyButton.point[5] == -(buttonSize * 2 + 8),
+        "Copy Text row should sit below the second reaction row"
+      )
     end
     assertPickerSize(9)
     assertPickerSize(12)

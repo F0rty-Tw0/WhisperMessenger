@@ -134,11 +134,14 @@ return function()
   local savedUIParent = _G.UIParent
   _G.UIParent = parent
   local reactionAnchor = factory.CreateFrame("Frame", nil, parent)
-  assert(ReactionPicker.Open(factory, reactionAnchor, {
-    kind = "user",
-    direction = "in",
-    text = "picker theme",
-  }, function() end, function() end), "reaction picker should open for theme comparison")
+  assert(
+    ReactionPicker.Open(factory, reactionAnchor, {
+      kind = "user",
+      direction = "in",
+      text = "picker theme",
+    }, function() end, function() end),
+    "reaction picker should open for theme comparison"
+  )
   local reactionPicker = ReactionPicker.GetFrame()
   local reactionBackground = reactionPicker._background.color
   local composerBackground = picker.frame._background.color
@@ -249,7 +252,10 @@ return function()
     local inputWidth = parent.width - 24 - composer.sendButton.width - buttonSize - 16
     assert(emojiIcon.width == iconSize and emojiIcon.height == iconSize, label .. " settings event should resize launcher icon to twice base size")
     assert(emojiButton.width == buttonSize and emojiButton.height == buttonSize, label .. " settings event should resize launcher hit area")
-    assert(composer.input.width == inputWidth and composer.inputBg.width == inputWidth, label .. " settings event should reserve launcher width from input")
+    assert(
+      composer.input.width == inputWidth and composer.inputBg.width == inputWidth,
+      label .. " settings event should reserve launcher width from input"
+    )
   end
 
   assertSettingsFontSize(17, "maximum")

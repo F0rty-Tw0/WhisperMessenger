@@ -115,11 +115,7 @@ return function()
     local result = BNetResolver.ResolveAccountInfoByGameAccountID(api, 9001)
     assert(result == accountInfo, "gameAccountID should resolve owning BNet account info")
     assert(
-      #calls == 2
-        and calls[1].method == "game"
-        and calls[1].value == 9001
-        and calls[2].method == "account"
-        and calls[2].value == "Player-1-JAINA",
+      #calls == 2 and calls[1].method == "game" and calls[1].value == 9001 and calls[2].method == "account" and calls[2].value == "Player-1-JAINA",
       "game-account resolution should use GetGameAccountInfoByID then GetAccountInfoByGUID"
     )
   end

@@ -14,8 +14,6 @@ local ReactionPicker = {}
 local PICKER_FRAME_NAME = "WhisperMessengerReactionPicker"
 local pickerFrame
 
-
-
 local function addSpecialFrame()
   _G.UISpecialFrames = _G.UISpecialFrames or {}
   for _, name in ipairs(_G.UISpecialFrames) do

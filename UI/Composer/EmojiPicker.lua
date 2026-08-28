@@ -9,7 +9,6 @@ local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatB
 
 local EmojiPicker = {}
 
-
 local function isMouseOver(frame)
   if type(frame.IsMouseOver) ~= "function" then
     return false
@@ -17,7 +16,6 @@ local function isMouseOver(frame)
   local ok, over = pcall(frame.IsMouseOver, frame)
   return ok and over == true
 end
-
 
 function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local frame = factory.CreateFrame("Frame", nil, parent)
