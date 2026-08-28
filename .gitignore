@@ -4,6 +4,7 @@ dist/
 docs/
 .env
 .claude
+.release
 .wolf
 .tmp_elvui/
 .tools/
