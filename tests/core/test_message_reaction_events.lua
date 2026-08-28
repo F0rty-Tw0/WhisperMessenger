@@ -222,7 +222,7 @@ return function()
       local meta
 
       if metadataFirst then
-        result, meta = Router.HandleEvent(state, "CHAT_MSG_ADDON", {
+        result = Router.HandleEvent(state, "CHAT_MSG_ADDON", {
           prefix = "WMRX",
           text = operation,
           channel = "WHISPER",

@@ -324,6 +324,7 @@ function GroupChatIngest.HandleAddonEvent(state, payload)
   local channel = REACTION_CHANNELS[payload.channel]
   local conversationKey
   local partyGUID
+  local _
   if channel then
     conversationKey, _, partyGUID = resolveGroupConversation(state, channel)
   end

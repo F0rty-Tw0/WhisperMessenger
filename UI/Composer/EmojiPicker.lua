@@ -132,9 +132,9 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
     frame:SetPoint("BOTTOMRIGHT", anchorFrame, "TOPRIGHT", 0, 4)
     frame._dismissArmed = false
     registerOutsideClick()
-    frame:SetScript("OnUpdate", function(self)
-      self._dismissArmed = true
-      self:SetScript("OnUpdate", nil)
+    frame:SetScript("OnUpdate", function(updateFrame)
+      updateFrame._dismissArmed = true
+      updateFrame:SetScript("OnUpdate", nil)
     end)
     frame:Show()
     return true

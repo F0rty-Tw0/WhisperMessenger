@@ -584,7 +584,7 @@ function MessageReactions.ClearPending(message, token)
   return true
 end
 
-function MessageReactions.BeginPending(state, message, token, operation, key, actorName, onTimeout)
+function MessageReactions.BeginPending(message, token, operation, key, actorName, onTimeout)
   message._pendingReaction = {
     token = token,
     operation = operation,

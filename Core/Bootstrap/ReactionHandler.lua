@@ -52,7 +52,7 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
       groupSendPolicy.sendReaction(selectedContact.conversation or selectedContact, message, reactionKey, operation, actorName, pendingToken)
     if accepted then
       if type(reactionControl) == "table" and reactionControl.confirmed ~= true then
-        MessageReactions.BeginPending(runtime, message, pendingToken, operation, reactionKey, actorName, refresh)
+        MessageReactions.BeginPending(message, pendingToken, operation, reactionKey, actorName, refresh)
       end
       refresh()
     end
@@ -92,7 +92,7 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
   }, refresh)
   if accepted then
     if reactionControl.confirmed ~= true then
-      MessageReactions.BeginPending(runtime, message, pendingToken, operation, reactionKey, actorName, refresh)
+      MessageReactions.BeginPending(message, pendingToken, operation, reactionKey, actorName, refresh)
     end
     refresh()
   end
