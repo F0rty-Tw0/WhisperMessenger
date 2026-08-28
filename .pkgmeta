@@ -16,7 +16,21 @@ ignore:
   - stylua.toml
   - CLAUDE.md
   - README.md
-  - LICENSE
+  - CHANGELOG.md
+  - entities.json
+  - mempalace.yaml
+  - Model/ContactEnricher/init.lua
+  - Model/Identity/init.lua
+  - Persistence/SavedState/init.lua
+  - UI/ChatBubble/init.lua
+  - UI/Composer/init.lua
+  - UI/ContactsList/init.lua
+  - UI/ConversationPane/init.lua
+  - UI/MessengerWindow/init.lua
+  - UI/MinimapIcon/init.lua
+  - UI/ScrollView/init.lua
+  - UI/Theme/init.lua
+  - UI/ToggleIcon/init.lua
 
 manual-changelog:
   filename: CHANGELOG.md

@@ -41,6 +41,7 @@ jobs:
       CF_API_KEY: ${{ secrets.CF_API_KEY }}
       WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
       GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+      ZIPOPT: "-9 -D"
 
     steps:
       - name: Clone project
@@ -71,5 +72,44 @@ jobs:
           git push origin HEAD:master
           git push origin "${TAG_VERSION}"
 
+      - name: Install Lua 5.1
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends lua5.1
+
+      - name: Minify release Lua
+        env:
+          LUASRCDIET_REV: e9ceefdd1b3a03bc6c444e8fbb41c506adbbf25f
+        run: |
+          set -euo pipefail
+          MINIFIER_DIR="${RUNNER_TEMP}/luasrcdiet"
+          git clone --quiet https://github.com/jirutka/luasrcdiet.git "${MINIFIER_DIR}"
+          git -C "${MINIFIER_DIR}" checkout --quiet --detach "${LUASRCDIET_REV}"
+          export LUA_PATH="${MINIFIER_DIR}/?.lua;${MINIFIER_DIR}/?/init.lua;;"
+
+          while IFS= read -r -d '' file; do
+            lua5.1 "${MINIFIER_DIR}/bin/luasrcdiet" \
+              --basic \
+              --noopt-emptylines \
+              --noopt-locals \
+              --quiet \
+              "${file}" \
+              -o "${file}.min"
+            mv "${file}.min" "${file}"
+          done < <(
+            find Bootstrap.lua Core Locale Model Persistence Transport UI Util \
+              -type f -name '*.lua' -print0
+          )
+
+      - name: Test minified release
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' test_file; do
+            lua5.1 tests/run.lua "${test_file}"
+          done < <(find tests -type f -name 'test_*.lua' -print0 | sort -z)
+
+
       - name: Package and release
         uses: BigWigsMods/packager@v2
+        with:
+          args: -u
