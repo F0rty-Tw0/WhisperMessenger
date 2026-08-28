@@ -7,6 +7,56 @@ local function setGameFont(path, size, flags)
   assert(type(gameFontNormal.SetFont) == "function", "expected GameFontNormal:SetFont")
   gameFontNormal:SetFont(path, size, flags)
 end
+
+local function withSharedMedia(fonts, fn)
+  local savedLibStub = rawget(_G, "LibStub")
+  local lsm = fonts
+      and {
+        List = function(_, mediaType)
+          assert(mediaType == "font", "expected LibSharedMedia font list")
+          local names = {}
+          for name in pairs(fonts) do
+            names[#names + 1] = name
+          end
+          return names
+        end,
+        Fetch = function(_, mediaType, name, noDefault)
+          assert(mediaType == "font", "expected LibSharedMedia font fetch")
+          assert(noDefault == true, "expected LibSharedMedia fetch without default")
+          return fonts[name]
+        end,
+      }
+    or nil
+
+  rawset(
+    _G,
+    "LibStub",
+    setmetatable({}, {
+      __call = function(_, name)
+        if name == "LibSharedMedia-3.0" then
+          return lsm
+        end
+      end,
+    })
+  )
+
+  local ok, err = pcall(fn)
+  rawset(_G, "LibStub", savedLibStub)
+  if not ok then
+    error(err, 0)
+  end
+end
+
+local function withoutLibStub(fn)
+  local savedLibStub = rawget(_G, "LibStub")
+  rawset(_G, "LibStub", nil)
+
+  local ok, err = pcall(fn)
+  rawset(_G, "LibStub", savedLibStub)
+  if not ok then
+    error(err, 0)
+  end
+end
 return function()
   -- test_default_mode_on_init
 
@@ -46,54 +96,71 @@ return function()
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
   end
 
-  -- test_system_mode_uses_arialn
+  -- test_list_font_families_returns_default_then_case_insensitive_lsm_names
 
   do
-    Fonts.SetMode("system")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local path = fontObj:GetFont()
-    assert(string.find(path, "ARIALN") ~= nil, "test_system: should use ARIALN, got: " .. tostring(path))
+    withSharedMedia({
+      zebra = "Fonts\\ZEBRA.TTF",
+      alpha = "Fonts\\ALPHA.TTF",
+      Bravo = "Fonts\\BRAVO.TTF",
+    }, function()
+      assert(type(Fonts.ListFontFamilies) == "function", "test_list_font_families: Fonts.ListFontFamilies contract is required")
+      local families = Fonts.ListFontFamilies()
+      assert(families[1].key == "default", "test_list_font_families: Default key should remain default")
+      assert(families[1].label == "Default", "test_list_font_families: Default should be first")
+      assert(families[2].label == "alpha", "test_list_font_families: LSM names should sort case-insensitively")
+      assert(families[3].label == "Bravo", "test_list_font_families: LSM names should sort case-insensitively")
+      assert(families[4].label == "zebra", "test_list_font_families: LSM names should sort case-insensitively")
+    end)
   end
 
-  -- test_unknown_mode_falls_back_to_default_behavior
+  -- test_missing_libstub_lists_default_and_falls_back_without_error
 
   do
-    setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
-    Fonts.SetMode("custom")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local path, size = fontObj:GetFont()
-    assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_unknown_mode: should inherit game font, got: " .. tostring(path))
-    assert(size == 12, "test_unknown_mode: should use controlled size, got: " .. tostring(size))
-    setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
+    withoutLibStub(function()
+      assert(type(Fonts.ListFontFamilies) == "function", "test_missing_libstub: Fonts.ListFontFamilies contract is required")
+      local families = Fonts.ListFontFamilies()
+      assert(#families == 1, "test_missing_libstub: absent LibStub should list only Default")
+      assert(families[1].key == "default", "test_missing_libstub: Default key should remain default")
+      assert(families[1].label == "Default", "test_missing_libstub: Default should be listed")
+
+      setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 12, "")
+      Fonts.Initialize("Unavailable Font")
+      local path = _G[Fonts.GetFonts().contact_name]:GetFont()
+      assert(Fonts.GetMode() == "default", "test_missing_libstub: custom name should select default mode")
+      assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_missing_libstub: custom name should apply default path, got: " .. tostring(path))
+      setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
+    end)
   end
 
-  -- test_mode_switch_default_vs_system_on_vanilla_client
+  -- test_absent_shared_media_falls_back_to_default
 
   do
-    -- On a vanilla client (no ElvUI), game fonts are FRIZQT
-    Fonts.SetMode("default")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local defaultPath = fontObj:GetFont()
-
-    Fonts.SetMode("system")
-    local systemPath = fontObj:GetFont()
-
-    assert(defaultPath ~= systemPath, "test_switch: default and system should differ")
-    assert(string.find(defaultPath, "FRIZQT") ~= nil, "test_switch: default should be FRIZQT")
-    assert(string.find(systemPath, "ARIALN") ~= nil, "test_switch: system should be ARIALN")
+    withSharedMedia(nil, function()
+      setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
+      Fonts.Initialize("Some Registered Font")
+      local fontObj = _G[Fonts.GetFonts().contact_name]
+      local path = fontObj:GetFont()
+      assert(Fonts.GetMode() == "default", "test_absent_lsm: unavailable library should select default mode")
+      assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_absent_lsm: should inherit game font, got: " .. tostring(path))
+      setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
+    end)
   end
 
-  -- test_set_mode_updates_all_font_objects
+  -- test_registered_shared_media_font_fetches_path_for_all_wm_objects
 
   do
-    Fonts.SetMode("system")
-    local fonts = Fonts.GetFonts()
-    for key, name in pairs(fonts) do
-      local obj = _G[name]
-      assert(obj ~= nil, "test_updates_all: " .. key .. " object should exist")
-      local path = obj:GetFont()
-      assert(string.find(path, "ARIALN") ~= nil, "test_updates_all: " .. key .. " should use ARIALN in system mode, got: " .. tostring(path))
-    end
+    local selectedPath = "Interface\\AddOns\\SharedMedia\\OpenSans.ttf"
+    withSharedMedia({ ["Open Sans"] = selectedPath }, function()
+      Fonts.Initialize("Open Sans")
+      assert(Fonts.GetMode() == "Open Sans", "test_lsm_mode: registered name should become current mode")
+      for key, name in pairs(Fonts.GetFonts()) do
+        local obj = _G[name]
+        assert(obj ~= nil, "test_lsm_all_wm_objects: " .. key .. " object should exist")
+        local path = obj:GetFont()
+        assert(path == selectedPath, "test_lsm_all_wm_objects: " .. key .. " should use fetched path, got: " .. tostring(path))
+      end
+    end)
   end
 
   -- test_composer_font_matches_ui_font_in_default_mode
@@ -115,11 +182,13 @@ return function()
     )
   end
 
-  -- test_initialize_with_mode
+  -- test_initialize_with_registered_shared_media_name
 
   do
-    Fonts.Initialize("system")
-    assert(Fonts.GetMode() == "system", "test_init_mode: should accept initial mode, got: " .. tostring(Fonts.GetMode()))
+    withSharedMedia({ ["Fira Sans"] = "Interface\\AddOns\\SharedMedia\\FiraSans.ttf" }, function()
+      Fonts.Initialize("Fira Sans")
+      assert(Fonts.GetMode() == "Fira Sans", "test_init_mode: should accept registered SharedMedia name, got: " .. tostring(Fonts.GetMode()))
+    end)
   end
 
   -- test_set_font_size_scales_all_objects
@@ -192,35 +261,36 @@ return function()
     assert(Fonts.GetOutline() == "OUTLINE", "test_get_outline: after set should be OUTLINE, got: " .. tostring(Fonts.GetOutline()))
   end
 
-  -- test_morpheus_mode_uses_morpheus_font
+  -- test_missing_and_legacy_names_fall_back_to_default
 
   do
-    Fonts.SetMode("morpheus")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local path = fontObj:GetFont()
-    assert(string.find(path, "MORPHEUS") ~= nil, "test_morpheus_mode: should use MORPHEUS font, got: " .. tostring(path))
+    withSharedMedia({ ["Open Sans"] = "Interface\\AddOns\\SharedMedia\\OpenSans.ttf" }, function()
+      setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 12, "")
+      for _, name in ipairs({ "Missing Font", "system", "morpheus" }) do
+        Fonts.SetMode(name)
+        local path = _G[Fonts.GetFonts().contact_name]:GetFont()
+        assert(Fonts.GetMode() == "default", "test_legacy_fallback: " .. name .. " should select default mode")
+        assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_legacy_fallback: " .. name .. " should use default path, got: " .. tostring(path))
+      end
+      setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
+    end)
   end
 
-  -- test_font_size_persists_across_mode_switch
+  -- test_registered_font_preserves_size_and_outline
 
   do
-    Fonts.Initialize("default")
-    Fonts.SetFontSize(16)
-    Fonts.SetMode("system")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local _, size = fontObj:GetFont()
-    assert(size == 16, "test_size_persists_mode_switch: size should persist as 16 after mode switch, got: " .. tostring(size))
-  end
+    local selectedPath = "Interface\\AddOns\\SharedMedia\\OpenSans.ttf"
+    withSharedMedia({ ["Open Sans"] = selectedPath }, function()
+      Fonts.Initialize("default")
+      Fonts.SetFontSize(16)
+      Fonts.SetOutline("THICKOUTLINE")
+      Fonts.SetMode("Open Sans")
 
-  -- test_outline_persists_across_mode_switch
-
-  do
-    Fonts.Initialize("default")
-    Fonts.SetOutline("THICKOUTLINE")
-    Fonts.SetMode("system")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local _, _, flags = fontObj:GetFont()
-    assert(flags == "THICKOUTLINE", "test_outline_persists_mode_switch: outline should persist after mode switch, got: " .. tostring(flags))
+      local path, size, flags = _G[Fonts.GetFonts().contact_name]:GetFont()
+      assert(path == selectedPath, "test_lsm_size_outline: should use fetched path, got: " .. tostring(path))
+      assert(size == 16, "test_lsm_size_outline: size should persist, got: " .. tostring(size))
+      assert(flags == "THICKOUTLINE", "test_lsm_size_outline: outline should persist, got: " .. tostring(flags))
+    end)
   end
 
   -- test_default_font_color_is_default

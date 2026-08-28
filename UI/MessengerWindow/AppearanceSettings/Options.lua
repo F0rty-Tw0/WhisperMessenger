@@ -10,12 +10,6 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 
 local Options = {}
 
-local FONT_OPTION_SPECS = {
-  { key = "default", label = "Default", tooltip = "Inherits your game font. Supports all languages." },
-  { key = "system", label = "System", tooltip = "Arial Narrow. Clean sans-serif look." },
-  { key = "morpheus", label = "Morpheus", tooltip = "Fantasy decorative font. Great for immersion." },
-}
-
 local OUTLINE_OPTION_SPECS = {
   { key = "NONE", label = "None", tooltip = "No outline on text." },
   { key = "OUTLINE", label = "Outline", tooltip = "Thin outline for readability." },
@@ -54,14 +48,21 @@ local function localizeOptionSpecs(specs)
 end
 
 function Options.BuildFontOptions()
-  return localizeOptionSpecs(FONT_OPTION_SPECS)
+  local families = Fonts.ListFontFamilies and Fonts.ListFontFamilies() or { { key = "default", label = "Default" } }
+  local result = {}
+  for _, family in ipairs(families) do
+    result[#result + 1] = {
+      key = family.key,
+      label = family.key == "default" and Localization.Text(family.label) or family.label,
+    }
+  end
+  return result
 end
 
 function Options.BuildOutlineOptions()
   return localizeOptionSpecs(OUTLINE_OPTION_SPECS)
 end
 
-Options.FONT_OPTIONS = Options.BuildFontOptions()
 Options.OUTLINE_OPTIONS = Options.BuildOutlineOptions()
 
 function Options.BuildFontColorOptions()

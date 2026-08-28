@@ -10,8 +10,6 @@ local Fonts = {}
 -- then SetFont (to propagate the change to every FontString).
 
 local FRIZQT_PATH = "Fonts\\FRIZQT__.TTF"
-local ARIALN_PATH = "Fonts\\ARIALN.TTF"
-local MORPHEUS_PATH = "Fonts\\MORPHEUS.TTF"
 
 -- Languages whose script may not be present in the user's locale-specific
 -- primary font (FRIZQT__.TTF on an English Classic client lacks CJK glyphs
@@ -81,10 +79,52 @@ local FONT_COLOR_PRESETS = {
 local FONT_COLOR_ORDER = { "default", "gold", "light_blue", "soft_green", "purple", "rose" }
 
 local currentMode = "default"
+local currentFontPath = nil
 local currentFontSize = DEFAULT_BASE_SIZE
 local currentOutline = "NONE"
 local currentFontColor = "default"
 local currentLanguage = "auto"
+
+local function sharedMedia()
+  local libStub = _G and _G.LibStub
+  if type(libStub) ~= "table" then
+    return nil
+  end
+
+  local ok, lsm = pcall(libStub, "LibSharedMedia-3.0", true)
+  if ok and type(lsm) == "table" then
+    return lsm
+  end
+  return nil
+end
+
+local function fetchFontPath(name)
+  if type(name) ~= "string" or name == "" or name == "default" or name == "system" or name == "morpheus" then
+    return nil
+  end
+
+  local lsm = sharedMedia()
+  if not lsm or type(lsm.Fetch) ~= "function" then
+    return nil
+  end
+
+  local ok, path = pcall(lsm.Fetch, lsm, "font", name, true)
+  if ok and type(path) == "string" and path ~= "" then
+    return path
+  end
+  return nil
+end
+
+local function selectMode(mode)
+  local path = fetchFontPath(mode)
+  if path then
+    currentMode = mode
+    currentFontPath = path
+  else
+    currentMode = "default"
+    currentFontPath = nil
+  end
+end
 
 local function resolveOutlineFlags(outline)
   if outline == "OUTLINE" or outline == "THICKOUTLINE" then
@@ -141,7 +181,6 @@ local function resolveInheritedSourceFontObject()
 end
 
 local function applyFonts()
-  local mode = currentMode
   local baseSize = currentFontSize
   local flags = resolveOutlineFlags(currentOutline)
   local CreateFont = _G.CreateFont
@@ -162,10 +201,8 @@ local function applyFonts()
       -- and we'd be back to squares (CJK) or frozen-size fallback glyphs
       -- (Cyrillic on a non-Russian client).
       fontObj:SetFontObject(inheritedSource)
-    elseif mode == "system" then
-      fontObj:SetFont(ARIALN_PATH, size, flags)
-    elseif mode == "morpheus" then
-      fontObj:SetFont(MORPHEUS_PATH, size, flags)
+    elseif currentFontPath then
+      fontObj:SetFont(currentFontPath, size, flags)
     else
       local source = _G[gameFont]
       if source then
@@ -180,7 +217,7 @@ local function applyFonts()
 end
 
 function Fonts.Initialize(mode)
-  currentMode = mode or "default"
+  selectMode(mode)
   currentFontSize = DEFAULT_BASE_SIZE
   currentOutline = "NONE"
   currentFontColor = "default"
@@ -198,12 +235,47 @@ function Fonts.GetLanguage()
 end
 
 function Fonts.SetMode(mode)
-  currentMode = mode or "default"
+  selectMode(mode)
   applyFonts()
 end
 
 function Fonts.GetMode()
   return currentMode
+end
+
+function Fonts.ListFontFamilies()
+  local families = { { key = "default", label = "Default" } }
+  local lsm = sharedMedia()
+  if not lsm or type(lsm.List) ~= "function" then
+    return families
+  end
+
+  local ok, names = pcall(lsm.List, lsm, "font")
+  if not ok or type(names) ~= "table" then
+    return families
+  end
+
+  local unique = {}
+  local sortedNames = {}
+  for _, name in ipairs(names) do
+    if type(name) == "string" and name ~= "" and name ~= "default" and name ~= "system" and name ~= "morpheus" and not unique[name] then
+      unique[name] = true
+      sortedNames[#sortedNames + 1] = name
+    end
+  end
+
+  table.sort(sortedNames, function(a, b)
+    local lowerA, lowerB = string.lower(a), string.lower(b)
+    if lowerA == lowerB then
+      return a < b
+    end
+    return lowerA < lowerB
+  end)
+
+  for _, name in ipairs(sortedNames) do
+    families[#families + 1] = { key = name, label = name }
+  end
+  return families
 end
 
 function Fonts.SetFontSize(size)

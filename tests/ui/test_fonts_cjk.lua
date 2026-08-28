@@ -20,6 +20,43 @@ local function withClientLocale(locale, fn)
   end
 end
 
+local function withSharedMedia(fonts, fn)
+  local savedLibStub = rawget(_G, "LibStub")
+  local lsm = {
+    List = function(_, mediaType)
+      assert(mediaType == "font", "expected LibSharedMedia font list")
+      local names = {}
+      for name in pairs(fonts) do
+        names[#names + 1] = name
+      end
+      return names
+    end,
+    Fetch = function(_, mediaType, name, noDefault)
+      assert(mediaType == "font", "expected LibSharedMedia font fetch")
+      assert(noDefault == true, "expected LibSharedMedia fetch without default")
+      return fonts[name]
+    end,
+  }
+
+  rawset(
+    _G,
+    "LibStub",
+    setmetatable({}, {
+      __call = function(_, name)
+        if name == "LibSharedMedia-3.0" then
+          return lsm
+        end
+      end,
+    })
+  )
+
+  local ok, err = pcall(fn)
+  rawset(_G, "LibStub", savedLibStub)
+  if not ok then
+    error(err, 0)
+  end
+end
+
 return function()
   -- Client locale enUS + addon language koKR: the user's primary fonts lack
   -- Hangul (FRIZQT__.TTF doesn't ship CJK glyphs), so we must inherit the
@@ -63,17 +100,19 @@ return function()
     assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "ruRU on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
 
-  -- The inheritance override beats explicit font modes that lack the script
-  withClientLocale("enUS", function()
-    Fonts.SetMode("morpheus")
-    Fonts.SetLanguage("koKR")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
-    local path = fontObj:GetFont()
-    assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "koKR override should beat morpheus mode, got: " .. tostring(path))
+  -- The CJK inheritance override beats a registered SharedMedia path.
+  withSharedMedia({ ["Shared CJK"] = "Interface\\AddOns\\SharedMedia\\SharedCJK.ttf" }, function()
+    withClientLocale("enUS", function()
+      Fonts.SetLanguage("enUS")
+      Fonts.SetMode("Shared CJK")
+      local fontObj = _G[Fonts.GetFonts().contact_name]
+      local selectedPath = fontObj:GetFont()
+      assert(selectedPath == "Interface\\AddOns\\SharedMedia\\SharedCJK.ttf", "SharedMedia path should apply before CJK override")
 
-    Fonts.SetMode("system")
-    local sysPath = fontObj:GetFont()
-    assert(string.find(sysPath, "TOOLTIP_FAMILY") ~= nil, "koKR override should beat system mode, got: " .. tostring(sysPath))
+      Fonts.SetLanguage("koKR")
+      local overridePath = fontObj:GetFont()
+      assert(string.find(overridePath, "TOOLTIP_FAMILY") ~= nil, "koKR override should beat SharedMedia path, got: " .. tostring(overridePath))
+    end)
   end)
 
   -- Latin languages keep the existing default behavior (FRIZQT-inherited)

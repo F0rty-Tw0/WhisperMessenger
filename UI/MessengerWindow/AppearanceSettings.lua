@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local Options = ns.AppearanceSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.Options")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
@@ -110,9 +111,21 @@ function AppearanceSettings.Create(factory, parent, config, options)
   themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
 
   local fontSelector = panel:bind(
-    sel(text("Font Family"), Options.BuildFontOptions(), DEFAULTS.fontFamily, config.fontFamily or DEFAULTS.fontFamily, function(v)
-      onChange("fontFamily", v)
-    end),
+    DropdownSelector.Create(factory, frame, {
+      labelText = text("Font Family"),
+      optionsList = Options.BuildFontOptions(),
+      getOptions = Options.BuildFontOptions,
+      fallbackKey = DEFAULTS.fontFamily,
+      initial = config.fontFamily or DEFAULTS.fontFamily,
+      colors = selectorColors,
+      onChange = function(v)
+        onChange("fontFamily", v)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonHeight = 26,
+      menuHeight = 156,
+    }),
     { type = "selector", key = "fontFamily", default = DEFAULTS.fontFamily }
   )
   fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
