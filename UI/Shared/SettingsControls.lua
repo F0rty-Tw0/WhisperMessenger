@@ -94,6 +94,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local formatFn = spec.formatFn
   local onChange = spec.onChange
   local tooltip = spec.tooltip
+  local commitOnRelease = spec.commitOnRelease == true
 
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT + 20)
@@ -140,13 +141,60 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   slider:SetValue(initial)
   valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
 
-  slider:SetScript("OnValueChanged", function(_self, value)
+  local dragActive = false
+  local pendingValue
+  local valueChangeGeneration = 0
+  local layoutResizeActive = false
+
+  slider:SetScript("OnValueChanged", function(_self, value, userInput)
+    if layoutResizeActive then
+      return
+    end
+    valueChangeGeneration = valueChangeGeneration + 1
     local stepped = math.floor(value / step + 0.5) * step
     valueFs:SetText(formatFn and formatFn(stepped) or tostring(stepped))
+    if commitOnRelease and dragActive and userInput == true then
+      pendingValue = stepped
+      return
+    end
+    if commitOnRelease and dragActive then
+      pendingValue = nil
+    end
     if onChange then
       onChange(stepped)
     end
   end)
+
+  if commitOnRelease then
+    local originalOnMouseDown = slider:GetScript("OnMouseDown")
+    local originalOnMouseUp = slider:GetScript("OnMouseUp")
+
+    slider:SetScript("OnMouseDown", function(self, button, ...)
+      if originalOnMouseDown then
+        originalOnMouseDown(self, button, ...)
+      end
+      if button == "LeftButton" then
+        dragActive = true
+        pendingValue = nil
+      end
+    end)
+
+    slider:SetScript("OnMouseUp", function(self, button, ...)
+      local committedValue
+      local releaseGeneration = valueChangeGeneration
+      if button == "LeftButton" and dragActive then
+        committedValue = pendingValue
+        dragActive = false
+        pendingValue = nil
+      end
+      if originalOnMouseUp then
+        originalOnMouseUp(self, button, ...)
+      end
+      if committedValue ~= nil and releaseGeneration == valueChangeGeneration and onChange then
+        onChange(committedValue)
+      end
+    end)
+  end
 
   if tooltip and row.SetScript then
     local lines = type(tooltip) == "table" and tooltip or { tooltip }
@@ -184,7 +232,9 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
         return
       end
       row:SetSize(nextWidth, sliderHeight + 20)
+      layoutResizeActive = true
       slider:SetSize(nextWidth, sliderHeight)
+      layoutResizeActive = false
     end,
     applyTheme = function(activeTheme)
       UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)

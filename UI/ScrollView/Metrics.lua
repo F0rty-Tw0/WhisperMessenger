@@ -53,7 +53,10 @@ local function applyViewportLayout(view, hasOverflow)
   end
 
   if view.scrollBar and view.scrollBar.SetSize then
+    local wasSyncingScrollBar = view.syncingScrollBar
+    view.syncingScrollBar = true
     view.scrollBar:SetSize(SCROLLBAR_WIDTH, viewportHeight)
+    view.syncingScrollBar = wasSyncingScrollBar
   end
 
   view.viewportWidth = scrollFrameWidth
