@@ -1,4 +1,5 @@
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
+local WindowScale = require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 
 local function makeRuntime()
   local calls = {
@@ -146,6 +147,85 @@ return function()
 
     assert(#calls.setTabMode == 0, "no tab change for unrelated key")
     assert(calls.refreshTabToggleVisibility == 0, "no toggle refresh for unrelated key")
+  end
+
+  -- Window scale normalizes and persists before one live handoff. It remains
+  -- account-only and does not rebuild window data.
+  do
+    local events = {}
+    local accountValues = {}
+    local accountSettings = setmetatable({}, {
+      __index = accountValues,
+      __newindex = function(_, key, value)
+        accountValues[key] = value
+        if key == "windowScale" then
+          events[#events + 1] = "persist"
+        end
+      end,
+    })
+    local calls = { normalize = 0, scale = 0, data = 0, trace = 0 }
+    local runtime = {
+      store = { config = { windowScale = "store-sentinel" } },
+      window = {
+        setScale = function(value)
+          calls.scale = calls.scale + 1
+          events[#events + 1] = "scale"
+          assert(value == 1.25, "setScale receives normalized windowScale")
+          assert(accountSettings.windowScale == 1.25, "windowScale persists before setScale")
+          assert(calls.trace == 1, "trace runs before setScale")
+        end,
+      },
+      refreshWindow = function()
+        calls.data = calls.data + 1
+      end,
+    }
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      windowScale = {
+        Normalize = function(value)
+          calls.normalize = calls.normalize + 1
+          assert(value == 1.274, "normalizer receives requested value")
+          return 1.25
+        end,
+      },
+      trace = function()
+        calls.trace = calls.trace + 1
+      end,
+    })
+
+    onChange("windowScale", 1.274)
+
+    assert(accountSettings.windowScale == 1.25, "normalized windowScale persists")
+    assert(runtime.store.config.windowScale == "store-sentinel", "windowScale must not write Store config")
+    assert(table.concat(events, ",") == "persist,scale", "windowScale persists before live scaling")
+    assert(calls.normalize == 1 and calls.scale == 1, "windowScale normalizes and applies exactly once")
+    assert(calls.data == 0, "windowScale must not refresh window data")
+  end
+
+  -- Invalid scale falls back safely before the lazy messenger window exists.
+  do
+    local calls = { data = 0 }
+    local runtime = {
+      store = { config = {} },
+      window = nil,
+      refreshWindow = function()
+        calls.data = calls.data + 1
+      end,
+    }
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = accountSettings,
+      windowScale = WindowScale,
+    })
+
+    local changed, changeErr = pcall(onChange, "windowScale", "invalid")
+
+    assert(changed, "windowScale must not crash without a messenger window: " .. tostring(changeErr))
+    assert(accountSettings.windowScale == 1.00, "invalid windowScale persists default fallback")
+    assert(runtime.store.config.windowScale == nil, "invalid windowScale remains account-only")
+    assert(calls.data == 0, "lazy windowScale change must not refresh data")
   end
 
   -- fontFamily / fontSize / fontOutline / fontColor each route to the right Fonts API

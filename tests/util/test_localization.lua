@@ -51,6 +51,27 @@ return function()
     assert(Localization.Text("Current") == expected, language .. " catalog should translate Current")
   end
 
+  local windowScaleTranslations = {
+    deDE = "Fensterskalierung",
+    esES = "Escala de ventana",
+    esMX = "Escala de ventana",
+    frFR = "Échelle de la fenêtre",
+    itIT = "Scala finestra",
+    koKR = "창 크기 비율",
+    ptBR = "Escala da janela",
+    ruRU = "Масштаб окна",
+    zhCN = "窗口缩放",
+    zhTW = "視窗縮放",
+  }
+
+  for language, expected in pairs(windowScaleTranslations) do
+    Localization.Configure({ language = language })
+    assert(Localization.Text("Window Scale") == expected, language .. " catalog should translate Window Scale")
+  end
+
+  Localization.Configure({ language = "enUS" })
+  assert(Localization.Text("Window Scale") == "Window Scale", "English should use Window Scale source key")
+
   local historicalGroupChatTranslations = {
     deDE = "Historischer Gruppenchat — nur lesbar.",
     esES = "Chat de grupo histórico — solo lectura.",

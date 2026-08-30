@@ -30,6 +30,7 @@ return function()
     interfaceLanguage = "ruRU",
     -- appearance
     themePreset = "elvui_dark",
+    windowScale = 1.25,
     fontFamily = "friz",
     fontSize = 14,
     fontOutline = "OUTLINE",
@@ -94,6 +95,10 @@ return function()
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",
     "expected appearance config.bubbleColorPreset=azeroth, got: " .. tostring(appearanceCapture.config.bubbleColorPreset)
+  )
+  assert(
+    appearanceCapture.config.windowScale == 1.25,
+    "expected appearance config.windowScale=1.25, got: " .. tostring(appearanceCapture.config.windowScale)
   )
 
   -- Notifications owns sound settings only.

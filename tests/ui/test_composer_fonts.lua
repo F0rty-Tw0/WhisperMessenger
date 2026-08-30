@@ -43,7 +43,7 @@ return function()
   for _, child in ipairs(parent.children) do
     -- The pane is a child of parent; walk its children
     for _, grandchild in ipairs(child.children or {}) do
-      if grandchild.frameType == "FontString" and grandchild.text == "Type a message and press Enter" then
+      if grandchild.frameType == "FontString" and grandchild.text == "Enter to send" then
         placeholder = grandchild
         break
       end
@@ -58,7 +58,7 @@ return function()
     -- Search the composer pane directly
     local pane = composer.frame
     for _, child in ipairs(pane.children) do
-      if child.frameType == "FontString" and child.text == "Type a message and press Enter" then
+      if child.frameType == "FontString" and child.text == "Enter to send" then
         placeholder = child
         break
       end
@@ -72,7 +72,7 @@ return function()
   Localization.Configure({ language = "ruRU" })
   local localizedComposer = Composer.Create(factory, parent, selectedContact, function() end, function() end)
   assert(localizedComposer.sendButton.label.text == "Отпр.", "expected localized send button label")
-  assert(localizedComposer.placeholder.text == "Введите сообщение и нажмите Enter", "expected localized composer placeholder")
+  assert(localizedComposer.placeholder.text == "Enter для отправки", "expected localized composer placeholder")
   Localization.Configure({ language = "enUS" })
   -- The input EditBox should also have fontObject set
   local input = composer.input

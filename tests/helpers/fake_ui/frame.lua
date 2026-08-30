@@ -20,6 +20,10 @@ local function makeCreateFrame()
       mouseOver = false,
       _hasFocus = false,
     }
+    local resizeMinWidth = nil
+    local resizeMinHeight = nil
+    local resizeMaxWidth = nil
+    local resizeMaxHeight = nil
 
     if parent then
       -- parent may be a hand-rolled table from run_test.py's _G.UIParent
@@ -29,8 +33,28 @@ local function makeCreateFrame()
     end
 
     function frame:SetSize(width, height)
+      local sizeChanged = self.width ~= width or self.height ~= height
       self.width = width
       self.height = height
+      if sizeChanged and self.frameType == "Slider" and self.scripts and self.scripts.OnValueChanged then
+        self.scripts.OnValueChanged(self, self:GetValue(), false)
+      end
+    end
+
+    function frame:SetScale(scale)
+      self.scale = scale
+    end
+
+    function frame:GetScale()
+      return self.scale or 1
+    end
+
+    function frame:GetEffectiveScale()
+      local parentScale = 1
+      if self.parent and type(self.parent.GetEffectiveScale) == "function" then
+        parentScale = self.parent:GetEffectiveScale()
+      end
+      return self:GetScale() * parentScale
     end
 
     function frame:GetSize()
@@ -286,10 +310,10 @@ local function makeCreateFrame()
       self.obeyStepOnDrag = value
     end
 
-    function frame:SetValue(value)
+    function frame:SetValue(value, userInput)
       self.value = value
       if self.scripts and self.scripts.OnValueChanged then
-        self.scripts.OnValueChanged(self, value)
+        self.scripts.OnValueChanged(self, value, userInput)
       end
     end
 
@@ -450,7 +474,14 @@ local function makeCreateFrame()
     end
 
     function frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
-      self.resizeBounds = { minWidth, minHeight, maxWidth, maxHeight }
+      resizeMinWidth = minWidth
+      resizeMinHeight = minHeight
+      resizeMaxWidth = maxWidth
+      resizeMaxHeight = maxHeight
+    end
+
+    function frame:GetResizeBounds()
+      return resizeMinWidth, resizeMinHeight, resizeMaxWidth, resizeMaxHeight
     end
 
     function frame:GetRegions()

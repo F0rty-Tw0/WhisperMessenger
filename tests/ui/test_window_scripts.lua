@@ -652,7 +652,12 @@ return function()
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     frame:SetSize(920, 580)
-    frame.resizeBounds = { 640, 420, 1280, 720 }
+    frame:SetResizeBounds(640, 420, 1000, 600)
+    assert(frame.resizeBounds == nil, "expected SetResizeBounds to keep native bounds private")
+    assert(type(frame.GetResizeBounds) == "function", "expected fake frame to expose native GetResizeBounds")
+    local minWidth, minHeight, maxWidth, maxHeight = frame:GetResizeBounds()
+    assert(minWidth == 640 and minHeight == 420, "expected native getter to return resize minima")
+    assert(maxWidth == 1000 and maxHeight == 600, "expected native getter to return resize maxima")
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
 
     local relayoutArgs = nil
@@ -677,10 +682,10 @@ return function()
       end,
       Theme = Theme,
       getCursorX = function()
-        return 1200
+        return 1600
       end,
       getCursorY = function()
-        return 100
+        return -100
       end,
       getFrameLeft = function()
         return 100
@@ -695,7 +700,8 @@ return function()
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     assert(frame.sizingAnchor == nil, "expected deferred resize to avoid native StartSizing")
     assert(resizeGrip.preview ~= nil and resizeGrip.preview.bg:IsShown(), "expected resize preview to be visible during drag")
-    assert(resizeGrip.preview.bg.parent ~= frame, "expected resize preview to live outside the resized frame")
+    assert(resizeGrip.preview.bg.width == 1000 and resizeGrip.preview.bg.height == 600, "expected preview to clamp to native getter maxima")
+    assert(resizeGrip.preview.bg:GetParent() ~= frame, "expected resize preview to live outside the resized frame")
     assert(frame:GetAlpha() <= 0.08, "expected window alpha to fade during deferred resize drag")
     frame.scripts.OnLeave(frame)
     assert(frame:GetAlpha() <= 0.08, "expected OnLeave to not override resize fade while dragging")
@@ -706,11 +712,11 @@ return function()
     assert(resizeGrip.preview.bg:IsShown() == false, "expected resize preview to hide after release")
     assert(frame:GetAlpha() > 0.08, "expected window alpha to restore after deferred resize release")
     assert(relayoutArgs ~= nil, "expected relayout to run when deferred resize commits")
-    assert(relayoutArgs.width == 1100 and relayoutArgs.height == 660, "expected committed resize dimensions from preview")
+    assert(relayoutArgs.width == 1000 and relayoutArgs.height == 600, "expected committed resize dimensions at native getter maxima")
     assert(frame.point[1] == "TOPLEFT", "expected deferred resize commit to preserve top-left anchor")
     assert(frame.point[4] == 100 and frame.point[5] == 760, "expected deferred resize commit to preserve top-left position")
     assert(persistedState ~= nil, "expected committed resize to persist state")
-    assert(persistedState.width == 1100 and persistedState.height == 660, "expected persisted dimensions to match committed preview")
+    assert(persistedState.width == 1000 and persistedState.height == 600, "expected persisted dimensions to match native getter maxima")
   end
 
   -- test_wire_frame_wires_contacts_resize_handle_and_persists_width
@@ -830,7 +836,6 @@ return function()
   do
     local frame = factory.CreateFrame("Frame", nil, parent)
     frame:SetSize(920, 580)
-    frame.resizeBounds = nil
     local resizeGrip = factory.CreateFrame("Frame", nil, parent)
 
     local originalMinWidth = Theme.LAYOUT.WINDOW_MIN_WIDTH

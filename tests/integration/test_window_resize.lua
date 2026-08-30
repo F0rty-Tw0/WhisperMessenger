@@ -2,6 +2,13 @@ local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
+local function assertNear(actual, expected, label)
+  assert(
+    type(actual) == "number" and math.abs(actual - expected) < 0.000001,
+    label .. ": expected " .. tostring(expected) .. ", got " .. tostring(actual)
+  )
+end
+
 return function()
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
@@ -209,14 +216,11 @@ return function()
     oversizedWindow.frame.height <= _G.UIParent:GetHeight(),
     "expected oversized saved height to clamp within UIParent height, got " .. tostring(oversizedWindow.frame.height)
   )
-  assert(
-    oversizedWindow.frame.resizeBounds[3] == _G.UIParent:GetWidth(),
-    "expected native resize max width to track UIParent width, got " .. tostring(oversizedWindow.frame.resizeBounds[3])
-  )
-  assert(
-    oversizedWindow.frame.resizeBounds[4] == _G.UIParent:GetHeight(),
-    "expected native resize max height to track UIParent height, got " .. tostring(oversizedWindow.frame.resizeBounds[4])
-  )
+  local nativeMinWidth, nativeMinHeight, nativeMaxWidth, nativeMaxHeight = oversizedWindow.frame:GetResizeBounds()
+  assert(nativeMinWidth == (Theme.LAYOUT.WINDOW_MIN_WIDTH or Theme.WINDOW_MIN_WIDTH), "expected native resize minimum width")
+  assert(nativeMinHeight == (Theme.LAYOUT.WINDOW_MIN_HEIGHT or Theme.WINDOW_MIN_HEIGHT), "expected native resize minimum height")
+  assert(nativeMaxWidth == _G.UIParent:GetWidth(), "expected native resize max width to track UIParent")
+  assert(nativeMaxHeight == _G.UIParent:GetHeight(), "expected native resize max height to track UIParent")
 
   local unsizedParent = factory.CreateFrame("Frame", "UnsizedParent", nil)
   local recoveredWindow = MessengerWindow.Create(factory, {
@@ -270,6 +274,96 @@ return function()
     clampedState.height <= _G.UIParent:GetHeight(),
     "expected persisted height to clamp within UIParent height, got " .. tostring(clampedState.height)
   )
+
+  local customHost = factory.CreateFrame("Frame", "ScaledCustomHost", _G.UIParent)
+  customHost:SetSize(1600, 1000)
+  customHost:SetScale(0.8)
+  customHost.GetLeft = function()
+    return 200
+  end
+  customHost.GetBottom = function()
+    return 100
+  end
+
+  local poisonedParent = {}
+  local scaledFrame
+  local scaledFactory = {
+    CreateFrame = function(frameType, name, frameParent, template)
+      local created = factory.CreateFrame(frameType, name, frameParent, template)
+      if name == "WhisperMessengerWindow" and frameParent == customHost then
+        scaledFrame = created
+        created.GetParent = function()
+          return customHost
+        end
+        created.parent = poisonedParent
+      end
+      return created
+    end,
+  }
+  local scaledState
+  local scaledWindow = MessengerWindow.Create(scaledFactory, {
+    parent = customHost,
+    contacts = {},
+    onPositionChanged = function(state)
+      scaledState = state
+    end,
+  })
+  assert(scaledWindow.frame == scaledFrame, "expected scaled regression to intercept root frame")
+  scaledWindow.frame:SetScale(0.75)
+  scaledWindow.frame.GetEffectiveScale = function()
+    return scaledWindow.frame:GetScale() * customHost:GetEffectiveScale()
+  end
+  scaledWindow.frame.GetLeft = function()
+    return 666.6666667
+  end
+  scaledWindow.frame.GetTop = function()
+    return 833.3333333
+  end
+
+  rawset(_G, "GetCursorPosition", function()
+    return 1000, 140
+  end)
+  scaledWindow.resizeGrip.scripts.OnMouseDown(scaledWindow.resizeGrip, "LeftButton")
+  scaledWindow.frame.scripts.OnUpdate(scaledWindow.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+
+  local preview = scaledWindow.resizeGrip.preview
+  assert(preview ~= nil and preview.bg:GetParent() == customHost, "expected preview hosted by actual GetParent result")
+  assert(scaledWindow.frame.parent == poisonedParent, "expected public parent field to remain poisoned")
+  assertNear(preview.bg.point[4], 300, "preview left")
+  assertNear(preview.bg.point[5], 525, "preview top")
+  assertNear(preview.bg:GetWidth(), 750, "preview width")
+  assertNear(preview.bg:GetHeight(), 450, "preview height")
+  assertNear(preview.top.points[2][4], 1050, "preview right")
+  assertNear(preview.bottom.points[1][5], 75, "preview bottom")
+  assertNear(preview.top:GetHeight(), Theme.DIVIDER_THICKNESS * 0.75, "preview horizontal divider")
+  assertNear(preview.left:GetWidth(), Theme.DIVIDER_THICKNESS * 0.75, "preview vertical divider")
+
+  local previewRawLeft = (customHost:GetLeft() + preview.bg.point[4]) * customHost:GetEffectiveScale()
+  local previewRawTop = (customHost:GetBottom() + preview.bg.point[5]) * customHost:GetEffectiveScale()
+  local previewRawWidth = preview.bg:GetWidth() * customHost:GetEffectiveScale()
+  local previewRawHeight = preview.bg:GetHeight() * customHost:GetEffectiveScale()
+
+  scaledWindow.resizeGrip.scripts.OnMouseUp(scaledWindow.resizeGrip, "LeftButton")
+  assert(scaledWindow.frame.point[2] == customHost, "expected commit to retain actual custom parent")
+  assertNear(scaledWindow.frame.point[4], 400, "committed parent-relative x")
+  assertNear(scaledWindow.frame.point[5], 700, "committed parent-relative y")
+  assertNear(scaledWindow.frame:GetWidth(), 1000, "logical committed width")
+  assertNear(scaledWindow.frame:GetHeight(), 600, "logical committed height")
+  assert(scaledState ~= nil, "expected scaled custom-parent resize to persist")
+  assertNear(scaledState.x, 400, "persisted parent-relative x")
+  assertNear(scaledState.y, 700, "persisted parent-relative y")
+  assertNear(scaledState.width, 1000, "persisted scaled logical width")
+  assertNear(scaledState.height, 600, "persisted scaled logical height")
+  local frameScale = scaledWindow.frame:GetEffectiveScale()
+  local parentScale = customHost:GetEffectiveScale()
+  local committedRawLeft = customHost:GetLeft() * parentScale + scaledWindow.frame.point[4] * frameScale
+  local committedRawTop = customHost:GetBottom() * parentScale + scaledWindow.frame.point[5] * frameScale
+  assertNear(committedRawLeft, 400, "committed raw left")
+  assertNear(committedRawTop, 500, "committed raw top")
+  assertNear(previewRawLeft, committedRawLeft, "preview and commit raw left")
+  assertNear(previewRawTop, committedRawTop, "preview and commit raw top")
+  assertNear(previewRawWidth, scaledWindow.frame:GetWidth() * frameScale, "preview and commit raw width")
+  assertNear(previewRawHeight, scaledWindow.frame:GetHeight() * frameScale, "preview and commit raw height")
   rawset(_G, "GetCursorPosition", originalGetCursorPositionOversize)
   _G.UIParent = savedUIParent
 end

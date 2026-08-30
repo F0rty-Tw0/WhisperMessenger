@@ -32,14 +32,17 @@ return function()
   local window = MessengerWindow.Create(factory, {
     title = "WhisperMessenger",
     contacts = items,
+    settingsConfig = { windowScale = 1.25 },
   })
 
   assert(window.frame.parent == _G.UIParent)
   assert(window.frame.point[1] == "CENTER")
   assert(window.frame.width == Theme.WINDOW_WIDTH)
   assert(window.frame.height == Theme.WINDOW_HEIGHT)
-  assert(window.frame.resizeBounds[1] == Theme.LAYOUT.WINDOW_MIN_WIDTH)
-  assert(window.frame.resizeBounds[2] == Theme.LAYOUT.WINDOW_MIN_HEIGHT)
+  assert(window.frame:GetScale() == 1.25)
+  local minWidth, minHeight = window.frame:GetResizeBounds()
+  assert(minWidth == Theme.LAYOUT.WINDOW_MIN_WIDTH)
+  assert(minHeight == Theme.LAYOUT.WINDOW_MIN_HEIGHT)
   assert(window.frame.background ~= nil)
   assert(window.contactsPane ~= nil)
   assert(window.contentPane ~= nil)

@@ -54,8 +54,8 @@ return function()
     assert(foundLabel, expectedLabel .. " button should have a label with text '" .. expectedLabel .. "'")
   end
 
-  assertModernButton(layout.resetWindowButton, "Reset Window Position")
-  assertModernButton(layout.resetIconButton, "Reset Icon Position")
+  assertModernButton(layout.resetWindowButton, "Reset Window")
+  assertModernButton(layout.resetIconButton, "Reset Icon")
   assertModernButton(layout.clearAllChatsButton, "Clear All Chats")
 
   -- Buttons should have hover scripts (OnEnter / OnLeave)

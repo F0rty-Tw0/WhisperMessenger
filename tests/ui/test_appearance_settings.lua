@@ -129,6 +129,64 @@ return function()
     )
   end
 
+  -- Window scale uses a localized percentage slider directly below theme.
+  do
+    Localization.Configure({ language = "enUS" })
+    local changes = {}
+    local result = AppearanceSettings.Create(factory, parent, { themePreset = "wow_default", windowScale = 1.25 }, {
+      onChange = function(key, value)
+        changes.key = key
+        changes.value = value
+      end,
+    })
+    local slider = result.windowScaleSlider
+
+    assert(slider ~= nil, "window scale slider should be exposed")
+    assert(slider.minValue == 0.75 and slider.maxValue == 1.50, "window scale range should be 0.75 through 1.50")
+    assert(slider.valueStep == 0.05 and slider.value == 1.25, "window scale should use 0.05 steps and configured value")
+    assert(slider.parent.children[1].text == "Window Scale", "window scale should use localized label")
+    assert(slider.parent.children[2].text == "125%", "window scale value should use percent formatter")
+    assert(slider.children[2].text == "75%" and slider.children[3].text == "150%", "window scale limits should use percent formatter")
+
+    result.refreshLayout(360)
+    assert(changes.key == nil, "layout slider resize must not commit a setting")
+    local _, scaleAnchor = slider.parent:GetPoint()
+    local _, fontAnchor = result.fontSelector.row:GetPoint()
+    assert(scaleAnchor == result.themePresetSelector.row, "window scale row should follow theme preset")
+    assert(fontAnchor == slider.parent, "font family row should follow window scale")
+
+    slider:SetValue(1.274)
+    assert(changes.key == "windowScale" and changes.value == 1.25, "programmatic window scale should commit stepped value immediately")
+  end
+
+  -- Native left drags update display but commit only the final value on release.
+  do
+    local changes = {}
+    local result = AppearanceSettings.Create(factory, parent, { windowScale = 1.00, fontSize = 12 }, {
+      onChange = function(key, value)
+        changes[#changes + 1] = { key = key, value = value }
+      end,
+    })
+    local slider = result.windowScaleSlider
+    local onMouseDown = slider:GetScript("OnMouseDown")
+    local onMouseUp = slider:GetScript("OnMouseUp")
+    assert(type(onMouseDown) == "function" and type(onMouseUp) == "function", "window scale slider must wire mouse handlers")
+
+    onMouseDown(slider, "LeftButton")
+    slider:SetValue(1.274, true)
+    slider:SetValue(1.326, true)
+    assert(slider.parent.children[2].text == "135%", "window scale drag must display latest stepped value")
+    assert(#changes == 0, "window scale drag must defer onChange")
+    onMouseUp(slider, "LeftButton")
+    assert(
+      #changes == 1 and changes[1].key == "windowScale" and changes[1].value == 1.35,
+      "window scale release must commit final stepped value once"
+    )
+
+    result.fontSizeSlider:SetValue(16)
+    assert(#changes == 2 and changes[2].key == "fontSize", "ordinary sliders must remain immediate")
+  end
+
   -- test_font_selector_uses_dropdown_for_registered_fonts
 
   do
@@ -188,16 +246,29 @@ return function()
         themePreset = "elvui_dark",
         windowOpacityInactive = 0.90,
         windowOpacityActive = 0.60,
+        windowScale = 1.35,
       }
       local result = AppearanceSettings.Create(factory, parent, config, {
         onChange = function(key, value)
           changes[key] = value
+          if key == "windowScale" then
+            changes.windowScaleCalls = (changes.windowScaleCalls or 0) + 1
+          end
         end,
       })
 
       local resetClick = result.resetButton:GetScript("OnClick")
       assert(resetClick ~= nil, "test_reset_resets_font_and_theme: resetButton should have OnClick")
+      local windowScaleSlider = result.windowScaleSlider
+      local onMouseDown = windowScaleSlider:GetScript("OnMouseDown")
+      local onMouseUp = windowScaleSlider:GetScript("OnMouseUp")
+      onMouseDown(windowScaleSlider, "LeftButton")
+      windowScaleSlider:SetValue(1.274, true)
+      assert(changes.windowScaleCalls == nil, "reset test user drag must defer windowScale")
       resetClick(result.resetButton)
+      assert(changes.windowScaleCalls == 1 and changes.windowScale == 1.00, "reset must commit windowScale immediately")
+      onMouseUp(windowScaleSlider, "LeftButton")
+      assert(changes.windowScaleCalls == 1, "release after reset must not replay stale windowScale")
 
       assert(
         changes.themePreset == "wow_default",
@@ -221,6 +292,8 @@ return function()
         "test_reset_resets_font_and_theme: Midnight theme should be selected after reset"
       )
       assert(result.fontSelector.button.label.text == "Default", "test_reset_resets_font_and_theme: reset should show Default font")
+      assert(result.windowScaleSlider.value == 1.00, "reset should restore windowScale slider to 1.00")
+      assert(result.windowScaleSlider.parent.children[2].text == "100%", "reset should display 100% window scale")
     end)
   end
 
@@ -378,6 +451,7 @@ return function()
     assert(texts["Внешний вид"], "Russian appearance panel should translate title")
     assert(texts["Настройте темы, шрифты и прозрачность окна."], "Russian appearance panel should translate hint")
     assert(result.themePresetSelector.label.text == "Профиль темы", "Theme Preset label should be localized")
+    assert(result.windowScaleSlider.parent.children[1].text == "Масштаб окна", "Window Scale label should be localized")
     assert(result.fontSelector.label.text == "Шрифт", "Font Family label should be localized")
     assert(result.fontSelector.button.label.text == "По умолчанию", "Default font should be localized in closed dropdown")
     assert(result.fontOutlineSelector.label.text == "Обводка шрифта", "Font Outline label should be localized")
