@@ -73,10 +73,13 @@ function Bootstrap.Initialize(factory, options)
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
   local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+  local WindowScale = loadModule("WhisperMessenger.UI.MessengerWindow.WindowScale", "MessengerWindowWindowScale")
 
   local uiFactory = factory or _G
   local localProfileId = RuntimeFactory.ResolveLocalProfileId(options)
   local accountState, characterState = SavedState.Initialize(options.accountState, options.characterState, localProfileId)
+  accountState.settings = accountState.settings or {}
+  accountState.settings.windowScale = WindowScale.Normalize(accountState.settings.windowScale)
   local defaultCharacterState = Schema.NewCharacterState()
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   ns._channelMessageState = runtime.channelMessageStore
@@ -93,7 +96,6 @@ function Bootstrap.Initialize(factory, options)
     end
   end
   -- Initialize theme/font mode from saved settings
-  accountState.settings = accountState.settings or {}
   -- Group-chat visibility toggle. First-run default is ON. We seed the
   -- value explicitly so SavedVariables always serializes the current
   -- choice (absence-treated-as-true is fragile if SavedVariables
