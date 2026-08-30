@@ -7,6 +7,9 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+local WindowScale = ns.MessengerWindowWindowScale
+  or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
+  or nil
 
 local RETENTION_SETTING_KEYS = {
   maxMessagesPerConversation = true,
@@ -25,6 +28,7 @@ function SettingsHandler.Create(options)
   local fonts = options.fonts or {}
   local timeFormat = options.timeFormat or {}
   local localization = options.localization or Localization or {}
+  local windowScale = options.windowScale or WindowScale or {}
   local trace = options.trace or function(...)
     local _ = ...
   end
@@ -45,6 +49,9 @@ function SettingsHandler.Create(options)
 
   return function(key, value)
     local persistedValue = value
+    if key == "windowScale" and windowScale.Normalize then
+      persistedValue = windowScale.Normalize(value)
+    end
     local themeApplied = false
 
     if key == "themePreset" then
@@ -68,7 +75,7 @@ function SettingsHandler.Create(options)
 
     accountSettings[key] = persistedValue
 
-    if runtime.store.config[key] ~= nil then
+    if key ~= "windowScale" and runtime.store.config[key] ~= nil then
       runtime.store.config[key] = persistedValue
     end
     if key == "messageMaxAge" then
@@ -91,6 +98,13 @@ function SettingsHandler.Create(options)
     end
 
     trace("setting changed", key, tostring(persistedValue))
+
+    if key == "windowScale" then
+      local window = runtime.window
+      if window and window.setScale then
+        window.setScale(persistedValue)
+      end
+    end
 
     if key == "shareWidgetPosition" and onShareWidgetPositionChanged then
       onShareWidgetPositionChanged(persistedValue)
