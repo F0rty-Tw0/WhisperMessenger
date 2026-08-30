@@ -5,6 +5,16 @@ end
 
 local WindowResize = {}
 
+local function effectiveScaleOrOne(target)
+  if target and type(target.GetEffectiveScale) == "function" then
+    local scale = target:GetEffectiveScale()
+    if type(scale) == "number" and scale == scale and scale > 0 and scale < math.huge then
+      return scale
+    end
+  end
+  return 1
+end
+
 function WindowResize.New(options)
   local frame = options.frame
   local resizeGrip = options.resizeGrip
@@ -66,14 +76,33 @@ function WindowResize.New(options)
       return
     end
 
-    local previewLeft = options.getFrameLeft()
-    local previewTop = options.getFrameTop()
-    if type(previewLeft) ~= "number" or type(previewTop) ~= "number" then
+    local frameLeft = options.getFrameLeft()
+    local frameTop = options.getFrameTop()
+    if type(frameLeft) ~= "number" or type(frameTop) ~= "number" then
       return
     end
 
-    local previewWidth = math.max(1, width or options.frameWidth())
-    local previewHeight = math.max(1, height or options.frameHeight())
+    local scaleRatio = effectiveScaleOrOne(frame) / effectiveScaleOrOne(windowResizePreviewHost)
+    local hostLeft = 0
+    local hostBottom = 0
+    if type(windowResizePreviewHost.GetLeft) == "function" then
+      local left = windowResizePreviewHost:GetLeft()
+      if type(left) == "number" then
+        hostLeft = left
+      end
+    end
+    if type(windowResizePreviewHost.GetBottom) == "function" then
+      local bottom = windowResizePreviewHost:GetBottom()
+      if type(bottom) == "number" then
+        hostBottom = bottom
+      end
+    end
+
+    local previewLeft = frameLeft * scaleRatio - hostLeft
+    local previewTop = frameTop * scaleRatio - hostBottom
+    local previewWidth = math.max(1, width or options.frameWidth()) * scaleRatio
+    local previewHeight = math.max(1, height or options.frameHeight()) * scaleRatio
+    local dividerThickness = ((frameTheme.LAYOUT and frameTheme.LAYOUT.DIVIDER_THICKNESS) or frameTheme.DIVIDER_THICKNESS) * scaleRatio
 
     if windowResizePreview.bg.ClearAllPoints then
       windowResizePreview.bg:ClearAllPoints()
@@ -86,28 +115,28 @@ function WindowResize.New(options)
     end
     windowResizePreview.top:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
     windowResizePreview.top:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
-    windowResizePreview.top:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
+    windowResizePreview.top:SetHeight(dividerThickness)
 
     if windowResizePreview.bottom.ClearAllPoints then
       windowResizePreview.bottom:ClearAllPoints()
     end
     windowResizePreview.bottom:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
     windowResizePreview.bottom:SetPoint("BOTTOMRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop - previewHeight)
-    windowResizePreview.bottom:SetHeight(frameTheme.LAYOUT.DIVIDER_THICKNESS)
+    windowResizePreview.bottom:SetHeight(dividerThickness)
 
     if windowResizePreview.left.ClearAllPoints then
       windowResizePreview.left:ClearAllPoints()
     end
     windowResizePreview.left:SetPoint("TOPLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop)
     windowResizePreview.left:SetPoint("BOTTOMLEFT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft, previewTop - previewHeight)
-    windowResizePreview.left:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
+    windowResizePreview.left:SetWidth(dividerThickness)
 
     if windowResizePreview.right.ClearAllPoints then
       windowResizePreview.right:ClearAllPoints()
     end
     windowResizePreview.right:SetPoint("TOPRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop)
     windowResizePreview.right:SetPoint("BOTTOMRIGHT", windowResizePreviewHost, "BOTTOMLEFT", previewLeft + previewWidth, previewTop - previewHeight)
-    windowResizePreview.right:SetWidth(frameTheme.LAYOUT.DIVIDER_THICKNESS)
+    windowResizePreview.right:SetWidth(dividerThickness)
 
     setPreviewShown(true)
   end

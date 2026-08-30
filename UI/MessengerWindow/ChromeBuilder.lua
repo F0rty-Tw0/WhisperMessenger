@@ -5,10 +5,23 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
+local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
 local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
 local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
 local ChromeBuilder = {}
+
+local function applyResizeBounds(frame, parent, theme, windowScale)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale)
+  if frame.SetResizeBounds then
+    frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
+  else
+    frame:SetMinResize(minWidth, minHeight)
+    if frame.SetMaxResize and maxWidth and maxHeight then
+      frame:SetMaxResize(maxWidth, maxHeight)
+    end
+  end
+end
 
 -- ChromeBuilder builds the messenger window with one of two chrome paths
 -- depending on the active skin (resolved from the active theme preset):
@@ -24,11 +37,12 @@ local ChromeBuilder = {}
 --     presets keep their modern minimal look.
 --
 -- Returns: { frame, background, title, newConversationButton, closeButton,
---   optionsButton, backButton, resizeGrip, applyTheme, setOptionsActive } in both cases. Non-chrome
+--   optionsButton, backButton, resizeGrip, applyTheme, refreshScale, setOptionsActive } in both cases. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
   options = options or {}
+  local normalizedWindowScale = WindowScale.Normalize(options.windowScale)
 
   -- Chrome choice is now controlled by an explicit setting passed in
   -- `options.useNativeChrome` (independent of the color preset). Falls
@@ -44,6 +58,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     -- lets us paint a backdrop later without recreating the frame).
     frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BackdropTemplate")
   end
+  frame:SetScale(normalizedWindowScale)
 
   frame:SetSize(initialState.width or Theme.WINDOW_WIDTH, initialState.height or Theme.WINDOW_HEIGHT)
   frame:SetPoint(
@@ -60,15 +75,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
   frame:SetResizable(true)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, Theme)
-  if frame.SetResizeBounds then
-    frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
-  else
-    frame:SetMinResize(minWidth, minHeight)
-    if frame.SetMaxResize and maxWidth and maxHeight then
-      frame:SetMaxResize(maxWidth, maxHeight)
-    end
-  end
+  applyResizeBounds(frame, parent, Theme, normalizedWindowScale)
   frame:SetClampedToScreen(true)
 
   local frameName = frame.GetName and frame:GetName() or frame.name
@@ -111,6 +118,13 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     resize.applyTheme(activeTheme)
   end
 
+  local function refreshScale(nextScale)
+    local normalizedScale = WindowScale.Normalize(nextScale)
+    frame:SetScale(normalizedScale)
+    applyResizeBounds(frame, parent, Theme, normalizedScale)
+    return normalizedScale
+  end
+
   applyTheme(Theme)
   local function setOptionsActive(active)
     options_.setActive(active)
@@ -131,6 +145,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     backButton = back.button,
     resizeGrip = resize.grip,
     applyTheme = applyTheme,
+    refreshScale = refreshScale,
     setOptionsActive = setOptionsActive,
     titleBarBorder = chrome.titleBarBorder,
     titleBarTopBorder = chrome.titleBarBorder and chrome.titleBarBorder.top or nil,

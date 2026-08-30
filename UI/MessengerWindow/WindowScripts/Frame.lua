@@ -12,12 +12,27 @@ local ContactsResize = ns.MessengerWindowWindowScriptsFrameContactsResize
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.ContactsResize")
 local ScriptBindings = ns.MessengerWindowWindowScriptsFrameScriptBindings
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.ScriptBindings")
+local unpackValues = table.unpack or _G.unpack
 
 local Frame = {}
 
 local RESIZE_PREVIEW_FILL_ALPHA = 0.20
 local RESIZE_PREVIEW_BORDER_ALPHA = 0.85
 local RESIZE_DRAG_FRAME_ALPHA = 0.08
+
+local function isPositiveFiniteNumber(value)
+  return type(value) == "number" and value == value and value > 0 and value < math.huge
+end
+
+local function effectiveScaleOrOne(target)
+  if target and type(target.GetEffectiveScale) == "function" then
+    local scale = target:GetEffectiveScale()
+    if isPositiveFiniteNumber(scale) then
+      return scale
+    end
+  end
+  return 1
+end
 
 -- Wire OnShow, OnHide, OnEnter, OnLeave, OnUpdate, OnSizeChanged,
 -- OnDragStart, OnDragStop on the main frame, plus OnMouseDown/OnMouseUp
@@ -38,6 +53,20 @@ function Frame.WireFrame(refs, options)
 
   local frameTheme = options.Theme or Theme
   local suppressSizeChangedRelayout = false
+  local function pack(...)
+    return { n = select("#", ...), ... }
+  end
+
+  local function withSizeChangedRelayoutSuppressed(callback)
+    local wasSuppressed = suppressSizeChangedRelayout
+    suppressSizeChangedRelayout = true
+    local results = pack(pcall(callback))
+    suppressSizeChangedRelayout = wasSuppressed
+    if not results[1] then
+      error(results[2], 0)
+    end
+    return unpackValues(results, 2, results.n)
+  end
 
   local function relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
     if options.relayout then
@@ -135,16 +164,13 @@ function Frame.WireFrame(refs, options)
   end
 
   local function getFrameParent()
-    if options.getFrameParent then
-      return options.getFrameParent()
+    if frame and type(frame.GetParent) == "function" then
+      local parent = frame:GetParent()
+      if parent ~= nil then
+        return parent
+      end
     end
-    if frame and frame.parent then
-      return frame.parent
-    end
-    if _G.UIParent then
-      return _G.UIParent
-    end
-    return nil
+    return _G.UIParent
   end
 
   local function resolveResizeBounds()
@@ -153,14 +179,20 @@ function Frame.WireFrame(refs, options)
     local minHeight = themeLayout.WINDOW_MIN_HEIGHT or frameTheme.WINDOW_MIN_HEIGHT or 420
     local maxWidth, maxHeight = nil, nil
 
-    if frame and type(frame.resizeBounds) == "table" then
-      minWidth = frame.resizeBounds[1] or minWidth
-      minHeight = frame.resizeBounds[2] or minHeight
-      maxWidth = frame.resizeBounds[3]
-      maxHeight = frame.resizeBounds[4]
-    elseif frame and type(frame.minResize) == "table" then
-      minWidth = frame.minResize[1] or minWidth
-      minHeight = frame.minResize[2] or minHeight
+    if frame and type(frame.GetResizeBounds) == "function" then
+      local nativeMinWidth, nativeMinHeight, nativeMaxWidth, nativeMaxHeight = frame:GetResizeBounds()
+      if isPositiveFiniteNumber(nativeMinWidth) then
+        minWidth = nativeMinWidth
+      end
+      if isPositiveFiniteNumber(nativeMinHeight) then
+        minHeight = nativeMinHeight
+      end
+      if isPositiveFiniteNumber(nativeMaxWidth) and nativeMaxWidth >= minWidth then
+        maxWidth = nativeMaxWidth
+      end
+      if isPositiveFiniteNumber(nativeMaxHeight) and nativeMaxHeight >= minHeight then
+        maxHeight = nativeMaxHeight
+      end
     end
 
     return minWidth, minHeight, maxWidth, maxHeight
@@ -182,16 +214,35 @@ function Frame.WireFrame(refs, options)
   local function applyCommittedWindowSize(nextWidth, nextHeight)
     local stableLeft = getFrameLeft()
     local stableTop = getFrameTop()
+    local parent = getFrameParent()
+    local parentLeft = 0
+    local parentBottom = 0
+    if parent and type(parent.GetLeft) == "function" then
+      local left = parent:GetLeft()
+      if type(left) == "number" then
+        parentLeft = left
+      end
+    end
+    if parent and type(parent.GetBottom) == "function" then
+      local bottom = parent:GetBottom()
+      if type(bottom) == "number" then
+        parentBottom = bottom
+      end
+    end
+    local frameScale = effectiveScaleOrOne(frame)
+    local parentScale = effectiveScaleOrOne(parent)
 
-    suppressSizeChangedRelayout = true
-    if frame and frame.SetSize then
-      frame:SetSize(nextWidth, nextHeight)
-    end
-    if frame and frame.ClearAllPoints and frame.SetPoint and type(stableLeft) == "number" and type(stableTop) == "number" then
-      frame:ClearAllPoints()
-      frame:SetPoint("TOPLEFT", getFrameParent(), "BOTTOMLEFT", stableLeft, stableTop)
-    end
-    suppressSizeChangedRelayout = false
+    withSizeChangedRelayoutSuppressed(function()
+      if frame and frame.SetSize then
+        frame:SetSize(nextWidth, nextHeight)
+      end
+      if frame and frame.ClearAllPoints and frame.SetPoint and type(stableLeft) == "number" and type(stableTop) == "number" then
+        local commitX = stableLeft - parentLeft * parentScale / frameScale
+        local commitY = stableTop - parentBottom * parentScale / frameScale
+        frame:ClearAllPoints()
+        frame:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", commitX, commitY)
+      end
+    end)
     relayoutWindow(nextWidth, nextHeight, nil, false)
   end
 
@@ -249,6 +300,9 @@ function Frame.WireFrame(refs, options)
     onPositionChanged = options.onPositionChanged,
     trace = options.trace,
   })
+  return {
+    withSizeChangedRelayoutSuppressed = withSizeChangedRelayoutSuppressed,
+  }
 end
 
 ns.MessengerWindowWindowScriptsFrame = Frame

@@ -64,10 +64,10 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   local clearAllChatsButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Clear All Chats"), dangerColors, btnLayout)
   clearAllChatsButton:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMLEFT", menuPadding, menuPadding)
 
-  local resetIconButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Icon Position"), normalColors, btnLayout)
+  local resetIconButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Icon"), normalColors, btnLayout)
   resetIconButton:SetPoint("BOTTOMLEFT", clearAllChatsButton, "TOPLEFT", 0, btnSpacing)
 
-  local resetWindowButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Window Position"), normalColors, btnLayout)
+  local resetWindowButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Window"), normalColors, btnLayout)
   resetWindowButton:SetPoint("BOTTOMLEFT", resetIconButton, "TOPLEFT", 0, btnSpacing)
 
   local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", theme.FONTS.system_text)
@@ -98,8 +98,8 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     setButtonText(notificationsTab, "Notifications")
     setButtonText(iconsTab, "Icons")
     setButtonText(clearAllChatsButton, "Clear All Chats")
-    setButtonText(resetIconButton, "Reset Icon Position")
-    setButtonText(resetWindowButton, "Reset Window Position")
+    setButtonText(resetIconButton, "Reset Icon")
+    setButtonText(resetWindowButton, "Reset Window")
     optionsHint:SetText(Localization.Text("Reset positions or clear all conversation history."))
   end
 

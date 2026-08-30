@@ -31,6 +31,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   themePreset = Theme.DEFAULT_PRESET or "wow_default",
+  windowScale = 1.0,
   nativeChrome = false,
 }
 
@@ -76,7 +77,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     return ButtonSelector.Create(factory, frame, spec)
   end
 
-  local function slider(label, min, max, step, initial, fmt, onCh)
+  local function slider(label, min, max, step, initial, fmt, onCh, commitOnRelease)
     return SettingsControls.CreateSliderRow(factory, frame, {
       label = label,
       min = min,
@@ -85,6 +86,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       initial = initial,
       formatFn = fmt,
       onChange = onCh,
+      commitOnRelease = commitOnRelease,
     })
   end
 
@@ -110,6 +112,14 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
 
+  local windowScaleRow = panel:bind(
+    slider(text("Window Scale"), 0.75, 1.50, 0.05, config.windowScale or DEFAULTS.windowScale, pctFormat, function(v)
+      onChange("windowScale", v)
+    end, true),
+    { type = "slider", key = "windowScale", default = DEFAULTS.windowScale }
+  )
+  windowScaleRow.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
+
   local fontSelector = panel:bind(
     DropdownSelector.Create(factory, frame, {
       labelText = text("Font Family"),
@@ -128,7 +138,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     }),
     { type = "selector", key = "fontFamily", default = DEFAULTS.fontFamily }
   )
-  fontSelector.row:SetPoint("TOPLEFT", themePresetSelector.row, "BOTTOMLEFT", 0, gap)
+  fontSelector.row:SetPoint("TOPLEFT", windowScaleRow.row, "BOTTOMLEFT", 0, gap)
 
   local fontSizeRow = panel:bind(
     slider(text("Font Size"), 9, 17, 1, config.fontSize or DEFAULTS.fontSize, pxFormat, function(v)
@@ -219,6 +229,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     nativeChromeToggle.label:SetText(text("Native WoW HUD"))
     themePresetSelector.label:SetText(text("Theme Preset"))
     themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
+    windowScaleRow.label:SetText(text("Window Scale"))
     fontSelector.label:SetText(text("Font Family"))
     fontSelector.setOptionsList(Options.BuildFontOptions())
     fontSizeRow.label:SetText(text("Font Size"))
@@ -249,6 +260,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     nativeChromeToggle = nativeChromeToggle,
     themePresetSelector = themePresetSelector,
     fontSelector = fontSelector,
+    windowScaleSlider = windowScaleRow.slider,
     fontSizeSlider = fontSizeRow.slider,
     fontOutlineSelector = fontOutlineSelector,
     fontColorSelector = fontColorSelector,

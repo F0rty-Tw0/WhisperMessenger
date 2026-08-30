@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 
 local sizeValue = UIHelpers.sizeValue
 
@@ -22,27 +23,30 @@ local function resolveMinBounds(theme)
   return minWidth, minHeight
 end
 
-local function resolveMaxBound(parent, getterName, fieldName)
+local function resolveMaxBound(parent, getterName, fieldName, scale)
   local bound = sizeValue(parent, getterName, fieldName, 0)
   if type(bound) ~= "number" or bound <= 0 then
     return nil
   end
 
-  return bound
+  return bound / scale
 end
 
-function WindowBounds.GetResizeBounds(parent, theme)
+function WindowBounds.GetResizeBounds(parent, theme, windowScale)
   local resolvedTheme = resolveTheme(theme)
-  local minWidth, minHeight = resolveMinBounds(resolvedTheme)
-  local maxWidth = resolveMaxBound(parent, "GetWidth", "width") or resolvedTheme.WINDOW_WIDTH or minWidth
-  local maxHeight = resolveMaxBound(parent, "GetHeight", "height") or resolvedTheme.WINDOW_HEIGHT or minHeight
+  local normalizedScale = WindowScale.Normalize(windowScale)
+  local configuredMinWidth, configuredMinHeight = resolveMinBounds(resolvedTheme)
+  local maxWidth = resolveMaxBound(parent, "GetWidth", "width", normalizedScale) or resolvedTheme.WINDOW_WIDTH or configuredMinWidth
+  local maxHeight = resolveMaxBound(parent, "GetHeight", "height", normalizedScale) or resolvedTheme.WINDOW_HEIGHT or configuredMinHeight
+  local minWidth = math.min(configuredMinWidth, maxWidth)
+  local minHeight = math.min(configuredMinHeight, maxHeight)
 
   return minWidth, minHeight, maxWidth, maxHeight
 end
 
-function WindowBounds.ClampState(parent, state, theme)
+function WindowBounds.ClampState(parent, state, theme, windowScale)
   local resolvedTheme = resolveTheme(theme)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme, windowScale)
   local nextState = {}
 
   for key, value in pairs(state or {}) do

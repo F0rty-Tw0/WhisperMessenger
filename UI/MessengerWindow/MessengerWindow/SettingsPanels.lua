@@ -73,6 +73,7 @@ function SettingsPanels.Create(factory, options)
 
   local appearancePanel, appearanceSettings = createSettingsPanel(factory, parent, options.appearanceCreate, {
     themePreset = settingsConfig.themePreset,
+    windowScale = settingsConfig.windowScale,
     fontFamily = settingsConfig.fontFamily,
     fontSize = settingsConfig.fontSize,
     fontOutline = settingsConfig.fontOutline,

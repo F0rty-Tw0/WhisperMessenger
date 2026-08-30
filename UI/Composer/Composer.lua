@@ -143,7 +143,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local placeholder = pane:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, Theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", 8, 0)
-  placeholder:SetText(Localization.Text("Type a message and press Enter"))
+  placeholder:SetText(Localization.Text("Enter to send"))
   setTextColor(placeholder, Theme.COLORS.text_secondary)
   placeholder:Show()
 
@@ -312,7 +312,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     placeholder = placeholder,
     setLanguage = function()
       buttonLabel:SetText(Localization.Text("Send"))
-      placeholder:SetText(Localization.Text("Type a message and press Enter"))
+      placeholder:SetText(Localization.Text("Enter to send"))
     end,
     setEnabled = function(enabled)
       sendDisabled = not enabled

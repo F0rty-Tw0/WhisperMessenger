@@ -9,9 +9,12 @@ function ScriptWiring.Wire(options)
   options = options or {}
 
   local windowScripts = options.windowScripts
-  local buttonsResult = windowScripts.WireButtons(options.buttonsRefs, options.buttonsCallbacks)
-  windowScripts.WireFrame(options.frameRefs, options.frameCallbacks)
-  return buttonsResult or {}
+  local result = windowScripts.WireButtons(options.buttonsRefs, options.buttonsCallbacks) or {}
+  local frameResult = windowScripts.WireFrame(options.frameRefs, options.frameCallbacks)
+  if frameResult and frameResult.withSizeChangedRelayoutSuppressed then
+    result.withSizeChangedRelayoutSuppressed = frameResult.withSizeChangedRelayoutSuppressed
+  end
+  return result
 end
 
 ns.MessengerWindowScriptWiring = ScriptWiring

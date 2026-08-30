@@ -8,6 +8,7 @@ local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.Con
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
 local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
+local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
@@ -35,6 +36,9 @@ function MessengerWindow.Create(factory, options)
   options = options or {}
 
   local parent = options.parent or _G.UIParent
+  local settingsConfig = options.settingsConfig or {}
+  local initialScale = WindowScale.Normalize(settingsConfig.windowScale)
+  settingsConfig.windowScale = initialScale
   local state = options.state or {}
   local initialState = WindowBounds.ClampState(parent, {
     anchorPoint = state.anchorPoint or "CENTER",
@@ -44,7 +48,7 @@ function MessengerWindow.Create(factory, options)
     width = state.width or Theme.WINDOW_WIDTH,
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
-  }, Theme)
+  }, Theme, initialScale)
   local windowGeometry = WindowGeometry.Create({
     parent = parent,
     theme = Theme,
@@ -54,6 +58,7 @@ function MessengerWindow.Create(factory, options)
     sizeValue = sizeValue,
     initialState = initialState,
     initialContactsWidth = state.contactsWidth,
+    initialScale = initialScale,
   })
   local currentContactsWidth = windowGeometry.getContactsWidth()
 
@@ -69,11 +74,11 @@ function MessengerWindow.Create(factory, options)
   -- from saved settings so it persists across reloads.
   local chrome = ChromeBuilder.Build(factory, parent, initialState, {
     title = options.title,
-    useNativeChrome = options.settingsConfig and options.settingsConfig.nativeChrome == true,
+    useNativeChrome = settingsConfig.nativeChrome == true,
+    windowScale = initialScale,
   })
   local frame = chrome.frame
-  -- Settings config (must be available before layout and alpha wiring)
-  local settingsConfig = options.settingsConfig or {}
+  -- Settings config is normalized before geometry and chrome creation.
 
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
@@ -230,7 +235,7 @@ function MessengerWindow.Create(factory, options)
 
   handleContactSelected = selectionController.handleContactSelected
 
-  local _, scriptResult = LifecycleWiring.Setup({
+  local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     relayoutFactory = RelayoutController,
     layoutBuilder = LayoutBuilder,
     layout = layout,
@@ -273,6 +278,25 @@ function MessengerWindow.Create(factory, options)
       return settingsConfig.autoFocusComposer == true
     end,
   })
+
+  local function setScale(nextScale)
+    local currentState = windowGeometry.buildState(frame)
+    local previousWidth = sizeValue(frame, "GetWidth", "width", currentState.width)
+    local previousHeight = sizeValue(frame, "GetHeight", "height", currentState.height)
+    currentState.width = previousWidth
+    currentState.height = previousHeight
+    local normalizedScale = windowGeometry.setScale(nextScale)
+    settingsConfig.windowScale = normalizedScale
+
+    local appliedState = scriptResult.withSizeChangedRelayoutSuppressed(function()
+      chrome.refreshScale(normalizedScale)
+      return windowGeometry.applyState(frame, currentState)
+    end)
+    if appliedState.width ~= previousWidth or appliedState.height ~= previousHeight then
+      relayoutWindow(appliedState.width, appliedState.height, windowGeometry.getContactsWidth(), nil)
+    end
+    return normalizedScale
+  end
 
   trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
@@ -373,6 +397,7 @@ function MessengerWindow.Create(factory, options)
     refreshContacts = refreshContacts,
     refreshSelection = refreshSelection,
     refreshTheme = refreshThemeVisuals,
+    setScale = setScale,
     refreshLanguage = refreshLanguage,
     refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
     setTabMode = contactsRuntime.setTabMode,
