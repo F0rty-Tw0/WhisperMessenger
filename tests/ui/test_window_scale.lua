@@ -191,6 +191,8 @@ return function()
   assert(#releaseChanges == 2, "programmatic update during drag must clear stale deferred value")
 
   parent:SetSize(1500, 900)
+  local _, minimumHeight = WindowBounds.GetResizeBounds(parent)
+  assert(minimumHeight == 320, "window minimum height must be 320")
   local expectedBounds = {
     { scale = 0.75, width = 2000, height = 1200 },
     { scale = 1.00, width = 1500, height = 900 },

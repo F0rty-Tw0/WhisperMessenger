@@ -25,6 +25,103 @@ return function()
 
   assert(layout.optionsMenu ~= nil, "optionsMenu sidebar should exist")
 
+  -- test_options_menu_scroll_view_exists
+
+  do
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    assert(optionsMenuScrollView ~= nil, "optionsMenuScrollView should exist")
+    assert(
+      optionsMenuScrollView.scrollFrame.scrollChild == optionsMenuScrollView.content,
+      "optionsMenuScrollView should wire its content as the scroll child"
+    )
+  end
+
+  -- test_options_menu_controls_are_parented_to_scroll_content
+
+  do
+    local scrollContent = layout.optionsMenuScrollView.content
+    local menuControls = {
+      { name = "optionsHeader", control = layout.optionsHeader },
+      { name = "generalTab", control = layout.generalTab },
+      { name = "appearanceTab", control = layout.appearanceTab },
+      { name = "behaviorTab", control = layout.behaviorTab },
+      { name = "notificationsTab", control = layout.notificationsTab },
+      { name = "iconsTab", control = layout.iconsTab },
+      { name = "resetWindowButton", control = layout.resetWindowButton },
+      { name = "resetIconButton", control = layout.resetIconButton },
+      { name = "clearAllChatsButton", control = layout.clearAllChatsButton },
+      { name = "optionsHint", control = layout.optionsHint },
+    }
+    for _, menuControl in ipairs(menuControls) do
+      assert(menuControl.control.parent == scrollContent, menuControl.name .. " should be parented to optionsMenuScrollView content")
+    end
+  end
+
+  -- test_options_menu_uses_live_height_when_options_panel_shows
+
+  do
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    layout.optionsMenu:SetHeight(473)
+    layout.optionsPanel:Show()
+
+    assert(optionsMenuScrollView.scrollFrame:GetHeight() == 473, "473px live options menu should set a 473px scroll viewport")
+    assert(optionsMenuScrollView.content:GetHeight() == 473, "473px live options menu should set 473px scroll content despite a 580px outer window")
+    assert(optionsMenuScrollView.hasOverflow == false, "473px live options menu should not overflow")
+  end
+
+  -- test_options_menu_overflows_below_live_content_minimum
+
+  do
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    layout.optionsMenu:SetHeight(213)
+    layout.optionsPanel:Show()
+
+    assert(optionsMenuScrollView.scrollFrame:GetHeight() == 213, "213px live options menu should set a 213px scroll viewport")
+    assert(optionsMenuScrollView.content:GetHeight() == 396, "213px live options menu should keep its 396px minimum content height")
+    assert(optionsMenuScrollView.hasOverflow == true, "213px live options menu should overflow")
+
+    optionsMenuScrollView.scrollFrame:SetVerticalScroll(100)
+    assert(
+      optionsMenuScrollView.scrollFrame:GetVerticalScroll() == 100,
+      "overflowing live options menu should retain a nonzero scroll offset before growing"
+    )
+  end
+
+  -- test_options_menu_clears_overflow_and_clamps_offset_after_growing
+
+  do
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    layout.optionsMenu:SetHeight(473)
+    layout.optionsPanel:Show()
+
+    assert(optionsMenuScrollView.hasOverflow == false, "grown live options menu should clear overflow")
+    assert(optionsMenuScrollView.scrollFrame:GetVerticalScroll() == 0, "grown live options menu should clamp its scroll offset to zero")
+  end
+
+  -- test_options_menu_does_not_overflow_at_normal_height
+
+  do
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    assert(optionsMenuScrollView.hasOverflow == false, "580px-high options menu should not overflow")
+    assert(optionsMenuScrollView.scrollBar.shown == false, "580px-high options menu scrollbar should be hidden")
+  end
+
+  -- test_options_menu_overflows_at_minimum_height_after_relayout
+
+  do
+    frame:SetSize(920, 320)
+    LayoutBuilder.Relayout(layout, 920, 320)
+
+    local optionsMenuScrollView = layout.optionsMenuScrollView
+    assert(
+      optionsMenuScrollView.scrollFrame:GetHeight() < optionsMenuScrollView.content:GetHeight(),
+      "320px-high options menu viewport should be shorter than its content"
+    )
+    assert(optionsMenuScrollView.hasOverflow == true, "320px-high options menu should overflow")
+    assert(optionsMenuScrollView.scrollFrame:GetVerticalScrollRange() > 0, "320px-high options menu should be scrollable")
+    assert(optionsMenuScrollView.scrollBar.shown == true, "320px-high options menu scrollbar should be visible")
+  end
+
   -- test_options_content_pane_exists
 
   assert(layout.optionsContentPane ~= nil, "optionsContentPane should exist")
@@ -97,10 +194,11 @@ return function()
   -- test_buttons_anchored_to_bottom_of_menu
 
   do
-    -- The clearAllChatsButton (bottommost) should anchor to BOTTOMLEFT of optionsMenu
+    -- The clearAllChatsButton (bottommost) should anchor to the scroll content.
     local btn = layout.clearAllChatsButton
     assert(btn.point ~= nil, "clearAllChatsButton should have a point set")
-    local anchor = btn.point[1]
+    local anchor, relativeTo = btn.point[1], btn.point[2]
     assert(anchor == "BOTTOMLEFT", "clearAllChatsButton should anchor to BOTTOMLEFT, got: " .. tostring(anchor))
+    assert(relativeTo == layout.optionsMenuScrollView.content, "clearAllChatsButton should anchor to menu scroll content")
   end
 end
