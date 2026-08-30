@@ -93,9 +93,12 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local optionsContentPane = optionsPanelLayout.optionsContentPane
   local optionsContentBg = optionsPanelLayout.optionsContentBg
   local optionsScrollView = optionsPanelLayout.optionsScrollView
+  local optionsMenuScrollView = optionsPanelLayout.optionsMenuScrollView
   local OPTIONS_CONTENT_HEIGHT = optionsPanelLayout.optionsContentHeight
+  local OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT = optionsPanelLayout.optionsMenuMinimumContentHeight
+  local refreshOptionsMenuScrollGeometry = optionsPanelLayout.refreshOptionsMenuScrollGeometry
 
-  local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, {
+  local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, optionsHeader, {
     menuPadding = menuPadding,
     contactsWidth = contactsWidth,
     theme = Theme,
@@ -175,6 +178,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsListHeight = contactsListHeight,
     contactsView = contactsView,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
+    optionsMenuMinimumContentHeight = OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT,
     contentPane = contentPane,
     contactsHeaderDivider = contactsHeaderDivider,
     headerDivider = headerDivider,
@@ -187,6 +191,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,
     optionsScrollView = optionsScrollView,
+    optionsMenuScrollView = optionsMenuScrollView,
+    refreshOptionsMenuScrollGeometry = refreshOptionsMenuScrollGeometry,
     generalTab = generalTab,
     appearanceTab = appearanceTab,
     behaviorTab = behaviorTab,

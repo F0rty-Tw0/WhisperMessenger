@@ -8,6 +8,7 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
+local sizeValue = UIHelpers.sizeValue
 
 local OptionsPanelLayout = {}
 
@@ -46,9 +47,36 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   applyTexture(optionsMenuBg, theme.COLORS.bg_secondary)
 
   local menuPadding = theme.CONTENT_PADDING
+  local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 396
+  local optionsMenuViewportHeight = initialState.height - theme.TOP_BAR_HEIGHT
+  local optionsMenuScrollView = scrollView.Create(factory, optionsMenu, {
+    width = contactsWidth,
+    height = optionsMenuViewportHeight,
+    step = 24,
+  })
+  if optionsMenuScrollView.scrollBar.ClearAllPoints then
+    optionsMenuScrollView.scrollBar:ClearAllPoints()
+  end
+  optionsMenuScrollView.scrollBar:SetPoint("TOPRIGHT", optionsMenu, "TOPRIGHT", 0, 0)
 
-  local optionsHeader = optionsMenu:CreateFontString(nil, "OVERLAY", theme.FONTS.header_name)
-  optionsHeader:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
+  local function refreshOptionsMenuScrollGeometry()
+    local menuWidth = sizeValue(optionsMenu, "GetWidth", "width", contactsWidth)
+    local menuHeight = sizeValue(optionsMenu, "GetHeight", "height", optionsMenuViewportHeight)
+    local menuContentHeight = math.max(menuHeight, OPTIONS_MENU_MIN_CONTENT_HEIGHT)
+
+    optionsMenuScrollView.totalWidth = menuWidth
+    optionsMenuScrollView.viewportHeight = menuHeight
+    optionsMenuScrollView.hasOverflow = false
+    optionsMenuScrollView.scrollFrame:SetSize(menuWidth, menuHeight)
+    optionsMenuScrollView.content:SetSize(menuWidth, menuContentHeight)
+    optionsMenuScrollView.scrollBar:SetHeight(menuHeight)
+    scrollView.RefreshMetrics(optionsMenuScrollView, menuContentHeight)
+  end
+
+  refreshOptionsMenuScrollGeometry()
+
+  local optionsHeader = optionsMenuScrollView.content:CreateFontString(nil, "OVERLAY", theme.FONTS.header_name)
+  optionsHeader:SetPoint("TOPLEFT", optionsMenuScrollView.content, "TOPLEFT", menuPadding, -menuPadding)
   optionsHeader:SetText(Localization.Text("Options"))
 
   local optionsMenuDivider = optionsPanel:CreateTexture(nil, "BORDER")
@@ -95,6 +123,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   -- runs its own measurement on top of this via HookScript("OnShow").
   if optionsPanel.SetScript then
     optionsPanel:SetScript("OnShow", function()
+      refreshOptionsMenuScrollGeometry()
       scrollView.Sync(optionsScrollView)
     end)
   end
@@ -108,6 +137,9 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     optionsMenu = optionsMenu,
     optionsMenuBg = optionsMenuBg,
     menuPadding = menuPadding,
+    optionsMenuScrollView = optionsMenuScrollView,
+    optionsMenuMinimumContentHeight = OPTIONS_MENU_MIN_CONTENT_HEIGHT,
+    refreshOptionsMenuScrollGeometry = refreshOptionsMenuScrollGeometry,
     optionsHeader = optionsHeader,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,

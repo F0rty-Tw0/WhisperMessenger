@@ -126,6 +126,7 @@ function Apply.Relayout(layout, relayout, theme)
   layout.optionsMenu:SetSize(contactsWidth, optionsHeight)
   layout.optionsMenuDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, optionsHeight)
   layout.optionsContentPane:SetSize(optionsContentWidth, optionsHeight)
+  layout.refreshOptionsMenuScrollGeometry()
 
   local menuPadding = layout.menuPadding or resolvedTheme.CONTENT_PADDING
   local optionsButtonWidth = math.max(0, contactsWidth - (menuPadding * 2))
