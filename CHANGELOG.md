@@ -2,7 +2,7 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
-## [1.4.0] - 2026-08-25
+## [1.4.0] - 2026-08-31
 
 - Added message reactions for character and Battle.net whispers plus party, raid, instance, guild, and officer chats. Right-click an incoming message to add or remove a reaction; friends using WhisperMessenger see it attached to the original message, while other players receive a readable fallback.
 - Added an emoji picker beside the message composer. Selected emoji appear inline in sent messages and scale with the configured chat font size.
@@ -12,6 +12,8 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed unrestricted and legacy boss fights incorrectly pausing the messenger; encounter locks now follow Blizzard's restricted-content signal.
 - Fixed Mists Classic Challenge Modes incorrectly activating Retail Mythic+ suspension.
 - Appearance → Font Family now lists optional fonts from SharedMedia addons in a scrollable selector instead of three fixed choices, and safely uses Default if SharedMedia or your selected font is unavailable.
+- Added an Appearance → Window Scale setting that resizes the entire messenger from 75% to 150%.
+- The Options sidebar now scrolls when the window is shortened, and the messenger can be resized 100 pixels shorter without hiding its navigation and reset controls.
 
 ## [1.3.1] - 2026-08-24
 
