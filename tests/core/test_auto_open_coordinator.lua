@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local AutoOpenCoordinator = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ConversationOps = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
+local EditBoxInterop = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
 
 return function()
   local savedGlobals = {
@@ -16,6 +17,8 @@ return function()
     BNGetNumFriends = _G.BNGetNumFriends,
     _wmSuspended = _G._wmSuspended,
     hooksecurefunc = _G.hooksecurefunc,
+    ChatFrameUtil = _G.ChatFrameUtil,
+    ChatFrame_SendBNetTell = _G.ChatFrame_SendBNetTell,
     ChatFrame_SendTell = _G.ChatFrame_SendTell,
     ChatFrame_ReplyTell = _G.ChatFrame_ReplyTell,
     ChatFrame_ReplyTell2 = _G.ChatFrame_ReplyTell2,
@@ -187,23 +190,55 @@ return function()
     return 1
   end
 
-  -- Set up globals for direct hook installation
+  -- Set up globals for direct hook installation.
   local hookedFunctions = {}
-  rawset(_G, "hooksecurefunc", function(name, handler)
-    hookedFunctions[name] = hookedFunctions[name] or {}
-    hookedFunctions[name][#hookedFunctions[name] + 1] = handler
+  local bnetLauncherEditBox = nil
+  local bnetLauncherAttributes = nil
+  local characterLauncherEditBox = nil
+  local characterLauncherAttributes = nil
+  local bnetHeaderUpdates = 0
+  local textChangedHook = nil
+  rawset(_G, "hooksecurefunc", function(target, methodOrHandler, postHook)
+    if type(target) == "table" then
+      local methodName = methodOrHandler
+      hookedFunctions["ChatFrameUtil." .. methodName] = hookedFunctions["ChatFrameUtil." .. methodName] or {}
+      hookedFunctions["ChatFrameUtil." .. methodName][#hookedFunctions["ChatFrameUtil." .. methodName] + 1] = postHook
+      local original = target[methodName]
+      target[methodName] = function(...)
+        original(...)
+        postHook(...)
+      end
+      return
+    end
+
+    hookedFunctions[target] = hookedFunctions[target] or {}
+    hookedFunctions[target][#hookedFunctions[target] + 1] = methodOrHandler
   end)
+  _G.ChatFrameUtil = {
+    SendBNetTell = function()
+      bnetHeaderUpdates = bnetHeaderUpdates + 1
+      bnetLauncherAttributes.chatType = "BN_WHISPER"
+      bnetLauncherAttributes.tellTarget = "Friend#1234"
+      bnetLauncherEditBox.chatType = "BN_WHISPER"
+      bnetLauncherEditBox.tellTarget = "Friend#1234"
+    end,
+    SendTell = function(...)
+      return _G.ChatFrameUtil.SendTellWithMessage(...)
+    end,
+    SendTellWithMessage = function()
+      characterLauncherEditBox:SetFocus()
+      characterLauncherAttributes.chatType = "WHISPER"
+      characterLauncherAttributes.tellTarget = "Arthas"
+      characterLauncherEditBox.chatType = "WHISPER"
+      characterLauncherEditBox.tellTarget = "Arthas"
+      characterLauncherEditBox._hookScripts.OnTextChanged[1](characterLauncherEditBox, false)
+    end,
+  }
   _G.ChatFrame_SendTell = function() end
   _G.ChatFrame_ReplyTell = function() end
   _G.ChatFrame_ReplyTell2 = function() end
-  coordinator.installDeferredPoller()
-  assert(#timerCallbacks == 1 and timerCallbacks[1].delaySeconds == 0, "expected deferred poller timer callback")
 
-  timerCallbacks[1].callback()
-
-  local pollFrame = findCreatedFrameWithScript("OnUpdate")
-  assert(pollFrame ~= nil, "expected edit-box poll frame installation")
-
+  -- Given an existing Blizzard chat edit box before auto-open installs.
   local editBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
   local attributeState = {
     chatType = "WHISPER",
@@ -219,16 +254,36 @@ return function()
     attributeState[key] = value
   end
 
+  _G.ChatFrame1EditBox = editBox
+
+  -- When deferred auto-open interception installs.
+  coordinator.installDeferredPoller()
+  assert(#timerCallbacks == 1 and timerCallbacks[1].delaySeconds == 0, "expected deferred poller timer callback")
+
+  timerCallbacks[1].callback()
+
+  -- Then interception is event-driven and does not install frame polling.
+  local pollFrame = findCreatedFrameWithScript("OnUpdate")
+  assert(pollFrame == nil, "expected auto-open interception not to install an OnUpdate frame")
+  assert(
+    editBox._hookScripts and editBox._hookScripts.OnEditFocusGained,
+    "expected auto-open interception to hook edit-box focus"
+  )
+  assert(
+    editBox._hookScripts and editBox._hookScripts.OnTextChanged,
+    "expected auto-open interception to hook edit-box text changes"
+  )
+
+  local focusHook = editBox._hookScripts.OnEditFocusGained[1]
+  textChangedHook = editBox._hookScripts.OnTextChanged[1]
+
   editBox.chatType = "WHISPER"
   editBox.stickyType = "PARTY"
   editBox.tellTarget = "Jaina"
   editBox:SetText("Need a summon")
   editBox:SetFocus()
-  _G.ChatFrame1EditBox = editBox
 
-  pollFrame.scripts.OnUpdate(pollFrame)
-
-  assert(#sendTellCalls == 1 and sendTellCalls[1] == "Jaina", "expected poller to route whisper target through hooks")
+  assert(#sendTellCalls == 1 and sendTellCalls[1] == "Jaina", "expected edit-box hook to route whisper target")
   assert(#composerTexts == 1 and composerTexts[1] == "Need a summon", "expected draft text moved into composer")
   assert(#deactivated == 1 and deactivated[1] == editBox, "expected edit box to close after interception")
   assert(editBox:GetAttribute("chatType") == "PARTY", "expected sticky chat type restored in secure state")
@@ -258,7 +313,7 @@ return function()
   bnEditBox:SetFocus()
   _G.ChatFrame1EditBox = bnEditBox
 
-  pollFrame.scripts.OnUpdate(pollFrame)
+  focusHook(bnEditBox)
 
   local expectedBnConversationKey = "me::BN::42"
   assert(
@@ -303,7 +358,7 @@ return function()
     local prevOutgoingCount = #outgoingCalls
     local prevDeactivatedCount = #deactivated
     local prevComposerTextCount = #composerTexts
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(staleBnBox, true)
 
     assert(#sendTellCalls == prevSendTellCount + 1, "expected slash whisper draft to route through character whisper")
     assert(sendTellCalls[#sendTellCalls] == "Thrall", "expected slash whisper target parsed from /w command")
@@ -335,7 +390,7 @@ return function()
 
     prevOutgoingCount = #outgoingCalls
     prevDeactivatedCount = #deactivated
-    pollFrame.scripts.OnUpdate(pollFrame)
+    focusHook(taintedTextBox)
 
     assert(#outgoingCalls == prevOutgoingCount, "expected unreadable slash draft state not to route stale BNet conversation")
     assert(#deactivated == prevDeactivatedCount, "expected unreadable slash draft state to stay in Blizzard edit box")
@@ -370,6 +425,95 @@ return function()
   -- Reply-hook scenarios removed: ChatFrame_ReplyTell / ReplyTell2 are no
   -- longer hooked. The /wr slash command (covered by its own test file) is
   -- the taint-safe reply path via runtime.lastIncomingWhisperKey.
+
+  -- test_active_retail_bnet_launcher_defers_edit_box_interception
+
+  do
+    local activeBNetBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local activeBNetAttributes = { chatType = "SAY", stickyType = "SAY" }
+    function activeBNetBox:GetAttribute(key)
+      return activeBNetAttributes[key]
+    end
+
+    function activeBNetBox:SetAttribute(key, value)
+      activeBNetAttributes[key] = value
+    end
+
+    activeBNetBox.chatType = "SAY"
+    activeBNetBox.stickyType = "SAY"
+    activeBNetBox:SetText("Active BNet draft")
+    activeBNetBox:SetFocus()
+    _G.ChatFrame1EditBox = activeBNetBox
+    bnetLauncherEditBox = activeBNetBox
+    bnetLauncherAttributes = activeBNetAttributes
+
+    local prevOutgoingCount = #outgoingCalls
+    local prevDeactivatedCount = #deactivated
+    local prevComposerTextCount = #composerTexts
+    local prevTimerCount = #timerCallbacks
+    _G.ChatFrameUtil.SendBNetTell()
+
+    assert(bnetHeaderUpdates == 1, "expected active Battle.net launcher to update only its header")
+    assert(#outgoingCalls == prevOutgoingCount, "expected secure launcher hook not to route synchronously")
+
+    for index = prevTimerCount + 1, #timerCallbacks do
+      timerCallbacks[index].callback()
+    end
+
+    assert(
+      #outgoingCalls == prevOutgoingCount + 1 and outgoingCalls[#outgoingCalls] == "me::BN::42",
+      "expected active Battle.net launcher to route exactly one Battle.net conversation"
+    )
+    assert(#timerCallbacks == prevTimerCount + 1, "expected secure launcher hook to defer interception")
+    assert(#deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == activeBNetBox, "expected active Battle.net edit box to close")
+    assert(
+      #composerTexts == prevComposerTextCount + 1 and composerTexts[#composerTexts] == "Active BNet draft",
+      "expected active Battle.net draft transferred to composer"
+    )
+    assert(activeBNetBox:HasFocus() == false, "expected active Battle.net edit box to lose focus after deferred interception")
+  end
+
+  -- test_active_retail_character_launcher_defers_edit_box_interception
+
+  do
+    local activeCharacterBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local activeCharacterAttributes = { chatType = "SAY", stickyType = "SAY" }
+    function activeCharacterBox:GetAttribute(key)
+      return activeCharacterAttributes[key]
+    end
+
+    function activeCharacterBox:SetAttribute(key, value)
+      activeCharacterAttributes[key] = value
+    end
+
+    activeCharacterBox.chatType = "SAY"
+    activeCharacterBox.stickyType = "SAY"
+    activeCharacterBox:SetText("Active character draft")
+    activeCharacterBox:HookScript("OnEditFocusGained", focusHook)
+    activeCharacterBox:HookScript("OnTextChanged", textChangedHook)
+    _G.ChatFrame1EditBox = activeCharacterBox
+    characterLauncherEditBox = activeCharacterBox
+    characterLauncherAttributes = activeCharacterAttributes
+
+    local prevSendTellCount = #sendTellCalls
+    local prevDeactivatedCount = #deactivated
+    local prevTimerCount = #timerCallbacks
+    _G.ChatFrameUtil.SendTell()
+
+    assert(#sendTellCalls == prevSendTellCount, "expected modern character launcher not to route synchronously")
+    assert(#timerCallbacks == prevTimerCount + 1, "expected modern character launcher to schedule next-frame interception")
+
+    timerCallbacks[#timerCallbacks].callback()
+
+    assert(
+      #sendTellCalls == prevSendTellCount + 1 and sendTellCalls[#sendTellCalls] == "Arthas",
+      "expected deferred modern character launcher to route character target once"
+    )
+    assert(
+      #deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == activeCharacterBox,
+      "expected deferred modern character launcher to close Blizzard edit box"
+    )
+  end
 
   -- test_direct_hook_intercepts_send_tell_with_deferred_close
 
@@ -483,7 +627,7 @@ return function()
     assert(failEditBox:HasFocus() == true, "expected edit box to keep focus when hook fails")
   end
 
-  -- test_poller_does_not_close_editbox_when_send_tell_fails
+  -- test_edit_box_hook_does_not_close_editbox_when_send_tell_fails
 
   do
     local pollerFailBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
@@ -505,14 +649,14 @@ return function()
 
     local prevDeactivatedCount = #deactivated
     sendTellResult = false
-    pollFrame.scripts.OnUpdate(pollFrame)
+    focusHook(pollerFailBox)
 
-    assert(#deactivated == prevDeactivatedCount, "expected poller NOT to close edit box when onSendTell returns false")
-    assert(pollerFailBox:HasFocus() == true, "expected edit box to keep focus when poller hook fails")
+    assert(#deactivated == prevDeactivatedCount, "expected edit-box hook NOT to close when onSendTell returns false")
+    assert(pollerFailBox:HasFocus() == true, "expected edit box to keep focus when interception fails")
     sendTellResult = true
   end
 
-  -- test_poller_preserves_combat_typed_draft_after_combat_ends
+  -- test_edit_box_hook_preserves_combat_typed_draft_after_combat_ends
 
   do
     local carriedDraftBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
@@ -536,13 +680,13 @@ return function()
     local prevDeactivatedCount = #deactivated
     inCombat = true
     windowVisible = false
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(carriedDraftBox, true)
 
-    assert(#sendTellCalls == prevSendTellCount, "expected poller not to route whisper draft while still in combat")
-    assert(#deactivated == prevDeactivatedCount, "expected poller not to close Blizzard chat edit box while in combat")
+    assert(#sendTellCalls == prevSendTellCount, "expected edit-box hook not to route a whisper draft in combat")
+    assert(#deactivated == prevDeactivatedCount, "expected edit-box hook not to close Blizzard chat in combat")
 
     inCombat = false
-    pollFrame.scripts.OnUpdate(pollFrame)
+    focusHook(carriedDraftBox)
 
     assert(#sendTellCalls == prevSendTellCount, "expected combat-carried draft to remain in Blizzard chat after combat ends")
     assert(#deactivated == prevDeactivatedCount, "expected combat-carried draft edit box to remain open after combat ends")
@@ -572,7 +716,7 @@ return function()
 
     inCombat = true
     windowVisible = false
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(carriedDraftBox, true)
     inCombat = false
 
     local prevSendTellCount = #sendTellCalls
@@ -587,7 +731,7 @@ return function()
     assert(carriedDraftBox:HasFocus() == true, "expected direct hook to preserve focus for combat-carried draft")
   end
 
-  -- test_poller_routes_again_after_preserved_draft_cleared
+  -- test_edit_box_hook_routes_again_after_preserved_draft_cleared
 
   do
     local resumedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
@@ -609,14 +753,14 @@ return function()
 
     inCombat = true
     windowVisible = false
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(resumedBox, true)
     inCombat = false
 
     resumedBox:SetText("")
     sendTellResult = true
     local prevSendTellCount = #sendTellCalls
     local prevDeactivatedCount = #deactivated
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(resumedBox, true)
 
     assert(
       #sendTellCalls == prevSendTellCount + 1 and sendTellCalls[#sendTellCalls] == "Arthas",
@@ -624,12 +768,12 @@ return function()
     )
     assert(
       #deactivated == prevDeactivatedCount + 1 and deactivated[#deactivated] == resumedBox,
-      "expected poller to close Blizzard chat edit box once preserved draft is cleared"
+      "expected edit-box hook to close Blizzard chat once the preserved draft is cleared"
     )
     assert(resumedBox:HasFocus() == false, "expected cleared draft edit box to lose focus once normal routing resumes")
   end
 
-  -- test_poller_tolerates_tainted_has_focus_during_lockdown
+  -- test_text_changed_hook_tolerates_tainted_has_focus_during_lockdown
 
   do
     local taintedBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
@@ -647,7 +791,9 @@ return function()
     -- Simulate WoW secret-boolean taint: HasFocus() throws when its return
     -- value is tested in a boolean context. In our test env we approximate
     -- this by making the call itself throw, which pcall catches identically.
+    local hasFocusCallCount = 0
     taintedBox.HasFocus = function()
+      hasFocusCallCount = hasFocusCallCount + 1
       error("attempt to perform boolean test on a secret boolean value (tainted by 'WhisperMessenger')")
     end
     _G.ChatFrame1EditBox = taintedBox
@@ -655,16 +801,27 @@ return function()
     local prevSendTellCount = #sendTellCalls
     local prevDeactivatedCount = #deactivated
 
-    -- Combat path: findFocusedEditBox should gracefully return nil
+    -- Given auto-open interception is suspended in restricted content.
+    _G._wmSuspended = true
+
+    -- When Blizzard reports a user text change.
+    local suspendedOk, suspendedError = pcall(textChangedHook, taintedBox, true)
+
+    -- Then the hard bail happens before reading focus state.
+    assert(suspendedOk, "expected suspended text hook to return safely, got: " .. tostring(suspendedError))
+    assert(hasFocusCallCount == 0, "expected suspended text hook not to read HasFocus")
+    _G._wmSuspended = false
+
+    -- Combat path: the text-change hook should gracefully ignore tainted focus.
     inCombat = true
     windowVisible = false
-    local ok1, err1 = pcall(pollFrame.scripts.OnUpdate, pollFrame)
-    assert(ok1, "expected combat poller to survive tainted HasFocus, got: " .. tostring(err1))
+    local ok1, err1 = pcall(textChangedHook, taintedBox, true)
+    assert(ok1, "expected combat text hook to survive tainted HasFocus, got: " .. tostring(err1))
 
-    -- Interception path: visible window during combat
+    -- Interception path: visible window during combat.
     windowVisible = true
-    local ok2, err2 = pcall(pollFrame.scripts.OnUpdate, pollFrame)
-    assert(ok2, "expected interception poller to survive tainted HasFocus, got: " .. tostring(err2))
+    local ok2, err2 = pcall(textChangedHook, taintedBox, true)
+    assert(ok2, "expected interception text hook to survive tainted HasFocus, got: " .. tostring(err2))
 
     assert(#sendTellCalls == prevSendTellCount, "expected no whisper routing when HasFocus is tainted")
     assert(#deactivated == prevDeactivatedCount, "expected no edit box close when HasFocus is tainted")
@@ -673,7 +830,42 @@ return function()
     windowVisible = false
   end
 
-  -- test_poller_does_not_route_partial_slash_whisper_target_while_typing
+  -- test_edit_box_hooks_reuse_interception_dependencies
+
+  do
+    local observedDependencies = {}
+    local originalInterceptEditBox = EditBoxInterop.interceptEditBox
+    EditBoxInterop.interceptEditBox = function(_, _, dependencies)
+      observedDependencies[#observedDependencies + 1] = dependencies
+      return false
+    end
+
+    local ordinaryChatBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+    local ordinaryChatState = { chatType = "SAY", stickyType = "SAY" }
+    function ordinaryChatBox:GetAttribute(key)
+      return ordinaryChatState[key]
+    end
+    function ordinaryChatBox:SetAttribute(key, value)
+      ordinaryChatState[key] = value
+    end
+    ordinaryChatBox.chatType = "SAY"
+    ordinaryChatBox.stickyType = "SAY"
+    ordinaryChatBox:SetText("hello")
+    ordinaryChatBox:SetFocus()
+
+    -- Given two edit-box events need the same interception services.
+    -- When focus and user text callbacks are processed.
+    focusHook(ordinaryChatBox)
+    textChangedHook(ordinaryChatBox, true)
+
+    EditBoxInterop.interceptEditBox = originalInterceptEditBox
+
+    -- Then the immutable dependency table is reused between callbacks.
+    assert(#observedDependencies == 2, "expected both edit-box callbacks to reach interception")
+    assert(observedDependencies[1] == observedDependencies[2], "expected edit-box callbacks to reuse dependencies")
+  end
+
+  -- test_text_changed_hook_does_not_route_partial_slash_whisper_target
   -- Regression: typing `/w` followed by a name in default chat must not auto-open
   -- the messenger on every keystroke. The auto-open should only fire after the
   -- user finishes typing the target name (signalled by trailing whitespace before
@@ -702,17 +894,17 @@ return function()
       local draft = partialDrafts[index]
       partialBox:SetText(draft)
       partialBox:SetFocus()
-      pollFrame.scripts.OnUpdate(pollFrame)
+      textChangedHook(partialBox, true)
       assert(#sendTellCalls == prevSendTellCount, "expected partial '/w' draft '" .. draft .. "' not to route through onSendTell")
       assert(#deactivated == prevDeactivatedCount, "expected partial '/w' draft '" .. draft .. "' to remain in Blizzard chat edit box")
       assert(partialBox:GetText() == draft, "expected partial '/w' draft text preserved while typing")
       assert(partialBox:HasFocus() == true, "expected partial '/w' draft to keep focus while typing")
     end
 
-    -- Once the user types a space after the name (commit signal), the poller routes.
+    -- Once the user types a space after the name, the text hook routes.
     partialBox:SetText("/w Shalomonk ")
     partialBox:SetFocus()
-    pollFrame.scripts.OnUpdate(pollFrame)
+    textChangedHook(partialBox, true)
     assert(#sendTellCalls == prevSendTellCount + 1, "expected committed '/w name ' draft to route through onSendTell")
     assert(sendTellCalls[#sendTellCalls] == "Shalomonk", "expected committed slash whisper target preserved")
     assert(#deactivated == prevDeactivatedCount + 1, "expected committed slash whisper draft to close Blizzard edit box")
@@ -782,6 +974,8 @@ return function()
   _G.BNGetNumFriends = savedGlobals.BNGetNumFriends
   _G._wmSuspended = savedGlobals._wmSuspended
   rawset(_G, "hooksecurefunc", savedGlobals.hooksecurefunc)
+  _G.ChatFrameUtil = savedGlobals.ChatFrameUtil
+  _G.ChatFrame_SendBNetTell = savedGlobals.ChatFrame_SendBNetTell
   _G.ChatFrame_SendTell = savedGlobals.ChatFrame_SendTell
   _G.ChatFrame_ReplyTell = savedGlobals.ChatFrame_ReplyTell
   _G.ChatFrame_ReplyTell2 = savedGlobals.ChatFrame_ReplyTell2
