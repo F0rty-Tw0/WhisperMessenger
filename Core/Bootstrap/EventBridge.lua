@@ -142,7 +142,10 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end
   end
   local convertedReactionControl = resultMeta and resultMeta.reactionControl == true
-  if INCOMING_WHISPER_EVENTS[eventName] and result and not convertedReactionControl then
+  local changedSetReaction = type(resultMeta) == "table" and resultMeta.reactionChanged == true and resultMeta.reactionOperation == "set"
+  local shouldApplyIncomingEffects = result
+    and ((INCOMING_WHISPER_EVENTS[eventName] and not convertedReactionControl) or (convertedReactionControl and changedSetReaction))
+  if shouldApplyIncomingEffects then
     applyIncomingEffects(runtime, result)
   end
   if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then

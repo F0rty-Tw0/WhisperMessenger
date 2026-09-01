@@ -207,6 +207,17 @@ local function resolveWhisperReactionConversation(state, playerName, computedCon
   return Identity.ResolveWhisperConversation(state, playerName, "WOW") or computedConversationKey
 end
 
+local function recordConvertedReactionFallbackActivity(state, result, fallbackConversationKey)
+  if result.changed ~= true or result.operation ~= "set" then
+    return
+  end
+  local conversationKey = result.conversationKey or fallbackConversationKey
+  if conversationKey == nil then
+    return
+  end
+  Store.RecordIncomingActivity(state.store, conversationKey, result.incomingFallbackMessage, result.incomingFallbackIsActive)
+end
+
 local function reactionSenderContext(state, payload, isBattleNet)
   if isBattleNet then
     local senderKey = battleNetReactionSenderKey(state, payload)
@@ -255,14 +266,18 @@ local function handleReactionMetadata(state, payload, isBattleNet)
 
   if result and result.converted then
     local resolvedConversationKey = result.conversationKey or conversationKey
+    recordConvertedReactionFallbackActivity(state, result, resolvedConversationKey)
+
     local conversation = resolvedConversationKey and state.store.conversations[resolvedConversationKey] or nil
     if conversation then
       conversation.conversationKey = resolvedConversationKey
     end
-    return conversation, {
-      reactionControl = true,
-      reactionChanged = result.changed == true,
-    }
+    return conversation,
+      {
+        reactionControl = true,
+        reactionChanged = result.changed == true,
+        reactionOperation = result.operation,
+      }
   end
   return nil
 end
@@ -349,13 +364,17 @@ local function handleUnlockedEvent(state, eventName, payload)
       end
       local reactionConversationKey = conversationKey
       local reactionSenderKey = senderKey
-      local reactionActorName = contact.displayName or payload.playerName
+      local reactionActorName = (contact and contact.displayName) or payload.playerName
       if eventName == "CHAT_MSG_WHISPER" then
         reactionConversationKey = resolveWhisperReactionConversation(state, payload.playerName, conversationKey)
         reactionSenderKey = reactionConversationKey
         local resolvedConversation = state.store.conversations[reactionConversationKey]
         reactionActorName = resolvedConversation and (resolvedConversation.displayName or resolvedConversation.contactDisplayName)
           or reactionActorName
+      end
+      local reactionIsActive = state.activeConversationKey == reactionConversationKey
+      if state.isConversationOpen then
+        reactionIsActive = state.isConversationOpen(reactionConversationKey) == true
       end
       confirmWhisperAvailability(state, payload, contact)
       local routeComplete = false
@@ -391,7 +410,9 @@ local function handleUnlockedEvent(state, eventName, payload)
         "out",
         sentAt,
         appendDegraded,
-        correlationText
+        correlationText,
+        nil,
+        reactionIsActive
       )
       routeComplete = true
       if controlResult then
@@ -402,14 +423,17 @@ local function handleUnlockedEvent(state, eventName, payload)
           }
         end
         if controlResult.converted then
+          recordConvertedReactionFallbackActivity(state, controlResult, reactionConversationKey)
           local conversation = state.store.conversations[reactionConversationKey]
           if conversation then
             conversation.conversationKey = reactionConversationKey
           end
-          return conversation, {
-            reactionControl = true,
-            reactionChanged = controlResult.changed == true,
-          }
+          return conversation,
+            {
+              reactionControl = true,
+              reactionChanged = controlResult.changed == true,
+              reactionOperation = controlResult.operation,
+            }
         end
         if controlResult.degraded then
           return degradedConversation, {
