@@ -9,6 +9,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: reaction markers on sent messages now sit on the left edge, matching the alignment of sent message bubbles.
 - Fixed: long status text in the conversation header now stays on one line, shortens with an ellipsis in narrow windows, and returns in full after resizing.
 - Fixed: Battle.net conversations merged after friend details load now preserve the newest preview and unread reaction indicator, including activity received in the same second.
+- Reduced background CPU use and temporary memory churn by checking Blizzard chat edit boxes only when their focus or text changes, while still opening Battle.net whispers started from an active chat box.
 
 ## [1.4.0] - 2026-08-31
 
@@ -266,4 +267,3 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [0.1.0] - 2025-01-01
 
 - First public version of WhisperMessenger: a dedicated whisper window with chat bubbles, contacts, unread badges, Battle.net support, saved history, settings, and drag-to-reorder contacts.
-
