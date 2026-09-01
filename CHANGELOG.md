@@ -2,6 +2,14 @@
 
 Player-friendly release notes for WhisperMessenger. Each version below focuses on the changes most people will actually notice in game.
 
+## [Unreleased]
+
+- Fixed: reactions from character and Battle.net whispers now count as new activity, update the conversation preview, play the configured whisper sound, and open the messenger automatically when enabled; duplicate reactions and removed reactions stay silent.
+- Fixed: incoming reaction previews now show emoji in the contact list and notification popup instead of raw reaction text.
+- Fixed: reaction markers on sent messages now sit on the left edge, matching the alignment of sent message bubbles.
+- Fixed: long status text in the conversation header now stays on one line, shortens with an ellipsis in narrow windows, and returns in full after resizing.
+- Fixed: Battle.net conversations merged after friend details load now preserve the newest preview and unread reaction indicator, including activity received in the same second.
+
 ## [1.4.0] - 2026-08-31
 
 - Added message reactions for character and Battle.net whispers plus party, raid, instance, guild, and officer chats. Right-click an incoming message to add or remove a reaction; friends using WhisperMessenger see it attached to the original message, while other players receive a readable fallback.

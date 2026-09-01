@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local applyVertexColor = UIHelpers.applyVertexColor
 local createRoundedBackground = UIHelpers.createRoundedBackground
 local setFontObject = UIHelpers.setFontObject
@@ -257,7 +258,7 @@ function IncomingPreview.Create(factory, frame, options)
     local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
 
     previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
-    previewMessageLabel:SetText(messageText)
+    previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
 
     local classIconPath = theme.ClassIcon(classTag)
     if classIconPath then

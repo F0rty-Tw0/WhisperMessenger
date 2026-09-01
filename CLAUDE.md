@@ -1,10 +1,3 @@
-# OpenWolf
-
-@.wolf/OPENWOLF.md
-
-This project uses OpenWolf for context management. Read and follow .wolf/OPENWOLF.md every session. Check .wolf/cerebrum.md before generating code. Check .wolf/anatomy.md before reading files.
-
-
 # WhisperMessenger
 
 Messenger-style whisper UI addon for World of Warcraft Retail.
@@ -12,7 +5,7 @@ Messenger-style whisper UI addon for World of Warcraft Retail.
 ## Tech Stack
 
 - **Lua 5.1** (WoW runtime) — no Lua 5.2+ features (no `goto`, no `table.unpack` without compat)
-- **WoW API** — Blizzard's frame/widget system, C_ namespaced APIs
+- **WoW API** — Blizzard's frame/widget system, C\_ namespaced APIs
 - **StyLua** — formatter (`stylua.toml`)
 - **Luacheck** — static analysis (`.luacheckrc`)
 
@@ -65,6 +58,7 @@ Every change follows test-driven development. No exceptions.
 3. **Refactor** — Clean up the implementation and the test. Remove duplication, improve naming, simplify logic. Run all tests to confirm nothing broke.
 
 Rules:
+
 - **Never write production code without a failing test that demands it.**
 - **One behavior per test** — each test should verify a single expectation.
 - **Test file mirrors source file** — `Model/ConversationStore.lua` → `tests/model/test_conversation_store.lua`

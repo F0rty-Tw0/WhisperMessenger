@@ -18,6 +18,7 @@ local UIHelpers = {
   captureFramePosition = Base.captureFramePosition,
   setFontObject = Base.setFontObject,
   setTextColor = Base.setTextColor,
+  fitTextWithEllipsis = Base.fitTextWithEllipsis,
   createBorderBox = Shapes.createBorderBox,
   createCircularIcon = Shapes.createCircularIcon,
   createRoundedBackground = Shapes.createRoundedBackground,
