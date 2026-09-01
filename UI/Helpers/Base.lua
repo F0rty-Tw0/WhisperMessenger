@@ -124,6 +124,64 @@ function Base.setTextColor(fontString, colorTable)
   end
 end
 
+local UTF8_CHAR_PATTERN = "[%z\1-\127\194-\244][\128-\191]*"
+local ELLIPSIS = "..."
+
+local function utf8CodepointCount(text)
+  local count = 0
+  for _ in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
+    count = count + 1
+  end
+  return count
+end
+
+local function utf8Prefix(text, maxChars)
+  if maxChars <= 0 then
+    return ""
+  end
+
+  local chars = {}
+  local index = 0
+  for char in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
+    index = index + 1
+    if index > maxChars then
+      break
+    end
+    chars[#chars + 1] = char
+  end
+
+  return table.concat(chars)
+end
+
+function Base.fitTextWithEllipsis(label, text, maxWidth)
+  local resolvedText = text or ""
+  label:SetText(resolvedText)
+  if maxWidth <= 0 or type(label.GetStringWidth) ~= "function" then
+    return resolvedText
+  end
+
+  if label:GetStringWidth() <= maxWidth then
+    return resolvedText
+  end
+
+  label:SetText(ELLIPSIS)
+  local ellipsisWidth = label:GetStringWidth() or 0
+  if ellipsisWidth >= maxWidth then
+    return ELLIPSIS
+  end
+
+  local totalChars = utf8CodepointCount(resolvedText)
+  for keepChars = totalChars - 1, 1, -1 do
+    local candidate = utf8Prefix(resolvedText, keepChars) .. ELLIPSIS
+    label:SetText(candidate)
+    if label:GetStringWidth() <= maxWidth then
+      return candidate
+    end
+  end
+
+  return ELLIPSIS
+end
+
 ns.UIHelpersBase = Base
 
 return Base

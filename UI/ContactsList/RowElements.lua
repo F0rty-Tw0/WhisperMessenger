@@ -5,10 +5,12 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
+local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local UNREAD_BADGE_SIZE = 16
 local UNREAD_BADGE_RIGHT_OFFSET = 4 -- relative to -CONTACT_PADDING
@@ -18,7 +20,6 @@ local UNREAD_BADGE_OVERFLOW = 99
 
 local RowElements = {}
 
-local NAME_ELLIPSIS = "..."
 local NAME_LABEL_LEFT_INSET = 10
 local NAME_TO_ICON_GAP = 4
 local NAME_TO_TIME_GAP = 2
@@ -26,7 +27,6 @@ local TIME_LABEL_FALLBACK_WIDTH = 14
 local TIME_LABEL_RIGHT_INSET = 6
 local FACTION_ICON_RIGHT_PADDING = 1
 local PREVIEW_RIGHT_RESERVE = 40 -- name label right reserve (timestamp + padding)
-local UTF8_CHAR_PATTERN = "[%z\1-\127\194-\244][\128-\191]*"
 
 local function previewLabelWidth(parentWidth)
   return parentWidth - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - PREVIEW_RIGHT_RESERVE
@@ -60,60 +60,6 @@ local function nameLabelWidth(row, parentWidth)
   )
 end
 
-local function utf8CodepointCount(text)
-  local count = 0
-  for _ in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
-    count = count + 1
-  end
-  return count
-end
-
-local function utf8Prefix(text, maxChars)
-  if maxChars <= 0 then
-    return ""
-  end
-
-  local chars = {}
-  local index = 0
-  for char in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
-    index = index + 1
-    if index > maxChars then
-      break
-    end
-    chars[#chars + 1] = char
-  end
-
-  return table.concat(chars)
-end
-
-local function fitLabelTextWithEllipsis(label, text, maxWidth)
-  local resolvedText = text or ""
-  label:SetText(resolvedText)
-  if maxWidth <= 0 or type(label.GetStringWidth) ~= "function" then
-    return resolvedText
-  end
-
-  if label:GetStringWidth() <= maxWidth then
-    return resolvedText
-  end
-
-  label:SetText(NAME_ELLIPSIS)
-  local ellipsisWidth = label:GetStringWidth() or 0
-  if ellipsisWidth >= maxWidth then
-    return NAME_ELLIPSIS
-  end
-
-  local totalChars = utf8CodepointCount(resolvedText)
-  for keepChars = totalChars - 1, 1, -1 do
-    local candidate = utf8Prefix(resolvedText, keepChars) .. NAME_ELLIPSIS
-    label:SetText(candidate)
-    if label:GetStringWidth() <= maxWidth then
-      return candidate
-    end
-  end
-
-  return NAME_ELLIPSIS
-end
 
 function RowElements.updateNameLabel(row, item, parentWidth)
   if row.title == nil then
@@ -122,7 +68,7 @@ function RowElements.updateNameLabel(row, item, parentWidth)
 
   local width = nameLabelWidth(row, parentWidth)
   row.title:SetWidth(width)
-  row.title:SetText(fitLabelTextWithEllipsis(row.title, item and item.displayName or "", width))
+  row.title:SetText(fitTextWithEllipsis(row.title, item and item.displayName or "", width))
   applyClassColor(row.title, item and item.classTag or nil, Theme.COLORS.text_primary)
 end
 
@@ -173,7 +119,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
     textBudget = math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
-    row.title:SetText(fitLabelTextWithEllipsis(row.title, item.displayName or "", textBudget))
+    row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, item.displayName or "", textBudget))
     applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
   end
 
@@ -233,7 +179,7 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
   end
 
   row.preview:SetWidth(previewLabelWidth(parentWidth))
-  row.preview:SetText(hideMessagePreview and "" or (item.lastPreview or ""))
+  row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(item.lastPreview))
 end
 
 function RowElements.createPreview(row, item, parentWidth)

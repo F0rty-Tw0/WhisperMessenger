@@ -64,7 +64,7 @@ local function resetReactionBadge(frame)
   frame._reactionKey = nil
 end
 
-local function showReactionBadge(factory, frame, reaction)
+local function showReactionBadge(factory, frame, reaction, direction)
   local reactionFrame = frame._reactionFrame
   if reactionFrame == nil then
     reactionFrame = factory.CreateFrame("Frame", nil, frame)
@@ -90,7 +90,11 @@ local function showReactionBadge(factory, frame, reaction)
   end
 
   reactionFrame:ClearAllPoints()
-  reactionFrame:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -5, ReactionAssets.BADGE_OFFSET_Y)
+  if direction == "out" then
+    reactionFrame:SetPoint("TOPLEFT", frame, "BOTTOMLEFT", 5, ReactionAssets.BADGE_OFFSET_Y)
+  else
+    reactionFrame:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -5, ReactionAssets.BADGE_OFFSET_Y)
+  end
   reactionFrame:SetScript("OnEnter", function(self)
     local tooltip = _G.GameTooltip
     if type(tooltip) ~= "table" then
@@ -351,7 +355,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local reactionIcon
   local reaction = MessageReactions.VisibleReaction(message)
   if kind == "user" and reaction and ReactionAssets.GetTexCoords(reaction.key) then
-    reactionFrame, reactionIcon = showReactionBadge(options.persistentFactory or factory, frame, reaction)
+    reactionFrame, reactionIcon = showReactionBadge(options.persistentFactory or factory, frame, reaction, direction)
     totalHeight = totalHeight + ReactionAssets.GetBadgeOverflow()
   end
 
