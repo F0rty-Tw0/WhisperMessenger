@@ -173,6 +173,176 @@ return function()
     assert(conv.lastIncomingAt == 12, "lastIncomingAt should track the incoming timestamp")
   end
 
+  -- test_record_incoming_activity_updates_preview_metadata_without_transcript_entry
+  do
+    local s = Store.New({})
+    local key = "me::WOW::jaina-proudmoore"
+    Store.AppendOutgoing(s, key, {
+      id = "outgoing",
+      direction = "out",
+      kind = "user",
+      text = "Meet by the summoning stone.",
+      sentAt = 10,
+    })
+
+    Store.RecordIncomingActivity(s, key, {
+      direction = "in",
+      kind = "user",
+      text = "reacted :heart: to: “Meet by the summoning stone.”",
+      sentAt = 20,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    local conv = s.conversations[key]
+    assert(#conv.messages == 1, "preview-only activity must not append a transcript message")
+    assert(conv.lastPreview == "reacted :heart: to: “Meet by the summoning stone.”", "lastPreview should expose the readable fallback")
+    assert(
+      conv.lastIncomingPreview == "reacted :heart: to: “Meet by the summoning stone.”",
+      "lastIncomingPreview should expose the readable fallback"
+    )
+    assert(conv.lastIncomingSender == "Jaina-Proudmoore", "lastIncomingSender should track the fallback sender")
+    assert(conv.lastIncomingAt == 20, "lastIncomingAt should track the fallback timestamp")
+    assert(conv.lastActivityAt == 20, "lastActivityAt should track preview-only incoming activity")
+    assert(conv.unreadCount == 1, "closed conversations should count preview-only incoming activity once")
+  end
+
+  -- test_record_incoming_activity_keeps_active_conversation_read
+  do
+    local s = Store.New({})
+    local key = "me::WOW::jaina-proudmoore"
+    Store.EnsureConversation(s, key)
+
+    Store.RecordIncomingActivity(s, key, {
+      direction = "in",
+      kind = "user",
+      text = "reacted :heart: to: “Meet by the summoning stone.”",
+      sentAt = 20,
+      playerName = "Jaina-Proudmoore",
+    }, true)
+
+    assert(s.conversations[key].unreadCount == 0, "active conversations must not count preview-only incoming activity as unread")
+  end
+
+  -- test_record_incoming_activity_older_fallback_keeps_newer_preview_and_counts_unread
+  do
+    local s = Store.New({})
+    local key = "me::WOW::jaina-proudmoore"
+    Store.AppendIncoming(s, key, {
+      id = "newer-whisper",
+      direction = "in",
+      kind = "user",
+      text = "The meeting moved to the docks.",
+      sentAt = 30,
+      lineID = 300,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    Store.RecordIncomingActivity(s, key, {
+      id = "older-reaction",
+      direction = "in",
+      kind = "user",
+      text = "reacted :heart: to: “Meet by the summoning stone.”",
+      sentAt = 20,
+      lineID = 200,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    local conv = s.conversations[key]
+    assert(conv.lastPreview == "The meeting moved to the docks.", "older reaction activity must not replace newer preview")
+    assert(conv.lastIncomingPreview == "The meeting moved to the docks.", "older reaction activity must not replace newer incoming preview")
+    assert(conv.lastActivityAt == 30, "older reaction activity must not rewind last activity timestamp")
+    assert(conv.lastIncomingAt == 30, "older reaction activity must not rewind last incoming timestamp")
+    assert(conv.unreadCount == 2, "closed conversation should count the received older reaction activity once")
+    assert(#conv.messages == 1 and conv.messages[1].id == "newer-whisper", "reaction activity must not enter the transcript")
+  end
+
+  -- test_record_incoming_activity_orders_same_timestamp_previews_by_line_id
+  do
+    local s = Store.New({})
+    local key = "me::WOW::jaina-proudmoore"
+    Store.AppendIncoming(s, key, {
+      id = "ordinary-whisper",
+      direction = "in",
+      kind = "user",
+      text = "The meeting moved to the docks.",
+      sentAt = 30,
+      lineID = 300,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    Store.RecordIncomingActivity(s, key, {
+      id = "older-line-reaction",
+      direction = "in",
+      kind = "user",
+      text = "reacted :heart: to: “Meet by the summoning stone.”",
+      sentAt = 30,
+      lineID = 299,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    local conv = s.conversations[key]
+    assert(conv.lastPreview == "The meeting moved to the docks.", "lower lineID must not replace same-timestamp preview")
+    assert(conv.lastIncomingPreview == "The meeting moved to the docks.", "lower lineID must not replace same-timestamp incoming preview")
+
+    Store.RecordIncomingActivity(s, key, {
+      id = "newer-line-reaction",
+      direction = "in",
+      kind = "user",
+      text = "reacted :smile: to: “The meeting moved to the docks.”",
+      sentAt = 30,
+      lineID = 301,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    assert(conv.lastPreview == "reacted :smile: to: “The meeting moved to the docks.”", "higher lineID must replace same-timestamp preview")
+    assert(
+      conv.lastIncomingPreview == "reacted :smile: to: “The meeting moved to the docks.”",
+      "higher lineID must replace same-timestamp incoming preview"
+    )
+    assert(conv.lastActivityAt == 30, "same-timestamp ordering must preserve activity timestamp")
+    assert(conv.lastIncomingAt == 30, "same-timestamp ordering must preserve incoming timestamp")
+    assert(#conv.messages == 1 and conv.messages[1].id == "ordinary-whisper", "reaction activities must not enter the transcript")
+  end
+
+  -- test_chronological_incoming_older_line_keeps_newer_preview_only_activity_metadata
+  do
+    local s = Store.New({})
+    local key = "me::WOW::jaina-proudmoore"
+    Store.RecordIncomingActivity(s, key, {
+      id = "reaction-301",
+      direction = "in",
+      kind = "user",
+      text = "reacted :heart: to: “Meet by the summoning stone.”",
+      sentAt = 30,
+      lineID = 301,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    Store.InsertIncomingChronological(s, key, {
+      id = "whisper-300",
+      direction = "in",
+      kind = "user",
+      text = "The meeting moved to the docks.",
+      sentAt = 30,
+      lineID = 300,
+      playerName = "Jaina-Proudmoore",
+    }, false)
+
+    local conv = s.conversations[key]
+    assert(
+      conv.lastPreview == "reacted :heart: to: “Meet by the summoning stone.”",
+      "lower lineID transcript message must not replace contact preview metadata"
+    )
+    assert(conv.lastActivityAt == 30 and conv.lastActivityLineID == 301, "contact preview metadata must retain higher lineID")
+    assert(
+      conv.lastIncomingPreview == "reacted :heart: to: “Meet by the summoning stone.”",
+      "lower lineID transcript message must not replace incoming preview metadata"
+    )
+    assert(conv.lastIncomingAt == 30 and conv.lastIncomingLineID == 301, "incoming preview metadata must retain higher lineID")
+    assert(conv.unreadCount == 2, "each received activity must increment unread independently")
+    assert(#conv.messages == 1 and conv.messages[1].id == "whisper-300", "inserted incoming message must enter transcript")
+  end
+
   -- test_battletag_persisted_on_append_incoming
   do
     local s = Store.New({})

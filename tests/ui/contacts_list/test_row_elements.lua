@@ -1,6 +1,7 @@
 local RowElements = require("WhisperMessenger.UI.ContactsList.RowElements")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
+local ReactionAssets = require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -261,6 +262,27 @@ return function()
     assert(label ~= nil, "createPreview should return a FontString")
     assert(label.text == "last message here", "preview label should have lastPreview text, got: " .. tostring(label.text))
   end
+  -- test_update_preview_renders_reaction_atlas_markup_without_mutating_model
+  do
+    local row = factory.CreateFrame("Button", nil, parent)
+    local preview = "reacted :heart: to: ..."
+    local item = {
+      displayName = "Alice",
+      classTag = nil,
+      raceTag = nil,
+      factionName = nil,
+      lastActivityAt = 100,
+      lastPreview = preview,
+    }
+    local label = RowElements.createPreview(row, item, 260)
+    RowElements.updatePreview(row, item, 260, false)
+
+    assert(
+      label.text == "reacted " .. ReactionAssets.GetInlineTextureMarkup("heart") .. " to: ..." and item.lastPreview == preview,
+      "preview should render reaction atlas markup without mutating raw preview data, got: " .. tostring(label.text)
+    )
+  end
+
   -- test_unread_badge_always_shows_numeric_count
   do
     local row = factory.CreateFrame("Button", nil, parent)
