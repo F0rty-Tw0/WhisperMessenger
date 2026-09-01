@@ -104,8 +104,15 @@ return function()
       state.availabilityByGUID["Player-1"] and state.availabilityByGUID["Player-1"].confirmedByWhisper == true,
       "converted incoming control should confirm whisper availability"
     )
-    assert(#conversation.messages == 1 and conversation.unreadCount == 0, "converted control should not append or increment unread")
-    assert(conversation.lastPreview == "Ready?" and conversation.lastActivityAt == 190, "converted control should not change preview or ordering")
+    assert(#conversation.messages == 1 and conversation.unreadCount == 1, "converted control should preserve transcript and increment unread")
+    assert(
+      conversation.lastPreview == fallback
+        and conversation.lastIncomingPreview == fallback
+        and conversation.lastIncomingSender == "Arthas-Area52"
+        and conversation.lastActivityAt == 200
+        and conversation.lastIncomingAt == 200,
+      "converted control should publish received fallback activity metadata"
+    )
     assert(
       target.reaction and target.reaction.key == "heart" and target.reaction.actorName == "Arthas-Area52",
       "event sender should be reaction actor"
@@ -125,6 +132,7 @@ return function()
       local target = { kind = "user", direction = "out", text = "kk", wireId = "catbury1", sentAt = 240 }
       local conversation = putOutgoing(state, key, target)
       local operation = Protocol.EncodeReaction("set", "thumbsup", target.wireId, target.text, fallback)
+      local receivedFallback = fallback .. " "
       local function routeMetadata()
         return Router.HandleEvent(state, "CHAT_MSG_ADDON", {
           prefix = "WMRX",
@@ -135,7 +143,7 @@ return function()
       end
       local function routeFallback()
         return Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
-          text = fallback .. " ",
+          text = receivedFallback,
           playerName = "Catbury",
           guid = "Player-Catbury",
           lineID = 4,
@@ -159,7 +167,15 @@ return function()
         assert(result == conversation and meta and meta.reactionChanged == true, "late metadata should convert trailing-space control")
       end
 
-      assert(#conversation.messages == 1 and conversation.unreadCount == 0, "converted control should stay hidden")
+      assert(#conversation.messages == 1 and conversation.unreadCount == 1, "converted control should preserve transcript and increment unread")
+      assert(
+        conversation.lastPreview == receivedFallback
+          and conversation.lastIncomingPreview == receivedFallback
+          and conversation.lastIncomingSender == "Catbury"
+          and conversation.lastActivityAt == 250
+          and conversation.lastIncomingAt == 250,
+        "trailing-space control should publish actual received fallback activity metadata"
+      )
       assert(target.reaction and target.reaction.key == "thumbsup" and target.reaction.actorName == "Catbury", "Catbury should be reaction actor")
     end
 
@@ -216,6 +232,9 @@ return function()
         channel = "WOW",
         displayName = "Friend-Realm",
       })
+      state.isConversationOpen = function(conversationKey)
+        return conversationKey == key
+      end
       local fallback = Protocol.BuildFallback("heart", "set", target.text)
       local operation = Protocol.EncodeReaction("set", "heart", target.wireId, target.text, fallback)
       local result
@@ -265,7 +284,24 @@ return function()
           .. ", reactionChanged="
           .. tostring(target.reaction ~= nil)
       )
-      assert(#conversation.messages == 1 and conversation.messages[1] == target, "alias control text should stay hidden")
+      assert(
+        #conversation.messages == 1
+          and conversation.messages[1] == target
+          and conversation.unreadCount == 0
+          and conversation.lastPreview == fallback
+          and conversation.lastIncomingPreview == fallback
+          and conversation.lastIncomingSender == fallbackName
+          and conversation.lastActivityAt == now
+          and conversation.lastIncomingAt == now,
+        "open resolved alias should retain transcript, update preview, and remain read ("
+          .. addonName
+          .. "/"
+          .. fallbackName
+          .. ", "
+          .. (metadataFirst and "metadata-first" or "fallback-first")
+          .. "), unread="
+          .. tostring(conversation.unreadCount)
+      )
       assert(
         target.direction == "out" and target.reaction and target.reaction.key == "heart" and target.reaction.actorName == "Friend-Realm",
         "alias reaction should update original outgoing message with stable actor"
@@ -275,6 +311,87 @@ return function()
     runOrder(false, "Friend", "Friend-Realm")
     runOrder(true, "Friend-Realm", "Friend")
     runOrder(false, "Friend-Realm", "Friend")
+    runOrder(true, "Friend", "Friend")
+    runOrder(false, "Friend", "Friend")
+    runOrder(true, "Friend-Realm", "Friend-Realm")
+    runOrder(false, "Friend-Realm", "Friend-Realm")
+  end
+
+  -- Alias reactions use the resolved closed conversation rather than an open base-name key.
+  do
+    local function runOrder(metadataFirst)
+      local now = 360
+      local state = newState(function()
+        return now
+      end)
+      local key = "wow::WOW::friend-realm"
+      local unresolvedKey = "wow::WOW::friend"
+      local target = { kind = "user", direction = "out", text = "Closed alias target", wireId = "closedaliastarget", sentAt = 350 }
+      local conversation = putOutgoing(state, key, target, {
+        channel = "WOW",
+        displayName = "Friend-Realm",
+      })
+      state.isConversationOpen = function(conversationKey)
+        return conversationKey == unresolvedKey
+      end
+      local fallback = Protocol.BuildFallback("heart", "set", target.text)
+      local operation = Protocol.EncodeReaction("set", "heart", target.wireId, target.text, fallback)
+      local result
+      local meta
+
+      local function routeMetadata()
+        return Router.HandleEvent(state, "CHAT_MSG_ADDON", {
+          prefix = "WMRX",
+          text = operation,
+          channel = "WHISPER",
+          playerName = "Friend",
+        })
+      end
+      local function routeFallback()
+        return Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+          text = fallback,
+          playerName = "Friend",
+          guid = "Player-closed-alias",
+          lineID = metadataFirst and 8 or 9,
+        })
+      end
+
+      if metadataFirst then
+        result = routeMetadata()
+        assert(result == nil and target.reaction == nil, "closed alias metadata should wait for fallback")
+        result, meta = routeFallback()
+      else
+        result, meta = routeFallback()
+        assert(result == nil and meta and meta.reactionStaged == true, "closed alias fallback should stage invisibly")
+        result, meta = routeMetadata()
+      end
+
+      assert(
+        result == conversation and meta and meta.reactionControl == true and meta.reactionChanged == true,
+        "closed resolved alias should convert (" .. (metadataFirst and "metadata-first" or "fallback-first") .. ")"
+      )
+      assert(
+        #conversation.messages == 1
+          and conversation.messages[1] == target
+          and conversation.unreadCount == 1
+          and conversation.lastPreview == fallback
+          and conversation.lastIncomingPreview == fallback
+          and conversation.lastIncomingSender == "Friend"
+          and conversation.lastActivityAt == now
+          and conversation.lastIncomingAt == now,
+        "closed resolved alias should retain transcript, update preview, and increment unread once ("
+          .. (metadataFirst and "metadata-first" or "fallback-first")
+          .. "), unread="
+          .. tostring(conversation.unreadCount)
+      )
+      assert(
+        target.direction == "out" and target.reaction and target.reaction.key == "heart" and target.reaction.actorName == "Friend-Realm",
+        "closed alias reaction should update original outgoing message with stable actor"
+      )
+    end
+
+    runOrder(true)
+    runOrder(false)
   end
 
   -- Invalid/missing metadata degrades the readable fallback after exactly 15 seconds.
@@ -492,6 +609,15 @@ return function()
     })
     assert(result == conversation and meta and meta.reactionControl == true, "BN control should convert")
     assert(#conversation.messages == 1 and target.reaction and target.reaction.key == "gg", "BN converted fallback should stay hidden")
+    assert(
+      conversation.unreadCount == 1
+        and conversation.lastPreview == fallback
+        and conversation.lastIncomingPreview == fallback
+        and conversation.lastIncomingSender == "Jaina#1234"
+        and conversation.lastActivityAt == 500
+        and conversation.lastIncomingAt == 500,
+      "BN converted control should publish fallback activity using account identity"
+    )
     assert(target.reaction.actorName == "Jaina#1234", "BN actor should derive from event-resolved identity")
   end
 
@@ -758,103 +884,290 @@ return function()
     })
     assert(bnTarget.reaction == nil and bnState.messageReactionRuntime == nil, "BN whisper must ignore spoofed group reaction")
   end
-  -- EventBridge suppresses all incoming/outgoing side effects for converted controls.
+  -- Changed remote direct-whisper sets notify once each; staged controls,
+  -- duplicate sets, and removes remain notification-silent.
   do
-    local now = 600
-    local state = newState(function()
-      return now
-    end)
-    local key = "wow::WOW::arthas-area52"
-    local target = { kind = "user", direction = "out", text = "Bridge", wireId = "bridge1", sentAt = 590 }
-    local conversation = putOutgoing(state, key, target)
-    state.accountState = {
-      settings = {
-        playSoundOnWhisper = true,
-        autoOpenIncoming = true,
-        autoOpenOutgoing = true,
-      },
-    }
-    state.chatApi = {}
-    state.bnetApi = {}
-    local sounds, incomingOpens, outgoingOpens, refreshes = 0, 0, 0, 0
     local originalPlay = SoundPlayer.Play
-    rawset(SoundPlayer, "Play", function()
-      sounds = sounds + 1
-    end)
-    state.onAutoOpen = function()
-      incomingOpens = incomingOpens + 1
-    end
-    state.onAutoOpenOutgoing = function()
-      outgoingOpens = outgoingOpens + 1
-    end
     rawset(_G, "InCombatLockdown", function()
       return false
     end)
-    local function refreshWindow()
-      refreshes = refreshes + 1
+
+    local function runSetConversion(arrivalOrder, isOpen)
+      local now = 600
+      local state = newState(function()
+        return now
+      end)
+      local key = "wow::WOW::arthas-area52"
+      local target = {
+        kind = "user",
+        direction = "out",
+        text = "Bridge " .. arrivalOrder,
+        wireId = "bridge" .. string.gsub(arrivalOrder, "%-", ""),
+        sentAt = 590,
+      }
+      local conversation = putOutgoing(state, key, target)
+      local unreadPerChangedIncoming = 1
+      if isOpen then
+        state.isConversationOpen = function(conversationKey)
+          return conversationKey == key
+        end
+        unreadPerChangedIncoming = 0
+      end
+      state.accountState = {
+        settings = {
+          playSoundOnWhisper = true,
+          autoOpenIncoming = true,
+          autoOpenOutgoing = true,
+        },
+      }
+      state.chatApi = {}
+      state.bnetApi = {}
+      local sounds, incomingOpens, outgoingOpens, refreshes = 0, 0, 0, 0
+      rawset(SoundPlayer, "Play", function()
+        sounds = sounds + 1
+      end)
+      state.onAutoOpen = function()
+        incomingOpens = incomingOpens + 1
+      end
+      state.onAutoOpenOutgoing = function()
+        outgoingOpens = outgoingOpens + 1
+      end
+      local function refreshWindow()
+        refreshes = refreshes + 1
+      end
+      local function routeMetadata(metadata)
+        return EventBridge.RouteLiveEvent(state, refreshWindow, "CHAT_MSG_ADDON", "WMRX", metadata, "WHISPER", "Arthas-Area52")
+      end
+      local function routeFallback(fallback, lineID)
+        return EventBridge.RouteLiveEvent(
+          state,
+          refreshWindow,
+          "CHAT_MSG_WHISPER",
+          fallback,
+          "Arthas-Area52",
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          nil,
+          lineID,
+          "Player-1"
+        )
+      end
+
+      local fallback = Protocol.BuildFallback("question", "set", target.text)
+      local metadata = Protocol.EncodeReaction("set", "question", target.wireId, target.text, fallback)
+      local completed
+      if arrivalOrder == "metadata-first" then
+        local staged = routeMetadata(metadata)
+        assert(
+          staged == nil and target.reaction == nil and sounds == 0 and incomingOpens == 0 and refreshes == 0,
+          "metadata half-pair should stay silent"
+        )
+        assert(
+          conversation.lastPreview == target.text and conversation.lastIncomingPreview == nil and conversation.unreadCount == 0,
+          "metadata half-pair should not update preview or unread"
+        )
+        completed = routeFallback(fallback, 7)
+      else
+        local staged = routeFallback(fallback, 7)
+        assert(
+          staged == nil and target.reaction == nil and sounds == 0 and incomingOpens == 0 and refreshes == 0,
+          "fallback half-pair should stay silent"
+        )
+        assert(state.lastIncomingWhisperKey == nil, "staged fallback should not alter reply target")
+        assert(
+          conversation.lastPreview == target.text and conversation.lastIncomingPreview == nil and conversation.unreadCount == 0,
+          "staged fallback should not update preview or unread"
+        )
+        completed = routeMetadata(metadata)
+      end
+
+      assert(
+        completed == conversation and target.reaction and target.reaction.key == "question",
+        arrivalOrder .. " complete pair should apply reaction"
+      )
+      assert(
+        sounds == 1 and incomingOpens == 1 and outgoingOpens == 0 and refreshes == 1,
+        arrivalOrder .. " complete remote set should notify and refresh exactly once"
+      )
+      assert(
+        #conversation.messages == 1 and conversation.messages[1] == target and conversation.unreadCount == unreadPerChangedIncoming,
+        arrivalOrder .. " conversion should preserve transcript and add one unread only when closed"
+      )
+      assert(
+        conversation.lastPreview == fallback
+          and conversation.lastIncomingPreview == fallback
+          and conversation.lastIncomingSender == "Arthas-Area52"
+          and conversation.lastActivityAt == 600
+          and conversation.lastIncomingAt == 600,
+        arrivalOrder .. " conversion should publish readable incoming preview metadata"
+      )
+
+      now = 601
+      routeMetadata(metadata)
+      local duplicate = routeFallback(fallback, 8)
+      assert(duplicate == conversation and target.reaction and target.reaction.key == "question", "duplicate set should remain a no-op")
+      assert(sounds == 1 and incomingOpens == 1 and outgoingOpens == 0, "duplicate direct set should not notify again")
+      assert(
+        #conversation.messages == 1
+          and conversation.unreadCount == unreadPerChangedIncoming
+          and conversation.lastPreview == fallback
+          and conversation.lastIncomingPreview == fallback,
+        "duplicate set should not increment unread or replace the confirmed set preview"
+      )
+
+      now = 602
+      local replacementFallback = Protocol.BuildFallback("heart", "set", target.text)
+      local replacementMetadata = Protocol.EncodeReaction("set", "heart", target.wireId, target.text, replacementFallback)
+      routeMetadata(replacementMetadata)
+      local replacement = routeFallback(replacementFallback, 9)
+      assert(
+        replacement == conversation and target.reaction and target.reaction.key == "heart",
+        "changed replacement set should update confirmed reaction"
+      )
+      assert(sounds == 2 and incomingOpens == 2 and outgoingOpens == 0, "changed replacement set should notify exactly once")
+      assert(
+        #conversation.messages == 1
+          and conversation.unreadCount == unreadPerChangedIncoming * 2
+          and conversation.lastPreview == replacementFallback
+          and conversation.lastIncomingPreview == replacementFallback
+          and conversation.lastIncomingSender == "Arthas-Area52"
+          and conversation.lastActivityAt == 602
+          and conversation.lastIncomingAt == 602,
+        "changed replacement set should publish preview metadata and increment unread once"
+      )
+
+      now = 603
+      local removeFallback = Protocol.BuildFallback("heart", "remove", target.text)
+      local removeMetadata = Protocol.EncodeReaction("remove", "heart", target.wireId, target.text, removeFallback)
+      routeMetadata(removeMetadata)
+      local removed = routeFallback(removeFallback, 10)
+      assert(removed == conversation and target.reaction == nil, "remote remove should clear confirmed reaction")
+      assert(sounds == 2 and incomingOpens == 2 and outgoingOpens == 0, "remote remove should not notify")
+      assert(
+        #conversation.messages == 1
+          and conversation.unreadCount == unreadPerChangedIncoming * 2
+          and conversation.lastPreview == replacementFallback
+          and conversation.lastIncomingPreview == replacementFallback,
+        "remote remove should not increment unread or replace the confirmed set preview"
+      )
+
+      local degradedFallback = Protocol.BuildFallback("heart", "set", target.text)
+      now = 610
+      local staged = routeFallback(degradedFallback, 11)
+      assert(staged == nil and sounds == 2 and incomingOpens == 2, "unmatched fallback should stay silent during TTL")
+      local refreshesBeforeExpiry = refreshes
+      now = 625
+      MessageReactions.Expire(state, now)
+      assert(
+        sounds == 3 and incomingOpens == 3 and refreshes == refreshesBeforeExpiry + 1,
+        "expired fallback should regain ordinary sound, auto-open, and refresh"
+      )
+      assert(state.lastIncomingWhisperKey == key, "expired fallback should become reply target")
+      assert(
+        #conversation.messages == 2 and conversation.messages[2].text == degradedFallback and conversation.unreadCount == unreadPerChangedIncoming * 3,
+        "expired fallback should enter readable history with normal unread behavior"
+      )
     end
 
-    local fallback = Protocol.BuildFallback("question", "set", target.text)
-    EventBridge.RouteLiveEvent(
-      state,
-      refreshWindow,
-      "CHAT_MSG_WHISPER",
-      fallback,
-      "Arthas-Area52",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      7,
-      "Player-1"
-    )
-    assert(sounds == 0 and incomingOpens == 0 and refreshes == 0, "staged control should have no sound, auto-open, or refresh")
-    assert(state.lastIncomingWhisperKey == nil, "staged control should not alter reply target")
+    local function runFallbackFirstOpenTransition(caseName, openAtFallback, expectedUnread)
+      local now = 604
+      local isOpen = openAtFallback
+      local state = newState(function()
+        return now
+      end)
+      local key = "wow::WOW::arthas-area52"
+      local target = {
+        kind = "user",
+        direction = "out",
+        text = "Receive-time openness",
+        wireId = "receiveTimeOpen",
+        sentAt = 594,
+      }
+      local conversation = putOutgoing(state, key, target)
+      state.isConversationOpen = function(conversationKey)
+        return conversationKey == key and isOpen
+      end
+      state.accountState = {
+        settings = {
+          playSoundOnWhisper = true,
+          autoOpenIncoming = true,
+          autoOpenOutgoing = true,
+        },
+      }
+      state.chatApi = {}
+      state.bnetApi = {}
+      local sounds, incomingOpens, outgoingOpens, refreshes = 0, 0, 0, 0
+      rawset(SoundPlayer, "Play", function()
+        sounds = sounds + 1
+      end)
+      state.onAutoOpen = function()
+        incomingOpens = incomingOpens + 1
+      end
+      state.onAutoOpenOutgoing = function()
+        outgoingOpens = outgoingOpens + 1
+      end
+      local function refreshWindow()
+        refreshes = refreshes + 1
+      end
+      local fallback = Protocol.BuildFallback("question", "set", target.text)
+      local metadata = Protocol.EncodeReaction("set", "question", target.wireId, target.text, fallback)
+      local staged = EventBridge.RouteLiveEvent(
+        state,
+        refreshWindow,
+        "CHAT_MSG_WHISPER",
+        fallback,
+        "Arthas-Area52",
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        12,
+        "Player-1"
+      )
+      assert(
+        staged == nil and #conversation.messages == 1 and conversation.unreadCount == 0,
+        caseName .. " should stay hidden without unread effects before metadata"
+      )
 
-    EventBridge.RouteLiveEvent(
-      state,
-      refreshWindow,
-      "CHAT_MSG_ADDON",
-      "WMRX",
-      Protocol.EncodeReaction("set", "question", target.wireId, target.text, fallback),
-      "WHISPER",
-      "Arthas-Area52"
-    )
-    assert(target.reaction and target.reaction.key == "question", "late bridge metadata should apply reaction")
-    assert(sounds == 0 and incomingOpens == 0 and outgoingOpens == 0, "converted control should keep notification and open effects suppressed")
-    assert(refreshes == 1, "converted control should refresh only affected conversation")
-    assert(#conversation.messages == 1 and conversation.lastActivityAt == 590, "bridge conversion should not change transcript or ordering")
+      isOpen = not openAtFallback
+      local completed = EventBridge.RouteLiveEvent(state, refreshWindow, "CHAT_MSG_ADDON", "WMRX", metadata, "WHISPER", "Arthas-Area52")
+      assert(
+        completed == conversation and target.reaction and target.reaction.key == "question",
+        caseName .. " should convert fallback after metadata"
+      )
+      assert(
+        sounds == 1 and incomingOpens == 1 and outgoingOpens == 0 and refreshes == 1,
+        caseName .. " should retain changed remote-set notifications"
+      )
+      assert(
+        #conversation.messages == 1 and conversation.messages[1] == target and conversation.unreadCount == expectedUnread,
+        caseName .. " should keep receipt-time unread state"
+      )
+      assert(
+        conversation.lastPreview == fallback
+          and conversation.lastIncomingPreview == fallback
+          and conversation.lastIncomingSender == "Arthas-Area52"
+          and conversation.lastActivityAt == now
+          and conversation.lastIncomingAt == now,
+        caseName .. " should publish fallback preview metadata"
+      )
+    end
 
-    local degradedFallback = Protocol.BuildFallback("heart", "set", target.text)
-    now = 610
-    EventBridge.RouteLiveEvent(
-      state,
-      refreshWindow,
-      "CHAT_MSG_WHISPER",
-      degradedFallback,
-      "Arthas-Area52",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      8,
-      "Player-1"
-    )
-    assert(sounds == 0 and incomingOpens == 0 and refreshes == 1, "unmatched fallback should stay effect-free during TTL")
-    now = 625
-    MessageReactions.Expire(state, now)
-    assert(sounds == 1 and incomingOpens == 1 and refreshes == 2, "expired fallback should regain ordinary sound, auto-open, and refresh")
-    assert(state.lastIncomingWhisperKey == key, "expired fallback should become reply target")
-    assert(#conversation.messages == 2 and conversation.messages[2].text == degradedFallback, "expired fallback should enter readable history")
+    runFallbackFirstOpenTransition("open fallback then closed metadata", true, 0)
+    runFallbackFirstOpenTransition("closed fallback then open metadata", false, 1)
 
+    runSetConversion("metadata-first")
+    runSetConversion("fallback-first")
+    runSetConversion("metadata-first", true)
     rawset(SoundPlayer, "Play", originalPlay)
   end
 

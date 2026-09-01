@@ -38,6 +38,28 @@ local function makeHarness(gameAccountInfo)
   return Bootstrap, deps, conversation
 end
 
+local function mergeNumericBNetCollision(accountID, battleTag, legacy, canonical)
+  local canonicalKey = Identity.BuildConversationKey(nil, Identity.FromBattleNet(accountID, { battleTag = battleTag }).contactKey)
+  local numericKey = Identity.BuildConversationKey(nil, Identity.FromBattleNet(accountID, nil).contactKey)
+  local conversations = {
+    [numericKey] = legacy,
+    [canonicalKey] = canonical,
+  }
+  local Bootstrap = {
+    runtime = {
+      bnetApi = {},
+      store = { conversations = conversations },
+    },
+  }
+  local deps = makeDeps({
+    [battleTag] = { bnetAccountID = accountID },
+  })
+
+  Presence.handleBNetFriendEvent(Bootstrap, deps)
+
+  return conversations[canonicalKey]
+end
+
 return function()
   -- Force the synchronous fallback path: without C_Timer the debounce runs
   -- the scan immediately, which the assertions below rely on.
@@ -171,6 +193,112 @@ return function()
     assert(Bootstrap.runtime.activeConversationKey == canonicalKey, "runtime active selection should rekey")
     assert(characterState.activeConversationKey == canonicalKey, "saved active selection should rekey")
     assert(Bootstrap.runtime.lastIncomingWhisperKey == canonicalKey, "reply target should rekey")
+  end
+
+  -- test_orphaned_numeric_bnet_collision_keeps_higher_canonical_line_id_for_equal_preview_timestamps
+  do
+    local merged = mergeNumericBNetCollision(915, "Canonical#1234", {
+      channel = "BN",
+      bnetAccountID = 915,
+      lastActivityAt = 50,
+      lastActivityLineID = 300,
+      lastPreview = "legacy activity",
+      lastIncomingAt = 50,
+      lastIncomingLineID = 300,
+      lastIncomingSender = "Legacy",
+      lastIncomingPreview = "legacy incoming",
+      messages = {},
+    }, {
+      channel = "BN",
+      battleTag = "Canonical#1234",
+      bnetAccountID = 915,
+      lastActivityAt = 50,
+      lastActivityLineID = 301,
+      lastPreview = "canonical activity",
+      lastIncomingAt = 50,
+      lastIncomingLineID = 301,
+      lastIncomingSender = "Canonical",
+      lastIncomingPreview = "canonical incoming",
+      messages = {},
+    })
+
+    assert(merged.lastPreview == "canonical activity", "lower legacy activity lineID must lose equal timestamp")
+    assert(merged.lastActivityLineID == 301, "canonical activity lineID must remain selected")
+    assert(merged.lastIncomingPreview == "canonical incoming", "lower legacy incoming lineID must lose equal timestamp")
+    assert(merged.lastIncomingSender == "Canonical", "incoming sender must follow selected canonical preview")
+    assert(merged.lastIncomingLineID == 301, "canonical incoming lineID must remain selected")
+  end
+
+  -- test_orphaned_numeric_bnet_collision_keeps_reaction_only_unread_without_transcript
+  do
+    local merged = mergeNumericBNetCollision(913, "Reaction#1234", {
+      channel = "BN",
+      bnetAccountID = 913,
+      unreadCount = 1,
+      unreadActivityCount = 1,
+      lastActivityAt = 60,
+      lastActivityLineID = 600,
+      lastPreview = "reacted :heart: to: “Meet by the summoning stone.”",
+      lastIncomingAt = 60,
+      lastIncomingLineID = 600,
+      lastIncomingSender = "Legacy",
+      lastIncomingPreview = "reacted :heart: to: “Meet by the summoning stone.”",
+      messages = {},
+    }, {
+      channel = "BN",
+      battleTag = "Reaction#1234",
+      bnetAccountID = 913,
+      unreadCount = 0,
+      lastActivityAt = 30,
+      lastActivityLineID = 300,
+      lastPreview = "canonical activity",
+      lastIncomingAt = 30,
+      lastIncomingLineID = 300,
+      lastIncomingSender = "Canonical",
+      lastIncomingPreview = "canonical incoming",
+      messages = {},
+    })
+
+    assert(merged.unreadCount == 1, "reaction-only unread must survive collision rekey; got " .. tostring(merged.unreadCount))
+    assert(
+      merged.unreadActivityCount == 1,
+      "reaction-only activity unread must survive collision rekey; got " .. tostring(merged.unreadActivityCount)
+    )
+    assert(#merged.messages == 0, "reaction-only activity must not require an incoming transcript")
+  end
+
+  -- test_orphaned_numeric_bnet_collision_uses_line_id_to_break_equal_preview_timestamps
+  do
+    local merged = mergeNumericBNetCollision(914, "LineID#1234", {
+      channel = "BN",
+      bnetAccountID = 914,
+      lastActivityAt = 50,
+      lastActivityLineID = 301,
+      lastPreview = "legacy activity",
+      lastIncomingAt = 50,
+      lastIncomingLineID = 301,
+      lastIncomingSender = "Legacy",
+      lastIncomingPreview = "legacy incoming",
+      messages = {},
+    }, {
+      channel = "BN",
+      battleTag = "LineID#1234",
+      bnetAccountID = 914,
+      lastActivityAt = 50,
+      lastActivityLineID = 300,
+      lastPreview = "canonical activity",
+      lastIncomingAt = 50,
+      lastIncomingLineID = 300,
+      lastIncomingSender = "Canonical",
+      lastIncomingPreview = "canonical incoming",
+      messages = {},
+    })
+
+    assert(merged.lastPreview == "legacy activity", "higher legacy activity lineID must win equal timestamp")
+    assert(merged.lastActivityLineID == 301, "selected activity lineID must be copied")
+    assert(merged.lastIncomingPreview == "legacy incoming", "higher legacy incoming lineID must win equal timestamp")
+    assert(merged.lastIncomingSender == "Legacy", "incoming sender must follow selected preview")
+    assert(merged.lastIncomingLineID == 301, "selected incoming lineID must be copied")
   end
 
   -- test_orphaned_numeric_bnet_conversation_rekeys_when_no_existing_thread
