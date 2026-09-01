@@ -34,4 +34,35 @@ return function()
   ConversationPane.SetStatus(pane, nil)
   bannerText = pane.statusBanner.text or ""
   assert(bannerText == "", "status banner should be empty for nil status, got: '" .. bannerText .. "'")
+  -- test_header_status_ellipsizes_when_narrow_and_restores_when_wide
+  do
+    local contact = {
+      channel = "BN",
+      bnetAccountID = 42,
+      displayName = "LongBattleTag#1234",
+      name = "Tyrande",
+      realmName = "Moon Guard",
+      className = "Demon Hunter",
+      factionName = "Alliance",
+    }
+    local conversation = { messages = {} }
+    local status = Availability.FromStatus("CanWhisper")
+    local fullStatus = "Online  -  Tyrande-Moon Guard  -  Demon Hunter  -  Alliance"
+    local narrowPrefix = "Online  -  Tyrande-Moon Guard"
+    local responsivePane = ConversationPane.Create(factory, parent, contact, conversation)
+
+    ConversationPane.Refresh(responsivePane, contact, conversation, status)
+    ConversationPane.Relayout(responsivePane, 299, 420)
+
+    local statusLabel = responsivePane.headerStatus
+    assert(statusLabel.justifyH == "LEFT", "narrow status should be explicitly left justified, got: " .. tostring(statusLabel.justifyH))
+    assert(string.sub(statusLabel:GetText(), 1, #narrowPrefix) == narrowPrefix, "narrow status should retain availability and character-realm prefix, got: " .. statusLabel:GetText())
+    assert(string.sub(statusLabel:GetText(), -3) == "...", "narrow status should end in ellipsis, got: " .. statusLabel:GetText())
+    assert(statusLabel.wordWrap == false, "narrow status should not wrap")
+    assert(statusLabel.maxLines == 1, "narrow status should remain on one line")
+    assert(statusLabel:GetStringWidth() <= statusLabel:GetWidth(), "narrow status width should not exceed its label width")
+
+    ConversationPane.Relayout(responsivePane, 900, 420)
+    assert(statusLabel:GetText() == fullStatus, "wide relayout should restore the full status without refresh, got: " .. statusLabel:GetText())
+  end
 end

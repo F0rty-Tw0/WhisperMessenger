@@ -498,11 +498,11 @@ return function()
       persistentFactory = factory,
     })
     assert(
-      outgoing.reactionFrame.point[1] == "TOPRIGHT"
-        and outgoing.reactionFrame.point[3] == "BOTTOMRIGHT"
-        and outgoing.reactionFrame.point[4] == -5
+      outgoing.reactionFrame.point[1] == "TOPLEFT"
+        and outgoing.reactionFrame.point[3] == "BOTTOMLEFT"
+        and outgoing.reactionFrame.point[4] == 5
         and outgoing.reactionFrame.point[5] == 7,
-      "outgoing badge should sit at message end with right padding"
+      "outgoing badge should sit at message inner edge with left padding"
     )
   end
 
@@ -554,11 +554,11 @@ return function()
     local switched = assert(findBubble(content), "direction switch should rerender pooled bubble")
     assert(switched == bubble17 and switched._reactionFrame == reactionFrame, "direction switch should reuse pooled badge")
     assert(
-      reactionFrame.point[1] == "TOPRIGHT"
-        and reactionFrame.point[3] == "BOTTOMRIGHT"
-        and reactionFrame.point[4] == -5
+      reactionFrame.point[1] == "TOPLEFT"
+        and reactionFrame.point[3] == "BOTTOMLEFT"
+        and reactionFrame.point[4] == 5
         and reactionFrame.point[5] == 7,
-      "pooled incoming-to-outgoing switch should preserve message-end anchor"
+      "pooled incoming-to-outgoing switch should use left inner-edge anchor"
     )
     Fonts.SetFontSize(savedFontSize or 12)
   end

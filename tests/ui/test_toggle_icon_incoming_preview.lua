@@ -16,10 +16,14 @@ return function()
   assert(preview.frame ~= nil, "preview frame should exist")
   assert(preview.frame.shown == false, "preview should start hidden")
 
-  preview.setIncomingPreview("Jaina-Proudmoore", "Need assistance?", "MAGE")
+  local rawMessageText = "Need assistance? :heart:"
+  preview.setIncomingPreview("Jaina-Proudmoore", rawMessageText, "MAGE")
   assert(preview.frame.shown == true, "preview should show after setting content")
   assert(preview.senderLabel.text == "Jaina-Proudmoore", "sender label should render sender name")
-  assert(preview.messageLabel.text == "Need assistance?", "message label should render message text")
+  assert(
+    preview.messageLabel.text == "Need assistance? |TInterface\\AddOns\\WhisperMessenger\\Media\\reactions.png:12:12:0:0:1024:256:28:100:28:100|t",
+    "message label should render known reaction shortcodes as atlas markup"
+  )
 
   local onClick = preview.dismissButton:GetScript("OnClick")
   assert(type(onClick) == "function", "dismiss button should expose OnClick handler")
