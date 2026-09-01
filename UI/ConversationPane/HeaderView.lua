@@ -10,6 +10,29 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
+
+local HEADER_STATUS_RIGHT_INSET = 8
+
+local function refitStatus(view)
+  local headerStatus = view and view.headerStatus
+  if headerStatus == nil or view._headerStatusVisible ~= true then
+    return
+  end
+
+  local statusText = view._headerStatusFullText or ""
+  if type(view._headerWidth) ~= "number" then
+    headerStatus:SetText(statusText)
+    return
+  end
+
+  local statusWidth = math.max(
+    0,
+    view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET
+  )
+  headerStatus:SetWidth(statusWidth)
+  headerStatus:SetText(fitTextWithEllipsis(headerStatus, statusText, statusWidth))
+end
 
 local HeaderView = {}
 
@@ -101,6 +124,15 @@ function HeaderView.SetLanguage(view)
   end
 end
 
+function HeaderView.Relayout(view, width)
+  if view == nil then
+    return
+  end
+
+  view._headerWidth = width or 0
+  refitStatus(view)
+end
+
 function HeaderView.Refresh(view, selectedContact, conversation, status)
   if view.headerFrame then
     local hasContact = selectedContact ~= nil
@@ -159,9 +191,11 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
 
     local showStatusLine = hasContact and (vm == nil or vm.showStatusLine)
     local statusText, dotColorKey = StatusLine.Build(selectedContact, status)
+    view._headerStatusFullText = statusText or ""
+    view._headerStatusVisible = showStatusLine
     if view.headerStatus then
       if showStatusLine then
-        view.headerStatus:SetText(statusText)
+        refitStatus(view)
         UIHelpers.applyColor(view.headerStatus, Theme.COLORS.text_secondary)
         view.headerStatus:Show()
       else

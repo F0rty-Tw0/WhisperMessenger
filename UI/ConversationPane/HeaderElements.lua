@@ -89,6 +89,13 @@ end
 
 function HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
   local headerStatus = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
+  headerStatus:SetJustifyH("LEFT")
+  if type(headerStatus.SetWordWrap) == "function" then
+    headerStatus:SetWordWrap(false)
+  end
+  if type(headerStatus.SetMaxLines) == "function" then
+    headerStatus:SetMaxLines(1)
+  end
   headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -2)
   applyColor(headerStatus, Theme.COLORS.text_secondary)
 

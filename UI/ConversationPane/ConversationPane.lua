@@ -234,6 +234,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     end,
   }
 
+  HeaderView.Relayout(view, parentWidth)
+
   if type(options.onReact) == "function" then
     transcript.onReact = function(message, reactionKey)
       return options.onReact(view._selectedContact, message, reactionKey)
@@ -253,7 +255,12 @@ end
 -- Resize the transcript scroll view to match new thread pane dimensions.
 -- width, height: new threadPane dimensions
 function ConversationPane.Relayout(view, width, height)
-  if view == nil or view.transcript == nil then
+  if view == nil then
+    return
+  end
+
+  HeaderView.Relayout(view, width)
+  if view.transcript == nil then
     return
   end
   local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
