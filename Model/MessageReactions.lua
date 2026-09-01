@@ -424,7 +424,11 @@ end
 
 function MessageReactions.DiscardIdentityCandidate(state, senderKey, message)
   local runtime = type(state) == "table" and state.messageReactionRuntime or nil
-  local queue = type(runtime) == "table" and runtime.identityMessages[senderKey] or nil
+  local identityMessages = type(runtime) == "table" and runtime.identityMessages or nil
+  if type(identityMessages) ~= "table" then
+    return
+  end
+  local queue = identityMessages[senderKey]
   if type(queue) ~= "table" then
     return
   end
@@ -434,7 +438,7 @@ function MessageReactions.DiscardIdentityCandidate(state, senderKey, message)
     end
   end
   if #queue == 0 then
-    runtime.identityMessages[senderKey] = nil
+    identityMessages[senderKey] = nil
   end
 end
 
@@ -453,7 +457,10 @@ local function resolveMatchedControl(state, senderKey, entry, operation, actorNa
   return {
     converted = true,
     changed = changed,
+    operation = operation.operation,
     message = target,
+    incomingFallbackMessage = entry.message,
+    incomingFallbackIsActive = entry.incomingFallbackIsActive,
     conversationKey = entry.conversationKey,
   }
 end
@@ -503,7 +510,8 @@ function MessageReactions.ConsumeIncomingControl(
   now,
   onDegrade,
   correlationText,
-  parseFallback
+  parseFallback,
+  incomingFallbackIsActive
 )
   if type(state) ~= "table" or type(senderKey) ~= "string" or type(message) ~= "table" or type(message.text) ~= "string" then
     return nil
@@ -531,6 +539,7 @@ function MessageReactions.ConsumeIncomingControl(
           conversationKey = conversationKey,
           message = message,
           onDegrade = onDegrade,
+          incomingFallbackIsActive = incomingFallbackIsActive,
         }, entry.operation, actorName, targetDirection, now, entry.canonicalizeText)
       end
     end
@@ -547,6 +556,7 @@ function MessageReactions.ConsumeIncomingControl(
     targetDirection = targetDirection,
     recordedAt = now,
     onDegrade = onDegrade,
+    incomingFallbackIsActive = incomingFallbackIsActive,
   })
   return {
     staged = true,

@@ -26,11 +26,14 @@ local function newConversation(key)
   return {
     messages = {},
     unreadCount = 0,
+    unreadActivityCount = 0,
     lastPreview = nil,
     lastActivityAt = 0,
+    lastActivityLineID = nil,
     lastIncomingSender = nil,
     lastIncomingPreview = nil,
     lastIncomingAt = nil,
+    lastIncomingLineID = nil,
     guid = nil,
     bnetAccountID = nil,
     battleTag = nil,
@@ -130,9 +133,20 @@ local function isOutgoingUserMessage(message)
   return message ~= nil and message.kind == "user" and message.direction == "out"
 end
 
-local function applyMessageMetadata(conversation, message)
+local function applyActivityMetadata(conversation, message)
   conversation.lastPreview = message.text
   conversation.lastActivityAt = message.sentAt
+  conversation.lastActivityLineID = message.lineID
+end
+
+local function applyIncomingMetadata(conversation, message)
+  conversation.lastIncomingSender = message.playerName or conversation.lastIncomingSender
+  conversation.lastIncomingPreview = message.text
+  conversation.lastIncomingAt = message.sentAt
+  conversation.lastIncomingLineID = message.lineID
+end
+
+local function applyContactMetadata(conversation, message)
   conversation.displayName = message.playerName or conversation.displayName
   conversation.channel = message.channel or conversation.channel or "WOW"
   conversation.guid = message.guid or conversation.guid
@@ -144,11 +158,26 @@ local function applyMessageMetadata(conversation, message)
   conversation.raceName = message.raceName or conversation.raceName
   conversation.raceTag = message.raceTag or conversation.raceTag
   conversation.factionName = message.factionName or conversation.factionName
+end
+
+local function applyMessageMetadata(conversation, message)
+  applyActivityMetadata(conversation, message)
   if isIncomingUserMessage(message) then
-    conversation.lastIncomingSender = message.playerName or conversation.lastIncomingSender
-    conversation.lastIncomingPreview = message.text
-    conversation.lastIncomingAt = message.sentAt
+    applyIncomingMetadata(conversation, message)
   end
+  applyContactMetadata(conversation, message)
+end
+
+local function isLatestMetadata(message, latestAt, latestLineID)
+  local sentAt = tonumber(message.sentAt) or 0
+  local latestSentAt = tonumber(latestAt) or 0
+  if sentAt ~= latestSentAt then
+    return sentAt > latestSentAt
+  end
+
+  local lineID = tonumber(message.lineID)
+  local latestLineIDNumber = tonumber(latestLineID)
+  return lineID == nil or latestLineIDNumber == nil or lineID >= latestLineIDNumber
 end
 
 local function shouldIncrementUnread(message)
@@ -169,6 +198,21 @@ function Store.AppendIncoming(state, key, message, isActive)
     conversation.unreadCount = conversation.unreadCount + 1
   end
 end
+function Store.RecordIncomingActivity(state, key, message, isActive)
+  local conversation = Store.EnsureConversation(state, key)
+  if isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
+    applyActivityMetadata(conversation, message)
+  end
+  if isIncomingUserMessage(message) and isLatestMetadata(message, conversation.lastIncomingAt, conversation.lastIncomingLineID) then
+    applyIncomingMetadata(conversation, message)
+  end
+  if not isActive and shouldIncrementUnread(message) then
+    conversation.unreadCount = (conversation.unreadCount or 0) + 1
+    conversation.unreadActivityCount = (conversation.unreadActivityCount or 0) + 1
+  end
+  return conversation
+end
+
 function Store.InsertIncomingChronological(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
   local messages = conversation.messages
@@ -188,7 +232,13 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   applyMessageCap(state, conversation)
 
   if isNewest then
-    applyMessageMetadata(conversation, message)
+    if isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
+      applyActivityMetadata(conversation, message)
+    end
+    if isIncomingUserMessage(message) and isLatestMetadata(message, conversation.lastIncomingAt, conversation.lastIncomingLineID) then
+      applyIncomingMetadata(conversation, message)
+    end
+    applyContactMetadata(conversation, message)
   end
   local activeStatus = conversation.activeStatus
   local statusSentAt = activeStatus and tonumber(activeStatus.sentAt)
@@ -227,6 +277,7 @@ end
 function Store.MarkRead(state, key)
   local conversation = Store.EnsureConversation(state, key)
   conversation.unreadCount = 0
+  conversation.unreadActivityCount = 0
 end
 
 function Store.CountUnansweredIncoming(conversation)
@@ -279,7 +330,7 @@ function Store.ApplyRetention(state, now, protectedKey)
 end
 function Store.MarkUnread(state, key)
   local conversation = Store.EnsureConversation(state, key)
-  conversation.unreadCount = Store.CountUnansweredIncoming(conversation)
+  conversation.unreadCount = Store.CountUnansweredIncoming(conversation) + (conversation.unreadActivityCount or 0)
 end
 
 function Store.Pin(state, key)

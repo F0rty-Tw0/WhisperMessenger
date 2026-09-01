@@ -16,14 +16,16 @@ assert(Retention, "Retention module not available")
 local ConversationMerge = {}
 
 local function numericValue(value)
-  if type(value) == "number" then
-    return value
-  end
-  return 0
+  return tonumber(value) or 0
 end
 
-local function newestConversation(canonical, legacy, field)
-  if numericValue(legacy[field]) > numericValue(canonical[field]) then
+local function newestConversation(canonical, legacy, timestampField, lineIDField)
+  local canonicalTimestamp = numericValue(canonical[timestampField])
+  local legacyTimestamp = numericValue(legacy[timestampField])
+  if legacyTimestamp ~= canonicalTimestamp then
+    return legacyTimestamp > canonicalTimestamp and legacy or canonical
+  end
+  if numericValue(legacy[lineIDField]) > numericValue(canonical[lineIDField]) then
     return legacy
   end
   return canonical
@@ -86,7 +88,11 @@ local function mergeMessages(canonical, legacy, maxMessages)
 end
 
 local function mergeUnreadCount(canonical, legacy)
-  local unreadCount = math.max(0, numericValue(canonical.unreadCount)) + math.max(0, numericValue(legacy.unreadCount))
+  local canonicalActivityUnread = math.max(0, numericValue(canonical.unreadActivityCount))
+  local legacyActivityUnread = math.max(0, numericValue(legacy.unreadActivityCount))
+  local activityUnread = canonicalActivityUnread + legacyActivityUnread
+  local messageUnread = math.max(0, numericValue(canonical.unreadCount) - canonicalActivityUnread)
+    + math.max(0, numericValue(legacy.unreadCount) - legacyActivityUnread)
   local maximumUnread = #canonical.messages
   local messagesAreClassified = true
   local incomingCount = 0
@@ -102,19 +108,22 @@ local function mergeUnreadCount(canonical, legacy)
   if messagesAreClassified then
     maximumUnread = incomingCount
   end
-  canonical.unreadCount = math.min(unreadCount, maximumUnread)
+  canonical.unreadActivityCount = activityUnread
+  canonical.unreadCount = math.min(messageUnread, maximumUnread) + activityUnread
 end
 
 local function mergeMetadata(canonical, legacy)
   canonical.pinned = canonical.pinned == true or legacy.pinned == true
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
 
-  local latestActivity = newestConversation(canonical, legacy, "lastActivityAt")
+  local latestActivity = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
   canonical.lastActivityAt = latestActivity.lastActivityAt
+  canonical.lastActivityLineID = latestActivity.lastActivityLineID
   canonical.lastPreview = latestActivity.lastPreview
 
-  local latestIncoming = newestConversation(canonical, legacy, "lastIncomingAt")
+  local latestIncoming = newestConversation(canonical, legacy, "lastIncomingAt", "lastIncomingLineID")
   canonical.lastIncomingAt = latestIncoming.lastIncomingAt
+  canonical.lastIncomingLineID = latestIncoming.lastIncomingLineID
   canonical.lastIncomingSender = latestIncoming.lastIncomingSender
   canonical.lastIncomingPreview = latestIncoming.lastIncomingPreview
 
