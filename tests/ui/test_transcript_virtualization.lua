@@ -274,7 +274,7 @@ return function()
     local messages = makeMessages(200)
     TranscriptView.RenderTranscript(transcript, messages)
 
-    for _cycle = 1, 5 do
+    for _ = 1, 5 do
       ScrollView.SetVerticalScroll(transcript, 0)
       ScrollView.SetVerticalScroll(transcript, transcript._virtualRows[100].offset)
       ScrollView.SetVerticalScroll(transcript, ScrollView.GetRange(transcript))
