@@ -154,6 +154,8 @@ local function clearBindingState(frame)
   frame._wmCanReact = nil
   frame._wmPersistentFactory = nil
   frame._wmOpenedOnMouseDown = nil
+  frame._wmPlayerMenuMessage = nil
+  frame._wmPlayerMenuOpener = nil
 
   local menuOptions = frame._wmContextMenuOptions
   if menuOptions then

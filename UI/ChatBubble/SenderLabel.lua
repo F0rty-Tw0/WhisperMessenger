@@ -19,17 +19,24 @@ local function defaultOpenPlayerMenu(message, anchor)
   return PM.Open(message, anchor)
 end
 
+local function playerMenuOnMouseUp(self, button)
+  if button ~= "RightButton" then
+    return
+  end
+  local opener = self._wmPlayerMenuOpener
+  if type(opener) == "function" then
+    opener(self._wmPlayerMenuMessage, self)
+  end
+end
+
 local function attachPlayerMenuHandler(frame, message, opener)
   if type(frame.EnableMouse) ~= "function" or type(frame.SetScript) ~= "function" then
     return
   end
+  frame._wmPlayerMenuMessage = message
+  frame._wmPlayerMenuOpener = opener
   frame:EnableMouse(true)
-  frame:SetScript("OnMouseUp", function(self, button)
-    if button ~= "RightButton" then
-      return
-    end
-    opener(message, self)
-  end)
+  frame:SetScript("OnMouseUp", playerMenuOnMouseUp)
 end
 
 -- Pooled frames are reused across renders. Creating a fresh FontString every

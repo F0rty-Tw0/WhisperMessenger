@@ -16,17 +16,24 @@ local function defaultOpenPlayerMenu(message, anchor)
   return PM.Open(message, anchor)
 end
 
+local function playerMenuOnMouseUp(self, button)
+  if button ~= "RightButton" then
+    return
+  end
+  local opener = self._wmPlayerMenuOpener
+  if type(opener) == "function" then
+    opener(self._wmPlayerMenuMessage, self)
+  end
+end
+
 local function attachPlayerMenuHandler(iconFrame, message, opener)
   if type(iconFrame.EnableMouse) ~= "function" or type(iconFrame.SetScript) ~= "function" then
     return
   end
+  iconFrame._wmPlayerMenuMessage = message
+  iconFrame._wmPlayerMenuOpener = opener
   iconFrame:EnableMouse(true)
-  iconFrame:SetScript("OnMouseUp", function(self, button)
-    if button ~= "RightButton" then
-      return
-    end
-    opener(message, self)
-  end)
+  iconFrame:SetScript("OnMouseUp", playerMenuOnMouseUp)
 end
 
 function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction, options)

@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FramePool = require("WhisperMessenger.UI.ChatBubble.FramePool")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
 local SenderLabel = require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 
@@ -211,5 +212,30 @@ return function()
       handler(result.frame, "RightButton")
     end
     assert(opened == false, "outgoing sender label must not open a player menu")
+  end
+
+  -- test_pooled_sender_label_reuses_handler_with_rebound_state
+  do
+    local pooledContent = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(pooledContent)
+    local pooledFactory = FramePool.getFactory(factory, pooledContent)
+    local firstMessage = { direction = "in", playerName = "Arthas", text = "first" }
+    local secondMessage = { direction = "in", playerName = "Jaina", text = "second" }
+    local openedMessage
+    local first = SenderLabel.CreateSenderLabel(pooledFactory, pooledContent, firstMessage, 400, 0, {
+      openPlayerMenu = function() end,
+    })
+    local handler = first.frame:GetScript("OnMouseUp")
+    FramePool.releaseAll(pooledContent)
+    local second = SenderLabel.CreateSenderLabel(pooledFactory, pooledContent, secondMessage, 400, 0, {
+      openPlayerMenu = function(message)
+        openedMessage = message
+      end,
+    })
+
+    assert(second.frame == first.frame, "expected pooled sender-label frame reuse")
+    assert(second.frame:GetScript("OnMouseUp") == handler, "expected pooled sender-label handler reuse")
+    handler(second.frame, "RightButton")
+    assert(openedMessage == secondMessage, "expected sender-label handler to read rebound message")
   end
 end

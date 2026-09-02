@@ -13,7 +13,6 @@ local TranscriptVirtualization = {}
 
 local OVERSCAN_ROWS = 2
 local END_TOLERANCE = 1
-local MAX_LAYOUT_PASSES = 3
 
 local function totalHeight(rows)
   local lastRow = rows[#rows]
@@ -51,6 +50,8 @@ local function prepareRows(transcript, messages, paneWidth)
 
   local rows = state.rows
   local widthChanged = state.paneWidth ~= paneWidth
+  local geometryRevision = ChatBubbleLayout.GetGeometryRevision()
+  local geometryChanged = state.geometryRevision ~= geometryRevision
   local offset = 0
   for index, message in ipairs(messages) do
     local row = rows[index]
@@ -61,6 +62,7 @@ local function prepareRows(transcript, messages, paneWidth)
 
     local estimatedHeight = ChatBubbleLayout.EstimateRowHeight(messages[index - 1], message, paneWidth, index == 1)
     local changed = widthChanged
+      or geometryChanged
       or row.message ~= message
       or row.text ~= message.text
       or row.direction ~= message.direction
@@ -106,6 +108,7 @@ local function prepareRows(transcript, messages, paneWidth)
 
   state.messages = messages
   state.paneWidth = paneWidth
+  state.geometryRevision = geometryRevision
   state.totalHeight = offset
   transcript._virtualRows = rows
   return state
@@ -157,6 +160,17 @@ local function captureAnchor(rows, offset)
   return row.message, offset - row.offset, row.index
 end
 
+local function anchoredOffset(rows, message, delta, fallbackIndex)
+  local index = indexForMessage(rows, message, fallbackIndex)
+  if index == nil then
+    return nil
+  end
+  local row = rows[index]
+  local maxDelta = math.max(row.height - 1, 0)
+  local clampedDelta = math.max(0, math.min(delta or 0, maxDelta))
+  return row.offset + clampedDelta
+end
+
 local function isAtEnd(transcript)
   local range = ScrollView.GetRange(transcript)
   return range <= 0 or ScrollView.GetOffset(transcript) >= range - END_TOLERANCE
@@ -192,7 +206,9 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
   end
 
   transcript._renderingViewport = true
-  for _ = 1, MAX_LAYOUT_PASSES do
+  local settled = false
+  local passCap = #rows + 1
+  for _ = 1, passCap do
     local _, firstChanged = ChatBubbleLayout.LayoutRange(
       transcript.factory,
       transcript.content,
@@ -212,10 +228,7 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
     if snapToEnd then
       targetOffset = math.max(state.totalHeight - viewportHeight, 0)
     else
-      local nextAnchorIndex = indexForMessage(rows, anchorMessage, anchorIndex)
-      if nextAnchorIndex then
-        targetOffset = rows[nextAnchorIndex].offset + anchorDelta
-      end
+      targetOffset = anchoredOffset(rows, anchorMessage, anchorDelta, anchorIndex) or targetOffset
     end
 
     local nextFirst, nextLast = rangeForOffset(rows, targetOffset, viewportHeight)
@@ -224,10 +237,38 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
     transcript._virtualFirstIndex = firstIndex
     transcript._virtualLastIndex = lastIndex
     if nextFirst == firstIndex and nextLast == lastIndex then
+      settled = true
       break
     end
     firstIndex = nextFirst
     lastIndex = nextLast
+  end
+
+  if not settled then
+    local _, firstChanged = ChatBubbleLayout.LayoutRange(
+      transcript.factory,
+      transcript.content,
+      state.messages,
+      rows,
+      firstIndex,
+      lastIndex,
+      state.paneWidth,
+      state.options
+    )
+    if firstChanged then
+      state.totalHeight = recomputeOffsets(rows, firstChanged)
+    else
+      state.totalHeight = totalHeight(rows)
+    end
+    if snapToEnd then
+      targetOffset = math.max(state.totalHeight - viewportHeight, 0)
+    else
+      targetOffset = anchoredOffset(rows, anchorMessage, anchorDelta, anchorIndex) or targetOffset
+    end
+    state.firstIndex = firstIndex
+    state.lastIndex = lastIndex
+    transcript._virtualFirstIndex = firstIndex
+    transcript._virtualLastIndex = lastIndex
   end
 
   local measuredTotalHeight = state.totalHeight
@@ -257,10 +298,7 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   state.options = options
   local targetOffset = previousOffset
   if anchorMessage then
-    local nextAnchorIndex = indexForMessage(state.rows, anchorMessage, anchorIndex)
-    if nextAnchorIndex then
-      targetOffset = state.rows[nextAnchorIndex].offset + anchorDelta
-    end
+    targetOffset = anchoredOffset(state.rows, anchorMessage, anchorDelta, anchorIndex) or targetOffset
   end
   bindOffset(transcript, state, targetOffset, snapToEnd, true)
 

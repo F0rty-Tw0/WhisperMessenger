@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FramePool = require("WhisperMessenger.UI.ChatBubble.FramePool")
 local Theme = require("WhisperMessenger.UI.Theme")
 local BubbleIcon = require("WhisperMessenger.UI.ChatBubble.BubbleIcon")
 
@@ -164,5 +165,30 @@ return function()
       handler(result.frame, "RightButton")
     end
     assert(opened == false, "outgoing icon must not open a player menu")
+  end
+
+  -- test_pooled_icon_reuses_handler_with_rebound_state
+  do
+    local pooledContent = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(pooledContent)
+    local pooledFactory = FramePool.getFactory(factory, pooledContent)
+    local firstMessage = { direction = "in", classTag = "MAGE", playerName = "Jaina" }
+    local secondMessage = { direction = "in", classTag = "DRUID", playerName = "Malfurion" }
+    local openedMessage
+    local first = BubbleIcon.CreateIcon(pooledFactory, pooledContent, makeBubbleFrame(), firstMessage, "in", {
+      openPlayerMenu = function() end,
+    })
+    local handler = first.frame:GetScript("OnMouseUp")
+    FramePool.releaseAll(pooledContent)
+    local second = BubbleIcon.CreateIcon(pooledFactory, pooledContent, makeBubbleFrame(), secondMessage, "in", {
+      openPlayerMenu = function(message)
+        openedMessage = message
+      end,
+    })
+
+    assert(second.frame == first.frame, "expected pooled icon frame reuse")
+    assert(second.frame:GetScript("OnMouseUp") == handler, "expected pooled icon handler reuse")
+    handler(second.frame, "RightButton")
+    assert(openedMessage == secondMessage, "expected icon handler to read rebound message")
   end
 end

@@ -139,6 +139,8 @@ return function()
     frame._wmMessage = message
     frame._wmVirtualIndex = 7
     frame._wmOnReact = function() end
+    frame._wmPlayerMenuMessage = message
+    frame._wmPlayerMenuOpener = function() end
     frame._wmContextMenuOptions = { message = message }
     frame._copyButton = {
       _wmCopyMessage = message,
@@ -152,5 +154,7 @@ return function()
     assert(frame._wmOnReact == nil, "released frame must not retain render callback")
     assert(frame._wmContextMenuOptions.message == nil, "released menu state must not retain message")
     assert(frame._copyButton._wmCopyMessage == nil, "released copy state must not retain message")
+    assert(frame._wmPlayerMenuMessage == nil, "released player-menu state must not retain message")
+    assert(frame._wmPlayerMenuOpener == nil, "released player-menu state must not retain callback")
   end
 end

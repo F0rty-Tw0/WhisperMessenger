@@ -4,6 +4,9 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 local Grouping = ns.ChatBubbleGrouping or require("WhisperMessenger.UI.ChatBubble.Grouping")
 local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
@@ -16,9 +19,15 @@ Layout.MESSAGE_EDGE_INSET = Theme.LAYOUT.MESSAGE_EDGE_INSET
 
 local BUBBLE_SPACING = Theme.LAYOUT.BUBBLE_SPACING
 local BUBBLE_GROUP_SPACING = Theme.LAYOUT.BUBBLE_GROUP_SPACING
-local ESTIMATED_LINE_HEIGHT = 16
+local DEFAULT_FONT_SIZE = 12
+local FONT_LINE_HEIGHT_OFFSET = 4
 local ESTIMATED_GLYPH_WIDTH = 7
 local SENDER_LABEL_HEIGHT = 18
+local geometryRevision = 0
+local geometryFontSize
+local geometryFontMode
+local geometryFontOutline
+local geometryLanguage
 
 local function isDifferentDay(previousMessage, message)
   if previousMessage == nil then
@@ -59,19 +68,45 @@ local function rowPrefixHeight(previousMessage, message, isFirst)
   return height
 end
 
+function Layout.GetGeometryRevision()
+  local fontSize = type(Fonts.GetFontSize) == "function" and Fonts.GetFontSize() or DEFAULT_FONT_SIZE
+  local fontMode = type(Fonts.GetMode) == "function" and Fonts.GetMode() or nil
+  local fontOutline = type(Fonts.GetOutline) == "function" and Fonts.GetOutline() or nil
+  local language = type(Fonts.GetLanguage) == "function" and Fonts.GetLanguage() or nil
+  if
+    geometryFontSize ~= fontSize
+    or geometryFontMode ~= fontMode
+    or geometryFontOutline ~= fontOutline
+    or geometryLanguage ~= language
+  then
+    geometryRevision = geometryRevision + 1
+    geometryFontSize = fontSize
+    geometryFontMode = fontMode
+    geometryFontOutline = fontOutline
+    geometryLanguage = language
+  end
+  return geometryRevision
+end
+
 function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst)
   local kind = message.kind or "user"
   local paddingHorizontal = kind == "system" and 8 or Theme.LAYOUT.BUBBLE_PADDING_H
   local paddingVertical = kind == "system" and 4 or Theme.LAYOUT.BUBBLE_PADDING_V
   local textWidth = math.max(paneWidth * Theme.LAYOUT.BUBBLE_MAX_WIDTH_PCT - paddingHorizontal * 2, 1)
+  local fontSize = type(Fonts.GetFontSize) == "function" and Fonts.GetFontSize() or DEFAULT_FONT_SIZE
+  local estimatedLineHeight = fontSize + FONT_LINE_HEIGHT_OFFSET
   local charactersPerLine = math.max(math.floor(textWidth / ESTIMATED_GLYPH_WIDTH), 1)
   local text = type(message.text) == "string" and message.text or ""
   local lineCount = math.max(math.ceil(math.max(#text, 1) / charactersPerLine), 1)
   local height = rowPrefixHeight(previousMessage, message, isFirst)
-    + lineCount * ESTIMATED_LINE_HEIGHT
+    + lineCount * estimatedLineHeight
     + paddingVertical * 2
   if message.isCensored == true then
     height = height + 12
+  end
+  local reaction = MessageReactions.VisibleReaction(message)
+  if kind == "user" and reaction and ReactionAssets.GetTexCoords(reaction.key) then
+    height = height + ReactionAssets.GetBadgeOverflow()
   end
   return height
 end
