@@ -132,6 +132,36 @@ return function()
     assert(conv.messages[1].sentAt == now - 100, "expected remaining message to be the recent one")
   end
 
+  -- test_store_expire_all_trims_loaded_recent_history_to_message_cap
+  do
+    local now = 10000
+    local state = Store.New({
+      maxMessagesPerConversation = 2,
+      messageMaxAge = 86400,
+      conversationMaxAge = 86400,
+    })
+
+    state.conversations["key::loaded-recent"] = {
+      pinned = false,
+      messages = {
+        { id = "oldest", sentAt = now - 400 },
+        { id = "older", sentAt = now - 300 },
+        { id = "newer", sentAt = now - 200 },
+        { id = "newest", sentAt = now - 100 },
+      },
+      lastActivityAt = now - 100,
+      unreadCount = 0,
+    }
+
+    Store.ExpireAll(state, now)
+
+    local conv = state.conversations["key::loaded-recent"]
+    assert(conv ~= nil, "expected loaded recent conversation to be kept")
+    assert(#conv.messages == 2, "expected startup expiry to enforce message cap, got " .. #conv.messages)
+    assert(conv.messages[1].id == "newer", "expected startup expiry to retain the newer message")
+    assert(conv.messages[2].id == "newest", "expected startup expiry to retain the newest message")
+  end
+
   -- test_pinned_conversations_keep_old_messages_but_still_honor_count_cap
   do
     local state = Store.New({

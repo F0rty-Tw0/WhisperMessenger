@@ -15,6 +15,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Long conversations now use less memory and scroll more reliably by rendering only the messages currently visible while keeping the full history available when scrolling.
 - Options pages now load when first opened instead of all at once, while keeping their controls and saved settings in sync.
 - Fixed: automatic history cleanup now continues during long play sessions, removing stale conversations and old message data while preserving pinned messages.
+- Fixed: saved chat history now respects the message limit after a reload, preventing old conversations from keeping excess messages in memory.
 - Fixed: delayed or out-of-order messages from expired conversations no longer revive old chats or change their preview, unread count, or contact details.
 - Fixed: reaction fallbacks no longer disappear when conversations are automatically cleaned up or merged after Battle.net friend details load.
 - Fixed: clearing all chats now cleans up leftover contact status and availability data without interrupting whispers already in progress.

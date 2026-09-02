@@ -514,6 +514,7 @@ function Store.ExpireAll(state, now)
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
       removeConversation(state, key, REMOVAL_REASON_RETENTION)
     else
+      Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
       expireConversationMessages(state, key, conversation, now, true)
     end
   end
