@@ -79,10 +79,10 @@ return function()
     local messages = makeMessages(200)
     local originalFormat = Hyperlinks.FormatTextForDisplay
     local formatCalls = 0
-    Hyperlinks.FormatTextForDisplay = function(text)
+    rawset(Hyperlinks, "FormatTextForDisplay", function(text)
       formatCalls = formatCalls + 1
       return originalFormat(text)
-    end
+    end)
 
     TranscriptView.RenderTranscript(transcript, messages)
     local initialFormatCalls = formatCalls
@@ -90,7 +90,7 @@ return function()
     TranscriptView.RenderTranscript(transcript, messages)
     local refreshFormatCalls = formatCalls
 
-    Hyperlinks.FormatTextForDisplay = originalFormat
+    rawset(Hyperlinks, "FormatTextForDisplay", originalFormat)
     local rows = transcript._virtualRows
     assert(type(rows) == "table", "test_full_history_uses_bounded_visible_bindings: expected full row metadata")
     assert(#rows == 200, "test_full_history_uses_bounded_visible_bindings: expected metadata for all 200 messages")

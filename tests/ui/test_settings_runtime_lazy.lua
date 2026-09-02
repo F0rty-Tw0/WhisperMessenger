@@ -3,7 +3,7 @@ local SettingsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWi
 
 return function()
   local factory = FakeUI.NewFactory()
-  local createOptions = nil
+  local onPanelCreated = nil
   local appearancePanel = { tag = "appearancePanel" }
   local appearanceSettings = { tag = "appearanceSettings" }
   local fakePanels = {
@@ -13,8 +13,8 @@ return function()
 
   fakePanels.getPanel = function(index)
     if index == 2 then
-      if createOptions.onPanelCreated then
-        createOptions.onPanelCreated(index, appearancePanel, appearanceSettings)
+      if onPanelCreated then
+        onPanelCreated(index, appearancePanel, appearanceSettings)
       end
       return appearancePanel
     end
@@ -27,7 +27,7 @@ return function()
 
   local runtime = SettingsRuntime.Create(factory, {
     settingsPanelsCreate = function(_, options)
-      createOptions = options
+      onPanelCreated = options.onPanelCreated
       return fakePanels
     end,
   })

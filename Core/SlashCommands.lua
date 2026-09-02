@@ -9,7 +9,7 @@ ns.SlashCommands = SlashCommands
 function SlashCommands.Register(handlers)
   handlers = handlers or {}
 
-  local function handleCommand()
+  local function handleCommand(_msg)
     if handlers.toggle then
       handlers.toggle()
     end
