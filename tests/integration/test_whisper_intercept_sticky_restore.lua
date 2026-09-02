@@ -80,12 +80,7 @@ return function()
     assert(runtime.window.composer.input:GetText() == expected.draftText, "expected " .. caseLabel .. " draft to transfer into composer")
     assert(
       #deactivated == expected.deactivateIndex and deactivated[expected.deactivateIndex] == editBox,
-      "expected "
-        .. caseLabel
-        .. " whisper edit box to close at index "
-        .. expected.deactivateIndex
-        .. ", got "
-        .. #deactivated
+      "expected " .. caseLabel .. " whisper edit box to close at index " .. expected.deactivateIndex .. ", got " .. #deactivated
     )
     -- chatType/tellTarget are restored via attributes only (not direct properties)
     -- to avoid tainting secure state on subsequent whisper calls.
@@ -169,15 +164,9 @@ return function()
   -- Then whisper interception observes edit-box events without frame polling.
   local pollFrame = findCreatedFrameWithScript("OnUpdate")
   assert(pollFrame == nil, "expected whisper interception not to install an OnUpdate frame")
-  assert(
-    chatEditBox._hookScripts and chatEditBox._hookScripts.OnEditFocusGained,
-    "expected whisper interception to hook edit-box focus"
-  )
+  assert(chatEditBox._hookScripts and chatEditBox._hookScripts.OnEditFocusGained, "expected whisper interception to hook edit-box focus")
   assert(#chatEditBox._hookScripts.OnEditFocusGained == 1, "expected one edit-box focus hook")
-  assert(
-    chatEditBox._hookScripts and chatEditBox._hookScripts.OnTextChanged,
-    "expected whisper interception to hook edit-box text changes"
-  )
+  assert(chatEditBox._hookScripts and chatEditBox._hookScripts.OnTextChanged, "expected whisper interception to hook edit-box text changes")
 
   runtime.accountState.settings.autoOpenOutgoing = false
   local disabledEditBox = makeInterceptedEditBox({

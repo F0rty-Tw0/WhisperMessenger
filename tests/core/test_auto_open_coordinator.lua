@@ -265,14 +265,8 @@ return function()
   -- Then interception is event-driven and does not install frame polling.
   local pollFrame = findCreatedFrameWithScript("OnUpdate")
   assert(pollFrame == nil, "expected auto-open interception not to install an OnUpdate frame")
-  assert(
-    editBox._hookScripts and editBox._hookScripts.OnEditFocusGained,
-    "expected auto-open interception to hook edit-box focus"
-  )
-  assert(
-    editBox._hookScripts and editBox._hookScripts.OnTextChanged,
-    "expected auto-open interception to hook edit-box text changes"
-  )
+  assert(editBox._hookScripts and editBox._hookScripts.OnEditFocusGained, "expected auto-open interception to hook edit-box focus")
+  assert(editBox._hookScripts and editBox._hookScripts.OnTextChanged, "expected auto-open interception to hook edit-box text changes")
 
   local focusHook = editBox._hookScripts.OnEditFocusGained[1]
   textChangedHook = editBox._hookScripts.OnTextChanged[1]
