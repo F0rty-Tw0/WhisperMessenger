@@ -15,6 +15,10 @@ assert(Retention, "Retention module not available")
 
 local Store = {}
 
+local REMOVAL_REASON_CAPACITY = "capacity"
+local REMOVAL_REASON_EXPLICIT = "explicit"
+local REMOVAL_REASON_RETENTION = "retention"
+
 function Store.New(config, now)
   return {
     config = config or {},
@@ -49,7 +53,7 @@ local function newConversation(key)
   }
 end
 
-local function removeConversation(state, key)
+local function removeConversation(state, key, reason)
   local conversation = state.conversations[key]
   if conversation == nil then
     return nil
@@ -60,7 +64,7 @@ local function removeConversation(state, key)
   end
   state.conversations[key] = nil
   if type(state.onConversationRemoved) == "function" then
-    state.onConversationRemoved(key, conversation)
+    state.onConversationRemoved(key, conversation, reason)
   end
   return conversation
 end
@@ -96,7 +100,7 @@ local function evictOldestConversation(state, protectedKey)
   end
 
   if oldestKey then
-    removeConversation(state, oldestKey)
+    removeConversation(state, oldestKey, REMOVAL_REASON_CAPACITY)
     return oldestKey
   end
   return nil
@@ -199,7 +203,7 @@ local function applyRetentionAfterAppend(state, key, conversation, message)
       and not candidate.pinned
       and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now)
     then
-      removeConversation(state, conversationKey)
+      removeConversation(state, conversationKey, REMOVAL_REASON_RETENTION)
     else
       expireConversationMessages(state, conversationKey, candidate, now, false)
     end
@@ -339,7 +343,7 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   if messageIndex == nil then
     local now = type(state.now) == "function" and state.now() or message.sentAt
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
-      removeConversation(state, key)
+      removeConversation(state, key, REMOVAL_REASON_RETENTION)
     end
     return state.conversations[key]
   end
@@ -352,7 +356,7 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   local now = type(state.now) == "function" and state.now() or message.sentAt
   if not conversation.pinned and Retention.IsExpired(prospectiveLastActivityAt, state.config.conversationMaxAge, now) then
     table.remove(messages, messageIndex)
-    removeConversation(state, key)
+    removeConversation(state, key, REMOVAL_REASON_RETENTION)
     return nil
   end
 
@@ -433,7 +437,7 @@ function Store.ApplyRetention(state, now, protectedKey)
 
   for key, conversation in pairs(state.conversations) do
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
-      removeConversation(state, key)
+      removeConversation(state, key, REMOVAL_REASON_RETENTION)
       removed[key] = true
     else
       local messages = conversation.messages
@@ -487,7 +491,7 @@ function Store.IsPinned(state, key)
 end
 
 function Store.Remove(state, key)
-  return removeConversation(state, key)
+  return removeConversation(state, key, REMOVAL_REASON_EXPLICIT)
 end
 
 function Store.SetSortOrder(state, key, order)
@@ -511,7 +515,7 @@ function Store.ExpireAll(state, now)
   state.messageRetentionAt = {}
   for key, conversation in pairs(state.conversations) do
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
-      removeConversation(state, key)
+      removeConversation(state, key, REMOVAL_REASON_RETENTION)
     else
       expireConversationMessages(state, key, conversation, now, true)
     end

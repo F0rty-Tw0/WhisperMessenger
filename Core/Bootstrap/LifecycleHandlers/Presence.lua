@@ -35,7 +35,8 @@ end
 -- friend list is readable, fold those orphans into the stable battleTag
 -- conversation so history isn't split — and isn't stranded next session
 -- when the numeric ID changes.
-local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity, maxMessages)
+local function rekeyOrphanedBNetConversations(store, friendMap, Identity, maxMessages)
+  local conversations = store.conversations
   local tagById = {}
   for battleTag, friend in pairs(friendMap) do
     if friend.bnetAccountID ~= nil then
@@ -65,7 +66,7 @@ local function rekeyOrphanedBNetConversations(conversations, friendMap, Identity
       if conversation.displayName == nil or conversation.displayName == tostring(conversation.bnetAccountID) then
         conversation.displayName = move.battleTag
       end
-      local rekeyed = ConversationMerge.Rekey(conversations, oldKey, move.newKey, maxMessages)
+      local rekeyed = ConversationMerge.Rekey(conversations, oldKey, move.newKey, maxMessages, store.messageRetentionAt)
       for sourceKey, destinationKey in pairs(rekeyed) do
         mappings[sourceKey] = destinationKey
       end
@@ -98,7 +99,7 @@ local function refreshBNetConversations(Bootstrap, deps)
 
   local Identity = deps.loadModule("WhisperMessenger.Model.Identity", "Identity")
   local maxMessages = Bootstrap.runtime.store.config and Bootstrap.runtime.store.config.maxMessagesPerConversation
-  local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store.conversations, friendMap, Identity, maxMessages)
+  local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store, friendMap, Identity, maxMessages)
   applyRekeyMappings(Bootstrap.runtime, mappings)
 
   for _, conversation in pairs(Bootstrap.runtime.store.conversations) do

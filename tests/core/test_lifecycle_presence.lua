@@ -195,6 +195,54 @@ return function()
     assert(Bootstrap.runtime.lastIncomingWhisperKey == canonicalKey, "reply target should rekey")
   end
 
+  -- test_collision_rekey_invalidates_old_and_canonical_retention_deadlines
+  do
+    local accountID = 916
+    local battleTag = "Deadline#1234"
+    local canonicalKey = Identity.BuildConversationKey(nil, Identity.FromBattleNet(accountID, { battleTag = battleTag }).contactKey)
+    local numericKey = Identity.BuildConversationKey(nil, Identity.FromBattleNet(accountID, nil).contactKey)
+    local conversations = {
+      [numericKey] = {
+        channel = "BN",
+        bnetAccountID = accountID,
+        lastActivityAt = 100,
+        messages = { { id = "numeric", sentAt = 100 } },
+      },
+      [canonicalKey] = {
+        channel = "BN",
+        battleTag = battleTag,
+        bnetAccountID = accountID,
+        lastActivityAt = 200,
+        messages = { { id = "canonical", sentAt = 200 } },
+      },
+    }
+    local store = {
+      conversations = conversations,
+      config = { maxMessagesPerConversation = 10 },
+      messageRetentionAt = {
+        [numericKey] = 101,
+        [canonicalKey] = 201,
+      },
+    }
+    local Bootstrap = {
+      runtime = {
+        bnetApi = {},
+        store = store,
+      },
+    }
+    local deps = makeDeps({
+      [battleTag] = { bnetAccountID = accountID },
+    })
+
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+
+    assert(conversations[numericKey] == nil and conversations[canonicalKey] ~= nil, "collision fixture must rekey into canonical conversation")
+    assert(
+      store.messageRetentionAt[numericKey] == nil and store.messageRetentionAt[canonicalKey] == nil,
+      "collision rekey must invalidate both cached message-retention deadlines"
+    )
+  end
+
   -- test_orphaned_numeric_bnet_collision_keeps_higher_canonical_line_id_for_equal_preview_timestamps
   do
     local merged = mergeNumericBNetCollision(915, "Canonical#1234", {

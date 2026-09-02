@@ -4,6 +4,7 @@ local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
 local Router = require("WhisperMessenger.Core.EventRouter")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
+local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
 
 local function newRuntime(nowRef)
   local store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 })
@@ -21,6 +22,19 @@ local function newRuntime(nowRef)
     end,
   }
 end
+local function newManagedRuntime(nowRef, maxConversations)
+  local accountState = { settings = {}, conversations = {} }
+  return RuntimeFactory.CreateRuntimeState(accountState, {}, "me", {
+    maxConversations = maxConversations,
+    maxMessagesPerConversation = 20,
+    messageMaxAge = 86400,
+    conversationMaxAge = 86400,
+    now = function()
+      return nowRef.value
+    end,
+  })
+end
+
 
 local function putTarget(runtime, key, sentAt)
   runtime.store.conversations[key] = {
@@ -94,6 +108,32 @@ return function()
     now.value = 215
     MessageReactions.Expire(runtime, now.value)
     assert(next(runtime.store.conversations) == nil, "expired staged fallback must not recreate cleared conversations")
+  end
+
+  -- Automatic capacity eviction preserves staged controls until readable TTL degradation.
+  do
+    local now = { value = 250 }
+    local runtime = newManagedRuntime(now, 1)
+    local otherKey = "wow::WOW::jaina-proudmoore"
+    putTarget(runtime, key, 240)
+    local fallback = stageFallback(runtime, key, 4)
+
+    Store.AppendIncoming(runtime.store, otherKey, {
+      kind = "user",
+      direction = "in",
+      text = "new conversation",
+      playerName = "Jaina-Proudmoore",
+      sentAt = now.value,
+    }, false)
+    assert(runtime.store.conversations[key] == nil, "capacity fixture must evict staged conversation")
+
+    now.value = 265
+    MessageReactions.Expire(runtime, now.value)
+
+    local restored = runtime.store.conversations[key]
+    assert(restored and #restored.messages == 1, "automatic eviction must allow staged fallback to recreate readable history")
+    assert(restored.messages[1].text == fallback, "TTL degradation must preserve readable fallback text")
+    assert(restored.unreadCount == 1, "TTL degradation after eviction must apply ordinary unread state")
   end
 
   -- Logout flushes delivered normal fallback into persisted history before save.

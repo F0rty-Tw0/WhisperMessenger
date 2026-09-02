@@ -138,7 +138,7 @@ end
 -- Rekeys one conversation into its canonical key. On collision, every persisted
 -- invariant is merged into the canonical record and the old-to-new mapping is
 -- returned for runtime selection/reply references.
-function ConversationMerge.Rekey(conversations, oldKey, newKey, maxMessages)
+function ConversationMerge.Rekey(conversations, oldKey, newKey, maxMessages, messageRetentionAt)
   if type(conversations) ~= "table" or oldKey == nil or newKey == nil or oldKey == newKey then
     return {}
   end
@@ -146,6 +146,10 @@ function ConversationMerge.Rekey(conversations, oldKey, newKey, maxMessages)
   local legacy = conversations[oldKey]
   if type(legacy) ~= "table" then
     return {}
+  end
+  if type(messageRetentionAt) == "table" then
+    messageRetentionAt[oldKey] = nil
+    messageRetentionAt[newKey] = nil
   end
 
   local canonical = conversations[newKey]

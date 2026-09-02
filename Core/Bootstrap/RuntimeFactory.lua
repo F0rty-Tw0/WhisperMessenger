@@ -132,8 +132,10 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     end
   end
 
-  store.onConversationRemoved = function(key, conversation)
-    MessageReactions.ClearConversation(runtime, key)
+  store.onConversationRemoved = function(key, conversation, reason)
+    if reason == "explicit" then
+      MessageReactions.ClearConversation(runtime, key)
+    end
     runtime.sendStatusByConversation[key] = nil
 
     clearGUIDCachesIfUnowned(conversation.guid)
