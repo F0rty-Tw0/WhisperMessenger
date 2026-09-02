@@ -604,20 +604,25 @@ return function()
     local now = 1000
     local key = "wow::WOW::cached-realm"
     local guid = "Player-cached"
-    local runtime = RuntimeFactory.CreateRuntimeState({
-      conversations = {
-        [key] = {
-          conversationKey = key,
-          guid = guid,
-          messages = {},
-          lastActivityAt = now,
+    local runtime = RuntimeFactory.CreateRuntimeState(
+      {
+        conversations = {
+          [key] = {
+            conversationKey = key,
+            guid = guid,
+            messages = {},
+            lastActivityAt = now,
+          },
         },
       },
-    }, { activeConversationKey = nil }, "wow", {
-      now = function()
-        return now
-      end,
-    })
+      { activeConversationKey = nil },
+      "wow",
+      {
+        now = function()
+          return now
+        end,
+      }
+    )
     runtime.pendingOutgoing[key] = { { createdAt = now } }
     runtime.pendingGroupOutgoing = { [key] = { { createdAt = now } } }
     runtime.sendStatusByConversation[key] = { status = "sent" }
@@ -643,21 +648,26 @@ return function()
     local now = 1000
     local key = "wow::WOW::renamed-realm"
     local oldGuid = "Player-old"
-    local runtime = RuntimeFactory.CreateRuntimeState({
-      conversations = {
-        [key] = {
-          conversationKey = key,
-          guid = oldGuid,
-          messages = {},
-          lastActivityAt = now,
-          unreadCount = 0,
+    local runtime = RuntimeFactory.CreateRuntimeState(
+      {
+        conversations = {
+          [key] = {
+            conversationKey = key,
+            guid = oldGuid,
+            messages = {},
+            lastActivityAt = now,
+            unreadCount = 0,
+          },
         },
       },
-    }, { activeConversationKey = nil }, "wow", {
-      now = function()
-        return now
-      end,
-    })
+      { activeConversationKey = nil },
+      "wow",
+      {
+        now = function()
+          return now
+        end,
+      }
+    )
     runtime.availabilityByGUID[oldGuid] = { status = "CanWhisper" }
     runtime.availabilityRequestedAt = { [oldGuid] = now }
 
@@ -672,6 +682,4 @@ return function()
     assert(runtime.availabilityByGUID[oldGuid] == nil, "GUID replacement must clear orphaned availability")
     assert(runtime.availabilityRequestedAt[oldGuid] == nil, "GUID replacement must clear orphaned resolver requests")
   end
-
-
 end

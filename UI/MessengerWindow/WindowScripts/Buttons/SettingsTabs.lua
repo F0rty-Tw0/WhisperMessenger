@@ -54,7 +54,6 @@ function SettingsTabs.Wire(options)
     return panel
   end
 
-
   if #settingsTabs == 0 or #settingsPanels == 0 then
     return
   end

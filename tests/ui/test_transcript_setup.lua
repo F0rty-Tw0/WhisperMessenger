@@ -19,7 +19,6 @@ return function()
     return transcript
   end
 
-
   -- test_configure_creates_edit_box
 
   do

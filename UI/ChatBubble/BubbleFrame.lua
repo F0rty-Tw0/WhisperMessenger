@@ -264,7 +264,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-
   local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
 
   if kind == "system" then
@@ -342,7 +341,6 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
       censoredLabel:Hide()
     end
   end
-
 
   if kind ~= "system" then
     HoverCopy.Attach(options.persistentFactory or factory, frame, message, options.copyText or ContextMenu.CopyText)

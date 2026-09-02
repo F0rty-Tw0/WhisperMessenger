@@ -6,8 +6,7 @@ end
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
-local Virtualization = ns.ConversationPaneTranscriptVirtualization
-  or require("WhisperMessenger.UI.ConversationPane.TranscriptVirtualization")
+local Virtualization = ns.ConversationPaneTranscriptVirtualization or require("WhisperMessenger.UI.ConversationPane.TranscriptVirtualization")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptView = {}

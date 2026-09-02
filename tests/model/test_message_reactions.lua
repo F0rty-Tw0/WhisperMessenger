@@ -460,5 +460,4 @@ return function()
 
     assert(MessageReactions.ResolveSenderAlias(state, "bngame:7") == "bngame:7", "expired correlation must release sender alias")
   end
-
 end

@@ -285,20 +285,25 @@ return function()
     local key = "wow::WOW::cached-realm"
     local guid = "Player-cached"
     local clearCharacterState = { activeConversationKey = key }
-    local clearRuntime = RuntimeFactory.CreateRuntimeState({
-      conversations = {
-        [key] = {
-          conversationKey = key,
-          guid = guid,
-          messages = {},
-          lastActivityAt = now,
+    local clearRuntime = RuntimeFactory.CreateRuntimeState(
+      {
+        conversations = {
+          [key] = {
+            conversationKey = key,
+            guid = guid,
+            messages = {},
+            lastActivityAt = now,
+          },
         },
       },
-    }, clearCharacterState, "wow", {
-      now = function()
-        return now
-      end,
-    })
+      clearCharacterState,
+      "wow",
+      {
+        now = function()
+          return now
+        end,
+      }
+    )
     clearRuntime.pendingOutgoing[key] = { { createdAt = now } }
     clearRuntime.pendingGroupOutgoing = { [key] = { { createdAt = now } } }
     clearRuntime.sendStatusByConversation[key] = { status = "sent" }

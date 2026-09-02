@@ -44,7 +44,6 @@ function SettingsRuntime.Create(factory, options)
     end
   end
 
-
   local settingsPanels = settingsPanelsCreate(factory, {
     parent = options.parent,
     settingsConfig = options.settingsConfig or {},

@@ -73,12 +73,7 @@ function Layout.GetGeometryRevision()
   local fontMode = type(Fonts.GetMode) == "function" and Fonts.GetMode() or nil
   local fontOutline = type(Fonts.GetOutline) == "function" and Fonts.GetOutline() or nil
   local language = type(Fonts.GetLanguage) == "function" and Fonts.GetLanguage() or nil
-  if
-    geometryFontSize ~= fontSize
-    or geometryFontMode ~= fontMode
-    or geometryFontOutline ~= fontOutline
-    or geometryLanguage ~= language
-  then
+  if geometryFontSize ~= fontSize or geometryFontMode ~= fontMode or geometryFontOutline ~= fontOutline or geometryLanguage ~= language then
     geometryRevision = geometryRevision + 1
     geometryFontSize = fontSize
     geometryFontMode = fontMode
@@ -98,9 +93,7 @@ function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst)
   local charactersPerLine = math.max(math.floor(textWidth / ESTIMATED_GLYPH_WIDTH), 1)
   local text = type(message.text) == "string" and message.text or ""
   local lineCount = math.max(math.ceil(math.max(#text, 1) / charactersPerLine), 1)
-  local height = rowPrefixHeight(previousMessage, message, isFirst)
-    + lineCount * estimatedLineHeight
-    + paddingVertical * 2
+  local height = rowPrefixHeight(previousMessage, message, isFirst) + lineCount * estimatedLineHeight + paddingVertical * 2
   if message.isCensored == true then
     height = height + 12
   end

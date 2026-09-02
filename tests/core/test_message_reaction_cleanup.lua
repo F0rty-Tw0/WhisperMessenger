@@ -35,7 +35,6 @@ local function newManagedRuntime(nowRef, maxConversations)
   })
 end
 
-
 local function putTarget(runtime, key, sentAt)
   runtime.store.conversations[key] = {
     conversationKey = key,

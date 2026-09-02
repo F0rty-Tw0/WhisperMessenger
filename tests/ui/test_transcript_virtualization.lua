@@ -122,10 +122,7 @@ return function()
     ScrollView.SetVerticalScroll(transcript, 0)
 
     assert(transcript._virtualFirstIndex == 1, "test_scrolling_recycles_bindings_to_oldest_message: first row should bind at top")
-    assert(
-      transcript._virtualLastIndex < 20,
-      "test_scrolling_recycles_bindings_to_oldest_message: top viewport should not retain bottom rows"
-    )
+    assert(transcript._virtualLastIndex < 20, "test_scrolling_recycles_bindings_to_oldest_message: top viewport should not retain bottom rows")
     assert(
       countBubbleFrames(transcript.content) == bubbleCount,
       "test_scrolling_recycles_bindings_to_oldest_message: scrolling should reuse bounded bubble frames"
@@ -150,10 +147,7 @@ return function()
 
     TranscriptView.RenderTranscript(transcript, messages)
 
-    assert(
-      ScrollView.GetOffset(transcript) == settledOffset,
-      "test_ordinary_refresh_preserves_viewport: same-history refresh must not snap to end"
-    )
+    assert(ScrollView.GetOffset(transcript) == settledOffset, "test_ordinary_refresh_preserves_viewport: same-history refresh must not snap to end")
   end
 
   -- test_append_preserves_end_or_scrolled_viewport
@@ -186,7 +180,6 @@ return function()
       "test_append_preserves_end_or_scrolled_viewport: append while scrolled up should preserve viewport"
     )
   end
-
 
   -- test_measurement_collapse_clamps_anchor_delta
   do

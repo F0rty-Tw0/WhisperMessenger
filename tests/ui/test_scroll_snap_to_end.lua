@@ -322,10 +322,7 @@ return function()
     })
     ConversationPane.Refresh(view, contact, conversation)
     assert(#view.transcript._virtualRows == 30, "incoming refresh should retain every message row")
-    assert(
-      view.transcript._virtualLastIndex - view.transcript._virtualFirstIndex + 1 < 30,
-      "incoming refresh should only bind viewport rows"
-    )
+    assert(view.transcript._virtualLastIndex - view.transcript._virtualFirstIndex + 1 < 30, "incoming refresh should only bind viewport rows")
     local range = Metrics.GetRange(view.transcript)
     assert(range > 0, "full transcript metadata should keep older history scrollable")
     assert(
@@ -347,10 +344,7 @@ return function()
     ScrollView.SetVerticalScroll(view.transcript, offset)
     ConversationPane.Refresh(view, contact, conversation, { status = "offline" })
 
-    assert(
-      ScrollView.GetOffset(view.transcript) == offset,
-      "same-conversation availability refresh should preserve viewport"
-    )
+    assert(ScrollView.GetOffset(view.transcript) == offset, "same-conversation availability refresh should preserve viewport")
   end
 
   -- test_conversation_refresh_resets_virtual_state_for_different_selection
@@ -366,10 +360,7 @@ return function()
     ConversationPane.Refresh(view, jaina, { messages = makeMessages(30, "jaina ") })
 
     assert(view.transcript._virtualRows[1].message.text == "jaina 1", "selection change should rebuild row metadata")
-    assert(
-      ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript),
-      "selection change should snap the new conversation to end"
-    )
+    assert(ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript), "selection change should snap the new conversation to end")
   end
 
   -- test_conversation_refresh_clamps_virtual_state_after_history_shrinks
@@ -383,10 +374,7 @@ return function()
     ConversationPane.Refresh(view, contact, { messages = makeMessages(15, "retained ") })
 
     assert(#view.transcript._virtualRows == 15, "refresh should clamp row metadata to retained history")
-    assert(
-      ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript),
-      "history shrink while at end should remain snapped to end"
-    )
+    assert(ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript), "history shrink while at end should remain snapped to end")
   end
 
   print("PASS: test_scroll_snap_to_end")

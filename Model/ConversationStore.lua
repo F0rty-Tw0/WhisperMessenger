@@ -199,10 +199,7 @@ local function applyRetentionAfterAppend(state, key, conversation, message)
   end
 
   for conversationKey, candidate in pairs(state.conversations) do
-    if conversationKey ~= key
-      and not candidate.pinned
-      and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now)
-    then
+    if conversationKey ~= key and not candidate.pinned and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now) then
       removeConversation(state, conversationKey, REMOVAL_REASON_RETENTION)
     else
       expireConversationMessages(state, conversationKey, candidate, now, false)
