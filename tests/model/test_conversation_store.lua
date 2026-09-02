@@ -359,6 +359,48 @@ return function()
     assert(conv.battleTag == "Friend#1234", "battleTag should be persisted on conversation, got: " .. tostring(conv.battleTag))
   end
 
+  -- test_append_compacts_transferred_message_metadata
+  do
+    local s = Store.New({})
+    local message = {
+      id = "compact-1",
+      eventName = "CHAT_MSG_BN_WHISPER",
+      direction = "in",
+      kind = "user",
+      text = "compact me",
+      sentAt = 10,
+      lineID = 10,
+      guid = "Player-compact",
+      playerName = "Friend#1234",
+      channel = "BN",
+      bnetAccountID = 42,
+      battleTag = "Friend#1234",
+      gameAccountName = "Friend-Realm",
+      className = "Mage",
+      classTag = "MAGE",
+      raceName = "Human",
+      raceTag = "Human",
+      factionName = "Alliance",
+    }
+
+    Store.AppendIncoming(s, "me::BN::compact", message, false)
+
+    local conversation = s.conversations["me::BN::compact"]
+    assert(conversation.className == "Mage" and conversation.raceName == "Human", "contact metadata must transfer before compaction")
+    assert(message.eventName == nil, "stored messages must omit unused event names")
+    assert(
+      message.className == nil and message.raceName == nil and message.raceTag == nil and message.factionName == nil,
+      "stored messages must omit contact metadata already held by the conversation"
+    )
+    assert(
+      message.classTag == "MAGE"
+        and message.guid == "Player-compact"
+        and message.playerName == "Friend#1234"
+        and message.battleTag == "Friend#1234",
+      "stored messages must retain fields still read by bubble, reaction, and player-menu flows"
+    )
+  end
+
   -- test_battletag_not_overwritten_by_nil
   do
     local s = Store.New({})

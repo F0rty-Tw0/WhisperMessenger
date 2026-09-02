@@ -335,6 +335,9 @@ return function()
           { text = "stale duplicate", channel = "PARTY", createdAt = 84 },
           { text = "at boundary", channel = "PARTY", createdAt = 85 },
         },
+        ["party::old-session"] = {
+          { text = "stale old session", channel = "PARTY", createdAt = 84 },
+        },
       },
     }
     local policy = GroupSendPolicy.Create({
@@ -359,6 +362,7 @@ return function()
     local queue = runtime.pendingGroupOutgoing[payload.conversationKey]
     assert(normalCalls == 1, "valid group dispatch should send once")
     assert(#queue == 2 and queue[1].text == "at boundary" and queue[2].text == "new message", "enqueue must prune stale duplicates and retain FIFO")
+    assert(runtime.pendingGroupOutgoing["party::old-session"] == nil, "enqueue must prune stale queues from older sessions")
     assert(type(policy.prunePending) == "function", "group pending expiry must be reusable by receive")
     policy.prunePending(payload.conversationKey, 101)
     assert(#queue == 1 and queue[1].text == "new message", "reusable prune must remove expired entries only")

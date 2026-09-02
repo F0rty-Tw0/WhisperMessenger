@@ -8,6 +8,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.ContentDetector")
 local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
+local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -53,6 +54,15 @@ function RuntimeFactory.ResolveLocalProfileId(options)
   return "current"
 end
 
+local function conversationOwnsGUID(store, guid)
+  for _, conversation in pairs(store.conversations) do
+    if conversation.guid == guid then
+      return true
+    end
+  end
+  return false
+end
+
 function RuntimeFactory.CreateRuntimeState(accountState, characterState, localProfileId, options)
   local nowFn = options.now or currentTime
   local nowValue = nowFn()
@@ -63,7 +73,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     maxConversations = options.maxConversations or saved.maxConversations or 100,
     messageMaxAge = messageMaxAge,
     conversationMaxAge = options.conversationMaxAge or messageMaxAge,
-  })
+  }, nowFn)
 
   store.conversations = accountState.conversations or {}
   accountState.conversations = store.conversations
@@ -88,7 +98,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   local getBNetInfo = options.getBNetInfo or _G.BNGetInfo
   local localBnetAccountID = BNetIdentity.ResolveLocalAccountID(options.localBnetAccountID, getBNetInfo)
 
-  return {
+  local runtime = {
     accountState = accountState,
     characterState = characterState,
     localProfileId = localProfileId,
@@ -111,6 +121,33 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
       return ContentDetector.IsMythicRestricted(_G.GetInstanceInfo)
     end,
   }
+
+  local function clearGUIDCachesIfUnowned(guid)
+    if guid == nil or conversationOwnsGUID(store, guid) then
+      return
+    end
+    runtime.availabilityByGUID[guid] = nil
+    if runtime.availabilityRequestedAt then
+      runtime.availabilityRequestedAt[guid] = nil
+    end
+  end
+
+  store.onConversationRemoved = function(key, conversation)
+    MessageReactions.ClearConversation(runtime, key)
+    runtime.sendStatusByConversation[key] = nil
+
+    clearGUIDCachesIfUnowned(conversation.guid)
+
+    if runtime.activeConversationKey == key then
+      runtime.activeConversationKey = nil
+      characterState.activeConversationKey = nil
+    end
+  end
+  store.onConversationGUIDChanged = function(_key, oldGuid)
+    clearGUIDCachesIfUnowned(oldGuid)
+  end
+
+  return runtime
 end
 
 ns.BootstrapRuntimeFactory = RuntimeFactory

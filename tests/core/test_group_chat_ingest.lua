@@ -957,5 +957,29 @@ return function()
       "matching local echo must scan past a distinct pending head while retaining FIFO duplicates"
     )
   end
+  -- Any later group event prunes expired pending sends from older sessions.
+  do
+    local now = 2300
+    local state = makeState({
+      now = function()
+        return now
+      end,
+      pendingGroupOutgoing = {
+        ["party::old-session"] = {
+          { text = "never echoed", channel = "PARTY", createdAt = now - 16 },
+        },
+      },
+    })
+
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_PARTY", {
+      text = "new activity",
+      playerName = "Remote-Realm",
+      lineID = 2301,
+      guid = "Player-remote",
+    })
+
+    assert(state.pendingGroupOutgoing["party::old-session"] == nil, "group activity must prune expired pending queues from old sessions")
+  end
+
   rawset(_G, "BNGetInfo", savedBNGetInfo)
 end

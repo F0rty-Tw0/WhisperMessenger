@@ -160,7 +160,7 @@ return function()
       })
     )
     assert(meta and meta.outgoingFromPendingSend == true, "outgoing inform should match the pending send")
-    assert(state.pendingOutgoing[pendingKey] and #state.pendingOutgoing[pendingKey] == 0, "matched pending send should be consumed")
+    assert(state.pendingOutgoing[pendingKey] == nil, "matched pending send queue should be removed")
   end
 
   -- A fresh outgoing inform that doesn't correspond to any pending entry
@@ -187,7 +187,7 @@ return function()
       })
     )
     assert(meta and meta.outgoingFromPendingSend == false, "fresh inform should not match stale pending send")
-    assert(#state.pendingOutgoing["wow::WOW::stale"] == 0, "stale pending sends should be pruned")
+    assert(state.pendingOutgoing["wow::WOW::stale"] == nil, "stale pending send queue should be removed")
   end
 
   -- ===== Message field stamping =====

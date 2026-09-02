@@ -47,7 +47,7 @@ return function()
     }, 105)
 
     assert(matched == true, "pending outgoing should match by guid")
-    assert(#state.pendingOutgoing[key] == 0, "matched pending outgoing should be removed")
+    assert(state.pendingOutgoing[key] == nil, "matched pending queue should be removed when empty")
   end
 
   -- Consume prunes stale entries and does not match fresh outgoing payloads.
@@ -78,7 +78,7 @@ return function()
     }, 100)
 
     assert(matched == false, "stale pending outgoing should not match fresh payload")
-    assert(#state.pendingOutgoing["wow::WOW::stale"] == 0, "stale pending outgoing should be pruned")
+    assert(state.pendingOutgoing["wow::WOW::stale"] == nil, "stale pending queue should be removed when empty")
   end
   -- Record prunes old pending sends even if no outgoing inform arrives.
   do

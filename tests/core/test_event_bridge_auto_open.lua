@@ -188,8 +188,7 @@ return function()
     })
     s.dispatch("CHAT_MSG_WHISPER_INFORM")
     assert(#s.outgoingCalls == 0, "tracked pending send should suppress outgoing auto-open")
-    local consumed = s.runtime.pendingOutgoing["wow::WOW::arthas-area52"]
-    assert(consumed and #consumed == 0, "matched pending send should be consumed")
+    assert(s.runtime.pendingOutgoing["wow::WOW::arthas-area52"] == nil, "matched pending send queue should be removed")
     teardown()
   end
 

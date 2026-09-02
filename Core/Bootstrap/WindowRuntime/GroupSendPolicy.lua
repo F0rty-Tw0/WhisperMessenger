@@ -46,6 +46,16 @@ local function prunePending(runtime, conversationKey, now)
   end
 end
 
+local function prunePendingQueues(runtime, now)
+  local queues = runtime.pendingGroupOutgoing
+  if type(queues) ~= "table" then
+    return
+  end
+  for conversationKey in pairs(queues) do
+    prunePending(runtime, conversationKey, now)
+  end
+end
+
 local supportedGroupChannels = {
   PARTY = true,
   RAID = true,
@@ -72,7 +82,7 @@ local function recordPending(runtime, conversationKey, entry, now)
   if type(conversationKey) ~= "string" or conversationKey == "" then
     return nil
   end
-  prunePending(runtime, conversationKey, now)
+  prunePendingQueues(runtime, now)
   runtime.pendingGroupOutgoing = runtime.pendingGroupOutgoing or {}
   local queue = runtime.pendingGroupOutgoing[conversationKey]
   if queue == nil then

@@ -141,7 +141,7 @@ local function localSenderName()
   return nil
 end
 
-local function buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+local function buildMessage(payload, direction, channel, sentAt, isLeader)
   local playerInfo = payload.playerInfo or {}
   local senderClassTag
   local senderName
@@ -157,7 +157,6 @@ local function buildMessage(eventName, payload, direction, channel, sentAt, isLe
   end
   local msg = {
     id = tostring(payload.lineID or sentAt),
-    eventName = eventName,
     direction = direction,
     kind = "user",
     text = payload.text,
@@ -188,7 +187,7 @@ end
 local function appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
   local direction = Direction.Resolve(eventName, payload, state)
   local sentAt = (state.now and state.now()) or 0
-  local msg = buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+  local msg = buildMessage(payload, direction, channel, sentAt, isLeader)
   if direction == "out" then
     Store.AppendOutgoing(state.store, conversationKey, msg)
   else
@@ -228,9 +227,19 @@ local function prunePending(state, conversationKey, now)
   end
   return queue
 end
+local function prunePendingQueues(state, now)
+  local queues = state.pendingGroupOutgoing
+  if type(queues) ~= "table" then
+    return
+  end
+  for conversationKey in pairs(queues) do
+    prunePending(state, conversationKey, now)
+  end
+end
 
-local function consumePending(state, conversationKey, channel, text, now)
-  local queue = prunePending(state, conversationKey, now)
+local function consumePending(state, conversationKey, channel, text)
+  local queues = state.pendingGroupOutgoing
+  local queue = type(queues) == "table" and queues[conversationKey] or nil
   if type(queue) ~= "table" then
     return nil
   end
@@ -238,7 +247,7 @@ local function consumePending(state, conversationKey, channel, text, now)
     if entry.channel == channel and entry.text == text then
       table.remove(queue, index)
       if #queue == 0 then
-        state.pendingGroupOutgoing[conversationKey] = nil
+        queues[conversationKey] = nil
       end
       return entry
     end
@@ -249,9 +258,10 @@ end
 local function appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
   local direction = Direction.Resolve(eventName, payload, state)
   local sentAt = (state.now and state.now()) or 0
-  local message = buildMessage(eventName, payload, direction, channel, sentAt, isLeader)
+  prunePendingQueues(state, sentAt)
+  local message = buildMessage(payload, direction, channel, sentAt, isLeader)
   if direction == "out" then
-    local pending = consumePending(state, conversationKey, channel, message.text, sentAt)
+    local pending = consumePending(state, conversationKey, channel, message.text)
     if pending and pending.reactionControl then
       local control = pending.reactionControl
       local changed, target = MessageReactions.ApplyOperation(state, conversationKey, control.operation, control.actorName, nil, sentAt)

@@ -1,6 +1,7 @@
 local Retention = require("WhisperMessenger.Model.Retention")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
+local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
 
 return function()
   -- test_expire_messages_removes_old
@@ -370,4 +371,201 @@ return function()
     assert(state.conversations["key::stale-contact"] == nil, "expected stale contact (last activity > retention) to be removed")
     assert(state.conversations["key::recent-contact"] ~= nil, "expected recent contact to be kept")
   end
+  -- test_append_reapplies_unpinned_age_retention_during_long_sessions
+  do
+    local state = Store.New({
+      maxMessagesPerConversation = 10,
+      maxConversations = 10,
+      messageMaxAge = 100,
+      conversationMaxAge = 1000,
+    })
+    state.conversations["key::active"] = {
+      messages = {
+        { id = "expired", sentAt = 800 },
+        { id = "recent", sentAt = 950 },
+      },
+      lastActivityAt = 950,
+      unreadCount = 0,
+    }
+
+    Store.AppendIncoming(state, "key::active", {
+      id = "new",
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 1000,
+    }, false)
+
+    local messages = state.conversations["key::active"].messages
+    assert(#messages == 2, "long-session append must expire old unpinned messages")
+    assert(messages[1].id == "recent" and messages[2].id == "new", "long-session append must retain only in-age messages")
+  end
+
+  -- test_append_reapplies_conversation_age_retention_during_long_sessions
+  do
+    local state = Store.New({
+      maxMessagesPerConversation = 10,
+      maxConversations = 10,
+      messageMaxAge = 100,
+      conversationMaxAge = 100,
+    })
+    state.conversations["key::stale"] = {
+      messages = { { id = "old", sentAt = 1 } },
+      lastActivityAt = 1,
+      unreadCount = 0,
+    }
+
+    Store.AppendIncoming(state, "key::active", {
+      id = "new",
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 1000,
+    }, false)
+
+    assert(state.conversations["key::stale"] == nil, "long-session append must remove expired unpinned conversations")
+    assert(state.conversations["key::active"] ~= nil, "long-session retention must protect the conversation receiving the message")
+  end
+
+  -- test_chronological_insert_uses_runtime_clock_for_retention
+  do
+    local now = 1000
+    local state = Store.New({
+      maxMessagesPerConversation = 10,
+      maxConversations = 10,
+      messageMaxAge = 100,
+      conversationMaxAge = 100,
+    }, function()
+      return now
+    end)
+    state.conversations["key::active"] = {
+      messages = { { id = "recent", sentAt = 950, lineID = 2 } },
+      lastActivityAt = 950,
+      lastActivityLineID = 2,
+      unreadCount = 0,
+    }
+    state.conversations["key::stale"] = {
+      messages = { { id = "old", sentAt = 1 } },
+      lastActivityAt = 1,
+      unreadCount = 0,
+    }
+
+    Store.InsertIncomingChronological(state, "key::active", {
+      id = "delayed",
+      direction = "in",
+      kind = "user",
+      text = "delayed",
+      sentAt = 100,
+      lineID = 1,
+    }, false)
+
+    assert(state.conversations["key::stale"] == nil, "delayed inserts must expire state using current runtime time")
+    assert(state.conversations["key::active"] ~= nil, "delayed insert retention must preserve the receiving conversation")
+  end
+
+  -- test_append_preserves_pinned_message_age_exemption
+  do
+    local state = Store.New({
+      maxMessagesPerConversation = 2,
+      maxConversations = 10,
+      messageMaxAge = 100,
+      conversationMaxAge = 1000,
+    })
+    state.conversations["key::pinned"] = {
+      pinned = true,
+      messages = {
+        { id = "expired", sentAt = 1 },
+      },
+      lastActivityAt = 1,
+      unreadCount = 0,
+    }
+
+    Store.AppendIncoming(state, "key::pinned", {
+      id = "new",
+      direction = "in",
+      kind = "user",
+      text = "new",
+      sentAt = 1000,
+    }, false)
+
+    local messages = state.conversations["key::pinned"].messages
+    assert(#messages == 2, "pinned append must keep old messages while honoring count cap")
+    assert(messages[1].id == "expired" and messages[2].id == "new", "pinned append must preserve old history exactly")
+  end
+
+  -- test_runtime_cache_cleanup_preserves_active_pending_sends
+  do
+    local now = 1000
+    local key = "wow::WOW::cached-realm"
+    local guid = "Player-cached"
+    local runtime = RuntimeFactory.CreateRuntimeState({
+      conversations = {
+        [key] = {
+          conversationKey = key,
+          guid = guid,
+          messages = {},
+          lastActivityAt = now,
+        },
+      },
+    }, { activeConversationKey = nil }, "wow", {
+      now = function()
+        return now
+      end,
+    })
+    runtime.pendingOutgoing[key] = { { createdAt = now } }
+    runtime.pendingGroupOutgoing = { [key] = { { createdAt = now } } }
+    runtime.sendStatusByConversation[key] = { status = "sent" }
+    runtime.availabilityByGUID[guid] = { status = "CanWhisper" }
+    runtime.availabilityRequestedAt = { [guid] = now }
+    MessageReactions.RecordIdentity(runtime, "sender", key, {
+      type = "identity",
+      wireId = "wire",
+      sourceFingerprint = "fingerprint",
+    }, now)
+
+    Store.Remove(runtime.store, key)
+
+    assert(runtime.pendingOutgoing[key] ~= nil, "conversation removal must preserve active whisper sends until inform or expiry")
+    assert(runtime.pendingGroupOutgoing[key] ~= nil, "conversation removal must preserve active group sends until echo or expiry")
+    assert(runtime.sendStatusByConversation[key] == nil, "conversation removal must clear its send status")
+    assert(runtime.availabilityByGUID[guid] == nil, "last GUID owner removal must clear resolved availability")
+    assert(runtime.availabilityRequestedAt[guid] == nil, "last GUID owner removal must clear resolver request state")
+    assert(runtime.messageReactionRuntime.identityMetadata.sender == nil, "conversation removal must clear reaction correlation state")
+  end
+  -- test_guid_replacement_clears_orphaned_resolver_cache
+  do
+    local now = 1000
+    local key = "wow::WOW::renamed-realm"
+    local oldGuid = "Player-old"
+    local runtime = RuntimeFactory.CreateRuntimeState({
+      conversations = {
+        [key] = {
+          conversationKey = key,
+          guid = oldGuid,
+          messages = {},
+          lastActivityAt = now,
+          unreadCount = 0,
+        },
+      },
+    }, { activeConversationKey = nil }, "wow", {
+      now = function()
+        return now
+      end,
+    })
+    runtime.availabilityByGUID[oldGuid] = { status = "CanWhisper" }
+    runtime.availabilityRequestedAt = { [oldGuid] = now }
+
+    Store.AppendIncoming(runtime.store, key, {
+      direction = "in",
+      kind = "user",
+      text = "new identity",
+      sentAt = now,
+      guid = "Player-new",
+    }, false)
+
+    assert(runtime.availabilityByGUID[oldGuid] == nil, "GUID replacement must clear orphaned availability")
+    assert(runtime.availabilityRequestedAt[oldGuid] == nil, "GUID replacement must clear orphaned resolver requests")
+  end
+
+
 end

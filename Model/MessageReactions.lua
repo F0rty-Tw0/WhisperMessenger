@@ -145,6 +145,28 @@ local function purgeQueues(queues, now, degradeExpired)
   end
 end
 
+local function hasPendingForSender(runtime, senderKey)
+  for _, field in ipairs(PENDING_QUEUE_FIELDS) do
+    local queue = runtime[field][senderKey]
+    if type(queue) == "table" and #queue > 0 then
+      return true
+    end
+  end
+  return false
+end
+
+local function pruneSenderAliases(runtime)
+  local aliases = runtime.senderAliases
+  if type(aliases) ~= "table" then
+    return
+  end
+  for aliasKey, canonicalKey in pairs(aliases) do
+    if not hasPendingForSender(runtime, aliasKey) and not hasPendingForSender(runtime, canonicalKey) then
+      aliases[aliasKey] = nil
+    end
+  end
+end
+
 local function currentTime(state, fallback)
   if type(state.now) == "function" then
     local ok, now = pcall(state.now)
@@ -176,6 +198,7 @@ function MessageReactions.Expire(state, now)
   purgeQueues(runtime.identityMessages, at, false)
   purgeQueues(runtime.operations, at, false)
   purgeQueues(runtime.controls, at, true)
+  pruneSenderAliases(runtime)
 end
 
 local function earliestDeadline(runtime)
@@ -652,7 +675,9 @@ function MessageReactions.ClearConversation(state, conversationKey)
       end
     end
   end
+  pruneSenderAliases(runtime)
 end
+
 function MessageReactions.FlushControls(state)
   local runtime = type(state) == "table" and state.messageReactionRuntime or nil
   if type(runtime) ~= "table" then

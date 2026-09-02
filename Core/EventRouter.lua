@@ -137,7 +137,7 @@ local function localSenderName()
   return nil
 end
 
-local function buildMessage(state, eventName, payload, contact, direction, kind, sentAt)
+local function buildMessage(state, payload, contact, direction, kind, sentAt)
   local senderClassTag
   local senderName
   if direction == "out" then
@@ -176,7 +176,6 @@ local function buildMessage(state, eventName, payload, contact, direction, kind,
   end
   return {
     id = tostring(payload.lineID or sentAt),
-    eventName = eventName,
     direction = direction,
     kind = kind,
     text = messageText,
@@ -354,7 +353,7 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
-      local incomingMessage = buildMessage(state, eventName, payload, contact, "in", "user", sentAt)
+      local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
       local correlationText = canonicalReactionText(incomingMessage.text)
       local senderKey
       if eventName == "CHAT_MSG_BN_WHISPER" then
@@ -483,7 +482,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         end
       end
 
-      local outgoingMessage = buildMessage(state, eventName, informPayload, contact, "out", "user", sentAt)
+      local outgoingMessage = buildMessage(state, informPayload, contact, "out", "user", sentAt)
       outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
       Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
       Store.MarkRead(state.store, conversationKey)
@@ -495,7 +494,7 @@ local function handleUnlockedEvent(state, eventName, payload)
         lineID = payload.lineID,
       })
     else
-      Store.AppendIncoming(state.store, conversationKey, buildMessage(state, eventName, payload, contact, "in", "system", sentAt), isActive)
+      Store.AppendIncoming(state.store, conversationKey, buildMessage(state, payload, contact, "in", "system", sentAt), isActive)
     end
 
     local conversation = state.store.conversations[conversationKey]

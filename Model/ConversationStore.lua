@@ -15,10 +15,12 @@ assert(Retention, "Retention module not available")
 
 local Store = {}
 
-function Store.New(config)
+function Store.New(config, now)
   return {
     config = config or {},
     conversations = {},
+    now = now,
+    messageRetentionAt = {},
   }
 end
 
@@ -45,6 +47,22 @@ local function newConversation(key)
     factionName = nil,
     conversationKey = key,
   }
+end
+
+local function removeConversation(state, key)
+  local conversation = state.conversations[key]
+  if conversation == nil then
+    return nil
+  end
+
+  if state.messageRetentionAt then
+    state.messageRetentionAt[key] = nil
+  end
+  state.conversations[key] = nil
+  if type(state.onConversationRemoved) == "function" then
+    state.onConversationRemoved(key, conversation)
+  end
+  return conversation
 end
 
 local function evictOldestConversation(state, protectedKey)
@@ -78,7 +96,7 @@ local function evictOldestConversation(state, protectedKey)
   end
 
   if oldestKey then
-    state.conversations[oldestKey] = nil
+    removeConversation(state, oldestKey)
     return oldestKey
   end
   return nil
@@ -101,6 +119,14 @@ local CONVERSATION_METADATA_FIELDS = {
   "lastActivityAt",
 }
 
+local function compactMessage(message)
+  message.eventName = nil
+  message.className = nil
+  message.raceName = nil
+  message.raceTag = nil
+  message.factionName = nil
+end
+
 function Store.EnsureConversation(state, key, metadata)
   state.conversations = state.conversations or {}
   local conversation = state.conversations[key]
@@ -121,8 +147,66 @@ function Store.EnsureConversation(state, key, metadata)
   return conversation, true
 end
 
-local function applyMessageCap(state, conversation)
+local function earlierBoundary(current, timestamp, maxAge)
+  if type(timestamp) ~= "number" or timestamp == 0 or type(maxAge) ~= "number" then
+    return current
+  end
+  local candidate = timestamp + maxAge
+  if current == nil or candidate < current then
+    return candidate
+  end
+  return current
+end
+
+local function findMessageRetentionBoundary(conversation, maxAge)
+  local boundary
+  for _, message in ipairs(conversation.messages or {}) do
+    boundary = earlierBoundary(boundary, message.sentAt, maxAge)
+  end
+  return boundary or math.huge
+end
+
+local function expireConversationMessages(state, key, conversation, now, force)
+  state.messageRetentionAt = state.messageRetentionAt or {}
+  if conversation.pinned then
+    state.messageRetentionAt[key] = nil
+    return
+  end
+
+  local boundary = state.messageRetentionAt[key]
+  if boundary == nil then
+    boundary = findMessageRetentionBoundary(conversation, state.config.messageMaxAge)
+  end
+  if force or type(now) ~= "number" or now > boundary then
+    Retention.ExpireMessages(conversation.messages, state.config.messageMaxAge, now)
+    boundary = findMessageRetentionBoundary(conversation, state.config.messageMaxAge)
+  end
+  state.messageRetentionAt[key] = boundary
+end
+
+local function applyRetentionAfterAppend(state, key, conversation, message)
+  local now = type(state.now) == "function" and state.now() or message.sentAt
   Retention.TrimMessages(conversation.messages, state.config.maxMessagesPerConversation)
+
+  state.messageRetentionAt = state.messageRetentionAt or {}
+  local trackedBoundary = state.messageRetentionAt[key]
+  if not conversation.pinned and trackedBoundary ~= nil then
+    state.messageRetentionAt[key] = earlierBoundary(trackedBoundary, message.sentAt, state.config.messageMaxAge)
+  end
+
+  for conversationKey, candidate in pairs(state.conversations) do
+    if not candidate.pinned and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now) then
+      removeConversation(state, conversationKey)
+    else
+      expireConversationMessages(state, conversationKey, candidate, now, false)
+    end
+  end
+
+  while true do
+    if evictOldestConversation(state, key) == nil then
+      break
+    end
+  end
 end
 
 local function isIncomingUserMessage(message)
@@ -146,7 +230,8 @@ local function applyIncomingMetadata(conversation, message)
   conversation.lastIncomingLineID = message.lineID
 end
 
-local function applyContactMetadata(conversation, message)
+local function applyContactMetadata(state, key, conversation, message)
+  local oldGuid = conversation.guid
   conversation.displayName = message.playerName or conversation.displayName
   conversation.channel = message.channel or conversation.channel or "WOW"
   conversation.guid = message.guid or conversation.guid
@@ -158,14 +243,18 @@ local function applyContactMetadata(conversation, message)
   conversation.raceName = message.raceName or conversation.raceName
   conversation.raceTag = message.raceTag or conversation.raceTag
   conversation.factionName = message.factionName or conversation.factionName
+
+  if oldGuid ~= nil and conversation.guid ~= oldGuid and type(state.onConversationGUIDChanged) == "function" then
+    state.onConversationGUIDChanged(key, oldGuid, conversation.guid)
+  end
 end
 
-local function applyMessageMetadata(conversation, message)
+local function applyMessageMetadata(state, key, conversation, message)
   applyActivityMetadata(conversation, message)
   if isIncomingUserMessage(message) then
     applyIncomingMetadata(conversation, message)
   end
-  applyContactMetadata(conversation, message)
+  applyContactMetadata(state, key, conversation, message)
 end
 
 local function isLatestMetadata(message, latestAt, latestLineID)
@@ -187,8 +276,9 @@ end
 function Store.AppendIncoming(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
   table.insert(conversation.messages, message)
-  applyMessageCap(state, conversation)
-  applyMessageMetadata(conversation, message)
+  applyMessageMetadata(state, key, conversation, message)
+  compactMessage(message)
+  applyRetentionAfterAppend(state, key, conversation, message)
 
   if message.kind == "user" and message.direction == "in" then
     conversation.activeStatus = nil
@@ -229,7 +319,6 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   end
   local isNewest = insertAt == #messages + 1
   table.insert(messages, insertAt, message)
-  applyMessageCap(state, conversation)
 
   if isNewest then
     if isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
@@ -238,7 +327,7 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
     if isIncomingUserMessage(message) and isLatestMetadata(message, conversation.lastIncomingAt, conversation.lastIncomingLineID) then
       applyIncomingMetadata(conversation, message)
     end
-    applyContactMetadata(conversation, message)
+    applyContactMetadata(state, key, conversation, message)
   end
   local activeStatus = conversation.activeStatus
   local statusSentAt = activeStatus and tonumber(activeStatus.sentAt)
@@ -249,6 +338,8 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   if supersedesStatus and message.kind == "user" and message.direction == "in" then
     conversation.activeStatus = nil
   end
+  compactMessage(message)
+  applyRetentionAfterAppend(state, key, conversation, message)
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
   end
@@ -258,8 +349,9 @@ end
 function Store.AppendOutgoing(state, key, message)
   local conversation = Store.EnsureConversation(state, key)
   table.insert(conversation.messages, message)
-  applyMessageCap(state, conversation)
-  applyMessageMetadata(conversation, message)
+  applyMessageMetadata(state, key, conversation, message)
+  compactMessage(message)
+  applyRetentionAfterAppend(state, key, conversation, message)
 end
 
 function Store.SetActiveStatus(state, key, status)
@@ -301,19 +393,18 @@ end
 
 function Store.ApplyRetention(state, now, protectedKey)
   state.conversations = state.conversations or {}
+  state.messageRetentionAt = {}
   local removed = {}
 
   for key, conversation in pairs(state.conversations) do
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
-      state.conversations[key] = nil
+      removeConversation(state, key)
       removed[key] = true
     else
       local messages = conversation.messages
       if messages then
         Retention.TrimMessages(messages, state.config.maxMessagesPerConversation)
-        if not conversation.pinned then
-          Retention.ExpireMessages(messages, state.config.messageMaxAge, now)
-        end
+        expireConversationMessages(state, key, conversation, now, true)
       end
     end
   end
@@ -337,6 +428,9 @@ function Store.Pin(state, key)
   local conversation = state.conversations[key]
   if conversation then
     conversation.pinned = true
+    if state.messageRetentionAt then
+      state.messageRetentionAt[key] = nil
+    end
   end
 end
 
@@ -358,7 +452,7 @@ function Store.IsPinned(state, key)
 end
 
 function Store.Remove(state, key)
-  state.conversations[key] = nil
+  return removeConversation(state, key)
 end
 
 function Store.SetSortOrder(state, key, order)
@@ -379,10 +473,12 @@ function Store.SwapOrder(state, keyA, keyB)
 end
 
 function Store.ExpireAll(state, now)
-  Retention.ExpireConversations(state.conversations, state.config.conversationMaxAge, now)
-  for _, conv in pairs(state.conversations) do
-    if not conv.pinned and conv.messages then
-      Retention.ExpireMessages(conv.messages, state.config.messageMaxAge, now)
+  state.messageRetentionAt = {}
+  for key, conversation in pairs(state.conversations) do
+    if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
+      removeConversation(state, key)
+    else
+      expireConversationMessages(state, key, conversation, now, true)
     end
   end
 end

@@ -135,16 +135,25 @@ local function consumeFromQueue(queue, payload, sentAt, matchFn)
   return nil
 end
 
+local function consumeAtKey(state, key, payload, sentAt, matchFn)
+  local queue = state.pendingOutgoing[key]
+  local entry = consumeFromQueue(queue, payload, sentAt, matchFn)
+  if type(queue) == "table" and #queue == 0 then
+    state.pendingOutgoing[key] = nil
+  end
+  return entry
+end
+
 -- Try a matcher (strict or soft) across the conversation's queue first, then
 -- spill into other queues. Returns the consumed entry or nil.
 local function consumeWithMatcher(state, conversationKey, payload, sentAt, matchFn)
-  local entry = consumeFromQueue(state.pendingOutgoing[conversationKey], payload, sentAt, matchFn)
+  local entry = consumeAtKey(state, conversationKey, payload, sentAt, matchFn)
   if entry ~= nil then
     return entry
   end
-  for key, candidateQueue in pairs(state.pendingOutgoing) do
+  for key in pairs(state.pendingOutgoing) do
     if key ~= conversationKey then
-      entry = consumeFromQueue(candidateQueue, payload, sentAt, matchFn)
+      entry = consumeAtKey(state, key, payload, sentAt, matchFn)
       if entry ~= nil then
         return entry
       end

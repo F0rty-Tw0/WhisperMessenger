@@ -445,4 +445,20 @@ return function()
     changed, target = MessageReactions.ApplyOperation(state, "group-legacy", operationFor("remove", remoteMessage), "Actor-Realm", nil, 102)
     assert(changed == true and target == remoteMessage and remoteMessage.reaction == nil, "nil-wire group remove must clear incoming target")
   end
+  -- Expired correlation work releases sender aliases.
+  do
+    local state = newState()
+    MessageReactions.RecordIdentity(state, "bngame:7", "conversation", {
+      type = "identity",
+      wireId = "wire-7",
+      sourceFingerprint = "fingerprint",
+    }, 100)
+    MessageReactions.AssociateSenderAlias(state, "bngame:7", "bn:42")
+    assert(MessageReactions.ResolveSenderAlias(state, "bngame:7") == "bn:42", "active correlation must retain sender alias")
+
+    MessageReactions.Expire(state, 115)
+
+    assert(MessageReactions.ResolveSenderAlias(state, "bngame:7") == "bngame:7", "expired correlation must release sender alias")
+  end
+
 end

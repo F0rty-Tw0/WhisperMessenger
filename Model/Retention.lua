@@ -60,11 +60,17 @@ function Retention.ExpireMessages(messages, maxAgeSeconds, now)
   end
 
   now = resolveNow(now)
-
-  for i = #messages, 1, -1 do
-    if Retention.IsExpired(messages[i].sentAt, maxAgeSeconds, now) then
-      table.remove(messages, i)
+  local total = #messages
+  local writeIndex = 1
+  for readIndex = 1, total do
+    local message = messages[readIndex]
+    if not Retention.IsExpired(message.sentAt, maxAgeSeconds, now) then
+      messages[writeIndex] = message
+      writeIndex = writeIndex + 1
     end
+  end
+  for index = writeIndex, total do
+    messages[index] = nil
   end
 
   return messages
