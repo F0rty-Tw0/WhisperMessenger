@@ -5,6 +5,14 @@ end
 
 local ChannelContextMerger = {}
 
+-- Only one conversation is on screen at a time, so a single memo slot is enough
+-- to hand back the same channel message table while the store entry and the
+-- resolved sender name are unchanged. The transcript diffs message identity, so
+-- a fresh table every refresh would mark that row changed and rebuild bubbles.
+local cachedEntry
+local cachedPlayerName
+local cachedMessage
+
 local function lookupNameFor(selectedContact)
   if type(selectedContact) ~= "table" then
     return nil
@@ -37,15 +45,22 @@ function ChannelContextMerger.Merge(messages, selectedContact, deps)
     return messages
   end
 
-  local channelMsg = {
-    id = "channel-ctx-" .. tostring(entry.sentAt),
-    direction = "in",
-    kind = "channel_context",
-    text = entry.text,
-    sentAt = entry.sentAt,
-    playerName = selectedContact.displayName or entry.playerName,
-    channelLabel = entry.channelLabel,
-  }
+  local playerName = selectedContact.displayName or entry.playerName
+  local channelMsg = cachedMessage
+  if channelMsg == nil or cachedEntry ~= entry or cachedPlayerName ~= playerName then
+    channelMsg = {
+      id = "channel-ctx-" .. tostring(entry.sentAt),
+      direction = "in",
+      kind = "channel_context",
+      text = entry.text,
+      sentAt = entry.sentAt,
+      playerName = playerName,
+      channelLabel = entry.channelLabel,
+    }
+    cachedEntry = entry
+    cachedPlayerName = playerName
+    cachedMessage = channelMsg
+  end
 
   local result = {}
   local inserted = false

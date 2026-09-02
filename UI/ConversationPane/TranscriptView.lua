@@ -149,7 +149,9 @@ local function layoutOptions(transcript)
   return options
 end
 
-function TranscriptView.RenderTranscript(transcript, messages)
+--- renderOptions may carry { force = true } for callers that change the
+--- viewport size or theme colors, which the per-message row diff cannot see.
+function TranscriptView.RenderTranscript(transcript, messages, renderOptions)
   local allMessages = messages or {}
   transcript._allMessages = allMessages
 
@@ -164,8 +166,10 @@ function TranscriptView.RenderTranscript(transcript, messages)
 
   local lines = updateLines(transcript, allMessages, false)
   local paneWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", 400)
-  Virtualization.Render(transcript, allMessages, paneWidth, layoutOptions(transcript))
-  updateVisibleLegacyText(transcript)
+  local _, _, _, relaidOut = Virtualization.Render(transcript, allMessages, paneWidth, layoutOptions(transcript), renderOptions)
+  if relaidOut then
+    updateVisibleLegacyText(transcript)
+  end
 
   if transcript.text and transcript.text.SetWidth then
     transcript.text:SetWidth(sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth))

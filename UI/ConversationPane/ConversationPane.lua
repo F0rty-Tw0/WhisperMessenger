@@ -26,6 +26,10 @@ local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 local TRANSCRIPT_BOTTOM_GAP = TranscriptView.TRANSCRIPT_BOTTOM_GAP
 local ACTIVE_STATUS_BANNER_HEIGHT = 24
 
+-- Shared, never mutated: viewport-size and theme changes must re-lay-out the
+-- bubbles even though no individual message changed.
+local FORCE_RENDER = { force = true }
+
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
 local function buildMessagesWithChannelContext(messages, selectedContact)
@@ -97,7 +101,7 @@ local function refreshBottomBanner(view)
       t.viewportHeight = newH
       if t._allMessages then
         t._virtualForceEnd = wasAtEnd
-        TranscriptView.RenderTranscript(t, t._allMessages)
+        TranscriptView.RenderTranscript(t, t._allMessages, FORCE_RENDER)
       else
         ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), false)
       end
@@ -237,7 +241,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
         view.transcript.refreshSkin()
       end
       if view.transcript and view.transcript._allMessages then
-        TranscriptView.RenderTranscript(view.transcript, view.transcript._allMessages)
+        TranscriptView.RenderTranscript(view.transcript, view.transcript._allMessages, FORCE_RENDER)
       end
     end,
   }
@@ -287,7 +291,7 @@ function ConversationPane.Relayout(view, width, height)
   -- Re-render bubbles at the new width
   if t._allMessages then
     t._virtualForceEnd = wasAtEnd
-    TranscriptView.RenderTranscript(t, t._allMessages)
+    TranscriptView.RenderTranscript(t, t._allMessages, FORCE_RENDER)
   end
 end
 

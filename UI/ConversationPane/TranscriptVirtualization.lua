@@ -52,6 +52,8 @@ local function prepareRows(transcript, messages, paneWidth)
   local widthChanged = state.paneWidth ~= paneWidth
   local geometryRevision = ChatBubbleLayout.GetGeometryRevision()
   local geometryChanged = state.geometryRevision ~= geometryRevision
+  local previousRowCount = #rows
+  local anyChanged = widthChanged or geometryChanged or previousRowCount ~= #messages
   local offset = 0
   for index, message in ipairs(messages) do
     local row = rows[index]
@@ -82,6 +84,7 @@ local function prepareRows(transcript, messages, paneWidth)
     if changed then
       row.height = estimatedHeight
       row.measured = false
+      anyChanged = true
     end
     row.index = index
     row.message = message
@@ -111,7 +114,7 @@ local function prepareRows(transcript, messages, paneWidth)
   state.geometryRevision = geometryRevision
   state.totalHeight = offset
   transcript._virtualRows = rows
-  return state
+  return state, anyChanged
 end
 
 local function rowAtOffset(rows, offset)
@@ -176,9 +179,12 @@ local function isAtEnd(transcript)
   return range <= 0 or ScrollView.GetOffset(transcript) >= range - END_TOLERANCE
 end
 
+-- Returns totalHeight, relaidOut. relaidOut is false when the visible range is
+-- unchanged and `force` is not set, which is the allocation-free skip path the
+-- background status refresh takes when nothing about the conversation changed.
 local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
   if transcript._renderingViewport then
-    return state.totalHeight
+    return state.totalHeight, false
   end
 
   local rows = state.rows
@@ -191,7 +197,7 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
     ScrollView.RefreshMetrics(transcript, 0, false)
     state.totalHeight = 0
     transcript._renderingViewport = false
-    return state.totalHeight
+    return state.totalHeight, true
   end
 
   local viewportHeight = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcript.viewportHeight or 0)
@@ -202,7 +208,7 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
   local anchorMessage, anchorDelta, anchorIndex = captureAnchor(rows, targetOffset)
   local firstIndex, lastIndex = rangeForOffset(rows, targetOffset, viewportHeight)
   if not force and firstIndex == state.firstIndex and lastIndex == state.lastIndex then
-    return state.totalHeight
+    return state.totalHeight, false
   end
 
   transcript._renderingViewport = true
@@ -278,10 +284,10 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
     ScrollView.SetVerticalScroll(transcript, targetOffset)
   end
   transcript._renderingViewport = false
-  return state.totalHeight
+  return state.totalHeight, true
 end
 
-function TranscriptVirtualization.Render(transcript, messages, paneWidth, options)
+function TranscriptVirtualization.Render(transcript, messages, paneWidth, options, renderOptions)
   local previousState = transcript._virtualState
   local previousRows = previousState and previousState.rows or nil
   local previousOffset = ScrollView.GetOffset(transcript)
@@ -294,21 +300,34 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     anchorMessage, anchorDelta, anchorIndex = captureAnchor(previousRows, previousOffset)
   end
 
-  local state = prepareRows(transcript, messages, paneWidth)
+  local state, anyChanged = prepareRows(transcript, messages, paneWidth)
   state.options = options
+  local fallbackClassTag = options and options.fallbackClassTag or nil
+  -- Bubble geometry is keyed off the row diff, but the fallback class tag only
+  -- recolors sender names, so it is tracked separately.
+  local force = (renderOptions and renderOptions.force == true)
+    or not hadRows
+    or forceSnapToEnd
+    or anyChanged
+    or state.fallbackClassTag ~= fallbackClassTag
+  state.fallbackClassTag = fallbackClassTag
+
   local targetOffset = previousOffset
   if anchorMessage then
     targetOffset = anchoredOffset(state.rows, anchorMessage, anchorDelta, anchorIndex) or targetOffset
   end
-  bindOffset(transcript, state, targetOffset, snapToEnd, true)
+  local _, relaidOut = bindOffset(transcript, state, targetOffset, snapToEnd, force)
 
   local settledWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth)
   if settledWidth ~= paneWidth then
-    state = prepareRows(transcript, messages, settledWidth)
+    local settledChanged
+    state, settledChanged = prepareRows(transcript, messages, settledWidth)
     state.options = options
-    bindOffset(transcript, state, ScrollView.GetOffset(transcript), snapToEnd, true)
+    state.fallbackClassTag = fallbackClassTag
+    local _, settledRelaidOut = bindOffset(transcript, state, ScrollView.GetOffset(transcript), snapToEnd, force or settledChanged)
+    relaidOut = relaidOut or settledRelaidOut
   end
-  return state.totalHeight, state.firstIndex, state.lastIndex
+  return state.totalHeight, state.firstIndex, state.lastIndex, relaidOut
 end
 
 function TranscriptVirtualization.RefreshViewport(transcript)
