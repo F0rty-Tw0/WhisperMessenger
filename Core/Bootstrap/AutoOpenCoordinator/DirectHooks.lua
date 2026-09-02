@@ -148,9 +148,6 @@ function DirectHooks.Install(runtime, hooks, deps)
   -- after whispers received in restricted content.
   safeHook("ChatFrame_SendTell")
 
-  if deps.trace then
-    deps.trace("AutoOpen: direct whisper hooks installed")
-  end
 end
 
 ns.BootstrapAutoOpenDirectHooks = DirectHooks

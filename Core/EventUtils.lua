@@ -13,15 +13,12 @@ function EventUtils.IsUnknownEventError(err)
   return string.find(string.lower(tostring(err or "")), "unknown event", 1, true) ~= nil
 end
 
-function EventUtils.RegisterEventIfSupported(frame, eventName, onSkip)
+function EventUtils.RegisterEventIfSupported(frame, eventName)
   local ok, err = pcall(frame.RegisterEvent, frame, eventName)
   if ok then
     return true
   end
   if EventUtils.IsUnknownEventError(err) then
-    if onSkip then
-      onSkip(eventName)
-    end
     return false
   end
   error(err)

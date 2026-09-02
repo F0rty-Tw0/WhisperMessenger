@@ -55,18 +55,7 @@ return function()
   _G.IsInGroup = function()
     return true
   end
-  LifecycleHandlers.Handle({ runtime = runtime }, "PLAYER_LOGOUT", {
-    trace = function() end,
-    getContentDetector = function()
-      return nil
-    end,
-    getPresenceCache = function()
-      return nil
-    end,
-    loadModule = function()
-      return nil
-    end,
-  })
+  LifecycleHandlers.Handle({ runtime = runtime }, "PLAYER_LOGOUT")
   _G.IsInGroup = savedIsInGroup
 
   assert(accountState.conversations[partyKey] ~= nil, "party conversation must survive PLAYER_LOGOUT (persistence contract)")

@@ -86,7 +86,6 @@ function ContactsResize.New(options)
     setHighlight(false)
 
     local nextState = options.buildState(options.frame)
-    options.trace("contacts resize stop", nextState.contactsWidth)
     if options.onPositionChanged then
       options.onPositionChanged(nextState)
     end
@@ -100,7 +99,6 @@ function ContactsResize.New(options)
     resizing = true
     setHighlight(true)
     updateFromCursor()
-    options.trace("contacts resize start")
   end
 
   local function reset()

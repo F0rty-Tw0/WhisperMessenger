@@ -188,15 +188,9 @@ return function()
   end
 
   do
-    local traceCalls = {}
-    local function trace(...)
-      traceCalls[#traceCalls + 1] = table.concat({ ... }, " ")
-    end
-
-    local resolved, applied = Theme.ResolvePreset("missing_preset", trace)
+    local resolved, applied = Theme.ResolvePreset("missing_preset")
     assert(applied == true, "test_resolve_fallback: expected fallback apply to succeed")
     assert(resolved == "wow_default", "test_resolve_fallback: expected wow_default fallback, got: " .. tostring(resolved))
-    assert(#traceCalls > 0, "test_resolve_fallback: expected fallback trace to be emitted")
   end
 
   local resetOk = Theme.SetPreset("wow_default")

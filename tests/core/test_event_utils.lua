@@ -25,32 +25,17 @@ return function()
     assert(registered.CHAT_MSG_WHISPER == true, "event should be registered")
   end
 
-  -- RegisterEventIfSupported: unsupported event → false, no error, calls onSkip
+  -- RegisterEventIfSupported: unsupported event returns false without throwing
   do
-    local skipCalls = {}
     local frame = {
       RegisterEvent = function(_, eventName)
         error('Attempt to register unknown event "' .. eventName .. '"')
       end,
     }
-    local result = EventUtils.RegisterEventIfSupported(frame, "CLUB_MEMBER_UPDATED", function(eventName)
-      table.insert(skipCalls, eventName)
-    end)
+    local result = EventUtils.RegisterEventIfSupported(frame, "CLUB_MEMBER_UPDATED")
     assert(result == false, "RegisterEventIfSupported should return false for unsupported events")
-    assert(#skipCalls == 1 and skipCalls[1] == "CLUB_MEMBER_UPDATED", "onSkip should be called with event name")
   end
 
-  -- RegisterEventIfSupported: onSkip is optional
-  do
-    local frame = {
-      RegisterEvent = function(_, eventName)
-        error('Attempt to register unknown event "' .. eventName .. '"')
-      end,
-    }
-    local ok, result = pcall(EventUtils.RegisterEventIfSupported, frame, "CLUB_MEMBER_UPDATED")
-    assert(ok, "RegisterEventIfSupported without onSkip should not throw")
-    assert(result == false, "RegisterEventIfSupported without onSkip should still return false on skip")
-  end
 
   -- RegisterEventIfSupported: non-unknown-event errors propagate
   do

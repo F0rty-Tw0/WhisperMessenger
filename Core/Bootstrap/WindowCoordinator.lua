@@ -37,9 +37,6 @@ function WindowCoordinator.Create(options)
   local buildMessagePreview = options.buildMessagePreview or function()
     return nil
   end
-  local trace = options.trace or function(...)
-    local _ = ...
-  end
   local isMythicRestricted = options.isMythicRestricted or function()
     return false
   end
@@ -125,10 +122,8 @@ function WindowCoordinator.Create(options)
       return
     end
 
-    trace("set visible=" .. tostring(nextVisible))
     if nextVisible then
       if presenceCache and type(presenceCache.IsStale) == "function" and presenceCache.IsStale() and presenceCache.Rebuild then
-        trace("PresenceCache: rebuild on window open")
         presenceCache.Rebuild()
       end
       window.frame:Show()

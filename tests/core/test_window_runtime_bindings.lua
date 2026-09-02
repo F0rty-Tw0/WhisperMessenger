@@ -1,7 +1,6 @@
 local RuntimeBindings = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 
 return function()
-  local diagnosticsValue = nil
   local visible = true
   local builtContacts = { { conversationKey = "wow::jaina" } }
   local selectedKey = nil
@@ -34,9 +33,6 @@ return function()
     isWindowVisible = function()
       return visible
     end,
-    setDiagnostics = function(nextDiagnostics)
-      diagnosticsValue = nextDiagnostics
-    end,
     buildContacts = function()
       return builtContacts
     end,
@@ -68,8 +64,6 @@ return function()
   assert(controller.getWindow() == window, "controller.getWindow should return current window")
   assert(controller.getIcon() == icon, "controller.getIcon should return icon")
   assert(controller.isWindowVisible() == true, "controller.isWindowVisible should delegate visibility")
-  controller.setDiagnostics({ tag = "diagnostics" })
-  assert(diagnosticsValue.tag == "diagnostics", "controller.setDiagnostics should pass diagnostics through")
 
   assert(controller.buildContacts() == builtContacts, "controller.buildContacts should be wired")
   assert(controller.ensureWindow() == "ensured", "controller.ensureWindow should be wired")

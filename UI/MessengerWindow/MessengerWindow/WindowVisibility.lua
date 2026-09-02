@@ -10,9 +10,6 @@ function WindowVisibility.Create(options)
   local contactsPane = options.contactsPane
   local contentPane = options.contentPane
   local onOptionsVisibilityChanged = options.onOptionsVisibilityChanged
-  local trace = options.trace or function(...)
-    local _ = ...
-  end
 
   local function setOptionsVisible(nextVisible)
     if nextVisible then
@@ -22,7 +19,6 @@ function WindowVisibility.Create(options)
       if onOptionsVisibilityChanged then
         onOptionsVisibilityChanged(true)
       end
-      trace("options shown")
       return
     end
 
@@ -32,12 +28,10 @@ function WindowVisibility.Create(options)
     if onOptionsVisibilityChanged then
       onOptionsVisibilityChanged(false)
     end
-    trace("options hidden")
   end
 
   local function closeWindow()
     setOptionsVisible(false)
-    trace("close click")
     if options.onClose then
       options.onClose()
     elseif options.frame and options.frame.Hide then

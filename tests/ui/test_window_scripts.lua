@@ -397,7 +397,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
     }
@@ -426,7 +425,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
     }
@@ -455,7 +453,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
     }
@@ -486,7 +483,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
       composerInput = composerInput,
@@ -520,7 +516,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
       composerInput = composerInput,
@@ -633,7 +628,6 @@ return function()
       buildState = function(_target)
         return {}
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
     }
@@ -676,7 +670,6 @@ return function()
       buildState = function(target)
         return { width = target.width, height = target.height }
       end,
-      trace = noop,
       onPositionChanged = function(state)
         persistedState = state
       end,
@@ -762,7 +755,6 @@ return function()
       buildState = function()
         return { contactsWidth = relayoutArgs and relayoutArgs.contactsWidth or nil }
       end,
-      trace = noop,
       onPositionChanged = function(state)
         persistedState = state
       end,
@@ -851,7 +843,6 @@ return function()
       buildState = function(target)
         return { width = target.width, height = target.height }
       end,
-      trace = noop,
       onPositionChanged = noop,
       Theme = Theme,
       getCursorX = function()

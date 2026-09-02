@@ -46,7 +46,6 @@ function AutoOpenCoordinator.Attach(options)
   local controller = {}
 
   local autoOpenHooks = autoOpenHooksModule.Create({
-    trace = options.trace,
     getSettings = function()
       return accountState.settings
     end,
@@ -94,7 +93,6 @@ function AutoOpenCoordinator.Attach(options)
 
   function controller.installPoller()
     return Poller.Install(runtime, autoOpenHooks, {
-      trace = options.trace,
       identity = identity,
       isSuspended = options.isSuspended or function()
         return _G._wmSuspended == true

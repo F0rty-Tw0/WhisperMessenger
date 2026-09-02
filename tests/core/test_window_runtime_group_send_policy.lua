@@ -147,18 +147,14 @@ return function()
 
     assert(policy.shouldRoutePayload({ channel = "WOW" }) == false, "legacy WOW should not route as group")
     assert(policy.shouldRoutePayload({ channel = ChannelType.PARTY }) == true, "party should route as group")
-    assert(
-      policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "hello party" }, function() end) == true,
-      "party send should succeed"
-    )
+    assert(policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "hello party" }) == true, "party send should succeed")
     assert(sendCalls == 1, "ChatGateway.Send should be called once")
-    assert(policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }, function() end) == false, "unsendable group should return false")
+    assert(policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }) == false, "unsendable group should return false")
   end
 
   -- A non-throwing Blizzard group dispatch is accepted even when its return
   -- value is false; dispatch itself is the acceptance boundary.
   do
-    local traces = {}
     local falseReturnCalls = 0
     local policy = GroupSendPolicy.Create({
       runtime = { localProfileId = "jaina-area52", chatApi = {} },
@@ -172,9 +168,10 @@ return function()
         end,
       },
     })
-    assert(policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "dispatched" }, function(...)
-      traces[#traces + 1] = { ... }
-    end) == true, "non-throwing group API false must accept the dispatch")
+    assert(
+      policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "dispatched" }) == true,
+      "non-throwing group API false must accept the dispatch"
+    )
     assert(falseReturnCalls == 1, "group API false return must dispatch exactly once")
 
     local errorPolicy = GroupSendPolicy.Create({
@@ -188,10 +185,10 @@ return function()
         end,
       },
     })
-    assert(errorPolicy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "error" }, function(...)
-      traces[#traces + 1] = { ... }
-    end) == false, "group API error must reject the send")
-    assert(#traces == 1 and traces[1][1] == "group send error", "group API error should be traced once")
+    assert(
+      errorPolicy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "error" }) == false,
+      "group API error must reject the send"
+    )
   end
   -- Every addon-supported group channel sends normal text then same-channel metadata.
   do
@@ -230,7 +227,7 @@ return function()
       })
       local payload = { conversationKey = "group::" .. channel, channel = channel, text = "hello " .. channel }
 
-      assert(policy.sendPayload(payload, function() end) == true, channel .. " ordinary group send should succeed")
+      assert(policy.sendPayload(payload) == true, channel .. " ordinary group send should succeed")
       assert(#normalCalls == 1 and normalCalls[1].text == payload.text, channel .. " normal group text should send first")
       assert(#addonCalls == 1 and addonCalls[1].channel == channel, channel .. " identity should use matching group channel")
       local identity = Protocol.Decode(addonCalls[1].payload)
@@ -304,13 +301,13 @@ return function()
       },
     })
     local payload = { conversationKey = "group::PARTY", channel = "PARTY", text = "normal failure" }
-    assert(policy.sendPayload(payload, function() end) == false, "normal failure should reject group send")
+    assert(policy.sendPayload(payload) == false, "normal failure should reject group send")
     assert(
       runtime.pendingGroupOutgoing == nil or runtime.pendingGroupOutgoing[payload.conversationKey] == nil,
       "normal failure should remove pending"
     )
     payload.text = "identity failure"
-    assert(policy.sendPayload(payload, function() end) == true, "identity addon failure must not reject ordinary group text")
+    assert(policy.sendPayload(payload) == true, "identity addon failure must not reject ordinary group text")
     local ordinaryPending = runtime.pendingGroupOutgoing[payload.conversationKey]
     assert(
       ordinaryPending and #ordinaryPending == 1 and ordinaryPending[1].wireId ~= nil,
@@ -358,7 +355,7 @@ return function()
     })
     local payload = { conversationKey = "party::current", channel = "PARTY", text = "new message" }
 
-    assert(policy.sendPayload(payload, function() end) == true, "supported group dispatch should accept")
+    assert(policy.sendPayload(payload) == true, "supported group dispatch should accept")
     local queue = runtime.pendingGroupOutgoing[payload.conversationKey]
     assert(normalCalls == 1, "valid group dispatch should send once")
     assert(#queue == 2 and queue[1].text == "at boundary" and queue[2].text == "new message", "enqueue must prune stale duplicates and retain FIFO")
@@ -392,11 +389,8 @@ return function()
     })
     local target = { kind = "user", direction = "in", text = "target", wireId = "target1" }
 
-    assert(policy.sendPayload({ channel = "PARTY", text = "nil key" }, function() end) == false, "nil group key must reject")
-    assert(
-      policy.sendPayload({ conversationKey = "", channel = "PARTY", text = "empty key" }, function() end) == false,
-      "empty group key must reject"
-    )
+    assert(policy.sendPayload({ channel = "PARTY", text = "nil key" }) == false, "nil group key must reject")
+    assert(policy.sendPayload({ conversationKey = "", channel = "PARTY", text = "empty key" }) == false, "empty group key must reject")
     assert(policy.sendReaction({ channel = "PARTY" }, target, "heart", "set", "Artio", "pending1") == false, "nil reaction key must reject")
     assert(
       policy.sendReaction({ conversationKey = "", channel = "PARTY" }, target, "heart", "set", "Artio", "pending2") == false,
@@ -443,7 +437,7 @@ return function()
     assert(policy.sendReaction(left, target, "heart", "set", "Artio", "pending2") == false, "left group reaction must reject")
     competitive = true
     assert(
-      policy.sendPayload({ conversationKey = current.conversationKey, channel = current.channel, text = "competitive" }, function() end) == false,
+      policy.sendPayload({ conversationKey = current.conversationKey, channel = current.channel, text = "competitive" }) == false,
       "competitive group send must reject"
     )
     assert(policy.sendReaction(current, target, "heart", "set", "Artio", "pending3") == false, "competitive group reaction must reject")
@@ -473,11 +467,8 @@ return function()
 
     assert(policy.shouldRoutePayload({ channel = "CHANNEL" }) == true, "CHANNEL composer payload must route through group policy")
     assert(policy.shouldRoutePayload({ channel = "BN_CONVERSATION" }) == true, "BN_CONVERSATION composer payload must route through group policy")
-    assert(policy.sendPayload({ channel = "CHANNEL", text = "channel" }, function() end) == true, "CHANNEL normal composer send must remain accepted")
-    assert(
-      policy.sendPayload({ channel = "BN_CONVERSATION", text = "conversation" }, function() end) == true,
-      "BN_CONVERSATION normal composer send must remain accepted"
-    )
+    assert(policy.sendPayload({ channel = "CHANNEL", text = "channel" }) == true, "CHANNEL normal composer send must remain accepted")
+    assert(policy.sendPayload({ channel = "BN_CONVERSATION", text = "conversation" }) == true, "BN_CONVERSATION normal composer send must remain accepted")
     assert(normalChannels[1] == "CHANNEL" and normalChannels[2] == "BN_CONVERSATION", "unsupported normal composer sends must still dispatch")
   end
 end

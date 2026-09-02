@@ -41,19 +41,8 @@ return function()
     }
   end
 
-  local function makeDeps(trace)
-    return {
-      trace = trace or function() end,
-      getContentDetector = function()
-        return nil
-      end,
-      getPresenceCache = function()
-        return nil
-      end,
-      loadModule = function()
-        return nil
-      end,
-    }
+  local function makeDeps()
+    return {}
   end
 
   local function lastMessage(conversation)

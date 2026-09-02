@@ -11,7 +11,6 @@ return function()
   local sentGroup = nil
   local reacted = nil
   local copiedStates = {}
-  local traceCalls = {}
 
   local runtime = {
     activeConversationKey = "wow::WOW::jaina",
@@ -125,9 +124,6 @@ return function()
     end,
     setWindowVisible = function(nextVisible)
       visibleState = nextVisible
-    end,
-    trace = function(...)
-      traceCalls[#traceCalls + 1] = { ... }
     end,
   })
 
@@ -327,5 +323,4 @@ return function()
   end
 
   assert(#copiedStates >= 3, "callbacks should copy mutable state before persisting")
-  assert(#traceCalls >= 3, "callbacks should trace pin/remove/reorder operations")
 end

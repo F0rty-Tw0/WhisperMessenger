@@ -242,7 +242,6 @@ local function makeRuntimeOptions()
       store.conversations[key].unreadCount = 0
     end,
     requestAvailability = function() end,
-    trace = function() end,
   }
 
   return options, runtime, trackers, conversationKey
@@ -257,7 +256,6 @@ return function()
     "getWindow",
     "getIcon",
     "isWindowVisible",
-    "setDiagnostics",
     "buildContacts",
     "ensureWindow",
     "refreshWindow",

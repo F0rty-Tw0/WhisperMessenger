@@ -13,7 +13,6 @@ local setTextColor = UIHelpers.setTextColor
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local EmojiPicker = ns.ComposerEmojiPicker or require("WhisperMessenger.UI.Composer.EmojiPicker")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
@@ -237,10 +236,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       return
     end
 
-    local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
-    if traceEnabled then
-      Trace("Composer: before-callback channel=" .. tostring(selectedContact.channel))
-    end
 
     local accepted = onSend({
       conversationKey = selectedContact.conversationKey,
@@ -254,18 +249,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       text = text,
     })
 
-    if traceEnabled then
-      local resultType = type(accepted)
-      local resultValue = resultType == "boolean" and tostring(accepted) or resultType == "nil" and "nil" or "<redacted>"
-      Trace("Composer: callback-result type=" .. resultType .. " value=" .. resultValue)
-    end
 
     if accepted ~= false then
       input:SetText("")
-      if traceEnabled then
-        local clearedText = input.GetText and input:GetText() or input.text
-        Trace("Composer: post-clear empty=" .. tostring(clearedText == ""))
-      end
     end
   end
 

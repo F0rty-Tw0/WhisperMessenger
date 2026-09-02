@@ -2,7 +2,6 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
-local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local DataBroker = {}
 
@@ -72,12 +71,10 @@ function DataBroker.Register(options)
       options.onRegistered(dataobj)
     end
 
-    trace("LDB data object registered: WhisperMessenger")
     return true
   end
 
   if not tryRegister() and type(_G.CreateFrame) == "function" then
-    trace("LDB not available; deferring registration to PLAYER_LOGIN")
     local loginFrame = _G.CreateFrame("Frame")
     loginFrame:RegisterEvent("PLAYER_LOGIN")
     loginFrame:SetScript("OnEvent", function()

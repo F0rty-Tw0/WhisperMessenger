@@ -126,7 +126,6 @@ function ScriptBindings.Bind(options)
       if options.composerInput and options.getAutoFocusChatInput and options.getAutoFocusChatInput() and options.composerInput.SetFocus then
         options.composerInput:SetFocus()
       end
-      options.trace("window shown")
     end)
 
     frame:SetScript("OnHide", function()
@@ -134,7 +133,6 @@ function ScriptBindings.Bind(options)
       contactsResize.reset()
       windowResize.reset()
       updateFrameOnUpdate()
-      options.trace("window hidden")
     end)
 
     frame:SetScript("OnMouseDown", function()
@@ -184,14 +182,12 @@ function ScriptBindings.Bind(options)
     frame:SetScript("OnDragStart", function(self)
       if self.IsMovable == nil or self:IsMovable() then
         self:StartMoving()
-        options.trace("window drag start")
       end
     end)
 
     frame:SetScript("OnDragStop", function(self)
       self:StopMovingOrSizing()
       local nextState = options.buildState(self)
-      options.trace("window drag stop", nextState.anchorPoint, nextState.x, nextState.y)
       if options.onPositionChanged then
         options.onPositionChanged(nextState)
       end

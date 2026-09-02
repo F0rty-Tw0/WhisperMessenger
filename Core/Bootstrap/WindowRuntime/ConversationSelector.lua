@@ -13,9 +13,6 @@ function ConversationSelector.Create(options)
   local markConversationRead = options.markConversationRead
   local presenceCache = options.presenceCache or {}
   local requestAvailability = options.requestAvailability
-  local getDiagnostics = options.getDiagnostics or function()
-    return options.diagnostics or {}
-  end
   local refreshWindow = options.refreshWindow or function()
     return nil
   end
@@ -40,10 +37,6 @@ function ConversationSelector.Create(options)
       end
     end
 
-    local diagnostics = getDiagnostics()
-    if diagnostics.debugContact then
-      diagnostics.debugContact(conversationKey)
-    end
 
     return refreshWindow()
   end

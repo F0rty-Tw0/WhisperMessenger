@@ -10,7 +10,7 @@ local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Mode
 
 local Presence = {}
 
-function Presence.handlePlayerLogout(Bootstrap, deps)
+function Presence.handlePlayerLogout(Bootstrap)
   if Bootstrap.runtime then
     local runtime = Bootstrap.runtime
     local settings = runtime.accountState and runtime.accountState.settings
@@ -23,7 +23,6 @@ function Presence.handlePlayerLogout(Bootstrap, deps)
         runtime.characterState.activeConversationKey = nil
       end
       runtime.lastIncomingWhisperKey = nil
-      deps.trace("clear on logout")
     end
   end
 
@@ -156,7 +155,7 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
   return true
 end
 
-local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
+local function schedulePresenceRefresh(Bootstrap, PresenceCache)
   if Common == nil then
     return
   end
@@ -164,7 +163,6 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
     if Bootstrap._inMythicContent then
       return
     end
-    deps.trace("PresenceCache: initial rebuild (PLAYER_ENTERING_WORLD +2s)")
     PresenceCache.Rebuild()
     Common.refreshRuntimeWindow(Bootstrap)
   end)
@@ -175,7 +173,6 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
 
   local function presenceTimerLoop()
     if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
-      deps.trace("PresenceCache: timer rebuild (TTL=" .. PresenceCache.GetTTL() .. "s)")
       PresenceCache.Rebuild()
     end
     Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop)
@@ -189,7 +186,6 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   local wasMythic = Bootstrap._inMythicContent or false
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
   local isCompetitive = ContentDetector and ContentDetector.IsCompetitiveContent(_G.GetInstanceInfo) or false
-  deps.trace("PLAYER_ENTERING_WORLD wasMythic=" .. tostring(wasMythic) .. " isMythic=" .. tostring(isMythic))
   Bootstrap._inMythicContent = isMythic
   Bootstrap._inCompetitiveContent = isCompetitive
   Bootstrap._inEncounter = false
@@ -207,20 +203,18 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
     if Bootstrap.runtime and Bootstrap.runtime.suspend then
       Bootstrap.runtime.suspend()
     end
-    deps.trace("mythic lockdown: suspended")
     return true
   elseif wasMythic and not isMythic then
     if Bootstrap.runtime and Bootstrap.runtime.resume then
       Bootstrap.runtime.resume()
     end
-    deps.trace("mythic lockdown: resumed")
   elseif isMythic then
     return true
   end
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then
-    schedulePresenceRefresh(Bootstrap, PresenceCache, deps)
+    schedulePresenceRefresh(Bootstrap, PresenceCache)
   elseif Bootstrap.runtime and Bootstrap.runtime.refreshWindow then
     Common.scheduleAfter(2, function()
       Bootstrap.runtime.refreshWindow()
@@ -237,7 +231,6 @@ function Presence.handlePresenceInvalidation(Bootstrap, event, deps)
   end
 
   PresenceCache.Invalidate()
-  deps.trace("PresenceCache: invalidated by " .. event)
 
   if not Bootstrap._presenceRebuildPending then
     Bootstrap._presenceRebuildPending = true
@@ -246,7 +239,6 @@ function Presence.handlePresenceInvalidation(Bootstrap, event, deps)
       if Bootstrap._inMythicContent then
         return
       end
-      deps.trace("PresenceCache: debounced rebuild after " .. event)
       PresenceCache.Rebuild()
     end)
   end

@@ -26,7 +26,6 @@ local ScriptWiring = ns.MessengerWindowScriptWiring or require("WhisperMessenger
 local RelayoutController = ns.MessengerWindowRelayoutController or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
 
@@ -191,7 +190,6 @@ function MessengerWindow.Create(factory, options)
     frame = frame,
     onClose = options.onClose,
     onOptionsVisibilityChanged = chrome.setOptionsActive,
-    trace = trace,
   })
   local setOptionsVisible = windowVisibility.setOptionsVisible
   local closeWindow = windowVisibility.closeWindow
@@ -272,7 +270,6 @@ function MessengerWindow.Create(factory, options)
     windowGeometry = windowGeometry,
     frame = frame,
     refreshWindowAlpha = refreshWindowAlpha,
-    trace = trace,
     onPositionChanged = options.onPositionChanged,
     theme = Theme,
     composerInput = composerInput,
@@ -300,7 +297,6 @@ function MessengerWindow.Create(factory, options)
     return normalizedScale
   end
 
-  trace("window created", initialState.anchorPoint, initialState.x, initialState.y)
 
   local function refreshLanguage(lang)
     -- GeneralSettings.applyLanguage uses `nextLanguage or DEFAULTS.interfaceLanguage`,

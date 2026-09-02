@@ -44,9 +44,6 @@ function WindowRuntime.Create(options)
   local uiFactory = options.uiFactory or _G
   local uiParent = options.uiParent or _G.UIParent
   local bootstrap = options.bootstrap or {}
-  local trace = options.trace or function(...)
-    local _ = ...
-  end
 
   local contactsList = options.contactsList or ContactsList
   local messengerWindow = options.messengerWindow or MessengerWindow
@@ -72,7 +69,6 @@ function WindowRuntime.Create(options)
   local icon
   local minimapIcon
   local minimapRuntime
-  local diagnostics = options.diagnostics or {}
 
   local function buildContacts()
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
@@ -161,7 +157,6 @@ function WindowRuntime.Create(options)
       end
       return minimapRuntime and minimapRuntime.getLdbObject() or nil
     end,
-    trace = trace,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
     buildMessagePreview = buildLatestIncomingPreview,
@@ -203,9 +198,6 @@ function WindowRuntime.Create(options)
     markConversationRead = markConversationRead,
     presenceCache = presenceCache,
     requestAvailability = requestAvailability,
-    getDiagnostics = function()
-      return diagnostics
-    end,
     refreshWindow = refreshWindow,
   })
   local function selectConversation(conversationKey)
@@ -241,7 +233,6 @@ function WindowRuntime.Create(options)
     selectConversation = selectConversation,
     startConversation = startConversation,
     setWindowVisible = setWindowVisible,
-    trace = trace,
   })
   runtime.canReact = windowCallbacks.canReact
 
@@ -262,7 +253,6 @@ function WindowRuntime.Create(options)
       theme = theme,
       fonts = fonts,
       timeFormat = TimeFormat,
-      trace = trace,
       getIcon = function()
         return icon
       end,
@@ -383,9 +373,6 @@ function WindowRuntime.Create(options)
     end,
     isWindowVisible = function()
       return coordinator.isWindowVisible()
-    end,
-    setDiagnostics = function(nextDiagnostics)
-      diagnostics = nextDiagnostics
     end,
     buildContacts = buildContacts,
     ensureWindow = ensureWindow,

@@ -30,9 +30,6 @@ function AddonEventFrame.Install(deps)
   local initializeRuntime = deps.initializeRuntime or function()
     return Bootstrap.runtime
   end
-  local trace = deps.trace or function(...)
-    local _ = ...
-  end
   local targetAddonName = deps.addonName or addonName
 
   local loadFrame = createFrame("Frame", "WhisperMessengerLoadFrame")
@@ -46,7 +43,6 @@ function AddonEventFrame.Install(deps)
   -- steady GC churn in raids.
   local lifecycleDeps = {
     loadModule = loadModule,
-    trace = trace,
     getContentDetector = function()
       return ns.ContentDetector
     end,
@@ -63,7 +59,6 @@ function AddonEventFrame.Install(deps)
         return
       end
 
-      trace("ADDON_LOADED", loadedAddonName)
       initializeRuntime()
 
       EventBridge =

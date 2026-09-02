@@ -25,7 +25,7 @@ local LifecycleHandlers = {}
 function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   if event == "ADDON_RESTRICTION_STATE_CHANGED" then
     local restrictionType, newState = ...
-    return RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+    return RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState)
   end
 
   if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
@@ -40,24 +40,24 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     -- Group chats (party, raid, instance) are persisted across /reload and
     -- logout so the user can keep recent history. Membership transitions
     -- are tracked separately via GROUP_ROSTER_UPDATE.
-    return Presence.handlePlayerLogout(Bootstrap, deps)
+    return Presence.handlePlayerLogout(Bootstrap)
   end
 
   if event == "GROUP_FORMED" or event == "GROUP_JOINED" then
     local category, partyGUID = ...
-    return GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID, deps)
+    return GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID)
   end
 
   if event == "GROUP_LEFT" then
     local category, partyGUID = ...
-    return GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID, deps)
+    return GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID)
   end
 
   if event == "GROUP_ROSTER_UPDATE" then
-    return GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
+    return GroupMembership.handleGroupRosterUpdate(Bootstrap)
   end
 
-  if Competitive.handleChallengeModeEvent(Bootstrap, event, deps) then
+  if Competitive.handleChallengeModeEvent(Bootstrap, event) then
     return true
   end
 
@@ -66,7 +66,7 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   end
 
   if event == "PLAYER_REGEN_DISABLED" then
-    return Competitive.handleCombatStart(Bootstrap, deps)
+    return Competitive.handleCombatStart(Bootstrap)
   end
 
   if event == "PLAYER_REGEN_ENABLED" then

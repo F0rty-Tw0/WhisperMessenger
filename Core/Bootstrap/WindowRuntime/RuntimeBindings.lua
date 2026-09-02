@@ -29,7 +29,6 @@ function RuntimeBindings.Apply(options)
   local isWindowVisible = options.isWindowVisible or function()
     return false
   end
-  local setDiagnostics = options.setDiagnostics or function() end
   local buildContacts = options.buildContacts or function()
     return {}
   end
@@ -44,9 +43,6 @@ function RuntimeBindings.Apply(options)
   controller.getWindow = getWindow
   controller.getIcon = getIcon
   controller.isWindowVisible = isWindowVisible
-  controller.setDiagnostics = function(nextDiagnostics)
-    setDiagnostics(nextDiagnostics or {})
-  end
   controller.buildContacts = buildContacts
   controller.ensureWindow = ensureWindow
   controller.refreshWindow = refreshWindow

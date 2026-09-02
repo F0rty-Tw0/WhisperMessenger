@@ -145,7 +145,7 @@ return function()
       },
     })
     local composer = makeGroupComposer(ChannelType.PARTY, "me::PARTY::1", nil, function(payload)
-      return policy.sendPayload(payload, function() end)
+      return policy.sendPayload(payload)
     end)
     composer.input:SetText("preserve after group error")
     composer.input:SetFocus()

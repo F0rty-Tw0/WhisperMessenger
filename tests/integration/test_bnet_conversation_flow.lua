@@ -58,7 +58,6 @@ return function()
     GroupRouter.RouteGroupEvent(
       runtime,
       "CHAT_MSG_BN_CONVERSATION",
-      {},
       "remote message",
       "Friend#1234",
       nil,
@@ -105,7 +104,6 @@ return function()
     GroupRouter.RouteGroupEvent(
       runtime,
       "CHAT_MSG_BN_CONVERSATION",
-      {},
       "local echo",
       "Me#1234",
       nil,

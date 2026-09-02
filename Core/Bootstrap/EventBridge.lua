@@ -7,7 +7,6 @@ local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 
-local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 -- stylua: ignore start
 local Registration = ns.BootstrapEventBridgeRegistration or require("WhisperMessenger.Core.Bootstrap.EventBridge.Registration")
@@ -60,21 +59,6 @@ local OUTGOING_WHISPER_EVENTS = {
   CHAT_MSG_BN_WHISPER_INFORM = true,
 }
 
-local TRACE_EVENTS = {
-  CHAT_MSG_WHISPER = true,
-  CHAT_MSG_WHISPER_INFORM = true,
-  CHAT_MSG_BN_WHISPER = true,
-  CHAT_MSG_BN_WHISPER_INFORM = true,
-  CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE = true,
-  CHAT_MSG_AFK = true,
-  CHAT_MSG_DND = true,
-  -- Group chat events
-  CHAT_MSG_PARTY = true,
-  CHAT_MSG_PARTY_LEADER = true,
-  CHAT_MSG_INSTANCE_CHAT = true,
-  CHAT_MSG_INSTANCE_CHAT_LEADER = true,
-  CHAT_MSG_BN_CONVERSATION = true,
-}
 
 local function applyIncomingEffects(runtime, result)
   if runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.playSoundOnWhisper == true then
@@ -108,25 +92,6 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end
   end
   local payload = LivePayload.Build(runtime, eventName, ...)
-  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
-  if traceEnabled and TRACE_EVENTS[eventName] then
-    -- pcall: 12.0 secret-string payload values throw on concatenation. The
-    -- router drops such payloads cleanly; the trace line must not error
-    -- first. (Not unit-testable: real secret strings cannot be simulated
-    -- from plain Lua — see SecretString.lua.)
-    pcall(function()
-      Trace(
-        "EventBridge: "
-          .. eventName
-          .. " from="
-          .. tostring(payload.playerName)
-          .. " guid="
-          .. tostring(payload.guid)
-          .. " lineID="
-          .. tostring(payload.lineID)
-      )
-    end)
-  end
   runtime.onReactionFallbackDegraded = function(degradedConversation)
     if degradedConversation == nil then
       return
@@ -138,15 +103,6 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
 
   local result, resultMeta = EventRouter.HandleEvent(runtime, eventName, payload)
-  if traceEnabled and TRACE_EVENTS[eventName] then
-    if result and result.queued then
-      Trace("EventBridge: queued (chat locked)")
-    elseif result then
-      Trace("EventBridge: routed OK, unread=" .. tostring(result.unreadCount))
-    else
-      Trace("EventBridge: result=nil (not processed)")
-    end
-  end
   local convertedReactionControl = resultMeta and resultMeta.reactionControl == true
   local changedSetReaction = type(resultMeta) == "table" and resultMeta.reactionChanged == true and resultMeta.reactionOperation == "set"
   local shouldApplyIncomingEffects = result
@@ -179,7 +135,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
 end
 
 function EventBridge.RouteGroupEvent(runtime, eventName, ...)
-  return GroupRouter.RouteGroupEvent(runtime, eventName, TRACE_EVENTS, ...)
+  return GroupRouter.RouteGroupEvent(runtime, eventName, ...)
 end
 
 ns.BootstrapEventBridge = EventBridge

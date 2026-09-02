@@ -71,7 +71,6 @@ return function()
       return Bootstrap.runtime
     end,
     loadModule = loadModule,
-    trace = function() end,
   })
 
   assert(frame ~= nil, "expected install to return a frame")

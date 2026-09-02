@@ -46,7 +46,6 @@ function WindowCallbacks.Create(options)
   local selectConversation = options.selectConversation or function() end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
-  local trace = options.trace or function() end
 
   local function canReact(selectedContact, message)
     if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
@@ -79,7 +78,7 @@ function WindowCallbacks.Create(options)
 
     onSend = function(payload)
       if groupSendPolicy and groupSendPolicy.shouldRoutePayload(payload) then
-        return groupSendPolicy.sendPayload(payload, trace)
+        return groupSendPolicy.sendPayload(payload)
       end
       return sendHandler.HandleSend(runtime, payload, refreshWindow)
     end,
@@ -113,7 +112,6 @@ function WindowCallbacks.Create(options)
 
     onPin = function(item)
       local key = item.conversationKey
-      trace("onPin", "key=" .. tostring(key), "wasPinned=" .. tostring(item.pinned))
       if Store.IsPinned(runtime.store, key) then
         Store.Unpin(runtime.store, key)
         if runtime.store.conversations[key] == nil and runtime.activeConversationKey == key then
@@ -128,7 +126,6 @@ function WindowCallbacks.Create(options)
 
     onRemove = function(item)
       local key = item.conversationKey
-      trace("onRemove", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
       MessageReactions.ClearConversation(runtime, key)
       Store.Remove(runtime.store, key)
       if runtime.activeConversationKey == key then
@@ -143,16 +140,13 @@ function WindowCallbacks.Create(options)
       if key == nil then
         return
       end
-      trace("onMarkUnread", "key=" .. tostring(key), "name=" .. tostring(item.displayName))
       Store.MarkUnread(runtime.store, key)
       refreshWindow()
     end,
 
     onReorder = function(orders)
-      trace("onReorder", "keys=" .. tostring(#orders or 0))
       for key, order in pairs(orders) do
         Store.SetSortOrder(runtime.store, key, order)
-        trace("  sortOrder", "key=" .. tostring(key), "order=" .. tostring(order))
       end
       refreshWindow()
     end,

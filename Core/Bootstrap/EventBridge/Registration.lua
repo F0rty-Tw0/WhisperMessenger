@@ -5,18 +5,12 @@ end
 
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
-local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local Registration = {}
 
-local function traceSkippedEvent(eventName)
-  if Trace then
-    Trace("EventBridge: skipping unsupported event " .. tostring(eventName))
-  end
-end
 
 local function registerEventIfSupported(frame, eventName)
-  return EventUtils.RegisterEventIfSupported(frame, eventName, traceSkippedEvent)
+  return EventUtils.RegisterEventIfSupported(frame, eventName)
 end
 
 local function unregisterEventIfSupported(frame, eventName)
@@ -25,7 +19,6 @@ local function unregisterEventIfSupported(frame, eventName)
     return true
   end
   if EventUtils.IsUnknownEventError(err) then
-    traceSkippedEvent(eventName)
     return false
   end
   error(err)

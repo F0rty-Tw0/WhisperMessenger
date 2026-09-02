@@ -12,20 +12,6 @@ local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
-local trace = ns.trace
-if not trace then
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, "WhisperMessenger.Core.Trace")
-    if ok and loaded then
-      trace = loaded
-    end
-  end
-  if not trace then
-    trace = function(...)
-      local _ = ...
-    end
-  end
-end
 
 local ActionButtons = {}
 
@@ -160,13 +146,6 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
 
     btn:SetScript("OnClick", function()
       if row.item and options.onRemove then
-        trace(
-          "remove clicked",
-          "key=" .. tostring(row.item.conversationKey),
-          "name=" .. tostring(row.item.displayName),
-          "channel=" .. tostring(row.item.channel),
-          "pinned=" .. tostring(row.item.pinned)
-        )
         options.onRemove(row.item)
       end
     end)
@@ -216,13 +195,6 @@ function ActionButtons.createPinButton(factory, row, _item, _parentWidth, option
 
     btn:SetScript("OnClick", function()
       if row.item and options.onPin then
-        trace(
-          "pin clicked",
-          "key=" .. tostring(row.item.conversationKey),
-          "name=" .. tostring(row.item.displayName),
-          "channel=" .. tostring(row.item.channel),
-          "pinned=" .. tostring(row.item.pinned)
-        )
         options.onPin(row.item)
       end
     end)

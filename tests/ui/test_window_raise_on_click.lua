@@ -58,7 +58,6 @@ local function buildHarness(options)
       return {}
     end,
     onPositionChanged = noop,
-    trace = noop,
   })
 
   return {

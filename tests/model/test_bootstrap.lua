@@ -36,7 +36,6 @@ return function()
         isWindowVisible = function()
           return false
         end,
-        setDiagnostics = function() end,
       }
     end,
   }

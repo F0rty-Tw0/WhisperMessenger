@@ -19,12 +19,11 @@ local function canClearStaleWhisperReplyState(runtime, deps)
   return true
 end
 
-function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
+function Competitive.handleChallengeModeEvent(Bootstrap, event)
   if
     (event == "CHALLENGE_MODE_START" or event == "CHALLENGE_MODE_COMPLETED" or event == "CHALLENGE_MODE_RESET")
     and (not FlavorCompat or not FlavorCompat.hasMythicPlus)
   then
-    deps.trace("mythic lockdown: ignored challenge event")
     return true
   end
 
@@ -37,7 +36,6 @@ function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
       if Bootstrap.runtime and Bootstrap.runtime.suspend then
         Bootstrap.runtime.suspend()
       end
-      deps.trace("mythic lockdown: M+ started")
     end
     Common.notifyCompetitiveState(Bootstrap)
     return true
@@ -51,7 +49,6 @@ function Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
       if Bootstrap.runtime and Bootstrap.runtime.resume then
         Bootstrap.runtime.resume()
       end
-      deps.trace(event == "CHALLENGE_MODE_COMPLETED" and "mythic lockdown: M+ completed" or "mythic lockdown: M+ reset")
     end
     Common.notifyCompetitiveState(Bootstrap)
     return true
@@ -63,7 +60,6 @@ end
 -- Raw encounter events also fire for unrestricted legacy bosses; ADDON_RESTRICTION_STATE_CHANGED owns Midnight restriction state.
 function Competitive.handleEncounterEvent(Bootstrap, event, deps)
   if event == "ENCOUNTER_START" then
-    deps.trace("encounter started")
     return true
   end
 
@@ -71,14 +67,13 @@ function Competitive.handleEncounterEvent(Bootstrap, event, deps)
     if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
     end
-    deps.trace("encounter ended")
     return true
   end
 
   return false
 end
 
-function Competitive.handleCombatStart(Bootstrap, _deps)
+function Competitive.handleCombatStart(Bootstrap)
   local runtime = Bootstrap.runtime
   local settings = runtime and runtime.accountState and runtime.accountState.settings
   if
@@ -120,7 +115,6 @@ function Competitive.handleZoneChangedNewArea(Bootstrap, deps)
   end
 
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
-  deps.trace("ZONE_CHANGED_NEW_AREA wasMythic=true isMythic=" .. tostring(isMythic))
   if not isMythic then
     Bootstrap._inMythicContent = false
     if Bootstrap.runtime and Bootstrap.runtime.resume then
@@ -133,13 +127,11 @@ function Competitive.handleZoneChangedNewArea(Bootstrap, deps)
         if Bootstrap._inMythicContent then
           return
         end
-        deps.trace("PresenceCache: rebuild after mythic exit")
         PresenceCache.Rebuild()
         Common.refreshRuntimeWindow(Bootstrap)
       end)
     end
 
-    deps.trace("mythic lockdown: resumed via zone change")
     Common.notifyCompetitiveState(Bootstrap)
   end
 

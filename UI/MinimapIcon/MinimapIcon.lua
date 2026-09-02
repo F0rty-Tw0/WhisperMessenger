@@ -6,7 +6,6 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
-local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
@@ -230,7 +229,6 @@ function MinimapIcon.Create(factory, options)
       if options.onPositionChanged then
         options.onPositionChanged({ degrees = degrees })
       end
-      trace("minimap icon drag stop", degrees)
     end)
 
     -- Click: toggle window
@@ -284,7 +282,6 @@ function MinimapIcon.Create(factory, options)
 
   refreshTheme()
 
-  trace("minimap icon created", degrees)
 
   return {
     frame = frame,

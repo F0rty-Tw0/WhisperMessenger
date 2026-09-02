@@ -23,9 +23,6 @@ return function()
   local savedCharacterDb = _G.WhisperMessengerCharacterDB
 
   local createdFrames = {}
-  local diagnosticsCreateCalls = 0
-  local debugCalls = {}
-  local memoryReportCalls = 0
   local factory = FakeUI.NewFactory()
   local conversationKey = "wow::WOW::jaina-proudmoore"
 
@@ -98,19 +95,6 @@ return function()
 
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
-  ns.BootstrapDiagnostics = {
-    Create = function()
-      diagnosticsCreateCalls = diagnosticsCreateCalls + 1
-      return {
-        debugContact = function(key)
-          debugCalls[#debugCalls + 1] = key
-        end,
-        memoryReport = function()
-          memoryReportCalls = memoryReportCalls + 1
-        end,
-      }
-    end,
-  }
 
   local eventFrame = nil
   for _, frame in ipairs(createdFrames) do
@@ -125,18 +109,13 @@ return function()
 
   local runtime = ns.Bootstrap.runtime
   assert(runtime ~= nil, "expected runtime after addon load")
-  assert(diagnosticsCreateCalls == 1, "expected Bootstrap to construct diagnostics exactly once")
 
   runtime.toggle()
   assert(runtime.window ~= nil, "expected runtime.toggle to create the messenger window")
   assert(runtime.window.contacts.rows[1] ~= nil, "expected a contact row for the preloaded conversation")
 
   runtime.window.contacts.rows[1].scripts.OnClick()
-  assert(#debugCalls == 1, "expected selecting a conversation to call diagnostics.debugContact")
-  assert(debugCalls[1] == conversationKey, "expected diagnostics.debugContact to receive the selected conversation key")
-
-  _G.SlashCmdList.WHISPERMESSENGER("mem")
-  assert(memoryReportCalls == 1, "expected slash mem to route to diagnostics.memoryReport")
+  assert(runtime.activeConversationKey == conversationKey, "expected contact click to select the preloaded conversation")
 
   _G.require = savedRequire
   rawset(_G, "CreateFrame", savedCreateFrame)

@@ -151,9 +151,6 @@ function Poller.Install(runtime, hooks, deps)
     pcall(_G.hooksecurefunc, "ChatFrame_SendBNetTell", handleTellLauncher)
   end
 
-  if deps.trace then
-    deps.trace("AutoOpen: edit box hooks installed")
-  end
 end
 
 ns.BootstrapAutoOpenPoller = Poller

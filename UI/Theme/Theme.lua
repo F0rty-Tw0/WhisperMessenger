@@ -92,7 +92,7 @@ function Theme.SetPreset(presetKey)
   return true
 end
 
-function Theme.ResolvePreset(requestedKey, trace)
+function Theme.ResolvePreset(requestedKey)
   local fallbackKey = Theme.DEFAULT_PRESET
   local targetKey = requestedKey or fallbackKey
 
@@ -101,16 +101,10 @@ function Theme.ResolvePreset(requestedKey, trace)
   end
 
   if targetKey ~= fallbackKey and Theme.SetPreset(fallbackKey) then
-    if trace then
-      trace("theme preset fallback", tostring(targetKey), "->", tostring(fallbackKey))
-    end
     return fallbackKey, true
   end
 
   local activeKey = Theme.GetPreset() or fallbackKey
-  if trace then
-    trace("theme preset apply failed", tostring(targetKey), "active=" .. tostring(activeKey))
-  end
   return activeKey, false
 end
 

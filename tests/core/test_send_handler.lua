@@ -1,16 +1,11 @@
 local SendHandler = require("WhisperMessenger.Core.Bootstrap.SendHandler")
 local Availability = require("WhisperMessenger.Transport.Availability")
 local Store = require("WhisperMessenger.Model.ConversationStore")
-local Trace = require("WhisperMessenger.Core.Trace")
 
 return function()
   local sentMessages = {}
   local refreshCalls = 0
-  local savedInCombatLockdown = _G.InCombatLockdown
   local savedBNSendWhisper = _G.BNSendWhisper
-  rawset(_G, "InCombatLockdown", function()
-    return false
-  end)
 
   local runtime = {
     sendStatusByConversation = {},
@@ -456,12 +451,7 @@ return function()
   runtime.isCompetitiveContent = nil
 
   -- Battle.net channel still routes through SendHandler when nothing blocks.
-  local traceLines = {}
-  local savedPrint = _G.print
 
-  rawset(_G, "InCombatLockdown", function()
-    return false
-  end)
   runtime.sendStatusByConversation = {}
   runtime.pendingOutgoing = {}
   refreshCalls = 0
@@ -470,10 +460,6 @@ return function()
     table.insert(sentMessages, { bnetAccountID = bnetAccountID, text = text, channel = "BN" })
     return true
   end)
-  rawset(_G, "print", function(_, line)
-    table.insert(traceLines, line)
-  end)
-  Trace.enable()
 
   local bnPayload2 = {
     conversationKey = "me::BN::thrall#1234",
@@ -487,34 +473,5 @@ return function()
   assert(bnResult2 == true, "expected BN send to go through")
   assert(#sentMessages == 1, "expected BN send to reach the gateway")
 
-  rawset(_G, "InCombatLockdown", function()
-    return true
-  end)
-  local combatTraceResult = SendHandler.HandleSend(runtime, payload, refreshWindow)
-  assert(combatTraceResult == true, "expected ordinary-combat send to return true with tracing enabled")
-  Trace.disable()
-  rawset(_G, "print", savedPrint)
-  assert(traceLines[1] == "SendHandler: entry channel=BN inCombat=false")
-  assert(traceLines[2] == "SendHandler: bnet-resolve outcome=matched")
-  assert(traceLines[3] == "SendHandler: dispatch transport=BN")
-  assert(traceLines[4] == "SendHandler: bnet-pcall ok=true")
-  assert(traceLines[5] == "SendHandler: return result=true")
-  assert(traceLines[6] == "SendHandler: entry channel=WOW inCombat=true")
-  assert(traceLines[7] == "SendHandler: dispatch transport=WOW")
-  assert(traceLines[8] == "SendHandler: return result=true")
-  local traceOutput = table.concat(traceLines, "\n")
-  for _, sensitiveValue in ipairs({
-    "me::BN::thrall#1234",
-    "Thrall#1234",
-    "Thrall-Nagrand",
-    "oldID",
-    "resolvedID",
-    "99",
-    "bn hello",
-  }) do
-    assert(not string.find(traceOutput, sensitiveValue, 1, true), "trace must not identify recipient: " .. sensitiveValue)
-  end
-
-  rawset(_G, "InCombatLockdown", savedInCombatLockdown)
   rawset(_G, "BNSendWhisper", savedBNSendWhisper)
 end

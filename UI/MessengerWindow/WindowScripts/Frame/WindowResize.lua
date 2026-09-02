@@ -179,7 +179,6 @@ function WindowResize.New(options)
     options.applyCommittedSize(nextWidth, nextHeight)
 
     local nextState = options.buildState(frame)
-    options.trace("window resize stop", nextState.width, nextState.height)
     if options.onPositionChanged then
       options.onPositionChanged(nextState)
     end
@@ -203,7 +202,6 @@ function WindowResize.New(options)
 
     updateFromCursor()
     updatePreview(pendingWidth, pendingHeight)
-    options.trace("window resize start")
   end
 
   local function reset()

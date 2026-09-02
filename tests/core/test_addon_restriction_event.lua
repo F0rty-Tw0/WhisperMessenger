@@ -3,29 +3,7 @@ local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedAct
 
 return function()
   local function makeDeps()
-    local calls = {}
-    return {
-      trace = function(...)
-        table.insert(calls, { ... })
-      end,
-      getContentDetector = function()
-        return {
-          IsCompetitiveContent = function()
-            return false
-          end,
-          IsMythicRestricted = function()
-            return false
-          end,
-        }
-      end,
-      getPresenceCache = function()
-        return nil
-      end,
-      loadModule = function()
-        return nil
-      end,
-      _calls = calls,
-    }
+    return {}
   end
 
   -- test_addon_restriction_challenge_mode_active_triggers_suspend

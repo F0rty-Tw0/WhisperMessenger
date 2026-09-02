@@ -148,9 +148,7 @@ return function()
     }
     local fallback = stageFallback(runtime, key, 3)
     assert(#runtime.store.conversations[key].messages == 1, "staged fallback should not persist before logout")
-    LifecycleHandlers.Handle({ runtime = runtime }, "PLAYER_LOGOUT", {
-      trace = function() end,
-    })
+    LifecycleHandlers.Handle({ runtime = runtime }, "PLAYER_LOGOUT")
     local conversation = runtime.accountState.conversations[key]
     assert(conversation and #conversation.messages == 2, "logout should flush staged fallback into saved conversation")
     assert(conversation.messages[2].text == fallback, "logout flush should preserve readable delivered fallback")

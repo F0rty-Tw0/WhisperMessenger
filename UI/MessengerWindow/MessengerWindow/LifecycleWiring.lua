@@ -77,7 +77,6 @@ function LifecycleWiring.Setup(options)
       conversation = options.conversation,
       relayout = relayoutWindow,
       buildState = options.windowGeometry.buildState,
-      trace = options.trace,
       onPositionChanged = options.onPositionChanged,
       Theme = options.theme,
       composerInput = options.composerInput,

@@ -7,7 +7,6 @@ local AutoOpenHooks = {}
 
 function AutoOpenHooks.Create(deps)
   local hooks = {}
-  local log = deps.trace
 
   local function shouldRouteToMessenger()
     -- Explicit whisper intent can route through the messenger, but combat still
@@ -23,9 +22,6 @@ function AutoOpenHooks.Create(deps)
       if isVisible then
         return true
       end
-      if log then
-        log("AutoOpen: shouldRouteToMessenger=false (in combat, window hidden)")
-      end
       return false
     end
     return true
@@ -39,9 +35,6 @@ function AutoOpenHooks.Create(deps)
     local settings = deps.getSettings and deps.getSettings() or {}
     local isVisible = deps.isWindowVisible and deps.isWindowVisible() == true
     if settings.autoOpenOutgoing ~= true and not isVisible then
-      if log then
-        log("AutoOpen: shouldRouteOutgoingToMessenger=false (setting disabled, window hidden)")
-      end
       return false
     end
 
@@ -86,9 +79,6 @@ function AutoOpenHooks.Create(deps)
     end
     -- Use the last incoming whisper key tracked by runtime
     local conversationKey = deps.getLastReplyKey and deps.getLastReplyKey()
-    if log then
-      log("AutoOpen: onReplyTell key=" .. tostring(conversationKey))
-    end
     if not conversationKey then
       return false
     end
@@ -106,9 +96,6 @@ function AutoOpenHooks.Create(deps)
     local conversationKey = deps.findConversationKeyByName(playerName)
     if not conversationKey and deps.buildConversationKeyFromName then
       conversationKey = deps.buildConversationKeyFromName(playerName)
-    end
-    if log then
-      log("AutoOpen: onSendTell name=" .. tostring(playerName) .. " key=" .. tostring(conversationKey))
     end
     if not conversationKey then
       return false

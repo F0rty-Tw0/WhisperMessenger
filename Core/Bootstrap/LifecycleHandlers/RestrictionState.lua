@@ -13,7 +13,7 @@ local RestrictedActions = ns.BootstrapRestrictedActions
 
 local RestrictionState = {}
 
-function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState)
   if not RestrictedActions then
     return true
   end
@@ -31,7 +31,6 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
       if Bootstrap.runtime and Bootstrap.runtime.suspend then
         Bootstrap.runtime.suspend()
       end
-      deps.trace("addon restriction: ChallengeMode active (suspend)")
     elseif not isActive and Bootstrap._inMythicContent then
       Bootstrap._inMythicContent = false
       Bootstrap._inEncounter = false
@@ -39,7 +38,6 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
       if Bootstrap.runtime and Bootstrap.runtime.resume then
         Bootstrap.runtime.resume()
       end
-      deps.trace("addon restriction: ChallengeMode inactive (resume)")
     end
     Common.notifyCompetitiveState(Bootstrap)
     return true
@@ -50,7 +48,6 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
-    deps.trace("addon restriction: Encounter " .. (isActive and "active" or "inactive"))
     Common.notifyCompetitiveState(Bootstrap)
     Common.refreshRuntimeWindow(Bootstrap)
     return true
@@ -61,7 +58,6 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
     if Bootstrap.syncChatFilters then
       Bootstrap.syncChatFilters()
     end
-    deps.trace("addon restriction: PvPMatch " .. (isActive and "active" or "inactive"))
     Common.notifyCompetitiveState(Bootstrap)
     return true
   end

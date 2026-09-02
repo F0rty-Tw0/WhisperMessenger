@@ -12,7 +12,6 @@ local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMess
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
-local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
@@ -72,7 +71,7 @@ local function resolveBattleNetRecipient(runtime, payload)
   local storedBattleTag = conversation and conversation.battleTag
   local payloadBattleTag = payload.battleTag
   if storedBattleTag ~= nil and payloadBattleTag ~= nil and storedBattleTag ~= payloadBattleTag then
-    return nil, "conflict"
+    return nil
   end
 
   local expectedBattleTag = storedBattleTag or payloadBattleTag
@@ -96,7 +95,7 @@ local function resolveBattleNetRecipient(runtime, payload)
   end
 
   if accountInfo == nil or accountInfo.battleTag ~= expectedBattleTag or type(resolvedBnetAccountID) ~= "number" then
-    return nil, "unresolved"
+    return nil
   end
 
   local gameAccountInfo = accountInfo.gameAccountInfo
@@ -111,7 +110,7 @@ local function resolveBattleNetRecipient(runtime, payload)
     conversation.bnetAccountID = resolvedBnetAccountID
   end
 
-  return resolvedBnetAccountID, resolvedBnetAccountID == oldBnetAccountID and "matched" or "recovered"
+  return resolvedBnetAccountID
 end
 
 local function normalizeOutgoingText(payload, text)
@@ -151,19 +150,10 @@ local function dispatchReactionMetadata(runtime, payload, addonPayload)
 end
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
-  local inCombat = type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() or false
-  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
-  if traceEnabled then
-    Trace("SendHandler: entry channel=" .. tostring(payload.channel) .. " inCombat=" .. tostring(inCombat))
-  end
 
   if runtime.isMythicLockdown and runtime.isMythicLockdown() then
     appendBlockedOutgoing(runtime, payload, "Mythic Lockdown")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")
-    if traceEnabled then
-      Trace("SendHandler: reject reason=Mythic Lockdown")
-      Trace("SendHandler: return result=false")
-    end
     refreshWindow()
     return false
   end
@@ -171,20 +161,13 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
     appendBlockedOutgoing(runtime, payload, "Competitive Content")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
-    if traceEnabled then
-      Trace("SendHandler: reject reason=Competitive Content")
-      Trace("SendHandler: return result=false")
-    end
     refreshWindow()
     return false
   end
 
   local sendAvailable
   if payload.channel == "BN" then
-    local resolvedBnetAccountID, outcome = resolveBattleNetRecipient(runtime, payload)
-    if traceEnabled then
-      Trace("SendHandler: bnet-resolve outcome=" .. outcome)
-    end
+    local resolvedBnetAccountID = resolveBattleNetRecipient(runtime, payload)
     sendAvailable = resolvedBnetAccountID ~= nil and Gateway.CanSendBattleNetWhisper(runtime.bnetApi)
   else
     sendAvailable = Gateway.CanSendCharacterWhisper(runtime.chatApi)
@@ -192,10 +175,6 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
 
   if not sendAvailable then
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send unavailable")
-    if traceEnabled then
-      Trace("SendHandler: reject reason=Send unavailable")
-      Trace("SendHandler: return result=false")
-    end
     refreshWindow()
     return false
   end
@@ -237,13 +216,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   })
   local callOk
   if payload.channel == "BN" then
-    if traceEnabled then
-      Trace("SendHandler: dispatch transport=BN")
-    end
     callOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
-    if traceEnabled then
-      Trace("SendHandler: bnet-pcall ok=" .. tostring(callOk))
-    end
 
     -- Classic Battle.net character whispers also strip the `(id)` from
     -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
@@ -258,9 +231,6 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
       end
     end
   else
-    if traceEnabled then
-      Trace("SendHandler: dispatch transport=WOW")
-    end
     -- SendChatMessage is hardware-event-protected; pcall breaks the
     -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
     -- and let WoW's error handler surface failures instead.
@@ -292,19 +262,12 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     end
 
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send failed")
-    if traceEnabled then
-      Trace("SendHandler: reject reason=Send failed")
-      Trace("SendHandler: return result=false")
-    end
     refreshWindow()
     return false
   end
 
   dispatchReactionMetadata(runtime, payload, reactionAddonPayload)
 
-  if traceEnabled then
-    Trace("SendHandler: return result=true")
-  end
   refreshWindow()
   return true
 end

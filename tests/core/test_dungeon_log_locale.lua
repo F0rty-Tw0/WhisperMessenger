@@ -136,9 +136,7 @@ return function()
       },
     }
 
-    GroupMembership.handleGroupRosterUpdate(Bootstrap, {
-      trace = function() end,
-    })
+    GroupMembership.handleGroupRosterUpdate(Bootstrap)
 
     local found = false
     for _, msg in ipairs(conv.messages or {}) do

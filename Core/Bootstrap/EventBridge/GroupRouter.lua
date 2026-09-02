@@ -6,7 +6,6 @@ end
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
-local Trace = ns.trace or require("WhisperMessenger.Core.Trace")
 
 local GroupRouter = {}
 
@@ -15,10 +14,6 @@ for _, name in ipairs(Constants.GROUP_EVENT_NAMES) do
   GROUP_EVENTS[name] = true
 end
 
--- TRACE_EVENTS is defined in the facade (EventBridge.lua) where RouteLiveEvent
--- also uses it. GroupRouter receives TRACE_EVENTS as a parameter to RouteGroupEvent
--- so neither module duplicates the constant nor couples to the other.
--- The caller (EventBridge facade) passes its local TRACE_EVENTS table.
 
 -- True when the conversation's member list contains bnSenderID, false when
 -- it provably does not, nil when the membership APIs are unavailable or
@@ -108,7 +103,7 @@ local function resolveCommunityChatSource()
   return info.clubId, info.streamId, info.clubType
 end
 
-function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
+function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   if runtime == nil or not GROUP_EVENTS[eventName] then
     return false
   end
@@ -174,26 +169,13 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, traceEvents, ...)
     playerInfo = playerInfo,
   }
 
-  local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
-  if traceEnabled and traceEvents and traceEvents[eventName] then
-    -- pcall: 12.0 secret-string payload values throw on concatenation. The
-    -- ingest guard below drops such payloads cleanly; the trace line must
-    -- not error first. (Not unit-testable: real secret strings cannot be
-    -- simulated from plain Lua — see SecretString.lua.)
-    pcall(function()
-      Trace("EventBridge: " .. eventName .. " from=" .. tostring(playerName) .. " guid=" .. tostring(guid) .. " lineID=" .. tostring(lineID))
-    end)
-  end
 
   runtime.onGroupReactionFallbackDegraded = function(conversation)
-    local ok, err = pcall(function()
+    pcall(function()
       if conversation and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
         runtime.refreshWindow()
       end
     end)
-    if not ok and Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled() then
-      Trace("EventBridge: group reaction fallback refresh failed: " .. tostring(err))
-    end
   end
 
   local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)

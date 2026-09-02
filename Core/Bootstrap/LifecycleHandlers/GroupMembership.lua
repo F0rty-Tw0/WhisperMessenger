@@ -78,7 +78,7 @@ local function validPartyGUID(partyGUID)
   return type(partyGUID) == "string" and partyGUID ~= ""
 end
 
-local function closeGroupSession(Bootstrap, category, partyGUID, deps)
+local function closeGroupSession(Bootstrap, category, partyGUID)
   local runtime = Bootstrap and Bootstrap.runtime
   local state = runtime and (runtime.accountState or runtime.store)
   local localProfileId = runtime and runtime.localProfileId
@@ -99,9 +99,6 @@ local function closeGroupSession(Bootstrap, category, partyGUID, deps)
   end
 
   if changed then
-    if deps and deps.trace then
-      deps.trace("GroupMembership: closed group session")
-    end
     if Common and Common.refreshRuntimeWindow then
       Common.refreshRuntimeWindow(Bootstrap)
     end
@@ -110,7 +107,7 @@ local function closeGroupSession(Bootstrap, category, partyGUID, deps)
   return true
 end
 
-function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID, deps)
+function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID)
   local runtime = Bootstrap and Bootstrap.runtime
   if runtime == nil or type(category) ~= "number" or not validPartyGUID(partyGUID) then
     return true
@@ -119,13 +116,13 @@ function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID, deps)
   runtime.groupPartyGUIDsByCategory = runtime.groupPartyGUIDsByCategory or {}
   local previousPartyGUID = runtime.groupPartyGUIDsByCategory[category]
   if validPartyGUID(previousPartyGUID) and previousPartyGUID ~= partyGUID then
-    closeGroupSession(Bootstrap, category, previousPartyGUID, deps)
+    closeGroupSession(Bootstrap, category, previousPartyGUID)
   end
   runtime.groupPartyGUIDsByCategory[category] = partyGUID
   return true
 end
 
-function GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID, deps)
+function GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID)
   local runtime = Bootstrap and Bootstrap.runtime
   if runtime == nil or type(category) ~= "number" or not validPartyGUID(partyGUID) then
     return true
@@ -136,12 +133,12 @@ function GroupMembership.handleGroupLeft(Bootstrap, category, partyGUID, deps)
     partyGUIDs[category] = nil
   end
 
-  return closeGroupSession(Bootstrap, category, partyGUID, deps)
+  return closeGroupSession(Bootstrap, category, partyGUID)
 end
 
 -- GROUP_ROSTER_UPDATE is a fallback for legacy rows and clients that cannot
 -- provide party GUID lifecycle events. It must not reopen a closed GUID row.
-function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
+function GroupMembership.handleGroupRosterUpdate(Bootstrap)
   if _G.IsInGroup == nil then
     return true
   end
@@ -192,9 +189,6 @@ function GroupMembership.handleGroupRosterUpdate(Bootstrap, deps)
   end
 
   if changed then
-    if deps and deps.trace then
-      deps.trace("GroupMembership: marked legacy group membership transition(s)")
-    end
     if Common and Common.refreshRuntimeWindow then
       Common.refreshRuntimeWindow(Bootstrap)
     end

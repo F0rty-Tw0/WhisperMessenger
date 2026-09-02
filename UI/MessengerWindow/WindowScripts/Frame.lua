@@ -43,7 +43,7 @@ end
 --
 -- options:
 --   refreshWindowAlpha, layout, composer, contactsController, conversation,
---   buildState, trace, onPositionChanged, Theme
+--   buildState, onPositionChanged, Theme
 --   relayout (optional), refreshContactsLayout (optional),
 --   getCursorX/getCursorY (optional), getFrameLeft/getFrameTop (optional)
 function Frame.WireFrame(refs, options)
@@ -263,7 +263,6 @@ function Frame.WireFrame(refs, options)
     clampWindowSize = clampWindowSize,
     applyCommittedSize = applyCommittedWindowSize,
     buildState = options.buildState,
-    trace = options.trace,
     onPositionChanged = options.onPositionChanged,
   })
 
@@ -278,7 +277,6 @@ function Frame.WireFrame(refs, options)
     frameHeight = frameHeight,
     relayoutWindow = relayoutWindow,
     buildState = options.buildState,
-    trace = options.trace,
     onPositionChanged = options.onPositionChanged,
   })
 
@@ -298,7 +296,6 @@ function Frame.WireFrame(refs, options)
     getAutoFocusChatInput = options.getAutoFocusChatInput,
     buildState = options.buildState,
     onPositionChanged = options.onPositionChanged,
-    trace = options.trace,
   })
   return {
     withSizeChangedRelayoutSuppressed = withSizeChangedRelayoutSuppressed,

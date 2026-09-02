@@ -27,26 +27,6 @@ elseif type(require) == "function" then
   end
 end
 
-local function trace(...)
-  if type(_G.print) == "function" then
-    _G.print("[WM]", ...)
-  end
-end
-
-if ns.trace then
-  local loadedTrace = ns.trace
-  trace = function(...)
-    loadedTrace(...)
-  end
-elseif type(require) == "function" then
-  local ok, loaded = pcall(require, "WhisperMessenger.Core.Trace")
-  if ok and loaded then
-    local loadedTrace = loaded
-    trace = function(...)
-      loadedTrace(...)
-    end
-  end
-end
 
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
@@ -54,7 +34,6 @@ ns.Bootstrap = Bootstrap
 local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
-  trace("initialize start")
 
   local RuntimeFactory = loadModule("WhisperMessenger.Core.Bootstrap.RuntimeFactory", "BootstrapRuntimeFactory")
   loadModule("WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge") -- registers on ns
@@ -68,7 +47,6 @@ function Bootstrap.Initialize(factory, options)
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
   local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
-  local Diagnostics = loadModule("WhisperMessenger.Core.Bootstrap.Diagnostics", "BootstrapDiagnostics")
   local ReplyToLast = loadModule("WhisperMessenger.Core.SlashCommands.ReplyToLast", "SlashCommandsReplyToLast")
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
@@ -117,7 +95,7 @@ function Bootstrap.Initialize(factory, options)
   end
   local themePresetKey = accountState.settings.themePreset or (Theme.DEFAULT_PRESET or "wow_default")
   if Theme.ResolvePreset then
-    local resolvedKey = Theme.ResolvePreset(themePresetKey, trace)
+    local resolvedKey = Theme.ResolvePreset(themePresetKey)
     themePresetKey = resolvedKey or themePresetKey
   elseif Theme.SetPreset then
     Theme.SetPreset(themePresetKey)
@@ -161,7 +139,6 @@ function Bootstrap.Initialize(factory, options)
     uiFactory = uiFactory,
     uiParent = _G.UIParent,
     bootstrap = Bootstrap,
-    trace = trace,
   })
 
   -- 12.0+ authoritative restriction cache, populated from
@@ -191,18 +168,8 @@ function Bootstrap.Initialize(factory, options)
     end
   end
 
-  local diagnostics = Diagnostics.Create({
-    addonName = addonName,
-    runtime = runtime,
-    trace = trace,
-    presenceCache = PresenceCache,
-    getWindow = windowRuntime.getWindow,
-    isWindowVisible = windowRuntime.isWindowVisible,
-  })
-  windowRuntime.setDiagnostics(diagnostics)
 
   AutoOpenCoordinator.Attach({
-    trace = trace,
     runtime = runtime,
     accountState = accountState,
     windowRuntime = windowRuntime,
@@ -241,11 +208,9 @@ function Bootstrap.Initialize(factory, options)
 
   SlashCommands.Register({
     toggle = runtime.toggle,
-    memoryReport = diagnostics.memoryReport,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
   })
 
-  trace("initialize complete")
 
   MythicSuspendController.Attach(runtime, {
     Bootstrap = Bootstrap,
@@ -260,11 +225,9 @@ end
 
 local function initializeRuntime()
   if Bootstrap.runtime ~= nil then
-    trace("runtime already initialized")
     return Bootstrap.runtime
   end
 
-  trace("runtime initialize")
   Bootstrap.runtime = Bootstrap.Initialize(_G, {
     accountState = _G.WhisperMessengerDB,
     characterState = _G.WhisperMessengerCharacterDB,
@@ -282,7 +245,6 @@ if type(_G.CreateFrame) == "function" then
     Bootstrap = Bootstrap,
     initializeRuntime = initializeRuntime,
     loadModule = loadModule,
-    trace = trace,
   })
 end
 

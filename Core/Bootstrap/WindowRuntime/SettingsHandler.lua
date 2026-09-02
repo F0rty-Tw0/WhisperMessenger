@@ -29,9 +29,6 @@ function SettingsHandler.Create(options)
   local timeFormat = options.timeFormat or {}
   local localization = options.localization or Localization or {}
   local windowScale = options.windowScale or WindowScale or {}
-  local trace = options.trace or function(...)
-    local _ = ...
-  end
   local getIcon = options.getIcon or function()
     return nil
   end
@@ -58,7 +55,7 @@ function SettingsHandler.Create(options)
       local fallbackKey = theme.DEFAULT_PRESET or "wow_default"
       local presetKey = value or fallbackKey
       if theme.ResolvePreset then
-        local resolvedKey, applied = theme.ResolvePreset(presetKey, trace)
+        local resolvedKey, applied = theme.ResolvePreset(presetKey)
         persistedValue = resolvedKey or presetKey
         themeApplied = applied == true
       else
@@ -97,7 +94,6 @@ function SettingsHandler.Create(options)
       end
     end
 
-    trace("setting changed", key, tostring(persistedValue))
 
     if key == "windowScale" then
       local window = runtime.window

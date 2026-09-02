@@ -15,8 +15,7 @@ local function makeHarness()
       end,
     },
   }
-  local deps = { trace = function() end }
-  return Bootstrap, deps, calls
+  return Bootstrap, calls
 end
 
 return function()
@@ -37,7 +36,6 @@ return function()
       },
     }
     local deps = {
-      trace = function() end,
       getNumChatWindows = function()
         return 0
       end,
@@ -91,37 +89,37 @@ return function()
 
   -- test_challenge_mode_start_suspends_once
   do
-    local Bootstrap, deps, calls = makeHarness()
+    local Bootstrap, calls = makeHarness()
 
-    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START", deps)
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     assert(calls.suspend == 1, "first CHALLENGE_MODE_START suspends")
     assert(Bootstrap._inMythicContent == true, "mythic flag set")
 
     -- A duplicate suspend would clobber _wasVisibleBeforeMythic (the window
     -- is already hidden by the first suspend), so it must be skipped.
-    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START", deps)
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
     assert(calls.suspend == 1, "already-suspended CHALLENGE_MODE_START must not suspend again; got: " .. tostring(calls.suspend))
   end
 
   -- test_challenge_mode_completed_resumes_only_when_suspended
   do
-    local Bootstrap, deps, calls = makeHarness()
+    local Bootstrap, calls = makeHarness()
 
-    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED", deps)
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED")
     assert(calls.resume == 0, "COMPLETED without a prior suspend must not resume; got: " .. tostring(calls.resume))
 
-    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START", deps)
-    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED", deps)
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_START")
+    Competitive.handleChallengeModeEvent(Bootstrap, "CHALLENGE_MODE_COMPLETED")
     assert(calls.resume == 1, "COMPLETED after a suspend resumes once")
     assert(Bootstrap._inMythicContent == false, "mythic flag cleared")
   end
   -- test_challenge_mode_events_are_noops_without_mythic_plus
   do
     FlavorCompat.hasMythicPlus = false
-    local Bootstrap, deps, calls = makeHarness()
+    local Bootstrap, calls = makeHarness()
 
     for _, event in ipairs({ "CHALLENGE_MODE_START", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_RESET" }) do
-      local handled = Competitive.handleChallengeModeEvent(Bootstrap, event, deps)
+      local handled = Competitive.handleChallengeModeEvent(Bootstrap, event)
       assert(handled == true, event .. " should remain claimed without Mythic+")
       assert(Bootstrap._inMythicContent == false, event .. " should not change mythic state without Mythic+")
     end

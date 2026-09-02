@@ -13,10 +13,9 @@ return function()
     end,
   }
 
-  local function makeDeps(trace, extra)
+  local function makeDeps(extra)
     extra = extra or {}
     return {
-      trace = trace or function() end,
       getContentDetector = function()
         return ContentDetector
       end,
@@ -215,7 +214,7 @@ return function()
     LifecycleHandlers.Handle(
       Bootstrap,
       "ENCOUNTER_END",
-      makeDeps(nil, {
+      makeDeps({
         getNumChatWindows = function()
           return 1
         end,
@@ -323,7 +322,7 @@ return function()
     LifecycleHandlers.Handle(
       Bootstrap,
       "PLAYER_REGEN_ENABLED",
-      makeDeps(nil, {
+      makeDeps({
         getNumChatWindows = function()
           return 1
         end,
@@ -372,7 +371,7 @@ return function()
     LifecycleHandlers.Handle(
       Bootstrap,
       "PLAYER_REGEN_ENABLED",
-      makeDeps(nil, {
+      makeDeps({
         getNumChatWindows = function()
           return 1
         end,
@@ -413,7 +412,6 @@ return function()
 
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }
     local deps = {
-      trace = function() end,
       getContentDetector = function()
         return ContentDetector
       end,

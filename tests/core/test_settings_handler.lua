@@ -163,7 +163,7 @@ return function()
         end
       end,
     })
-    local calls = { normalize = 0, scale = 0, data = 0, trace = 0 }
+    local calls = { normalize = 0, scale = 0, data = 0 }
     local runtime = {
       store = { config = { windowScale = "store-sentinel" } },
       window = {
@@ -172,7 +172,6 @@ return function()
           events[#events + 1] = "scale"
           assert(value == 1.25, "setScale receives normalized windowScale")
           assert(accountSettings.windowScale == 1.25, "windowScale persists before setScale")
-          assert(calls.trace == 1, "trace runs before setScale")
         end,
       },
       refreshWindow = function()
@@ -189,9 +188,6 @@ return function()
           return 1.25
         end,
       },
-      trace = function()
-        calls.trace = calls.trace + 1
-      end,
     })
 
     onChange("windowScale", 1.274)

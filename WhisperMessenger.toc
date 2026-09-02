@@ -22,7 +22,6 @@
 
 Core/FlavorCompat.lua
 Core/Loader.lua
-Core/Trace.lua
 Core/Bindings.lua
 Core/Constants.lua
 Core/ContentDetector.lua
@@ -243,8 +242,6 @@ Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
-Core/Bootstrap/Diagnostics/MemoryReport.lua
-Core/Bootstrap/Diagnostics.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua

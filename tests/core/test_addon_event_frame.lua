@@ -80,7 +80,6 @@ return function()
       calls[#calls + 1] = "LifecycleHandlers:" .. eventName
       assert(receivedBootstrap == Bootstrap, "expected lifecycle bootstrap reference")
       assert(type(deps.loadModule) == "function", "expected lifecycle loadModule dependency")
-      assert(type(deps.trace) == "function", "expected lifecycle trace dependency")
       assert(type(deps.getContentDetector) == "function", "expected lifecycle content detector accessor")
       assert(type(deps.getPresenceCache) == "function", "expected lifecycle presence cache accessor")
       return lifecycleHandled[eventName] == true
@@ -124,7 +123,6 @@ return function()
     createFrame = createFrame,
     initializeRuntime = initializeRuntime,
     loadModule = loadModule,
-    trace = function() end,
   })
 
   assert(frame ~= nil, "expected load frame from install")

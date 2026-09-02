@@ -3,7 +3,6 @@ local Identity = require("WhisperMessenger.Model.Identity")
 
 local function makeDeps(friendMap)
   return {
-    trace = function() end,
     loadModule = function(modulePath)
       if string.find(modulePath, "BNetResolver", 1, true) then
         return {
@@ -394,7 +393,7 @@ return function()
       },
     }
 
-    Presence.handlePlayerLogout(Bootstrap, { trace = function() end })
+    Presence.handlePlayerLogout(Bootstrap)
 
     assert(next(Bootstrap.runtime.store.conversations) == nil, "real logout handler should clear all conversations")
     assert(Bootstrap.runtime.activeConversationKey == nil, "real logout handler should clear runtime selection")
@@ -408,7 +407,6 @@ return function()
   do
     local scans = 0
     local deps = {
-      trace = function() end,
       loadModule = function(modulePath)
         if string.find(modulePath, "BNetResolver", 1, true) then
           return {

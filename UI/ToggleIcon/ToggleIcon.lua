@@ -7,7 +7,6 @@ local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
-local trace = ns.trace or require("WhisperMessenger.Core.Trace")
 local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
@@ -270,7 +269,6 @@ function ToggleIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnClick", function()
-      trace("icon click")
       if options.onToggle then
         options.onToggle()
       end
@@ -278,12 +276,10 @@ function ToggleIcon.Create(factory, options)
 
     frame:SetScript("OnDragStart", function(self)
       if isLocked() then
-        trace("icon drag blocked: locked")
         return
       end
       if self.IsMovable == nil or self:IsMovable() then
         self:StartMoving()
-        trace("icon drag start")
       end
     end)
 
@@ -291,7 +287,6 @@ function ToggleIcon.Create(factory, options)
       self:StopMovingOrSizing()
       local nextState = captureFramePosition(self)
 
-      trace("icon drag stop", nextState.anchorPoint, nextState.x, nextState.y)
       if options.onPositionChanged then
         options.onPositionChanged(nextState)
       end
@@ -327,7 +322,6 @@ function ToggleIcon.Create(factory, options)
   refreshLockGlyph()
   refreshTransparency()
 
-  trace("icon created", anchorPoint, x, y)
 
   return {
     frame = frame,

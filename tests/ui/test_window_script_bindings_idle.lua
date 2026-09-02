@@ -80,7 +80,6 @@ return function()
       buildState = function()
         return {}
       end,
-      trace = noop,
     })
 
     assert(frame:GetScript("OnUpdate") == nil, "expected idle window to have no OnUpdate when C_Timer.NewTicker is available")

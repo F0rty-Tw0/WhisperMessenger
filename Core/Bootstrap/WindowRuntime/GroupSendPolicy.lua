@@ -216,16 +216,13 @@ function GroupSendPolicy.Create(options)
     return channel ~= nil and not isWhisperChannel(channel)
   end
 
-  local function sendNormal(payload, text, trace)
+  local function sendNormal(payload, text)
     if not chatGateway.CanSend(runtime.chatApi, payload) then
       return false
     end
 
-    local ok, result = pcall(chatGateway.Send, runtime.chatApi, payload, text)
+    local ok = pcall(chatGateway.Send, runtime.chatApi, payload, text)
     if not ok then
-      if type(trace) == "function" then
-        trace("group send error", tostring(result))
-      end
       return false
     end
     return true
@@ -238,12 +235,12 @@ function GroupSendPolicy.Create(options)
     return addonComm.SendGroup(runtime.chatApi, GROUP_REACTION_ADDON_PREFIX, encoded, payload.channel)
   end
 
-  local function sendPayload(payload, trace)
+  local function sendPayload(payload)
     if type(payload) ~= "table" then
       return false
     end
     if not isSupportedGroupChannel(payload.channel) then
-      return sendNormal(payload, payload.text, trace)
+      return sendNormal(payload, payload.text)
     end
     if isCompetitive(runtime) or not hasConversationKey(payload) then
       return false
@@ -258,7 +255,7 @@ function GroupSendPolicy.Create(options)
       createdAt = now,
       wireId = wireId,
     }, now)
-    if not sendNormal(payload, payload.text, trace) then
+    if not sendNormal(payload, payload.text) then
       discardPending(runtime, payload.conversationKey, pending)
       return false
     end
