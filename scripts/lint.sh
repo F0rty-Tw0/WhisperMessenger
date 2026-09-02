@@ -51,7 +51,11 @@ else
 fi
 
 LUACHECK_CMD=""
-if [[ -f ".tools/hererocks54/bin/luacheck.bat" ]]; then
+# Prefer the bare exe: the hererocks-generated luacheck.bat is a bash script
+# with a .bat extension and does not run under cmd.exe on Windows.
+if [[ -x ".tools/luacheck.exe" ]]; then
+  LUACHECK_CMD=".tools/luacheck.exe"
+elif [[ -f ".tools/hererocks54/bin/luacheck.bat" ]]; then
   LUACHECK_CMD=".tools/hererocks54/bin/luacheck.bat"
 elif LUACHECK_CMD="$(find_command luacheck)"; then
   :

@@ -279,3 +279,4 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 ## [0.1.0] - 2025-01-01
 
 - First public version of WhisperMessenger: a dedicated whisper window with chat bubbles, contacts, unread badges, Battle.net support, saved history, settings, and drag-to-reorder contacts.
+
