@@ -15,7 +15,47 @@ function ScriptBindings.Bind(options)
   local contactsResize = options.contactsResize
   local relayoutWindow = options.relayoutWindow
 
-  local alphaElapsed = 0
+  local alphaTicker = nil
+
+  local function updateResizeFromCursor()
+    contactsResize.updateFromCursor()
+    windowResize.updateFromCursor()
+  end
+
+  local function updateResizeOnly()
+    updateResizeFromCursor()
+  end
+
+  local function updateFrameOnUpdate()
+    if frame == nil or type(frame.SetScript) ~= "function" then
+      return
+    end
+    if windowResize.isResizing() or contactsResize.isResizing() then
+      frame:SetScript("OnUpdate", updateResizeOnly)
+    else
+      frame:SetScript("OnUpdate", nil)
+    end
+  end
+
+  local function startAlphaTicker()
+    local timer = _G.C_Timer
+    if alphaTicker ~= nil or type(timer) ~= "table" or type(timer.NewTicker) ~= "function" then
+      return
+    end
+    alphaTicker = timer.NewTicker(options.frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL, function()
+      if not windowResize.isResizing() then
+        options.refreshWindowAlpha()
+      end
+    end)
+  end
+
+  local function stopAlphaTicker()
+    if alphaTicker == nil then
+      return
+    end
+    alphaTicker:Cancel()
+    alphaTicker = nil
+  end
 
   local function composerHasFocus()
     local input = options.composerInput
@@ -78,7 +118,7 @@ function ScriptBindings.Bind(options)
 
   if frame and frame.SetScript then
     frame:SetScript("OnShow", function()
-      alphaElapsed = 0
+      startAlphaTicker()
       options.refreshWindowAlpha(true)
       -- Promote on Show so we sit above HIGH-strata frames the user already
       -- has open (Auction House, World Map). Outside-click still demotes.
@@ -90,9 +130,10 @@ function ScriptBindings.Bind(options)
     end)
 
     frame:SetScript("OnHide", function()
-      alphaElapsed = 0
+      stopAlphaTicker()
       contactsResize.reset()
       windowResize.reset()
+      updateFrameOnUpdate()
       options.trace("window hidden")
     end)
 
@@ -116,16 +157,6 @@ function ScriptBindings.Bind(options)
       -- moving the cursor onto the Auction House or another addon) must
       -- not send our window to the back — only an explicit click outside
       -- our frame should, handled via GLOBAL_MOUSE_DOWN below.
-    end)
-
-    frame:SetScript("OnUpdate", function(_, elapsed)
-      alphaElapsed = alphaElapsed + (elapsed or 0)
-      if not windowResize.isResizing() and alphaElapsed >= options.frameTheme.WINDOW_ALPHA_UPDATE_INTERVAL then
-        alphaElapsed = 0
-        options.refreshWindowAlpha()
-      end
-      contactsResize.updateFromCursor()
-      windowResize.updateFromCursor()
     end)
 
     -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
@@ -173,7 +204,9 @@ function ScriptBindings.Bind(options)
       end
       windowResize.stop(button)
       contactsResize.stop(button)
+      updateFrameOnUpdate()
     end)
+    updateFrameOnUpdate()
   end
 
   -- The composer EditBox swallows clicks, so OnMouseDown on the frame
@@ -188,10 +221,12 @@ function ScriptBindings.Bind(options)
   if resizeGrip and resizeGrip.SetScript then
     resizeGrip:SetScript("OnMouseDown", function(_self, button)
       windowResize.start(button)
+      updateFrameOnUpdate()
     end)
 
     resizeGrip:SetScript("OnMouseUp", function(_self, button)
       windowResize.stop(button)
+      updateFrameOnUpdate()
     end)
   end
 
@@ -208,10 +243,12 @@ function ScriptBindings.Bind(options)
 
     contactsResizeHandle:SetScript("OnMouseDown", function(_self, button)
       contactsResize.start(button)
+      updateFrameOnUpdate()
     end)
 
     contactsResizeHandle:SetScript("OnMouseUp", function(_self, button)
       contactsResize.stop(button)
+      updateFrameOnUpdate()
     end)
   end
 end

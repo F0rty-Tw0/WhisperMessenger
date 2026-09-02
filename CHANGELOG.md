@@ -11,6 +11,7 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: Battle.net conversations merged after friend details load now preserve the newest preview and unread reaction indicator, including activity received in the same second.
 - Reduced background CPU use and temporary memory churn by checking Blizzard chat edit boxes only when their focus or text changes, while still opening Battle.net whispers started from an active chat box.
 - Reduced background CPU use while other addons communicate, including when the messenger is hidden.
+- Reduced CPU use while the messenger is open, especially with many contacts or a high frame rate.
 
 ## [1.4.0] - 2026-08-31
 

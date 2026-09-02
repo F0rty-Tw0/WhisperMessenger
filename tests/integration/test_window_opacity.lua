@@ -8,6 +8,8 @@ return function()
   local savedGetUnitSpeed = _G.GetUnitSpeed
   local savedIsMouselooking = _G.IsMouselooking
   local savedIsMouseButtonDown = _G.IsMouseButtonDown
+  local savedCTimer = rawget(_G, "C_Timer")
+  local alphaTicker = nil
   local movementSpeed = 0
   local isMouselooking = false
   local pressedButtons = {}
@@ -36,13 +38,25 @@ return function()
 
     return pressedButtons[button] == true
   end)
+  rawset(_G, "C_Timer", {
+    NewTicker = function(interval, callback)
+      assert(interval == Theme.WINDOW_ALPHA_UPDATE_INTERVAL, "expected alpha ticker interval")
+      alphaTicker = {
+        callback = callback,
+      }
+      function alphaTicker:Cancel()
+        self.cancelled = true
+      end
+      return alphaTicker
+    end,
+  })
 
   local window = MessengerWindow.Create(factory, {
     title = "WhisperMessenger",
     contacts = {},
   })
 
-  assert(window.frame.scripts.OnUpdate ~= nil, "expected window opacity updater")
+  assert(window.frame.scripts.OnUpdate == nil, "expected idle window not to own an updater")
   assert(window.frame.scripts.OnEnter ~= nil, "expected window hover handler")
   assert(window.frame.scripts.OnLeave ~= nil, "expected window leave handler")
   assert(window.composer.input.scripts.OnEditFocusGained ~= nil, "expected focus gain opacity hook")
@@ -50,28 +64,29 @@ return function()
 
   window.frame:Show()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected shown window to start fully opaque")
+  assert(alphaTicker ~= nil and alphaTicker.callback ~= nil, "expected alpha ticker on show")
 
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected idle unfocused window to stay fully opaque")
 
   movementSpeed = 7
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected player movement outside the window to dim it")
 
   movementSpeed = 0
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected opacity to restore after movement stops")
 
   isMouselooking = true
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected camera look activity to dim the window")
 
   isMouselooking = false
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected opacity to restore after camera activity stops")
 
   pressedButtons.LeftButton = true
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA, "expected outside mouse interaction to dim the window")
 
   window.frame.mouseOver = true
@@ -87,16 +102,17 @@ return function()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focused input to keep the window fully opaque")
 
   movementSpeed = 7
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected focus to override outside activity dimming")
 
   movementSpeed = 0
   window.composer.input:ClearFocus()
-  window.frame.scripts.OnUpdate(window.frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)
+  alphaTicker.callback()
   assert(window.frame.alpha == Theme.WINDOW_IDLE_ALPHA, "expected opacity to return to normal after focus and outside activity end")
 
   _G.UIParent = savedUIParent
   rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)
   rawset(_G, "IsMouselooking", savedIsMouselooking)
   rawset(_G, "IsMouseButtonDown", savedIsMouseButtonDown)
+  rawset(_G, "C_Timer", savedCTimer)
 end
