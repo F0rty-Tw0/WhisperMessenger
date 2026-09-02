@@ -192,12 +192,12 @@ return function()
 
   -- Set up globals for direct hook installation.
   local hookedFunctions = {}
-  local bnetLauncherEditBox = nil
-  local bnetLauncherAttributes = nil
+  local bnetLauncherEditBox
+  local bnetLauncherAttributes
   local characterLauncherEditBox = nil
-  local characterLauncherAttributes = nil
+  local characterLauncherAttributes
   local bnetHeaderUpdates = 0
-  local textChangedHook = nil
+  local textChangedHook
   rawset(_G, "hooksecurefunc", function(target, methodOrHandler, postHook)
     if type(target) == "table" then
       local methodName = methodOrHandler
