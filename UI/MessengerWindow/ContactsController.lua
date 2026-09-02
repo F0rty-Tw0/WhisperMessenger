@@ -43,8 +43,32 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     onReorder = options.onReorder,
     rowHeight = rowH,
   })
-  local handleDragStart = dragHandlers.handleDragStart
-  local handleDragStop = dragHandlers.handleDragStop
+  -- Built once and mutated in place. refresh() runs on every background status
+  -- tick, and a fresh table plus five wrapper closures per call was pure churn.
+  local rowOptions = {
+    onSelect = function(item)
+      if options.onSelect then
+        options.onSelect(item)
+      end
+    end,
+    onPin = function(item)
+      if options.onPin then
+        options.onPin(item)
+      end
+    end,
+    onRemove = function(item)
+      if options.onRemove then
+        options.onRemove(item)
+      end
+    end,
+    onMarkUnread = function(item)
+      if options.onMarkUnread then
+        options.onMarkUnread(item)
+      end
+    end,
+    onDragStart = dragHandlers.handleDragStart,
+    onDragStop = dragHandlers.handleDragStop,
+  }
 
   local function refresh(nextContacts, selectedKey, resetPaging)
     if nextContacts ~= nil then
@@ -61,33 +85,12 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       ScrollView.SetVerticalScroll(contactsView, 0)
     end
 
-    controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, {
-      selectedConversationKey = currentSelectedKey,
-      visibleCount = visibleCount,
-      hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview() or options.hideMessagePreview,
-      onSelect = function(item)
-        if options.onSelect then
-          options.onSelect(item)
-        end
-      end,
-      onPin = function(item)
-        if options.onPin then
-          options.onPin(item)
-        end
-      end,
-      onRemove = function(item)
-        if options.onRemove then
-          options.onRemove(item)
-        end
-      end,
-      onMarkUnread = function(item)
-        if options.onMarkUnread then
-          options.onMarkUnread(item)
-        end
-      end,
-      onDragStart = handleDragStart,
-      onDragStop = handleDragStop,
-    })
+    rowOptions.selectedConversationKey = currentSelectedKey
+    rowOptions.visibleCount = visibleCount
+    rowOptions.hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview()
+      or options.hideMessagePreview
+
+    controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
     ScrollView.Sync(contactsView)
 
     return controller.rows

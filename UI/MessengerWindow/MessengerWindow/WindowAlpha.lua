@@ -15,12 +15,15 @@ function WindowAlpha.Create(options)
 
   local windowState = { isDimmed = false }
 
+  -- Reused across calls to avoid allocating a table 10x/sec on the alpha
+  -- ticker; caller only reads the fields synchronously, never retains it.
+  local alphaSettings = {}
+
   local function getAlphaSettings()
-    return {
-      dimWhenMoving = settingsConfig.dimWhenMoving,
-      windowOpacityActive = settingsConfig.windowOpacityActive,
-      windowOpacityInactive = settingsConfig.windowOpacityInactive,
-    }
+    alphaSettings.dimWhenMoving = settingsConfig.dimWhenMoving
+    alphaSettings.windowOpacityActive = settingsConfig.windowOpacityActive
+    alphaSettings.windowOpacityInactive = settingsConfig.windowOpacityInactive
+    return alphaSettings
   end
 
   alphaController.hookScript(composerInput, "OnEditFocusGained", function()

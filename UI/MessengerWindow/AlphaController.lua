@@ -52,24 +52,28 @@ end
 -- comparison or boolean test on the result raises. Wrap the probe *inside*
 -- pcall so the error is caught at its source; a raw `pcall(fn)` would return
 -- the secret value unchanged and crash at the caller.
+local function readPlayerSpeed()
+  local speed = _G.GetUnitSpeed("player")
+  return type(speed) == "number" and speed > 0
+end
+
 local function probeIsMoving()
   if type(_G.GetUnitSpeed) ~= "function" then
     return false
   end
-  local ok, moving = pcall(function()
-    local speed = _G.GetUnitSpeed("player")
-    return type(speed) == "number" and speed > 0
-  end)
+  local ok, moving = pcall(readPlayerSpeed)
   return ok and moving == true
+end
+
+local function callIsTrue(fn)
+  return fn() == true
 end
 
 local function probeBoolean(fn)
   if type(fn) ~= "function" then
     return false
   end
-  local ok, value = pcall(function()
-    return fn() == true
-  end)
+  local ok, value = pcall(callIsTrue, fn)
   return ok and value == true
 end
 
@@ -107,9 +111,20 @@ function AlphaController.applyWindowAlpha(frame, dimmed, windowState, alphaConfi
   windowState.isDimmed = dimmed
 end
 
+-- Reused across calls to avoid allocating a table 10x/sec on the alpha
+-- ticker; refreshWindowAlpha only reads it synchronously, never retains it.
+local sharedAlphaConfig = { active = nil, inactive = nil }
+
 -- settings (optional): { dimWhenMoving, windowOpacityActive, windowOpacityInactive }
 function AlphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, settings)
-  local alphaConfig = settings and { active = settings.windowOpacityActive, inactive = settings.windowOpacityInactive } or nil
+  local alphaConfig
+  if settings then
+    sharedAlphaConfig.active = settings.windowOpacityActive
+    sharedAlphaConfig.inactive = settings.windowOpacityInactive
+    alphaConfig = sharedAlphaConfig
+  else
+    alphaConfig = nil
+  end
   if forceOpaque == true then
     AlphaController.applyWindowAlpha(frame, false, windowState, alphaConfig)
     return
