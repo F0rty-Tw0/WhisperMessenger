@@ -12,9 +12,12 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Reduced background CPU use and temporary memory churn by checking Blizzard chat edit boxes only when their focus or text changes, while still opening Battle.net whispers started from an active chat box.
 - Reduced background CPU use while other addons communicate, including when the messenger is hidden.
 - Reduced CPU use while the messenger is open, especially with many contacts or a high frame rate.
-- Long conversations now use less memory by rendering only the messages currently visible while keeping the full history available when scrolling.
-- Options pages now load when first opened instead of all at once.
-- Fixed: automatic history cleanup now continues during long play sessions while still preserving pinned messages.
+- Long conversations now use less memory and scroll more reliably by rendering only the messages currently visible while keeping the full history available when scrolling.
+- Options pages now load when first opened instead of all at once, while keeping their controls and saved settings in sync.
+- Fixed: automatic history cleanup now continues during long play sessions, removing stale conversations and old message data while preserving pinned messages.
+- Fixed: delayed or out-of-order messages from expired conversations no longer revive old chats or change their preview, unread count, or contact details.
+- Fixed: reaction fallbacks no longer disappear when conversations are automatically cleaned up or merged after Battle.net friend details load.
+- Fixed: clearing all chats now cleans up leftover contact status and availability data without interrupting whispers already in progress.
 
 ## [1.4.0] - 2026-08-31
 
