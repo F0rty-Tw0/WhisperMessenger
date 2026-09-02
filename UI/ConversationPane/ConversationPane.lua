@@ -276,8 +276,12 @@ function ConversationPane.Relayout(view, width, height)
     return
   end
   local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
+  -- The pane is dual-anchored in the live client, so its real height can
+  -- differ from the window-derived metric; size the transcript to what the
+  -- pane actually is so bubbles reach the composer instead of stopping short.
+  local paneHeight = sizeValue(view.frame, "GetHeight", "height", height)
   local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
-  local transcriptH = height - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
+  local transcriptH = paneHeight - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   t.scrollFrame:SetSize(transcriptW, transcriptH)

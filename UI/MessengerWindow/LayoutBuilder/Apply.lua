@@ -106,7 +106,7 @@ function Apply.Relayout(layout, relayout, theme)
     -- dual-anchored height, so rows can't paint past the pane border.
     cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
     cv.scrollFrame:SetSize(contactsWidth, contactsListHeight)
-    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", 0, 0)
+    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", 0, relayout.contactsBottomInset or 0)
     cv.scrollBar:SetHeight(contactsListHeight)
     cv.viewportHeight = contactsListHeight
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")

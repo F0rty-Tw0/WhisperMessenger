@@ -174,6 +174,13 @@ function MessengerWindow.Create(factory, options)
   local getCurrentContacts = contactsRuntime.getCurrentContacts
   contactsRuntime.bindInputScripts()
 
+  -- The tab toggle is created after LayoutBuilder.Build, so the list was
+  -- sized without it. Reserve its height now and re-run the layout once.
+  layout.contactsBottomInset = contactsRuntime.getContactsBottomInset()
+  if layout.contactsBottomInset > 0 then
+    LayoutBuilder.Relayout(layout, initialState.width, initialState.height, currentContactsWidth)
+  end
+
   -- Conversation pane
   local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
     onReact = options.onReact,
@@ -401,7 +408,16 @@ function MessengerWindow.Create(factory, options)
     refreshTheme = refreshThemeVisuals,
     setScale = setScale,
     refreshLanguage = refreshLanguage,
-    refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
+    refreshTabToggleVisibility = function()
+      contactsRuntime.refreshTabToggleVisibility()
+      layout.contactsBottomInset = contactsRuntime.getContactsBottomInset()
+      relayoutWindow(
+        sizeValue(frame, "GetWidth", "width", initialState.width),
+        sizeValue(frame, "GetHeight", "height", initialState.height),
+        windowGeometry.getContactsWidth(),
+        false
+      )
+    end,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,
     selectConversation = function(conversationKey)

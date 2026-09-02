@@ -65,7 +65,10 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local searchHeight = layoutState.contactsSearchHeight or (layout.CONTACT_SEARCH_HEIGHT or 30)
   local searchMargin = layoutState.contactsSearchMargin or (layout.CONTACT_SEARCH_MARGIN or 10)
   local searchTotalHeight = layoutState.contactsSearchTotalHeight or (searchHeight + (searchMargin * 2))
-  local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight)
+  -- Space reserved under the list for the Whispers/Groups tab toggle (0 when
+  -- the toggle is hidden). Without it the last rows scroll underneath the tabs.
+  local contactsBottomInset = layoutState.contactsBottomInset or 0
+  local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight - contactsBottomInset)
 
   return {
     windowWidth = width,
@@ -77,6 +80,7 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
     searchHeight = searchHeight,
     searchMargin = searchMargin,
     searchTotalHeight = searchTotalHeight,
+    contactsBottomInset = contactsBottomInset,
     contactsListHeight = contactsListHeight,
   }
 end

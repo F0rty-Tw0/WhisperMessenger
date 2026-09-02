@@ -12,6 +12,9 @@ local applyVertexColor = UIHelpers.applyVertexColor
 local TabToggle = {}
 
 local TAB_HEIGHT = 24
+-- Exported so layout code can reserve exactly this much space under the
+-- contacts list while the toggle is shown.
+TabToggle.HEIGHT = TAB_HEIGHT
 local BADGE_SIZE = 14
 local BADGE_GAP = 4
 local BADGE_CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"

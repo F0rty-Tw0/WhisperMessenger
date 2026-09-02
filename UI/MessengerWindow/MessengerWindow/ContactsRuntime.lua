@@ -162,6 +162,14 @@ function ContactsRuntime.Create(factory, options)
         tabToggle.setShown(getShowGroupChats())
       end
     end,
+    -- Height the contacts list must leave free at the pane bottom so rows
+    -- never scroll underneath the Whispers/Groups toggle.
+    getContactsBottomInset = function()
+      if tabToggle and tabToggle.frame and tabToggle.frame:IsShown() then
+        return TabToggle.HEIGHT
+      end
+      return 0
+    end,
     setTabMode = function(mode)
       local resolved = mode or "whispers"
       if resolved == currentTabMode then
