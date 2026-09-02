@@ -144,6 +144,7 @@ UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/StatusLine.lua
+UI/ConversationPane/TranscriptVirtualization.lua
 UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/GroupHeaderViewModel.lua
