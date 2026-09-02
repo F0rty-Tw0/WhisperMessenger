@@ -101,6 +101,12 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
   end
+  if eventName == "CHAT_MSG_ADDON" or eventName == "BN_CHAT_MSG_ADDON" then
+    local prefix = ...
+    if prefix ~= "WMRX" and prefix ~= "WMQL" then
+      return nil
+    end
+  end
   local payload = LivePayload.Build(runtime, eventName, ...)
   local traceEnabled = Trace and type(Trace.isEnabled) == "function" and Trace.isEnabled()
   if traceEnabled and TRACE_EVENTS[eventName] then
