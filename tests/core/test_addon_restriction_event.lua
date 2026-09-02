@@ -2,9 +2,6 @@ local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHand
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 return function()
-  local function makeDeps()
-    return {}
-  end
 
   -- test_addon_restriction_challenge_mode_active_triggers_suspend
 
@@ -28,7 +25,7 @@ return function()
     local handled = LifecycleHandlers.Handle(
       Bootstrap,
       "ADDON_RESTRICTION_STATE_CHANGED",
-      makeDeps(),
+      {},
       RestrictedActions.TYPES.ChallengeMode,
       RestrictedActions.STATES.Active
     )
@@ -61,7 +58,7 @@ return function()
     local handled = LifecycleHandlers.Handle(
       Bootstrap,
       "ADDON_RESTRICTION_STATE_CHANGED",
-      makeDeps(),
+      {},
       RestrictedActions.TYPES.ChallengeMode,
       RestrictedActions.STATES.Inactive
     )
@@ -88,7 +85,7 @@ return function()
     LifecycleHandlers.Handle(
       Bootstrap,
       "ADDON_RESTRICTION_STATE_CHANGED",
-      makeDeps(),
+      {},
       RestrictedActions.TYPES.Encounter,
       RestrictedActions.STATES.Active
     )
@@ -122,7 +119,7 @@ return function()
     LifecycleHandlers.Handle(
       Bootstrap,
       "ADDON_RESTRICTION_STATE_CHANGED",
-      makeDeps(),
+      {},
       RestrictedActions.TYPES.ChallengeMode,
       RestrictedActions.STATES.Active
     )

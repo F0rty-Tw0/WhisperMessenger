@@ -91,7 +91,7 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   end
 
   if event == "GUILD_ROSTER_UPDATE" or event == "CLUB_MEMBER_UPDATED" or event == "CLUB_MEMBER_ADDED" or event == "CLUB_MEMBER_REMOVED" then
-    return Presence.handlePresenceInvalidation(Bootstrap, event, deps)
+    return Presence.handlePresenceInvalidation(Bootstrap, deps)
   end
 
   return false

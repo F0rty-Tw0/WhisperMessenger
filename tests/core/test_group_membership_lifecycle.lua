@@ -41,10 +41,6 @@ return function()
     }
   end
 
-  local function makeDeps()
-    return {}
-  end
-
   local function lastMessage(conversation)
     local messages = conversation.messages or {}
     return messages[#messages]
@@ -71,7 +67,7 @@ return function()
       refreshCalled = true
     end)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(state.conversations[PARTY_KEY] ~= nil, "PARTY conversation must NOT be purged")
     assert(state.conversations[INSTANCE_KEY] ~= nil, "INSTANCE conversation must NOT be purged")
@@ -104,9 +100,9 @@ return function()
     })
     local Bootstrap = makeBootstrap(state)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(
       #state.conversations[PARTY_KEY].messages == 1,
@@ -129,16 +125,16 @@ return function()
     })
     local Bootstrap = makeBootstrap(state)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
     assert(state.conversations[PARTY_KEY].leftGroup == true, "after leave, leftGroup=true")
     assert(#state.conversations[PARTY_KEY].messages == 1, "one left-message after first leave")
 
     inGroup = true
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
     assert(state.conversations[PARTY_KEY].leftGroup == nil, "rejoin clears leftGroup flag")
 
     inGroup = false
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
     assert(
       #state.conversations[PARTY_KEY].messages == 2,
       "second leave should append a second left-message, got " .. #state.conversations[PARTY_KEY].messages
@@ -161,7 +157,7 @@ return function()
     })
     local Bootstrap = makeBootstrap(state)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(state.conversations[PARTY_KEY].leftGroup == nil, "PARTY should NOT be marked left while in home group")
     assert(#state.conversations[PARTY_KEY].messages == 0, "PARTY should not receive a left-message")
@@ -188,7 +184,7 @@ return function()
     })
     local Bootstrap = makeBootstrap(state)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(#state.conversations[FOREIGN_PARTY_KEY].messages == 0, "foreign-character party should NOT receive a left message")
     assert(state.conversations[FOREIGN_PARTY_KEY].leftGroup == true, "foreign-character leftGroup flag must stay intact")
@@ -198,7 +194,7 @@ return function()
       return category == _G.LE_PARTY_CATEGORY_HOME
     end
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(
       state.conversations[FOREIGN_PARTY_KEY].leftGroup == true,
@@ -215,7 +211,7 @@ return function()
     })
     local Bootstrap = makeBootstrap(state)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     assert(state.conversations[PARTY_KEY] ~= nil, "PARTY kept when IsInGroup is nil (Classic compat)")
     assert(state.conversations[PARTY_KEY].leftGroup == nil, "no leftGroup flag when IsInGroup is nil (Classic compat)")
@@ -243,7 +239,7 @@ return function()
       },
     }
 
-    LifecycleHandlers.Handle(Bootstrap, "PLAYER_LOGOUT", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_LOGOUT", {})
 
     assert(state.conversations[PARTY_KEY] ~= nil, "PARTY survives logout (persistence)")
     assert(state.conversations[RAID_KEY] ~= nil, "RAID survives logout (persistence)")
@@ -268,8 +264,8 @@ return function()
     local category = _G.LE_PARTY_CATEGORY_HOME
     local partyKeyA = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidA
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", makeDeps(), category, partyGuidA)
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", {}, category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", {}, category, partyGuidA)
     GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
       text = "group A",
       playerName = "Member-Realm",
@@ -277,7 +273,7 @@ return function()
       guid = "Player-1084-00000099",
     })
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", {}, category, partyGuidB)
 
     local conversationA = store.conversations[partyKeyA]
     assert(conversationA.leftGroup == true, "joining group B must close group A when GROUP_LEFT was missed")
@@ -286,7 +282,7 @@ return function()
     assert(refreshCalls == 1, "replacing group A should refresh once")
     assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidB, "group B should become current")
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", {}, category, partyGuidB)
 
     assert(#conversationA.messages == 2, "rejoining current group B must not append another Left notice")
     assert(refreshCalls == 1, "rejoining current group B must not refresh")
@@ -314,9 +310,9 @@ return function()
     local partyKeyA = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidA
     local partyKeyB = "party::" .. LOCAL_PROFILE_ID .. "::" .. category .. "::" .. partyGuidB
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_FORMED", {}, category, partyGuidA)
     assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidA, "GROUP_FORMED should capture group A")
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", {}, category, partyGuidA)
     assert(Bootstrap.runtime.groupPartyGUIDsByCategory[category] == partyGuidA, "GROUP_JOINED should retain group A")
 
     GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
@@ -326,17 +322,17 @@ return function()
       guid = "Player-1084-00000099",
     })
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", makeDeps(), category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", {}, category, partyGuidA)
 
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", makeDeps(), category, partyGuidB)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_JOINED", {}, category, partyGuidB)
     GroupChatIngest.HandleEvent(Bootstrap.runtime, "CHAT_MSG_PARTY", {
       text = "group B",
       playerName = "Member-Realm",
       lineID = 10002,
       guid = "Player-1084-00000099",
     })
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", makeDeps(), category, partyGuidA)
-    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", makeDeps())
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_LEFT", {}, category, partyGuidA)
+    LifecycleHandlers.Handle(Bootstrap, "GROUP_ROSTER_UPDATE", {})
 
     local conversationA = store.conversations[partyKeyA]
     local conversationB = store.conversations[partyKeyB]

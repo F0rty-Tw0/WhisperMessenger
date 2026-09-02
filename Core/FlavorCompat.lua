@@ -21,7 +21,6 @@ FlavorCompat.isCata = (projectId == CATA)
 FlavorCompat.isMists = (projectId == MISTS)
 FlavorCompat.isClassic = not FlavorCompat.isRetail
 
--- Human-readable flavor name for display
 local FLAVOR_NAMES = {
   [MAINLINE] = "Retail",
   [CLASSIC] = "Classic Era",

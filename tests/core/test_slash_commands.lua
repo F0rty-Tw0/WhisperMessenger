@@ -1,17 +1,6 @@
 local SlashCommands = require("WhisperMessenger.Core.SlashCommands")
 
 return function()
-  -- helper: capture print output during a callback
-  local function withCapture(fn)
-    local captured = {}
-    local originalPrint = _G.print
-    rawset(_G, "print", function(...)
-      table.insert(captured, { ... })
-    end)
-    fn()
-    rawset(_G, "print", originalPrint)
-    return captured
-  end
 
   -- Save globals for cleanup
   local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
@@ -43,11 +32,15 @@ return function()
   local handler = _G.SlashCmdList["WHISPERMESSENGER"]
 
   -- 2. Removed command words behave like ordinary /wmsg invocations.
-  local captured = withCapture(function()
-    handler("debug")
-    handler("mem")
-    handler("memory")
+  local captured = {}
+  local originalPrint = _G.print
+  rawset(_G, "print", function(...)
+    table.insert(captured, { ... })
   end)
+  handler("debug")
+  handler("mem")
+  handler("memory")
+  rawset(_G, "print", originalPrint)
   assert(toggleCalls == 3, "removed command words should toggle the messenger")
   assert(#captured == 0, "removed command words should not print status")
 

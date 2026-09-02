@@ -224,7 +224,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   return true
 end
 
-function Presence.handlePresenceInvalidation(Bootstrap, event, deps)
+function Presence.handlePresenceInvalidation(Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
     return true
