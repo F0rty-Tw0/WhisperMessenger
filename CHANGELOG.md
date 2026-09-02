@@ -19,6 +19,9 @@ Player-friendly release notes for WhisperMessenger. Each version below focuses o
 - Fixed: delayed or out-of-order messages from expired conversations no longer revive old chats or change their preview, unread count, or contact details.
 - Fixed: reaction fallbacks no longer disappear when conversations are automatically cleaned up or merged after Battle.net friend details load.
 - Fixed: clearing all chats now cleans up leftover contact status and availability data without interrupting whispers already in progress.
+- Fixed: memory usage no longer jumps by a couple of megabytes every 30 seconds when you are in a large guild or community. Contact online status is now looked up per contact instead of scanning every member.
+- Fixed: the messenger no longer redraws the conversation and the contact list on every background status refresh when nothing has changed, which cuts memory churn while the window is open.
+- Fixed: the window's fade-when-moving check no longer creates memory garbage ten times per second while the messenger is open.
 
 ## [1.4.0] - 2026-08-31
 

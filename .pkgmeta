@@ -5,7 +5,6 @@ ignore:
   - .github
   - .claude
   - .omc
-  - .wolf
   - tests
   - scripts
   - docs

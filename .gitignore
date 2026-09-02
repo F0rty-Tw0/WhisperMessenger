@@ -5,7 +5,6 @@ docs/
 .env
 .claude
 .release
-.wolf
 .tmp_elvui/
 .tools/
 .tmp_luals/
