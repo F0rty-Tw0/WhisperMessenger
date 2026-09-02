@@ -29,6 +29,7 @@ return function()
   local timerCallbacks = {}
   local deactivated = {}
   local factory = FakeUI.NewFactory()
+  local chatEditBox = nil
 
   local function findCreatedFrameWithScript(scriptName)
     for _, frame in ipairs(createdFrames) do
@@ -39,8 +40,8 @@ return function()
     return nil
   end
 
-  local function makeInterceptedEditBox(name, attributeState, directState, text)
-    local editBox = factory.CreateFrame("EditBox", name, _G.UIParent)
+  local function makeInterceptedEditBox(attributeState, directState, text, shouldFocus)
+    local editBox = chatEditBox
     local state = {}
     for key, value in pairs(attributeState) do
       state[key] = value
@@ -57,9 +58,11 @@ return function()
     editBox.chatType = directState.chatType
     editBox.stickyType = directState.stickyType
     editBox.tellTarget = directState.tellTarget
+    editBox:Show()
     editBox:SetText(text)
-    editBox:SetFocus()
-    _G.ChatFrame1EditBox = editBox
+    if shouldFocus ~= false then
+      editBox:SetFocus()
+    end
 
     return editBox
   end
@@ -77,7 +80,12 @@ return function()
     assert(runtime.window.composer.input:GetText() == expected.draftText, "expected " .. caseLabel .. " draft to transfer into composer")
     assert(
       #deactivated == expected.deactivateIndex and deactivated[expected.deactivateIndex] == editBox,
-      "expected " .. caseLabel .. " whisper edit box to close"
+      "expected "
+        .. caseLabel
+        .. " whisper edit box to close at index "
+        .. expected.deactivateIndex
+        .. ", got "
+        .. #deactivated
     )
     -- chatType/tellTarget are restored via attributes only (not direct properties)
     -- to avoid tainting secure state on subsequent whisper calls.
@@ -139,6 +147,10 @@ return function()
     return frame
   end)
 
+  -- Given Blizzard's chat edit box exists before the addon initializes.
+  chatEditBox = factory.CreateFrame("EditBox", "ChatFrame1EditBox", _G.UIParent)
+  _G.ChatFrame1EditBox = chatEditBox
+
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
 
@@ -154,11 +166,21 @@ return function()
 
   timerCallbacks[1].callback()
 
+  -- Then whisper interception observes edit-box events without frame polling.
   local pollFrame = findCreatedFrameWithScript("OnUpdate")
-  assert(pollFrame ~= nil, "expected whisper interception poll frame")
+  assert(pollFrame == nil, "expected whisper interception not to install an OnUpdate frame")
+  assert(
+    chatEditBox._hookScripts and chatEditBox._hookScripts.OnEditFocusGained,
+    "expected whisper interception to hook edit-box focus"
+  )
+  assert(#chatEditBox._hookScripts.OnEditFocusGained == 1, "expected one edit-box focus hook")
+  assert(
+    chatEditBox._hookScripts and chatEditBox._hookScripts.OnTextChanged,
+    "expected whisper interception to hook edit-box text changes"
+  )
 
   runtime.accountState.settings.autoOpenOutgoing = false
-  local disabledEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+  local disabledEditBox = makeInterceptedEditBox({
     chatType = "WHISPER",
     stickyType = "SAY",
     tellTarget = "Jaina",
@@ -169,7 +191,6 @@ return function()
   }, "stay in default chat")
 
   local disabledDeactivateCount = #deactivated
-  pollFrame.scripts.OnUpdate(pollFrame)
 
   assert(#deactivated == disabledDeactivateCount, "expected disabled outgoing auto-open to leave Blizzard chat edit box open")
   assert(disabledEditBox:GetText() == "stay in default chat", "expected disabled outgoing auto-open to preserve default chat draft")
@@ -180,7 +201,7 @@ return function()
   runtime.toggle()
   assert(runtime.window ~= nil, "expected window before toggling outgoing auto-open")
 
-  local staleReplyBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+  local staleReplyBox = makeInterceptedEditBox({
     chatType = "WHISPER",
     stickyType = "WHISPER",
     tellTarget = "Jaina",
@@ -188,7 +209,7 @@ return function()
     chatType = "WHISPER",
     stickyType = "WHISPER",
     tellTarget = "Jaina",
-  }, "")
+  }, "", false)
   staleReplyBox:ClearFocus()
   staleReplyBox:Hide()
 
@@ -198,10 +219,9 @@ return function()
 
   assert(runtime.accountState.settings.autoOpenOutgoing == true, "expected outgoing auto-open enabled after toggle")
 
+  local staleDeactivateCount = #deactivated
   staleReplyBox:Show()
   staleReplyBox:SetFocus()
-  local staleDeactivateCount = #deactivated
-  pollFrame.scripts.OnUpdate(pollFrame)
 
   assert(
     #deactivated == staleDeactivateCount,
@@ -212,7 +232,7 @@ return function()
   assert(staleReplyBox:GetAttribute("stickyType") == "SAY", "expected enable scrub to restore stale reply stickyType to SAY")
   assert(staleReplyBox:GetAttribute("tellTarget") == nil, "expected enable scrub to clear stale reply tellTarget")
 
-  local directFieldEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+  local directFieldEditBox = makeInterceptedEditBox({
     chatType = "WHISPER",
     stickyType = "PARTY",
     tellTarget = "Jaina",
@@ -221,8 +241,6 @@ return function()
     stickyType = "PARTY",
     tellTarget = "Jaina",
   }, "Need a summon")
-
-  pollFrame.scripts.OnUpdate(pollFrame)
 
   assert(runtime.window ~= nil, "expected whisper interception to ensure the messenger window")
   assert(runtime.window.frame.shown == true, "expected whisper interception to show the messenger window")
@@ -233,7 +251,7 @@ return function()
     deactivateIndex = 1,
   })
 
-  local attributeBackedEditBox = makeInterceptedEditBox("ChatFrame1EditBox", {
+  local attributeBackedEditBox = makeInterceptedEditBox({
     chatType = "WHISPER",
     stickyType = "SAY",
     tellTarget = "Uther",
@@ -242,8 +260,6 @@ return function()
     stickyType = "",
     tellTarget = "",
   }, "attribute backed whisper")
-
-  pollFrame.scripts.OnUpdate(pollFrame)
 
   assertInterceptedState("attribute-backed", runtime, attributeBackedEditBox, {
     displayName = "Uther",

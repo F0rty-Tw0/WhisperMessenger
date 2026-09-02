@@ -96,7 +96,6 @@ function AutoOpenCoordinator.Attach(options)
     return Poller.Install(runtime, autoOpenHooks, {
       trace = options.trace,
       identity = identity,
-      createFrame = options.CreateFrame or _G.CreateFrame,
       isSuspended = options.isSuspended or function()
         return _G._wmSuspended == true
       end,
