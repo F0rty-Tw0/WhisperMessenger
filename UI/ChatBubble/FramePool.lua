@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
+local select = select
 
 local FramePool = {}
 
@@ -49,22 +50,40 @@ function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent)
   return frame
 end
 
-function FramePool.hideAllRegions(frame)
-  if frame.GetRegions then
-    local regions = { frame:GetRegions() }
-    for _, r in ipairs(regions) do
-      if r.Hide then
-        r:Hide()
-      end
+function FramePool.getFactory(realFactory, contentFrame)
+  local state = contentFrame._wmPooledFactoryState
+  if state == nil then
+    state = {
+      contentFrame = contentFrame,
+      realFactory = realFactory,
+    }
+    contentFrame._wmPooledFactoryState = state
+    contentFrame._wmPooledFactory = {
+      CreateFrame = function(frameType, _name, parent)
+        return FramePool.acquireFrame(state.realFactory, state.contentFrame, frameType, parent)
+      end,
+    }
+  else
+    state.realFactory = realFactory
+  end
+  return contentFrame._wmPooledFactory
+end
+
+local function hideRegions(...)
+  for index = 1, select("#", ...) do
+    local region = select(index, ...)
+    if region and region.Hide then
+      region:Hide()
     end
   end
+end
+
+function FramePool.hideAllRegions(frame)
+  if frame.GetRegions then
+    hideRegions(frame:GetRegions())
+  end
   if frame.GetChildren then
-    local children = { frame:GetChildren() }
-    for _, c in ipairs(children) do
-      if c.Hide then
-        c:Hide()
-      end
-    end
+    hideRegions(frame:GetChildren())
   end
 end
 
@@ -117,10 +136,36 @@ local function clearReactionState(frame)
     end
   end
   frame._reactionKey = nil
+  if reactionFrame then
+    reactionFrame._wmReactionKey = nil
+  end
 
   local pickerFrame = type(ReactionPicker.GetFrame) == "function" and ReactionPicker.GetFrame() or nil
   if pickerFrame and pickerFrame._anchor == frame and type(ReactionPicker.Close) == "function" then
     ReactionPicker.Close()
+  end
+end
+
+local function clearBindingState(frame)
+  frame._wmMessage = nil
+  frame._wmVirtualIndex = nil
+  frame._wmOnRevealCensored = nil
+  frame._wmOnReact = nil
+  frame._wmCanReact = nil
+  frame._wmPersistentFactory = nil
+  frame._wmOpenedOnMouseDown = nil
+
+  local menuOptions = frame._wmContextMenuOptions
+  if menuOptions then
+    menuOptions.message = nil
+    menuOptions.onReact = nil
+    menuOptions.canReact = nil
+    menuOptions.factory = nil
+  end
+  local copyButton = frame._copyButton
+  if copyButton then
+    copyButton._wmCopyMessage = nil
+    copyButton._wmCopyText = nil
   end
 end
 
@@ -132,6 +177,7 @@ function FramePool.releaseAll(contentFrame)
     FramePool.hideAllRegions(f)
     clearInteractiveScripts(f)
     clearReactionState(f)
+    clearBindingState(f)
     if f.Hide then
       f:Hide()
     end

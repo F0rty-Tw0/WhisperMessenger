@@ -62,6 +62,30 @@ local function resetReactionBadge(frame)
     end
   end
   frame._reactionKey = nil
+  if reactionFrame then
+    reactionFrame._wmReactionKey = nil
+  end
+end
+
+local function reactionOnEnter(self)
+  local tooltip = _G.GameTooltip
+  if type(tooltip) ~= "table" then
+    return
+  end
+  self._reactionTooltipOwned = true
+  if type(tooltip.SetOwner) == "function" then
+    tooltip:SetOwner(self, "ANCHOR_TOP")
+  end
+  if type(tooltip.SetText) == "function" then
+    tooltip:SetText(":" .. tostring(self._wmReactionKey or "") .. ":")
+  end
+  if type(tooltip.Show) == "function" then
+    tooltip:Show()
+  end
+end
+
+local function reactionOnLeave(self)
+  hideReactionTooltip(self)
 end
 
 local function showReactionBadge(factory, frame, reaction, direction)
@@ -72,8 +96,7 @@ local function showReactionBadge(factory, frame, reaction, direction)
       reactionFrame:EnableMouse(true)
     end
     frame._reactionFrame = reactionFrame
-    local texture = reactionFrame:CreateTexture(nil, "ARTWORK")
-    frame._reactionTexture = texture
+    frame._reactionTexture = reactionFrame:CreateTexture(nil, "ARTWORK")
   end
 
   local iconSize = ReactionAssets.GetIconSize()
@@ -95,28 +118,97 @@ local function showReactionBadge(factory, frame, reaction, direction)
   else
     reactionFrame:SetPoint("TOPRIGHT", frame, "BOTTOMRIGHT", -5, ReactionAssets.BADGE_OFFSET_Y)
   end
-  reactionFrame:SetScript("OnEnter", function(self)
-    local tooltip = _G.GameTooltip
-    if type(tooltip) ~= "table" then
-      return
-    end
-    self._reactionTooltipOwned = true
-    if type(tooltip.SetOwner) == "function" then
-      tooltip:SetOwner(self, "ANCHOR_TOP")
-    end
-    if type(tooltip.SetText) == "function" then
-      tooltip:SetText(":" .. reaction.key .. ":")
-    end
-    if type(tooltip.Show) == "function" then
-      tooltip:Show()
-    end
-  end)
-  reactionFrame:SetScript("OnLeave", function(self)
-    hideReactionTooltip(self)
-  end)
+  reactionFrame._wmReactionKey = reaction.key
+  reactionFrame:SetScript("OnEnter", reactionOnEnter)
+  reactionFrame:SetScript("OnLeave", reactionOnLeave)
   reactionFrame:Show()
   frame._reactionKey = reaction.key
   return reactionFrame, texture
+end
+
+local function applyBubbleColor(frame, colorTable, alphaScale)
+  local r, g, b = colorTable[1], colorTable[2], colorTable[3]
+  local a = (colorTable[4] or 1) * (alphaScale or 1)
+  for _, part in ipairs(frame._bgFills) do
+    if part.SetColorTexture then
+      part:SetColorTexture(r, g, b, a)
+    end
+  end
+  for _, part in ipairs(frame._bgCorners) do
+    if part.SetVertexColor then
+      part:SetVertexColor(r, g, b, a)
+    end
+  end
+end
+
+local function revealCensored(frame)
+  local message = frame._wmMessage
+  if message == nil or message.isCensored ~= true then
+    return
+  end
+  local chatApi = _G.C_ChatInfo
+  if chatApi and message.lineID then
+    if type(chatApi.UncensorChatLine) == "function" then
+      pcall(chatApi.UncensorChatLine, message.lineID)
+    end
+    if type(chatApi.GetChatLineText) == "function" then
+      local ok, uncensoredText = pcall(chatApi.GetChatLineText, message.lineID)
+      if ok and type(uncensoredText) == "string" and uncensoredText ~= "" then
+        message.text = uncensoredText
+      end
+    end
+  end
+  message.isCensored = nil
+  if type(frame._wmOnRevealCensored) == "function" then
+    frame._wmOnRevealCensored()
+  end
+end
+
+local function openBubbleMenu(frame)
+  local message = frame._wmMessage
+  if message == nil then
+    return
+  end
+  local options = frame._wmContextMenuOptions
+  if options == nil then
+    options = {}
+    frame._wmContextMenuOptions = options
+  end
+  options.message = message
+  options.onReact = frame._wmOnReact
+  options.canReact = frame._wmCanReact
+  options.factory = frame._wmPersistentFactory
+  ContextMenu.Open(message.text or "", frame, options)
+end
+
+local function bubbleOnMouseDown(self, button)
+  if button == "LeftButton" and self._wmMessage and self._wmMessage.isCensored == true then
+    revealCensored(self)
+    return
+  end
+  if button ~= "RightButton" then
+    return
+  end
+  self._wmOpenedOnMouseDown = true
+  openBubbleMenu(self)
+end
+
+local function bubbleOnMouseUp(self, button)
+  if button ~= "RightButton" then
+    return
+  end
+  if self._wmOpenedOnMouseDown then
+    self._wmOpenedOnMouseDown = false
+    return
+  end
+  openBubbleMenu(self)
+end
+
+local function bubbleOnDoubleClick(self, button)
+  local message = self._wmMessage
+  if button == "LeftButton" and message and reactionsAllowed(message, self._wmCanReact) then
+    self._wmOnReact(message, "heart")
+  end
 end
 
 function BubbleFrame.CreateBubble(factory, parent, message, options)
@@ -142,6 +234,12 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     frame:RegisterForClicks("AnyUp", "AnyDown")
   end
   resetReactionBadge(frame)
+  frame._wmMessage = message
+  frame._wmOnRevealCensored = options.onRevealCensored
+  frame._wmOnReact = options.onReact
+  frame._wmCanReact = options.canReact
+  frame._wmPersistentFactory = options.persistentFactory or factory
+  frame._wmOpenedOnMouseDown = false
 
   -- Create structure once, reuse on subsequent calls
   local bgFills = frame._bgFills
@@ -166,40 +264,26 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-  local function applyBubbleColor(colorTable)
-    local r, g, b, a = colorTable[1], colorTable[2], colorTable[3], colorTable[4] or 1
-    for _, part in ipairs(bgFills) do
-      if part.SetColorTexture then
-        part:SetColorTexture(r, g, b, a)
-      end
-    end
-    for _, part in ipairs(bgCorners) do
-      if part.SetVertexColor then
-        part:SetVertexColor(r, g, b, a)
-      end
-    end
-  end
 
   local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
 
   if kind == "system" then
     setFontObject(textFS, Theme.FONTS.system_text)
     setTextColor(textFS, Theme.COLORS.text_system)
-    applyBubbleColor(Theme.COLORS.bg_bubble_system)
+    applyBubbleColor(frame, Theme.COLORS.bg_bubble_system)
   elseif kind == "channel_context" then
     -- Channel context: muted version of incoming bubble
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
-    local base = Theme.COLORS.bg_bubble_in
-    applyBubbleColor({ base[1], base[2], base[3], (base[4] or 1) * 0.55 })
+    applyBubbleColor(frame, Theme.COLORS.bg_bubble_in, 0.55)
   elseif direction == "out" then
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_sent)
-    applyBubbleColor(Theme.COLORS.bg_bubble_out)
+    applyBubbleColor(frame, Theme.COLORS.bg_bubble_out)
   else
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
-    applyBubbleColor(Theme.COLORS.bg_bubble_in)
+    applyBubbleColor(frame, Theme.COLORS.bg_bubble_in)
   end
 
   local textAvailWidth = maxBubbleWidth - pH * 2
@@ -259,81 +343,19 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
   end
 
-  local function revealCensored()
-    if message.isCensored ~= true then
-      return
-    end
-    local chatApi = _G.C_ChatInfo
-    if chatApi and message.lineID then
-      if type(chatApi.UncensorChatLine) == "function" then
-        pcall(chatApi.UncensorChatLine, message.lineID)
-      end
-      if type(chatApi.GetChatLineText) == "function" then
-        local ok, uncensoredText = pcall(chatApi.GetChatLineText, message.lineID)
-        if ok and type(uncensoredText) == "string" and uncensoredText ~= "" then
-          message.text = uncensoredText
-        end
-      end
-    end
-    message.isCensored = nil
-    if options.onRevealCensored then
-      options.onRevealCensored()
-    end
-  end
 
   if kind ~= "system" then
-    local copyText = options.copyText or function(text)
-      return ContextMenu.CopyText(text)
-    end
-    HoverCopy.Attach(options.persistentFactory or factory, frame, message, copyText)
+    HoverCopy.Attach(options.persistentFactory or factory, frame, message, options.copyText or ContextMenu.CopyText)
+  elseif frame._copyButton and frame._copyButton.Hide then
+    frame._copyButton:Hide()
   end
 
   if frame.SetScript then
-    local openedOnMouseDown = false
-
-    local function openBubbleMenu(anchor)
-      local currentText = message.text or ""
-      ContextMenu.Open(currentText, anchor or frame, {
-        message = message,
-        onReact = options.onReact,
-        canReact = options.canReact,
-        factory = options.persistentFactory or factory,
-      })
-    end
-
-    frame:SetScript("OnMouseDown", function(self, button)
-      if button == "LeftButton" and message.isCensored == true then
-        revealCensored()
-        return
-      end
-
-      if button ~= "RightButton" then
-        return
-      end
-
-      openedOnMouseDown = true
-      openBubbleMenu(self)
-    end)
-
-    frame:SetScript("OnMouseUp", function(self, button)
-      if button ~= "RightButton" then
-        return
-      end
-
-      if openedOnMouseDown then
-        openedOnMouseDown = false
-        return
-      end
-
-      openBubbleMenu(self)
-    end)
+    frame:SetScript("OnMouseDown", bubbleOnMouseDown)
+    frame:SetScript("OnMouseUp", bubbleOnMouseUp)
     frame:SetScript("OnDoubleClick", nil)
     if type(options.onReact) == "function" and kind == "user" and direction == "in" and message.delivery ~= "blocked" then
-      frame:SetScript("OnDoubleClick", function(_, button)
-        if button == "LeftButton" and reactionsAllowed(message, options.canReact) then
-          options.onReact(message, "heart")
-        end
-      end)
+      frame:SetScript("OnDoubleClick", bubbleOnDoubleClick)
     end
   end
 
@@ -342,10 +364,14 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local icon = nil
   local iconFrame = nil
   if (kind == "user" or kind == "channel_context") and showIcon then
-    local bubbleIcon = BubbleIcon.CreateIcon(options.iconFactory or factory, parent, frame, message, direction, {
-      fallbackClassTag = options.fallbackClassTag,
-      iconFactory = options.iconFactory,
-    })
+    local iconOptions = frame._wmIconOptions
+    if iconOptions == nil then
+      iconOptions = {}
+      frame._wmIconOptions = iconOptions
+    end
+    iconOptions.fallbackClassTag = options.fallbackClassTag
+    iconOptions.iconFactory = options.iconFactory
+    local bubbleIcon = BubbleIcon.CreateIcon(options.iconFactory or factory, parent, frame, message, direction, iconOptions)
     icon = bubbleIcon.texture
     iconFrame = bubbleIcon.frame
   end
@@ -359,19 +385,23 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     totalHeight = totalHeight + ReactionAssets.GetBadgeOverflow()
   end
 
-  return {
-    frame = frame,
-    iconFrame = iconFrame,
-    bgFills = bgFills,
-    bgCorners = bgCorners,
-    text = textFS,
-    icon = icon,
-    reactionFrame = reactionFrame,
-    reactionIcon = reactionIcon,
-    kind = kind,
-    direction = direction,
-    height = totalHeight,
-  }
+  local result = frame._wmBubbleResult
+  if result == nil then
+    result = {}
+    frame._wmBubbleResult = result
+  end
+  result.frame = frame
+  result.iconFrame = iconFrame
+  result.bgFills = bgFills
+  result.bgCorners = bgCorners
+  result.text = textFS
+  result.icon = icon
+  result.reactionFrame = reactionFrame
+  result.reactionIcon = reactionIcon
+  result.kind = kind
+  result.direction = direction
+  result.height = totalHeight
+  return result
 end
 
 ns.ChatBubbleBubbleFrame = BubbleFrame

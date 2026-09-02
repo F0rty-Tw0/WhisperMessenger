@@ -329,4 +329,34 @@ return function()
     assert(fontStringCount == 0, "expected zero new CreateFontString on re-render (sender label leak), got " .. fontStringCount)
     assert(textureCount == 0, "expected zero new CreateTexture on re-render (icon texture leak), got " .. textureCount)
   end
+
+  -- TEST 6: Pooled bubbles reuse handlers while rebinding message state.
+  do
+    local factory = FakeUI.NewFactory()
+    local content = factory.CreateFrame("Frame", nil, nil)
+    content:SetSize(400, 200)
+    Layout.LayoutMessages(factory, content, {
+      { direction = "in", kind = "user", text = "first", sentAt = 1000, playerName = "Arthas" },
+    }, 400)
+    local firstBubble = collectBubbleFrames(content)[1]
+    local mouseDown = firstBubble.scripts.OnMouseDown
+    local mouseEnter = firstBubble.scripts.OnEnter
+    local copyClick = firstBubble._copyButton.scripts.OnClick
+
+    Layout.LayoutMessages(factory, content, {
+      { direction = "in", kind = "user", text = "second", sentAt = 1001, playerName = "Arthas" },
+    }, 400)
+    local reboundBubble = collectBubbleFrames(content)[1]
+
+    assert(reboundBubble == firstBubble, "expected pooled bubble frame reuse")
+    assert(reboundBubble.scripts.OnMouseDown == mouseDown, "expected pooled mouse handler reuse")
+    assert(reboundBubble.scripts.OnEnter == mouseEnter, "expected pooled hover handler reuse")
+    assert(reboundBubble._copyButton.scripts.OnClick == copyClick, "expected pooled copy handler reuse")
+    local copiedText
+    reboundBubble._copyButton._wmCopyText = function(text)
+      copiedText = text
+    end
+    copyClick(reboundBubble._copyButton)
+    assert(copiedText == "second", "expected reused copy handler to read rebound message")
+  end
 end

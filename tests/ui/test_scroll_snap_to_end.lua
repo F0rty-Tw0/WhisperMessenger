@@ -292,10 +292,7 @@ return function()
     }
   end
 
-  -- test_conversation_refresh_exposes_older_history_after_zero_height_incoming_relayout
-  -- Regression: an incoming refresh can occur while WoW reports a transient
-  -- zero scroll-frame height. The captured viewport must still fill older
-  -- history and keep the newest bubble at the bottom.
+  -- test_conversation_refresh_keeps_full_history_after_zero_height_incoming_relayout
 
   do
     local view = makeConversationPaneView(200)
@@ -309,10 +306,8 @@ return function()
     end
 
     ConversationPane.Refresh(view, contact, conversation)
-    assert(view.transcript._visibleCount == 10, "initial 200px viewport should keep the overflowing newest page")
+    assert(#view.transcript._virtualRows == 29, "initial refresh should retain metadata for complete history")
 
-    -- Incoming messages can arrive during relayout: live size is zero, but
-    -- the next 400px viewport was captured before WoW exposed that transient.
     view.transcript.viewportHeight = 400
     view.transcript.scrollFrame.height = nil
     view.transcript.scrollFrame.GetHeight = function()
@@ -326,58 +321,72 @@ return function()
       text = "short 30",
     })
     ConversationPane.Refresh(view, contact, conversation)
-    assert(view.transcript._visibleCount > 10, "incoming refresh should expose older history when the newest page underfills the viewport")
+    assert(#view.transcript._virtualRows == 30, "incoming refresh should retain every message row")
+    assert(
+      view.transcript._virtualLastIndex - view.transcript._virtualFirstIndex + 1 < 30,
+      "incoming refresh should only bind viewport rows"
+    )
     local range = Metrics.GetRange(view.transcript)
-    assert(range > 0, "exposed older history should make the transcript overflow the viewport")
+    assert(range > 0, "full transcript metadata should keep older history scrollable")
     assert(
       view.transcript.scrollFrame:GetVerticalScroll() == range,
       "incoming refresh should snap the latest bubble to the bottom without wheel-triggered relayout"
     )
   end
 
-  -- test_conversation_refresh_preserves_loaded_depth_for_same_selection
+  -- test_conversation_refresh_preserves_viewport_for_same_selection
 
   do
     local view = makeConversationPaneView()
+    view.transcript.factory = factory
     local contact = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
     local conversation = { messages = makeMessages(30, "message ") }
 
     ConversationPane.Refresh(view, contact, conversation)
-    assert(ConversationPane.LoadMore(view.transcript), "expected load-more to reveal an older page")
-    assert(view.transcript._visibleCount == 20, "load-more should reveal two pages")
-
-    ConversationPane.Refresh(view, contact, conversation)
-    assert(view.transcript._visibleCount == 20, "same-conversation refresh should retain loaded depth")
-
+    local offset = view.transcript._virtualRows[10].offset + 2
+    ScrollView.SetVerticalScroll(view.transcript, offset)
     ConversationPane.Refresh(view, contact, conversation, { status = "offline" })
-    assert(view.transcript._visibleCount == 20, "availability refresh should retain loaded depth")
+
+    assert(
+      ScrollView.GetOffset(view.transcript) == offset,
+      "same-conversation availability refresh should preserve viewport"
+    )
   end
 
-  -- test_conversation_refresh_resets_loaded_depth_for_different_selection
+  -- test_conversation_refresh_resets_virtual_state_for_different_selection
 
   do
     local view = makeConversationPaneView()
+    view.transcript.factory = factory
     local arthas = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
     local jaina = { conversationKey = "me::WOW::jaina", displayName = "Jaina" }
 
     ConversationPane.Refresh(view, arthas, { messages = makeMessages(30, "arthas ") })
-    assert(ConversationPane.LoadMore(view.transcript), "expected load-more before switching conversations")
+    ScrollView.SetVerticalScroll(view.transcript, 0)
     ConversationPane.Refresh(view, jaina, { messages = makeMessages(30, "jaina ") })
 
-    assert(view.transcript._visibleCount == 10, "different conversation should reset to initial page size")
+    assert(view.transcript._virtualRows[1].message.text == "jaina 1", "selection change should rebuild row metadata")
+    assert(
+      ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript),
+      "selection change should snap the new conversation to end"
+    )
   end
 
-  -- test_conversation_refresh_clamps_loaded_depth_after_history_shrinks
+  -- test_conversation_refresh_clamps_virtual_state_after_history_shrinks
 
   do
     local view = makeConversationPaneView()
+    view.transcript.factory = factory
     local contact = { conversationKey = "me::WOW::arthas", displayName = "Arthas" }
 
     ConversationPane.Refresh(view, contact, { messages = makeMessages(30, "old ") })
-    assert(ConversationPane.LoadMore(view.transcript), "expected load-more before retained history shrinks")
     ConversationPane.Refresh(view, contact, { messages = makeMessages(15, "retained ") })
 
-    assert(view.transcript._visibleCount == 15, "refresh should clamp retained depth to available history")
+    assert(#view.transcript._virtualRows == 15, "refresh should clamp row metadata to retained history")
+    assert(
+      ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript),
+      "history shrink while at end should remain snapped to end"
+    )
   end
 
   print("PASS: test_scroll_snap_to_end")

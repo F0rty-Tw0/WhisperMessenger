@@ -3,7 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
@@ -13,9 +12,7 @@ local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
 
-local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
-
-function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
+function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth)
   transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)
   transcript.text:SetPoint("TOPLEFT", transcript.content, "TOPLEFT", 0, 0)
   if transcript.text.SetMultiLine then
@@ -51,20 +48,11 @@ function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, C
 
   TranscriptView._updateTranscriptLayout(transcript, false)
 
-  local function checkLoadMoreMessages()
-    local offset = ScrollView.GetOffset(transcript)
-    if offset <= TRANSCRIPT_SCROLL_STEP and ConversationPane.HasMore(transcript) then
-      local prevHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
-      ConversationPane.LoadMore(transcript)
-      local newHeight = sizeValue(transcript.content, "GetHeight", "height", 0)
-      local delta = newHeight - prevHeight
-      if delta > 0 then
-        ScrollView.SetVerticalScroll(transcript, offset + delta)
-      end
-    end
+  local function refreshViewport()
+    TranscriptView.RefreshViewport(transcript)
   end
 
-  Navigation.InstallPostScrollHook(transcript, checkLoadMoreMessages)
+  Navigation.InstallPostScrollHook(transcript, refreshViewport)
 end
 
 ns.ConversationPaneTranscriptSetup = TranscriptSetup

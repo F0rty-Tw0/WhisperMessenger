@@ -24,12 +24,9 @@ local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
 local TRANSCRIPT_BOTTOM_GAP = TranscriptView.TRANSCRIPT_BOTTOM_GAP
-local MESSAGES_PAGE_SIZE = TranscriptView.MESSAGES_PAGE_SIZE
 local ACTIVE_STATUS_BANNER_HEIGHT = 24
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
-ConversationPane.HasMore = TranscriptView.HasMore
-ConversationPane.LoadMore = TranscriptView.LoadMore
 
 local function buildMessagesWithChannelContext(messages, selectedContact)
   return ChannelContextMerger.Merge(messages, selectedContact, {
@@ -39,10 +36,15 @@ local function buildMessagesWithChannelContext(messages, selectedContact)
   })
 end
 
+local function transcriptIsAtEnd(transcript)
+  local range = ScrollView.GetRange(transcript)
+  return range <= 0 or ScrollView.GetOffset(transcript) >= range - 1
+end
+
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
   local selectedConversationKey = selectedContact and selectedContact.conversationKey or nil
   if view._selectedConversationKey ~= selectedConversationKey then
-    view.transcript._visibleCount = MESSAGES_PAGE_SIZE
+    TranscriptView.Reset(view.transcript)
   end
   view._selectedConversationKey = selectedConversationKey
   view._selectedContact = selectedContact
@@ -85,6 +87,7 @@ local function refreshBottomBanner(view)
   -- Adjust transcript height when banner visibility changes
   if view._activeStatusVisible ~= wasVisible and view.transcript then
     local t = view.transcript
+    local wasAtEnd = transcriptIsAtEnd(t)
     local delta = view._activeStatusVisible and -ACTIVE_STATUS_BANNER_HEIGHT or ACTIVE_STATUS_BANNER_HEIGHT
     local currentH = sizeValue(t.scrollFrame, "GetHeight", "height", 0)
     if currentH > 0 then
@@ -92,7 +95,12 @@ local function refreshBottomBanner(view)
       t.scrollFrame:SetSize(sizeValue(t.scrollFrame, "GetWidth", "width", 0), newH)
       t.scrollBar:SetHeight(newH)
       t.viewportHeight = newH
-      ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), true)
+      if t._allMessages then
+        t._virtualForceEnd = wasAtEnd
+        TranscriptView.RenderTranscript(t, t._allMessages)
+      else
+        ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), false)
+      end
     end
   end
 end
@@ -169,7 +177,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   transcript.point = pointValue(transcript.scrollFrame, nil)
   transcript.width = sizeValue(transcript.scrollFrame, "GetWidth", "width", parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET)
   transcript.height = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcriptHeight)
-  TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth, ConversationPane)
+  TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth)
 
   -- Active status banner (above composer, shown for AFK/DND)
 
@@ -267,6 +275,7 @@ function ConversationPane.Relayout(view, width, height)
   local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
   local transcriptH = height - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
   local t = view.transcript
+  local wasAtEnd = transcriptIsAtEnd(t)
   t.scrollFrame:SetSize(transcriptW, transcriptH)
   t.content:SetSize(transcriptW, t.content.height or transcriptH)
   t.scrollBar:SetHeight(transcriptH)
@@ -277,6 +286,7 @@ function ConversationPane.Relayout(view, width, height)
   end
   -- Re-render bubbles at the new width
   if t._allMessages then
+    t._virtualForceEnd = wasAtEnd
     TranscriptView.RenderTranscript(t, t._allMessages)
   end
 end

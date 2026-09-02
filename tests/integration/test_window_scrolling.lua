@@ -35,6 +35,18 @@ local function buildMessages(count)
   return messages
 end
 
+local function countBubbleFrames(content)
+  local count = 0
+  for _, frames in ipairs({ content._activeFrames or {}, content._freeFrames or {} }) do
+    for _, frame in ipairs(frames) do
+      if frame._textFS then
+        count = count + 1
+      end
+    end
+  end
+  return count
+end
+
 return function()
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
@@ -104,7 +116,12 @@ return function()
     "expected transcript content to be wired as scroll child"
   )
   assert(window.conversation.transcript.scrollFrame:GetVerticalScrollRange() > 0, "expected overflowing transcript to be scrollable")
-  local initialTranscriptVisibleCount = window.conversation.transcript._visibleCount
+  assert(#window.conversation.transcript._virtualRows == #messages, "expected row metadata for complete transcript history")
+  local initialBoundCount = window.conversation.transcript._virtualLastIndex
+    - window.conversation.transcript._virtualFirstIndex
+    + 1
+  assert(initialBoundCount < #messages, "expected transcript to bind only viewport rows")
+  assert(countBubbleFrames(window.conversation.transcript.content) < #messages, "expected bounded transcript bubble pool")
   assert(window.conversation.transcript.scrollFrame.scripts.OnMouseWheel ~= nil, "expected transcript mouse wheel scrolling")
   assert(
     window.conversation.transcript.content.width == window.conversation.transcript.scrollFrame.width,
@@ -116,8 +133,9 @@ return function()
   )
 
   window.conversation.transcript.scrollBar:SetValue(0)
-  assert(window.conversation.transcript._visibleCount > initialTranscriptVisibleCount, "expected transcript load more to trigger near the top")
-  assert(window.conversation.transcript.scrollFrame:GetVerticalScroll() > 0, "expected transcript load more to preserve scroll position")
+  assert(window.conversation.transcript.scrollFrame:GetVerticalScroll() == 0, "expected transcript to reach oldest history")
+  assert(window.conversation.transcript._virtualFirstIndex == 1, "expected oldest message row to bind at top")
+  assert(countBubbleFrames(window.conversation.transcript.content) < #messages, "expected scrolling to keep bubble pool bounded")
 
   for _ = 1, 200 do
     window.conversation.transcript.scrollFrame.scripts.OnMouseWheel(window.conversation.transcript.scrollFrame, 1)

@@ -19,24 +19,13 @@ return function()
     return transcript
   end
 
-  -- Stub ConversationPane for tests (no circular require)
-  local function makeConversationPaneStub()
-    return {
-      HasMore = function(_transcript)
-        return false
-      end,
-      LoadMore = function(_transcript) end,
-    }
-  end
 
   -- test_configure_creates_edit_box
 
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     assert(transcript.text ~= nil, "test_configure_creates_edit_box: transcript.text should be created")
   end
@@ -46,9 +35,7 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     assert(transcript.text.multiline == true, "test_edit_box_is_multiline: SetMultiLine(true) should be called")
   end
@@ -58,9 +45,7 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     assert(transcript.text.autoFocus == false, "test_edit_box_auto_focus_disabled: SetAutoFocus(false) should be called")
   end
@@ -70,9 +55,7 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     assert(transcript.text.hyperlinksEnabled == true, "test_edit_box_hyperlinks_enabled: SetHyperlinksEnabled(true) should be called")
   end
@@ -103,9 +86,7 @@ return function()
 
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
     transcript.text.scripts.OnHyperlinkClick(transcript.text, "url:https://example.com/help", "https://example.com/help", "LeftButton")
 
     assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
@@ -121,9 +102,7 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local stub = makeConversationPaneStub()
-
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     -- After ConfigureTranscript, transcript.text should exist and have empty text
     assert(transcript.text ~= nil, "test_initial_layout_called: transcript.text must exist after configure")
@@ -135,29 +114,15 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local heights = { 600, 720, 840, 960, 1080 }
-    local loadMoreCalls = 0
     local wheelOriginalCalled = false
-    local wheelDelta = nil
-    local stub = {
-      HasMore = function(_transcript)
-        return loadMoreCalls < 4
-      end,
-      LoadMore = function(target)
-        loadMoreCalls = loadMoreCalls + 1
-        target.content:SetSize(target.content:GetWidth(), heights[loadMoreCalls + 1])
-      end,
-    }
+    local wheelDelta
 
     transcript.scrollFrame:SetScript("OnMouseWheel", function(_self, delta)
       wheelOriginalCalled = true
       wheelDelta = delta
     end)
 
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
-
-    transcript.content:SetSize(transcript.content:GetWidth(), heights[1])
-    transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     local wheelHandler = transcript.scrollFrame:GetScript("OnMouseWheel")
     assert(type(wheelHandler) == "function", "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel handler must exist")
@@ -167,14 +132,6 @@ return function()
       wheelDelta == -1,
       "test_scroll_wiring_preserves_original_mouse_wheel_handler: original OnMouseWheel handler should receive the wheel delta"
     )
-    assert(
-      loadMoreCalls > 0,
-      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel should still trigger transcript loading near the top"
-    )
-    assert(
-      transcript.content:GetHeight() > heights[1],
-      "test_scroll_wiring_preserves_original_mouse_wheel_handler: OnMouseWheel should still grow the transcript content when loading older messages"
-    )
   end
 
   -- test_scroll_wiring_preserves_original_value_changed_handler
@@ -182,49 +139,23 @@ return function()
   do
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
-    local heights = { 600, 720, 840, 960, 1080 }
-    local loadMoreCalls = 0
     local valueOriginalCalled
     local valueSeen
-    local stub = {
-      HasMore = function(_transcript)
-        return loadMoreCalls < 4
-      end,
-      LoadMore = function(target)
-        loadMoreCalls = loadMoreCalls + 1
-        target.content:SetSize(target.content:GetWidth(), heights[loadMoreCalls + 1])
-      end,
-    }
 
     transcript.scrollBar:SetScript("OnValueChanged", function(_self, value)
       valueOriginalCalled = true
-      if valueSeen == nil then
-        valueSeen = value
-      end
+      valueSeen = value
     end)
 
-    TranscriptSetup.ConfigureTranscript(factory, transcript, 600, stub)
-
-    transcript.content:SetSize(transcript.content:GetWidth(), heights[1])
-    transcript.scrollFrame.verticalScroll = TranscriptView.TRANSCRIPT_SCROLL_STEP
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
 
     local valueHandler = transcript.scrollBar:GetScript("OnValueChanged")
     assert(type(valueHandler) == "function", "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged handler must exist")
-    valueOriginalCalled = false
-    valueSeen = nil
     valueHandler(transcript.scrollBar, TranscriptView.TRANSCRIPT_SCROLL_STEP)
     assert(valueOriginalCalled, "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should be called")
     assert(
       valueSeen == TranscriptView.TRANSCRIPT_SCROLL_STEP,
       "test_scroll_wiring_preserves_original_value_changed_handler: original OnValueChanged handler should receive the scroll value"
-    )
-    assert(
-      loadMoreCalls > 0,
-      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged should still trigger transcript loading near the top"
-    )
-    assert(
-      transcript.content:GetHeight() > heights[1],
-      "test_scroll_wiring_preserves_original_value_changed_handler: OnValueChanged should still grow the transcript content when loading older messages"
     )
   end
 end

@@ -129,4 +129,28 @@ return function()
 
     assert(touched == false, "releaseAll must not call SetScript('OnClick', ...) on pooled Frames")
   end
+
+  -- test_release_all_clears_bound_message_state
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    FramePool.initPool(contentFrame)
+    local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
+    local message = { text = "released" }
+    frame._wmMessage = message
+    frame._wmVirtualIndex = 7
+    frame._wmOnReact = function() end
+    frame._wmContextMenuOptions = { message = message }
+    frame._copyButton = {
+      _wmCopyMessage = message,
+      _wmCopyText = function() end,
+    }
+
+    FramePool.releaseAll(contentFrame)
+
+    assert(frame._wmMessage == nil, "released frame must not retain bound message")
+    assert(frame._wmVirtualIndex == nil, "released frame must not retain virtual row index")
+    assert(frame._wmOnReact == nil, "released frame must not retain render callback")
+    assert(frame._wmContextMenuOptions.message == nil, "released menu state must not retain message")
+    assert(frame._copyButton._wmCopyMessage == nil, "released copy state must not retain message")
+  end
 end
