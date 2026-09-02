@@ -155,6 +155,9 @@ function Presence.handleBNetFriendEvent(Bootstrap, deps)
   return true
 end
 
+-- One deferred rebuild after login builds the guild/community index. From
+-- then on presence is read per contact, so there is no repeating refresh loop
+-- re-enumerating every member every TTL.
 local function schedulePresenceRefresh(Bootstrap, PresenceCache)
   if Common == nil then
     return
@@ -166,19 +169,6 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache)
     PresenceCache.Rebuild()
     Common.refreshRuntimeWindow(Bootstrap)
   end)
-
-  if Bootstrap._presenceTimerLoopStarted then
-    return
-  end
-
-  local function presenceTimerLoop()
-    if not Bootstrap._inMythicContent and PresenceCache.IsStale() then
-      PresenceCache.Rebuild()
-    end
-    Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop)
-  end
-
-  Bootstrap._presenceTimerLoopStarted = Common.scheduleAfter(PresenceCache.GetTTL(), presenceTimerLoop) == true
 end
 
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
@@ -224,24 +214,15 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   return true
 end
 
-function Presence.handlePresenceInvalidation(Bootstrap, deps)
+-- Roster and club membership events fire in bursts. Only mark the data stale;
+-- the next per-contact presence read decides whether a rescan is worth it.
+function Presence.handlePresenceInvalidation(_Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
     return true
   end
 
   PresenceCache.Invalidate()
-
-  if not Bootstrap._presenceRebuildPending then
-    Bootstrap._presenceRebuildPending = true
-    Common.scheduleAfter(2, function()
-      Bootstrap._presenceRebuildPending = false
-      if Bootstrap._inMythicContent then
-        return
-      end
-      PresenceCache.Rebuild()
-    end)
-  end
 
   return true
 end

@@ -123,9 +123,9 @@ function WindowCoordinator.Create(options)
     end
 
     if nextVisible then
-      if presenceCache and type(presenceCache.IsStale) == "function" and presenceCache.IsStale() and presenceCache.Rebuild then
-        presenceCache.Rebuild()
-      end
+      -- No full presence rebuild here: refreshWindow below runs
+      -- refreshContacts, which freshens presence for the visible contacts
+      -- only.
       window.frame:Show()
       -- Re-render after Show so scroll frame dimensions are settled,
       -- allowing snapToEnd to scroll to the latest message.
@@ -149,7 +149,11 @@ function WindowCoordinator.Create(options)
     if not isMythicRestricted() then
       runtime.availabilityRequestedAt = runtime.availabilityRequestedAt or {}
       local now = nowSeconds()
+      local ensureFresh = presenceCache and type(presenceCache.EnsureFresh) == "function" and presenceCache.EnsureFresh or nil
       for _, item in ipairs(freshContacts) do
+        if ensureFresh and item.guid then
+          ensureFresh(item.guid)
+        end
         if item.channel == "WOW" and item.guid and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid]) then
           local lastAt = runtime.availabilityRequestedAt[item.guid] or 0
           if now - lastAt >= AVAILABILITY_THROTTLE_SECONDS then

@@ -5,8 +5,19 @@ end
 
 local PresenceCache = {}
 
+-- A full guild/community enumeration allocates one info table per member, so
+-- a large guild costs megabytes of garbage per pass. Cap unattended rescans.
+local INDEX_MIN_INTERVAL = 300
+
 -- Private module state
 local cache = {}
+-- guid -> club/member coordinates, kept as two flat maps so the index costs
+-- two tables instead of one table per member.
+local indexClub = {}
+local indexMember = {}
+-- guid -> timestamp of the last presence read for that GUID.
+local freshAt = {}
+local indexBuiltAt = nil
 local lastRebuiltAt = 0
 local ttl = 30
 local dirty = true
@@ -45,7 +56,7 @@ local function safeIpairs(tbl)
   return iter, state, start
 end
 
-local function cacheClub(newCache, api, clubId)
+local function cacheClub(acc, api, clubId)
   local ok, members = pcall(api.GetClubMembers, clubId)
   if not ok or type(members) ~= "table" then
     return
@@ -53,9 +64,12 @@ local function cacheClub(newCache, api, clubId)
   for _, memberId in safeIpairs(members) do
     local infoOk, info = pcall(api.GetMemberInfo, clubId, memberId)
     if infoOk and info and info.guid then
+      acc.club[info.guid] = clubId
+      acc.member[info.guid] = memberId
+      acc.freshAt[info.guid] = acc.now
       local p = presenceToString(info.presence)
       if p then
-        newCache[info.guid] = p
+        acc.cache[info.guid] = p
       end
     end
   end
@@ -74,6 +88,10 @@ function PresenceCache.Initialize(api, options)
     nowFn = defaultNow
   end
   cache = {}
+  indexClub = {}
+  indexMember = {}
+  freshAt = {}
+  indexBuiltAt = nil
   lastRebuiltAt = 0
   -- Don't rebuild immediately — club data may not be loaded yet at ADDON_LOADED time.
   -- Mark dirty so the first timer tick or event triggers the rebuild when data is ready.
@@ -81,30 +99,41 @@ function PresenceCache.Initialize(api, options)
 end
 
 function PresenceCache.Rebuild()
-  local newCache = {}
+  local now = nowFn()
+  local acc = { cache = {}, club = {}, member = {}, freshAt = {}, now = now }
 
   if type(clubApi) == "table" then
+    local guildId = nil
+
     -- Cache guild members
     if type(clubApi.GetGuildClubId) == "function" then
-      local ok, guildId = pcall(clubApi.GetGuildClubId)
-      if ok and guildId then
-        cacheClub(newCache, clubApi, guildId)
+      local ok, id = pcall(clubApi.GetGuildClubId)
+      if ok and id then
+        guildId = id
+        cacheClub(acc, clubApi, id)
       end
     end
 
-    -- Cache all community members
+    -- Cache all community members. The guild club is also listed here, so
+    -- skip it rather than enumerating every guild member a second time.
     if type(clubApi.GetSubscribedClubs) == "function" then
       local ok, clubs = pcall(clubApi.GetSubscribedClubs)
       if ok and clubs then
         for _, club in ipairs(clubs) do
-          cacheClub(newCache, clubApi, club.clubId)
+          if club.clubId ~= guildId then
+            cacheClub(acc, clubApi, club.clubId)
+          end
         end
       end
     end
   end
 
-  cache = newCache
-  lastRebuiltAt = nowFn()
+  cache = acc.cache
+  indexClub = acc.club
+  indexMember = acc.member
+  freshAt = acc.freshAt
+  indexBuiltAt = now
+  lastRebuiltAt = now
   dirty = false
 end
 
@@ -115,57 +144,62 @@ function PresenceCache.GetPresence(guid)
   return cache[guid]
 end
 
--- Targeted single-GUID refresh: scans guild + communities for just this GUID
--- and updates the cache entry. Only ~3-5 API calls, not a full rebuild.
--- Use on contact click to get fresh presence without rebuilding everything.
+-- Read one member straight from the index: a single API call, no enumeration.
+-- Returns presence (may be nil for an unknown presence enum) plus whether the
+-- GUID was actually resolved.
+local function lookupIndexed(guid)
+  local clubId = indexClub[guid]
+  if clubId == nil or type(clubApi) ~= "table" then
+    return nil, false
+  end
+
+  local ok, info = pcall(clubApi.GetMemberInfo, clubId, indexMember[guid])
+  if not ok or type(info) ~= "table" or info.guid ~= guid then
+    -- Member IDs shift when people leave a club; drop the stale coordinates
+    -- rather than reporting somebody else's presence under this GUID.
+    indexClub[guid] = nil
+    indexMember[guid] = nil
+    return nil, false
+  end
+
+  return presenceToString(info.presence), true
+end
+
+-- Targeted single-GUID refresh: one member lookup against the index built by
+-- Rebuild. Falls back to a full rescan only when the index has never been
+-- built, or when club membership changed and the rescan interval has elapsed.
 function PresenceCache.RefreshPresence(guid)
   if guid == nil or type(clubApi) ~= "table" then
     return nil
   end
 
-  local function findInClub(clubId)
-    local ok, members = pcall(clubApi.GetClubMembers, clubId)
-    if not ok or type(members) ~= "table" then
-      return nil
+  local presence, found = lookupIndexed(guid)
+  if not found then
+    local staleIndex = dirty and indexBuiltAt ~= nil and (nowFn() - indexBuiltAt) >= INDEX_MIN_INTERVAL
+    if indexBuiltAt == nil or staleIndex then
+      PresenceCache.Rebuild()
+      presence = lookupIndexed(guid)
     end
-    for _, memberId in safeIpairs(members) do
-      local infoOk, info = pcall(clubApi.GetMemberInfo, clubId, memberId)
-      if infoOk and info and info.guid == guid then
-        return presenceToString(info.presence)
-      end
-    end
+  end
+
+  cache[guid] = presence
+  freshAt[guid] = nowFn()
+  return presence
+end
+
+-- Refresh this GUID only if its last read is older than the TTL. Callers that
+-- run on every window refresh should use this instead of RefreshPresence.
+function PresenceCache.EnsureFresh(guid)
+  if guid == nil or type(clubApi) ~= "table" then
     return nil
   end
 
-  -- Check guild
-  if type(clubApi.GetGuildClubId) == "function" then
-    local ok, guildId = pcall(clubApi.GetGuildClubId)
-    if ok and guildId then
-      local presence = findInClub(guildId)
-      if presence then
-        cache[guid] = presence
-        return presence
-      end
-    end
+  local readAt = freshAt[guid]
+  if readAt ~= nil and (nowFn() - readAt) < ttl then
+    return cache[guid]
   end
 
-  -- Check communities
-  if type(clubApi.GetSubscribedClubs) == "function" then
-    local ok, clubs = pcall(clubApi.GetSubscribedClubs)
-    if ok and clubs then
-      for _, club in ipairs(clubs) do
-        local presence = findInClub(club.clubId)
-        if presence then
-          cache[guid] = presence
-          return presence
-        end
-      end
-    end
-  end
-
-  -- Not found in any club — remove from cache if stale
-  cache[guid] = nil
-  return nil
+  return PresenceCache.RefreshPresence(guid)
 end
 
 function PresenceCache.Invalidate()
@@ -190,6 +224,10 @@ end
 -- Test helpers (prefixed with _ to indicate internal use)
 function PresenceCache._reset()
   cache = {}
+  indexClub = {}
+  indexMember = {}
+  freshAt = {}
+  indexBuiltAt = nil
   lastRebuiltAt = 0
   dirty = true
   clubApi = nil
