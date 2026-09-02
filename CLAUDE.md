@@ -98,6 +98,13 @@ Rules:
 - **Fixes start with `Fixed:`.** Features and behavior changes don't need a prefix.
 - **Always update `CHANGELOG.md` when behavior, UI, settings, or fixes change** — in the same turn as the code edit. Put the line under `## [Unreleased]` (or the current version section if release prep is already in flight, like 1.1.8 during this session).
 
+### Layout
+
+`CHANGELOG.md` holds only `[Unreleased]` plus the **current minor series** (1.4.x today). Older series live in `archive/changelog/<major>.<minor>.md` (e.g. `archive/changelog/1.3.md`).
+
+- Every file starts with an `All releases:` nav line linking each of the other series. When a new minor opens, move the finished series into a new archive file and add it to the nav line in **all** changelog files.
+- `archive/` is ignored by `.pkgmeta`, so it never ships in the addon zip.
+
 When in doubt, read the existing 1.1.0 - 1.1.7 sections — they are the style guide. Match their voice.
 
 ## Project Structure
