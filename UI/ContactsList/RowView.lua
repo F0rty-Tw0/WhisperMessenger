@@ -132,8 +132,15 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   row.skinHighlight:Hide()
 
-  -- Event scripts (hover, click, drag)
-  RowScripts.bindHover(row, { rowBaseBg = rowBaseBg })
+  -- Event scripts (hover, click, drag). The hover options table is kept on the
+  -- row and reused so a refresh that changes nothing allocates nothing.
+  local hoverOptions = row._wmHoverOptions
+  if hoverOptions == nil then
+    hoverOptions = {}
+    row._wmHoverOptions = hoverOptions
+  end
+  hoverOptions.rowBaseBg = rowBaseBg
+  RowScripts.bindHover(row, hoverOptions)
   RowScripts.bindClick(row, item, options)
   row.rowIndex = index
   RowScripts.bindDrag(row, item, options)

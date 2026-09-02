@@ -182,98 +182,110 @@ end
 
 --- Bind OnEnter / OnLeave hover scripts to a row.
 --- options may include: rowBaseBg (color table for base background)
+--- Rows are re-bound on every refresh, so the closures are created once and
+--- read their state (row.item, row.selected) live at call time.
 function RowScripts.bindHover(row, options)
   stopHoverWatchdog(row)
   row._wmRowBaseBg = (options and options.rowBaseBg) or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
   row._wmRowHover = false
   row._wmActionHoverCount = 0
-  row._wmIsPointerInside = function()
-    return isPointerInsideRow(row)
-  end
-  row._wmApplyVisualState = function()
-    applyRowVisualState(row)
+
+  if not row._wmHoverBound then
+    row._wmHoverBound = true
+    row._wmIsPointerInside = function()
+      return isPointerInsideRow(row)
+    end
+    row._wmApplyVisualState = function()
+      applyRowVisualState(row)
+    end
+
+    if row.SetScript then
+      row:SetScript("OnEnter", function()
+        if row.selected then
+          stopHoverWatchdog(row)
+        else
+          installHoverWatchdog(row)
+        end
+        row._wmRowHover = true
+        row._wmApplyVisualState()
+        local AB = getActionButtons()
+        if AB then
+          AB.showActions(row)
+        end
+      end)
+
+      row:SetScript("OnLeave", function()
+        row._wmRowHover = false
+        row._wmApplyVisualState()
+        deferHideActions(row)
+      end)
+    end
   end
 
   row._wmApplyVisualState()
-
-  if row.SetScript then
-    row:SetScript("OnEnter", function()
-      if row.selected then
-        stopHoverWatchdog(row)
-      else
-        installHoverWatchdog(row)
-      end
-      row._wmRowHover = true
-      row._wmApplyVisualState()
-      local AB = getActionButtons()
-      if AB then
-        AB.showActions(row)
-      end
-    end)
-
-    row:SetScript("OnLeave", function()
-      row._wmRowHover = false
-      row._wmApplyVisualState()
-      deferHideActions(row)
-    end)
-  end
 end
 
 --- Bind OnClick script to a row.
 --- Left-click selects the conversation. Right-click opens the native player menu.
+--- The handler is created once per row and reads row._wmRowOptions, so a later
+--- refresh with fresh callbacks takes effect without rebinding.
 function RowScripts.bindClick(row, _item, options)
+  row._wmRowOptions = options
   if row.RegisterForClicks then
     row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
   end
 
-  if row.SetScript then
+  if not row._wmClickBound and row.SetScript then
+    row._wmClickBound = true
     row:SetScript("OnClick", function(self, button)
       if row.item == nil then
         return
       end
 
+      local rowOptions = row._wmRowOptions
       if button == "RightButton" then
-        if ContextMenu.Open(row.item, self or row, options and options.onMarkUnread) then
+        if ContextMenu.Open(row.item, self or row, rowOptions and rowOptions.onMarkUnread) then
           return
         end
       end
 
-      if options and options.onSelect then
-        options.onSelect(row.item)
+      if rowOptions and rowOptions.onSelect then
+        rowOptions.onSelect(row.item)
       end
     end)
   end
 end
 
 --- Bind drag-and-drop scripts to a row (pinned contacts only).
---- For pinned items: registers for drag and sets OnDragStart/OnDragStop.
---- For non-pinned items: clears drag registration and scripts.
+--- The handlers are attached once and stay attached; they no-op unless the item
+--- the row currently holds is pinned. Drag registration is still toggled on
+--- every bind: it is sticky on pooled row Buttons, and a registered-but-inert
+--- drag swallows clicks.
 function RowScripts.bindDrag(row, item, options)
-  if item.pinned then
-    if row.RegisterForDrag then
+  row._wmRowOptions = options
+
+  if not row._wmDragBound and row.SetScript then
+    row._wmDragBound = true
+    row:SetScript("OnDragStart", function()
+      local rowOptions = row._wmRowOptions
+      if row.item and row.item.pinned and rowOptions and rowOptions.onDragStart then
+        rowOptions.onDragStart(row, row.rowIndex)
+      end
+    end)
+    row:SetScript("OnDragStop", function()
+      local rowOptions = row._wmRowOptions
+      if row.item and row.item.pinned and rowOptions and rowOptions.onDragStop then
+        rowOptions.onDragStop(row, row.rowIndex)
+      end
+    end)
+  end
+
+  if row.RegisterForDrag then
+    if item.pinned then
       row:RegisterForDrag("LeftButton")
-    end
-    if row.SetScript then
-      row:SetScript("OnDragStart", function()
-        if row.item and options and options.onDragStart then
-          options.onDragStart(row, row.rowIndex)
-        end
-      end)
-      row:SetScript("OnDragStop", function()
-        if row.item and options and options.onDragStop then
-          options.onDragStop(row, row.rowIndex)
-        end
-      end)
-    end
-  else
-    if row.RegisterForDrag then
-      -- No arguments = unregister. Drag registration is sticky on pooled
-      -- row Buttons, and a registered-but-handlerless drag swallows clicks.
+    else
+      -- No arguments = unregister.
       row:RegisterForDrag()
-    end
-    if row.SetScript then
-      row:SetScript("OnDragStart", nil)
-      row:SetScript("OnDragStop", nil)
     end
   end
 end
