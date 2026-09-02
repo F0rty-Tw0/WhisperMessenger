@@ -56,7 +56,10 @@ return function()
 
     local statusLabel = responsivePane.headerStatus
     assert(statusLabel.justifyH == "LEFT", "narrow status should be explicitly left justified, got: " .. tostring(statusLabel.justifyH))
-    assert(string.sub(statusLabel:GetText(), 1, #narrowPrefix) == narrowPrefix, "narrow status should retain availability and character-realm prefix, got: " .. statusLabel:GetText())
+    assert(
+      string.sub(statusLabel:GetText(), 1, #narrowPrefix) == narrowPrefix,
+      "narrow status should retain availability and character-realm prefix, got: " .. statusLabel:GetText()
+    )
     assert(string.sub(statusLabel:GetText(), -3) == "...", "narrow status should end in ellipsis, got: " .. statusLabel:GetText())
     assert(statusLabel.wordWrap == false, "narrow status should not wrap")
     assert(statusLabel.maxLines == 1, "narrow status should remain on one line")

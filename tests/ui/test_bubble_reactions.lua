@@ -554,10 +554,7 @@ return function()
     local switched = assert(findBubble(content), "direction switch should rerender pooled bubble")
     assert(switched == bubble17 and switched._reactionFrame == reactionFrame, "direction switch should reuse pooled badge")
     assert(
-      reactionFrame.point[1] == "TOPLEFT"
-        and reactionFrame.point[3] == "BOTTOMLEFT"
-        and reactionFrame.point[4] == 5
-        and reactionFrame.point[5] == 7,
+      reactionFrame.point[1] == "TOPLEFT" and reactionFrame.point[3] == "BOTTOMLEFT" and reactionFrame.point[4] == 5 and reactionFrame.point[5] == 7,
       "pooled incoming-to-outgoing switch should use left inner-edge anchor"
     )
     Fonts.SetFontSize(savedFontSize or 12)

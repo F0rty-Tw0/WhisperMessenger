@@ -26,10 +26,8 @@ local function refitStatus(view)
     return
   end
 
-  local statusWidth = math.max(
-    0,
-    view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET
-  )
+  local statusWidth =
+    math.max(0, view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET)
   headerStatus:SetWidth(statusWidth)
   headerStatus:SetText(fitTextWithEllipsis(headerStatus, statusText, statusWidth))
 end

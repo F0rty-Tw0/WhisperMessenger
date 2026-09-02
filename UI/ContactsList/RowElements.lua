@@ -60,7 +60,6 @@ local function nameLabelWidth(row, parentWidth)
   )
 end
 
-
 function RowElements.updateNameLabel(row, item, parentWidth)
   if row.title == nil then
     return
