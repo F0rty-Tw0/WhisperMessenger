@@ -25,6 +25,9 @@ function SettingsRuntime.Create(factory, options)
   local currentConversation = nil
   local currentComposer = nil
   local refreshThemeVisuals
+  local runtime = {}
+  local panelKeys = { "generalPanel", "appearancePanel", "behaviorPanel", "notificationsPanel", "iconsPanel" }
+  local settingsKeys = { "generalSettings", "appearanceSettings", "behaviorSettings", "notificationSettings", "iconSettings" }
   local function onSettingChanged(key, value)
     if options.onSettingChanged then
       options.onSettingChanged(key, value)
@@ -33,6 +36,14 @@ function SettingsRuntime.Create(factory, options)
       refreshThemeVisuals()
     end
   end
+  local function onPanelCreated(index, panel, settings)
+    runtime[panelKeys[index]] = panel
+    runtime[settingsKeys[index]] = settings
+    if options.onPanelCreated then
+      options.onPanelCreated(index, panel, settings)
+    end
+  end
+
 
   local settingsPanels = settingsPanelsCreate(factory, {
     parent = options.parent,
@@ -44,7 +55,7 @@ function SettingsRuntime.Create(factory, options)
     behaviorCreate = behaviorCreate,
     notificationCreate = notificationCreate,
     iconCreate = iconCreate,
-    onPanelCreated = options.onPanelCreated,
+    onPanelCreated = onPanelCreated,
   })
 
   refreshThemeVisuals = function()
@@ -57,26 +68,25 @@ function SettingsRuntime.Create(factory, options)
   end
   refreshThemeVisuals()
 
-  return {
-    settingsPanels = settingsPanels.settingsPanels,
-    getPanel = settingsPanels.getPanel,
-    getSettings = settingsPanels.getSettings,
-    generalPanel = settingsPanels.generalPanel,
-    generalSettings = settingsPanels.generalSettings,
-    appearancePanel = settingsPanels.appearancePanel,
-    appearanceSettings = settingsPanels.appearanceSettings,
-    behaviorPanel = settingsPanels.behaviorPanel,
-    behaviorSettings = settingsPanels.behaviorSettings,
-    notificationsPanel = settingsPanels.notificationsPanel,
-    notificationSettings = settingsPanels.notificationSettings,
-    iconsPanel = settingsPanels.iconsPanel,
-    iconSettings = settingsPanels.iconSettings,
-    refreshThemeVisuals = refreshThemeVisuals,
-    setThemeTargets = function(conversation, composer)
-      currentConversation = conversation
-      currentComposer = composer
-    end,
-  }
+  runtime.settingsPanels = settingsPanels.settingsPanels
+  runtime.getPanel = settingsPanels.getPanel
+  runtime.getSettings = settingsPanels.getSettings
+  runtime.generalPanel = settingsPanels.generalPanel
+  runtime.generalSettings = settingsPanels.generalSettings
+  runtime.appearancePanel = settingsPanels.appearancePanel
+  runtime.appearanceSettings = settingsPanels.appearanceSettings
+  runtime.behaviorPanel = settingsPanels.behaviorPanel
+  runtime.behaviorSettings = settingsPanels.behaviorSettings
+  runtime.notificationsPanel = settingsPanels.notificationsPanel
+  runtime.notificationSettings = settingsPanels.notificationSettings
+  runtime.iconsPanel = settingsPanels.iconsPanel
+  runtime.iconSettings = settingsPanels.iconSettings
+  runtime.refreshThemeVisuals = refreshThemeVisuals
+  runtime.setThemeTargets = function(conversation, composer)
+    currentConversation = conversation
+    currentComposer = composer
+  end
+  return runtime
 end
 
 ns.MessengerWindowSettingsRuntime = SettingsRuntime
