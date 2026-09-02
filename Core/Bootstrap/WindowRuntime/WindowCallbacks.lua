@@ -105,7 +105,7 @@ function WindowCallbacks.Create(options)
     onClearAllChats = function()
       MessageReactions.ClearAll(runtime)
       for key in pairs(runtime.store.conversations) do
-        runtime.store.conversations[key] = nil
+        Store.Remove(runtime.store, key)
       end
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil

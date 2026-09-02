@@ -1,5 +1,6 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WindowCallbacks")
+local RuntimeFactory = require("WhisperMessenger.Core.Bootstrap.RuntimeFactory")
 
 return function()
   local refreshes = 0
@@ -277,6 +278,48 @@ return function()
     count = count + 1
   end
   assert(count == 0, "clear all should remove all conversations")
+
+  -- test_clear_all_uses_store_removal_lifecycle_without_discarding_active_sends
+  do
+    local now = 1000
+    local key = "wow::WOW::cached-realm"
+    local guid = "Player-cached"
+    local clearCharacterState = { activeConversationKey = key }
+    local clearRuntime = RuntimeFactory.CreateRuntimeState({
+      conversations = {
+        [key] = {
+          conversationKey = key,
+          guid = guid,
+          messages = {},
+          lastActivityAt = now,
+        },
+      },
+    }, clearCharacterState, "wow", {
+      now = function()
+        return now
+      end,
+    })
+    clearRuntime.pendingOutgoing[key] = { { createdAt = now } }
+    clearRuntime.pendingGroupOutgoing = { [key] = { { createdAt = now } } }
+    clearRuntime.sendStatusByConversation[key] = { status = "sent" }
+    clearRuntime.availabilityByGUID[guid] = { status = "CanWhisper" }
+    clearRuntime.availabilityRequestedAt = { [guid] = now }
+
+    local clearCallbacks = WindowCallbacks.Create({
+      runtime = clearRuntime,
+      characterState = clearCharacterState,
+    })
+    clearCallbacks.onClearAllChats()
+
+    assert(next(clearRuntime.store.conversations) == nil, "clear all must remove every conversation")
+    assert(clearRuntime.sendStatusByConversation[key] == nil, "clear all must release per-conversation send status")
+    assert(clearRuntime.availabilityByGUID[guid] == nil, "clear all must release orphaned availability")
+    assert(clearRuntime.availabilityRequestedAt[guid] == nil, "clear all must release orphaned resolver requests")
+    assert(clearRuntime.pendingOutgoing[key] ~= nil, "clear all must preserve active whisper sends")
+    assert(clearRuntime.pendingGroupOutgoing[key] ~= nil, "clear all must preserve active group sends")
+    assert(clearRuntime.activeConversationKey == nil, "clear all must clear runtime active conversation")
+    assert(clearCharacterState.activeConversationKey == nil, "clear all must clear persisted active conversation")
+  end
 
   assert(#copiedStates >= 3, "callbacks should copy mutable state before persisting")
   assert(#traceCalls >= 3, "callbacks should trace pin/remove/reorder operations")

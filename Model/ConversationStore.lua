@@ -195,7 +195,10 @@ local function applyRetentionAfterAppend(state, key, conversation, message)
   end
 
   for conversationKey, candidate in pairs(state.conversations) do
-    if not candidate.pinned and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now) then
+    if conversationKey ~= key
+      and not candidate.pinned
+      and Retention.IsExpired(candidate.lastActivityAt, state.config.conversationMaxAge, now)
+    then
       removeConversation(state, conversationKey)
     else
       expireConversationMessages(state, conversationKey, candidate, now, false)
@@ -320,6 +323,27 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   local isNewest = insertAt == #messages + 1
   table.insert(messages, insertAt, message)
 
+  applyRetentionAfterAppend(state, key, conversation, message)
+  local storedConversation = state.conversations[key]
+  if storedConversation ~= conversation then
+    return storedConversation
+  end
+
+  local messageRetained = false
+  for _, retainedMessage in ipairs(conversation.messages) do
+    if retainedMessage == message then
+      messageRetained = true
+      break
+    end
+  end
+  if not messageRetained then
+    local now = type(state.now) == "function" and state.now() or message.sentAt
+    if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
+      removeConversation(state, key)
+    end
+    return state.conversations[key]
+  end
+
   if isNewest then
     if isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
       applyActivityMetadata(conversation, message)
@@ -339,7 +363,6 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
     conversation.activeStatus = nil
   end
   compactMessage(message)
-  applyRetentionAfterAppend(state, key, conversation, message)
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
   end

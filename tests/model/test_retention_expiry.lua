@@ -427,7 +427,7 @@ return function()
     assert(state.conversations["key::active"] ~= nil, "long-session retention must protect the conversation receiving the message")
   end
 
-  -- test_chronological_insert_uses_runtime_clock_for_retention
+  -- test_expired_chronological_insert_has_no_side_effects_or_detached_return
   do
     local now = 1000
     local state = Store.New({
@@ -438,29 +438,83 @@ return function()
     }, function()
       return now
     end)
-    state.conversations["key::active"] = {
-      messages = { { id = "recent", sentAt = 950, lineID = 2 } },
-      lastActivityAt = 950,
-      lastActivityLineID = 2,
-      unreadCount = 0,
+    local activeStatus = { kind = "afk", sentAt = 700 }
+    local conversation = {
+      displayName = "Original",
+      guid = "Player-original",
+      messages = {},
+      lastPreview = "original preview",
+      lastActivityAt = 800,
+      unreadCount = 2,
+      activeStatus = activeStatus,
     }
-    state.conversations["key::stale"] = {
-      messages = { { id = "old", sentAt = 1 } },
-      lastActivityAt = 1,
-      unreadCount = 0,
-    }
+    state.conversations["key::expired"] = conversation
 
-    Store.InsertIncomingChronological(state, "key::active", {
-      id = "delayed",
+    local returned = Store.InsertIncomingChronological(state, "key::expired", {
+      id = "expired",
       direction = "in",
       kind = "user",
-      text = "delayed",
-      sentAt = 100,
+      text = "expired delayed message",
+      playerName = "Replacement",
+      guid = "Player-replacement",
+      sentAt = 800,
       lineID = 1,
     }, false)
 
-    assert(state.conversations["key::stale"] == nil, "delayed inserts must expire state using current runtime time")
-    assert(state.conversations["key::active"] ~= nil, "delayed insert retention must preserve the receiving conversation")
+    assert(state.conversations["key::expired"] == nil, "expired conversation must be removed with its discarded insert")
+    assert(#conversation.messages == 0, "expired insert must not remain in detached transcript")
+    assert(conversation.unreadCount == 2, "expired insert must not mutate unread state")
+    assert(
+      conversation.displayName == "Original" and conversation.guid == "Player-original" and conversation.lastPreview == "original preview",
+      "expired insert must not mutate conversation metadata"
+    )
+    assert(conversation.activeStatus == activeStatus, "expired insert must not clear active status")
+    assert(returned == nil, "expired insert must return actual stored conversation state")
+  end
+
+  -- test_count_trimmed_chronological_insert_has_no_side_effects
+  do
+    local now = 1000
+    local state = Store.New({
+      maxMessagesPerConversation = 1,
+      maxConversations = 10,
+      messageMaxAge = 1000,
+      conversationMaxAge = 1000,
+    }, function()
+      return now
+    end)
+    local key = "key::count-trimmed"
+    local activeStatus = { kind = "afk", sentAt = 800 }
+    local conversation = {
+      displayName = "Original",
+      guid = "Player-original",
+      messages = { { id = "recent", sentAt = 950, lineID = 2 } },
+      lastPreview = "recent",
+      lastActivityAt = 950,
+      unreadCount = 2,
+      activeStatus = activeStatus,
+    }
+    state.conversations[key] = conversation
+
+    local returned = Store.InsertIncomingChronological(state, key, {
+      id = "trimmed",
+      direction = "in",
+      kind = "user",
+      text = "old delayed message",
+      playerName = "Replacement",
+      guid = "Player-replacement",
+      sentAt = 900,
+      lineID = 1,
+    }, false)
+
+    assert(#conversation.messages == 1 and conversation.messages[1].id == "recent", "count-trimmed insert must not change transcript")
+    assert(conversation.unreadCount == 2, "count-trimmed insert must not mutate unread state")
+    assert(
+      conversation.displayName == "Original" and conversation.guid == "Player-original" and conversation.lastPreview == "recent",
+      "count-trimmed insert must not mutate conversation metadata"
+    )
+    assert(conversation.activeStatus == activeStatus, "count-trimmed insert must not clear active status")
+    assert(returned == state.conversations[key], "count-trimmed insert must return stored conversation")
   end
 
   -- test_append_preserves_pinned_message_age_exemption
