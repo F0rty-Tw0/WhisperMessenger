@@ -8,7 +8,6 @@ local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
 
 local Registration = {}
 
-
 local function registerEventIfSupported(frame, eventName)
   return EventUtils.RegisterEventIfSupported(frame, eventName)
 end

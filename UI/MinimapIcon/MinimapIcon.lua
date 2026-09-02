@@ -282,7 +282,6 @@ function MinimapIcon.Create(factory, options)
 
   refreshTheme()
 
-
   return {
     frame = frame,
     iconTex = iconTex,

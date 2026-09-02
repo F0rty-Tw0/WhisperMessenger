@@ -27,7 +27,6 @@ elseif type(require) == "function" then
   end
 end
 
-
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
@@ -168,7 +167,6 @@ function Bootstrap.Initialize(factory, options)
     end
   end
 
-
   AutoOpenCoordinator.Attach({
     runtime = runtime,
     accountState = accountState,
@@ -210,7 +208,6 @@ function Bootstrap.Initialize(factory, options)
     toggle = runtime.toggle,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
   })
-
 
   MythicSuspendController.Attach(runtime, {
     Bootstrap = Bootstrap,

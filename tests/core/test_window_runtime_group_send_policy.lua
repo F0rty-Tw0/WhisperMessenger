@@ -147,7 +147,10 @@ return function()
 
     assert(policy.shouldRoutePayload({ channel = "WOW" }) == false, "legacy WOW should not route as group")
     assert(policy.shouldRoutePayload({ channel = ChannelType.PARTY }) == true, "party should route as group")
-    assert(policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "hello party" }) == true, "party send should succeed")
+    assert(
+      policy.sendPayload({ conversationKey = "party::jaina-area52", channel = ChannelType.PARTY, text = "hello party" }) == true,
+      "party send should succeed"
+    )
     assert(sendCalls == 1, "ChatGateway.Send should be called once")
     assert(policy.sendPayload({ channel = ChannelType.RAID, text = "raid" }) == false, "unsendable group should return false")
   end
@@ -468,7 +471,10 @@ return function()
     assert(policy.shouldRoutePayload({ channel = "CHANNEL" }) == true, "CHANNEL composer payload must route through group policy")
     assert(policy.shouldRoutePayload({ channel = "BN_CONVERSATION" }) == true, "BN_CONVERSATION composer payload must route through group policy")
     assert(policy.sendPayload({ channel = "CHANNEL", text = "channel" }) == true, "CHANNEL normal composer send must remain accepted")
-    assert(policy.sendPayload({ channel = "BN_CONVERSATION", text = "conversation" }) == true, "BN_CONVERSATION normal composer send must remain accepted")
+    assert(
+      policy.sendPayload({ channel = "BN_CONVERSATION", text = "conversation" }) == true,
+      "BN_CONVERSATION normal composer send must remain accepted"
+    )
     assert(normalChannels[1] == "CHANNEL" and normalChannels[2] == "BN_CONVERSATION", "unsupported normal composer sends must still dispatch")
   end
 end

@@ -12,7 +12,6 @@ local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
-
 local ActionButtons = {}
 
 local function rowBaseBackgroundColor(row)

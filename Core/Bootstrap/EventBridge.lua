@@ -59,7 +59,6 @@ local OUTGOING_WHISPER_EVENTS = {
   CHAT_MSG_BN_WHISPER_INFORM = true,
 }
 
-
 local function applyIncomingEffects(runtime, result)
   if runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.playSoundOnWhisper == true then
     SoundPlayer.Play(runtime.accountState.settings)

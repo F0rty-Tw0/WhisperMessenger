@@ -297,7 +297,6 @@ function MessengerWindow.Create(factory, options)
     return normalizedScale
   end
 
-
   local function refreshLanguage(lang)
     -- GeneralSettings.applyLanguage uses `nextLanguage or DEFAULTS.interfaceLanguage`,
     -- so calling it with nil silently resets the panel to "auto" and unselects

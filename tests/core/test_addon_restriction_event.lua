@@ -2,7 +2,6 @@ local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHand
 local RestrictedActions = require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 return function()
-
   -- test_addon_restriction_challenge_mode_active_triggers_suspend
 
   do
@@ -82,13 +81,7 @@ return function()
       end,
     }
 
-    LifecycleHandlers.Handle(
-      Bootstrap,
-      "ADDON_RESTRICTION_STATE_CHANGED",
-      {},
-      RestrictedActions.TYPES.Encounter,
-      RestrictedActions.STATES.Active
-    )
+    LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.Encounter, RestrictedActions.STATES.Active)
 
     assert(Bootstrap._inEncounter == true, "Encounter active should set _inEncounter=true")
     assert(syncCalls == 1, "should sync chat filters once on encounter state change")
@@ -116,13 +109,7 @@ return function()
       },
     }
 
-    LifecycleHandlers.Handle(
-      Bootstrap,
-      "ADDON_RESTRICTION_STATE_CHANGED",
-      {},
-      RestrictedActions.TYPES.ChallengeMode,
-      RestrictedActions.STATES.Active
-    )
+    LifecycleHandlers.Handle(Bootstrap, "ADDON_RESTRICTION_STATE_CHANGED", {}, RestrictedActions.TYPES.ChallengeMode, RestrictedActions.STATES.Active)
 
     assert(Bootstrap.runtime.restrictedActions.isMythic() == true, "payload must win over lying IsAddOnRestrictionActive during dispatch")
 

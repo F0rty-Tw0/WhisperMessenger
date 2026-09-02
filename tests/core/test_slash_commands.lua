@@ -1,7 +1,6 @@
 local SlashCommands = require("WhisperMessenger.Core.SlashCommands")
 
 return function()
-
   -- Save globals for cleanup
   local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
   local savedSlash2 = _G.SLASH_WHISPERMESSENGER2

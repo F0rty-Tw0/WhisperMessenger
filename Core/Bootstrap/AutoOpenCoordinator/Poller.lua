@@ -150,7 +150,6 @@ function Poller.Install(runtime, hooks, deps)
   elseif type(_G.hooksecurefunc) == "function" and type(_G.ChatFrame_SendBNetTell) == "function" then
     pcall(_G.hooksecurefunc, "ChatFrame_SendBNetTell", handleTellLauncher)
   end
-
 end
 
 ns.BootstrapAutoOpenPoller = Poller

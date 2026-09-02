@@ -14,7 +14,6 @@ for _, name in ipairs(Constants.GROUP_EVENT_NAMES) do
   GROUP_EVENTS[name] = true
 end
 
-
 -- True when the conversation's member list contains bnSenderID, false when
 -- it provably does not, nil when the membership APIs are unavailable or
 -- throw. The sender's presenceID can sit at different return positions
@@ -168,7 +167,6 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     streamName = streamName,
     playerInfo = playerInfo,
   }
-
 
   runtime.onGroupReactionFallbackDegraded = function(conversation)
     pcall(function()

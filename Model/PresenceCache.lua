@@ -3,7 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-
 local PresenceCache = {}
 
 -- Private module state
@@ -107,7 +106,6 @@ function PresenceCache.Rebuild()
   cache = newCache
   lastRebuiltAt = nowFn()
   dirty = false
-
 end
 
 function PresenceCache.GetPresence(guid)

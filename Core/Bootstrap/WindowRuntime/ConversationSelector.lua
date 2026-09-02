@@ -37,7 +37,6 @@ function ConversationSelector.Create(options)
       end
     end
 
-
     return refreshWindow()
   end
 

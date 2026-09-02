@@ -236,7 +236,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       return
     end
 
-
     local accepted = onSend({
       conversationKey = selectedContact.conversationKey,
       target = selectedContact.displayName,
@@ -248,7 +247,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       gameAccountName = selectedContact.gameAccountName,
       text = text,
     })
-
 
     if accepted ~= false then
       input:SetText("")

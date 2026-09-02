@@ -36,7 +36,6 @@ return function()
     assert(result == false, "RegisterEventIfSupported should return false for unsupported events")
   end
 
-
   -- RegisterEventIfSupported: non-unknown-event errors propagate
   do
     local frame = {

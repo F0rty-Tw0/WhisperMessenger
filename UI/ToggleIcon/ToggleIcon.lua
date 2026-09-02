@@ -322,7 +322,6 @@ function ToggleIcon.Create(factory, options)
   refreshLockGlyph()
   refreshTransparency()
 
-
   return {
     frame = frame,
     background = background,

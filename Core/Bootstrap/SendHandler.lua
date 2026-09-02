@@ -150,7 +150,6 @@ local function dispatchReactionMetadata(runtime, payload, addonPayload)
 end
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
-
   if runtime.isMythicLockdown and runtime.isMythicLockdown() then
     appendBlockedOutgoing(runtime, payload, "Mythic Lockdown")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")

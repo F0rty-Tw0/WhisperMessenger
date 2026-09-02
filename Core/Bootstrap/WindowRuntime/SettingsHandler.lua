@@ -94,7 +94,6 @@ function SettingsHandler.Create(options)
       end
     end
 
-
     if key == "windowScale" then
       local window = runtime.window
       if window and window.setScale then

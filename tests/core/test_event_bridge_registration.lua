@@ -51,5 +51,4 @@ return function()
     assert(unregistered.GUILD_ROSTER_UPDATE == true, "supported lifecycle events should still unregister")
     assert(unregistered.CLUB_MEMBER_UPDATED == nil, "unsupported lifecycle unregistration should be skipped")
   end
-
 end

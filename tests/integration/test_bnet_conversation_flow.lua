@@ -101,23 +101,8 @@ return function()
 
   currentMemberID = 12345
   assert(
-    GroupRouter.RouteGroupEvent(
-      runtime,
-      "CHAT_MSG_BN_CONVERSATION",
-      "local echo",
-      "Me#1234",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      2,
-      nil,
-      12345
-    ) == true,
+    GroupRouter.RouteGroupEvent(runtime, "CHAT_MSG_BN_CONVERSATION", "local echo", "Me#1234", nil, nil, nil, nil, nil, nil, nil, nil, 2, nil, 12345)
+      == true,
     "local BN conversation echo should route"
   )
   local conversation = runtime.store.conversations["bnconv::77"]

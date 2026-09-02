@@ -147,7 +147,6 @@ function DirectHooks.Install(runtime, hooks, deps)
   -- hook attached. Users should use `/wr` (or a macro-bound key) to reply
   -- after whispers received in restricted content.
   safeHook("ChatFrame_SendTell")
-
 end
 
 ns.BootstrapAutoOpenDirectHooks = DirectHooks

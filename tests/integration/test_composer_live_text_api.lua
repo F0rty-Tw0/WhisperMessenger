@@ -9,7 +9,6 @@ return function()
     channel = "WOW",
   }
 
-
   local baseFactory = FakeUI.NewFactory()
   local factory = {}
   factory.CreateFrame = function(frameType, name, parent, template)
@@ -49,5 +48,4 @@ return function()
   assert(sent[2] ~= nil, "expected Enter to submit text from EditBox:GetText()")
   assert(sent[2].text == "rejected draft")
   assert(composer.input:GetText() == "rejected draft", "expected rejected draft to remain")
-
 end
