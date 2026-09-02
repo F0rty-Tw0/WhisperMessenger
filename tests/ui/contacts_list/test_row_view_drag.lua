@@ -74,9 +74,21 @@ return function()
       pinned = false,
       sortOrder = 0,
     }
-    local row = RowView.bindRow(factory, parent, nil, 3, unpinnedItem, options)
-    assert(row.scripts.OnDragStart == nil, "unpinned row should not have OnDragStart")
-    assert(row.scripts.OnDragStop == nil, "unpinned row should not have OnDragStop")
+    local dragged = false
+    local unpinnedOptions = {
+      onSelect = function() end,
+      onDragStart = function()
+        dragged = true
+      end,
+      onDragStop = function()
+        dragged = true
+      end,
+    }
+    local row = RowView.bindRow(factory, parent, nil, 3, unpinnedItem, unpinnedOptions)
+    -- Handlers are bound once per row and no-op on non-pinned items.
+    row.scripts.OnDragStart(row)
+    row.scripts.OnDragStop(row)
+    assert(dragged == false, "unpinned row should not fire drag callbacks")
     assert(row.dragButtons == nil, "unpinned row should not be registered for drag")
   end
 end

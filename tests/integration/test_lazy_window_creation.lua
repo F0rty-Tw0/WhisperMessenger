@@ -60,11 +60,12 @@ return function()
   -- TEST 3: icon badge updates even without window
   assert(runtime.icon.badgeLabel.text == "2", "expected icon badge to show unread count")
 
-  -- TEST 4: window is created on first toggle and rebuilds presence on open
+  -- TEST 4: window is created on first toggle without enumerating every
+  -- guild and community member; presence is read per visible contact instead
   runtime.toggle()
   assert(runtime.window ~= nil, "expected window to be created on first toggle")
   assert(runtime.window.frame.shown == true, "expected window to be visible after toggle")
-  assert(rebuildCount == 1, "expected PresenceCache.Rebuild once on first open, got " .. rebuildCount)
+  assert(rebuildCount == 0, "expected no full presence rebuild on open, got " .. rebuildCount)
 
   -- TEST 5: second toggle hides the window
   runtime.toggle()

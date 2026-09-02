@@ -195,16 +195,26 @@ return function()
     row.item = item
     row.rowIndex = 2
 
+    local dragStartCalled = false
+    local dragStopCalled = false
     local options = {
-      onDragStart = function() end,
-      onDragStop = function() end,
+      onDragStart = function()
+        dragStartCalled = true
+      end,
+      onDragStop = function()
+        dragStopCalled = true
+      end,
     }
 
     RowScripts.bindDrag(row, item, options)
 
+    -- The handlers stay attached across binds (they are created once per row)
+    -- but must do nothing while the row holds a non-pinned item.
     assert(row.dragButtons == nil, "non-pinned row should not be registered for drag")
-    assert(row.scripts == nil or row.scripts.OnDragStart == nil, "non-pinned row should not have OnDragStart script")
-    assert(row.scripts == nil or row.scripts.OnDragStop == nil, "non-pinned row should not have OnDragStop script")
+    row.scripts.OnDragStart(row)
+    row.scripts.OnDragStop(row)
+    assert(dragStartCalled == false, "non-pinned row should not fire onDragStart")
+    assert(dragStopCalled == false, "non-pinned row should not fire onDragStop")
   end
 
   -- test_bind_drag_unregisters_when_pooled_row_is_rebound_unpinned

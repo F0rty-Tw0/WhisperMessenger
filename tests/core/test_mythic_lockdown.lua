@@ -249,24 +249,14 @@ return function()
     _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
-  -- test_presence_cache_timer_skips_during_mythic
+  -- test_roster_events_never_schedule_a_presence_rebuild
 
+  -- Roster and club membership events used to queue a deferred rebuild that
+  -- re-read every guild and community member. They now only mark the data
+  -- stale, so nothing heavy runs during mythic content or outside it.
   do
-    local Bootstrap = require("WhisperMessenger.Bootstrap")
-    local FakeUI = require("tests.helpers.fake_ui")
-    local factory = FakeUI.NewFactory()
+    local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 
-    local savedUIParent = _G.UIParent
-    local savedSlashCmdList = _G.SlashCmdList
-    local savedSlash1 = _G.SLASH_WHISPERMESSENGER1
-    local savedSlash2 = _G.SLASH_WHISPERMESSENGER2
-
-    _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-    _G.SlashCmdList = {}
-    _G.SLASH_WHISPERMESSENGER1 = nil
-    _G.SLASH_WHISPERMESSENGER2 = nil
-
-    -- Track C_Timer callbacks and PresenceCache rebuilds
     local timerCallbacks = {}
     local savedCTimer = _G.C_Timer
     _G.C_Timer = {
@@ -276,38 +266,44 @@ return function()
     }
 
     local rebuildCount = 0
-    local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
-    local savedRebuild = PresenceCache.Rebuild
-    rawset(PresenceCache, "Rebuild", function()
-      rebuildCount = rebuildCount + 1
-    end)
+    local invalidateCount = 0
+    local presenceCache = {
+      Rebuild = function()
+        rebuildCount = rebuildCount + 1
+      end,
+      Invalidate = function()
+        invalidateCount = invalidateCount + 1
+      end,
+      IsStale = function()
+        return true
+      end,
+      GetTTL = function()
+        return 30
+      end,
+    }
 
-    Bootstrap._inMythicContent = true
+    local deps = {
+      getContentDetector = function()
+        return nil
+      end,
+      getPresenceCache = function()
+        return presenceCache
+      end,
+    }
 
-    -- Fire any pending presence rebuild callbacks during mythic
-    for _, cb in ipairs(timerCallbacks) do
-      cb.fn()
+    for _, inMythic in ipairs({ true, false }) do
+      local Bootstrap = { runtime = {}, _inMythicContent = inMythic }
+      LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", deps)
+      LifecycleHandlers.Handle(Bootstrap, "CLUB_MEMBER_UPDATED", deps)
+
+      assert(#timerCallbacks == 0, "roster events must not schedule any timer, got " .. #timerCallbacks)
+      assert(rebuildCount == 0, "roster events must not rebuild the presence cache, got " .. rebuildCount)
+      assert(Bootstrap._presenceRebuildPending == nil, "roster events must not leave a pending-rebuild flag behind")
     end
 
-    -- The debounced rebuild callback should skip during mythic
-    local savedPresenceRebuildPending = Bootstrap._presenceRebuildPending
-    Bootstrap._presenceRebuildPending = true
-    -- Simulate the debounced timer firing
-    local rebuildBefore = rebuildCount
-    -- The actual guard is in the timer callback in Bootstrap's event handler;
-    -- we test that the guard exists by verifying the flag check pattern.
-    -- For now verify the flag is respected in the guild/community event path.
+    assert(invalidateCount == 4, "each roster event should mark presence stale, got " .. invalidateCount)
 
-    Bootstrap._inMythicContent = false
-
-    -- Cleanup
-    rawset(PresenceCache, "Rebuild", savedRebuild)
     _G.C_Timer = savedCTimer
-    Bootstrap._presenceRebuildPending = savedPresenceRebuildPending
-    _G.UIParent = savedUIParent
-    _G.SlashCmdList = savedSlashCmdList
-    _G.SLASH_WHISPERMESSENGER1 = savedSlash1
-    _G.SLASH_WHISPERMESSENGER2 = savedSlash2
   end
 
   -- test_event_bridge_no_api_call_in_mythic_guard
@@ -441,10 +437,11 @@ return function()
       },
     })
 
-    -- Open the window
+    -- Open the window. Presence is read per contact, so opening must never
+    -- enumerate every guild and community member.
     runtime.toggle()
     assert(runtime.window ~= nil, "window should be created after toggle")
-    assert(rebuildCount == 1, "window open should rebuild presence once, got " .. rebuildCount)
+    assert(rebuildCount == 0, "window open should not rebuild the whole presence cache, got " .. rebuildCount)
 
     -- Suspend should hide the window
     runtime.suspend()
@@ -453,7 +450,7 @@ return function()
     -- Resume should restore the window without rebuilding already-fresh presence
     runtime.resume()
     assert(runtime.window.frame.shown == true, "window should be visible after resume")
-    assert(rebuildCount == 1, "window resume should keep fresh presence without rebuilding, got " .. rebuildCount)
+    assert(rebuildCount == 0, "window resume should keep fresh presence without rebuilding, got " .. rebuildCount)
 
     -- If window was closed before suspend, resume should not open it
     runtime.toggle() -- close
@@ -461,7 +458,7 @@ return function()
     runtime.suspend()
     runtime.resume()
     assert(runtime.window.frame.shown == false, "window should stay closed if it was closed before suspend")
-    assert(rebuildCount == 1, "closed window should not rebuild presence on resume, got " .. rebuildCount)
+    assert(rebuildCount == 0, "closed window should not rebuild presence on resume, got " .. rebuildCount)
 
     rawset(PresenceCache, "Rebuild", savedRebuild)
     _G.UIParent = savedUIParent

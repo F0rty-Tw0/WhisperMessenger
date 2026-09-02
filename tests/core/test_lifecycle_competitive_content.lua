@@ -386,7 +386,7 @@ return function()
     assert(attributes.tellTarget == 999, "combat end must preserve unresolved Battle.net target")
   end
 
-  -- test_player_entering_world_does_not_start_duplicate_presence_timer_loops
+  -- test_player_entering_world_starts_no_repeating_presence_timer_loop
 
   do
     rawset(_G, "GetInstanceInfo", function()
@@ -423,14 +423,20 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", deps)
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_ENTERING_WORLD", deps)
 
+    -- Presence is refreshed per contact now, so nothing may schedule a
+    -- recurring TTL-length rescan of every guild and community member.
     local timerLoopSchedules = 0
+    local oneShotRebuilds = 0
     for _, call in ipairs(scheduled) do
       if call.delay == 30 then
         timerLoopSchedules = timerLoopSchedules + 1
+      elseif call.delay == 2 then
+        oneShotRebuilds = oneShotRebuilds + 1
       end
     end
 
-    assert(timerLoopSchedules == 1, "PLAYER_ENTERING_WORLD must not start duplicate presence timer loops")
+    assert(timerLoopSchedules == 0, "PLAYER_ENTERING_WORLD must not start a repeating presence timer loop")
+    assert(oneShotRebuilds == 2, "each PLAYER_ENTERING_WORLD should schedule its own one-shot rebuild")
   end
   rawset(_G, "GetInstanceInfo", savedGetInstanceInfo)
   FlavorCompat.hasMythicPlus = savedHasMythicPlus

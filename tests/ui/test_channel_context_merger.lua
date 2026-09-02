@@ -118,4 +118,26 @@ return function()
     assert(#result == 1, "empty input should yield 1 channel_context message")
     assert(result[1].kind == "channel_context", "the single entry should be the channel_context")
   end
+
+  ----------------------------------------------------------------------------
+  -- Repeated merges of the same store entry reuse the built channel message.
+  -- The transcript diffs message identity, so a fresh table every refresh would
+  -- mark that row changed and force a full bubble relayout each background tick.
+  ----------------------------------------------------------------------------
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Cache-Realm", "same entry", "Trade", 9700)
+    local contact = { displayName = "Cache-Realm" }
+    local whispers = { { id = "1", sentAt = 9000, kind = "user" } }
+
+    local first = ChannelContextMerger.Merge(whispers, contact, makeDeps(state))
+    local second = ChannelContextMerger.Merge(whispers, contact, makeDeps(state))
+    assert(first[2].kind == "channel_context", "expected a channel_context entry")
+    assert(first[2] == second[2], "same store entry should reuse the same channel message table")
+
+    ChannelMessageStore.Record(state, "Cache-Realm", "newer entry", "Trade", 9750)
+    local third = ChannelContextMerger.Merge(whispers, contact, makeDeps(state))
+    assert(third[2] ~= second[2], "a newer store entry should build a fresh channel message")
+    assert(third[2].text == "newer entry", "the rebuilt message should carry the new text")
+  end
 end

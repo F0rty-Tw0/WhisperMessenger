@@ -414,45 +414,17 @@ return function()
     assert(guidReads < 500, "cache pruning should use linear GUID membership checks, got " .. tostring(guidReads) .. " GUID reads")
   end
 
-  -- Opening a window keeps already-fresh presence data instead of repeating
-  -- full guild/community enumeration.
+  -- Opening a window freshens the presence of the contacts it is about to
+  -- draw, never the whole guild and community roster — even when the cache
+  -- reports itself stale.
   do
     local window, runtime = makeBase()
     local rebuilds = 0
+    local ensured = {}
     local coord = WindowCoordinator.Create({
       runtime = runtime,
       buildContacts = function()
-        return {}
-      end,
-      getWindow = function()
-        return window
-      end,
-      presenceCache = {
-        IsStale = function()
-          return false
-        end,
-        Rebuild = function()
-          rebuilds = rebuilds + 1
-        end,
-      },
-      isMythicRestricted = function()
-        return false
-      end,
-      requestAvailability = function() end,
-    })
-
-    coord.setWindowVisible(true)
-    assert(rebuilds == 0, "opening with fresh presence must not rebuild")
-  end
-
-  -- Stale presence is rebuilt before the first visible render.
-  do
-    local window, runtime = makeBase()
-    local rebuilds = 0
-    local coord = WindowCoordinator.Create({
-      runtime = runtime,
-      buildContacts = function()
-        return {}
+        return { { channel = "WOW", guid = "visible-guid", conversationKey = "k1" } }
       end,
       getWindow = function()
         return window
@@ -464,6 +436,9 @@ return function()
         Rebuild = function()
           rebuilds = rebuilds + 1
         end,
+        EnsureFresh = function(guid)
+          ensured[#ensured + 1] = guid
+        end,
       },
       isMythicRestricted = function()
         return false
@@ -472,7 +447,9 @@ return function()
     })
 
     coord.setWindowVisible(true)
-    assert(rebuilds == 1, "opening with stale presence must rebuild once")
+    assert(rebuilds == 0, "opening must not enumerate every guild and community member")
+    assert(#ensured >= 1, "opening should freshen the presence of the visible contacts")
+    assert(ensured[1] == "visible-guid", "expected the visible contact GUID, got " .. tostring(ensured[1]))
   end
   -- A visible mutation in an unselected conversation refreshes contact rows
   -- without rebuilding the active transcript.
