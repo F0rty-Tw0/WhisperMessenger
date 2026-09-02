@@ -46,6 +46,14 @@ function SettingsTabs.Wire(options)
   local theme = options.theme or Theme
   local scrollView = options.scrollView or ScrollView
   local measureContentHeight = options.measurePanelContentHeight or measurePanelContentHeight
+  local function getPanel(index)
+    local panel = settingsPanels[index]
+    if not panel and type(settingsPanels.getPanel) == "function" then
+      panel = settingsPanels.getPanel(index)
+    end
+    return panel
+  end
+
 
   if #settingsTabs == 0 or #settingsPanels == 0 then
     return
@@ -112,7 +120,26 @@ function SettingsTabs.Wire(options)
     end
   end
 
+  local wiredPanels = {}
+
+  local function wirePanel(panel)
+    if not panel or wiredPanels[panel] or type(panel.HookScript) ~= "function" then
+      return
+    end
+    wiredPanels[panel] = true
+    panel:HookScript("OnSizeChanged", function(self)
+      if type(self.IsShown) == "function" and not self:IsShown() then
+        return
+      end
+      if not applyVisibleTabContentHeight(self) then
+        scheduleVisibleTabRemeasure(self)
+      end
+    end)
+  end
+
   local function selectTab(index)
+    local visiblePanel = getPanel(index)
+    wirePanel(visiblePanel)
     for i, panel in ipairs(settingsPanels) do
       if panel and panel.Hide and panel.Show then
         if i == index then
@@ -122,7 +149,6 @@ function SettingsTabs.Wire(options)
         end
       end
     end
-    local visiblePanel = settingsPanels[index]
     if not applyVisibleTabContentHeight(visiblePanel) then
       scheduleVisibleTabRemeasure(visiblePanel)
     end
@@ -223,16 +249,7 @@ function SettingsTabs.Wire(options)
   -- re-wrap labels and shift the bottom of content. HookScript stacks on
   -- top of that handler so we re-measure the visible panel afterwards.
   for _, panel in ipairs(settingsPanels) do
-    if panel and type(panel.HookScript) == "function" then
-      panel:HookScript("OnSizeChanged", function(self)
-        if type(self.IsShown) == "function" and not self:IsShown() then
-          return
-        end
-        if not applyVisibleTabContentHeight(self) then
-          scheduleVisibleTabRemeasure(self)
-        end
-      end)
-    end
+    wirePanel(panel)
   end
 end
 

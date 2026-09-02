@@ -294,6 +294,7 @@ return function()
     },
     onSettingChanged = onDeferredSettingChanged,
   })
+  deferredWindow.appearanceTab:GetScript("OnClick")(deferredWindow.appearanceTab)
   local deferredSlider = deferredWindow.appearanceSettings.windowScaleSlider
   local deferredMouseDown = deferredSlider:GetScript("OnMouseDown")
   local deferredMouseUp = deferredSlider:GetScript("OnMouseUp")
@@ -338,6 +339,7 @@ return function()
     },
     onSettingChanged = onConstrainedReleaseSettingChanged,
   })
+  constrainedReleaseWindow.appearanceTab:GetScript("OnClick")(constrainedReleaseWindow.appearanceTab)
   local constrainedReleaseSlider = constrainedReleaseWindow.appearanceSettings.windowScaleSlider
   constrainedReleaseSlider:GetScript("OnMouseDown")(constrainedReleaseSlider, "LeftButton")
   constrainedReleaseSlider:SetValue(1.50, true)

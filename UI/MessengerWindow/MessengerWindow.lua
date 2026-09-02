@@ -94,7 +94,15 @@ function MessengerWindow.Create(factory, options)
   local contactsSearchInput = layout.contactsSearchInput
   local contactsSearchClearButton = layout.contactsSearchClearButton
   local contactsSearchPlaceholder = layout.contactsSearchPlaceholder
-  -- Compose settings panels (each inside its own frame within optionsContentPane)
+  -- Construct each settings panel when its tab is selected.
+  local settingsResult = {}
+  local settingKeys = {
+    "generalSettings",
+    "appearanceSettings",
+    "behaviorSettings",
+    "notificationSettings",
+    "iconSettings",
+  }
   local settingsRuntime = SettingsPanelsBootstrap.Create(factory, {
     parent = optionsScrollContent,
     settingsConfig = settingsConfig,
@@ -103,17 +111,11 @@ function MessengerWindow.Create(factory, options)
     theme = Theme,
     chrome = chrome,
     layout = layout,
+    onPanelCreated = function(index, _panel, settings)
+      settingsResult[settingKeys[index]] = settings
+    end,
   })
-  local generalPanel = settingsRuntime.generalPanel
-  local generalSettings = settingsRuntime.generalSettings
-  local appearancePanel = settingsRuntime.appearancePanel
-  local appearanceSettings = settingsRuntime.appearanceSettings
-  local behaviorPanel = settingsRuntime.behaviorPanel
-  local behaviorSettings = settingsRuntime.behaviorSettings
-  local notificationsPanel = settingsRuntime.notificationsPanel
-  local notificationSettings = settingsRuntime.notificationSettings
-  local iconsPanel = settingsRuntime.iconsPanel
-  local iconSettings = settingsRuntime.iconSettings
+  local settingsPanels = settingsRuntime.settingsPanels
   local refreshThemeVisuals = settingsRuntime.refreshThemeVisuals
 
   -- Contacts controller (manages rows, paging, scroll hooks)
@@ -260,7 +262,7 @@ function MessengerWindow.Create(factory, options)
     scriptWiring = ScriptWiring,
     windowScripts = WindowScripts,
     chrome = chrome,
-    settingsPanels = { generalPanel, appearancePanel, behaviorPanel, notificationsPanel, iconsPanel },
+    settingsPanels = settingsPanels,
     closeWindow = closeWindow,
     onResetWindowPosition = options.onResetWindowPosition,
     onResetIconPosition = options.onResetIconPosition,
@@ -316,6 +318,11 @@ function MessengerWindow.Create(factory, options)
     if composer.setLanguage then
       composer.setLanguage()
     end
+    local generalSettings = settingsRuntime.getSettings(1)
+    local appearanceSettings = settingsRuntime.getSettings(2)
+    local behaviorSettings = settingsRuntime.getSettings(3)
+    local notificationSettings = settingsRuntime.getSettings(4)
+    local iconSettings = settingsRuntime.getSettings(5)
     if generalSettings and generalSettings.setLanguage then
       generalSettings.setLanguage(effectiveLang)
     end
@@ -348,7 +355,7 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
-  return {
+  local window = {
     frame = chrome.frame,
     title = chrome.title,
     newConversationButton = chrome.newConversationButton,
@@ -376,11 +383,11 @@ function MessengerWindow.Create(factory, options)
     behaviorTab = layout.behaviorTab,
     notificationsTab = layout.notificationsTab,
     iconsTab = layout.iconsTab,
-    generalSettings = generalSettings,
-    appearanceSettings = appearanceSettings,
-    behaviorSettings = behaviorSettings,
-    notificationSettings = notificationSettings,
-    iconSettings = iconSettings,
+    generalSettings = settingsRuntime.getSettings(1),
+    appearanceSettings = settingsRuntime.getSettings(2),
+    behaviorSettings = settingsRuntime.getSettings(3),
+    notificationSettings = settingsRuntime.getSettings(4),
+    iconSettings = settingsRuntime.getSettings(5),
     optionsHeader = layout.optionsHeader,
     optionsHint = layout.optionsHint,
     resetWindowButton = layout.resetWindowButton,
@@ -413,6 +420,7 @@ function MessengerWindow.Create(factory, options)
       return false
     end,
   }
+  return setmetatable(window, { __index = settingsResult })
 end
 
 ns.MessengerWindow = MessengerWindow

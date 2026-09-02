@@ -64,7 +64,7 @@ return function()
     widgetPreviewPosition = "top",
   }
 
-  SettingsPanels.Create(factory, {
+  local panels = SettingsPanels.Create(factory, {
     parent = parent,
     settingsConfig = settingsConfig,
     storeConfig = {
@@ -79,6 +79,9 @@ return function()
     notificationCreate = captureCreate(notificationCapture),
     iconCreate = captureCreate(iconsCapture),
   })
+  for index = 1, 5 do
+    panels.getPanel(index)
+  end
 
   -- General: timeFormat and timeSource must round-trip.
   assert(generalCapture.config.timeFormat == "24h", "expected general config.timeFormat=24h, got: " .. tostring(generalCapture.config.timeFormat))

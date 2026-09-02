@@ -44,6 +44,7 @@ function SettingsRuntime.Create(factory, options)
     behaviorCreate = behaviorCreate,
     notificationCreate = notificationCreate,
     iconCreate = iconCreate,
+    onPanelCreated = options.onPanelCreated,
   })
 
   refreshThemeVisuals = function()
@@ -57,6 +58,9 @@ function SettingsRuntime.Create(factory, options)
   refreshThemeVisuals()
 
   return {
+    settingsPanels = settingsPanels.settingsPanels,
+    getPanel = settingsPanels.getPanel,
+    getSettings = settingsPanels.getSettings,
     generalPanel = settingsPanels.generalPanel,
     generalSettings = settingsPanels.generalSettings,
     appearancePanel = settingsPanels.appearancePanel,

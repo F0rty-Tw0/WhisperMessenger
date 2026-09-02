@@ -20,6 +20,7 @@ function SettingsPanelsBootstrap.Create(factory, options)
     theme = options.theme,
     chrome = options.chrome,
     layout = options.layout,
+    onPanelCreated = options.onPanelCreated,
   })
 end
 

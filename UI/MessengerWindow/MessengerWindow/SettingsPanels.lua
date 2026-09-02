@@ -59,62 +59,125 @@ function SettingsPanels.Create(factory, options)
   local settingsConfig = options.settingsConfig or {}
   local storeConfig = options.storeConfig or {}
   local onSettingChanged = options.onSettingChanged or function() end
+  local definitions = {
+    {
+      panelKey = "generalPanel",
+      settingsKey = "generalSettings",
+      create = options.generalCreate,
+      config = {
+        maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
+        maxConversations = storeConfig.maxConversations or 100,
+        messageMaxAge = storeConfig.messageMaxAge or 86400,
+        clearOnLogout = settingsConfig.clearOnLogout,
+        hideMessagePreview = settingsConfig.hideMessagePreview,
+        timeFormat = settingsConfig.timeFormat,
+        timeSource = settingsConfig.timeSource,
+        interfaceLanguage = settingsConfig.interfaceLanguage,
+      },
+    },
+    {
+      panelKey = "appearancePanel",
+      settingsKey = "appearanceSettings",
+      create = options.appearanceCreate,
+      config = {
+        themePreset = settingsConfig.themePreset,
+        windowScale = settingsConfig.windowScale,
+        fontFamily = settingsConfig.fontFamily,
+        fontSize = settingsConfig.fontSize,
+        fontOutline = settingsConfig.fontOutline,
+        fontColor = settingsConfig.fontColor,
+        bubbleColorPreset = settingsConfig.bubbleColorPreset,
+        windowOpacityInactive = settingsConfig.windowOpacityInactive,
+        windowOpacityActive = settingsConfig.windowOpacityActive,
+        nativeChrome = settingsConfig.nativeChrome,
+      },
+    },
+    {
+      panelKey = "behaviorPanel",
+      settingsKey = "behaviorSettings",
+      create = options.behaviorCreate,
+      config = {
+        dimWhenMoving = settingsConfig.dimWhenMoving,
+        autoFocusComposer = settingsConfig.autoFocusComposer,
+        hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
+        autoOpenIncoming = settingsConfig.autoOpenIncoming,
+        autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
+        hideOnCombat = settingsConfig.hideOnCombat,
+        doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
+        showGroupChats = settingsConfig.showGroupChats,
+      },
+    },
+    {
+      panelKey = "notificationsPanel",
+      settingsKey = "notificationSettings",
+      create = options.notificationCreate,
+      config = {
+        playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
+        notificationSound = settingsConfig.notificationSound,
+      },
+    },
+    {
+      panelKey = "iconsPanel",
+      settingsKey = "iconSettings",
+      create = options.iconCreate,
+      config = {
+        badgePulse = settingsConfig.badgePulse,
+        showUnreadBadge = settingsConfig.showUnreadBadge,
+        iconSize = settingsConfig.iconSize,
+        iconDesaturated = settingsConfig.iconDesaturated,
+        lockToggleIcon = settingsConfig.lockToggleIcon,
+        shareWidgetPosition = settingsConfig.shareWidgetPosition,
+        widgetTransparency = settingsConfig.widgetTransparency,
+        showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
+        widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
+        widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
+        iconMode = settingsConfig.iconMode,
+      },
+    },
+  }
+  local settingsPanels = { false, false, false, false, false }
+  local result = { settingsPanels = settingsPanels }
+  local currentTheme = nil
+  local currentOuterWidth = nil
 
-  local generalPanel, generalSettings = createSettingsPanel(factory, parent, options.generalCreate, {
-    maxMessagesPerConversation = storeConfig.maxMessagesPerConversation or 200,
-    maxConversations = storeConfig.maxConversations or 100,
-    messageMaxAge = storeConfig.messageMaxAge or 86400,
-    clearOnLogout = settingsConfig.clearOnLogout,
-    hideMessagePreview = settingsConfig.hideMessagePreview,
-    timeFormat = settingsConfig.timeFormat,
-    timeSource = settingsConfig.timeSource,
-    interfaceLanguage = settingsConfig.interfaceLanguage,
-  }, onSettingChanged)
+  local function getPanel(index)
+    local definition = definitions[index]
+    if not definition then
+      return nil
+    end
+    local panel = settingsPanels[index]
+    if panel then
+      return panel
+    end
 
-  local appearancePanel, appearanceSettings = createSettingsPanel(factory, parent, options.appearanceCreate, {
-    themePreset = settingsConfig.themePreset,
-    windowScale = settingsConfig.windowScale,
-    fontFamily = settingsConfig.fontFamily,
-    fontSize = settingsConfig.fontSize,
-    fontOutline = settingsConfig.fontOutline,
-    fontColor = settingsConfig.fontColor,
-    bubbleColorPreset = settingsConfig.bubbleColorPreset,
-    windowOpacityInactive = settingsConfig.windowOpacityInactive,
-    windowOpacityActive = settingsConfig.windowOpacityActive,
-    nativeChrome = settingsConfig.nativeChrome,
-  }, onSettingChanged)
+    local settings
+    panel, settings = createSettingsPanel(factory, parent, definition.create, definition.config, onSettingChanged)
+    settingsPanels[index] = panel
+    result[definition.panelKey] = panel
+    result[definition.settingsKey] = settings
+    if currentTheme and settings and settings.refreshTheme then
+      settings.refreshTheme(currentTheme)
+    end
+    if currentOuterWidth and settings and settings.refreshLayout then
+      local inner = paneInnerWidth(currentOuterWidth)
+      if inner then
+        settings.refreshLayout(inner)
+      end
+    end
+    if options.onPanelCreated then
+      options.onPanelCreated(index, panel, settings)
+    end
+    return panel
+  end
+  settingsPanels.getPanel = getPanel
 
-  local behaviorPanel, behaviorSettings = createSettingsPanel(factory, parent, options.behaviorCreate, {
-    dimWhenMoving = settingsConfig.dimWhenMoving,
-    autoFocusComposer = settingsConfig.autoFocusComposer,
-    hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
-    autoOpenIncoming = settingsConfig.autoOpenIncoming,
-    autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
-    hideOnCombat = settingsConfig.hideOnCombat,
-    doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
-    showGroupChats = settingsConfig.showGroupChats,
-  }, onSettingChanged)
-
-  local notificationsPanel, notificationSettings = createSettingsPanel(factory, parent, options.notificationCreate, {
-    playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
-    notificationSound = settingsConfig.notificationSound,
-  }, onSettingChanged)
-
-  local iconsPanel, iconSettings = createSettingsPanel(factory, parent, options.iconCreate, {
-    badgePulse = settingsConfig.badgePulse,
-    showUnreadBadge = settingsConfig.showUnreadBadge,
-    iconSize = settingsConfig.iconSize,
-    iconDesaturated = settingsConfig.iconDesaturated,
-    lockToggleIcon = settingsConfig.lockToggleIcon,
-    shareWidgetPosition = settingsConfig.shareWidgetPosition,
-    widgetTransparency = settingsConfig.widgetTransparency,
-    showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
-    widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
-    widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
-    iconMode = settingsConfig.iconMode,
-  }, onSettingChanged)
+  local function getSettings(index)
+    local definition = definitions[index]
+    return definition and result[definition.settingsKey] or nil
+  end
 
   local function refreshTheme(theme, context)
+    currentTheme = theme
     context = context or {}
 
     if context.chrome and context.chrome.applyTheme then
@@ -130,7 +193,8 @@ function SettingsPanels.Create(factory, options)
       context.composer.refreshTheme()
     end
 
-    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings, iconSettings }) do
+    for index = 1, #definitions do
+      local settingsView = getSettings(index)
       if settingsView and settingsView.refreshTheme then
         settingsView.refreshTheme(theme)
       end
@@ -142,27 +206,20 @@ function SettingsPanels.Create(factory, options)
     if not inner then
       return
     end
-    for _, settingsView in ipairs({ generalSettings, appearanceSettings, behaviorSettings, notificationSettings, iconSettings }) do
+    currentOuterWidth = outerWidth
+    for index = 1, #definitions do
+      local settingsView = getSettings(index)
       if settingsView and settingsView.refreshLayout then
         settingsView.refreshLayout(inner)
       end
     end
   end
 
-  return {
-    generalPanel = generalPanel,
-    generalSettings = generalSettings,
-    appearancePanel = appearancePanel,
-    appearanceSettings = appearanceSettings,
-    behaviorPanel = behaviorPanel,
-    behaviorSettings = behaviorSettings,
-    notificationsPanel = notificationsPanel,
-    notificationSettings = notificationSettings,
-    iconsPanel = iconsPanel,
-    iconSettings = iconSettings,
-    refreshTheme = refreshTheme,
-    refreshLayout = refreshLayout,
-  }
+  result.getPanel = getPanel
+  result.getSettings = getSettings
+  result.refreshTheme = refreshTheme
+  result.refreshLayout = refreshLayout
+  return result
 end
 
 ns.MessengerWindowSettingsPanels = SettingsPanels
