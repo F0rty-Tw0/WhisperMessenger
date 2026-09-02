@@ -227,5 +227,71 @@ return function()
     assert(PresenceCache.EnsureFresh("Player-Any") == nil, "EnsureFresh without a club API should return nil")
   end
 
+  -- 12.0 restricted content: GetMemberInfo can return a table whose fields
+  -- are secret values, so any comparison on info.guid throws. RefreshPresence
+  -- must swallow that throw, keep the last known presence, and keep the
+  -- index intact (no forced rebuild) rather than propagating the error.
+  do
+    PresenceCache._reset()
+    local api, counts = makeCountingClubApi({
+      guildMembers = {
+        { guid = "Player-Secret", presence = 1 },
+      },
+    })
+    PresenceCache._initForTest(api, {
+      now = function()
+        return 100
+      end,
+    })
+    assert(PresenceCache.GetPresence("Player-Secret") == "online", "precondition: guild member starts online")
+
+    local origGetMemberInfo = api.GetMemberInfo
+    api.GetMemberInfo = function(_clubId, _memberId)
+      -- Simulates a secret-value info table: any field read throws.
+      return setmetatable({}, {
+        __index = function(_, k)
+          error("secret " .. k)
+        end,
+      })
+    end
+
+    local ok, result = pcall(PresenceCache.RefreshPresence, "Player-Secret")
+    assert(ok, "RefreshPresence must not propagate a secret-value comparison error: " .. tostring(result))
+    assert(result == "online", "RefreshPresence should keep the last known presence, got " .. tostring(result))
+
+    api.GetMemberInfo = origGetMemberInfo
+    counts.clubMembers = 0
+    local result2 = PresenceCache.RefreshPresence("Player-Secret")
+    assert(result2 == "online", "RefreshPresence should still resolve after the throw clears, got " .. tostring(result2))
+    assert(counts.clubMembers == 0, "the index must survive a secret-value throw (no forced rebuild), got " .. counts.clubMembers)
+  end
+
+  -- Rebuild must skip a member whose info throws (secret guid/presence)
+  -- rather than aborting the whole club scan.
+  do
+    PresenceCache._reset()
+    local throwingInfo = setmetatable({}, {
+      __index = function(_, k)
+        error("secret " .. k)
+      end,
+    })
+    local api = makeCountingClubApi({
+      guildMembers = {
+        { guid = "Player-A", presence = 1 },
+        throwingInfo,
+        { guid = "Player-C", presence = 1 },
+      },
+    })
+
+    local ok = pcall(PresenceCache._initForTest, api, {
+      now = function()
+        return 100
+      end,
+    })
+    assert(ok, "Rebuild must not propagate a secret-value error from one member")
+    assert(PresenceCache.GetPresence("Player-A") == "online", "member before the throwing one should still be indexed")
+    assert(PresenceCache.GetPresence("Player-C") == "online", "member after the throwing one should still be indexed")
+  end
+
   print("  All targeted PresenceCache tests passed")
 end

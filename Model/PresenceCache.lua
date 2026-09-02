@@ -56,6 +56,20 @@ local function safeIpairs(tbl)
   return iter, state, start
 end
 
+-- In 12.0 restricted content (e.g. Mythic+), info's fields can be "secret
+-- values" — any ==/~= comparison or table-key use throws. Record one member
+-- via pcall so a throw on this member (secret guid as table key, or secret
+-- presence) skips it instead of aborting the whole club scan.
+local function recordMember(acc, clubId, memberId, info)
+  acc.club[info.guid] = clubId
+  acc.member[info.guid] = memberId
+  acc.freshAt[info.guid] = acc.now
+  local p = presenceToString(info.presence)
+  if p then
+    acc.cache[info.guid] = p
+  end
+end
+
 local function cacheClub(acc, api, clubId)
   local ok, members = pcall(api.GetClubMembers, clubId)
   if not ok or type(members) ~= "table" then
@@ -63,14 +77,8 @@ local function cacheClub(acc, api, clubId)
   end
   for _, memberId in safeIpairs(members) do
     local infoOk, info = pcall(api.GetMemberInfo, clubId, memberId)
-    if infoOk and info and info.guid then
-      acc.club[info.guid] = clubId
-      acc.member[info.guid] = memberId
-      acc.freshAt[info.guid] = acc.now
-      local p = presenceToString(info.presence)
-      if p then
-        acc.cache[info.guid] = p
-      end
+    if infoOk and info then
+      pcall(recordMember, acc, clubId, memberId, info)
     end
   end
 end
@@ -144,6 +152,12 @@ function PresenceCache.GetPresence(guid)
   return cache[guid]
 end
 
+-- Comparing a secret value (12.0 restricted content, e.g. Mythic+) throws, so
+-- this runs under pcall in the caller.
+local function guidMatches(info, guid)
+  return info.guid == guid
+end
+
 -- Read one member straight from the index: a single API call, no enumeration.
 -- Returns presence (may be nil for an unknown presence enum) plus whether the
 -- GUID was actually resolved.
@@ -154,7 +168,7 @@ local function lookupIndexed(guid)
   end
 
   local ok, info = pcall(clubApi.GetMemberInfo, clubId, indexMember[guid])
-  if not ok or type(info) ~= "table" or info.guid ~= guid then
+  if not ok or type(info) ~= "table" then
     -- Member IDs shift when people leave a club; drop the stale coordinates
     -- rather than reporting somebody else's presence under this GUID.
     indexClub[guid] = nil
@@ -162,7 +176,26 @@ local function lookupIndexed(guid)
     return nil, false
   end
 
-  return presenceToString(info.presence), true
+  local matchOk, matches = pcall(guidMatches, info, guid)
+  if not matchOk then
+    -- info.guid is a secret value under 12.0 restricted content: unreadable
+    -- right now, but the club/member coordinates are still valid. Keep the
+    -- index and report the last known presence instead of erroring out.
+    return cache[guid], true
+  end
+  if not matches then
+    indexClub[guid] = nil
+    indexMember[guid] = nil
+    return nil, false
+  end
+
+  local presenceOk, presence = pcall(presenceToString, info.presence)
+  if not presenceOk then
+    -- Same secret-value case, this time on the presence field.
+    return cache[guid], true
+  end
+
+  return presence, true
 end
 
 -- Targeted single-GUID refresh: one member lookup against the index built by
