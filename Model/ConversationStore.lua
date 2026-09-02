@@ -329,14 +329,14 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
     return storedConversation
   end
 
-  local messageRetained = false
-  for _, retainedMessage in ipairs(conversation.messages) do
+  local messageIndex
+  for index, retainedMessage in ipairs(conversation.messages) do
     if retainedMessage == message then
-      messageRetained = true
+      messageIndex = index
       break
     end
   end
-  if not messageRetained then
+  if messageIndex == nil then
     local now = type(state.now) == "function" and state.now() or message.sentAt
     if not conversation.pinned and Retention.IsExpired(conversation.lastActivityAt, state.config.conversationMaxAge, now) then
       removeConversation(state, key)
@@ -344,8 +344,20 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
     return state.conversations[key]
   end
 
+  local updatesLatestActivity = isNewest and isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID)
+  local prospectiveLastActivityAt = conversation.lastActivityAt
+  if updatesLatestActivity then
+    prospectiveLastActivityAt = message.sentAt
+  end
+  local now = type(state.now) == "function" and state.now() or message.sentAt
+  if not conversation.pinned and Retention.IsExpired(prospectiveLastActivityAt, state.config.conversationMaxAge, now) then
+    table.remove(messages, messageIndex)
+    removeConversation(state, key)
+    return nil
+  end
+
   if isNewest then
-    if isLatestMetadata(message, conversation.lastActivityAt, conversation.lastActivityLineID) then
+    if updatesLatestActivity then
       applyActivityMetadata(conversation, message)
     end
     if isIncomingUserMessage(message) and isLatestMetadata(message, conversation.lastIncomingAt, conversation.lastIncomingLineID) then

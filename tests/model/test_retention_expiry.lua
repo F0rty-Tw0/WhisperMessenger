@@ -517,6 +517,58 @@ return function()
     assert(returned == state.conversations[key], "count-trimmed insert must return stored conversation")
   end
 
+  -- test_message_valid_chronological_insert_cannot_revive_expired_conversation
+  do
+    local now = 1000
+    local state = Store.New({
+      maxMessagesPerConversation = 10,
+      maxConversations = 10,
+      messageMaxAge = 500,
+      conversationMaxAge = 100,
+    }, function()
+      return now
+    end)
+    local key = "key::conversation-expired"
+    local activeStatus = { kind = "afk", sentAt = 700 }
+    local conversation = {
+      displayName = "Original",
+      guid = "Player-original",
+      messages = {},
+      lastPreview = "original preview",
+      lastActivityAt = 800,
+      unreadCount = 2,
+      activeStatus = activeStatus,
+    }
+    local removedKey
+    local removedConversation
+    state.conversations[key] = conversation
+    state.onConversationRemoved = function(nextKey, nextConversation)
+      removedKey = nextKey
+      removedConversation = nextConversation
+    end
+
+    local returned = Store.InsertIncomingChronological(state, key, {
+      id = "message-valid",
+      direction = "in",
+      kind = "user",
+      text = "still too old for conversation",
+      playerName = "Replacement",
+      guid = "Player-replacement",
+      sentAt = 850,
+      lineID = 1,
+    }, false)
+
+    assert(state.conversations[key] == nil and #conversation.messages == 0, "expired conversation must retain no transcript")
+    assert(conversation.unreadCount == 2, "conversation-expired insert must not mutate unread state")
+    assert(
+      conversation.displayName == "Original" and conversation.guid == "Player-original" and conversation.lastPreview == "original preview",
+      "conversation-expired insert must not mutate conversation metadata"
+    )
+    assert(conversation.activeStatus == activeStatus, "conversation-expired insert must not clear active status")
+    assert(removedKey == key and removedConversation == conversation, "conversation expiry must use central removal lifecycle")
+    assert(returned == nil, "conversation-expired insert must return nil")
+  end
+
   -- test_append_preserves_pinned_message_age_exemption
   do
     local state = Store.New({
