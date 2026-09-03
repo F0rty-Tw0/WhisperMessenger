@@ -250,6 +250,8 @@ function SettingsTabs.Wire(options)
   for _, panel in ipairs(settingsPanels) do
     wirePanel(panel)
   end
+
+  return { selectTab = selectTab }
 end
 
 ns.MessengerWindowWindowScriptsButtonsSettingsTabs = SettingsTabs

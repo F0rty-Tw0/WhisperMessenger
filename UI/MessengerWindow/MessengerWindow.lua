@@ -25,6 +25,9 @@ local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMesse
 local ScriptWiring = ns.MessengerWindowScriptWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
 local RelayoutController = ns.MessengerWindowRelayoutController or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
+local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PatchNotesRuntime")
+local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
+local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
@@ -77,6 +80,7 @@ function MessengerWindow.Create(factory, options)
     windowScale = initialScale,
   })
   local frame = chrome.frame
+
   -- Settings config is normalized before geometry and chrome creation.
 
   -- Build layout (panes)
@@ -101,6 +105,7 @@ function MessengerWindow.Create(factory, options)
     "behaviorSettings",
     "notificationSettings",
     "iconSettings",
+    "patchNotesSettings",
   }
   local settingsRuntime = SettingsPanelsBootstrap.Create(factory, {
     parent = optionsScrollContent,
@@ -285,6 +290,27 @@ function MessengerWindow.Create(factory, options)
     end,
   })
 
+  -- Patch-notes "?" button: glows until the shipped release notes are read.
+  -- Clicking opens Options on the What's New page; the sidebar tab clears the
+  -- glow too, so either route counts as seeing the notes.
+  if PatchNotes ~= nil and chrome.patchNotesButton ~= nil then
+    PatchNotesRuntime.Wire({
+      button = chrome.patchNotesButton,
+      tab = layout.whatsNewTab,
+      setGlowing = chrome.setPatchNotesGlow,
+      settingsConfig = settingsConfig,
+      patchNotes = PatchNotes,
+      openPage = function()
+        setOptionsVisible(true)
+        if scriptResult.selectSettingsTab then
+          scriptResult.selectSettingsTab(SettingsPanels.PATCH_NOTES_INDEX)
+        end
+      end,
+    })
+  elseif chrome.patchNotesButton ~= nil and chrome.patchNotesButton.Hide then
+    chrome.patchNotesButton:Hide()
+  end
+
   local function setScale(nextScale)
     local currentState = windowGeometry.buildState(frame)
     local previousWidth = sizeValue(frame, "GetWidth", "width", currentState.width)
@@ -340,6 +366,10 @@ function MessengerWindow.Create(factory, options)
     if iconSettings and iconSettings.setLanguage then
       iconSettings.setLanguage()
     end
+    local patchNotesSettings = settingsRuntime.getSettings(SettingsPanels.PATCH_NOTES_INDEX)
+    if patchNotesSettings and patchNotesSettings.setLanguage then
+      patchNotesSettings.setLanguage()
+    end
     if contactsRuntime and contactsRuntime.tabToggle and contactsRuntime.tabToggle.setLanguage then
       contactsRuntime.tabToggle.setLanguage()
     end
@@ -361,6 +391,7 @@ function MessengerWindow.Create(factory, options)
     frame = chrome.frame,
     title = chrome.title,
     newConversationButton = chrome.newConversationButton,
+    patchNotesButton = chrome.patchNotesButton,
     contactsPane = layout.contactsPane,
     contactsPaneBorder = layout.contactsPaneBorder,
     contactsDivider = layout.contactsDivider,
@@ -385,11 +416,14 @@ function MessengerWindow.Create(factory, options)
     behaviorTab = layout.behaviorTab,
     notificationsTab = layout.notificationsTab,
     iconsTab = layout.iconsTab,
+    whatsNewTab = layout.whatsNewTab,
+    settingsPanels = settingsPanels,
     generalSettings = settingsRuntime.getSettings(1),
     appearanceSettings = settingsRuntime.getSettings(2),
     behaviorSettings = settingsRuntime.getSettings(3),
     notificationSettings = settingsRuntime.getSettings(4),
     iconSettings = settingsRuntime.getSettings(5),
+    patchNotesSettings = settingsRuntime.getSettings(SettingsPanels.PATCH_NOTES_INDEX),
     optionsHeader = layout.optionsHeader,
     optionsHint = layout.optionsHint,
     resetWindowButton = layout.resetWindowButton,

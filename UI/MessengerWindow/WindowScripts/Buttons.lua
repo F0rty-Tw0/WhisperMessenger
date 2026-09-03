@@ -117,14 +117,15 @@ function Buttons.WireButtons(refs, options)
     end)
   end
 
-  SettingsTabs.Wire({
+  local tabsResult = SettingsTabs.Wire({
     optionsPanel = optionsPanel,
     optionsScrollView = optionsScrollView,
     settingsTabs = settingsTabs,
     settingsPanels = settingsPanels,
-  })
+  }) or {}
 
   return {
+    selectSettingsTab = tabsResult.selectTab,
     setLanguage = function()
       clearAllPopupSetLanguage()
       if startConversationResult.setLanguage then

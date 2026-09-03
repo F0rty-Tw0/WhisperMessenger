@@ -9,6 +9,8 @@ local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.U
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
 local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
 local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
+local PatchNotesButton = ns.MessengerWindowChromeBuilderPatchNotesButton
+  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.PatchNotesButton")
 local ChromeBuilder = {}
 
 local function applyResizeBounds(frame, parent, theme, windowScale)
@@ -36,8 +38,9 @@ end
 --     pre-Azeroth chrome, restored as an explicit branch so non-native
 --     presets keep their modern minimal look.
 --
--- Returns: { frame, background, title, newConversationButton, closeButton,
---   optionsButton, backButton, resizeGrip, applyTheme, refreshScale, setOptionsActive } in both cases. Non-chrome
+-- Returns: { frame, background, title, newConversationButton, patchNotesButton,
+--   closeButton, optionsButton, backButton, resizeGrip, applyTheme, refreshScale,
+--   setOptionsActive, setPatchNotesGlow } in both cases. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
@@ -105,6 +108,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local applyChromePaint = chrome.applyChromePaint
 
   local newConv = Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome, Theme)
+  local patchNotes = PatchNotesButton.Create(factory, frame, newConv.button, Theme)
   local options_ = Buttons.CreateOptions(factory, frame, closeButton, Theme)
   local back = Buttons.CreateBack(factory, frame, options_.button, Theme)
   local resize = Buttons.CreateResizeGrip(factory, frame, Theme)
@@ -115,6 +119,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     options_.applyTheme(activeTheme)
     back.applyTheme(activeTheme)
     newConv.applyTheme(activeTheme)
+    patchNotes.applyTheme(activeTheme)
     resize.applyTheme(activeTheme)
   end
 
@@ -140,6 +145,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     background = chrome.background,
     title = title,
     newConversationButton = newConv.button,
+    patchNotesButton = patchNotes.button,
     closeButton = closeButton,
     optionsButton = options_.button,
     backButton = back.button,
@@ -147,6 +153,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     applyTheme = applyTheme,
     refreshScale = refreshScale,
     setOptionsActive = setOptionsActive,
+    setPatchNotesGlow = patchNotes.setGlowing,
     titleBarBorder = chrome.titleBarBorder,
     titleBarTopBorder = chrome.titleBarBorder and chrome.titleBarBorder.top or nil,
   }

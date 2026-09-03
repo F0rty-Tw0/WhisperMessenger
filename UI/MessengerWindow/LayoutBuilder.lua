@@ -108,6 +108,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local behaviorTab = optionsMenuButtons.behaviorTab
   local notificationsTab = optionsMenuButtons.notificationsTab
   local iconsTab = optionsMenuButtons.iconsTab
+  local whatsNewTab = optionsMenuButtons.whatsNewTab
   local resetWindowButton = optionsMenuButtons.resetWindowButton
   local resetIconButton = optionsMenuButtons.resetIconButton
   local clearAllChatsButton = optionsMenuButtons.clearAllChatsButton
@@ -137,6 +138,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     behaviorTab = behaviorTab,
     notificationsTab = notificationsTab,
     iconsTab = iconsTab,
+    whatsNewTab = whatsNewTab,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
@@ -198,6 +200,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     behaviorTab = behaviorTab,
     notificationsTab = notificationsTab,
     iconsTab = iconsTab,
+    whatsNewTab = whatsNewTab,
     optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
