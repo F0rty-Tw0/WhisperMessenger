@@ -45,6 +45,9 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   local iconsTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Icons"), tabColors, tabLayout)
   iconsTab:SetPoint("TOPLEFT", notificationsTab, "BOTTOMLEFT", 0, -tabSpacing)
 
+  local whatsNewTab = optionButtonFactory(factory, optionsMenu, Localization.Text("What's New"), tabColors, tabLayout)
+  whatsNewTab:SetPoint("TOPLEFT", iconsTab, "BOTTOMLEFT", 0, -tabSpacing)
+
   local btnH = theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnSpacing = theme.LAYOUT.OPTION_BUTTON_SPACING
   local normalColors = {
@@ -97,6 +100,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     setButtonText(behaviorTab, "Behavior")
     setButtonText(notificationsTab, "Notifications")
     setButtonText(iconsTab, "Icons")
+    setButtonText(whatsNewTab, "What's New")
     setButtonText(clearAllChatsButton, "Clear All Chats")
     setButtonText(resetIconButton, "Reset Icon")
     setButtonText(resetWindowButton, "Reset Window")
@@ -109,6 +113,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     behaviorTab = behaviorTab,
     notificationsTab = notificationsTab,
     iconsTab = iconsTab,
+    whatsNewTab = whatsNewTab,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,

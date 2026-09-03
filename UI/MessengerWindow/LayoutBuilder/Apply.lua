@@ -148,6 +148,7 @@ function Apply.Relayout(layout, relayout, theme)
     layout.behaviorTab,
     layout.notificationsTab,
     layout.iconsTab,
+    layout.whatsNewTab,
     layout.resetWindowButton,
     layout.resetIconButton,
     layout.clearAllChatsButton,

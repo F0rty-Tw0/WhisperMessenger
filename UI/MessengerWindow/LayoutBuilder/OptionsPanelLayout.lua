@@ -47,7 +47,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   applyTexture(optionsMenuBg, theme.COLORS.bg_secondary)
 
   local menuPadding = theme.CONTENT_PADDING
-  local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 396
+  local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 430
   local optionsMenuViewportHeight = initialState.height - theme.TOP_BAR_HEIGHT
   local optionsMenuScrollView = scrollView.Create(factory, optionsMenu, {
     width = contactsWidth,
