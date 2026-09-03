@@ -24,6 +24,7 @@ Core/FlavorCompat.lua
 Core/Loader.lua
 Core/Bindings.lua
 Core/Constants.lua
+Core/PatchNotes.lua
 Core/ContentDetector.lua
 Core/EventUtils.lua
 Core/BNetIdentity.lua
@@ -169,6 +170,7 @@ UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
 UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
 UI/MessengerWindow/ChromeBuilder/Buttons.lua
+UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
@@ -200,6 +202,7 @@ UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua
+UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
@@ -214,6 +217,7 @@ UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/ScriptWiring.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
+UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow.lua
 

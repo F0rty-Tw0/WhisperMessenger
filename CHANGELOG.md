@@ -6,6 +6,7 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 ## [Unreleased]
 
+- Added a "?" button next to the Start New Whisper button and a What's New page in Options. The button glows after each update until you open the page, which lists what changed in the latest version.
 - Fixed: reactions from character and Battle.net whispers now count as new activity, update the conversation preview, play the configured whisper sound, and open the messenger automatically when enabled; duplicate reactions and removed reactions stay silent.
 - Fixed: incoming reaction previews now show emoji in the contact list and notification popup instead of raw reaction text.
 - Fixed: reaction markers on sent messages now sit on the left edge, matching the alignment of sent message bubbles.
@@ -34,6 +35,7 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 - Fixed Battle.net whispers causing Secret Value comparison errors during restricted content.
 - Fixed unrestricted and legacy boss fights incorrectly pausing the messenger; encounter locks now follow Blizzard's restricted-content signal.
 - Fixed Mists Classic Challenge Modes incorrectly activating Retail Mythic+ suspension.
-- Appearance → Font Family now lists optional fonts from SharedMedia addons in a scrollable selector instead of three fixed choices, and safely uses Default if SharedMedia or your selected font is unavailable.
-- Added an Appearance → Window Scale setting that resizes the entire messenger from 75% to 150%.
+- Appearance - Font Family now lists optional fonts from SharedMedia addons in a scrollable selector instead of three fixed choices, and safely uses Default if SharedMedia or your selected font is unavailable.
+- Added an Appearance - Window Scale setting that resizes the entire messenger from 75% to 150%.
 - The Options sidebar now scrolls when the window is shortened, and the messenger can be resized 100 pixels shorter without hiding its navigation and reset controls.
+
