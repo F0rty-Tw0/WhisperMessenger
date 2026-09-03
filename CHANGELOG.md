@@ -4,7 +4,7 @@ Player-friendly release notes for WhisperMessenger. This file covers the current
 
 All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x](archive/changelog/1.2.md) · [1.1.x](archive/changelog/1.1.md) · [1.0.x](archive/changelog/1.0.md) · [0.1.x](archive/changelog/0.1.md)
 
-## [Unreleased]
+## [1.4.1] - 2026-09-03
 
 - Added a "?" button next to the Start New Whisper button and a What's New page in Options. The button glows after each update until you open the page, which lists what changed in the latest version.
 - Fixed: reactions from character and Battle.net whispers now count as new activity, update the conversation preview, play the configured whisper sound, and open the messenger automatically when enabled; duplicate reactions and removed reactions stay silent.
