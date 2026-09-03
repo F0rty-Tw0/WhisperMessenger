@@ -215,6 +215,9 @@ local Portuguese = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Novo sussurro",
   ["Open an empty conversation thread."] = "Abrir uma conversa vazia.",
+  ["What's New"] = "Novidades",
+  ["See what changed in the latest update."] = "Veja o que mudou na última atualização.",
+  ["English only"] = "somente em inglês",
   ["Back"] = "Voltar",
   ["Close"] = "Fechar",
   ["Whispers"] = "Sussurros",

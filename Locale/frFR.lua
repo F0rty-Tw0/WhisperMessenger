@@ -215,6 +215,9 @@ local French = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "Nouveau chuchotement",
   ["Open an empty conversation thread."] = "Ouvrir une conversation vide.",
+  ["What's New"] = "Quoi de neuf",
+  ["See what changed in the latest update."] = "Découvrez les nouveautés de la dernière mise à jour.",
+  ["English only"] = "en anglais uniquement",
   ["Back"] = "Retour",
   ["Close"] = "Fermer",
   ["Whispers"] = "Chuchotements",

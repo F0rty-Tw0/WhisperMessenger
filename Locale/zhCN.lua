@@ -215,6 +215,9 @@ local SimplifiedChinese = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "新密语",
   ["Open an empty conversation thread."] = "打开空白对话。",
+  ["What's New"] = "更新内容",
+  ["See what changed in the latest update."] = "查看最新版本更新了哪些内容。",
+  ["English only"] = "仅英文",
   ["Back"] = "返回",
   ["Close"] = "关闭",
   ["Whispers"] = "密语",

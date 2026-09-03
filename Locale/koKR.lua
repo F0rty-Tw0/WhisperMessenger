@@ -215,6 +215,9 @@ local Korean = {
   -- Messenger chrome, tabs, composer, and hovers
   ["Start New Whisper"] = "새 귓속말",
   ["Open an empty conversation thread."] = "빈 대화를 엽니다.",
+  ["What's New"] = "새로운 소식",
+  ["See what changed in the latest update."] = "최신 업데이트에서 변경된 내용을 확인하세요.",
+  ["English only"] = "영어만 지원",
   ["Back"] = "뒤로",
   ["Close"] = "닫기",
   ["Whispers"] = "귓속말",
