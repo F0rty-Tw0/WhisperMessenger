@@ -5,6 +5,11 @@
 ##
 ## Accepts 1.0.0 or v1.0.0 and always normalizes to v-prefixed
 ## tags and file versions.
+##
+## Requires CHANGELOG.md to already carry this release's notes: the top
+## '## [x.y.z]' section (below '## [Unreleased]') must match the version
+## being released, because those bullets are baked into Core/PatchNotes.lua
+## and shown in the in-game What's New dialog.
 
 set -euo pipefail
 
@@ -98,8 +103,11 @@ sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
 # Update version in Constants.lua
 sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
 
+# Bake the latest CHANGELOG.md section into the shipped patch notes.
+python scripts/gen_patch_notes.py --version "${TAG_VERSION}"
+
 # Commit version + interface bump
-git add WhisperMessenger.toc Core/Constants.lua
+git add WhisperMessenger.toc Core/Constants.lua Core/PatchNotes.lua
 if git diff --cached --quiet; then
   echo "No TOC or version changes to commit (already up to date)."
 else

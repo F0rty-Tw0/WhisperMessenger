@@ -47,6 +47,7 @@ return function()
       { name = "behaviorTab", control = layout.behaviorTab },
       { name = "notificationsTab", control = layout.notificationsTab },
       { name = "iconsTab", control = layout.iconsTab },
+      { name = "whatsNewTab", control = layout.whatsNewTab },
       { name = "resetWindowButton", control = layout.resetWindowButton },
       { name = "resetIconButton", control = layout.resetIconButton },
       { name = "clearAllChatsButton", control = layout.clearAllChatsButton },
@@ -77,7 +78,7 @@ return function()
     layout.optionsPanel:Show()
 
     assert(optionsMenuScrollView.scrollFrame:GetHeight() == 213, "213px live options menu should set a 213px scroll viewport")
-    assert(optionsMenuScrollView.content:GetHeight() == 396, "213px live options menu should keep its 396px minimum content height")
+    assert(optionsMenuScrollView.content:GetHeight() == 430, "213px live options menu should keep its 430px minimum content height")
     assert(optionsMenuScrollView.hasOverflow == true, "213px live options menu should overflow")
 
     optionsMenuScrollView.scrollFrame:SetVerticalScroll(100)
@@ -133,6 +134,7 @@ return function()
   assert(layout.behaviorTab ~= nil, "behaviorTab should exist")
   assert(layout.notificationsTab ~= nil, "notificationsTab should exist")
   assert(layout.iconsTab ~= nil, "iconsTab should exist")
+  assert(layout.whatsNewTab ~= nil, "whatsNewTab should exist")
 
   -- test_buttons_are_still_present
 
@@ -160,6 +162,7 @@ return function()
     assert(hasLabel(layout.behaviorTab, "Behavior"), "behaviorTab should have 'Behavior' label")
     assert(hasLabel(layout.notificationsTab, "Notifications"), "notificationsTab should have 'Notifications' label")
     assert(hasLabel(layout.iconsTab, "Icons"), "iconsTab should have 'Icons' label")
+    assert(hasLabel(layout.whatsNewTab, "What's New"), "whatsNewTab should have 'What's New' label")
   end
 
   -- test_russian_options_menu_labels
@@ -183,6 +186,7 @@ return function()
     assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")
     assert(hasLabel(localizedLayout.notificationsTab, "Уведомления"), "notifications tab should be localized")
     assert(hasLabel(localizedLayout.iconsTab, "Значки"), "icons tab should be localized")
+    assert(hasLabel(localizedLayout.whatsNewTab, "Что нового"), "what's new tab should be localized")
     assert(hasLabel(localizedLayout.clearAllChatsButton, "Очистить все чаты"), "clear all chats button should be localized")
     assert(
       localizedLayout.optionsHint.text == "Сбросьте позиции или очистите всю историю переписок.",
