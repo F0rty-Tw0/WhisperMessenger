@@ -7,6 +7,10 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 local SettingsPanels = {}
 
+-- Single source of truth for the What's New tab position, so the "?" button
+-- and the sidebar tab select the same page without a magic number.
+SettingsPanels.PATCH_NOTES_INDEX = 6
+
 local SETTINGS_RIGHT_PADDING_TRIM = 20
 local SETTINGS_SCROLLBAR_RESERVE = 4
 
@@ -59,6 +63,7 @@ function SettingsPanels.Create(factory, options)
   local settingsConfig = options.settingsConfig or {}
   local storeConfig = options.storeConfig or {}
   local onSettingChanged = options.onSettingChanged or function() end
+  local patchNotes = options.patchNotes or ns.PatchNotes or {}
   local definitions = {
     {
       panelKey = "generalPanel",
@@ -134,8 +139,18 @@ function SettingsPanels.Create(factory, options)
         iconMode = settingsConfig.iconMode,
       },
     },
+    {
+      panelKey = "patchNotesPanel",
+      settingsKey = "patchNotesSettings",
+      create = options.patchNotesCreate,
+      config = {
+        version = patchNotes.version,
+        date = patchNotes.date,
+        lines = patchNotes.lines,
+      },
+    },
   }
-  local settingsPanels = { false, false, false, false, false }
+  local settingsPanels = { false, false, false, false, false, false }
   local result = { settingsPanels = settingsPanels }
   local currentTheme = nil
   local currentOuterWidth = nil

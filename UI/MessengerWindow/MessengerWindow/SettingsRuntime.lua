@@ -9,6 +9,8 @@ local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI
 local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
 local NotificationSettings = ns.NotificationSettings or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local IconSettings = ns.IconSettings or require("WhisperMessenger.UI.MessengerWindow.IconSettings")
+local PatchNotesSettings = ns.PatchNotesSettings or require("WhisperMessenger.UI.MessengerWindow.PatchNotesSettings")
+local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
 
 local SettingsRuntime = {}
 
@@ -21,13 +23,14 @@ function SettingsRuntime.Create(factory, options)
   local behaviorCreate = options.behaviorCreate or BehaviorSettings.Create
   local notificationCreate = options.notificationCreate or NotificationSettings.Create
   local iconCreate = options.iconCreate or IconSettings.Create
+  local patchNotesCreate = options.patchNotesCreate or PatchNotesSettings.Create
 
   local currentConversation = nil
   local currentComposer = nil
   local refreshThemeVisuals
   local runtime = {}
-  local panelKeys = { "generalPanel", "appearancePanel", "behaviorPanel", "notificationsPanel", "iconsPanel" }
-  local settingsKeys = { "generalSettings", "appearanceSettings", "behaviorSettings", "notificationSettings", "iconSettings" }
+  local panelKeys = { "generalPanel", "appearancePanel", "behaviorPanel", "notificationsPanel", "iconsPanel", "patchNotesPanel" }
+  local settingsKeys = { "generalSettings", "appearanceSettings", "behaviorSettings", "notificationSettings", "iconSettings", "patchNotesSettings" }
   local function onSettingChanged(key, value)
     if options.onSettingChanged then
       options.onSettingChanged(key, value)
@@ -54,6 +57,8 @@ function SettingsRuntime.Create(factory, options)
     behaviorCreate = behaviorCreate,
     notificationCreate = notificationCreate,
     iconCreate = iconCreate,
+    patchNotesCreate = patchNotesCreate,
+    patchNotes = options.patchNotes or PatchNotes,
     onPanelCreated = onPanelCreated,
   })
 
@@ -80,6 +85,8 @@ function SettingsRuntime.Create(factory, options)
   runtime.notificationSettings = settingsPanels.notificationSettings
   runtime.iconsPanel = settingsPanels.iconsPanel
   runtime.iconSettings = settingsPanels.iconSettings
+  runtime.patchNotesPanel = settingsPanels.patchNotesPanel
+  runtime.patchNotesSettings = settingsPanels.patchNotesSettings
   runtime.refreshThemeVisuals = refreshThemeVisuals
   runtime.setThemeTargets = function(conversation, composer)
     currentConversation = conversation
