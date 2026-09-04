@@ -49,4 +49,35 @@ return function()
     assert(string.find(busyText, "Busy", 1, true), "should show 'Busy' label: " .. busyText)
     assert(busyColor == "dnd", "Busy dot color should be 'dnd', got: " .. tostring(busyColor))
   end
+
+  -- areaName present should be inserted after availability, before the realm part
+  do
+    local locContact = {
+      displayName = "Nergrom",
+      realmName = "Kazzak",
+      className = "Hunter",
+      factionName = "Horde",
+      areaName = "Voidscar Arena",
+    }
+    local locStatus = { status = "CanWhisper", canWhisper = true }
+    local locText = StatusLine.Build(locContact, locStatus)
+    local areaPos = string.find(locText, "Voidscar Arena", 1, true)
+    local realmPos = string.find(locText, "Kazzak", 1, true)
+    assert(areaPos ~= nil, "should include areaName: " .. locText)
+    assert(realmPos ~= nil, "should include realm part: " .. locText)
+    assert(areaPos < realmPos, "areaName should appear before the realm part: " .. locText)
+  end
+
+  -- areaName absent should leave the line unchanged (no double separators)
+  do
+    local noLocContact = {
+      displayName = "Nergrom",
+      realmName = "Kazzak",
+      className = "Hunter",
+      factionName = "Horde",
+    }
+    local noLocStatus = { status = "CanWhisper", canWhisper = true }
+    local noLocText = StatusLine.Build(noLocContact, noLocStatus)
+    assert(not string.find(noLocText, "-  -", 1, true), "should not have double separators: " .. noLocText)
+  end
 end

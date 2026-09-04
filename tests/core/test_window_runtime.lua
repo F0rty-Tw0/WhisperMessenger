@@ -331,6 +331,16 @@ return function()
   controller.setWindowVisible(true)
   assert(options.accountState.widgetPreviewAcknowledgedAt == 9999, "setWindowVisible(true) should acknowledge the latest widget preview")
 
+  -- Whisper arrives while the window is open (already on screen in the pane),
+  -- then the user closes the window: closing must acknowledge it too, or the
+  -- next background refresh pops the widget preview for a message already read.
+  options.accountState.conversations[conversationKey].lastIncomingAt = 10500
+  controller.setWindowVisible(false)
+  assert(
+    options.accountState.widgetPreviewAcknowledgedAt == 10500,
+    "setWindowVisible(false) should acknowledge whispers seen while the window was open"
+  )
+
   -- Composition wire: toggle() routes through ToggleFlow + real ConversationSelector.
   -- Whispers tab + matching unread key => selector marks unread as read.
   trackers.coordinatorVisible = false

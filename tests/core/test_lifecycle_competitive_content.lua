@@ -238,6 +238,70 @@ return function()
     )
   end
 
+  -- test_challenge_mode_restriction_inactive_scrubs_stale_reply_even_after_resume
+  --
+  -- CHALLENGE_MODE_COMPLETED already ran resume() (and its scrub) while the
+  -- 12.0 addon restriction was still Active, where edit-box reads can be
+  -- secret and the scrub silently skips. The later Inactive transition must
+  -- scrub again, or every Enter re-opens the messenger to the /r target.
+  do
+    local attributes = {
+      chatType = "WHISPER",
+      stickyType = "WHISPER",
+      tellTarget = "Jaina",
+    }
+    local editBox = {
+      GetAttribute = function(self, key)
+        return attributes[key]
+      end,
+      SetAttribute = function(self, key, value)
+        attributes[key] = value
+      end,
+      GetText = function()
+        return ""
+      end,
+    }
+    local resumeCalls = 0
+    local Bootstrap = {
+      _inMythicContent = false,
+      runtime = {
+        localProfileId = "me",
+        store = { conversations = {} },
+        now = function()
+          return 300
+        end,
+        suspend = function() end,
+        resume = function()
+          resumeCalls = resumeCalls + 1
+        end,
+      },
+    }
+
+    LifecycleHandlers.Handle(
+      Bootstrap,
+      "ADDON_RESTRICTION_STATE_CHANGED",
+      makeDeps({
+        getNumChatWindows = function()
+          return 1
+        end,
+        getEditBox = function(index)
+          if index == 1 then
+            return editBox
+          end
+          return nil
+        end,
+      }),
+      2, -- RestrictedActions.TYPES.ChallengeMode
+      0 -- RestrictedActions.STATES.Inactive
+    )
+
+    assert(resumeCalls == 0, "already-resumed runtime must not resume again on Inactive")
+    assert(attributes.tellTarget == nil, "challenge mode Inactive must clear stale Blizzard tellTarget")
+    assert(attributes.chatType == "SAY", "challenge mode Inactive must restore chatType to SAY, got " .. tostring(attributes.chatType))
+    assert(attributes.stickyType == "SAY", "challenge mode Inactive must restore stickyType to SAY, got " .. tostring(attributes.stickyType))
+    assert(Bootstrap.runtime.lastIncomingWhisperKey == "wow::WOW::jaina", "challenge mode Inactive must capture the reply target for /wr")
+  end
+
   -- test_player_entering_world_calls_competitive_state_callback
 
   do
