@@ -20,6 +20,7 @@ return function()
   local savedUnitFullName = _G.UnitFullName
   local savedGetNormalizedRealmName = _G.GetNormalizedRealmName
   local savedInCombatLockdown = _G.InCombatLockdown
+  local savedGetPlayerInfoByGUID = _G.GetPlayerInfoByGUID
 
   local createdFrames = {}
   local sendCalls = {}
@@ -35,6 +36,17 @@ return function()
   end)
   rawset(_G, "InCombatLockdown", function()
     return false
+  end)
+  -- Real WoW always has GetPlayerInfoByGUID available. Stub it behind a
+  -- toggle so the initial whisper (asserted below to carry the BNet API's
+  -- raw "Mage") is unaffected, but the later BN_FRIEND_INFO_CHANGED refresh
+  -- can resolve classTag/className together (see BNetStatus.ApplyGameInfoMetadata).
+  local playerInfoStub = { active = false }
+  rawset(_G, "GetPlayerInfoByGUID", function(_guid)
+    if not playerInfoStub.active then
+      return nil
+    end
+    return "Priest", "PRIEST", "Kul Tiran", "Kul Tiran"
   end)
 
   _G.require = nil
@@ -292,13 +304,16 @@ return function()
     }
   end
 
+  playerInfoStub.active = true
   eventFrame.scripts.OnEvent(eventFrame, "BN_FRIEND_INFO_CHANGED")
 
   assert(conversation.bnetAccountID == 77, "expected BNet refresh to update account id")
   assert(conversation.gameAccountName == "Jaina-KulTiras", "expected BNet refresh to update gameAccountName")
   assert(conversation.className == "Priest", "expected BNet refresh to update class name")
+  assert(conversation.classTag == "PRIEST", "expected BNet refresh to update class tag alongside class name")
   assert(conversation.raceName == "Kul Tiran", "expected BNet refresh to update race name")
   assert(runtime.window.contacts.rows[1].item.className == "Priest", "expected open window row to refresh after BNet update")
+  rawset(_G, "GetPlayerInfoByGUID", savedGetPlayerInfoByGUID)
   _G.require = savedRequire
   rawset(_G, "CreateFrame", savedCreateFrame)
   _G.SlashCmdList = savedSlashCmdList
