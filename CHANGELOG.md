@@ -8,8 +8,11 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 - Contacts now show where a Battle.net friend or guild/community member currently is (zone, arena, or dungeon), in a dimmed line under their name in the contact list and in the conversation header, like the Battle.net friends list.
 - Fixed: Battle.net friends who are also logged into the Battle.net app or another Blizzard game now show their WoW character, class, faction, and zone again, and no longer appear as "Away" when they are online in WoW.
+- Fixed: when a Battle.net friend is offline, their class icon in the contact list and the class shown in the conversation header no longer disagree, and the header no longer shows a stale zone for them.
 - Fixed: whispers that arrived while the messenger was open no longer pop up as a preview on the widget a few seconds after you close the window.
 - Fixed: after replying to a whisper in the default chat during a Mythic+ run, pressing Enter once the run is over no longer keeps opening the messenger to that person, so you can type in Say and General again.
+- Fixed: shift-clicking a player name or link in chat while typing in the messenger no longer inserts it several times; the name now appears once.
+- Fixed: hovering a profession link in a conversation no longer opens the profession window; it now opens only when you click the link.
 
 ## [1.4.1] - 2026-09-03
 

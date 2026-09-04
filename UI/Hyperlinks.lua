@@ -54,6 +54,11 @@ local function formatPlainSegment(segment)
   return formatEmojiInPlainSegments(UrlFormatter.FormatPlainSegment(segment))
 end
 
+-- Link types whose GameTooltip:SetHyperlink has a side effect instead of a
+-- tooltip: `trade` opens the profession window. Hovering shows nothing for
+-- these (same as Blizzard chat); clicking still routes through SetItemRef.
+local NO_HOVER_TOOLTIP_TYPES = { trade = true }
+
 local Hyperlinks = {}
 
 local function resolveManualCopy()
@@ -128,6 +133,13 @@ function Hyperlinks.HandleClick(link, text, button, sourceFrame)
 end
 
 function Hyperlinks.HandleEnter(owner, link)
+  if type(link) == "string" then
+    local linkType = string.match(link, "^|H([^:|]+):") or string.match(link, "^([^:|]+):")
+    if linkType and NO_HOVER_TOOLTIP_TYPES[string.lower(linkType)] then
+      return
+    end
+  end
+
   local tooltip = _G.GameTooltip
   if type(tooltip) ~= "table" or type(tooltip.SetOwner) ~= "function" then
     return

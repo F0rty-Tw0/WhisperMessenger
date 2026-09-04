@@ -8,6 +8,7 @@ local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMess
 local LinkHooks = {}
 local registeredLinkHooks = false
 local linkedInputs = {}
+local lastInsertFrameTime = nil
 
 local function isInputShown(input)
   if type(input.IsVisible) == "function" then
@@ -61,6 +62,16 @@ local function tryInsertLink(link, options)
   if type(insertable) == "string" then
     insertable = QuestLinkClassic.Rewrite(insertable)
   end
+
+  -- ponytail: one insert per frame. A single shift-click fans out into several
+  -- Blizzard insert paths (player-link handler, SetItemRef modified-click
+  -- fallback, our SetItemRef post-hook). Only the first — the plain
+  -- whisperable name — should land. GetTime() is constant within a frame.
+  local now = type(_G.GetTime) == "function" and _G.GetTime() or nil
+  if now ~= nil and now == lastInsertFrameTime then
+    return true -- already inserted this frame; report handled so callers don't fall back
+  end
+  lastInsertFrameTime = now
 
   input:Insert(insertable)
   return true
@@ -124,29 +135,27 @@ local function wmGetActiveWindow()
 end
 
 local function wmInsertLink(link)
-  -- Rewrite Classic plain-text quest links BEFORE delegating to the original.
-  -- Otherwise Blizzard's `ChatEdit_InsertLink` sees our composer via our
-  -- `wmGetActiveWindow` override, calls `editbox:Insert(plainText)` directly,
-  -- and returns true — short-circuiting the rewrite path below.
+  -- Rewrite Classic plain-text quest links before trying either path.
   local insertable = link
   if type(insertable) == "string" then
     insertable = QuestLinkClassic.Rewrite(insertable)
   end
 
-  local original = originals.chatEditInsertLink or originals.chatFrameUtilInsertLink
-  if original then
-    local handled = original(insertable)
-    if handled then
-      return true
-    end
-  end
-  if _G._wmSuspended then
-    return false
-  end
-  if type(insertable) == "string" and insertable ~= "" then
+  -- Try our focused composer FIRST (through tryInsertLink, so the one-insert-
+  -- per-frame dedupe applies). Blizzard routes the same click through several
+  -- insert paths in one frame (player-link handler, SetItemRef modified-click
+  -- fallback, our SetItemRef post-hook); only the first should land. Overrides
+  -- are only installed while our composer is focused, so inserting ourselves
+  -- first never steals links from other editboxes.
+  if not _G._wmSuspended and type(insertable) == "string" and insertable ~= "" then
     if tryInsertLink(insertable, { allowVisibleWithoutFocus = false }) then
       return true
     end
+  end
+
+  local original = originals.chatEditInsertLink or originals.chatFrameUtilInsertLink
+  if original then
+    return original(insertable) == true
   end
   return false
 end
