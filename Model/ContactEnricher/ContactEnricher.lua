@@ -92,6 +92,9 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
         if gameInfo.raceName and gameInfo.raceName ~= "" then
           selectedContact.raceName = gameInfo.raceName
         end
+        if gameInfo.areaName and gameInfo.areaName ~= "" then
+          selectedContact.areaName = gameInfo.areaName
+        end
         if gameInfo.characterName then
           selectedContact.characterName = gameInfo.characterName
           selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName

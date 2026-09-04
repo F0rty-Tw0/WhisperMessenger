@@ -76,6 +76,9 @@ function BNetStatus.Apply(item, runtime)
         if gameInfo.raceName and gameInfo.raceName ~= "" then
           item.raceName = gameInfo.raceName
         end
+        if gameInfo.areaName and gameInfo.areaName ~= "" then
+          item.areaName = gameInfo.areaName
+        end
         -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
         local guid = gameInfo.playerGuid or item.guid
         if guid then

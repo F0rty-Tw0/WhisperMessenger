@@ -83,5 +83,14 @@ function WoWStatus.ApplyPresenceFallback(item, runtime)
   end
 end
 
+-- Apply the contact's current zone from the presence cache.
+function WoWStatus.ApplyZone(item)
+  if PresenceCache.GetPresence(item.guid) == "online" then
+    item.areaName = PresenceCache.GetZone(item.guid)
+  else
+    item.areaName = nil
+  end
+end
+
 ns.ContactEnricherWoWStatus = WoWStatus
 return WoWStatus
