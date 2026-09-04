@@ -8,7 +8,7 @@ local PatchNotes = {
   version = "v1.4.1",
   date = "2026-09-03",
   lines = {
-    "Added a \"?\" button next to the Start New Whisper button and a What's New page in Options. The button glows after each update until you open the page, which lists what changed in the latest version.",
+    'Added a "?" button next to the Start New Whisper button and a What\'s New page in Options. The button glows after each update until you open the page, which lists what changed in the latest version.',
     "Fixed: reactions from character and Battle.net whispers now count as new activity, update the conversation preview, play the configured whisper sound, and open the messenger automatically when enabled; duplicate reactions and removed reactions stay silent.",
     "Fixed: incoming reaction previews now show emoji in the contact list and notification popup instead of raw reaction text.",
     "Fixed: reaction markers on sent messages now sit on the left edge, matching the alignment of sent message bubbles.",
