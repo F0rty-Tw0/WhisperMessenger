@@ -66,13 +66,15 @@ function BNetStatus.Apply(item, runtime)
       end
     end
     local gameInfo = accountInfo.gameAccountInfo
-    -- isAFK/isDND are STICKY on BNetAccountInfo — they persist after a friend
-    -- goes offline. Only isOnline (strict true) or game-account presence prove
-    -- they are actually connected; sticky flags are valid only as sub-status.
-    local isOnline = accountInfo.isOnline == true or (gameInfo and (gameInfo.isOnline or gameInfo.characterName))
+    -- The live BNetAccountInfo struct has no top-level isOnline; presence lives
+    -- on gameAccountInfo.isOnline (Blizzard's FriendsFrame reads the same field).
+    -- isAFK/isDND are STICKY — they persist after a friend goes offline and are
+    -- valid only as sub-status once presence is proven.
+    local gameOnline = gameInfo and gameInfo.isOnline
+    local inWoW = BNetStatus.IsInWoW(gameInfo)
+    local isOnline = accountInfo.isOnline == true or gameOnline == true or inWoW
     if isOnline then
       -- Check AFK/DND first (applies whether in WoW or BNet app)
-      local inWoW = gameInfo and (gameInfo.isOnline or gameInfo.characterName)
       local bnetStatus
       if accountInfo.isAFK or (gameInfo and gameInfo.isGameAFK) then
         bnetStatus = "Away"
@@ -88,8 +90,8 @@ function BNetStatus.Apply(item, runtime)
       -- Refresh potentially stale metadata from live BNet data, but only
       -- while the friend is actually in WoW — otherwise leave it as-is.
       BNetStatus.ApplyGameInfoMetadata(item, gameInfo, runtime)
-    elseif accountInfo.isOnline == false then
-      -- BNet API explicitly says offline at account level; fall back to guild/community presence
+    elseif accountInfo.isOnline == false or gameOnline == false then
+      -- BNet API explicitly says offline; fall back to guild/community presence
       local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil
       if presence == "online" then
         -- BNet whispers are always cross-faction; no XFaction needed

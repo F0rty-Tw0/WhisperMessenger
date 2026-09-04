@@ -264,7 +264,8 @@ return function()
     )
   end
 
-  -- EnrichContactsAvailability: BNet contact online via gameAccountInfo.isOnline shows as online
+  -- EnrichContactsAvailability: BNet contact online via gameAccountInfo.isOnline but
+  -- with no character (Battle.net app) shows as BNetOnline, not plain Online
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -289,8 +290,8 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet online contact should have availability")
     assert(
-      contacts[1].availability.status == "CanWhisper",
-      "BNet online contact without characterName should be CanWhisper, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "BNetOnline",
+      "BNet online contact without characterName should be BNetOnline, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -573,7 +574,7 @@ return function()
 
   -- EnrichContactsAvailability: BNet contact with sticky isAFK=true + isOnline=nil
   -- must NOT be treated as online. isAFK/isDND are sticky flags that persist after
-  -- a friend goes offline. Without positive proof of presence, fall back to BNetOnline.
+  -- a friend goes offline. gameAccountInfo.isOnline=false is explicit offline.
   do
     local runtime = makeRuntime({
       bnetApi = {
@@ -598,8 +599,8 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet AFK with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "BNetOnline",
-      "sticky isAFK with isOnline=nil must fall back to BNetOnline, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Offline",
+      "sticky isAFK with game isOnline=false must be Offline, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
@@ -629,8 +630,8 @@ return function()
     ContactEnricher.EnrichContactsAvailability(contacts, runtime)
     assert(contacts[1].availability ~= nil, "BNet DND with nil isOnline should have availability")
     assert(
-      contacts[1].availability.status == "BNetOnline",
-      "sticky isDND with isOnline=nil must fall back to BNetOnline, got: " .. tostring(contacts[1].availability.status)
+      contacts[1].availability.status == "Offline",
+      "sticky isDND with game isOnline=false must be Offline, got: " .. tostring(contacts[1].availability.status)
     )
   end
 
