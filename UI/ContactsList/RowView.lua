@@ -241,6 +241,16 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   RowElements.updatePreview(row, item, parentWidth, options and options.hideMessagePreview)
 
+  -- Location text (create once, update every bind). Group rows have no
+  -- single member's zone to show, so it stays hidden for them.
+  if row.location == nil then
+    RowElements.createLocation(row, item, parentWidth)
+  end
+  RowElements.updateLocation(row, item, parentWidth)
+  if isGroup and row.location and row.location.Hide then
+    row.location:Hide()
+  end
+
   -- Action buttons (create once)
   if row.removeButton == nil then
     row.removeButton = ActionButtons.createRemoveButton(factory, row, parentWidth, options)

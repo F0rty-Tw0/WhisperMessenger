@@ -177,6 +177,18 @@ function ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBo
   end
 end
 
+-- Capture the stale reply target for /wr, then scrub Blizzard's sticky state.
+-- Skips the scrub when a Battle.net target could not be resolved (nothing to
+-- reply to later). Idempotent: a box with no whisper state is a no-op.
+function ChatReplyState.ScrubStaleWhisperReplyState(runtime, getNumChatWindows, getEditBox)
+  local _, resolved = ChatReplyState.CaptureStaleWhisperReplyTarget(runtime, getNumChatWindows, getEditBox)
+  if resolved == false then
+    return false
+  end
+  ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
+  return true
+end
+
 ns.ChatReplyState = ChatReplyState
 
 return ChatReplyState

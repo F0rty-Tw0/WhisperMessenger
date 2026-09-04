@@ -196,6 +196,37 @@ function RowElements.createPreview(row, item, parentWidth)
   return label
 end
 
+function RowElements.updateLocation(row, item, parentWidth)
+  if row.location == nil then
+    return
+  end
+
+  local areaName = item and item.areaName or nil
+  if type(areaName) == "string" and areaName ~= "" then
+    row.location:SetWidth(previewLabelWidth(parentWidth))
+    row.location:SetText(areaName)
+    row.location:Show()
+  else
+    row.location:SetText("")
+    row.location:Hide()
+  end
+end
+
+function RowElements.createLocation(row, item, parentWidth)
+  local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
+  label:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 0, -1)
+  setTextColor(label, Theme.COLORS.text_timestamp)
+  label:SetWidth(previewLabelWidth(parentWidth))
+  label:SetJustifyH("LEFT")
+  label:SetWordWrap(false)
+  if label.SetMaxLines then
+    label:SetMaxLines(1)
+  end
+  row.location = label
+  RowElements.updateLocation(row, item, parentWidth)
+  return label
+end
+
 function RowElements.updateUnreadBadge(row, item)
   if row.unreadBadge == nil then
     return

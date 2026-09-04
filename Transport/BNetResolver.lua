@@ -109,6 +109,26 @@ local function scanFriendListById(bnetApi, bnetAccountID)
   return nil, nil
 end
 
+-- Picks the best game account from a friend's account list: prefers the
+-- first entry with an actual WoW characterName (a Battle.net app or other
+-- game account has none), falling back to the first isOnline entry only
+-- when no account has a character.
+local function pickGameAccount(bnetApi, friendIndex, numAccounts)
+  local fallback
+  for j = 1, numAccounts do
+    local ok, gameInfo = pcall(bnetApi.GetFriendGameAccountInfo, friendIndex, j)
+    if ok and gameInfo then
+      if gameInfo.characterName and gameInfo.characterName ~= "" then
+        return gameInfo
+      end
+      if not fallback and gameInfo.isOnline then
+        fallback = gameInfo
+      end
+    end
+  end
+  return fallback
+end
+
 -- Stage 4: Iterate game accounts to detect online status when isOnline is nil.
 -- Mutates accountInfo.isOnline and accountInfo.gameAccountInfo on success.
 -- Returns enriched accountInfo if an active game account is found, otherwise nil.
@@ -126,15 +146,18 @@ local function probeGameAccounts(bnetApi, friendIndex, accountInfo)
   if not ok or not numAccounts or numAccounts <= 0 then
     return nil
   end
-  for j = 1, numAccounts do
-    local ok2, gameInfo = pcall(bnetApi.GetFriendGameAccountInfo, friendIndex, j)
-    if ok2 and gameInfo and (gameInfo.isOnline or gameInfo.characterName) then
-      accountInfo.isOnline = true
-      accountInfo.gameAccountInfo = gameInfo
-      return accountInfo
-    end
+  local picked = pickGameAccount(bnetApi, friendIndex, numAccounts)
+  if not picked then
+    return nil
   end
-  return nil
+  accountInfo.isOnline = true
+  local existing = accountInfo.gameAccountInfo
+  local existingHasCharacter = existing and existing.characterName and existing.characterName ~= ""
+  local pickedHasCharacter = picked.characterName and picked.characterName ~= ""
+  if not (existingHasCharacter and not pickedHasCharacter) then
+    accountInfo.gameAccountInfo = picked
+  end
+  return accountInfo
 end
 
 -- Stage 5: GUID fallback.

@@ -37,6 +37,10 @@ function StatusLine.Build(selectedContact, status)
     dotColor = avail.color
   end
 
+  if selectedContact.areaName and selectedContact.areaName ~= "" then
+    table.insert(parts, selectedContact.areaName)
+  end
+
   if selectedContact.realmName and selectedContact.realmName ~= "" then
     local name = selectedContact.name or selectedContact.displayName or ""
     if name ~= "" then

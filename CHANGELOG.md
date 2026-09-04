@@ -4,6 +4,13 @@ Player-friendly release notes for WhisperMessenger. This file covers the current
 
 All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x](archive/changelog/1.2.md) · [1.1.x](archive/changelog/1.1.md) · [1.0.x](archive/changelog/1.0.md) · [0.1.x](archive/changelog/0.1.md)
 
+## [Unreleased]
+
+- Contacts now show where a Battle.net friend or guild/community member currently is (zone, arena, or dungeon), in a dimmed line under their name in the contact list and in the conversation header, like the Battle.net friends list.
+- Fixed: Battle.net friends who are also logged into the Battle.net app or another Blizzard game now show their WoW character, class, faction, and zone again, and no longer appear as "Away" when they are online in WoW.
+- Fixed: whispers that arrived while the messenger was open no longer pop up as a preview on the widget a few seconds after you close the window.
+- Fixed: after replying to a whisper in the default chat during a Mythic+ run, pressing Enter once the run is over no longer keeps opening the messenger to that person, so you can type in Say and General again.
+
 ## [1.4.1] - 2026-09-03
 
 - Added a "?" button next to the Start New Whisper button and a What's New page in Options. The button glows after each update until you open the page, which lists what changed in the latest version.
