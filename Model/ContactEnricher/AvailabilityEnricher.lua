@@ -20,10 +20,6 @@ end
 -- Expose helpers for use by ContactEnricher facade
 AvailabilityEnricher.isOppositeFaction = isOppositeFaction
 
--- Re-export enrichClassTag from BNetStatus so ContactEnricher.lua callers
--- (BuildWindowSelectionState) can reach it via AvailabilityEnricher.enrichClassTag.
-AvailabilityEnricher.enrichClassTag = BNetStatus.EnrichClassTag
-
 function AvailabilityEnricher.ShouldRequestAvailability(_cached)
   -- Always re-request: the async whisper-check API is lightweight and ensures
   -- statuses stay fresh. A player marked CanWhisper may have gone offline,

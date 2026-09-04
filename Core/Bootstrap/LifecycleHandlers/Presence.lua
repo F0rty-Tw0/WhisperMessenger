@@ -94,6 +94,7 @@ local function refreshBNetConversations(Bootstrap, deps)
   end
 
   local BNetResolver = deps.loadModule("WhisperMessenger.Transport.BNetResolver", "BNetResolver")
+  local BNetStatus = deps.loadModule("WhisperMessenger.Model.ContactEnricher.BNetStatus", "ContactEnricherBNetStatus")
   local friendMap = BNetResolver.ScanFriendList(Bootstrap.runtime.bnetApi)
 
   local Identity = deps.loadModule("WhisperMessenger.Model.Identity", "Identity")
@@ -107,20 +108,10 @@ local function refreshBNetConversations(Bootstrap, deps)
       if friend then
         conversation.bnetAccountID = friend.bnetAccountID
         local gameInfo = friend.accountInfo and friend.accountInfo.gameAccountInfo
-        if gameInfo then
-          if gameInfo.factionName and gameInfo.factionName ~= "" then
-            conversation.factionName = gameInfo.factionName
-          end
-          if gameInfo.className and gameInfo.className ~= "" then
-            conversation.className = gameInfo.className
-          end
-          if gameInfo.raceName and gameInfo.raceName ~= "" then
-            conversation.raceName = gameInfo.raceName
-          end
-          if gameInfo.characterName and gameInfo.characterName ~= "" then
-            local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
-            conversation.gameAccountName = gameInfo.characterName .. realmSuffix
-          end
+        BNetStatus.ApplyGameInfoMetadata(conversation, gameInfo, Bootstrap.runtime)
+        if gameInfo and gameInfo.characterName and gameInfo.characterName ~= "" then
+          local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
+          conversation.gameAccountName = gameInfo.characterName .. realmSuffix
         end
       end
     end

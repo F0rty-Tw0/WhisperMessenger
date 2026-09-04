@@ -5,24 +5,44 @@ end
 
 local BNetStatus = {}
 
--- Resolve classTag/raceTag for a contact via GetPlayerInfoByGUID.
--- The BNet API provides className (localized) but not classTag (engine token),
--- which is needed for class coloring and icons.
-local function enrichClassTag(item, guid, runtime)
-  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
-  local playerInfo = BNetResolver.ResolvePlayerInfo(runtime.playerInfoByGUID, guid)
-  if playerInfo then
-    if playerInfo.classTag then
-      item.classTag = playerInfo.classTag
-    end
-    if playerInfo.raceTag then
-      item.raceTag = playerInfo.raceTag
-    end
-  end
+-- True only while the friend is logged into a WoW character. Offline friends
+-- and Battle.net-app-only friends report no (or empty) characterName; any
+-- className/areaName beside it is stale and must not be copied.
+function BNetStatus.IsInWoW(gameInfo)
+  return gameInfo ~= nil and type(gameInfo.characterName) == "string" and gameInfo.characterName ~= ""
 end
 
--- Expose for re-export on AvailabilityEnricher facade (ContactEnricher.lua uses it)
-BNetStatus.EnrichClassTag = enrichClassTag
+-- Copy live character metadata from gameInfo onto target (a contact item or a
+-- stored conversation). className and classTag are written together so the
+-- class icon and the class text never describe different characters.
+-- Returns true when metadata was applied (i.e. the friend is in WoW).
+function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
+  if not BNetStatus.IsInWoW(gameInfo) then
+    return false
+  end
+  if gameInfo.factionName and gameInfo.factionName ~= "" then
+    target.factionName = gameInfo.factionName
+  end
+  if gameInfo.raceName and gameInfo.raceName ~= "" then
+    target.raceName = gameInfo.raceName
+  end
+  if gameInfo.areaName and gameInfo.areaName ~= "" then
+    target.areaName = gameInfo.areaName
+  end
+  local guid = gameInfo.playerGuid or target.guid
+  local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  local playerInfo = guid and BNetResolver.ResolvePlayerInfo(runtime.playerInfoByGUID, guid)
+  if playerInfo and playerInfo.classTag then
+    target.classTag = playerInfo.classTag
+    target.className = (gameInfo.className ~= nil and gameInfo.className ~= "") and gameInfo.className or playerInfo.className or target.className
+    if playerInfo.raceTag then
+      target.raceTag = playerInfo.raceTag
+    end
+  end
+  -- else: classTag unresolvable — leave BOTH className and classTag untouched
+  -- (stale but consistent beats a mismatched icon/text pair)
+  return true
+end
 
 -- Apply live BNet status and refresh metadata from the BNet API for a BNet contact.
 -- Handles ResolveAccountInfo, isOnline/isAFK/isDND/isGameAFK sticky-flag logic,
@@ -65,27 +85,9 @@ function BNetStatus.Apply(item, runtime)
         bnetStatus = "CanWhisper"
       end
       item.availability = Availability.FromStatus(bnetStatus)
-      -- Refresh potentially stale metadata from live BNet data when in WoW
-      if gameInfo and gameInfo.characterName then
-        if gameInfo.factionName and gameInfo.factionName ~= "" then
-          item.factionName = gameInfo.factionName
-        end
-        if gameInfo.className and gameInfo.className ~= "" then
-          item.className = gameInfo.className
-        end
-        if gameInfo.raceName and gameInfo.raceName ~= "" then
-          item.raceName = gameInfo.raceName
-        end
-        if gameInfo.areaName and gameInfo.areaName ~= "" then
-          item.areaName = gameInfo.areaName
-        end
-        -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
-        local guid = gameInfo.playerGuid or item.guid
-        if guid then
-          enrichClassTag(item, guid, runtime)
-        end
-        -- BNet whispers are always cross-faction; no XFaction status needed
-      end
+      -- Refresh potentially stale metadata from live BNet data, but only
+      -- while the friend is actually in WoW — otherwise leave it as-is.
+      BNetStatus.ApplyGameInfoMetadata(item, gameInfo, runtime)
     elseif accountInfo.isOnline == false then
       -- BNet API explicitly says offline at account level; fall back to guild/community presence
       local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil

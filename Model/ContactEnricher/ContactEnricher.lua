@@ -52,6 +52,7 @@ end
 
 function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+  local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
   local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
   if contacts == nil and buildContactsFn then
     contacts = buildContactsFn(runtime)
@@ -82,28 +83,9 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     )
     if accountInfo then
       local gameInfo = accountInfo.gameAccountInfo
-      if gameInfo then
-        if gameInfo.factionName and gameInfo.factionName ~= "" then
-          selectedContact.factionName = gameInfo.factionName
-        end
-        if gameInfo.className and gameInfo.className ~= "" then
-          selectedContact.className = gameInfo.className
-        end
-        if gameInfo.raceName and gameInfo.raceName ~= "" then
-          selectedContact.raceName = gameInfo.raceName
-        end
-        if gameInfo.areaName and gameInfo.areaName ~= "" then
-          selectedContact.areaName = gameInfo.areaName
-        end
-        if gameInfo.characterName then
-          selectedContact.characterName = gameInfo.characterName
-          selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
-        end
-        -- Resolve classTag/raceTag from GUID (BNet API only provides localized className)
-        local guid = gameInfo.playerGuid or selectedContact.guid
-        if guid then
-          AvailabilityEnricher.enrichClassTag(selectedContact, guid, runtime)
-        end
+      if BNetStatus.ApplyGameInfoMetadata(selectedContact, gameInfo, runtime) then
+        selectedContact.characterName = gameInfo.characterName
+        selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
       end
     end
   end
