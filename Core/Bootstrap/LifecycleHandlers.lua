@@ -25,7 +25,7 @@ local LifecycleHandlers = {}
 function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
   if event == "ADDON_RESTRICTION_STATE_CHANGED" then
     local restrictionType, newState = ...
-    return RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState)
+    return RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
   end
 
   if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then

@@ -11,9 +11,12 @@ local RestrictedActions = ns.BootstrapRestrictedActions
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.RestrictedActions"))
   or nil
 
+local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+
 local RestrictionState = {}
 
-function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState)
+function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+  deps = deps or {}
   if not RestrictedActions then
     return true
   end
@@ -38,6 +41,13 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
       if Bootstrap.runtime and Bootstrap.runtime.resume then
         Bootstrap.runtime.resume()
       end
+    end
+    if not isActive and ChatReplyState and ChatReplyState.ScrubStaleWhisperReplyState then
+      -- CHALLENGE_MODE_COMPLETED usually fires resume() (and its scrub) while
+      -- this restriction is still Active, where edit-box reads can be secret
+      -- and the scrub silently skips. Inactive is the last safe point to
+      -- clear a /r whisper sticky left by Blizzard chat during the key.
+      ChatReplyState.ScrubStaleWhisperReplyState(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
     end
     Common.notifyCompetitiveState(Bootstrap)
     return true

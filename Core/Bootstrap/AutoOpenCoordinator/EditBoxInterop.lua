@@ -91,14 +91,19 @@ function EditBoxInterop.closeEditBox(runtime, editBox, deactivateChat, composerT
   -- When sticky is a non-whisper mode, restore chatType to that sticky type
   -- and clear tellTarget — the user's next Enter should land in Say/Party/etc.
   --
-  -- When sticky IS whisper (WHISPER/BN_WHISPER), leave Blizzard's state alone.
-  -- Clearing tellTarget while chatType stays WHISPER leaves the edit box in
-  -- an invalid state — Blizzard's SendText will then call SendChatMessage
-  -- with target=nil and throw "Chat type requires a target player". Blizzard
-  -- already manages whisper-sticky target cleanup on its own.
+  -- When sticky IS whisper (WHISPER/BN_WHISPER) — a whisper was really sent
+  -- through Blizzard chat, e.g. /r while we were suspended in M+ — the
+  -- messenger has now taken that conversation over. Keeping the whisper
+  -- sticky would make every later Enter re-open the messenger and lock the
+  -- user out of Say/General, so reset all three attributes together
+  -- (chatType=WHISPER with tellTarget=nil alone is an invalid Blizzard state).
   if type(editBox.SetAttribute) == "function" then
     local stickyType = EditBoxInterop.readEditBoxState(editBox, "stickyType")
-    if stickyType and stickyType ~= "WHISPER" and stickyType ~= "BN_WHISPER" then
+    if stickyType == "WHISPER" or stickyType == "BN_WHISPER" then
+      pcall(editBox.SetAttribute, editBox, "chatType", "SAY")
+      pcall(editBox.SetAttribute, editBox, "stickyType", "SAY")
+      pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
+    elseif stickyType then
       pcall(editBox.SetAttribute, editBox, "chatType", stickyType)
       pcall(editBox.SetAttribute, editBox, "tellTarget", nil)
     end

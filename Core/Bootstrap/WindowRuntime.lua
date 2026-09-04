@@ -182,9 +182,10 @@ function WindowRuntime.Create(options)
   end
 
   local function setWindowVisible(nextVisible)
-    if nextVisible then
-      acknowledgeLatestWidgetPreview(buildContacts())
-    end
+    -- Acknowledge on both open and close: a whisper that arrived while the
+    -- window was open was already on screen, so closing must not let the
+    -- next background refresh pop it on the widget as if it were new.
+    acknowledgeLatestWidgetPreview(buildContacts())
     return coordinator.setWindowVisible(nextVisible)
   end
 
