@@ -90,20 +90,36 @@ end
 
 function LivePresence.SetTyping(state, key, active, now)
   if type(state) ~= "table" or key == nil then
-    return
+    return false
   end
+  local wasTyping = LivePresence.IsTyping(state, key, now)
   state.typingByConversation = state.typingByConversation or {}
   if active then
     state.typingByConversation[key] = (now or 0) + TYPING_TTL
   else
     state.typingByConversation[key] = nil
   end
+  return wasTyping ~= (active == true)
 end
 
 function LivePresence.IsTyping(state, key, now)
   local typing = type(state) == "table" and state.typingByConversation or nil
   local expiresAt = typing and key and typing[key] or nil
   return expiresAt ~= nil and (now or 0) < expiresAt
+end
+
+-- Seconds until the typing indicator expires, or 0 when not typing / expired.
+function LivePresence.TypingRemaining(state, key, now)
+  local typing = type(state) == "table" and state.typingByConversation or nil
+  local expiresAt = typing and key and typing[key] or nil
+  if expiresAt == nil then
+    return 0
+  end
+  local remaining = expiresAt - (now or 0)
+  if remaining <= 0 then
+    return 0
+  end
+  return remaining
 end
 
 -- Seeing a message implies seeing everything sent before it, so mark the

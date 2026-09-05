@@ -61,16 +61,32 @@ local OUTGOING_WHISPER_EVENTS = {
 }
 
 -- A typing indicator expires on its own; nothing else would redraw the
--- window at that moment, so schedule one refresh just past the TTL.
+-- window at that moment, so schedule one refresh just past the TTL. At most
+-- one pending timer is kept per conversation: while the peer keeps typing
+-- (extending the TTL on every packet), the timer just re-arms for the new
+-- remaining time instead of stacking a fresh timer per packet.
 local TYPING_EXPIRY_GRACE = 0.2
-local function scheduleTypingExpiry(refreshWindow, conversationKey)
+local function scheduleTypingExpiry(runtime, refreshWindow, conversationKey)
   local timer = _G.C_Timer
   if timer == nil or type(timer.After) ~= "function" then
     return
   end
-  timer.After(LivePresence.TYPING_TTL + TYPING_EXPIRY_GRACE, function()
-    refreshWindow(conversationKey)
-  end)
+  runtime.typingExpiryPending = runtime.typingExpiryPending or {}
+  if runtime.typingExpiryPending[conversationKey] then
+    return
+  end
+  local function fire()
+    local now = runtime.now and runtime.now() or 0
+    local remaining = LivePresence.TypingRemaining(runtime, conversationKey, now)
+    if remaining > 0 then
+      timer.After(remaining + TYPING_EXPIRY_GRACE, fire)
+    else
+      runtime.typingExpiryPending[conversationKey] = nil
+      refreshWindow(conversationKey)
+    end
+  end
+  runtime.typingExpiryPending[conversationKey] = true
+  timer.After(LivePresence.TYPING_TTL + TYPING_EXPIRY_GRACE, fire)
 end
 
 local function applyIncomingEffects(runtime, result)
@@ -142,9 +158,12 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end
   end
   if refreshWindow and result and result.conversationKey then
-    refreshWindow(result.conversationKey)
-    if type(resultMeta) == "table" and resultMeta.presence == "typing" and resultMeta.typingActive == true then
-      scheduleTypingExpiry(refreshWindow, result.conversationKey)
+    local typingMeta = type(resultMeta) == "table" and resultMeta.presence == "typing" and resultMeta or nil
+    if not (typingMeta and typingMeta.typingChanged == false) then
+      refreshWindow(result.conversationKey)
+    end
+    if typingMeta and typingMeta.typingActive == true then
+      scheduleTypingExpiry(runtime, refreshWindow, result.conversationKey)
     end
   end
   return result

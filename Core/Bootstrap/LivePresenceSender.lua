@@ -103,7 +103,10 @@ function Sender.OnComposerText(runtime, contact, text)
   if not hasText then
     return sentStop
   end
-  if not settingOn(runtime, "shareTypingStatus") or isRestricted(runtime) or not LivePresence.HasPeer(runtime, key) then
+  if not LivePresence.HasPeer(runtime, key) then
+    return sentStop
+  end
+  if not settingOn(runtime, "shareTypingStatus") then
     return sentStop
   end
   local conversation = conversationFor(runtime, key)
@@ -113,6 +116,9 @@ function Sender.OnComposerText(runtime, contact, text)
 
   local now = nowSeconds(runtime)
   if out.active and out.conversationKey == key and now - (out.lastSentAt or 0) < TYPING_RESEND_INTERVAL then
+    return sentStop
+  end
+  if isRestricted(runtime) then
     return sentStop
   end
   if not send(runtime, conversation, LivePresence.EncodeTyping(true)) then
@@ -132,12 +138,21 @@ function Sender.SyncReadReceipts(runtime, selectedContact)
     return false
   end
   local key = selectedContact.conversationKey
-  if key == nil or not settingOn(runtime, "shareReadReceipts") or isRestricted(runtime) or not LivePresence.HasPeer(runtime, key) then
+  if key == nil then
+    return false
+  end
+  if not LivePresence.HasPeer(runtime, key) then
+    return false
+  end
+  if not settingOn(runtime, "shareReadReceipts") then
     return false
   end
   local conversation = conversationFor(runtime, key)
   local message = LivePresence.NextReceipt(conversation)
   if message == nil then
+    return false
+  end
+  if isRestricted(runtime) then
     return false
   end
   message.receiptSentAt = nowSeconds(runtime)
