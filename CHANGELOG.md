@@ -6,6 +6,9 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 ## [Unreleased]
 
+- Added live typing indicators: when a friend who also uses WhisperMessenger is writing to you, their contact row and the conversation header show "typing…" in green until they send or stop.
+- Added "Seen" receipts: once a friend who also uses WhisperMessenger has your conversation open, your latest sent messages show a green "Seen" next to the timestamp. Contacts who run the addon are labelled "Uses WhisperMessenger" in the conversation header.
+- Added two Behavior settings, "Share typing status" and "Send read receipts", both on by default. Turn them off to stop sharing your own typing and read activity. Nothing is ever sent to players without the addon, and both pause during Mythic+ and other restricted content.
 - Fixed: Battle.net friends who are fully offline no longer show as "Online (App)" in the contact list and conversation header. Friends who are only in the Battle.net app now show "Online (App)" instead of plain "Online".
 - Contacts now show where a Battle.net friend or guild/community member currently is (zone, arena, or dungeon), in a dimmed line under their name in the contact list and in the conversation header, like the Battle.net friends list.
 - Fixed: Battle.net friends who are also logged into the Battle.net app or another Blizzard game now show their WoW character, class, faction, and zone again, and no longer appear as "Away" when they are online in WoW.
