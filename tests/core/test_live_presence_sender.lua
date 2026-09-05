@@ -41,6 +41,20 @@ local function newRuntime(nowRef, sent, bnSent)
   }
 end
 
+local function countingRuntime(nowRef, sent, bnSent)
+  local runtime = newRuntime(nowRef, sent, bnSent)
+  local calls = { mythic = 0, competitive = 0 }
+  runtime.isMythicLockdown = function()
+    calls.mythic = calls.mythic + 1
+    return false
+  end
+  runtime.isCompetitiveContent = function()
+    calls.competitive = calls.competitive + 1
+    return false
+  end
+  return runtime, calls
+end
+
 local function wowConversation(runtime, key, displayName)
   local conv = Store.EnsureConversation(runtime.store, key)
   conv.displayName = displayName
@@ -176,5 +190,51 @@ return function()
     assert(Sender.SyncReadReceipts(runtime, nil) == false, "no selection: no receipt")
     assert(Sender.SyncReadReceipts(runtime, contact) == true, "next message receipted")
     assert(sent[2].payload == "1|S|in2", "second receipt payload")
+  end
+
+  -- test_keystroke_to_stranger_skips_lockdown_checks
+  do
+    local now = { value = 100 }
+    local sent, bnSent = {}, {}
+    local runtime, calls = countingRuntime(now, sent, bnSent)
+    wowConversation(runtime, key, "Thrall-Nagrand")
+    -- no RecordPeer: the contact is a stranger
+
+    for i = 1, 5 do
+      Sender.OnComposerText(runtime, contact, "hel" .. i)
+      now.value = now.value + 1
+    end
+    assert(calls.mythic == 0 and calls.competitive == 0, "stranger keystrokes never check lockdown")
+    assert(#sent == 0, "nothing sent to a stranger")
+  end
+
+  -- test_read_receipt_sync_for_stranger_skips_lockdown_checks
+  do
+    local now = { value = 100 }
+    local sent, bnSent = {}, {}
+    local runtime, calls = countingRuntime(now, sent, bnSent)
+    local conv = wowConversation(runtime, key, "Thrall-Nagrand")
+    conv.messages = { { direction = "in", kind = "user", wireId = "in1", text = "hi", sentAt = 90 } }
+    -- no RecordPeer: the contact is a stranger
+
+    assert(Sender.SyncReadReceipts(runtime, contact) == false, "stranger: no receipt")
+    assert(calls.mythic == 0 and calls.competitive == 0, "stranger receipt sync never checks lockdown")
+  end
+
+  -- test_throttled_keystroke_skips_lockdown_checks
+  do
+    local now = { value = 100 }
+    local sent, bnSent = {}, {}
+    local runtime, calls = countingRuntime(now, sent, bnSent)
+    wowConversation(runtime, key, "Thrall-Nagrand")
+    LivePresence.RecordPeer(runtime, key)
+
+    assert(Sender.OnComposerText(runtime, contact, "hel") == true, "first key sends")
+    calls.mythic = 0
+    calls.competitive = 0
+    now.value = now.value + 0.1
+    assert(Sender.OnComposerText(runtime, contact, "hell") == false, "throttled: no send")
+    assert(calls.mythic == 0 and calls.competitive == 0, "throttled keystroke skips lockdown checks")
+    assert(#sent == 1, "throttled keystroke sends nothing new")
   end
 end

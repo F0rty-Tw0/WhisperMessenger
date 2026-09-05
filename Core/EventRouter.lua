@@ -254,8 +254,9 @@ local function conversationWithKey(state, conversationKey)
 end
 
 local function handlePresence(state, conversationKey, presence, now)
+  local typingChanged
   if presence.type == "typing" then
-    LivePresence.SetTyping(state, conversationKey, presence.active, now)
+    typingChanged = LivePresence.SetTyping(state, conversationKey, presence.active, now)
   elseif presence.type == "seen" then
     LivePresence.MarkSeen(state, conversationKey, presence.wireId, now)
   end
@@ -263,7 +264,11 @@ local function handlePresence(state, conversationKey, presence, now)
   if conversation == nil then
     return nil
   end
-  return conversation, { presence = presence.type, typingActive = presence.active }
+  local meta = { presence = presence.type, typingActive = presence.active }
+  if presence.type == "typing" then
+    meta.typingChanged = typingChanged
+  end
+  return conversation, meta
 end
 
 local function handleReactionMetadata(state, payload, isBattleNet)

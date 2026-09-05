@@ -54,6 +54,43 @@ return function()
     assert(not LivePresence.IsTyping(state, "k", 101), "stop clears typing")
   end
 
+  -- test_set_typing_reports_change_on_start
+  do
+    local state = newState()
+    assert(LivePresence.SetTyping(state, "k", true, 100) == true, "starting typing is a change")
+  end
+
+  -- test_set_typing_reports_no_change_on_repeat_inside_ttl
+  do
+    local state = newState()
+    LivePresence.SetTyping(state, "k", true, 100)
+    assert(LivePresence.SetTyping(state, "k", true, 101) == false, "repeat active packet inside ttl is no change")
+  end
+
+  -- test_set_typing_reports_change_on_stop
+  do
+    local state = newState()
+    LivePresence.SetTyping(state, "k", true, 100)
+    assert(LivePresence.SetTyping(state, "k", false, 101) == true, "stopping while typing is a change")
+  end
+
+  -- test_set_typing_reports_no_change_on_stop_when_idle
+  do
+    local state = newState()
+    assert(LivePresence.SetTyping(state, "k", false, 100) == false, "stop while already idle is no change")
+  end
+
+  -- test_typing_remaining_counts_down_to_zero
+  do
+    local state = newState()
+    LivePresence.SetTyping(state, "k", true, 100)
+    assert(LivePresence.TypingRemaining(state, "k", 100) == LivePresence.TYPING_TTL, "full ttl remaining right away")
+    assert(LivePresence.TypingRemaining(state, "k", 100 + LivePresence.TYPING_TTL - 1) == 1, "counts down")
+    assert(LivePresence.TypingRemaining(state, "k", 100 + LivePresence.TYPING_TTL) == 0, "zero once expired")
+    assert(LivePresence.TypingRemaining(state, "k", 100 + LivePresence.TYPING_TTL + 5) == 0, "zero stays zero past expiry")
+    assert(LivePresence.TypingRemaining(state, "other", 100) == 0, "zero for unknown conversation")
+  end
+
   -- test_peer_detection_is_remembered_and_persisted
   do
     local state = newState()

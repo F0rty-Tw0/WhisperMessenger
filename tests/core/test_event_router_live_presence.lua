@@ -44,6 +44,19 @@ return function()
     assert(not LivePresence.IsTyping(state, key, now.value), "stop clears typing")
   end
 
+  -- test_typing_payload_reports_typing_changed
+  do
+    local now = { value = 150 }
+    local state = newState(now)
+    Router.HandleEvent(state, "CHAT_MSG_WHISPER", whisperEvent("hi", 1))
+    local _, firstMeta = Router.HandleEvent(state, "CHAT_MSG_ADDON", addonEvent(LivePresence.EncodeTyping(true)))
+    assert(firstMeta and firstMeta.typingChanged == true, "first typing packet reports a change")
+    local _, secondMeta = Router.HandleEvent(state, "CHAT_MSG_ADDON", addonEvent(LivePresence.EncodeTyping(true)))
+    assert(secondMeta and secondMeta.typingChanged == false, "repeat typing packet inside ttl reports no change")
+    local _, stopMeta = Router.HandleEvent(state, "CHAT_MSG_ADDON", addonEvent(LivePresence.EncodeTyping(false)))
+    assert(stopMeta and stopMeta.typingChanged == true, "stop packet reports a change")
+  end
+
   -- test_identity_payload_marks_peer_and_refreshes_when_it_pairs
   do
     local now = { value = 200 }
