@@ -6,6 +6,7 @@ end
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
+local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 
 
 -- stylua: ignore start
@@ -58,6 +59,19 @@ local OUTGOING_WHISPER_EVENTS = {
   CHAT_MSG_WHISPER_INFORM = true,
   CHAT_MSG_BN_WHISPER_INFORM = true,
 }
+
+-- A typing indicator expires on its own; nothing else would redraw the
+-- window at that moment, so schedule one refresh just past the TTL.
+local TYPING_EXPIRY_GRACE = 0.2
+local function scheduleTypingExpiry(refreshWindow, conversationKey)
+  local timer = _G.C_Timer
+  if timer == nil or type(timer.After) ~= "function" then
+    return
+  end
+  timer.After(LivePresence.TYPING_TTL + TYPING_EXPIRY_GRACE, function()
+    refreshWindow(conversationKey)
+  end)
+end
 
 local function applyIncomingEffects(runtime, result)
   if runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.playSoundOnWhisper == true then
@@ -129,6 +143,9 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
   if refreshWindow and result and result.conversationKey then
     refreshWindow(result.conversationKey)
+    if type(resultMeta) == "table" and resultMeta.presence == "typing" and resultMeta.typingActive == true then
+      scheduleTypingExpiry(refreshWindow, result.conversationKey)
+    end
   end
   return result
 end

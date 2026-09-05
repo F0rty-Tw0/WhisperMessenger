@@ -41,6 +41,7 @@ function WindowCoordinator.Create(options)
     return false
   end
   local presenceCache = options.presenceCache
+  local livePresenceSender = options.livePresenceSender
   local requestAvailability = options.requestAvailability or WhisperGateway.RequestAvailability
   local cTimer = options.cTimer or _G.C_Timer
 
@@ -236,6 +237,11 @@ function WindowCoordinator.Create(options)
         window.refreshContacts(nextState.contacts, selectedConversationKey)
       elseif window.refreshSelection then
         window.refreshSelection(nextState)
+      end
+      -- The selected conversation is on screen now, so its newest message
+      -- counts as seen by the user.
+      if livePresenceSender and type(livePresenceSender.SyncReadReceipts) == "function" then
+        livePresenceSender.SyncReadReceipts(runtime, nextState.selectedContact)
       end
     end
 

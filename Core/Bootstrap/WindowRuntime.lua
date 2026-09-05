@@ -9,6 +9,7 @@ local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.Presen
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local WindowCoordinator = ns.BootstrapWindowCoordinator or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
+local LivePresenceSender = ns.BootstrapLivePresenceSender or require("WhisperMessenger.Core.Bootstrap.LivePresenceSender")
 local ChatGateway = ns.ChatGateway or require("WhisperMessenger.Transport.ChatGateway")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
@@ -50,6 +51,7 @@ function WindowRuntime.Create(options)
   local toggleIcon = options.toggleIcon or ToggleIcon
   local windowCoordinatorModule = options.windowCoordinator or WindowCoordinator
   local sendHandler = options.sendHandler or SendHandler
+  local livePresenceSender = options.livePresenceSender or LivePresenceSender
   local tableUtils = options.tableUtils or TableUtils
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
@@ -159,6 +161,7 @@ function WindowRuntime.Create(options)
     end,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
+    livePresenceSender = livePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
   })
 
@@ -230,6 +233,7 @@ function WindowRuntime.Create(options)
     groupSendPolicy = groupSendPolicy,
     sendHandler = sendHandler,
     reactionHandler = options.reactionHandler,
+    livePresenceSender = livePresenceSender,
     refreshWindow = refreshWindow,
     selectConversation = selectConversation,
     startConversation = startConversation,
@@ -278,6 +282,7 @@ function WindowRuntime.Create(options)
       onSend = windowCallbacks.onSend,
       onReact = windowCallbacks.onReact,
       canReact = windowCallbacks.canReact,
+      onTyping = windowCallbacks.onTyping,
       onPositionChanged = windowCallbacks.onPositionChanged,
       onClose = windowCallbacks.onClose,
       onResetWindowPosition = windowCallbacks.onResetWindowPosition,

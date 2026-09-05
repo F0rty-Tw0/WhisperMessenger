@@ -42,6 +42,7 @@ function WindowCallbacks.Create(options)
   local groupSendPolicy = options.groupSendPolicy
   local sendHandler = options.sendHandler
   local reactionHandler = options.reactionHandler or ReactionHandler
+  local livePresenceSender = options.livePresenceSender
   local refreshWindow = options.refreshWindow or function() end
   local selectConversation = options.selectConversation or function() end
   local startConversation = options.startConversation or function() end
@@ -86,6 +87,12 @@ function WindowCallbacks.Create(options)
       return reactionHandler.HandleReact(runtime, selectedContact, message, reactionKey, refreshWindow, groupSendPolicy)
     end,
     canReact = canReact,
+    onTyping = function(selectedContact, text)
+      if livePresenceSender == nil then
+        return false
+      end
+      return livePresenceSender.OnComposerText(runtime, selectedContact, text)
+    end,
 
     onPositionChanged = function(nextState)
       characterState.window = tableUtils.copyState(nextState)
