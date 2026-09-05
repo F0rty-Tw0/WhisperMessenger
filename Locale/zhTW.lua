@@ -375,6 +375,14 @@ local TraditionalChinese = {
   ["October"] = "10月",
   ["November"] = "11月",
   ["December"] = "12月",
+  -- Live presence
+  ["typing…"] = "正在輸入…",
+  ["Seen"] = "已讀",
+  ["Uses WhisperMessenger"] = "使用 WhisperMessenger",
+  ["Share typing status"] = "分享輸入狀態",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "讓同樣使用 WhisperMessenger 的聯絡人看到你正在輸入密語給他們。",
+  ["Send read receipts"] = "傳送已讀回條",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "讓同樣使用 WhisperMessenger 的聯絡人看到你已讀他們的密語。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

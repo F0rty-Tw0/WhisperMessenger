@@ -375,6 +375,14 @@ local Russian = {
   ["October"] = "Октябрь",
   ["November"] = "Ноябрь",
   ["December"] = "Декабрь",
+  -- Live presence
+  ["typing…"] = "печатает…",
+  ["Seen"] = "Просмотрено",
+  ["Uses WhisperMessenger"] = "Использует WhisperMessenger",
+  ["Share typing status"] = "Показывать, что вы печатаете",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Контакты, у которых тоже есть WhisperMessenger, видят, когда вы им пишете.",
+  ["Send read receipts"] = "Отправлять отметки о прочтении",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Контакты, у которых тоже есть WhisperMessenger, видят, когда вы прочитали их сообщения.",
 }
 
 ns.Locale_ruRU = Russian

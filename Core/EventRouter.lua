@@ -10,6 +10,7 @@ local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMesseng
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 
@@ -244,9 +245,31 @@ local function reactionSenderContext(state, payload, isBattleNet)
   return conversationKey, conversationKey, actorName, conversationKey, conversationKey
 end
 
+local function conversationWithKey(state, conversationKey)
+  local conversation = conversationKey and state.store.conversations[conversationKey] or nil
+  if conversation then
+    conversation.conversationKey = conversationKey
+  end
+  return conversation
+end
+
+local function handlePresence(state, conversationKey, presence, now)
+  if presence.type == "typing" then
+    LivePresence.SetTyping(state, conversationKey, presence.active, now)
+  elseif presence.type == "seen" then
+    LivePresence.MarkSeen(state, conversationKey, presence.wireId, now)
+  end
+  local conversation = conversationWithKey(state, conversationKey)
+  if conversation == nil then
+    return nil
+  end
+  return conversation, { presence = presence.type, typingActive = presence.active }
+end
+
 local function handleReactionMetadata(state, payload, isBattleNet)
   local metadata = MessageReactionProtocol.Decode(payload.text)
-  if metadata == nil then
+  local presence = metadata == nil and LivePresence.Decode(payload.text) or nil
+  if metadata == nil and presence == nil then
     return nil
   end
   local senderKey, conversationKey, actorName, identityConversationKey, reactionSenderKey = reactionSenderContext(state, payload, isBattleNet)
@@ -254,9 +277,22 @@ local function handleReactionMetadata(state, payload, isBattleNet)
     return nil
   end
   local now = state.now and state.now() or 0
+  -- Any well-formed WMRX payload proves the sender runs the addon.
+  LivePresence.RecordPeer(state, conversationKey)
+  if metadata == nil then
+    return handlePresence(state, conversationKey, presence, now)
+  end
   if metadata.type == "identity" then
-    MessageReactions.RecordIdentity(state, senderKey, identityConversationKey, metadata, now)
-    return nil
+    local paired = MessageReactions.RecordIdentity(state, senderKey, identityConversationKey, metadata, now)
+    if paired == nil then
+      return nil
+    end
+    -- The whisper now carries a wire id, so the window can send its receipt.
+    local conversation = conversationWithKey(state, conversationKey)
+    if conversation == nil then
+      return nil
+    end
+    return conversation, { presence = "identity" }
   end
   if metadata.type ~= "reaction" then
     return nil

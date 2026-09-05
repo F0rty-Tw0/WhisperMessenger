@@ -375,6 +375,14 @@ local German = {
   ["October"] = "Oktober",
   ["November"] = "November",
   ["December"] = "Dezember",
+  -- Live presence
+  ["typing…"] = "schreibt…",
+  ["Seen"] = "Gesehen",
+  ["Uses WhisperMessenger"] = "Nutzt WhisperMessenger",
+  ["Share typing status"] = "Tippstatus teilen",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Kontakte, die ebenfalls WhisperMessenger nutzen, sehen, wenn du ihnen gerade schreibst.",
+  ["Send read receipts"] = "Lesebestätigungen senden",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Kontakte, die ebenfalls WhisperMessenger nutzen, sehen, wenn du ihre Nachrichten gelesen hast.",
 }
 
 ns.Locale_deDE = German

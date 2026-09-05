@@ -375,6 +375,14 @@ local SimplifiedChinese = {
   ["October"] = "10月",
   ["November"] = "11月",
   ["December"] = "12月",
+  -- Live presence
+  ["typing…"] = "正在输入…",
+  ["Seen"] = "已读",
+  ["Uses WhisperMessenger"] = "使用 WhisperMessenger",
+  ["Share typing status"] = "共享输入状态",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "让同样使用 WhisperMessenger 的联系人看到你正在给他们输入密语。",
+  ["Send read receipts"] = "发送已读回执",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "让同样使用 WhisperMessenger 的联系人看到你已读他们的密语。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

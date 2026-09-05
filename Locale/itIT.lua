@@ -375,6 +375,14 @@ local Italian = {
   ["October"] = "ottobre",
   ["November"] = "novembre",
   ["December"] = "dicembre",
+  -- Live presence
+  ["typing…"] = "sta scrivendo…",
+  ["Seen"] = "Visto",
+  ["Uses WhisperMessenger"] = "Usa WhisperMessenger",
+  ["Share typing status"] = "Condividi stato di digitazione",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permette ai contatti che usano anche WhisperMessenger di vedere quando stai scrivendo loro.",
+  ["Send read receipts"] = "Invia conferme di lettura",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Permette ai contatti che usano anche WhisperMessenger di vedere quando hai letto i loro messaggi.",
 }
 
 ns.Locale_itIT = Italian

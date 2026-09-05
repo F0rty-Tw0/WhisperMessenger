@@ -375,6 +375,14 @@ local Portuguese = {
   ["October"] = "outubro",
   ["November"] = "novembro",
   ["December"] = "dezembro",
+  -- Live presence
+  ["typing…"] = "digitando…",
+  ["Seen"] = "Visto",
+  ["Uses WhisperMessenger"] = "Usa WhisperMessenger",
+  ["Share typing status"] = "Compartilhar status de digitação",
+  ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permite que contatos que também usam WhisperMessenger vejam quando você está digitando para eles.",
+  ["Send read receipts"] = "Enviar confirmações de leitura",
+  ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Permite que contatos que também usam WhisperMessenger vejam quando você leu as mensagens deles.",
 }
 
 ns.Locale_ptBR = Portuguese
