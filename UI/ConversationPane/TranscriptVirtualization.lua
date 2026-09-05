@@ -74,6 +74,7 @@ local function prepareRows(transcript, messages, paneWidth)
       or row.senderDisplayName ~= message.senderDisplayName
       or row.senderName ~= message.senderName
       or row.isCensored ~= message.isCensored
+      or row.seenAt ~= message.seenAt
       or row.reaction ~= message.reaction
       or row.reactionKey ~= reactionKey(message.reaction)
       or row.pendingReaction ~= message._pendingReaction
@@ -97,6 +98,7 @@ local function prepareRows(transcript, messages, paneWidth)
     row.senderDisplayName = message.senderDisplayName
     row.senderName = message.senderName
     row.isCensored = message.isCensored
+    row.seenAt = message.seenAt
     row.reaction = message.reaction
     row.reactionKey = reactionKey(message.reaction)
     row.pendingReaction = message._pendingReaction

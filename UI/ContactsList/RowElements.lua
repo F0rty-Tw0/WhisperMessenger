@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
@@ -178,6 +179,14 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
   end
 
   row.preview:SetWidth(previewLabelWidth(parentWidth))
+  -- Live typing takes the preview slot (even with previews hidden: it reveals
+  -- nothing about message content).
+  if item.isTyping then
+    setTextColor(row.preview, Theme.COLORS.online or Theme.COLORS.text_secondary)
+    row.preview:SetText(Localization.Text("typing…"))
+    return
+  end
+  setTextColor(row.preview, Theme.COLORS.text_secondary)
   row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(item.lastPreview))
 end
 

@@ -210,7 +210,7 @@ function MessengerWindow.Create(factory, options)
     local _ = ...
   end, closeWindow, function()
     return settingsConfig.doubleEscapeToClose == true
-  end)
+  end, options.onTyping)
   settingsRuntime.setThemeTargets(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)

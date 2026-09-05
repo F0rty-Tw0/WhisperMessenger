@@ -115,8 +115,19 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     -- frame previously rendered an incoming message with a channel.
     hideCached(frame, "_wmSenderTagFS")
     timeFS:SetPoint("RIGHT", nameFS, "LEFT", -Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
+    -- "Seen" receipt from a peer running the addon, left of the timestamp.
+    if options.showSeen then
+      local seenFS = ensureFontString(frame, "_wmSenderSeenFS")
+      setFontObject(seenFS, Theme.FONTS.message_time)
+      setTextColor(seenFS, Theme.COLORS.online or Theme.COLORS.text_secondary)
+      seenFS:SetText(Localization.Text("Seen"))
+      seenFS:SetPoint("RIGHT", timeFS, "LEFT", -Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
+    else
+      hideCached(frame, "_wmSenderSeenFS")
+    end
     frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
   else
+    hideCached(frame, "_wmSenderSeenFS")
     local displayName = message.playerName or message.senderDisplayName or ""
     nameFS:SetText(displayName)
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)

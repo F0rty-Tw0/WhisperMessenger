@@ -23,7 +23,7 @@ local Composer = {}
 
 local TRANSPARENT_COLOR = { 0, 0, 0, 0 }
 
-function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose)
+function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping)
   local pane = factory.CreateFrame("Frame", nil, parent)
   pane:SetScript("OnHide", function()
     PickerStyles.HideTooltip()
@@ -259,6 +259,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       placeholder:Show()
     else
       placeholder:Hide()
+    end
+    if onTyping then
+      onTyping(selectedContact, text)
     end
   end)
 

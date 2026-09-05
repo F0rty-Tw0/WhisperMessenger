@@ -29,10 +29,13 @@ function StatusLine.Build(selectedContact, status)
   local parts = {}
   local dotColor = nil
 
-  -- Availability status from the game API
+  -- A live typing indicator replaces the availability label while it lasts.
   local statusKey = status and status.status or nil
   local avail = statusKey and StatusLine.AVAILABILITY_DISPLAY[statusKey] or nil
-  if avail then
+  if selectedContact.isTyping then
+    table.insert(parts, Localization.Text("typing…"))
+    dotColor = "online"
+  elseif avail then
     table.insert(parts, Localization.Text(avail.label))
     dotColor = avail.color
   end
@@ -65,6 +68,10 @@ function StatusLine.Build(selectedContact, status)
   local factionName = selectedContact.factionName
   if factionName and factionName ~= "" then
     table.insert(parts, Localization.Text(factionName))
+  end
+
+  if selectedContact.peerHasAddon then
+    table.insert(parts, Localization.Text("Uses WhisperMessenger"))
   end
 
   local sep = "  -  "

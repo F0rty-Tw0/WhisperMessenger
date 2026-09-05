@@ -104,7 +104,33 @@ function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst)
   return height
 end
 
-local function layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options)
+-- Index of the sender label that should carry the "Seen" receipt: the start
+-- of the group holding the newest seen outgoing message, and only when that
+-- whole group has been seen. Newer unseen groups simply show nothing, like
+-- other messengers. Returns nil when there is nothing to mark.
+local function seenLabelIndex(messages)
+  local lastSeen
+  for index = #messages, 1, -1 do
+    local message = messages[index]
+    if message.direction == "out" and message.kind ~= "system" and message.seenAt ~= nil then
+      lastSeen = index
+      break
+    end
+  end
+  if lastSeen == nil then
+    return nil
+  end
+  local groupStart = lastSeen
+  while groupStart > 1 and Grouping.ShouldGroup(messages[groupStart - 1], messages[groupStart]) do
+    groupStart = groupStart - 1
+  end
+  if messages[lastSeen + 1] ~= nil and Grouping.ShouldGroup(messages[lastSeen], messages[lastSeen + 1]) then
+    return nil
+  end
+  return groupStart
+end
+
+local function layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options, seenIndex)
   local message = messages[index]
   local previousMessage = messages[index - 1]
   if isDifferentDay(previousMessage, message) then
@@ -121,7 +147,13 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
 
   local showIcon = not grouped and message.kind ~= "system"
   if showIcon then
-    local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset)
+    local labelOptions = contentFrame._wmLabelOptions
+    if labelOptions == nil then
+      labelOptions = {}
+      contentFrame._wmLabelOptions = labelOptions
+    end
+    labelOptions.showSeen = index == seenIndex
+    local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset, labelOptions)
     yOffset = yOffset + label.height
   end
 
@@ -156,10 +188,11 @@ function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, l
   local pooledFactory = FramePool.getFactory(factory, contentFrame)
   local yOffset = rows[firstIndex].offset
   local firstChanged
+  local seenIndex = seenLabelIndex(messages)
   for index = firstIndex, lastIndex do
     local row = rows[index]
     row.offset = yOffset
-    local nextOffset = layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options)
+    local nextOffset = layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options, seenIndex)
     local measuredHeight = nextOffset - yOffset
     if row.height ~= measuredHeight then
       firstChanged = firstChanged or index

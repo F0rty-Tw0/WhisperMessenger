@@ -25,6 +25,8 @@ local DEFAULTS = {
   doubleEscapeToClose = false,
   showGroupChats = true,
   hideOnCombat = false,
+  shareTypingStatus = true,
+  shareReadReceipts = true,
 }
 
 function BehaviorSettings.Create(factory, parent, config, options)
@@ -151,6 +153,28 @@ function BehaviorSettings.Create(factory, parent, config, options)
         text("When off, only whispers appear."),
       },
     },
+    {
+      label = text("Share typing status"),
+      initial = config.shareTypingStatus ~= false,
+      onChange = function(value)
+        onChange("shareTypingStatus", value)
+      end,
+      tooltipLines = {
+        text("Share typing status"),
+        text("Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."),
+      },
+    },
+    {
+      label = text("Send read receipts"),
+      initial = config.shareReadReceipts ~= false,
+      onChange = function(value)
+        onChange("shareReadReceipts", value)
+      end,
+      tooltipLines = {
+        text("Send read receipts"),
+        text("Lets contacts who also use WhisperMessenger see when you have read their whispers."),
+      },
+    },
   }
 
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
@@ -163,6 +187,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local hideOnCombatToggle = toggles[7]
   local doubleEscapeToggle = toggles[8]
   local showGroupChatsToggle = toggles[9]
+  local shareTypingToggle = toggles[10]
+  local shareReadReceiptsToggle = toggles[11]
 
   local panel = SettingsControls.NewPanelRegistry()
   panel:bind(dimToggle, { type = "toggle", key = "dimWhenMoving", default = DEFAULTS.dimWhenMoving })
@@ -184,6 +210,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
   panel:bind(hideOnCombatToggle, { type = "toggle", key = "hideOnCombat", default = DEFAULTS.hideOnCombat })
   panel:bind(doubleEscapeToggle, { type = "toggle", key = "doubleEscapeToClose", default = DEFAULTS.doubleEscapeToClose })
   panel:bind(showGroupChatsToggle, { type = "toggle", key = "showGroupChats", default = DEFAULTS.showGroupChats })
+  panel:bind(shareTypingToggle, { type = "toggle", key = "shareTypingStatus", default = DEFAULTS.shareTypingStatus })
+  panel:bind(shareReadReceiptsToggle, { type = "toggle", key = "shareReadReceipts", default = DEFAULTS.shareReadReceipts })
 
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
@@ -195,7 +223,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", showGroupChatsToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", shareReadReceiptsToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
   end)
@@ -228,6 +256,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     doubleEscapeToggle.label:SetText(text("Double ESC to close"))
     hideOnCombatToggle.label:SetText(text("Hide on entering combat"))
     showGroupChatsToggle.label:SetText(text("Show group chats"))
+    shareTypingToggle.label:SetText(text("Share typing status"))
+    shareReadReceiptsToggle.label:SetText(text("Send read receipts"))
     resetButton.label:SetText(text("Reset to Defaults"))
     -- Tooltip lines were captured into closure-frozen arrays at construction
     -- and stay in the previous language until the toggle is re-hovered after
@@ -257,6 +287,8 @@ function BehaviorSettings.Create(factory, parent, config, options)
     doubleEscapeToggle = doubleEscapeToggle,
     hideOnCombatToggle = hideOnCombatToggle,
     showGroupChatsToggle = showGroupChatsToggle,
+    shareTypingToggle = shareTypingToggle,
+    shareReadReceiptsToggle = shareReadReceiptsToggle,
     resetButton = resetButton,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
