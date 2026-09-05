@@ -50,6 +50,18 @@ function ContactEnricher.BuildConversationStatus(runtime, conversationKey, conve
   return nil
 end
 
+-- Live presence flags read by the contact row preview and the header status
+-- line: `isTyping` while the peer's typing indicator is inside its TTL and
+-- `peerHasAddon` once any addon payload has arrived from them.
+function ContactEnricher.EnrichContactsPresence(contacts, runtime)
+  local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+  local now = type(runtime.now) == "function" and runtime.now() or 0
+  for _, item in ipairs(contacts or {}) do
+    item.isTyping = LivePresence.IsTyping(runtime, item.conversationKey, now)
+    item.peerHasAddon = LivePresence.HasPeer(runtime, item.conversationKey)
+  end
+end
+
 function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContactsFn)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
   local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
@@ -59,6 +71,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   end
 
   ContactEnricher.EnrichContactsAvailability(contacts, runtime)
+  ContactEnricher.EnrichContactsPresence(contacts, runtime)
 
   if runtime.activeConversationKey == nil then
     return {
@@ -71,6 +84,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local selectedContact = TableUtils.findWhere(contacts, "conversationKey", conversationKey)
   if selectedContact == nil and conversation ~= nil then
     selectedContact = ConversationSnapshot.Build(conversationKey, conversation)
+    ContactEnricher.EnrichContactsPresence({ selectedContact }, runtime)
   end
 
   -- Enrich selected contact with live BNet metadata for display
