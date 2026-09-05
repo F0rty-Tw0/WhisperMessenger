@@ -165,8 +165,13 @@ return function()
     h.frame.mouseOver = false
     assert(type(h.scripts.OnEvent) == "function", "expected OnEvent handler on frame to listen for GLOBAL_MOUSE_DOWN")
     assert(h.frame:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "expected frame to register GLOBAL_MOUSE_DOWN for outside-click demotion")
+    local prevRaiseCalls = h.getRaiseCalls()
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(h.frame.frameStrata == "MEDIUM", "expected outside click to demote strata to MEDIUM; got " .. tostring(h.frame.frameStrata))
+    assert(
+      h.getRaiseCalls() >= prevRaiseCalls + 1,
+      "expected outside-click demotion to call frame:Raise() so the window stays above MEDIUM-strata action/pet bars"
+    )
   end
 
   -- Clicks inside our frame must NOT demote — only clicks outside do.

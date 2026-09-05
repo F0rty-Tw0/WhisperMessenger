@@ -76,6 +76,10 @@ function IncomingPreview.Create(factory, frame, options)
   if previewFrame.SetFrameLevel then
     previewFrame:SetFrameLevel(frame:GetFrameLevel() + 1)
   end
+  -- The minimap icon reparents this frame to UIParent, which would otherwise drop it to MEDIUM strata.
+  if previewFrame.SetFrameStrata then
+    previewFrame:SetFrameStrata("HIGH")
+  end
   if previewFrame.EnableMouse then
     previewFrame:EnableMouse(true)
   end

@@ -113,6 +113,12 @@ function ScriptBindings.Bind(options)
       if frame and type(frame.SetFrameStrata) == "function" then
         frame:SetFrameStrata("MEDIUM")
       end
+      -- Blizzard's action/pet bars live in MEDIUM strata at frame level ~70.
+      -- Without Raise(), our window keeps whatever small level it had from
+      -- its last HIGH-strata Raise() and slips underneath those bars.
+      if frame and type(frame.Raise) == "function" then
+        frame:Raise()
+      end
     end)
   end
 

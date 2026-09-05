@@ -14,6 +14,8 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 - Fixed: after replying to a whisper in the default chat during a Mythic+ run, pressing Enter once the run is over no longer keeps opening the messenger to that person, so you can type in Say and General again.
 - Fixed: shift-clicking a player name or link in chat while typing in the messenger no longer inserts it several times; the name now appears once.
 - Fixed: hovering a profession link in a conversation no longer opens the profession window; it now opens only when you click the link.
+- Fixed: after you click outside the messenger, the window no longer slips behind the pet bar, action bars, or other bars at the bottom of the screen.
+- Fixed: the floating widget icon and its incoming-message preview now stay above bags, action bars, and other windows.
 
 ## [1.4.1] - 2026-09-03
 

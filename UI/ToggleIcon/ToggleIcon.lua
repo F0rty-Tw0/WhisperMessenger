@@ -41,6 +41,10 @@ function ToggleIcon.Create(factory, options)
   frame:SetMovable(true)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
+  -- Float above action bars and bags, same as the minimap icon.
+  if frame.SetFrameStrata then
+    frame:SetFrameStrata("HIGH")
+  end
 
   -- Circular background: use the circle texture directly, tinted to desired color
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
