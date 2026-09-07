@@ -25,6 +25,19 @@ local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTa
   if expectedBattleTag and info.battleTag and info.battleTag ~= expectedBattleTag then
     return nil, true
   end
+  -- Retail exposes presence on gameAccountInfo, not the legacy account field.
+  -- A live WoW character is already the preferred result; do not scan the
+  -- roster to rediscover it. App-only data still needs multi-account probing.
+  local gameInfo = info.gameAccountInfo
+  if
+    info.isOnline == nil
+    and gameInfo
+    and gameInfo.isOnline == true
+    and type(gameInfo.characterName) == "string"
+    and gameInfo.characterName ~= ""
+  then
+    info.isOnline = true
+  end
   return info, false
 end
 

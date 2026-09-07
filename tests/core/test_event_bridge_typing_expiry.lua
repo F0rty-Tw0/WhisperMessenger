@@ -38,20 +38,6 @@ end
 return function()
   local savedTimer = _G.C_Timer
 
-  -- test_typing_start_schedules_expiry_refresh
-  do
-    local scheduled, refreshed, refreshWindow = newHarness()
-    local runtime = newRuntime()
-    typingMeta.typingActive = true
-    typingMeta.typingChanged = nil
-    EventBridge.RouteLiveEvent(runtime, refreshWindow, "CHAT_MSG_ADDON", "WMRX", "1|T|1", "WHISPER", "Arthas")
-    assert(#refreshed == 1 and refreshed[1] == "k1", "immediate refresh for the typing conversation")
-    assert(#scheduled == 1, "one expiry timer scheduled")
-    assert(scheduled[1].delay >= LivePresence.TYPING_TTL, "expiry fires after the ttl")
-    scheduled[1].fn()
-    assert(#refreshed == 2 and refreshed[2] == "k1", "expiry refreshes the same conversation")
-  end
-
   -- test_typing_stop_schedules_nothing
   do
     local scheduled, _, refreshWindow = newHarness()

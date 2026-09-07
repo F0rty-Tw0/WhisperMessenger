@@ -258,7 +258,9 @@ local function handlePresence(state, conversationKey, presence, now)
   if presence.type == "typing" then
     typingChanged = LivePresence.SetTyping(state, conversationKey, presence.active, now)
   elseif presence.type == "seen" then
-    LivePresence.MarkSeen(state, conversationKey, presence.wireId, now)
+    if LivePresence.MarkSeen(state, conversationKey, presence.wireId, now) == 0 then
+      return nil
+    end
   end
   local conversation = conversationWithKey(state, conversationKey)
   if conversation == nil then

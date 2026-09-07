@@ -52,6 +52,11 @@ return function()
   -- accounts discovered while probing must not clobber it.
   do
     local api = buildApi(WOW_ACCOUNT)
+    local scans = 0
+    api.GetNumFriends = function()
+      scans = scans + 1
+      return 1
+    end
     local result = BNetResolver.ResolveAccountInfo(api, 14, nil, "Nergrom#2503")
     assert(result ~= nil, "should resolve account info")
     assert(result.isOnline == true, "friend online in WoW should be online")
@@ -60,6 +65,7 @@ return function()
       "gameAccountInfo should be the WoW character, not the app account"
     )
     assert(result.gameAccountInfo.areaName == "Silvermoon City", "should keep the WoW character's zone")
+    assert(scans == 0, "complete live WoW presence must not scan the friend list")
   end
 
   -- Stage 1 has no gameAccountInfo at all; probing the friend's game accounts
@@ -73,6 +79,12 @@ return function()
       result.gameAccountInfo and result.gameAccountInfo.characterName == "Redfer",
       "gameAccountInfo should be the WoW character even with no stage-1 hint"
     )
+  end
+
+  -- An app account can hide a simultaneous WoW session; keep probing it.
+  do
+    local result = BNetResolver.ResolveAccountInfo(buildApi(APP_ACCOUNT), 14, nil, "Nergrom#2503")
+    assert(result.gameAccountInfo.characterName == "Redfer", "app presence must still resolve the live WoW character")
   end
 
   -- No WoW character anywhere, only the Battle.net app online: falling back

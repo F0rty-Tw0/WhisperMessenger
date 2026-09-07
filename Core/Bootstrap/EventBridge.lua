@@ -82,7 +82,10 @@ local function scheduleTypingExpiry(runtime, refreshWindow, conversationKey)
       timer.After(remaining + TYPING_EXPIRY_GRACE, fire)
     else
       runtime.typingExpiryPending[conversationKey] = nil
-      refreshWindow(conversationKey)
+      if runtime.typingByConversation and runtime.typingByConversation[conversationKey] ~= nil then
+        runtime.typingByConversation[conversationKey] = nil
+        refreshWindow(conversationKey)
+      end
     end
   end
   runtime.typingExpiryPending[conversationKey] = true
