@@ -4,7 +4,7 @@ Player-friendly release notes for WhisperMessenger. This file covers the current
 
 All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x](archive/changelog/1.2.md) · [1.1.x](archive/changelog/1.1.md) · [1.0.x](archive/changelog/1.0.md) · [0.1.x](archive/changelog/0.1.md)
 
-## [Unreleased]
+## [1.4.2] - 2026-09-11
 
 - Added live typing indicators: when a friend who also uses WhisperMessenger is writing to you, their contact row and the conversation header show "typing…" in green until they send or stop.
 - Added "Seen" receipts: once a friend who also uses WhisperMessenger has your conversation open, your latest sent messages show a green "Seen" next to the timestamp. Contacts who run the addon are labelled "Uses WhisperMessenger" in the conversation header.
@@ -55,4 +55,3 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 - Appearance - Font Family now lists optional fonts from SharedMedia addons in a scrollable selector instead of three fixed choices, and safely uses Default if SharedMedia or your selected font is unavailable.
 - Added an Appearance - Window Scale setting that resizes the entire messenger from 75% to 150%.
 - The Options sidebar now scrolls when the window is shortened, and the messenger can be resized 100 pixels shorter without hiding its navigation and reset controls.
-
