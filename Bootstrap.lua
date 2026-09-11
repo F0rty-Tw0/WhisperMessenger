@@ -42,6 +42,7 @@ function Bootstrap.Initialize(factory, options)
   local MythicSuspendController = loadModule("WhisperMessenger.Core.Bootstrap.MythicSuspendController", "BootstrapMythicSuspendController")
   local WindowRuntime = loadModule("WhisperMessenger.Core.Bootstrap.WindowRuntime", "BootstrapWindowRuntime")
   local AutoOpenCoordinator = loadModule("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator", "BootstrapAutoOpenCoordinator")
+  local FirstRunTip = loadModule("WhisperMessenger.Core.Bootstrap.FirstRunTip", "BootstrapFirstRunTip")
   local SavedState = loadModule("WhisperMessenger.Persistence.SavedState", "SavedState")
   local Schema = loadModule("WhisperMessenger.Persistence.Schema", "Schema")
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
@@ -80,6 +81,7 @@ function Bootstrap.Initialize(factory, options)
   if accountState.settings.showGroupChats == nil then
     accountState.settings.showGroupChats = true
   end
+  FirstRunTip.Announce(accountState)
   if Fonts.Initialize then
     Fonts.Initialize(accountState.settings.fontFamily or "default")
   end

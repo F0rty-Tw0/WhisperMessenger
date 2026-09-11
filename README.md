@@ -4,19 +4,26 @@
 [![Release Date](https://img.shields.io/github/release-date/F0rty-Tw0/WhisperMessenger)](https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest)
 [![CI](https://img.shields.io/github/actions/workflow/status/F0rty-Tw0/WhisperMessenger/ci.yml?label=CI)](https://github.com/F0rty-Tw0/WhisperMessenger/actions/workflows/ci.yml)
 
-A messenger-style whisper UI for World of Warcraft. Replaces the default whisper chat with a modern conversation interface — contact list, chat bubbles, unread badges, and more.
+**Never lose a whisper again.** Every conversation lands in one messenger window with history, online status and unread badges — like the messenger you already use, inside World of Warcraft.
 
 ![WhisperMessenger preview](.github/assets/preview.png)
 
-> [!WARNING]
-> **Whispers are disabled by Blizzard during competitive content.**
-> WoW blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds, and raid boss encounters. This is a game-level restriction — not a limitation of WhisperMessenger. The addon automatically detects these situations, suspends itself, and resumes when you're done.
+## Why players install it
+
+- **Whispers stop drowning in raid, trade and guild spam.** Each person gets their own conversation with an unread badge, so you always know who is waiting on you.
+- **Yesterday's conversation is still there.** History survives logout and is shared across your characters.
+- **See who is online and where before you whisper.** Class, faction, zone and Battle.net status sit right in the contact list.
+- **Battle.net and character whispers, side by side.** No more guessing which tab a friend wrote in.
+
+## "Can't I just make a Whispers chat tab?"
+
+You can, and it helps. A tab still mixes everyone into one scrolling stream, forgets everything on logout, has no unread count per person and no online status. WhisperMessenger gives every person their own thread with all of that.
 
 ## Features
 
 ### Messenger-Style Conversations
 
-Chat bubbles with timestamps, date separators, and sender labels — just like a real messenger app. Right-click any bubble to copy its text.
+Chat bubbles with timestamps, date separators, and sender labels — just like a real messenger app. Right-click any bubble to copy its text or add a reaction.
 
 ### Contact List
 
@@ -26,13 +33,17 @@ Scrollable contact list with online status dots, unread message badges, and last
 
 Seamlessly handles both character whispers and Battle.net friend whispers. Contact details stay in sync with your friends list in real time.
 
+### Friends Who Also Use It
+
+When a friend also runs WhisperMessenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Players without the addon still receive a readable plain-text fallback.
+
 ### Theme Presets
 
 Switch between multiple visual themes — Default, Midnight, Shadowlands, and Draenor — from the Appearance settings. Themes apply instantly with no reload required.
 
 ### Font Customization
 
-Choose from Default (Friz Quadrata), System (Arial Narrow), or Custom (inherits fonts from addons like ElvUI).
+Choose from Default (Friz Quadrata), System (Arial Narrow), or any font provided by SharedMedia addons like ElvUI.
 
 ### Smart Notifications
 
@@ -42,10 +53,6 @@ Configurable notification sounds (Whisper, Ping, Chime, Bell, Raid Warning) that
 
 Automatically opens the messenger when you receive a whisper, right-click "Whisper" on a player, or click a name to whisper — configurable in Behavior settings, disabled during combat.
 
-### Mythic+ Awareness
-
-Automatically suspends during Mythic+ dungeons and Mythic raids. Your window hides and restores when you leave. Whispers fall through to the default chat during this time.
-
 ### Quest & Item Linking
 
 Shift-click quests, achievements, spells, and professions to link them directly into the messenger chat.
@@ -53,6 +60,10 @@ Shift-click quests, achievements, spells, and professions to link them directly 
 ### Settings
 
 Full settings panel with General, Appearance, Behavior, and Notification tabs. Includes a profanity filter toggle, hide-from-default-chat option, and auto-focus control.
+
+## Good to know
+
+Blizzard blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds, and raid boss encounters. This is a game-level restriction, not a limitation of WhisperMessenger. The addon detects these situations, steps aside so whispers fall through to the default chat, and resumes when you're done.
 
 ## Compatibility
 

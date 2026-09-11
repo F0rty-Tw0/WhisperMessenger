@@ -10,7 +10,7 @@
 ## Interface-Mists: 50504
 ## Interface-MoP: 50504
 ## Title: WhisperMessenger
-## Notes: Messenger-style whisper UI for World of Warcraft
+## Notes: Never lose a whisper again. Every whisper in one messenger window with history, online status and unread badges.
 ## Author: F0rty_tw0
 ## Category: Chat
 ## IconTexture: Interface\AddOns\WhisperMessenger\Media\icon.png
@@ -149,6 +149,7 @@ UI/ConversationPane/TranscriptVirtualization.lua
 UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/GroupHeaderViewModel.lua
+UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
@@ -233,6 +234,7 @@ Core/Bootstrap/ReplyKeyBinder.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/LivePresenceSender.lua
 Core/Bootstrap/ReactionHandler.lua
+Core/Bootstrap/InviteHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator.lua
@@ -248,6 +250,7 @@ Core/Bootstrap/AutoOpenCoordinator/EditBoxInterop.lua
 Core/Bootstrap/AutoOpenCoordinator/DirectHooks.lua
 Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
+Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua

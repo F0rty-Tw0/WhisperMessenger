@@ -4,6 +4,13 @@ Player-friendly release notes for WhisperMessenger. This file covers the current
 
 All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x](archive/changelog/1.2.md) · [1.1.x](archive/changelog/1.1.md) · [1.0.x](archive/changelog/1.0.md) · [0.1.x](archive/changelog/0.1.md)
 
+## [Unreleased]
+
+- New installs now get a one-time line in chat after logging in, pointing out that whispers open in the messenger window and how to open it. Existing users will not see it.
+- The Whispers tab now explains what to do when you have no conversations yet, instead of showing an empty panel.
+- The conversation header now shows a small dimmed "(Invite to WM)" link next to friends who do not run the addon. Click it to whisper them a short invite to install WhisperMessenger; it then reads "(Invite sent)" and can only be sent once per person. Friends who already have the addon keep the gold "(Uses WM)" tag.
+- The first reaction you send in a conversation now ends with "(via WhisperMessenger)" so other players know where it came from. In whispers it is added once per person and never to friends who already run the addon; in party, raid, guild and instance chat it is added once per group chat.
+
 ## [1.4.2] - 2026-09-11
 
 - Added live typing indicators: when a friend who also uses WhisperMessenger is writing to you, their contact row and the conversation header show "typing…" in green until they send or stop.
