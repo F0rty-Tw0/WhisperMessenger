@@ -240,6 +240,27 @@ return function()
     assert(reaction and reaction.type == "reaction" and reaction.wireId == "wire9", "existing reaction payload should remain unchanged")
   end
 
+  do
+    local suffix = Protocol.ADDON_HINT_SUFFIX
+    assert(suffix == " (via WhisperMessenger)", "hint suffix should match the addon nudge copy")
+
+    local fallback = Protocol.BuildFallback("heart", "set", "Ready?", suffix)
+    assert(fallback == "reacted :heart: to: “Ready?”" .. suffix, "suffixed fallback should append the hint after the closing quote")
+    assert(#fallback <= Protocol.MAX_PAYLOAD_BYTES, "suffixed fallback should fit the addon cap")
+
+    local parsed = Protocol.ParseGroupFallback(fallback)
+    assert(parsed and parsed.key == "heart" and parsed.sourceExcerpt == "Ready?", "an addon peer should still be able to parse a suffixed fallback")
+
+    local longSource = string.rep("x", 250)
+    local longFallback = Protocol.BuildFallback("heart", "set", longSource, suffix)
+    assert(longFallback ~= nil, "long source plus suffix should still fit by truncating the excerpt further")
+    assert(#longFallback <= Protocol.MAX_PAYLOAD_BYTES, "long suffixed fallback should respect the addon cap")
+    assert(string.sub(longFallback, -#suffix) == suffix, "suffix should never be dropped even when the excerpt truncates")
+
+    local unsuffixed = Protocol.BuildFallback("heart", "set", "Ready?")
+    assert(string.sub(unsuffixed, -#suffix) ~= suffix, "omitting the suffix argument should keep today's behavior")
+  end
+
   local invalidPayloads = {
     "2|I|abc|12345678",
     "1|X|abc|12345678",

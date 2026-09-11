@@ -178,6 +178,113 @@ return function()
     assert(targetMessage.reaction == nil, "remove should apply after inform")
   end
 
+  local function newHintRuntime(now, dispatches)
+    return {
+      localProfileId = "me",
+      store = newStore(),
+      pendingOutgoing = {},
+      sendStatusByConversation = {},
+      availabilityByGUID = {},
+      now = function()
+        return now
+      end,
+      chatApi = {
+        SendChatMessage = function(text, chatType, _, target)
+          table.insert(dispatches, { transport = "normal", text = text, chatType = chatType, target = target })
+        end,
+        RegisterAddonMessagePrefix = function() end,
+        SendAddonMessage = function(prefix, payload, channel, target)
+          table.insert(dispatches, { transport = "addon", prefix = prefix, payload = payload, channel = channel, target = target })
+        end,
+      },
+      bnetApi = {},
+    }
+  end
+
+  -- The first reaction fallback sent to a whisper contact who isn't known to
+  -- run the addon gets a one-time hint suffix; repeats must not add it again.
+  do
+    local suffixConst = Protocol.ADDON_HINT_SUFFIX
+    local dispatches = {}
+    local runtime = newHintRuntime(600, dispatches)
+    local conversationKey = "wow::WOW::hintee-area52"
+    local targetMessage = {
+      kind = "user",
+      direction = "in",
+      text = "Hello there",
+      wireId = "hint-target",
+      sentAt = 590,
+      playerName = "Hintee-Area52",
+    }
+    runtime.store.conversations[conversationKey] = {
+      conversationKey = conversationKey,
+      messages = { targetMessage },
+      unreadCount = 1,
+      lastPreview = targetMessage.text,
+      lastActivityAt = targetMessage.sentAt,
+    }
+    local contact = {
+      conversationKey = conversationKey,
+      displayName = "Hintee-Area52",
+      guid = "Player-2",
+      channel = "WOW",
+    }
+
+    assert(
+      ReactionHandler.HandleReact(runtime, contact, targetMessage, "heart", function() end) == true,
+      "first reaction to a non-addon contact should send"
+    )
+    local firstText = dispatches[1].text
+    assert(string.sub(firstText, -#suffixConst) == suffixConst, "first reaction fallback to a non-addon contact should include the hint suffix")
+    assert(
+      runtime.store.conversations[conversationKey].addonHintSent == true,
+      "first accepted reaction should mark the hint as sent on the conversation"
+    )
+
+    for i = #dispatches, 1, -1 do
+      dispatches[i] = nil
+    end
+    targetMessage.reaction = nil
+    assert(ReactionHandler.HandleReact(runtime, contact, targetMessage, "thumbsup", function() end) == true, "second reaction should still send")
+    local secondText = dispatches[1].text
+    assert(string.sub(secondText, -#suffixConst) ~= suffixConst, "second reaction fallback should not repeat the hint suffix")
+  end
+
+  -- A contact already known to run the addon never gets the hint suffix.
+  do
+    local suffixConst = Protocol.ADDON_HINT_SUFFIX
+    local dispatches = {}
+    local runtime = newHintRuntime(700, dispatches)
+    local conversationKey = "wow::WOW::addonuser-area52"
+    local targetMessage = {
+      kind = "user",
+      direction = "in",
+      text = "Hey",
+      wireId = "addon-target",
+      sentAt = 690,
+      playerName = "Addonuser-Area52",
+    }
+    runtime.store.conversations[conversationKey] = {
+      conversationKey = conversationKey,
+      peerHasAddon = true,
+      messages = { targetMessage },
+      unreadCount = 1,
+      lastPreview = targetMessage.text,
+      lastActivityAt = targetMessage.sentAt,
+    }
+    local contact = {
+      conversationKey = conversationKey,
+      displayName = "Addonuser-Area52",
+      guid = "Player-3",
+      channel = "WOW",
+    }
+
+    assert(ReactionHandler.HandleReact(runtime, contact, targetMessage, "heart", function() end) == true, "reaction to addon peer should send")
+    local text = dispatches[1].text
+    assert(string.sub(text, -#suffixConst) ~= suffixConst, "reaction to a known addon peer should never include the hint suffix")
+    assert(runtime.store.conversations[conversationKey].addonHintSent == nil, "addon-peer contact should never need the hint flag set")
+  end
+
   -- Group reactions route only through the injected group policy and display pending after full acceptance.
   do
     local normalCalls = 0
@@ -462,8 +569,8 @@ return function()
     assert(ReactionHandler.HandleReact(runtime, contact, targetMessage, "gg", function() end) == true, "BN reaction should send")
     assert(#normalCalls == 1 and normalCalls[1].bnetAccountID == 77, "BN normal fallback should use bnetAccountID")
     assert(
-      normalCalls[1].text == Protocol.BuildGroupFallback("gg", "set", targetMessage.text),
-      "BN whisper fallback should match group layout without local actor"
+      normalCalls[1].text == Protocol.BuildGroupFallback("gg", "set", targetMessage.text, Protocol.ADDON_HINT_SUFFIX),
+      "BN whisper fallback should match group layout without local actor, plus the first-reaction addon hint"
     )
     assert(
       #addonCalls == 1 and addonCalls[1].gameAccountID == 9001 and addonCalls[1].prefix == "WMRX",
