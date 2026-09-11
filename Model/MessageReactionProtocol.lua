@@ -11,6 +11,7 @@ local VERSION = "1"
 local ELLIPSIS = "…"
 local OPEN_QUOTE = "“"
 local CLOSE_QUOTE = "”"
+local ADDON_HINT_SUFFIX = " (via WhisperMessenger)"
 
 local REACTION_KEYS = {
   "heart",
@@ -154,15 +155,15 @@ function Protocol.NewWireId(state, now)
   return candidate
 end
 
-function Protocol.BuildFallback(key, operation, sourceText)
-  return Protocol.BuildGroupFallback(key, operation, sourceText)
+function Protocol.BuildFallback(key, operation, sourceText, hintSuffix)
+  return Protocol.BuildGroupFallback(key, operation, sourceText, hintSuffix)
 end
 
 function Protocol.ParseFallback(text)
   return Protocol.ParseGroupFallback(text)
 end
 
-function Protocol.BuildGroupFallback(key, operation, sourceText)
+function Protocol.BuildGroupFallback(key, operation, sourceText, hintSuffix)
   if not Protocol.IsReactionKey(key) then
     return nil
   end
@@ -172,6 +173,9 @@ function Protocol.BuildGroupFallback(key, operation, sourceText)
   if type(sourceText) ~= "string" then
     sourceText = ""
   end
+  if type(hintSuffix) ~= "string" then
+    hintSuffix = ""
+  end
 
   local action
   if operation == "set" then
@@ -180,8 +184,8 @@ function Protocol.BuildGroupFallback(key, operation, sourceText)
     action = "removed :" .. key .. ": from: "
   end
   local prefix = action .. OPEN_QUOTE
-  local suffix = CLOSE_QUOTE
-  local available = MAX_PAYLOAD_BYTES - #prefix - #suffix
+  local closeQuote = CLOSE_QUOTE
+  local available = MAX_PAYLOAD_BYTES - #prefix - #closeQuote - #hintSuffix
   if available < 0 then
     return nil
   end
@@ -194,12 +198,16 @@ function Protocol.BuildGroupFallback(key, operation, sourceText)
     end
     excerpt = utf8Prefix(excerpt, textBudget) .. ELLIPSIS
   end
-  return prefix .. excerpt .. suffix
+  return prefix .. excerpt .. closeQuote .. hintSuffix
 end
 
 function Protocol.ParseGroupFallback(text)
   if type(text) ~= "string" or #text > MAX_PAYLOAD_BYTES then
     return nil
+  end
+
+  if #text > #ADDON_HINT_SUFFIX and string.sub(text, -#ADDON_HINT_SUFFIX) == ADDON_HINT_SUFFIX then
+    text = string.sub(text, 1, -#ADDON_HINT_SUFFIX - 1)
   end
 
   local key, sourceExcerpt = string.match(text, "^reacted :([a-z]+): to: “(.*)” *$")
@@ -377,6 +385,7 @@ Protocol.REACTION_KEYS = REACTION_KEYS
 Protocol.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
 Protocol.MAX_WHISPER_BYTES = MAX_WHISPER_BYTES
 Protocol.VERSION = VERSION
+Protocol.ADDON_HINT_SUFFIX = ADDON_HINT_SUFFIX
 
 ns.MessageReactionProtocol = Protocol
 return Protocol

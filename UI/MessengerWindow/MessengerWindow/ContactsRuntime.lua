@@ -109,6 +109,18 @@ function ContactsRuntime.Create(factory, options)
   -- locale without requiring /reload. Caching at create time meant the empty
   -- state stayed in the previous language until reload.
   local GROUPS_EMPTY_KEY = "No group chats yet.\nJoin a party or instance to see messages here."
+  local WHISPERS_EMPTY_KEY = "No conversations yet. Click Start New Whisper to message a friend."
+
+  -- True while the search box has text, so the whispers empty-state hint
+  -- only shows for a genuinely empty list, not a "no results" search.
+  local function hasSearchText()
+    local input = options.contactsSearchInput
+    if input == nil then
+      return false
+    end
+    local text = (input.GetText and input:GetText()) or input.text or ""
+    return ContactSearch.NormalizeSearchQuery(text) ~= ""
+  end
 
   local contactsSearchController = ContactsSearchController.Create({
     contacts = contacts,
@@ -133,6 +145,8 @@ function ContactsRuntime.Create(factory, options)
       end
       if currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
         EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
+      elseif currentTabMode == "whispers" and #filtered == 0 and not hasSearchText() then
+        EmptyState.Show(emptyStateFrame, Localization.Text(WHISPERS_EMPTY_KEY))
       else
         EmptyState.Hide(emptyStateFrame)
       end

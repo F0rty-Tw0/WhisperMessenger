@@ -190,6 +190,7 @@ function MessengerWindow.Create(factory, options)
   local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
     onReact = options.onReact,
     canReact = options.canReact,
+    onInviteContact = options.onInviteContact,
   })
 
   -- Composer (created before wiring alpha so we have composer.input)
