@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
+local AddonBadge = ns.ConversationPaneAddonBadge or require("WhisperMessenger.UI.ConversationPane.AddonBadge")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
@@ -119,7 +120,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   local headerStatusDetail = HeaderElements.createStatusDetail(headerFrame, headerStatus)
 
-  local headerAddonBadge = HeaderElements.createAddonBadge(headerFrame, headerFactionIcon)
+  local headerAddonBadgeButton, headerAddonBadge = AddonBadge.createAddonBadge(factory, headerFrame, headerFactionIcon)
 
   local statusDot = HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
 
@@ -144,6 +145,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerStatus = headerStatus,
     headerStatusDetail = headerStatusDetail,
     headerAddonBadge = headerAddonBadge,
+    headerAddonBadgeButton = headerAddonBadgeButton,
     headerStatusDot = statusDot,
     headerDivider = headerDivider,
     headerEmpty = headerEmpty,
@@ -155,9 +157,7 @@ function HeaderView.SetLanguage(view)
   if view and view.headerEmpty and view.headerEmpty.setLanguage then
     view.headerEmpty.setLanguage()
   end
-  if view and view.headerAddonBadge and type(view.headerAddonBadge.SetText) == "function" then
-    view.headerAddonBadge:SetText(HeaderElements.addonBadgeText())
-  end
+  AddonBadge.SetLanguage(view)
 end
 
 function HeaderView.Relayout(view, width)
@@ -275,23 +275,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
       end
     end
 
-    if view.headerAddonBadge then
-      local showBadge = hasContact and selectedContact.peerHasAddon and not (vm and vm.isGroup)
-      if showBadge then
-        local anchor = view.headerFactionIcon
-        if type(anchor) ~= "table" or type(anchor.IsShown) ~= "function" or not anchor:IsShown() then
-          anchor = view.headerName
-        end
-        if anchor and type(view.headerAddonBadge.ClearAllPoints) == "function" then
-          view.headerAddonBadge:ClearAllPoints()
-          view.headerAddonBadge:SetPoint("LEFT", anchor, "RIGHT", 6, 0)
-        end
-        UIHelpers.applyColor(view.headerAddonBadge, Theme.TAG_GOLD)
-        view.headerAddonBadge:Show()
-      else
-        view.headerAddonBadge:Hide()
-      end
-    end
+    AddonBadge.Refresh(view, selectedContact, conversation)
 
     if view.headerEmpty then
       view.headerEmpty:SetShown(not hasContact)

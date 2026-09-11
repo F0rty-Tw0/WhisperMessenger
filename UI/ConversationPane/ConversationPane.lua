@@ -204,6 +204,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerStatus = header.headerStatus,
     headerStatusDetail = header.headerStatusDetail,
     headerAddonBadge = header.headerAddonBadge,
+    headerAddonBadgeButton = header.headerAddonBadgeButton,
     headerStatusDot = header.headerStatusDot,
     headerDivider = header.headerDivider,
     headerEmpty = header.headerEmpty,
@@ -235,9 +236,6 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       if view.headerStatusDetail then
         applyColor(view.headerStatusDetail, Theme.COLORS.text_secondary)
       end
-      if view.headerAddonBadge then
-        applyColor(view.headerAddonBadge, Theme.TAG_GOLD)
-      end
       if view.headerEmpty then
         local emptyLabel = view.headerEmpty._label or view.headerEmpty
         applyColor(emptyLabel, Theme.COLORS.text_secondary)
@@ -266,6 +264,11 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     transcript.canReact = function(message)
       return options.canReact(view._selectedContact, message)
     end
+  end
+
+  -- Read by the header's addon badge button when the invite hint is clicked.
+  if type(options.onInviteContact) == "function" then
+    view.onInviteContact = options.onInviteContact
   end
 
   ConversationPane.Refresh(view, selectedContact, conversation)

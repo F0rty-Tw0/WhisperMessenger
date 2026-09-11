@@ -132,20 +132,6 @@ function HeaderElements.createStatusDetail(headerFrame, headerStatus)
   return headerStatusDetail
 end
 
-function HeaderElements.addonBadgeText()
-  return "(" .. Localization.Text("Uses WM") .. ")"
-end
-
-function HeaderElements.createAddonBadge(headerFrame, headerFactionIcon)
-  local headerAddonBadge = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
-  headerAddonBadge:SetPoint("LEFT", headerFactionIcon, "RIGHT", 6, 0)
-  applyColor(headerAddonBadge, Theme.TAG_GOLD)
-  headerAddonBadge:SetText(HeaderElements.addonBadgeText())
-  headerAddonBadge:Hide()
-
-  return headerAddonBadge
-end
-
 function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
   local dotSize = Theme.LAYOUT.HEADER_STATUS_DOT_SIZE
