@@ -46,6 +46,9 @@ end
 
 -- Legacy flat constants
 Theme.TITLE = "WM"
+-- Fixed gold accent shared by chat bubble sender tags and the header addon
+-- badge. Deliberately NOT a preset token — stays the same in every theme.
+Theme.TAG_GOLD = { 0.96, 0.78, 0.24, 1 }
 Theme.WINDOW_IDLE_ALPHA = 1
 Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA = 0.72
 Theme.WINDOW_ALPHA_FADE_SECONDS = 0.12

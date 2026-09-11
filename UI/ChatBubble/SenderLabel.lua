@@ -100,7 +100,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
       if currentPlayerName and currentPlayerName ~= message.senderName then
         local charnameFS = ensureFontString(frame, "_wmSenderCharnameFS")
         setFontObject(charnameFS, Theme.FONTS.message_time)
-        charnameFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- match channel tag gold
+        setTextColor(charnameFS, Theme.TAG_GOLD) -- match channel tag gold
         charnameFS:SetText("- " .. message.senderName)
         charnameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
         nameFS:SetPoint("RIGHT", charnameFS, "LEFT", -4, 0)
@@ -141,7 +141,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     if message.channelLabel and message.channelLabel ~= "" then
       local tagFS = ensureFontString(frame, "_wmSenderTagFS")
       setFontObject(tagFS, Theme.FONTS.message_time)
-      tagFS:SetTextColor(0.96, 0.78, 0.24, 1.0) -- hardcoded gold
+      setTextColor(tagFS, Theme.TAG_GOLD)
       tagFS:SetText("- " .. Localization.Text("via ") .. Localization.Text(message.channelLabel))
       tagFS:SetPoint("LEFT", nameFS, "RIGHT", 4, 0)
       channelAnchor = tagFS

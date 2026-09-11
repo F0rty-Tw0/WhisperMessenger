@@ -202,6 +202,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerName = header.headerName,
     headerFactionIcon = header.headerFactionIcon,
     headerStatus = header.headerStatus,
+    headerStatusDetail = header.headerStatusDetail,
+    headerAddonBadge = header.headerAddonBadge,
     headerStatusDot = header.headerStatusDot,
     headerDivider = header.headerDivider,
     headerEmpty = header.headerEmpty,
@@ -229,6 +231,12 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
       if view.headerStatus then
         applyColor(view.headerStatus, Theme.COLORS.text_secondary)
+      end
+      if view.headerStatusDetail then
+        applyColor(view.headerStatusDetail, Theme.COLORS.text_secondary)
+      end
+      if view.headerAddonBadge then
+        applyColor(view.headerAddonBadge, Theme.TAG_GOLD)
       end
       if view.headerEmpty then
         local emptyLabel = view.headerEmpty._label or view.headerEmpty

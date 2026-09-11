@@ -13,23 +13,44 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local HEADER_STATUS_RIGHT_INSET = 8
+-- Top inset of the name row; the two status rows hang below it.
+local HEADER_NAME_TOP_INSET = 7
+
+local function fitOneLine(fontString, fullText, width)
+  fontString:SetWidth(width)
+  fontString:SetText(fitTextWithEllipsis(fontString, fullText, width))
+end
 
 local function refitStatus(view)
-  local headerStatus = view and view.headerStatus
-  if headerStatus == nil or view._headerStatusVisible ~= true then
+  if view == nil then
     return
   end
 
-  local statusText = view._headerStatusFullText or ""
-  if type(view._headerWidth) ~= "number" then
-    headerStatus:SetText(statusText)
-    return
+  local statusWidth
+  if type(view._headerWidth) == "number" then
+    statusWidth =
+      math.max(0, view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET)
   end
 
-  local statusWidth =
-    math.max(0, view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET)
-  headerStatus:SetWidth(statusWidth)
-  headerStatus:SetText(fitTextWithEllipsis(headerStatus, statusText, statusWidth))
+  local headerStatus = view.headerStatus
+  if headerStatus ~= nil and view._headerStatusVisible == true then
+    local statusText = view._headerStatusFullText or ""
+    if statusWidth == nil then
+      headerStatus:SetText(statusText)
+    else
+      fitOneLine(headerStatus, statusText, statusWidth)
+    end
+  end
+
+  local headerStatusDetail = view.headerStatusDetail
+  if headerStatusDetail ~= nil and view._headerStatusDetailVisible == true then
+    local detailText = view._headerStatusDetailFullText or ""
+    if statusWidth == nil then
+      headerStatusDetail:SetText(detailText)
+    else
+      fitOneLine(headerStatusDetail, detailText, statusWidth)
+    end
+  end
 end
 
 local HeaderView = {}
@@ -73,7 +94,15 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   local classIcon = classIconResult.texture
 
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  headerName:SetPoint("TOPLEFT", classIconFrame, "TOPRIGHT", 10, -4)
+  -- Anchored to the header frame (not the class icon) so three text rows
+  -- (name, status line, status detail) fit within HEADER_HEIGHT.
+  headerName:SetPoint(
+    "TOPLEFT",
+    headerFrame,
+    "TOPLEFT",
+    Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + 10,
+    -HEADER_NAME_TOP_INSET
+  )
 
   if selectedContact then
     headerName:SetText(selectedContact.displayName or "")
@@ -87,6 +116,10 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   local headerFactionIcon = HeaderElements.createFactionIcon(headerFrame, headerName, selectedContact)
 
   local headerStatus = HeaderElements.createStatusLine(headerFrame, headerName, selectedContact)
+
+  local headerStatusDetail = HeaderElements.createStatusDetail(headerFrame, headerStatus)
+
+  local headerAddonBadge = HeaderElements.createAddonBadge(headerFrame, headerFactionIcon)
 
   local statusDot = HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
 
@@ -109,6 +142,8 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerName = headerName,
     headerFactionIcon = headerFactionIcon,
     headerStatus = headerStatus,
+    headerStatusDetail = headerStatusDetail,
+    headerAddonBadge = headerAddonBadge,
     headerStatusDot = statusDot,
     headerDivider = headerDivider,
     headerEmpty = headerEmpty,
@@ -119,6 +154,9 @@ end
 function HeaderView.SetLanguage(view)
   if view and view.headerEmpty and view.headerEmpty.setLanguage then
     view.headerEmpty.setLanguage()
+  end
+  if view and view.headerAddonBadge and type(view.headerAddonBadge.SetText) == "function" then
+    view.headerAddonBadge:SetText(HeaderElements.addonBadgeText())
   end
 end
 
@@ -188,12 +226,13 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     end
 
     local showStatusLine = hasContact and (vm == nil or vm.showStatusLine)
-    local statusText, dotColorKey = StatusLine.Build(selectedContact, status)
-    view._headerStatusFullText = statusText or ""
+    local line1, line2, dotColorKey = StatusLine.Build(selectedContact, status)
+    view._headerStatusFullText = line1 or ""
     view._headerStatusVisible = showStatusLine
+    view._headerStatusDetailFullText = line2 or ""
+    view._headerStatusDetailVisible = showStatusLine and line2 ~= ""
     if view.headerStatus then
       if showStatusLine then
-        refitStatus(view)
         UIHelpers.applyColor(view.headerStatus, Theme.COLORS.text_secondary)
         view.headerStatus:Show()
       else
@@ -201,6 +240,16 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerStatus:Hide()
       end
     end
+    if view.headerStatusDetail then
+      if view._headerStatusDetailVisible then
+        UIHelpers.applyColor(view.headerStatusDetail, Theme.COLORS.text_secondary)
+        view.headerStatusDetail:Show()
+      else
+        view.headerStatusDetail:SetText("")
+        view.headerStatusDetail:Hide()
+      end
+    end
+    refitStatus(view)
 
     local showDot = hasContact and (vm == nil or vm.showPresenceDot)
     if view.headerStatusDot then
@@ -223,6 +272,24 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerFactionIcon:Show()
       else
         view.headerFactionIcon:Hide()
+      end
+    end
+
+    if view.headerAddonBadge then
+      local showBadge = hasContact and selectedContact.peerHasAddon and not (vm and vm.isGroup)
+      if showBadge then
+        local anchor = view.headerFactionIcon
+        if type(anchor) ~= "table" or type(anchor.IsShown) ~= "function" or not anchor:IsShown() then
+          anchor = view.headerName
+        end
+        if anchor and type(view.headerAddonBadge.ClearAllPoints) == "function" then
+          view.headerAddonBadge:ClearAllPoints()
+          view.headerAddonBadge:SetPoint("LEFT", anchor, "RIGHT", 6, 0)
+        end
+        UIHelpers.applyColor(view.headerAddonBadge, Theme.TAG_GOLD)
+        view.headerAddonBadge:Show()
+      else
+        view.headerAddonBadge:Hide()
       end
     end
 

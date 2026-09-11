@@ -21,61 +21,61 @@ StatusLine.AVAILABILITY_DISPLAY = {
   ["Send failed"] = { label = "Send failed", color = "dnd" },
 }
 
+-- Returns line1 (name-realm + class + faction), line2 (availability/typing + zone),
+-- and the status dot color key. Both lines are "" when there is no contact.
 function StatusLine.Build(selectedContact, status)
   if not selectedContact then
-    return "", nil
+    return "", "", nil
   end
 
-  local parts = {}
+  local line1 = {}
+
+  if selectedContact.realmName and selectedContact.realmName ~= "" then
+    local name = selectedContact.name or selectedContact.displayName or ""
+    if name ~= "" then
+      table.insert(line1, name .. "-" .. selectedContact.realmName)
+    else
+      table.insert(line1, selectedContact.realmName)
+    end
+  elseif selectedContact.characterName and selectedContact.characterName ~= "" then
+    local realm = selectedContact.realm or ""
+    if realm ~= "" then
+      table.insert(line1, selectedContact.characterName .. "-" .. realm)
+    else
+      table.insert(line1, selectedContact.characterName)
+    end
+  end
+
+  if selectedContact.className and selectedContact.className ~= "" then
+    table.insert(line1, Localization.Text(selectedContact.className))
+  end
+
+  -- Show faction (inferred from race, or direct from BNet API)
+  local factionName = selectedContact.factionName
+  if factionName and factionName ~= "" then
+    table.insert(line1, Localization.Text(factionName))
+  end
+
+  local line2 = {}
   local dotColor = nil
 
   -- A live typing indicator replaces the availability label while it lasts.
   local statusKey = status and status.status or nil
   local avail = statusKey and StatusLine.AVAILABILITY_DISPLAY[statusKey] or nil
   if selectedContact.isTyping then
-    table.insert(parts, Localization.Text("typing…"))
+    table.insert(line2, Localization.Text("typing…"))
     dotColor = "online"
   elseif avail then
-    table.insert(parts, Localization.Text(avail.label))
+    table.insert(line2, Localization.Text(avail.label))
     dotColor = avail.color
   end
 
   if selectedContact.areaName and selectedContact.areaName ~= "" then
-    table.insert(parts, selectedContact.areaName)
-  end
-
-  if selectedContact.realmName and selectedContact.realmName ~= "" then
-    local name = selectedContact.name or selectedContact.displayName or ""
-    if name ~= "" then
-      table.insert(parts, name .. "-" .. selectedContact.realmName)
-    else
-      table.insert(parts, selectedContact.realmName)
-    end
-  elseif selectedContact.characterName and selectedContact.characterName ~= "" then
-    local realm = selectedContact.realm or ""
-    if realm ~= "" then
-      table.insert(parts, selectedContact.characterName .. "-" .. realm)
-    else
-      table.insert(parts, selectedContact.characterName)
-    end
-  end
-
-  if selectedContact.className and selectedContact.className ~= "" then
-    table.insert(parts, Localization.Text(selectedContact.className))
-  end
-
-  -- Show faction (inferred from race, or direct from BNet API)
-  local factionName = selectedContact.factionName
-  if factionName and factionName ~= "" then
-    table.insert(parts, Localization.Text(factionName))
-  end
-
-  if selectedContact.peerHasAddon then
-    table.insert(parts, Localization.Text("Uses WhisperMessenger"))
+    table.insert(line2, selectedContact.areaName)
   end
 
   local sep = "  -  "
-  return table.concat(parts, sep), dotColor
+  return table.concat(line1, sep), table.concat(line2, sep), dotColor
 end
 
 ns.ConversationPaneStatusLine = StatusLine

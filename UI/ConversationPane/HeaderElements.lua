@@ -16,6 +16,10 @@ local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI
 
 local HeaderElements = {}
 
+-- Vertical gaps between the header's stacked text rows (name -> status -> detail).
+local STATUS_LINE_GAP = 2
+local STATUS_DETAIL_GAP = 5
+
 function HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
   local headerFrame = factory.CreateFrame("Frame", nil, pane)
   headerFrame:SetPoint("TOPLEFT", pane, "TOPLEFT", 0, -2)
@@ -96,11 +100,12 @@ function HeaderElements.createStatusLine(headerFrame, headerName, selectedContac
   if type(headerStatus.SetMaxLines) == "function" then
     headerStatus:SetMaxLines(1)
   end
-  headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -2)
+  headerStatus:SetPoint("TOPLEFT", headerName, "BOTTOMLEFT", 0, -STATUS_LINE_GAP)
   applyColor(headerStatus, Theme.COLORS.text_secondary)
 
   if selectedContact then
-    headerStatus:SetText(StatusLine.Build(selectedContact))
+    local line1 = StatusLine.Build(selectedContact)
+    headerStatus:SetText(line1)
     headerStatus:Show()
   else
     headerStatus:SetText("")
@@ -108,6 +113,37 @@ function HeaderElements.createStatusLine(headerFrame, headerName, selectedContac
   end
 
   return headerStatus
+end
+
+function HeaderElements.createStatusDetail(headerFrame, headerStatus)
+  local headerStatusDetail = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
+  headerStatusDetail:SetJustifyH("LEFT")
+  if type(headerStatusDetail.SetWordWrap) == "function" then
+    headerStatusDetail:SetWordWrap(false)
+  end
+  if type(headerStatusDetail.SetMaxLines) == "function" then
+    headerStatusDetail:SetMaxLines(1)
+  end
+  headerStatusDetail:SetPoint("TOPLEFT", headerStatus, "BOTTOMLEFT", 0, -STATUS_DETAIL_GAP)
+  applyColor(headerStatusDetail, Theme.COLORS.text_secondary)
+  headerStatusDetail:SetText("")
+  headerStatusDetail:Hide()
+
+  return headerStatusDetail
+end
+
+function HeaderElements.addonBadgeText()
+  return "(" .. Localization.Text("Uses WM") .. ")"
+end
+
+function HeaderElements.createAddonBadge(headerFrame, headerFactionIcon)
+  local headerAddonBadge = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_status)
+  headerAddonBadge:SetPoint("LEFT", headerFactionIcon, "RIGHT", 6, 0)
+  applyColor(headerAddonBadge, Theme.TAG_GOLD)
+  headerAddonBadge:SetText(HeaderElements.addonBadgeText())
+  headerAddonBadge:Hide()
+
+  return headerAddonBadge
 end
 
 function HeaderElements.createStatusDot(factory, headerFrame, classIconFrame, selectedContact)
