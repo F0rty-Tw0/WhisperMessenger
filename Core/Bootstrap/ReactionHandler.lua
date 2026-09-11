@@ -59,7 +59,14 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     return accepted
   end
 
-  local fallback = Protocol.BuildFallback(reactionKey, operation, message.text or "")
+  local conversations = runtime.store and runtime.store.conversations
+  local conversation = conversations and conversations[selectedContact.conversationKey]
+  local hintSuffix
+  if conversation and conversation.peerHasAddon ~= true and conversation.addonHintSent ~= true then
+    hintSuffix = Protocol.ADDON_HINT_SUFFIX
+  end
+
+  local fallback = Protocol.BuildFallback(reactionKey, operation, message.text or "", hintSuffix)
   if fallback == nil then
     return false
   end
@@ -67,6 +74,7 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     actorName = actorName,
     sourceText = message.text or "",
     pendingToken = pendingToken,
+    hintSuffix = hintSuffix,
     operation = {
       type = "reaction",
       operation = operation,
@@ -91,6 +99,9 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     reactionControl = reactionControl,
   }, refresh)
   if accepted then
+    if hintSuffix ~= nil then
+      conversation.addonHintSent = true
+    end
     if reactionControl.confirmed ~= true then
       MessageReactions.BeginPending(message, pendingToken, operation, reactionKey, actorName, refresh)
     end

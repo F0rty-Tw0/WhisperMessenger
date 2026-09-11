@@ -282,6 +282,7 @@ function WindowRuntime.Create(options)
       onSend = windowCallbacks.onSend,
       onReact = windowCallbacks.onReact,
       canReact = windowCallbacks.canReact,
+      onInviteContact = windowCallbacks.onInviteContact,
       onTyping = windowCallbacks.onTyping,
       onPositionChanged = windowCallbacks.onPositionChanged,
       onClose = windowCallbacks.onClose,

@@ -6,6 +6,7 @@ end
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
+local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 
 local WindowCallbacks = {}
@@ -42,6 +43,7 @@ function WindowCallbacks.Create(options)
   local groupSendPolicy = options.groupSendPolicy
   local sendHandler = options.sendHandler
   local reactionHandler = options.reactionHandler or ReactionHandler
+  local inviteHandler = options.inviteHandler or InviteHandler
   local livePresenceSender = options.livePresenceSender
   local refreshWindow = options.refreshWindow or function() end
   local selectConversation = options.selectConversation or function() end
@@ -87,6 +89,9 @@ function WindowCallbacks.Create(options)
       return reactionHandler.HandleReact(runtime, selectedContact, message, reactionKey, refreshWindow, groupSendPolicy)
     end,
     canReact = canReact,
+    onInviteContact = function(selectedContact)
+      return inviteHandler.HandleInvite(runtime, selectedContact, refreshWindow)
+    end,
     onTyping = function(selectedContact, text)
       if livePresenceSender == nil then
         return false

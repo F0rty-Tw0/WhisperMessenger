@@ -183,7 +183,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   if reactionControl then
     local operation = reactionControl.operation or {}
     local normalizedSource = canonicalReactionText(normalizeOutgoingText(payload, reactionControl.sourceText or ""))
-    payload.text = MessageReactionProtocol.BuildFallback(operation.key, operation.operation, normalizedSource)
+    payload.text = MessageReactionProtocol.BuildFallback(operation.key, operation.operation, normalizedSource, reactionControl.hintSuffix)
   else
     payload.text = normalizeOutgoingText(payload, payload.text)
   end

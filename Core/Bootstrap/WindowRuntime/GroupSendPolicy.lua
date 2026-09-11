@@ -276,7 +276,11 @@ function GroupSendPolicy.Create(options)
     end
 
     local sourceText = message.text or ""
-    local fallback = Protocol.BuildGroupFallback(reactionKey, operation, sourceText)
+    local hintSuffix
+    if conversation.addonHintSent ~= true then
+      hintSuffix = Protocol.ADDON_HINT_SUFFIX
+    end
+    local fallback = Protocol.BuildGroupFallback(reactionKey, operation, sourceText, hintSuffix)
     local targetGuid = message.guid or conversation.guid
     local targetName = message.playerName or conversation.displayName
     local encoded = Protocol.EncodeGroupReaction(operation, reactionKey, message.wireId, sourceText, fallback, targetGuid, targetName)
@@ -307,6 +311,9 @@ function GroupSendPolicy.Create(options)
     if not sendAddon(conversation, encoded) then
       discardPending(runtime, conversation.conversationKey, pending)
       return false
+    end
+    if hintSuffix ~= nil then
+      conversation.addonHintSent = true
     end
     return true, reactionControl
   end
