@@ -8,49 +8,56 @@ return function()
     factionName = "Horde",
   }
   local status = { status = "WrongFaction", canWhisper = false }
-  local text = StatusLine.Build(contact, status)
+  local line1, line2 = StatusLine.Build(contact, status)
 
   -- Must NOT contain the literal string "xC2xB7"
-  assert(not string.find(text, "xC2xB7"), "separator should be UTF-8 middle dot, not literal hex: " .. text)
+  assert(not string.find(line1, "xC2xB7"), "separator should be UTF-8 middle dot, not literal hex: " .. line1)
 
   -- Should contain the actual middle dot character (U+00B7 = bytes 0xC2 0xB7)
-  assert(string.find(text, " - ", 1, true), "separator should contain ' - ': " .. text)
+  assert(string.find(line1, " - ", 1, true), "separator should contain ' - ': " .. line1)
 
-  -- WrongFaction should display as "Wrong Faction" label
-  assert(string.find(text, "Wrong Faction", 1, true), "should show 'Wrong Faction' label: " .. text)
+  -- WrongFaction should display as "Wrong Faction" label, on line2 (not line1)
+  assert(string.find(line2, "Wrong Faction", 1, true), "should show 'Wrong Faction' label on line2: " .. line2)
+  assert(not string.find(line1, "Wrong Faction", 1, true), "'Wrong Faction' label should not appear on line1: " .. line1)
 
-  -- Should include class and faction
-  assert(string.find(text, "Hunter", 1, true), "should include className: " .. text)
-  assert(string.find(text, "Horde", 1, true), "should include factionName: " .. text)
+  -- Should include class and faction on line1, not line2
+  assert(string.find(line1, "Hunter", 1, true), "should include className: " .. line1)
+  assert(string.find(line1, "Horde", 1, true), "should include factionName: " .. line1)
+  assert(not string.find(line2, "Hunter", 1, true), "className should not appear on line2: " .. line2)
+  assert(not string.find(line2, "Horde", 1, true), "factionName should not appear on line2: " .. line2)
 
-  -- XFaction (computed cross-faction guild/community) should show "X-Faction" label
+  -- XFaction (computed cross-faction guild/community) should show "X-Faction" label on line2
   do
     local xfContact = { displayName = "Thrall", factionName = "Horde" }
     local xfStatus = { status = "XFaction", canWhisper = true }
-    local xfText, xfColor = StatusLine.Build(xfContact, xfStatus)
-    assert(string.find(xfText, "X-Faction", 1, true), "should show 'X-Faction' label: " .. xfText)
+    local xfLine1, xfLine2, xfColor = StatusLine.Build(xfContact, xfStatus)
+    assert(string.find(xfLine2, "X-Faction", 1, true), "should show 'X-Faction' label on line2: " .. xfLine2)
+    assert(not string.find(xfLine1, "X-Faction", 1, true), "'X-Faction' label should not appear on line1: " .. xfLine1)
     assert(xfColor == "online", "X-Faction dot color should be 'online', got: " .. tostring(xfColor))
   end
 
-  -- Away status should display as "Away" with away color
+  -- Away status should display as "Away" with away color, on line2
   do
     local awayContact = { displayName = "Jaina" }
     local awayStatus = { status = "Away", canWhisper = true }
-    local awayText, awayColor = StatusLine.Build(awayContact, awayStatus)
-    assert(string.find(awayText, "Away", 1, true), "should show 'Away' label: " .. awayText)
+    local awayLine1, awayLine2, awayColor = StatusLine.Build(awayContact, awayStatus)
+    assert(string.find(awayLine2, "Away", 1, true), "should show 'Away' label on line2: " .. awayLine2)
+    assert(not string.find(awayLine1, "Away", 1, true), "'Away' label should not appear on line1: " .. awayLine1)
     assert(awayColor == "away", "Away dot color should be 'away', got: " .. tostring(awayColor))
   end
 
-  -- Busy status should display as "Busy" with dnd color
+  -- Busy status should display as "Busy" with dnd color, on line2
   do
     local busyContact = { displayName = "Thrall" }
     local busyStatus = { status = "Busy", canWhisper = true }
-    local busyText, busyColor = StatusLine.Build(busyContact, busyStatus)
-    assert(string.find(busyText, "Busy", 1, true), "should show 'Busy' label: " .. busyText)
+    local busyLine1, busyLine2, busyColor = StatusLine.Build(busyContact, busyStatus)
+    assert(string.find(busyLine2, "Busy", 1, true), "should show 'Busy' label on line2: " .. busyLine2)
+    assert(not string.find(busyLine1, "Busy", 1, true), "'Busy' label should not appear on line1: " .. busyLine1)
     assert(busyColor == "dnd", "Busy dot color should be 'dnd', got: " .. tostring(busyColor))
   end
 
-  -- areaName present should be inserted after availability, before the realm part
+  -- name-realm part belongs on line1; areaName present should be inserted on
+  -- line2 after the availability label, and neither should cross lines
   do
     local locContact = {
       displayName = "Nergrom",
@@ -60,15 +67,24 @@ return function()
       areaName = "Voidscar Arena",
     }
     local locStatus = { status = "CanWhisper", canWhisper = true }
-    local locText = StatusLine.Build(locContact, locStatus)
-    local areaPos = string.find(locText, "Voidscar Arena", 1, true)
-    local realmPos = string.find(locText, "Kazzak", 1, true)
-    assert(areaPos ~= nil, "should include areaName: " .. locText)
-    assert(realmPos ~= nil, "should include realm part: " .. locText)
-    assert(areaPos < realmPos, "areaName should appear before the realm part: " .. locText)
+    local locLine1, locLine2 = StatusLine.Build(locContact, locStatus)
+
+    -- line1: name-realm, class, faction
+    assert(string.find(locLine1, "Kazzak", 1, true), "should include realm part on line1: " .. locLine1)
+    assert(string.find(locLine1, "Hunter", 1, true), "should include className on line1: " .. locLine1)
+    assert(string.find(locLine1, "Horde", 1, true), "should include factionName on line1: " .. locLine1)
+    assert(not string.find(locLine1, "Voidscar Arena", 1, true), "areaName should not appear on line1: " .. locLine1)
+
+    -- line2: availability label, then areaName
+    local availPos = string.find(locLine2, "Online", 1, true)
+    local areaPos = string.find(locLine2, "Voidscar Arena", 1, true)
+    assert(availPos ~= nil, "should include availability label on line2: " .. locLine2)
+    assert(areaPos ~= nil, "should include areaName on line2: " .. locLine2)
+    assert(availPos < areaPos, "availability label should appear before areaName: " .. locLine2)
+    assert(not string.find(locLine2, "Kazzak", 1, true), "realm part should not appear on line2: " .. locLine2)
   end
 
-  -- areaName absent should leave the line unchanged (no double separators)
+  -- areaName absent should leave line2 unchanged (no double separators)
   do
     local noLocContact = {
       displayName = "Nergrom",
@@ -77,7 +93,7 @@ return function()
       factionName = "Horde",
     }
     local noLocStatus = { status = "CanWhisper", canWhisper = true }
-    local noLocText = StatusLine.Build(noLocContact, noLocStatus)
-    assert(not string.find(noLocText, "-  -", 1, true), "should not have double separators: " .. noLocText)
+    local _, noLocLine2 = StatusLine.Build(noLocContact, noLocStatus)
+    assert(not string.find(noLocLine2, "-  -", 1, true), "should not have double separators: " .. noLocLine2)
   end
 end

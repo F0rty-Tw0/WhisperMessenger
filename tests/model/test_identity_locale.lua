@@ -12,16 +12,16 @@ return function()
     assert(Localization.Text("Alliance") == "Альянс", "Alliance should localize")
     assert(Localization.Text("Horde") == "Орда", "Horde should localize")
 
-    -- Check availability states in StatusLine
+    -- Check availability states in StatusLine (availability lives on line2)
     local status = { status = "BNetOnline" }
-    local text, _ = StatusLine.Build({ displayName = "Bob" }, status)
+    local _, text = StatusLine.Build({ displayName = "Bob" }, status)
     assert(
       string.find(text, "В сети %(прил.%)", 1, false),
       "BNetOnline should localize to 'В сети (прил.)', got: " .. tostring(text)
     )
 
     status = { status = "WrongFaction" }
-    text, _ = StatusLine.Build({ displayName = "Bob" }, status)
+    _, text = StatusLine.Build({ displayName = "Bob" }, status)
     assert(
       string.find(text, "Другая фракция", 1, true),
       "WrongFaction should localize to 'Другая фракция', got: " .. tostring(text)
