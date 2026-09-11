@@ -378,7 +378,7 @@ local Korean = {
   -- Live presence
   ["typing…"] = "입력 중…",
   ["Seen"] = "읽음",
-  ["Uses WhisperMessenger"] = "WhisperMessenger 사용 중",
+  ["Uses WM"] = "WM 사용 중",
   ["Share typing status"] = "입력 상태 공유",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "WhisperMessenger를 사용하는 상대에게 내가 귓속말을 입력 중임을 보여줍니다.",
   ["Send read receipts"] = "읽음 확인 보내기",

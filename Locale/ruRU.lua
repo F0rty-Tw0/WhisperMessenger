@@ -378,7 +378,7 @@ local Russian = {
   -- Live presence
   ["typing…"] = "печатает…",
   ["Seen"] = "Просмотрено",
-  ["Uses WhisperMessenger"] = "Использует WhisperMessenger",
+  ["Uses WM"] = "Использует WM",
   ["Share typing status"] = "Показывать, что вы печатаете",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Контакты, у которых тоже есть WhisperMessenger, видят, когда вы им пишете.",
   ["Send read receipts"] = "Отправлять отметки о прочтении",

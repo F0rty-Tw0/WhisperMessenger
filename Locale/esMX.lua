@@ -382,7 +382,7 @@ local Spanish = {
   -- Live presence
   ["typing…"] = "escribiendo…",
   ["Seen"] = "Visto",
-  ["Uses WhisperMessenger"] = "Usa WhisperMessenger",
+  ["Uses WM"] = "Usa WM",
   ["Share typing status"] = "Compartir estado de escritura",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permite que los contactos que también usan WhisperMessenger vean cuándo les estás escribiendo.",
   ["Send read receipts"] = "Enviar confirmaciones de lectura",

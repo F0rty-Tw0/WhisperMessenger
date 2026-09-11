@@ -378,7 +378,7 @@ local SimplifiedChinese = {
   -- Live presence
   ["typing…"] = "正在输入…",
   ["Seen"] = "已读",
-  ["Uses WhisperMessenger"] = "使用 WhisperMessenger",
+  ["Uses WM"] = "使用 WM",
   ["Share typing status"] = "共享输入状态",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "让同样使用 WhisperMessenger 的联系人看到你正在给他们输入密语。",
   ["Send read receipts"] = "发送已读回执",

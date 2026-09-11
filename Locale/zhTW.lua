@@ -378,7 +378,7 @@ local TraditionalChinese = {
   -- Live presence
   ["typing…"] = "正在輸入…",
   ["Seen"] = "已讀",
-  ["Uses WhisperMessenger"] = "使用 WhisperMessenger",
+  ["Uses WM"] = "使用 WM",
   ["Share typing status"] = "分享輸入狀態",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "讓同樣使用 WhisperMessenger 的聯絡人看到你正在輸入密語給他們。",
   ["Send read receipts"] = "傳送已讀回條",

@@ -378,7 +378,7 @@ local French = {
   -- Live presence
   ["typing…"] = "écrit…",
   ["Seen"] = "Vu",
-  ["Uses WhisperMessenger"] = "Utilise WhisperMessenger",
+  ["Uses WM"] = "Utilise WM",
   ["Share typing status"] = "Partager le statut de saisie",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permet aux contacts qui utilisent aussi WhisperMessenger de voir quand vous leur écrivez.",
   ["Send read receipts"] = "Envoyer les accusés de lecture",

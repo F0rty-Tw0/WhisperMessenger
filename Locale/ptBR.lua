@@ -378,7 +378,7 @@ local Portuguese = {
   -- Live presence
   ["typing…"] = "digitando…",
   ["Seen"] = "Visto",
-  ["Uses WhisperMessenger"] = "Usa WhisperMessenger",
+  ["Uses WM"] = "Usa WM",
   ["Share typing status"] = "Compartilhar status de digitação",
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permite que contatos que também usam WhisperMessenger vejam quando você está digitando para eles.",
   ["Send read receipts"] = "Enviar confirmações de leitura",
