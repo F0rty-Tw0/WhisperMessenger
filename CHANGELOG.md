@@ -6,6 +6,8 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-09-18
+
 - New installs now get a one-time line in chat after logging in, pointing out that whispers open in the messenger window and how to open it. Existing users will not see it.
 - The Whispers tab now explains what to do when you have no conversations yet, instead of showing an empty panel.
 - The conversation header now shows a small dimmed "(Invite to WM)" link next to friends who do not run the addon. Click it to whisper them a short invite to install WhisperMessenger; it then reads "(Invite sent)" and can only be sent once per person. Friends who already have the addon keep the gold "(Uses WM)" tag.
