@@ -14,6 +14,7 @@ local presetToSkin = {
   wow_default = Skins.MODERN,
   elvui_dark = Skins.MODERN,
   plumber_warm = Skins.MODERN,
+  jade_dark = Skins.MODERN,
   wow_native = Skins.BLIZZARD,
 }
 

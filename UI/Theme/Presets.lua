@@ -8,6 +8,7 @@ local Presets = {}
 Presets.WOW_DEFAULT = "wow_default"
 Presets.ELVUI_DARK = "elvui_dark"
 Presets.PLUMBER_WARM = "plumber_warm"
+Presets.JADE_DARK = "jade_dark"
 Presets.WOW_NATIVE = "wow_native"
 
 local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
@@ -15,6 +16,7 @@ local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Pre
 local dataWowDefault = ns.ThemePresetDataWowDefault or require("WhisperMessenger.UI.Theme.Presets.Data.WowDefault")
 local dataElvuiDark = ns.ThemePresetDataElvuiDark or require("WhisperMessenger.UI.Theme.Presets.Data.ElvuiDark")
 local dataPlumberWarm = ns.ThemePresetDataPlumberWarm or require("WhisperMessenger.UI.Theme.Presets.Data.PlumberWarm")
+local dataJadeDark = ns.ThemePresetDataJadeDark or require("WhisperMessenger.UI.Theme.Presets.Data.JadeDark")
 local dataWowNative = ns.ThemePresetDataWowNative or require("WhisperMessenger.UI.Theme.Presets.Data.WowNative")
 
 local tokenRoles = {
@@ -88,6 +90,7 @@ local presetOrder = {
   Presets.WOW_DEFAULT,
   Presets.ELVUI_DARK,
   Presets.PLUMBER_WARM,
+  Presets.JADE_DARK,
   Presets.WOW_NATIVE,
 }
 
@@ -95,6 +98,7 @@ local presetDataFiles = {
   [Presets.WOW_DEFAULT] = dataWowDefault,
   [Presets.ELVUI_DARK] = dataElvuiDark,
   [Presets.PLUMBER_WARM] = dataPlumberWarm,
+  [Presets.JADE_DARK] = dataJadeDark,
   [Presets.WOW_NATIVE] = dataWowNative,
 }
 

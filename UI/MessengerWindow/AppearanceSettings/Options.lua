@@ -23,6 +23,7 @@ local PRESET_LABELS = {
   wow_default = { label = "Midnight", tooltip = "Default colors and contrasts." },
   elvui_dark = { label = "Shadowlands", tooltip = "Dark UI style inspired by ElvUI." },
   plumber_warm = { label = "Draenor", tooltip = "Warm tones with softer contrast." },
+  jade_dark = { label = "Pandaria", tooltip = "Dark charcoal with jade accents, inspired by EllesmereUI." },
   wow_native = { label = "Azeroth", tooltip = "Native WoW colors with gold accents." },
 }
 
