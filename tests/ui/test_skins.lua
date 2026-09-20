@@ -100,6 +100,9 @@ return function()
     Theme.SetPreset("plumber_warm")
     assert(Skins.GetActive() == "modern", "test_active_skin: plumber_warm should map to modern")
 
+    assert(Theme.SetPreset("jade_dark") == true, "test_active_skin: jade_dark preset should apply")
+    assert(Skins.GetActive() == "modern", "test_active_skin: jade_dark should map to modern")
+
     Theme.SetPreset("wow_native")
     assert(Skins.GetActive() == "blizzard", "test_active_skin: wow_native should map to blizzard")
 

@@ -19,6 +19,7 @@ return function()
     assert(found.wow_default == true, "test_list_presets: missing wow_default")
     assert(found.elvui_dark == true, "test_list_presets: missing elvui_dark")
     assert(found.plumber_warm == true, "test_list_presets: missing plumber_warm")
+    assert(found.jade_dark == true, "test_list_presets: missing jade_dark")
     assert(found.wow_native == true, "test_list_presets: missing wow_native")
   end
 
@@ -99,6 +100,23 @@ return function()
       "test_set_plumber_warm: contact_selected_border_right did not update"
     )
     assert(colorsMatch(Theme.COLORS.text_title, { 1.0, 0.97, 0.92, 1.0 }), "test_set_plumber_warm: text_title did not update")
+  end
+
+  do
+    local ok = Theme.SetPreset("jade_dark")
+    assert(ok == true, "test_set_jade_dark: expected SetPreset to return true")
+    assert(Theme.GetPreset() == "jade_dark", "test_set_jade_dark: expected active preset key")
+
+    assert(colorsMatch(Theme.COLORS.bg_primary, { 0.067, 0.067, 0.067, 0.94 }), "test_set_jade_dark: bg_primary did not update")
+    assert(colorsMatch(Theme.COLORS.accent, { 0.047, 0.824, 0.616, 1.0 }), "test_set_jade_dark: accent did not update")
+    assert(colorsMatch(Theme.COLORS.option_toggle_on, { 0.047, 0.824, 0.616, 1.0 }), "test_set_jade_dark: option_toggle_on tracks accent")
+    assert(
+      colorsMatch(Theme.COLORS.contact_selected_border_right, { 0.047, 0.824, 0.616, 1.0 }),
+      "test_set_jade_dark: contact_selected_border_right did not update"
+    )
+    assert(colorsMatch(Theme.COLORS.contacts_border_right, { 0.20, 0.20, 0.20, 0.90 }), "test_set_jade_dark: contacts_border_right did not update")
+    assert(Theme.COLORS.message_input_border_top == nil, "test_set_jade_dark: message_input_border_top should be removed")
+    assert(Theme.COLORS.send_button_border == nil, "test_set_jade_dark: send_button_border should be removed")
   end
 
   do

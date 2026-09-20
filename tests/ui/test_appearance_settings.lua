@@ -52,8 +52,8 @@ return function()
     assert(result.themePresetSelector ~= nil, "test_theme_preset_selector_exists: should expose themePresetSelector")
     assert(result.themePresetSelector.buttons ~= nil, "test_theme_preset_selector_exists: themePresetSelector should have buttons")
     assert(
-      #result.themePresetSelector.buttons == 4,
-      "test_theme_preset_selector_exists: should have 4 preset buttons, got: " .. tostring(#result.themePresetSelector.buttons)
+      #result.themePresetSelector.buttons == 5,
+      "test_theme_preset_selector_exists: should have 5 preset buttons, got: " .. tostring(#result.themePresetSelector.buttons)
     )
   end
 
@@ -74,6 +74,7 @@ return function()
       ["Midnight"] = false,
       ["Shadowlands"] = false,
       ["Draenor"] = false,
+      ["Pandaria"] = false,
       ["Azeroth"] = false,
     }
     for _, text in ipairs(labels) do
@@ -85,6 +86,7 @@ return function()
     assert(expected["Midnight"], "test_theme_preset_selector_labels: should have a 'Midnight' button")
     assert(expected["Shadowlands"], "test_theme_preset_selector_labels: should have a 'Shadowlands' button")
     assert(expected["Draenor"], "test_theme_preset_selector_labels: should have a 'Draenor' button")
+    assert(expected["Pandaria"], "test_theme_preset_selector_labels: should have a 'Pandaria' button")
     assert(expected["Azeroth"], "test_theme_preset_selector_labels: should have an 'Azeroth' button")
   end
 
