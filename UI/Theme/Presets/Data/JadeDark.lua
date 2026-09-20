@@ -45,8 +45,8 @@ local roles = {
   accent = withAlpha(jadeRgb, 1.0),
   accent_soft = { 0.04, 0.62, 0.47, 0.88 },
   toggle_on = withAlpha(jadeRgb, 1.0),
-  button_fill = { 0.16, 0.16, 0.16, 1.0 },
-  button_fill_hover = { 0.22, 0.22, 0.22, 1.0 },
+  button_fill = { 0.03, 0.55, 0.41, 1.0 },
+  button_fill_hover = withAlpha(jadeRgb, 1.0),
   button_disabled = { 0.24, 0.24, 0.24, 0.65 },
   status_online = { 0.30, 0.82, 0.40, 1.0 },
   status_offline = { 0.45, 0.45, 0.45, 1.0 },
@@ -57,7 +57,7 @@ local roles = {
   option_bg = { 0.09, 0.09, 0.09, 0.92 },
   toggle_off = { 0.20, 0.20, 0.20, 0.96 },
   toggle_border = { 0.40, 0.40, 0.40, 0.90 },
-  composer_pane_border = { 0.30, 0.30, 0.30, 1.0 },
+  composer_pane_border = withAlpha(jadeRgb, 0.45),
   danger_bg = { 0.45, 0.12, 0.12, 0.80 },
   danger_hover = { 0.55, 0.16, 0.16, 0.90 },
   action_icon = withAlpha(textSecondaryRgb, 0.70),
@@ -70,6 +70,8 @@ local dividers = makeDividerRoles(rgb(0.20, 0.20, 0.20), 0.75, 0.90, jadeRgb, 0.
 for k, v in pairs(dividers) do
   roles[k] = v
 end
+-- jade edge on the contacts/composer borders; plain dividers stay gray
+roles.divider_strong = withAlpha(jadeRgb, 0.35)
 
 local data = { key = "jade_dark", roles = roles }
 

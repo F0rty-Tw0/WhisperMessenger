@@ -87,6 +87,7 @@ UI/Theme/Presets/Builder.lua
 UI/Theme/Presets/Data/WowDefault.lua
 UI/Theme/Presets/Data/ElvuiDark.lua
 UI/Theme/Presets/Data/PlumberWarm.lua
+UI/Theme/Presets/Data/JadeDark.lua
 UI/Theme/Presets/Data/WowNative.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua

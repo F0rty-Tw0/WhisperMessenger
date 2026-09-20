@@ -6,6 +6,8 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 ## [Unreleased]
 
+- New "Pandaria" theme in Appearance settings: dark charcoal with jade-green accents, a close match if you use EllesmereUI.
+
 ## [1.4.3] - 2026-09-18
 
 - New installs now get a one-time line in chat after logging in, pointing out that whispers open in the messenger window and how to open it. Existing users will not see it.

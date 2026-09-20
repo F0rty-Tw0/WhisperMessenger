@@ -114,7 +114,16 @@ return function()
       colorsMatch(Theme.COLORS.contact_selected_border_right, { 0.047, 0.824, 0.616, 1.0 }),
       "test_set_jade_dark: contact_selected_border_right did not update"
     )
-    assert(colorsMatch(Theme.COLORS.contacts_border_right, { 0.20, 0.20, 0.20, 0.90 }), "test_set_jade_dark: contacts_border_right did not update")
+    assert(
+      colorsMatch(Theme.COLORS.contacts_border_right, { 0.047, 0.824, 0.616, 0.35 }),
+      "test_set_jade_dark: contacts_border_right should be jade-tinted"
+    )
+    assert(colorsMatch(Theme.COLORS.send_button, { 0.03, 0.55, 0.41, 1.0 }), "test_set_jade_dark: send_button should be dark jade")
+    assert(colorsMatch(Theme.COLORS.send_button_hover, { 0.047, 0.824, 0.616, 1.0 }), "test_set_jade_dark: send_button_hover should be full jade")
+    assert(
+      colorsMatch(Theme.COLORS.composer_pane_border, { 0.047, 0.824, 0.616, 0.45 }),
+      "test_set_jade_dark: composer_pane_border should be jade-tinted"
+    )
     assert(Theme.COLORS.message_input_border_top == nil, "test_set_jade_dark: message_input_border_top should be removed")
     assert(Theme.COLORS.send_button_border == nil, "test_set_jade_dark: send_button_border should be removed")
   end
