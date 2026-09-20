@@ -6,6 +6,7 @@ All releases: **1.4.x (current)** · [1.3.x](archive/changelog/1.3.md) · [1.2.x
 
 ## [Unreleased]
 
+- Now works on World of Warcraft: Forever (beta). Mythic+ features stay off there since Forever has no Mythic+.
 - New "Pandaria" theme in Appearance settings: dark charcoal with jade-green accents, a close match if you use EllesmereUI.
 
 ## [1.4.3] - 2026-09-18

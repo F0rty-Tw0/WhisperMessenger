@@ -1,5 +1,6 @@
 ## Interface: 120100
 ## Interface-Mainline: 120100
+## Interface-Forever: 16001
 ## Interface-Vanilla: 11509
 ## Interface-Classic: 11509
 ## Interface-TBC: 20505

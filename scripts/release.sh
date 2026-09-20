@@ -78,6 +78,10 @@ echo "Fetching live TOC interface numbers from Blizzard CDN..."
 TOC_RETAIL=$(fetch_toc wow) || cdn_die wow
 TOC_VANILLA=$(fetch_toc wow_classic_era) || cdn_die wow_classic_era
 TOC_MISTS=$(fetch_toc wow_classic) || cdn_die wow_classic
+# WoW: Forever is soft-fail: the beta lives under 'wow_classic_beta' and the
+# launch product key is unknown until 2026-11-04. If the fetch fails, warn and
+# keep whatever the TOC currently has.
+TOC_FOREVER=$(fetch_toc wow_classic_beta) || true
 
 if [[ -z "$TOC_RETAIL" || -z "$TOC_VANILLA" || -z "$TOC_MISTS" ]]; then
   echo "Error: could not parse one or more TOC numbers from Blizzard response."
@@ -88,6 +92,11 @@ fi
 echo "  retail (Mainline): ${TOC_RETAIL}"
 echo "  vanilla:           ${TOC_VANILLA}"
 echo "  mists:             ${TOC_MISTS}"
+if [[ -n "$TOC_FOREVER" ]]; then
+  echo "  forever:           ${TOC_FOREVER}"
+else
+  echo "  forever:           skipped (CDN fetch failed, keeping current TOC value)"
+fi
 echo "  TBC and Cata: skipped (Classic seasons EOL, no live CDN)"
 
 sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}/" WhisperMessenger.toc
@@ -96,6 +105,9 @@ sed -i "s/^## Interface-Vanilla: .*/## Interface-Vanilla: ${TOC_VANILLA}/" Whisp
 sed -i "s/^## Interface-Classic: .*/## Interface-Classic: ${TOC_VANILLA}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mists: .*/## Interface-Mists: ${TOC_MISTS}/" WhisperMessenger.toc
 sed -i "s/^## Interface-MoP: .*/## Interface-MoP: ${TOC_MISTS}/" WhisperMessenger.toc
+if [[ -n "$TOC_FOREVER" ]]; then
+  sed -i "s/^## Interface-Forever: .*/## Interface-Forever: ${TOC_FOREVER}/" WhisperMessenger.toc
+fi
 
 # Update version in TOC
 sed -i "s/^## Version: .*/## Version: ${TAG_VERSION}/" WhisperMessenger.toc
