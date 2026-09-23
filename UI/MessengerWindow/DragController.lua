@@ -4,11 +4,19 @@ if type(ns) ~= "table" then
 end
 
 local DragReorder = ns.ContactsListDragReorder or require("WhisperMessenger.UI.ContactsList.DragReorder")
+local DragGhost = ns.MessengerWindowDragGhost or require("WhisperMessenger.UI.MessengerWindow.DragGhost")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 
+local math_max = math.max
+local math_min = math.min
+
 local DragController = {}
+
+-- The dragged row stays in place, dimmed, while the ghost card follows the cursor.
+local SOURCE_DIM_ALPHA = 0.4
+local INDICATOR_HEIGHT = 2
 
 -- Creates drag-and-drop handlers for contact row reordering.
 --
@@ -17,82 +25,33 @@ local DragController = {}
 -- currentContactsRef : function() -> current contacts list
 -- options            : { onReorder, rowHeight }
 --
--- Returns: { handleDragStart, handleDragStop }
+-- Returns: { handleDragStart, handleDragStop, cancel }
 function DragController.Create(factory, controller, currentContactsRef, options)
   options = options or {}
   local rowH = options.rowHeight or Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  local content = controller.content
+  -- Ghost + indicator live outside the window so its strata flips can't bury them.
+  local host = _G.UIParent or content
 
   local dragState = {
     active = false,
     sourceIndex = nil,
-    ghostFrame = nil,
-    ghostBg = nil,
-    ghostLabel = nil,
+    sourceRow = nil,
+    sourceKey = nil,
+    sourceAlpha = nil,
+    ghost = nil,
     dropIndicator = nil,
     dropIndicatorBg = nil,
   }
 
-  local function createGhostFrame(sourceRow)
-    if dragState.ghostFrame == nil then
-      local ghostParent = sourceRow.parent or controller.content
-      local ghostFrame = factory.CreateFrame("Frame", nil, ghostParent)
-      if ghostFrame == nil then
-        return nil
-      end
-      dragState.ghostFrame = ghostFrame
-
-      if ghostFrame.SetSize and sourceRow.GetWidth and sourceRow.GetHeight then
-        ghostFrame:SetSize(sourceRow:GetWidth(), sourceRow:GetHeight())
-      end
-      if ghostFrame.SetFrameStrata then
-        ghostFrame:SetFrameStrata("TOOLTIP")
-      end
-
-      if ghostFrame.CreateTexture then
-        local ghostBg = ghostFrame:CreateTexture(nil, "BACKGROUND")
-        dragState.ghostBg = ghostBg
-        if ghostBg and ghostBg.SetAllPoints then
-          ghostBg:SetAllPoints()
-        end
-        if ghostBg then
-          applyColorTexture(ghostBg, Theme.COLORS.bg_contact_selected)
-        end
-      end
-
-      if ghostFrame.SetAlpha then
-        ghostFrame:SetAlpha(0.7)
-      end
-
-      if ghostFrame.CreateFontString then
-        local ghostLabel = ghostFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-        dragState.ghostLabel = ghostLabel
-        if ghostLabel and ghostLabel.SetPoint then
-          ghostLabel:SetPoint("CENTER")
-        end
-        if ghostLabel and ghostLabel.SetJustifyH then
-          ghostLabel:SetJustifyH("CENTER")
-        end
-      end
-    end
-
-    local ghostLabel = dragState.ghostLabel
-    if ghostLabel and ghostLabel.SetText then
-      ghostLabel:SetText(sourceRow.item and sourceRow.item.displayName or "")
-    end
-    return dragState.ghostFrame
-  end
-
   local function createDropIndicator()
     if dragState.dropIndicator == nil then
-      local indicator = factory.CreateFrame("Frame", nil, controller.content)
+      local indicator = factory.CreateFrame("Frame", nil, host)
       if indicator == nil then
         return nil
       end
       dragState.dropIndicator = indicator
-
-      if indicator.SetSize and controller.content.GetWidth then
-        indicator:SetSize(controller.content:GetWidth(), 2)
-      end
+      indicator:SetHeight(INDICATOR_HEIGHT)
       if indicator.CreateTexture then
         local indicatorBg = indicator:CreateTexture(nil, "OVERLAY")
         dragState.dropIndicatorBg = indicatorBg
@@ -107,68 +66,143 @@ function DragController.Create(factory, controller, currentContactsRef, options)
     return dragState.dropIndicator
   end
 
-  local function handleDragStart(sourceRow, sourceIndex)
-    dragState.active = true
-    dragState.sourceIndex = sourceIndex
-    local ghost = createGhostFrame(sourceRow)
-    if ghost and ghost.SetPoint then
-      ghost:SetPoint("CENTER", sourceRow, "CENTER", 0, 0)
+  -- Cursor Y below the list top (content units), before scroll adjustment.
+  local function cursorOffsetY()
+    if type(_G.GetCursorPosition) ~= "function" then
+      return 0
     end
-    if ghost and ghost.Show then
-      ghost:Show()
+    local _, cy = _G.GetCursorPosition()
+    local scale = content.GetEffectiveScale and content:GetEffectiveScale() or 1
+    local contentTop = content.GetTop and content:GetTop() or 0
+    return contentTop - cy / scale
+  end
+
+  local function scrollOffset()
+    local scrollFrame = controller.scrollFrame
+    if scrollFrame and scrollFrame.GetVerticalScroll then
+      return scrollFrame:GetVerticalScroll()
+    end
+    return 0
+  end
+
+  local function computeDrop(sourceIndex)
+    local currentContacts = currentContactsRef()
+    local cursorY = cursorOffsetY()
+    local totalRows = content.visibleCount or #currentContacts
+    local targetIndex = DragReorder.CursorToRowIndex(cursorY, scrollOffset(), rowH, totalRows)
+    local dropIndex = DragReorder.FindDropIndex(currentContacts, sourceIndex, targetIndex)
+    return currentContacts, dropIndex, cursorY
+  end
+
+  -- Accent line on the row boundary where the item will land: below the target
+  -- row when moving down, above it when moving up. Hidden for a no-op drop.
+  local function placeDropIndicator(dropIndex)
+    local indicator = dragState.dropIndicator
+    if indicator == nil then
+      return
+    end
+    local sourceIndex = dragState.sourceIndex
+    if dropIndex == sourceIndex then
+      indicator:Hide()
+      return
+    end
+    local rowsAbove = dropIndex > sourceIndex and dropIndex or dropIndex - 1
+    local lineTop = math_max(0, rowsAbove * rowH - INDICATOR_HEIGHT / 2)
+    local offsetY = lineTop - (sourceIndex - 1) * rowH -- relative to the source row top
+    indicator:ClearAllPoints()
+    indicator:SetPoint("TOPLEFT", dragState.sourceRow, "TOPLEFT", 0, -offsetY)
+    indicator:SetPoint("TOPRIGHT", dragState.sourceRow, "TOPRIGHT", 0, -offsetY)
+    indicator:Show()
+  end
+
+  -- Centre the card on the cursor, kept inside the source item's group rows.
+  local function placeGhost(currentContacts, cursorY)
+    local sourceIndex = dragState.sourceIndex
+    local groupStart, groupEnd = DragReorder.GroupRange(currentContacts, sourceIndex)
+    local wanted = cursorY + scrollOffset() - rowH / 2
+    local top = math_max((groupStart - 1) * rowH, math_min(wanted, (groupEnd - 1) * rowH))
+    DragGhost.MoveTo(dragState.ghost, dragState.sourceRow, top - (sourceIndex - 1) * rowH)
+  end
+
+  -- Ends the drag visuals (drop and cancel share this); returns the source row.
+  local function endDrag()
+    dragState.active = false
+    local sourceRow = dragState.sourceRow
+    dragState.sourceRow = nil
+    if sourceRow and sourceRow.SetAlpha then
+      sourceRow:SetAlpha(dragState.sourceAlpha or 1)
+    end
+    if dragState.ghost then
+      DragGhost.Hide(dragState.ghost)
+    end
+    if dragState.dropIndicator and dragState.dropIndicator.Hide then
+      dragState.dropIndicator:Hide()
+    end
+    if content.SetScript then
+      content:SetScript("OnUpdate", nil)
+    end
+    return sourceRow
+  end
+
+  local function cancel()
+    if dragState.active then
+      endDrag()
+    end
+  end
+
+  -- Window/list hidden mid-drag: OnUpdate stops and OnDragStop may never fire.
+  if content.HookScript then
+    content:HookScript("OnHide", cancel)
+  end
+
+  -- A list refresh can hide the source row or rebind it to another contact.
+  local function sourceRowLost()
+    local row = dragState.sourceRow
+    if row == nil or (row.IsVisible and not row:IsVisible()) then
+      return true
+    end
+    return (row.item and row.item.conversationKey) ~= dragState.sourceKey
+  end
+
+  local function onDragUpdate()
+    if not dragState.active then
+      return
+    end
+    if sourceRowLost() then
+      cancel()
+      return
     end
 
+    local currentContacts, dropIndex, cursorY = computeDrop(dragState.sourceIndex)
+    placeDropIndicator(dropIndex)
+    placeGhost(currentContacts, cursorY)
+  end
+
+  local function handleDragStart(sourceRow, sourceIndex)
+    cancel()
+    dragState.active = true
+    dragState.sourceIndex = sourceIndex
+    dragState.sourceRow = sourceRow
+    dragState.sourceKey = sourceRow.item and sourceRow.item.conversationKey
+    dragState.sourceAlpha = sourceRow.GetAlpha and sourceRow:GetAlpha() or 1
+    if sourceRow.SetAlpha then
+      sourceRow:SetAlpha(SOURCE_DIM_ALPHA)
+    end
+
+    dragState.ghost = dragState.ghost or DragGhost.Create(factory, host)
+    DragGhost.MoveTo(dragState.ghost, sourceRow, 0)
+    DragGhost.Show(dragState.ghost, sourceRow, content)
+
+    -- Accent drop line stays visible over the card.
     local indicator = createDropIndicator()
-    if indicator and indicator.Hide then
+    if indicator then
+      DragGhost.PlaceOnTop(indicator, content)
+      indicator:SetFrameLevel(dragState.ghost.frame:GetFrameLevel() + 2)
       indicator:Hide()
     end
 
-    -- Attach an OnUpdate to track cursor position and update drop indicator
-    if controller.content.SetScript then
-      controller.content:SetScript("OnUpdate", function()
-        if not dragState.active then
-          return
-        end
-
-        local currentContacts = currentContactsRef()
-        local cursorY = 0
-        local scrollOffset = 0
-        if type(_G.GetCursorPosition) == "function" then
-          local _, cy = _G.GetCursorPosition()
-          local scale = controller.content.GetEffectiveScale and controller.content:GetEffectiveScale() or 1
-          local contentTop = 0
-          if controller.content.GetTop then
-            contentTop = controller.content:GetTop() or 0
-          end
-          cursorY = (contentTop - cy / scale)
-        end
-        if controller.scrollFrame and controller.scrollFrame.GetVerticalScroll then
-          scrollOffset = controller.scrollFrame:GetVerticalScroll()
-        end
-
-        local totalRows = controller.content.visibleCount or #currentContacts
-        local targetIndex = DragReorder.CursorToRowIndex(cursorY, scrollOffset, rowH, totalRows)
-        local dropIndex = DragReorder.FindDropIndex(currentContacts, sourceIndex, targetIndex)
-
-        -- Position drop indicator
-        if indicator and indicator.ClearAllPoints then
-          indicator:ClearAllPoints()
-        end
-        if indicator and indicator.SetPoint then
-          indicator:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((dropIndex - 1) * rowH))
-        end
-        if indicator and indicator.Show then
-          indicator:Show()
-        end
-
-        -- Move ghost to follow cursor
-        if ghost and ghost.ClearAllPoints then
-          ghost:ClearAllPoints()
-          if ghost.SetPoint then
-            ghost:SetPoint("TOPLEFT", controller.content, "TOPLEFT", 0, -((targetIndex - 1) * rowH))
-          end
-        end
-      end)
+    if content.SetScript then
+      content:SetScript("OnUpdate", onDragUpdate)
     end
   end
 
@@ -176,42 +210,9 @@ function DragController.Create(factory, controller, currentContactsRef, options)
     if not dragState.active then
       return
     end
-    dragState.active = false
+    local currentContacts, dropIndex = computeDrop(sourceIndex)
+    endDrag()
 
-    local currentContacts = currentContactsRef()
-
-    -- Calculate final drop position from cursor
-    local cursorY = 0
-    local scrollOffset = 0
-    if type(_G.GetCursorPosition) == "function" then
-      local _, cy = _G.GetCursorPosition()
-      local scale = controller.content.GetEffectiveScale and controller.content:GetEffectiveScale() or 1
-      local contentTop = 0
-      if controller.content.GetTop then
-        contentTop = controller.content:GetTop() or 0
-      end
-      cursorY = (contentTop - cy / scale)
-    end
-    if controller.scrollFrame and controller.scrollFrame.GetVerticalScroll then
-      scrollOffset = controller.scrollFrame:GetVerticalScroll()
-    end
-
-    local totalRows = controller.content.visibleCount or #currentContacts
-    local targetIndex = DragReorder.CursorToRowIndex(cursorY, scrollOffset, rowH, totalRows)
-    local dropIndex = DragReorder.FindDropIndex(currentContacts, sourceIndex, targetIndex)
-
-    -- Clean up visuals
-    if dragState.ghostFrame and dragState.ghostFrame.Hide then
-      dragState.ghostFrame:Hide()
-    end
-    if dragState.dropIndicator and dragState.dropIndicator.Hide then
-      dragState.dropIndicator:Hide()
-    end
-    if controller.content.SetScript then
-      controller.content:SetScript("OnUpdate", nil)
-    end
-
-    -- Fire reorder callback if position changed
     if dropIndex ~= sourceIndex and options.onReorder then
       local orders = DragReorder.ComputeNewOrders(currentContacts, sourceIndex, dropIndex)
       options.onReorder(orders)

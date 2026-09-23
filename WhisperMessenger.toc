@@ -196,6 +196,7 @@ UI/MessengerWindow/LayoutBuilder/OptionsPanelLayout.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSection.lua
 UI/MessengerWindow/LayoutBuilder/ContentSection.lua
 UI/MessengerWindow/LayoutBuilder.lua
+UI/MessengerWindow/DragGhost.lua
 UI/MessengerWindow/DragController.lua
 UI/MessengerWindow/ContactsController.lua
 UI/MessengerWindow/WindowScripts/Buttons/SettingsTabs.lua

@@ -44,32 +44,28 @@ function DragReorder.CursorToRowIndex(cursorY, scrollOffset, rowHeight, totalRow
   return math_max(1, math_min(raw, totalRows))
 end
 
+--- Returns the first and last index of the group (pinned or unpinned) that
+-- holds items[index]. A drag may only move within this range.
+function DragReorder.GroupRange(items, index)
+  local pinStart, pinEnd, unStart, unEnd = DragReorder.GroupBoundaries(items)
+  if items[index].pinned then
+    return pinStart, pinEnd
+  end
+  return unStart, unEnd
+end
+
 --- Finds the valid drop index for a drag from sourceIndex to targetIndex,
 -- clamped within the source item's group boundary.
 function DragReorder.FindDropIndex(items, sourceIndex, targetIndex)
-  local pinStart, pinEnd, unStart, unEnd = DragReorder.GroupBoundaries(items)
-  local source = items[sourceIndex]
-
-  if source.pinned then
-    return math_max(pinStart, math_min(targetIndex, pinEnd))
-  else
-    return math_max(unStart, math_min(targetIndex, unEnd))
-  end
+  local groupStart, groupEnd = DragReorder.GroupRange(items, sourceIndex)
+  return math_max(groupStart, math_min(targetIndex, groupEnd))
 end
 
 --- Computes new sortOrder values after moving an item from sourceIndex to dropIndex.
 -- Returns a table of { [conversationKey] = newSortOrder } for all affected items
 -- within the same group.
 function DragReorder.ComputeNewOrders(items, sourceIndex, dropIndex)
-  local source = items[sourceIndex]
-  local pinStart, pinEnd, unStart, unEnd = DragReorder.GroupBoundaries(items)
-
-  local groupStart, groupEnd
-  if source.pinned then
-    groupStart, groupEnd = pinStart, pinEnd
-  else
-    groupStart, groupEnd = unStart, unEnd
-  end
+  local groupStart, groupEnd = DragReorder.GroupRange(items, sourceIndex)
 
   -- Build ordered list of keys in the group, then move the source
   local keys = {}
