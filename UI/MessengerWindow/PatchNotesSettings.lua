@@ -105,8 +105,6 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
 
   return {
     frame = frame,
-    header = header,
-    bodyText = bodyText,
     refreshTheme = refreshTheme,
     refreshLayout = refreshLayout,
     setLanguage = setLanguage,

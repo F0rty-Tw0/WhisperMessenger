@@ -5,8 +5,9 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
 local PanelRegistry = ns.SettingsControlsPanelRegistry or require("WhisperMessenger.UI.Shared.SettingsControls.PanelRegistry")
+local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.SettingsControls.Header")
+local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
 
 local SettingsControls = {}
 
@@ -28,7 +29,7 @@ function SettingsControls.ToggleColors(activeTheme)
     text = activeTheme.COLORS.text_primary,
     on = activeTheme.COLORS.option_toggle_on or activeTheme.COLORS.online,
     off = activeTheme.COLORS.option_toggle_off or activeTheme.COLORS.offline,
-    border = activeTheme.COLORS.option_toggle_border or activeTheme.COLORS.divider,
+    knob = activeTheme.COLORS.control_knob,
   }
 end
 
@@ -41,47 +42,8 @@ function SettingsControls.OptionButtonColors(activeTheme)
   }
 end
 
--- Settings panel header (title + hint) ----------------------------------------
-
-function SettingsControls.CreateHeader(frame, opts)
-  opts = opts or {}
-  local PADDING = Theme.CONTENT_PADDING
-  local CONTROL_WIDTH = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
-
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
-  title:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
-  title:SetText(opts.title or "")
-  UIHelpers.setTextColor(title, Theme.COLORS.text_primary)
-
-  local hint = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  hint:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
-  hint:SetText(opts.hint or "")
-  if hint.SetWordWrap then
-    hint:SetWordWrap(true)
-  end
-  if hint.SetJustifyH then
-    hint:SetJustifyH("LEFT")
-  end
-  if hint.SetWidth then
-    hint:SetWidth(CONTROL_WIDTH)
-  end
-  UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
-
-  return {
-    title = title,
-    hint = hint,
-    refreshTheme = function(activeTheme)
-      activeTheme = activeTheme or Theme
-      UIHelpers.setTextColor(title, activeTheme.COLORS.text_primary)
-      UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
-    end,
-    refreshLayout = function(width)
-      if hint.SetWidth and type(width) == "number" and width > 0 then
-        hint:SetWidth(width)
-      end
-    end,
-  }
-end
+-- Settings panel header (title + hint): see SettingsControls/Header.lua.
+SettingsControls.CreateHeader = Header.Create
 
 -- Slider row ------------------------------------------------------------------
 
@@ -102,11 +64,9 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
   labelFs:SetText(label)
-  UIHelpers.setTextColor(labelFs, Theme.COLORS.text_primary)
 
   local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
-  UIHelpers.setTextColor(valueFs, Theme.COLORS.text_secondary)
 
   local slider = factory.CreateFrame("Slider", nil, row)
   slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
@@ -120,26 +80,31 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     slider:SetObeyStepOnDrag(true)
   end
 
+  -- Track; SliderSkin.Attach anchors it as a thin centred line.
   local bg = slider:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(slider)
-  applyColorTexture(bg, Theme.COLORS.option_button_bg)
-
-  if slider.SetThumbTexture then
-    slider:SetThumbTexture("Interface\\Buttons\\UI-SliderBar-Button-Horizontal")
-  end
 
   local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
   minLabel:SetText(formatFn and formatFn(min) or tostring(min))
-  UIHelpers.setTextColor(minLabel, Theme.COLORS.text_secondary)
 
   local maxLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
   maxLabel:SetText(formatFn and formatFn(max) or tostring(max))
-  UIHelpers.setTextColor(maxLabel, Theme.COLORS.text_secondary)
+
+  local skin = SliderSkin.Attach(slider, bg)
+
+  local function paintLabels(activeTheme)
+    local valueColor, rangeColor = SliderSkin.LabelColors(activeTheme)
+    UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
+    UIHelpers.setTextColor(valueFs, valueColor)
+    UIHelpers.setTextColor(minLabel, rangeColor)
+    UIHelpers.setTextColor(maxLabel, rangeColor)
+  end
 
   slider:SetValue(initial)
   valueFs:SetText(formatFn and formatFn(initial) or tostring(initial))
+  SliderSkin.Apply(skin, Theme)
+  paintLabels(Theme)
 
   local dragActive = false
   local pendingValue
@@ -147,6 +112,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local layoutResizeActive = false
 
   slider:SetScript("OnValueChanged", function(_self, value, userInput)
+    SliderSkin.UpdateFill(skin)
     if layoutResizeActive then
       return
     end
@@ -224,7 +190,8 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
     label = labelFs,
     value = valueFs,
     slider = slider,
-    sliderBg = bg,
+    fill = skin.fill,
+    thumb = skin.thumb,
     minLabel = minLabel,
     maxLabel = maxLabel,
     setWidth = function(nextWidth)
@@ -235,13 +202,11 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
       layoutResizeActive = true
       slider:SetSize(nextWidth, sliderHeight)
       layoutResizeActive = false
+      SliderSkin.UpdateFill(skin)
     end,
     applyTheme = function(activeTheme)
-      UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
-      UIHelpers.setTextColor(valueFs, activeTheme.COLORS.text_secondary)
-      applyColorTexture(bg, activeTheme.COLORS.option_button_bg)
-      UIHelpers.setTextColor(minLabel, activeTheme.COLORS.text_secondary)
-      UIHelpers.setTextColor(maxLabel, activeTheme.COLORS.text_secondary)
+      SliderSkin.Apply(skin, activeTheme)
+      paintLabels(activeTheme)
     end,
   }
 end

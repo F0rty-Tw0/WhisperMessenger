@@ -223,7 +223,7 @@ function GeneralSettings.Create(factory, parent, config, options)
       frame,
       text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
     ),
     { type = "optionButton" }
   )
@@ -282,21 +282,6 @@ function GeneralSettings.Create(factory, parent, config, options)
   return {
     frame = frame,
     refreshLayout = refreshLayout,
-    maxMessagesSlider = messagesRow.slider,
-    maxConversationsSlider = conversationsRow.slider,
-    retentionSlider = retentionRow.slider,
-    maxMessagesMinLabel = messagesRow.minLabel,
-    maxMessagesMaxLabel = messagesRow.maxLabel,
-    maxConversationsMinLabel = conversationsRow.minLabel,
-    maxConversationsMaxLabel = conversationsRow.maxLabel,
-    retentionMinLabel = retentionRow.minLabel,
-    retentionMaxLabel = retentionRow.maxLabel,
-    clearOnLogoutToggle = clearOnLogoutToggle,
-    hidePreviewToggle = hidePreviewToggle,
-    timeFormatSelector = timeFormatSelector,
-    timeSourceSelector = timeSourceSelector,
-    languageSelector = languageSelector,
-    resetButton = resetButton,
     refreshTheme = refreshTheme,
     setLanguage = applyLanguage,
   }

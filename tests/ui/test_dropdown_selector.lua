@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local dropdownLoaded, DropdownSelector = pcall(require, "WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 assert(dropdownLoaded, "test_dropdown_module: DropdownSelector module contract is required: " .. tostring(DropdownSelector))
 
@@ -52,22 +53,23 @@ return function()
       initial = "default",
       menuHeight = 52,
     })
+    local menu = FindUI.dropdownMenu(selector.row)
 
     local open = selector.button:GetScript("OnClick")
     assert(type(open) == "function", "test_dropdown_open: closed button should open menu")
     open(selector.button)
-    assert(selector.menu:IsShown(), "test_dropdown_open: menu should show after clicking closed button")
+    assert(menu:IsShown(), "test_dropdown_open: menu should show after clicking closed button")
     assert(refreshes == 1, "test_dropdown_refresh: options should refresh on first open")
-    assert(#selector.optionButtons == #source, "test_dropdown_refresh: refreshed options should create option buttons")
+    assert(#FindUI.dropdownOptions(selector.row) == #source, "test_dropdown_refresh: refreshed options should create option buttons")
 
     source = {
       { key = "default", label = "Default" },
       { key = "fira", label = "Fira Sans" },
     }
-    selector.menu:Hide()
+    menu:Hide()
     open(selector.button)
     assert(refreshes == 2, "test_dropdown_refresh: options should refresh on every open")
-    assert(#selector.optionButtons == #source, "test_dropdown_refresh: second open should replace option buttons")
+    assert(#FindUI.dropdownOptions(selector.row) == #source, "test_dropdown_refresh: second open should replace option buttons")
 
     source = {
       { key = "default", label = "Default" },
@@ -76,24 +78,21 @@ return function()
       { key = "charlie", label = "Charlie" },
       { key = "delta", label = "Delta" },
     }
-    selector.menu:Hide()
+    menu:Hide()
     open(selector.button)
-    assert(selector.menu.clipsChildren == true, "test_dropdown_scroll: menu should clip overflowing option buttons")
-    assert(selector.menu:GetHeight() == 52, "test_dropdown_scroll: menu should retain configured viewport height")
-    assert(selector.menu:GetVerticalScrollRange() > 0, "test_dropdown_scroll: overflowing options should create a scroll range")
-    local wheel = selector.menu:GetScript("OnMouseWheel")
+    assert(menu.clipsChildren == true, "test_dropdown_scroll: menu should clip overflowing option buttons")
+    assert(menu:GetHeight() == 52, "test_dropdown_scroll: menu should retain configured viewport height")
+    assert(menu:GetVerticalScrollRange() > 0, "test_dropdown_scroll: overflowing options should create a scroll range")
+    local wheel = menu:GetScript("OnMouseWheel")
     assert(type(wheel) == "function", "test_dropdown_scroll: menu should handle mouse wheel")
     for _ = 1, 20 do
-      wheel(selector.menu, -1)
+      wheel(menu, -1)
     end
-    assert(
-      selector.menu:GetVerticalScroll() == selector.menu:GetVerticalScrollRange(),
-      "test_dropdown_scroll: wheel down should clamp at menu bottom"
-    )
+    assert(menu:GetVerticalScroll() == menu:GetVerticalScrollRange(), "test_dropdown_scroll: wheel down should clamp at menu bottom")
     for _ = 1, 20 do
-      wheel(selector.menu, 1)
+      wheel(menu, 1)
     end
-    assert(selector.menu:GetVerticalScroll() == 0, "test_dropdown_scroll: wheel up should clamp at menu top")
+    assert(menu:GetVerticalScroll() == 0, "test_dropdown_scroll: wheel up should clamp at menu top")
   end
 
   -- test_parent_hide_closes_open_menu
@@ -109,11 +108,12 @@ return function()
       fallbackKey = "default",
       initial = "default",
     })
+    local menu = FindUI.dropdownMenu(selector.row)
 
     selector.button:GetScript("OnClick")(selector.button)
-    assert(selector.menu:IsShown(), "test_dropdown_parent_hide: menu should open before parent hides")
+    assert(menu:IsShown(), "test_dropdown_parent_hide: menu should open before parent hides")
     lifecycleParent:Hide()
-    assert(not selector.menu:IsShown(), "test_dropdown_parent_hide: hiding parent should close open menu")
+    assert(not menu:IsShown(), "test_dropdown_parent_hide: hiding parent should close open menu")
   end
 
   -- test_selection_closes_menu_and_reset_apis_update_control
@@ -133,12 +133,14 @@ return function()
       end,
     })
 
+    local menu = FindUI.dropdownMenu(selector.row)
     selector.button:GetScript("OnClick")(selector.button)
-    local selectOpenSans = selector.optionButtons[2]:GetScript("OnClick")
+    local openSansButton = FindUI.dropdownOptions(selector.row)[2]
+    local selectOpenSans = openSansButton:GetScript("OnClick")
     assert(type(selectOpenSans) == "function", "test_dropdown_select: option button should be clickable")
-    selectOpenSans(selector.optionButtons[2])
+    selectOpenSans(openSansButton)
     assert(changed == "open_sans", "test_dropdown_select: selecting option should call onChange")
-    assert(not selector.menu:IsShown(), "test_dropdown_select: selecting option should close menu")
+    assert(not menu:IsShown(), "test_dropdown_select: selecting option should close menu")
     assert(selector.button.label.text == "Open Sans", "test_dropdown_select: closed button should show selected label")
 
     selector.setSelected("default")

@@ -292,7 +292,7 @@ function IconSettings.Create(factory, parent, config, options)
       frame,
       text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
     ),
     { type = "optionButton" }
   )
@@ -345,18 +345,6 @@ function IconSettings.Create(factory, parent, config, options)
 
   return {
     frame = frame,
-    badgePulseToggle = badgePulseToggle,
-    showBadgeToggle = showBadgeToggle,
-    iconSizeSlider = iconSizeRow.slider,
-    iconDesaturatedToggle = iconDesaturatedToggle,
-    iconModeSelector = iconModeSelector,
-    lockToggleIconToggle = lockToggleIconToggle,
-    shareWidgetPositionToggle = shareWidgetPositionToggle,
-    widgetTransparencySlider = widgetTransparencyRow.slider,
-    widgetMessagePreviewToggle = widgetMessagePreviewToggle,
-    autoDismissSlider = autoDismissRow.slider,
-    positionSelector = positionSelector,
-    resetButton = resetButton,
     refreshTheme = refreshTheme,
     refreshLayout = refreshLayout,
     setLanguage = setLanguage,

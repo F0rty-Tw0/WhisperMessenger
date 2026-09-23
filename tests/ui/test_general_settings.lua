@@ -1,6 +1,30 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local GeneralSettings = require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
 local Theme = require("WhisperMessenger.UI.Theme")
+local Localization = require("WhisperMessenger.Locale.Localization")
+local FindUI = require("tests.helpers.find_ui")
+
+local MAX_MESSAGES = "Max Messages Per Contact"
+local MAX_CONTACTS = "Max Contacts"
+local RETENTION = "Message Retention (hours)"
+
+local function slider(settings, label)
+  return FindUI.slider(settings.frame, label)
+end
+
+-- Min and max range labels hang under the slider, in that order.
+local function rangeLabels(settings, label)
+  local labels = FindUI.ofType(slider(settings, label), "FontString")
+  return labels[1], labels[2]
+end
+
+local function languageButtons(settings, language)
+  return FindUI.selectorButtons(settings.frame, Localization.Text("Interface Language", language))
+end
+
+local function resetButton(settings)
+  return FindUI.byLabel(settings.frame, "Reset to Defaults")
+end
 
 local function colorsMatch(actual, expected)
   if type(actual) ~= "table" or type(expected) ~= "table" then
@@ -35,9 +59,9 @@ return function()
 
     assert(settings ~= nil, "Create should return a table")
     assert(settings.frame ~= nil, "should have a frame")
-    assert(settings.maxMessagesSlider ~= nil, "should have maxMessagesSlider")
-    assert(settings.maxConversationsSlider ~= nil, "should have maxConversationsSlider")
-    assert(settings.retentionSlider ~= nil, "should have retentionSlider")
+    assert(slider(settings, MAX_MESSAGES) ~= nil, "should render a max messages slider")
+    assert(slider(settings, MAX_CONTACTS) ~= nil, "should render a max contacts slider")
+    assert(slider(settings, RETENTION) ~= nil, "should render a retention slider")
   end
 
   -- test_has_labels_for_each_setting
@@ -74,11 +98,11 @@ return function()
       end,
     })
 
-    assert(settings.languageSelector ~= nil, "should expose languageSelector")
-    assert(settings.languageSelector.buttons ~= nil, "languageSelector should expose buttons")
+    local buttons = languageButtons(settings, "ruRU")
+    assert(#buttons > 0, "should render the language selector in Russian")
 
     local ruRUButton = nil
-    for _, button in ipairs(settings.languageSelector.buttons) do
+    for _, button in ipairs(buttons) do
       if button._key == "ruRU" then
         ruRUButton = button
         break
@@ -95,7 +119,7 @@ return function()
     end
     assert(texts["Общие настройки"], "Russian language should translate the General Settings header")
 
-    local englishButton = settings.languageSelector.buttons[2]
+    local englishButton = buttons[2]
     assert(englishButton.scripts and englishButton.scripts.OnClick, "English language button needs OnClick")
     englishButton.scripts.OnClick(englishButton)
     assert(lastChange ~= nil, "language selector click should fire onChange")
@@ -103,11 +127,12 @@ return function()
     assert(lastChange.value == "enUS", "language selector should select enUS")
 
     settings.setLanguage("enUS")
-    assert(settings.languageSelector.buttons[2]._selected == true, "setLanguage should select enUS")
-    assert(settings.languageSelector.buttons[2].label.text == "English", "setLanguage should update English button label")
+    buttons = languageButtons(settings, "enUS")
+    assert(buttons[2]._selected == true, "setLanguage should select enUS")
+    assert(buttons[2].label.text == "English", "setLanguage should update English button label")
 
     ruRUButton = nil
-    for _, button in ipairs(settings.languageSelector.buttons) do
+    for _, button in ipairs(buttons) do
       if button._key == "ruRU" then
         ruRUButton = button
         break
@@ -136,16 +161,13 @@ return function()
       onChange = function() end,
     })
 
-    assert(
-      settings.maxMessagesSlider:GetValue() == 150,
-      "maxMessagesSlider should start at 150, got: " .. tostring(settings.maxMessagesSlider:GetValue())
-    )
-    assert(
-      settings.maxConversationsSlider:GetValue() == 100,
-      "maxConversationsSlider should start at 100, got: " .. tostring(settings.maxConversationsSlider:GetValue())
-    )
+    local maxMessages = slider(settings, MAX_MESSAGES):GetValue()
+    local maxContacts = slider(settings, MAX_CONTACTS):GetValue()
+    local retention = slider(settings, RETENTION):GetValue()
+    assert(maxMessages == 150, "maxMessagesSlider should start at 150, got: " .. tostring(maxMessages))
+    assert(maxContacts == 100, "maxConversationsSlider should start at 100, got: " .. tostring(maxContacts))
     -- Retention slider uses hours: 43200 / 3600 = 12
-    assert(settings.retentionSlider:GetValue() == 12, "retentionSlider should start at 12h, got: " .. tostring(settings.retentionSlider:GetValue()))
+    assert(retention == 12, "retentionSlider should start at 12h, got: " .. tostring(retention))
   end
 
   -- test_on_change_fires_with_updated_values
@@ -163,13 +185,13 @@ return function()
     })
 
     -- Simulate slider change
-    settings.maxMessagesSlider:SetValue(300)
+    slider(settings, MAX_MESSAGES):SetValue(300)
     assert(lastChange ~= nil, "onChange should fire on slider change")
     assert(lastChange.key == "maxMessagesPerConversation", "key should be maxMessagesPerConversation")
     assert(lastChange.value == 300, "value should be 300, got: " .. tostring(lastChange.value))
 
     lastChange = nil
-    settings.retentionSlider:SetValue(48)
+    slider(settings, RETENTION):SetValue(48)
     assert(lastChange ~= nil, "onChange should fire on retention change")
     assert(lastChange.key == "messageMaxAge", "key should be messageMaxAge")
     -- 48 hours = 172800 seconds
@@ -188,20 +210,17 @@ return function()
     })
 
     -- Each slider row should have min and max labels
-    assert(settings.maxMessagesMinLabel ~= nil, "should have maxMessagesMinLabel")
-    assert(settings.maxMessagesMaxLabel ~= nil, "should have maxMessagesMaxLabel")
-    assert(settings.maxMessagesMinLabel.text == "50", "min label should be '50', got: " .. tostring(settings.maxMessagesMinLabel.text))
-    assert(settings.maxMessagesMaxLabel.text == "500", "max label should be '500', got: " .. tostring(settings.maxMessagesMaxLabel.text))
+    local messagesMin, messagesMax = rangeLabels(settings, MAX_MESSAGES)
+    assert(messagesMin and messagesMin.text == "50", "min label should be '50', got: " .. tostring(messagesMin and messagesMin.text))
+    assert(messagesMax and messagesMax.text == "500", "max label should be '500', got: " .. tostring(messagesMax and messagesMax.text))
 
-    assert(settings.maxConversationsMinLabel ~= nil, "should have maxConversationsMinLabel")
-    assert(settings.maxConversationsMaxLabel ~= nil, "should have maxConversationsMaxLabel")
-    assert(settings.maxConversationsMinLabel.text == "10", "min label should be '10', got: " .. tostring(settings.maxConversationsMinLabel.text))
-    assert(settings.maxConversationsMaxLabel.text == "100", "max label should be '100', got: " .. tostring(settings.maxConversationsMaxLabel.text))
+    local contactsMin, contactsMax = rangeLabels(settings, MAX_CONTACTS)
+    assert(contactsMin and contactsMin.text == "10", "min label should be '10', got: " .. tostring(contactsMin and contactsMin.text))
+    assert(contactsMax and contactsMax.text == "100", "max label should be '100', got: " .. tostring(contactsMax and contactsMax.text))
 
-    assert(settings.retentionMinLabel ~= nil, "should have retentionMinLabel")
-    assert(settings.retentionMaxLabel ~= nil, "should have retentionMaxLabel")
-    assert(settings.retentionMinLabel.text == "1", "min label should be '1', got: " .. tostring(settings.retentionMinLabel.text))
-    assert(settings.retentionMaxLabel.text == "168", "max label should be '168', got: " .. tostring(settings.retentionMaxLabel.text))
+    local retentionMin, retentionMax = rangeLabels(settings, RETENTION)
+    assert(retentionMin and retentionMin.text == "1", "min label should be '1', got: " .. tostring(retentionMin and retentionMin.text))
+    assert(retentionMax and retentionMax.text == "168", "max label should be '168', got: " .. tostring(retentionMax and retentionMax.text))
   end
 
   -- test_reset_button_exists
@@ -215,17 +234,8 @@ return function()
       onChange = function() end,
     })
 
-    assert(settings.resetButton ~= nil, "should have a resetButton")
-
-    -- Check it has a label
-    local foundLabel = false
-    for _, child in ipairs(settings.resetButton.children) do
-      if child.text and string.find(child.text, "Reset", 1, true) then
-        foundLabel = true
-        break
-      end
-    end
-    assert(foundLabel, "resetButton should have a label containing 'Reset'")
+    local reset = resetButton(settings)
+    assert(reset.frameType == "Button", "should render a Reset to Defaults button")
   end
 
   -- test_reset_button_restores_defaults
@@ -243,21 +253,20 @@ return function()
     })
 
     -- Verify sliders start at non-default values
-    assert(settings.maxMessagesSlider:GetValue() == 300, "should start at 300")
-    assert(settings.maxConversationsSlider:GetValue() == 50, "should start at 50")
-    assert(settings.retentionSlider:GetValue() == 2, "should start at 2h")
+    local maxMessages = slider(settings, MAX_MESSAGES)
+    local maxContacts = slider(settings, MAX_CONTACTS)
+    local retention = slider(settings, RETENTION)
+    assert(maxMessages:GetValue() == 300, "should start at 300")
+    assert(maxContacts:GetValue() == 50, "should start at 50")
+    assert(retention:GetValue() == 2, "should start at 2h")
 
     -- Click reset
-    assert(settings.resetButton.scripts and settings.resetButton.scripts.OnClick, "resetButton needs OnClick")
-    settings.resetButton.scripts.OnClick(settings.resetButton)
+    FindUI.click(resetButton(settings))
 
     -- Sliders should be back to defaults
-    assert(settings.maxMessagesSlider:GetValue() == 200, "maxMessages should reset to 200, got: " .. tostring(settings.maxMessagesSlider:GetValue()))
-    assert(
-      settings.maxConversationsSlider:GetValue() == 100,
-      "maxConversations should reset to 100, got: " .. tostring(settings.maxConversationsSlider:GetValue())
-    )
-    assert(settings.retentionSlider:GetValue() == 24, "retention should reset to 24h, got: " .. tostring(settings.retentionSlider:GetValue()))
+    assert(maxMessages:GetValue() == 200, "maxMessages should reset to 200, got: " .. tostring(maxMessages:GetValue()))
+    assert(maxContacts:GetValue() == 100, "maxConversations should reset to 100, got: " .. tostring(maxContacts:GetValue()))
+    assert(retention:GetValue() == 24, "retention should reset to 24h, got: " .. tostring(retention:GetValue()))
 
     -- onChange should have fired for each
     assert(changes.maxMessagesPerConversation == 200, "should fire onChange for maxMessagesPerConversation=200")
@@ -280,21 +289,18 @@ return function()
       onChange = function() end,
     })
 
+    local dot = FindUI.toggle(settings.frame, "Clear on logout")
+    -- Second texture of the switch = the rounded track's second fill.
+    local track = FindUI.ofType(dot, "Texture")[2]
     local offDefault = Theme.COLORS.option_toggle_off
-    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offDefault), "expected unchecked toggle to use option_toggle_off")
-    local borderDefault = Theme.COLORS.option_toggle_border
-    assert(colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderDefault), "expected toggle border to use option_toggle_border")
+    assert(colorsMatch(track.color, offDefault), "expected unchecked toggle to use option_toggle_off")
 
-    local onClick = settings.clearOnLogoutToggle.dot:GetScript("OnClick")
+    local onClick = dot:GetScript("OnClick")
     assert(onClick ~= nil, "expected toggle dot click handler")
-    onClick(settings.clearOnLogoutToggle.dot)
+    onClick(dot)
 
     local onDefault = Theme.COLORS.option_toggle_on
-    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onDefault), "expected checked toggle to use option_toggle_on")
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onDefault),
-      "expected checked toggle border to use option_toggle_on for stronger visibility"
-    )
+    assert(colorsMatch(track.color, onDefault), "expected checked toggle to use option_toggle_on")
 
     if Theme.SetPreset then
       Theme.SetPreset("plumber_warm")
@@ -302,20 +308,11 @@ return function()
     end
 
     local onPlumber = Theme.COLORS.option_toggle_on
-    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, onPlumber), "expected checked toggle to repaint with preset option_toggle_on")
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, onPlumber),
-      "expected checked toggle border to repaint with preset option_toggle_on"
-    )
+    assert(colorsMatch(track.color, onPlumber), "expected checked toggle to repaint with preset option_toggle_on")
 
-    onClick(settings.clearOnLogoutToggle.dot)
+    onClick(dot)
     local offPlumber = Theme.COLORS.option_toggle_off
-    assert(colorsMatch(settings.clearOnLogoutToggle.dotBg.color, offPlumber), "expected unchecked toggle to repaint with preset option_toggle_off")
-    local borderPlumber = Theme.COLORS.option_toggle_border
-    assert(
-      colorsMatch(settings.clearOnLogoutToggle.dotBorder.color, borderPlumber),
-      "expected toggle border to repaint with preset option_toggle_border"
-    )
+    assert(colorsMatch(track.color, offPlumber), "expected unchecked toggle to repaint with preset option_toggle_off")
 
     if Theme.SetPreset and previousPreset then
       Theme.SetPreset(previousPreset)

@@ -219,7 +219,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
       frame,
       text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
     ),
     { type = "optionButton" }
   )
@@ -278,18 +278,6 @@ function BehaviorSettings.Create(factory, parent, config, options)
   return {
     frame = frame,
     refreshLayout = refreshLayout,
-    dimToggle = dimToggle,
-    autoFocusToggle = autoFocusToggle,
-    hideFromDefaultChatToggle = hideFromDefaultChatToggle,
-    profanityFilterToggle = profanityFilterToggle,
-    autoOpenIncomingToggle = autoOpenIncomingToggle,
-    autoOpenOutgoingToggle = autoOpenOutgoingToggle,
-    doubleEscapeToggle = doubleEscapeToggle,
-    hideOnCombatToggle = hideOnCombatToggle,
-    showGroupChatsToggle = showGroupChatsToggle,
-    shareTypingToggle = shareTypingToggle,
-    shareReadReceiptsToggle = shareReadReceiptsToggle,
-    resetButton = resetButton,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
   }

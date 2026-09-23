@@ -1,6 +1,19 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local FindUI = require("tests.helpers.find_ui")
+
+-- Text of the first FontString in the panel containing `fragment`.
+local function labelContaining(result, fragment)
+  local label = FindUI.find(result.frame, function(node)
+    return node.frameType == "FontString" and type(node.text) == "string" and string.find(node.text, fragment, 1, true) ~= nil
+  end)
+  return label and label.text
+end
+
+local function resetButton(result)
+  return FindUI.byLabel(result.frame, "Reset to Defaults")
+end
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -12,14 +25,7 @@ return function()
     local config = { dimWhenMoving = true, autoFocusComposer = false }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    local label = nil
-    local row = result.autoFocusToggle.row
-    for _, child in ipairs(row.children) do
-      if child.text and string.find(child.text, "focus", 1, true) then
-        label = child.text
-        break
-      end
-    end
+    local label = labelContaining(result, "focus")
 
     assert(label ~= nil, "test_auto_focus_toggle_label: should have a label with 'focus'")
     assert(string.find(label, "chat input", 1, true) ~= nil, "test_auto_focus_toggle_label: label should say 'chat input', got: " .. tostring(label))
@@ -45,7 +51,7 @@ return function()
     local config = { autoFocusComposer = false }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    local row = result.autoFocusToggle.row
+    local row = FindUI.byLabel(result.frame, "Auto-focus chat input")
     local onEnter = row:GetScript("OnEnter")
     assert(onEnter ~= nil, "test_auto_focus_toggle_has_tooltip: row should have OnEnter script")
 
@@ -62,16 +68,7 @@ return function()
     local config = { hideFromDefaultChat = true }
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.hideFromDefaultChatToggle ~= nil, "test_hide_from_default_chat_toggle: should expose hideFromDefaultChatToggle")
-
-    local label = nil
-    local row = result.hideFromDefaultChatToggle.row
-    for _, child in ipairs(row.children) do
-      if child.text and string.find(child.text, "default chat", 1, true) then
-        label = child.text
-        break
-      end
-    end
+    local label = labelContaining(result, "default chat")
 
     assert(label ~= nil, "test_hide_from_default_chat_toggle: should have a label with 'default chat'")
   end
@@ -82,7 +79,9 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.hideFromDefaultChatToggle ~= nil, "test_hide_from_default_chat_defaults: toggle should exist even with empty config")
+    local toggle = FindUI.toggle(result.frame, "Hide whispers from default chat")
+    assert(toggle ~= nil, "test_hide_from_default_chat_defaults: toggle should exist even with empty config")
+    assert(FindUI.isToggleOn(toggle) == false, "test_hide_from_default_chat_defaults: empty config should leave the toggle off")
   end
 
   -- test_profanity_filter_toggle_exists
@@ -96,16 +95,7 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.profanityFilterToggle ~= nil, "test_profanity_filter_toggle_exists: should expose profanityFilterToggle")
-
-    local label = nil
-    local row = result.profanityFilterToggle.row
-    for _, child in ipairs(row.children) do
-      if child.text and string.find(child.text, "profanity", 1, true) then
-        label = child.text
-        break
-      end
-    end
+    local label = labelContaining(result, "profanity")
 
     assert(label ~= nil, "test_profanity_filter_toggle_exists: should have a label with 'profanity'")
   end
@@ -124,7 +114,9 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.profanityFilterToggle ~= nil, "test_profanity_filter_toggle_reads_cvar: toggle should exist")
+    local toggle = FindUI.toggle(result.frame, "Enable profanity filter")
+    assert(toggle ~= nil, "test_profanity_filter_toggle_reads_cvar: toggle should exist")
+    assert(FindUI.isToggleOn(toggle) == false, "test_profanity_filter_toggle_reads_cvar: CVar 0 should leave the toggle off")
   end
 
   -- test_auto_open_incoming_toggle_exists
@@ -133,27 +125,10 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.autoOpenIncomingToggle ~= nil, "test_auto_open_incoming_toggle_exists: should expose autoOpenIncomingToggle")
-    assert(result.autoOpenOutgoingToggle ~= nil, "test_auto_open_outgoing_toggle_exists: should expose autoOpenOutgoingToggle")
-
-    local incomingLabel = nil
-    local inRow = result.autoOpenIncomingToggle.row
-    for _, child in ipairs(inRow.children) do
-      if child.text and string.find(child.text, "incoming", 1, false) then
-        incomingLabel = child.text
-        break
-      end
-    end
+    local incomingLabel = labelContaining(result, "incoming")
     assert(incomingLabel ~= nil, "test_auto_open_incoming_toggle_exists: should have label with 'incoming'")
 
-    local outgoingLabel = nil
-    local outRow = result.autoOpenOutgoingToggle.row
-    for _, child in ipairs(outRow.children) do
-      if child.text and string.find(child.text, "outgoing", 1, false) then
-        outgoingLabel = child.text
-        break
-      end
-    end
+    local outgoingLabel = labelContaining(result, "outgoing")
     assert(outgoingLabel ~= nil, "test_auto_open_outgoing_toggle_exists: should have label with 'outgoing'")
   end
 
@@ -163,8 +138,10 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.autoOpenIncomingToggle ~= nil, "test_auto_open_defaults_to_off: incoming toggle should exist")
-    assert(result.autoOpenOutgoingToggle ~= nil, "test_auto_open_defaults_to_off: outgoing toggle should exist")
+    local incoming = FindUI.toggle(result.frame, "Auto-open on incoming whisper")
+    local outgoing = FindUI.toggle(result.frame, "Auto-open on outgoing whisper")
+    assert(FindUI.isToggleOn(incoming) == false, "test_auto_open_defaults_to_off: incoming toggle should default off")
+    assert(FindUI.isToggleOn(outgoing) == false, "test_auto_open_defaults_to_off: outgoing toggle should default off")
   end
 
   -- test_auto_open_toggles_fire_on_change
@@ -178,14 +155,16 @@ return function()
       end,
     })
 
-    local inClick = result.autoOpenIncomingToggle.dot:GetScript("OnClick")
+    local inDot = FindUI.toggle(result.frame, "Auto-open on incoming whisper")
+    local inClick = inDot:GetScript("OnClick")
     assert(inClick ~= nil, "test_auto_open_incoming_fires: dot should have OnClick")
-    inClick(result.autoOpenIncomingToggle.dot)
+    inClick(inDot)
     assert(changes.autoOpenIncoming ~= nil, "test_auto_open_incoming_fires: should fire onChange with 'autoOpenIncoming' key")
 
-    local outClick = result.autoOpenOutgoingToggle.dot:GetScript("OnClick")
+    local outDot = FindUI.toggle(result.frame, "Auto-open on outgoing whisper")
+    local outClick = outDot:GetScript("OnClick")
     assert(outClick ~= nil, "test_auto_open_outgoing_fires: dot should have OnClick")
-    outClick(result.autoOpenOutgoingToggle.dot)
+    outClick(outDot)
     assert(changes.autoOpenOutgoing ~= nil, "test_auto_open_outgoing_fires: should fire onChange with 'autoOpenOutgoing' key")
   end
 
@@ -209,7 +188,7 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    local row = result.autoOpenIncomingToggle.row
+    local row = FindUI.byLabel(result.frame, "Auto-open on incoming whisper")
     local onEnter = row:GetScript("OnEnter")
     assert(onEnter ~= nil, "test_auto_open_incoming_tooltip: row should have OnEnter script")
 
@@ -231,9 +210,10 @@ return function()
       end,
     })
 
-    local resetOnClick = result.resetButton:GetScript("OnClick")
+    local reset = resetButton(result)
+    local resetOnClick = reset:GetScript("OnClick")
     assert(resetOnClick ~= nil, "test_auto_open_included_in_reset: reset button should have OnClick")
-    resetOnClick(result.resetButton)
+    resetOnClick(reset)
 
     assert(changes.autoOpenIncoming == false, "test_auto_open_included_in_reset: reset should set autoOpenIncoming to false (default)")
     assert(changes.autoOpenOutgoing == false, "test_auto_open_included_in_reset: reset should set autoOpenOutgoing to false (default)")
@@ -245,17 +225,9 @@ return function()
     local config = {}
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
-    assert(result.doubleEscapeToggle ~= nil, "test_double_escape_toggle_exists: should expose doubleEscapeToggle")
-
-    local label = nil
-    local row = result.doubleEscapeToggle.row
-    for _, child in ipairs(row.children) do
-      if child.text and string.find(child.text, "Double ESC", 1, true) then
-        label = child.text
-        break
-      end
-    end
+    local label = labelContaining(result, "Double ESC")
     assert(label ~= nil, "test_double_escape_toggle_exists: label should say 'Double ESC'")
+    assert(FindUI.isToggleOn(FindUI.toggle(result.frame, label)) == false, "test_double_escape_toggle_exists: should default off")
   end
 
   -- test_double_escape_toggle_fires_on_change
@@ -269,9 +241,10 @@ return function()
       end,
     })
 
-    local onClick = result.doubleEscapeToggle.dot:GetScript("OnClick")
+    local dot = FindUI.toggle(result.frame, "Double ESC to close")
+    local onClick = dot:GetScript("OnClick")
     assert(onClick ~= nil, "test_double_escape_fires: dot should have OnClick")
-    onClick(result.doubleEscapeToggle.dot)
+    onClick(dot)
     assert(changes.doubleEscapeToClose ~= nil, "test_double_escape_fires: should fire onChange with 'doubleEscapeToClose' key")
   end
 
@@ -286,9 +259,10 @@ return function()
       end,
     })
 
-    local resetOnClick = result.resetButton:GetScript("OnClick")
+    local reset = resetButton(result)
+    local resetOnClick = reset:GetScript("OnClick")
     assert(resetOnClick ~= nil, "test_double_escape_reset: reset button should have OnClick")
-    resetOnClick(result.resetButton)
+    resetOnClick(reset)
 
     assert(changes.doubleEscapeToClose == false, "test_double_escape_reset: reset should set doubleEscapeToClose to false (default)")
   end
@@ -308,9 +282,10 @@ return function()
     local result = BehaviorSettings.Create(factory, parent, config, { onChange = function() end })
 
     -- Simulate toggling off via the dot button
-    local onClickHandler = result.profanityFilterToggle.dot:GetScript("OnClick")
+    local dot = FindUI.toggle(result.frame, "Enable profanity filter")
+    local onClickHandler = dot:GetScript("OnClick")
     assert(onClickHandler ~= nil, "test_profanity_filter_toggle_writes_cvar: toggle dot should have OnClick")
-    onClickHandler(result.profanityFilterToggle.dot)
+    onClickHandler(dot)
 
     assert(cvarWrites.profanityFilter ~= nil, "test_profanity_filter_toggle_writes_cvar: should have called SetCVar('profanityFilter', ...)")
   end
@@ -338,13 +313,13 @@ return function()
       end,
     })
 
-    assert(result.hideOnCombatToggle ~= nil, "hideOnCombat toggle should be exposed")
-    assert(result.hideOnCombatToggle.getValue() == false, "hideOnCombat should default off")
-    assert(result.hideOnCombatToggle.label.text == "Hide on entering combat", "hideOnCombat should use its label")
+    local row = FindUI.byLabel(result.frame, "Hide on entering combat")
+    local dot = FindUI.toggle(result.frame, "Hide on entering combat")
+    assert(FindUI.isToggleOn(dot) == false, "hideOnCombat should default off")
 
-    local onEnter = result.hideOnCombatToggle.row:GetScript("OnEnter")
+    local onEnter = row:GetScript("OnEnter")
     assert(onEnter ~= nil, "hideOnCombat row should have a tooltip")
-    onEnter(result.hideOnCombatToggle.row)
+    onEnter(row)
     assert(tooltipTitle == "Hide on entering combat", "hideOnCombat tooltip should use its label")
     assert(
       tooltipLines[1]
@@ -352,14 +327,15 @@ return function()
       "hideOnCombat tooltip should explain its one-shot behavior"
     )
 
-    local onClick = result.hideOnCombatToggle.dot:GetScript("OnClick")
+    local onClick = dot:GetScript("OnClick")
     assert(onClick ~= nil, "hideOnCombat dot should have OnClick")
-    onClick(result.hideOnCombatToggle.dot)
+    onClick(dot)
     assert(changes.hideOnCombat == true, "hideOnCombat should persist enabled value")
 
-    local resetOnClick = result.resetButton:GetScript("OnClick")
+    local reset = resetButton(result)
+    local resetOnClick = reset:GetScript("OnClick")
     assert(resetOnClick ~= nil, "hideOnCombat reset button should have OnClick")
-    resetOnClick(result.resetButton)
+    resetOnClick(reset)
     assert(changes.hideOnCombat == false, "hideOnCombat reset should restore default off")
 
     _G.GameTooltip = nil
@@ -380,13 +356,13 @@ return function()
 
     assert(texts["Поведение"], "Russian behavior panel should translate title")
     assert(texts["Настройте поведение окна мессенджера."], "Russian behavior panel should translate hint")
-    assert(result.autoFocusToggle.label.text == "Автофокус ввода чата", "Auto-focus toggle should be localized")
+    assert(FindUI.toggle(result.frame, "Автофокус ввода чата") ~= nil, "Auto-focus toggle should be localized")
     assert(
-      result.hideFromDefaultChatToggle.label.text == "Скрывать шепот из стандартного чата",
+      FindUI.toggle(result.frame, "Скрывать шепот из стандартного чата") ~= nil,
       "Default chat toggle should be localized"
     )
-    assert(result.showGroupChatsToggle.label.text == "Показывать групповые чаты", "Group chats toggle should be localized")
-    assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
+    assert(FindUI.toggle(result.frame, "Показывать групповые чаты") ~= nil, "Group chats toggle should be localized")
+    assert(FindUI.byLabel(result.frame, "Сбросить настройки").frameType == "Button", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })
   end
 end

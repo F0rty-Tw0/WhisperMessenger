@@ -43,7 +43,9 @@ local function pxFormat(v)
 end
 
 function AppearanceSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function() end
+  local onChange = options.onChange or function(...)
+    local _ = ...
+  end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetAllPoints(parent)
@@ -201,7 +203,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       frame,
       text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
     ),
     { type = "optionButton" }
   )
@@ -257,17 +259,6 @@ function AppearanceSettings.Create(factory, parent, config, options)
   return {
     frame = frame,
     refreshLayout = refreshLayout,
-    nativeChromeToggle = nativeChromeToggle,
-    themePresetSelector = themePresetSelector,
-    fontSelector = fontSelector,
-    windowScaleSlider = windowScaleRow.slider,
-    fontSizeSlider = fontSizeRow.slider,
-    fontOutlineSelector = fontOutlineSelector,
-    fontColorSelector = fontColorSelector,
-    bubbleColorSelector = bubbleColorSelector,
-    opacityInactiveSlider = opacityInactiveRow.slider,
-    opacityActiveSlider = opacityActiveRow.slider,
-    resetButton = resetButton,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
   }

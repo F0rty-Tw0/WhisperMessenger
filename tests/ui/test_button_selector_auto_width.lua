@@ -54,11 +54,11 @@ return function()
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
       optionsList = {
-        { key = "a", label = "One" },
-        { key = "b", label = "Two" },
-        { key = "c", label = "Three" },
-        { key = "d", label = "Four" },
-        { key = "e", label = "Five" },
+        { key = "a", label = "1" },
+        { key = "b", label = "2" },
+        { key = "c", label = "3" },
+        { key = "d", label = "4" },
+        { key = "e", label = "5" },
       },
       fallbackKey = "a",
       initial = "a",
@@ -77,8 +77,8 @@ return function()
     local selector = ButtonSelector.Create(factory, parent, {
       labelText = "Test",
       optionsList = {
-        { key = "a", label = "Alpha" },
-        { key = "b", label = "Beta" },
+        { key = "a", label = "A" },
+        { key = "b", label = "B" },
       },
       fallbackKey = "a",
       initial = "a",

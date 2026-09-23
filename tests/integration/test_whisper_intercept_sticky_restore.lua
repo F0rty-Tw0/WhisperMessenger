@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 
 local function loadAddonFromToc(addonName, ns)
   for line in io.lines("WhisperMessenger.toc") do
@@ -205,9 +206,10 @@ return function()
   local selectBehavior = runtime.window.behaviorTab:GetScript("OnClick")
   assert(type(selectBehavior) == "function", "expected behavior tab click handler")
   selectBehavior(runtime.window.behaviorTab)
-  local enableOutgoingClick = runtime.window.behaviorSettings.autoOpenOutgoingToggle.dot:GetScript("OnClick")
+  local outgoingDot = FindUI.toggle(runtime.window.behaviorSettings.frame, "Auto-open on outgoing whisper")
+  local enableOutgoingClick = outgoingDot:GetScript("OnClick")
   assert(type(enableOutgoingClick) == "function", "expected outgoing toggle click handler")
-  enableOutgoingClick(runtime.window.behaviorSettings.autoOpenOutgoingToggle.dot)
+  enableOutgoingClick(outgoingDot)
 
   assert(runtime.accountState.settings.autoOpenOutgoing == true, "expected outgoing auto-open enabled after toggle")
 

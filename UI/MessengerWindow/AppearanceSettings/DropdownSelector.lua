@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local DropdownSelector = {}
@@ -28,14 +29,7 @@ function DropdownSelector.Create(factory, parent, options)
   local menuHeight = options.menuHeight or DEFAULT_MENU_HEIGHT
   local rowHeight = buttonHeight + 20
 
-  local palette = {
-    bg = colors.bg or Theme.COLORS.option_button_bg,
-    bgHover = colors.bgHover or Theme.COLORS.option_button_hover,
-    bgActive = colors.bgActive or Theme.COLORS.option_button_active or Theme.COLORS.option_button_hover,
-    text = colors.text or Theme.COLORS.option_button_text,
-    textHover = colors.textHover or Theme.COLORS.option_button_text_hover,
-    textActive = colors.textActive or Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary,
-  }
+  local palette = DropdownSkin.Palette(Theme.COLORS, colors)
 
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(rowWidth, rowHeight)
@@ -49,14 +43,11 @@ function DropdownSelector.Create(factory, parent, options)
   button:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -labelSpacing)
   button:SetSize(rowWidth, buttonHeight)
 
-  local buttonBg = button:CreateTexture(nil, "BACKGROUND")
-  buttonBg:SetAllPoints(button)
-
+  -- DropdownSkin anchors the label clear of the chevron.
   local buttonLabel = button:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  buttonLabel:SetPoint("LEFT", button, "LEFT", 8, 0)
-  buttonLabel:SetPoint("RIGHT", button, "RIGHT", -8, 0)
   buttonLabel:SetJustifyH("LEFT")
   button.label = buttonLabel
+  local skin = DropdownSkin.Attach(button, buttonLabel)
 
   local menu = factory.CreateFrame("ScrollFrame", nil, row)
   menu:SetPoint("TOPLEFT", button, "BOTTOMLEFT", 0, -2)
@@ -85,12 +76,9 @@ function DropdownSelector.Create(factory, parent, options)
     if type(nextColors) ~= "table" then
       return
     end
-    palette.bg = nextColors.bg or palette.bg
-    palette.bgHover = nextColors.bgHover or palette.bgHover
-    palette.bgActive = nextColors.bgActive or palette.bgActive
-    palette.text = nextColors.text or palette.text
-    palette.textHover = nextColors.textHover or palette.textHover
-    palette.textActive = nextColors.textActive or palette.textActive
+    for key in pairs(palette) do
+      palette[key] = nextColors[key] or palette[key]
+    end
   end
 
   local function findOption(key)
@@ -103,8 +91,7 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function paintClosedButton()
-    applyColorTexture(buttonBg, buttonHovered and palette.bgHover or palette.bg)
-    UIHelpers.setTextColor(buttonLabel, buttonHovered and palette.textHover or palette.text)
+    DropdownSkin.Paint(skin, buttonLabel, buttonHovered)
   end
 
   local function paintOptionButton(optionButton)
@@ -265,8 +252,6 @@ function DropdownSelector.Create(factory, parent, options)
     row = row,
     label = labelFs,
     button = button,
-    menu = menu,
-    optionButtons = optionButtons,
     setSelected = updateSelection,
     setOptionsList = setOptionsList,
     setWidth = function(nextWidth)
@@ -282,14 +267,7 @@ function DropdownSelector.Create(factory, parent, options)
       if type(activeTheme) == "table" and type(activeTheme.COLORS) == "table" then
         UIHelpers.setTextColor(labelFs, activeTheme.COLORS.text_primary)
         if type(nextColors) ~= "table" then
-          nextColors = {
-            bg = activeTheme.COLORS.option_button_bg,
-            bgHover = activeTheme.COLORS.option_button_hover,
-            bgActive = activeTheme.COLORS.option_button_active,
-            text = activeTheme.COLORS.option_button_text,
-            textHover = activeTheme.COLORS.option_button_text_hover,
-            textActive = activeTheme.COLORS.option_button_text_active,
-          }
+          nextColors = DropdownSkin.Palette(activeTheme.COLORS)
         end
       end
       mergePalette(nextColors)

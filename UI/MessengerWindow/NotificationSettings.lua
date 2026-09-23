@@ -80,7 +80,7 @@ function NotificationSettings.Create(factory, parent, config, options)
       frame,
       text("Reset to Defaults"),
       SettingsControls.OptionButtonColors(Theme),
-      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH }
+      { height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, ghost = true }
     ),
     { type = "optionButton" }
   )
@@ -123,9 +123,6 @@ function NotificationSettings.Create(factory, parent, config, options)
 
   return {
     frame = frame,
-    playSoundToggle = playSoundToggle,
-    soundSelector = soundSelector,
-    resetButton = resetButton,
     refreshTheme = refreshTheme,
     refreshLayout = refreshLayout,
     setLanguage = setLanguage,

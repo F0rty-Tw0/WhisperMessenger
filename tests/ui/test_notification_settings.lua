@@ -1,6 +1,15 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local NotificationSettings = require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local FindUI = require("tests.helpers.find_ui")
+
+local function soundButtons(result)
+  return FindUI.selectorButtons(result.frame, "Notification sound")
+end
+
+local function resetButton(result)
+  return FindUI.byLabel(result.frame, "Reset to Defaults")
+end
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -11,13 +20,9 @@ return function()
   do
     local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
 
-    assert(result.playSoundToggle ~= nil, "test_sound_controls_exist: playSoundToggle should not be nil")
-    assert(result.soundSelector ~= nil, "test_sound_controls_exist: soundSelector should not be nil")
-    assert(result.soundSelector.buttons ~= nil, "test_sound_controls_exist: soundSelector.buttons should not be nil")
-    assert(
-      #result.soundSelector.buttons == 16,
-      "test_sound_controls_exist: should have 16 sound buttons, got: " .. tostring(#result.soundSelector.buttons)
-    )
+    assert(FindUI.toggle(result.frame, "Play sound on new whisper") ~= nil, "test_sound_controls_exist: play sound toggle should render")
+    local buttons = soundButtons(result)
+    assert(#buttons == 16, "test_sound_controls_exist: should have 16 sound buttons, got: " .. tostring(#buttons))
   end
 
   -- test_notifications_owns_only_sound_controls
@@ -25,18 +30,18 @@ return function()
   do
     local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
 
-    for _, handle in ipairs({
-      "badgePulseToggle",
-      "showBadgeToggle",
-      "iconSizeSlider",
-      "iconDesaturatedToggle",
-      "iconModeSelector",
-      "lockToggleIconToggle",
-      "widgetMessagePreviewToggle",
-      "autoDismissSlider",
-      "positionSelector",
+    for _, label in ipairs({
+      "Badge pulse animation",
+      "Show unread badge",
+      "Icon Size",
+      "Desaturate icon when idle",
+      "Icon Mode",
+      "Lock icon position",
+      "Show widget message preview",
+      "Auto-dismiss widget preview",
+      "Widget preview position",
     }) do
-      assert(result[handle] == nil, "test_notifications_owns_only_sound_controls: Notifications should not expose " .. handle)
+      assert(FindUI.text(result.frame, label) == nil, "test_notifications_owns_only_sound_controls: Notifications should not render " .. label)
     end
   end
 
@@ -44,7 +49,7 @@ return function()
 
   do
     local result = NotificationSettings.Create(factory, parent, {}, { onChange = function() end })
-    local firstBtn = result.soundSelector.buttons[1]
+    local firstBtn = soundButtons(result)[1]
     assert(firstBtn._selected == true, "test_sound_selector_default_whisper: first (whisper) button should be selected by default")
   end
 
@@ -58,7 +63,7 @@ return function()
       end,
     })
 
-    local pingBtn = result.soundSelector.buttons[2]
+    local pingBtn = soundButtons(result)[2]
     local onClick = pingBtn:GetScript("OnClick")
     assert(onClick ~= nil, "test_sound_selector_fires_on_change: ping button should have OnClick")
     onClick(pingBtn)
@@ -82,9 +87,10 @@ return function()
       end,
     })
 
-    local resetClick = result.resetButton:GetScript("OnClick")
+    local reset = resetButton(result)
+    local resetClick = reset:GetScript("OnClick")
     assert(resetClick ~= nil, "test_reset_restores_only_sound_defaults: resetButton should have OnClick")
-    resetClick(result.resetButton)
+    resetClick(reset)
 
     assert(changes.playSoundOnWhisper == false, "test_reset_restores_only_sound_defaults: playSoundOnWhisper should reset to false")
     assert(changes.notificationSound == "whisper", "test_reset_restores_only_sound_defaults: notificationSound should reset to whisper")
@@ -93,7 +99,7 @@ return function()
       resetCount = resetCount + 1
     end
     assert(resetCount == 2, "test_reset_restores_only_sound_defaults: reset should emit only sound keys")
-    assert(result.soundSelector.buttons[1]._selected == true, "test_reset_restores_only_sound_defaults: first sound should be selected")
+    assert(soundButtons(result)[1]._selected == true, "test_reset_restores_only_sound_defaults: first sound should be selected")
   end
 
   -- test_refresh_layout_resizes_sound_selector
@@ -104,8 +110,20 @@ return function()
     assert(type(result.refreshLayout) == "function", "test_refresh_layout_resizes_sound_selector: refreshLayout should be exposed")
     result.refreshLayout(260)
 
-    assert(result.soundSelector.row.width == 260, "test_refresh_layout_resizes_sound_selector: selector should resize to 260")
-    assert(result.soundSelector.buttons[5].point[1] == "TOPLEFT", "test_refresh_layout_resizes_sound_selector: 5th button should wrap at 260")
+    assert(
+      FindUI.byLabel(result.frame, "Notification sound").width == 260,
+      "test_refresh_layout_resizes_sound_selector: selector should resize to 260"
+    )
+    -- Buttons are sized to fit their labels, so how many share a row depends
+    -- on label width; the row must still wrap at 260.
+    local wrapped = false
+    local buttons = soundButtons(result)
+    for i = 2, #buttons do
+      if buttons[i].point[1] == "TOPLEFT" then
+        wrapped = true
+      end
+    end
+    assert(wrapped, "test_refresh_layout_resizes_sound_selector: buttons should wrap at 260")
     assert(result.frame._wmBottomMarker ~= nil, "test_refresh_layout_resizes_sound_selector: panel should retain bottom marker")
   end
 
@@ -127,9 +145,9 @@ return function()
       texts["Настройте оповещения о входящих сообщениях."],
       "Russian notifications panel should translate hint"
     )
-    assert(result.soundSelector.label.text == "Звук уведомления", "Notification sound label should be localized")
-    assert(result.playSoundToggle.label.text == "Звук при новом шепоте", "Play sound toggle should be localized")
-    assert(result.resetButton.label.text == "Сбросить настройки", "Reset button should be localized")
+    assert(#FindUI.selectorButtons(result.frame, "Звук уведомления") == 16, "Notification sound label should be localized")
+    assert(FindUI.toggle(result.frame, "Звук при новом шепоте") ~= nil, "Play sound toggle should be localized")
+    assert(FindUI.byLabel(result.frame, "Сбросить настройки").frameType == "Button", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })
   end
 
