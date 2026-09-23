@@ -3,8 +3,11 @@
 local Texture = {}
 
 function Texture.Augment(frame)
+  -- Models WoW textures where the colour/vertex alpha and Region:SetAlpha
+  -- share ONE channel: whichever is written last wins (self.alpha).
   function frame:SetColorTexture(...)
     self.color = { ... }
+    self.alpha = select(4, ...) or 1
   end
 
   function frame:SetTexture(path)
@@ -17,6 +20,7 @@ function Texture.Augment(frame)
 
   function frame:SetVertexColor(...)
     self.vertexColor = { ... }
+    self.alpha = select(4, ...) or 1
   end
 
   function frame:SetDesaturated(value)

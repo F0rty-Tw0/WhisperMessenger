@@ -5,6 +5,9 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Base = ns.UIHelpersBase or require("WhisperMessenger.UI.Helpers.Base")
+local GhostButton = ns.UIHelpersGhostButton or require("WhisperMessenger.UI.Helpers.GhostButton")
+local NavItem = ns.UIHelpersNavItem or require("WhisperMessenger.UI.Helpers.NavItem")
+local ToggleSwitch = ns.UIHelpersToggleSwitch or require("WhisperMessenger.UI.Helpers.ToggleSwitch")
 
 local Controls = {}
 
@@ -30,16 +33,67 @@ function Controls.createOptionButton(factory, parent, label, colors, layout)
     textHover = colors.textHover or colors.text,
   }
 
+  -- `layout.ghost` opts a button into the outline look (`layout.danger`
+  -- makes it the red destructive variant).
+  local ghost = layout.ghost and GhostButton.Attach(button, { danger = layout.danger }) or nil
+  button.ghost = ghost
+  -- `layout.nav` opts a button into the settings-nav list-item look.
+  local nav = layout.nav and NavItem.Attach(button) or nil
+  button.nav = nav
+  button._wmNavActive = false
+
+  if nav then
+    labelFs:ClearAllPoints()
+    labelFs:SetPoint("LEFT", button, "LEFT", NavItem.PADDING_X, 0)
+  end
+
+  local function applyNavState(hovered)
+    if not nav then
+      return false
+    end
+    Base.applyColorTexture(bg, Base.TRANSPARENT)
+    NavItem.Paint(nav, labelFs, button._wmNavActive, hovered)
+    return true
+  end
+
+  local function applyGhostState(hovered)
+    if not ghost then
+      return false
+    end
+    Base.applyColorTexture(bg, Base.TRANSPARENT)
+    GhostButton.Paint(ghost, labelFs, hovered)
+    return true
+  end
+
   local function applyBaseState()
+    if applyNavState(false) or applyGhostState(false) then
+      return
+    end
     local palette = button._wmColors
     Base.applyColorTexture(bg, palette.bg)
     Base.setTextColor(labelFs, palette.text)
   end
 
   local function applyHoverState()
+    if applyNavState(true) or applyGhostState(true) then
+      return
+    end
     local palette = button._wmColors
     Base.applyColorTexture(bg, palette.bgHover or palette.bg)
     Base.setTextColor(labelFs, palette.textHover or palette.text)
+  end
+
+  local function repaint()
+    if button._wmHovered then
+      applyHoverState()
+    else
+      applyBaseState()
+    end
+  end
+
+  button.setNavActive = function(active)
+    button._wmNavActive = active == true
+    repaint()
   end
 
   button.applyThemeColors = function(nextColors)
@@ -57,12 +111,7 @@ function Controls.createOptionButton(factory, parent, label, colors, layout)
         button._wmColors.textHover = nextColors.textHover
       end
     end
-
-    if button._wmHovered then
-      applyHoverState()
-    else
-      applyBaseState()
-    end
+    repaint()
   end
 
   button:SetScript("OnEnter", function()
@@ -92,7 +141,6 @@ end
 function Controls.createToggleRow(factory, parent, label, initial, colors, layout, onChange, tooltip)
   local toggleWidth = layout.width or 280
   local toggleHeight = layout.height or 24
-  local dotSize = 14
 
   local row = factory.CreateFrame("Frame", nil, parent)
   row:SetSize(toggleWidth, toggleHeight)
@@ -102,34 +150,22 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
   labelFs:SetText(label)
 
   local dot = factory.CreateFrame("Button", nil, row)
-  dot:SetSize(dotSize, dotSize)
+  dot:SetSize(ToggleSwitch.TRACK_WIDTH, ToggleSwitch.TRACK_HEIGHT)
   dot:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-
-  local dotBorder = dot:CreateTexture(nil, "BORDER")
-  dotBorder:SetAllPoints(dot)
-
-  local dotBg = dot:CreateTexture(nil, "BACKGROUND")
-  dotBg:SetPoint("TOPLEFT", dot, "TOPLEFT", 1, -1)
-  dotBg:SetPoint("BOTTOMRIGHT", dot, "BOTTOMRIGHT", -1, 1)
 
   row._wmColors = {
     text = colors.text,
     on = colors.on or Theme.COLORS.option_toggle_on or Theme.COLORS.online or { 0.30, 0.82, 0.40, 1.0 },
     off = colors.off or Theme.COLORS.option_toggle_off or Theme.COLORS.offline or { 0.45, 0.45, 0.50, 1.0 },
-    border = colors.border or Theme.COLORS.option_toggle_border or Theme.COLORS.divider or { 0.55, 0.57, 0.64, 0.90 },
+    knob = colors.knob or Theme.COLORS.control_knob,
   }
+
+  local switch = ToggleSwitch.Attach(dot)
 
   local enabled = initial == true
   local function updateVisual()
     Base.setTextColor(labelFs, row._wmColors.text)
-    if enabled then
-      -- Use the active color on the border too so checked toggles read clearly at a glance.
-      Base.applyColorTexture(dotBorder, row._wmColors.on)
-      Base.applyColorTexture(dotBg, row._wmColors.on)
-    else
-      Base.applyColorTexture(dotBorder, row._wmColors.border)
-      Base.applyColorTexture(dotBg, row._wmColors.off)
-    end
+    ToggleSwitch.Paint(switch, dot, enabled, row._wmColors)
   end
   updateVisual()
 
@@ -166,11 +202,7 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
     row = row,
     label = labelFs,
     dot = dot,
-    dotBg = dotBg,
-    dotBorder = dotBorder,
-    getValue = function()
-      return enabled
-    end,
+    switch = switch,
     setValue = function(val)
       enabled = val == true
       updateVisual()
@@ -192,8 +224,8 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
         if nextColors.off ~= nil then
           row._wmColors.off = nextColors.off
         end
-        if nextColors.border ~= nil then
-          row._wmColors.border = nextColors.border
+        if nextColors.knob ~= nil then
+          row._wmColors.knob = nextColors.knob
         end
       end
       updateVisual()

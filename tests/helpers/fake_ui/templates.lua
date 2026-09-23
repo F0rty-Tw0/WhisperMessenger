@@ -22,6 +22,11 @@ function Templates.Apply(frame, template, createFrame)
     function frame:GetTitle()
       return self.title
     end
+  elseif template == "SearchBoxTemplate" then
+    -- Assumed live child keys (verify in-game): Instructions, clearButton, searchIcon.
+    frame.Instructions = frame:CreateFontString(nil, "ARTWORK")
+    frame.clearButton = createFrame("Button", nil, frame, nil)
+    frame.searchIcon = frame:CreateTexture(nil, "OVERLAY")
   end
 end
 

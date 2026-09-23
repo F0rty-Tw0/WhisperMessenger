@@ -5,6 +5,9 @@ end
 
 local Base = {}
 
+-- Shared fully transparent color; treat as read-only.
+Base.TRANSPARENT = { 0, 0, 0, 0 }
+
 function Base.sizeValue(target, getterName, fieldName, fallback)
   if target and type(target[getterName]) == "function" then
     local value = target[getterName](target)
@@ -35,27 +38,6 @@ function Base.applyColorTexture(region, colorTable)
   end
 end
 
--- Paint a pane background with either the active skin's Blizzard texture
--- (if `skinTexturePath` is non-nil) or fall back to the flat color paint.
--- Caller passes the theme color regardless; helper handles the swap so
--- live preset switches between skinned and modern paint clear cleanly.
-function Base.applyPaneBackground(region, colorTable, skinTexturePath)
-  if not region then
-    return
-  end
-  if skinTexturePath and region.SetTexture then
-    region:SetTexture(skinTexturePath)
-    if region.SetVertexColor then
-      region:SetVertexColor(1, 1, 1, 1)
-    end
-  else
-    if region.SetTexture then
-      region:SetTexture(nil)
-    end
-    Base.applyColorTexture(region, colorTable)
-  end
-end
-
 function Base.applyBorderBoxColor(border, colorTable)
   if type(border) ~= "table" or not colorTable then
     return
@@ -63,6 +45,61 @@ function Base.applyBorderBoxColor(border, colorTable)
 
   for _, edge in pairs(border) do
     Base.applyColorTexture(edge, colorTable)
+  end
+end
+
+-- Paint `color` as a gradient between two alphas (Retail SetGradient +
+-- CreateColor; min = left/bottom, max = right/top). The base texture is the
+-- intended colour at its peak alpha and the gradient only scales that alpha
+-- (vertex colours multiply the base), so if the gradient is unsupported or
+-- dropped the worst case is the flat intended colour, never opaque white.
+local function applyAlphaGradient(texture, orientation, color, minAlpha, maxAlpha)
+  if not texture or not texture.SetColorTexture then
+    return
+  end
+  local peak = math.max(minAlpha, maxAlpha)
+  texture:SetColorTexture(color[1], color[2], color[3], peak)
+  local createColor = _G.CreateColor
+  if peak <= 0 or not texture.SetGradient or type(createColor) ~= "function" then
+    return
+  end
+  pcall(texture.SetGradient, texture, orientation, createColor(1, 1, 1, minAlpha / peak), createColor(1, 1, 1, maxAlpha / peak))
+end
+
+-- Left edge at the color's alpha, fading to transparent on the right.
+function Base.applyHorizontalFade(texture, color)
+  applyAlphaGradient(texture, "HORIZONTAL", color, color[4] or 1, 0)
+end
+
+-- Right edge at the color's alpha, fading to transparent on the left.
+function Base.applyHorizontalFadeLeft(texture, color)
+  applyAlphaGradient(texture, "HORIZONTAL", color, 0, color[4] or 1)
+end
+
+-- Transparent at the bottom, the color's alpha at the top.
+function Base.applyVerticalFade(texture, color)
+  applyAlphaGradient(texture, "VERTICAL", color, 0, color[4] or 1)
+end
+
+-- Fill for small hover buttons (new whisper, empty-state start button).
+-- White-plus-alpha tokens use their own alpha, doubled on hover, so the
+-- fill never turns solid white.
+function Base.hoverButtonFill(color, hovered)
+  local alpha = (color[4] or 1) * (hovered and 2 or 1)
+  return { color[1], color[2], color[3], alpha }
+end
+
+-- Show only the listed sides of a createBorderBox table (nil = every side).
+function Base.setBorderEdgesShown(border, visibleSides)
+  if type(border) ~= "table" then
+    return
+  end
+  for side, edge in pairs(border) do
+    if visibleSides == nil or visibleSides[side] then
+      edge:Show()
+    else
+      edge:Hide()
+    end
   end
 end
 
@@ -180,6 +217,17 @@ function Base.fitTextWithEllipsis(label, text, maxWidth)
   end
 
   return ELLIPSIS
+end
+
+-- Creates a frame from a Blizzard template, or returns nil when this client
+-- flavor lacks the template (CreateFrame raises). Callers fall back to their
+-- custom-drawn widget on nil.
+function Base.createTemplatedFrame(factory, frameType, name, parent, template)
+  local ok, frame = pcall(factory.CreateFrame, frameType, name, parent, template)
+  if ok then
+    return frame
+  end
+  return nil
 end
 
 ns.UIHelpersBase = Base

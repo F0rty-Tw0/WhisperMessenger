@@ -7,6 +7,7 @@ local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
+local Shapes = require("WhisperMessenger.UI.Helpers.Shapes")
 
 local function findBubble(contentFrame)
   for _, frame in ipairs(contentFrame._activeFrames or {}) do
@@ -171,13 +172,18 @@ return function()
     )
     local border = picker._border
     assert(border and border.top and border.left and border.right and border.bottom, "picker should create four border edges")
-    assert(border.top.height == 1 and border.bottom.height == 1, "horizontal picker border edges should be 1px")
-    assert(border.left.width == 1 and border.right.width == 1, "vertical picker border edges should be 1px")
+    -- Hairlines are drawn as exactly one physical pixel.
+    local px = Shapes.hairlineThickness(picker, 1)
+    assert(border.top.height == px and border.bottom.height == px, "horizontal picker border edges should be one hairline")
+    assert(border.left.width == px and border.right.width == px, "vertical picker border edges should be one hairline")
     local borderThemeColor = Theme.COLORS.contacts_border_right or Theme.COLORS.divider
     for _, edge in pairs(border) do
       assert(
-        edge.color[1] == borderThemeColor[1] and edge.color[2] == borderThemeColor[2] and edge.color[3] == borderThemeColor[3] and edge.color[4] == 1,
-        "picker border should use strong current theme color"
+        edge.color[1] == borderThemeColor[1]
+          and edge.color[2] == borderThemeColor[2]
+          and edge.color[3] == borderThemeColor[3]
+          and edge.color[4] == borderThemeColor[4],
+        "picker border should use the current theme hairline color with its own alpha (modern)"
       )
     end
 
@@ -198,8 +204,8 @@ return function()
     )
     for _, edge in pairs(border) do
       assert(
-        edge.color[1] == 0.44 and edge.color[2] == 0.55 and edge.color[3] == 0.66 and edge.color[4] == 1,
-        "picker reopen should reapply current strong border color"
+        edge.color[1] == 0.44 and edge.color[2] == 0.55 and edge.color[3] == 0.66 and edge.color[4] == 0.10,
+        "picker reopen should reapply the current border color (modern keeps its alpha)"
       )
     end
     Theme.COLORS.bg_header = savedBackground
@@ -257,8 +263,11 @@ return function()
     picker._reactionButtons[1].scripts.OnEnter(picker._reactionButtons[1])
     local hoverColor = picker._reactionButtons[1]._selectedMark.color
     assert(
-      hoverColor[1] == hoverTheme[1] and hoverColor[2] == hoverTheme[2] and hoverColor[3] == hoverTheme[3] and hoverColor[4] == 0.35,
-      "hover highlight should use hover theme RGB with alpha 0.35"
+      hoverColor[1] == hoverTheme[1]
+        and hoverColor[2] == hoverTheme[2]
+        and hoverColor[3] == hoverTheme[3]
+        and hoverColor[4] == math.min(1, (hoverTheme[4] or 1) * 2),
+      "modern hover highlight should use hover theme RGB at double the token alpha (never a fixed white box)"
     )
     local copyHighlight = picker._copyButton._highlight
     assert(copyHighlight, "Copy Text should expose a hover highlight")
@@ -285,8 +294,8 @@ return function()
     picker._reactionButtons[1].scripts.OnEnter(picker._reactionButtons[1])
     hoverColor = picker._reactionButtons[1]._selectedMark.color
     assert(
-      hoverColor[1] == 0.71 and hoverColor[2] == 0.62 and hoverColor[3] == 0.53 and hoverColor[4] == 0.35,
-      "picker reopen should reapply hover RGB with forced alpha"
+      hoverColor[1] == 0.71 and hoverColor[2] == 0.62 and hoverColor[3] == 0.53 and hoverColor[4] == 1,
+      "picker reopen should reapply hover RGB at double the token alpha (capped at 1)"
     )
     picker._reactionButtons[1].scripts.OnLeave(picker._reactionButtons[1])
     Theme.COLORS.option_button_hover = savedOptionHover
@@ -366,7 +375,6 @@ return function()
   -- Custom picker preserves a labeled Copy Text action.
   do
     local copied
-    local savedLanguage = Localization.GetConfiguredLanguage()
     Localization.Configure({ language = "deDE" })
     _G.C_Clipboard = {
       SetClipboard = function(text)
@@ -394,7 +402,7 @@ return function()
     picker._copyButton.scripts.OnClick(picker._copyButton)
     assert(copied == "copy this reaction target", "Copy Text should preserve existing clipboard path")
     assert(picker.shown == false, "Copy Text should dismiss picker")
-    Localization.Configure({ language = savedLanguage })
+    Localization.Configure({ language = "auto" })
   end
 
   -- Censored incoming messages become eligible only after reveal.

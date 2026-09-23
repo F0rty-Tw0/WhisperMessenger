@@ -106,6 +106,8 @@ read_globals = {
   "UnitGUID",
   "UnitClass",
   "UnitFactionGroup",
+  "GetPhysicalScreenSize",
+  "CreateColor",
   "UnitIsConnected",
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",

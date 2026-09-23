@@ -99,8 +99,13 @@ UI/Theme/Textures.lua
 UI/Theme/Theme.lua
 UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
+UI/Helpers/HoverFade.lua
+UI/Helpers/GhostButton.lua
+UI/Helpers/NavItem.lua
+UI/Helpers/ToggleSwitch.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua

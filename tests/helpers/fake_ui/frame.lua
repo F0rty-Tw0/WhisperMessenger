@@ -329,6 +329,18 @@ local function makeCreateFrame()
       self.justifyV = value
     end
 
+    function frame:SetShadowOffset(x, y)
+      self.shadowOffset = { x, y }
+    end
+
+    function frame:SetSnapToPixelGrid(value)
+      self.snapToPixelGrid = value
+    end
+
+    function frame:SetTexelSnappingBias(value)
+      self.texelSnappingBias = value
+    end
+
     function frame:SetWordWrap(value)
       self.wordWrap = value
     end
