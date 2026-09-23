@@ -126,7 +126,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
 
   local headerDivider = HeaderElements.createDivider(headerFrame)
 
-  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory)
+  local headerEmpty = HeaderElements.createEmptyState(pane, selectedContact, factory, options.nativeChrome == true)
 
   -- Channel chip: small label shown for group conversations to the right of
   -- the header name. Hidden for whisper conversations.
@@ -279,6 +279,10 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
 
     if view.headerEmpty then
       view.headerEmpty:SetShown(not hasContact)
+    end
+    -- Native WoW HUD: no empty header strip above the welcome screen.
+    if view.hideEmptyHeader then
+      view.headerFrame:SetShown(hasContact)
     end
   else
     -- Fallback: legacy header (should not happen after Create, but kept for safety)

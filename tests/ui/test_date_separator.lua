@@ -39,4 +39,53 @@ return function()
 
     Theme.COLORS.divider = savedDivider
   end
+
+  -- Pooled separator whose lines record SetGradient / SetVertexColor calls,
+  -- rendered once under `preset`.
+  local function renderWithGradientSpy(preset)
+    local pooled
+    local poolingFactory = {
+      CreateFrame = function(...)
+        if pooled == nil then
+          pooled = innerFactory.CreateFrame(...)
+        end
+        return pooled
+      end,
+    }
+    local frame = DateSeparator.CreateDateSeparator(poolingFactory, parent, ts, 400).frame
+    for _, line in ipairs({ frame._lineLeft, frame._lineRight }) do
+      rawset(line, "SetGradient", function(self, orientation, minColor, maxColor)
+        self.gradient = { orientation = orientation, from = minColor, to = maxColor }
+      end)
+    end
+    Theme.SetPreset(preset)
+    DateSeparator.CreateDateSeparator(poolingFactory, parent, ts, 400)
+    return frame
+  end
+
+  local previousPreset = Theme.GetPreset()
+  local previousCreateColor = _G.CreateColor
+  rawset(_G, "CreateColor", function(r, g, b, a)
+    return { r = r, g = g, b = b, a = a }
+  end)
+
+  -- test_modern_divider_lines_fade_toward_outer_edges
+  do
+    local frame = renderWithGradientSpy("wow_default")
+    local left = frame._lineLeft.gradient
+    assert(left and left.orientation == "HORIZONTAL", "left line gets a horizontal gradient")
+    assert(left.from.a == 0 and left.to.a == 1, "left line: transparent far left -> full near label")
+    local right = frame._lineRight.gradient
+    assert(right and right.orientation == "HORIZONTAL", "right line gets a horizontal gradient")
+    assert(right.from.a == 1 and right.to.a == 0, "right line: full near label -> transparent far right")
+  end
+
+  -- test_azeroth_divider_lines_fade_too
+  do
+    local frame = renderWithGradientSpy("wow_native")
+    assert(frame._lineLeft.gradient ~= nil and frame._lineRight.gradient ~= nil, "Azeroth lines fade like every preset")
+  end
+
+  Theme.SetPreset(previousPreset)
+  rawset(_G, "CreateColor", previousCreateColor)
 end
