@@ -12,6 +12,12 @@ local PopupButtonStyling = ns.ChatBubbleContextMenuManualCopyPopupUIButtonStylin
 
 local StyledTextInputPopup = {}
 
+-- Native WoW HUD: set once when the window is built (the setting applies after
+-- /reload). When true the popups keep Blizzard's StaticPopup art (dialog
+-- border, InputBoxTemplate edit box, UIPanelButtonTemplate buttons) and only
+-- the text prime / focus / width behaviour runs.
+StyledTextInputPopup.nativeChrome = false
+
 local function resolveEditBox(dialog, dialogName)
   return PopupResolvers.resolvePopupEditBox(dialog, dialogName)
 end
@@ -54,8 +60,11 @@ function StyledTextInputPopup.Apply(dialog, dialogName, data, options)
     return nil
   end
 
-  PopupStyling.styleManualCopyDialog(dialog, dialogName)
-  if options.styleSecondaryButton == true then
+  local native = StyledTextInputPopup.nativeChrome == true
+  if not native then
+    PopupStyling.styleManualCopyDialog(dialog, dialogName)
+  end
+  if not native and options.styleSecondaryButton == true then
     PopupButtonStyling.styleManualCopyButton(PopupResolvers.resolvePopupButton(dialog, 2))
   end
 
@@ -83,8 +92,11 @@ function StyledTextInputPopup.Restore(dialog, dialogName, options)
     return nil
   end
 
-  PopupStyling.restoreManualCopyDialog(dialog, dialogName)
-  if options.styleSecondaryButton == true then
+  local native = StyledTextInputPopup.nativeChrome == true
+  if not native then
+    PopupStyling.restoreManualCopyDialog(dialog, dialogName)
+  end
+  if not native and options.styleSecondaryButton == true then
     PopupButtonStyling.restoreManualCopyButton(PopupResolvers.resolvePopupButton(dialog, 2))
   end
 
