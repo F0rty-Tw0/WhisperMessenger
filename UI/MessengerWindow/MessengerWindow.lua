@@ -29,6 +29,7 @@ local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("Whispe
 local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
 local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local sizeValue = UIHelpers.sizeValue
 local captureFramePosition = UIHelpers.captureFramePosition
 
@@ -74,6 +75,7 @@ function MessengerWindow.Create(factory, options)
   -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips
   -- the frame to BasicFrameTemplateWithInset (gold border, red X) — read
   -- from saved settings so it persists across reloads.
+  StyledTextInputPopup.nativeChrome = settingsConfig.nativeChrome == true
   local chrome = ChromeBuilder.Build(factory, parent, initialState, {
     title = options.title,
     useNativeChrome = settingsConfig.nativeChrome == true,
@@ -128,6 +130,7 @@ function MessengerWindow.Create(factory, options)
   -- Per-tab remembered selection/restore policy. Keep it in a focused helper
   -- so Create only wires runtime dependencies instead of owning the policy.
   local refreshSelection -- forward declaration (used by swap callback below)
+  local conversation -- forward declaration (tab changes retitle its empty state)
   -- IMPORTANT: declare before the `= Create(...)` call so the callbacks
   -- inside the table constructor capture THIS local (not a global/nil).
   -- Lua local scope begins AFTER the declaration statement completes.
@@ -155,11 +158,19 @@ function MessengerWindow.Create(factory, options)
   })
   contactsRuntime = ContactsRuntime.Create(factory, {
     contactsPane = contactsPane,
+    nativeChrome = layout.nativeChrome == true,
     contactsView = contactsView,
     initialContacts = options.contacts or {},
     settingsConfig = settingsConfig,
     initialTabMode = options.initialTabMode,
-    onTabModeChanged = options.onTabModeChanged,
+    onTabModeChanged = function(mode)
+      if conversation and conversation.headerEmpty then
+        conversation.headerEmpty.setMode(mode)
+      end
+      if options.onTabModeChanged then
+        options.onTabModeChanged(mode)
+      end
+    end,
     onTabModeSwapSelection = tabSelectionMemory.onTabModeSwapSelection,
     onSelect = tabSelectionMemory.onSelect,
     onPin = options.onPin,
@@ -187,11 +198,13 @@ function MessengerWindow.Create(factory, options)
   end
 
   -- Conversation pane
-  local conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
+  conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
     onReact = options.onReact,
     canReact = options.canReact,
     onInviteContact = options.onInviteContact,
+    hideEmptyHeader = settingsConfig.nativeChrome == true,
   })
+  conversation.headerEmpty.setMode(contactsRuntime.getTabMode())
 
   -- Composer (created before wiring alpha so we have composer.input)
   local composerSelectedContact = {}
@@ -211,7 +224,7 @@ function MessengerWindow.Create(factory, options)
     local _ = ...
   end, closeWindow, function()
     return settingsConfig.doubleEscapeToClose == true
-  end, options.onTyping)
+  end, options.onTyping, { nativeChrome = layout.nativeChrome == true })
   settingsRuntime.setThemeTargets(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)
@@ -233,8 +246,8 @@ function MessengerWindow.Create(factory, options)
     syncComposerSelectedContact = function(selectedContact)
       SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact)
     end,
-    setComposerEnabled = function(selectedContact, noticeText, status)
-      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText, status)
+    setComposerEnabled = function(selectedContact, noticeText)
+      SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
     end,
     onSelectConversation = options.onSelectConversation,
     getSelectedContact = options.getSelectedContact,
@@ -394,18 +407,11 @@ function MessengerWindow.Create(factory, options)
     newConversationButton = chrome.newConversationButton,
     patchNotesButton = chrome.patchNotesButton,
     contactsPane = layout.contactsPane,
-    contactsPaneBorder = layout.contactsPaneBorder,
     contactsDivider = layout.contactsDivider,
-    contactsRightBorder = layout.contactsRightBorder,
-    contactsHeaderDivider = layout.contactsHeaderDivider,
     contentPane = layout.contentPane,
     headerDivider = layout.headerDivider,
-    titleBarBorder = chrome.titleBarBorder,
-    titleBarTopBorder = chrome.titleBarTopBorder,
     threadPane = layout.threadPane,
     composerPane = layout.composerPane,
-    composerPaneBorder = layout.composerPaneBorder,
-    composerDivider = layout.composerDivider,
     closeButton = chrome.closeButton,
     optionsButton = chrome.optionsButton,
     backButton = chrome.backButton,
@@ -435,12 +441,28 @@ function MessengerWindow.Create(factory, options)
     contactsSearchPlaceholder = layout.contactsSearchPlaceholder,
     resizeGrip = chrome.resizeGrip,
     contactsResizeHandle = layout.contactsResizeHandle,
+    tabToggle = contactsRuntime.tabToggle,
     contacts = contacts,
     conversation = conversation,
     composer = composer,
     refreshContacts = refreshContacts,
     refreshSelection = refreshSelection,
-    refreshTheme = refreshThemeVisuals,
+    refreshTheme = function()
+      refreshThemeVisuals()
+      -- Tab bar reads colours at paint time; re-set the current mode to
+      -- repaint it without firing the mode-change callback.
+      local tabToggle = contactsRuntime.tabToggle
+      if tabToggle then
+        tabToggle.setMode(tabToggle.getMode())
+      end
+      -- Re-apply pane anchors and composer geometry for the new theme.
+      relayoutWindow(
+        sizeValue(frame, "GetWidth", "width", initialState.width),
+        sizeValue(frame, "GetHeight", "height", initialState.height),
+        windowGeometry.getContactsWidth(),
+        false
+      )
+    end,
     setScale = setScale,
     refreshLanguage = refreshLanguage,
     refreshTabToggleVisibility = function()

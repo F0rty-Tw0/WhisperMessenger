@@ -26,10 +26,26 @@ function Apply.Relayout(layout, relayout, theme)
   layout.contactsWidth = contactsWidth
 
   layout.contactsPane:SetSize(contactsWidth, contactsHeight)
-  if layout.contactsRightBorder then
-    layout.contactsRightBorder:SetHeight(contactsHeight)
+  -- Re-anchor so the pane keeps its edge insets after every relayout.
+  local contactsPaneParent = layout.contactsPane.GetParent and layout.contactsPane:GetParent() or layout.contactsPane.parent
+  if contactsPaneParent and layout.contactsPane.ClearAllPoints then
+    layout.contactsPane:ClearAllPoints()
+    layout.contactsPane:SetPoint(
+      "TOPLEFT",
+      contactsPaneParent,
+      "TOPLEFT",
+      layoutTheme.CONTACTS_PANE_LEFT_INSET,
+      layout.contactsTopOffset or -layoutTheme.TOP_BAR_HEIGHT
+    )
+    layout.contactsPane:SetPoint(
+      "BOTTOMLEFT",
+      contactsPaneParent,
+      "BOTTOMLEFT",
+      layoutTheme.CONTACTS_PANE_BOTTOM_LEFT_INSET,
+      layoutTheme.CONTACTS_PANE_BOTTOM_INSET
+    )
   end
-  layout.contactsDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, contactsHeight)
+  layout.contactsDivider:SetSize(UIHelpers.hairlineThickness(layout.contactsDivider, resolvedTheme.DIVIDER_THICKNESS), contactsHeight)
   if layout.contactsResizeHandle then
     local handleWidth =
       sizeValue(layout.contactsResizeHandle, "GetWidth", "width", layout.contactsHandleWidth or Theme.LAYOUT.CONTACTS_RESIZE_HANDLE_WIDTH)
@@ -41,11 +57,12 @@ function Apply.Relayout(layout, relayout, theme)
   end
 
   if layout.contactsSearchFrame then
-    layout.contactsSearchFrame:SetSize(math.max(0, contactsWidth - (searchMargin * 2)), searchHeight)
+    local insetX = resolvedTheme.LAYOUT.CONTACT_SEARCH_INSET_X or searchMargin
+    layout.contactsSearchFrame:SetSize(math.max(0, contactsWidth - (insetX * 2)), searchHeight)
     if layout.contactsSearchFrame.ClearAllPoints then
       layout.contactsSearchFrame:ClearAllPoints()
     end
-    layout.contactsSearchFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", searchMargin, -searchMargin)
+    layout.contactsSearchFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", insetX, -searchMargin)
   end
 
   layout.contentPane:SetSize(contentWidth, contentHeight)
@@ -75,21 +92,22 @@ function Apply.Relayout(layout, relayout, theme)
       Theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET
     )
   end
-  if layout.contactsHeaderDivider then
-    layout.contactsHeaderDivider:SetSize(contactsWidth, resolvedTheme.DIVIDER_THICKNESS)
-  end
   if layout.headerDivider then
-    layout.headerDivider:SetSize(contentWidth, resolvedTheme.DIVIDER_THICKNESS)
+    layout.headerDivider:SetSize(contentWidth, UIHelpers.hairlineThickness(layout.headerDivider, resolvedTheme.DIVIDER_THICKNESS))
   end
   layout.threadPane:SetSize(contentWidth, threadHeight)
   -- composerPane width tracks contentPane's *actual* current width (after
   -- contentPane's dual-anchor settles). Reading live geometry instead of
   -- `contentWidth` (the precomputed full content width) means the SetSize
-  -- matches the dual-anchor in production WoW where contentPane is 5px
-  -- shorter than `contentWidth` due to its own BOTTOMRIGHT (-5, 5) margin.
+  -- matches the dual-anchor in production WoW where contentPane is
+  -- shorter than `contentWidth` by CONTENT_PANE_RIGHT_INSET.
   local contentPaneWidth = (layout.contentPane.GetWidth and layout.contentPane:GetWidth()) or layout.contentPane.width or contentWidth
   layout.composerPane:SetSize(contentPaneWidth, resolvedTheme.COMPOSER_HEIGHT)
-  layout.composerDivider:SetSize(contentWidth, resolvedTheme.DIVIDER_THICKNESS)
+  if layout.composerPane.ClearAllPoints then
+    layout.composerPane:ClearAllPoints()
+    layout.composerPane:SetPoint("BOTTOMLEFT", layout.contentPane, "BOTTOMLEFT", 0, 0)
+    layout.composerPane:SetPoint("BOTTOMRIGHT", layout.contentPane, "BOTTOMRIGHT", 0, 0)
+  end
 
   -- Resize contacts scroll view while preserving its content height and scroll position.
   local cv = layout.contactsView
@@ -116,13 +134,12 @@ function Apply.Relayout(layout, relayout, theme)
   -- Resize options overlay to match new window dimensions. optionsPanel's
   -- size is fully driven by its dual-anchor (TOPLEFT + BOTTOMRIGHT to
   -- parent) — DON'T call SetSize on it, that would override the anchor
-  -- with the outer windowWidth (which is wider than Inset under Azeroth)
+  -- with the outer windowWidth (which is wider than Inset under the HUD)
   -- and overflow the gold border.
   local optionsHeight = contactsHeight
-  local windowWidth = relayout.windowWidth
-  -- Inner content width matches the shrunk options panel (windowWidth - 20
-  -- for the 10px each side margin) minus the menu column + divider.
-  local optionsContentWidth = (windowWidth - 20) - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
+  -- Inner content width (Metrics): options panel width minus the menu
+  -- column + divider.
+  local optionsContentWidth = relayout.optionsContentWidth
   layout.optionsMenu:SetSize(contactsWidth, optionsHeight)
   layout.optionsMenuDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, optionsHeight)
   layout.optionsContentPane:SetSize(optionsContentWidth, optionsHeight)

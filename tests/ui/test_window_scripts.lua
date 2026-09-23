@@ -724,16 +724,11 @@ return function()
     end
 
     local contactsDivider = frame:CreateTexture(nil, "BORDER")
-    contactsResizeHandle.hoverBg = contactsResizeHandle:CreateTexture(nil, "BACKGROUND")
-    contactsResizeHandle.outline = {
-      top = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
-      bottom = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
-      left = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
-      right = contactsResizeHandle:CreateTexture(nil, "OVERLAY"),
-    }
-    for _, edge in pairs(contactsResizeHandle.outline) do
-      edge:Hide()
-    end
+    local idle = Theme.COLORS.contacts_divider
+    contactsDivider:SetColorTexture(idle[1], idle[2], idle[3], idle[4])
+    contactsResizeHandle.line = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
+    contactsResizeHandle.line:Hide()
+    contactsResizeHandle.lineFade = require("WhisperMessenger.UI.Helpers.HoverFade").Attach(contactsResizeHandle.line)
 
     local relayoutArgs = nil
     local persistedState = nil
@@ -787,32 +782,19 @@ return function()
       "test_wire_frame_wires_contacts_resize_handle_and_persists_width: expected contactsResizeHandle OnMouseUp"
     )
 
-    local activeDividerColor = Theme.COLORS.contacts_divider_hover
-    local activeHoverFill = Theme.COLORS.contacts_resize_hover_fill
-    local activeOutline = Theme.COLORS.contacts_resize_outline
     local idleDividerColor = Theme.COLORS.contacts_divider
 
     contactsResizeHandle.scripts.OnEnter(contactsResizeHandle)
-    assert(
-      contactsDivider.color[1] == activeDividerColor[1] and contactsDivider.color[2] == activeDividerColor[2],
-      "expected contacts divider to use hover color on handle hover"
-    )
-    assert(
-      contactsResizeHandle.hoverBg.color[1] == activeHoverFill[1] and contactsResizeHandle.hoverBg.color[4] == activeHoverFill[4],
-      "expected contacts resize hover fill color to apply on handle hover"
-    )
-    assert(
-      contactsResizeHandle.outline.top.color[1] == activeOutline[1] and contactsResizeHandle.outline.top.shown == true,
-      "expected contacts resize outline to apply on handle hover"
-    )
+    assert(contactsResizeHandle.line.shown == true, "expected contacts resize line to fade in on handle hover")
+    local hoverLine = Theme.COLORS.contacts_divider_hover
+    assert(contactsResizeHandle.line.color[1] == hoverLine[1], "expected contacts resize line in the neutral hover color")
 
     contactsResizeHandle.scripts.OnLeave(contactsResizeHandle)
     assert(
       contactsDivider.color[1] == idleDividerColor[1] and contactsDivider.color[2] == idleDividerColor[2],
       "expected contacts divider to restore idle color after hover"
     )
-    assert(contactsResizeHandle.hoverBg.color[4] == 0, "expected contacts resize hover fill to clear after hover")
-    assert(contactsResizeHandle.outline.top.shown == false, "expected contacts resize outline to hide after hover")
+    assert(contactsResizeHandle.line.shown == false, "expected contacts resize line to hide after hover")
     contactsResizeHandle.scripts.OnMouseDown(contactsResizeHandle, "LeftButton")
     assert(relayoutArgs ~= nil, "expected relayout call while resizing contacts")
     assert(relayoutArgs.contactsWidth == 160, "expected requested contacts width 160 from cursor delta")

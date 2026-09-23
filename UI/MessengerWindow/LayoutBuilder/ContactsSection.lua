@@ -8,9 +8,12 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local LayoutMetrics = ns.MessengerWindowLayoutMetrics or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
+local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.HoverFade")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContactsSection = {}
+
+local RESIZE_LINE_WIDTH = 2
 
 function ContactsSection.Build(factory, frame, sizing, options)
   options = options or {}
@@ -31,61 +34,36 @@ function ContactsSection.Build(factory, frame, sizing, options)
   local contactsHandleWidth = layoutMetrics.GetContactsResizeHandleWidth(theme)
   local _, _, searchClearButtonSize = layoutMetrics.ContactsSearchMetrics(theme)
 
-  local dividerColor = theme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
-  local contactsSectionBorderColor = theme.COLORS.contacts_border_right or theme.COLORS.contacts_divider or dividerColor
-  local strongContactsBorderColor = {
-    contactsSectionBorderColor[1],
-    contactsSectionBorderColor[2],
-    contactsSectionBorderColor[3],
-    contactsSectionBorderColor[4] or 1,
-  }
-
-  -- Stage 2 + 3 of BasicFrameTemplateWithInset migration: anchor content
-  -- inside the template's Inset frame and dual-anchor (TOPLEFT + BOTTOMLEFT)
-  -- so the contacts pane auto-fills Inset's height. Without dual-anchor the
+  -- Native WoW HUD: anchor content inside the chrome's content area and
+  -- dual-anchor (TOPLEFT + BOTTOMLEFT) so the contacts pane auto-fills its
+  -- parent's height. Without dual-anchor the
   -- pane uses a stale `initialState.height - TOP_BAR_HEIGHT` height that's
-  -- shorter than Inset, leaving a visible gap at the bottom of the window.
-  local contactsPaneParent = frame.Inset or frame
+  -- shorter than its parent, leaving a visible gap at the bottom of the window.
+  local contactsPaneParent = frame.contentArea or frame
   local contactsPane = factory.CreateFrame("Frame", nil, contactsPaneParent)
   contactsPane:SetSize(contactsWidth, contactsHeight)
-  -- Same 8px left + 24px top offset under both chromes — only the chrome
-  -- itself is conditional on Azeroth, layout sizes/positions stay uniform.
-  contactsPane:SetPoint("TOPLEFT", contactsPaneParent, "TOPLEFT", 6, -theme.LAYOUT.TOP_BAR_HEIGHT)
-  contactsPane:SetPoint("BOTTOMLEFT", contactsPaneParent, "BOTTOMLEFT", 7, 6)
+  -- Edge insets from the window edge (Theme.LAYOUT).
+  local L = theme.LAYOUT
+  -- Native WoW HUD: the content area already clears the template title bar,
+  -- so content starts at its top and lets the template texture show through.
+  local nativeChrome = frame.contentArea ~= nil
+  local contactsTopOffset = nativeChrome and 0 or -L.TOP_BAR_HEIGHT
+  contactsPane:SetPoint("TOPLEFT", contactsPaneParent, "TOPLEFT", L.CONTACTS_PANE_LEFT_INSET, contactsTopOffset)
+  contactsPane:SetPoint("BOTTOMLEFT", contactsPaneParent, "BOTTOMLEFT", L.CONTACTS_PANE_BOTTOM_LEFT_INSET, L.CONTACTS_PANE_BOTTOM_INSET)
 
-  -- Contacts pane background and section border
+  -- Contacts pane background
   local contactsPaneBg = contactsPane:CreateTexture(nil, "BACKGROUND")
   contactsPaneBg:SetAllPoints(contactsPane)
-  applyTexture(contactsPaneBg, theme.COLORS.bg_secondary)
-  local contactsPaneEdges = uiHelpers.createBorderBox(
-    contactsPane,
-    strongContactsBorderColor,
-    theme.DIVIDER_THICKNESS,
-    "BORDER",
-    { top = false, left = true, right = true, bottom = true }
-  )
-  local contactsHeaderDivider = contactsPane:CreateTexture(nil, "BORDER")
-  contactsHeaderDivider:SetPoint("TOPLEFT", contactsPane, "TOPLEFT", 0, 0)
-  contactsHeaderDivider:SetPoint("TOPRIGHT", contactsPane, "TOPRIGHT", 0, 0)
-  contactsHeaderDivider:SetHeight(theme.DIVIDER_THICKNESS)
-  applyTexture(contactsHeaderDivider, dividerColor)
-  local contactsPaneBorder = {
-    top = contactsHeaderDivider,
-    left = contactsPaneEdges and contactsPaneEdges.left or nil,
-    right = contactsPaneEdges and contactsPaneEdges.right or nil,
-    bottom = contactsPaneEdges and contactsPaneEdges.bottom or nil,
-  }
-  local contactsRightBorder = contactsPaneBorder.right
+  applyTexture(contactsPaneBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_secondary)
 
   local contactsSearch = contactsSearchUI.Build(factory, contactsPane, {
     contactsWidth = contactsWidth,
     searchMargin = searchMargin,
     searchHeight = searchHeight,
     searchClearButtonSize = searchClearButtonSize,
-    dividerColor = dividerColor,
     theme = theme,
     uiHelpers = uiHelpers,
-    applyColorTexture = applyTexture,
+    nativeChrome = nativeChrome,
   })
 
   local contactsView = scrollView.Create(factory, contactsPane, {
@@ -103,11 +81,13 @@ function ContactsSection.Build(factory, frame, sizing, options)
     contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", 0, 0)
   end
 
-  local contentParent = frame.Inset or frame
+  local contentParent = contactsPaneParent
   local contactsDivider = contentParent:CreateTexture(nil, "BORDER")
   contactsDivider:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", 0, 0)
-  contactsDivider:SetSize(theme.DIVIDER_THICKNESS, contactsHeight)
+  contactsDivider:SetSize(uiHelpers.hairlineThickness(contentParent, theme.DIVIDER_THICKNESS), contactsHeight)
+  uiHelpers.snapToPixelGrid(contactsDivider)
   applyTexture(contactsDivider, theme.COLORS.contacts_divider or theme.COLORS.divider)
+  contactsDivider:Show()
 
   -- Drag handle over the contacts divider for contacts-only resizing.
   local contactsResizeHandle = factory.CreateFrame("Frame", nil, contentParent)
@@ -117,48 +97,26 @@ function ContactsSection.Build(factory, frame, sizing, options)
   if contactsResizeHandle.SetFrameLevel and frame.GetFrameLevel then
     contactsResizeHandle:SetFrameLevel(frame:GetFrameLevel() + 15)
   end
-  local contactsResizeHandleBg = contactsResizeHandle:CreateTexture(nil, "BACKGROUND")
-  contactsResizeHandleBg:SetAllPoints(contactsResizeHandle)
-  applyTexture(contactsResizeHandleBg, { 0, 0, 0, 0 })
-  contactsResizeHandle.hoverBg = contactsResizeHandleBg
-
-  local resizeOutlineThickness = 2
-  local contactsResizeOutline = {}
-  contactsResizeOutline.top = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.top:SetPoint("TOPLEFT", contactsResizeHandle, "TOPLEFT", 0, 0)
-  contactsResizeOutline.top:SetPoint("TOPRIGHT", contactsResizeHandle, "TOPRIGHT", 0, 0)
-  contactsResizeOutline.top:SetHeight(resizeOutlineThickness)
-  contactsResizeOutline.bottom = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.bottom:SetPoint("BOTTOMLEFT", contactsResizeHandle, "BOTTOMLEFT", 0, 0)
-  contactsResizeOutline.bottom:SetPoint("BOTTOMRIGHT", contactsResizeHandle, "BOTTOMRIGHT", 0, 0)
-  contactsResizeOutline.bottom:SetHeight(resizeOutlineThickness)
-  contactsResizeOutline.left = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.left:SetPoint("TOPLEFT", contactsResizeHandle, "TOPLEFT", 0, 0)
-  contactsResizeOutline.left:SetPoint("BOTTOMLEFT", contactsResizeHandle, "BOTTOMLEFT", 0, 0)
-  contactsResizeOutline.left:SetWidth(resizeOutlineThickness)
-  contactsResizeOutline.right = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
-  contactsResizeOutline.right:SetPoint("TOPRIGHT", contactsResizeHandle, "TOPRIGHT", 0, 0)
-  contactsResizeOutline.right:SetPoint("BOTTOMRIGHT", contactsResizeHandle, "BOTTOMRIGHT", 0, 0)
-  contactsResizeOutline.right:SetWidth(resizeOutlineThickness)
-
-  for _, edge in pairs(contactsResizeOutline) do
-    applyTexture(edge, { 0, 0, 0, 0 })
-    edge:Hide()
-  end
-  contactsResizeHandle.outline = contactsResizeOutline
+  -- The hit zone stays invisible; hover/drag fades in this 2px line over the
+  -- hairline divider.
+  local contactsResizeLine = contactsResizeHandle:CreateTexture(nil, "OVERLAY")
+  contactsResizeLine:SetPoint("TOP", contactsDivider, "TOP", 0, 0)
+  contactsResizeLine:SetPoint("BOTTOM", contactsDivider, "BOTTOM", 0, 0)
+  contactsResizeLine:SetWidth(RESIZE_LINE_WIDTH)
+  contactsResizeLine:Hide()
+  contactsResizeHandle.line = contactsResizeLine
+  contactsResizeHandle.lineFade = HoverFade.Attach(contactsResizeLine)
 
   return {
     contactsPane = contactsPane,
     contactsPaneBg = contactsPaneBg,
-    contactsPaneEdges = contactsPaneEdges,
-    contactsPaneBorder = contactsPaneBorder,
-    contactsRightBorder = contactsRightBorder,
-    contactsHeaderDivider = contactsHeaderDivider,
     contactsSearch = contactsSearch,
     contactsView = contactsView,
     contactsDivider = contactsDivider,
     contactsResizeHandle = contactsResizeHandle,
     contactsHandleWidth = contactsHandleWidth,
+    contactsTopOffset = contactsTopOffset,
+    nativeChrome = nativeChrome,
   }
 end
 

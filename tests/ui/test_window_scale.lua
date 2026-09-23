@@ -1,5 +1,6 @@
 local WindowScale = require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local WindowBounds = require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
@@ -231,6 +232,13 @@ return function()
   assert(refreshedMaxWidth == 2000 and refreshedMaxHeight == 1200, "refreshScale must reapply logical bounds")
   assert(chrome.refreshScale("1.5") == 1.00 and frame:GetScale() == 1.00, "refreshScale must normalize invalid scale")
 
+  -- test_refresh_scale_remeasures_hairline_borders
+  local bordered = factory.CreateFrame("Button", nil, frame)
+  local hairline = assert(UIHelpers.createBorderBox(bordered, { 1, 1, 1, 1 }, 1, "BORDER"))
+  chrome.refreshScale(0.75)
+  local expectedHairline = UIHelpers.hairlineThickness(bordered, 1)
+  assert(math.abs(hairline.top.height - expectedHairline) < 0.0001, "refreshScale must re-measure 1px borders for the new scale")
+
   local liveFactory = FakeUI.NewFactory()
   local liveSettings = { windowScale = 1.00 }
   local liveWindow, liveCalls = createObservedWindow(liveFactory, {
@@ -295,7 +303,7 @@ return function()
     onSettingChanged = onDeferredSettingChanged,
   })
   deferredWindow.appearanceTab:GetScript("OnClick")(deferredWindow.appearanceTab)
-  local deferredSlider = deferredWindow.appearanceSettings.windowScaleSlider
+  local deferredSlider = FindUI.slider(deferredWindow.appearanceSettings.frame, "Window Scale")
   local deferredMouseDown = deferredSlider:GetScript("OnMouseDown")
   local deferredMouseUp = deferredSlider:GetScript("OnMouseUp")
   assert(type(deferredMouseDown) == "function" and type(deferredMouseUp) == "function", "window scale slider must defer left drags")
@@ -340,7 +348,7 @@ return function()
     onSettingChanged = onConstrainedReleaseSettingChanged,
   })
   constrainedReleaseWindow.appearanceTab:GetScript("OnClick")(constrainedReleaseWindow.appearanceTab)
-  local constrainedReleaseSlider = constrainedReleaseWindow.appearanceSettings.windowScaleSlider
+  local constrainedReleaseSlider = FindUI.slider(constrainedReleaseWindow.appearanceSettings.frame, "Window Scale")
   constrainedReleaseSlider:GetScript("OnMouseDown")(constrainedReleaseSlider, "LeftButton")
   constrainedReleaseSlider:SetValue(1.50, true)
   constrainedReleaseSlider:GetScript("OnMouseUp")(constrainedReleaseSlider, "LeftButton")
@@ -438,10 +446,9 @@ return function()
     initialState = { width = 900, height = 580, contactsWidth = 300 },
     initialScale = 1.476,
   })
-  assert(geometry.getScale() == 1.50, "geometry must normalize and own initial scale")
   geometry.applyState(geometryFrame, geometry.buildState(geometryFrame))
-  assert(observedScales[1] == 1.50 and observedScales[2] == 1.50, "build and apply must clamp with current scale")
-  assert(geometry.setScale(0.75) == 0.75 and geometry.getScale() == 0.75, "geometry setter must normalize, store, and return")
+  assert(observedScales[1] == 1.50 and observedScales[2] == 1.50, "geometry must normalize initial scale and clamp with it")
+  assert(geometry.setScale(0.75) == 0.75, "geometry setter must normalize and return")
   assert(geometryFrame:GetScale() == 1, "geometry setter must not call frame scaling APIs")
   geometry.buildState(geometryFrame)
   assert(observedScales[3] == 0.75, "later geometry clamps must use updated scale")

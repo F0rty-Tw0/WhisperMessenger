@@ -4,10 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
-local applyPaneBackground = UIHelpers.applyPaneBackground
 local setTextColor = UIHelpers.setTextColor
 
 local ThemeApply = {}
@@ -17,18 +15,13 @@ function ThemeApply.Create(options)
 
   local fallbackTheme = options.theme or Theme
   local contactsPaneBg = options.contactsPaneBg
-  local contactsSearchBg = options.contactsSearchBg
-  local searchBorderTop = options.searchBorderTop
-  local searchBorderBottom = options.searchBorderBottom
-  local searchBorderLeft = options.searchBorderLeft
-  local searchBorderRight = options.searchBorderRight
+  local nativeChrome = options.nativeChrome == true
+  local nativeSearch = options.nativeSearch == true
   local contactsSearchInput = options.contactsSearchInput
+  local applySearchSkin = options.applySearchSkin
   local contactsSearchPlaceholder = options.contactsSearchPlaceholder
   local contactsSearchClearLabel = options.contactsSearchClearLabel
   local contactsDivider = options.contactsDivider
-  local contactsPaneEdges = options.contactsPaneEdges
-  local contactsHeaderDivider = options.contactsHeaderDivider
-  local composerPaneBorder = options.composerPaneBorder
   local optionsMenuBg = options.optionsMenuBg
   local optionsMenuDivider = options.optionsMenuDivider
   local optionsContentBg = options.optionsContentBg
@@ -70,45 +63,27 @@ function ThemeApply.Create(options)
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or fallbackTheme
 
-    -- Resolve skin so the contacts pane bg can paint with the Blizzard
-    -- inset texture under wow_native (matches the conversation pane's
-    -- backdrop texture for a unified native panel look).
-    local skinSpec = Skins.Get(Skins.GetActive())
-    applyPaneBackground(contactsPaneBg, activeTheme.COLORS.bg_secondary, skinSpec and skinSpec.pane_inset_texture)
-    applyColorTexture(contactsSearchBg, activeTheme.COLORS.bg_search_input or activeTheme.COLORS.bg_input)
+    -- Native WoW HUD keeps the pane clear so the template texture shows through.
+    applyColorTexture(contactsPaneBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
+    -- Native WoW HUD search box keeps Blizzard's own text colours.
+    if not nativeSearch then
+      if contactsSearchInput.SetTextColor then
+        contactsSearchInput:SetTextColor(
+          activeTheme.COLORS.text_primary[1],
+          activeTheme.COLORS.text_primary[2],
+          activeTheme.COLORS.text_primary[3],
+          activeTheme.COLORS.text_primary[4] or 1
+        )
+      end
 
-    local divider = activeTheme.COLORS.divider or { 0.15, 0.16, 0.22, 0.60 }
-    local searchBorder = { divider[1], divider[2], divider[3], 0.95 }
-    applyColorTexture(searchBorderTop, searchBorder)
-    applyColorTexture(searchBorderBottom, searchBorder)
-    applyColorTexture(searchBorderLeft, searchBorder)
-    applyColorTexture(searchBorderRight, searchBorder)
-    if contactsSearchInput.SetTextColor then
-      contactsSearchInput:SetTextColor(
-        activeTheme.COLORS.text_primary[1],
-        activeTheme.COLORS.text_primary[2],
-        activeTheme.COLORS.text_primary[3],
-        activeTheme.COLORS.text_primary[4] or 1
-      )
+      setTextColor(contactsSearchPlaceholder, activeTheme.COLORS.text_secondary)
+      setTextColor(contactsSearchClearLabel, activeTheme.COLORS.text_secondary)
     end
-
-    setTextColor(contactsSearchPlaceholder, activeTheme.COLORS.text_secondary)
-    setTextColor(contactsSearchClearLabel, activeTheme.COLORS.text_secondary)
     applyColorTexture(contactsDivider, activeTheme.COLORS.contacts_divider or activeTheme.COLORS.divider)
 
-    local strongDividerThemeColor = { divider[1], divider[2], divider[3], 1 }
-    local activeContactsBorder = activeTheme.COLORS.contacts_border_right or activeTheme.COLORS.contacts_divider or divider
-    local strongActiveContactsBorder = {
-      activeContactsBorder[1],
-      activeContactsBorder[2],
-      activeContactsBorder[3],
-      activeContactsBorder[4] or 1,
-    }
-
-    UIHelpers.applyBorderBoxColor(contactsPaneEdges, strongActiveContactsBorder)
-    applyColorTexture(contactsHeaderDivider, divider)
-    local composerBorderColor = activeTheme.COLORS.composer_pane_border or strongDividerThemeColor
-    UIHelpers.applyBorderBoxColor(composerPaneBorder, composerBorderColor)
+    if applySearchSkin then
+      applySearchSkin(activeTheme)
+    end
 
     applyColorTexture(optionsMenuBg, activeTheme.COLORS.bg_secondary)
     applyColorTexture(optionsMenuDivider, activeTheme.COLORS.divider)

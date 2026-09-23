@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
+local FindUI = require("tests.helpers.find_ui")
 local Composer = require("WhisperMessenger.UI.Composer")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 
@@ -30,13 +31,9 @@ return function()
   assert(Theme.SetPreset("wow_default"), "expected wow_default preset to apply for baseline")
 
   local layout = LayoutBuilder.Build(factory, frame, { width = 920, height = 580 }, {})
-  assert(layout.contactsSearchBg ~= nil, "expected layout to expose contactsSearchBg")
-  assert(layout.contactsRightBorder ~= nil, "expected layout to expose contactsRightBorder")
-  assert(colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input), "expected search input background to use bg_search_input token")
-  assert(
-    colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
-    "expected contacts right border to use contacts_border_right token"
-  )
+  -- The rounded background's first fill is the search field's first texture.
+  local searchFill = FindUI.ofType(layout.contactsSearchFrame, "Texture")[1]
+  assert(colorsMatch(searchFill.color, Theme.COLORS.bg_search_input), "expected search input background to use bg_search_input token")
   assert(colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary), "expected search input text to use text_primary token")
   local clearLabel = layout.contactsSearchClearButton.children[1]
   assert(clearLabel ~= nil, "expected search clear button label")
@@ -45,11 +42,19 @@ return function()
   local composerParent = factory.CreateFrame("Frame", nil, uiParent)
   composerParent:SetSize(600, Theme.COMPOSER_HEIGHT)
   local composer = Composer.Create(factory, composerParent, { conversationKey = "wow::test" }, function() end)
-  assert(colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input), "expected composer input background to use bg_message_input token")
+  -- The rounded background's first fill is the composer input's first texture.
+  local composerFill = FindUI.ofType(composer.input, "Texture")[1]
+  local sendIcon = assert(
+    FindUI.find(composer.sendButton, function(node)
+      return node.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\send.png"
+    end),
+    "expected a send glyph"
+  )
+  assert(colorsMatch(composerFill.color, Theme.COLORS.bg_message_input), "expected composer input background to use bg_message_input token")
   assert(composer.inputTopBorder == nil, "expected composer input top border to be removed")
-  assert(composer.sendButton.sendBg ~= nil, "expected send button themed state tracking")
   assert(composer.sendButton.sendBorderTop == nil, "expected send button top border to be removed")
-  assert(colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button), "expected send button to use send_button token")
+  -- The send button is an accent paper-plane glyph.
+  assert(colorsMatch(sendIcon.vertexColor, Theme.COLORS.accent), "expected send glyph to use the accent token")
 
   local transcriptParent = factory.CreateFrame("Frame", nil, uiParent)
   transcriptParent:SetSize(600, 400)
@@ -67,14 +72,10 @@ return function()
   layout.applyTheme(Theme)
   composer.refreshTheme()
 
-  assert(colorsMatch(layout.contactsSearchBg.color, Theme.COLORS.bg_search_input), "expected search input background to update when preset changes")
-  assert(colorsMatch(composer.inputBg.color, Theme.COLORS.bg_message_input), "expected composer input background to update when preset changes")
+  assert(colorsMatch(searchFill.color, Theme.COLORS.bg_search_input), "expected search input background to update when preset changes")
+  assert(colorsMatch(composerFill.color, Theme.COLORS.bg_message_input), "expected composer input background to update when preset changes")
   assert(composer.inputTopBorder == nil, "expected composer input top border to stay removed after preset change")
-  assert(
-    colorsMatch(rawget(layout.contactsRightBorder, "color"), Theme.COLORS.contacts_border_right),
-    "expected contacts right border to repaint on preset change"
-  )
-  assert(colorsMatch(composer.sendButton.sendBg.color, Theme.COLORS.send_button), "expected send button to repaint on preset change")
+  assert(colorsMatch(sendIcon.vertexColor, Theme.COLORS.accent), "expected send glyph to repaint on preset change")
   assert(composer.sendButton.sendBorderTop == nil, "expected send button top border to stay removed after preset change")
   assert(
     colorsMatch(layout.contactsSearchInput.textColor, Theme.COLORS.text_primary),

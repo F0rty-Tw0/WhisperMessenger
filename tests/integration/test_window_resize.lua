@@ -104,19 +104,14 @@ return function()
     "expected composer width " .. expectedContentW .. " but got " .. tostring(window.composerPane.width)
   )
 
-  -- Composer input and inputBg scale with the composerPane's actual width.
-  local sendButtonWidth = 44
-  local emojiButtonWidth = 30
-  local buttonGap = 8
+  -- Composer input scales with the composerPane's actual width.
+  -- Modern composer: one gutter each side, two square buttons, two gaps.
+  local layout = Theme.LAYOUT
   local expectedPaneW = expectedContentW
-  local expectedInputW = expectedPaneW - 24 - sendButtonWidth - emojiButtonWidth - (buttonGap * 2)
+  local expectedInputW = expectedPaneW - (layout.COMPOSER_GUTTER * 2) - (layout.COMPOSER_BUTTON_SIZE * 2) - (layout.COMPOSER_BUTTON_GAP * 2)
   assert(
     window.composer.input.width == expectedInputW,
     "expected composer input width " .. expectedInputW .. " but got " .. tostring(window.composer.input.width)
-  )
-  assert(
-    window.composer.inputBg.width == expectedInputW,
-    "expected composer inputBg width " .. expectedInputW .. " but got " .. tostring(window.composer.inputBg.width)
   )
 
   -- Transcript scroll view should resize with the thread pane
@@ -138,23 +133,12 @@ return function()
   assert(type(window.contactsResizeHandle.scripts.OnMouseDown) == "function", "expected contacts resize handle OnMouseDown script")
   assert(type(window.contactsResizeHandle.scripts.OnMouseUp) == "function", "expected contacts resize handle OnMouseUp script")
 
-  assert(window.contactsResizeHandle.hoverBg ~= nil, "expected contacts resize hover background")
-  assert(window.contactsResizeHandle.outline ~= nil, "expected contacts resize outline textures")
-  assert(window.contactsResizeHandle.outline.left ~= nil, "expected left outline texture")
-
+  -- Hover fades in a thin line over the divider; no fill, no outline box.
   window.contactsResizeHandle.scripts.OnEnter(window.contactsResizeHandle)
-  assert(
-    window.contactsResizeHandle.hoverBg.color ~= nil and window.contactsResizeHandle.hoverBg.color[4] > 0,
-    "expected resize handle hover background alpha to increase on hover"
-  )
-  assert(window.contactsResizeHandle.outline.left.shown == true, "expected resize outline to show on hover")
+  assert(window.contactsResizeHandle.line.shown == true, "expected resize line to show on hover")
 
   window.contactsResizeHandle.scripts.OnLeave(window.contactsResizeHandle)
-  assert(
-    window.contactsResizeHandle.hoverBg.color ~= nil and window.contactsResizeHandle.hoverBg.color[4] == 0,
-    "expected resize handle hover background to clear on leave"
-  )
-  assert(window.contactsResizeHandle.outline.left.shown == false, "expected resize outline to hide on leave")
+  assert(window.contactsResizeHandle.line.shown == false, "expected resize line to hide on leave")
 
   local originalGetCursorPosition = _G.GetCursorPosition
   rawset(_G, "GetCursorPosition", function()

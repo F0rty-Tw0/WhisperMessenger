@@ -24,8 +24,6 @@ return function()
   assert(section.contentPane ~= nil, "contentPane should exist")
   assert(section.threadPane ~= nil, "threadPane should exist")
   assert(section.composerPane ~= nil, "composerPane should exist")
-  assert(section.composerPaneBorder ~= nil, "composerPaneBorder should exist")
-  assert(section.composerDivider ~= nil, "composerDivider should exist")
 
   assert(section.contentPane.parent == frame, "contentPane should parent to frame")
   assert(section.threadPane.parent == section.contentPane, "threadPane should parent to contentPane")

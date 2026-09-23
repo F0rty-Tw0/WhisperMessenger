@@ -57,8 +57,20 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local layout = resolvedTheme.LAYOUT or {}
 
   local contactsWidth = Metrics.ClampContactsWidth(width, requestedContactsWidth or layoutState.contactsWidth, resolvedTheme)
-  local contactsHeight = height - resolvedTheme.TOP_BAR_HEIGHT
+  -- Native WoW HUD content area is shorter than the frame by the template
+  -- border (single-anchored divider/handle take this height).
+  local hudExtraHeight = layoutState.nativeChrome and (layout.HUD_INSET_BOTTOM + layout.HUD_CONTENT_INSET + layout.HUD_CONTENT_TOP_INSET) or 0
+  local contactsHeight = height - resolvedTheme.TOP_BAR_HEIGHT - hudExtraHeight
   local contentWidth = width - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
+  -- Options content column: HUD fills the content area; modern keeps its
+  -- 10px-per-side margin.
+  local optionsContentWidth
+  if layoutState.nativeChrome then
+    local hudExtraWidth = layout.HUD_INSET_LEFT + layout.HUD_INSET_RIGHT + 2 * layout.HUD_CONTENT_INSET
+    optionsContentWidth = width - hudExtraWidth - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
+  else
+    optionsContentWidth = (width - 20) - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
+  end
   local contentHeight = contactsHeight
   local threadHeight = contentHeight - resolvedTheme.COMPOSER_HEIGHT - resolvedTheme.DIVIDER_THICKNESS
 
@@ -75,6 +87,7 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
     contactsWidth = contactsWidth,
     contactsHeight = contactsHeight,
     contentWidth = contentWidth,
+    optionsContentWidth = optionsContentWidth,
     contentHeight = contentHeight,
     threadHeight = threadHeight,
     searchHeight = searchHeight,

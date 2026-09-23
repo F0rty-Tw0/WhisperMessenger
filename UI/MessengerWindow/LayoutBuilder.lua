@@ -30,12 +30,17 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 --
 -- Returns:
 --   contactsPane, contactsDivider, contactsResizeHandle, contentPane, headerDivider,
---   threadPane, composerPane, composerDivider, optionsPanel, optionsHeader, optionsHint,
+--   threadPane, composerPane, optionsPanel, optionsHeader, optionsHint,
 --   resetWindowButton, resetIconButton, clearAllChatsButton, contactsView
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
-  local sizing =
-    LayoutMetrics.CalculateRelayout({}, initialState.width, initialState.height, _options.contactsWidth or initialState.contactsWidth, Theme)
+  local sizing = LayoutMetrics.CalculateRelayout(
+    { nativeChrome = frame.contentArea ~= nil },
+    initialState.width,
+    initialState.height,
+    _options.contactsWidth or initialState.contactsWidth,
+    Theme
+  )
   local contactsWidth = sizing.contactsWidth
   local searchHeight = sizing.searchHeight
   local searchMargin = sizing.searchMargin
@@ -47,17 +52,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   })
   local contactsPane = contactsSection.contactsPane
   local contactsPaneBg = contactsSection.contactsPaneBg
-  local contactsPaneEdges = contactsSection.contactsPaneEdges
-  local contactsPaneBorder = contactsSection.contactsPaneBorder
-  local contactsRightBorder = contactsSection.contactsRightBorder
-  local contactsHeaderDivider = contactsSection.contactsHeaderDivider
   local contactsSearch = contactsSection.contactsSearch
   local contactsSearchFrame = contactsSearch.frame
-  local contactsSearchBg = contactsSearch.bg
-  local searchBorderTop = contactsSearch.borderTop
-  local searchBorderBottom = contactsSearch.borderBottom
-  local searchBorderLeft = contactsSearch.borderLeft
-  local searchBorderRight = contactsSearch.borderRight
   local contactsSearchInput = contactsSearch.input
   local contactsSearchPlaceholder = contactsSearch.placeholder
   local contactsSearchClearButton = contactsSearch.clearButton
@@ -67,19 +63,20 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsResizeHandle = contactsSection.contactsResizeHandle
   local contactsHandleWidth = contactsSection.contactsHandleWidth
 
-  local contentParent = frame.Inset or frame
+  local contentParent = frame.contentArea or frame
   local contentSection = ContentSection.Build(factory, contentParent, contactsPane, sizing, {
     theme = Theme,
   })
   local contentPane = contentSection.contentPane
   local threadPane = contentSection.threadPane
   local composerPane = contentSection.composerPane
-  local composerPaneBorder = contentSection.composerPaneBorder
-  local composerDivider = contentSection.composerDivider
   local headerDivider = nil
 
   local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {
     contactsWidth = contactsWidth,
+    contactsHeight = sizing.contactsHeight,
+    optionsContentWidth = sizing.optionsContentWidth,
+    nativeChrome = contactsSection.nativeChrome,
     theme = Theme,
     scrollView = ScrollView,
     applyColorTexture = applyColorTexture,
@@ -101,6 +98,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, optionsHeader, {
     menuPadding = menuPadding,
     contactsWidth = contactsWidth,
+    nativeChrome = contactsSection.nativeChrome,
     theme = Theme,
   })
   local generalTab = optionsMenuButtons.generalTab
@@ -116,18 +114,13 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local layoutTheme = LayoutThemeApply.Create({
     theme = Theme,
     contactsPaneBg = contactsPaneBg,
-    contactsSearchBg = contactsSearchBg,
-    searchBorderTop = searchBorderTop,
-    searchBorderBottom = searchBorderBottom,
-    searchBorderLeft = searchBorderLeft,
-    searchBorderRight = searchBorderRight,
+    nativeChrome = contactsSection.nativeChrome,
+    nativeSearch = contactsSearch.native == true,
+    applySearchSkin = contactsSearch.applySkin,
     contactsSearchInput = contactsSearchInput,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
     contactsSearchClearLabel = contactsSearchClearLabel,
     contactsDivider = contactsDivider,
-    contactsPaneEdges = contactsPaneEdges,
-    contactsHeaderDivider = contactsHeaderDivider,
-    composerPaneBorder = composerPaneBorder,
     optionsMenuBg = optionsMenuBg,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentBg = optionsContentBg,
@@ -163,14 +156,14 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   return {
     contactsPane = contactsPane,
-    contactsPaneBorder = contactsPaneBorder,
+    contactsPaneBg = contactsPaneBg,
+    contactsTopOffset = contactsSection.contactsTopOffset,
+    nativeChrome = contactsSection.nativeChrome,
     contactsDivider = contactsDivider,
-    contactsRightBorder = contactsRightBorder,
     contactsResizeHandle = contactsResizeHandle,
     contactsWidth = contactsWidth,
     contactsHandleWidth = contactsHandleWidth,
     contactsSearchFrame = contactsSearchFrame,
-    contactsSearchBg = contactsSearchBg,
     contactsSearchInput = contactsSearchInput,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
     contactsSearchClearButton = contactsSearchClearButton,
@@ -182,12 +175,9 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
     optionsMenuMinimumContentHeight = OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT,
     contentPane = contentPane,
-    contactsHeaderDivider = contactsHeaderDivider,
     headerDivider = headerDivider,
     threadPane = threadPane,
     composerPane = composerPane,
-    composerPaneBorder = composerPaneBorder,
-    composerDivider = composerDivider,
     optionsPanel = optionsPanel,
     optionsMenu = optionsMenu,
     optionsMenuDivider = optionsMenuDivider,
