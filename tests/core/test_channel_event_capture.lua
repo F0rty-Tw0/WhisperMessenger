@@ -91,9 +91,9 @@ return function()
     local e2 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p2-realm")
     assert(e2.channelLabel == "General", "expected 'General', got: " .. tostring(e2.channelLabel))
 
-    -- "4. LookingForGroup" (no zone suffix) → "4. LookingForGroup" (full string as fallback)
+    -- "4. LookingForGroup" (no zone suffix) → "LookingForGroup" (number prefix still stripped)
     EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg3", "P3-Realm", "", "4. LookingForGroup")
     local e3 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p3-realm")
-    assert(e3.channelLabel == "4. LookingForGroup", "fallback should use full string, got: " .. tostring(e3.channelLabel))
+    assert(e3.channelLabel == "LookingForGroup", "custom channel should drop its number, got: " .. tostring(e3.channelLabel))
   end
 end

@@ -38,8 +38,11 @@ function EventBridge.RouteChannelEvent(runtime, eventName, ...)
     return nil
   end
   local text, senderName, _, channelString = ...
-  -- Extract base channel name (e.g. "2. Trade - City" → "Trade")
-  local channelLabel = string.match(channelString or "", "^%d+%.%s*(.-)%s*%-") or channelString or ""
+  -- Extract base channel name (e.g. "2. Trade - City" → "Trade", "1. CraftScan" → "CraftScan")
+  local channelLabel = string.match(channelString or "", "^%d+%.%s*(.-)%s*%-")
+    or string.match(channelString or "", "^%d+%.%s*(.+)$")
+    or channelString
+    or ""
   if channelLabel == "" then
     channelLabel = channelString or ""
   end
