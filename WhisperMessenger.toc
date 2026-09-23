@@ -175,10 +175,14 @@ UI/MinimapIcon/DataBroker.lua
 UI/MessengerWindow/AlphaController.lua
 UI/MessengerWindow/WindowScale.lua
 UI/MessengerWindow/WindowBounds.lua
+UI/MessengerWindow/ChromeBuilder/IconButtonStyle.lua
+UI/MessengerWindow/ChromeBuilder/WindowShadow.lua
 UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
 UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
 UI/MessengerWindow/ChromeBuilder/Buttons.lua
+UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
+UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua

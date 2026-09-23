@@ -16,7 +16,6 @@ local function assertTooltipLifecycle(Localization, button, expectedTitle, label
   assert(type(onLeaveScript) == "function", label .. ": expected OnLeave script")
 
   local originalGameTooltip = _G.GameTooltip
-  local originalLanguage = Localization.GetConfiguredLanguage()
   local tooltipState = { shown = false, hidden = false }
   _G.GameTooltip = {
     SetOwner = function(_, owner, anchor)
@@ -48,7 +47,7 @@ local function assertTooltipLifecycle(Localization, button, expectedTitle, label
   end)
 
   _G.GameTooltip = originalGameTooltip
-  Localization.Configure({ language = originalLanguage })
+  Localization.Configure({ language = "auto" })
   if not ok then
     error(err, 0)
   end
@@ -74,9 +73,10 @@ return function()
 
     assert(chrome.frame.template == "BackdropTemplate", "modern chrome: expected BackdropTemplate, got " .. tostring(chrome.frame.template))
     assert(chrome.frame.Inset == nil, "modern chrome: should NOT have template Inset")
+    assert(chrome.frame.contentArea == nil, "modern chrome: content stays on the frame itself")
     assert(chrome.frame.CloseButton == nil, "modern chrome: should NOT have template CloseButton")
     assert(chrome.title ~= nil, "modern chrome: custom title FontString should exist")
-    assert(chrome.title.text == Theme.TITLE, "modern chrome: title should render Theme.TITLE")
+    assert(chrome.title.text == Theme.MODERN_TITLE, "modern chrome: title should render Theme.MODERN_TITLE under a modern preset")
     assert(chrome.background ~= nil, "modern chrome: custom background texture should exist")
     assert(chrome.closeButton ~= nil, "modern chrome: custom close button should exist")
     assert(
@@ -103,7 +103,25 @@ return function()
     assert(chrome.frame.Inset ~= nil, "blizzard chrome: template should provide frame.Inset")
     assert(chrome.frame.CloseButton ~= nil, "blizzard chrome: template should provide frame.CloseButton")
     assert(chrome.frame.TitleText ~= nil, "blizzard chrome: template should provide frame.TitleText")
-    assert(chrome.frame.title == Theme.TITLE, "blizzard chrome: SetTitle should set frame.title")
+    assert(chrome.frame.title == Theme.MODERN_TITLE, "blizzard chrome: title should be the full addon name")
+    -- Content lives in an addon-owned area inside the template border, so
+    -- it never depends on a template Inset frame (absent in the live client).
+    local L = Theme.LAYOUT
+    local area = chrome.frame.contentArea
+    assert(area ~= nil and area.parent == chrome.frame, "blizzard chrome: expected frame.contentArea")
+    local tl, br = area.points[1], area.points[2]
+    local pad = L.HUD_CONTENT_INSET
+    assert(
+      tl[1] == "TOPLEFT" and tl[4] == L.HUD_INSET_LEFT + pad and tl[5] == -(L.TOP_BAR_HEIGHT + L.HUD_CONTENT_TOP_INSET) and tl[5] == -23,
+      "blizzard chrome: content area TOPLEFT"
+    )
+    assert(
+      br[1] == "BOTTOMRIGHT" and br[4] == -(L.HUD_INSET_RIGHT + pad) and br[5] == L.HUD_INSET_BOTTOM + pad,
+      "blizzard chrome: content area BOTTOMRIGHT"
+    )
+    for _, child in ipairs(chrome.frame.children) do
+      assert(child.frameType ~= "Texture" or child.height ~= 24, "blizzard chrome: no extra title strip texture expected")
+    end
 
     assert(chrome.background == chrome.frame.Bg, "blizzard chrome: chrome.background aliases frame.Bg")
     assert(chrome.title == chrome.frame.TitleText, "blizzard chrome: chrome.title aliases frame.TitleText")

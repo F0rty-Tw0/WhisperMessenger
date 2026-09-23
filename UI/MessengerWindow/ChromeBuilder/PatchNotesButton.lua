@@ -7,40 +7,29 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
-local applyColorTexture = UIHelpers.applyColorTexture
-local setTextColor = UIHelpers.setTextColor
-
-local IDLE_BG_ALPHA = 0.35
-local HOVER_BG_ALPHA = 0.75
+local IconButtonStyle = ns.MessengerWindowChromeBuilderIconButtonStyle or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.IconButtonStyle")
+local applyVertexColor = UIHelpers.applyVertexColor
 
 local PatchNotesButton = {}
 
--- Creates the "?" title-bar button that opens the What's New dialog. It sits
--- immediately right of the New Whisper button and pulses while the shipped
--- patch-notes version has not been seen yet (glow is driven by setGlowing).
-function PatchNotesButton.Create(factory, frame, anchorButton, theme)
+-- Creates the What's New title-bar button (sparkle icon). Size and anchor come from TitleBarLayout. It pulses while the
+-- shipped patch-notes version has not been seen yet (setGlowing).
+function PatchNotesButton.Create(factory, frame, theme)
   theme = theme or Theme
 
   local button = factory.CreateFrame("Button", nil, frame)
-  button:SetSize(theme.LAYOUT.CHROME_BUTTON_SIZE, theme.LAYOUT.CHROME_BUTTON_SIZE)
-  button:SetPoint("LEFT", anchorButton, "RIGHT", 2, 0)
 
   local bg = button:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints(button)
+  IconButtonStyle.Attach(button, bg)
 
-  local label = button:CreateFontString(nil, "OVERLAY", theme.FONTS.contact_name)
-  label:SetPoint("CENTER", button, "CENTER", 0, 0)
-  label:SetText("?")
+  local icon = button:CreateTexture(nil, "ARTWORK")
+  IconButtonStyle.SetGlyph(button, icon, theme.TEXTURES.title_whats_new_icon)
+  icon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
+  icon:SetPoint("CENTER", button, "CENTER", 0, 0)
 
   local function applyVisuals(hovered)
-    local colors = theme.COLORS
-    local base = colors.bg_contact_hover
-    applyColorTexture(bg, { base[1], base[2], base[3], hovered and HOVER_BG_ALPHA or IDLE_BG_ALPHA })
-    if hovered then
-      setTextColor(label, colors.text_title or colors.text_primary)
-      return
-    end
-    setTextColor(label, colors.text_primary)
+    applyVertexColor(icon, IconButtonStyle.Paint(button, hovered, theme.COLORS))
   end
 
   local function isHovered()
@@ -81,9 +70,6 @@ function PatchNotesButton.Create(factory, frame, anchorButton, theme)
 
   return {
     button = button,
-    bg = bg,
-    label = label,
-    glow = glow,
     setGlowing = setGlowing,
     applyTheme = function(nextTheme)
       theme = nextTheme or Theme

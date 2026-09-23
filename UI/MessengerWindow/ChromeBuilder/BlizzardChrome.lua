@@ -4,23 +4,20 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
-
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local BlizzardChrome = {}
 
 -- Builds the Blizzard-template chrome branch. The outer frame is already
 -- created with BasicFrameTemplateWithInset by ChromeBuilder.Build and passed
--- in as `frame`. This module supplies the title text, an extra title strip
--- (doubled top bar height) painted with bg_header, and repositions the
--- template's Inset to clear that extra strip.
-function BlizzardChrome.Build(_factory, frame, options, theme)
+-- in as `frame`. This module supplies the title text and `frame.contentArea`,
+-- an addon-owned frame inside the template border that all panes use as
+-- their parent (the live template exposes no Inset frame to anchor to).
+function BlizzardChrome.Build(factory, frame, options, theme)
   options = options or {}
   theme = theme or Theme
 
-  local titleText = options.title or theme.TITLE
+  local titleText = options.title or theme.MODERN_TITLE
   if frame.SetTitle then
     frame:SetTitle(titleText)
   elseif frame.TitleText and frame.TitleText.SetText then
@@ -53,40 +50,21 @@ function BlizzardChrome.Build(_factory, frame, options, theme)
     end)
   end
 
-  -- Double the apparent top bar height: fill the space below the
-  -- template's title strip with bg_header, and shift the Inset down
-  -- by the same amount so content starts below the extended bar.
-  local EXTRA_TITLE_HEIGHT = 24
-  local topBarExtension = frame:CreateTexture(nil, "ARTWORK")
-  topBarExtension:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -theme.LAYOUT.TOP_BAR_HEIGHT)
-  -- -6 right matches the Inset's own BOTTOMRIGHT inset so the top status
-  -- bar extension and the content area share the same right edge (2px
-  -- more padding than the default 4px, giving the corner some breathing
-  -- room away from the resize grip).
-  topBarExtension:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -4, -theme.LAYOUT.TOP_BAR_HEIGHT)
-  topBarExtension:SetHeight(EXTRA_TITLE_HEIGHT)
-  applyColorTexture(topBarExtension, theme.COLORS.bg_header)
+  local L = theme.LAYOUT
+  local pad = L.HUD_CONTENT_INSET
+  local contentArea = factory.CreateFrame("Frame", nil, frame)
+  contentArea:SetPoint("TOPLEFT", frame, "TOPLEFT", L.HUD_INSET_LEFT + pad, -(L.TOP_BAR_HEIGHT + L.HUD_CONTENT_TOP_INSET))
+  contentArea:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(L.HUD_INSET_RIGHT + pad), L.HUD_INSET_BOTTOM + pad)
+  frame.contentArea = contentArea
 
-  if frame.Inset and frame.Inset.ClearAllPoints and frame.Inset.SetPoint then
-    frame.Inset:ClearAllPoints()
-    frame.Inset:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -(theme.LAYOUT.TOP_BAR_HEIGHT + EXTRA_TITLE_HEIGHT))
-    -- +8px of chrome visible at the bottom (Inset bottom raised).
-    frame.Inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 34)
-  end
-
-  local function applyChromePaint(activeTheme)
-    activeTheme = activeTheme or theme
-    if topBarExtension then
-      applyColorTexture(topBarExtension, activeTheme.COLORS.bg_header)
-    end
-  end
+  -- The template paints all of its own chrome.
+  local function applyChromePaint(_activeTheme) end
 
   return {
     background = background,
     title = title,
     closeButton = closeButton,
     applyChromePaint = applyChromePaint,
-    topBarExtension = topBarExtension,
   }
 end
 

@@ -8,9 +8,17 @@ local Textures = {
   faction_alliance = "Interface\\ICONS\\PVPCurrency-Honor-Alliance",
   faction_horde = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
   bnet_icon = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
-  pin_up_icon = "Interface\\BUTTONS\\Arrow-Up-Up",
-  pin_down_icon = "Interface\\BUTTONS\\Arrow-Down-Up",
-  remove_icon = "Interface\\Buttons\\UI-StopButton",
+  -- Pin glyphs (bundled, white on transparent; tinted at runtime).
+  pin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\pin.png",
+  unpin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\unpin.png",
+  pinned_marker = "Interface\\AddOns\\WhisperMessenger\\Media\\pinned.png",
+  trash_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\remove.png",
+  -- Title-bar line icons (white on transparent; tinted at runtime).
+  title_close_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\close.png",
+  title_settings_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\settings.png",
+  title_back_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\back.png",
+  title_new_whisper_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\new_whisper.png",
+  title_whats_new_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\whats_new.png",
 }
 
 -- Class tokens with a matching ClassIcon_* texture. Unknown tags must

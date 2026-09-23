@@ -6,11 +6,14 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
+local Shapes = ns.UIHelpersShapes or require("WhisperMessenger.UI.Helpers.Shapes")
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
 local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
 local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
+local ResizeGrip = ns.MessengerWindowChromeBuilderResizeGrip or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ResizeGrip")
 local PatchNotesButton = ns.MessengerWindowChromeBuilderPatchNotesButton
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.PatchNotesButton")
+local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
 local ChromeBuilder = {}
 
 local function applyResizeBounds(frame, parent, theme, windowScale)
@@ -25,18 +28,16 @@ local function applyResizeBounds(frame, parent, theme, windowScale)
   end
 end
 
--- ChromeBuilder builds the messenger window with one of two chrome paths
--- depending on the active skin (resolved from the active theme preset):
+-- ChromeBuilder builds the messenger window with one of two chrome paths,
+-- chosen by the Native WoW HUD setting (independent of the color preset):
 --
---   * BLIZZARD skin (Azeroth preset): frame uses BasicFrameTemplateWithInset.
---     Gold border, red close X, dark inset, and centered title come from
---     the Blizzard template — we don't paint them ourselves.
+--   * Native WoW HUD: frame uses BasicFrameTemplateWithInset. Gold border,
+--     red close X, dark inset, and centered title come from the Blizzard
+--     template — we don't paint them ourselves.
 --
---   * MODERN skin (any other preset): frame uses BackdropTemplate. We paint
---     a custom flat-color background, our own title bar with header bg +
---     borders, edge highlights, and a custom close button. This is the
---     pre-Azeroth chrome, restored as an explicit branch so non-native
---     presets keep their modern minimal look.
+--   * Custom chrome (default): frame uses BackdropTemplate. We paint a flat
+--     background, our own title bar with header bg, a window edge hairline,
+--     and a custom close button.
 --
 -- Returns: { frame, background, title, newConversationButton, patchNotesButton,
 --   closeButton, optionsButton, backButton, resizeGrip, applyTheme, refreshScale,
@@ -101,20 +102,32 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame.alpha = Theme.WINDOW_IDLE_ALPHA
   end
 
-  -- Chrome differs by skin (Blizzard template vs custom modern chrome).
+  -- Chrome differs by setting (Blizzard template vs custom chrome).
   local chromeBranch = useBlizzardChrome and BlizzardChrome or ModernChrome
   local chrome = chromeBranch.Build(factory, frame, options, Theme)
   local title, closeButton = chrome.title, chrome.closeButton
   local applyChromePaint = chrome.applyChromePaint
 
-  local newConv = Buttons.CreateNewConversation(factory, frame, title, useBlizzardChrome, Theme)
-  local patchNotes = PatchNotesButton.Create(factory, frame, newConv.button, Theme)
-  local options_ = Buttons.CreateOptions(factory, frame, closeButton, Theme)
-  local back = Buttons.CreateBack(factory, frame, options_.button, Theme)
-  local resize = Buttons.CreateResizeGrip(factory, frame, Theme)
+  local newConv = Buttons.CreateNewConversation(factory, frame, Theme)
+  local patchNotes = PatchNotesButton.Create(factory, frame, Theme)
+  local options_ = Buttons.CreateOptions(factory, frame, Theme)
+  local back = Buttons.CreateBack(factory, frame, Theme)
+  local resize = ResizeGrip.Create(factory, frame)
+  local titleBarParts = {
+    frame = frame,
+    titleBar = chrome.titleBar,
+    title = title,
+    closeButton = closeButton,
+    newConversationButton = newConv.button,
+    patchNotesButton = patchNotes.button,
+    optionsButton = options_.button,
+    backButton = back.button,
+    blizzardChrome = useBlizzardChrome,
+  }
 
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or Theme
+    TitleBarLayout.Apply(titleBarParts, activeTheme)
     applyChromePaint(activeTheme)
     options_.applyTheme(activeTheme)
     back.applyTheme(activeTheme)
@@ -126,6 +139,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local function refreshScale(nextScale)
     local normalizedScale = WindowScale.Normalize(nextScale)
     frame:SetScale(normalizedScale)
+    Shapes.refreshHairlines()
     applyResizeBounds(frame, parent, Theme, normalizedScale)
     return normalizedScale
   end
@@ -154,8 +168,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     refreshScale = refreshScale,
     setOptionsActive = setOptionsActive,
     setPatchNotesGlow = patchNotes.setGlowing,
-    titleBarBorder = chrome.titleBarBorder,
-    titleBarTopBorder = chrome.titleBarBorder and chrome.titleBarBorder.top or nil,
+    titleBar = chrome.titleBar,
   }
 end
 
