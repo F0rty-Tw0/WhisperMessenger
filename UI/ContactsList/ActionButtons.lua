@@ -9,19 +9,49 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
+local PinnedMarker = ns.ContactsListPinnedMarker or require("WhisperMessenger.UI.ContactsList.PinnedMarker")
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
 local ActionButtons = {}
+
+-- Right column: timestamp, pin slot, remove, spaced by COLUMN_GAP.
+local COLUMN_GAP = 2
+-- Pushes the button so its glyph (1px inset) ends on the timestamp's edge.
+local COLUMN_GLYPH_NUDGE_X = 1
 
 local function rowBaseBackgroundColor(row)
   local item = row and row.item or nil
   return item and item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
 end
 
-local function pinBaseColor(row)
-  local item = row and row.item or nil
-  return item and item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
+-- Pin action glyph: pin / unpin pushpins in the neutral action colour (the
+-- pinned state at rest is shown by the pinned marker).
+function ActionButtons.paintPinIcon(row)
+  local pinned = row.item and row.item.pinned
+  local textures = Theme.TEXTURES
+  row.pinButton.icon:SetTexture(pinned and textures.unpin_icon or textures.pin_icon)
+  applyVertexColor(row.pinButton.icon, Theme.COLORS.action_icon)
+end
+
+-- Remove glyph: the trash can.
+function ActionButtons.paintRemoveIcon(row)
+  row.removeButton.icon:SetTexture(Theme.TEXTURES.trash_icon)
+end
+
+-- Anchor the actions: time / pin / remove stack in one right-aligned column.
+function ActionButtons.layout(row)
+  local pinButton, removeButton = row.pinButton, row.removeButton
+  local gap = COLUMN_GAP
+  pinButton:ClearAllPoints()
+  removeButton:ClearAllPoints()
+  if row.timeLabel then
+    pinButton:SetPoint("TOPRIGHT", row.timeLabel, "BOTTOMRIGHT", COLUMN_GLYPH_NUDGE_X, -gap)
+  else
+    pinButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -gap)
+  end
+  removeButton:SetPoint("TOPRIGHT", pinButton, "BOTTOMRIGHT", 0, -gap)
+  PinnedMarker.update(row)
 end
 
 local function pinTooltipText(row)
@@ -90,13 +120,14 @@ function ActionButtons.showActions(row)
   if row.removeButton then
     row.removeButton:Show()
   end
+  -- The Unpin button takes the pinned marker's slot while shown.
+  PinnedMarker.setVisible(row, false)
 end
 
+-- Actions show on hover only.
 function ActionButtons.hideActions(row)
-  if row.selected then
-    return
-  end
-  if row.pinButton and not (row.item and row.item.pinned) then
+  PinnedMarker.setVisible(row, true)
+  if row.pinButton then
     row.pinButton:Hide()
   end
   if row.removeButton then
@@ -118,7 +149,6 @@ function ActionButtons.createRemoveButton(factory, row, _parentWidth, options)
   btn.icon = btn:CreateTexture(nil, "ARTWORK")
   btn.icon:SetSize(ACTION_SIZE - 2, ACTION_SIZE - 2)
   btn.icon:SetPoint("CENTER", btn, "CENTER", 0, 0)
-  btn.icon:SetTexture(Theme.TEXTURES.remove_icon)
   if btn.icon.SetDesaturated then
     btn.icon:SetDesaturated(true)
   end
@@ -185,7 +215,7 @@ function ActionButtons.createPinButton(factory, row, _item, _parentWidth, option
     end)
 
     btn:SetScript("OnLeave", function(self)
-      applyVertexColor(self.icon, pinBaseColor(row))
+      applyVertexColor(self.icon, Theme.COLORS.action_icon)
       adjustActionHoverCount(row, -1)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()

@@ -9,6 +9,7 @@ local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
+local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -84,46 +85,15 @@ local function applyRowVisualState(row)
   local hovered = row._wmRowHover == true
     or (row._wmActionHoverCount or 0) > 0
     or ((row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row))
-  if row.selected then
+  local overlayOwnsHover = RowHoverOverlay.update(row, hovered)
+  if row.selected and not overlayOwnsHover then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-  elseif hovered then
+  elseif hovered and not overlayOwnsHover then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
   elseif row.item and row.item.pinned then
     applyColorTexture(row.bg, Theme.COLORS.bg_contact_pinned)
   else
     applyColorTexture(row.bg, { 0, 0, 0, 0 })
-  end
-  if row.selectedRightBorder then
-    applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
-    if row.selected then
-      row.selectedRightBorder:Show()
-    else
-      row.selectedRightBorder:Hide()
-    end
-  end
-
-  -- Stage 2C: bundled Blizzard chrome paints a hover/selected overlay on
-  -- top of row.bg. Only visible when a texture is set (blizzard skin sets
-  -- it via RowView; modern skin leaves it nil so this branch no-ops).
-  if row.skinHighlight then
-    local hasTexture = row.skinHighlight.GetTexture and row.skinHighlight:GetTexture()
-    if hasTexture then
-      if row.selected then
-        if row.skinHighlight.SetAlpha then
-          row.skinHighlight:SetAlpha(0.6)
-        end
-        row.skinHighlight:Show()
-      elseif hovered then
-        if row.skinHighlight.SetAlpha then
-          row.skinHighlight:SetAlpha(0.4)
-        end
-        row.skinHighlight:Show()
-      else
-        row.skinHighlight:Hide()
-      end
-    else
-      row.skinHighlight:Hide()
-    end
   end
 end
 
@@ -146,11 +116,6 @@ local function installHoverWatchdog(row)
       return
     end
     self._wmHoverWatchdogElapsed = 0
-
-    if self.selected then
-      stopHoverWatchdog(self)
-      return
-    end
 
     local actionHoverCount = effectiveActionHoverCount(self)
     local hadHoverState = self._wmRowHover or actionHoverCount > 0
@@ -181,12 +146,10 @@ local function installHoverWatchdog(row)
 end
 
 --- Bind OnEnter / OnLeave hover scripts to a row.
---- options may include: rowBaseBg (color table for base background)
 --- Rows are re-bound on every refresh, so the closures are created once and
 --- read their state (row.item, row.selected) live at call time.
-function RowScripts.bindHover(row, options)
+function RowScripts.bindHover(row)
   stopHoverWatchdog(row)
-  row._wmRowBaseBg = (options and options.rowBaseBg) or (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary)
   row._wmRowHover = false
   row._wmActionHoverCount = 0
 
@@ -201,11 +164,7 @@ function RowScripts.bindHover(row, options)
 
     if row.SetScript then
       row:SetScript("OnEnter", function()
-        if row.selected then
-          stopHoverWatchdog(row)
-        else
-          installHoverWatchdog(row)
-        end
+        installHoverWatchdog(row)
         row._wmRowHover = true
         row._wmApplyVisualState()
         local AB = getActionButtons()

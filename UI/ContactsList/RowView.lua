@@ -4,22 +4,19 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
-local applyVertexColor = UIHelpers.applyVertexColor
 
 local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local StatusDot = ns.ContactsListStatusDot or require("WhisperMessenger.UI.ContactsList.StatusDot")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
+local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 local RowView = {}
-local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
-local ACTIONS_RIGHT_INSET = 4
 
 -- Group rows use a slightly muted background (15% darker than the whisper
 -- row base). Computed once at module load to avoid per-frame table creation.
@@ -71,6 +68,7 @@ end
 
 local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
+  local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
   -- 3px left inset on each row so contacts sit slightly tighter to the pane's
@@ -91,56 +89,19 @@ local function bindRow(factory, parent, row, index, item, options)
   local rowBaseBg = isGroup and mutedColor(whisperBaseBg) or whisperBaseBg
   applyColorTexture(row.bg, rowBaseBg)
 
-  -- Left accent bar (shown when selected)
+  -- Left accent bar (shown when selected).
   if row.accentBar == nil then
     row.accentBar = row:CreateTexture(nil, "BORDER")
-    row.accentBar:SetSize(Theme.LAYOUT.CONTACT_ACCENT_BAR_W, ROW_HEIGHT)
-    row.accentBar:SetPoint("LEFT", row, "LEFT", 0, 0)
-    applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
+    row.accentBar:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    row.accentBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
   end
+  row.accentBar:SetWidth(Theme.LAYOUT.CONTACT_ACCENT_BAR_W)
   applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
   row.accentBar:Hide()
 
-  -- Right border for selected row
-  if row.selectedRightBorder == nil then
-    row.selectedRightBorder = row:CreateTexture(nil, "BORDER")
-    row.selectedRightBorder:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
-    row.selectedRightBorder:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
-    row.selectedRightBorder:SetWidth(2)
-  end
-  applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
-  row.selectedRightBorder:Hide()
-
-  -- Stage 2C: bundled Blizzard chrome paints a hover/selected highlight
-  -- overlay on top of row.bg. The overlay is created unconditionally so the
-  -- shape stays stable across skin switches; only its texture path is
-  -- skin-dependent. RowScripts.applyRowVisualState shows/hides it based on
-  -- hover/selected state when a texture is set; modern skin leaves the
-  -- texture nil so it never paints.
-  if row.skinHighlight == nil then
-    row.skinHighlight = row:CreateTexture(nil, "ARTWORK")
-    row.skinHighlight:SetAllPoints()
-  end
-  local rowSkinSpec = Skins.Get(Skins.GetActive())
-  if rowSkinSpec and rowSkinSpec.contact_row_highlight_texture and row.skinHighlight.SetTexture then
-    row.skinHighlight:SetTexture(rowSkinSpec.contact_row_highlight_texture)
-    if row.skinHighlight.SetBlendMode then
-      row.skinHighlight:SetBlendMode("ADD")
-    end
-  elseif row.skinHighlight.SetTexture then
-    row.skinHighlight:SetTexture(nil)
-  end
-  row.skinHighlight:Hide()
-
-  -- Event scripts (hover, click, drag). The hover options table is kept on the
-  -- row and reused so a refresh that changes nothing allocates nothing.
-  local hoverOptions = row._wmHoverOptions
-  if hoverOptions == nil then
-    hoverOptions = {}
-    row._wmHoverOptions = hoverOptions
-  end
-  hoverOptions.rowBaseBg = rowBaseBg
-  RowScripts.bindHover(row, hoverOptions)
+  -- Event scripts (hover, click, drag).
+  RowHoverOverlay.ensure(row)
+  RowScripts.bindHover(row)
   RowScripts.bindClick(row, item, options)
   row.rowIndex = index
   RowScripts.bindDrag(row, item, options)
@@ -259,31 +220,12 @@ local function bindRow(factory, parent, row, index, item, options)
     row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
   end
 
-  -- Update action icon appearance and position just below the timestamp.
-  local pinTex = item.pinned and Theme.TEXTURES.pin_down_icon or Theme.TEXTURES.pin_up_icon
-  row.pinButton.icon:SetTexture(pinTex)
-  local pinColor = item.pinned and Theme.COLORS.action_icon_pinned or Theme.COLORS.action_icon
-  applyVertexColor(row.pinButton.icon, pinColor)
-  local ACTION_SPACING = Theme.LAYOUT.CONTACT_ACTION_SPACING
+  ActionButtons.paintPinIcon(row)
+  ActionButtons.paintRemoveIcon(row)
+  ActionButtons.layout(row)
 
-  row.removeButton:ClearAllPoints()
-  if row.timeLabel then
-    row.removeButton:SetPoint("TOPRIGHT", row.timeLabel, "BOTTOMRIGHT", ACTIONS_RIGHT_INSET, -ACTION_SPACING)
-  else
-    row.removeButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", -Theme.LAYOUT.CONTACT_PADDING, -ACTION_SPACING)
-  end
-
-  row.pinButton:ClearAllPoints()
-  local pinYOffset = item.pinned and (-ACTION_SPACING + 4) or (-ACTION_SPACING + 10)
-  row.pinButton:SetPoint("TOP", row.removeButton, "BOTTOM", 0, pinYOffset)
-
-  -- Show/hide action buttons: hide when unread badge is visible
-  local hasUnread = (item.unreadCount or 0) > 0
-  if not hasUnread and item.pinned then
-    row.pinButton:Show()
-  else
-    row.pinButton:Hide()
-  end
+  -- Actions show on hover only (and never under an unread badge).
+  row.pinButton:Hide()
   row.removeButton:Hide()
 
   -- Unread badge (create once, update every bind)
@@ -300,7 +242,6 @@ local function bindRow(factory, parent, row, index, item, options)
 end
 
 RowView.bindRow = bindRow
-RowView.ROW_HEIGHT = ROW_HEIGHT
 
 ns.ContactsListRowView = RowView
 return RowView

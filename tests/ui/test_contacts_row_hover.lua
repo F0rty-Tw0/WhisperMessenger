@@ -29,7 +29,7 @@ return function()
   row.bg = row:CreateTexture(nil, "BACKGROUND")
   row.bg:SetAllPoints(row)
 
-  RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+  RowScripts.bindHover(row)
 
   local removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
   local pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })

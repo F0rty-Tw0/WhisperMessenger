@@ -13,7 +13,6 @@ local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.
 local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.ContactsList.DataBuilder")
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
 local bindRow = RowView.bindRow
-local ROW_HEIGHT = RowView.ROW_HEIGHT
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -27,9 +26,6 @@ local function hasEffectiveActionHover(row)
 end
 
 local function shouldKeepActionsVisible(row)
-  if row.selected then
-    return true
-  end
   if row._wmRowHover == true then
     return true
   end
@@ -46,7 +42,6 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
   for _, row in ipairs(rows or {}) do
     row.selected = row.item ~= nil and row.item.conversationKey == selectedConversationKey
     local baseColor = (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
-    row._wmRowBaseBg = baseColor
     local keepActionsVisible = shouldKeepActionsVisible(row)
 
     if row._wmApplyVisualState then
@@ -62,14 +57,6 @@ function ContactsList.SetSelected(rows, selectedConversationKey)
         row.accentBar:Show()
       else
         row.accentBar:Hide()
-      end
-    end
-    if row.selectedRightBorder then
-      applyColorTexture(row.selectedRightBorder, Theme.COLORS.contact_selected_border_right or Theme.COLORS.accent_bar)
-      if row.selected then
-        row.selectedRightBorder:Show()
-      else
-        row.selectedRightBorder:Hide()
       end
     end
 
@@ -114,9 +101,6 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
     if row.accentBar then
       row.accentBar:Hide()
     end
-    if row.selectedRightBorder then
-      row.selectedRightBorder:Hide()
-    end
     if row.title then
       row.title:SetText("")
     end
@@ -128,7 +112,7 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
       row.timeLabel:SetText("")
     end
     if row.unreadBadge then
-      row.unreadBadge:Hide()
+      row.unreadBadge.frame:Hide()
     end
     if row.Hide then
       row:Hide()
@@ -139,8 +123,9 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   -- GetParent() works on both real WoW frames and test fakes; the bare
   -- `.parent` field only exists on fakes, which left this path dead in-game.
   local viewport = parent and ((type(parent.GetParent) == "function" and parent:GetParent()) or parent.parent) or nil
-  local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * ROW_HEIGHT)
-  local contentHeight = math.max(viewportHeight, visibleCount * ROW_HEIGHT)
+  local rowHeight = Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * rowHeight)
+  local contentHeight = math.max(viewportHeight, visibleCount * rowHeight)
 
   if parent and parent.SetSize then
     parent:SetSize(parentWidth, contentHeight)

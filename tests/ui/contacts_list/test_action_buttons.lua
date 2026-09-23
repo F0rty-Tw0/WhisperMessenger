@@ -1,6 +1,7 @@
 local ActionButtons = require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local FakeUI = require("tests.helpers.fake_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -112,19 +113,34 @@ return function()
     assert(called == "me::WOW::alice", "onPin should be called with item, got: " .. tostring(called))
   end
 
-  -- test_hide_actions_skips_when_row_is_selected
+  -- test_modern_hide_actions_hides_selected_row_too
   do
+    Theme.SetPreset("wow_default")
     local row = makeRow()
     local options = makeOptions({})
-    local parentWidth = 260
-    row.removeButton = ActionButtons.createRemoveButton(factory, row, parentWidth, options)
-    row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, options)
+    row.pinButton = ActionButtons.createPinButton(factory, row, item, 260, options)
     row.removeButton:Show()
     row.pinButton:Show()
     row.selected = true
     ActionButtons.hideActions(row)
-    assert(row.removeButton:IsShown() == true, "hideActions should NOT hide removeButton when row is selected")
-    assert(row.pinButton:IsShown() == true, "hideActions should NOT hide pinButton when row is selected")
+    assert(row.removeButton:IsShown() == false, "modern: selected rows hide removeButton when not hovered")
+    assert(row.pinButton:IsShown() == false, "modern: selected rows hide pinButton when not hovered")
+  end
+
+  -- test_modern_actions_keep_timestamp
+  do
+    Theme.SetPreset("wow_default")
+    local row = makeRow()
+    local options = makeOptions({})
+    row.timeLabel = row:CreateFontString(nil, "OVERLAY")
+    row.timeLabel:Show()
+    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, options)
+    row.pinButton = ActionButtons.createPinButton(factory, row, item, 260, options)
+    ActionButtons.showActions(row)
+    assert(row.timeLabel:IsShown() == true, "modern: timestamp stays above the action column")
+    ActionButtons.hideActions(row)
+    assert(row.timeLabel:IsShown() == true, "modern: timestamp stays when action buttons hide")
   end
 
   -- test_hide_actions_hides_when_row_is_not_selected

@@ -43,25 +43,6 @@ return function()
     assert(row.removeButton ~= nil, "row should have removeButton")
   end
 
-  -- test_action_buttons_anchor_below_timestamp
-  do
-    local row = RowView.bindRow(factory, parent, nil, 1, item, options)
-    local actionSpacing = Theme.LAYOUT.CONTACT_ACTION_SPACING
-
-    assert(row.timeLabel ~= nil, "row should have timeLabel before action button anchoring")
-    assert(row.removeButton.point ~= nil, "removeButton should have point")
-    assert(row.removeButton.point[1] == "TOPRIGHT", "removeButton should anchor TOPRIGHT")
-    assert(row.removeButton.point[2] == row.timeLabel, "removeButton should anchor to time label")
-    assert(row.removeButton.point[3] == "BOTTOMRIGHT", "removeButton should sit below time label")
-    assert(row.removeButton.point[5] == -actionSpacing, "removeButton should be offset below time label")
-
-    assert(row.pinButton.point ~= nil, "pinButton should have point")
-    assert(row.pinButton.point[1] == "TOP", "pinButton should anchor TOP")
-    assert(row.pinButton.point[2] == row.removeButton, "pinButton should anchor to removeButton")
-    assert(row.pinButton.point[3] == "BOTTOM", "pinButton should sit below removeButton")
-    assert(row.pinButton.point[5] == -actionSpacing + 10, "pinButton should be offset below removeButton")
-  end
-
   -- test_action_buttons_hidden_by_default
   do
     local row = RowView.bindRow(factory, parent, nil, 1, item, options)
@@ -139,14 +120,13 @@ return function()
     assert(row.removeButton:IsShown() == false, "removeButton should hide when mouse truly leaves")
   end
 
-  -- test_action_buttons_visible_when_selected
+  -- test_modern_action_buttons_hidden_on_selected_row_without_hover
   do
     local row = RowView.bindRow(factory, parent, nil, 1, item, options)
-    row.selected = true
     local ContactsList = require("WhisperMessenger.UI.ContactsList")
     ContactsList.SetSelected({ row }, item.conversationKey)
-    assert(row.pinButton:IsShown() == true, "pinButton should be visible when row is selected")
-    assert(row.removeButton:IsShown() == true, "removeButton should be visible when row is selected")
+    assert(row.pinButton:IsShown() == false, "modern: pinButton hidden on a selected row that is not hovered")
+    assert(row.removeButton:IsShown() == false, "modern: removeButton hidden on a selected row that is not hovered")
   end
 
   -- test_action_buttons_hidden_when_deselected
@@ -161,19 +141,21 @@ return function()
     assert(row.removeButton:IsShown() == false, "removeButton should be hidden when row is deselected")
   end
 
-  -- test_action_buttons_stay_visible_after_hover_leave_when_selected
+  -- test_modern_selected_row_actions_hide_after_hover_leave
   do
+    Theme.SetPreset("wow_default")
     local row = RowView.bindRow(factory, parent, nil, 1, item, options)
     local ContactsList = require("WhisperMessenger.UI.ContactsList")
     ContactsList.SetSelected({ row }, item.conversationKey)
-
-    -- Simulate hover enter then leave
-    local onEnter = row.scripts.OnEnter
-    local onLeave = row.scripts.OnLeave
-    onEnter(row)
-    onLeave(row)
-    assert(row.pinButton:IsShown() == true, "pinButton should stay visible after hover leave on selected row")
-    assert(row.removeButton:IsShown() == true, "removeButton should stay visible after hover leave on selected row")
+    row.timeLabel:Show()
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    assert(row.removeButton:IsShown() == true, "modern: hover shows removeButton on the selected row")
+    assert(row.timeLabel:IsShown() == true, "modern: timestamp stays while actions show")
+    row.mouseOver = false
+    row.scripts.OnLeave(row)
+    assert(row.removeButton:IsShown() == false, "modern: leaving hides removeButton on the selected row")
+    assert(row.timeLabel:IsShown() == true, "modern: timestamp back after leave")
   end
 
   -- test_pinned_item_shows_pin_icon_active
@@ -188,9 +170,18 @@ return function()
       classTag = nil,
       pinned = true,
     }
+    -- The pin action follows the hover-only rule on every preset.
+    Theme.SetPreset("wow_native")
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
-    -- Pinned items should always show the pin icon
-    assert(row.pinButton:IsShown() == true, "pinButton should be visible for pinned items")
+    local ContactsList = require("WhisperMessenger.UI.ContactsList")
+    ContactsList.SetSelected({ row }, pinnedItem.conversationKey)
+    assert(row.pinButton:IsShown() == false, "modern: pinned chevron hidden on a selected, unhovered row")
+    row.mouseOver = true
+    row.scripts.OnEnter(row)
+    assert(row.pinButton:IsShown() == true, "modern: pinned chevron shows on hover")
+    row.mouseOver = false
+    row.scripts.OnLeave(row)
+    assert(row.pinButton:IsShown() == false, "modern: pinned chevron hides after leave")
   end
   -- test_session_labels_preserve_owner_prefix
   do

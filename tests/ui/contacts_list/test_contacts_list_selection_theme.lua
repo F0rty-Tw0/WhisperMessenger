@@ -63,11 +63,11 @@ return function()
 
   assert(selectedRow ~= nil and selectedRow.selected == true, "expected first row selected")
   assert(colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar), "expected selected accent bar to use accent_bar")
-  assert(selectedRow.selectedRightBorder ~= nil and selectedRow.selectedRightBorder.shown ~= false, "expected selected right border to be shown")
-  assert(
-    colorsMatch(selectedRow.selectedRightBorder.color, Theme.COLORS.contact_selected_border_right),
-    "expected selected right border to use contact_selected_border_right"
-  )
+  assert(selectedRow.accentBar.shown == true, "expected selected accent bar to be shown")
+  assert(selectedRow.accentBar.width == 2, "expected a thin 2px accent bar, got " .. tostring(selectedRow.accentBar.width))
+  assert(selectedRow.selectedRightBorder == nil, "selection reads as tint + left bar only (no right border)")
+  assert(selectedRow.selectionFill.shown == true, "selection gradient overlay shown")
+  assert((selectedRow.bg.color[4] or 1) == 0, "row bg stays clear; the overlay carries the tint")
   assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary), "expected selected preview text to use text_primary")
   assert(colorsMatch(unselectedRow.preview.textColor, Theme.COLORS.text_secondary), "expected unselected preview text to use text_secondary")
 
@@ -77,14 +77,25 @@ return function()
   ContactsList.SetSelected(rows, items[1].conversationKey)
 
   assert(colorsMatch(selectedRow.accentBar.color, Theme.COLORS.accent_bar), "expected selected accent bar to repaint on preset switch")
-  assert(
-    colorsMatch(selectedRow.selectedRightBorder.color, Theme.COLORS.contact_selected_border_right),
-    "expected selected right border to repaint on preset switch"
-  )
   assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_primary), "expected selected preview text to repaint on preset switch")
 
+  -- Azeroth uses the same selection chrome as every other preset.
+  Theme.SetPreset("wow_native")
+  rows = ContactsList.Refresh(factory, parent, rows, items, {
+    selectedConversationKey = items[1].conversationKey,
+    visibleCount = 2,
+    onSelect = function() end,
+    onPin = function() end,
+    onRemove = function() end,
+  })
+  assert(selectedRow.accentBar.width == 2, "azeroth: thin 2px accent bar like every preset, got " .. tostring(selectedRow.accentBar.width))
+  assert(selectedRow.selectionFill.shown == true, "azeroth: selection gradient overlay shown")
+  assert((selectedRow.bg.color[4] or 1) == 0, "azeroth: row bg stays clear; the overlay carries the tint")
+  Theme.SetPreset("plumber_warm")
+  ContactsList.SetSelected(rows, items[1].conversationKey)
+
   ContactsList.SetSelected(rows, nil)
-  assert(selectedRow.selectedRightBorder.shown == false, "expected selected right border to hide when selection clears")
+  assert(selectedRow.selectionFill.shown == false, "expected selection overlay to hide when selection clears")
   assert(colorsMatch(selectedRow.preview.textColor, Theme.COLORS.text_secondary), "expected preview text to restore when selection clears")
 
   -- Re-applying selection while hovering another row should not hide that row's actions.

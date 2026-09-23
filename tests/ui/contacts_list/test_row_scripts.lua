@@ -1,4 +1,3 @@
-local Theme = require("WhisperMessenger.UI.Theme")
 local RowScripts = require("WhisperMessenger.UI.ContactsList.RowScripts")
 local ActionButtons = require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
@@ -17,13 +16,7 @@ return function()
     row.pinButton = factory.CreateFrame("Button", nil, row)
     row.removeButton = factory.CreateFrame("Button", nil, row)
 
-    local options = {
-      onClick = function() end,
-      onDragStart = function() end,
-      onDragStop = function() end,
-    }
-
-    RowScripts.bindHover(row, options)
+    RowScripts.bindHover(row)
 
     assert(row.scripts ~= nil and row.scripts.OnEnter ~= nil, "row should have OnEnter script after bindHover")
     assert(row.scripts.OnLeave ~= nil, "row should have OnLeave script after bindHover")
@@ -248,7 +241,7 @@ return function()
     }
     row.selected = false
 
-    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    RowScripts.bindHover(row)
     row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
     row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
 
@@ -283,7 +276,7 @@ return function()
     }
     row.selected = false
 
-    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    RowScripts.bindHover(row)
     row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
     row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
 
@@ -321,7 +314,7 @@ return function()
     }
     row.selected = false
 
-    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    RowScripts.bindHover(row)
     row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
     row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
 
@@ -356,7 +349,7 @@ return function()
     }
     row.selected = false
 
-    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    RowScripts.bindHover(row)
     row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
     row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
 
@@ -394,7 +387,7 @@ return function()
     }
     row.selected = false
 
-    RowScripts.bindHover(row, { rowBaseBg = Theme.COLORS.bg_secondary })
+    RowScripts.bindHover(row)
     row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, { onRemove = function() end })
     row.pinButton = ActionButtons.createPinButton(factory, row, row.item, 260, { onPin = function() end })
 

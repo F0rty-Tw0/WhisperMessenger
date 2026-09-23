@@ -5,19 +5,17 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
-local applyVertexColor = UIHelpers.applyVertexColor
 local setTextColor = UIHelpers.setTextColor
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local UNREAD_BADGE_SIZE = 16
 local UNREAD_BADGE_RIGHT_OFFSET = 4 -- relative to -CONTACT_PADDING
 local UNREAD_BADGE_BOTTOM_OFFSET = 12
-local UNREAD_BADGE_TEXTURE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
-local UNREAD_BADGE_OVERFLOW = 99
 
 local RowElements = {}
 
@@ -90,7 +88,7 @@ end
 
 function RowElements.createNameLabel(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-  label:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", NAME_LABEL_LEFT_INSET, -4)
+  label:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", NAME_LABEL_LEFT_INSET, Theme.LAYOUT.CONTACT_NAME_OFFSET_Y)
   label:SetWidth(nameLabelWidth(row, parentWidth))
   label:SetJustifyH("LEFT")
   label:SetWordWrap(false)
@@ -100,6 +98,16 @@ function RowElements.createNameLabel(row, item, parentWidth)
   row.title = label
   RowElements.updateNameLabel(row, item, parentWidth)
   return label
+end
+
+-- Only cross-faction contacts get a badge; same-faction is the norm
+-- and the icon is noise. Unknown player faction keeps the icon visible.
+local function isPlayerFaction(faction)
+  local unitFactionGroup = _G.UnitFactionGroup
+  if type(unitFactionGroup) ~= "function" then
+    return false
+  end
+  return unitFactionGroup("player") == faction
 end
 
 function RowElements.updateFactionIcon(row, item, ns_ref)
@@ -112,6 +120,9 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
     or nil
   local factionForIcon = inferredFaction or item.factionName
   local reliableFaction = factionForIcon and Theme.FactionIcon(factionForIcon) or nil
+  if reliableFaction and isPlayerFaction(factionForIcon) then
+    reliableFaction = nil
+  end
 
   local titleMaxWidth = row.title and row.title.GetWidth and row.title:GetWidth() or 0
   local textBudget = titleMaxWidth
@@ -192,7 +203,7 @@ end
 
 function RowElements.createPreview(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
-  label:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", 10, 2)
+  label:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", NAME_LABEL_LEFT_INSET, Theme.LAYOUT.CONTACT_PREVIEW_OFFSET_Y)
   setTextColor(label, Theme.COLORS.text_secondary)
   label:SetWidth(previewLabelWidth(parentWidth))
   label:SetJustifyH("LEFT")
@@ -240,33 +251,19 @@ function RowElements.updateUnreadBadge(row, item)
   if row.unreadBadge == nil then
     return
   end
-  local count = (item and item.unreadCount) or 0
-  if count > 0 then
-    row.unreadBadge:Show()
-    local badgeText = count > UNREAD_BADGE_OVERFLOW and (tostring(UNREAD_BADGE_OVERFLOW) .. "+") or tostring(count)
-    row.unreadBadge.label:SetText(badgeText)
-    row.unreadBadge.label:Show()
-  else
-    row.unreadBadge:Hide()
-    row.unreadBadge.label:Hide()
-  end
+  -- Painted per bind so the badge follows live preset switches.
+  row.unreadBadge.paint()
+  row.unreadBadge.setCount(item and item.unreadCount)
 end
 
 function RowElements.createUnreadBadge(factory, row)
-  local badge = factory.CreateFrame("Frame", nil, row)
-  badge:SetSize(UNREAD_BADGE_SIZE, UNREAD_BADGE_SIZE)
-  badge:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -Theme.LAYOUT.CONTACT_PADDING + UNREAD_BADGE_RIGHT_OFFSET, UNREAD_BADGE_BOTTOM_OFFSET)
-  badge.bg = badge:CreateTexture(nil, "BACKGROUND")
-  badge.bg:SetAllPoints()
-  badge.bg:SetTexture(UNREAD_BADGE_TEXTURE)
-  applyVertexColor(badge.bg, Theme.COLORS.unread_badge)
-  badge.label = badge:CreateFontString(nil, "OVERLAY", Theme.FONTS.unread_badge)
-  badge.label:SetAllPoints()
-  badge.label:SetJustifyH("CENTER")
-  badge.label:SetJustifyV("MIDDLE")
+  local badge = Badge.Create(factory, row, { size = UNREAD_BADGE_SIZE })
+  badge.frame:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -Theme.LAYOUT.CONTACT_PADDING + UNREAD_BADGE_RIGHT_OFFSET, UNREAD_BADGE_BOTTOM_OFFSET)
   row.unreadBadge = badge
   return badge
 end
+
+RowElements.NAME_LABEL_LEFT_INSET = NAME_LABEL_LEFT_INSET
 
 ns.ContactsListRowElements = RowElements
 return RowElements

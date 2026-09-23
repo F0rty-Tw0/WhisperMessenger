@@ -55,11 +55,16 @@ return function()
     assert(colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned), "pinned row should use bg_contact_pinned")
   end
 
-  -- test_pinned_row_hover_uses_hover_bg
+  -- test_modern_pinned_row_hover_fades_in_overlay
   do
+    Theme.SetPreset("wow_default")
     local row = RowView.bindRow(factory, parent, nil, 1, pinnedItem, options)
     row.scripts.OnEnter(row)
-    assert(colorsMatch(row.bg.color, Theme.COLORS.bg_contact_hover), "pinned row hover should use bg_contact_hover")
+    assert(colorsMatch(row.bg.color, Theme.COLORS.bg_contact_pinned), "modern: pinned base bg stays under the hover overlay")
+    assert(row.hoverFill.shown == true, "modern: hover overlay shown")
+    assert(colorsMatch(row.hoverFill.color, Theme.COLORS.bg_contact_hover), "modern: hover overlay uses bg_contact_hover")
+    row.scripts.OnLeave(row)
+    assert(row.hoverFill.shown == false, "modern: hover overlay hidden after leave")
   end
 
   -- test_pinned_row_leave_reverts_to_pinned_bg
