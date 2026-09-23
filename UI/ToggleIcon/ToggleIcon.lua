@@ -3,11 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
-local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
+local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
@@ -20,6 +19,7 @@ local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
 local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
+local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local ToggleIcon = {}
 
@@ -48,9 +48,10 @@ function ToggleIcon.Create(factory, options)
 
   -- Circular background: use the circle texture directly, tinted to desired color
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+  local RING_TEX = "Interface\\COMMON\\RingBorder"
 
   local function resolveBgColor()
-    return Theme.COLORS.toggle_icon_bg or Theme.COLORS.icon_bg
+    return Theme.COLORS.toggle_icon_bg
   end
   local function resolveRingColor()
     local c = Theme.COLORS.toggle_icon_ring
@@ -63,24 +64,18 @@ function ToggleIcon.Create(factory, options)
   local function resolveGlyphColor()
     return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
   end
-  local function resolveRingTexture()
-    local spec = Skins.Get(Skins.GetActive())
-    return (spec and spec.toggle_icon_ring_texture) or "Interface\\COMMON\\RingBorder"
-  end
 
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   background:SetTexture(CIRCLE_TEX)
   applyVertexColor(background, resolveBgColor())
 
-  -- Circular border ring. Texture is skin-driven: Modern presets use the
-  -- generic `COMMON\RingBorder` hoop, the Blizzard skin (Azeroth) swaps to
-  -- the classic minimap-tracker rune border so the draggable widget reads
-  -- as a first-party native element.
+  -- Circular border ring: the generic `COMMON\RingBorder` hoop, which
+  -- paints cleanly with any vertex-color tint from the preset palette.
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture(resolveRingTexture())
+  border:SetTexture(RING_TEX)
   applyVertexColor(border, resolveRingColor())
 
   -- Chat icon (speech bubble) instead of text label
@@ -96,20 +91,23 @@ function ToggleIcon.Create(factory, options)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
     accent = Theme.COLORS.accent,
+    inner = true, -- glow stays inside the ring, no halo around the widget
   })
   local startPulse = pulseGlow.start
   local stopPulse = pulseGlow.stop
 
-  -- Unread badge via Badge submodule
-  local badgeResult = Badge.Create(factory, frame)
-  local badge = badgeResult.badge
-  local badgeBackground = badgeResult.badgeBackground
-  local badgeLabel = badgeResult.badgeLabel
-  local innerSetUnreadCount = badgeResult.setUnreadCount
+  -- Unread badge, outlined so it reads where it overlaps the ring
+  local badgeResult = Badge.Create(factory, frame, { outline = true })
+  local badge = badgeResult.frame
+  local badgeBackground = badgeResult.background
+  local badgeOutline = badgeResult.outline
+  local badgeLabel = badgeResult.label
+  local innerSetUnreadCount = badgeResult.setCount
+  badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 6)
+  badge:SetFrameLevel(frame:GetFrameLevel() + BADGE_LEVEL_OFFSET)
 
   -- Competitive content indicator via CompetitiveIndicator submodule
   local competitiveResult = CompetitiveIndicator.Create(factory, frame)
-  local competitiveFrame = competitiveResult.frame
   local innerSetCompetitiveActive = competitiveResult.setActive
   local isCompetitiveActive = false
 
@@ -300,7 +298,7 @@ function ToggleIcon.Create(factory, options)
   local refreshDesaturation = desaturation.refresh
 
   local function refreshTheme()
-    border:SetTexture(resolveRingTexture())
+    badgeResult.paint()
     desaturation.refreshOriginalColors()
     pulseGlow.applyTheme(Theme)
     incomingPreview.applyTheme(Theme)
@@ -333,8 +331,8 @@ function ToggleIcon.Create(factory, options)
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,
+    badgeOutline = badgeOutline,
     badgeLabel = badgeLabel,
-    competitiveIndicator = competitiveFrame,
     previewFrame = previewFrame,
     previewSenderLabel = previewSenderLabel,
     previewMessageLabel = previewMessageLabel,

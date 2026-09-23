@@ -5,7 +5,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
-local Badge = ns.ToggleIconBadge or require("WhisperMessenger.UI.ToggleIcon.Badge")
+local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
@@ -18,6 +18,7 @@ local MinimapIcon = {}
 local ICON_SIZE = 30
 local ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 local BADGE_SIZE = 14
+local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
 local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
@@ -124,27 +125,28 @@ function MinimapIcon.Create(factory, options)
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
   iconTex:SetAllPoints(frame)
   iconTex:SetTexture(ICON_TEXTURE)
-  -- Ring border (same skin-aware texture as the widget icon)
+  -- Ring border (same texture as the widget icon)
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
   border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
   border:SetTexture("Interface\\COMMON\\RingBorder")
   applyVertexColor(border, BORDER_COLOR)
 
-  -- Glow pulse for unread messages (same animation as the widget icon)
+  -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
     accent = Theme.COLORS.accent,
+    inner = true, -- glow stays inside the ring, no halo around the button
   })
 
-  -- Unread badge, scaled down from widget size to minimap size
-  local badgeResult = Badge.Create(factory, frame)
-  local badge = badgeResult.badge
-  local badgeBackground = badgeResult.badgeBackground
-  local badgeLabel = badgeResult.badgeLabel
-  local innerSetUnreadCount = badgeResult.setUnreadCount
-  badge:SetSize(BADGE_SIZE, BADGE_SIZE)
+  -- Unread badge, sized down from widget size to minimap size
+  local badgeResult = Badge.Create(factory, frame, { size = BADGE_SIZE, outline = true })
+  local badge = badgeResult.frame
+  local badgeBackground = badgeResult.background
+  local badgeLabel = badgeResult.label
+  local innerSetUnreadCount = badgeResult.setCount
   badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 4, 4)
+  badge:SetFrameLevel(frame:GetFrameLevel() + BADGE_LEVEL_OFFSET)
 
   -- Incoming message preview (reuses the same module as the widget icon)
   local incomingPreview = IncomingPreview.Create(factory, frame, {
@@ -273,6 +275,7 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshTheme()
+    badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
     desaturation.refresh()
@@ -289,6 +292,7 @@ function MinimapIcon.Create(factory, options)
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,
+    pulseGlow = pulseGlow,
     previewFrame = incomingPreview.frame,
     setUnreadCount = setUnreadCount,
     setIncomingPreview = setIncomingPreview,

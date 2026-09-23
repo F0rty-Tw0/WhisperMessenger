@@ -1,5 +1,21 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local FindUI = require("tests.helpers.find_ui")
+
+-- The competitive indicator is the child frame carrying the lock glyph
+-- (the icon's own lock glyph is a texture directly on the icon frame).
+local function findCompetitiveIndicator(icon)
+  for _, child in ipairs(FindUI.ofType(icon.frame, "Frame")) do
+    local lock = FindUI.find(child, function(node)
+      return node.texturePath == "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
+    end)
+    if lock then
+      return child
+    end
+  end
+  return nil
+end
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -603,7 +619,11 @@ return function()
 
     onLeave(icon.previewDismissButton)
     local idleColor = icon.previewDismissLabel.textColor or {}
-    assert(idleColor[1] and idleColor[1] < 0.9, "leave should restore base red tint")
+    local neutral = Theme.COLORS.text_secondary
+    assert(
+      idleColor[1] == neutral[1] and idleColor[2] == neutral[2] and idleColor[3] == neutral[3],
+      "leave should restore the neutral text_secondary tint, not red"
+    )
   end
 
   -- test_setCompetitiveContent_method_exists
@@ -623,8 +643,8 @@ return function()
       parent = parent,
     })
 
-    assert(icon.competitiveIndicator ~= nil, "test_competitive_indicator_hidden_by_default: competitiveIndicator should exist")
-    assert(icon.competitiveIndicator.shown == false, "test_competitive_indicator_hidden_by_default: indicator should be hidden by default")
+    assert(findCompetitiveIndicator(icon) ~= nil, "test_competitive_indicator_hidden_by_default: competitiveIndicator should exist")
+    assert(findCompetitiveIndicator(icon).shown == false, "test_competitive_indicator_hidden_by_default: indicator should be hidden by default")
   end
 
   -- test_competitive_indicator_shown_when_active
@@ -637,7 +657,7 @@ return function()
     icon.setCompetitiveContent(true)
 
     assert(
-      icon.competitiveIndicator.shown == true,
+      findCompetitiveIndicator(icon).shown == true,
       "test_competitive_indicator_shown_when_active: indicator should show when competitive content is active"
     )
   end
@@ -653,7 +673,7 @@ return function()
     icon.setCompetitiveContent(false)
 
     assert(
-      icon.competitiveIndicator.shown == false,
+      findCompetitiveIndicator(icon).shown == false,
       "test_competitive_indicator_hidden_when_cleared: indicator should hide when competitive content ends"
     )
   end

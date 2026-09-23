@@ -23,7 +23,6 @@ local PREVIEW_ICON_GAP = 6
 local PREVIEW_DISMISS_GAP = 4
 local PREVIEW_SENDER_TOP_OFFSET = -8
 local PREVIEW_MESSAGE_GAP = -1
-local DISMISS_COLOR = { 0.85, 0.15, 0.15, 0.95 }
 local DISMISS_COLOR_HOVER = { 1.0, 0.35, 0.35, 1.0 }
 local DISMISS_BG_HOVER = { 0.85, 0.15, 0.15, 0.35 }
 
@@ -105,7 +104,8 @@ function IncomingPreview.Create(factory, frame, options)
   setFontObject(previewDismissLabel, theme.FONTS.header_name or theme.FONTS.contact_name)
   previewDismissLabel:SetPoint("CENTER", previewDismissButton, "CENTER", 0, 0)
   previewDismissLabel:SetText("×")
-  setTextColor(previewDismissLabel, DISMISS_COLOR)
+  -- Neutral at rest; red only on hover so the toast does not shout.
+  setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
 
   local senderLeft = PREVIEW_LEFT_PAD + PREVIEW_CLASS_ICON_SIZE + PREVIEW_ICON_GAP
   local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
@@ -239,7 +239,7 @@ function IncomingPreview.Create(factory, frame, options)
       applyVertexColor(previewDismissBg, DISMISS_BG_HOVER)
     end)
     previewDismissButton:SetScript("OnLeave", function()
-      setTextColor(previewDismissLabel, DISMISS_COLOR)
+      setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
       applyVertexColor(previewDismissBg, { 0, 0, 0, 0 })
     end)
   end
@@ -291,7 +291,7 @@ function IncomingPreview.Create(factory, frame, options)
     end
     setTextColor(previewSenderLabel, theme.COLORS.text_primary)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
-    setTextColor(previewDismissLabel, DISMISS_COLOR)
+    setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
   end
 
   return {

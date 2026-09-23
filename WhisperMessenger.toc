@@ -170,7 +170,6 @@ UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
-UI/ToggleIcon/Badge.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua

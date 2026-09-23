@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local Theme = require("WhisperMessenger.UI.Theme")
 local IncomingPreview = require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 
 return function()
@@ -15,6 +16,11 @@ return function()
 
   assert(preview.frame ~= nil, "preview frame should exist")
   assert(preview.frame.shown == false, "preview should start hidden")
+
+  -- test_dismiss_label_idles_neutral: red is reserved for hover
+  local idle = preview.dismissLabel.textColor or {}
+  local neutral = Theme.COLORS.text_secondary
+  assert(idle[1] == neutral[1] and idle[2] == neutral[2] and idle[3] == neutral[3], "dismiss x should idle in text_secondary, not red")
 
   local rawMessageText = "Need assistance? :heart:"
   preview.setIncomingPreview("Jaina-Proudmoore", rawMessageText, "MAGE")

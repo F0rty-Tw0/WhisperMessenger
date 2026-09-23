@@ -44,10 +44,9 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- Azeroth (wow_native / Blizzard skin) keeps the same generic ring
-  -- texture as modern presets. Only the color tint carries the theme — a
-  -- Blizzard-native ring texture read as a "weird element" on a ~40px
-  -- floating icon. Theming on the toggle widget is color-only.
+  -- Azeroth (wow_native) uses the same generic ring texture as every
+  -- preset. Only the color tint carries the theme — theming on the toggle
+  -- widget is color-only.
   -- -----------------------------------------------------------------------
   do
     Theme.SetPreset("wow_native")
