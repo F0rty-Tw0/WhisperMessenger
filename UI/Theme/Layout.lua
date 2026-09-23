@@ -14,22 +14,29 @@ local Layout = {
   CONTACTS_RESIZE_HANDLE_WIDTH = 8,
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
-  COMPOSER_HEIGHT = 52,
+  COMPOSER_HEIGHT = 44,
   DIVIDER_THICKNESS = 1,
 
   -- Contacts search
   CONTACT_SEARCH_HEIGHT = 30,
-  CONTACT_SEARCH_MARGIN = 0,
+  -- The search field floats inside the pane with a gap above the first row.
+  CONTACT_SEARCH_MARGIN = 6,
+  -- Horizontal inset of the search field (vertical gap uses the margin above).
+  CONTACT_SEARCH_INSET_X = 4,
   CONTACT_SEARCH_CLEAR_BUTTON_SIZE = 18,
 
   -- Contact rows
-  CONTACT_ROW_HEIGHT = 56,
-  CONTACT_ICON_SIZE = 40,
+  CONTACT_ROW_HEIGHT = 48,
+  CONTACT_ICON_SIZE = 34,
   CONTACT_FACTION_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,
   CONTACT_PADDING = 6,
-  CONTACT_ACCENT_BAR_W = 3,
-  CONTACT_ACTION_SIZE = 20,
+  CONTACT_ACCENT_BAR_W = 2,
+  -- Right column: time (~10) + 2 + pin 14 + 2 + remove 14 fits 48.
+  CONTACT_ACTION_SIZE = 14,
+  -- Name label top / preview bottom offsets relative to the class icon.
+  CONTACT_NAME_OFFSET_Y = 1,
+  CONTACT_PREVIEW_OFFSET_Y = -1,
   CONTACT_ACTION_SPACING = 4,
 
   -- Chat bubbles
@@ -51,7 +58,11 @@ local Layout = {
   SCROLLBAR_THUMB_MIN_H = 20,
 
   -- Composer
-  COMPOSER_INPUT_HEIGHT = 36,
+  -- One gutter on every side (input height is the strip
+  -- minus both gutters), square buttons centered on the input, equal gaps.
+  COMPOSER_GUTTER = 8,
+  COMPOSER_BUTTON_SIZE = 26,
+  COMPOSER_BUTTON_GAP = 4,
 
   -- Toggle icon
   ICON_SIZE = 42,
@@ -69,10 +80,30 @@ local Layout = {
   -- Window chrome buttons (close / new conversation / options / empty-state)
   CHROME_BUTTON_SIZE = 20,
   CHROME_BUTTON_ICON_SIZE = 14,
+  -- Custom title bar: one hit size and gap for every button; the edge inset
+  -- puts the outer glyphs' ink 8px from the window edge on both sides.
+  TITLE_BUTTON_SIZE = 22,
+  TITLE_BUTTON_GAP = 4,
+  TITLE_BAR_INSET_X = 3,
 
-  -- Content pane insets (shared between initial Build and Relayout)
-  CONTENT_PANE_RIGHT_INSET = 5,
-  CONTENT_PANE_BOTTOM_INSET = 10,
+  -- Pane insets from the window edge (shared between initial Build and
+  -- Relayout). The 1px window hairline is a BORDER texture on the
+  -- window frame, so child panes would paint over it; inset by exactly 1.
+  CONTACTS_PANE_LEFT_INSET = 1,
+  CONTACTS_PANE_BOTTOM_LEFT_INSET = 1,
+  CONTACTS_PANE_BOTTOM_INSET = 1,
+  CONTENT_PANE_RIGHT_INSET = 1,
+  CONTENT_PANE_BOTTOM_INSET = 1,
+  -- Native WoW HUD: edges of the template's inset background (top edge is
+  -- TOP_BAR_HEIGHT), plus the inset border width. Content sits inside both.
+  HUD_INSET_LEFT = 4,
+  HUD_INSET_RIGHT = 6,
+  HUD_INSET_BOTTOM = 4,
+  -- ponytail: assumed border width, not read from the template; tune in-game.
+  HUD_CONTENT_INSET = 3,
+  -- Top edge only, below TOP_BAR_HEIGHT (negative = tucks up under the
+  -- title bar border). ponytail: tuned in-game from a screenshot.
+  HUD_CONTENT_TOP_INSET = -1,
 
   -- Status dot corner offset over icon (header + contact row)
   STATUS_DOT_CORNER_OFFSET = 2,
@@ -80,7 +111,6 @@ local Layout = {
   -- Option buttons
   OPTION_BUTTON_HEIGHT = 30,
   OPTION_BUTTON_SPACING = 8,
-  OPTION_BUTTON_RADIUS = 4,
 
   -- Settings panels (shared across Appearance/General/Behavior/Notification)
   SETTINGS_CONTROL_WIDTH = 350,

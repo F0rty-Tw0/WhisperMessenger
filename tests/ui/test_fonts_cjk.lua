@@ -67,7 +67,7 @@ return function()
     setGameFont("GameFontNormal", "Fonts\\FRIZQT__.TTF", 12, "")
 
     Fonts.SetLanguage("koKR")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path = fontObj:GetFont()
     assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "koKR on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
@@ -75,7 +75,7 @@ return function()
   -- Same for Chinese (Simplified)
   withClientLocale("enUS", function()
     Fonts.SetLanguage("zhCN")
-    local fontObj = _G[Fonts.GetFonts().message_text]
+    local fontObj = _G[Fonts.message_text]
     local path = fontObj:GetFont()
     assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "zhCN on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
@@ -83,7 +83,7 @@ return function()
   -- Same for Chinese (Traditional)
   withClientLocale("enUS", function()
     Fonts.SetLanguage("zhTW")
-    local fontObj = _G[Fonts.GetFonts().composer_input]
+    local fontObj = _G[Fonts.composer_input]
     local path = fontObj:GetFont()
     assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "zhTW on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
@@ -95,7 +95,7 @@ return function()
   -- fallback font's natural size.
   withClientLocale("enUS", function()
     Fonts.SetLanguage("ruRU")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path = fontObj:GetFont()
     assert(string.find(path, "TOOLTIP_FAMILY") ~= nil, "ruRU on enUS client should inherit GameTooltipText, got: " .. tostring(path))
   end)
@@ -105,7 +105,7 @@ return function()
     withClientLocale("enUS", function()
       Fonts.SetLanguage("enUS")
       Fonts.SetMode("Shared CJK")
-      local fontObj = _G[Fonts.GetFonts().contact_name]
+      local fontObj = _G[Fonts.contact_name]
       local selectedPath = fontObj:GetFont()
       assert(selectedPath == "Interface\\AddOns\\SharedMedia\\SharedCJK.ttf", "SharedMedia path should apply before CJK override")
 
@@ -119,7 +119,7 @@ return function()
   withClientLocale("enUS", function()
     Fonts.SetMode("default")
     Fonts.SetLanguage("enUS")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path = fontObj:GetFont()
     assert(string.find(path, "FRIZQT") ~= nil, "enUS should fall back to default FRIZQT inheritance, got: " .. tostring(path))
   end)
@@ -133,7 +133,7 @@ return function()
     Fonts.SetMode("default")
     Fonts.SetLanguage("ruRU")
     Fonts.SetFontSize(16)
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path, size = fontObj:GetFont()
     assert(string.find(path, "FRIZQT___CYR") ~= nil, "ruRU on ruRU client should keep native FRIZQT_CYR, got: " .. tostring(path))
     assert(size == 16, "ruRU on ruRU client should respect the size slider, got: " .. tostring(size))
@@ -145,7 +145,7 @@ return function()
     Fonts.SetMode("default")
     Fonts.SetLanguage("koKR")
     Fonts.SetFontSize(14)
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path, size = fontObj:GetFont()
     assert(string.find(path, "2002") ~= nil, "koKR on koKR client should keep native primary font, got: " .. tostring(path))
     assert(size == 14, "koKR on koKR client should respect the size slider, got: " .. tostring(size))
@@ -157,7 +157,7 @@ return function()
     setGameFont("GameFontNormal", "Fonts\\2002.TTF", 12, "")
     Fonts.SetLanguage("auto")
     Fonts.SetFontSize(15)
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path, size = fontObj:GetFont()
     assert(string.find(path, "2002") ~= nil, "auto on koKR client should keep native primary font, got: " .. tostring(path))
     assert(size == 15, "auto on koKR client should respect the size slider, got: " .. tostring(size))
@@ -173,7 +173,7 @@ return function()
     setGameFont("GameFontNormal", "Fonts\\GAME_FONT_NORMAL.TTF", 12, "")
 
     Fonts.SetLanguage("koKR")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path = fontObj:GetFont()
     assert(
       string.find(path, "GAME_FONT_NORMAL") ~= nil,

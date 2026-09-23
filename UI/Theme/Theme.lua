@@ -44,14 +44,13 @@ local function applyPresetColors(preset)
   end
 end
 
--- Legacy flat constants
-Theme.TITLE = "WM"
+-- Window title in both chromes (not localized: it is the addon name).
+Theme.MODERN_TITLE = "WhisperMessenger"
 -- Fixed gold accent shared by chat bubble sender tags and the header addon
 -- badge. Deliberately NOT a preset token — stays the same in every theme.
 Theme.TAG_GOLD = { 0.96, 0.78, 0.24, 1 }
 Theme.WINDOW_IDLE_ALPHA = 1
 Theme.WINDOW_EXTERNAL_ACTIVITY_ALPHA = 0.72
-Theme.WINDOW_ALPHA_FADE_SECONDS = 0.12
 Theme.WINDOW_ALPHA_UPDATE_INTERVAL = 0.1
 
 Theme.COLORS = Colors
@@ -76,6 +75,12 @@ end
 
 function Theme.GetPreset()
   return activePresetKey
+end
+
+-- Single source for every unread badge's colours (bg, text). Read at paint
+-- time so badges follow live preset switches.
+function Theme.BadgeColors()
+  return Theme.COLORS.unread_badge, Theme.COLORS.unread_badge_text
 end
 
 function Theme.SetPreset(presetKey)
@@ -116,13 +121,6 @@ function Theme.ListBubblePresets()
     return BubbleColors.ListPresets()
   end
   return { "default" }
-end
-
-function Theme.GetBubblePreset()
-  if BubbleColors and BubbleColors.GetPreset then
-    return BubbleColors.GetPreset()
-  end
-  return "default"
 end
 
 function Theme.SetBubblePreset(presetKey)

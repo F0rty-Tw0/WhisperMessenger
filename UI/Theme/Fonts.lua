@@ -40,8 +40,10 @@ local MULTI_SCRIPT_FONT_OBJECT_NAMES = {
 
 local DEFAULT_BASE_SIZE = 12
 
--- { wmName, gameFont, sizeOffset }
--- sizeOffset is relative to the base size (0 = base, -2 = small, +4 = large)
+-- { wmName, gameFont, sizeOffset, hasShadow }
+-- sizeOffset is relative to the base size (0 = base, -2 = small, +4 = large).
+-- hasShadow bakes a drop shadow into the font object itself: a shadow set at
+-- runtime on a FontString may not render on current Retail.
 local FONT_DEFS = {
   { "WM_Normal", "GameFontNormal", 0 },
   { "WM_DisableSmall", "GameFontDisableSmall", -2 },
@@ -49,7 +51,11 @@ local FONT_DEFS = {
   { "WM_HighlightSmall", "GameFontHighlightSmall", -2 },
   { "WM_HighlightLarge", "GameFontHighlightLarge", 4 },
   { "WM_ChatNormal", "GameFontHighlight", 0 },
+  { "WM_Title", "GameFontHighlight", 0, true },
 }
+
+local SHADOW_OFFSET_X, SHADOW_OFFSET_Y = 1, -1
+local SHADOW_ALPHA = 0.85
 
 local FONT_MAP = {
   contact_name = "WM_Normal",
@@ -65,6 +71,7 @@ local FONT_MAP = {
   composer_input = "WM_ChatNormal",
   icon_label = "WM_Highlight",
   empty_state = "WM_Highlight",
+  window_title = "WM_Title",
 }
 
 local FONT_COLOR_PRESETS = {
@@ -187,7 +194,7 @@ local function applyFonts()
   local inheritedSource = resolveInheritedSourceFontObject()
 
   for _, def in ipairs(FONT_DEFS) do
-    local wmName, gameFont, sizeOffset = def[1], def[2], def[3]
+    local wmName, gameFont, sizeOffset, hasShadow = def[1], def[2], def[3], def[4]
     local size = baseSize + sizeOffset
     local fontObj = _G[wmName]
     if not fontObj then
@@ -212,6 +219,11 @@ local function applyFonts()
       else
         fontObj:SetFont(FRIZQT_PATH, size, flags)
       end
+    end
+
+    if hasShadow and fontObj.SetShadowOffset then
+      fontObj:SetShadowOffset(SHADOW_OFFSET_X, SHADOW_OFFSET_Y)
+      fontObj:SetShadowColor(0, 0, 0, SHADOW_ALPHA)
     end
   end
 end
@@ -304,10 +316,6 @@ function Fonts.SetFontColor(key)
   end
 end
 
-function Fonts.GetFontColor()
-  return currentFontColor
-end
-
 function Fonts.GetFontColorRGBA()
   local preset = FONT_COLOR_PRESETS[currentFontColor]
   return preset and preset.rgba or nil
@@ -320,10 +328,6 @@ function Fonts.ListFontColorPresets()
     list[#list + 1] = { key = preset.key, label = preset.label, rgba = preset.rgba }
   end
   return list
-end
-
-function Fonts.GetFonts()
-  return FONT_MAP
 end
 
 for key, value in pairs(FONT_MAP) do

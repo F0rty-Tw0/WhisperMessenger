@@ -38,6 +38,14 @@ function FontObjects.Install()
         self:CopyFontObject(source)
       end
 
+      function font:SetShadowOffset(x, y)
+        self._shadowOffset = { x, y }
+      end
+
+      function font:SetShadowColor(r, g, b, a)
+        self._shadowColor = { r, g, b, a }
+      end
+
       _G[name] = font
       return font
     end

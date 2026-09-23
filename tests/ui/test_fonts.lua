@@ -69,7 +69,7 @@ return function()
 
   do
     Fonts.Initialize()
-    local fonts = Fonts.GetFonts()
+    local fonts = Fonts
     for _, key in ipairs({ "contact_name", "message_text", "composer_input" }) do
       assert(string.find(fonts[key], "^WM_") ~= nil, "test_font_keys: " .. key .. " should start with WM_, got: " .. tostring(fonts[key]))
     end
@@ -79,7 +79,7 @@ return function()
 
   do
     Fonts.Initialize("default")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     assert(fontObj ~= nil, "test_default: WM font object should exist")
     local path = fontObj:GetFont()
     assert(string.find(path, "FRIZQT") ~= nil, "test_default: should inherit game font path, got: " .. tostring(path))
@@ -90,7 +90,7 @@ return function()
   do
     setGameFont("Fonts\\FRIZQT___CYR.TTF", 12, "")
     Fonts.SetMode("default")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local path = fontObj:GetFont()
     assert(string.find(path, "CYR") ~= nil, "test_default_locale: should follow locale game font, got: " .. tostring(path))
     setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
@@ -126,7 +126,7 @@ return function()
 
       setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 12, "")
       Fonts.Initialize("Unavailable Font")
-      local path = _G[Fonts.GetFonts().contact_name]:GetFont()
+      local path = _G[Fonts.contact_name]:GetFont()
       assert(Fonts.GetMode() == "default", "test_missing_libstub: custom name should select default mode")
       assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_missing_libstub: custom name should apply default path, got: " .. tostring(path))
       setGameFont("Fonts\\FRIZQT__.TTF", 12, "")
@@ -139,7 +139,7 @@ return function()
     withSharedMedia(nil, function()
       setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 18, "OUTLINE")
       Fonts.Initialize("Some Registered Font")
-      local fontObj = _G[Fonts.GetFonts().contact_name]
+      local fontObj = _G[Fonts.contact_name]
       local path = fontObj:GetFont()
       assert(Fonts.GetMode() == "default", "test_absent_lsm: unavailable library should select default mode")
       assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_absent_lsm: should inherit game font, got: " .. tostring(path))
@@ -154,11 +154,13 @@ return function()
     withSharedMedia({ ["Open Sans"] = selectedPath }, function()
       Fonts.Initialize("Open Sans")
       assert(Fonts.GetMode() == "Open Sans", "test_lsm_mode: registered name should become current mode")
-      for key, name in pairs(Fonts.GetFonts()) do
-        local obj = _G[name]
-        assert(obj ~= nil, "test_lsm_all_wm_objects: " .. key .. " object should exist")
-        local path = obj:GetFont()
-        assert(path == selectedPath, "test_lsm_all_wm_objects: " .. key .. " should use fetched path, got: " .. tostring(path))
+      for key, name in pairs(Fonts) do
+        if type(name) == "string" then
+          local obj = _G[name]
+          assert(obj ~= nil, "test_lsm_all_wm_objects: " .. key .. " object should exist")
+          local path = obj:GetFont()
+          assert(path == selectedPath, "test_lsm_all_wm_objects: " .. key .. " should use fetched path, got: " .. tostring(path))
+        end
       end
     end)
   end
@@ -167,7 +169,7 @@ return function()
 
   do
     Fonts.SetMode("default")
-    local fonts = Fonts.GetFonts()
+    local fonts = Fonts
     local uiObj = _G[fonts.contact_name]
     local composerObj = _G[fonts.composer_input]
     local uiPath = uiObj:GetFont()
@@ -196,15 +198,15 @@ return function()
   do
     Fonts.Initialize("default")
     Fonts.SetFontSize(14)
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local _, size = fontObj:GetFont()
     assert(size == 14, "test_set_font_size: contact_name base should be 14, got: " .. tostring(size))
 
-    local smallObj = _G[Fonts.GetFonts().contact_preview]
+    local smallObj = _G[Fonts.contact_preview]
     local _, smallSize = smallObj:GetFont()
     assert(smallSize == 12, "test_set_font_size: contact_preview (small) should be 12, got: " .. tostring(smallSize))
 
-    local largeObj = _G[Fonts.GetFonts().header_name]
+    local largeObj = _G[Fonts.header_name]
     local _, largeSize = largeObj:GetFont()
     assert(largeSize == 18, "test_set_font_size: header_name (large) should be 18, got: " .. tostring(largeSize))
   end
@@ -223,11 +225,11 @@ return function()
   do
     Fonts.Initialize("default")
     Fonts.SetOutline("OUTLINE")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local _, _, flags = fontObj:GetFont()
     assert(flags == "OUTLINE", "test_set_outline: flags should be OUTLINE, got: " .. tostring(flags))
 
-    local smallObj = _G[Fonts.GetFonts().contact_preview]
+    local smallObj = _G[Fonts.contact_preview]
     local _, _, smallFlags = smallObj:GetFont()
     assert(smallFlags == "OUTLINE", "test_set_outline: small flags should be OUTLINE, got: " .. tostring(smallFlags))
   end
@@ -237,7 +239,7 @@ return function()
   do
     Fonts.Initialize("default")
     Fonts.SetOutline("THICKOUTLINE")
-    local fontObj = _G[Fonts.GetFonts().message_text]
+    local fontObj = _G[Fonts.message_text]
     local _, _, flags = fontObj:GetFont()
     assert(flags == "THICKOUTLINE", "test_set_outline_thick: flags should be THICKOUTLINE, got: " .. tostring(flags))
   end
@@ -247,7 +249,7 @@ return function()
   do
     Fonts.SetOutline("OUTLINE")
     Fonts.SetOutline("NONE")
-    local fontObj = _G[Fonts.GetFonts().contact_name]
+    local fontObj = _G[Fonts.contact_name]
     local _, _, flags = fontObj:GetFont()
     assert(flags == "", "test_set_outline_none: flags should be empty, got: " .. tostring(flags))
   end
@@ -268,7 +270,7 @@ return function()
       setGameFont("Fonts\\CUSTOM_ELVUI.TTF", 12, "")
       for _, name in ipairs({ "Missing Font", "system", "morpheus" }) do
         Fonts.SetMode(name)
-        local path = _G[Fonts.GetFonts().contact_name]:GetFont()
+        local path = _G[Fonts.contact_name]:GetFont()
         assert(Fonts.GetMode() == "default", "test_legacy_fallback: " .. name .. " should select default mode")
         assert(string.find(path, "CUSTOM_ELVUI") ~= nil, "test_legacy_fallback: " .. name .. " should use default path, got: " .. tostring(path))
       end
@@ -286,26 +288,11 @@ return function()
       Fonts.SetOutline("THICKOUTLINE")
       Fonts.SetMode("Open Sans")
 
-      local path, size, flags = _G[Fonts.GetFonts().contact_name]:GetFont()
+      local path, size, flags = _G[Fonts.contact_name]:GetFont()
       assert(path == selectedPath, "test_lsm_size_outline: should use fetched path, got: " .. tostring(path))
       assert(size == 16, "test_lsm_size_outline: size should persist, got: " .. tostring(size))
       assert(flags == "THICKOUTLINE", "test_lsm_size_outline: outline should persist, got: " .. tostring(flags))
     end)
-  end
-
-  -- test_default_font_color_is_default
-
-  do
-    Fonts.Initialize("default")
-    assert(Fonts.GetFontColor() == "default", "test_default_font_color: should be 'default', got: " .. tostring(Fonts.GetFontColor()))
-  end
-
-  -- test_set_font_color_returns_preset_key
-
-  do
-    Fonts.Initialize("default")
-    Fonts.SetFontColor("gold")
-    assert(Fonts.GetFontColor() == "gold", "test_set_font_color: should be 'gold', got: " .. tostring(Fonts.GetFontColor()))
   end
 
   -- test_get_font_color_rgba_returns_nil_for_default
@@ -349,8 +336,10 @@ return function()
 
   do
     Fonts.Initialize("default")
+    Fonts.SetFontColor("gold")
     Fonts.SetFontColor("nonexistent")
-    assert(Fonts.GetFontColor() == "default", "test_font_color_unknown: should fall back to 'default', got: " .. tostring(Fonts.GetFontColor()))
+    local rgba = Fonts.GetFontColorRGBA()
+    assert(rgba == nil, "test_font_color_unknown: should fall back to 'default' (nil rgba), got: " .. tostring(rgba))
   end
 
   print("  All font mode tests passed")

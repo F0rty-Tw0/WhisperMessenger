@@ -30,7 +30,6 @@ local tokenRoles = {
   bg_contact_hover = "contact_hover",
   bg_contact_pinned = "contact_pinned",
   bg_contact_selected = "contact_selected",
-  contact_selected_border_right = "accent",
   bg_input = "input_bg",
   bg_search_input = "input_bg",
   bg_message_input = "input_bg",
@@ -48,26 +47,25 @@ local tokenRoles = {
   offline = "status_offline",
   away = "status_away",
   dnd = "status_dnd",
-  unread_badge = "accent_soft",
+  -- Every unread badge (rows, tabs, widget, minimap): accent circle with
+  -- knockout (surface-coloured) text, readable on every preset's accent.
+  unread_badge = "accent",
+  unread_badge_text = "surface_primary",
   divider = "divider",
+  window_border = "window_border",
   contacts_divider = "divider",
   contacts_border_right = "divider_strong",
   composer_pane_border = "composer_pane_border",
   contacts_divider_hover = "divider_hover",
-  contacts_resize_hover_fill = "divider_fill",
-  contacts_resize_outline = "divider_outline",
   scrollbar = "scrollbar",
   scrollbar_hover = "scrollbar_hover",
-  send_button = "button_fill",
   send_button_hover = "button_fill_hover",
-  send_button_disabled = "button_disabled",
-  send_button_text = "text_emphasis",
-  send_button_text_disabled = "text_soft",
-  icon_bg = "accent",
+  ghost_button_fill_hover = "contact_hover",
+  ghost_button_border = "divider_strong",
+  ghost_button_text = "text_soft",
   toggle_icon_bg = "toggle_icon_bg",
   toggle_icon_ring = "toggle_icon_ring",
   toggle_icon_glyph = "toggle_icon_glyph",
-  badge_bg = "status_dnd",
   option_button_bg = "option_bg",
   option_button_hover = "contact_hover",
   option_button_active = "contact_selected",
@@ -77,12 +75,16 @@ local tokenRoles = {
   option_button_text_active = "text_emphasis",
   option_toggle_on = "toggle_on",
   option_toggle_off = "toggle_off",
-  option_toggle_border = "toggle_border",
   danger_button_bg = "danger_bg",
   danger_button_hover = "danger_hover",
+  -- Modern settings controls: switch knob / slider thumb, slider track and
+  -- fill, and the red text of the danger ghost button.
+  control_knob = "text_emphasis",
+  slider_track = "scrollbar",
+  slider_fill = "accent",
+  danger_text = "status_dnd",
   action_icon = "action_icon",
   action_icon_hover = "text_primary",
-  action_icon_pinned = "status_away",
   action_remove_hover = "status_dnd",
 }
 
@@ -128,8 +130,6 @@ function Presets.Get(key)
 
   return Builder.ClonePalette(preset)
 end
-
-Presets.DATA = presetData
 
 ns.ThemePresets = Presets
 return Presets

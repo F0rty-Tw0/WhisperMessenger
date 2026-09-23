@@ -48,12 +48,18 @@ end
 
 function PickerStyles.BorderColor()
   local color = Theme.COLORS.contacts_border_right or Theme.COLORS.divider or { 0.2, 0.2, 0.2, 1 }
-  return { color[1], color[2], color[3], 1 }
+  return { color[1], color[2], color[3], color[4] or 1 }
 end
 
 function PickerStyles.HighlightColor(alpha)
   local color = Theme.COLORS.option_button_hover or Theme.COLORS.bg_contact_hover or { 0.2, 0.5, 0.8, 1 }
-  return { color[1], color[2], color[3], alpha ~= nil and alpha or (color[4] or 1) }
+  local tokenAlpha = color[4] or 1
+  if alpha ~= nil then
+    -- Hovers are white-plus-alpha: a fixed alpha would paint a white box,
+    -- so emphasise with the token's own alpha doubled instead.
+    return { color[1], color[2], color[3], math.min(1, tokenAlpha * 2) }
+  end
+  return { color[1], color[2], color[3], tokenAlpha }
 end
 
 function PickerStyles.ApplyPanelTheme(frame, border)

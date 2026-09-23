@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local Skins = ns.Skins or require("WhisperMessenger.UI.Theme.Skins")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -72,25 +71,10 @@ function Factory.Create(factory, parent, options)
   local thumb = scrollBar:CreateTexture(nil, "ARTWORK")
   thumb:SetSize(SCROLLBAR_WIDTH, Theme.LAYOUT.SCROLLBAR_THUMB_MIN_H)
 
-  -- Stage 2B: bundled Blizzard chrome paints the native scrollbar knob.
-  -- Modern skin keeps the slim flat-color thumb. Color hover is skipped
-  -- under blizzard skin (a textured knob doesn't tint), but width hover
-  -- still applies to give the same affordance. Stashing the active state
-  -- on a captured table lets refreshSkin() rewrite it on live preset
-  -- switches without rebuilding the scrollview.
-  local skinState = { useBlizzardThumb = false }
+  -- Repainted by refreshSkin() on live preset switches without rebuilding
+  -- the scrollview.
   local function paintThumb()
-    local spec = Skins.Get(Skins.GetActive())
-    local useBlizzardThumb = spec and spec.scrollbar_thumb_texture or nil
-    skinState.useBlizzardThumb = useBlizzardThumb ~= nil
-    if useBlizzardThumb and thumb.SetTexture then
-      thumb:SetTexture(useBlizzardThumb)
-    else
-      if thumb.SetTexture then
-        thumb:SetTexture(nil)
-      end
-      applyColorTexture(thumb, Theme.COLORS.scrollbar)
-    end
+    applyColorTexture(thumb, Theme.COLORS.scrollbar)
   end
   paintThumb()
 
@@ -104,17 +88,13 @@ function Factory.Create(factory, parent, options)
   -- resets the size, causing an OnEnter/OnLeave flicker loop).
   if scrollBar.SetScript then
     scrollBar:SetScript("OnEnter", function()
-      if not skinState.useBlizzardThumb then
-        applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
-      end
+      applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
       if thumb.SetWidth then
         thumb:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH_HOVER)
       end
     end)
     scrollBar:SetScript("OnLeave", function()
-      if not skinState.useBlizzardThumb then
-        applyColorTexture(thumb, Theme.COLORS.scrollbar)
-      end
+      applyColorTexture(thumb, Theme.COLORS.scrollbar)
       if thumb.SetWidth then
         thumb:SetWidth(SCROLLBAR_WIDTH)
       end
