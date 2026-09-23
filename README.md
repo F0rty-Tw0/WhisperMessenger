@@ -1,10 +1,25 @@
-# WhisperMessenger
+<p align="center">
+  <a href="https://mod.curseforge.com/modding-contests/wow_midnight-addon_contest/">
+    <img src=".github/assets/contest.png" alt="Winner of The Addon Trials 2026, a CurseForge WoW addon contest">
+  </a>
+</p>
 
-[![Latest Release](https://img.shields.io/github/v/release/F0rty-Tw0/WhisperMessenger)](https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest)
-[![Release Date](https://img.shields.io/github/release-date/F0rty-Tw0/WhisperMessenger)](https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest)
-[![CI](https://img.shields.io/github/actions/workflow/status/F0rty-Tw0/WhisperMessenger/ci.yml?label=CI)](https://github.com/F0rty-Tw0/WhisperMessenger/actions/workflows/ci.yml)
+<h1 align="center">WhisperMessenger</h1>
 
-**Never lose a whisper again.** Every conversation lands in one messenger window with history, online status and unread badges — like the messenger you already use, inside World of Warcraft.
+<p align="center">
+  <a href="https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest"><img src="https://img.shields.io/github/v/release/F0rty-Tw0/WhisperMessenger" alt="Latest Release"></a>
+  <a href="https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest"><img src="https://img.shields.io/github/release-date/F0rty-Tw0/WhisperMessenger" alt="Release Date"></a>
+  <a href="https://github.com/F0rty-Tw0/WhisperMessenger/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/F0rty-Tw0/WhisperMessenger/ci.yml?label=CI" alt="CI"></a>
+</p>
+
+<p align="center">
+  <b>Never lose a whisper again.</b><br>
+  Every conversation lands in one messenger window with history, online status and unread badges, like the messenger you already use, inside World of Warcraft.
+</p>
+
+<p align="center">
+  🏆 5th place in <a href="https://mod.curseforge.com/modding-contests/wow_midnight-addon_contest/">The Addon Trials</a>, CurseForge's 2026 WoW addon contest.
+</p>
 
 ![WhisperMessenger preview](.github/assets/preview.png)
 
@@ -23,47 +38,51 @@ You can, and it helps. A tab still mixes everyone into one scrolling stream, for
 
 ### Messenger-Style Conversations
 
-Chat bubbles with timestamps, date separators, and sender labels — just like a real messenger app. Right-click any bubble to copy its text or add a reaction.
+Chat bubbles with timestamps, date separators and sender labels. Right-click any message to copy it or add a reaction. An emoji picker sits next to the message box.
 
 ### Contact List
 
-Scrollable contact list with online status dots, unread message badges, and last-message previews. Drag contacts to reorder them. Search across names and message history with live filtering.
+Online status dots, unread badges, last-message previews, and the zone or dungeon a friend is in. Pin and drag contacts to reorder them. Search across names and message history.
+
+### Whispers and Groups
+
+The **Whispers** tab holds your private conversations. The **Groups** tab collects party, raid, instance and guild chat, with reactions there too.
 
 ### Battle.net Integration
 
-Seamlessly handles both character whispers and Battle.net friend whispers. Contact details stay in sync with your friends list in real time.
+Character whispers and Battle.net friend whispers live in one list. Contact details stay in sync with your friends list in real time.
 
 ### Friends Who Also Use It
 
-When a friend also runs WhisperMessenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Players without the addon still receive a readable plain-text fallback.
+When a friend also runs WhisperMessenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Both can be switched off in Behavior settings. Players without the addon still receive a readable plain-text fallback.
 
-### Theme Presets
+### Themes
 
-Switch between multiple visual themes — Default, Midnight, Shadowlands, and Draenor — from the Appearance settings. Themes apply instantly with no reload required.
+A modern, clean look with five color themes: **Midnight**, **Shadowlands**, **Draenor**, **Pandaria** and **Azeroth**. Prefer the game's own style? Turn on **Native WoW HUD** for a classic Blizzard frame. Themes apply instantly, no reload.
 
-### Font Customization
+### Fonts and Scale
 
-Choose from Default (Friz Quadrata), System (Arial Narrow), or any font provided by SharedMedia addons like ElvUI.
+Pick the default font or any font from SharedMedia addons like ElvUI. Resize the whole window from 75% to 150%.
 
-### Smart Notifications
+### Notifications
 
-Configurable notification sounds (Whisper, Ping, Chime, Bell, Raid Warning) that play even when in-game audio is muted.
+Choose a sound (Whisper, Ping, Chime, Bell, Raid Warning) that plays even when in-game audio is muted.
 
 ### Auto-Open Window
 
-Automatically opens the messenger when you receive a whisper, right-click "Whisper" on a player, or click a name to whisper — configurable in Behavior settings, disabled during combat.
+Opens the messenger when you receive a whisper, pick "Whisper" on a player, or click a name. Configurable in Behavior settings, and never during combat.
 
-### Quest & Item Linking
+### Linking
 
-Shift-click quests, achievements, spells, and professions to link them directly into the messenger chat.
+Shift-click items, quests, achievements, spells and professions to link them straight into your message.
 
 ### Settings
 
-Full settings panel with General, Appearance, Behavior, and Notification tabs. Includes a profanity filter toggle, hide-from-default-chat option, and auto-focus control.
+Pages for **General**, **Appearance**, **Behavior**, **Notifications**, **Icons** and **What's New**. Includes a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
 
 ## Good to know
 
-Blizzard blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds, and raid boss encounters. This is a game-level restriction, not a limitation of WhisperMessenger. The addon detects these situations, steps aside so whispers fall through to the default chat, and resumes when you're done.
+Blizzard blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds and raid boss encounters. This is a game-level restriction, not a limitation of WhisperMessenger. The addon detects these situations, steps aside so whispers fall through to the default chat, and resumes when you're done.
 
 ## Compatibility
 
@@ -77,14 +96,15 @@ WhisperMessenger works on **all WoW flavors**:
 | TBC Classic Anniversary   | Supported |
 | Cataclysm Classic         | Supported |
 | Mists of Pandaria Classic | Supported |
+| WoW: Forever              | Beta      |
 
-A single install covers every client — WoW automatically loads the correct version.
+A single install covers every client. WoW loads the correct version automatically.
 
 ## Download
 
 ### CurseForge (Recommended)
 
-Install via the [CurseForge App](https://www.curseforge.com/wow/addons/whispermessenger) for automatic updates.
+Install via the [CurseForge App](https://www.curseforge.com/wow/addons/whisper-messenger) for automatic updates.
 
 ### Wago
 
@@ -96,7 +116,7 @@ Download the latest ZIP from [GitHub Releases](https://github.com/F0rty-Tw0/Whis
 
 ## Configuration
 
-Open the settings panel by clicking the gear icon in the messenger window, or type:
+Open settings with the gear icon in the messenger window, or type:
 
 ```
 /wmsg
@@ -125,6 +145,9 @@ bash scripts/lint.sh
 ```bash
 # Run a single test file
 lua tests/run.lua tests/path/to/test_file.lua
+
+# No Lua on Windows? Use the Python + lupa harness
+python scripts/run_test.py tests/path/to/test_file.lua
 
 # Run all tests
 for f in tests/**/*.lua; do lua tests/run.lua "$f"; done
