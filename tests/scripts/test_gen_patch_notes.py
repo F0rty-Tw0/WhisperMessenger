@@ -11,6 +11,21 @@ class RenderLuaTests(unittest.TestCase):
 
         self.assertIn("    'Added a \"?\" button and a What\\'s New page.',\n", rendered)
 
+    def test_quote_lua_escapes_newline(self):
+        self.assertEqual(gen_patch_notes.quote_lua("a\nb"), '"a\\nb"')
+
+
+class ParseLatestSectionTests(unittest.TestCase):
+    def test_nested_bullets_fold_into_parent_line(self):
+        text = "## [1.5.0] - 2026-09-20\n- New look:\n  - Cleaner window.\n  - Softer colors.\n- Fixed: typo.\n"
+
+        _version, _date, lines = gen_patch_notes.parse_latest_section(text)
+
+        self.assertEqual(
+            lines,
+            ["New look:\n   - Cleaner window.\n   - Softer colors.", "Fixed: typo."],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

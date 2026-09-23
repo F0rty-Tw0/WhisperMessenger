@@ -100,7 +100,7 @@ Rules:
 
 ### Layout
 
-`CHANGELOG.md` holds only `[Unreleased]` plus the **current minor series** (1.4.x today). Older series live in `archive/changelog/<major>.<minor>.md` (e.g. `archive/changelog/1.3.md`).
+`CHANGELOG.md` holds only `[Unreleased]` plus the **current series** (2.0.x today). Older series live in `archive/changelog/<major>.<minor>.md` (e.g. `archive/changelog/1.4.md`).
 
 - Every file starts with an `All releases:` nav line linking each of the other series. When a new minor opens, move the finished series into a new archive file and add it to the nav line in **all** changelog files.
 - `archive/` is ignored by `.pkgmeta`, so it never ships in the addon zip.

@@ -23,6 +23,8 @@ OUTPUT_PATH = os.path.join(PROJECT_ROOT, "Core", "PatchNotes.lua")
 
 # "## [1.4.0] - 2026-08-31" or "## [1.4.0]". "## [Unreleased]" never matches.
 SECTION_PATTERN = re.compile(r"^## \[(\d+\.\d+\.\d+)\](?: - (\S+))?\s*$")
+# "  - detail" under a top-level bullet; folded into the parent line.
+SUB_BULLET_PATTERN = re.compile(r"^\s+- (.*)$")
 
 
 def parse_latest_section(text):
@@ -41,10 +43,15 @@ def parse_latest_section(text):
         if raw_line.startswith("## "):
             break
 
+        sub_match = SUB_BULLET_PATTERN.match(raw_line)
         if raw_line.startswith("- "):
             bullet = raw_line[2:].strip()
             if bullet:
                 lines.append(bullet)
+        elif sub_match and lines:
+            sub_bullet = sub_match.group(1).strip()
+            if sub_bullet:
+                lines[-1] += "\n   - " + sub_bullet
 
     return version, date, lines
 
@@ -52,7 +59,7 @@ def parse_latest_section(text):
 def quote_lua(value):
     """Return a StyLua-compatible quoted string with the fewest escapes."""
     delimiter = "'" if value.count('"') > value.count("'") else '"'
-    escaped = value.replace("\\", "\\\\").replace(delimiter, "\\" + delimiter)
+    escaped = value.replace("\\", "\\\\").replace(delimiter, "\\" + delimiter).replace("\n", "\\n")
     return delimiter + escaped + delimiter
 
 
