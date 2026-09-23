@@ -1,7 +1,9 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local Composer = require("WhisperMessenger.UI.Composer.Composer")
 local ReactionAssets = require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Theme = require("WhisperMessenger.UI.Theme")
+local ComposerLayout = require("WhisperMessenger.UI.Composer.ComposerLayout")
 local ReactionPicker = require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
 local SettingsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
@@ -40,7 +42,17 @@ return function()
     local button = picker.buttons[index]
     local column = (index - 1) % 9
     local row = math.floor((index - 1) / 9)
-    assert(button._emojiKey == key, "picker order must come from ReactionAssets.KEYS")
+    local glyph = assert(
+      FindUI.find(button, function(node)
+        return node.texCoords ~= nil
+      end),
+      "picker button should carry a reaction glyph"
+    )
+    local want = ReactionAssets.GetTexCoords(key)
+    assert(
+      glyph.texCoords[1] == want[1] and glyph.texCoords[2] == want[2] and glyph.texCoords[3] == want[3] and glyph.texCoords[4] == want[4],
+      "picker order must come from ReactionAssets.KEYS"
+    )
     assert(button.width == pickerButtonSize and button.height == pickerButtonSize, "picker buttons should share the configured size")
     assert(
       button.point[4] == 6 + column * pickerButtonSize and button.point[5] == -6 - row * pickerButtonSize,
@@ -50,9 +62,10 @@ return function()
 
   local emojiButton = composer.emojiButton
   local emojiIcon = emojiButton.icon
-  local iconSize = ReactionAssets.GetIconSize() * 2
+  -- The glyph is capped so it fits the square composer button.
+  local iconSize = math.min(ReactionAssets.GetIconSize() * 2, Theme.LAYOUT.COMPOSER_BUTTON_SIZE - 8)
   assert(emojiIcon ~= nil, "launcher should expose its icon visual state")
-  assert(emojiIcon.width == iconSize and emojiIcon.height == iconSize, "launcher icon should be exactly twice the base reaction size")
+  assert(emojiIcon.width == iconSize and emojiIcon.height == iconSize, "launcher icon should be twice the base reaction size, capped to the button")
   assert(emojiButton.width >= iconSize and emojiButton.height >= iconSize, "launcher hit area should contain the enlarged icon")
   local winkCoords = ReactionAssets.GetTexCoords("wink")
   for index = 1, 4 do
@@ -161,8 +174,8 @@ return function()
       and reactionHighlight[2] == composerHighlight[2]
       and reactionHighlight[3] == composerHighlight[3]
       and reactionHighlight[4] == composerHighlight[4]
-      and reactionHighlight[4] == 0.35,
-    "picker highlights should use identical RGBA with canonical 0.35 hover alpha"
+      and reactionHighlight[4] == math.min(1, (Theme.COLORS.option_button_hover[4] or 1) * 2),
+    "picker highlights should use identical RGBA; modern doubles the token alpha (never a fixed white box)"
   )
   picker.buttons[1].scripts.OnLeave(picker.buttons[1])
   reactionPicker._reactionButtons[1].scripts.OnLeave(reactionPicker._reactionButtons[1])
@@ -187,8 +200,8 @@ return function()
     activeHighlight.color[1] == refreshedHover[1]
       and activeHighlight.color[2] == refreshedHover[2]
       and activeHighlight.color[3] == refreshedHover[3]
-      and activeHighlight.color[4] == 0.35,
-    "picker refresh should repaint hovered highlight with current shared RGB and canonical 0.35 alpha"
+      and activeHighlight.color[4] == 1,
+    "picker refresh should repaint hovered highlight with current shared RGB and doubled token alpha (capped at 1)"
   )
   assert(activeHighlight:IsShown(), "picker refresh should preserve visible highlight state")
   assert(not inactiveHighlight:IsShown(), "picker refresh should preserve hidden highlight state")
@@ -206,8 +219,8 @@ return function()
     activeHighlight.color[1] == refreshedHover[1]
       and activeHighlight.color[2] == refreshedHover[2]
       and activeHighlight.color[3] == refreshedHover[3]
-      and activeHighlight.color[4] == 0.35,
-    "composer refresh should repaint picker hover with current shared RGB and canonical 0.35 alpha"
+      and activeHighlight.color[4] == 1,
+    "composer refresh should repaint picker hover with current shared RGB and doubled token alpha (capped at 1)"
   )
 
   emojiButton.mouseOver = false
@@ -247,15 +260,15 @@ return function()
   local function assertSettingsFontSize(fontSize, label)
     expectedFontSize = fontSize
     settingsOnChange("fontSize", fontSize)
-    local iconSize = ReactionAssets.GetIconSize() * 2
-    local buttonSize = math.max(30, iconSize)
-    local inputWidth = parent.width - 24 - composer.sendButton.width - buttonSize - 16
+    -- Expected geometry at the new font size.
+    local expected = ComposerLayout.Compute(parent.width)
+    local iconSize = expected.emojiIconSize
+    local buttonSize = expected.emojiSize
+    local inputWidth = expected.inputW
+    assert(iconSize == math.min(ReactionAssets.GetIconSize() * 2, Theme.LAYOUT.COMPOSER_BUTTON_SIZE - 8), label .. " expected capped twice-base icon")
     assert(emojiIcon.width == iconSize and emojiIcon.height == iconSize, label .. " settings event should resize launcher icon to twice base size")
     assert(emojiButton.width == buttonSize and emojiButton.height == buttonSize, label .. " settings event should resize launcher hit area")
-    assert(
-      composer.input.width == inputWidth and composer.inputBg.width == inputWidth,
-      label .. " settings event should reserve launcher width from input"
-    )
+    assert(composer.input.width == inputWidth, label .. " settings event should reserve launcher width from input")
   end
 
   assertSettingsFontSize(17, "maximum")

@@ -1,83 +1,86 @@
 local Composer = require("WhisperMessenger.UI.Composer")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 
-return function()
+local SEND_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\send.png"
+local HOVER_CIRCLE_TEXTURE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+
+local function textureWithPath(frame, path)
+  return FindUI.find(frame, function(node)
+    return node.texturePath == path
+  end)
+end
+
+local function colorsMatch(actual, expected)
+  if type(actual) ~= "table" or type(expected) ~= "table" then
+    return false
+  end
+  for i = 1, 4 do
+    if math.abs((actual[i] or 1) - (expected[i] or 1)) > 0.0001 then
+      return false
+    end
+  end
+  return true
+end
+
+-- The send button is an accent paper-plane glyph, no border/fill.
+local function testIconSendButton(key)
+  Theme.SetPreset(key)
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "parent", nil)
   parent:SetSize(600, 50)
-
-  local selectedContact = {
-    conversationKey = "me::WOW::arthas-area52",
-    displayName = "Arthas-Area52",
-    channel = "WOW",
-  }
-
-  local composer = Composer.Create(factory, parent, selectedContact, function() end)
+  local composer = Composer.Create(factory, parent, { conversationKey = "me::WOW::a", displayName = "A", channel = "WOW" }, function() end)
   local btn = composer.sendButton
 
-  assert(btn.sendBg ~= nil, "expected sendBg texture on button")
-  assert(btn.sendBorderTop == nil, "expected sendBorderTop to be removed")
-  assert(btn.label ~= nil, "expected send button label")
+  assert(btn.ghost == nil, key .. ": no outline parts on the send button")
+  local sendIcon = assert(textureWithPath(btn, SEND_ICON_TEXTURE), key .. ": send glyph is the bundled paper plane")
+  local hoverCircle = assert(textureWithPath(btn, HOVER_CIRCLE_TEXTURE), key .. ": send button carries a hover circle")
+  assert(sendIcon.desaturated ~= true, key .. ": paper plane is not desaturated")
+  assert(sendIcon.width >= 18 and sendIcon.width <= 20, key .. ": glyph is 18-20px, got " .. tostring(sendIcon.width))
+  assert(sendIcon.shown == true, key .. ": icon visible")
+  assert(colorsMatch(sendIcon.vertexColor, Theme.COLORS.accent), key .. ": icon uses the accent color")
 
-  local expected = Theme.COLORS.send_button
-  local c = btn.sendBg.color
-  assert(c ~= nil, "expected sendBg to have a color")
-  assert(
-    c[1] == expected[1] and c[2] == expected[2] and c[3] == expected[3],
-    "expected send_button color, got: " .. tostring(c[1]) .. "," .. tostring(c[2]) .. "," .. tostring(c[3])
-  )
-
-  local expectedText = Theme.COLORS.send_button_text or Theme.COLORS.text_primary
-  assert(
-    btn.label.textColor[1] == expectedText[1] and btn.label.textColor[2] == expectedText[2] and btn.label.textColor[3] == expectedText[3],
-    "expected send button label color token"
-  )
-
-  assert(btn.scripts.OnEnter ~= nil, "expected OnEnter script")
+  local originalTooltip = _G.GameTooltip
+  local tooltipText
+  _G.GameTooltip = {
+    SetOwner = function() end,
+    SetText = function(_, text)
+      tooltipText = text
+    end,
+    Show = function() end,
+    Hide = function() end,
+  }
   btn.scripts.OnEnter(btn)
-
-  local hoverExpected = Theme.COLORS.send_button_hover
-  local hc = btn.sendBg.color
-  assert(hc[1] == hoverExpected[1] and hc[2] == hoverExpected[2] and hc[3] == hoverExpected[3], "expected send_button_hover color on hover")
-
-  assert(btn.scripts.OnLeave ~= nil, "expected OnLeave script")
+  assert(hoverCircle.shown == true, key .. ": hover shows a faint circle")
+  local wantCircle = Theme.COLORS.bg_contact_hover
+  local vc = hoverCircle.vertexColor
+  assert(vc[1] == wantCircle[1] and vc[2] == wantCircle[2] and vc[3] == wantCircle[3], key .. ": hover circle is neutral")
+  assert(hoverCircle.alpha == wantCircle[4], key .. ": hover circle at the token's faint alpha")
+  assert(tooltipText == "Send", key .. ": hover tooltip names the action, got " .. tostring(tooltipText))
+  local hc = sendIcon.vertexColor
+  local accent = Theme.COLORS.accent
+  assert(hc[1] >= accent[1] and hc[2] >= accent[2] and hc[3] >= accent[3], key .. ": hover brightens the glyph")
+  assert(not colorsMatch(hc, accent), key .. ": hover glyph differs from idle accent")
   btn.scripts.OnLeave(btn)
-
-  local lc = btn.sendBg.color
-  assert(lc[1] == expected[1] and lc[2] == expected[2] and lc[3] == expected[3], "expected send_button color after leave")
+  assert(hoverCircle.shown == false, key .. ": leave hides the circle")
+  _G.GameTooltip = originalTooltip
 
   composer.setEnabled(false)
-  local disabledExpected = Theme.COLORS.send_button_disabled
-  local dc = btn.sendBg.color
-  assert(
-    dc[1] == disabledExpected[1] and dc[2] == disabledExpected[2] and dc[3] == disabledExpected[3],
-    "expected send_button_disabled color when disabled"
-  )
-
-  local disabledTextExpected = Theme.COLORS.send_button_text_disabled or Theme.COLORS.text_secondary
-  assert(
-    btn.label.textColor[1] == disabledTextExpected[1]
-      and btn.label.textColor[2] == disabledTextExpected[2]
-      and btn.label.textColor[3] == disabledTextExpected[3],
-    "expected disabled send button text color token"
-  )
-
+  local dc = sendIcon.vertexColor
+  assert(math.abs(dc[1] - dc[2]) < 0.01 and math.abs(dc[2] - dc[3]) < 0.01, key .. ": disabled glyph is neutral grey")
+  assert(math.abs(dc[4] - 0.5) < 0.01, key .. ": disabled glyph at ~0.5 alpha")
   btn.scripts.OnEnter(btn)
-  local dhc = btn.sendBg.color
-  assert(
-    dhc[1] == disabledExpected[1] and dhc[2] == disabledExpected[2] and dhc[3] == disabledExpected[3],
-    "expected disabled color to remain on hover when disabled"
-  )
+  assert(hoverCircle.shown ~= true, key .. ": disabled button has no hover circle")
   btn.scripts.OnLeave(btn)
+end
 
-  composer.setEnabled(true)
-  local rc = btn.sendBg.color
-  assert(rc[1] == expected[1] and rc[2] == expected[2] and rc[3] == expected[3], "expected send_button color after re-enabling")
-  assert(
-    btn.label.textColor[1] == expectedText[1] and btn.label.textColor[2] == expectedText[2] and btn.label.textColor[3] == expectedText[3],
-    "expected send button text color after re-enabling"
-  )
+return function()
+  local previousPreset = Theme.GetPreset()
+  for _, key in ipairs(Theme.ListPresets()) do
+    testIconSendButton(key)
+  end
 
+  Theme.SetPreset(previousPreset)
   print("PASS: test_send_button_hover")
 end

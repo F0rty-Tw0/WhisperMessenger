@@ -19,51 +19,11 @@ return function()
 
   local composer = Composer.Create(factory, parent, selectedContact, function() end, function() end)
 
-  -- The send button label should have fontObject set via SetFontObject
-  local sendButton = composer.sendButton
-  local buttonLabel
-  for _, child in ipairs(sendButton.children) do
-    if child.frameType == "FontString" and child.text == "Send" then
-      buttonLabel = child
-      break
-    end
-  end
-
-  assert(buttonLabel ~= nil, "expected send button to have a FontString label")
-
   local expectedFont = _G[Theme.FONTS.composer_input]
   assert(expectedFont ~= nil, "expected WM_ChatNormal font object to exist")
-  assert(
-    buttonLabel.fontObject == expectedFont,
-    "expected send button label fontObject to be WM_ChatNormal, got: " .. tostring(buttonLabel.fontObject)
-  )
 
   -- The placeholder should have fontObject set via SetFontObject
-  local placeholder
-  for _, child in ipairs(parent.children) do
-    -- The pane is a child of parent; walk its children
-    for _, grandchild in ipairs(child.children or {}) do
-      if grandchild.frameType == "FontString" and grandchild.text == "Enter to send" then
-        placeholder = grandchild
-        break
-      end
-    end
-    if placeholder then
-      break
-    end
-  end
-
-  -- Placeholder is on the pane (which is the first child frame of parent)
-  if not placeholder then
-    -- Search the composer pane directly
-    local pane = composer.frame
-    for _, child in ipairs(pane.children) do
-      if child.frameType == "FontString" and child.text == "Enter to send" then
-        placeholder = child
-        break
-      end
-    end
-  end
+  local placeholder = composer.placeholder
 
   assert(placeholder ~= nil, "expected placeholder FontString to exist")
   assert(placeholder.fontObject == expectedFont, "expected placeholder fontObject to be WM_ChatNormal, got: " .. tostring(placeholder.fontObject))
@@ -71,7 +31,6 @@ return function()
   -- Composer text should localize when Russian is configured.
   Localization.Configure({ language = "ruRU" })
   local localizedComposer = Composer.Create(factory, parent, selectedContact, function() end, function() end)
-  assert(localizedComposer.sendButton.label.text == "Отпр.", "expected localized send button label")
   assert(localizedComposer.placeholder.text == "Enter для отправки", "expected localized composer placeholder")
   Localization.Configure({ language = "enUS" })
   -- The input EditBox should also have fontObject set
