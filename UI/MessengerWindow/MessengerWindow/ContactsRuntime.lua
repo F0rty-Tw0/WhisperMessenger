@@ -36,6 +36,7 @@ function ContactsRuntime.Create(factory, options)
   if options.contactsPane then
     tabToggle = TabToggle.Create(factory, options.contactsPane, {
       initialMode = currentTabMode,
+      nativeChrome = options.nativeChrome == true,
       onModeChanged = function(mode)
         if mode == currentTabMode then
           return
@@ -180,7 +181,7 @@ function ContactsRuntime.Create(factory, options)
     -- never scroll underneath the Whispers/Groups toggle.
     getContactsBottomInset = function()
       if tabToggle and tabToggle.frame and tabToggle.frame:IsShown() then
-        return TabToggle.HEIGHT
+        return tabToggle.reservedHeight or TabToggle.HEIGHT
       end
       return 0
     end,

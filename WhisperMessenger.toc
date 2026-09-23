@@ -149,6 +149,7 @@ UI/ContactsList/ActionButtons.lua
 UI/ContactsList/GroupLabel.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/EmptyState.lua
+UI/ContactsList/NativeTabToggle.lua
 UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua

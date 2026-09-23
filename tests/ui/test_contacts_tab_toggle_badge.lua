@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local TabParts = require("tests.helpers.tab_toggle_parts")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
@@ -28,16 +29,22 @@ return function()
   do
     local toggle = createToggle()
     toggle.setUnreadCounts(0, 0)
-    assert(toggle.whispersLabel.text == "Whispers", "expected whispers label to be 'Whispers', got " .. tostring(toggle.whispersLabel.text))
-    assert(toggle.groupsLabel.text == "Groups", "expected groups label to be 'Groups', got " .. tostring(toggle.groupsLabel.text))
+    assert(
+      TabParts.whispers(toggle).label.text == "Whispers",
+      "expected whispers label to be 'Whispers', got " .. tostring(TabParts.whispers(toggle).label.text)
+    )
+    assert(
+      TabParts.groups(toggle).label.text == "Groups",
+      "expected groups label to be 'Groups', got " .. tostring(TabParts.groups(toggle).label.text)
+    )
   end
 
   -- test_labels_stay_plain_when_unread_present
   do
     local toggle = createToggle()
     toggle.setUnreadCounts(3, 5)
-    assert(toggle.whispersLabel.text == "Whispers", "label must not embed count; got " .. tostring(toggle.whispersLabel.text))
-    assert(toggle.groupsLabel.text == "Groups", "label must not embed count; got " .. tostring(toggle.groupsLabel.text))
+    assert(TabParts.whispers(toggle).label.text == "Whispers", "label must not embed count; got " .. tostring(TabParts.whispers(toggle).label.text))
+    assert(TabParts.groups(toggle).label.text == "Groups", "label must not embed count; got " .. tostring(TabParts.groups(toggle).label.text))
   end
 
   -- test_russian_tab_labels
@@ -45,8 +52,8 @@ return function()
     Localization.Configure({ language = "ruRU" })
     local toggle = createToggle()
     toggle.setUnreadCounts(0, 0)
-    assert(toggle.whispersLabel.text == "Шепот", "expected localized whispers label")
-    assert(toggle.groupsLabel.text == "Группы", "expected localized groups label")
+    assert(TabParts.whispers(toggle).label.text == "Шепот", "expected localized whispers label")
+    assert(TabParts.groups(toggle).label.text == "Группы", "expected localized groups label")
     Localization.Configure({ language = "enUS" })
   end
 
@@ -55,18 +62,18 @@ return function()
     local toggle = createToggle()
     toggle.setUnreadCounts(3, 5)
 
-    assert(toggle.whispersBadge ~= nil, "expected whispersBadge to be exposed on return value")
-    assert(toggle.groupsBadge ~= nil, "expected groupsBadge to be exposed on return value")
+    assert(TabParts.whispers(toggle).badge ~= nil, "expected a whispers badge frame")
+    assert(TabParts.groups(toggle).badge ~= nil, "expected a groups badge frame")
 
-    assert(toggle.whispersBadge.shown ~= false, "expected whispers badge to be shown when count > 0")
-    assert(toggle.groupsBadge.shown ~= false, "expected groups badge to be shown when count > 0")
+    assert(TabParts.whispers(toggle).badge.shown ~= false, "expected whispers badge to be shown when count > 0")
+    assert(TabParts.groups(toggle).badge.shown ~= false, "expected groups badge to be shown when count > 0")
 
-    local whispersText = findChildFontString(toggle.whispersBadge, function(c)
+    local whispersText = findChildFontString(TabParts.whispers(toggle).badge, function(c)
       return c.text == "3"
     end)
     assert(whispersText ~= nil, "expected whispers badge to render '3'")
 
-    local groupsText = findChildFontString(toggle.groupsBadge, function(c)
+    local groupsText = findChildFontString(TabParts.groups(toggle).badge, function(c)
       return c.text == "5"
     end)
     assert(groupsText ~= nil, "expected groups badge to render '5'")
@@ -77,19 +84,19 @@ return function()
     local toggle = createToggle()
     toggle.setUnreadCounts(4, 2)
     toggle.setUnreadCounts(0, 0)
-    assert(toggle.whispersBadge.shown == false, "expected whispers badge hidden when count is 0")
-    assert(toggle.groupsBadge.shown == false, "expected groups badge hidden when count is 0")
+    assert(TabParts.whispers(toggle).badge.shown == false, "expected whispers badge hidden when count is 0")
+    assert(TabParts.groups(toggle).badge.shown == false, "expected groups badge hidden when count is 0")
   end
 
   -- test_badge_caps_at_99_plus
   do
     local toggle = createToggle()
     toggle.setUnreadCounts(100, 250)
-    local whispersText = findChildFontString(toggle.whispersBadge, function(c)
+    local whispersText = findChildFontString(TabParts.whispers(toggle).badge, function(c)
       return c.text == "99+"
     end)
     assert(whispersText ~= nil, "expected whispers badge to cap at '99+' for counts > 99")
-    local groupsText = findChildFontString(toggle.groupsBadge, function(c)
+    local groupsText = findChildFontString(TabParts.groups(toggle).badge, function(c)
       return c.text == "99+"
     end)
     assert(groupsText ~= nil, "expected groups badge to cap at '99+' for counts > 99")
