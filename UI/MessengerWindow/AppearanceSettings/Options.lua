@@ -64,8 +64,6 @@ function Options.BuildOutlineOptions()
   return localizeOptionSpecs(OUTLINE_OPTION_SPECS)
 end
 
-Options.OUTLINE_OPTIONS = Options.BuildOutlineOptions()
-
 function Options.BuildFontColorOptions()
   local presets = Fonts.ListFontColorPresets and Fonts.ListFontColorPresets() or {}
   local result = {}

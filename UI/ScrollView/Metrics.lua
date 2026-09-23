@@ -74,7 +74,6 @@ local function normalizeRange(range)
   end
   return range
 end
-Metrics._normalizeRange = normalizeRange
 
 function Metrics.GetRange(view)
   if view == nil or view.scrollFrame == nil then

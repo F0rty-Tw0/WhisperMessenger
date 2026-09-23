@@ -73,7 +73,6 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
     local column = slot % layout.columns
     local row = math.floor(slot / layout.columns)
     local button = factory.CreateFrame("Button", nil, frame)
-    button._emojiKey = key
     button:SetSize(buttonSize, buttonSize)
     button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * buttonSize, -6 - row * buttonSize)
 

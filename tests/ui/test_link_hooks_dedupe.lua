@@ -74,9 +74,7 @@ return function()
   local function reset()
     input.focused = false
     inserts = {}
-    if LinkHooks._isOverrideInstalled() then
-      LinkHooks._uninstallOverrides()
-    end
+    fire("OnEditFocusLost")
   end
 
   -- test_shift_click_fanout_inserts_once
@@ -120,7 +118,8 @@ return function()
   -- test_original_used_when_composer_unfocused_but_override_installed
   do
     reset()
-    LinkHooks._installOverrides()
+    input.focused = true
+    fire("OnEditFocusGained")
     input.focused = false
     frameTime = 400
 
@@ -142,9 +141,6 @@ return function()
   end
 
   -- Cleanup global state
-  if LinkHooks._isOverrideInstalled() then
-    LinkHooks._uninstallOverrides()
-  end
   _G.hooksecurefunc = savedHook
   _G.SetItemRef = savedSetItemRef
   _G.ChatEdit_GetActiveWindow = savedChatEditGetActiveWindow

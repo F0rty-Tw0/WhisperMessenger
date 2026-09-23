@@ -80,7 +80,6 @@ function ButtonStyling.restoreManualCopyButton(button)
   button._wmManualCopyOriginalHighlightTexture = nil
   button._wmManualCopyOriginalPushedTexture = nil
   button._wmManualCopyOriginalDisabledTexture = nil
-  button._wmManualCopyRanOriginalHover = nil
 
   if button.SetScript then
     button:SetScript("OnEnter", originalOnEnter)
@@ -149,7 +148,6 @@ function ButtonStyling.styleManualCopyButton(button)
           local originalOnEnter = self._wmManualCopyOriginalOnEnter
           if originalOnEnter then
             originalOnEnter(self, ...)
-            self._wmManualCopyRanOriginalHover = true
           end
           if self._wmManualCopyStyleActive then
             self._wmManualCopyHovered = true
@@ -161,7 +159,6 @@ function ButtonStyling.styleManualCopyButton(button)
           if originalOnLeave then
             originalOnLeave(self, ...)
           end
-          self._wmManualCopyRanOriginalHover = false
           if self._wmManualCopyStyleActive then
             self._wmManualCopyHovered = false
             paintManualCopyButton(self)
@@ -176,7 +173,6 @@ function ButtonStyling.styleManualCopyButton(button)
 
   button._wmManualCopyStyleActive = true
   button._wmManualCopyHovered = button.IsMouseOver and button:IsMouseOver() or false
-  button._wmManualCopyRanOriginalHover = false
   paintManualCopyButton(button)
 end
 

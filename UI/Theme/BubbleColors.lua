@@ -89,10 +89,6 @@ function BubbleColors.ListPresets()
   return keys
 end
 
-function BubbleColors.GetPreset()
-  return activePresetKey
-end
-
 function BubbleColors.SetPreset(presetKey)
   if presetKey == PRESET_DEFAULT then
     activePresetKey = PRESET_DEFAULT
@@ -158,34 +154,6 @@ function BubbleColors.ApplyPreset()
       applyColorTable(target, source)
     end
   end
-end
-
-function BubbleColors.GetColors()
-  local colors = getThemeColors()
-  if not colors then
-    return {}
-  end
-
-  return {
-    bg_bubble_in = {
-      colors.bg_bubble_in[1],
-      colors.bg_bubble_in[2],
-      colors.bg_bubble_in[3],
-      colors.bg_bubble_in[4],
-    },
-    bg_bubble_out = {
-      colors.bg_bubble_out[1],
-      colors.bg_bubble_out[2],
-      colors.bg_bubble_out[3],
-      colors.bg_bubble_out[4],
-    },
-    bg_bubble_system = {
-      colors.bg_bubble_system[1],
-      colors.bg_bubble_system[2],
-      colors.bg_bubble_system[3],
-      colors.bg_bubble_system[4],
-    },
-  }
 end
 
 ns.ThemeBubbleColors = BubbleColors

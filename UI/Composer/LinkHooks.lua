@@ -212,14 +212,6 @@ local function attachFocusGuards(input)
   end)
 end
 
--- Exposed for tests so we can drive focus transitions without a real
--- EditBox.
-LinkHooks._installOverrides = installOverrides
-LinkHooks._uninstallOverrides = uninstallOverrides
-LinkHooks._isOverrideInstalled = function()
-  return overrideInstalled
-end
-
 local function registerLinkHooks()
   if registeredLinkHooks or type(_G.hooksecurefunc) ~= "function" then
     return

@@ -306,7 +306,7 @@ return function()
     end
 
     ConversationPane.Refresh(view, contact, conversation)
-    assert(#view.transcript._virtualRows == 29, "initial refresh should retain metadata for complete history")
+    assert(#view.transcript._virtualState.rows == 29, "initial refresh should retain metadata for complete history")
 
     view.transcript.viewportHeight = 400
     view.transcript.scrollFrame.height = nil
@@ -321,7 +321,7 @@ return function()
       text = "short 30",
     })
     ConversationPane.Refresh(view, contact, conversation)
-    assert(#view.transcript._virtualRows == 30, "incoming refresh should retain every message row")
+    assert(#view.transcript._virtualState.rows == 30, "incoming refresh should retain every message row")
     assert(view.transcript._virtualLastIndex - view.transcript._virtualFirstIndex + 1 < 30, "incoming refresh should only bind viewport rows")
     local range = Metrics.GetRange(view.transcript)
     assert(range > 0, "full transcript metadata should keep older history scrollable")
@@ -340,7 +340,7 @@ return function()
     local conversation = { messages = makeMessages(30, "message ") }
 
     ConversationPane.Refresh(view, contact, conversation)
-    local offset = view.transcript._virtualRows[10].offset + 2
+    local offset = view.transcript._virtualState.rows[10].offset + 2
     ScrollView.SetVerticalScroll(view.transcript, offset)
     ConversationPane.Refresh(view, contact, conversation, { status = "offline" })
 
@@ -359,7 +359,7 @@ return function()
     ScrollView.SetVerticalScroll(view.transcript, 0)
     ConversationPane.Refresh(view, jaina, { messages = makeMessages(30, "jaina ") })
 
-    assert(view.transcript._virtualRows[1].message.text == "jaina 1", "selection change should rebuild row metadata")
+    assert(view.transcript._virtualState.rows[1].message.text == "jaina 1", "selection change should rebuild row metadata")
     assert(ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript), "selection change should snap the new conversation to end")
   end
 
@@ -373,7 +373,7 @@ return function()
     ConversationPane.Refresh(view, contact, { messages = makeMessages(30, "old ") })
     ConversationPane.Refresh(view, contact, { messages = makeMessages(15, "retained ") })
 
-    assert(#view.transcript._virtualRows == 15, "refresh should clamp row metadata to retained history")
+    assert(#view.transcript._virtualState.rows == 15, "refresh should clamp row metadata to retained history")
     assert(ScrollView.GetOffset(view.transcript) == ScrollView.GetRange(view.transcript), "history shrink while at end should remain snapped to end")
   end
 

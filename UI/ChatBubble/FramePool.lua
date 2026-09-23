@@ -148,7 +148,6 @@ end
 
 local function clearBindingState(frame)
   frame._wmMessage = nil
-  frame._wmVirtualIndex = nil
   frame._wmOnRevealCensored = nil
   frame._wmOnReact = nil
   frame._wmCanReact = nil

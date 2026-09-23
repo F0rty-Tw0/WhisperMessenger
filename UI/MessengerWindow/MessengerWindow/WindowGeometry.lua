@@ -33,10 +33,6 @@ function WindowGeometry.Create(options)
     currentContactsWidth = nextContactsWidth
   end
 
-  local function getScale()
-    return currentScale
-  end
-
   local function setScale(nextScale)
     currentScale = WindowScale.Normalize(nextScale)
     return currentScale
@@ -71,7 +67,6 @@ function WindowGeometry.Create(options)
   return {
     getContactsWidth = getContactsWidth,
     setContactsWidth = setContactsWidth,
-    getScale = getScale,
     setScale = setScale,
     applyState = applyState,
     buildState = buildState,

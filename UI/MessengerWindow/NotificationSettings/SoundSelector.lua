@@ -38,8 +38,6 @@ function SoundSelector.Options()
   return options
 end
 
-SoundSelector.OPTIONS = SoundSelector.Options()
-
 function SoundSelector.Create(factory, parent, opts)
   opts = opts or {}
   local onChange = opts.onChange

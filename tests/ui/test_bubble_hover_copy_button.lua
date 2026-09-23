@@ -2,17 +2,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 
 local function findCopyButton(frame)
-  -- The button is now parented to the bubble's parent (sibling of the
-  -- bubble), but still tracked on the bubble via _copyButton.
-  if frame._copyButton then
-    return frame._copyButton
-  end
-  for _, child in ipairs(frame.children) do
-    if child._wmCopyButton == true then
-      return child
-    end
-  end
-  return nil
+  -- The button is parented to the bubble's parent (sibling of the
+  -- bubble), and tracked on the bubble via _copyButton.
+  return frame._copyButton
 end
 
 return function()

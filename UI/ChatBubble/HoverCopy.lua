@@ -102,7 +102,6 @@ local function ensureCopyButton(persistentFactory, frame)
 
   local buttonParent = (type(frame.GetParent) == "function" and frame:GetParent()) or frame
   button = persistentFactory.CreateFrame("Button", nil, buttonParent)
-  button._wmCopyButton = true
   button._wmCopyBubble = frame
   button:SetSize(COPY_BUTTON_SIZE, COPY_BUTTON_SIZE)
   if button.EnableMouse then
@@ -119,7 +118,6 @@ local function ensureCopyButton(persistentFactory, frame)
   if texture.SetVertexColor then
     texture:SetVertexColor(1, 1, 1, 1)
   end
-  button._copyTexture = texture
 
   if button.SetAlpha then
     button:SetAlpha(COPY_BUTTON_DIM_ALPHA)

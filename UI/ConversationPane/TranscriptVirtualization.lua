@@ -84,7 +84,6 @@ local function prepareRows(transcript, messages, paneWidth)
 
     if changed then
       row.height = estimatedHeight
-      row.measured = false
       anyChanged = true
     end
     row.index = index
@@ -115,7 +114,6 @@ local function prepareRows(transcript, messages, paneWidth)
   state.paneWidth = paneWidth
   state.geometryRevision = geometryRevision
   state.totalHeight = offset
-  transcript._virtualRows = rows
   return state, anyChanged
 end
 
@@ -348,7 +346,6 @@ end
 
 function TranscriptVirtualization.Reset(transcript)
   transcript._virtualState = nil
-  transcript._virtualRows = nil
   transcript._virtualFirstIndex = nil
   transcript._virtualLastIndex = nil
 end

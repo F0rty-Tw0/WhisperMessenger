@@ -60,9 +60,7 @@ return function()
   local function reset()
     input.focused = false
     input.lastInsert = nil
-    if LinkHooks._isOverrideInstalled() then
-      LinkHooks._uninstallOverrides()
-    end
+    fire("OnEditFocusLost")
   end
 
   -- test_overrides_not_installed_at_module_load
@@ -74,7 +72,6 @@ return function()
     reset()
     assert(_G.ChatEdit_GetActiveWindow == originalGetActiveWindow, "ChatEdit_GetActiveWindow must NOT be overridden at module load")
     assert(_G.ChatEdit_InsertLink == originalInsertLink, "ChatEdit_InsertLink must NOT be overridden at module load")
-    assert(not LinkHooks._isOverrideInstalled(), "override state should start uninstalled")
   end
 
   -- test_focus_gained_installs_overrides
@@ -83,7 +80,6 @@ return function()
     reset()
     input.focused = true
     fire("OnEditFocusGained")
-    assert(LinkHooks._isOverrideInstalled(), "focus-gained should install overrides")
     assert(_G.ChatEdit_GetActiveWindow ~= originalGetActiveWindow, "ChatEdit_GetActiveWindow should route through our wrapper while focused")
     assert(_G.ChatEdit_InsertLink ~= originalInsertLink, "ChatEdit_InsertLink should route through our wrapper while focused")
   end
@@ -96,7 +92,6 @@ return function()
     fire("OnEditFocusGained")
     input.focused = false
     fire("OnEditFocusLost")
-    assert(not LinkHooks._isOverrideInstalled(), "focus-lost should uninstall overrides")
     assert(_G.ChatEdit_GetActiveWindow == originalGetActiveWindow, "ChatEdit_GetActiveWindow must be restored to Blizzard's original on focus-lost")
     assert(_G.ChatEdit_InsertLink == originalInsertLink, "ChatEdit_InsertLink must be restored to Blizzard's original on focus-lost")
   end
@@ -145,9 +140,6 @@ return function()
   end
 
   -- Cleanup global state
-  if LinkHooks._isOverrideInstalled() then
-    LinkHooks._uninstallOverrides()
-  end
   _G.hooksecurefunc = savedHook
   _G.SetItemRef = savedSetItemRef
   _G.ChatEdit_GetActiveWindow = savedChatEditGetActiveWindow

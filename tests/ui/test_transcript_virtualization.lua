@@ -62,11 +62,16 @@ local function rowIndexAtOffset(rows, offset)
   return result
 end
 
-local function boundBubbleIndexes(content)
+local function boundBubbleIndexes(content, messages)
+  local indexByMessage = {}
+  for index, message in ipairs(messages) do
+    indexByMessage[message] = index
+  end
   local indexes = {}
   for _, frame in ipairs(content._activeFrames or {}) do
-    if frame._textFS and frame._wmVirtualIndex then
-      indexes[frame._wmVirtualIndex] = true
+    local index = frame._textFS and indexByMessage[frame._wmMessage]
+    if index then
+      indexes[index] = true
     end
   end
   return indexes
@@ -91,7 +96,7 @@ return function()
     local refreshFormatCalls = formatCalls
 
     rawset(Hyperlinks, "FormatTextForDisplay", originalFormat)
-    local rows = transcript._virtualRows
+    local rows = transcript._virtualState.rows
     assert(type(rows) == "table", "test_full_history_uses_bounded_visible_bindings: expected full row metadata")
     assert(#rows == 200, "test_full_history_uses_bounded_visible_bindings: expected metadata for all 200 messages")
     assert(
@@ -141,7 +146,7 @@ return function()
     local transcript = makeTranscript(400, 120)
     local messages = makeMessages(80)
     TranscriptView.RenderTranscript(transcript, messages)
-    local middleOffset = transcript._virtualRows[30].offset + 3
+    local middleOffset = transcript._virtualState.rows[30].offset + 3
     ScrollView.SetVerticalScroll(transcript, middleOffset)
     local settledOffset = ScrollView.GetOffset(transcript)
 
@@ -166,7 +171,7 @@ return function()
       "test_append_preserves_end_or_scrolled_viewport: append at end should remain snapped to end"
     )
 
-    local middleOffset = transcript._virtualRows[30].offset + 2
+    local middleOffset = transcript._virtualState.rows[30].offset + 2
     ScrollView.SetVerticalScroll(transcript, middleOffset)
     local settledOffset = ScrollView.GetOffset(transcript)
     messages[#messages + 1] = makeMessages(1)[1]
@@ -189,10 +194,10 @@ return function()
       message.text = string.rep("https://example.com/path/", 12)
     end
     TranscriptView.RenderTranscript(transcript, messages)
-    local anchorRow = transcript._virtualRows[100]
+    local anchorRow = transcript._virtualState.rows[100]
     ScrollView.SetVerticalScroll(transcript, anchorRow.offset + anchorRow.height - 1)
 
-    anchorRow = transcript._virtualRows[100]
+    anchorRow = transcript._virtualState.rows[100]
     assert(
       ScrollView.GetOffset(transcript) <= anchorRow.offset + anchorRow.height,
       "test_measurement_collapse_clamps_anchor_delta: retained offset must stay inside measured anchor"
@@ -214,9 +219,9 @@ return function()
     TranscriptView.RenderTranscript(transcript, messages)
 
     local offset = ScrollView.GetOffset(transcript)
-    local topIndex = rowIndexAtOffset(transcript._virtualRows, offset)
-    local bottomIndex = rowIndexAtOffset(transcript._virtualRows, offset + transcript.viewportHeight - 1)
-    local bound = boundBubbleIndexes(transcript.content)
+    local topIndex = rowIndexAtOffset(transcript._virtualState.rows, offset)
+    local bottomIndex = rowIndexAtOffset(transcript._virtualState.rows, offset + transcript.viewportHeight - 1)
+    local bound = boundBubbleIndexes(transcript.content, messages)
     assert(bound[topIndex], "test_hyperlink_estimate_collapse_binds_final_viewport_range: top row must be bound")
     assert(bound[bottomIndex], "test_hyperlink_estimate_collapse_binds_final_viewport_range: bottom row must be bound")
     assert(
@@ -224,7 +229,7 @@ return function()
       "test_hyperlink_estimate_collapse_binds_final_viewport_range: expected final leading overscan"
     )
     assert(
-      transcript._virtualLastIndex == math.min(bottomIndex + 2, #transcript._virtualRows),
+      transcript._virtualLastIndex == math.min(bottomIndex + 2, #transcript._virtualState.rows),
       "test_hyperlink_estimate_collapse_binds_final_viewport_range: expected final trailing overscan"
     )
   end
@@ -234,15 +239,17 @@ return function()
     local transcript = makeTranscript(400, 120)
     local messages = makeMessages(200)
     TranscriptView.RenderTranscript(transcript, messages)
-    local lastRow = transcript._virtualRows[#messages]
-    assert(lastRow.measured == true, "expected last row measured at initial end")
+    local lastRow = transcript._virtualState.rows[#messages]
     ScrollView.SetVerticalScroll(transcript, 0)
+    -- Stand-in for a stale measured height: only an invalidation re-estimates it.
+    local staleHeight = lastRow.estimatedHeight + 1000
+    lastRow.height = staleHeight
 
     local originalOutline = Fonts.GetOutline()
     local changedOutline = originalOutline == "OUTLINE" and "THICKOUTLINE" or "OUTLINE"
     Fonts.SetOutline(changedOutline)
     TranscriptView.RenderTranscript(transcript, messages)
-    local invalidated = lastRow.measured == false
+    local invalidated = lastRow.height ~= staleHeight
     Fonts.SetOutline(originalOutline)
 
     assert(invalidated, "test_font_geometry_revision_invalidates_offscreen_measurements: offscreen row must invalidate")
@@ -276,7 +283,7 @@ return function()
 
     for _ = 1, 5 do
       ScrollView.SetVerticalScroll(transcript, 0)
-      ScrollView.SetVerticalScroll(transcript, transcript._virtualRows[100].offset)
+      ScrollView.SetVerticalScroll(transcript, transcript._virtualState.rows[100].offset)
       ScrollView.SetVerticalScroll(transcript, ScrollView.GetRange(transcript))
       for _ = 1, 20 do
         local index = #messages + 1

@@ -164,7 +164,6 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   end
   bubbleOptions.paneWidth = paneWidth
   bubbleOptions.showIcon = showIcon
-  bubbleOptions.isGrouped = grouped
   bubbleOptions.fallbackClassTag = options and options.fallbackClassTag or nil
   bubbleOptions.iconFactory = pooledFactory
   bubbleOptions.persistentFactory = factory
@@ -173,7 +172,6 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.canReact = options and options.canReact or nil
 
   local bubble = BubbleFrame.CreateBubble(pooledFactory, contentFrame, message, bubbleOptions)
-  bubble.frame._wmVirtualIndex = index
   placeBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)
   return yOffset + bubble.height
 end
@@ -198,7 +196,6 @@ function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, l
       firstChanged = firstChanged or index
       row.height = measuredHeight
     end
-    row.measured = true
     yOffset = nextOffset
   end
   return yOffset, firstChanged

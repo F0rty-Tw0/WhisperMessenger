@@ -116,7 +116,7 @@ return function()
     "expected transcript content to be wired as scroll child"
   )
   assert(window.conversation.transcript.scrollFrame:GetVerticalScrollRange() > 0, "expected overflowing transcript to be scrollable")
-  assert(#window.conversation.transcript._virtualRows == #messages, "expected row metadata for complete transcript history")
+  assert(#window.conversation.transcript._virtualState.rows == #messages, "expected row metadata for complete transcript history")
   local initialBoundCount = window.conversation.transcript._virtualLastIndex - window.conversation.transcript._virtualFirstIndex + 1
   assert(initialBoundCount < #messages, "expected transcript to bind only viewport rows")
   assert(countBubbleFrames(window.conversation.transcript.content) < #messages, "expected bounded transcript bubble pool")

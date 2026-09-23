@@ -137,7 +137,6 @@ return function()
     local frame = FramePool.acquireFrame(FakeUI.NewFactory(), contentFrame, "Button", contentFrame)
     local message = { text = "released" }
     frame._wmMessage = message
-    frame._wmVirtualIndex = 7
     frame._wmOnReact = function() end
     frame._wmPlayerMenuMessage = message
     frame._wmPlayerMenuOpener = function() end
@@ -150,7 +149,6 @@ return function()
     FramePool.releaseAll(contentFrame)
 
     assert(frame._wmMessage == nil, "released frame must not retain bound message")
-    assert(frame._wmVirtualIndex == nil, "released frame must not retain virtual row index")
     assert(frame._wmOnReact == nil, "released frame must not retain render callback")
     assert(frame._wmContextMenuOptions.message == nil, "released menu state must not retain message")
     assert(frame._copyButton._wmCopyMessage == nil, "released copy state must not retain message")
