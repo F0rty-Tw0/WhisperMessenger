@@ -46,121 +46,74 @@ local function forEachChrome(assertions)
   end
 end
 
-local function test_back_button_renders_themed_visuals()
+local TRANSPARENT = { 0, 0, 0, 0 }
+local DANGER_GLYPH = { 0.95, 0.36, 0.36, 1 }
+local GRIP_HOVER = { 1, 1, 1, 0.55 }
+
+local function test_back_button_renders_icon_visuals()
   forEachChrome(function(chrome, chromeType)
     local background, icon = findButtonVisuals(chrome.backButton)
-    assert(background ~= nil, chromeType .. " Back button should render a themed background")
+    assert(background ~= nil, chromeType .. " Back button should render a background")
     assert(icon ~= nil, chromeType .. " Back button should render an icon")
-    assert(icon.texturePath == "Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up", chromeType .. " Back button should render the previous-page icon")
-    assert(colorsMatch(background.color, Theme.COLORS.option_button_bg), chromeType .. " Back button should use the themed resting background")
-    assert(colorsMatch(icon.vertexColor, Theme.COLORS.option_button_text), chromeType .. " Back button should use the themed resting icon color")
+    assert(icon.texturePath == Theme.TEXTURES.title_back_icon, chromeType .. " Back button should render the bundled back icon")
+    assert(colorsMatch(background.color, TRANSPARENT), chromeType .. " Back button has no fill at rest")
+    assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_secondary), chromeType .. " Back icon is text_secondary at rest")
   end)
 end
 
-local function test_back_button_hover_uses_theme_colors()
+local function test_back_button_hover_and_leave()
   forEachChrome(function(chrome, chromeType)
     local background, icon = findButtonVisuals(chrome.backButton)
-    assert(background ~= nil and icon ~= nil, chromeType .. " Back button should expose rendered visuals")
-
-    local onEnter = chrome.backButton:GetScript("OnEnter")
-    assert(type(onEnter) == "function", chromeType .. " Back button should repaint on hover")
-
-    onEnter(chrome.backButton)
-    assert(colorsMatch(background.color, Theme.COLORS.option_button_hover), chromeType .. " Back hover should use the themed hover background")
-    assert(colorsMatch(icon.vertexColor, Theme.COLORS.option_button_text_hover), chromeType .. " Back hover should use the themed hover icon color")
-  end)
-end
-
-local function test_back_button_leave_restores_theme_colors()
-  forEachChrome(function(chrome, chromeType)
-    local background, icon = findButtonVisuals(chrome.backButton)
-    assert(background ~= nil and icon ~= nil, chromeType .. " Back button should expose rendered visuals")
-
-    local onEnter = chrome.backButton:GetScript("OnEnter")
-    local onLeave = chrome.backButton:GetScript("OnLeave")
-    assert(type(onEnter) == "function", chromeType .. " Back button should repaint on hover")
-    assert(type(onLeave) == "function", chromeType .. " Back button should restore paint after hover")
-
-    onEnter(chrome.backButton)
-    onLeave(chrome.backButton)
-    assert(colorsMatch(background.color, Theme.COLORS.option_button_bg), chromeType .. " Back leave should restore the themed resting background")
-    assert(colorsMatch(icon.vertexColor, Theme.COLORS.option_button_text), chromeType .. " Back leave should restore the themed resting icon color")
+    chrome.backButton:GetScript("OnEnter")(chrome.backButton)
+    assert(colorsMatch(background.color, TRANSPARENT), chromeType .. " Back hover keeps no fill")
+    assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_primary), chromeType .. " Back hover brightens the icon")
+    chrome.backButton:GetScript("OnLeave")(chrome.backButton)
+    assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_secondary), chromeType .. " Back leave restores the resting icon")
   end)
 end
 
 local function test_back_button_apply_theme_repaints_visuals()
   local repaintTheme = setmetatable({
     COLORS = setmetatable({
-      option_button_bg = { 0.11, 0.22, 0.33, 0.44 },
-      option_button_text = { 0.55, 0.66, 0.77, 0.88 },
+      text_secondary = { 0.55, 0.66, 0.77, 0.88 },
     }, { __index = Theme.COLORS }),
   }, { __index = Theme })
 
   forEachChrome(function(chrome, chromeType)
-    local background, icon = findButtonVisuals(chrome.backButton)
-    assert(background ~= nil and icon ~= nil, chromeType .. " Back button should expose rendered visuals")
-
+    local _, icon = findButtonVisuals(chrome.backButton)
     chrome.applyTheme(repaintTheme)
-
-    assert(colorsMatch(background.color, repaintTheme.COLORS.option_button_bg), chromeType .. " Back background should repaint when theme changes")
-    assert(colorsMatch(icon.vertexColor, repaintTheme.COLORS.option_button_text), chromeType .. " Back icon should repaint when theme changes")
+    assert(colorsMatch(icon.vertexColor, repaintTheme.COLORS.text_secondary), chromeType .. " Back icon should repaint when theme changes")
   end)
 end
 
 local function test_hovered_chrome_controls_keep_hover_paint_when_theme_changes()
   local repaintTheme = setmetatable({
     COLORS = setmetatable({
-      option_button_bg = { 0.01, 0.02, 0.03, 0.04 },
-      option_button_hover = { 0.11, 0.12, 0.13, 0.14 },
-      option_button_text = { 0.21, 0.22, 0.23, 0.24 },
-      option_button_text_hover = { 0.31, 0.32, 0.33, 0.34 },
-      bg_contact_hover = { 0.41, 0.42, 0.43, 0.44 },
       text_primary = { 0.51, 0.52, 0.53, 0.54 },
-      text_title = { 0.61, 0.62, 0.63, 0.64 },
       text_secondary = { 0.71, 0.72, 0.73, 0.74 },
     }, { __index = Theme.COLORS }),
   }, { __index = Theme })
 
   forEachChrome(function(chrome, chromeType)
-    local backBackground, backIcon = findButtonVisuals(chrome.backButton)
-    local newConversationBackground, newConversationIcon = findButtonVisuals(chrome.newConversationButton)
+    local _, backIcon = findButtonVisuals(chrome.backButton)
+    local _, newConversationIcon = findButtonVisuals(chrome.newConversationButton)
     local resizeLines = chrome.resizeGrip.children or {}
-    assert(backBackground ~= nil and backIcon ~= nil, chromeType .. " Back button should expose rendered visuals")
-    assert(newConversationBackground ~= nil and newConversationIcon ~= nil, chromeType .. " New Conversation button should expose rendered visuals")
     assert(#resizeLines > 0, chromeType .. " resize grip should expose rendered lines")
 
-    for _, control in ipairs({
-      { name = "Back", frame = chrome.backButton },
-      { name = "New Conversation", frame = chrome.newConversationButton },
-      { name = "resize grip", frame = chrome.resizeGrip },
-    }) do
-      control.frame.mouseOver = true
-      local onEnter = control.frame:GetScript("OnEnter")
-      assert(type(onEnter) == "function", chromeType .. " " .. control.name .. " should repaint on hover")
-      onEnter(control.frame)
+    for _, control in ipairs({ chrome.backButton, chrome.newConversationButton, chrome.resizeGrip }) do
+      control.mouseOver = true
+      control:GetScript("OnEnter")(control)
     end
 
     chrome.applyTheme(repaintTheme)
 
+    assert(colorsMatch(backIcon.vertexColor, repaintTheme.COLORS.text_primary), chromeType .. " hovered Back icon keeps hover paint")
     assert(
-      colorsMatch(backBackground.color, repaintTheme.COLORS.option_button_hover),
-      chromeType .. " hovered Back background should keep hover paint when theme changes"
+      colorsMatch(newConversationIcon.vertexColor, repaintTheme.COLORS.text_primary),
+      chromeType .. " hovered New Conversation icon keeps hover paint"
     )
-    assert(
-      colorsMatch(backIcon.vertexColor, repaintTheme.COLORS.option_button_text_hover),
-      chromeType .. " hovered Back icon should keep hover paint when theme changes"
-    )
-    assert(
-      colorsMatch(newConversationBackground.color, { 0.41, 0.42, 0.43, 0.75 }),
-      chromeType .. " hovered New Conversation background should keep hover paint when theme changes"
-    )
-    assert(
-      colorsMatch(newConversationIcon.vertexColor, repaintTheme.COLORS.text_title),
-      chromeType .. " hovered New Conversation icon should keep hover paint when theme changes"
-    )
-
     for _, line in ipairs(resizeLines) do
-      assert(colorsMatch(line.color, { 0.51, 0.52, 0.53, 1 }), chromeType .. " hovered resize grip should keep hover paint when theme changes")
+      assert(colorsMatch(line.color, GRIP_HOVER), chromeType .. " hovered resize grip keeps hover paint")
     end
   end)
 end
@@ -175,25 +128,22 @@ local function test_modern_close_button_preserves_hover_and_latest_theme()
   local background, icon = findButtonVisuals(chrome.closeButton)
   assert(background ~= nil and icon ~= nil, "modern close button should expose rendered visuals")
 
-  local onEnter = chrome.closeButton:GetScript("OnEnter")
-  local onLeave = chrome.closeButton:GetScript("OnLeave")
-  assert(type(onEnter) == "function" and type(onLeave) == "function", "modern close button should expose hover scripts")
-
   chrome.closeButton.mouseOver = true
-  onEnter(chrome.closeButton)
+  chrome.closeButton:GetScript("OnEnter")(chrome.closeButton)
   chrome.applyTheme(repaintTheme)
-
-  assert(colorsMatch(icon.vertexColor, { 0.9, 0.3, 0.3, 1 }), "modern hovered close icon should keep hover color when theme changes")
-  assert(colorsMatch(background.color, { 0.9, 0.3, 0.3, 0.15 }), "modern hovered close background should keep hover color when theme changes")
+  assert(colorsMatch(icon.vertexColor, DANGER_GLYPH), "hovered close icon keeps its red hover glyph when theme changes")
+  assert(colorsMatch(background.color, TRANSPARENT), "hovered close button keeps no fill")
 
   chrome.closeButton.mouseOver = false
-  onLeave(chrome.closeButton)
-  assert(colorsMatch(icon.vertexColor, repaintTheme.COLORS.text_secondary), "modern close leave should restore the latest themed icon color")
-  assert(colorsMatch(background.color, { 0, 0, 0, 0 }), "modern close leave should restore the resting background")
+  chrome.closeButton:GetScript("OnLeave")(chrome.closeButton)
+  assert(colorsMatch(icon.vertexColor, repaintTheme.COLORS.text_secondary), "close leave restores the latest themed icon color")
 end
 
 local function test_chrome_controls_use_branch_specific_anchor_tuples()
   forEachChrome(function(chrome, chromeType)
+    -- Native WoW HUD keeps its compact 2px chain; custom chrome uses the
+    -- shared title-bar gap.
+    local gap = chromeType == "native" and 2 or Theme.LAYOUT.TITLE_BUTTON_GAP
     local newPoint, newRelativeTo, newRelativePoint, newX, newY = chrome.newConversationButton:GetPoint()
     if chromeType == "native" then
       assert(
@@ -202,20 +152,20 @@ local function test_chrome_controls_use_branch_specific_anchor_tuples()
       )
     else
       assert(
-        newPoint == "LEFT" and newRelativeTo == chrome.title and newRelativePoint == "RIGHT" and newX == 2 and newY == 0,
+        newPoint == "LEFT" and newRelativeTo == chrome.title and newRelativePoint == "RIGHT" and newX == gap and newY == 0,
         "modern New Conversation button should use its complete title-relative anchor"
       )
     end
 
     local optionsPoint, optionsRelativeTo, optionsRelativePoint, optionsX, optionsY = chrome.optionsButton:GetPoint()
     assert(
-      optionsPoint == "RIGHT" and optionsRelativeTo == chrome.closeButton and optionsRelativePoint == "LEFT" and optionsX == -2 and optionsY == 0,
+      optionsPoint == "RIGHT" and optionsRelativeTo == chrome.closeButton and optionsRelativePoint == "LEFT" and optionsX == -gap and optionsY == 0,
       chromeType .. " options button should use its complete close-relative anchor"
     )
 
     local backPoint, backRelativeTo, backRelativePoint, backX, backY = chrome.backButton:GetPoint()
     assert(
-      backPoint == "RIGHT" and backRelativeTo == chrome.optionsButton and backRelativePoint == "LEFT" and backX == -2 and backY == 0,
+      backPoint == "RIGHT" and backRelativeTo == chrome.optionsButton and backRelativePoint == "LEFT" and backX == -gap and backY == 0,
       chromeType .. " Back button should use its complete options-relative anchor"
     )
   end)
@@ -230,23 +180,18 @@ local function test_cogwheel_active_visual_survives_hover()
 
   chrome.setOptionsActive(true)
 
-  local activeBackground = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected
-  local activeIcon = Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary
-  assert(colorsMatch(background.color, activeBackground), "visible options should render the cogwheel active background")
-  assert(colorsMatch(icon.vertexColor, activeIcon), "visible options should render the cogwheel active icon")
+  assert(colorsMatch(background.color, TRANSPARENT), "active cogwheel has no fill")
+  assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_primary), "visible options should render the cogwheel emphasized")
   assert(chrome.backButton:IsShown(), "Back button should be visible while options are active")
 
   chrome.optionsButton.mouseOver = true
   chrome.optionsButton:GetScript("OnEnter")(chrome.optionsButton)
-  local activeHover = Theme.COLORS.option_button_active_hover or activeBackground
-  assert(colorsMatch(background.color, activeHover), "hover should remain visible while the cogwheel is active")
-
   chrome.optionsButton.mouseOver = false
   chrome.optionsButton:GetScript("OnLeave")(chrome.optionsButton)
-  assert(colorsMatch(background.color, activeBackground), "leaving hover should restore the cogwheel active background")
+  assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_primary), "leaving hover keeps the active cogwheel emphasized")
 
   chrome.setOptionsActive(false)
-  assert(not colorsMatch(background.color, activeBackground), "hidden options should clear the cogwheel active background")
+  assert(colorsMatch(icon.vertexColor, Theme.COLORS.text_secondary), "hidden options should restore the resting cogwheel")
   assert(not chrome.backButton:IsShown(), "Back button should hide with options")
 end
 
@@ -284,15 +229,12 @@ local function test_navigation_updates_built_chrome_after_panes_transition()
     end,
   })
 
-  local optionsBackground, optionsIcon = findButtonVisuals(chrome.optionsButton)
-  assert(optionsBackground ~= nil and optionsIcon ~= nil, "built options button should expose rendered visuals")
-  local activeBackground = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected
-  local activeIcon = Theme.COLORS.option_button_text_active or Theme.COLORS.text_primary
+  local _, optionsIcon = findButtonVisuals(chrome.optionsButton)
+  assert(optionsIcon ~= nil, "built options button should expose rendered visuals")
 
   chrome.optionsButton:GetScript("OnClick")(chrome.optionsButton)
   assert(observedTransitions[1] == true, "show callback should observe already-transitioned panes")
-  assert(colorsMatch(optionsBackground.color, activeBackground), "cogwheel show should activate built options paint")
-  assert(colorsMatch(optionsIcon.vertexColor, activeIcon), "cogwheel show should activate built options icon")
+  assert(colorsMatch(optionsIcon.vertexColor, Theme.COLORS.text_primary), "cogwheel show should activate built options icon")
   assert(chrome.backButton:IsShown(), "cogwheel show should reveal the built Back button")
 
   local onBack = chrome.backButton:GetScript("OnClick")
@@ -300,19 +242,22 @@ local function test_navigation_updates_built_chrome_after_panes_transition()
   onBack(chrome.backButton)
 
   assert(observedTransitions[2] == true, "Back callback should observe already-restored panes")
-  assert(colorsMatch(optionsBackground.color, Theme.COLORS.option_button_bg), "Back should restore the built options resting background")
-  assert(colorsMatch(optionsIcon.vertexColor, Theme.COLORS.option_button_text), "Back should restore the built options resting icon")
+  assert(colorsMatch(optionsIcon.vertexColor, Theme.COLORS.text_secondary), "Back should restore the built options resting icon")
   assert(not chrome.backButton:IsShown(), "Back should hide after restoring conversation panes")
 end
 
 return function()
-  test_back_button_renders_themed_visuals()
-  test_back_button_hover_uses_theme_colors()
-  test_back_button_leave_restores_theme_colors()
+  -- Every preset shares the icon-button chrome; run against Azeroth to prove
+  -- it no longer takes a separate paint path.
+  local previousPreset = Theme.GetPreset()
+  Theme.SetPreset("wow_native")
+  test_back_button_renders_icon_visuals()
+  test_back_button_hover_and_leave()
   test_back_button_apply_theme_repaints_visuals()
   test_hovered_chrome_controls_keep_hover_paint_when_theme_changes()
   test_chrome_controls_use_branch_specific_anchor_tuples()
   test_cogwheel_active_visual_survives_hover()
   test_navigation_updates_built_chrome_after_panes_transition()
   test_modern_close_button_preserves_hover_and_latest_theme()
+  Theme.SetPreset(previousPreset)
 end

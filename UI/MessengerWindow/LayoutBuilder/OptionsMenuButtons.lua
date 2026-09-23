@@ -28,7 +28,8 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     text = theme.COLORS.option_button_text,
     textHover = theme.COLORS.option_button_text_hover,
   }
-  local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding) }
+  -- Tabs render as a list (see NavItem).
+  local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding), nav = true }
   local tabSpacing = 4
 
   local generalTab = optionButtonFactory(factory, optionsMenu, Localization.Text("General"), tabColors, tabLayout)
@@ -62,15 +63,36 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     text = theme.COLORS.option_button_text,
     textHover = theme.COLORS.option_button_text_hover,
   }
-  local btnLayout = { height = btnH, width = optionButtonWidth(contactsWidth, menuPadding) }
+  -- Utility actions are ghost buttons; Clear All Chats is the red danger
+  -- ghost.
+  local btnLayout = { height = btnH, width = optionButtonWidth(contactsWidth, menuPadding), ghost = true }
+  local dangerLayout = { height = btnH, width = btnLayout.width, ghost = true, danger = true }
 
-  local clearAllChatsButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Clear All Chats"), dangerColors, btnLayout)
+  -- Native WoW HUD: Blizzard red-gold UIPanelButtonTemplate. Returns nil in
+  -- modern mode or when the template is unavailable (modern ghost button).
+  local nativeChrome = options.nativeChrome == true
+  local function nativeButton(key)
+    if not nativeChrome then
+      return nil
+    end
+    local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, optionsMenu, "UIPanelButtonTemplate")
+    if button then
+      button:SetSize(btnLayout.width, btnH)
+      button:SetText(Localization.Text(key))
+    end
+    return button
+  end
+
+  local clearAllChatsButton = nativeButton("Clear All Chats")
+    or optionButtonFactory(factory, optionsMenu, Localization.Text("Clear All Chats"), dangerColors, dangerLayout)
   clearAllChatsButton:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMLEFT", menuPadding, menuPadding)
 
-  local resetIconButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Icon"), normalColors, btnLayout)
+  local resetIconButton = nativeButton("Reset Icon")
+    or optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Icon"), normalColors, btnLayout)
   resetIconButton:SetPoint("BOTTOMLEFT", clearAllChatsButton, "TOPLEFT", 0, btnSpacing)
 
-  local resetWindowButton = optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Window"), normalColors, btnLayout)
+  local resetWindowButton = nativeButton("Reset Window")
+    or optionButtonFactory(factory, optionsMenu, Localization.Text("Reset Window"), normalColors, btnLayout)
   resetWindowButton:SetPoint("BOTTOMLEFT", resetIconButton, "TOPLEFT", 0, btnSpacing)
 
   local optionsHint = optionsMenu:CreateFontString(nil, "OVERLAY", theme.FONTS.system_text)
@@ -91,6 +113,9 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     local label = button and button.label
     if label and label.SetText then
       label:SetText(Localization.Text(key))
+    elseif button and button.SetText then
+      -- Blizzard template button: label lives on the button itself.
+      button:SetText(Localization.Text(key))
     end
   end
 

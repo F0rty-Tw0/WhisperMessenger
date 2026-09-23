@@ -19,20 +19,29 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   local contactsWidth = options.contactsWidth
   local scrollView = options.scrollView or ScrollView
   local applyTexture = options.applyColorTexture or applyColorTexture
+  -- Native WoW HUD: `frame` is the chrome's content area, which already
+  -- clears the title bar, so the panel sits flush and viewports take the
+  -- content-area height (options.contactsHeight).
+  local nativeChrome = options.nativeChrome == true
 
   -- Same 20px top offset under both chromes — only the chrome itself is
-  -- conditional on Azeroth, layout sizes/positions stay uniform.
-  -- Dual-anchor BOTTOMRIGHT so the panel auto-fills the parent's full width
-  -- (Inset for Azeroth, outer frame for modern) — matches the messenger
+  -- conditional on the Native WoW HUD setting, layout sizes/positions stay
+  -- uniform. Dual-anchor BOTTOMRIGHT so the panel auto-fills the parent's
+  -- full width (Inset for the HUD, outer frame otherwise) — matches the messenger
   -- window width in both chromes without needing explicit SetSize.
   local optionsPanel = factory.CreateFrame("Frame", nil, frame)
   -- Flush left/right against the parent via dual-anchor offsets. No SetSize —
   -- the anchors auto-derive full width and height (parent.height - 28).
   -- SetSize would override the BOTTOMRIGHT anchor with the OUTER frame width
-  -- (which is wider than Inset under Azeroth), causing overflow past the
+  -- (which is wider than Inset under the HUD), causing overflow past the
   -- gold border.
-  optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -20)
-  optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
+  if nativeChrome then
+    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+  else
+    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -20)
+    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
+  end
 
   -- Dual-anchor menu vertically to optionsPanel so it auto-fills the
   -- panel's height (no stale TOP_BAR_HEIGHT-based SetSize). Width stays
@@ -48,7 +57,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local menuPadding = theme.CONTENT_PADDING
   local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 430
-  local optionsMenuViewportHeight = initialState.height - theme.TOP_BAR_HEIGHT
+  local optionsMenuViewportHeight = nativeChrome and options.contactsHeight or (initialState.height - theme.TOP_BAR_HEIGHT)
   local optionsMenuScrollView = scrollView.Create(factory, optionsMenu, {
     width = contactsWidth,
     height = optionsMenuViewportHeight,
@@ -90,12 +99,16 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   -- SetSize — anchors derive width and height from the parent's size,
   -- which itself follows optionsPanel's dual-anchor to the messenger.
   local optionsContentPane = factory.CreateFrame("Frame", nil, optionsPanel)
-  optionsContentPane:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", theme.DIVIDER_THICKNESS, -2)
-  optionsContentPane:SetPoint("BOTTOMRIGHT", optionsPanel, "BOTTOMRIGHT", -4, 0)
+  -- Native WoW HUD: flush to the content area on top and right.
+  local contentTopGap = nativeChrome and 0 or 2
+  local contentRightInset = nativeChrome and 0 or 4
+  optionsContentPane:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", theme.DIVIDER_THICKNESS, -contentTopGap)
+  optionsContentPane:SetPoint("BOTTOMRIGHT", optionsPanel, "BOTTOMRIGHT", -contentRightInset, 0)
   -- Initial width/height as a fallback for environments that don't resolve
   -- anchors (fake_ui in tests). In production WoW, the dual-anchor wins.
-  local optionsContentWidth = initialState.width - contactsWidth - theme.DIVIDER_THICKNESS - 4
-  local optionsContentH = initialState.height - theme.TOP_BAR_HEIGHT - 28 - 2
+  -- The scroll view's width also comes from here (single-anchored).
+  local optionsContentWidth = nativeChrome and options.optionsContentWidth or (initialState.width - contactsWidth - theme.DIVIDER_THICKNESS - 4)
+  local optionsContentH = nativeChrome and options.contactsHeight or (initialState.height - theme.TOP_BAR_HEIGHT - 28 - 2)
   optionsContentPane:SetSize(optionsContentWidth, optionsContentH)
 
   local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")

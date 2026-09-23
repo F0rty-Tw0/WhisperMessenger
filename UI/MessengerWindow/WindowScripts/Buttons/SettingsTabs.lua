@@ -188,6 +188,13 @@ function SettingsTabs.Wire(options)
               textHover = hoverText,
             })
           end
+          -- Nav-style tabs paint themselves (list look) from the state set
+          -- here.
+          if tab.setNavActive then
+            tab._wmHovered = hovered
+            tab.setNavActive(isActive)
+            return
+          end
           local paintColor = hovered and hoverBg or color
           if bg and bg.SetColorTexture then
             bg:SetColorTexture(paintColor[1], paintColor[2], paintColor[3], paintColor[4] or 1)
