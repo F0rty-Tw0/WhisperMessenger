@@ -107,6 +107,30 @@ local function closeGroupSession(Bootstrap, category, partyGUID)
   return true
 end
 
+-- Relog can report GROUP_LEFT then GROUP_JOINED for the same party GUID;
+-- that is the same group, so its thread becomes writable again.
+local function reopenGroupSession(Bootstrap, category, partyGUID)
+  local runtime = Bootstrap.runtime
+  local state = runtime.accountState or runtime.store
+  local localProfileId = runtime.localProfileId
+  if state == nil or state.conversations == nil or type(localProfileId) ~= "string" or localProfileId == "" then
+    return
+  end
+
+  local changed = false
+  for _, prefix in pairs(CHANNEL_KEY_PREFIX) do
+    local conversation = state.conversations[prefix .. localProfileId .. "::" .. category .. "::" .. partyGUID]
+    if conversation and conversation.leftGroup then
+      conversation.leftGroup = nil
+      changed = true
+    end
+  end
+
+  if changed and Common and Common.refreshRuntimeWindow then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
 function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID)
   local runtime = Bootstrap and Bootstrap.runtime
   if runtime == nil or type(category) ~= "number" or not validPartyGUID(partyGUID) then
@@ -119,6 +143,7 @@ function GroupMembership.handleGroupJoined(Bootstrap, category, partyGUID)
     closeGroupSession(Bootstrap, category, previousPartyGUID)
   end
   runtime.groupPartyGUIDsByCategory[category] = partyGUID
+  reopenGroupSession(Bootstrap, category, partyGUID)
   return true
 end
 

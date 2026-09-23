@@ -72,4 +72,51 @@ return function()
     reloadedRuntime.store.conversations[partyKey].channel == ChannelType.PARTY,
     "party conversation should keep its PARTY channel tag through relog"
   )
+
+  local category = _G.LE_PARTY_CATEGORY_HOME or 1
+  local partyGUID = "Party-0-0000000000000077"
+  local guidKey = "party::" .. profileId .. "::" .. category .. "::" .. partyGUID
+
+  local function partyMessage(rt, text, lineID)
+    GroupChatIngest.HandleEvent(rt, "CHAT_MSG_PARTY", {
+      text = text,
+      playerName = "Jaina-Goldrinn",
+      guid = "Player-1-00000099",
+      lineID = lineID,
+    })
+  end
+
+  -- test_reload_without_group_joined_reuses_guid_session
+  do
+    local account, character = SavedState.Initialize(nil, nil, profileId)
+    local rt = RuntimeFactory.CreateRuntimeState(account, character, profileId, {})
+    LifecycleHandlers.Handle({ runtime = rt }, "GROUP_JOINED", {}, category, partyGUID)
+    partyMessage(rt, "before reload", 10)
+
+    -- /reload: GROUP_JOINED is not guaranteed to fire again.
+    local _, _, reloadedRt = simulateRelog(account, character, profileId)
+    partyMessage(reloadedRt, "after reload", 11)
+
+    local conversation = reloadedRt.store.conversations[guidKey]
+    assert(conversation ~= nil, "reload must keep writing to the same group session")
+    assert(#conversation.messages == 2, "both messages should share one thread, got " .. #conversation.messages)
+    assert(reloadedRt.store.conversations["party::" .. profileId] == nil, "reload must not fork a singleton party thread")
+  end
+
+  -- test_rejoining_same_guid_reopens_closed_session
+  do
+    local account, character = SavedState.Initialize(nil, nil, profileId)
+    local rt = RuntimeFactory.CreateRuntimeState(account, character, profileId, {})
+    local bootstrap = { runtime = rt }
+    LifecycleHandlers.Handle(bootstrap, "GROUP_JOINED", {}, category, partyGUID)
+    partyMessage(rt, "before relog", 20)
+
+    -- Relog can report leaving and then rejoining the very same group.
+    LifecycleHandlers.Handle(bootstrap, "GROUP_LEFT", {}, category, partyGUID)
+    local _, _, reloadedRt = simulateRelog(account, character, profileId)
+    LifecycleHandlers.Handle({ runtime = reloadedRt }, "GROUP_JOINED", {}, category, partyGUID)
+
+    local conversation = reloadedRt.store.conversations[guidKey]
+    assert(conversation.leftGroup == nil, "rejoining the same group must reopen its session")
+  end
 end

@@ -95,6 +95,10 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     end
   end
 
+  -- Party GUIDs persist per character: /reload does not re-fire GROUP_JOINED,
+  -- so without them group chat would fork into a new thread after reload.
+  characterState.groupPartyGUIDs = characterState.groupPartyGUIDs or {}
+
   local getBNetInfo = options.getBNetInfo or _G.BNGetInfo
   local localBnetAccountID = BNetIdentity.ResolveLocalAccountID(options.localBnetAccountID, getBNetInfo)
 
@@ -106,6 +110,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     localBnetAccountID = localBnetAccountID,
     getBNetInfo = getBNetInfo,
     activeConversationKey = characterState.activeConversationKey,
+    groupPartyGUIDsByCategory = characterState.groupPartyGUIDs,
     pendingOutgoing = {},
     sendStatusByConversation = {},
     availabilityByGUID = {},
