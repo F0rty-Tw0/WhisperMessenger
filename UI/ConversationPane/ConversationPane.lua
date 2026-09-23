@@ -32,10 +32,11 @@ local FORCE_RENDER = { force = true }
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
-local function buildMessagesWithChannelContext(messages, selectedContact)
+local function buildMessagesWithChannelContext(messages, selectedContact, conversation)
   return ChannelContextMerger.Merge(messages, selectedContact, {
     channelMessageStore = ns.ChannelMessageStore,
     channelMessageState = ns._channelMessageState,
+    conversation = conversation,
     now = type(_G["time"]) == "function" and _G["time"]() or nil,
   })
 end
@@ -59,7 +60,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   local messages = conversation and conversation.messages or {}
-  messages = buildMessagesWithChannelContext(messages, selectedContact)
+  messages = buildMessagesWithChannelContext(messages, selectedContact, conversation)
   ConversationPane.RenderTranscript(view.transcript, messages)
   ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)

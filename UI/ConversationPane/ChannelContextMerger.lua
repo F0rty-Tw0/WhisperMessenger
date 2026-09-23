@@ -13,6 +13,9 @@ local cachedEntry
 local cachedPlayerName
 local cachedMessage
 
+-- Only 1:1 whisper threads keep a sender's channel post; group threads never do.
+local WHISPER_CHANNELS = { WOW = true, BN = true }
+
 local function lookupNameFor(selectedContact)
   if type(selectedContact) ~= "table" then
     return nil
@@ -22,6 +25,47 @@ local function lookupNameFor(selectedContact)
     return nil
   end
   return string.lower(name)
+end
+
+local function buildChannelMessage(entry, playerName)
+  return {
+    id = "channel-ctx-" .. tostring(entry.sentAt),
+    direction = "in",
+    kind = "channel_context",
+    text = entry.text,
+    sentAt = entry.sentAt,
+    playerName = playerName,
+    channelLabel = entry.channelLabel,
+  }
+end
+
+local function insertChronological(messages, channelMsg)
+  local insertAt = #messages + 1
+  for index, message in ipairs(messages) do
+    if (channelMsg.sentAt or 0) < (message.sentAt or 0) then
+      insertAt = index
+      break
+    end
+  end
+  table.insert(messages, insertAt, channelMsg)
+end
+
+-- Keep the sender's latest channel post inside their existing conversation so
+-- it outlives the short channel TTL and follows the conversation's own
+-- retention and deletion. Only one post per conversation (latest wins); it is
+-- context, so unread counts and activity metadata are left untouched.
+local function persistIntoConversation(conversation, entry, playerName)
+  local messages = conversation.messages
+  for index, message in ipairs(messages) do
+    if message.kind == "channel_context" then
+      if (message.sentAt or 0) > entry.sentAt or (message.sentAt == entry.sentAt and message.text == entry.text) then
+        return
+      end
+      table.remove(messages, index)
+      break
+    end
+  end
+  insertChronological(messages, buildChannelMessage(entry, playerName))
 end
 
 -- Merge a recent channel-context message into the chronological message list
@@ -46,34 +90,25 @@ function ChannelContextMerger.Merge(messages, selectedContact, deps)
   end
 
   local playerName = selectedContact.displayName or entry.playerName
+  local conversation = deps.conversation
+  if type(conversation) == "table" and conversation.messages == messages and WHISPER_CHANNELS[conversation.channel] then
+    persistIntoConversation(conversation, entry, playerName)
+    return messages
+  end
+
   local channelMsg = cachedMessage
   if channelMsg == nil or cachedEntry ~= entry or cachedPlayerName ~= playerName then
-    channelMsg = {
-      id = "channel-ctx-" .. tostring(entry.sentAt),
-      direction = "in",
-      kind = "channel_context",
-      text = entry.text,
-      sentAt = entry.sentAt,
-      playerName = playerName,
-      channelLabel = entry.channelLabel,
-    }
+    channelMsg = buildChannelMessage(entry, playerName)
     cachedEntry = entry
     cachedPlayerName = playerName
     cachedMessage = channelMsg
   end
 
   local result = {}
-  local inserted = false
   for _, m in ipairs(messages) do
-    if not inserted and (channelMsg.sentAt or 0) < (m.sentAt or 0) then
-      result[#result + 1] = channelMsg
-      inserted = true
-    end
     result[#result + 1] = m
   end
-  if not inserted then
-    result[#result + 1] = channelMsg
-  end
+  insertChronological(result, channelMsg)
   return result
 end
 
