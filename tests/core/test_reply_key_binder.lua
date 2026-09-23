@@ -159,7 +159,6 @@ return function()
     binder.bind()
 
     assert(#stubs.overrideBindings == 0, "must not bind any key when REPLY is unbound, got " .. #stubs.overrideBindings)
-    assert(binder.isBound() == false, "isBound() must report false when REPLY is unbound")
   end
 
   -- test_bind_ignores_empty_string_keys
@@ -323,12 +322,15 @@ return function()
     })
 
     binder.sync()
-    assert(binder.isBound() == true, "bound after first sync")
+    assert(#stubs.overrideBindings == 1, "bound after first sync")
 
     replyKey = nil
     binder.sync()
 
-    assert(binder.isBound() == false, "sync must unbind when user clears REPLY")
+    assert(#stubs.overrideBindings == 1, "sync must not rebind when user clears REPLY")
     assert(#stubs.clearedFor >= 1, "must clear the stale override")
+    local clearedAfterSync = #stubs.clearedFor
+    binder.unbind()
+    assert(#stubs.clearedFor == clearedAfterSync, "no bindings should remain after sync unbinds")
   end
 end

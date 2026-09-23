@@ -14,8 +14,4 @@ return function()
   assert(Types.WHISPERABLE.Busy == true)
   assert(Types.WHISPERABLE.WrongFaction == nil, "WrongFaction should not be whisperable")
   assert(Types.WHISPERABLE.Offline == nil)
-
-  -- CHANNELS
-  assert(Types.CHANNELS.WOW == "WOW")
-  assert(Types.CHANNELS.BN == "BN")
 end

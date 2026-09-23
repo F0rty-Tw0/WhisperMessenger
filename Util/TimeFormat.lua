@@ -117,11 +117,6 @@ function TimeFormat.Configure(opts)
   end
 end
 
---- Returns a shallow copy of the current config.
-function TimeFormat.GetConfig()
-  return { timeFormat = config.timeFormat, timeSource = config.timeSource }
-end
-
 --- Returns current epoch seconds, respecting the configured time source.
 local function now()
   if config.timeSource == "server" and _G.GetServerTime then
@@ -202,31 +197,6 @@ function TimeFormat.ContactPreview(timestamp)
   end
   -- Older: localized "Mar 14"
   return L(MONTH_ABBR_KEYS[t.month] or MONTH_ABBR_KEYS[1]) .. " " .. t.day
-end
-
---- Format a longer relative string for status lines.
---- Returns: "just now", "2 minutes ago", "1 hour ago", "yesterday", "Mar 14, 2026"
-function TimeFormat.Relative(timestamp)
-  if not timestamp or timestamp == 0 then
-    return L("unknown")
-  end
-  local current = now()
-  local diff = current - timestamp
-  if diff < 60 then
-    return L("just now")
-  elseif diff < 3600 then
-    local mins = floor(diff / 60)
-    return mins .. (mins == 1 and L(" minute ago") or L(" minutes ago"))
-  elseif diff < 86400 then
-    local hours = floor(diff / 3600)
-    return hours .. (hours == 1 and L(" hour ago") or L(" hours ago"))
-  end
-  local todayStart = startOfLocalDay(current)
-  if timestamp >= todayStart - 86400 and timestamp < todayStart then
-    return L("yesterday")
-  end
-  local t = date("*t", displayTimestamp(timestamp))
-  return L(MONTH_ABBR_KEYS[t.month] or MONTH_ABBR_KEYS[1]) .. " " .. t.day .. ", " .. t.year
 end
 
 --- Check if two timestamps are on different calendar days.

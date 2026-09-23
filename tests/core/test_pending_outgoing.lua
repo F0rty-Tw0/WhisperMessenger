@@ -23,7 +23,7 @@ return function()
     assert(state.pendingOutgoing[key][1].text == "hello", "pending entry should keep text")
   end
 
-  -- Consume matches an outgoing inform by GUID/name and removes the pending entry.
+  -- Resolve matches an outgoing inform by GUID/name and removes the pending entry.
   do
     local state = {
       localProfileId = "me",
@@ -39,7 +39,7 @@ return function()
       guid = "Player-1",
     }, "hello")
 
-    local matched = PendingOutgoing.Consume(state, key, {
+    local matched = PendingOutgoing.Resolve(state, key, {
       channel = "WOW",
       text = "hello",
       playerName = "Arthas",
@@ -50,7 +50,7 @@ return function()
     assert(state.pendingOutgoing[key] == nil, "matched pending queue should be removed when empty")
   end
 
-  -- Consume prunes stale entries and does not match fresh outgoing payloads.
+  -- Resolve prunes stale entries and does not match fresh outgoing payloads.
   do
     local state = {
       localProfileId = "me",
@@ -70,7 +70,7 @@ return function()
       end,
     }
 
-    local matched = PendingOutgoing.Consume(state, "wow::WOW::fresh", {
+    local matched = PendingOutgoing.Resolve(state, "wow::WOW::fresh", {
       channel = "WOW",
       text = "fresh",
       playerName = "Jaina-Proudmoore",
@@ -167,7 +167,7 @@ return function()
       },
     }
 
-    local ok, matched = pcall(PendingOutgoing.Consume, state, key, {
+    local ok, matched = pcall(PendingOutgoing.Resolve, state, key, {
       channel = "BN",
       bnetAccountID = payloadId,
       text = "hello",

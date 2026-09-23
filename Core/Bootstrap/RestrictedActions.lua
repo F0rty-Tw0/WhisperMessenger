@@ -31,11 +31,6 @@ RestrictedActions.STATES = {
   Active = 2,
 }
 
-function RestrictedActions.IsAvailable()
-  local api = _G.C_RestrictedActions
-  return api ~= nil and type(api.IsAddOnRestrictionActive) == "function"
-end
-
 function RestrictedActions.New()
   local cached = {}
   local self = {}
@@ -70,10 +65,6 @@ function RestrictedActions.New()
 
   function self.isMythic()
     return self.isActive(RestrictedActions.TYPES.ChallengeMode)
-  end
-
-  function self.isCombat()
-    return self.isActive(RestrictedActions.TYPES.Combat)
   end
 
   return self

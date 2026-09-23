@@ -25,10 +25,6 @@ return function()
   assert(conv.activeStatus.text == "Away from keyboard")
   assert(conv.activeStatus.eventName == "CHAT_MSG_AFK")
 
-  -- ClearActiveStatus removes the field
-  Store.ClearActiveStatus(state, key)
-  assert(conv.activeStatus == nil, "expected activeStatus to be cleared")
-
   -- SetActiveStatus on non-existent conversation creates it
   local key2 = "me::WOW::jaina-proudmoore"
   Store.SetActiveStatus(state, key2, {

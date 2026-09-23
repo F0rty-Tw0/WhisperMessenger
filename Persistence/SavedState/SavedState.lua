@@ -35,18 +35,5 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
   return account, character
 end
 
-function SavedState.ListProfileConversations(accountState, localProfileId)
-  local prefix = (localProfileId or "") .. "::"
-  local filtered = {}
-
-  for conversationKey, conversation in pairs(accountState.conversations or {}) do
-    if string.find(conversationKey, prefix, 1, true) == 1 then
-      filtered[conversationKey] = conversation
-    end
-  end
-
-  return filtered
-end
-
 ns.SavedState = SavedState
 return SavedState

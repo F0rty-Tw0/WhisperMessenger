@@ -8,68 +8,58 @@ _G.GetServerTime = os.time
 
 local TimeFormat = require("Util.TimeFormat")
 
-local function tests()
-  -- Configure exists and accepts a table
-  assert(type(TimeFormat.Configure) == "function", "Configure should be a function")
-  assert(type(TimeFormat.GetConfig) == "function", "GetConfig should be a function")
-
-  -- Default config
-  local defaults = TimeFormat.GetConfig()
-  Assert.equal(defaults.timeFormat, "12h")
-  Assert.equal(defaults.timeSource, "local")
-
-  -- Configure with 24h format
-  TimeFormat.Configure({ timeFormat = "24h" })
-  local cfg = TimeFormat.GetConfig()
-  Assert.equal(cfg.timeFormat, "24h")
-  Assert.equal(cfg.timeSource, "local")
-
-  -- MessageTime respects 24h format
-  local ts = os.time({ year = 2026, month = 3, day = 19, hour = 14, min = 30, sec = 0 })
-  TimeFormat.Configure({ timeFormat = "24h" })
-  local mt24 = TimeFormat.MessageTime(ts)
-  assert(mt24:find("14:30"), "24h format should show 14:30, got: " .. tostring(mt24))
-
-  TimeFormat.Configure({ timeFormat = "12h" })
-  local mt12 = TimeFormat.MessageTime(ts)
-  assert(mt12:find("2:30") or mt12:find("02:30"), "12h format should show 2:30 PM, got: " .. tostring(mt12))
-  assert(mt12:find("PM"), "12h format should contain PM, got: " .. tostring(mt12))
-
-  -- Configure with server time source
-  TimeFormat.Configure({ timeSource = "server" })
-  local cfg2 = TimeFormat.GetConfig()
-  Assert.equal(cfg2.timeSource, "server")
-
-  -- now() uses GetServerTime when source is server
+local function usesServerClock()
   local called = false
   local originalGetServerTime = _G.GetServerTime
   _G.GetServerTime = function()
     called = true
     return 1000000
   end
-  TimeFormat.Configure({ timeSource = "server" })
-  -- ContactPreview calls now() internally, so if GetServerTime is called, source works
   TimeFormat.ContactPreview(999970)
-  assert(called, "GetServerTime should be called when timeSource is 'server'")
   _G.GetServerTime = originalGetServerTime
+  return called
+end
+
+local function tests()
+  -- Configure exists and accepts a table
+  assert(type(TimeFormat.Configure) == "function", "Configure should be a function")
+
+  local ts = os.time({ year = 2026, month = 3, day = 19, hour = 14, min = 30, sec = 0 })
+
+  -- Default config: 12h format, local time source
+  assert(TimeFormat.MessageTime(ts) == "2:30 PM", "default format should be 12h")
+  assert(not usesServerClock(), "default time source should be local")
+
+  -- MessageTime respects 24h format
+  TimeFormat.Configure({ timeFormat = "24h" })
+  local mt24 = TimeFormat.MessageTime(ts)
+  assert(mt24:find("14:30"), "24h format should show 14:30, got: " .. tostring(mt24))
+  assert(not usesServerClock(), "format-only Configure should keep local time source")
+
+  TimeFormat.Configure({ timeFormat = "12h" })
+  local mt12 = TimeFormat.MessageTime(ts)
+  assert(mt12:find("2:30") or mt12:find("02:30"), "12h format should show 2:30 PM, got: " .. tostring(mt12))
+  assert(mt12:find("PM"), "12h format should contain PM, got: " .. tostring(mt12))
+
+  -- now() uses GetServerTime when source is server
+  TimeFormat.Configure({ timeSource = "server" })
+  assert(usesServerClock(), "GetServerTime should be called when timeSource is 'server'")
 
   -- Reset to local source
   TimeFormat.Configure({ timeSource = "local" })
-  local cfg3 = TimeFormat.GetConfig()
-  Assert.equal(cfg3.timeSource, "local")
+  assert(not usesServerClock(), "local time source should not call GetServerTime")
 
   -- Configure merges partial updates
   TimeFormat.Configure({ timeFormat = "24h", timeSource = "server" })
   TimeFormat.Configure({ timeFormat = "12h" })
-  local cfg4 = TimeFormat.GetConfig()
-  Assert.equal(cfg4.timeFormat, "12h")
-  Assert.equal(cfg4.timeSource, "server")
+  assert(TimeFormat.MessageTime(ts) == "2:30 PM", "partial update should apply 12h format")
+  assert(usesServerClock(), "partial update should keep server time source")
 
   -- Invalid values are ignored
   TimeFormat.Configure({ timeFormat = "bogus" })
-  Assert.equal(TimeFormat.GetConfig().timeFormat, "12h")
+  assert(TimeFormat.MessageTime(ts) == "2:30 PM", "invalid timeFormat should keep 12h")
   TimeFormat.Configure({ timeSource = "bogus" })
-  Assert.equal(TimeFormat.GetConfig().timeSource, "server")
+  assert(usesServerClock(), "invalid timeSource should keep server source")
 
   -- DateSeparator respects server time offset
   -- Simulate a server 5 hours ahead of local: a timestamp near local midnight
@@ -120,7 +110,7 @@ local function tests()
   local localDay2 = os.time({ year = 2026, month = 3, day = 19, hour = 0, min = 1, sec = 0 })
   assert(TimeFormat.IsDifferentDay(localDay1, localDay2), "23:59 and 00:01 should be different local days")
 
-  -- ContactPreview / Relative date labels must honor server offset.
+  -- ContactPreview date labels must honor server offset.
   -- Install a +1h server offset via C_DateAndTime; then verify that the date()
   -- formatter receives the offset timestamp, not the raw one.
   do
@@ -160,14 +150,13 @@ local function tests()
     local twoWeeksAgo = fakeNow - 14 * 86400
     TimeFormat.ContactPreview(threeDaysAgo) -- weekday branch
     TimeFormat.ContactPreview(twoWeeksAgo) -- month-abbrev branch
-    TimeFormat.Relative(twoWeeksAgo) -- month-abbrev + year branch
 
     _G.date = originalDate
 
     -- Each call makes two date('*t', ...) calls: first the local-midnight
     -- "Yesterday" boundary from the current time (no display offset), then
     -- the rendered message timestamp with the +3600s server offset applied.
-    assert(#tCalls == 6, "expected six date('*t', ...) calls (boundary + render per call), got " .. tostring(#tCalls))
+    assert(#tCalls == 4, "expected four date('*t', ...) calls (boundary + render per call), got " .. tostring(#tCalls))
     assert(
       tCalls[2] == threeDaysAgo + 3600,
       "ContactPreview weekday branch should add +3600s server offset, got diff " .. tostring(tCalls[2] - threeDaysAgo)
@@ -175,10 +164,6 @@ local function tests()
     assert(
       tCalls[4] == twoWeeksAgo + 3600,
       "ContactPreview month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[4] - twoWeeksAgo)
-    )
-    assert(
-      tCalls[6] == twoWeeksAgo + 3600,
-      "Relative month-abbrev branch should add +3600s server offset, got diff " .. tostring(tCalls[6] - twoWeeksAgo)
     )
 
     _G.C_DateAndTime = nil

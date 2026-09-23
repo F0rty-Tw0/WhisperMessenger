@@ -23,18 +23,9 @@ return function()
     messages = { { text = "On my way." } },
   }
 
-  account.conversations["alt::WOW::thrall-draenor"] = {
-    displayName = "Thrall-Draenor",
-    unreadCount = 4,
-    lastPreview = "Lok'tar.",
-    lastActivityAt = 30,
-    messages = { { text = "Lok'tar." } },
-  }
-
   character.activeConversationKey = "me::WOW::jaina-proudmoore"
 
-  local currentProfile = SavedState.ListProfileConversations(account, "me")
-  local items = ContactsList.BuildItems(currentProfile)
+  local items = ContactsList.BuildItems(account.conversations)
   local _, reloadedCharacter = SavedState.Initialize(account, character)
 
   assert(items[1].displayName == "Jaina-Proudmoore")

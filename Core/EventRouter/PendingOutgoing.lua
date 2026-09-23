@@ -215,14 +215,6 @@ function PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
   return true, entry.text, entry
 end
 
--- Backwards-compat wrapper: strict (text-equal) match only. Resolve is the
--- preferred entry point; this helper exists for callers that only need the
--- boolean "was-from-pending" signal and don't want soft-match behavior.
-function PendingOutgoing.Consume(state, conversationKey, payload, sentAt)
-  local entry = consumeWithMatcher(state, conversationKey, payload, sentAt, pendingMatchesOutgoing)
-  return entry ~= nil
-end
-
 ns.EventRouterPendingOutgoing = PendingOutgoing
 
 return PendingOutgoing

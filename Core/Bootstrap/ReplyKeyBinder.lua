@@ -150,10 +150,6 @@ function ReplyKeyBinder.New(deps)
     end
   end
 
-  function self.isBound()
-    return #boundKeys > 0
-  end
-
   return self
 end
 

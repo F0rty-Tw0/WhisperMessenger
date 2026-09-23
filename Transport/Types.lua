@@ -29,11 +29,5 @@ Types.WHISPERABLE = {
   BNetOnline = true,
 }
 
--- All known channel types
-Types.CHANNELS = {
-  WOW = "WOW",
-  BN = "BN",
-}
-
 ns.TransportTypes = Types
 return Types

@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 
 local Constants = {
-  ADDON_NAME = addonName or "WhisperMessenger",
   VERSION = "v1.4.3",
 
   LIVE_EVENT_NAMES = {

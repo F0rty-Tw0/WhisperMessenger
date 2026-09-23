@@ -43,25 +43,9 @@ function Registration.RegisterChannelEvents(frame)
   end
 end
 
-function Registration.UnregisterChannelEvents(frame)
-  for _, eventName in ipairs(Constants.CHANNEL_EVENT_NAMES) do
-    if frame.UnregisterEvent then
-      unregisterEventIfSupported(frame, eventName)
-    end
-  end
-end
-
 function Registration.RegisterGroupEvents(frame)
   for _, eventName in ipairs(Constants.GROUP_EVENT_NAMES) do
     registerEventIfSupported(frame, eventName)
-  end
-end
-
-function Registration.UnregisterGroupEvents(frame)
-  for _, eventName in ipairs(Constants.GROUP_EVENT_NAMES) do
-    if frame.UnregisterEvent then
-      unregisterEventIfSupported(frame, eventName)
-    end
   end
 end
 

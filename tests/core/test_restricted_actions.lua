@@ -92,21 +92,4 @@ return function()
 
     _G.C_RestrictedActions = savedApi
   end
-
-  -- test_is_available_guards_pre_midnight_clients
-
-  do
-    local savedApi = _G.C_RestrictedActions
-    _G.C_RestrictedActions = nil
-    assert(RestrictedActions.IsAvailable() == false, "should report unavailable when C_RestrictedActions is missing")
-
-    _G.C_RestrictedActions = {
-      IsAddOnRestrictionActive = function()
-        return false
-      end,
-    }
-    assert(RestrictedActions.IsAvailable() == true, "should report available when API exists")
-
-    _G.C_RestrictedActions = savedApi
-  end
 end

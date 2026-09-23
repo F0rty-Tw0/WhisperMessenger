@@ -532,32 +532,6 @@ return function()
     assert(s.conversations["me::WOW::zara"].sortOrder == 5, "sortOrder should be 5 after SetSortOrder")
   end
 
-  -- test_swap_order_between_two_conversations
-  do
-    local s = Store.New({})
-    Store.AppendIncoming(s, "me::WOW::one", {
-      id = "sw1",
-      direction = "in",
-      kind = "user",
-      text = "a",
-      sentAt = 1,
-    }, false)
-    Store.AppendIncoming(s, "me::WOW::two", {
-      id = "sw2",
-      direction = "in",
-      kind = "user",
-      text = "b",
-      sentAt = 2,
-    }, false)
-
-    Store.SetSortOrder(s, "me::WOW::one", 1)
-    Store.SetSortOrder(s, "me::WOW::two", 2)
-
-    Store.SwapOrder(s, "me::WOW::one", "me::WOW::two")
-    assert(s.conversations["me::WOW::one"].sortOrder == 2, "one should have order 2 after swap")
-    assert(s.conversations["me::WOW::two"].sortOrder == 1, "two should have order 1 after swap")
-  end
-
   -- test_set_sort_order_nonexistent_is_noop
   do
     local s = Store.New({})

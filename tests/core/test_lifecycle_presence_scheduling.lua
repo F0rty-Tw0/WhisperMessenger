@@ -15,12 +15,6 @@ return function()
         Rebuild = function()
           calls.rebuild = calls.rebuild + 1
         end,
-        IsStale = function()
-          return true
-        end,
-        GetTTL = function()
-          return 30
-        end,
       }
   end
 

@@ -274,12 +274,6 @@ return function()
       Invalidate = function()
         invalidateCount = invalidateCount + 1
       end,
-      IsStale = function()
-        return true
-      end,
-      GetTTL = function()
-        return 30
-      end,
     }
 
     local deps = {

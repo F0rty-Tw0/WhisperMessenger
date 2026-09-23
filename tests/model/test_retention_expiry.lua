@@ -30,17 +30,6 @@ return function()
     assert(#messages == 0, "expected 0 messages when all are old, got " .. #messages)
   end
 
-  -- test_expire_conversations_removes_inactive
-  do
-    local conversations = {
-      a = { lastActivityAt = 100 },
-      b = { lastActivityAt = 300 },
-    }
-    Retention.ExpireConversations(conversations, 150, 350) -- threshold = 350-150 = 200
-    assert(conversations.a == nil, "expected conversation a to be expired")
-    assert(conversations.b ~= nil, "expected conversation b to be kept")
-  end
-
   -- test_missing_timestamp_is_not_expired
   -- A record with no timestamp yet (freshly ensured conversation, message
   -- missing sentAt) must be kept conservatively, not treated as infinitely old.
@@ -48,31 +37,12 @@ return function()
     assert(Retention.IsExpired(nil, 100, 99999) == false, "nil timestamp must not count as expired")
     assert(Retention.IsExpired(0, 100, 99999) == false, "zero timestamp must not count as expired")
 
-    local conversations = {
-      fresh = { lastActivityAt = 0 },
-      old = { lastActivityAt = 100 },
-    }
-    Retention.ExpireConversations(conversations, 150, 99999)
-    assert(conversations.fresh ~= nil, "freshly-created conversation (lastActivityAt=0) must be kept")
-    assert(conversations.old == nil, "genuinely old conversation is still expired")
-  end
-
-  -- test_expire_conversations_keeps_pinned
-  do
-    local conversations = {
-      a = { lastActivityAt = 1, pinned = true },
-    }
-    Retention.ExpireConversations(conversations, 10, 100)
-    assert(conversations.a ~= nil, "expected pinned conversation a to be kept")
-  end
-
-  -- test_expire_conversations_no_op_when_nil_max_age
-  do
-    local conversations = {
-      a = { lastActivityAt = 1 },
-    }
-    Retention.ExpireConversations(conversations, nil, 999)
-    assert(conversations.a ~= nil, "expected conversation a to remain when maxAgeSeconds is nil")
+    local state = Store.New({ conversationMaxAge = 150 })
+    state.conversations["key::fresh"] = { messages = {}, lastActivityAt = 0, unreadCount = 0 }
+    state.conversations["key::old"] = { messages = {}, lastActivityAt = 100, unreadCount = 0 }
+    Store.ExpireAll(state, 99999)
+    assert(state.conversations["key::fresh"] ~= nil, "freshly-created conversation (lastActivityAt=0) must be kept")
+    assert(state.conversations["key::old"] == nil, "genuinely old conversation is still expired")
   end
 
   -- test_store_expire_all_purges_old_conversations_and_messages

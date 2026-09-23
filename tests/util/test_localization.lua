@@ -7,7 +7,6 @@ return function()
       return "enUS"
     end,
   })
-  assert(Localization.GetConfiguredLanguage() == "auto", "default configured language should be auto")
   assert(Localization.GetEffectiveLanguage() == "enUS", "enUS locale should resolve English")
   assert(Localization.Text("General Settings") == "General Settings", "English should return the source key")
 
@@ -30,7 +29,6 @@ return function()
       return "ruRU"
     end,
   })
-  assert(Localization.GetConfiguredLanguage() == "auto", "invalid language should normalize to auto")
   assert(Localization.GetEffectiveLanguage() == "ruRU", "invalid explicit language should fall back to supported auto-detected locale")
 
   local currentTranslations = {

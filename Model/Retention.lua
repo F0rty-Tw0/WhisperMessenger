@@ -76,22 +76,6 @@ function Retention.ExpireMessages(messages, maxAgeSeconds, now)
   return messages
 end
 
-function Retention.ExpireConversations(conversations, maxAgeSeconds, now)
-  if type(maxAgeSeconds) ~= "number" then
-    return conversations
-  end
-
-  now = resolveNow(now)
-
-  for key, conv in pairs(conversations) do
-    if not conv.pinned and Retention.IsExpired(conv.lastActivityAt, maxAgeSeconds, now) then
-      conversations[key] = nil
-    end
-  end
-
-  return conversations
-end
-
 ns.Retention = Retention
 
 return Retention

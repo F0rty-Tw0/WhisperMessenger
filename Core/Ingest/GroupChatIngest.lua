@@ -115,10 +115,6 @@ local function resolveGroupConversation(state, channel)
   return conversationKey, groupCategory, partyGUID, guildName
 end
 
-function GroupChatIngest.ResolveCurrentConversation(state, channel)
-  return resolveGroupConversation(state, REACTION_CHANNELS[channel] or channel)
-end
-
 local function localSenderClassTag()
   if type(_G.UnitClass) ~= "function" then
     return nil

@@ -466,12 +466,6 @@ return function()
 
     local PresenceCache = {
       Rebuild = function() end,
-      IsStale = function()
-        return false
-      end,
-      GetTTL = function()
-        return 30
-      end,
     }
 
     local Bootstrap = { runtime = { suspend = function() end, resume = function() end } }

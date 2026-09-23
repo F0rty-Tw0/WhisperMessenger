@@ -31,14 +31,6 @@ function TableUtils.unpackValues(values)
   return unpackFn(values)
 end
 
-function TableUtils.sumBy(items, fieldName)
-  local total = 0
-  for _, item in ipairs(items or {}) do
-    total = total + (item[fieldName] or 0)
-  end
-  return total
-end
-
 function TableUtils.findWhere(items, fieldName, value)
   for _, item in ipairs(items or {}) do
     if item[fieldName] == value then

@@ -28,16 +28,6 @@ local function tests()
   local twoHours = os.time() - 7200
   Assert.equal(TimeFormat.ContactPreview(twoHours), "2h")
 
-  -- Relative: recent timestamps
-  local justNow = os.time() - 10
-  Assert.equal(TimeFormat.Relative(justNow), "just now")
-
-  local threeMin = os.time() - 180
-  Assert.equal(TimeFormat.Relative(threeMin), "3 minutes ago")
-
-  local oneHour = os.time() - 3600
-  Assert.equal(TimeFormat.Relative(oneHour), "1 hour ago")
-
   -- IsDifferentDay
   local day1 = os.time({ year = 2026, month = 3, day = 18, hour = 12, min = 0, sec = 0 })
   local day1b = os.time({ year = 2026, month = 3, day = 18, hour = 23, min = 0, sec = 0 })
@@ -71,7 +61,6 @@ local function tests()
 
     local yesterdayMorning = os.time({ year = 2026, month = 7, day = 17, hour = 10, min = 0, sec = 0 })
     Assert.equal(TimeFormat.ContactPreview(yesterdayMorning), "Yesterday")
-    Assert.equal(TimeFormat.Relative(yesterdayMorning), "yesterday")
 
     local twoDaysAgo = os.time({ year = 2026, month = 7, day = 16, hour = 22, min = 0, sec = 0 })
     assert(TimeFormat.ContactPreview(twoDaysAgo) ~= "Yesterday", "two days ago must not be labeled Yesterday")
@@ -83,7 +72,6 @@ local function tests()
   Assert.equal(TimeFormat.MessageTime(nil), "")
   Assert.equal(TimeFormat.MessageTime(0), "")
   Assert.equal(TimeFormat.ContactPreview(nil), "")
-  Assert.equal(TimeFormat.Relative(0), "unknown")
   assert(TimeFormat.IsDifferentDay(nil, day1), "nil timestamp should return true")
 
   print("  All TimeFormat tests passed")

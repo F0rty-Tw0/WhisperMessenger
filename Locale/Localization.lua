@@ -87,10 +87,6 @@ function Localization.Configure(options)
   configuredLanguage = normalizeLanguage(options.language)
 end
 
-function Localization.GetConfiguredLanguage()
-  return configuredLanguage
-end
-
 function Localization.GetEffectiveLanguage(languageOverride)
   local language = configuredLanguage
   if languageOverride ~= nil then

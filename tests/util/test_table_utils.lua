@@ -21,15 +21,6 @@ return function()
   local a, b, c = TableUtils.unpackValues({ 10, 20, 30 })
   assert(a == 10 and b == 20 and c == 30, "unpackValues should unpack table")
 
-  -- sumBy
-  local items = {
-    { count = 3 },
-    { count = 7 },
-    { count = 0 },
-  }
-  assert(TableUtils.sumBy(items, "count") == 10, "sumBy should sum field values")
-  assert(TableUtils.sumBy(nil, "count") == 0, "sumBy(nil) should return 0")
-
   -- findWhere
   local contacts = {
     { name = "Alice", id = 1 },

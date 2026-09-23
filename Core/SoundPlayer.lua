@@ -31,8 +31,6 @@ local DEFAULT_SOUND_KEY = "whisper"
 
 local SoundPlayer = {}
 
-SoundPlayer.SOUND_OPTIONS = SOUND_OPTIONS
-
 function SoundPlayer.Play(settings)
   local soundKey = settings.notificationSound or DEFAULT_SOUND_KEY
   local soundId = SOUND_BY_KEY[soundKey] or SOUND_BY_KEY[DEFAULT_SOUND_KEY]

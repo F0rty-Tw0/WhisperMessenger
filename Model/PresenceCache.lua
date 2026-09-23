@@ -20,7 +20,6 @@ local zoneByGuid = {}
 -- guid -> timestamp of the last presence read for that GUID.
 local freshAt = {}
 local indexBuiltAt = nil
-local lastRebuiltAt = 0
 local ttl = 30
 local dirty = true
 local clubApi = nil
@@ -120,7 +119,6 @@ function PresenceCache.Initialize(api, options)
   zoneByGuid = {}
   freshAt = {}
   indexBuiltAt = nil
-  lastRebuiltAt = 0
   -- Don't rebuild immediately — club data may not be loaded yet at ADDON_LOADED time.
   -- Mark dirty so the first timer tick or event triggers the rebuild when data is ready.
   dirty = true
@@ -162,7 +160,6 @@ function PresenceCache.Rebuild()
   zoneByGuid = acc.zoneByGuid
   freshAt = acc.freshAt
   indexBuiltAt = now
-  lastRebuiltAt = now
   dirty = false
 end
 
@@ -272,21 +269,6 @@ function PresenceCache.Invalidate()
   dirty = true
 end
 
-function PresenceCache.IsStale()
-  if dirty then
-    return true
-  end
-  return (nowFn() - lastRebuiltAt) >= ttl
-end
-
-function PresenceCache.SetTTL(seconds)
-  ttl = seconds
-end
-
-function PresenceCache.GetTTL()
-  return ttl
-end
-
 -- Test helpers (prefixed with _ to indicate internal use)
 function PresenceCache._reset()
   cache = {}
@@ -295,7 +277,6 @@ function PresenceCache._reset()
   zoneByGuid = {}
   freshAt = {}
   indexBuiltAt = nil
-  lastRebuiltAt = 0
   dirty = true
   clubApi = nil
   nowFn = function()
@@ -312,7 +293,6 @@ end
 function PresenceCache._setCache(tbl)
   cache = tbl or {}
   dirty = false
-  lastRebuiltAt = nowFn and nowFn() or 0
 end
 
 ns.PresenceCache = PresenceCache

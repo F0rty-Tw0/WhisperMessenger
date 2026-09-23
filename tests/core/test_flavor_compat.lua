@@ -31,15 +31,12 @@ return function()
   assert(forever.isForever == true, "toc 16001 should be Forever")
   assert(forever.isRetail == true, "Forever runs the retail engine, isRetail stays true")
   assert(forever.hasMythicPlus == false, "Forever has no Mythic+")
-  assert(forever.hasCrossFactonWhispers == false, "Forever has no cross-faction whispers")
-  assert(forever.flavorName == "Forever", "flavorName should be Forever, got " .. tostring(forever.flavorName))
 
   -- Retail: project 1 + toc 120100
   local retail = loadFlavorCompat(1, 120100)
   assert(retail.isForever == false, "toc 120100 should not be Forever")
   assert(retail.isRetail == true, "toc 120100 should be Retail")
   assert(retail.hasMythicPlus == true, "Retail has Mythic+")
-  assert(retail.flavorName == "Retail", "flavorName should be Retail, got " .. tostring(retail.flavorName))
 
   -- GetBuildInfo nil (test harness default): never Forever
   local noBuild = loadFlavorCompat(1, nil)

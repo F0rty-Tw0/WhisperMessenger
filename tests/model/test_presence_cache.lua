@@ -174,55 +174,6 @@ return function()
     assert(PresenceCache.GetPresence("Player-Unknown") == nil, "Unknown (0) should not be cached")
   end
 
-  -- Invalidate marks cache as stale
-  do
-    PresenceCache._reset()
-    local api = makeMockClubApi({ guildMembers = {} })
-    PresenceCache._initForTest(api, {
-      now = function()
-        return 100
-      end,
-    })
-    assert(PresenceCache.IsStale() == false, "fresh cache should not be stale")
-    PresenceCache.Invalidate()
-    assert(PresenceCache.IsStale() == true, "invalidated cache should be stale")
-  end
-
-  -- IsStale returns true when TTL expires
-  do
-    PresenceCache._reset()
-    local clock = 100
-    local api = makeMockClubApi({ guildMembers = {} })
-    PresenceCache._initForTest(api, {
-      ttl = 30,
-      now = function()
-        return clock
-      end,
-    })
-    assert(PresenceCache.IsStale() == false, "just built: should not be stale")
-    clock = 129
-    assert(PresenceCache.IsStale() == false, "29s later: should not be stale yet")
-    clock = 130
-    assert(PresenceCache.IsStale() == true, "30s later: should be stale")
-  end
-
-  -- SetTTL updates the TTL
-  do
-    PresenceCache._reset()
-    local clock = 100
-    local api = makeMockClubApi({ guildMembers = {} })
-    PresenceCache._initForTest(api, {
-      ttl = 30,
-      now = function()
-        return clock
-      end,
-    })
-    clock = 120
-    assert(PresenceCache.IsStale() == false, "20s with 30s TTL: not stale")
-    PresenceCache.SetTTL(15)
-    assert(PresenceCache.IsStale() == true, "20s with 15s TTL: now stale")
-  end
-
   -- _setCache sets cache directly for tests
   do
     PresenceCache._reset()
@@ -239,7 +190,6 @@ return function()
       end,
     })
     assert(PresenceCache.GetPresence("any-guid") == nil, "nil clubApi: should return nil for any guid")
-    assert(PresenceCache.IsStale() == false, "nil clubApi: should still mark as fresh after rebuild")
   end
 
   -- Rebuild handles pcall errors gracefully
@@ -259,7 +209,6 @@ return function()
       end,
     })
     assert(PresenceCache.GetPresence("any-guid") == nil, "erroring API: should return nil")
-    assert(PresenceCache.IsStale() == false, "erroring API: should still mark as fresh")
   end
 
   -- Rebuild handles GetMemberInfo errors for individual members

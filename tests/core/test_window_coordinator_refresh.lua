@@ -430,9 +430,6 @@ return function()
         return window
       end,
       presenceCache = {
-        IsStale = function()
-          return true
-        end,
         Rebuild = function()
           rebuilds = rebuilds + 1
         end,

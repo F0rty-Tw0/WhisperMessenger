@@ -21,9 +21,7 @@ local EventBridge = {}
 EventBridge.RegisterLiveEvents = Registration.RegisterLiveEvents
 EventBridge.UnregisterLiveEvents = Registration.UnregisterLiveEvents
 EventBridge.RegisterChannelEvents = Registration.RegisterChannelEvents
-EventBridge.UnregisterChannelEvents = Registration.UnregisterChannelEvents
 EventBridge.RegisterGroupEvents = Registration.RegisterGroupEvents
-EventBridge.UnregisterGroupEvents = Registration.UnregisterGroupEvents
 EventBridge.RegisterSuspendableLifecycleEvents = Registration.RegisterSuspendableLifecycleEvents
 EventBridge.UnregisterSuspendableLifecycleEvents = Registration.UnregisterSuspendableLifecycleEvents
 

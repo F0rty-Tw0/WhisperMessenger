@@ -58,9 +58,6 @@ return function()
         EnsureFresh = function(guid)
           ensured[#ensured + 1] = guid
         end,
-        IsStale = function()
-          return true
-        end,
         Rebuild = function()
           rebuilds = rebuilds + 1
         end,
@@ -120,9 +117,6 @@ return function()
       presenceCache = {
         EnsureFresh = function()
           ensured = ensured + 1
-        end,
-        IsStale = function()
-          return true
         end,
         Rebuild = function()
           rebuilds = rebuilds + 1
