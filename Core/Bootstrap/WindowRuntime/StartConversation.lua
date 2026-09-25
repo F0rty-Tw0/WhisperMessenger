@@ -5,21 +5,9 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local StartConversation = {}
-
-local function normalizePlayerName(playerName)
-  if type(playerName) ~= "string" then
-    return nil
-  end
-
-  local trimmed = string.match(playerName, "^%s*(.-)%s*$")
-  if trimmed == "" then
-    return nil
-  end
-
-  return trimmed
-end
 
 local function findExistingConversationKeyByName(runtime, playerName)
   return Identity.ResolveWhisperConversation(runtime, playerName, "WOW")
@@ -74,7 +62,7 @@ function StartConversation.Create(options)
   local timer = options.timer
 
   local function startConversation(playerName)
-    local normalizedName = normalizePlayerName(playerName)
+    local normalizedName = TextLimits.Trim(playerName)
     if normalizedName == nil then
       return false
     end
@@ -107,7 +95,7 @@ function StartConversation.Create(options)
 
   return {
     startConversation = startConversation,
-    normalizePlayerName = normalizePlayerName,
+    normalizePlayerName = TextLimits.Trim,
     findExistingConversationKeyByName = function(playerName)
       return findExistingConversationKeyByName(runtime, playerName)
     end,

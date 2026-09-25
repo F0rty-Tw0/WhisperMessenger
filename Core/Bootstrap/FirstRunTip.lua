@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+
 local FirstRunTip = {}
 
 local TIP_TEXT_KEY = "your whispers now open in the messenger window. Click the chat icon or type /wmsg."
@@ -21,12 +23,9 @@ function FirstRunTip.Announce(accountState, options)
   local isExistingUser = next(accountState.conversations or {}) ~= nil or accountState.settings.patchNotesSeenVersion ~= nil
 
   if not isExistingUser then
-    local frame = options.frame or _G.DEFAULT_CHAT_FRAME
     local localization = ns.Localization
     local text = (localization and localization.Text and localization.Text(TIP_TEXT_KEY)) or TIP_TEXT_KEY
-    if frame and frame.AddMessage then
-      frame:AddMessage("|cffffd100WhisperMessenger:|r " .. text)
-    end
+    ChatPrint.Print(text, options.frame)
   end
 
   accountState.settings.firstRunTipShown = true

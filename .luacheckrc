@@ -162,6 +162,7 @@ read_globals = {
   "IsInGroup",
   "IsInRaid",
   "IsInGuild",
+  "DEFAULT_CHAT_FRAME",
   "PlaySound",
   "print",
   "UpdateAddOnMemoryUsage",

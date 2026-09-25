@@ -3,10 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+
 local Protocol = {}
 
 local MAX_PAYLOAD_BYTES = 255
-local MAX_WHISPER_BYTES = 255
 local VERSION = "1"
 local ELLIPSIS = "…"
 local OPEN_QUOTE = "“"
@@ -97,36 +98,6 @@ local function wireIdExists(state, candidate)
   return false
 end
 
-local function utf8SequenceWidth(firstByte)
-  if firstByte < 0x80 then
-    return 1
-  end
-  if firstByte >= 0xC2 and firstByte <= 0xDF then
-    return 2
-  end
-  if firstByte >= 0xE0 and firstByte <= 0xEF then
-    return 3
-  end
-  if firstByte >= 0xF0 and firstByte <= 0xF4 then
-    return 4
-  end
-  return 1
-end
-
-local function utf8Prefix(text, maxBytes)
-  local cursor = 1
-  local lastComplete = 0
-  while cursor <= #text do
-    local width = utf8SequenceWidth(string.byte(text, cursor))
-    if cursor + width - 1 > maxBytes then
-      break
-    end
-    lastComplete = cursor + width - 1
-    cursor = cursor + width
-  end
-  return string.sub(text, 1, lastComplete)
-end
-
 function Protocol.IsReactionKey(key)
   return reactionKeySet[key] == true
 end
@@ -196,7 +167,7 @@ function Protocol.BuildGroupFallback(key, operation, sourceText, hintSuffix)
     if textBudget < 0 then
       return nil
     end
-    excerpt = utf8Prefix(excerpt, textBudget) .. ELLIPSIS
+    excerpt = TextLimits.CapBytes(excerpt, textBudget) .. ELLIPSIS
   end
   return prefix .. excerpt .. closeQuote .. hintSuffix
 end
@@ -383,7 +354,7 @@ end
 
 Protocol.REACTION_KEYS = REACTION_KEYS
 Protocol.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
-Protocol.MAX_WHISPER_BYTES = MAX_WHISPER_BYTES
+Protocol.MAX_WHISPER_BYTES = TextLimits.MESSAGE_MAX_BYTES
 Protocol.VERSION = VERSION
 Protocol.ADDON_HINT_SUFFIX = ADDON_HINT_SUFFIX
 

@@ -31,6 +31,8 @@ Core/EventUtils.lua
 Core/BNetIdentity.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
+Util/TextLimits.lua
+Util/ChatPrint.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua

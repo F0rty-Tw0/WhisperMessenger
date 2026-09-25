@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 
@@ -15,19 +16,6 @@ local function L(key)
     return Localization.Text(key)
   end
   return key
-end
-
-local function trimPlayerName(value)
-  if type(value) ~= "string" then
-    return nil
-  end
-
-  local trimmed = string.match(value, "^%s*(.-)%s*$") or ""
-  if trimmed == "" then
-    return nil
-  end
-
-  return trimmed
 end
 
 local function resolveConversationPopupEditBox(popup, dialogName)
@@ -108,7 +96,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
 
   dialog.OnAccept = function(popup)
     local editBox = resolveConversationPopupEditBox(popup, DIALOG_NAME)
-    local playerName = trimPlayerName(editBox and editBox.GetText and editBox:GetText() or nil)
+    local playerName = TextLimits.Trim(editBox and editBox.GetText and editBox:GetText() or nil)
     if playerName ~= nil and dialog._wmOnStartConversation then
       dialog._wmOnStartConversation(playerName)
     end
