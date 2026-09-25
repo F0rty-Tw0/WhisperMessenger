@@ -26,6 +26,7 @@ local ScriptWiring = ns.MessengerWindowScriptWiring or require("WhisperMessenger
 local RelayoutController = ns.MessengerWindowRelayoutController or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PatchNotesRuntime")
+local LanguageRefresh = ns.MessengerWindowLanguageRefresh or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LanguageRefresh")
 local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
 local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
@@ -344,62 +345,30 @@ function MessengerWindow.Create(factory, options)
     return normalizedScale
   end
 
-  local function refreshLanguage(lang)
-    -- GeneralSettings.applyLanguage uses `nextLanguage or DEFAULTS.interfaceLanguage`,
-    -- so calling it with nil silently resets the panel to "auto" and unselects
-    -- the user's choice in the language selector. Resolve the live setting
-    -- when the caller doesn't pass an explicit language.
-    local effectiveLang = lang or settingsConfig.interfaceLanguage
-    -- Each child widget owns the labels it created and re-resolves them from
-    -- the active Localization catalog. Call them in dependency order so a
-    -- StatusLine.Build() that runs during the contacts refresh sees fresh
-    -- catalog state.
-    if layout.setLanguage then
-      layout.setLanguage()
-    end
-    if composer.setLanguage then
-      composer.setLanguage()
-    end
-    local generalSettings = settingsRuntime.getSettings(1)
-    local appearanceSettings = settingsRuntime.getSettings(2)
-    local behaviorSettings = settingsRuntime.getSettings(3)
-    local notificationSettings = settingsRuntime.getSettings(4)
-    local iconSettings = settingsRuntime.getSettings(5)
-    if generalSettings and generalSettings.setLanguage then
-      generalSettings.setLanguage(effectiveLang)
-    end
-    if appearanceSettings and appearanceSettings.setLanguage then
-      appearanceSettings.setLanguage()
-    end
-    if behaviorSettings and behaviorSettings.setLanguage then
-      behaviorSettings.setLanguage()
-    end
-    if notificationSettings and notificationSettings.setLanguage then
-      notificationSettings.setLanguage()
-    end
-    if iconSettings and iconSettings.setLanguage then
-      iconSettings.setLanguage()
-    end
-    local patchNotesSettings = settingsRuntime.getSettings(SettingsPanels.PATCH_NOTES_INDEX)
-    if patchNotesSettings and patchNotesSettings.setLanguage then
-      patchNotesSettings.setLanguage()
-    end
-    if contactsRuntime and contactsRuntime.tabToggle and contactsRuntime.tabToggle.setLanguage then
-      contactsRuntime.tabToggle.setLanguage()
-    end
-    if conversation then
-      ConversationPane.SetLanguage(conversation)
-    end
-    if scriptResult and scriptResult.setLanguage then
-      scriptResult.setLanguage()
-    end
-    -- Force a contacts refresh so dynamic labels (group channel labels,
-    -- the "no group chats yet" empty state, contact preview timestamps)
-    -- pick up the new locale.
-    if refreshContacts then
-      refreshContacts(getCurrentContacts(), selectionController and selectionController.getSelectedConversationKey() or nil, false)
-    end
+  -- Re-applies the layout at the current size (theme, language and footer
+  -- tab changes can all move the bottom of the contacts list).
+  local function relayoutCurrentSize()
+    relayoutWindow(
+      sizeValue(frame, "GetWidth", "width", initialState.width),
+      sizeValue(frame, "GetHeight", "height", initialState.height),
+      windowGeometry.getContactsWidth(),
+      false
+    )
   end
+
+  local refreshLanguage = LanguageRefresh.Create({
+    layout = layout,
+    composer = composer,
+    settingsRuntime = settingsRuntime,
+    settingsConfig = settingsConfig,
+    contactsRuntime = contactsRuntime,
+    relayoutCurrentSize = relayoutCurrentSize,
+    conversation = conversation,
+    scriptResult = scriptResult,
+    refreshContacts = refreshContacts,
+    getCurrentContacts = getCurrentContacts,
+    selectionController = selectionController,
+  })
 
   local window = {
     frame = chrome.frame,
@@ -456,12 +425,7 @@ function MessengerWindow.Create(factory, options)
         tabToggle.setMode(tabToggle.getMode())
       end
       -- Re-apply pane anchors and composer geometry for the new theme.
-      relayoutWindow(
-        sizeValue(frame, "GetWidth", "width", initialState.width),
-        sizeValue(frame, "GetHeight", "height", initialState.height),
-        windowGeometry.getContactsWidth(),
-        false
-      )
+      relayoutCurrentSize()
     end,
     setScale = setScale,
     refreshLanguage = refreshLanguage,

@@ -252,6 +252,7 @@ UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
+UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
