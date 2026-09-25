@@ -5,8 +5,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local SettingsPanels = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 
 local function captureCreate(capture)
-  return function(_factory, _parent, config, _options)
+  return function(_factory, _parent, config, options)
     capture.config = config
+    capture.options = options
     return { frame = {}, refreshLayout = function() end, refreshTheme = function() end }
   end
 end
@@ -48,6 +49,7 @@ return function()
     doubleEscapeToClose = true,
     showGroupChats = false,
     requestsInbox = true,
+    quickReplies = { "brb" },
     -- notifications and icons
     lockToggleIcon = true,
     shareWidgetPosition = true,
@@ -95,7 +97,12 @@ return function()
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)
   )
 
+  -- Behavior: the saved quick replies reach the page, which can ask the
+  -- options scroll view to re-measure after the list grows or shrinks.
+  assert(behaviorCapture.config.quickReplies == settingsConfig.quickReplies, "behavior config should carry quickReplies")
   assert(behaviorCapture.config.requestsInbox == true, "behavior config should carry requestsInbox")
+  assert(type(behaviorCapture.options.onLayoutChanged) == "function", "behavior page gets an onLayoutChanged hook")
+
   -- Appearance: bubbleColorPreset must round-trip.
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",

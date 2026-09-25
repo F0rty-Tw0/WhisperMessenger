@@ -11,23 +11,19 @@ local setTextColor = UIHelpers.setTextColor
 
 local LinkHooks = ns.ComposerLinkHooks or require("WhisperMessenger.UI.Composer.LinkHooks")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local EmojiPicker = ns.ComposerEmojiPicker or require("WhisperMessenger.UI.Composer.EmojiPicker")
-local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local SendButtonStyle = ns.ComposerSendButtonStyle or require("WhisperMessenger.UI.Composer.SendButtonStyle")
 local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Composer.ComposerSurface")
 local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Composer.ComposerLayout")
-
-local COMPOSER_MAX_BYTES = 255
+local ComposerLaunchers = ns.ComposerLaunchers or require("WhisperMessenger.UI.Composer.ComposerLaunchers")
 local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local Composer = {}
 
-local TRANSPARENT_COLOR = UIHelpers.TRANSPARENT
-
 -- options.nativeChrome: Native WoW HUD -> Blizzard input border art.
 -- options.onDraftChanged(conversationKey, text): typed text to keep as draft.
+-- options.getQuickReplies(): saved quick-reply list (nil = defaults).
 -- options.onReplyChanged(replyTo | nil): the open conversation's reply target.
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
@@ -51,27 +47,26 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- ComposerSurface trims it to a single top hairline.
   local composerBorder = UIHelpers.createBorderBox(pane, Theme.COLORS.divider, Theme.DIVIDER_THICKNESS, "OVERLAY")
 
-  local createRoundedBackground = UIHelpers.createRoundedBackground
+  local sendDisabled = selectedContact == nil
   local button = factory.CreateFrame("Button", nil, pane)
-  local emojiButton = factory.CreateFrame("Button", nil, pane)
-  local emojiBg = createRoundedBackground(emojiButton, 8)
-  emojiButton.bg = emojiBg
-  local emojiIcon = emojiButton:CreateTexture(nil, "ARTWORK")
-  emojiButton.icon = emojiIcon
-  emojiIcon:SetPoint("CENTER", emojiButton, "CENTER", 0, 0)
-  emojiIcon:SetTexture(ReactionAssets.TEXTURE)
-  local emojiCoords = ReactionAssets.GetTexCoords("wink")
-  emojiIcon:SetTexCoord(emojiCoords[1], emojiCoords[2], emojiCoords[3], emojiCoords[4])
-
-  local function applyEmojiColor(color)
-    emojiBg.setColor(color)
-  end
   local paintSendButton = SendButtonStyle.Create(button)
 
   -- Plain EditBox (no template)
   local input = factory.CreateFrame("EditBox", nil, pane)
   input:SetText("")
-  local layoutParts = { pane = pane, input = input, sendButton = button, emojiButton = emojiButton, emojiIcon = emojiIcon }
+  local launchers = ComposerLaunchers.Create(factory, pane, input, {
+    enabled = not sendDisabled,
+    maxBytes = TextLimits.MESSAGE_MAX_BYTES,
+    getQuickReplies = options.getQuickReplies,
+  })
+  local layoutParts = {
+    pane = pane,
+    input = input,
+    sendButton = button,
+    emojiButton = launchers.emojiButton,
+    emojiIcon = launchers.emojiButton.icon,
+    quickReplyButton = launchers.quickReplyButton,
+  }
   ComposerLayout.Apply(layoutParts, parentWidth)
 
   UIHelpers.setFontObject(input, Theme.FONTS.composer_input)
@@ -127,26 +122,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     return width
   end
 
-  local sendDisabled = selectedContact == nil
   button.disabled = sendDisabled
-  emojiButton.disabled = sendDisabled
-
   paintSendButton(sendDisabled, false)
-  applyEmojiColor(TRANSPARENT_COLOR)
-
-  local emojiPicker = EmojiPicker.Create(factory, pane, emojiButton, function(key)
-    if sendDisabled then
-      return
-    end
-    local token = ":" .. key .. ":"
-    if #(input:GetText() or "") + #token <= COMPOSER_MAX_BYTES then
-      input:Insert(token)
-    end
-    if input.SetFocus then
-      input:SetFocus()
-    end
-  end)
-  emojiPicker:setEnabled(not sendDisabled)
 
   button:SetScript("OnEnter", function(self)
     paintSendButton(sendDisabled, true)
@@ -156,23 +133,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   button:SetScript("OnLeave", function()
     paintSendButton(sendDisabled, false)
     PickerStyles.HideTooltip()
-  end)
-
-  emojiButton:SetScript("OnEnter", function(self)
-    if not sendDisabled then
-      applyEmojiColor(PickerStyles.HighlightColor())
-      PickerStyles.ShowTooltipText(self, Localization.Text("Emojis"))
-    end
-  end)
-  emojiButton:SetScript("OnLeave", function()
-    applyEmojiColor(TRANSPARENT_COLOR)
-    PickerStyles.HideTooltip()
-  end)
-  emojiButton:SetScript("OnClick", function()
-    PickerStyles.HideTooltip()
-    if not sendDisabled then
-      emojiPicker:toggle()
-    end
   end)
 
   local function submitMessage()
@@ -271,8 +231,10 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     paneBg = paneBg,
     border = composerBorder,
     sendButton = button,
-    emojiButton = emojiButton,
-    emojiPicker = emojiPicker,
+    emojiButton = launchers.emojiButton,
+    emojiPicker = launchers.emojiPicker,
+    quickReplyButton = launchers.quickReplyButton,
+    quickReplyPicker = launchers.quickReplyPicker,
     placeholder = placeholder,
     loadDraft = loadDraft,
     setReply = function(conversationKey, replyTo)
@@ -291,11 +253,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     setEnabled = function(enabled)
       sendDisabled = not enabled
       button.disabled = not enabled
-      emojiButton.disabled = not enabled
-      emojiPicker:setEnabled(enabled)
+      launchers.setEnabled(enabled)
       PickerStyles.HideTooltip()
       paintSendButton(sendDisabled, false)
-      applyEmojiColor(TRANSPARENT_COLOR)
     end,
     refreshTheme = function()
       if surface.native then
@@ -314,13 +274,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
         setTextColor(placeholder, Theme.COLORS.text_secondary)
       end
       paintSendButton(sendDisabled, false)
-      if not sendDisabled and emojiButton:IsMouseOver() then
-        applyEmojiColor(PickerStyles.HighlightColor())
-      else
-        applyEmojiColor(TRANSPARENT_COLOR)
-      end
+      launchers.refreshTheme()
       relayoutLauncher(currentParentWidth(parentWidth))
-      emojiPicker:refreshTheme()
     end,
     relayout = function(parentW)
       -- Prefer the pane's live width over the passed-in hint: the caller

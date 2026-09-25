@@ -340,6 +340,14 @@ local Korean = {
   ["Draft"] = "임시 저장",
   ["Draft:"] = "임시 저장:",
   ["New messages"] = "새 메시지",
+  ["One sec"] = "잠깐만요",
+  ["On my way"] = "가는 중이에요",
+  ["Sure!"] = "물론이죠!",
+  ["Sorry, busy right now — will reply soon"] = "죄송해요, 지금 바빠요 — 곧 답장할게요",
+  ["Quick replies"] = "빠른 답장",
+  ["Emojis"] = "이모티콘",
+  ["Add quick reply"] = "빠른 답장 추가",
+  ["Add"] = "추가",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "요청",
   ["Put whispers from strangers in Requests"] = "낯선 사람의 귓속말을 요청으로 보내기",
@@ -358,6 +366,7 @@ local Korean = {
   ["Replying to %s"] = "%s님에게 답장",
   ["1 queued message is waiting — open the messenger to send or discard."] = "대기 중인 메시지가 1개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "대기 중인 메시지가 %d개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
+  ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
 }
 
 ns.Locale_koKR = Korean

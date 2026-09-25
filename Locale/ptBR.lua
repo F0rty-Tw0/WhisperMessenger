@@ -340,6 +340,14 @@ local Portuguese = {
   ["Draft"] = "Rascunho",
   ["Draft:"] = "Rascunho:",
   ["New messages"] = "Novas mensagens",
+  ["One sec"] = "Só um segundo",
+  ["On my way"] = "Estou a caminho",
+  ["Sure!"] = "Claro!",
+  ["Sorry, busy right now — will reply soon"] = "Desculpe, estou ocupado agora — respondo logo",
+  ["Quick replies"] = "Respostas rápidas",
+  ["Emojis"] = "Emojis",
+  ["Add quick reply"] = "Adicionar resposta rápida",
+  ["Add"] = "Adicionar",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Solicitações",
   ["Put whispers from strangers in Requests"] = "Colocar sussurros de desconhecidos em Solicitações",
@@ -358,6 +366,7 @@ local Portuguese = {
   ["Replying to %s"] = "Respondendo a %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 mensagem na fila está aguardando — abra o mensageiro para enviar ou descartar.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d mensagens na fila estão aguardando — abra o mensageiro para enviar ou descartar.",
+  ["Edit this list in Options > Behavior."] = "Edite esta lista em Opções > Comportamento.",
 }
 
 ns.Locale_ptBR = Portuguese

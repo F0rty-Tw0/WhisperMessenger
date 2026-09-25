@@ -27,6 +27,11 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
   panel:SetAllPoints(parent)
   local settings = createSettingsView(factory, panel, config, {
     onChange = onSettingChanged,
+    onLayoutChanged = function()
+      if panel._wmRemeasure then
+        panel._wmRemeasure()
+      end
+    end,
   })
   -- Propagate the inner panel's bottom marker up to the wrapper so the
   -- options scrollview's per-tab content sizing (in WindowScripts/Buttons)
@@ -111,6 +116,7 @@ function SettingsPanels.Create(factory, options)
         doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
         showGroupChats = settingsConfig.showGroupChats,
         requestsInbox = settingsConfig.requestsInbox,
+        quickReplies = settingsConfig.quickReplies,
       },
     },
     {

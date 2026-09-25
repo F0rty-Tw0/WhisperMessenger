@@ -19,6 +19,7 @@ local Textures = {
   title_back_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\back.png",
   title_new_whisper_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\new_whisper.png",
   title_whats_new_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\whats_new.png",
+  quick_reply_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\quick_reply.png",
 }
 
 -- Class tokens with a matching ClassIcon_* texture. Unknown tags must

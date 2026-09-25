@@ -57,6 +57,7 @@ Model/ConversationStore.lua
 Model/ConversationDrafts.lua
 Model/OutgoingDelivery.lua
 Model/MessageRequests.lua
+Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
 Model/RosterLookup.lua
@@ -192,6 +193,9 @@ UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
 UI/Composer/EmojiPicker.lua
+UI/Composer/QuickReplyPicker.lua
+UI/Composer/LauncherButton.lua
+UI/Composer/ComposerLaunchers.lua
 UI/Composer/ComposerLayout.lua
 UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
@@ -248,6 +252,7 @@ UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
+UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua

@@ -340,6 +340,14 @@ local German = {
   ["Draft"] = "Entwurf",
   ["Draft:"] = "Entwurf:",
   ["New messages"] = "Neue Nachrichten",
+  ["One sec"] = "Moment",
+  ["On my way"] = "Bin unterwegs",
+  ["Sure!"] = "Klar!",
+  ["Sorry, busy right now — will reply soon"] = "Sorry, gerade beschäftigt — antworte gleich",
+  ["Quick replies"] = "Schnellantworten",
+  ["Emojis"] = "Emojis",
+  ["Add quick reply"] = "Schnellantwort hinzufügen",
+  ["Add"] = "Hinzufügen",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Anfragen",
   ["Put whispers from strangers in Requests"] = "Flüstern von Fremden unter Anfragen ablegen",
@@ -358,6 +366,7 @@ local German = {
   ["Replying to %s"] = "Antwort an %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 Nachricht in der Warteschlange wartet – öffne den Messenger, um sie zu senden oder zu verwerfen.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d Nachrichten in der Warteschlange warten – öffne den Messenger, um sie zu senden oder zu verwerfen.",
+  ["Edit this list in Options > Behavior."] = "Diese Liste unter Optionen > Verhalten bearbeiten.",
 }
 
 ns.Locale_deDE = German

@@ -340,6 +340,14 @@ local Italian = {
   ["Draft"] = "Bozza",
   ["Draft:"] = "Bozza:",
   ["New messages"] = "Nuovi messaggi",
+  ["One sec"] = "Un attimo",
+  ["On my way"] = "Sto arrivando",
+  ["Sure!"] = "Certo!",
+  ["Sorry, busy right now — will reply soon"] = "Scusa, ora sono occupato — rispondo presto",
+  ["Quick replies"] = "Risposte rapide",
+  ["Emojis"] = "Emoji",
+  ["Add quick reply"] = "Aggiungi risposta rapida",
+  ["Add"] = "Aggiungi",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Richieste",
   ["Put whispers from strangers in Requests"] = "Metti i sussurri degli sconosciuti in Richieste",
@@ -358,6 +366,7 @@ local Italian = {
   ["Replying to %s"] = "Risposta a %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 messaggio in coda è in attesa: apri il messenger per inviarlo o scartarlo.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messaggi in coda sono in attesa: apri il messenger per inviarli o scartarli.",
+  ["Edit this list in Options > Behavior."] = "Modifica questo elenco in Opzioni > Comportamento.",
 }
 
 ns.Locale_itIT = Italian

@@ -340,6 +340,14 @@ local French = {
   ["Draft"] = "Brouillon",
   ["Draft:"] = "Brouillon :",
   ["New messages"] = "Nouveaux messages",
+  ["One sec"] = "Une seconde",
+  ["On my way"] = "J'arrive",
+  ["Sure!"] = "Bien sûr !",
+  ["Sorry, busy right now — will reply soon"] = "Désolé, occupé pour le moment — je réponds bientôt",
+  ["Quick replies"] = "Réponses rapides",
+  ["Emojis"] = "Émojis",
+  ["Add quick reply"] = "Ajouter une réponse rapide",
+  ["Add"] = "Ajouter",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Demandes",
   ["Put whispers from strangers in Requests"] = "Placer les chuchotements d'inconnus dans Demandes",
@@ -358,6 +366,7 @@ local French = {
   ["Replying to %s"] = "Réponse à %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 message en attente – ouvrez la messagerie pour l'envoyer ou le supprimer.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messages en attente – ouvrez la messagerie pour les envoyer ou les supprimer.",
+  ["Edit this list in Options > Behavior."] = "Modifiez cette liste dans Options > Comportement.",
 }
 
 ns.Locale_frFR = French

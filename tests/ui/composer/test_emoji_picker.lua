@@ -334,12 +334,12 @@ return function()
 
   composer.emojiButton.scripts.OnClick(composer.emojiButton)
   composer.setEnabled(false)
-  assert(composer.emojiButton.disabled, "disabling composer should disable emoji button")
   assert(not picker.frame:IsShown(), "disabling composer should close picker")
   assert(emojiButton.bg.fills[1].color[4] == 0, "disabled launcher should remain backgroundless")
 
   local textBeforeDisabledActions = composer.input:GetText()
   composer.emojiButton.scripts.OnClick(composer.emojiButton)
+  assert(not picker.frame:IsShown(), "disabled emoji button should not open picker")
   picker.buttons[1].scripts.OnClick(picker.buttons[1])
   assert(composer.input:GetText() == textBeforeDisabledActions, "disabled picker actions must not mutate input")
   assert(sendCount == 0, "disabled picker actions must not send")

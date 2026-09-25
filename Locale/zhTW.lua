@@ -340,6 +340,14 @@ local TraditionalChinese = {
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
   ["New messages"] = "新訊息",
+  ["One sec"] = "稍等",
+  ["On my way"] = "馬上到",
+  ["Sure!"] = "當然！",
+  ["Sorry, busy right now — will reply soon"] = "抱歉，現在很忙——稍後回覆",
+  ["Quick replies"] = "快速回覆",
+  ["Emojis"] = "表情符號",
+  ["Add quick reply"] = "新增快速回覆",
+  ["Add"] = "新增",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "請求",
   ["Put whispers from strangers in Requests"] = "將陌生人的密語放入請求",
@@ -358,6 +366,7 @@ local TraditionalChinese = {
   ["Replying to %s"] = "回覆 %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
+  ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

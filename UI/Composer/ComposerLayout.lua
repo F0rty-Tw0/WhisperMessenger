@@ -7,8 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 -- Composer geometry: one gutter on every side, an input filling the strip
--- between them, and square emoji/send buttons vertically centered on it with
--- equal gaps.
+-- between them, and square quick-reply/emoji/send buttons vertically centered
+-- on it with equal gaps.
 local ComposerLayout = {}
 
 -- Room around the emoji glyph inside its square button.
@@ -21,7 +21,7 @@ function ComposerLayout.Compute(width)
   return {
     inputX = gutter,
     inputY = gutter,
-    inputW = width - (gutter * 2) - (size * 2) - (gap * 2),
+    inputW = width - (gutter * 2) - (size * 3) - (gap * 3),
     inputH = inputH,
     sendW = size,
     sendH = size,
@@ -44,6 +44,9 @@ function ComposerLayout.Apply(parts, width)
   parts.emojiButton:SetPoint("RIGHT", parts.sendButton, "LEFT", -m.gap, 0)
   parts.emojiButton:SetSize(m.emojiSize, m.emojiSize)
   parts.emojiIcon:SetSize(m.emojiIconSize, m.emojiIconSize)
+  parts.quickReplyButton:SetPoint("RIGHT", parts.emojiButton, "LEFT", -m.gap, 0)
+  parts.quickReplyButton:SetSize(m.emojiSize, m.emojiSize)
+  parts.quickReplyButton.icon:SetSize(m.emojiIconSize, m.emojiIconSize)
 end
 
 ns.ComposerLayout = ComposerLayout

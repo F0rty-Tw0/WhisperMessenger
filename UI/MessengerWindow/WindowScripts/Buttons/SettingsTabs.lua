@@ -122,10 +122,18 @@ function SettingsTabs.Wire(options)
   local wiredPanels = {}
 
   local function wirePanel(panel)
-    if not panel or wiredPanels[panel] or type(panel.HookScript) ~= "function" then
+    if not panel or wiredPanels[panel] then
       return
     end
     wiredPanels[panel] = true
+    -- Pages whose content grows or shrinks in place (the quick replies list)
+    -- call this; the frame size itself does not change, so no OnSizeChanged.
+    panel._wmRemeasure = function()
+      scheduleVisibleTabRemeasure(panel)
+    end
+    if type(panel.HookScript) ~= "function" then
+      return
+    end
     panel:HookScript("OnSizeChanged", function(self)
       if type(self.IsShown) == "function" and not self:IsShown() then
         return

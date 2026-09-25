@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local QuickRepliesSettings = ns.MessengerWindowQuickRepliesSettings or require("WhisperMessenger.UI.MessengerWindow.QuickRepliesSettings")
 local ToggleSpecs = ns.MessengerWindowBehaviorToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
 
 local BehaviorSettings = {}
@@ -73,6 +74,14 @@ function BehaviorSettings.Create(factory, parent, config, options)
   panel:bind(shareTypingToggle, { type = "toggle", key = "shareTypingStatus", default = DEFAULTS.shareTypingStatus })
   panel:bind(shareReadReceiptsToggle, { type = "toggle", key = "shareReadReceipts", default = DEFAULTS.shareReadReceipts })
 
+  -- Not bound to Reset to Defaults: it would wipe replies the player typed.
+  local quickReplies = QuickRepliesSettings.Create(factory, frame, shareReadReceiptsToggle.row, {
+    config = config,
+    panel = panel,
+    onChange = onChange,
+    onLayoutChanged = options.onLayoutChanged,
+  })
+
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
       factory,
@@ -83,7 +92,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", shareReadReceiptsToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", quickReplies.bottom, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
   end)
@@ -100,6 +109,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
+    quickReplies.refreshTheme()
   end
 
   refreshTheme(Theme)
@@ -120,6 +130,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     shareTypingToggle.label:SetText(text("Share typing status"))
     shareReadReceiptsToggle.label:SetText(text("Send read receipts"))
     resetButton.label:SetText(text("Reset to Defaults"))
+    quickReplies.setLanguage()
     -- Tooltip lines were captured into closure-frozen arrays at construction
     -- and stay in the previous language until the toggle is re-hovered after
     -- a /reload. Live-refreshing them would require restructuring the toggle
@@ -134,10 +145,12 @@ function BehaviorSettings.Create(factory, parent, config, options)
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
+    quickReplies.refreshLayout(effective)
   end
 
   return {
     frame = frame,
+    quickReplies = quickReplies,
     refreshLayout = refreshLayout,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,

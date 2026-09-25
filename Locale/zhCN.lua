@@ -340,6 +340,14 @@ local SimplifiedChinese = {
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
   ["New messages"] = "新消息",
+  ["One sec"] = "稍等",
+  ["On my way"] = "马上到",
+  ["Sure!"] = "当然！",
+  ["Sorry, busy right now — will reply soon"] = "抱歉，现在很忙——稍后回复",
+  ["Quick replies"] = "快捷回复",
+  ["Emojis"] = "表情",
+  ["Add quick reply"] = "添加快捷回复",
+  ["Add"] = "添加",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "请求",
   ["Put whispers from strangers in Requests"] = "将陌生人的密语放入请求",
@@ -358,6 +366,7 @@ local SimplifiedChinese = {
   ["Replying to %s"] = "回复 %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 条排队消息等待处理 — 打开信使即可发送或丢弃。",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 条排队消息等待处理 — 打开信使即可发送或丢弃。",
+  ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

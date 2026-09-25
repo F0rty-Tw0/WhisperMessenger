@@ -231,6 +231,9 @@ function MessengerWindow.Create(factory, options)
     nativeChrome = layout.nativeChrome == true,
     onDraftChanged = options.onDraftChanged,
     onReplyChanged = messageActions.onReplyChanged,
+    getQuickReplies = function()
+      return settingsConfig.quickReplies
+    end,
   }
   local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...

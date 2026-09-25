@@ -340,6 +340,14 @@ local Russian = {
   ["Draft"] = "Черновик",
   ["Draft:"] = "Черновик:",
   ["New messages"] = "Новые сообщения",
+  ["One sec"] = "Секунду",
+  ["On my way"] = "Уже иду",
+  ["Sure!"] = "Конечно!",
+  ["Sorry, busy right now — will reply soon"] = "Извини, сейчас занят — скоро отвечу",
+  ["Quick replies"] = "Быстрые ответы",
+  ["Emojis"] = "Эмодзи",
+  ["Add quick reply"] = "Добавить быстрый ответ",
+  ["Add"] = "Добавить",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Запросы",
   ["Put whispers from strangers in Requests"] = "Шепот от незнакомцев — во «Запросы»",
@@ -358,6 +366,7 @@ local Russian = {
   ["Replying to %s"] = "Ответ для %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "В очереди ждёт 1 сообщение — откройте мессенджер, чтобы отправить или удалить его.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "Сообщений в очереди: %d — откройте мессенджер, чтобы отправить или удалить их.",
+  ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
 }
 
 ns.Locale_ruRU = Russian

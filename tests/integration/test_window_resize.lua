@@ -105,10 +105,11 @@ return function()
   )
 
   -- Composer input scales with the composerPane's actual width.
-  -- Modern composer: one gutter each side, two square buttons, two gaps.
+  -- Modern composer: one gutter each side, three square buttons (quick
+  -- replies, emoji, send), three gaps.
   local layout = Theme.LAYOUT
   local expectedPaneW = expectedContentW
-  local expectedInputW = expectedPaneW - (layout.COMPOSER_GUTTER * 2) - (layout.COMPOSER_BUTTON_SIZE * 2) - (layout.COMPOSER_BUTTON_GAP * 2)
+  local expectedInputW = expectedPaneW - (layout.COMPOSER_GUTTER * 2) - (layout.COMPOSER_BUTTON_SIZE * 3) - (layout.COMPOSER_BUTTON_GAP * 3)
   assert(
     window.composer.input.width == expectedInputW,
     "expected composer input width " .. expectedInputW .. " but got " .. tostring(window.composer.input.width)

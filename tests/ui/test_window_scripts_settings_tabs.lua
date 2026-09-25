@@ -93,6 +93,22 @@ return function()
   local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
   assert(iconsTab.bg.color[1] == activeColor[1] and iconsTab.bg.color[2] == activeColor[2], "active fifth-tab background should persist after leave")
 
+  -- test_panel_content_change_remeasures_without_scrolling_to_top
+  behaviorTab.scripts.OnClick(behaviorTab)
+  assert(type(behaviorPanel._wmRemeasure) == "function", "shown panel exposes a re-measure hook")
+  behaviorPanel._testContentHeight = 350
+  scrollPosition = nil
+  local savedTimer = _G.C_Timer
+  _G.C_Timer = {
+    After = function(_, fn)
+      fn()
+    end,
+  }
+  behaviorPanel._wmRemeasure()
+  _G.C_Timer = savedTimer
+  assert(scrollContent.height == 350, "re-measure applies the panel's new content height")
+  assert(scrollPosition == nil, "re-measure keeps the scroll position")
+
   -- The "?" title-bar button drives the same selection without a tab click.
   assert(type(wired) == "table" and type(wired.selectTab) == "function", "Wire should return a programmatic tab selector")
   wired.selectTab(6)

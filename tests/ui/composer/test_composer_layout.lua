@@ -52,9 +52,14 @@ return function()
     local emojiPoint = lastPoint(emoji, "RIGHT")
     assert(emojiPoint[3] == "LEFT" and emojiPoint[4] == -gap, "emoji -> send gap is " .. gap)
 
+    local quick = composer.quickReplyButton
+    assert(quick.width == size and quick.height == size, "quick reply button matches the emoji size")
+    local quickPoint = lastPoint(quick, "RIGHT")
+    assert(quickPoint[2] == emoji and quickPoint[3] == "LEFT" and quickPoint[4] == -gap, "quick reply -> emoji gap is " .. gap)
+
     local inputRight = gutter + input.width
-    local emojiLeft = PANE_WIDTH - gutter - size - gap - size
-    assert(emojiLeft - inputRight == gap, "input -> emoji gap is " .. gap .. ", got " .. tostring(emojiLeft - inputRight))
+    local quickLeft = PANE_WIDTH - gutter - size - gap - size - gap - size
+    assert(quickLeft - inputRight == gap, "input -> quick reply gap is " .. gap .. ", got " .. tostring(quickLeft - inputRight))
   end
 
   -- test_every_preset_uses_the_compact_composer
