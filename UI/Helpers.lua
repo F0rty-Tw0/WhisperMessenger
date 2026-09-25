@@ -14,6 +14,7 @@ local UIHelpers = {
   applyHorizontalFade = Base.applyHorizontalFade,
   applyHorizontalFadeLeft = Base.applyHorizontalFadeLeft,
   applyVerticalFade = Base.applyVerticalFade,
+  applyVerticalFadeDown = Base.applyVerticalFadeDown,
   createSheen = Shapes.createSheen,
   applySheen = Shapes.applySheen,
   sizeValue = Base.sizeValue,

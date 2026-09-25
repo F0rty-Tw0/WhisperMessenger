@@ -179,6 +179,9 @@ function FramePool.releaseAll(contentFrame)
     clearInteractiveScripts(f)
     clearReactionState(f)
     clearBindingState(f)
+    if f.SetAlpha then
+      f:SetAlpha(1)
+    end
     if f.Hide then
       f:Hide()
     end

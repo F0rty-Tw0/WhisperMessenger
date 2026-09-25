@@ -10,6 +10,7 @@ local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMess
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
+local EdgeFade = ns.ConversationPaneEdgeFade or require("WhisperMessenger.UI.ConversationPane.EdgeFade")
 local ChannelContextMerger = ns.ConversationPaneChannelContextMerger or require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
 
 local sizeValue = TranscriptView._sizeValue
@@ -215,6 +216,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     transcript = transcript,
+    -- Native WoW HUD sits on Blizzard art a flat-colour fade would not match.
+    edgeFade = EdgeFade.Attach(factory, pane, transcript),
     refreshTheme = function()
       if view.headerFrame and view.headerFrame.bg then
         UIHelpers.applyColorTexture(view.headerFrame.bg, Theme.COLORS.bg_header)
@@ -234,6 +237,9 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       end
       if view.activeStatusBanner then
         applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
+      end
+      if view.edgeFade then
+        view.edgeFade.refreshTheme()
       end
       if view.transcript and view.transcript.refreshSkin then
         view.transcript.refreshSkin()

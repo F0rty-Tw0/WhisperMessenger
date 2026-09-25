@@ -187,10 +187,14 @@ function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, l
   local yOffset = rows[firstIndex].offset
   local firstChanged
   local seenIndex = seenLabelIndex(messages)
+  local activeFrames = contentFrame._activeFrames
   for index = firstIndex, lastIndex do
     local row = rows[index]
     row.offset = yOffset
+    -- The row's pooled frames, as a span of the active list (edge fade).
+    row.frameFirst = #activeFrames + 1
     local nextOffset = layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options, seenIndex)
+    row.frameLast = #activeFrames
     local measuredHeight = nextOffset - yOffset
     if row.height ~= measuredHeight then
       firstChanged = firstChanged or index

@@ -81,6 +81,11 @@ function Base.applyVerticalFade(texture, color)
   applyAlphaGradient(texture, "VERTICAL", color, 0, color[4] or 1)
 end
 
+-- The color's alpha at the bottom, transparent at the top.
+function Base.applyVerticalFadeDown(texture, color)
+  applyAlphaGradient(texture, "VERTICAL", color, color[4] or 1, 0)
+end
+
 -- Fill for small hover buttons (new whisper, empty-state start button).
 -- White-plus-alpha tokens use their own alpha, doubled on hover, so the
 -- fill never turns solid white.

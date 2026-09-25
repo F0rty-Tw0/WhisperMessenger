@@ -31,6 +31,15 @@ return function()
     assert(texture.color[4] == 0.05, "base texture is the intended colour, not opaque white")
   end
 
+  -- test_vertical_fade_down_is_transparent_at_top
+  do
+    local texture = gradientTexture()
+    Base.applyVerticalFadeDown(texture, { 0, 0, 0, 0.35 })
+    local g = texture.gradient
+    assert(g.orientation == "VERTICAL" and g.from.a == 1 and g.to.a == 0, "bottom (min) full -> top (max) transparent")
+    assert(texture.color[4] == 0.35, "base texture is the intended colour")
+  end
+
   -- test_dropped_gradient_leaves_intended_colour
   do
     local factory = FakeUI.NewFactory()

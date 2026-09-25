@@ -10,6 +10,13 @@ local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.
 
 local Navigation = {}
 
+-- view.onPositionChanged(view), when set, runs after any offset or range change.
+local function notifyPosition(view)
+  if view.onPositionChanged then
+    view.onPositionChanged(view)
+  end
+end
+
 function Navigation.Sync(view, skipValueSync)
   if view == nil or view.scrollFrame == nil or view.scrollBar == nil then
     return 0
@@ -67,6 +74,7 @@ function Navigation.Sync(view, skipValueSync)
     end
   end
 
+  notifyPosition(view)
   return range
 end
 
@@ -94,6 +102,7 @@ function Navigation.SetVerticalScroll(view, offset)
   end
   view.syncingScrollBar = false
 
+  notifyPosition(view)
   return clamped
 end
 
