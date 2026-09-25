@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-09-25
+
 - Now works on World of Warcraft: Forever (beta). Mythic+ features stay off there.
 - New "Pandaria" theme: dark charcoal with jade-green accents (pairs well with EllesmereUI).
 - Fresh modern look for every theme, including Azeroth:
@@ -53,3 +55,4 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: a channel post shown in a whisper chat vanished after a reload.
 - Fixed: reloading while in a group started a second group chat.
 - Fixed: long button names in settings touched the button edges.
+
