@@ -12,6 +12,24 @@ function BNetStatus.IsInWoW(gameInfo)
   return gameInfo ~= nil and type(gameInfo.characterName) == "string" and gameInfo.characterName ~= ""
 end
 
+-- Presence rule shared by the contact status and "Notify when online":
+-- true when the account, its game account or a WoW character is online,
+-- false when the API says offline, nil when unknown.
+function BNetStatus.IsOnline(accountInfo)
+  if type(accountInfo) ~= "table" then
+    return nil
+  end
+  local gameInfo = accountInfo.gameAccountInfo
+  local gameOnline = gameInfo and gameInfo.isOnline
+  if accountInfo.isOnline == true or gameOnline == true or BNetStatus.IsInWoW(gameInfo) then
+    return true
+  end
+  if accountInfo.isOnline == false or gameOnline == false then
+    return false
+  end
+  return nil
+end
+
 -- Copy live character metadata from gameInfo onto target (a contact item or a
 -- stored conversation). className and classTag are written together so the
 -- class icon and the class text never describe different characters.
@@ -70,9 +88,8 @@ function BNetStatus.Apply(item, runtime)
     -- on gameAccountInfo.isOnline (Blizzard's FriendsFrame reads the same field).
     -- isAFK/isDND are STICKY — they persist after a friend goes offline and are
     -- valid only as sub-status once presence is proven.
-    local gameOnline = gameInfo and gameInfo.isOnline
     local inWoW = BNetStatus.IsInWoW(gameInfo)
-    local isOnline = accountInfo.isOnline == true or gameOnline == true or inWoW
+    local isOnline = BNetStatus.IsOnline(accountInfo)
     if isOnline then
       -- Check AFK/DND first (applies whether in WoW or BNet app)
       local bnetStatus
@@ -90,7 +107,7 @@ function BNetStatus.Apply(item, runtime)
       -- Refresh potentially stale metadata from live BNet data, but only
       -- while the friend is actually in WoW — otherwise leave it as-is.
       BNetStatus.ApplyGameInfoMetadata(item, gameInfo, runtime)
-    elseif accountInfo.isOnline == false or gameOnline == false then
+    elseif isOnline == false then
       -- BNet API explicitly says offline; fall back to guild/community presence
       local presence = item.guid and PresenceCache.GetPresence(item.guid) or nil
       if presence == "online" then

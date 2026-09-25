@@ -366,6 +366,8 @@ local Portuguese = {
   ["Accept"] = "Aceitar",
   ["Delete"] = "Excluir",
   ["No message requests."] = "Nenhuma solicitação de mensagem.",
+  ["Notify when online"] = "Avisar quando ficar online",
+  ["%s is now online."] = "%s está online agora.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "Na fila",
   ["Not sent"] = "Não enviada",

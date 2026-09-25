@@ -7,6 +7,7 @@ local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
+local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 
 local Presence = {}
 
@@ -90,6 +91,15 @@ local function applyRekeyMappings(runtime, mappings)
   if divider ~= nil and mappings[divider.conversationKey] ~= nil then
     divider.conversationKey = mappings[divider.conversationKey]
   end
+  local onlineWatch = runtime.onlineWatch
+  if onlineWatch ~= nil then
+    for oldKey, newKey in pairs(mappings) do
+      if onlineWatch[newKey] == nil then
+        onlineWatch[newKey] = onlineWatch[oldKey]
+      end
+      onlineWatch[oldKey] = nil
+    end
+  end
 end
 
 local function refreshBNetConversations(Bootstrap, deps)
@@ -106,11 +116,16 @@ local function refreshBNetConversations(Bootstrap, deps)
   local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store, friendMap, Identity, maxMessages)
   applyRekeyMappings(Bootstrap.runtime, mappings)
 
-  for _, conversation in pairs(Bootstrap.runtime.store.conversations) do
+  for key, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
       local friend = friendMap[conversation.battleTag]
       if friend then
         conversation.bnetAccountID = friend.bnetAccountID
+        -- Records a "Notify when online" friend's state from this existing
+        -- scan, so their next online event is a real change.
+        if conversation.notifyOnline == true then
+          OnlineNotify.Observe(Bootstrap.runtime, key, conversation, BNetStatus.IsOnline(friend.accountInfo))
+        end
         local gameInfo = friend.accountInfo and friend.accountInfo.gameAccountInfo
         BNetStatus.ApplyGameInfoMetadata(conversation, gameInfo, Bootstrap.runtime)
         if gameInfo and gameInfo.characterName and gameInfo.characterName ~= "" then

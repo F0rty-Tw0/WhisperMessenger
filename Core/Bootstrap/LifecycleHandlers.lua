@@ -18,6 +18,7 @@ local RestrictionState = ns.BootstrapLifecycleHandlersRestrictionState
 local GroupMembership = ns.BootstrapLifecycleHandlersGroupMembership
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.GroupMembership"))
   or nil
+local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 
 local LifecycleHandlers = {}
@@ -30,6 +31,15 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
 
   if event == "BN_FRIEND_LIST_SIZE_CHANGED" or event == "BN_FRIEND_INFO_CHANGED" then
     return Presence.handleBNetFriendEvent(Bootstrap, deps)
+  end
+
+  if event == "FRIENDLIST_UPDATE" then
+    return OnlineNotify.handleFriendListUpdate(Bootstrap)
+  end
+
+  if event == "BN_FRIEND_ACCOUNT_ONLINE" or event == "BN_FRIEND_ACCOUNT_OFFLINE" then
+    local bnetAccountID = ...
+    return OnlineNotify.handleBNetAccountEvent(Bootstrap, bnetAccountID, event == "BN_FRIEND_ACCOUNT_ONLINE")
   end
 
   if event == "PLAYER_LOGOUT" then

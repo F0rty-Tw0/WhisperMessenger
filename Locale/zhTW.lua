@@ -366,6 +366,8 @@ local TraditionalChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "刪除",
   ["No message requests."] = "沒有訊息請求。",
+  ["Notify when online"] = "上線時通知",
+  ["%s is now online."] = "%s 已上線。",
   -- Queued sends, delivery status, replies
   ["Queued"] = "排隊中",
   ["Not sent"] = "未送出",

@@ -7,6 +7,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local ContactPrefsDialog = ns.ContactsListContactPrefsDialog or require("WhisperMessenger.UI.ContactsList.ContactPrefsDialog")
+local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
@@ -33,6 +34,29 @@ local function addMarkUnreadButton(rootDescription, item, onMarkUnread)
   end
 end
 
+-- Checkbox (plain button on clients without one) shown only for friends
+-- whose online state WoW reports.
+local function addNotifyOnlineEntry(rootDescription, item, onUpdatePrefs)
+  if not OnlineWatch.CanWatch(item, _G.C_FriendList) then
+    return
+  end
+  local label = Localization.Text("Notify when online")
+  -- item is a snapshot that the save doesn't update, and the menu stays open
+  -- after a checkbox click, so track the ticked state here.
+  local enabled = item.notifyOnline == true
+  local function toggle()
+    enabled = not enabled
+    onUpdatePrefs(item, { notifyOnline = enabled })
+  end
+  if type(rootDescription.CreateCheckbox) == "function" then
+    rootDescription:CreateCheckbox(label, function()
+      return enabled
+    end, toggle)
+  else
+    rootDescription:CreateButton(label, toggle)
+  end
+end
+
 -- Mute/Unmute for every row; nickname, note and notify-when-online for
 -- whispers only.
 local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
@@ -56,6 +80,7 @@ local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
       onUpdatePrefs(item, { note = text })
     end)
   end)
+  addNotifyOnlineEntry(rootDescription, item, onUpdatePrefs)
 end
 
 -- Menu.ModifyMenu hook on Blizzard's FRIEND / BN_FRIEND player menus. Only

@@ -366,6 +366,8 @@ local Korean = {
   ["Accept"] = "수락",
   ["Delete"] = "삭제",
   ["No message requests."] = "메시지 요청이 없습니다.",
+  ["Notify when online"] = "접속 시 알림",
+  ["%s is now online."] = "%s님이 접속했습니다.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "대기 중",
   ["Not sent"] = "전송 안 됨",

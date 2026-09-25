@@ -43,6 +43,7 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     muted = conversation.muted,
     nickname = conversation.nickname,
     note = conversation.note,
+    notifyOnline = conversation.notifyOnline,
     isRequest = MessageRequests.IsRequest(conversation, settings) or nil,
   }
 end

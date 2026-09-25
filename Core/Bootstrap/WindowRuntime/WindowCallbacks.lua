@@ -11,6 +11,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
 local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
+local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 
 local WindowCallbacks = {}
@@ -204,6 +205,10 @@ function WindowCallbacks.Create(options)
         return
       end
       ContactPrefs.Apply(runtime.store, key, changes)
+      -- Record the friend's state now so their next login is a change.
+      if changes and changes.notifyOnline == true then
+        OnlineWatch.Observe(runtime, key, OnlineWatch.ReadOnline(runtime, runtime.store.conversations[key]))
+      end
       refreshWindow()
     end,
 

@@ -59,6 +59,7 @@ Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
 Model/AlertPolicy.lua
+Model/OnlineWatch.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
@@ -305,6 +306,7 @@ Core/Bootstrap/WindowCoordinator/RequestFollow.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua
+Core/Bootstrap/LifecycleHandlers/OnlineNotify.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua

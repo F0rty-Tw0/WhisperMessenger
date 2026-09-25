@@ -366,6 +366,8 @@ local Italian = {
   ["Accept"] = "Accetta",
   ["Delete"] = "Elimina",
   ["No message requests."] = "Nessuna richiesta di messaggio.",
+  ["Notify when online"] = "Avvisa quando è online",
+  ["%s is now online."] = "%s è ora online.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "In coda",
   ["Not sent"] = "Non inviato",

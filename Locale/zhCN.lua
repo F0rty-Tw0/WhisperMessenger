@@ -366,6 +366,8 @@ local SimplifiedChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "删除",
   ["No message requests."] = "没有消息请求。",
+  ["Notify when online"] = "上线时通知",
+  ["%s is now online."] = "%s 已上线。",
   -- Queued sends, delivery status, replies
   ["Queued"] = "排队中",
   ["Not sent"] = "未发送",

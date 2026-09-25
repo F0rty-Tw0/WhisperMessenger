@@ -120,6 +120,7 @@ local function mergeMetadata(canonical, legacy)
   canonical.nickname = canonical.nickname or legacy.nickname
   canonical.note = canonical.note or legacy.note
   canonical.draft = canonical.draft or legacy.draft
+  canonical.notifyOnline = (canonical.notifyOnline == true or legacy.notifyOnline == true) or nil
   -- A message request stays one only if both records were (fail open).
   canonical.request = (canonical.request == true and legacy.request == true) or nil
 
