@@ -376,7 +376,8 @@ local function makeCreateFrame()
       local inserted = text or ""
       local result = string.sub(value, 1, cursorPosition) .. inserted .. string.sub(value, cursorPosition + 1)
       if self.maxBytes ~= nil then
-        result = string.sub(result, 1, self.maxBytes)
+        -- Like the real EditBox, the byte cap counts the null terminator.
+        result = string.sub(result, 1, self.maxBytes - 1)
       end
       self.text = result
       self.cursorPosition = math.min(cursorPosition + #inserted, #result)

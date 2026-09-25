@@ -19,6 +19,7 @@ local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Compo
 local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Composer.ComposerLayout")
 
 local COMPOSER_MAX_BYTES = 255
+local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local Composer = {}
 
@@ -86,7 +87,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- keystroke so users see the limit instead of finding out from a
   -- truncated send.
   if input.SetMaxBytes then
-    input:SetMaxBytes(COMPOSER_MAX_BYTES)
+    input:SetMaxBytes(TextLimits.INPUT_MAX_BYTES)
   end
   local surface = nativeChrome and ComposerSurface.CreateNative(input, composerBorder, paneBg) or ComposerSurface.Create(pane, input, composerBorder)
   surface.apply()
