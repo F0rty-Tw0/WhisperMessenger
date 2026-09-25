@@ -7,6 +7,7 @@ local Localization = ns.Localization or (type(require) == "function" and require
 local function L(key)
   return Localization and Localization.Text(key) or key
 end
+local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Common = {}
 
 Common.COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
@@ -41,6 +42,10 @@ function Common.notifyCompetitiveState(Bootstrap)
 
   if type(Bootstrap.onCompetitiveStateChanged) == "function" then
     Bootstrap.onCompetitiveStateChanged(isActive)
+  end
+
+  if Bootstrap.runtime then
+    QueuedSends.OnLockStateChanged(Bootstrap.runtime)
   end
 end
 

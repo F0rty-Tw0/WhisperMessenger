@@ -348,8 +348,16 @@ local Russian = {
   ["Accept"] = "Принять",
   ["Delete"] = "Удалить",
   ["No message requests."] = "Нет запросов на переписку.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "В очереди",
+  ["Not sent"] = "Не отправлено",
+  ["Send now"] = "Отправить",
+  ["Discard"] = "Удалить",
+  ["Retry"] = "Повторить",
   ["Reply"] = "Ответить",
   ["Replying to %s"] = "Ответ для %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "В очереди ждёт 1 сообщение — откройте мессенджер, чтобы отправить или удалить его.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "Сообщений в очереди: %d — откройте мессенджер, чтобы отправить или удалить их.",
 }
 
 ns.Locale_ruRU = Russian

@@ -348,8 +348,16 @@ local TraditionalChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "刪除",
   ["No message requests."] = "沒有訊息請求。",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "排隊中",
+  ["Not sent"] = "未送出",
+  ["Send now"] = "立即送出",
+  ["Discard"] = "捨棄",
+  ["Retry"] = "重試",
   ["Reply"] = "回覆",
   ["Replying to %s"] = "回覆 %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

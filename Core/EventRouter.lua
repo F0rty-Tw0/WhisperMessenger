@@ -14,6 +14,7 @@ local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePres
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
+local FailedWhisper = ns.EventRouterFailedWhisper or require("WhisperMessenger.Core.EventRouter.FailedWhisper")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
@@ -341,6 +342,10 @@ local function handleUnlockedEvent(state, eventName, payload)
       QuestLinkExchange.RecordIncoming(state, "bn:" .. tostring(payload.bnetAccountID), payload.text, now)
     end
     return nil
+  end
+
+  if eventName == "CHAT_MSG_SYSTEM" then
+    return FailedWhisper.Handle(state, payload.text)
   end
 
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then

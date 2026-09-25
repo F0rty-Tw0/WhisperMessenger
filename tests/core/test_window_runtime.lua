@@ -303,6 +303,7 @@ return function()
     "onStartConversation",
     "onSend",
     "onReact",
+    "onMessageAction",
     "canReact",
     "onPositionChanged",
     "onClose",

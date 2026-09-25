@@ -7,6 +7,7 @@ local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter
 local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 
 
 -- stylua: ignore start
@@ -121,6 +122,13 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if eventName == "CHAT_MSG_ADDON" or eventName == "BN_CHAT_MSG_ADDON" then
     local prefix = ...
     if prefix ~= "WMRX" and prefix ~= "WMQL" then
+      return nil
+    end
+  end
+  -- System lines only matter while a whisper awaits its echo.
+  if eventName == "CHAT_MSG_SYSTEM" then
+    PendingOutgoing.PruneExpired(runtime, type(runtime.now) == "function" and runtime.now() or nil)
+    if next(runtime.pendingOutgoing or {}) == nil then
       return nil
     end
   end

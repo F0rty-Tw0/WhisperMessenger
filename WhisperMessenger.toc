@@ -55,9 +55,11 @@ Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore.lua
 Model/ConversationDrafts.lua
+Model/OutgoingDelivery.lua
 Model/MessageRequests.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
+Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
 Model/MessageReactionProtocol.lua
@@ -90,6 +92,7 @@ Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
+Core/EventRouter/FailedWhisper.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
@@ -146,6 +149,8 @@ UI/ChatBubble/ReactionBadge.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
+UI/ChatBubble/DeliveryMenu.lua
+UI/ChatBubble/DeliveryStatus.lua
 UI/ChatBubble/SenderLabel.lua
 UI/ChatBubble/PlayerMenu.lua
 UI/ChatBubble/Layout.lua
@@ -278,6 +283,7 @@ Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
 Core/Bootstrap/SendHandler.lua
+Core/Bootstrap/QueuedSends.lua
 Core/Bootstrap/LivePresenceSender.lua
 Core/Bootstrap/ReactionHandler.lua
 Core/Bootstrap/InviteHandler.lua

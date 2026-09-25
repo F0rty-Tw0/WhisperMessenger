@@ -18,7 +18,10 @@ local setTextColor = UIHelpers.setTextColor
 
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
+local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 
+-- Queued / not-sent bubbles fade so they read as "didn't go out".
+local UNSENT_BUBBLE_ALPHA = 0.55
 
 local BubbleFrame = {}
 local function reactionsAllowed(message, canReact)
@@ -189,7 +192,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   elseif direction == "out" then
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_sent)
-    applyBubbleColor(frame, Theme.COLORS.bg_bubble_out)
+    applyBubbleColor(frame, Theme.COLORS.bg_bubble_out, OutgoingDelivery.Status(message) and UNSENT_BUBBLE_ALPHA or nil)
   else
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)

@@ -348,8 +348,16 @@ local German = {
   ["Accept"] = "Annehmen",
   ["Delete"] = "Löschen",
   ["No message requests."] = "Keine Nachrichtenanfragen.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "In Warteschlange",
+  ["Not sent"] = "Nicht gesendet",
+  ["Send now"] = "Jetzt senden",
+  ["Discard"] = "Verwerfen",
+  ["Retry"] = "Erneut versuchen",
   ["Reply"] = "Antworten",
   ["Replying to %s"] = "Antwort an %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "1 Nachricht in der Warteschlange wartet – öffne den Messenger, um sie zu senden oder zu verwerfen.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "%d Nachrichten in der Warteschlange warten – öffne den Messenger, um sie zu senden oder zu verwerfen.",
 }
 
 ns.Locale_deDE = German

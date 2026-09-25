@@ -216,6 +216,22 @@ function PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)
   return true, entry.text, entry
 end
 
+-- Drop entries past the echo window as of `now`.
+PendingOutgoing.PruneExpired = pruneExpiredQueues
+
+-- Remove and return the oldest pending entry the predicate accepts, with
+-- its conversation key. Entries past the echo window as of `now` are pruned
+-- on the way.
+function PendingOutgoing.ConsumeWhere(state, predicate, now)
+  for key in pairs(state.pendingOutgoing or {}) do
+    local entry = consumeAtKey(state, key, nil, now, predicate)
+    if entry ~= nil then
+      return key, entry
+    end
+  end
+  return nil, nil
+end
+
 ns.EventRouterPendingOutgoing = PendingOutgoing
 
 return PendingOutgoing

@@ -348,8 +348,16 @@ local Korean = {
   ["Accept"] = "수락",
   ["Delete"] = "삭제",
   ["No message requests."] = "메시지 요청이 없습니다.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "대기 중",
+  ["Not sent"] = "전송 안 됨",
+  ["Send now"] = "지금 보내기",
+  ["Discard"] = "삭제",
+  ["Retry"] = "다시 시도",
   ["Reply"] = "답장",
   ["Replying to %s"] = "%s님에게 답장",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "대기 중인 메시지가 1개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "대기 중인 메시지가 %d개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
 }
 
 ns.Locale_koKR = Korean

@@ -10,6 +10,7 @@ local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Cor
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
+local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 
 local WindowCallbacks = {}
 
@@ -99,7 +100,17 @@ function WindowCallbacks.Create(options)
       if groupSendPolicy and groupSendPolicy.shouldRoutePayload(payload) then
         return groupSendPolicy.sendPayload(payload)
       end
-      return sendHandler.HandleSend(runtime, payload, refreshWindow)
+      local sent = sendHandler.HandleSend(runtime, payload, refreshWindow)
+      -- Queued or failed: the text is safe in history, so the composer clears.
+      return sent or payload.deliveryRecorded == true
+    end,
+    -- Delivery menu: "send_now" / "discard" / "retry" (sends again).
+    onMessageAction = function(selectedContact, message, action)
+      local key = type(selectedContact) == "table" and selectedContact.conversationKey or nil
+      if key == nil then
+        return false
+      end
+      return QueuedSends.HandleAction(runtime, key, message, action, sendHandler, refreshWindow)
     end,
     onReact = function(selectedContact, message, reactionKey)
       return reactionHandler.HandleReact(runtime, selectedContact, message, reactionKey, refreshWindow, groupSendPolicy)

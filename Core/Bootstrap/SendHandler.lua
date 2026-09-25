@@ -13,6 +13,7 @@ local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm"
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 
@@ -21,46 +22,29 @@ local REACTION_ADDON_PREFIX = "WMRX"
 
 local SendHandler = {}
 
-local function appendBlockedOutgoing(runtime, payload, reason)
-  if runtime == nil or runtime.store == nil or payload == nil or payload.conversationKey == nil then
+-- Keeps an unsent message in history: "queued" (lockdown; Send now later)
+-- or "failed" (the game rejected it). Flags the payload so the composer can
+-- clear: the text is not lost. A reaction is not a typed message, so an
+-- unsent one leaves nothing behind.
+local function appendUnsentOutgoing(runtime, payload, delivery, reason)
+  if runtime == nil or runtime.store == nil or payload == nil or payload.conversationKey == nil or payload.reactionControl ~= nil then
     return
   end
 
   local now = runtime.now and runtime.now() or 0
-  local blockedMessage = {
-    id = tostring(now),
-    eventName = "WHISPERMESSENGER_OUTGOING_BLOCKED",
-    direction = "out",
-    kind = "user",
-    text = payload.text,
-    sentAt = now,
-    guid = payload.guid,
-    playerName = payload.displayName or payload.target,
-    channel = payload.channel or "WOW",
-    bnetAccountID = payload.bnetAccountID,
-    gameAccountName = payload.gameAccountName,
-    delivery = "blocked",
-    blockedReason = reason,
-  }
+  payload.deliveryRecorded = true
+  Store.AppendOutgoing(runtime.store, payload.conversationKey, OutgoingDelivery.BuildRecord(payload, now, delivery, reason))
+end
 
-  if type(runtime.store.config) == "table" then
-    Store.AppendOutgoing(runtime.store, payload.conversationKey, blockedMessage)
-    return
+-- The lock that keeps a whisper from going out now, as its status reason.
+local function lockReason(runtime)
+  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
+    return "Mythic Lockdown"
   end
-
-  runtime.store.conversations = runtime.store.conversations or {}
-  local conversation = runtime.store.conversations[payload.conversationKey]
-  if conversation == nil then
-    conversation = { messages = {}, unreadCount = 0, lastPreview = nil, lastActivityAt = 0 }
-    runtime.store.conversations[payload.conversationKey] = conversation
+  if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+    return "Competitive Content"
   end
-
-  conversation.messages = conversation.messages or {}
-  table.insert(conversation.messages, blockedMessage)
-  conversation.lastPreview = blockedMessage.text
-  conversation.lastActivityAt = blockedMessage.sentAt
-  conversation.displayName = blockedMessage.playerName or conversation.displayName
-  conversation.channel = blockedMessage.channel or conversation.channel
+  return nil
 end
 
 local function isBattleTag(value)
@@ -152,16 +136,10 @@ local function dispatchReactionMetadata(runtime, payload, addonPayload)
 end
 
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
-  if runtime.isMythicLockdown and runtime.isMythicLockdown() then
-    appendBlockedOutgoing(runtime, payload, "Mythic Lockdown")
-    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Mythic Lockdown")
-    refreshWindow()
-    return false
-  end
-
-  if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
-    appendBlockedOutgoing(runtime, payload, "Competitive Content")
-    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Competitive Content")
+  local locked = lockReason(runtime)
+  if locked then
+    appendUnsentOutgoing(runtime, payload, "queued", locked)
+    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus(locked)
     refreshWindow()
     return false
   end
@@ -263,6 +241,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
       end
     end
 
+    appendUnsentOutgoing(runtime, payload, "failed", "Send failed")
     runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send failed")
     refreshWindow()
     return false

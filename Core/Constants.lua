@@ -17,6 +17,7 @@ local Constants = {
     "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE",
     "CHAT_MSG_ADDON",
     "BN_CHAT_MSG_ADDON",
+    "CHAT_MSG_SYSTEM",
   },
 
   CHANNEL_EVENT_NAMES = {

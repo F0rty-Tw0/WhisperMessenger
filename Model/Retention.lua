@@ -49,12 +49,19 @@ function Retention.TrimMessages(messages, maxMessages)
     return messages
   end
 
-  -- Shift tail down in one O(n) pass instead of O(n) table.remove(t, 1) calls
-  for i = 1, maxMessages do
-    messages[i] = messages[excess + i]
+  -- One O(n) compaction pass: drop the oldest non-queued messages.
+  local writeIndex = 1
+  for readIndex = 1, total do
+    local message = messages[readIndex]
+    if excess > 0 and not Retention.IsQueued(message) then
+      excess = excess - 1
+    else
+      messages[writeIndex] = message
+      writeIndex = writeIndex + 1
+    end
   end
-  for i = maxMessages + 1, total do
-    messages[i] = nil
+  for index = writeIndex, total do
+    messages[index] = nil
   end
 
   return messages
@@ -70,7 +77,7 @@ function Retention.ExpireMessages(messages, maxAgeSeconds, now)
   local writeIndex = 1
   for readIndex = 1, total do
     local message = messages[readIndex]
-    if not Retention.IsExpired(message.sentAt, maxAgeSeconds, now) then
+    if Retention.IsQueued(message) or not Retention.IsExpired(message.sentAt, maxAgeSeconds, now) then
       messages[writeIndex] = message
       writeIndex = writeIndex + 1
     end

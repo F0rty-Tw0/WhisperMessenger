@@ -166,6 +166,9 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
       contentFrame._wmLabelOptions = labelOptions
     end
     labelOptions.showSeen = index == seenIndex
+    labelOptions.chatLocked = options and options.chatLocked or nil
+    labelOptions.onMessageAction = options and options.onMessageAction or nil
+    labelOptions.persistentFactory = factory
     local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset, labelOptions)
     yOffset = yOffset + label.height
   end

@@ -348,8 +348,16 @@ local French = {
   ["Accept"] = "Accepter",
   ["Delete"] = "Supprimer",
   ["No message requests."] = "Aucune demande de message.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "En attente",
+  ["Not sent"] = "Non envoyé",
+  ["Send now"] = "Envoyer",
+  ["Discard"] = "Supprimer",
+  ["Retry"] = "Réessayer",
   ["Reply"] = "Répondre",
   ["Replying to %s"] = "Réponse à %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "1 message en attente – ouvrez la messagerie pour l'envoyer ou le supprimer.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messages en attente – ouvrez la messagerie pour les envoyer ou les supprimer.",
 }
 
 ns.Locale_frFR = French

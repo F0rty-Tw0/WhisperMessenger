@@ -235,7 +235,9 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     or forceSnapToEnd
     or anyChanged
     or state.fallbackClassTag ~= fallbackClassTag
+    or state.chatLocked ~= (options and options.chatLocked)
   state.fallbackClassTag = fallbackClassTag
+  state.chatLocked = options and options.chatLocked
 
   local targetOffset = previousOffset
   if anchorMessage then

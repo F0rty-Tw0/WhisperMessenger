@@ -167,6 +167,7 @@ read_globals = {
   "UnitInParty",
   "UnitInRaid",
   "IsGUIDInGroup",
+  "ERR_CHAT_PLAYER_NOT_FOUND_S",
   "DEFAULT_CHAT_FRAME",
   "PlaySound",
   "print",

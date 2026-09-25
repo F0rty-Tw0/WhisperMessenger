@@ -348,8 +348,16 @@ local Italian = {
   ["Accept"] = "Accetta",
   ["Delete"] = "Elimina",
   ["No message requests."] = "Nessuna richiesta di messaggio.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "In coda",
+  ["Not sent"] = "Non inviato",
+  ["Send now"] = "Invia ora",
+  ["Discard"] = "Scarta",
+  ["Retry"] = "Riprova",
   ["Reply"] = "Rispondi",
   ["Replying to %s"] = "Risposta a %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "1 messaggio in coda è in attesa: apri il messenger per inviarlo o scartarlo.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messaggi in coda sono in attesa: apri il messenger per inviarli o scartarli.",
 }
 
 ns.Locale_itIT = Italian

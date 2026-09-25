@@ -432,7 +432,7 @@ return function()
   local compConversation = runtime.store.conversations[payload.conversationKey]
   assert(compConversation ~= nil, "expected conversation to exist after competitive block")
   local lastMsg = compConversation.messages[#compConversation.messages]
-  assert(lastMsg.delivery == "blocked", "expected blocked delivery marker")
+  assert(lastMsg.delivery == "queued", "expected queued delivery marker")
   assert(lastMsg.blockedReason == "Competitive Content", "expected competitive blocked reason")
 
   -- Test 6: Competitive content does NOT block when isCompetitiveContent returns false

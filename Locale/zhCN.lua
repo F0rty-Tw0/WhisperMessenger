@@ -348,8 +348,16 @@ local SimplifiedChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "删除",
   ["No message requests."] = "没有消息请求。",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "排队中",
+  ["Not sent"] = "未发送",
+  ["Send now"] = "立即发送",
+  ["Discard"] = "丢弃",
+  ["Retry"] = "重试",
   ["Reply"] = "回复",
   ["Replying to %s"] = "回复 %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 条排队消息等待处理 — 打开信使即可发送或丢弃。",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 条排队消息等待处理 — 打开信使即可发送或丢弃。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

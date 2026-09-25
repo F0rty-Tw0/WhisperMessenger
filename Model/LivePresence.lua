@@ -139,7 +139,7 @@ function LivePresence.MarkSeen(state, key, wireId, now)
   local changed = 0
   for index = targetIndex, 1, -1 do
     local message = messages[index]
-    if message.direction == "out" and message.kind == "user" and message.delivery ~= "blocked" then
+    if message.direction == "out" and message.kind == "user" and message.delivery == nil then
       if message.seenAt ~= nil then
         break
       end

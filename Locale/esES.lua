@@ -348,8 +348,16 @@ local Spanish = {
   ["Accept"] = "Aceptar",
   ["Delete"] = "Eliminar",
   ["No message requests."] = "No hay solicitudes de mensajes.",
+  -- Queued sends, delivery status, replies
+  ["Queued"] = "En cola",
+  ["Not sent"] = "No enviado",
+  ["Send now"] = "Enviar ahora",
+  ["Discard"] = "Descartar",
+  ["Retry"] = "Reintentar",
   ["Reply"] = "Responder",
   ["Replying to %s"] = "Respondiendo a %s",
+  ["1 queued message is waiting — open the messenger to send or discard."] = "Hay 1 mensaje en cola: abre el mensajero para enviarlo o descartarlo.",
+  ["%d queued messages are waiting — open the messenger to send or discard."] = "Hay %d mensajes en cola: abre el mensajero para enviarlos o descartarlos.",
 }
 
 ns.Locale_esES = Spanish

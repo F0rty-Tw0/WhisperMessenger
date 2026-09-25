@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local DeliveryStatus = ns.ChatBubbleDeliveryStatus or require("WhisperMessenger.UI.ChatBubble.DeliveryStatus")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -115,8 +116,10 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     -- frame previously rendered an incoming message with a channel.
     hideCached(frame, "_wmSenderTagFS")
     timeFS:SetPoint("RIGHT", nameFS, "LEFT", -Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
-    -- "Seen" receipt from a peer running the addon, left of the timestamp.
-    if options.showSeen then
+    -- "(Not sent)" / "(Queued)", or else the "Seen" receipt from a peer
+    -- running the addon, left of the timestamp.
+    local hasStatus = DeliveryStatus.ApplyHeader(frame, message, timeFS, options)
+    if options.showSeen and not hasStatus then
       local seenFS = ensureFontString(frame, "_wmSenderSeenFS")
       setFontObject(seenFS, Theme.FONTS.message_time)
       setTextColor(seenFS, Theme.COLORS.online or Theme.COLORS.text_secondary)
@@ -128,6 +131,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     frame:SetPoint("TOPRIGHT", contentFrame, "TOPRIGHT", 0, -yOffset)
   else
     hideCached(frame, "_wmSenderSeenFS")
+    DeliveryStatus.Hide(frame)
     local displayName = message.playerName or message.senderDisplayName or ""
     nameFS:SetText(displayName)
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)

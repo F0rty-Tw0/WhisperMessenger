@@ -9,6 +9,7 @@ local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.
 local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.ContentDetector")
 local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -101,6 +102,8 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
 
   local getBNetInfo = options.getBNetInfo or _G.BNGetInfo
   local localBnetAccountID = BNetIdentity.ResolveLocalAccountID(options.localBnetAccountID, getBNetInfo)
+
+  OutgoingDelivery.SetLocalProfileId(localProfileId)
 
   local runtime = {
     accountState = accountState,

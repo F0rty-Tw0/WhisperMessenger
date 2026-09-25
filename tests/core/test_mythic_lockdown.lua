@@ -70,7 +70,7 @@ return function()
       isMythicLockdown = function()
         return true
       end,
-      store = { conversations = {} },
+      store = require("WhisperMessenger.Model.ConversationStore").New({}),
       activeConversationKey = nil,
     }
 

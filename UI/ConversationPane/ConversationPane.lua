@@ -59,6 +59,9 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   view.transcript.unreadDividerMessage = selectedContact and selectedContact.unreadDividerMessage or nil
+  -- The pause notice shows exactly while chat is locked: queued bubbles
+  -- offer Send now only without it.
+  view.transcript.chatLocked = (noticeText or "") ~= ""
   local messages = conversation and conversation.messages or {}
   messages = buildMessagesWithChannelContext(messages, selectedContact, conversation)
   ConversationPane.RenderTranscript(view.transcript, messages)

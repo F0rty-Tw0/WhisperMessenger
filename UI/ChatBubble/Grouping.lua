@@ -18,6 +18,10 @@ function Grouping.ShouldGroup(prev, current)
   if prev.kind == "channel_context" or current.kind == "channel_context" then
     return false
   end
+  -- Queued / failed messages carry their own status label.
+  if prev.delivery ~= nil or current.delivery ~= nil then
+    return false
+  end
   if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then
     return false
   end
