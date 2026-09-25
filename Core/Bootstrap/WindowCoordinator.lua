@@ -8,6 +8,7 @@ local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
@@ -96,12 +97,29 @@ function WindowCoordinator.Create(options)
     pruneGUIDCache(runtime.availabilityRequestedAt, presentGUIDs)
   end
 
+  -- Idle chats otherwise expire only on load or when a new message arrives.
+  -- ponytail: runs only while the window is open (show + status tick); a
+  -- hidden window catches up on the next open.
+  local function applyRetention()
+    local store = runtime.store
+    if type(store) ~= "table" or store.config == nil then
+      return false
+    end
+    local removed = Store.ApplyRetention(store, nowSeconds(), runtime.activeConversationKey)
+    return next(removed) ~= nil
+  end
+
   local function startStatusTicker()
     if statusTicker or cTimer == nil or type(cTimer.NewTicker) ~= "function" then
       return
     end
     statusTicker = cTimer.NewTicker(STATUS_REFRESH_INTERVAL, function()
-      if coordinator.isWindowVisible() then
+      if not coordinator.isWindowVisible() then
+        return
+      end
+      if applyRetention() then
+        coordinator.refreshWindow()
+      else
         coordinator.refreshContacts()
       end
     end)
@@ -128,6 +146,7 @@ function WindowCoordinator.Create(options)
       -- refreshContacts, which freshens presence for the visible contacts
       -- only.
       window.frame:Show()
+      applyRetention()
       -- Re-render after Show so scroll frame dimensions are settled,
       -- allowing snapToEnd to scroll to the latest message.
       coordinator.refreshWindow()
