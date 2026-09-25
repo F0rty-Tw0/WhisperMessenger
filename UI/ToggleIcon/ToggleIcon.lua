@@ -13,6 +13,7 @@ local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleI
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
 local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
@@ -252,6 +253,7 @@ function ToggleIcon.Create(factory, options)
           lockedText = "\n" .. Localization.Text("Locked")
         end
         _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText .. lockedText)
+        KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
         _G.GameTooltip:Show()
       end
     end)

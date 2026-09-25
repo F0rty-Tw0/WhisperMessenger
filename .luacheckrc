@@ -91,6 +91,7 @@ read_globals = {
 
   -- Key bindings
   "GetBindingKey",
+  "GetBindingText",
   "SetOverrideBindingClick",
   "ClearOverrideBindings",
 

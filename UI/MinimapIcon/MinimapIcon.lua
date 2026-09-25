@@ -7,6 +7,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
@@ -248,6 +249,7 @@ function MinimapIcon.Create(factory, options)
         if showBadge and badge:IsShown() then
           _G.GameTooltip:AddLine((badgeLabel:GetText() or "") .. " " .. (Localization and Localization.Text("unread") or "unread"))
         end
+        KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
         _G.GameTooltip:Show()
       end
     end)

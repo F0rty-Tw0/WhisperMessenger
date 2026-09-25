@@ -386,6 +386,8 @@ local French = {
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messages en attente – ouvrez la messagerie pour les envoyer ou les supprimer.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Note :",
+  ["Open/close: %s"] = "Ouvrir/fermer : %s",
+  ["Reply: %s"] = "Répondre : %s",
   ["Edit this list in Options > Behavior."] = "Modifiez cette liste dans Options > Comportement.",
 }
 

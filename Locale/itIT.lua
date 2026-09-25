@@ -386,6 +386,8 @@ local Italian = {
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messaggi in coda sono in attesa: apri il messenger per inviarli o scartarli.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Nota:",
+  ["Open/close: %s"] = "Apri/chiudi: %s",
+  ["Reply: %s"] = "Rispondi: %s",
   ["Edit this list in Options > Behavior."] = "Modifica questo elenco in Opzioni > Comportamento.",
 }
 

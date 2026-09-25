@@ -386,6 +386,8 @@ local TraditionalChinese = {
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "備註：",
+  ["Open/close: %s"] = "開啟/關閉：%s",
+  ["Reply: %s"] = "回覆：%s",
   ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
 }
 

@@ -107,6 +107,9 @@ function IconRuntime.Create(options)
     getIsLocked = function()
       return settings.lockToggleIcon == true
     end,
+    getHideFromDefaultChat = function()
+      return settings.hideFromDefaultChat == true
+    end,
     getPreviewAutoDismissSeconds = function()
       return resolveAutoDismissSeconds(settings)
     end,

@@ -54,6 +54,9 @@ function MinimapIconRuntime.Create(options)
     getIconDesaturated = function()
       return settings().iconDesaturated ~= false
     end,
+    getHideFromDefaultChat = function()
+      return settings().hideFromDefaultChat == true
+    end,
     getPreviewPosition = function()
       return IconRuntime.ResolvePreviewPosition(settings())
     end,

@@ -386,6 +386,8 @@ local Korean = {
   ["%d queued messages are waiting — open the messenger to send or discard."] = "대기 중인 메시지가 %d개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "메모:",
+  ["Open/close: %s"] = "열기/닫기: %s",
+  ["Reply: %s"] = "답장: %s",
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
 }
 

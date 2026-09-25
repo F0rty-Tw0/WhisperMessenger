@@ -386,6 +386,8 @@ local Russian = {
   ["%d queued messages are waiting — open the messenger to send or discard."] = "Сообщений в очереди: %d — откройте мессенджер, чтобы отправить или удалить их.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Заметка:",
+  ["Open/close: %s"] = "Открыть/закрыть: %s",
+  ["Reply: %s"] = "Ответить: %s",
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
 }
 
