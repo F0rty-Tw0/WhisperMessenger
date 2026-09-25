@@ -285,6 +285,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     end
     iconOptions.fallbackClassTag = options.fallbackClassTag
     iconOptions.iconFactory = options.iconFactory
+    iconOptions.openPlayerMenu = options.openPlayerMenu
     local bubbleIcon = BubbleIcon.CreateIcon(options.iconFactory or factory, parent, frame, message, direction, iconOptions)
     icon = bubbleIcon.texture
     iconFrame = bubbleIcon.frame

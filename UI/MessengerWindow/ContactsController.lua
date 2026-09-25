@@ -66,6 +66,11 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
         options.onMarkUnread(item)
       end
     end,
+    onUpdatePrefs = function(item, changes)
+      if options.onUpdatePrefs then
+        options.onUpdatePrefs(item, changes)
+      end
+    end,
     onDragStart = dragHandlers.handleDragStart,
     onDragStop = dragHandlers.handleDragStop,
   }

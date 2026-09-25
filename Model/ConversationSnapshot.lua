@@ -40,6 +40,9 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     sortOrder = conversation.sortOrder or 0,
     guildName = conversation.guildName,
     draft = conversation.draft,
+    muted = conversation.muted,
+    nickname = conversation.nickname,
+    note = conversation.note,
     isRequest = MessageRequests.IsRequest(conversation, settings) or nil,
   }
 end

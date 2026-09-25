@@ -9,6 +9,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
+local PlayerMenu = ns.ChatBubblePlayerMenu or require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
@@ -30,6 +31,18 @@ function TranscriptSetup.BindMessageActions(transcript, view, onMessageAction)
   end
   transcript.onReply = function(message)
     return onMessageAction(view._selectedContact, message, "reply")
+  end
+end
+
+-- Sender name / portrait right-click: player menu for the selected contact,
+-- with the same Mark unread / prefs callbacks the contact rows use.
+function TranscriptSetup.BindPlayerMenu(transcript, view, options)
+  transcript.openPlayerMenu = function(message, anchor)
+    return PlayerMenu.Open(message, anchor, nil, {
+      contact = view._selectedContact,
+      onMarkUnread = options.onMarkUnread,
+      onUpdatePrefs = options.onUpdatePrefs,
+    })
   end
 end
 

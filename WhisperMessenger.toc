@@ -56,6 +56,7 @@ Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore.lua
 Model/ConversationDrafts.lua
 Model/OutgoingDelivery.lua
+Model/ContactPrefs.lua
 Model/MessageRequests.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
@@ -160,14 +161,16 @@ UI/ContactsList/DataBuilder.lua
 UI/ContactsList/DragReorder.lua
 UI/ContactsList/StatusDot.lua
 UI/ContactsList/PinnedMarker.lua
+UI/ContactsList/RowMarkers.lua
 UI/ContactsList/RowElements.lua
+UI/ContactsList/ContactsTabFilter.lua
+UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua
 UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
 UI/ContactsList/GroupLabel.lua
-UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/EmptyState.lua
 UI/ContactsList/TabLayout.lua
 UI/ContactsList/NativeTabToggle.lua
@@ -182,6 +185,7 @@ UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/AddonBadge.lua
+UI/ConversationPane/HeaderContactExtras.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua

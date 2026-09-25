@@ -348,6 +348,13 @@ local Russian = {
   ["Emojis"] = "Эмодзи",
   ["Add quick reply"] = "Добавить быстрый ответ",
   ["Add"] = "Добавить",
+  ["Mute"] = "Без звука",
+  ["Unmute"] = "Включить оповещения",
+  ["Set nickname…"] = "Задать прозвище…",
+  ["Edit note…"] = "Изменить заметку…",
+  ["Set a nickname for %s. Leave empty to remove it."] = "Прозвище для %s. Оставьте пустым, чтобы убрать.",
+  ["Note for %s. Leave empty to remove it."] = "Заметка о %s. Оставьте пустой, чтобы убрать.",
+  ["Save"] = "Сохранить",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Запросы",
   ["Put whispers from strangers in Requests"] = "Шепот от незнакомцев — во «Запросы»",
@@ -366,6 +373,8 @@ local Russian = {
   ["Replying to %s"] = "Ответ для %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "В очереди ждёт 1 сообщение — откройте мессенджер, чтобы отправить или удалить его.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "Сообщений в очереди: %d — откройте мессенджер, чтобы отправить или удалить их.",
+  -- Header note label, icon keybinding hints, quick-replies hint
+  ["Note:"] = "Заметка:",
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
 }
 

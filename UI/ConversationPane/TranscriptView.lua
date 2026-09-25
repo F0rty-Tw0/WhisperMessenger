@@ -161,6 +161,7 @@ local function layoutOptions(transcript)
   options.onReply = transcript.onReply
   options.canReply = transcript.canReply
   options.onQuoteClick = transcript.onQuoteClick
+  options.openPlayerMenu = transcript.openPlayerMenu
   return options
 end
 

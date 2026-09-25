@@ -202,6 +202,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerDivider = header.headerDivider,
     headerEmpty = header.headerEmpty,
     headerChannelChip = header.headerChannelChip,
+    headerNote = header.headerNote,
+    headerNoteHitArea = header.headerNoteHitArea,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
     requestBanner = requestBanner,
@@ -252,6 +254,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   end
 
   TranscriptSetup.BindMessageActions(transcript, view, options.onMessageAction)
+  TranscriptSetup.BindPlayerMenu(transcript, view, options)
 
   if type(options.canReact) == "function" then
     transcript.canReact = function(message)

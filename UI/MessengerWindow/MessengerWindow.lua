@@ -178,6 +178,7 @@ function MessengerWindow.Create(factory, options)
     onPin = options.onPin,
     onRemove = options.onRemove,
     onMarkUnread = options.onMarkUnread,
+    onUpdatePrefs = options.onUpdatePrefs,
     onReorder = options.onReorder,
     contactsSearchInput = contactsSearchInput,
     contactsSearchClearButton = contactsSearchClearButton,
@@ -208,6 +209,8 @@ function MessengerWindow.Create(factory, options)
     onInviteContact = options.onInviteContact,
     onAcceptRequest = options.onAcceptRequest,
     onDeleteRequest = options.onDeleteRequest,
+    onMarkUnread = options.onMarkUnread,
+    onUpdatePrefs = options.onUpdatePrefs,
     hideEmptyHeader = settingsConfig.nativeChrome == true,
     nativeChrome = settingsConfig.nativeChrome == true,
   })

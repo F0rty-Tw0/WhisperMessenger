@@ -56,6 +56,54 @@ return function()
     assert(opened.item.battleTag == "Jaina#1234", "expected battleTag forwarded, got " .. tostring(opened.item.battleTag))
   end
 
+  -- test_open_uses_selected_whisper_contact_with_callbacks
+  do
+    local opened
+    local stub = {
+      Open = function(item, anchorFrame, onMarkUnread, onUpdatePrefs)
+        opened = { item = item, anchor = anchorFrame, onMarkUnread = onMarkUnread, onUpdatePrefs = onUpdatePrefs }
+        return true
+      end,
+    }
+    local contact = { channel = "BN", conversationKey = "me::BN::jaina#1234", displayName = "Jaina", muted = true }
+    local markUnread, updatePrefs = function() end, function() end
+
+    local ok = PlayerMenu.Open(
+      { direction = "in", channel = "BN", playerName = "Jaina#1234" },
+      anchor,
+      stub,
+      { contact = contact, onMarkUnread = markUnread, onUpdatePrefs = updatePrefs }
+    )
+
+    assert(ok == true, "expected whisper-contact open to return true")
+    assert(opened.item == contact, "expected the selected contact as the menu item")
+    assert(opened.anchor == anchor, "expected the anchor frame to be forwarded")
+    assert(opened.onMarkUnread == markUnread and opened.onUpdatePrefs == updatePrefs, "expected both callbacks forwarded")
+  end
+
+  -- test_open_in_group_conversation_uses_bare_sender_item
+  do
+    local opened
+    local stub = {
+      Open = function(item, _anchorFrame, onMarkUnread, onUpdatePrefs)
+        opened = { item = item, onMarkUnread = onMarkUnread, onUpdatePrefs = onUpdatePrefs }
+        return true
+      end,
+    }
+    local group = { channel = "GUILD", conversationKey = "me::GUILD::guild", displayName = "Guild" }
+
+    local ok = PlayerMenu.Open(
+      { direction = "in", channel = "WOW", playerName = "Thrall-Doomhammer" },
+      anchor,
+      stub,
+      { contact = group, onMarkUnread = function() end, onUpdatePrefs = function() end }
+    )
+
+    assert(ok == true, "expected group-sender open to return true")
+    assert(opened.item ~= group and opened.item.displayName == "Thrall-Doomhammer", "expected the bare sender item")
+    assert(opened.onMarkUnread == nil and opened.onUpdatePrefs == nil, "expected no WM callbacks for group senders")
+  end
+
   -- test_open_refuses_outgoing_messages
   -- You don't open a player menu on yourself.
   do

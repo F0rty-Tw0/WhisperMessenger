@@ -348,6 +348,13 @@ local TraditionalChinese = {
   ["Emojis"] = "表情符號",
   ["Add quick reply"] = "新增快速回覆",
   ["Add"] = "新增",
+  ["Mute"] = "靜音",
+  ["Unmute"] = "取消靜音",
+  ["Set nickname…"] = "設定暱稱…",
+  ["Edit note…"] = "編輯備註…",
+  ["Set a nickname for %s. Leave empty to remove it."] = "為 %s 設定暱稱。留空即可移除。",
+  ["Note for %s. Leave empty to remove it."] = "關於 %s 的備註。留空即可移除。",
+  ["Save"] = "儲存",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "請求",
   ["Put whispers from strangers in Requests"] = "將陌生人的密語放入請求",
@@ -366,6 +373,8 @@ local TraditionalChinese = {
   ["Replying to %s"] = "回覆 %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
+  -- Header note label, icon keybinding hints, quick-replies hint
+  ["Note:"] = "備註：",
   ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
 }
 

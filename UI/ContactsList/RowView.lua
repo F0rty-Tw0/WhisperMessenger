@@ -11,6 +11,7 @@ local applyColorTexture = UIHelpers.applyColorTexture
 local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local StatusDot = ns.ContactsListStatusDot or require("WhisperMessenger.UI.ContactsList.StatusDot")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
+local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
@@ -147,6 +148,7 @@ local function bindRow(factory, parent, row, index, item, options)
   else
     RowElements.updateTimestamp(row, item, ns)
   end
+  RowMarkers.updateMuted(row, item)
 
   -- Refit name/faction now that timestamp width is known for this row.
   RowElements.updateNameLabel(row, item, parentWidth)
@@ -233,6 +235,7 @@ local function bindRow(factory, parent, row, index, item, options)
     RowElements.createUnreadBadge(factory, row)
   end
   RowElements.updateUnreadBadge(row, item)
+  RowMarkers.updateBadge(row, item)
 
   if row.Show then
     row:Show()

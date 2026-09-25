@@ -348,6 +348,13 @@ local Korean = {
   ["Emojis"] = "이모티콘",
   ["Add quick reply"] = "빠른 답장 추가",
   ["Add"] = "추가",
+  ["Mute"] = "알림 끄기",
+  ["Unmute"] = "알림 켜기",
+  ["Set nickname…"] = "별명 설정…",
+  ["Edit note…"] = "메모 편집…",
+  ["Set a nickname for %s. Leave empty to remove it."] = "%s의 별명입니다. 비워 두면 삭제됩니다.",
+  ["Note for %s. Leave empty to remove it."] = "%s에 대한 메모입니다. 비워 두면 삭제됩니다.",
+  ["Save"] = "저장",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "요청",
   ["Put whispers from strangers in Requests"] = "낯선 사람의 귓속말을 요청으로 보내기",
@@ -366,6 +373,8 @@ local Korean = {
   ["Replying to %s"] = "%s님에게 답장",
   ["1 queued message is waiting — open the messenger to send or discard."] = "대기 중인 메시지가 1개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "대기 중인 메시지가 %d개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
+  -- Header note label, icon keybinding hints, quick-replies hint
+  ["Note:"] = "메모:",
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
 }
 

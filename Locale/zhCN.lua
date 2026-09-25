@@ -348,6 +348,13 @@ local SimplifiedChinese = {
   ["Emojis"] = "表情",
   ["Add quick reply"] = "添加快捷回复",
   ["Add"] = "添加",
+  ["Mute"] = "静音",
+  ["Unmute"] = "取消静音",
+  ["Set nickname…"] = "设置昵称…",
+  ["Edit note…"] = "编辑备注…",
+  ["Set a nickname for %s. Leave empty to remove it."] = "为 %s 设置昵称。留空即可移除。",
+  ["Note for %s. Leave empty to remove it."] = "关于 %s 的备注。留空即可移除。",
+  ["Save"] = "保存",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "请求",
   ["Put whispers from strangers in Requests"] = "将陌生人的密语放入请求",
@@ -366,6 +373,8 @@ local SimplifiedChinese = {
   ["Replying to %s"] = "回复 %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 条排队消息等待处理 — 打开信使即可发送或丢弃。",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 条排队消息等待处理 — 打开信使即可发送或丢弃。",
+  -- Header note label, icon keybinding hints, quick-replies hint
+  ["Note:"] = "备注：",
   ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
 }
 

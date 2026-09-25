@@ -71,6 +71,8 @@ local Layout = {
   -- Header
   HEADER_HEIGHT = 56,
   HEADER_ICON_SIZE = 32,
+  -- Gap between the class icon and the name / status text.
+  HEADER_NAME_GAP = 10,
   HEADER_STATUS_DOT_SIZE = 8,
 
   -- Conversation pane transcript

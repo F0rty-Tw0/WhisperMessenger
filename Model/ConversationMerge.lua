@@ -116,6 +116,9 @@ local function mergeMetadata(canonical, legacy)
   canonical.pinned = canonical.pinned == true or legacy.pinned == true
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
   -- Player-set prefs: the canonical record wins, the legacy one fills gaps.
+  canonical.muted = (canonical.muted == true or legacy.muted == true) or nil
+  canonical.nickname = canonical.nickname or legacy.nickname
+  canonical.note = canonical.note or legacy.note
   canonical.draft = canonical.draft or legacy.draft
   -- A message request stays one only if both records were (fail open).
   canonical.request = (canonical.request == true and legacy.request == true) or nil

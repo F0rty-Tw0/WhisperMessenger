@@ -169,6 +169,7 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
     labelOptions.chatLocked = options and options.chatLocked or nil
     labelOptions.onMessageAction = options and options.onMessageAction or nil
     labelOptions.persistentFactory = factory
+    labelOptions.openPlayerMenu = options and options.openPlayerMenu or nil
     local label = SenderLabel.CreateSenderLabel(pooledFactory, contentFrame, message, paneWidth, yOffset, labelOptions)
     yOffset = yOffset + label.height
   end
@@ -189,6 +190,7 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.onReply = options and options.onReply or nil
   bubbleOptions.canReply = options and options.canReply or nil
   bubbleOptions.onQuoteClick = options and options.onQuoteClick or nil
+  bubbleOptions.openPlayerMenu = options and options.openPlayerMenu or nil
 
   local bubble = BubbleFrame.CreateBubble(pooledFactory, contentFrame, message, bubbleOptions)
   placeBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)

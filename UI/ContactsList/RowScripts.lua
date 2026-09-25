@@ -203,7 +203,8 @@ function RowScripts.bindClick(row, _item, options)
 
       local rowOptions = row._wmRowOptions
       if button == "RightButton" then
-        if ContextMenu.Open(row.item, self or row, rowOptions and rowOptions.onMarkUnread) then
+        local onMarkUnread = rowOptions and rowOptions.onMarkUnread
+        if ContextMenu.Open(row.item, self or row, onMarkUnread, rowOptions and rowOptions.onUpdatePrefs) then
           return
         end
       end

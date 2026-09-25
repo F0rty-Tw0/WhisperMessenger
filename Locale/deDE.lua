@@ -348,6 +348,13 @@ local German = {
   ["Emojis"] = "Emojis",
   ["Add quick reply"] = "Schnellantwort hinzufügen",
   ["Add"] = "Hinzufügen",
+  ["Mute"] = "Stummschalten",
+  ["Unmute"] = "Stummschaltung aufheben",
+  ["Set nickname…"] = "Spitznamen festlegen…",
+  ["Edit note…"] = "Notiz bearbeiten…",
+  ["Set a nickname for %s. Leave empty to remove it."] = "Spitzname für %s. Leer lassen, um ihn zu entfernen.",
+  ["Note for %s. Leave empty to remove it."] = "Notiz zu %s. Leer lassen, um sie zu entfernen.",
+  ["Save"] = "Speichern",
   -- Requests inbox, last seen, notify when online
   ["Requests"] = "Anfragen",
   ["Put whispers from strangers in Requests"] = "Flüstern von Fremden unter Anfragen ablegen",
@@ -366,6 +373,8 @@ local German = {
   ["Replying to %s"] = "Antwort an %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 Nachricht in der Warteschlange wartet – öffne den Messenger, um sie zu senden oder zu verwerfen.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d Nachrichten in der Warteschlange warten – öffne den Messenger, um sie zu senden oder zu verwerfen.",
+  -- Header note label, icon keybinding hints, quick-replies hint
+  ["Note:"] = "Notiz:",
   ["Edit this list in Options > Behavior."] = "Diese Liste unter Optionen > Verhalten bearbeiten.",
 }
 

@@ -41,6 +41,8 @@ local function itemMatchesSearch(item, terms)
   end
 
   match(item.displayName)
+  match(item.nickname)
+  match(item.note)
   match(item.contactDisplayName)
   match(item.conversationKey)
   match(item.battleTag)

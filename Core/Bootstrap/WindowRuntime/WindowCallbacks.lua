@@ -9,6 +9,7 @@ local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger
 local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
+local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 
@@ -193,6 +194,16 @@ function WindowCallbacks.Create(options)
         return
       end
       Store.MarkUnread(runtime.store, key)
+      refreshWindow()
+    end,
+
+    -- Mute / nickname / note / notify-when-online from the contact row menu.
+    onUpdatePrefs = function(item, changes)
+      local key = item and item.conversationKey
+      if key == nil then
+        return
+      end
+      ContactPrefs.Apply(runtime.store, key, changes)
       refreshWindow()
     end,
 

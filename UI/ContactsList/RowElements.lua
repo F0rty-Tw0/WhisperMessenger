@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local setTextColor = UIHelpers.setTextColor
@@ -52,10 +53,21 @@ local function timestampReserveWidth(row)
 end
 
 local function nameLabelWidth(row, parentWidth)
+  local mutedReserve = row.item and row.item.muted == true and RowMarkers.MUTED_RESERVE or 0
   return math.max(
     0,
-    (parentWidth or 0) - Theme.LAYOUT.CONTACT_ICON_SIZE - Theme.LAYOUT.CONTACT_PADDING - NAME_LABEL_LEFT_INSET - timestampReserveWidth(row)
+    (parentWidth or 0)
+      - Theme.LAYOUT.CONTACT_ICON_SIZE
+      - Theme.LAYOUT.CONTACT_PADDING
+      - NAME_LABEL_LEFT_INSET
+      - timestampReserveWidth(row)
+      - mutedReserve
   )
+end
+
+-- The player's nickname wins over the contact's own name.
+local function rowName(item)
+  return item and (item.nickname or item.displayName) or ""
 end
 
 function RowElements.updateNameLabel(row, item, parentWidth)
@@ -65,7 +77,7 @@ function RowElements.updateNameLabel(row, item, parentWidth)
 
   local width = nameLabelWidth(row, parentWidth)
   row.title:SetWidth(width)
-  row.title:SetText(fitTextWithEllipsis(row.title, item and item.displayName or "", width))
+  row.title:SetText(fitTextWithEllipsis(row.title, rowName(item), width))
   applyClassColor(row.title, item and item.classTag or nil, Theme.COLORS.text_primary)
 end
 
@@ -129,7 +141,7 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
     textBudget = math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
-    row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, item.displayName or "", textBudget))
+    row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, rowName(item), textBudget))
     applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
   end
 

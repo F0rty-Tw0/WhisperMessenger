@@ -11,6 +11,7 @@ local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMess
 local AddonBadge = ns.ConversationPaneAddonBadge or require("WhisperMessenger.UI.ConversationPane.AddonBadge")
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local HEADER_STATUS_RIGHT_INSET = 8
@@ -29,8 +30,14 @@ local function refitStatus(view)
 
   local statusWidth
   if type(view._headerWidth) == "number" then
-    statusWidth =
-      math.max(0, view._headerWidth - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER - Theme.LAYOUT.HEADER_ICON_SIZE - 10 - HEADER_STATUS_RIGHT_INSET)
+    statusWidth = math.max(
+      0,
+      view._headerWidth
+        - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER
+        - Theme.LAYOUT.HEADER_ICON_SIZE
+        - Theme.LAYOUT.HEADER_NAME_GAP
+        - HEADER_STATUS_RIGHT_INSET
+    )
   end
 
   local headerStatus = view.headerStatus
@@ -101,7 +108,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     "TOPLEFT",
     headerFrame,
     "TOPLEFT",
-    Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + 10,
+    Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + Theme.LAYOUT.HEADER_ICON_SIZE + Theme.LAYOUT.HEADER_NAME_GAP,
     -HEADER_NAME_TOP_INSET
   )
 
@@ -136,7 +143,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   headerChannelChip:SetText("")
   headerChannelChip:Hide()
 
-  return {
+  local view = {
     headerFrame = headerFrame,
     headerClassIcon = classIcon,
     headerClassIconFrame = classIconFrame,
@@ -151,6 +158,8 @@ function HeaderView.Create(factory, pane, selectedContact, options)
     headerEmpty = headerEmpty,
     headerChannelChip = headerChannelChip,
   }
+  HeaderContactExtras.Create(factory, view, headerFrame, headerName)
+  return view
 end
 
 function HeaderView.SetLanguage(view)
@@ -167,6 +176,7 @@ function HeaderView.Relayout(view, width)
 
   view._headerWidth = width or 0
   refitStatus(view)
+  HeaderContactExtras.RefitNote(view)
 end
 
 function HeaderView.Refresh(view, selectedContact, conversation, status)
@@ -196,7 +206,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerName then
       if hasContact then
         local title = (vm and vm.title) or (selectedContact.displayName or "")
-        view.headerName:SetText(title)
+        view.headerName:SetText(HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup))
         if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag
           if groupClassTag == nil and not selectedContact.ownerProfileId then
@@ -276,6 +286,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     end
 
     AddonBadge.Refresh(view, selectedContact, conversation)
+    HeaderContactExtras.Refresh(view, selectedContact, vm and vm.isGroup)
 
     if view.headerEmpty then
       view.headerEmpty:SetShown(not hasContact)
