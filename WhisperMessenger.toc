@@ -137,6 +137,7 @@ UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
 UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/HoverCopy.lua
+UI/ChatBubble/ReactionBadge.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
