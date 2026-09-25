@@ -13,9 +13,6 @@ local TranscriptView = {}
 
 local TRANSCRIPT_LINE_HEIGHT = 16
 TranscriptView.TRANSCRIPT_SCROLL_STEP = 24
--- Vertical space the transcript leaves inside the thread pane: 8px below the
--- header (the scrollFrame's TOPLEFT offset) + 8px above the composer.
-TranscriptView.TRANSCRIPT_BOTTOM_GAP = 16
 
 local function formatMessage(message)
   local body = Hyperlinks.FormatTextForDisplay(message and message.text or "")

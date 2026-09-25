@@ -116,9 +116,9 @@ return function()
 
   -- Transcript scroll view should resize with the thread pane
   local HEADER_HEIGHT = 56
-  local TRANSCRIPT_BOTTOM_GAP = 16
   local expectedTranscriptW = expectedContentW - 32
-  local expectedTranscriptH = expectedThreadH - HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
+  -- Flush with the header and composer lines; the content carries the padding.
+  local expectedTranscriptH = expectedThreadH - HEADER_HEIGHT
   assert(
     window.conversation.transcript.scrollFrame.width == expectedTranscriptW,
     "expected transcript width " .. expectedTranscriptW .. " but got " .. tostring(window.conversation.transcript.scrollFrame.width)

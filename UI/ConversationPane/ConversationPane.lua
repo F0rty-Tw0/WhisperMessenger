@@ -21,7 +21,6 @@ local applyColor = UIHelpers.applyColor
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
-local TRANSCRIPT_BOTTOM_GAP = TranscriptView.TRANSCRIPT_BOTTOM_GAP
 local ACTIVE_STATUS_BANNER_HEIGHT = 24
 
 -- Shared, never mutated: viewport-size and theme changes must re-lay-out the
@@ -172,11 +171,13 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   -- Transcript ScrollView (anchored below header)
 
-  local transcriptHeight = parentHeight - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP
+  -- Flush with the header divider and the composer line; the transcript
+  -- pads its own content.
+  local transcriptHeight = parentHeight - Theme.LAYOUT.HEADER_HEIGHT
   local transcript = ScrollView.Create(factory, pane, {
     width = parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET,
     height = transcriptHeight,
-    point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, -8 },
+    point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 0 },
     step = TRANSCRIPT_SCROLL_STEP,
   })
   transcript.factory = factory
@@ -284,7 +285,7 @@ function ConversationPane.Relayout(view, width, height)
   -- pane actually is so bubbles reach the composer instead of stopping short.
   local paneHeight = sizeValue(view.frame, "GetHeight", "height", height)
   local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
-  local transcriptH = paneHeight - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_BOTTOM_GAP - bannerOffset
+  local transcriptH = paneHeight - Theme.LAYOUT.HEADER_HEIGHT - bannerOffset
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   t.scrollFrame:SetSize(transcriptW, transcriptH)

@@ -7,7 +7,9 @@ local ChatBubbleLayout = ns.ChatBubbleLayout or require("WhisperMessenger.UI.Cha
 local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBubble.FramePool")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local TranscriptRows = ns.ConversationPaneTranscriptRows or require("WhisperMessenger.UI.ConversationPane.TranscriptRows")
 local sizeValue = UIHelpers.sizeValue
+local CONTENT_PAD = TranscriptRows.CONTENT_PAD
 
 local TranscriptVirtualization = {}
 
@@ -19,12 +21,12 @@ local function totalHeight(rows)
   if lastRow == nil then
     return 0
   end
-  return lastRow.offset + lastRow.height
+  return lastRow.offset + lastRow.height + CONTENT_PAD
 end
 
 local function recomputeOffsets(rows, startIndex)
   startIndex = math.max(startIndex or 1, 1)
-  local offset = 0
+  local offset = CONTENT_PAD
   if startIndex > 1 then
     local previousRow = rows[startIndex - 1]
     offset = previousRow.offset + previousRow.height
@@ -34,87 +36,7 @@ local function recomputeOffsets(rows, startIndex)
     row.offset = offset
     offset = offset + row.height
   end
-  return offset
-end
-
-local function reactionKey(reaction)
-  return type(reaction) == "table" and reaction.key or nil
-end
-
-local function prepareRows(transcript, messages, paneWidth)
-  local state = transcript._virtualState
-  if state == nil then
-    state = { rows = {} }
-    transcript._virtualState = state
-  end
-
-  local rows = state.rows
-  local widthChanged = state.paneWidth ~= paneWidth
-  local geometryRevision = ChatBubbleLayout.GetGeometryRevision()
-  local geometryChanged = state.geometryRevision ~= geometryRevision
-  local previousRowCount = #rows
-  local anyChanged = widthChanged or geometryChanged or previousRowCount ~= #messages
-  local offset = 0
-  for index, message in ipairs(messages) do
-    local row = rows[index]
-    if row == nil then
-      row = {}
-      rows[index] = row
-    end
-
-    local estimatedHeight = ChatBubbleLayout.EstimateRowHeight(messages[index - 1], message, paneWidth, index == 1)
-    local changed = widthChanged
-      or geometryChanged
-      or row.message ~= message
-      or row.text ~= message.text
-      or row.direction ~= message.direction
-      or row.kind ~= message.kind
-      or row.sentAt ~= message.sentAt
-      or row.playerName ~= message.playerName
-      or row.senderDisplayName ~= message.senderDisplayName
-      or row.senderName ~= message.senderName
-      or row.isCensored ~= message.isCensored
-      or row.seenAt ~= message.seenAt
-      or row.reaction ~= message.reaction
-      or row.reactionKey ~= reactionKey(message.reaction)
-      or row.pendingReaction ~= message._pendingReaction
-      or row.pendingReactionKey ~= reactionKey(message._pendingReaction)
-      or row.pendingReactionOperation ~= (message._pendingReaction and message._pendingReaction.operation or nil)
-      or row.estimatedHeight ~= estimatedHeight
-
-    if changed then
-      row.height = estimatedHeight
-      anyChanged = true
-    end
-    row.index = index
-    row.message = message
-    row.offset = offset
-    row.text = message.text
-    row.direction = message.direction
-    row.kind = message.kind
-    row.sentAt = message.sentAt
-    row.playerName = message.playerName
-    row.senderDisplayName = message.senderDisplayName
-    row.senderName = message.senderName
-    row.isCensored = message.isCensored
-    row.seenAt = message.seenAt
-    row.reaction = message.reaction
-    row.reactionKey = reactionKey(message.reaction)
-    row.pendingReaction = message._pendingReaction
-    row.pendingReactionKey = reactionKey(message._pendingReaction)
-    row.pendingReactionOperation = message._pendingReaction and message._pendingReaction.operation or nil
-    row.estimatedHeight = estimatedHeight
-    offset = offset + row.height
-  end
-  for index = #messages + 1, #rows do
-    rows[index] = nil
-  end
-
-  state.messages = messages
-  state.paneWidth = paneWidth
-  state.geometryRevision = geometryRevision
-  state.totalHeight = offset
-  return state, anyChanged
+  return offset + CONTENT_PAD
 end
 
 local function rowAtOffset(rows, offset)
@@ -170,7 +92,8 @@ local function anchoredOffset(rows, message, delta, fallbackIndex)
   end
   local row = rows[index]
   local maxDelta = math.max(row.height - 1, 0)
-  local clampedDelta = math.max(0, math.min(delta or 0, maxDelta))
+  -- Negative only above the first row, inside the top pad.
+  local clampedDelta = math.max(-row.offset, math.min(delta or 0, maxDelta))
   return row.offset + clampedDelta
 end
 
@@ -300,7 +223,8 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     anchorMessage, anchorDelta, anchorIndex = captureAnchor(previousRows, previousOffset)
   end
 
-  local state, anyChanged = prepareRows(transcript, messages, paneWidth)
+  local dividerMessage = options and options.unreadDividerMessage or nil
+  local state, anyChanged = TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
   state.options = options
   local fallbackClassTag = options and options.fallbackClassTag or nil
   -- Bubble geometry is keyed off the row diff, but the fallback class tag only
@@ -321,7 +245,7 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   local settledWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth)
   if settledWidth ~= paneWidth then
     local settledChanged
-    state, settledChanged = prepareRows(transcript, messages, settledWidth)
+    state, settledChanged = TranscriptRows.Prepare(transcript, messages, settledWidth, dividerMessage)
     state.options = options
     state.fallbackClassTag = fallbackClassTag
     local _, settledRelaidOut = bindOffset(transcript, state, ScrollView.GetOffset(transcript), snapToEnd, force or settledChanged)

@@ -2,8 +2,8 @@ local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
--- 8px below the header + 8px above the composer; no dead band.
-local TRANSCRIPT_VERTICAL_GAP = 16
+-- Flush with the header divider and the composer line: no vertical gap. The
+-- 8px of breathing room is padding inside the scroll content.
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -14,14 +14,14 @@ return function()
 
   -- test_transcript_fills_thread_pane_on_create
   do
-    local expected = 420 - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_VERTICAL_GAP
+    local expected = 420 - Theme.LAYOUT.HEADER_HEIGHT
     assert(sf:GetHeight() == expected, "expected transcript height " .. expected .. ", got " .. tostring(sf:GetHeight()))
   end
 
   -- test_transcript_fills_thread_pane_on_relayout
   do
     ConversationPane.Relayout(view, 600, 400)
-    local expected = 400 - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_VERTICAL_GAP
+    local expected = 400 - Theme.LAYOUT.HEADER_HEIGHT
     assert(sf:GetHeight() == expected, "expected transcript height " .. expected .. ", got " .. tostring(sf:GetHeight()))
   end
 
@@ -31,7 +31,7 @@ return function()
     -- from the window-derived metric passed in. The real height wins.
     view.frame.height = 380
     ConversationPane.Relayout(view, 600, 400)
-    local expected = 380 - Theme.LAYOUT.HEADER_HEIGHT - TRANSCRIPT_VERTICAL_GAP
+    local expected = 380 - Theme.LAYOUT.HEADER_HEIGHT
     assert(sf:GetHeight() == expected, "expected transcript height from live pane " .. expected .. ", got " .. tostring(sf:GetHeight()))
   end
 end
