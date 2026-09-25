@@ -21,7 +21,7 @@
   🏆 5th place in <a href="https://mod.curseforge.com/modding-contests/wow_midnight-addon_contest/">The Addon Trials</a>, CurseForge's 2026 WoW addon contest.
 </p>
 
-![WhisperMessenger preview](.github/assets/preview.png)
+![WhisperMessenger window with replies, reactions and a Seen receipt](.github/assets/chat-reactions-seen.png)
 
 ## Why players install it
 
@@ -38,15 +38,47 @@ You can, and it helps. A tab still mixes everyone into one scrolling stream, for
 
 ### Messenger-Style Conversations
 
-Chat bubbles with timestamps, date separators and sender labels. Right-click any message to copy it or add a reaction. An emoji picker sits next to the message box.
+Chat bubbles with timestamps, date separators and sender labels. Right-click any message to reply, copy it or add a reaction. An emoji picker sits next to the message box.
+
+- **Reply** quotes the original line above your message.
+- **Quick replies** drop in a saved line like "On my way" (up to 10, edit them under Options > Behavior).
+- **Drafts** stay with each chat, even after a reload.
+- **Queued messages** wait safely when whispers are paused, and nothing is sent until you click.
+- **Filtered messages** that the game flags as inappropriate stay hidden until you click to reveal them.
+
+<p align="center">
+  <img src=".github/assets/chat-reply-quote.png" width="49%" alt="A reply quoting an earlier message">
+  <img src=".github/assets/message-menu-reactions.png" width="49%" alt="Right-click menu with reactions, Reply and Copy text">
+</p>
+
+<p align="center">
+  <img src=".github/assets/quick-replies.png" width="60%" alt="Quick replies menu next to the message box">
+</p>
+
+<p align="center">
+  <img src=".github/assets/censored-message.png" width="80%" alt="A filtered message hidden behind Show Message, with click to reveal">
+</p>
 
 ### Contact List
 
-Online status dots, unread badges, last-message previews, and the zone or dungeon a friend is in. Pin and drag contacts to reorder them. Search across names and message history.
+Online status dots, unread badges, last-message previews, and the zone or dungeon a friend is in. Pin and drag contacts to reorder them. Search across names, nicknames, notes and message history.
 
-### Whispers and Groups
+Right-click a contact to **mute** them, set a **nickname**, add a private **note**, or get told when they come **online**.
 
-The **Whispers** tab holds your private conversations. The **Groups** tab collects party, raid, instance and guild chat, with reactions there too.
+<p align="center">
+  <img src=".github/assets/contact-menu.png" width="60%" alt="Contact right-click menu with Mute, Set nickname, Edit note and Notify when online">
+</p>
+
+### Whispers, Groups and Requests
+
+- **Whispers** holds your private conversations.
+- **Groups** collects party, raid, instance and guild chat, with reactions and @mention highlights.
+- **Requests** (optional) holds whispers from strangers until you accept or delete them. Turn it on under Options > Behavior.
+
+<p align="center">
+  <img src=".github/assets/group-raid-chat.png" width="49%" alt="Raid chat in the Groups tab with a New messages line">
+  <img src=".github/assets/requests-tab.png" width="49%" alt="Requests tab with Accept and Delete buttons for a stranger's whisper">
+</p>
 
 ### Battle.net Integration
 
@@ -55,6 +87,13 @@ Character whispers and Battle.net friend whispers live in one list. Contact deta
 ### Friends Who Also Use It
 
 When a friend also runs WhisperMessenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Both can be switched off in Behavior settings. Players without the addon still receive a readable plain-text fallback.
+
+The chat header shows **(Uses WM)** for friends who have it, and an **(Invite to WM)** link for those who don't.
+
+<p align="center">
+  <img src=".github/assets/typing-indicator.png" width="40%" alt="Contact list showing typing… under a friend's name">
+  <img src=".github/assets/seen-receipt.png" width="58%" alt="A Seen receipt above a sent message">
+</p>
 
 ### Themes
 
@@ -68,6 +107,12 @@ Pick the default font or any font from SharedMedia addons like ElvUI. Resize the
 
 Choose a sound (Whisper, Ping, Chime, Bell, Raid Warning) that plays even when in-game audio is muted.
 
+The floating button shows an unread badge and a short preview of the newest message.
+
+<p align="center">
+  <img src=".github/assets/widget-preview.png" alt="Floating button with an unread badge and a message preview">
+</p>
+
 ### Auto-Open Window
 
 Opens the messenger when you receive a whisper, pick "Whisper" on a player, or click a name. Configurable in Behavior settings, and never during combat.
@@ -78,7 +123,17 @@ Shift-click items, quests, achievements, spells and professions to link them str
 
 ### Settings
 
-Pages for **General**, **Appearance**, **Behavior**, **Notifications**, **Icons** and **What's New**. Includes a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
+Pages for **General**, **Appearance**, **Behavior**, **Notifications**, **Icons** and **What's New**. Includes history limits and retention, privacy options, 12 interface languages, a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
+
+<p align="center">
+  <img src=".github/assets/settings-general.png" width="49%" alt="General settings: history limits, privacy, time format and interface language">
+  <img src=".github/assets/settings-appearance.png" width="49%" alt="Appearance settings: themes, scale, fonts and bubble colors">
+</p>
+
+<p align="center">
+  <img src=".github/assets/settings-behavior.png" width="49%" alt="Behavior settings: auto-open, combat, requests, typing status and read receipts">
+  <img src=".github/assets/settings-icons.png" width="49%" alt="Icons settings: size, badge, widget preview and icon mode">
+</p>
 
 ## Good to know
 
@@ -115,6 +170,8 @@ Also available on [Wago Addons](https://addons.wago.io/addons/whispermessenger).
 Download the latest ZIP from [GitHub Releases](https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest) and extract it into your `Interface/AddOns/` folder.
 
 ## Configuration
+
+Open or close the messenger with **CTRL-O** (change it in the game's Key Bindings menu).
 
 Open settings with the gear icon in the messenger window, or type:
 
