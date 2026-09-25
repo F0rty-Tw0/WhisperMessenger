@@ -269,34 +269,22 @@ function WindowRuntime.Create(options)
       onShareWidgetPositionChanged = onShareWidgetPositionChanged,
     })
 
-    window = messengerWindow.Create(uiFactory, {
+    local windowOptions = {
       contacts = contacts,
       selectedContact = selectedState.selectedContact,
       conversation = selectedState.conversation,
       status = selectedState.status,
       state = characterState.window,
       initialTabMode = characterState.contactsTabMode or "whispers",
-      onTabModeChanged = windowCallbacks.onTabModeChanged,
-      onSelectConversation = windowCallbacks.onSelectConversation,
-      onStartConversation = windowCallbacks.onStartConversation,
-      onSend = windowCallbacks.onSend,
-      onReact = windowCallbacks.onReact,
-      canReact = windowCallbacks.canReact,
-      onInviteContact = windowCallbacks.onInviteContact,
-      onTyping = windowCallbacks.onTyping,
-      onPositionChanged = windowCallbacks.onPositionChanged,
-      onClose = windowCallbacks.onClose,
-      onResetWindowPosition = windowCallbacks.onResetWindowPosition,
-      onClearAllChats = windowCallbacks.onClearAllChats,
-      onPin = windowCallbacks.onPin,
-      onRemove = windowCallbacks.onRemove,
-      onMarkUnread = windowCallbacks.onMarkUnread,
-      onReorder = windowCallbacks.onReorder,
-      onResetIconPosition = windowCallbacks.onResetIconPosition,
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,
       onSettingChanged = onSettingChanged,
-    })
+    }
+    -- Every window callback passes straight through.
+    for name, callback in pairs(windowCallbacks) do
+      windowOptions[name] = callback
+    end
+    window = messengerWindow.Create(uiFactory, windowOptions)
 
     if window.frame.Hide then
       window.frame:Hide()
