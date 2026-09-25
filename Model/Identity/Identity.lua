@@ -7,19 +7,24 @@ local Factions = ns.IdentityFactions or require("WhisperMessenger.Model.Identity
 
 local Identity = {}
 
+-- Ambiguate(name, "none"): drops the realm for same-realm players and
+-- detaints chat-event names. Returns name unchanged when the API is missing
+-- or rejects the value (a secret string during chat lockdown).
+function Identity.ShortName(name)
+  if name ~= nil and type(_G.Ambiguate) == "function" then
+    local ok, short = pcall(_G.Ambiguate, name, "none")
+    if ok and short ~= nil then
+      return short
+    end
+  end
+  return name
+end
+
 local function normalizeName(name)
   if name == nil then
     return ""
   end
-  -- Detaint secret strings from chat events before string ops.
-  -- During tainted execution (e.g. mythic lockdown) Ambiguate itself
-  -- rejects secret values, so guard with pcall.
-  if _G.Ambiguate then
-    local ok, clean = pcall(_G.Ambiguate, name, "none")
-    if ok then
-      name = clean
-    end
-  end
+  name = Identity.ShortName(name)
   local ok, result = pcall(string.lower, name)
   if ok then
     return result
@@ -61,13 +66,7 @@ end
 function Identity.FromWhisper(fullName, guid, playerInfo)
   playerInfo = playerInfo or {}
   -- Detaint the name once; normalizeName handles nil but displayName needs a clean copy too.
-  -- pcall guards against tainted execution (mythic lockdown).
-  if _G.Ambiguate and fullName then
-    local ok, clean = pcall(_G.Ambiguate, fullName, "none")
-    if ok then
-      fullName = clean
-    end
-  end
+  fullName = Identity.ShortName(fullName)
   return {
     channel = "WOW",
     contactKey = "WOW::" .. normalizeName(fullName),
