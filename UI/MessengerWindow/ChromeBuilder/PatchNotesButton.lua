@@ -12,7 +12,7 @@ local applyVertexColor = UIHelpers.applyVertexColor
 
 local PatchNotesButton = {}
 
--- Creates the What's New title-bar button (sparkle icon). Size and anchor come from TitleBarLayout. It pulses while the
+-- Creates the What's New title-bar button (scroll icon). Size and anchor come from TitleBarLayout. It pulses while the
 -- shipped patch-notes version has not been seen yet (setGlowing).
 function PatchNotesButton.Create(factory, frame, theme)
   theme = theme or Theme
