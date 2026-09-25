@@ -84,6 +84,7 @@ Transport/BNetResolver.lua
 Core/LocalPlayer.lua
 Core/Ingest/GroupChatIngest/SecretString.lua
 Core/Ingest/GroupChatIngest/Direction.lua
+Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter.lua

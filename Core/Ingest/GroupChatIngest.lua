@@ -10,6 +10,7 @@ local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
+local PendingEcho = ns.GroupChatIngestPendingEcho or require("WhisperMessenger.Core.Ingest.GroupChatIngest.PendingEcho")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 -- stylua: ignore end
@@ -184,59 +185,13 @@ local function groupSenderKey(playerName, conversationKey)
   return ok and normalized .. "::" .. conversationKey or nil
 end
 
-local function prunePending(state, conversationKey, now)
-  local queues = state.pendingGroupOutgoing
-  local queue = type(queues) == "table" and queues[conversationKey] or nil
-  if type(queue) ~= "table" then
-    return nil
-  end
-  for index = #queue, 1, -1 do
-    local entry = queue[index]
-    if type(entry) ~= "table" or (type(entry.createdAt) == "number" and now - entry.createdAt > 15) then
-      table.remove(queue, index)
-    end
-  end
-  if #queue == 0 then
-    queues[conversationKey] = nil
-    return nil
-  end
-  return queue
-end
-local function prunePendingQueues(state, now)
-  local queues = state.pendingGroupOutgoing
-  if type(queues) ~= "table" then
-    return
-  end
-  for conversationKey in pairs(queues) do
-    prunePending(state, conversationKey, now)
-  end
-end
-
-local function consumePending(state, conversationKey, channel, text)
-  local queues = state.pendingGroupOutgoing
-  local queue = type(queues) == "table" and queues[conversationKey] or nil
-  if type(queue) ~= "table" then
-    return nil
-  end
-  for index, entry in ipairs(queue) do
-    if entry.channel == channel and entry.text == text then
-      table.remove(queue, index)
-      if #queue == 0 then
-        queues[conversationKey] = nil
-      end
-      return entry
-    end
-  end
-  return nil
-end
-
 local function appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
   local direction = Direction.Resolve(eventName, payload, state)
   local sentAt = (state.now and state.now()) or 0
-  prunePendingQueues(state, sentAt)
+  PendingEcho.PruneAll(state, sentAt)
   local message = buildMessage(payload, direction, channel, sentAt, isLeader)
   if direction == "out" then
-    local pending = consumePending(state, conversationKey, channel, message.text)
+    local pending = PendingEcho.Consume(state, conversationKey, channel, message.text)
     if pending and pending.reactionControl then
       local control = pending.reactionControl
       local changed, target = MessageReactions.ApplyOperation(state, conversationKey, control.operation, control.actorName, nil, sentAt)
