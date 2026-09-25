@@ -25,8 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run patch notes generator tests
-        run: python -m unittest tests.scripts.test_gen_patch_notes
+      - name: Run release script tests
+        run: python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog
 
       - name: Install Lua
         run: |

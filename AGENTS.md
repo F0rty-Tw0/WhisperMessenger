@@ -96,13 +96,14 @@ Rules:
 - **Banned in changelog entries:** file paths, module names (`BehaviorSettings`, `WindowCoordinator`, `MessengerWindow`, etc.), function names, API names (`C_ChatInfo`, `SetCVar`, etc.), Lua terms, test names, "refactor", "introduce", "extract", "wire up", "config key", "token". If a sentence only makes sense to someone reading the diff, it doesn't belong here.
 - **One bullet per user-visible change.** Group related fixes into one line if the user would see them as the same thing.
 - **Fixes start with `Fixed:`.** Features and behavior changes don't need a prefix.
-- **Always update `CHANGELOG.md` when behavior, UI, settings, or fixes change** — in the same turn as the code edit. Put the line under `## [Unreleased]` (or the current version section if release prep is already in flight, like 1.1.8 during this session).
+- **Always update `CHANGELOG.md` when behavior, UI, settings, or fixes change** — in the same turn as the code edit. Put the line under `## [Unreleased]`. Only if a version section exists that has not been tagged yet (release prep in flight), add it there instead — `scripts/release.sh` refuses to run when both hold notes.
 
 ### Layout
 
 `CHANGELOG.md` holds only `[Unreleased]` plus the **current series** (2.0.x today). Older series live in `archive/changelog/<major>.<minor>.md` (e.g. `archive/changelog/1.4.md`).
 
-- Every file starts with an `All releases:` nav line linking each of the other series. When a new minor opens, move the finished series into a new archive file and add it to the nav line in **all** changelog files.
+- Every file starts with an `All releases:` nav line linking each of the other series.
+- **`bash scripts/release.sh <version>` handles all of this:** it moves `[Unreleased]` into a dated `## [x.y.z]` section, archives the finished series when a new minor/major opens, rebuilds every nav line, regenerates `Core/PatchNotes.lua`, and bumps the TOC + `Constants.lua` versions. Don't hand-edit version sections or nav lines for a release.
 - `archive/` is ignored by `.pkgmeta`, so it never ships in the addon zip.
 
 When in doubt, read the existing 1.1.0 - 1.1.7 sections — they are the style guide. Match their voice.

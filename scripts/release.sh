@@ -6,10 +6,12 @@
 ## Accepts 1.0.0 or v1.0.0 and always normalizes to v-prefixed
 ## tags and file versions.
 ##
-## Requires CHANGELOG.md to already carry this release's notes: the top
-## '## [x.y.z]' section (below '## [Unreleased]') must match the version
-## being released, because those bullets are baked into Core/PatchNotes.lua
-## and shown in the in-game What's New dialog.
+## Write player notes under '## [Unreleased]' in CHANGELOG.md as you go.
+## This script moves them into a dated '## [x.y.z]' section (archiving the
+## finished series when a new minor/major opens), bakes them into
+## Core/PatchNotes.lua for the in-game What's New dialog, bumps the TOC and
+## Constants.lua versions, commits, and tags. It refuses to run when
+## [Unreleased] is empty, unless the top section already is this version.
 
 set -euo pipefail
 
@@ -99,6 +101,10 @@ else
 fi
 echo "  TBC and Cata: skipped (Classic seasons EOL, no live CDN)"
 
+# Move [Unreleased] notes into this release's section. Runs before any other
+# file edit so a missing-notes error leaves the tree untouched.
+python scripts/promote_changelog.py --version "${TAG_VERSION}"
+
 sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mainline: .*/## Interface-Mainline: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Vanilla: .*/## Interface-Vanilla: ${TOC_VANILLA}/" WhisperMessenger.toc
@@ -119,7 +125,7 @@ sed -i "s/VERSION = \"[^\"]*\"/VERSION = \"${TAG_VERSION}\"/" Core/Constants.lua
 python scripts/gen_patch_notes.py --version "${TAG_VERSION}"
 
 # Commit version + interface bump
-git add WhisperMessenger.toc Core/Constants.lua Core/PatchNotes.lua
+git add WhisperMessenger.toc Core/Constants.lua Core/PatchNotes.lua CHANGELOG.md archive/changelog
 if git diff --cached --quiet; then
   echo "No TOC or version changes to commit (already up to date)."
 else
