@@ -18,6 +18,28 @@ local StyledTextInputPopup = {}
 -- the text prime / focus / width behaviour runs.
 StyledTextInputPopup.nativeChrome = false
 
+-- Look shared by the addon's one-line text popups (start conversation,
+-- nickname, note, quick reply): Apply / Restore options and the
+-- StaticPopupDialogs fields.
+StyledTextInputPopup.INPUT_STYLE = {
+  styleSecondaryButton = true,
+  fullWidthInput = true,
+  inputHorizontalPadding = 14,
+  minInputWidth = 260,
+}
+StyledTextInputPopup.RESTORE_STYLE = { styleSecondaryButton = true, clearEditBox = true }
+
+function StyledTextInputPopup.NewDialog()
+  return {
+    hasEditBox = true,
+    editBoxWidth = 340,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+  }
+end
+
 local function resolveEditBox(dialog, dialogName)
   return PopupResolvers.resolvePopupEditBox(dialog, dialogName)
 end

@@ -42,19 +42,11 @@ local function resolveConversationPopupEditBox(popup, dialogName)
 end
 
 local function styleStartConversationDialog(popup, dialogName, value)
-  StyledTextInputPopup.Apply(popup, dialogName, value, {
-    styleSecondaryButton = true,
-    fullWidthInput = true,
-    inputHorizontalPadding = 14,
-    minInputWidth = 260,
-  })
+  StyledTextInputPopup.Apply(popup, dialogName, value, StyledTextInputPopup.INPUT_STYLE)
 end
 
 local function restoreStartConversationDialog(popup, dialogName)
-  StyledTextInputPopup.Restore(popup, dialogName, {
-    styleSecondaryButton = true,
-    clearEditBox = true,
-  })
+  StyledTextInputPopup.Restore(popup, dialogName, StyledTextInputPopup.RESTORE_STYLE)
 end
 
 local function applyDialogText(dialog)
@@ -81,15 +73,8 @@ function StartConversationDialog.Wire(newConversationButton, options)
 
   local dialog = _G.StaticPopupDialogs[DIALOG_NAME]
   if type(dialog) ~= "table" then
-    dialog = {
-      hasEditBox = true,
-      editBoxWidth = 340,
-      maxLetters = 255,
-      timeout = 0,
-      whileDead = true,
-      hideOnEscape = true,
-      preferredIndex = 3,
-    }
+    dialog = StyledTextInputPopup.NewDialog()
+    dialog.maxLetters = 255
     _G.StaticPopupDialogs[DIALOG_NAME] = dialog
   end
   applyDialogText(dialog)
