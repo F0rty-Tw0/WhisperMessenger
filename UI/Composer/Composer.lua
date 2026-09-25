@@ -26,8 +26,11 @@ local Composer = {}
 local TRANSPARENT_COLOR = UIHelpers.TRANSPARENT
 
 -- options.nativeChrome: Native WoW HUD -> Blizzard input border art.
+-- options.onDraftChanged(conversationKey, text): typed text to keep as draft.
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
-  local nativeChrome = type(options) == "table" and options.nativeChrome == true
+  options = type(options) == "table" and options or {}
+  local nativeChrome = options.nativeChrome == true
+  local onDraftChanged = options.onDraftChanged
   local pane = factory.CreateFrame("Frame", nil, parent)
   pane:SetScript("OnHide", function()
     PickerStyles.HideTooltip()
@@ -191,20 +194,41 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
     if accepted ~= false then
       input:SetText("")
+      if onDraftChanged then
+        onDraftChanged(selectedContact.conversationKey, "")
+      end
     end
   end
 
-  input:SetScript("OnTextChanged", function()
-    local text = input.GetText and input:GetText() or input.text or ""
-    if text == "" then
+  local function syncPlaceholder(text)
+    if text == nil or text == "" then
       placeholder:Show()
     else
       placeholder:Hide()
     end
+  end
+
+  -- True while loadDraft swaps in another conversation's text: that text is
+  -- already stored, and it is not the player typing.
+  local loadingDraft = false
+
+  input:SetScript("OnTextChanged", function()
+    local text = input.GetText and input:GetText() or input.text or ""
+    syncPlaceholder(text)
+    if onDraftChanged and not loadingDraft and selectedContact.conversationKey ~= nil then
+      onDraftChanged(selectedContact.conversationKey, text)
+    end
     if onTyping then
-      onTyping(selectedContact, text)
+      onTyping(selectedContact, loadingDraft and "" or text)
     end
   end)
+
+  local function loadDraft(text)
+    loadingDraft = true
+    input:SetText(text or "")
+    loadingDraft = false
+    syncPlaceholder(text)
+  end
 
   input:SetScript("OnEnterPressed", function()
     submitMessage()
@@ -238,6 +262,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     emojiButton = emojiButton,
     emojiPicker = emojiPicker,
     placeholder = placeholder,
+    loadDraft = loadDraft,
     setLanguage = function()
       placeholder:SetText(Localization.Text("Enter to send"))
     end,

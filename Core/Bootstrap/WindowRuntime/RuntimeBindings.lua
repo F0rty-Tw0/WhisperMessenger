@@ -3,10 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
+
 local RuntimeBindings = {}
 
-local function buildComposerTextSetter(getWindow)
+-- Text handed over from Blizzard chat becomes the active conversation's
+-- draft too, so it survives even when the window is not built yet.
+local function buildComposerTextSetter(runtime, getWindow)
   return function(text)
+    ConversationDrafts.Set(runtime.store, runtime.activeConversationKey, text)
     local window = getWindow()
     if window and window.composer and window.composer.input and window.composer.input.SetText then
       window.composer.input:SetText(text or "")
@@ -38,7 +43,7 @@ function RuntimeBindings.Apply(options)
   local setWindowVisible = options.setWindowVisible or function() end
   local toggle = options.toggle or function() end
 
-  local setComposerText = buildComposerTextSetter(getWindow)
+  local setComposerText = buildComposerTextSetter(runtime, getWindow)
 
   controller.getWindow = getWindow
   controller.getIcon = getIcon

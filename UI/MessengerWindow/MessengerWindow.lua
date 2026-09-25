@@ -221,11 +221,15 @@ function MessengerWindow.Create(factory, options)
   local setOptionsVisible = windowVisibility.setOptionsVisible
   local closeWindow = windowVisibility.closeWindow
 
+  local composerOptions = {
+    nativeChrome = layout.nativeChrome == true,
+    onDraftChanged = options.onDraftChanged,
+  }
   local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...
   end, closeWindow, function()
     return settingsConfig.doubleEscapeToClose == true
-  end, options.onTyping, { nativeChrome = layout.nativeChrome == true })
+  end, options.onTyping, composerOptions)
   settingsRuntime.setThemeTargets(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)
@@ -245,7 +249,7 @@ function MessengerWindow.Create(factory, options)
       ConversationPane.Refresh(conversation, selectedContact, selectedConversation, selectedStatus, noticeText)
     end,
     syncComposerSelectedContact = function(selectedContact)
-      SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact)
+      SelectionSync.SyncComposerSelectedContact(composerSelectedContact, selectedContact, composer, options.getDraft)
     end,
     setComposerEnabled = function(selectedContact, noticeText)
       SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)

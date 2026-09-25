@@ -115,6 +115,8 @@ end
 local function mergeMetadata(canonical, legacy)
   canonical.pinned = canonical.pinned == true or legacy.pinned == true
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
+  -- Player-set prefs: the canonical record wins, the legacy one fills gaps.
+  canonical.draft = canonical.draft or legacy.draft
 
   local latestActivity = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
   canonical.lastActivityAt = latestActivity.lastActivityAt

@@ -336,6 +336,9 @@ local Korean = {
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "WhisperMessenger를 사용하는 상대에게 내가 귓속말을 입력 중임을 보여줍니다.",
   ["Send read receipts"] = "읽음 확인 보내기",
   ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "WhisperMessenger를 사용하는 상대에게 내가 귓속말을 읽었음을 보여줍니다.",
+  -- Drafts, new-messages divider, quick replies
+  ["Draft"] = "임시 저장",
+  ["Draft:"] = "임시 저장:",
   ["New messages"] = "새 메시지",
 }
 

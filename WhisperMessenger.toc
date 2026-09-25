@@ -54,6 +54,7 @@ Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore.lua
+Model/ConversationDrafts.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua

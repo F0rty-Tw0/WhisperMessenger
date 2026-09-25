@@ -34,6 +34,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
     pinned = conversation.pinned or false,
     sortOrder = conversation.sortOrder or 0,
     guildName = conversation.guildName,
+    draft = conversation.draft,
   }
 end
 

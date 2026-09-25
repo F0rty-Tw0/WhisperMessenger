@@ -336,6 +336,9 @@ local TraditionalChinese = {
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "讓同樣使用 WhisperMessenger 的聯絡人看到你正在輸入密語給他們。",
   ["Send read receipts"] = "傳送已讀回條",
   ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "讓同樣使用 WhisperMessenger 的聯絡人看到你已讀他們的密語。",
+  -- Drafts, new-messages divider, quick replies
+  ["Draft"] = "草稿",
+  ["Draft:"] = "草稿：",
   ["New messages"] = "新訊息",
 }
 

@@ -313,6 +313,8 @@ return function()
     "onReorder",
     "onResetIconPosition",
     "onSettingChanged",
+    "getDraft",
+    "onDraftChanged",
   }) do
     assert(type(windowOptions[name]) == "function", "window options should include " .. name)
   end

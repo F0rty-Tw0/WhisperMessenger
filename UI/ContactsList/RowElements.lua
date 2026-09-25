@@ -183,7 +183,19 @@ function RowElements.createTimestamp(row, item, ns_ref)
   return label
 end
 
-function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
+-- Unsent text: "Draft: <text>" with the marker in the danger colour. Only
+-- the marker when previews are hidden.
+local function draftPreviewText(draft, hideMessagePreview)
+  local color = UIHelpers.colorEscape(Theme.COLORS.danger_text or Theme.COLORS.text_secondary)
+  if hideMessagePreview then
+    return color .. Localization.Text("Draft") .. "|r"
+  end
+  return color .. Localization.Text("Draft:") .. "|r " .. ReactionAssets.FormatTextForDisplay(draft)
+end
+
+-- selectedConversationKey: the open conversation's draft is in the composer,
+-- so its own row keeps the normal preview.
+function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview, selectedConversationKey)
   if row.preview == nil then
     return
   end
@@ -197,6 +209,10 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview)
     return
   end
   setTextColor(row.preview, Theme.COLORS.text_secondary)
+  if item.draft ~= nil and item.conversationKey ~= selectedConversationKey then
+    row.preview:SetText(draftPreviewText(item.draft, hideMessagePreview))
+    return
+  end
   row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(item.lastPreview))
 end
 

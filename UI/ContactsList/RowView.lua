@@ -200,7 +200,7 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.preview == nil then
     RowElements.createPreview(row, item, parentWidth)
   end
-  RowElements.updatePreview(row, item, parentWidth, options and options.hideMessagePreview)
+  RowElements.updatePreview(row, item, parentWidth, options and options.hideMessagePreview, options and options.selectedConversationKey)
 
   -- Location text (create once, update every bind). Group rows have no
   -- single member's zone to show, so it stays hidden for them.

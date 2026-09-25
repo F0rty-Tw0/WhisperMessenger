@@ -8,6 +8,7 @@ local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger.Core.Bootstrap.ReactionHandler")
 local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
 
 local WindowCallbacks = {}
 
@@ -97,6 +98,14 @@ function WindowCallbacks.Create(options)
         return false
       end
       return livePresenceSender.OnComposerText(runtime, selectedContact, text)
+    end,
+
+    getDraft = function(conversationKey)
+      return ConversationDrafts.Get(runtime.store, conversationKey)
+    end,
+
+    onDraftChanged = function(conversationKey, text)
+      ConversationDrafts.Set(runtime.store, conversationKey, text)
     end,
 
     onPositionChanged = function(nextState)
