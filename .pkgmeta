@@ -18,6 +18,7 @@ ignore:
   - AGENTS.md
   - README.md
   - CHANGELOG.md
+  - INGAME_TEST.md
   - entities.json
   - mempalace.yaml
   - Model/ContactEnricher/init.lua
