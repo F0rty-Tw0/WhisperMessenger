@@ -348,6 +348,9 @@ local German = {
   ["Emojis"] = "Emojis",
   ["Add quick reply"] = "Schnellantwort hinzufügen",
   ["Add"] = "Hinzufügen",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "Taskleiste bei neuem Flüstern blinken lassen",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "Lässt das Spielsymbol in der Taskleiste blinken, wenn ein Flüstern oder eine Erwähnung eintrifft, während du in einem anderen Fenster bist.",
   ["Mute"] = "Stummschalten",
   ["Unmute"] = "Stummschaltung aufheben",
   ["Set nickname…"] = "Spitznamen festlegen…",

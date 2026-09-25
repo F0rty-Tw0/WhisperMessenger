@@ -348,6 +348,9 @@ local TraditionalChinese = {
   ["Emojis"] = "表情符號",
   ["Add quick reply"] = "新增快速回覆",
   ["Add"] = "新增",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "收到新密語時閃爍工作列",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "當你切到其他視窗時收到密語或被提及，工作列上的遊戲圖示會閃爍。",
   ["Mute"] = "靜音",
   ["Unmute"] = "取消靜音",
   ["Set nickname…"] = "設定暱稱…",

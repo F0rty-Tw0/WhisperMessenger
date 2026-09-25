@@ -58,6 +58,7 @@ Model/ConversationDrafts.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
+Model/AlertPolicy.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
@@ -287,6 +288,7 @@ Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge/Registration.lua
 Core/Bootstrap/EventBridge/LivePayload.lua
+Core/Bootstrap/EventBridge/IncomingAlerts.lua
 Core/Bootstrap/EventBridge/GroupRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua

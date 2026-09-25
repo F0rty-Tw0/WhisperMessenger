@@ -126,6 +126,7 @@ function SettingsPanels.Create(factory, options)
       config = {
         playSoundOnWhisper = settingsConfig.playSoundOnWhisper,
         notificationSound = settingsConfig.notificationSound,
+        flashTaskbarOnWhisper = settingsConfig.flashTaskbarOnWhisper,
       },
     },
     {

@@ -86,6 +86,9 @@ read_globals = {
   "FriendsFrame_ShowBNDropdown",
   "FriendsFrame_ShowDropdown",
 
+  -- Taskbar alert
+  "FlashClientIcon",
+
   -- Key bindings
   "GetBindingKey",
   "SetOverrideBindingClick",

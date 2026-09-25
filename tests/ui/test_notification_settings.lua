@@ -98,7 +98,7 @@ return function()
     for _ in pairs(changes) do
       resetCount = resetCount + 1
     end
-    assert(resetCount == 2, "test_reset_restores_only_sound_defaults: reset should emit only sound keys")
+    assert(resetCount == 3, "test_reset_restores_only_sound_defaults: reset should emit only notification keys")
     assert(soundButtons(result)[1]._selected == true, "test_reset_restores_only_sound_defaults: first sound should be selected")
   end
 

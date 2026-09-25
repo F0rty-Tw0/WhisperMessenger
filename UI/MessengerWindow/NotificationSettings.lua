@@ -16,6 +16,7 @@ local PADDING = Theme.CONTENT_PADDING
 local DEFAULTS = {
   playSoundOnWhisper = false,
   notificationSound = SoundSelector.DEFAULT_SOUND,
+  flashTaskbarOnWhisper = true,
 }
 
 local function text(key)
@@ -74,6 +75,26 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   soundSelector.row:SetPoint("TOPLEFT", playSoundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local flashToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Flash taskbar on new whisper"),
+      config.flashTaskbarOnWhisper ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("flashTaskbarOnWhisper", value)
+      end,
+      {
+        text("Flash taskbar on new whisper"),
+        text("Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."),
+      }
+    ),
+    { type = "toggle", key = "flashTaskbarOnWhisper", default = DEFAULTS.flashTaskbarOnWhisper }
+  )
+  flashToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
       factory,
@@ -84,7 +105,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", flashToggle.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
   end)
@@ -108,6 +129,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     playSoundToggle.label:SetText(text("Play sound on new whisper"))
     soundSelector.label:SetText(text("Notification sound"))
     soundSelector.setOptionsList(SoundSelector.Options())
+    flashToggle.label:SetText(text("Flash taskbar on new whisper"))
     resetButton.label:SetText(text("Reset to Defaults"))
   end
 

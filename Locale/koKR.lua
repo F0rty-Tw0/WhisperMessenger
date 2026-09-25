@@ -348,6 +348,9 @@ local Korean = {
   ["Emojis"] = "이모티콘",
   ["Add quick reply"] = "빠른 답장 추가",
   ["Add"] = "추가",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "새 귓속말 시 작업 표시줄 깜박이기",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "다른 창을 보고 있을 때 귓속말이나 언급이 오면 작업 표시줄의 게임 아이콘을 깜박입니다.",
   ["Mute"] = "알림 끄기",
   ["Unmute"] = "알림 켜기",
   ["Set nickname…"] = "별명 설정…",

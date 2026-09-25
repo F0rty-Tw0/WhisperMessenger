@@ -348,6 +348,9 @@ local Spanish = {
   ["Emojis"] = "Emojis",
   ["Add quick reply"] = "Añadir respuesta rápida",
   ["Add"] = "Añadir",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "Parpadear en la barra de tareas con un nuevo susurro",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "Hace parpadear el icono del juego en la barra de tareas cuando llega un susurro o una mención mientras estás en otra ventana.",
   ["Mute"] = "Silenciar",
   ["Unmute"] = "Quitar silencio",
   ["Set nickname…"] = "Poner apodo…",

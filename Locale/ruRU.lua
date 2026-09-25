@@ -348,6 +348,9 @@ local Russian = {
   ["Emojis"] = "Эмодзи",
   ["Add quick reply"] = "Добавить быстрый ответ",
   ["Add"] = "Добавить",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "Мигать на панели задач при новом шепоте",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "Значок игры на панели задач мигает, когда приходит шепот или упоминание, пока вы в другом окне.",
   ["Mute"] = "Без звука",
   ["Unmute"] = "Включить оповещения",
   ["Set nickname…"] = "Задать прозвище…",

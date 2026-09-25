@@ -348,6 +348,9 @@ local French = {
   ["Emojis"] = "Émojis",
   ["Add quick reply"] = "Ajouter une réponse rapide",
   ["Add"] = "Ajouter",
+  -- Taskbar flash, mute, nickname and note
+  ["Flash taskbar on new whisper"] = "Faire clignoter la barre des tâches à chaque chuchotement",
+  ["Flashes the game's taskbar icon when a whisper or a mention arrives while you are tabbed out."] = "Fait clignoter l'icône du jeu dans la barre des tâches quand un chuchotement ou une mention arrive pendant que vous êtes sur une autre fenêtre.",
   ["Mute"] = "Mettre en sourdine",
   ["Unmute"] = "Réactiver les alertes",
   ["Set nickname…"] = "Définir un surnom…",

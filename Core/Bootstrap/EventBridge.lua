@@ -4,7 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
-local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
+local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
 local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
@@ -14,6 +14,7 @@ local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMesseng
 local Registration = ns.BootstrapEventBridgeRegistration or require("WhisperMessenger.Core.Bootstrap.EventBridge.Registration")
 local LivePayload = ns.BootstrapEventBridgeLivePayload or require("WhisperMessenger.Core.Bootstrap.EventBridge.LivePayload")
 local GroupRouter = ns.BootstrapEventBridgeGroupRouter or require("WhisperMessenger.Core.Bootstrap.EventBridge.GroupRouter")
+local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 -- stylua: ignore end
 
 local EventBridge = {}
@@ -95,16 +96,20 @@ local function scheduleTypingExpiry(runtime, refreshWindow, conversationKey)
 end
 
 local function applyIncomingEffects(runtime, result)
-  if runtime.accountState and runtime.accountState.settings and runtime.accountState.settings.playSoundOnWhisper == true then
-    SoundPlayer.Play(runtime.accountState.settings)
+  -- Muted conversations still store the whisper and count it unread; they
+  -- just never make noise or open the window.
+  local settings = runtime.accountState and runtime.accountState.settings
+  local shouldAlert = AlertPolicy.ShouldAlert(result, settings)
+  if shouldAlert then
+    IncomingAlerts.Notify(settings)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey
     local inGroupsTab = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode() == "groups"
     if
-      runtime.accountState
-      and runtime.accountState.settings
-      and runtime.accountState.settings.autoOpenIncoming == true
+      shouldAlert
+      and settings
+      and settings.autoOpenIncoming == true
       and runtime.onAutoOpen
       and type(_G.InCombatLockdown) == "function"
       and not _G.InCombatLockdown()

@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
 
 local WidgetPreview = {}
 
@@ -14,16 +15,20 @@ function WidgetPreview.Create(options)
   local runtimeStore = options.runtimeStore or {}
   local badgeFilter = options.badgeFilter or BadgeFilter
 
-  local function findLatestIncomingPreview(contacts)
+  -- includeQuiet: also count muted chats and message requests (used to
+  -- acknowledge, so unmuting or accepting later never pops a message that
+  -- was already on screen).
+  local function findLatestIncomingPreview(contacts, includeQuiet)
     local storeConversations = runtimeStore.conversations or {}
     local savedConversations = accountState.conversations or {}
     local latest = nil
 
     for _, item in ipairs(contacts or {}) do
+      local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
       -- Group chats never produce a widget preview — per user requirement,
-      -- the popup is reserved for whispers.
-      if not badgeFilter.IsGroupChannel(item.channel) then
-        local conversation = savedConversations[item.conversationKey] or storeConversations[item.conversationKey]
+      -- the popup is reserved for whispers. Muted whispers and message requests
+      -- never pop it either.
+      if not badgeFilter.IsGroupChannel(item.channel) and (includeQuiet or AlertPolicy.ShouldAlert(conversation, accountState.settings)) then
         local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
         local messageText = conversation and conversation.lastIncomingPreview or nil
         if sentAt and type(messageText) == "string" and messageText ~= "" then
@@ -60,7 +65,7 @@ function WidgetPreview.Create(options)
   end
 
   local function acknowledgeLatestWidgetPreview(contacts)
-    local latest = findLatestIncomingPreview(contacts)
+    local latest = findLatestIncomingPreview(contacts, true)
     if latest == nil then
       return
     end
