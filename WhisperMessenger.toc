@@ -62,6 +62,7 @@ Model/QuestLinkExchange.lua
 Model/MessageReactionProtocol.lua
 Model/MessageReactions.lua
 Model/LivePresence.lua
+Model/MessageReplies.lua
 Model/ContactEnricher/Disambiguation.lua
 Model/ContactEnricher/WoWStatus.lua
 Model/ContactEnricher/BNetStatus.lua
@@ -139,6 +140,7 @@ UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
 UI/ChatBubble/ContextMenu/ManualCopy.lua
 UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/HoverCopy.lua
+UI/ChatBubble/ReplyQuote.lua
 UI/ChatBubble/ReactionBadge.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
@@ -175,6 +177,7 @@ UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
+UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
@@ -183,6 +186,7 @@ UI/Composer/EmojiPicker.lua
 UI/Composer/ComposerLayout.lua
 UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
+UI/Composer/ReplyState.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
@@ -241,6 +245,7 @@ UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua
 UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
+UI/MessengerWindow/MessengerWindow/MessageActions.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua

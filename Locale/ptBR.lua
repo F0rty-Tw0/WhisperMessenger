@@ -340,6 +340,8 @@ local Portuguese = {
   ["Draft"] = "Rascunho",
   ["Draft:"] = "Rascunho:",
   ["New messages"] = "Novas mensagens",
+  ["Reply"] = "Responder",
+  ["Replying to %s"] = "Respondendo a %s",
 }
 
 ns.Locale_ptBR = Portuguese

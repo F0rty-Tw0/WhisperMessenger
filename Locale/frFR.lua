@@ -340,6 +340,8 @@ local French = {
   ["Draft"] = "Brouillon",
   ["Draft:"] = "Brouillon :",
   ["New messages"] = "Nouveaux messages",
+  ["Reply"] = "Répondre",
+  ["Replying to %s"] = "Réponse à %s",
 }
 
 ns.Locale_frFR = French

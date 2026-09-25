@@ -17,6 +17,7 @@ local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory or require("Whis
 local SettingsPanelsBootstrap = ns.MessengerWindowSettingsPanelsBootstrap
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
 local SelectionSync = ns.MessengerWindowSelectionSync or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
+local MessageActions = ns.MessengerWindowMessageActions or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.MessageActions")
 local SelectionController = ns.MessengerWindowSelectionController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionController")
 local WindowVisibility = ns.MessengerWindowWindowVisibility or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
@@ -199,11 +200,14 @@ function MessengerWindow.Create(factory, options)
   end
 
   -- Conversation pane
+  local messageActions = MessageActions.Create(options.onMessageAction)
   conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
+    onMessageAction = messageActions.onMessageAction,
     onReact = options.onReact,
     canReact = options.canReact,
     onInviteContact = options.onInviteContact,
     hideEmptyHeader = settingsConfig.nativeChrome == true,
+    nativeChrome = settingsConfig.nativeChrome == true,
   })
   conversation.headerEmpty.setMode(contactsRuntime.getTabMode())
 
@@ -224,6 +228,7 @@ function MessengerWindow.Create(factory, options)
   local composerOptions = {
     nativeChrome = layout.nativeChrome == true,
     onDraftChanged = options.onDraftChanged,
+    onReplyChanged = messageActions.onReplyChanged,
   }
   local composer = Composer.Create(factory, composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...
@@ -231,6 +236,7 @@ function MessengerWindow.Create(factory, options)
     return settingsConfig.doubleEscapeToClose == true
   end, options.onTyping, composerOptions)
   settingsRuntime.setThemeTargets(conversation, composer)
+  messageActions.bind(conversation, composer)
 
   -- Alpha helpers (capture composer.input now that composer exists)
   local composerInput = composer.input

@@ -13,6 +13,7 @@ local BubbleFrame = ns.ChatBubbleBubbleFrame or require("WhisperMessenger.UI.Cha
 local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI.ChatBubble.DateSeparator")
 local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBubble.FramePool")
 local SenderLabel = ns.ChatBubbleSenderLabel or require("WhisperMessenger.UI.ChatBubble.SenderLabel")
+local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
 
 local Layout = {}
 Layout.MESSAGE_EDGE_INSET = Theme.LAYOUT.MESSAGE_EDGE_INSET
@@ -100,6 +101,9 @@ function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst, 
   if message.isCensored == true then
     height = height + 12
   end
+  if type(message.replyTo) == "table" then
+    height = height + ReplyQuote.HEIGHT
+  end
   local reaction = MessageReactions.VisibleReaction(message)
   if kind == "user" and reaction and ReactionAssets.GetTexCoords(reaction.key) then
     height = height + ReactionAssets.GetBadgeOverflow()
@@ -179,6 +183,9 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.onRevealCensored = options and options.onRevealCensored or nil
   bubbleOptions.onReact = options and options.onReact or nil
   bubbleOptions.canReact = options and options.canReact or nil
+  bubbleOptions.onReply = options and options.onReply or nil
+  bubbleOptions.canReply = options and options.canReply or nil
+  bubbleOptions.onQuoteClick = options and options.onQuoteClick or nil
 
   local bubble = BubbleFrame.CreateBubble(pooledFactory, contentFrame, message, bubbleOptions)
   placeBubble(bubble.frame, contentFrame, message, paneWidth, yOffset)

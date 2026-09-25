@@ -19,6 +19,7 @@ local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Compo
 local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Composer.ComposerLayout")
 
 local COMPOSER_MAX_BYTES = 255
+local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local Composer = {}
@@ -27,10 +28,14 @@ local TRANSPARENT_COLOR = UIHelpers.TRANSPARENT
 
 -- options.nativeChrome: Native WoW HUD -> Blizzard input border art.
 -- options.onDraftChanged(conversationKey, text): typed text to keep as draft.
+-- options.onReplyChanged(replyTo | nil): the open conversation's reply target.
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
   local nativeChrome = options.nativeChrome == true
   local onDraftChanged = options.onDraftChanged
+  local replies = ReplyState.Create(function()
+    return selectedContact.conversationKey
+  end, options.onReplyChanged)
   local pane = factory.CreateFrame("Frame", nil, parent)
   pane:SetScript("OnHide", function()
     PickerStyles.HideTooltip()
@@ -190,9 +195,11 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       guid = selectedContact.guid,
       gameAccountName = selectedContact.gameAccountName,
       text = text,
+      replyTo = replies.current(),
     })
 
     if accepted ~= false then
+      replies.clear()
       input:SetText("")
       if onDraftChanged then
         onDraftChanged(selectedContact.conversationKey, "")
@@ -228,6 +235,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     input:SetText(text or "")
     loadingDraft = false
     syncPlaceholder(text)
+    replies.sync()
   end
 
   input:SetScript("OnEnterPressed", function()
@@ -237,6 +245,10 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     submitMessage()
   end)
   input:SetScript("OnEscapePressed", function()
+    if replies.current() ~= nil then
+      replies.clear()
+      return
+    end
     if getDoubleEscapeToClose and getDoubleEscapeToClose() then
       if input.ClearFocus then
         input:ClearFocus()
@@ -263,6 +275,16 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     emojiPicker = emojiPicker,
     placeholder = placeholder,
     loadDraft = loadDraft,
+    setReply = function(conversationKey, replyTo)
+      replies.set(conversationKey, replyTo)
+      if input.SetFocus then
+        input:SetFocus()
+      end
+    end,
+    clearReply = replies.clear,
+    forgetReply = function(conversationKey)
+      replies.set(conversationKey, nil)
+    end,
     setLanguage = function()
       placeholder:SetText(Localization.Text("Enter to send"))
     end,

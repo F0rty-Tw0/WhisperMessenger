@@ -10,6 +10,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 -- stylua: ignore end
 
 local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
@@ -50,6 +51,22 @@ function ContextMenu.CopyText(text)
   return ManualCopy.CopyText(text)
 end
 
+-- Retail's menu API: Reply + Copy text. False when the API is missing.
+local function openModernMenu(normalized, anchorFrame, onReply)
+  local menuUtil = _G.MenuUtil
+  if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
+    return false
+  end
+  menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
+    rootDescription:CreateButton(Localization.Text("Reply"), onReply)
+    rootDescription:CreateButton(Localization.Text("Copy text"), function()
+      ContextMenu.CopyText(normalized)
+    end)
+  end)
+  return true
+end
+
+-- options.onReply(): optional; adds "Reply" to whichever menu opens.
 function ContextMenu.Open(text, anchorFrame, options)
   local normalized = type(ManualCopy) == "table" and type(ManualCopy.NormalizeText) == "function" and ManualCopy.NormalizeText(text) or nil
   if normalized == nil then
@@ -68,10 +85,14 @@ function ContextMenu.Open(text, anchorFrame, options)
     if
       ReactionPicker.Open(factory, anchorFrame, options.message, options.onReact, function()
         return ContextMenu.CopyText(normalized)
-      end, options.canReact)
+      end, options.canReact, options.onReply)
     then
       return true
     end
+  end
+
+  if type(options.onReply) == "function" and openModernMenu(normalized, anchorFrame, options.onReply) then
+    return true
   end
 
   local menuFrame = getMenuFrame()
@@ -92,6 +113,16 @@ function ContextMenu.Open(text, anchorFrame, options)
       end,
     },
   }
+  if type(options.onReply) == "function" then
+    table.insert(menu, 1, {
+      text = styleMenuText(Localization.Text("Reply")),
+      notCheckable = true,
+      padding = 0,
+      minWidth = 1,
+      fontObject = Theme.FONTS.icon_label,
+      func = options.onReply,
+    })
+  end
 
   if type(_G.EasyMenu) == "function" then
     local ok = pcall(_G.EasyMenu, menu, menuFrame, menuAnchor, 0, 0, "MENU")

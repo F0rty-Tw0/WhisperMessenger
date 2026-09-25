@@ -340,6 +340,8 @@ local German = {
   ["Draft"] = "Entwurf",
   ["Draft:"] = "Entwurf:",
   ["New messages"] = "Neue Nachrichten",
+  ["Reply"] = "Antworten",
+  ["Replying to %s"] = "Antwort an %s",
 }
 
 ns.Locale_deDE = German

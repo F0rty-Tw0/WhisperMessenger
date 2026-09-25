@@ -56,6 +56,13 @@ function RuntimeBindings.Apply(options)
   controller.setComposerText = setComposerText
   controller.toggle = toggle
 
+  runtime.onConversationRemoved = function(conversationKey)
+    local window = getWindow()
+    if window and window.composer and window.composer.forgetReply then
+      window.composer.forgetReply(conversationKey)
+    end
+  end
+
   runtime.isConversationOpen = function(conversationKey)
     return controller.isWindowVisible() and runtime.activeConversationKey == conversationKey
   end

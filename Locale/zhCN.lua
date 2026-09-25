@@ -340,6 +340,8 @@ local SimplifiedChinese = {
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
   ["New messages"] = "新消息",
+  ["Reply"] = "回复",
+  ["Replying to %s"] = "回复 %s",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

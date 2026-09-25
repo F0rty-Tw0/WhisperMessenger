@@ -186,6 +186,7 @@ function PendingOutgoing.Record(state, target, text, metadata)
     target = target.target,
     wireId = metadata.wireId,
     reactionControl = metadata.reactionControl,
+    replyTo = metadata.replyTo,
   })
 
   return conversationKey

@@ -62,7 +62,7 @@ return function()
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", nil, nil)
     parent:SetSize(600, 420)
-    local view = ConversationPane.Create(factory, parent, nil, nil, { hideEmptyHeader = true })
+    local view = ConversationPane.Create(factory, parent, nil, nil, { hideEmptyHeader = true, nativeChrome = true })
     local button = FindUI.ofType(view.headerEmpty, "Button")[1]
     assert(button.template == "UIPanelButtonTemplate", "HUD pane: native empty-state button")
   end

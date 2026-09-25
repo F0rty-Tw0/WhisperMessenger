@@ -344,6 +344,8 @@ local Spanish = {
   ["Draft"] = "Borrador",
   ["Draft:"] = "Borrador:",
   ["New messages"] = "Mensajes nuevos",
+  ["Reply"] = "Responder",
+  ["Replying to %s"] = "Respondiendo a %s",
 }
 
 ns.Locale_esMX = Spanish

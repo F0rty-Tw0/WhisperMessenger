@@ -79,6 +79,7 @@ read_globals = {
   "UIDropDownMenu_CreateInfo",
   "UIDropDownMenu_Initialize",
   "UnitPopup_OpenMenu",
+  "MenuUtil",
   "StaticPopupDialogs",
   "StaticPopup_Show",
   "StaticPopup1EditBox",

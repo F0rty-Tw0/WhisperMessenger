@@ -149,6 +149,10 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil
     end
+    -- Session UI state for the key (a pending reply) goes with it.
+    if type(runtime.onConversationRemoved) == "function" then
+      runtime.onConversationRemoved(key)
+    end
   end
   store.onConversationGUIDChanged = function(_key, oldGuid)
     clearGUIDCachesIfUnowned(oldGuid)

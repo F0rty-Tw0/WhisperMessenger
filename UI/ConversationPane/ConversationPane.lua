@@ -12,6 +12,7 @@ local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMess
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 local EdgeFade = ns.ConversationPaneEdgeFade or require("WhisperMessenger.UI.ConversationPane.EdgeFade")
 local ChannelContextMerger = ns.ConversationPaneChannelContextMerger or require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
+local ReplyBanner = ns.ConversationPaneReplyBanner or require("WhisperMessenger.UI.ConversationPane.ReplyBanner")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -114,6 +115,13 @@ function ConversationPane.SetNotice(view, noticeText)
   refreshBottomBanner(view)
 end
 
+-- replyTo: the open conversation's reply target, or nil.
+function ConversationPane.SetReply(view, replyTo, onCancel)
+  view._replyTo = replyTo
+  view.replyBanner.setReply(replyTo, onCancel)
+  refreshBottomBanner(view)
+end
+
 function ConversationPane.RefreshActiveStatus(view, activeStatus)
   view._activeStatusText = activeStatus and activeStatus.text or ""
   refreshBottomBanner(view)
@@ -124,6 +132,7 @@ function ConversationPane.SetLanguage(view)
     return
   end
   HeaderView.SetLanguage(view)
+  view.replyBanner.setLanguage()
   -- Re-running Refresh re-resolves the localized status line (StatusLine.Build
   -- routes availability/class/faction labels through Localization on each call)
   -- so the header reflects the new language without waiting for the next
@@ -160,7 +169,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   local header = HeaderView.Create(factory, pane, selectedContact, {
     HEADER_HEIGHT = Theme.LAYOUT.HEADER_HEIGHT,
-    nativeChrome = options.hideEmptyHeader == true,
+    nativeChrome = options.nativeChrome == true,
   })
   local headerFrame = header.headerFrame
 
@@ -216,6 +225,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerChannelChip = header.headerChannelChip,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
+    replyBanner = ReplyBanner.Create(factory, pane, { nativeChrome = options.nativeChrome == true }),
     transcript = transcript,
     -- Native WoW HUD sits on Blizzard art a flat-colour fade would not match.
     edgeFade = EdgeFade.Attach(factory, pane, transcript),
@@ -239,6 +249,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       if view.activeStatusBanner then
         applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
       end
+      view.replyBanner.refreshTheme()
       if view.edgeFade then
         view.edgeFade.refreshTheme()
       end
@@ -258,6 +269,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       return options.onReact(view._selectedContact, message, reactionKey)
     end
   end
+
+  TranscriptSetup.BindMessageActions(transcript, view, options.onMessageAction)
 
   if type(options.canReact) == "function" then
     transcript.canReact = function(message)

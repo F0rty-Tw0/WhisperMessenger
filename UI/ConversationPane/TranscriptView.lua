@@ -7,6 +7,8 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local Virtualization = ns.ConversationPaneTranscriptVirtualization or require("WhisperMessenger.UI.ConversationPane.TranscriptVirtualization")
+local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
+local TranscriptRows = ns.ConversationPaneTranscriptRows or require("WhisperMessenger.UI.ConversationPane.TranscriptRows")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptView = {}
@@ -146,6 +148,9 @@ local function layoutOptions(transcript)
   options.onRevealCensored = transcript._onRevealCensored
   options.onReact = transcript.onReact
   options.canReact = transcript.canReact
+  options.onReply = transcript.onReply
+  options.canReply = transcript.canReply
+  options.onQuoteClick = transcript.onQuoteClick
   return options
 end
 
@@ -186,6 +191,20 @@ function TranscriptView.RefreshViewport(transcript)
     return true
   end
   return false
+end
+
+-- Jump to a quoted message if it is still in history. Best effort: the
+-- row offset is the virtualized estimate until that row is laid out.
+function TranscriptView.ScrollToReply(transcript, replyTo)
+  local state = transcript._virtualState
+  local index = MessageReplies.Find(transcript._allMessages, replyTo)
+  local row = state and index and state.rows[index]
+  if row == nil then
+    return false
+  end
+  ScrollView.SetVerticalScroll(transcript, row.offset - TranscriptRows.CONTENT_PAD)
+  TranscriptView.RefreshViewport(transcript)
+  return true
 end
 
 function TranscriptView.Reset(transcript)

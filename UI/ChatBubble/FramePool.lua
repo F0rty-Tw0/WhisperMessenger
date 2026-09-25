@@ -151,6 +151,8 @@ local function clearBindingState(frame)
   frame._wmOnRevealCensored = nil
   frame._wmOnReact = nil
   frame._wmCanReact = nil
+  frame._wmOnReply = nil
+  frame._wmCanReply = nil
   frame._wmPersistentFactory = nil
   frame._wmOpenedOnMouseDown = nil
   frame._wmPlayerMenuMessage = nil
@@ -161,6 +163,7 @@ local function clearBindingState(frame)
     menuOptions.message = nil
     menuOptions.onReact = nil
     menuOptions.canReact = nil
+    menuOptions.onReply = nil
     menuOptions.factory = nil
   end
   local copyButton = frame._copyButton

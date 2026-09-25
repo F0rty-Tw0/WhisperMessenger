@@ -13,6 +13,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
@@ -256,7 +257,8 @@ end
 local function handleReactionMetadata(state, payload, isBattleNet)
   local metadata = MessageReactionProtocol.Decode(payload.text)
   local presence = metadata == nil and LivePresence.Decode(payload.text) or nil
-  if metadata == nil and presence == nil then
+  local replyLink = metadata == nil and presence == nil and MessageReplies.DecodeLink(payload.text) or nil
+  if metadata == nil and presence == nil and replyLink == nil then
     return nil
   end
   local senderKey, conversationKey, actorName, identityConversationKey, reactionSenderKey = reactionSenderContext(state, payload, isBattleNet)
@@ -266,6 +268,12 @@ local function handleReactionMetadata(state, payload, isBattleNet)
   local now = state.now and state.now() or 0
   -- Any well-formed WMRX payload proves the sender runs the addon.
   LivePresence.RecordPeer(state, conversationKey)
+  if replyLink ~= nil then
+    if MessageReplies.ApplyLink(state, conversationKey, replyLink, now) then
+      return conversationWithKey(state, conversationKey)
+    end
+    return nil
+  end
   if metadata == nil then
     return handlePresence(state, conversationKey, presence, now)
   end
@@ -274,6 +282,7 @@ local function handleReactionMetadata(state, payload, isBattleNet)
     if paired == nil then
       return nil
     end
+    MessageReplies.ClaimStaged(state, identityConversationKey, paired, now)
     -- The whisper now carries a wire id, so the window can send its receipt.
     local conversation = conversationWithKey(state, conversationKey)
     if conversation == nil then
@@ -429,6 +438,7 @@ local function handleUnlockedEvent(state, eventName, payload)
       end
 
       MessageReactions.AttachIncomingIdentity(state, identitySenderKey, identityConversationKey, incomingMessage, sentAt, correlationText)
+      MessageReplies.ClaimStaged(state, identityConversationKey, incomingMessage, sentAt)
       local controlResult = MessageReactions.ConsumeIncomingControl(
         state,
         reactionSenderKey,
@@ -513,6 +523,7 @@ local function handleUnlockedEvent(state, eventName, payload)
 
       local outgoingMessage = buildMessage(state, informPayload, contact, "out", "user", sentAt)
       outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
+      outgoingMessage.replyTo = pendingEntry and pendingEntry.replyTo or nil
       Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
       Store.MarkRead(state.store, conversationKey)
     elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then

@@ -17,6 +17,8 @@ local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
+local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
+
 
 local BubbleFrame = {}
 local function reactionsAllowed(message, canReact)
@@ -78,6 +80,13 @@ local function openBubbleMenu(frame)
   options.onReact = frame._wmOnReact
   options.canReact = frame._wmCanReact
   options.factory = frame._wmPersistentFactory
+  options.onReply = nil
+  local onReply, canReply = frame._wmOnReply, frame._wmCanReply
+  if type(onReply) == "function" and type(canReply) == "function" and canReply(message) then
+    options.onReply = function()
+      onReply(message)
+    end
+  end
   ContextMenu.Open(message.text or "", frame, options)
 end
 
@@ -138,6 +147,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   frame._wmOnRevealCensored = options.onRevealCensored
   frame._wmOnReact = options.onReact
   frame._wmCanReact = options.canReact
+  frame._wmOnReply = options.onReply
+  frame._wmCanReply = options.canReply
   frame._wmPersistentFactory = options.persistentFactory or factory
   frame._wmOpenedOnMouseDown = false
 
@@ -201,8 +212,10 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     textHeight = BubbleStructure.measureTextHeight(textFS, displayText, textColumnWidth)
   end
 
-  local bubbleInnerWidth = textColumnWidth
-  local bubbleInnerHeight = textHeight
+  local quoteWidth = ReplyQuote.Apply(options.persistentFactory or factory, frame, message, textAvailWidth, pH, pV, options.onQuoteClick)
+  local quoteHeight = quoteWidth > 0 and ReplyQuote.HEIGHT or 0
+  local bubbleInnerWidth = math.max(textColumnWidth, quoteWidth)
+  local bubbleInnerHeight = textHeight + quoteHeight
   local bubbleWidth = bubbleInnerWidth + pH * 2
   local bubbleHeight = bubbleInnerHeight + pV * 2
 
@@ -210,7 +223,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   textFS:SetWidth(textColumnWidth)
   textFS:SetJustifyH("LEFT")
   textFS:SetText(displayText)
-  textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV)
+  textFS:SetPoint("TOPLEFT", frame, "TOPLEFT", pH, -pV - quoteHeight)
 
   -- Censored message indicator
   local CENSORED_LABEL_HEIGHT = 12

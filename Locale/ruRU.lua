@@ -340,6 +340,8 @@ local Russian = {
   ["Draft"] = "Черновик",
   ["Draft:"] = "Черновик:",
   ["New messages"] = "Новые сообщения",
+  ["Reply"] = "Ответить",
+  ["Replying to %s"] = "Ответ для %s",
 }
 
 ns.Locale_ruRU = Russian

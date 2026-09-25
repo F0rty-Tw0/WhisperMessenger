@@ -340,6 +340,8 @@ local TraditionalChinese = {
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
   ["New messages"] = "新訊息",
+  ["Reply"] = "回覆",
+  ["Replying to %s"] = "回覆 %s",
 }
 
 ns.Locale_zhTW = TraditionalChinese

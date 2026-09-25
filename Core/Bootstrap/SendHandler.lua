@@ -13,6 +13,8 @@ local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm"
 local QuestLinkExchange = ns.QuestLinkExchange or require("WhisperMessenger.Model.QuestLinkExchange")
 local MessageReactionProtocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
+local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 local REACTION_ADDON_PREFIX = "WMRX"
@@ -212,6 +214,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local pendingConversationKey = Router.RecordPendingSend(runtime, payload, payload.text, {
     wireId = wireId,
     reactionControl = reactionControl,
+    replyTo = payload.replyTo,
   })
   local callOk
   if payload.channel == "BN" then
@@ -266,6 +269,10 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
   end
 
   dispatchReactionMetadata(runtime, payload, reactionAddonPayload)
+  -- Only known addon users get the reply link; the whisper stays plain text.
+  if LivePresence.HasPeer(runtime, payload.conversationKey) then
+    dispatchReactionMetadata(runtime, payload, MessageReplies.EncodeLink(wireId, payload.replyTo))
+  end
 
   refreshWindow()
   return true

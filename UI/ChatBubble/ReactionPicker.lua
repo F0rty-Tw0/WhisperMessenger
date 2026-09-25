@@ -28,9 +28,21 @@ local function applyPickerLayout(frame)
     button:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD_LEFT + column * layout.buttonSize, -PAD_TOP - row * layout.buttonSize)
     button._icon:SetSize(layout.iconSize, layout.iconSize)
   end
+  -- With a reply handler the bottom row splits into [Reply][Copy text].
+  local copyX, copyWidth = PAD_LEFT, layout.copyWidth
+  frame._replyButton:ClearAllPoints()
+  if frame._onReply then
+    local half = math.floor(layout.copyWidth / 2)
+    frame._replyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD_LEFT, layout.copyOffsetY)
+    frame._replyButton:SetSize(half, PickerStyles.ROW_HEIGHT)
+    frame._replyButton:Show()
+    copyX, copyWidth = PAD_LEFT + half, layout.copyWidth - half
+  else
+    frame._replyButton:Hide()
+  end
   frame._copyButton:ClearAllPoints()
-  frame._copyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, layout.copyOffsetY)
-  frame._copyButton:SetSize(layout.copyWidth, 24)
+  frame._copyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", copyX, layout.copyOffsetY)
+  frame._copyButton:SetSize(copyWidth, PickerStyles.ROW_HEIGHT)
 end
 
 local function createPicker(factory)
@@ -96,6 +108,16 @@ local function createPicker(factory)
   end)
   frame._copyButton = copyButton
   frame._copyLabel = copyLabel
+  local replyButton, replyLabel = PickerPopup.CreateTextButton(factory, frame, "Reply", function()
+    local message = frame._message
+    local onReply = frame._onReply
+    ReactionPicker.Close()
+    if type(onReply) == "function" then
+      onReply(message)
+    end
+  end)
+  frame._replyButton = replyButton
+  frame._replyLabel = replyLabel
   applyPickerLayout(frame)
 
   frame:SetScript("OnEvent", function(self, event)
@@ -109,6 +131,7 @@ local function createPicker(factory)
     self._onReact = nil
     self._copyText = nil
     self._canReact = nil
+    self._onReply = nil
   end)
 
   frame._wmReactionPicker = true
@@ -131,7 +154,8 @@ local function ensurePicker(factory)
   return pickerFrame
 end
 
-function ReactionPicker.Open(factory, anchorFrame, message, onReact, copyText, canReact)
+-- onReply(message), optional: adds a Reply button beside Copy text.
+function ReactionPicker.Open(factory, anchorFrame, message, onReact, copyText, canReact, onReply)
   if type(onReact) ~= "function" or type(message) ~= "table" then
     return false
   end
@@ -141,6 +165,7 @@ function ReactionPicker.Open(factory, anchorFrame, message, onReact, copyText, c
   end
 
   PickerStyles.ApplyPanelTheme(frame, frame._border)
+  frame._onReply = onReply
   applyPickerLayout(frame)
   frame._anchor = anchorFrame
   frame._message = message
@@ -160,6 +185,7 @@ function ReactionPicker.Open(factory, anchorFrame, message, onReact, copyText, c
   end
 
   frame._copyLabel:SetText(Localization.Text("Copy text"))
+  frame._replyLabel:SetText(Localization.Text("Reply"))
   frame:ClearAllPoints()
   frame:SetPoint("BOTTOMLEFT", anchorFrame, "TOPLEFT", 0, 4)
   PickerPopup.ArmDismiss(frame)
@@ -177,6 +203,7 @@ function ReactionPicker.Close()
   pickerFrame._onReact = nil
   pickerFrame._copyText = nil
   pickerFrame._canReact = nil
+  pickerFrame._onReply = nil
 end
 
 function ReactionPicker.GetFrame()

@@ -340,6 +340,8 @@ local Korean = {
   ["Draft"] = "임시 저장",
   ["Draft:"] = "임시 저장:",
   ["New messages"] = "새 메시지",
+  ["Reply"] = "답장",
+  ["Replying to %s"] = "%s님에게 답장",
 }
 
 ns.Locale_koKR = Korean

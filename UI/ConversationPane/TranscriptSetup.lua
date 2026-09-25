@@ -8,9 +8,30 @@ local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMess
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
+local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
+
+-- Bubble buttons and Reply report (open contact, message, action); a quote
+-- click jumps to the original.
+function TranscriptSetup.BindMessageActions(transcript, view, onMessageAction)
+  transcript.onQuoteClick = function(replyTo)
+    return TranscriptView.ScrollToReply(transcript, replyTo)
+  end
+  if type(onMessageAction) ~= "function" then
+    return
+  end
+  transcript.onMessageAction = function(message, action)
+    return onMessageAction(view._selectedContact, message, action)
+  end
+  transcript.canReply = function(message)
+    return MessageReplies.CanReply(view._selectedContact and view._selectedContact.channel, message)
+  end
+  transcript.onReply = function(message)
+    return onMessageAction(view._selectedContact, message, "reply")
+  end
+end
 
 function TranscriptSetup.ConfigureTranscript(factory, transcript, parentWidth)
   transcript.text = factory.CreateFrame("EditBox", nil, transcript.content)

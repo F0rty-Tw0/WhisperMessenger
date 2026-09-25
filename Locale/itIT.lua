@@ -340,6 +340,8 @@ local Italian = {
   ["Draft"] = "Bozza",
   ["Draft:"] = "Bozza:",
   ["New messages"] = "Nuovi messaggi",
+  ["Reply"] = "Rispondi",
+  ["Replying to %s"] = "Risposta a %s",
 }
 
 ns.Locale_itIT = Italian
