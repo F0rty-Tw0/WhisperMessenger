@@ -14,7 +14,6 @@ local setTextColor = UIHelpers.setTextColor
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local UNREAD_BADGE_SIZE = 16
-local UNREAD_BADGE_RIGHT_OFFSET = 4 -- relative to -CONTACT_PADDING
 local UNREAD_BADGE_BOTTOM_OFFSET = 12
 
 local RowElements = {}
@@ -258,7 +257,8 @@ end
 
 function RowElements.createUnreadBadge(factory, row)
   local badge = Badge.Create(factory, row, { size = UNREAD_BADGE_SIZE })
-  badge.frame:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -Theme.LAYOUT.CONTACT_PADDING + UNREAD_BADGE_RIGHT_OFFSET, UNREAD_BADGE_BOTTOM_OFFSET)
+  -- Shares the timestamp's right edge so the two stack as one column.
+  badge.frame:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -TIME_LABEL_RIGHT_INSET, UNREAD_BADGE_BOTTOM_OFFSET)
   row.unreadBadge = badge
   return badge
 end
