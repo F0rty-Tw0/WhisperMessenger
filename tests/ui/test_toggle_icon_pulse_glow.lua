@@ -40,8 +40,6 @@ local function makeAnimationGroup()
     function anim:SetOrder(value)
       self.order = value
     end
-    function anim:SetScaleFrom(_, _) end
-    function anim:SetScaleTo(_, _) end
     table.insert(self.animations, anim)
     return anim
   end
@@ -92,26 +90,16 @@ return function()
   assert(pulse.animation.playing == false, "animation should stop after stop()")
   assert(glow.shown == false, "OnStop should Hide glow")
 
-  -- default (outer) glow is unchanged for other hosts (What's New button)
-  assert(pulse.glowTexture.atlas == "GarrLanding-CircleGlow", "default glow should keep the outer halo atlas")
-  pulse.applyIconSize(80)
-  assert(glow.width == 80 * 1.8, "default glow width should follow icon size * GLOW_RATIO")
-  assert(glow.height == 80 * 1.8, "default glow height should follow icon size * GLOW_RATIO")
-
-  -- inner glow (toggle widget)
+  -- every host (widget, minimap, What's New) gets the same inner glow
   frame:SetSize(40, 40)
   pulse = PulseGlow.Create(factory, frame, {
     accent = { 1, 0.5, 0, 1 },
-    inner = true,
   })
   glow = pulse.glowFrame
 
-  -- test_glow_is_inner_and_never_exceeds_icon: the glow sits inside the
-  -- ring, so its frame matches the icon exactly (no outer halo).
-  assert(glow.width == 40 and glow.height == 40, "inner glow should match icon size, got " .. tostring(glow.width))
-  pulse.applyIconSize(80)
-  assert(glow.width == 80, "inner glow width should follow icon size 1:1")
-  assert(glow.height == 80, "inner glow height should follow icon size 1:1")
+  -- test_glow_is_inner_and_never_exceeds_icon: the glow is pinned to the
+  -- host's edges, so it tracks every resize and never spills past it.
+  assert(glow.allPoints == frame, "glow should be pinned to the host frame")
 
   -- test_glow_uses_inner_glow_texture_with_additive_blend
   local tex = pulse.glowTexture
@@ -119,7 +107,7 @@ return function()
     tex.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow.png",
     "expected inner-glow texture, got " .. tostring(tex.texturePath)
   )
-  assert(tex.atlas == nil, "outer CircleGlow atlas must no longer be used")
+  assert(tex.atlas == nil, "outer halo atlas must not be used")
   assert(tex.blendMode == "ADD", "inner glow should use additive blend")
 
   -- test_pulse_has_no_scale_animation_so_glow_stays_inside_ring

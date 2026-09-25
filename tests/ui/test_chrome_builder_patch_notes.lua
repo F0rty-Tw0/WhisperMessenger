@@ -29,8 +29,7 @@ local function makeAnimationGroup()
     function anim:SetToAlpha(_) end
     function anim:SetDuration(_) end
     function anim:SetOrder(_) end
-    function anim:SetScaleFrom(_, _) end
-    function anim:SetScaleTo(_, _) end
+    function anim:SetEndDelay(_) end
     return anim
   end
   return ag
@@ -124,6 +123,14 @@ return function()
     assert(type(chrome.setPatchNotesGlow) == "function", case.name .. ": expected setPatchNotesGlow")
     local glowFrame = findGlowFrame(button)
     assert(glowFrame ~= nil, case.name .. ": expected a glow frame parented to the button")
+
+    -- test_patch_notes_glow_matches_widget_and_minimap: same inner glow, no outer halo
+    local glowTexture = glowFrame.children and glowFrame.children[1]
+    assert(
+      glowTexture and glowTexture.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow.png",
+      case.name .. ": expected the inner-glow texture used by the widget and minimap"
+    )
+    assert(glowFrame.allPoints == button, case.name .. ": expected the glow pinned to the button")
 
     chrome.setPatchNotesGlow(true)
     assert(glowFrame:IsShown() == true, case.name .. ": expected glow shown after setPatchNotesGlow(true)")

@@ -92,7 +92,6 @@ function ToggleIcon.Create(factory, options)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
     accent = Theme.COLORS.accent,
-    inner = true, -- glow stays inside the ring, no halo around the widget
   })
   local startPulse = pulseGlow.start
   local stopPulse = pulseGlow.stop
@@ -311,7 +310,6 @@ function ToggleIcon.Create(factory, options)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
     chatIcon:SetSize(math.floor(newSize * CHAT_ICON_RATIO), math.floor(newSize * CHAT_ICON_RATIO))
-    pulseGlow.applyIconSize(newSize)
     if border.SetPoint and border.ClearAllPoints then
       border:ClearAllPoints()
       border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)

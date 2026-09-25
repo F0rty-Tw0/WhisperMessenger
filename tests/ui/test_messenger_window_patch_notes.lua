@@ -36,8 +36,7 @@ local function makeAnimationGroup()
     function anim:SetToAlpha(_) end
     function anim:SetDuration(_) end
     function anim:SetOrder(_) end
-    function anim:SetScaleFrom(_, _) end
-    function anim:SetScaleTo(_, _) end
+    function anim:SetEndDelay(_) end
     return anim
   end
   return ag

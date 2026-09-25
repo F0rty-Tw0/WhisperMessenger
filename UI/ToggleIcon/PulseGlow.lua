@@ -7,15 +7,10 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 
--- Default (outer) glow: Blizzard halo at 1.8x the host, breathing in scale.
-local GLOW_RATIO = 1.8
-local OUTER_GLOW_ATLAS = "GarrLanding-CircleGlow"
-local PULSE_MIN_SCALE = 0.75
-local PULSE_MAX_SCALE = 1.1
-local PULSE_SCALE_SECONDS = 0.75
--- options.inner: white radial texture, transparent centre fading up to the
--- ring's inner edge and back to zero at the rim. Sized 1:1 with the host and
--- never scaled, so the glow stays inside the ring (no outer halo).
+-- White radial texture, transparent centre fading up to the ring's inner
+-- edge and back to zero at the rim. Pinned to the host's edges and never
+-- scaled, so the glow stays inside the host (no outer halo). Shared by the widget,
+-- minimap icon and What's New button.
 local INNER_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow.png"
 local PULSE_FADE_IN = 0.5
 local PULSE_PEAK_HOLD = 0.25 -- keeps the original 1.75s cycle (0.75s + 1.0s)
@@ -27,19 +22,9 @@ function PulseGlow.Create(factory, frame, options)
   options = options or {}
   local theme = options.theme or Theme
   local accent = options.accent or theme.COLORS.accent
-  local inner = options.inner == true
-  local ratio = inner and 1 or GLOW_RATIO
-  local iconSize
-  if type(frame.GetWidth) == "function" then
-    iconSize = frame:GetWidth()
-  end
-  if type(iconSize) ~= "number" or iconSize <= 0 then
-    iconSize = theme.LAYOUT and theme.LAYOUT.ICON_SIZE or 40
-  end
-
   local glowFrame = factory.CreateFrame("Frame", nil, frame)
-  glowFrame:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  glowFrame:SetSize(iconSize * ratio, iconSize * ratio)
+  -- Follows the host's size, including hosts sized after Create (title-bar buttons) and widget resizes.
+  glowFrame:SetAllPoints(frame)
   glowFrame:SetAlpha(0)
   if type(frame.GetFrameLevel) == "function" then
     glowFrame:SetFrameLevel(frame:GetFrameLevel() + 5)
@@ -47,11 +32,7 @@ function PulseGlow.Create(factory, frame, options)
 
   local glowTexture = glowFrame:CreateTexture(nil, "ARTWORK")
   glowTexture:SetAllPoints(glowFrame)
-  if inner then
-    glowTexture:SetTexture(INNER_GLOW_TEXTURE)
-  else
-    glowTexture:SetAtlas(OUTER_GLOW_ATLAS)
-  end
+  glowTexture:SetTexture(INNER_GLOW_TEXTURE)
   if glowTexture.SetBlendMode then
     glowTexture:SetBlendMode("ADD")
   end
@@ -63,11 +44,13 @@ function PulseGlow.Create(factory, frame, options)
     local ag = glowFrame:CreateAnimationGroup()
     ag:SetLooping("REPEAT")
 
-    -- Fade in 0→0.8 over 0.5s, then fade out 0.8→0 over 1s
+    -- Fade in 0→0.8 over 0.5s, hold, then fade out 0.8→0 over 1s. Alpha only:
+    -- a scale step would push the glow past the host's edge.
     local fadeIn = ag:CreateAnimation("Alpha")
     fadeIn:SetFromAlpha(0)
     fadeIn:SetToAlpha(0.8)
     fadeIn:SetDuration(PULSE_FADE_IN)
+    fadeIn:SetEndDelay(PULSE_PEAK_HOLD)
     fadeIn:SetOrder(1)
 
     local fadeOut = ag:CreateAnimation("Alpha")
@@ -75,24 +58,6 @@ function PulseGlow.Create(factory, frame, options)
     fadeOut:SetToAlpha(0)
     fadeOut:SetDuration(PULSE_FADE_OUT)
     fadeOut:SetOrder(2)
-
-    if inner then
-      -- No scale step (it would push past the ring); hold the peak instead.
-      fadeIn:SetEndDelay(PULSE_PEAK_HOLD)
-    else
-      -- Breathe scale PULSE_MIN_SCALE→PULSE_MAX_SCALE over the full cycle
-      local scaleUp = ag:CreateAnimation("Scale")
-      scaleUp:SetScaleFrom(PULSE_MIN_SCALE, PULSE_MIN_SCALE)
-      scaleUp:SetScaleTo(PULSE_MAX_SCALE, PULSE_MAX_SCALE)
-      scaleUp:SetDuration(PULSE_SCALE_SECONDS)
-      scaleUp:SetOrder(1)
-
-      local scaleDown = ag:CreateAnimation("Scale")
-      scaleDown:SetScaleFrom(PULSE_MAX_SCALE, PULSE_MAX_SCALE)
-      scaleDown:SetScaleTo(PULSE_MIN_SCALE, PULSE_MIN_SCALE)
-      scaleDown:SetDuration(PULSE_SCALE_SECONDS)
-      scaleDown:SetOrder(2)
-    end
 
     if ag.SetScript then
       ag:SetScript("OnPlay", function()
@@ -123,11 +88,6 @@ function PulseGlow.Create(factory, frame, options)
     end
   end
 
-  local function applyIconSize(newSize)
-    newSize = tonumber(newSize) or iconSize
-    glowFrame:SetSize(newSize * ratio, newSize * ratio)
-  end
-
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or theme
     if glowTexture and glowTexture.SetVertexColor then
@@ -141,7 +101,6 @@ function PulseGlow.Create(factory, frame, options)
     animation = pulseAnim,
     start = startPulse,
     stop = stopPulse,
-    applyIconSize = applyIconSize,
     applyTheme = applyTheme,
   }
 end

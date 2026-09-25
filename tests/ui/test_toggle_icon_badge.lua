@@ -40,7 +40,7 @@ return function()
     end
   end
   assert(innerGlow ~= nil, "widget pulse glow should use the inner-glow texture")
-  assert(innerGlow.width == icon.frame.width, "inner glow should be exactly the widget size")
+  assert(innerGlow.allPoints == icon.frame, "inner glow should be pinned to the widget")
 
   -- test_badge_draws_above_pulse_glow: the glow must never wash over the badge
   local glowLevel = icon.frame:GetFrameLevel() + 5

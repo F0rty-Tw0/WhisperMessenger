@@ -48,8 +48,7 @@ return function()
   assert(glow.glowTexture.atlas == nil, "minimap glow drops the outer halo atlas")
 
   -- test_minimap_glow_matches_icon_size
-  assert(glow.glowFrame.width == icon.frame.width, "minimap glow is sized 1:1 with the icon, got " .. tostring(glow.glowFrame.width))
-  assert(glow.glowFrame.height == icon.frame.height, "minimap glow height matches the icon")
+  assert(glow.glowFrame.allPoints == icon.frame, "minimap glow should be pinned to the icon")
 
   -- test_minimap_glow_has_no_scale_animation
   for _, anim in ipairs(glow.animation.animations) do

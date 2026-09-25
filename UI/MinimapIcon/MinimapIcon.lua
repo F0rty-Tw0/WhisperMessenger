@@ -137,7 +137,6 @@ function MinimapIcon.Create(factory, options)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
     accent = Theme.COLORS.accent,
-    inner = true, -- glow stays inside the ring, no halo around the button
   })
 
   -- Unread badge, sized down from widget size to minimap size
