@@ -317,6 +317,7 @@ return function()
     "getDraft",
     "onDraftChanged",
     "onUpdatePrefs",
+    "onMarkAllRead",
   }) do
     assert(type(windowOptions[name]) == "function", "window options should include " .. name)
   end

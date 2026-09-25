@@ -217,6 +217,7 @@ local TraditionalChinese = {
   ["Unpin"] = "取消釘選",
   ["Remove"] = "移除",
   ["Mark last messages as unread"] = "將最近訊息標記為未讀",
+  ["Mark all as read"] = "全部標記為已讀",
   ["Copy text"] = "複製文字",
   ["Search chats"] = "搜尋對話",
   ["No conversation selected"] = "未選擇對話",

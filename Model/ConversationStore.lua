@@ -226,6 +226,13 @@ function Store.MarkRead(state, key)
   conversation.hasUnreadMention = nil
 end
 
+-- Whispers, groups and requests all live in state.conversations.
+function Store.MarkAllRead(state)
+  for key in pairs(state.conversations) do
+    Store.MarkRead(state, key)
+  end
+end
+
 function Store.CountUnansweredIncoming(conversation)
   if type(conversation) ~= "table" then
     return 0

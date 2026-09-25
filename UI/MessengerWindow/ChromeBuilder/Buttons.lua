@@ -134,50 +134,59 @@ function Buttons.CreateOptions(factory, frame, theme)
   }
 end
 
-function Buttons.CreateBack(factory, frame, theme)
+-- Title-bar icon button with the shared hover paint and a one-line tooltip.
+-- textureKey names a theme.TEXTURES entry; the caller sets OnClick. Returns
+-- { button, bg, icon, applyTheme }.
+function Buttons.CreatePlainIcon(factory, frame, theme, textureKey, tooltipKey)
   theme = theme or Theme
 
-  local backButton = factory.CreateFrame("Button", nil, frame)
-  local backBg = backButton:CreateTexture(nil, "BACKGROUND")
-  backBg:SetAllPoints(backButton)
-  IconButtonStyle.Attach(backButton, backBg)
-  local backIcon = backButton:CreateTexture(nil, "ARTWORK")
-  IconButtonStyle.SetGlyph(backButton, backIcon, theme.TEXTURES.title_back_icon)
-  backIcon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
-  backIcon:SetPoint("CENTER", backButton, "CENTER", 0, 0)
-  backIcon:SetDesaturated(true)
+  local button = factory.CreateFrame("Button", nil, frame)
+  local bg = button:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(button)
+  IconButtonStyle.Attach(button, bg)
+  local icon = button:CreateTexture(nil, "ARTWORK")
+  IconButtonStyle.SetGlyph(button, icon, theme.TEXTURES[textureKey])
+  icon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
+  icon:SetPoint("CENTER", button, "CENTER", 0, 0)
 
   local function applyVisuals(hovered)
-    applyVertexColor(backIcon, IconButtonStyle.Paint(backButton, hovered, theme.COLORS))
+    applyVertexColor(icon, IconButtonStyle.Paint(button, hovered, theme.COLORS))
   end
 
   local function isHovered()
-    return backButton.IsMouseOver and backButton:IsMouseOver()
+    return button.IsMouseOver and button:IsMouseOver()
   end
 
-  if backButton.SetScript then
-    backButton:SetScript("OnEnter", function()
+  if button.SetScript then
+    button:SetScript("OnEnter", function()
       applyVisuals(true)
-      showTooltip(backButton, "Back")
+      showTooltip(button, tooltipKey)
     end)
-    backButton:SetScript("OnLeave", function()
+    button:SetScript("OnLeave", function()
       applyVisuals(false)
       hideTooltip()
     end)
   end
-  backButton:EnableMouse(true)
-  backButton:Hide()
+  button:EnableMouse(true)
   applyVisuals(false)
 
   return {
-    button = backButton,
-    bg = backBg,
-    icon = backIcon,
+    button = button,
+    bg = bg,
+    icon = icon,
     applyTheme = function(nextTheme)
       theme = nextTheme or Theme
       applyVisuals(isHovered())
     end,
   }
+end
+
+-- Starts hidden; ChromeBuilder shows it while the options pane is open.
+function Buttons.CreateBack(factory, frame, theme)
+  local back = Buttons.CreatePlainIcon(factory, frame, theme, "title_back_icon", "Back")
+  back.icon:SetDesaturated(true)
+  back.button:Hide()
+  return back
 end
 
 ns.MessengerWindowChromeBuilderButtons = Buttons

@@ -10,6 +10,8 @@ local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMes
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
+local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
+  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.MarkAllReadButton")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsRuntime = ns.MessengerWindowContactsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
@@ -82,6 +84,7 @@ function MessengerWindow.Create(factory, options)
     title = options.title,
     useNativeChrome = settingsConfig.nativeChrome == true,
     windowScale = initialScale,
+    onMarkAllRead = options.onMarkAllRead,
   })
   local frame = chrome.frame
 
@@ -180,6 +183,9 @@ function MessengerWindow.Create(factory, options)
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
     onReorder = options.onReorder,
+    onAllContactsRefreshed = function(allContacts)
+      chrome.setMarkAllReadShown(MarkAllReadButton.HasUnread(allContacts))
+    end,
     contactsSearchInput = contactsSearchInput,
     contactsSearchClearButton = contactsSearchClearButton,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
@@ -393,6 +399,7 @@ function MessengerWindow.Create(factory, options)
     frame = chrome.frame,
     title = chrome.title,
     newConversationButton = chrome.newConversationButton,
+    markAllReadButton = chrome.markAllReadButton,
     patchNotesButton = chrome.patchNotesButton,
     contactsPane = layout.contactsPane,
     contactsDivider = layout.contactsDivider,

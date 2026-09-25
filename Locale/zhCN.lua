@@ -217,6 +217,7 @@ local SimplifiedChinese = {
   ["Unpin"] = "取消置顶",
   ["Remove"] = "移除",
   ["Mark last messages as unread"] = "将最近消息标记为未读",
+  ["Mark all as read"] = "全部标记为已读",
   ["Copy text"] = "复制文本",
   ["Search chats"] = "搜索对话",
   ["No conversation selected"] = "未选择对话",

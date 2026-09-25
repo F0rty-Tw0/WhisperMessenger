@@ -198,6 +198,11 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
+    onMarkAllRead = function()
+      Store.MarkAllRead(runtime.store)
+      refreshWindow()
+    end,
+
     -- Mute / nickname / note / notify-when-online from the contact row menu.
     onUpdatePrefs = function(item, changes)
       local key = item and item.conversationKey

@@ -13,6 +13,8 @@ local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessen
 local ResizeGrip = ns.MessengerWindowChromeBuilderResizeGrip or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ResizeGrip")
 local PatchNotesButton = ns.MessengerWindowChromeBuilderPatchNotesButton
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.PatchNotesButton")
+local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
+  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.MarkAllReadButton")
 local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
 local ChromeBuilder = {}
 
@@ -39,9 +41,10 @@ end
 --     background, our own title bar with header bg, a window edge hairline,
 --     and a custom close button.
 --
--- Returns: { frame, background, title, newConversationButton, patchNotesButton,
---   closeButton, optionsButton, backButton, resizeGrip, applyTheme, refreshScale,
---   setOptionsActive, setPatchNotesGlow } in both cases. Non-chrome
+-- Returns: { frame, background, title, newConversationButton, markAllReadButton,
+--   patchNotesButton, closeButton, optionsButton, backButton, resizeGrip,
+--   applyTheme, refreshScale, setOptionsActive, setPatchNotesGlow,
+--   setMarkAllReadShown } in both cases. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
@@ -109,6 +112,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local applyChromePaint = chrome.applyChromePaint
 
   local newConv = Buttons.CreateNewConversation(factory, frame, Theme)
+  local markAllRead = MarkAllReadButton.Create(factory, frame, Theme, options.onMarkAllRead)
   local patchNotes = PatchNotesButton.Create(factory, frame, Theme)
   local options_ = Buttons.CreateOptions(factory, frame, Theme)
   local back = Buttons.CreateBack(factory, frame, Theme)
@@ -119,6 +123,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     title = title,
     closeButton = closeButton,
     newConversationButton = newConv.button,
+    markAllReadButton = markAllRead.button,
     patchNotesButton = patchNotes.button,
     optionsButton = options_.button,
     backButton = back.button,
@@ -132,6 +137,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     options_.applyTheme(activeTheme)
     back.applyTheme(activeTheme)
     newConv.applyTheme(activeTheme)
+    markAllRead.applyTheme(activeTheme)
     patchNotes.applyTheme(activeTheme)
     resize.applyTheme(activeTheme)
   end
@@ -159,6 +165,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     background = chrome.background,
     title = title,
     newConversationButton = newConv.button,
+    markAllReadButton = markAllRead.button,
     patchNotesButton = patchNotes.button,
     closeButton = closeButton,
     optionsButton = options_.button,
@@ -168,6 +175,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     refreshScale = refreshScale,
     setOptionsActive = setOptionsActive,
     setPatchNotesGlow = patchNotes.setGlowing,
+    setMarkAllReadShown = markAllRead.setShown,
     titleBar = chrome.titleBar,
   }
 end

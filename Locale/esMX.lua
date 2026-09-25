@@ -221,6 +221,7 @@ local Spanish = {
   ["Unpin"] = "Desanclar",
   ["Remove"] = "Eliminar",
   ["Mark last messages as unread"] = "Marcar los últimos mensajes como no leídos",
+  ["Mark all as read"] = "Marcar todo como leído",
   ["Copy text"] = "Copiar texto",
   ["Search chats"] = "Buscar chats",
   ["No conversation selected"] = "Sin conversación seleccionada",

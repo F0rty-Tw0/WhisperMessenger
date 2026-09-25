@@ -217,6 +217,7 @@ local Russian = {
   ["Unpin"] = "Открепить",
   ["Remove"] = "Удалить",
   ["Mark last messages as unread"] = "Пометить последние сообщения как непрочитанные",
+  ["Mark all as read"] = "Отметить все как прочитанные",
   ["Copy text"] = "Копировать текст",
   ["Search chats"] = "Поиск чатов",
   ["No conversation selected"] = "Переписка не выбрана",

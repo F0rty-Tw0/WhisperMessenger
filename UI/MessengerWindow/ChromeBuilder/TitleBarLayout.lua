@@ -30,6 +30,7 @@ local function applyModern(parts, L)
   place(parts.closeButton, "RIGHT", parts.titleBar, "RIGHT", -L.TITLE_BAR_INSET_X, 0)
   place(parts.newConversationButton, "LEFT", parts.title, "RIGHT", gap, 0)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", gap, 0)
+  place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", gap, 0)
   place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -gap, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -gap, 0)
 end
@@ -42,6 +43,7 @@ local function applyHud(parts, L)
   -- The template owns the close button and title.
   place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", 6, -3)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
+  place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
   if parts.closeButton then
     place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -HUD_GAP, 0)
   else
@@ -51,13 +53,14 @@ local function applyHud(parts, L)
 end
 
 -- parts: frame, titleBar (custom chrome only), title, closeButton,
--- newConversationButton, patchNotesButton, optionsButton, backButton,
+-- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
 -- blizzardChrome (bool).
 function TitleBarLayout.Apply(parts, theme)
   parts.buttons = parts.buttons
     or {
       parts.newConversationButton,
       parts.patchNotesButton,
+      parts.markAllReadButton,
       parts.optionsButton,
       parts.backButton,
       not parts.blizzardChrome and parts.closeButton or nil,

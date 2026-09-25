@@ -172,6 +172,9 @@ function ContactsRuntime.Create(factory, options)
         local source = allContacts or filtered
         tabToggle.setUnreadCounts(BadgeFilter.SumWhisperUnread(source), BadgeFilter.SumGroupUnread(source), BadgeFilter.SumRequestUnread(source))
       end
+      if options.onAllContactsRefreshed then
+        options.onAllContactsRefreshed(allContacts or filtered)
+      end
       if emptyStateFrame == nil then
         return
       end

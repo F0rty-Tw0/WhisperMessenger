@@ -5,12 +5,17 @@ local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder
 local function build()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
-  return ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, { useNativeChrome = false })
+  local chrome = ChromeBuilder.Build(factory, parent, { width = 920, height = 580 }, { useNativeChrome = false })
+  -- Mark-all-read stays hidden until unread arrives; show it so the shared
+  -- hover checks below apply to it like every other button.
+  chrome.setMarkAllReadShown(true)
+  return chrome
 end
 
 local function titleButtons(chrome)
   return {
     newWhisper = chrome.newConversationButton,
+    markRead = chrome.markAllReadButton,
     whatsNew = chrome.patchNotesButton,
     options = chrome.optionsButton,
     back = chrome.backButton,
@@ -34,6 +39,7 @@ return function()
   local chrome = build()
   local expected = {
     newWhisper = T.title_new_whisper_icon,
+    markRead = T.title_mark_read_icon,
     whatsNew = T.title_whats_new_icon,
     options = T.title_settings_icon,
     back = T.title_back_icon,
@@ -61,6 +67,7 @@ return function()
   -- Title ink lines up with the close glyph's ink on the other side.
   local titleInset = L.TITLE_BAR_INSET_X + (L.TITLE_BUTTON_SIZE - L.CHROME_BUTTON_ICON_SIZE) / 2
   assertPoint(chrome.title, "LEFT", chrome.titleBar, "LEFT", titleInset, 0, "title")
+  assertPoint(chrome.markAllReadButton, "LEFT", chrome.patchNotesButton, "RIGHT", gap, 0, "mark all read")
 
   -- test_modern_hover_fades_circle_and_brightens_glyph
   for name, button in pairs(titleButtons(chrome)) do
