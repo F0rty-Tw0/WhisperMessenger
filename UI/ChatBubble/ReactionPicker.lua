@@ -3,50 +3,18 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 
 local ReactionPicker = {}
 local PICKER_FRAME_NAME = "WhisperMessengerReactionPicker"
+-- Inner padding: left of the first column, above the first row.
+local PAD_LEFT = 6
+local PAD_TOP = 5
 local pickerFrame
-
-local function addSpecialFrame()
-  _G.UISpecialFrames = _G.UISpecialFrames or {}
-  for _, name in ipairs(_G.UISpecialFrames) do
-    if name == PICKER_FRAME_NAME then
-      return
-    end
-  end
-  table.insert(_G.UISpecialFrames, PICKER_FRAME_NAME)
-end
-
-local function isMouseOver(frame)
-  if type(frame.IsMouseOver) ~= "function" then
-    return false
-  end
-  local ok, over = pcall(frame.IsMouseOver, frame)
-  return ok and over == true
-end
-
-local function registerGlobalMouse(frame)
-  if frame._globalMouseRegistered or type(frame.RegisterEvent) ~= "function" then
-    return
-  end
-  local ok = pcall(frame.RegisterEvent, frame, "GLOBAL_MOUSE_DOWN")
-  frame._globalMouseRegistered = ok
-end
-
-local function unregisterGlobalMouse(frame)
-  if not frame._globalMouseRegistered or type(frame.UnregisterEvent) ~= "function" then
-    return
-  end
-  pcall(frame.UnregisterEvent, frame, "GLOBAL_MOUSE_DOWN")
-  frame._globalMouseRegistered = nil
-end
 
 local function applyPickerLayout(frame)
   local layout = Assets.GetPickerLayout()
@@ -57,7 +25,7 @@ local function applyPickerLayout(frame)
     local row = math.floor(slot / layout.columns)
     button:SetSize(layout.buttonSize, layout.buttonSize)
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * layout.buttonSize, -5 - row * layout.buttonSize)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD_LEFT + column * layout.buttonSize, -PAD_TOP - row * layout.buttonSize)
     button._icon:SetSize(layout.iconSize, layout.iconSize)
   end
   frame._copyButton:ClearAllPoints()
@@ -71,28 +39,9 @@ local function createPicker(factory)
     return nil
   end
 
-  local frame = factory.CreateFrame("Frame", PICKER_FRAME_NAME, parent)
-  if frame.Hide then
-    frame:Hide()
-  end
+  local frame = PickerPopup.CreatePanel(factory, parent, PICKER_FRAME_NAME, "FULLSCREEN_DIALOG")
   frame._factory = factory
   frame._reactionButtons = {}
-  if frame.SetFrameStrata then
-    frame:SetFrameStrata("FULLSCREEN_DIALOG")
-  end
-  if frame.SetClampedToScreen then
-    frame:SetClampedToScreen(true)
-  end
-  if frame.EnableMouse then
-    frame:EnableMouse(true)
-  end
-
-  local background = frame:CreateTexture(nil, "BACKGROUND")
-  background:SetAllPoints(frame)
-  frame._background = background
-  if type(UIHelpers.createBorderBox) == "function" then
-    frame._border = UIHelpers.createBorderBox(frame, PickerStyles.BorderColor(), 1, "BORDER")
-  end
   PickerStyles.ApplyPanelTheme(frame, frame._border)
 
   for index, key in ipairs(Assets.KEYS) do
@@ -137,26 +86,7 @@ local function createPicker(factory)
     frame._reactionButtons[index] = button
   end
 
-  local copyButton = factory.CreateFrame("Button", nil, frame)
-  local highlight = copyButton:CreateTexture(nil, "BACKGROUND")
-  highlight:SetAllPoints(copyButton)
-  PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
-  highlight:Hide()
-  copyButton._highlight = highlight
-
-  local copyLabel = copyButton:CreateFontString(nil, "OVERLAY")
-  copyLabel:SetPoint("CENTER", copyButton, "CENTER", 0, 0)
-  UIHelpers.setFontObject(copyLabel, Theme.FONTS.icon_label)
-  copyLabel:SetText(Localization.Text("Copy text"))
-  UIHelpers.setTextColor(copyLabel, Theme.COLORS.option_button_text or Theme.COLORS.text_primary)
-  copyButton:SetScript("OnEnter", function(self)
-    PickerStyles.ApplyColor(self._highlight, PickerStyles.HighlightColor(0.35))
-    self._highlight:Show()
-  end)
-  copyButton:SetScript("OnLeave", function(self)
-    self._highlight:Hide()
-  end)
-  copyButton:SetScript("OnClick", function()
+  local copyButton, copyLabel = PickerPopup.CreateTextButton(factory, frame, "Copy text", function()
     local message = frame._message
     local copyText = frame._copyText
     ReactionPicker.Close()
@@ -169,14 +99,10 @@ local function createPicker(factory)
   applyPickerLayout(frame)
 
   frame:SetScript("OnEvent", function(self, event)
-    if event == "GLOBAL_MOUSE_DOWN" and self._dismissArmed and not isMouseOver(self) then
-      ReactionPicker.Close()
-    end
+    PickerPopup.HandleEvent(self, event, ReactionPicker.Close)
   end)
   frame:SetScript("OnHide", function(self)
-    unregisterGlobalMouse(self)
-    self:SetScript("OnUpdate", nil)
-    self._dismissArmed = nil
+    PickerPopup.Disarm(self)
     PickerStyles.HideTooltip()
     self._anchor = nil
     self._message = nil
@@ -187,7 +113,7 @@ local function createPicker(factory)
 
   frame._wmReactionPicker = true
   rawset(_G, PICKER_FRAME_NAME, frame)
-  addSpecialFrame()
+  PickerPopup.RegisterEscape(PICKER_FRAME_NAME)
   frame:Hide()
   return frame
 end
@@ -236,12 +162,7 @@ function ReactionPicker.Open(factory, anchorFrame, message, onReact, copyText, c
   frame._copyLabel:SetText(Localization.Text("Copy text"))
   frame:ClearAllPoints()
   frame:SetPoint("BOTTOMLEFT", anchorFrame, "TOPLEFT", 0, 4)
-  frame._dismissArmed = false
-  registerGlobalMouse(frame)
-  frame:SetScript("OnUpdate", function(self)
-    self._dismissArmed = true
-    self:SetScript("OnUpdate", nil)
-  end)
+  PickerPopup.ArmDismiss(frame)
   frame:Show()
   return true
 end

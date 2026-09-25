@@ -14,7 +14,15 @@ function PickerStyles.ApplyColor(texture, color)
   end
 end
 
-function PickerStyles.ShowTooltipText(owner, text)
+-- Grey of secondary tooltip lines (hints, keybindings).
+PickerStyles.HINT_GREY = 0.6
+local HINT_GREY = PickerStyles.HINT_GREY
+-- One row of a popup list or settings list (quick replies, delivery actions,
+-- the reaction picker's bottom row).
+PickerStyles.ROW_HEIGHT = 24
+
+-- hint: optional second line, grey.
+function PickerStyles.ShowTooltipText(owner, text, hint)
   local tooltip = _G.GameTooltip
   if type(tooltip) ~= "table" then
     return
@@ -24,6 +32,9 @@ function PickerStyles.ShowTooltipText(owner, text)
   end
   if type(tooltip.SetText) == "function" then
     tooltip:SetText(text)
+  end
+  if hint and type(tooltip.AddLine) == "function" then
+    tooltip:AddLine(hint, HINT_GREY, HINT_GREY, HINT_GREY)
   end
   if type(tooltip.Show) == "function" then
     tooltip:Show()

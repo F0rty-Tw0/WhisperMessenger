@@ -113,6 +113,7 @@ UI/Helpers/Controls.lua
 UI/Helpers.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
+UI/Shared/PickerPopup.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
 UI/ChatBubble/ReactionAssets.lua
@@ -170,6 +171,7 @@ UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
+UI/Composer/Popover.lua
 UI/Composer/EmojiPicker.lua
 UI/Composer/ComposerLayout.lua
 UI/Composer/ComposerSurface.lua
