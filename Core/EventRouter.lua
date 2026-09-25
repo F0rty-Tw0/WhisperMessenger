@@ -13,6 +13,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
@@ -339,11 +340,17 @@ local function handleUnlockedEvent(state, eventName, payload)
 
     local avail = Availability.FromStatus(payload.status)
     avail.rawStatus = payload.rawStatus
-    -- Don't downgrade CanWhisper set by a recent successful whisper.
-    -- A whisper exchange proves reachability; the async availability API
-    -- may return WrongFaction for cross-realm same-faction players.
+    -- A whisper exchange proves reachability, so keep it over the ambiguous
+    -- WrongFaction (also sent for reachable cross-realm players). A definite
+    -- Offline, or a guild/community roster showing them offline, wins.
     local existing = state.availabilityByGUID[payload.guid]
-    if existing and existing.canWhisper and existing.confirmedByWhisper and not avail.canWhisper then
+    if
+      existing
+      and existing.canWhisper
+      and existing.confirmedByWhisper
+      and avail.status == "WrongFaction"
+      and PresenceCache.GetPresence(payload.guid) ~= "offline"
+    then
       return existing
     end
     state.availabilityByGUID[payload.guid] = avail
