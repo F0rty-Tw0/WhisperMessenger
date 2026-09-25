@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local HeaderView = require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 local function clickBadge(view)
   local button = view.headerAddonBadgeButton
@@ -51,6 +52,9 @@ return function()
       view.headerAddonBadge:GetText() == "(Invite sent)",
       "badge text should read '(Invite sent)', got: " .. tostring(view.headerAddonBadge:GetText())
     )
+    -- test_sent_invite_stays_dimmed
+    local tc = view.headerAddonBadge.textColor
+    assert(tc ~= nil and tc[1] == Theme.COLORS.text_secondary[1], "sent invite stays text_secondary")
   end
 
   -- test_sent_invite_is_not_clickable

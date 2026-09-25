@@ -49,10 +49,10 @@ return function()
       "badge text should read '(Invite to WM)', got: " .. tostring(view.headerAddonBadge:GetText())
     )
     local tc = view.headerAddonBadge.textColor
-    local secondary = Theme.COLORS.text_secondary
+    local gold = Theme.TAG_GOLD
     assert(
-      tc ~= nil and tc[1] == secondary[1] and tc[2] == secondary[2] and tc[3] == secondary[3],
-      "invite hint should be colored text_secondary, got: " .. tostring(tc and tc[1])
+      tc ~= nil and tc[1] == gold[1] and tc[2] == gold[2] and tc[3] == gold[3],
+      "invite hint should be colored TAG_GOLD, got: " .. tostring(tc and tc[1])
     )
   end
 

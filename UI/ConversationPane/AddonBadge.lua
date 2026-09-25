@@ -121,7 +121,7 @@ function AddonBadge.Refresh(view, selectedContact, conversation)
 
   -- Direct whisper contacts only (not groups): show "(Uses WM)" when the
   -- peer also runs the addon, "(Invite sent)" once we've whispered them an
-  -- invite, else a dimmed, clickable "(Invite to WM)" hint.
+  -- invite (dimmed), else a gold, clickable "(Invite to WM)" hint.
   local hasContact = selectedContact ~= nil
   local vm = GroupHeaderViewModel.Build(selectedContact, conversation)
   local badge = view.headerAddonBadge
@@ -148,7 +148,7 @@ function AddonBadge.Refresh(view, selectedContact, conversation)
     end
     view._headerAddonBadgeMode = mode
     badge:SetText(badgeTextFor(mode))
-    UIHelpers.applyColor(badge, mode == "addon" and Theme.TAG_GOLD or Theme.COLORS.text_secondary)
+    UIHelpers.applyColor(badge, mode == "sent" and Theme.COLORS.text_secondary or Theme.TAG_GOLD)
     AddonBadge.sizeAddonBadge(badgeButton, badge)
     setInviteTarget(view, badgeButton, mode == "invite" and selectedContact or nil)
 
