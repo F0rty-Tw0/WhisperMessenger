@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 local applyVertexColor = UIHelpers.applyVertexColor
 local createRoundedBackground = UIHelpers.createRoundedBackground
 local setFontObject = UIHelpers.setFontObject
@@ -23,7 +24,7 @@ local PREVIEW_ICON_GAP = 6
 local PREVIEW_DISMISS_GAP = 4
 local PREVIEW_SENDER_TOP_OFFSET = -8
 local PREVIEW_MESSAGE_GAP = -1
-local DISMISS_COLOR_HOVER = { 1.0, 0.35, 0.35, 1.0 }
+local DISMISS_COLOR_HOVER = CloseGlyphButton.DANGER_HOVER
 local DISMISS_BG_HOVER = { 0.85, 0.15, 0.15, 0.35 }
 
 local PREVIEW_ANCHORS = {

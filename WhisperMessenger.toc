@@ -114,6 +114,7 @@ UI/Helpers.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua
+UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
 UI/ChatBubble/ReactionAssets.lua

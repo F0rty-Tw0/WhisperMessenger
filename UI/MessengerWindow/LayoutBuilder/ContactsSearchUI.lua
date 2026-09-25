@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 
 local ContactsSearchUI = {}
 
@@ -132,24 +133,12 @@ function ContactsSearchUI.Build(factory, contactsPane, options)
     UIHelpers.applyVertexColor(searchIcon, activeTheme.COLORS.text_secondary)
   end
 
-  local contactsSearchClearButton = factory.CreateFrame("Button", nil, contactsSearchFrame)
-  contactsSearchClearButton:SetSize(searchClearButtonSize, searchClearButtonSize)
+  local contactsSearchClearButton = CloseGlyphButton.Create(factory, contactsSearchFrame, searchClearButtonSize, theme)
   contactsSearchClearButton:SetPoint("RIGHT", contactsSearchFrame, "RIGHT", -2, 0)
-  contactsSearchClearButton:EnableMouse(true)
-
-  local contactsSearchClearLabel = contactsSearchClearButton:CreateFontString(nil, "OVERLAY", theme.FONTS.contact_name)
-  contactsSearchClearLabel:SetPoint("CENTER", contactsSearchClearButton, "CENTER", 0, 0)
-  contactsSearchClearLabel:SetText("X")
-  uiHelpers.setTextColor(contactsSearchClearLabel, theme.COLORS.text_secondary)
+  local contactsSearchClearLabel = contactsSearchClearButton.label
 
   contactsSearchPlaceholder:Show()
   contactsSearchClearButton:Hide()
-  contactsSearchClearButton:SetScript("OnEnter", function()
-    uiHelpers.setTextColor(contactsSearchClearLabel, theme.COLORS.text_primary)
-  end)
-  contactsSearchClearButton:SetScript("OnLeave", function()
-    uiHelpers.setTextColor(contactsSearchClearLabel, theme.COLORS.text_secondary)
-  end)
 
   local function setLanguage()
     contactsSearchPlaceholder:SetText(Localization.Text("Search chats"))
