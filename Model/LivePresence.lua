@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+
 -- Live presence between two WhisperMessenger users: typing indicators and
 -- "Seen" receipts. Payloads ride the existing WMRX addon-message prefix, so
 -- decoding any WMRX payload also proves the sender runs the addon (a "peer").
@@ -53,14 +55,6 @@ function LivePresence.Decode(payload)
   return nil
 end
 
-local function conversationFor(state, key)
-  local conversations = type(state) == "table" and state.store and state.store.conversations
-  if type(conversations) ~= "table" or key == nil then
-    return nil
-  end
-  return conversations[key]
-end
-
 -- Peers are remembered in the runtime as soon as any payload arrives (the
 -- conversation may not exist yet) and persisted on the conversation record
 -- once it does, so the flag survives a reload.
@@ -70,7 +64,7 @@ function LivePresence.RecordPeer(state, key)
   end
   state.livePresencePeers = state.livePresencePeers or {}
   state.livePresencePeers[key] = true
-  local conversation = conversationFor(state, key)
+  local conversation = Store.Find(state.store, key)
   if conversation then
     conversation.peerHasAddon = true
   end
@@ -84,7 +78,7 @@ function LivePresence.HasPeer(state, key)
   if state.livePresencePeers and state.livePresencePeers[key] then
     return true
   end
-  local conversation = conversationFor(state, key)
+  local conversation = Store.Find(state.store, key)
   return conversation ~= nil and conversation.peerHasAddon == true
 end
 
@@ -125,7 +119,7 @@ end
 -- Seeing a message implies seeing everything sent before it, so mark the
 -- target and every earlier unseen outgoing message. Returns how many changed.
 function LivePresence.MarkSeen(state, key, wireId, now)
-  local conversation = conversationFor(state, key)
+  local conversation = Store.Find(state.store, key)
   if conversation == nil or not isWireId(wireId) then
     return 0
   end

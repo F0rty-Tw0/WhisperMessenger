@@ -32,6 +32,12 @@ function Retention.IsExpired(timestamp, maxAgeSeconds, now)
   return now - timestamp > maxAgeSeconds
 end
 
+-- A queued message waits for the player's Send now / Discard click, so age
+-- and count limits never drop it.
+function Retention.IsQueued(message)
+  return message.delivery == "queued"
+end
+
 function Retention.TrimMessages(messages, maxMessages)
   if type(maxMessages) ~= "number" or maxMessages < 1 then
     return messages

@@ -6,6 +6,7 @@ end
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 -- Outbound side of live presence: broadcasts typing state from the composer
 -- and "Seen" receipts for the conversation on screen. Only talks to contacts
@@ -37,14 +38,6 @@ local function isRestricted(runtime)
     return true
   end
   return false
-end
-
-local function conversationFor(runtime, key)
-  local conversations = runtime.store and runtime.store.conversations
-  if type(conversations) ~= "table" or key == nil then
-    return nil
-  end
-  return conversations[key]
 end
 
 local function resolveGameAccountID(runtime, conversation)
@@ -94,7 +87,7 @@ function Sender.OnComposerText(runtime, contact, text)
   local sentStop = false
   if out.active and (not hasText or out.conversationKey ~= key) then
     if not isRestricted(runtime) then
-      send(runtime, conversationFor(runtime, out.conversationKey), LivePresence.EncodeTyping(false))
+      send(runtime, Store.Find(runtime.store, out.conversationKey), LivePresence.EncodeTyping(false))
     end
     out.active = false
     out.conversationKey = nil
@@ -109,7 +102,7 @@ function Sender.OnComposerText(runtime, contact, text)
   if not settingOn(runtime, "shareTypingStatus") then
     return sentStop
   end
-  local conversation = conversationFor(runtime, key)
+  local conversation = Store.Find(runtime.store, key)
   if conversation == nil then
     return sentStop
   end
@@ -147,7 +140,7 @@ function Sender.SyncReadReceipts(runtime, selectedContact)
   if not settingOn(runtime, "shareReadReceipts") then
     return false
   end
-  local conversation = conversationFor(runtime, key)
+  local conversation = Store.Find(runtime.store, key)
   local message = LivePresence.NextReceipt(conversation)
   if message == nil then
     return false
