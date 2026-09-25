@@ -107,6 +107,9 @@ function Store.AppendIncoming(state, key, message, isActive)
 
   if not isActive and shouldIncrementUnread(message) then
     conversation.unreadCount = conversation.unreadCount + 1
+    if message.mention then
+      conversation.hasUnreadMention = true
+    end
   end
 end
 function Store.RecordIncomingActivity(state, key, message, isActive)
@@ -220,6 +223,7 @@ function Store.MarkRead(state, key)
   local conversation = Store.EnsureConversation(state, key)
   conversation.unreadCount = 0
   conversation.unreadActivityCount = 0
+  conversation.hasUnreadMention = nil
 end
 
 function Store.CountUnansweredIncoming(conversation)

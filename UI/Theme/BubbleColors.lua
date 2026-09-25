@@ -156,5 +156,21 @@ function BubbleColors.ApplyPreset()
   end
 end
 
+-- Incoming bubble tinted toward the accent, for group lines that name the
+-- player. Read live so it follows theme and bubble preset switches; one
+-- table is reused for every bubble.
+local MENTION_TINT = 0.35
+local mentionColor = { 0, 0, 0, 1 }
+function BubbleColors.MentionColor()
+  local colors = getThemeColors()
+  local base = colors and colors.bg_bubble_in or { 0, 0, 0, 1 }
+  local accent = colors and colors.accent or base
+  for index = 1, 3 do
+    mentionColor[index] = base[index] + (accent[index] - base[index]) * MENTION_TINT
+  end
+  mentionColor[4] = base[4] or 1
+  return mentionColor
+end
+
 ns.ThemeBubbleColors = BubbleColors
 return BubbleColors

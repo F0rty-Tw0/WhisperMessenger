@@ -44,6 +44,7 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     nickname = conversation.nickname,
     note = conversation.note,
     notifyOnline = conversation.notifyOnline,
+    hasUnreadMention = conversation.hasUnreadMention,
     isRequest = MessageRequests.IsRequest(conversation, settings) or nil,
   }
 end

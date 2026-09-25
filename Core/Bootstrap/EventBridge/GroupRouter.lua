@@ -6,6 +6,7 @@ end
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 
 local GroupRouter = {}
 
@@ -176,7 +177,12 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end)
   end
 
-  local handled = GroupChatIngest.HandleEvent(runtime, eventName, payload)
+  local handled, _, meta = GroupChatIngest.HandleEvent(runtime, eventName, payload)
+  -- Only a line naming the player alerts in group chats (sound + flash, no
+  -- popup or auto-open), even when the chat is muted.
+  if meta and meta.mention then
+    IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
+  end
   if handled and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
     runtime.refreshWindow()
   end

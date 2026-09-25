@@ -10,6 +10,7 @@ local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
+local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
 local PendingEcho = ns.GroupChatIngestPendingEcho or require("WhisperMessenger.Core.Ingest.GroupChatIngest.PendingEcho")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
@@ -154,7 +155,18 @@ local function buildMessage(payload, direction, channel, sentAt, isLeader)
   if isLeader ~= nil then
     msg.isLeader = isLeader
   end
+  if direction == "in" and Mention.Matches(payload.text, Mention.PlayerName()) then
+    msg.mention = true
+  end
   return msg
+end
+
+-- Tells the router a mention arrived so it can alert (sound + flash).
+-- Read-only, shared to avoid a table per mention.
+local MENTION_META = { mention = true }
+
+local function mentionMeta(message)
+  return message.mention and MENTION_META or nil
 end
 
 -- appendAndStamp resolves direction, builds the message, routes it to the
@@ -174,7 +186,7 @@ local function appendAndStamp(state, conversationKey, channel, eventName, payloa
   if conversation then
     conversation.conversationKey = conversationKey
   end
-  return conversation
+  return conversation, mentionMeta(msg)
 end
 
 local function groupSenderKey(playerName, conversationKey)
@@ -254,7 +266,7 @@ local function appendGroupMessage(state, conversationKey, channel, eventName, pa
   if conversation then
     conversation.conversationKey = conversationKey
   end
-  return conversation
+  return conversation, mentionMeta(message)
 end
 
 function GroupChatIngest.HandleAddonEvent(state, payload)
@@ -317,11 +329,11 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
       return false
     end
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, "BNCONV::" .. tostring(payload.conversationID))
-    local conversation = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
+    local conversation, meta = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
     if conversation then
       conversation.conversationID = payload.conversationID
     end
-    return true
+    return true, conversation, meta
   end
 
   -- COMMUNITY: keyed by (clubId, streamId). Receive-only — Blizzard blocks
@@ -332,7 +344,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
     end
     local contactKey = "COMMUNITY::" .. tostring(payload.clubId) .. "::" .. tostring(payload.streamId)
     local conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKey)
-    local conv = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
+    local conv, meta = appendAndStamp(state, conversationKey, channel, eventName, payload, nil)
     if conv then
       -- Use the stream's base name as the sticky title so the row shows
       -- "General" or "Trade" instead of the generic "Community" label.
@@ -340,7 +352,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
         conv.title = payload.streamName
       end
     end
-    return true
+    return true, conv, meta
   end
 
   -- PARTY / INSTANCE_CHAT / RAID use a per-session key when lifecycle
@@ -354,7 +366,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
   if SUPPORTED_REACTION_CHANNELS[channel] then
     conv, resultMeta = appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
   else
-    conv = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
+    conv, resultMeta = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)
   end
 
   if conv and partyGUID then

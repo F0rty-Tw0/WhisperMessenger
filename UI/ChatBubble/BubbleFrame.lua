@@ -17,6 +17,7 @@ local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
+local BubbleColors = ns.ThemeBubbleColors or require("WhisperMessenger.UI.Theme.BubbleColors")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 
@@ -196,7 +197,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   else
     setFontObject(textFS, Theme.FONTS.message_text)
     setTextColor(textFS, fontColorOverride or Theme.COLORS.text_received)
-    applyBubbleColor(frame, Theme.COLORS.bg_bubble_in)
+    applyBubbleColor(frame, message.mention and BubbleColors.MentionColor() or Theme.COLORS.bg_bubble_in)
   end
 
   local textAvailWidth = maxBubbleWidth - pH * 2
