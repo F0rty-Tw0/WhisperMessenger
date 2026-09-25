@@ -79,6 +79,7 @@ Transport/WhisperGateway.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 
+Core/LocalPlayer.lua
 Core/Ingest/GroupChatIngest/SecretString.lua
 Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest.lua

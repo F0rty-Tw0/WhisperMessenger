@@ -13,6 +13,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 local REACTION_ADDON_PREFIX = "WMRX"
@@ -116,36 +117,14 @@ local function confirmWhisperAvailability(state, payload, contact)
   state.availabilityByGUID[guid] = availability
 end
 
-local function localSenderClassTag()
-  if type(_G.UnitClass) ~= "function" then
-    return nil
-  end
-  local ok, _, classTag = pcall(_G.UnitClass, "player")
-  if ok and type(classTag) == "string" and classTag ~= "" then
-    return classTag
-  end
-  return nil
-end
-
-local function localSenderName()
-  if type(_G.UnitName) ~= "function" then
-    return nil
-  end
-  local ok, name = pcall(_G.UnitName, "player")
-  if ok and type(name) == "string" and name ~= "" then
-    return name
-  end
-  return nil
-end
-
 local function buildMessage(state, payload, contact, direction, kind, sentAt)
   local senderClassTag
   local senderName
   if direction == "out" then
     -- Stamp the sending character's class and name so the bubble icon and
     -- "You — <char>" label survive relogging to another character.
-    senderClassTag = localSenderClassTag()
-    senderName = localSenderName()
+    senderClassTag = LocalPlayer.ClassTag()
+    senderName = LocalPlayer.Name()
   end
   -- WoW Classic's character-whisper protocol strips real quest hyperlinks
   -- on the wire, so CHAT_MSG_WHISPER and CHAT_MSG_WHISPER_INFORM can arrive

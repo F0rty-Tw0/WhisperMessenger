@@ -6,6 +6,7 @@ end
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 local ReactionHandler = {}
 
@@ -13,13 +14,7 @@ local function localActorName(runtime)
   if type(runtime.localPlayerName) == "string" and runtime.localPlayerName ~= "" then
     return runtime.localPlayerName
   end
-  if type(_G.UnitName) == "function" then
-    local ok, name = pcall(_G.UnitName, "player")
-    if ok and type(name) == "string" and name ~= "" then
-      return name
-    end
-  end
-  return "You"
+  return LocalPlayer.Name() or "You"
 end
 
 function ReactionHandler.HandleReact(runtime, selectedContact, message, reactionKey, refreshWindow, groupSendPolicy)

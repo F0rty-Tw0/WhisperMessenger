@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
@@ -115,28 +116,6 @@ local function resolveGroupConversation(state, channel)
   return conversationKey, groupCategory, partyGUID, guildName
 end
 
-local function localSenderClassTag()
-  if type(_G.UnitClass) ~= "function" then
-    return nil
-  end
-  local ok, _, classTag = pcall(_G.UnitClass, "player")
-  if ok and type(classTag) == "string" and classTag ~= "" then
-    return classTag
-  end
-  return nil
-end
-
-local function localSenderName()
-  if type(_G.UnitName) ~= "function" then
-    return nil
-  end
-  local ok, name = pcall(_G.UnitName, "player")
-  if ok and type(name) == "string" and name ~= "" then
-    return name
-  end
-  return nil
-end
-
 local function buildMessage(payload, direction, channel, sentAt, isLeader)
   local playerInfo = payload.playerInfo or {}
   local senderClassTag
@@ -145,11 +124,11 @@ local function buildMessage(payload, direction, channel, sentAt, isLeader)
     -- Freeze the sending character's class and name so the bubble icon and
     -- "You — <char>" label survive relogging. Prefer already-resolved fields
     -- from the payload over live API calls.
-    senderClassTag = playerInfo.classTag or localSenderClassTag()
+    senderClassTag = playerInfo.classTag or LocalPlayer.ClassTag()
     -- Use the live player's short name, not payload.playerName. Group chat
     -- events deliver "Name-Realm"; SenderLabel compares against the live
     -- UnitName("player") which is the short form, so we normalize here.
-    senderName = localSenderName()
+    senderName = LocalPlayer.Name()
   end
   local msg = {
     id = tostring(payload.lineID or sentAt),
