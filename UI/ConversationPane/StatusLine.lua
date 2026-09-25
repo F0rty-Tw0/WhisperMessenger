@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -20,6 +21,25 @@ StatusLine.AVAILABILITY_DISPLAY = {
   ["Send unavailable"] = { label = "Send unavailable", color = "dnd" },
   ["Send failed"] = { label = "Send failed", color = "dnd" },
 }
+
+-- "Last online 2h" for Battle.net friends (Blizzard's time, nil while
+-- online), else "Last seen 2h" from the newest of our own last-seen stamp and
+-- the last whisper they sent. nil when no time is known.
+local function lastSeenLabel(selectedContact)
+  -- The relative text needs the game clock.
+  if type(_G.time) ~= "function" then
+    return nil
+  end
+  if selectedContact.channel == "BN" and tonumber(selectedContact.lastOnlineTime) then
+    return string.format(Localization.Text("Last online %s"), TimeFormat.ContactPreview(selectedContact.lastOnlineTime))
+  end
+  local conversation = selectedContact.conversation or {}
+  local seenAt = math.max(tonumber(conversation.lastSeenAt) or 0, tonumber(conversation.lastIncomingAt) or 0)
+  if seenAt <= 0 then
+    return nil
+  end
+  return string.format(Localization.Text("Last seen %s"), TimeFormat.ContactPreview(seenAt))
+end
 
 -- Returns line1 (name-realm + class + faction), line2 (availability/typing + zone),
 -- and the status dot color key. Both lines are "" when there is no contact.
@@ -67,6 +87,10 @@ function StatusLine.Build(selectedContact, status)
     dotColor = "online"
   elseif avail then
     table.insert(line2, Localization.Text(avail.label))
+    local seenLabel = statusKey == "Offline" and lastSeenLabel(selectedContact) or nil
+    if seenLabel then
+      table.insert(line2, seenLabel)
+    end
     dotColor = avail.color
   end
 

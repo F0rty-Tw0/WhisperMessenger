@@ -370,6 +370,8 @@ local Spanish = {
   ["Accept"] = "Aceptar",
   ["Delete"] = "Eliminar",
   ["No message requests."] = "No hay solicitudes de mensajes.",
+  ["Last seen %s"] = "Visto por última vez: %s",
+  ["Last online %s"] = "Última vez en línea: %s",
   ["Notify when online"] = "Avisarme cuando se conecte",
   ["%s is now online."] = "%s ya está en línea.",
   -- Queued sends, delivery status, replies

@@ -366,6 +366,8 @@ local French = {
   ["Accept"] = "Accepter",
   ["Delete"] = "Supprimer",
   ["No message requests."] = "Aucune demande de message.",
+  ["Last seen %s"] = "Vu pour la dernière fois : %s",
+  ["Last online %s"] = "Dernière connexion : %s",
   ["Notify when online"] = "Prévenir à la connexion",
   ["%s is now online."] = "%s est maintenant en ligne.",
   -- Queued sends, delivery status, replies

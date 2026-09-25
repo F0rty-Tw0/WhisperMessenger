@@ -90,6 +90,8 @@ function BNetStatus.Apply(item, runtime)
     -- valid only as sub-status once presence is proven.
     local inWoW = BNetStatus.IsInWoW(gameInfo)
     local isOnline = BNetStatus.IsOnline(accountInfo)
+    -- Blizzard's "last online" time; nil while online. Read by the header.
+    item.lastOnlineTime = not isOnline and tonumber(accountInfo.lastOnlineTime) or nil
     if isOnline then
       -- Check AFK/DND first (applies whether in WoW or BNet app)
       local bnetStatus

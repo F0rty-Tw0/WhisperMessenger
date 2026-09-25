@@ -366,6 +366,8 @@ local Russian = {
   ["Accept"] = "Принять",
   ["Delete"] = "Удалить",
   ["No message requests."] = "Нет запросов на переписку.",
+  ["Last seen %s"] = "Был(а) в сети: %s",
+  ["Last online %s"] = "Последний вход: %s",
   ["Notify when online"] = "Сообщить о входе в сеть",
   ["%s is now online."] = "%s теперь в сети.",
   -- Queued sends, delivery status, replies
