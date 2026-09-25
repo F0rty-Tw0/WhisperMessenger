@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Divider = ns.SettingsControlsDivider or require("WhisperMessenger.UI.Shared.SettingsControls.Divider")
 
 -- Settings panel header (title + hint). The title renders as a small
 -- "--- Title ---" section label: secondary colour, centered, with a
@@ -36,14 +37,10 @@ function Header.Create(frame, opts)
     hint:SetWidth(bandWidth)
   end
 
-  local leftLine = frame:CreateTexture(nil, "ARTWORK")
+  local leftLine = Divider.createLine(frame)
   leftLine:SetPoint("RIGHT", title, "LEFT", -LINE_GAP, 0)
-  local rightLine = frame:CreateTexture(nil, "ARTWORK")
+  local rightLine = Divider.createLine(frame)
   rightLine:SetPoint("LEFT", title, "RIGHT", LINE_GAP, 0)
-  for _, line in ipairs({ leftLine, rightLine }) do
-    line:SetHeight(UIHelpers.hairlineThickness(frame, 1))
-    UIHelpers.snapToPixelGrid(line)
-  end
 
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or Theme
@@ -55,11 +52,9 @@ function Header.Create(frame, opts)
     hint:ClearAllPoints()
     hint:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -(PADDING + TITLE_BLOCK))
     local lineWidth = math.max(0, (bandWidth - (title:GetStringWidth() or 0)) / 2 - LINE_GAP)
-    local lineColor = activeTheme.COLORS.contacts_border_right or activeTheme.COLORS.divider
     leftLine:SetWidth(lineWidth)
     rightLine:SetWidth(lineWidth)
-    UIHelpers.applyHorizontalFadeLeft(leftLine, lineColor)
-    UIHelpers.applyHorizontalFade(rightLine, lineColor)
+    Divider.paint(leftLine, rightLine, activeTheme)
     leftLine:Show()
     rightLine:Show()
   end

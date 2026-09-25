@@ -6,8 +6,6 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
-## [2.0.0] - 2026-09-23
-
 - Now works on World of Warcraft: Forever (beta). Mythic+ features stay off there.
 - New "Pandaria" theme: dark charcoal with jade-green accents (pairs well with EllesmereUI).
 - Fresh modern look for every theme, including Azeroth:
@@ -45,6 +43,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Refreshed settings: simple page list, on/off switches, slim sliders and cleaner choice buttons.
 - The "(Invite to WM)" link is now gold and translated into every supported language.
 - Hovering the WhisperMessenger button or minimap icon shows the key that opens the messenger.
+- What's New: the button now pulses with the same soft glow as the WhisperMessenger button and minimap icon, and the page puts a thin line between changes so it's easier to scan.
 - Fixed: new whispers flash the taskbar icon again while you're tabbed out, even with whispers hidden from normal chat. You can turn this off under Options > Notifications.
 - Fixed: the message box stopped one letter short of a full-length whisper.
 - Fixed: old chats weren't removed by your Message Retention setting while the window was open.

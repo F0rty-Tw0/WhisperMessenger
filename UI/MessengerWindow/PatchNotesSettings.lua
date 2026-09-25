@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
+local Divider = ns.SettingsControlsDivider or require("WhisperMessenger.UI.Shared.SettingsControls.Divider")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local setTextColor = UIHelpers.setTextColor
 
@@ -15,7 +16,7 @@ local PADDING = Theme.CONTENT_PADDING
 local BODY_TOP_GAP = -24
 local MIN_BODY_WIDTH = 160
 local BULLET_PREFIX = "• "
-local LINE_SEPARATOR = "\n\n"
+local DIVIDER_GAP = 10 -- space above and below each divider between notes
 
 local function text(key)
   return Localization.Text(key)
@@ -38,12 +39,41 @@ local function buildTitle(config)
   return title
 end
 
-local function buildBody(config)
-  local bullets = {}
-  for _, line in ipairs(config.lines or {}) do
-    bullets[#bullets + 1] = BULLET_PREFIX .. line
+-- message_text follows the Options font size, so the notes read at the
+-- same size as the chat thread.
+local function createNote(frame, line)
+  local note = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.message_text)
+  note:SetText(BULLET_PREFIX .. line)
+  note:SetJustifyH("LEFT")
+  if note.SetJustifyV then
+    note:SetJustifyV("TOP")
   end
-  return table.concat(bullets, LINE_SEPARATOR)
+  if note.SetWordWrap then
+    note:SetWordWrap(true)
+  end
+  return note
+end
+
+-- One text block per note with a section-header style divider between
+-- neighbors, so a long release reads as separate items instead of one wall
+-- of text.
+-- Returns the notes, the dividers and the last region in the stack.
+local function buildNotes(frame, anchor, lines)
+  local notes, dividers = {}, {}
+  local previous, gap = anchor, BODY_TOP_GAP
+  for index, line in ipairs(lines or {}) do
+    if index > 1 then
+      local divider = Divider.Create(frame)
+      divider.left:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, -DIVIDER_GAP)
+      dividers[#dividers + 1] = divider
+      previous, gap = divider.left, -DIVIDER_GAP
+    end
+    local note = createNote(frame, line)
+    note:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, gap)
+    notes[#notes + 1] = note
+    previous = note
+  end
+  return notes, dividers, previous
 end
 
 function PatchNotesSettings.Create(factory, parent, config, _options)
@@ -57,30 +87,24 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
     hint = hintText(),
   })
 
-  -- message_text follows the Options font size, so the notes read at the
-  -- same size as the chat thread.
-  local bodyText = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.message_text)
-  bodyText:SetPoint("TOPLEFT", header.hint, "BOTTOMLEFT", 0, BODY_TOP_GAP)
-  bodyText:SetText(buildBody(config))
-  bodyText:SetJustifyH("LEFT")
-  if bodyText.SetJustifyV then
-    bodyText:SetJustifyV("TOP")
-  end
-  if bodyText.SetWordWrap then
-    bodyText:SetWordWrap(true)
-  end
+  local notes, dividers, lastRegion = buildNotes(frame, header.hint, config.lines)
 
   -- A wrapped FontString's bottom tracks its rendered height in WoW, so
-  -- anchoring the marker to the body keeps the scroll measurement correct.
+  -- anchoring the marker to the last note keeps the scroll measurement correct.
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
   bottomSpacer:SetSize(1, PADDING)
-  bottomSpacer:SetPoint("TOPLEFT", bodyText, "BOTTOMLEFT", 0, 0)
+  bottomSpacer:SetPoint("TOPLEFT", lastRegion, "BOTTOMLEFT", 0, 0)
   frame._wmBottomMarker = bottomSpacer
 
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
-    setTextColor(bodyText, activeTheme.COLORS.text_primary)
+    for _, note in ipairs(notes) do
+      setTextColor(note, activeTheme.COLORS.text_primary)
+    end
+    for _, divider in ipairs(dividers) do
+      divider.applyTheme(activeTheme)
+    end
   end
 
   refreshTheme(Theme)
@@ -90,7 +114,7 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
     header.hint:SetText(hintText())
   end
 
-  -- Release notes are prose, so the body uses the full pane width rather
+  -- Release notes are prose, so notes use the full pane width rather
   -- than the SETTINGS_CONTROL_WIDTH cap the control-based pages apply.
   local function refreshLayout(width)
     if type(width) ~= "number" or width <= 0 then
@@ -98,8 +122,11 @@ function PatchNotesSettings.Create(factory, parent, config, _options)
     end
     local effective = math.max(MIN_BODY_WIDTH, math.floor(width))
     header.refreshLayout(effective)
-    if bodyText.SetWidth then
-      bodyText:SetWidth(effective)
+    for _, note in ipairs(notes) do
+      note:SetWidth(effective)
+    end
+    for _, divider in ipairs(dividers) do
+      divider.setWidth(effective)
     end
   end
 
