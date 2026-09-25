@@ -87,6 +87,12 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     ContactEnricher.EnrichContactsPresence({ selectedContact }, runtime)
   end
 
+  -- "New messages" divider captured when the conversation was opened.
+  local divider = runtime.unreadDivider
+  if selectedContact then
+    selectedContact.unreadDividerMessage = divider and divider.conversationKey == conversationKey and divider.message or nil
+  end
+
   -- Enrich selected contact with live BNet metadata for display
   if selectedContact and selectedContact.channel == "BN" and selectedContact.bnetAccountID then
     local accountInfo = BNetResolver.ResolveAccountInfo(

@@ -86,6 +86,10 @@ local function applyRekeyMappings(runtime, mappings)
   if runtime.lastIncomingWhisperKey ~= nil then
     runtime.lastIncomingWhisperKey = mappings[runtime.lastIncomingWhisperKey] or runtime.lastIncomingWhisperKey
   end
+  local divider = runtime.unreadDivider
+  if divider ~= nil and mappings[divider.conversationKey] ~= nil then
+    divider.conversationKey = mappings[divider.conversationKey]
+  end
 end
 
 local function refreshBNetConversations(Bootstrap, deps)

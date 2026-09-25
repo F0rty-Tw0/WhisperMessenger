@@ -336,6 +336,7 @@ local Russian = {
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Контакты, у которых тоже есть WhisperMessenger, видят, когда вы им пишете.",
   ["Send read receipts"] = "Отправлять отметки о прочтении",
   ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Контакты, у которых тоже есть WhisperMessenger, видят, когда вы прочитали их сообщения.",
+  ["New messages"] = "Новые сообщения",
 }
 
 ns.Locale_ruRU = Russian

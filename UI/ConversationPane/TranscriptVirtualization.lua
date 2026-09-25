@@ -7,6 +7,7 @@ local ChatBubbleLayout = ns.ChatBubbleLayout or require("WhisperMessenger.UI.Cha
 local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBubble.FramePool")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local UnreadDividerPosition = ns.ConversationPaneUnreadDividerPosition or require("WhisperMessenger.UI.ConversationPane.UnreadDividerPosition")
 local TranscriptRows = ns.ConversationPaneTranscriptRows or require("WhisperMessenger.UI.ConversationPane.TranscriptRows")
 local sizeValue = UIHelpers.sizeValue
 local CONTENT_PAD = TranscriptRows.CONTENT_PAD
@@ -240,6 +241,13 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   if anchorMessage then
     targetOffset = anchoredOffset(state.rows, anchorMessage, anchorDelta, anchorIndex) or targetOffset
   end
+  local viewportHeight = sizeValue(transcript.scrollFrame, "GetHeight", "height", transcript.viewportHeight or 0)
+  local dividerOffset = UnreadDividerPosition.OpeningOffset(transcript, state, dividerMessage, viewportHeight)
+  if dividerOffset ~= nil then
+    snapToEnd = false
+    targetOffset = math.max(dividerOffset - CONTENT_PAD, 0)
+    force = true
+  end
   local _, relaidOut = bindOffset(transcript, state, targetOffset, snapToEnd, force)
 
   local settledWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth)
@@ -270,6 +278,7 @@ end
 
 function TranscriptVirtualization.Reset(transcript)
   transcript._virtualState = nil
+  transcript._positionedDivider = nil
   transcript._virtualFirstIndex = nil
   transcript._virtualLastIndex = nil
 end

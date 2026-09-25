@@ -142,6 +142,7 @@ local function layoutOptions(transcript)
     end
   end
   options.fallbackClassTag = transcript.fallbackClassTag
+  options.unreadDividerMessage = transcript.unreadDividerMessage
   options.onRevealCensored = transcript._onRevealCensored
   options.onReact = transcript.onReact
   options.canReact = transcript.canReact

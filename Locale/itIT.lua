@@ -336,6 +336,7 @@ local Italian = {
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permette ai contatti che usano anche WhisperMessenger di vedere quando stai scrivendo loro.",
   ["Send read receipts"] = "Invia conferme di lettura",
   ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Permette ai contatti che usano anche WhisperMessenger di vedere quando hai letto i loro messaggi.",
+  ["New messages"] = "Nuovi messaggi",
 }
 
 ns.Locale_itIT = Italian

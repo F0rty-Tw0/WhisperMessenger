@@ -335,7 +335,9 @@ return function()
   -- then the user closes the window: closing must acknowledge it too, or the
   -- next background refresh pops the widget preview for a message already read.
   options.accountState.conversations[conversationKey].lastIncomingAt = 10500
+  runtime.unreadDivider = { conversationKey = conversationKey, message = {} }
   controller.setWindowVisible(false)
+  assert(runtime.unreadDivider == nil, "closing the window drops the New messages divider")
   assert(
     options.accountState.widgetPreviewAcknowledgedAt == 10500,
     "setWindowVisible(false) should acknowledge whispers seen while the window was open"

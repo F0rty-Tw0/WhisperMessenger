@@ -336,6 +336,7 @@ local Portuguese = {
   ["Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."] = "Permite que contatos que também usam WhisperMessenger vejam quando você está digitando para eles.",
   ["Send read receipts"] = "Enviar confirmações de leitura",
   ["Lets contacts who also use WhisperMessenger see when you have read their whispers."] = "Permite que contatos que também usam WhisperMessenger vejam quando você leu as mensagens deles.",
+  ["New messages"] = "Novas mensagens",
 }
 
 ns.Locale_ptBR = Portuguese

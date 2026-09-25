@@ -8,10 +8,12 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyColorTexture = UIHelpers.applyColorTexture
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local DateSeparator = {}
 
-function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth)
+-- Centered label between two fading divider lines.
+local function createLabelSeparator(factory, parent, paneWidth, labelText, labelColor)
   local height = Theme.LAYOUT.DATE_SEPARATOR_HEIGHT
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetSize(paneWidth, height)
@@ -49,7 +51,7 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
   end
 
   setFontObject(labelFS, Theme.FONTS.date_separator)
-  setTextColor(labelFS, Theme.COLORS.text_timestamp)
+  setTextColor(labelFS, labelColor)
   -- Re-apply divider colors on every render, not just creation: pooled
   -- frames outlive theme-preset switches, and SetColorTexture snapshots
   -- the RGBA values at call time.
@@ -60,17 +62,26 @@ function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth
   UIHelpers.applyHorizontalFadeLeft(lineLeft, divider)
   UIHelpers.applyHorizontalFade(lineRight, divider)
 
-  local dateStr = ""
-  if ns.TimeFormat and ns.TimeFormat.DateSeparator then
-    dateStr = ns.TimeFormat.DateSeparator(timestamp) or ""
-  end
   if labelFS.SetText then
-    labelFS:SetText(dateStr)
+    labelFS:SetText(labelText)
   end
   labelFS:ClearAllPoints()
   labelFS:SetPoint("CENTER", frame, "CENTER", 0, 0)
 
   return { frame = frame, height = height }
+end
+
+function DateSeparator.CreateDateSeparator(factory, parent, timestamp, paneWidth)
+  local dateStr = ""
+  if ns.TimeFormat and ns.TimeFormat.DateSeparator then
+    dateStr = ns.TimeFormat.DateSeparator(timestamp) or ""
+  end
+  return createLabelSeparator(factory, parent, paneWidth, dateStr, Theme.COLORS.text_timestamp)
+end
+
+-- "New messages" divider above the first unread message; accent label.
+function DateSeparator.CreateNewMessagesSeparator(factory, parent, paneWidth)
+  return createLabelSeparator(factory, parent, paneWidth, Localization.Text("New messages"), Theme.COLORS.accent)
 end
 
 ns.ChatBubbleDateSeparator = DateSeparator

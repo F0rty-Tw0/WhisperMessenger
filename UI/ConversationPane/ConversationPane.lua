@@ -57,6 +57,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- Pass classTag from selected contact so chat bubbles can use it as fallback
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
+  view.transcript.unreadDividerMessage = selectedContact and selectedContact.unreadDividerMessage or nil
   local messages = conversation and conversation.messages or {}
   messages = buildMessagesWithChannelContext(messages, selectedContact, conversation)
   ConversationPane.RenderTranscript(view.transcript, messages)

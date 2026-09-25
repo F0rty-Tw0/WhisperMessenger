@@ -53,13 +53,15 @@ local function placeBubble(frame, contentFrame, message, paneWidth, yOffset)
   end
 end
 
-local function rowPrefixHeight(previousMessage, message, isFirst)
+local function rowPrefixHeight(previousMessage, message, isFirst, hasUnreadDivider)
   local grouped = Grouping.ShouldGroup(previousMessage, message)
   local height = 0
   if isDifferentDay(previousMessage, message) then
     height = height + Theme.LAYOUT.DATE_SEPARATOR_HEIGHT + BUBBLE_GROUP_SPACING
   end
-  if not isFirst then
+  if hasUnreadDivider then
+    height = height + Theme.LAYOUT.DATE_SEPARATOR_HEIGHT + BUBBLE_SPACING
+  elseif not isFirst then
     height = height + (grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING)
   end
   if not grouped and message.kind ~= "system" then
@@ -83,7 +85,8 @@ function Layout.GetGeometryRevision()
   return geometryRevision
 end
 
-function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst)
+-- hasUnreadDivider: the row opens with the "New messages" divider.
+function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst, hasUnreadDivider)
   local kind = message.kind or "user"
   local paddingHorizontal = kind == "system" and 8 or Theme.LAYOUT.BUBBLE_PADDING_H
   local paddingVertical = kind == "system" and 4 or Theme.LAYOUT.BUBBLE_PADDING_V
@@ -93,7 +96,7 @@ function Layout.EstimateRowHeight(previousMessage, message, paneWidth, isFirst)
   local charactersPerLine = math.max(math.floor(textWidth / ESTIMATED_GLYPH_WIDTH), 1)
   local text = type(message.text) == "string" and message.text or ""
   local lineCount = math.max(math.ceil(math.max(#text, 1) / charactersPerLine), 1)
-  local height = rowPrefixHeight(previousMessage, message, isFirst) + lineCount * estimatedLineHeight + paddingVertical * 2
+  local height = rowPrefixHeight(previousMessage, message, isFirst, hasUnreadDivider) + lineCount * estimatedLineHeight + paddingVertical * 2
   if message.isCensored == true then
     height = height + 12
   end
@@ -139,9 +142,15 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
     separator.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
     yOffset = yOffset + separator.height + BUBBLE_GROUP_SPACING
   end
-
   local grouped = Grouping.ShouldGroup(previousMessage, message)
-  if index > 1 then
+  -- The divider's own padding already separates it from the message, so only
+  -- the small in-group gap follows it.
+  if options and options.unreadDividerMessage == message then
+    local divider = DateSeparator.CreateNewMessagesSeparator(pooledFactory, contentFrame, paneWidth)
+    divider.frame:ClearAllPoints()
+    divider.frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
+    yOffset = yOffset + divider.height + BUBBLE_SPACING
+  elseif index > 1 then
     yOffset = yOffset + (grouped and BUBBLE_SPACING or BUBBLE_GROUP_SPACING)
   end
 

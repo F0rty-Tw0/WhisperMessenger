@@ -189,6 +189,11 @@ function WindowRuntime.Create(options)
     -- window was open was already on screen, so closing must not let the
     -- next background refresh pop it on the widget as if it were new.
     acknowledgeLatestWidgetPreview(buildContacts())
+    -- Reopening shows the "New messages" divider again only if new
+    -- whispers arrived meanwhile.
+    if not nextVisible then
+      runtime.unreadDivider = nil
+    end
     return coordinator.setWindowVisible(nextVisible)
   end
 
