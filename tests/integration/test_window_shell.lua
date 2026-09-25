@@ -89,7 +89,7 @@ return function()
   assert(#window.contacts.rows == 2)
   assert(window.title.text == "WhisperMessenger")
   -- Modern title is vertically centred on the title bar (TitleBarLayout).
-  assert(window.title.point[1] == "LEFT", "expected modern title centred on the title bar")
+  assert(window.title.point[1] == "CENTER", "expected modern title centred on the title bar")
   assert(window.contacts.rows[1].title.point[1] == "TOPLEFT")
   assert(window.contacts.scrollBar ~= nil)
   assert(window.contacts.scrollBar.template == nil, "expected contacts scrollbar to avoid Blizzard scrollbar templates")

@@ -62,12 +62,12 @@ return function()
   assertPoint(chrome.closeButton, "RIGHT", chrome.titleBar, "RIGHT", -L.TITLE_BAR_INSET_X, 0, "close")
   assertPoint(chrome.optionsButton, "RIGHT", chrome.closeButton, "LEFT", -gap, 0, "options")
   assertPoint(chrome.backButton, "RIGHT", chrome.optionsButton, "LEFT", -gap, 0, "back")
-  assertPoint(chrome.newConversationButton, "LEFT", chrome.title, "RIGHT", gap, 0, "new whisper")
+  -- New-whisper glyph ink mirrors the close glyph's ink on the other side.
+  assertPoint(chrome.newConversationButton, "LEFT", chrome.titleBar, "LEFT", L.TITLE_BAR_INSET_X, 0, "new whisper")
   assertPoint(chrome.patchNotesButton, "LEFT", chrome.newConversationButton, "RIGHT", gap, 0, "what's new")
-  -- Title ink lines up with the close glyph's ink on the other side.
-  local titleInset = L.TITLE_BAR_INSET_X + (L.TITLE_BUTTON_SIZE - L.CHROME_BUTTON_ICON_SIZE) / 2
-  assertPoint(chrome.title, "LEFT", chrome.titleBar, "LEFT", titleInset, 0, "title")
   assertPoint(chrome.markAllReadButton, "LEFT", chrome.patchNotesButton, "RIGHT", gap, 0, "mark all read")
+  -- test_modern_title_centred_on_title_bar
+  assertPoint(chrome.title, "CENTER", chrome.titleBar, "CENTER", 0, 0, "title")
 
   -- test_modern_hover_fades_circle_and_brightens_glyph
   for name, button in pairs(titleButtons(chrome)) do

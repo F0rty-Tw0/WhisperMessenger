@@ -152,8 +152,12 @@ local function test_chrome_controls_use_branch_specific_anchor_tuples()
       )
     else
       assert(
-        newPoint == "LEFT" and newRelativeTo == chrome.title and newRelativePoint == "RIGHT" and newX == gap and newY == 0,
-        "modern New Conversation button should use its complete title-relative anchor"
+        newPoint == "LEFT"
+          and newRelativeTo == chrome.titleBar
+          and newRelativePoint == "LEFT"
+          and newX == Theme.LAYOUT.TITLE_BAR_INSET_X
+          and newY == 0,
+        "modern New Conversation button should use its complete title-bar-relative anchor"
       )
     end
 
