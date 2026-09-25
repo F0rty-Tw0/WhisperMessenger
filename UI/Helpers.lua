@@ -22,6 +22,7 @@ local UIHelpers = {
   applyColorTexture = Base.applyColorTexture,
   applyBorderBoxColor = Base.applyBorderBoxColor,
   applyVertexColor = Base.applyVertexColor,
+  colorEscape = Base.colorEscape,
   applyClassColor = Base.applyClassColor,
   captureFramePosition = Base.captureFramePosition,
   setFontObject = Base.setFontObject,

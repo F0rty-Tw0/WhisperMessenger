@@ -6,6 +6,7 @@ end
 local ContextMenu = {}
 -- stylua: ignore start
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
@@ -19,25 +20,8 @@ local function reactionsAllowed(message, canReact)
   return MessageReactions.IsEligible(message)
 end
 
-local function colorToHex(color)
-  local function component(value)
-    local v = math.floor((tonumber(value) or 1) * 255 + 0.5)
-    if v < 0 then
-      v = 0
-    elseif v > 255 then
-      v = 255
-    end
-    return v
-  end
-
-  local r = component(color and color[1] or 1)
-  local g = component(color and color[2] or 1)
-  local b = component(color and color[3] or 1)
-  return string.format("|cff%02x%02x%02x", r, g, b)
-end
-
 local function styleMenuText(text)
-  return colorToHex(Theme.COLORS.option_button_text) .. text .. "|r"
+  return UIHelpers.colorEscape(Theme.COLORS.option_button_text) .. text .. "|r"
 end
 
 local function getMenuFrame()

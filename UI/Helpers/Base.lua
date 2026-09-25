@@ -112,6 +112,15 @@ function Base.applyVertexColor(region, colorTable)
   end
 end
 
+-- "|cffRRGGBB" escape for inline-coloured text; close it with "|r".
+function Base.colorEscape(color)
+  local function component(value)
+    local v = math.floor((tonumber(value) or 1) * 255 + 0.5)
+    return math.max(0, math.min(255, v))
+  end
+  return string.format("|cff%02x%02x%02x", component(color and color[1]), component(color and color[2]), component(color and color[3]))
+end
+
 function Base.applyClassColor(fontString, classTag, fallbackColor)
   if not fontString then
     return
