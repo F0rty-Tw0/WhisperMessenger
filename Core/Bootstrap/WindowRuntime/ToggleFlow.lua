@@ -3,33 +3,32 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local ToggleFlow = {}
 
-local function conversationMatchesTab(runtime, badgeFilter, conversationKey, tabMode)
+-- Classified exactly like the contacts list: the conversation's snapshot
+-- through ContactsTabFilter.ModeOf.
+local function conversationMatchesTab(runtime, conversationKey, tabMode)
   if tabMode == nil then
     return true
   end
 
-  local conversation = runtime.store and runtime.store.conversations and runtime.store.conversations[conversationKey] or nil
+  local conversation = Store.Find(runtime.store, conversationKey)
   if conversation == nil then
     return true
   end
 
-  local isGroup = badgeFilter.IsGroupChannel(conversation.channel)
-  if tabMode == "groups" then
-    return isGroup
-  end
-
-  return not isGroup
+  local settings = runtime.accountState and runtime.accountState.settings
+  return ContactsTabFilter.ModeOf(ConversationSnapshot.Build(conversationKey, conversation, settings)) == tabMode
 end
 
 function ToggleFlow.Create(options)
   options = options or {}
 
   local runtime = options.runtime or {}
-  local badgeFilter = options.badgeFilter or BadgeFilter
   local ensureWindow = options.ensureWindow or function() end
   local isWindowVisible = options.isWindowVisible or function()
     return false
@@ -45,7 +44,7 @@ function ToggleFlow.Create(options)
   local refreshWindow = options.refreshWindow or function() end
 
   local function matchesTab(conversationKey, tabMode)
-    return conversationMatchesTab(runtime, badgeFilter, conversationKey, tabMode)
+    return conversationMatchesTab(runtime, conversationKey, tabMode)
   end
 
   local function toggle()

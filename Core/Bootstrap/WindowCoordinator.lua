@@ -6,9 +6,11 @@ end
 local ContactEnricher = ns.ContactEnricher or require("WhisperMessenger.Model.ContactEnricher")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
-local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
-local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+-- stylua: ignore start
+local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
+local RequestFollow = ns.BootstrapWindowCoordinatorRequestFollow or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.RequestFollow")
+-- stylua: ignore end
 
 local STATUS_REFRESH_INTERVAL = 30
 local AVAILABILITY_THROTTLE_SECONDS = 10
@@ -45,8 +47,10 @@ function WindowCoordinator.Create(options)
   local livePresenceSender = options.livePresenceSender
   local requestAvailability = options.requestAvailability or WhisperGateway.RequestAvailability
   local cTimer = options.cTimer or _G.C_Timer
+  local selectConversation = options.selectConversation
 
   local statusTicker = nil
+  local requestFollow = RequestFollow.Create(getWindow, selectConversation)
 
   local coordinator = {}
 
@@ -162,8 +166,18 @@ function WindowCoordinator.Create(options)
     return ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildContacts)
   end
 
+  local iconSurfaces = {
+    getWindow = getWindow,
+    isWindowVisible = coordinator.isWindowVisible,
+    buildMessagePreview = buildMessagePreview,
+    getIcon = getIcon,
+    getMinimapIcon = getMinimapIcon,
+    getLdbObject = getLdbObject,
+  }
+
   function coordinator.refreshContacts()
     local freshContacts = buildContacts()
+    local previousRequestKeys = requestFollow.takeRequestKeys(freshContacts)
     pruneAvailabilityCaches(freshContacts)
 
     if not isMythicRestricted() then
@@ -184,66 +198,11 @@ function WindowCoordinator.Create(options)
       end
     end
 
-    local nextState = coordinator.buildSelectionState(freshContacts)
-    -- Guard against a stale `activeConversationKey` bleeding into the pane
-    -- when it doesn't belong to the current tab. Per-tab memory clears the
-    -- pane at the moment of swap, but the persistent key isn't reset — so a
-    -- later refresh (incoming whisper, availability tick) would re-surface
-    -- the off-tab conversation. Match the selection's channel against the
-    -- active tab and drop it on mismatch.
-    do
-      local window = getWindow()
-      local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
-      if tabMode and nextState and nextState.selectedContact then
-        local isGroupItem = ContactsTabFilter.IsGroupChannel(nextState.selectedContact.channel)
-        local expectedMode = isGroupItem and "groups" or "whispers"
-        if expectedMode ~= tabMode then
-          nextState = { contacts = nextState.contacts }
-        end
-      end
+    local nextState, followed = requestFollow.reconcile(coordinator.buildSelectionState(freshContacts), previousRequestKeys)
+    if followed then
+      return nextState
     end
-    -- One unread sum and one preview feed every icon surface. Suppress the
-    -- icon-anchored previews only when the Whispers tab is actually showing —
-    -- the full conversation is already on screen and the popup would be
-    -- redundant. On the Groups tab the whisper isn't visible in the pane, so
-    -- the popup is still the user's only surface.
-    local unread = BadgeFilter.SumWhisperUnread(freshContacts)
-    local previewWindow = getWindow()
-    local previewTabMode = previewWindow and type(previewWindow.getTabMode) == "function" and previewWindow.getTabMode() or "whispers"
-    local whispersVisibleInPane = coordinator.isWindowVisible() and previewTabMode == "whispers"
-    local preview = not whispersVisibleInPane and buildMessagePreview(freshContacts) or nil
-    local previewSender = preview and preview.senderName or nil
-    local previewText = preview and preview.messageText or nil
-    local previewClass = preview and preview.classTag or nil
-
-    local icon = getIcon()
-    if icon and icon.setUnreadCount then
-      icon.setUnreadCount(unread)
-    end
-    if icon and icon.setIncomingPreview then
-      icon.setIncomingPreview(previewSender, previewText, previewClass)
-    end
-
-    local minimap = getMinimapIcon()
-    if minimap and minimap.setUnreadCount then
-      minimap.setUnreadCount(unread)
-    end
-    if minimap and minimap.setIncomingPreview then
-      -- The minimap preview floats on UIParent, so it must not pop (or
-      -- linger) while the minimap icon itself is hidden (icon mode "widget").
-      if not minimap.isShown or minimap.isShown() then
-        minimap.setIncomingPreview(previewSender, previewText, previewClass)
-      else
-        minimap.setIncomingPreview(nil, nil, nil)
-      end
-    end
-
-    local ldb = getLdbObject()
-    if ldb then
-      ldb.unread = unread
-      ldb.text = DataBroker.FormatText(unread)
-    end
-
+    IconSurfaces.Update(freshContacts, iconSurfaces)
     return nextState
   end
   function coordinator.refreshWindow(affectedConversationKey)
@@ -317,7 +276,7 @@ function WindowCoordinator.Create(options)
     local freshContacts = buildContacts()
 
     for _, item in ipairs(freshContacts) do
-      if (item.unreadCount or 0) > 0 then
+      if BadgeFilter.BadgeUnread(item) > 0 then
         return item.conversationKey
       end
     end

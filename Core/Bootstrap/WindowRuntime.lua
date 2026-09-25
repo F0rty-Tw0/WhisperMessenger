@@ -134,6 +134,9 @@ function WindowRuntime.Create(options)
     return widgetPreview.acknowledgeLatestWidgetPreview(contacts)
   end
 
+  -- Assigned below; the coordinator uses it to follow a replied-to request.
+  local conversationSelector
+
   local coordinator = windowCoordinatorModule.Create({
     runtime = runtime,
     buildContacts = buildContacts,
@@ -163,6 +166,9 @@ function WindowRuntime.Create(options)
     presenceCache = presenceCache,
     livePresenceSender = livePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
+    selectConversation = function(conversationKey)
+      return conversationSelector.selectConversation(conversationKey)
+    end,
   })
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
@@ -201,7 +207,7 @@ function WindowRuntime.Create(options)
     return coordinator.refreshWindow(affectedConversationKey)
   end
 
-  local conversationSelector = ConversationSelector.Create({
+  conversationSelector = ConversationSelector.Create({
     runtime = runtime,
     characterState = characterState,
     markConversationRead = markConversationRead,
@@ -300,7 +306,6 @@ function WindowRuntime.Create(options)
 
   local toggleFlow = ToggleFlow.Create({
     runtime = runtime,
-    badgeFilter = BadgeFilter,
     ensureWindow = ensureWindow,
     isWindowVisible = function()
       return controller.isWindowVisible()

@@ -33,6 +33,18 @@ function BadgeFilter.IsGroupChannel(channel)
   return isGroupChannel(channel)
 end
 
+-- Muted conversations and message requests keep their own row count but
+-- never feed an aggregate badge. A mention breaks through mute.
+local function badgeUnread(contact)
+  if contact.isRequest == true or (contact.muted == true and contact.hasUnreadMention ~= true) then
+    return 0
+  end
+  return tonumber(contact.unreadCount) or 0
+end
+
+-- The unread count a contact adds to badges and "jump to unread".
+BadgeFilter.BadgeUnread = badgeUnread
+
 -- SumWhisperUnread returns the aggregate unread count across all contacts
 -- that are NOT group conversations. Group conversations are intentionally
 -- excluded from the minimap/widget badge per user requirement.
@@ -42,7 +54,7 @@ function BadgeFilter.SumWhisperUnread(contacts)
   local total = 0
   for _, contact in ipairs(contacts or {}) do
     if not isGroupChannel(contact.channel) then
-      total = total + (tonumber(contact.unreadCount) or 0)
+      total = total + badgeUnread(contact)
     end
   end
   return total
@@ -54,6 +66,17 @@ function BadgeFilter.SumGroupUnread(contacts)
   local total = 0
   for _, contact in ipairs(contacts or {}) do
     if isGroupChannel(contact.channel) then
+      total = total + badgeUnread(contact)
+    end
+  end
+  return total
+end
+
+-- SumRequestUnread feeds only the (dim) Requests tab counter.
+function BadgeFilter.SumRequestUnread(contacts)
+  local total = 0
+  for _, contact in ipairs(contacts or {}) do
+    if contact.isRequest == true then
       total = total + (tonumber(contact.unreadCount) or 0)
     end
   end

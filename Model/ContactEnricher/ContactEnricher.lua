@@ -83,7 +83,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local conversation = runtime.store.conversations[conversationKey]
   local selectedContact = TableUtils.findWhere(contacts, "conversationKey", conversationKey)
   if selectedContact == nil and conversation ~= nil then
-    selectedContact = ConversationSnapshot.Build(conversationKey, conversation)
+    selectedContact = ConversationSnapshot.Build(conversationKey, conversation, runtime.accountState and runtime.accountState.settings)
     ContactEnricher.EnrichContactsPresence({ selectedContact }, runtime)
   end
 

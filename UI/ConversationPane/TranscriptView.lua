@@ -15,6 +15,14 @@ local TranscriptView = {}
 
 local TRANSCRIPT_LINE_HEIGHT = 16
 TranscriptView.TRANSCRIPT_SCROLL_STEP = 24
+-- Render option that re-lays-out every bubble. Shared, never mutated.
+TranscriptView.FORCE_RENDER = { force = true }
+
+-- True when the transcript is scrolled to (within 1px of) its end.
+function TranscriptView.IsAtEnd(transcript)
+  local range = ScrollView.GetRange(transcript)
+  return range <= 0 or ScrollView.GetOffset(transcript) >= range - 1
+end
 
 local function formatMessage(message)
   local body = Hyperlinks.FormatTextForDisplay(message and message.text or "")

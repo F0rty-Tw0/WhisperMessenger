@@ -522,6 +522,11 @@ local function makeCreateFrame()
       return #text * 7
     end
 
+    -- Button:GetTextWidth (width of the button's label); same metric.
+    function frame:GetTextWidth()
+      return self:GetStringWidth()
+    end
+
     function frame:SetClipsChildren(value)
       self.clipsChildren = value
     end

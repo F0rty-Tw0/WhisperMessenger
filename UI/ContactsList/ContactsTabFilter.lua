@@ -29,16 +29,37 @@ end
 -- conversation by channel without running a full filter pass.
 ContactsTabFilter.IsGroupChannel = isGroupChannel
 
--- FilterWhispers returns only items that are NOT in a known group channel.
--- Nil, "WOW", "BN", "WHISPER", "BN_WHISPER" all pass through as whispers.
-function ContactsTabFilter.FilterWhispers(items)
+-- ModeOf names the tab an item belongs to. isRequest is only ever set while
+-- the Requests inbox setting is on.
+function ContactsTabFilter.ModeOf(item)
+  if isGroupChannel(item.channel) then
+    return "groups"
+  end
+  if item.isRequest == true then
+    return "requests"
+  end
+  return "whispers"
+end
+
+local function filterMode(items, mode)
   local result = {}
   for _, item in ipairs(items or {}) do
-    if not isGroupChannel(item.channel) then
+    if ContactsTabFilter.ModeOf(item) == mode then
       result[#result + 1] = item
     end
   end
   return result
+end
+
+-- FilterWhispers returns only items that are NOT in a known group channel
+-- and not message requests.
+-- Nil, "WOW", "BN", "WHISPER", "BN_WHISPER" all pass through as whispers.
+function ContactsTabFilter.FilterWhispers(items)
+  return filterMode(items, "whispers")
+end
+
+function ContactsTabFilter.FilterRequests(items)
+  return filterMode(items, "requests")
 end
 
 -- FilterGroups returns only items that ARE in a known group channel.
@@ -53,9 +74,12 @@ function ContactsTabFilter.FilterGroups(items)
 end
 
 -- Apply filters the item list according to mode and feature flag.
--- mode: "whispers" | "groups" | nil (nil defaults to "whispers")
--- showGroupChats: boolean — when false, always returns whisper filter
+-- mode: "whispers" | "groups" | "requests" | nil (nil defaults to "whispers")
+-- showGroupChats: boolean — when false, groups fall back to the whisper filter
 function ContactsTabFilter.Apply(items, mode, showGroupChats)
+  if mode == "requests" then
+    return ContactsTabFilter.FilterRequests(items)
+  end
   if not showGroupChats then
     return ContactsTabFilter.FilterWhispers(items)
   end

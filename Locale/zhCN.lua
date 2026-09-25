@@ -340,6 +340,14 @@ local SimplifiedChinese = {
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
   ["New messages"] = "新消息",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "请求",
+  ["Put whispers from strangers in Requests"] = "将陌生人的密语放入请求",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "来自非好友、非公会成员、非队友玩家的密语会安静地留在“请求”标签页：无声音、无弹窗、无计数。",
+  ["Not a friend, guildmate or group member."] = "不是好友、公会成员或队友。",
+  ["Accept"] = "接受",
+  ["Delete"] = "删除",
+  ["No message requests."] = "没有消息请求。",
   ["Reply"] = "回复",
   ["Replying to %s"] = "回复 %s",
 }

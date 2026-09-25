@@ -47,6 +47,7 @@ return function()
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
     showGroupChats = false,
+    requestsInbox = true,
     -- notifications and icons
     lockToggleIcon = true,
     shareWidgetPosition = true,
@@ -94,6 +95,7 @@ return function()
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)
   )
 
+  assert(behaviorCapture.config.requestsInbox == true, "behavior config should carry requestsInbox")
   -- Appearance: bubbleColorPreset must round-trip.
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",

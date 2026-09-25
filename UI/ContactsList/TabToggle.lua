@@ -9,6 +9,7 @@ local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local NativeTabToggle = ns.ContactsListNativeTabToggle or require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
+local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local TabToggle = {}
@@ -30,12 +31,11 @@ local UNDERLINE_PADDING = 12
 local FOOTER_TINT = { 1, 1, 1, 0.04 }
 local FALLBACK_DIVIDER = { 0.15, 0.16, 0.22, 0.60 }
 
--- One equal-width segment: button spanning the bar height between two
--- anchors, hover fill, centred label, accent underline, badge.
-local function createTab(factory, frame, textKey, leftAnchor, rightAnchor)
+-- One equal-width segment (anchored by TabLayout): button spanning the bar
+-- height, hover fill, centred label, accent underline, badge. The Requests
+-- badge is dim so a stranger's message never looks urgent.
+local function createTab(factory, frame, textKey, mode)
   local btn = factory.CreateFrame("Button", nil, frame)
-  btn:SetPoint("TOPLEFT", frame, leftAnchor, 0, -1)
-  btn:SetPoint("BOTTOMRIGHT", frame, rightAnchor, 0, 0)
 
   local hover = btn:CreateTexture(nil, "BORDER")
   hover:SetAllPoints()
@@ -50,10 +50,11 @@ local function createTab(factory, frame, textKey, leftAnchor, rightAnchor)
   underline:SetPoint("BOTTOM", btn, "BOTTOM", 0, 0)
   underline:Hide()
 
-  local badge = Badge.Create(factory, btn, { size = BADGE_SIZE })
+  local badge = Badge.Create(factory, btn, { size = BADGE_SIZE, dim = mode == "requests" })
   badge.frame:SetPoint("LEFT", label, "RIGHT", BADGE_GAP, 0)
 
   return {
+    mode = mode,
     btn = btn,
     hover = hover,
     hoverFade = HoverFade.Attach(hover),
@@ -75,6 +76,12 @@ local function layoutGroup(tab)
   tab.underline:SetWidth(labelWidth + extra + UNDERLINE_PADDING)
 end
 
+-- Width a tab needs on one row; the badge is always counted so the wrap
+-- decision never flips with unread counts.
+local function naturalWidth(tab)
+  return (tab.label:GetStringWidth() or 0) + BADGE_GAP + BADGE_SIZE + UNDERLINE_PADDING
+end
+
 local function labelColor(active, hovered)
   if active then
     return Theme.COLORS.accent
@@ -93,8 +100,8 @@ local function paintTab(tab, active)
   tab.hoverFade.set(tab.hovered and not active)
 end
 
--- Create builds a two-segment Whispers/Groups toggle control anchored to
--- the bottom of the parent contacts pane.
+-- Create builds the Whispers/Groups(/Requests) toggle control anchored to
+-- the bottom of the parent contacts pane. setModes picks the visible tabs.
 --
 -- options:
 --   parent        : parent frame
@@ -103,7 +110,8 @@ end
 --   nativeChrome  : Native WoW HUD -> Blizzard tabs at the pane bottom
 --
 -- Returns:
---   { frame, reservedHeight, setMode, getMode, setShown, setUnreadCounts, setLanguage }
+--   { frame, reservedHeightFor, setMode, getMode, setModes, setShown,
+--     setUnreadCounts, setLanguage }
 function TabToggle.Create(factory, parent, options)
   options = options or {}
   if options.nativeChrome then
@@ -112,9 +120,6 @@ function TabToggle.Create(factory, parent, options)
       return native
     end
   end
-  local onModeChanged = options.onModeChanged or function(_mode) end
-  local currentMode = options.initialMode or "whispers"
-
   -- Container anchored at the bottom of the contacts pane
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetHeight(TAB_HEIGHT)
@@ -138,48 +143,36 @@ function TabToggle.Create(factory, parent, options)
   footerTint:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
   footerTint:Show()
 
-  local whispers = createTab(factory, frame, "Whispers", "TOPLEFT", "BOTTOM")
-  local groups = createTab(factory, frame, "Groups", "TOP", "BOTTOMRIGHT")
+  local whispers = createTab(factory, frame, "Whispers", "whispers")
+  local groups = createTab(factory, frame, "Groups", "groups")
+  local requests = createTab(factory, frame, "Requests", "requests")
+  local tabs = { whispers, groups, requests }
+  local toggle = { frame = frame }
 
   -- Colours are read at paint time so preset switches repaint on the
   -- next mode, unread, hover or language update.
-  local function paintTabs()
-    local isWhispers = currentMode == "whispers"
-    applyColorTexture(divider, Theme.COLORS.divider or FALLBACK_DIVIDER)
-    applyColorTexture(bg, Theme.COLORS.bg_primary or Theme.COLORS.bg_secondary)
-    applyColorTexture(footerTint, FOOTER_TINT)
-    for _, tab in ipairs({ whispers, groups }) do
-      tab.badge.setCount(tab.unread)
-      layoutGroup(tab)
-    end
-    paintTab(whispers, isWhispers)
-    paintTab(groups, not isWhispers)
-  end
-
-  paintTabs()
-
-  local function setMode(mode)
-    if mode ~= "whispers" and mode ~= "groups" then
-      mode = "whispers"
-    end
-    currentMode = mode
-    paintTabs()
-  end
-
-  local function getMode()
-    return currentMode
-  end
-
-  local function bindTab(tab, mode)
-    if not tab.btn.SetScript then
-      return
-    end
-    tab.btn:SetScript("OnClick", function()
-      if currentMode ~= mode then
-        setMode(mode)
-        onModeChanged(mode)
+  local paintTabs = TabLayout.BindController(toggle, frame, { whispers = whispers, groups = groups, requests = requests }, {
+    initialMode = options.initialMode,
+    onModeChanged = options.onModeChanged,
+    tabHeight = TAB_HEIGHT,
+    topInset = 1,
+    naturalWidth = naturalWidth,
+    paint = function(currentMode)
+      applyColorTexture(divider, Theme.COLORS.divider or FALLBACK_DIVIDER)
+      applyColorTexture(bg, Theme.COLORS.bg_primary or Theme.COLORS.bg_secondary)
+      applyColorTexture(footerTint, FOOTER_TINT)
+      for _, tab in ipairs(tabs) do
+        tab.badge.setCount(tab.unread)
+        layoutGroup(tab)
+        paintTab(tab, tab.mode == currentMode)
       end
-    end)
+    end,
+    relabel = function(tab)
+      tab.label:SetText(Localization.Text(tab.textKey))
+    end,
+  })
+
+  for _, tab in ipairs(tabs) do
     tab.btn:SetScript("OnEnter", function()
       tab.hovered = true
       paintTabs()
@@ -189,44 +182,8 @@ function TabToggle.Create(factory, parent, options)
       paintTabs()
     end)
   end
-  bindTab(whispers, "whispers")
-  bindTab(groups, "groups")
 
-  local function setShown(shown)
-    if frame.SetShown then
-      frame:SetShown(shown)
-    elseif shown then
-      if frame.Show then
-        frame:Show()
-      end
-    else
-      if frame.Hide then
-        frame:Hide()
-      end
-    end
-  end
-
-  local function setUnreadCounts(whispersCount, groupsCount)
-    whispers.unread = tonumber(whispersCount) or 0
-    groups.unread = tonumber(groupsCount) or 0
-    paintTabs()
-  end
-
-  local function setLanguage()
-    whispers.label:SetText(Localization.Text(whispers.textKey))
-    groups.label:SetText(Localization.Text(groups.textKey))
-    paintTabs()
-  end
-
-  return {
-    frame = frame,
-    reservedHeight = TAB_HEIGHT,
-    setMode = setMode,
-    getMode = getMode,
-    setShown = setShown,
-    setUnreadCounts = setUnreadCounts,
-    setLanguage = setLanguage,
-  }
+  return toggle
 end
 
 ns.ContactsListTabToggle = TabToggle

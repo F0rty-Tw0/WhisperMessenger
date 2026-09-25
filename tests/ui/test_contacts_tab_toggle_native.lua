@@ -71,7 +71,8 @@ return function()
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
     local buttons = tabs(toggle)
-    assert(#buttons == 2, "HUD: two tabs, got " .. #buttons)
+    assert(#buttons == 3, "HUD: three tabs, got " .. #buttons)
+    assert(buttons[3].shown == false, "HUD: the Requests tab stays hidden until the inbox is on")
     assert(buttons[1].template == "PanelTabButtonTemplate", "HUD: whispers tab should use PanelTabButtonTemplate")
     assert(buttons[2].template == "PanelTabButtonTemplate", "HUD: groups tab should use PanelTabButtonTemplate")
     assert(buttons[1].text == "Whispers" and buttons[2].text == "Groups", "HUD: tab labels via SetText")
@@ -83,7 +84,8 @@ return function()
     local points = toggle.frame.points
     assert(points[1][1] == "BOTTOMLEFT" and points[1][2] == pane, "HUD: strip anchored to the pane bottom-left (inside the window)")
     assert(points[2][1] == "BOTTOMRIGHT" and points[2][2] == pane, "HUD: strip spans the pane width")
-    assert(toggle.reservedHeight == TabToggle.NATIVE_HEIGHT and toggle.reservedHeight > 0, "HUD: list reserves the strip height")
+    local reserved = toggle.reservedHeightFor(toggle.frame:GetWidth())
+    assert(reserved == TabToggle.NATIVE_HEIGHT and reserved > 0, "HUD: list reserves the strip height")
     assert(toggle.frame.height == TabToggle.NATIVE_HEIGHT, "HUD: strip height matches the reserved space")
   end
 
@@ -208,7 +210,7 @@ return function()
     local factory = TemplateFactory.missing(FakeUI.NewFactory(), "PanelTabButtonTemplate")
     local toggle = createToggle(factory, true)
     assert(tabs(toggle)[1].template == nil, "fallback: modern segment buttons")
-    assert(toggle.reservedHeight == TabToggle.HEIGHT, "fallback: modern reserves the bar height")
+    assert(toggle.reservedHeightFor(toggle.frame:GetWidth()) == TabToggle.HEIGHT, "fallback: modern reserves the bar height")
   end
 
   -- test_modern_tabs_unchanged
@@ -218,7 +220,7 @@ return function()
     assert(pt[1] == "BOTTOMLEFT" and pt[2] == pane, "modern: bar anchored inside the contacts pane bottom")
     assert(toggle.frame.height == TabToggle.HEIGHT, "modern: bar height unchanged")
     assert(tabs(toggle)[1].template == nil, "modern: plain buttons")
-    assert(toggle.reservedHeight == TabToggle.HEIGHT, "modern: reserves the bar height")
+    assert(toggle.reservedHeightFor(toggle.frame:GetWidth()) == TabToggle.HEIGHT, "modern: reserves the bar height")
     assert(#FindUI.ofType(toggle.frame, "Texture") == 3, "modern: divider, bg and footer tint stay")
   end
 end

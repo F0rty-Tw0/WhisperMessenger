@@ -23,9 +23,26 @@ function ContactsRuntime.Create(factory, options)
   local function getShowGroupChats()
     return settingsConfig.showGroupChats ~= false
   end
+  local function getRequestsInbox()
+    return settingsConfig.requestsInbox == true
+  end
+  -- Footer tabs in order; the footer shows only when there is a choice.
+  local function visibleTabModes()
+    local modes = { "whispers" }
+    if getShowGroupChats() then
+      modes[#modes + 1] = "groups"
+    end
+    if getRequestsInbox() then
+      modes[#modes + 1] = "requests"
+    end
+    return modes
+  end
 
   -- Tab toggle mode — persists in characterState via onTabModeChanged
   local currentTabMode = (options.initialTabMode and options.initialTabMode ~= "") and options.initialTabMode or "whispers"
+  if currentTabMode == "requests" and not getRequestsInbox() then
+    currentTabMode = "whispers"
+  end
 
   -- Forward-declare so the tab toggle callback can call it after
   -- contactsSearchController is wired below.
@@ -56,9 +73,17 @@ function ContactsRuntime.Create(factory, options)
         end
       end,
     })
-    -- Show/hide based on feature flag
-    tabToggle.setShown(getShowGroupChats())
   end
+
+  local function applyTabModes()
+    if tabToggle == nil then
+      return
+    end
+    local modes = visibleTabModes()
+    tabToggle.setModes(modes)
+    tabToggle.setShown(#modes > 1)
+  end
+  applyTabModes()
 
   local contactsController = ContactsController.Create(factory, options.contactsView, options.initialContacts or {}, {
     getHideMessagePreview = function()
@@ -110,6 +135,7 @@ function ContactsRuntime.Create(factory, options)
   -- locale without requiring /reload. Caching at create time meant the empty
   -- state stayed in the previous language until reload.
   local GROUPS_EMPTY_KEY = "No group chats yet.\nJoin a party or instance to see messages here."
+  local REQUESTS_EMPTY_KEY = "No message requests."
   local WHISPERS_EMPTY_KEY = "No conversations yet. Click Start New Whisper to message a friend."
 
   -- True while the search box has text, so the whispers empty-state hint
@@ -139,13 +165,15 @@ function ContactsRuntime.Create(factory, options)
       -- Per-tab unread counters rendered as circular badges next to the labels.
       if tabToggle and tabToggle.setUnreadCounts then
         local source = allContacts or filtered
-        tabToggle.setUnreadCounts(BadgeFilter.SumWhisperUnread(source), BadgeFilter.SumGroupUnread(source))
+        tabToggle.setUnreadCounts(BadgeFilter.SumWhisperUnread(source), BadgeFilter.SumGroupUnread(source), BadgeFilter.SumRequestUnread(source))
       end
       if emptyStateFrame == nil then
         return
       end
       if currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
         EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
+      elseif currentTabMode == "requests" and #filtered == 0 and not hasSearchText() then
+        EmptyState.Show(emptyStateFrame, Localization.Text(REQUESTS_EMPTY_KEY))
       elseif currentTabMode == "whispers" and #filtered == 0 and not hasSearchText() then
         EmptyState.Show(emptyStateFrame, Localization.Text(WHISPERS_EMPTY_KEY))
       else
@@ -172,16 +200,13 @@ function ContactsRuntime.Create(factory, options)
     bindInputScripts = function()
       contactsSearchController.bindInputScripts()
     end,
-    refreshTabToggleVisibility = function()
-      if tabToggle then
-        tabToggle.setShown(getShowGroupChats())
-      end
-    end,
+    refreshTabToggleVisibility = applyTabModes,
     -- Height the contacts list must leave free at the pane bottom so rows
-    -- never scroll underneath the Whispers/Groups toggle.
-    getContactsBottomInset = function()
+    -- never scroll underneath the footer tabs (two rows when they wrap).
+    -- paneWidth: the width about to be applied; nil = the footer's current.
+    getContactsBottomInset = function(paneWidth)
       if tabToggle and tabToggle.frame and tabToggle.frame:IsShown() then
-        return tabToggle.reservedHeight or TabToggle.HEIGHT
+        return tabToggle.reservedHeightFor(paneWidth or tabToggle.frame:GetWidth())
       end
       return 0
     end,

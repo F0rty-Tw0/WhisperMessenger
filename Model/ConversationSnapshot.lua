@@ -2,9 +2,14 @@ local addonName, ns = ...
 if type(ns) ~= "table" then
   ns = {}
 end
+
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
+
 local ConversationSnapshot = {}
 
-function ConversationSnapshot.Build(conversationKey, conversation)
+-- settings: account settings; decides whether the conversation counts as a
+-- message request (isRequest is only set while the Requests inbox is on).
+function ConversationSnapshot.Build(conversationKey, conversation, settings)
   conversation = conversation or {}
 
   local displayName = conversation.displayName or conversation.contactDisplayName or conversationKey
@@ -35,6 +40,7 @@ function ConversationSnapshot.Build(conversationKey, conversation)
     sortOrder = conversation.sortOrder or 0,
     guildName = conversation.guildName,
     draft = conversation.draft,
+    isRequest = MessageRequests.IsRequest(conversation, settings) or nil,
   }
 end
 

@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local ToggleSpecs = ns.MessengerWindowBehaviorToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
 
 local BehaviorSettings = {}
 
@@ -16,18 +17,7 @@ local function text(key)
   return Localization.Text(key)
 end
 
-local DEFAULTS = {
-  dimWhenMoving = true,
-  autoFocusComposer = false,
-  hideFromDefaultChat = false,
-  autoOpenIncoming = false,
-  autoOpenOutgoing = false,
-  doubleEscapeToClose = false,
-  showGroupChats = true,
-  hideOnCombat = false,
-  shareTypingStatus = true,
-  shareReadReceipts = true,
-}
+local DEFAULTS = ToggleSpecs.DEFAULTS
 
 function BehaviorSettings.Create(factory, parent, config, options)
   local onChange = options.onChange or function(...)
@@ -43,139 +33,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   })
   local hint = header.hint
 
-  local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
-
-  local toggleSpecs = {
-    {
-      label = text("Dim when moving"),
-      initial = config.dimWhenMoving ~= false,
-      onChange = function(value)
-        onChange("dimWhenMoving", value)
-      end,
-      tooltipLines = {
-        text("Dim when moving"),
-        text("Reduces window opacity while your character is moving."),
-      },
-      anchorOffsetY = -24,
-    },
-    {
-      label = text("Auto-focus chat input"),
-      initial = config.autoFocusComposer == true,
-      onChange = function(value)
-        onChange("autoFocusComposer", value)
-      end,
-      tooltipLines = {
-        text("Auto-focus chat input"),
-        text("Places the cursor in the text box when you open the messenger."),
-      },
-    },
-    {
-      label = text("Hide whispers from default chat"),
-      initial = config.hideFromDefaultChat == true,
-      onChange = function(value)
-        onChange("hideFromDefaultChat", value)
-      end,
-      tooltipLines = {
-        text("Hide whispers from default chat"),
-        text("Prevents whisper messages from appearing in the default WoW chat frame."),
-        " ",
-        text(
-          "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."
-        ),
-      },
-    },
-    {
-      label = text("Enable profanity filter"),
-      initial = profanityEnabled,
-      onChange = function(value)
-        if _G.SetCVar then
-          _G.SetCVar("profanityFilter", value and "1" or "0")
-        end
-      end,
-      tooltipLines = {
-        text("Enable profanity filter"),
-        text("Uses Blizzard's built-in filter to censor profanity in messages."),
-      },
-    },
-    {
-      label = text("Auto-open on incoming whisper"),
-      initial = config.autoOpenIncoming == true,
-      onChange = function(value)
-        onChange("autoOpenIncoming", value)
-      end,
-      tooltipLines = {
-        text("Auto-open on incoming whisper"),
-        text("Opens the messenger when you receive a whisper. Disabled during combat."),
-      },
-    },
-    {
-      label = text("Auto-open on outgoing whisper"),
-      initial = config.autoOpenOutgoing == true,
-      onChange = function(value)
-        onChange("autoOpenOutgoing", value)
-      end,
-      tooltipLines = {
-        text("Auto-open on outgoing whisper"),
-        text("Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."),
-      },
-    },
-    {
-      label = text("Hide on entering combat"),
-      initial = config.hideOnCombat == true,
-      onChange = function(value)
-        onChange("hideOnCombat", value)
-      end,
-      tooltipLines = {
-        text("Hide on entering combat"),
-        text("Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."),
-      },
-    },
-    {
-      label = text("Double ESC to close"),
-      initial = config.doubleEscapeToClose == true,
-      onChange = function(value)
-        onChange("doubleEscapeToClose", value)
-      end,
-      tooltipLines = {
-        text("Double ESC to close"),
-        text("First Esc clears the chat input; second Esc closes the window."),
-      },
-    },
-    {
-      label = text("Show group chats"),
-      initial = config.showGroupChats ~= false,
-      onChange = function(value)
-        onChange("showGroupChats", value)
-      end,
-      tooltipLines = {
-        text("Show group chats"),
-        text("Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."),
-        text("When off, only whispers appear."),
-      },
-    },
-    {
-      label = text("Share typing status"),
-      initial = config.shareTypingStatus ~= false,
-      onChange = function(value)
-        onChange("shareTypingStatus", value)
-      end,
-      tooltipLines = {
-        text("Share typing status"),
-        text("Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."),
-      },
-    },
-    {
-      label = text("Send read receipts"),
-      initial = config.shareReadReceipts ~= false,
-      onChange = function(value)
-        onChange("shareReadReceipts", value)
-      end,
-      tooltipLines = {
-        text("Send read receipts"),
-        text("Lets contacts who also use WhisperMessenger see when you have read their whispers."),
-      },
-    },
-  }
+  local toggleSpecs = ToggleSpecs.Build(config, onChange)
 
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
   local dimToggle = toggles[1]
@@ -187,8 +45,9 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local hideOnCombatToggle = toggles[7]
   local doubleEscapeToggle = toggles[8]
   local showGroupChatsToggle = toggles[9]
-  local shareTypingToggle = toggles[10]
-  local shareReadReceiptsToggle = toggles[11]
+  local requestsInboxToggle = toggles[10]
+  local shareTypingToggle = toggles[11]
+  local shareReadReceiptsToggle = toggles[12]
 
   local panel = SettingsControls.NewPanelRegistry()
   panel:bind(dimToggle, { type = "toggle", key = "dimWhenMoving", default = DEFAULTS.dimWhenMoving })
@@ -210,6 +69,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   panel:bind(hideOnCombatToggle, { type = "toggle", key = "hideOnCombat", default = DEFAULTS.hideOnCombat })
   panel:bind(doubleEscapeToggle, { type = "toggle", key = "doubleEscapeToClose", default = DEFAULTS.doubleEscapeToClose })
   panel:bind(showGroupChatsToggle, { type = "toggle", key = "showGroupChats", default = DEFAULTS.showGroupChats })
+  panel:bind(requestsInboxToggle, { type = "toggle", key = "requestsInbox", default = DEFAULTS.requestsInbox })
   panel:bind(shareTypingToggle, { type = "toggle", key = "shareTypingStatus", default = DEFAULTS.shareTypingStatus })
   panel:bind(shareReadReceiptsToggle, { type = "toggle", key = "shareReadReceipts", default = DEFAULTS.shareReadReceipts })
 
@@ -256,6 +116,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     doubleEscapeToggle.label:SetText(text("Double ESC to close"))
     hideOnCombatToggle.label:SetText(text("Hide on entering combat"))
     showGroupChatsToggle.label:SetText(text("Show group chats"))
+    requestsInboxToggle.label:SetText(text("Put whispers from strangers in Requests"))
     shareTypingToggle.label:SetText(text("Share typing status"))
     shareReadReceiptsToggle.label:SetText(text("Send read receipts"))
     resetButton.label:SetText(text("Reset to Defaults"))

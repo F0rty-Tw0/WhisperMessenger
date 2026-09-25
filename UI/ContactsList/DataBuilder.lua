@@ -178,7 +178,7 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
     end
 
     if include then
-      local snapshot = ConversationSnapshot.Build(conversationKey, conversation)
+      local snapshot = ConversationSnapshot.Build(conversationKey, conversation, savedState.settings)
       snapshot.ownerProfileId = foreignOwner
       snapshot.ownerClassTag = ownerClassTag
       table.insert(items, snapshot)

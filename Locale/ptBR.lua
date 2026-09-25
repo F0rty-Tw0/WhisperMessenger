@@ -340,6 +340,14 @@ local Portuguese = {
   ["Draft"] = "Rascunho",
   ["Draft:"] = "Rascunho:",
   ["New messages"] = "Novas mensagens",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "Solicitações",
+  ["Put whispers from strangers in Requests"] = "Colocar sussurros de desconhecidos em Solicitações",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "Sussurros de jogadores que não são seus amigos, membros da guilda ou do grupo esperam em silêncio na aba Solicitações: sem som, sem pop-up, sem contador.",
+  ["Not a friend, guildmate or group member."] = "Não é amigo, membro da guilda nem do grupo.",
+  ["Accept"] = "Aceitar",
+  ["Delete"] = "Excluir",
+  ["No message requests."] = "Nenhuma solicitação de mensagem.",
   ["Reply"] = "Responder",
   ["Replying to %s"] = "Respondendo a %s",
 }

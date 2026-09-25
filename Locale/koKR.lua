@@ -340,6 +340,14 @@ local Korean = {
   ["Draft"] = "임시 저장",
   ["Draft:"] = "임시 저장:",
   ["New messages"] = "새 메시지",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "요청",
+  ["Put whispers from strangers in Requests"] = "낯선 사람의 귓속말을 요청으로 보내기",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "친구, 길드원, 파티원이 아닌 플레이어의 귓속말은 요청 탭에서 조용히 기다립니다. 소리, 팝업, 알림 숫자가 없습니다.",
+  ["Not a friend, guildmate or group member."] = "친구, 길드원 또는 파티원이 아닙니다.",
+  ["Accept"] = "수락",
+  ["Delete"] = "삭제",
+  ["No message requests."] = "메시지 요청이 없습니다.",
   ["Reply"] = "답장",
   ["Replying to %s"] = "%s님에게 답장",
 }

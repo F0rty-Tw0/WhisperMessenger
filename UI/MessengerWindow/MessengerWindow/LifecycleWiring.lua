@@ -21,6 +21,7 @@ function LifecycleWiring.Setup(options)
     conversationPane = options.conversationPane,
     refreshContacts = options.refreshContacts,
     getSelectedConversationKey = options.getSelectedConversationKey,
+    getContactsBottomInset = options.getContactsBottomInset,
   })
   local relayoutWindow = relayoutController.relayoutWindow
 

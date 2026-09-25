@@ -194,7 +194,7 @@ function MessengerWindow.Create(factory, options)
 
   -- The tab toggle is created after LayoutBuilder.Build, so the list was
   -- sized without it. Reserve its height now and re-run the layout once.
-  layout.contactsBottomInset = contactsRuntime.getContactsBottomInset()
+  layout.contactsBottomInset = contactsRuntime.getContactsBottomInset(currentContactsWidth)
   if layout.contactsBottomInset > 0 then
     LayoutBuilder.Relayout(layout, initialState.width, initialState.height, currentContactsWidth)
   end
@@ -206,6 +206,8 @@ function MessengerWindow.Create(factory, options)
     onReact = options.onReact,
     canReact = options.canReact,
     onInviteContact = options.onInviteContact,
+    onAcceptRequest = options.onAcceptRequest,
+    onDeleteRequest = options.onDeleteRequest,
     hideEmptyHeader = settingsConfig.nativeChrome == true,
     nativeChrome = settingsConfig.nativeChrome == true,
   })
@@ -289,6 +291,7 @@ function MessengerWindow.Create(factory, options)
       return selectionController and selectionController.getSelectedConversationKey() or nil
     end,
     getCurrentContacts = getCurrentContacts,
+    getContactsBottomInset = contactsRuntime.getContactsBottomInset,
     selectedContact = options.selectedContact,
     initialConversation = options.conversation,
     initialStatus = options.status,
@@ -441,13 +444,8 @@ function MessengerWindow.Create(factory, options)
     refreshLanguage = refreshLanguage,
     refreshTabToggleVisibility = function()
       contactsRuntime.refreshTabToggleVisibility()
-      layout.contactsBottomInset = contactsRuntime.getContactsBottomInset()
-      relayoutWindow(
-        sizeValue(frame, "GetWidth", "width", initialState.width),
-        sizeValue(frame, "GetHeight", "height", initialState.height),
-        windowGeometry.getContactsWidth(),
-        false
-      )
+      -- relayoutWindow re-measures the footer height under the list.
+      relayoutCurrentSize()
     end,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,

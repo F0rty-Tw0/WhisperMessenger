@@ -344,6 +344,14 @@ local Spanish = {
   ["Draft"] = "Borrador",
   ["Draft:"] = "Borrador:",
   ["New messages"] = "Mensajes nuevos",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "Solicitudes",
+  ["Put whispers from strangers in Requests"] = "Enviar susurros de desconocidos a Solicitudes",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "Los susurros de jugadores que no son tus amigos, compañeros de hermandad ni miembros de tu grupo esperan en silencio en la pestaña Solicitudes: sin sonido, sin ventana emergente, sin contador.",
+  ["Not a friend, guildmate or group member."] = "No es amigo, compañero de hermandad ni miembro del grupo.",
+  ["Accept"] = "Aceptar",
+  ["Delete"] = "Eliminar",
+  ["No message requests."] = "No hay solicitudes de mensajes.",
   ["Reply"] = "Responder",
   ["Replying to %s"] = "Respondiendo a %s",
 }

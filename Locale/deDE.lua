@@ -340,6 +340,14 @@ local German = {
   ["Draft"] = "Entwurf",
   ["Draft:"] = "Entwurf:",
   ["New messages"] = "Neue Nachrichten",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "Anfragen",
+  ["Put whispers from strangers in Requests"] = "Flüstern von Fremden unter Anfragen ablegen",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "Flüsternachrichten von Spielern, die weder Freunde noch Gilden- oder Gruppenmitglieder sind, warten still im Tab „Anfragen“: kein Ton, kein Pop-up, kein Zähler.",
+  ["Not a friend, guildmate or group member."] = "Kein Freund, Gildenmitglied oder Gruppenmitglied.",
+  ["Accept"] = "Annehmen",
+  ["Delete"] = "Löschen",
+  ["No message requests."] = "Keine Nachrichtenanfragen.",
   ["Reply"] = "Antworten",
   ["Replying to %s"] = "Antwort an %s",
 }

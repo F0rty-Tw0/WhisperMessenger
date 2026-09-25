@@ -117,6 +117,8 @@ local function mergeMetadata(canonical, legacy)
   canonical.sortOrder = deliberateSortOrder(canonical) or deliberateSortOrder(legacy) or 0
   -- Player-set prefs: the canonical record wins, the legacy one fills gaps.
   canonical.draft = canonical.draft or legacy.draft
+  -- A message request stays one only if both records were (fail open).
+  canonical.request = (canonical.request == true and legacy.request == true) or nil
 
   local latestActivity = newestConversation(canonical, legacy, "lastActivityAt", "lastActivityLineID")
   canonical.lastActivityAt = latestActivity.lastActivityAt

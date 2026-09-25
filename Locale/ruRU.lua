@@ -340,6 +340,14 @@ local Russian = {
   ["Draft"] = "Черновик",
   ["Draft:"] = "Черновик:",
   ["New messages"] = "Новые сообщения",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "Запросы",
+  ["Put whispers from strangers in Requests"] = "Шепот от незнакомцев — во «Запросы»",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "Шепот от игроков, которые не являются вашими друзьями, согильдийцами или участниками группы, тихо ждет во вкладке «Запросы»: без звука, всплывающего окна и счетчика.",
+  ["Not a friend, guildmate or group member."] = "Не друг, не согильдиец и не участник группы.",
+  ["Accept"] = "Принять",
+  ["Delete"] = "Удалить",
+  ["No message requests."] = "Нет запросов на переписку.",
   ["Reply"] = "Ответить",
   ["Replying to %s"] = "Ответ для %s",
 }

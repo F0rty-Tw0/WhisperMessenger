@@ -13,6 +13,7 @@ local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
@@ -480,7 +481,11 @@ local function handleUnlockedEvent(state, eventName, payload)
         end
       end
 
+      local isNewConversation = state.store.conversations[conversationKey] == nil
       Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
+      if isNewConversation and eventName == "CHAT_MSG_WHISPER" then
+        MessageRequests.ClassifyNew(state, state.store.conversations[conversationKey], payload.guid, payload.playerName)
+      end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
       confirmWhisperAvailability(state, payload, contact)
       local fromPending, pendingText, pendingEntry = PendingOutgoing.Resolve(state, conversationKey, payload, sentAt)

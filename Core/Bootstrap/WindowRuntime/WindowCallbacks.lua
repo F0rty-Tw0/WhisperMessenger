@@ -9,6 +9,7 @@ local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger
 local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 
 local WindowCallbacks = {}
 
@@ -47,7 +48,7 @@ function WindowCallbacks.Create(options)
   local inviteHandler = options.inviteHandler or InviteHandler
   local livePresenceSender = options.livePresenceSender
   local refreshWindow = options.refreshWindow or function() end
-  local selectConversation = options.selectConversation or function() end
+  local selectConversation = options.selectConversation or function(_conversationKey) end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
 
@@ -65,6 +66,20 @@ function WindowCallbacks.Create(options)
       return false
     end
     return groupSendPolicy.getNotice(selectedContact.conversation or selectedContact) == nil
+  end
+
+  local function removeConversation(item)
+    local key = item and item.conversationKey
+    if key == nil then
+      return
+    end
+    MessageReactions.ClearConversation(runtime, key)
+    Store.Remove(runtime.store, key)
+    if runtime.activeConversationKey == key then
+      runtime.activeConversationKey = nil
+      characterState.activeConversationKey = nil
+    end
+    refreshWindow()
   end
 
   return {
@@ -145,16 +160,21 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
-    onRemove = function(item)
-      local key = item.conversationKey
-      MessageReactions.ClearConversation(runtime, key)
-      Store.Remove(runtime.store, key)
-      if runtime.activeConversationKey == key then
-        runtime.activeConversationKey = nil
-        characterState.activeConversationKey = nil
+    onRemove = removeConversation,
+
+    -- Request banner: Accept moves it to Whispers and keeps it open there.
+    onAcceptRequest = function(item)
+      local key = item and item.conversationKey
+      if key == nil then
+        return
       end
-      refreshWindow()
+      MessageRequests.Accept(runtime.store, key)
+      if runtime.window and runtime.window.setTabMode then
+        runtime.window.setTabMode("whispers")
+      end
+      selectConversation(key)
     end,
+    onDeleteRequest = removeConversation,
 
     onMarkUnread = function(item)
       local key = item and item.conversationKey

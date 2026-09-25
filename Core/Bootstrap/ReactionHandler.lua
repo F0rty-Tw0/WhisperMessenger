@@ -6,6 +6,7 @@ end
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local SendHandler = ns.BootstrapSendHandler or require("WhisperMessenger.Core.Bootstrap.SendHandler")
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 
 local ReactionHandler = {}
@@ -94,6 +95,8 @@ function ReactionHandler.HandleReact(runtime, selectedContact, message, reaction
     reactionControl = reactionControl,
   }, refresh)
   if accepted then
+    -- Reacting answers a message request, like replying does.
+    MessageRequests.Accept(runtime.store, selectedContact.conversationKey)
     if hintSuffix ~= nil then
       conversation.addonHintSent = true
     end

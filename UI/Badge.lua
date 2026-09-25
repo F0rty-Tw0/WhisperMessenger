@@ -19,6 +19,8 @@ local OVERFLOW = 99
 -- opts.size    : px, default Theme.LAYOUT.ICON_BADGE_SIZE (SetSize, not
 --                SetScale, so small badges keep readable digits)
 -- opts.outline : dark rim for badges drawn over busy art
+-- opts.dim     : muted grey look for counts that must not look urgent
+--                (setDim switches it later)
 function Badge.Create(factory, parent, opts)
   opts = opts or {}
   local size = opts.size or Theme.LAYOUT.ICON_BADGE_SIZE
@@ -50,11 +52,22 @@ function Badge.Create(factory, parent, opts)
     UIHelpers.polishBadge(label, background)
   end
 
+  local dim = opts.dim == true
+
   -- Read at call time so the badge follows live preset switches.
   local function paint()
     local bg, text = Theme.BadgeColors()
+    if dim then
+      bg, text = Theme.COLORS.option_toggle_off, Theme.COLORS.text_primary
+    end
     applyVertexColor(background, bg)
     UIHelpers.setTextColor(label, text)
+  end
+
+  -- Switches between the accent and muted looks (e.g. a muted contact).
+  local function setDim(nextDim)
+    dim = nextDim == true
+    paint()
   end
 
   local function setCount(count)
@@ -78,6 +91,7 @@ function Badge.Create(factory, parent, opts)
     label = label,
     setCount = setCount,
     paint = paint,
+    setDim = setDim,
   }
 end
 

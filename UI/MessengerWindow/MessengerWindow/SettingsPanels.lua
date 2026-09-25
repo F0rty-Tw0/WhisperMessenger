@@ -110,6 +110,7 @@ function SettingsPanels.Create(factory, options)
         hideOnCombat = settingsConfig.hideOnCombat,
         doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
         showGroupChats = settingsConfig.showGroupChats,
+        requestsInbox = settingsConfig.requestsInbox,
       },
     },
     {

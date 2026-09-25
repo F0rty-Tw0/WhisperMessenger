@@ -21,11 +21,6 @@ return function()
 
   local flow = ToggleFlow.Create({
     runtime = runtime,
-    badgeFilter = {
-      IsGroupChannel = function(channel)
-        return channel == "PARTY"
-      end,
-    },
     ensureWindow = function()
       ensureCalls = ensureCalls + 1
     end,

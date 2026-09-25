@@ -55,6 +55,7 @@ Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore.lua
 Model/ConversationDrafts.lua
+Model/MessageRequests.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache.lua
 Model/ConversationSnapshot.lua
@@ -162,6 +163,7 @@ UI/ContactsList/ActionButtons.lua
 UI/ContactsList/GroupLabel.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/EmptyState.lua
+UI/ContactsList/TabLayout.lua
 UI/ContactsList/NativeTabToggle.lua
 UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
@@ -177,6 +179,8 @@ UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
+UI/ConversationPane/BottomBanner.lua
+UI/ConversationPane/RequestBanner.lua
 UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/ConversationPane.lua
@@ -239,6 +243,7 @@ UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
+UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
@@ -278,6 +283,8 @@ Core/Bootstrap/ReactionHandler.lua
 Core/Bootstrap/InviteHandler.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
+Core/Bootstrap/WindowCoordinator/IconSurfaces.lua
+Core/Bootstrap/WindowCoordinator/RequestFollow.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua

@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
+
 local ConversationSelector = {}
 
 -- The oldest of the last `unreadCount` incoming user messages; when fewer are
@@ -38,6 +40,20 @@ local function updateUnreadDivider(runtime, conversationKey, conversation)
   end
 end
 
+-- Callers that open a whisper force the Whispers tab first; a message
+-- request lives in the Requests tab, so switch there instead. Runs before
+-- the selection is stored: the tab swap restores that tab's own selection.
+local function showRequestsTab(runtime, conversation)
+  local window = runtime.window
+  if window == nil or type(window.getTabMode) ~= "function" or type(window.setTabMode) ~= "function" then
+    return
+  end
+  local settings = runtime.accountState and runtime.accountState.settings
+  if window.getTabMode() ~= "requests" and MessageRequests.IsRequest(conversation, settings) then
+    window.setTabMode("requests")
+  end
+end
+
 function ConversationSelector.Create(options)
   options = options or {}
 
@@ -55,6 +71,8 @@ function ConversationSelector.Create(options)
   function selector.selectConversation(conversationKey)
     local store = runtime.store
     local conversation = conversationKey ~= nil and store.conversations[conversationKey] or nil
+    showRequestsTab(runtime, conversation)
+
     runtime.activeConversationKey = conversationKey
     characterState.activeConversationKey = conversationKey
     updateUnreadDivider(runtime, conversationKey, conversation)

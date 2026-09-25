@@ -12,6 +12,8 @@ local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMess
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 local EdgeFade = ns.ConversationPaneEdgeFade or require("WhisperMessenger.UI.ConversationPane.EdgeFade")
 local ChannelContextMerger = ns.ConversationPaneChannelContextMerger or require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
+local BottomBanner = ns.ConversationPaneBottomBanner or require("WhisperMessenger.UI.ConversationPane.BottomBanner")
+local RequestBanner = ns.ConversationPaneRequestBanner or require("WhisperMessenger.UI.ConversationPane.RequestBanner")
 local ReplyBanner = ns.ConversationPaneReplyBanner or require("WhisperMessenger.UI.ConversationPane.ReplyBanner")
 
 local sizeValue = TranscriptView._sizeValue
@@ -23,11 +25,11 @@ local applyColor = UIHelpers.applyColor
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
-local ACTIVE_STATUS_BANNER_HEIGHT = 24
+local ACTIVE_STATUS_BANNER_HEIGHT = BottomBanner.HEIGHT
 
--- Shared, never mutated: viewport-size and theme changes must re-lay-out the
--- bubbles even though no individual message changed.
-local FORCE_RENDER = { force = true }
+-- Viewport-size and theme changes must re-lay-out the bubbles even though
+-- no individual message changed.
+local FORCE_RENDER = TranscriptView.FORCE_RENDER
 
 ConversationPane.RenderTranscript = TranscriptView.RenderTranscript
 
@@ -40,10 +42,7 @@ local function buildMessagesWithChannelContext(messages, selectedContact, conver
   })
 end
 
-local function transcriptIsAtEnd(transcript)
-  local range = ScrollView.GetRange(transcript)
-  return range <= 0 or ScrollView.GetOffset(transcript) >= range - 1
-end
+local transcriptIsAtEnd = TranscriptView.IsAtEnd
 
 ConversationPane.Refresh = function(view, selectedContact, conversation, status, noticeText)
   local selectedConversationKey = selectedContact and selectedContact.conversationKey or nil
@@ -54,6 +53,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   view._selectedContact = selectedContact
   view._conversation = conversation
   view._status = status
+  view._isRequest = selectedContact ~= nil and selectedContact.isRequest == true
   HeaderView.Refresh(view, selectedContact, conversation, status)
   -- Pass classTag from selected contact so chat bubbles can use it as fallback
   -- when individual messages lack classTag (e.g., older BNet messages)
@@ -68,47 +68,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   return view
 end
 
-local function refreshBottomBanner(view)
-  if view.activeStatusBanner == nil then
-    return
-  end
-
-  local wasVisible = view._activeStatusVisible or false
-  local nextText = view._noticeText or ""
-  if nextText == "" and view._activeStatusText and view._activeStatusText ~= "" then
-    nextText = view._activeStatusText
-  end
-
-  if nextText ~= "" then
-    view.activeStatusBanner:SetText(nextText)
-    view.activeStatusBanner:Show()
-    view._activeStatusVisible = true
-  else
-    view.activeStatusBanner:SetText("")
-    view.activeStatusBanner:Hide()
-    view._activeStatusVisible = false
-  end
-
-  -- Adjust transcript height when banner visibility changes
-  if view._activeStatusVisible ~= wasVisible and view.transcript then
-    local t = view.transcript
-    local wasAtEnd = transcriptIsAtEnd(t)
-    local delta = view._activeStatusVisible and -ACTIVE_STATUS_BANNER_HEIGHT or ACTIVE_STATUS_BANNER_HEIGHT
-    local currentH = sizeValue(t.scrollFrame, "GetHeight", "height", 0)
-    if currentH > 0 then
-      local newH = currentH + delta
-      t.scrollFrame:SetSize(sizeValue(t.scrollFrame, "GetWidth", "width", 0), newH)
-      t.scrollBar:SetHeight(newH)
-      t.viewportHeight = newH
-      if t._allMessages then
-        t._virtualForceEnd = wasAtEnd
-        TranscriptView.RenderTranscript(t, t._allMessages, FORCE_RENDER)
-      else
-        ScrollView.RefreshMetrics(t, sizeValue(t.content, "GetHeight", "height", 0), false)
-      end
-    end
-  end
-end
+local refreshBottomBanner = BottomBanner.Refresh
 
 function ConversationPane.SetNotice(view, noticeText)
   view._noticeText = noticeText or ""
@@ -132,6 +92,7 @@ function ConversationPane.SetLanguage(view)
     return
   end
   HeaderView.SetLanguage(view)
+  view.requestBanner.setLanguage()
   view.replyBanner.setLanguage()
   -- Re-running Refresh re-resolves the localized status line (StatusLine.Build
   -- routes availability/class/faction labels through Localization on each call)
@@ -206,7 +167,22 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   applyColor(activeStatusBanner, Theme.COLORS.text_system)
   activeStatusBanner:Hide()
 
+  -- Message-request banner (same slot; Accept / Delete the open contact)
   local view
+  local requestBanner = RequestBanner.Create(factory, pane, {
+    nativeChrome = options.nativeChrome == true,
+    onAccept = function()
+      if options.onAcceptRequest then
+        options.onAcceptRequest(view._selectedContact)
+      end
+    end,
+    onDelete = function()
+      if options.onDeleteRequest then
+        options.onDeleteRequest(view._selectedContact)
+      end
+    end,
+  })
+
   view = {
     frame = pane,
     -- Legacy header stub so any callers using view.header:SetText() don't crash
@@ -225,6 +201,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     headerChannelChip = header.headerChannelChip,
     statusBanner = statusBanner,
     activeStatusBanner = activeStatusBanner,
+    requestBanner = requestBanner,
     replyBanner = ReplyBanner.Create(factory, pane, { nativeChrome = options.nativeChrome == true }),
     transcript = transcript,
     -- Native WoW HUD sits on Blizzard art a flat-colour fade would not match.
@@ -249,6 +226,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       if view.activeStatusBanner then
         applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
       end
+      view.requestBanner.refreshTheme()
       view.replyBanner.refreshTheme()
       if view.edgeFade then
         view.edgeFade.refreshTheme()

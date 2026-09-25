@@ -166,6 +166,18 @@ function SettingsHandler.Create(options)
         runtime.refreshWindow()
       end
     end
+    if key == "requestsInbox" then
+      local window = runtime.window
+      if persistedValue ~= true and window and window.getTabMode and window.getTabMode() == "requests" and window.setTabMode then
+        window.setTabMode("whispers")
+      end
+      if window and window.refreshTabToggleVisibility then
+        window.refreshTabToggleVisibility()
+      end
+      if runtime.refreshWindow then
+        runtime.refreshWindow()
+      end
+    end
     if
       (
         key == "hideMessagePreview"

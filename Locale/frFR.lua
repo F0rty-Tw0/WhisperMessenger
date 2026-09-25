@@ -340,6 +340,14 @@ local French = {
   ["Draft"] = "Brouillon",
   ["Draft:"] = "Brouillon :",
   ["New messages"] = "Nouveaux messages",
+  -- Requests inbox, last seen, notify when online
+  ["Requests"] = "Demandes",
+  ["Put whispers from strangers in Requests"] = "Placer les chuchotements d'inconnus dans Demandes",
+  ["Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."] = "Les chuchotements de joueurs qui ne sont ni vos amis, ni membres de votre guilde ou de votre groupe attendent discrètement dans l'onglet Demandes : pas de son, pas de fenêtre, pas de compteur.",
+  ["Not a friend, guildmate or group member."] = "Ni ami, ni membre de la guilde, ni du groupe.",
+  ["Accept"] = "Accepter",
+  ["Delete"] = "Supprimer",
+  ["No message requests."] = "Aucune demande de message.",
   ["Reply"] = "Répondre",
   ["Replying to %s"] = "Réponse à %s",
 }

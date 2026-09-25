@@ -20,7 +20,7 @@ function TabSelectionMemory.Create(options)
   local handleContactSelected = options.handleContactSelected or function() end
   local refreshSelection = options.refreshSelection or function() end
 
-  local tabSelections = { whispers = nil, groups = nil }
+  local tabSelections = { whispers = nil, groups = nil, requests = nil }
 
   local function saveLiveSelection(oldMode)
     local liveKey = getSelectedConversationKey()
@@ -30,9 +30,7 @@ function TabSelectionMemory.Create(options)
 
     for _, item in ipairs(getCurrentContacts() or {}) do
       if item ~= nil and item.conversationKey == liveKey then
-        local isGroupItem = contactsTabFilter.IsGroupChannel(item.channel)
-        local expectedMode = isGroupItem and "groups" or "whispers"
-        if expectedMode == oldMode then
+        if contactsTabFilter.ModeOf(item) == oldMode then
           tabSelections[oldMode] = liveKey
         end
         return
@@ -64,8 +62,7 @@ function TabSelectionMemory.Create(options)
     end,
     onSelect = function(item)
       if item and item.conversationKey then
-        local mode = contactsTabFilter.IsGroupChannel(item.channel) and "groups" or "whispers"
-        tabSelections[mode] = item.conversationKey
+        tabSelections[contactsTabFilter.ModeOf(item)] = item.conversationKey
       end
       handleContactSelected(item)
     end,

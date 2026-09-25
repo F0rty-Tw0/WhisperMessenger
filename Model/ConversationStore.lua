@@ -203,6 +203,8 @@ end
 
 function Store.AppendOutgoing(state, key, message)
   local conversation = Store.EnsureConversation(state, key)
+  -- Writing to someone accepts their message request.
+  conversation.request = nil
   table.insert(conversation.messages, message)
   MessageMetadata.Apply(state, key, conversation, message)
   MessageMetadata.Compact(message)
