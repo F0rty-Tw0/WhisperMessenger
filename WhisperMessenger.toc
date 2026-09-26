@@ -15,7 +15,7 @@
 ## Author: F0rty_tw0
 ## Category: Chat
 ## IconTexture: Interface\AddOns\WhisperMessenger\Media\icon.png
-## Version: v2.0.0
+## Version: v2.0.1
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
