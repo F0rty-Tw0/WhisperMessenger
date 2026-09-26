@@ -8,3 +8,5 @@ docs/
 .tmp_elvui/
 .tools/
 .tmp_luals/
+__pycache__/
+/CLAUDE.md
