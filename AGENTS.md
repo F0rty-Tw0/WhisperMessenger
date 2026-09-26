@@ -1,11 +1,12 @@
 # WhisperMessenger
 
-Messenger-style whisper UI addon for World of Warcraft Retail.
+Messenger-style whisper UI addon for World of Warcraft: Retail, the Classic flavors (Vanilla, TBC, Wrath, Cata, Mists) and WoW: Forever. One TOC (`WhisperMessenger.toc`) carries every flavor's `## Interface-*` line.
 
 ## Tech Stack
 
 - **Lua 5.1** (WoW runtime) — no Lua 5.2+ features (no `goto`, no `table.unpack` without compat)
 - **WoW API** — Blizzard's frame/widget system, C\_ namespaced APIs
+- **Flavor differences** go through `Core/FlavorCompat.lua` — never assume a Retail-only API exists
 - **StyLua** — formatter (`stylua.toml`)
 - **Luacheck** — static analysis (`.luacheckrc`)
 
@@ -15,7 +16,7 @@ Messenger-style whisper UI addon for World of Warcraft Retail.
 - **PascalCase** for modules/classes: `ConversationStore`, `TableUtils`
 - **camelCase** for functions/variables: `buildContacts`, `refreshWindow`
 - **snake_case** for theme constants: `bg_primary`, `text_secondary`
-- **Module pattern**: every file starts with `local addonName, ns = ...` and ends with `ns.ModuleName = ModuleName; return ModuleName`
+- **Module pattern**: every file starts with `local addonName, ns = ...` plus the `if type(ns) ~= "table" then ns = {} end` guard, and ends with `ns.ModuleName = ModuleName; return ModuleName`
 - **Prefix unused args with `_`**: `_self`, `_event`, `_conversation`
 - **Access WoW globals via `_G.`**: `_G.CreateFrame`, `_G.C_ChatInfo` — keeps the dependency on globals explicit and testable
 
@@ -29,7 +30,11 @@ bash scripts/lint.sh
 bash scripts/lint.sh --fix
 ```
 
-Luacheck handles semantics (unused vars, undefined globals, shadowing). StyLua handles formatting (line length, spacing, alignment). Both must pass clean before committing.
+Luacheck handles semantics (unused vars, undefined globals, shadowing). StyLua handles formatting (line length, spacing, alignment). Both must pass clean before committing — they are the only lint gates CI runs.
+
+`lint.sh` also runs LuaLS diagnostics, which already report ~300 old problems, so the script exits 1 even on a clean tree. Don't add new LuaLS problems: compare the count against a stash of your changes.
+
+Missing tools on Windows: `powershell -ExecutionPolicy Bypass -File scripts/setup-lint-tools.ps1` installs them into `.tools/`.
 
 When adding new WoW API globals, add them to `.luacheckrc` under `read_globals`.
 
@@ -39,15 +44,20 @@ When adding new WoW API globals, add them to `.luacheckrc` under `read_globals`.
 # If lua is available:
 lua tests/run.lua tests/path/to/test_file.lua
 
-# If lua is not available (Windows), use the Python+lupa harness:
+# If lua is not available (Windows), use the Python+lupa harness (pip install lupa):
 python scripts/run_test.py tests/path/to/test_file.lua
 ```
 
-Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua`. Run all tests:
+Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua` and the `tests/helpers/fake_ui/` folder. Run all tests:
 
 ```bash
 for f in tests/**/*.lua; do python scripts/run_test.py "$f"; done
+
+# Release script tests (Python):
+python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog
 ```
+
+The release pipeline minifies the shipped Lua and runs every test again on the minified code, so neither code nor tests may depend on comments or exact source formatting.
 
 ## Development Workflow — TDD (Red-Green-Refactor)
 
@@ -72,6 +82,17 @@ Rules:
 - **One responsibility per file** — a file that does two things should be two files.
 - **Extract early** — when adding code would push a file over 300 lines, extract a new module before continuing.
 - **Applies to both production and test files.**
+
+## Adding a File
+
+- **Add it to `WhisperMessenger.toc`, after everything it depends on.** TOC order is load order. WoW: Forever has a global `require` that throws "Invalid import", so a module's `ns.X or require(...)` fallback must never be reached in game. `tests/integration/test_toc_load_order.lua` guards this.
+- **Folder modules** (`UI/Theme/`, `UI/Composer/`, …) have an `init.lua` that only exists so tests can `require` the folder. It is not in the TOC; add any new one to the `ignore:` list in `.pkgmeta`.
+- **New top-level files that aren't addon code** (docs, configs) go in `.pkgmeta` `ignore:` so they don't ship in the zip.
+
+## Localization
+
+- English strings are the keys: `Localization.Text("Mark all as read")`. There is no enUS catalog.
+- `Locale/<code>.lua` holds one catalog per language (10 total). Every new player-visible string needs a translation in **all** of them with the same `%s` / `%d` slots in the same order — `tests/util/test_locale_parity.lua` fails otherwise.
 
 ## Lua Best Practices
 
@@ -106,18 +127,37 @@ Rules:
 - **`bash scripts/release.sh <version>` handles all of this:** it moves `[Unreleased]` into a dated `## [x.y.z]` section, archives the finished series when a new minor/major opens, rebuilds every nav line, regenerates `Core/PatchNotes.lua`, and bumps the TOC + `Constants.lua` versions. Don't hand-edit version sections or nav lines for a release.
 - `archive/` is ignored by `.pkgmeta`, so it never ships in the addon zip.
 
-When in doubt, read the existing 1.1.0 - 1.1.7 sections — they are the style guide. Match their voice.
+When in doubt, read the 1.1.0 - 1.1.7 sections in `archive/changelog/1.1.md` — they are the style guide. Match their voice.
+
+## Releasing
+
+1. Notes sit under `## [Unreleased]` in `CHANGELOG.md`, and the working tree is clean (the script refuses otherwise).
+2. `bash scripts/release.sh <version>` — needs internet (it reads live game version numbers from Blizzard). It promotes the notes, regenerates `Core/PatchNotes.lua` (the in-game What's New), bumps the TOC + `Core/Constants.lua`, commits and tags.
+3. `git push origin master v<version>` — CI lints, minifies, re-runs the tests, and uploads to CurseForge, Wago and GitHub Releases.
+
+No local setup? Run the "Package and release" workflow by hand on GitHub (`workflow_dispatch`); it runs the same script.
+
+What's New shows only the **top** changelog section. For a hotfix right after a big release, rename the big section to the new version and add the fix to it, leaving `[Unreleased]` empty — players who skipped the big release still see all of it.
 
 ## Project Structure
 
 ```
-Core/           — Bootstrap, event routing, slash commands, module loader
-Model/          — Identity, conversations, contacts, retention, lockdown queue
+Bootstrap.lua   — Addon entry point (last file in the TOC)
+Core/           — Bootstrap runtime, event routing (EventRouter, Ingest),
+                  flavor compat, slash commands, module loader, patch notes
+Model/          — Identity, conversations, contacts, presence, drafts,
+                  requests, replies, reactions, retention, outgoing delivery
 Persistence/    — SavedVariables, migrations, schema
-Transport/      — WhisperGateway, BNet resolver, availability
+Transport/      — Whisper/chat gateways, addon messages, BNet resolver,
+                  availability
 UI/             — MessengerWindow, ContactsList, ConversationPane, Composer,
-                  ChatBubble, ScrollView, Theme, ToggleIcon
-Util/           — TableUtils, TimeFormat
-tests/          — Unit and integration tests
-scripts/        — Build and lint scripts
+                  ChatBubble, ScrollView, Theme, ToggleIcon, MinimapIcon,
+                  Hyperlinks, Shared (settings controls, pickers)
+Util/           — TableUtils, TimeFormat, TextLimits, ChatPrint
+Locale/         — Localization lookup + one catalog per language
+Media/          — Icons and textures
+tests/          — Unit and integration tests (mirror the source folders)
+scripts/        — Lint, test runner, release, packaging
+archive/        — Older changelog series (not shipped)
 ```
+
