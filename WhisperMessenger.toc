@@ -44,7 +44,6 @@ Locale/koKR.lua
 Locale/zhCN.lua
 Locale/zhTW.lua
 Locale/Localization.lua
-Util/ChatReplyState.lua
 
 Model/Identity/Factions.lua
 Model/Identity/ChannelType.lua
@@ -54,6 +53,7 @@ Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore.lua
+Util/ChatReplyState.lua
 Model/ConversationDrafts.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua

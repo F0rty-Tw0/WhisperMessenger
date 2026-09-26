@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- Fixed: an "Invalid import" error on login in World of Warcraft: Forever.
+
 ## [2.0.0] - 2026-09-25
 
 - Now works on World of Warcraft: Forever (beta). Mythic+ features stay off there.
