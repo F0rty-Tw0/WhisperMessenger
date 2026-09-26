@@ -6,9 +6,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
-- Fixed: an "Invalid import" error on login in World of Warcraft: Forever.
-
-## [2.0.0] - 2026-09-25
+## [2.0.1] - 2026-09-26
 
 - Now works on World of Warcraft: Forever (beta). Mythic+ features stay off there.
 - New "Pandaria" theme: dark charcoal with jade-green accents (pairs well with EllesmereUI).
@@ -57,4 +55,4 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: a channel post shown in a whisper chat vanished after a reload.
 - Fixed: reloading while in a group started a second group chat.
 - Fixed: long button names in settings touched the button edges.
-
+- Fixed: an "Invalid import" error on login in World of Warcraft: Forever.
