@@ -249,6 +249,9 @@ function WindowRuntime.Create(options)
     selectConversation = selectConversation,
     startConversation = startConversation,
     setWindowVisible = setWindowVisible,
+    dismissWidgetPreview = function()
+      acknowledgeLatestWidgetPreview(buildContacts())
+    end,
   })
   runtime.canReact = windowCallbacks.canReact
 

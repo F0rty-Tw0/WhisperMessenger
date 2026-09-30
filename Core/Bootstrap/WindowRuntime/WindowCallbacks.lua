@@ -54,6 +54,7 @@ function WindowCallbacks.Create(options)
   local selectConversation = options.selectConversation or function(_conversationKey) end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
+  local dismissWidgetPreview = options.dismissWidgetPreview or function() end
 
   local function canReact(selectedContact, message)
     if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
@@ -198,8 +199,10 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
+    -- Also acknowledges the icon popup so nothing still signals unread.
     onMarkAllRead = function()
       Store.MarkAllRead(runtime.store)
+      dismissWidgetPreview()
       refreshWindow()
     end,
 

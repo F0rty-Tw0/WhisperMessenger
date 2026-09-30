@@ -3,6 +3,7 @@ local WindowCallbacks = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.W
 
 return function()
   local refreshes = 0
+  local dismissedBeforeRefresh = nil
   local runtime = { store = Store.New({ maxMessagesPerConversation = 10 }) }
   Store.EnsureConversation(runtime.store, "wow::WOW::jaina").unreadCount = 3
   Store.EnsureConversation(runtime.store, "channel::GUILD").unreadCount = 5
@@ -12,6 +13,9 @@ return function()
     refreshWindow = function()
       refreshes = refreshes + 1
     end,
+    dismissWidgetPreview = function()
+      dismissedBeforeRefresh = refreshes == 0
+    end,
   })
 
   -- test_mark_all_read_clears_every_conversation_and_refreshes
@@ -19,4 +23,7 @@ return function()
   assert(runtime.store.conversations["wow::WOW::jaina"].unreadCount == 0, "whisper read")
   assert(runtime.store.conversations["channel::GUILD"].unreadCount == 0, "group read")
   assert(refreshes == 1, "window refreshed so rows and badges update")
+
+  -- test_mark_all_read_dismisses_the_icon_preview_before_refreshing
+  assert(dismissedBeforeRefresh == true, "incoming preview acknowledged so the refresh hides it")
 end
