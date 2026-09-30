@@ -33,6 +33,7 @@ Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
 Util/ChatPrint.lua
+Util/DisplayName.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
