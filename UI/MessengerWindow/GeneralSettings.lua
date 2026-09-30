@@ -156,7 +156,7 @@ function GeneralSettings.Create(factory, parent, config, options)
   local hideBattleTagToggle = privacyToggle(
     "hideBattleTagNumbers",
     "Hide BattleTag numbers",
-    "Shows Battle.net friends without the #1234 part of their BattleTag.",
+    "Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers.",
     config.hideBattleTagNumbers ~= false,
     hidePreviewToggle.row
   )

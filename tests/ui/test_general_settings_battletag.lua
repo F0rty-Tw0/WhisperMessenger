@@ -72,4 +72,11 @@ return function()
     assert(translated ~= LABEL, "the German catalog translates the label")
     assert(FindUI.text(settings.frame, translated) ~= nil, "toggle label follows the interface language")
   end
+
+  -- test_tooltip_says_shared_names_keep_their_numbers
+
+  do
+    local tooltip = "Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."
+    assert(Localization.Text(tooltip, "deDE") ~= tooltip, "the German catalog translates the clash-aware tooltip")
+  end
 end
