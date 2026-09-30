@@ -246,6 +246,7 @@ function MinimapIcon.Create(factory, options)
           _G.GameTooltip:AddLine((badgeLabel:GetText() or "") .. " " .. (Localization and Localization.Text("unread") or "unread"))
         end
         KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
+        KeybindHints.AddClickHint(_G.GameTooltip)
         _G.GameTooltip:Show()
       end
     end)

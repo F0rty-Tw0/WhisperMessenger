@@ -50,6 +50,9 @@ return function()
     hideFromDefaultChat = true
     text = hover(frame)
     assert(string.find(text, "Reply: R", 1, true), "reply hint when routed, got " .. text)
+
+    -- test_icon_tooltip_shows_shift_click_hint
+    assert(string.find(text, "Shift-click: mark all as read", 1, true), "shift-click hint, got " .. text)
   end
 
   _G.GameTooltip = savedTooltip

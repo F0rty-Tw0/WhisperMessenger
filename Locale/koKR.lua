@@ -389,6 +389,7 @@ local Korean = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "메모:",
   ["Open/close: %s"] = "열기/닫기: %s",
+  ["Shift-click: mark all as read"] = "Shift-클릭: 모두 읽음으로 표시",
   ["Reply: %s"] = "답장: %s",
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
 }

@@ -389,6 +389,7 @@ local TraditionalChinese = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "備註：",
   ["Open/close: %s"] = "開啟/關閉：%s",
+  ["Shift-click: mark all as read"] = "Shift-點擊：全部標記為已讀",
   ["Reply: %s"] = "回覆：%s",
   ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
 }

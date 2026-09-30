@@ -45,5 +45,13 @@ function KeybindHints.AddToTooltip(tooltip, includeReply)
   end
 end
 
+-- Shift-clicking either icon marks every conversation read.
+function KeybindHints.AddClickHint(tooltip)
+  if tooltip == nil or type(tooltip.AddLine) ~= "function" then
+    return
+  end
+  tooltip:AddLine(Localization.Text("Shift-click: mark all as read"), HINT_GREY, HINT_GREY, HINT_GREY)
+end
+
 ns.KeybindHints = KeybindHints
 return KeybindHints

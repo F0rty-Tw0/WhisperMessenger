@@ -254,6 +254,7 @@ function ToggleIcon.Create(factory, options)
         end
         _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText .. lockedText)
         KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
+        KeybindHints.AddClickHint(_G.GameTooltip)
         _G.GameTooltip:Show()
       end
     end)

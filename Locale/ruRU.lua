@@ -389,6 +389,7 @@ local Russian = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Заметка:",
   ["Open/close: %s"] = "Открыть/закрыть: %s",
+  ["Shift-click: mark all as read"] = "Shift-клик: отметить все как прочитанные",
   ["Reply: %s"] = "Ответить: %s",
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
 }

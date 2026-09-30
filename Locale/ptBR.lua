@@ -389,6 +389,7 @@ local Portuguese = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Nota:",
   ["Open/close: %s"] = "Abrir/fechar: %s",
+  ["Shift-click: mark all as read"] = "Shift-clique: marcar tudo como lido",
   ["Reply: %s"] = "Responder: %s",
   ["Edit this list in Options > Behavior."] = "Edite esta lista em Opções > Comportamento.",
 }

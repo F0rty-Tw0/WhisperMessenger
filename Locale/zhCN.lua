@@ -389,6 +389,7 @@ local SimplifiedChinese = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "备注：",
   ["Open/close: %s"] = "打开/关闭：%s",
+  ["Shift-click: mark all as read"] = "Shift-点击：全部标记为已读",
   ["Reply: %s"] = "回复：%s",
   ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
 }
