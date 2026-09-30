@@ -9,6 +9,7 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local UnreadDividerPosition = ns.ConversationPaneUnreadDividerPosition or require("WhisperMessenger.UI.ConversationPane.UnreadDividerPosition")
 local TranscriptRows = ns.ConversationPaneTranscriptRows or require("WhisperMessenger.UI.ConversationPane.TranscriptRows")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local sizeValue = UIHelpers.sizeValue
 local CONTENT_PAD = TranscriptRows.CONTENT_PAD
 
@@ -228,15 +229,18 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   local state, anyChanged = TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
   state.options = options
   local fallbackClassTag = options and options.fallbackClassTag or nil
-  -- Bubble geometry is keyed off the row diff, but the fallback class tag only
-  -- recolors sender names, so it is tracked separately.
+  local displayNameRevision = DisplayName.Revision()
+  -- Bubble geometry is keyed off the row diff, but the fallback class tag and
+  -- the display-name rules only change sender names, so they are tracked separately.
   local force = (renderOptions and renderOptions.force == true)
     or not hadRows
     or forceSnapToEnd
     or anyChanged
     or state.fallbackClassTag ~= fallbackClassTag
+    or state.displayNameRevision ~= displayNameRevision
     or state.chatLocked ~= (options and options.chatLocked)
   state.fallbackClassTag = fallbackClassTag
+  state.displayNameRevision = displayNameRevision
   state.chatLocked = options and options.chatLocked
 
   local targetOffset = previousOffset
