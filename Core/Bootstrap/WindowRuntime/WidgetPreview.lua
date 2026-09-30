@@ -5,6 +5,7 @@ end
 
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 local WidgetPreview = {}
 
@@ -32,7 +33,7 @@ function WidgetPreview.Create(options)
         local sentAt = conversation and tonumber(conversation.lastIncomingAt) or nil
         local messageText = conversation and conversation.lastIncomingPreview or nil
         if sentAt and type(messageText) == "string" and messageText ~= "" then
-          local senderName = conversation.lastIncomingSender or item.displayName or conversation.displayName
+          local senderName = DisplayName.Format(conversation.lastIncomingSender or item.displayName or conversation.displayName)
           if type(senderName) == "string" and senderName ~= "" then
             if latest == nil or sentAt > latest.sentAt then
               latest = {

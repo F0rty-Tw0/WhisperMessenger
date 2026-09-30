@@ -12,6 +12,7 @@ local AddonBadge = ns.ConversationPaneAddonBadge or require("WhisperMessenger.UI
 local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require("WhisperMessenger.UI.ConversationPane.GroupHeaderViewModel")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
 
 local HEADER_STATUS_RIGHT_INSET = 8
@@ -85,7 +86,7 @@ end
 
 local function headerTextFor(selectedContact)
   if selectedContact and selectedContact.displayName then
-    return selectedContact.displayName
+    return DisplayName.Format(selectedContact.displayName)
   end
 
   return Localization.Text("No conversation selected")
@@ -113,7 +114,7 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   )
 
   if selectedContact then
-    headerName:SetText(selectedContact.displayName or "")
+    headerName:SetText(DisplayName.Format(selectedContact.displayName) or "")
     UIHelpers.applyClassColor(headerName, selectedContact.classTag, Theme.COLORS.text_primary)
     headerName:Show()
   else
@@ -205,7 +206,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
 
     if view.headerName then
       if hasContact then
-        local title = (vm and vm.title) or (selectedContact.displayName or "")
+        local title = (vm and vm.title) or (DisplayName.Format(selectedContact.displayName) or "")
         view.headerName:SetText(HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup))
         if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag

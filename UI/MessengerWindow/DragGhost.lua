@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyBorderBoxColor = UIHelpers.applyBorderBoxColor
@@ -65,7 +66,7 @@ function DragGhost.Show(ghost, sourceRow, listFrame)
   -- Same texture the row shows (class or channel icon); item class as fallback.
   local iconPath = sourceRow.classIcon and sourceRow.classIcon.GetTexture and sourceRow.classIcon:GetTexture() or nil
   ghost.icon:SetTexture(iconPath or Theme.ClassIcon(item.classTag) or Theme.TEXTURES.bnet_icon)
-  ghost.label:SetText(item.displayName or "")
+  ghost.label:SetText(DisplayName.Format(item.displayName) or "")
   applyClassColor(ghost.label, item.classTag, Theme.COLORS.text_primary)
 
   if sourceRow.GetHeight then

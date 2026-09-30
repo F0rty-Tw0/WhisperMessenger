@@ -77,7 +77,8 @@ return function()
   -- test_bnet_friend_offline_then_online_alerts
   LifecycleHandlers.Handle(Bootstrap, "BN_FRIEND_ACCOUNT_OFFLINE", deps, 7)
   LifecycleHandlers.Handle(Bootstrap, "BN_FRIEND_ACCOUNT_ONLINE", deps, 7)
-  assert(#lines == 2 and string.find(lines[2], "Anduin#1 is now online.", 1, true), "Battle.net friend alert")
+  -- The alert hides the BattleTag number, like every other on-screen name.
+  assert(#lines == 2 and string.find(lines[2], "Anduin is now online.", 1, true), "Battle.net friend alert: " .. tostring(lines[2]))
   assert(anduin.lastSeenAt == 900, "Battle.net online event stamps last seen")
 
   -- test_sound_setting_off_stays_quiet

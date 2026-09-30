@@ -5,6 +5,7 @@ end
 
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 local GroupHeaderViewModel = {}
 
@@ -47,7 +48,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
   if not isGroup then
     return {
       isGroup = false,
-      title = contact.displayName or "",
+      title = DisplayName.Format(contact.displayName) or "",
       showPresenceDot = true,
       showFactionIcon = true,
       showStatusLine = true,

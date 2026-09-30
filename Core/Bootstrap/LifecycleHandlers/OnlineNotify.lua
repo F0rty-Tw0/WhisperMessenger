@@ -9,6 +9,7 @@ local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("Whisper
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 -- "Notify when online" for flagged friends, driven only by Blizzard's own
 -- friend events (no polling): FRIENDLIST_UPDATE for character friends,
@@ -16,7 +17,7 @@ local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
 local OnlineNotify = {}
 
 local function announce(runtime, conversation)
-  local name = conversation.nickname or conversation.displayName or "?"
+  local name = conversation.nickname or DisplayName.Format(conversation.displayName) or "?"
   ChatPrint.Print(string.format(Localization.Text("%s is now online."), name))
   IncomingAlerts.PlaySound(runtime.accountState and runtime.accountState.settings)
 end

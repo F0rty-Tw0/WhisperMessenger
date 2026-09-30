@@ -5,6 +5,7 @@ end
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -51,7 +52,7 @@ function StatusLine.Build(selectedContact, status)
   local line1 = {}
 
   if selectedContact.realmName and selectedContact.realmName ~= "" then
-    local name = selectedContact.name or selectedContact.displayName or ""
+    local name = selectedContact.name or DisplayName.Format(selectedContact.displayName) or ""
     if name ~= "" then
       table.insert(line1, name .. "-" .. selectedContact.realmName)
     else

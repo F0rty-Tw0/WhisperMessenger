@@ -9,6 +9,7 @@ local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local setTextColor = UIHelpers.setTextColor
@@ -67,7 +68,7 @@ end
 
 -- The player's nickname wins over the contact's own name.
 local function rowName(item)
-  return item and (item.nickname or item.displayName) or ""
+  return item and (item.nickname or DisplayName.Format(item.displayName)) or ""
 end
 
 function RowElements.updateNameLabel(row, item, parentWidth)

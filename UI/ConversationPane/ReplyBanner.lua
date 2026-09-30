@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 -- "Replying to <name>" strip above the composer, in the AFK/DND banner slot:
 -- accent bar, name, dim snippet, close button. Lines up with the composer
@@ -66,7 +67,7 @@ function ReplyBanner.Create(factory, pane, options)
       label:SetText("")
       return
     end
-    local name = replyTo.author or Localization.Text("You")
+    local name = DisplayName.Format(replyTo.author) or Localization.Text("You")
     local heading = string.format(Localization.Text("Replying to %s"), name)
     label:SetText(ReplyQuote.FormatLine(heading, replyTo.snippet))
   end
