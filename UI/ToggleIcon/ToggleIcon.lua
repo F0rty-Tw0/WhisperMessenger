@@ -11,6 +11,7 @@ local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenge
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
@@ -271,11 +272,7 @@ function ToggleIcon.Create(factory, options)
       end
     end)
 
-    frame:SetScript("OnClick", function()
-      if options.onToggle then
-        options.onToggle()
-      end
-    end)
+    frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnDragStart", function(self)
       if isLocked() then

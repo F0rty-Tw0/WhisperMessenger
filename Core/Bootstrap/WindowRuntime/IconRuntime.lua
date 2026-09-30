@@ -84,6 +84,7 @@ function IconRuntime.Create(options)
     state = getActiveIconState(),
     iconSize = settings.iconSize,
     onToggle = onToggle,
+    onMarkAllRead = options.onMarkAllRead,
     onPositionChanged = function(nextState)
       local persistedState = tableUtils.copyState(nextState)
       if isSharingWidgetPosition() then

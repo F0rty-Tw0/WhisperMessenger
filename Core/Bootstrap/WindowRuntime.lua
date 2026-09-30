@@ -336,6 +336,7 @@ function WindowRuntime.Create(options)
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
       onToggle = toggle,
+      onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     runtime.icon = icon
     return icon
@@ -355,6 +356,7 @@ function WindowRuntime.Create(options)
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
       onToggle = toggle,
+      onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     minimapIcon = minimapRuntime.minimapIcon
     return minimapRuntime

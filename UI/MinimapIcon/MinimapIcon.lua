@@ -11,6 +11,7 @@ local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.Keyb
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 
 local MinimapIcon = {}
 
@@ -233,12 +234,8 @@ function MinimapIcon.Create(factory, options)
       end
     end)
 
-    -- Click: toggle window
-    frame:SetScript("OnClick", function(self, buttonName)
-      if buttonName == "LeftButton" and options.onToggle then
-        options.onToggle()
-      end
-    end)
+    -- Click: toggle window, or shift-click to mark everything read
+    frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnEnter", function()
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
