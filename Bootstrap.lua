@@ -143,6 +143,11 @@ function Bootstrap.Initialize(factory, options)
     uiParent = _G.UIParent,
     bootstrap = Bootstrap,
   })
+  -- Building the contact list fills DisplayName's BattleTag clash set, so
+  -- chat alerts before the first window or icon refresh name the right friend.
+  if windowRuntime.buildContacts then
+    windowRuntime.buildContacts()
+  end
 
   -- 12.0+ authoritative restriction cache, populated from
   -- ADDON_RESTRICTION_STATE_CHANGED payload. On pre-12.0 clients the
