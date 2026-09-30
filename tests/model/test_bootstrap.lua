@@ -47,7 +47,7 @@ return function()
     conversations = {},
     contacts = {},
     pendingHydration = {},
-    settings = { windowScale = "invalid", hideFromDefaultChat = false },
+    settings = { windowScale = "invalid", hideFromDefaultChat = false, hideBattleTagNumbers = false },
   }
 
   local ok, err = pcall(Bootstrap.Initialize, factory, {
@@ -66,4 +66,6 @@ return function()
 
   assert(accountState.settings.windowScale == 1.00, "Bootstrap persists normalized window scale")
   assert(windowCreateScale == 1.00, "window creation receives normalized window scale")
+  local DisplayName = require("WhisperMessenger.Util.DisplayName")
+  assert(DisplayName.Format("Arthas#1234") == "Arthas#1234", "a saved off choice shows full BattleTags after login")
 end

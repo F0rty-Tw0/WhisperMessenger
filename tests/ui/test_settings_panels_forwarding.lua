@@ -26,6 +26,7 @@ return function()
     -- general
     clearOnLogout = true,
     hideMessagePreview = true,
+    hideBattleTagNumbers = false,
     timeFormat = "24h",
     timeSource = "server",
     interfaceLanguage = "ruRU",
@@ -93,6 +94,7 @@ return function()
     generalCapture.config.timeSource == "server",
     "expected general config.timeSource=server, got: " .. tostring(generalCapture.config.timeSource)
   )
+  assert(generalCapture.config.hideBattleTagNumbers == false, "general config should carry hideBattleTagNumbers")
   assert(
     generalCapture.config.interfaceLanguage == "ruRU",
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)

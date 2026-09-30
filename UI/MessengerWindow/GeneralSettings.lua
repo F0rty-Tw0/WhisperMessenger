@@ -22,6 +22,7 @@ local DEFAULTS = {
   messageMaxAge = 86400,
   clearOnLogout = false,
   hideMessagePreview = false,
+  hideBattleTagNumbers = true,
   timeFormat = "12h",
   timeSource = "local",
   interfaceLanguage = "auto",
@@ -127,39 +128,41 @@ function GeneralSettings.Create(factory, parent, config, options)
   privacyLabel:SetText(text("Privacy"))
   UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
 
-  local clearOnLogoutToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, text("Clear on logout"), config.clearOnLogout == true, toggleColors, toggleLayout, function(value)
-      onChange("clearOnLogout", value)
-    end, {
-      text("Clear on logout"),
-      text("Deletes all saved conversations and contacts when you log out."),
-    }),
-    { type = "toggle", key = "clearOnLogout", default = DEFAULTS.clearOnLogout }
-  )
-  clearOnLogoutToggle.row:SetPoint("TOPLEFT", privacyLabel, "BOTTOMLEFT", 0, -12)
+  local function privacyToggle(key, label, tooltip, initial, anchor)
+    local toggle = panel:bind(
+      UIHelpers.createToggleRow(factory, frame, text(label), initial, toggleColors, toggleLayout, function(value)
+        onChange(key, value)
+      end, { text(label), text(tooltip) }),
+      { type = "toggle", key = key, default = DEFAULTS[key] }
+    )
+    toggle.row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -12)
+    return toggle
+  end
 
-  local hidePreviewToggle = panel:bind(
-    UIHelpers.createToggleRow(
-      factory,
-      frame,
-      text("Hide message preview"),
-      config.hideMessagePreview == true,
-      toggleColors,
-      toggleLayout,
-      function(value)
-        onChange("hideMessagePreview", value)
-      end,
-      {
-        text("Hide message preview"),
-        text("Hides the last message preview text in the contacts list for privacy."),
-      }
-    ),
-    { type = "toggle", key = "hideMessagePreview", default = DEFAULTS.hideMessagePreview }
+  local clearOnLogoutToggle = privacyToggle(
+    "clearOnLogout",
+    "Clear on logout",
+    "Deletes all saved conversations and contacts when you log out.",
+    config.clearOnLogout == true,
+    privacyLabel
   )
-  hidePreviewToggle.row:SetPoint("TOPLEFT", clearOnLogoutToggle.row, "BOTTOMLEFT", 0, -12)
+  local hidePreviewToggle = privacyToggle(
+    "hideMessagePreview",
+    "Hide message preview",
+    "Hides the last message preview text in the contacts list for privacy.",
+    config.hideMessagePreview == true,
+    clearOnLogoutToggle.row
+  )
+  local hideBattleTagToggle = privacyToggle(
+    "hideBattleTagNumbers",
+    "Hide BattleTag numbers",
+    "Shows Battle.net friends without the #1234 part of their BattleTag.",
+    config.hideBattleTagNumbers ~= false,
+    hidePreviewToggle.row
+  )
 
   local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  timeLabel:SetPoint("TOPLEFT", hidePreviewToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  timeLabel:SetPoint("TOPLEFT", hideBattleTagToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
   timeLabel:SetText(text("Time Display"))
   UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
 
@@ -243,6 +246,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     privacyLabel:SetText(text("Privacy"))
     clearOnLogoutToggle.label:SetText(text("Clear on logout"))
     hidePreviewToggle.label:SetText(text("Hide message preview"))
+    hideBattleTagToggle.label:SetText(text("Hide BattleTag numbers"))
     timeLabel:SetText(text("Time Display"))
     timeFormatSelector.label:SetText(text("Time Format"))
     timeFormatSelector.setOptionsList(buildTimeFormatOptions(interfaceLanguage))

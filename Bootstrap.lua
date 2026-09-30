@@ -125,6 +125,8 @@ function Bootstrap.Initialize(factory, options)
   if Fonts.SetLanguage then
     Fonts.SetLanguage(accountState.settings.interfaceLanguage or "auto")
   end
+  local DisplayName = loadModule("WhisperMessenger.Util.DisplayName", "DisplayName")
+  DisplayName.Configure({ hideBattleTagNumbers = accountState.settings.hideBattleTagNumbers ~= false })
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30
   PresenceCache.Initialize(options.clubApi or _G["C_Club"], {
