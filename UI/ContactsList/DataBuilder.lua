@@ -6,6 +6,7 @@ end
 local DataBuilder = {}
 
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 local function compareItems(left, right)
   local leftPinned = left.pinned and true or false
@@ -109,6 +110,7 @@ end
 
 function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
   local items = {}
+  local battleTags = {}
   local profilePrefix = localProfileId .. "::"
   local bnetPrefix = "bnet::"
   local wowPrefix = "wow::"
@@ -182,9 +184,15 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
       snapshot.ownerProfileId = foreignOwner
       snapshot.ownerClassTag = ownerClassTag
       table.insert(items, snapshot)
+      if snapshot.channel == "BN" then
+        battleTags[#battleTags + 1] = snapshot.displayName
+      end
     end
   end
 
+  -- Every stored Battle.net friend, before any tab or search filter, so a
+  -- hidden row still counts toward a name clash.
+  DisplayName.SetBattleTags(battleTags)
   table.sort(items, compareItems)
   return items
 end

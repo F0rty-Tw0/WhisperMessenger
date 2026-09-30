@@ -43,4 +43,70 @@ return function()
     DisplayName.Configure(nil)
     assert(DisplayName.Format("Arthas#1234") == "Arthas", "an empty configure keeps the current choice")
   end
+
+  -- test_clashing_battletags_keep_their_numbers
+
+  do
+    DisplayName.SetBattleTags({ "Mike#1234", "Mike#5678", "Arthas#1111" })
+    assert(DisplayName.Format("Mike#1234") == "Mike#1234", "a shared name part keeps the number")
+    assert(DisplayName.Format("Mike#5678") == "Mike#5678", "both clashing friends keep the number")
+    assert(DisplayName.Format("Arthas#1111") == "Arthas", "a unique name part still hides the number")
+  end
+
+  -- test_no_clash_hides_the_number
+
+  do
+    DisplayName.SetBattleTags({ "Mike#1234", "Jaina#2222" })
+    assert(DisplayName.Format("Mike#1234") == "Mike", "no other Mike, so the number hides")
+  end
+
+  -- test_same_battletag_twice_is_not_a_clash
+
+  do
+    DisplayName.SetBattleTags({ "Mike#1234", "Mike#1234" })
+    assert(DisplayName.Format("Mike#1234") == "Mike", "one friend stored twice is still one friend")
+  end
+
+  -- test_clash_ignores_case
+
+  do
+    DisplayName.SetBattleTags({ "mike#1234", "Mike#5678" })
+    assert(DisplayName.Format("mike#1234") == "mike#1234", "mike and Mike clash")
+    assert(DisplayName.Format("Mike#5678") == "Mike#5678", "Mike and mike clash")
+  end
+
+  -- test_clash_leaves_non_battletag_names_alone
+
+  do
+    DisplayName.SetBattleTags({ "Mike#1234", "Mike#5678", "Mike-Area52" })
+    assert(DisplayName.Format("Mike-Area52") == "Mike-Area52", "a character name is never a BattleTag")
+    assert(DisplayName.Format("Mike") == "Mike", "a plain name is unchanged")
+  end
+
+  -- test_option_off_shows_full_tags_with_clashes
+
+  do
+    DisplayName.SetBattleTags({ "Mike#1234", "Mike#5678", "Arthas#1111" })
+    DisplayName.Configure({ hideBattleTagNumbers = false })
+    assert(DisplayName.Format("Arthas#1111") == "Arthas#1111", "option off shows every full tag")
+    assert(DisplayName.Format("Mike#1234") == "Mike#1234", "clashing tags stay full too")
+    DisplayName.Configure({ hideBattleTagNumbers = true })
+  end
+
+  -- test_revision_bumps_when_output_can_change
+
+  do
+    local start = DisplayName.Revision()
+    DisplayName.Configure({ hideBattleTagNumbers = true })
+    assert(DisplayName.Revision() == start, "configuring the same value changes nothing")
+    DisplayName.Configure({ hideBattleTagNumbers = false })
+    assert(DisplayName.Revision() > start, "flipping the option bumps the revision")
+    DisplayName.Configure({ hideBattleTagNumbers = true })
+
+    local afterToggle = DisplayName.Revision()
+    DisplayName.SetBattleTags({ "Mike#1234", "Mike#5678", "Arthas#9999" })
+    assert(DisplayName.Revision() == afterToggle, "the same clash set does not bump")
+    DisplayName.SetBattleTags({ "Mike#1234" })
+    assert(DisplayName.Revision() > afterToggle, "a changed clash set bumps the revision")
+  end
 end
