@@ -58,5 +58,12 @@ return function()
   KeybindHints.AddToTooltip(tooltip, false)
   assert(tooltip.lines[1].text == "Open/close: CTRL-O", "raw key fallback")
 
+  -- test_click_hint_names_shift_click_in_grey
+  tooltip = newTooltip()
+  KeybindHints.AddClickHint(tooltip)
+  assert(#tooltip.lines == 1 and tooltip.lines[1].text == "Shift-click: mark all as read", "shift-click hint")
+  line = tooltip.lines[1]
+  assert(line.r == line.g and line.g == line.b and line.r < 1, "click hint is grey")
+
   rawset(_G, "GetBindingKey", nil)
 end

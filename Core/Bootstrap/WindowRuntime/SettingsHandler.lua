@@ -8,6 +8,7 @@ local Localization = ns.Localization or (type(require) == "function" and require
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
   or nil
@@ -29,6 +30,7 @@ function SettingsHandler.Create(options)
   local fonts = options.fonts or {}
   local timeFormat = options.timeFormat or {}
   local localization = options.localization or Localization or {}
+  local displayName = options.displayName or DisplayName or {}
   local windowScale = options.windowScale or WindowScale or {}
   local getIcon = options.getIcon or function()
     return nil
@@ -124,6 +126,9 @@ function SettingsHandler.Create(options)
     if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
       timeFormat.Configure({ [key] = persistedValue })
     end
+    if key == "hideBattleTagNumbers" and displayName.Configure then
+      displayName.Configure({ hideBattleTagNumbers = persistedValue ~= false })
+    end
     if key == "interfaceLanguage" then
       if localization.Configure then
         localization.Configure({ language = persistedValue })
@@ -181,6 +186,7 @@ function SettingsHandler.Create(options)
     if
       (
         key == "hideMessagePreview"
+        or key == "hideBattleTagNumbers"
         or key == "showWidgetMessagePreview"
         or key == "fontFamily"
         or key == "fontSize"

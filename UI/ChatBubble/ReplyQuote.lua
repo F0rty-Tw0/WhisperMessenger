@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 -- Compact quote at the top of a reply bubble: accent bar, author, dim
 -- one-line snippet. Cached on the (pooled) bubble frame.
@@ -71,7 +72,7 @@ function ReplyQuote.Apply(factory, frame, message, maxWidth, padH, padV, onQuote
     return 0
   end
   local quote = ensureQuote(factory, frame)
-  local author = replyTo.author or Localization.Text("You")
+  local author = DisplayName.Format(replyTo.author) or Localization.Text("You")
   local label = quote._wmLabel
   UIHelpers.setFontObject(label, Theme.FONTS.message_time)
   UIHelpers.setTextColor(label, Theme.COLORS.text_secondary)

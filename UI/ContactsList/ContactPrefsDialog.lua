@@ -7,6 +7,7 @@ local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Share
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 -- Text-entry popups for a contact's nickname and note. The typed text goes
 -- to onSave untouched (ContactPrefs trims, caps and clears).
@@ -21,7 +22,7 @@ local function show(dialogName, limits, promptKey, item, currentValue, onSave)
     accept = Localization.Text("Save"),
     maxLetters = limits.maxLetters,
     maxBytes = limits.maxBytes,
-    textArg = item.displayName or item.battleTag or "",
+    textArg = DisplayName.Format(item.displayName or item.battleTag) or "",
     value = currentValue or "",
     onAccept = onSave,
   })

@@ -15,6 +15,8 @@ local Russian = {
   ["Deletes all saved conversations and contacts when you log out."] = "Удаляет все сохранённые диалоги и контакты при выходе из игры.",
   ["Hide message preview"] = "Скрыть предпросмотр сообщений",
   ["Hides the last message preview text in the contacts list for privacy."] = "Скрывает текст последнего сообщения в списке контактов.",
+  ["Hide BattleTag numbers"] = "Скрывать номер BattleTag",
+  ["Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."] = "Показывает друзей Battle.net без части #1234 в BattleTag. У двух друзей с одинаковым именем номера сохраняются.",
   ["Time Display"] = "Отображение времени",
   ["Time Format"] = "Формат времени",
   ["12-hour"] = "12 часов",
@@ -387,6 +389,7 @@ local Russian = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Заметка:",
   ["Open/close: %s"] = "Открыть/закрыть: %s",
+  ["Shift-click: mark all as read"] = "Shift-клик: отметить все как прочитанные",
   ["Reply: %s"] = "Ответить: %s",
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
 }

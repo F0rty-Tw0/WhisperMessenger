@@ -67,6 +67,7 @@ read_globals = {
   "GetMouseFocus",
   "IsMouseButtonDown",
   "IsMouselooking",
+  "IsShiftKeyDown",
   "UISpecialFrames",
 
   -- Library loader (optional dependency for LibDataBroker displays)

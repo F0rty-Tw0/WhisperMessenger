@@ -19,6 +19,23 @@ end
 
 local ReplyToLast = {}
 
+-- The reply key runs /wr on key-down; the key's character event reaches
+-- whatever has focus during the next frame's input phase, after that frame's
+-- C_Timer callbacks. Waiting one frame plus a short delay (What The Whisper
+-- uses the same 0.05s) keeps the composer unfocused until the "r" is gone.
+local REPLY_KEY_SETTLE_SECONDS = 0.05
+
+local function afterReplyKeySettles(fn)
+  local timer = _G.C_Timer
+  if type(timer) ~= "table" or type(timer.After) ~= "function" then
+    fn()
+    return
+  end
+  timer.After(0, function()
+    timer.After(REPLY_KEY_SETTLE_SECONDS, fn)
+  end)
+end
+
 local function isWhisperConversation(conv)
   if type(conv) ~= "table" then
     return false
@@ -55,34 +72,9 @@ function ReplyToLast.Create(deps)
     end
   end
 
-  return function()
-    local function scrubLeakedR()
-      local timer = _G.C_Timer
-      if type(timer) ~= "table" or type(timer.After) ~= "function" then
-        return
-      end
-      local function doScrub()
-        local window = runtime.window
-        local input = window and window.composer and window.composer.input
-        if input and input.GetText and input.SetText then
-          local text = input:GetText() or ""
-          if text == "r" or text == "R" then
-            input:SetText("")
-          end
-        end
-      end
-      -- C_Timer.After(0) fires at frame start, before WoW's OnChar dispatch.
-      -- The leaked 'r' arrives during frame N+1's input phase (after timer
-      -- callbacks), so a single defer misses it. Double-defer runs on frame
-      -- N+2, after the char is already in the box.
-      timer.After(0, function()
-        timer.After(0, doScrub)
-      end)
-    end
-
+  local function reply()
     local hooks = runtime.autoOpenHooks
     if hooks and hooks.onReplyTell and hooks.onReplyTell() == true then
-      scrubLeakedR()
       return
     end
 
@@ -116,13 +108,16 @@ function ReplyToLast.Create(deps)
         windowRuntime.selectConversation(key)
       end
       focusComposerInput()
-      scrubLeakedR()
       return
     end
 
     if runtime.toggle then
       runtime.toggle()
     end
+  end
+
+  return function()
+    afterReplyKeySettles(reply)
   end
 end
 

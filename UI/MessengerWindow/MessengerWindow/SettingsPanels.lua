@@ -80,6 +80,7 @@ function SettingsPanels.Create(factory, options)
         messageMaxAge = storeConfig.messageMaxAge or 86400,
         clearOnLogout = settingsConfig.clearOnLogout,
         hideMessagePreview = settingsConfig.hideMessagePreview,
+        hideBattleTagNumbers = settingsConfig.hideBattleTagNumbers,
         timeFormat = settingsConfig.timeFormat,
         timeSource = settingsConfig.timeSource,
         interfaceLanguage = settingsConfig.interfaceLanguage,

@@ -171,7 +171,11 @@ return function()
   assert(runtime.window.contacts.rows[1].item.factionName == "Alliance")
   runtime.window.contacts.rows[1].scripts.OnClick()
   assert(runtime.activeConversationKey == conversationKey)
-  assert(runtime.window.conversation.header.text == "Jaina#1234")
+  -- Stored name keeps the full BattleTag; the header hides its number.
+  assert(
+    runtime.window.conversation.header.text == "Jaina",
+    "header hides the BattleTag number: " .. tostring(runtime.window.conversation.header.text)
+  )
 
   runtime.window.composer.input:SetText("reply over bn")
   runtime.window.composer.sendButton.scripts.OnClick()

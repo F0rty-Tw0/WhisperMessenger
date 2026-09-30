@@ -249,6 +249,9 @@ function WindowRuntime.Create(options)
     selectConversation = selectConversation,
     startConversation = startConversation,
     setWindowVisible = setWindowVisible,
+    dismissWidgetPreview = function()
+      acknowledgeLatestWidgetPreview(buildContacts())
+    end,
   })
   runtime.canReact = windowCallbacks.canReact
 
@@ -336,6 +339,7 @@ function WindowRuntime.Create(options)
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
       onToggle = toggle,
+      onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     runtime.icon = icon
     return icon
@@ -355,6 +359,7 @@ function WindowRuntime.Create(options)
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
       onToggle = toggle,
+      onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     minimapIcon = minimapRuntime.minimapIcon
     return minimapRuntime

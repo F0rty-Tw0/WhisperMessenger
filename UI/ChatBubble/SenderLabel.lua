@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local DeliveryStatus = ns.ChatBubbleDeliveryStatus or require("WhisperMessenger.UI.ChatBubble.DeliveryStatus")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -132,7 +133,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   else
     hideCached(frame, "_wmSenderSeenFS")
     DeliveryStatus.Hide(frame)
-    local displayName = message.playerName or message.senderDisplayName or ""
+    local displayName = DisplayName.Format(message.playerName or message.senderDisplayName) or ""
     nameFS:SetText(displayName)
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
 

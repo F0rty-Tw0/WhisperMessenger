@@ -15,6 +15,8 @@ local TraditionalChinese = {
   ["Deletes all saved conversations and contacts when you log out."] = "登出時刪除所有已儲存的對話與聯絡人。",
   ["Hide message preview"] = "隱藏訊息預覽",
   ["Hides the last message preview text in the contacts list for privacy."] = "在聯絡人列表中隱藏最後一則訊息預覽文字以保護隱私。",
+  ["Hide BattleTag numbers"] = "隱藏 BattleTag 數字",
+  ["Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."] = "顯示 Battle.net 好友時不顯示 BattleTag 的 #1234 部分。同名的兩位好友會保留編號。",
   ["Time Display"] = "時間顯示",
   ["Time Format"] = "時間格式",
   ["12-hour"] = "12小時制",
@@ -387,6 +389,7 @@ local TraditionalChinese = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "備註：",
   ["Open/close: %s"] = "開啟/關閉：%s",
+  ["Shift-click: mark all as read"] = "Shift-點擊：全部標記為已讀",
   ["Reply: %s"] = "回覆：%s",
   ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
 }

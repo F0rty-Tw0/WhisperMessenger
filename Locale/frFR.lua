@@ -15,6 +15,8 @@ local French = {
   ["Deletes all saved conversations and contacts when you log out."] = "Supprime toutes les conversations et contacts enregistrés lors de la déconnexion.",
   ["Hide message preview"] = "Masquer l'aperçu des messages",
   ["Hides the last message preview text in the contacts list for privacy."] = "Masque l'aperçu du dernier message dans la liste des contacts.",
+  ["Hide BattleTag numbers"] = "Masquer les numéros de BattleTag",
+  ["Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."] = "Affiche les amis Battle.net sans la partie #1234 de leur BattleTag. Deux amis portant le même nom gardent leurs numéros.",
   ["Time Display"] = "Affichage de l'heure",
   ["Time Format"] = "Format de l'heure",
   ["12-hour"] = "12 heures",
@@ -387,6 +389,7 @@ local French = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Note :",
   ["Open/close: %s"] = "Ouvrir/fermer : %s",
+  ["Shift-click: mark all as read"] = "Maj-clic : tout marquer comme lu",
   ["Reply: %s"] = "Répondre : %s",
   ["Edit this list in Options > Behavior."] = "Modifiez cette liste dans Options > Comportement.",
 }

@@ -42,6 +42,7 @@ function MinimapIconRuntime.Create(options)
   local minimapIcon = minimapIconModule.Create(uiFactory, {
     state = characterState.minimapIcon,
     onToggle = onToggle,
+    onMarkAllRead = options.onMarkAllRead,
     onPositionChanged = function(nextState)
       characterState.minimapIcon = tableUtils.copyState(nextState)
     end,

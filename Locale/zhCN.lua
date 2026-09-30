@@ -15,6 +15,8 @@ local SimplifiedChinese = {
   ["Deletes all saved conversations and contacts when you log out."] = "登出时删除所有已保存的对话和联系人。",
   ["Hide message preview"] = "隐藏消息预览",
   ["Hides the last message preview text in the contacts list for privacy."] = "在联系人列表中隐藏最后一条消息的预览文本以保护隐私。",
+  ["Hide BattleTag numbers"] = "隐藏战网昵称数字",
+  ["Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."] = "显示战网好友时不显示战网昵称中的 #1234 部分。同名的两位好友会保留编号。",
   ["Time Display"] = "时间显示",
   ["Time Format"] = "时间格式",
   ["12-hour"] = "12小时制",
@@ -387,6 +389,7 @@ local SimplifiedChinese = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "备注：",
   ["Open/close: %s"] = "打开/关闭：%s",
+  ["Shift-click: mark all as read"] = "Shift-点击：全部标记为已读",
   ["Reply: %s"] = "回复：%s",
   ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
 }

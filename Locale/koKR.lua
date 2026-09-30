@@ -15,6 +15,8 @@ local Korean = {
   ["Deletes all saved conversations and contacts when you log out."] = "로그아웃할 때 저장된 모든 대화와 연락처를 삭제합니다.",
   ["Hide message preview"] = "메시지 미리보기 숨기기",
   ["Hides the last message preview text in the contacts list for privacy."] = "개인 정보 보호를 위해 연락처 목록에서 마지막 메시지 미리보기를 숨깁니다.",
+  ["Hide BattleTag numbers"] = "배틀태그 번호 숨기기",
+  ["Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers."] = "Battle.net 친구를 배틀태그의 #1234 부분 없이 표시합니다. 이름이 같은 두 친구는 번호가 계속 표시됩니다.",
   ["Time Display"] = "시간 표시",
   ["Time Format"] = "시간 형식",
   ["12-hour"] = "12시간",
@@ -387,6 +389,7 @@ local Korean = {
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "메모:",
   ["Open/close: %s"] = "열기/닫기: %s",
+  ["Shift-click: mark all as read"] = "Shift-클릭: 모두 읽음으로 표시",
   ["Reply: %s"] = "답장: %s",
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
 }

@@ -33,6 +33,7 @@ Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
 Util/ChatPrint.lua
+Util/DisplayName.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
@@ -214,6 +215,7 @@ UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/Desaturation.lua
+UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
