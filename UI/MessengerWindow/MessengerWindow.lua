@@ -77,9 +77,9 @@ function MessengerWindow.Create(factory, options)
     return target ~= nil and target.shown == true
   end
 
-  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips
-  -- the frame to BasicFrameTemplateWithInset (gold border, red X) — follows
-  -- the HUD style configured at boot, so a change applies after /reload.
+  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips the
+  -- frame to the HUD style's Blizzard template (see ChromeBuilder), set at
+  -- boot, so a change applies after /reload.
   local nativeChrome = Hud.IsOn()
   StyledTextInputPopup.nativeChrome = nativeChrome
   local chrome = ChromeBuilder.Build(factory, parent, initialState, {

@@ -57,13 +57,16 @@ local function createWindowFrame(factory, parent, useBlizzardChrome)
   return factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BasicFrameTemplateWithInset"), BlizzardChrome
 end
 
--- ChromeBuilder builds the messenger window with one of two chrome paths,
--- chosen by the Native WoW HUD setting (independent of the color preset):
+-- ChromeBuilder builds the messenger window with one of three chrome paths,
+-- chosen by the Native WoW HUD style (independent of the color preset):
 --
---   * Native WoW HUD: frame uses BasicFrameTemplateWithInset (Classic) or
---     ButtonFrameTemplate (Retail: round portrait, modern title bar). Border,
---     close X, insets, and centered title come from the Blizzard template —
---     we don't paint them ourselves.
+--   * Classic HUD: frame uses BasicFrameTemplateWithInset.
+--
+--   * Retail HUD: frame uses ButtonFrameTemplate (round portrait, modern
+--     title bar); falls back to the Classic HUD when the client lacks it.
+--
+--     In both HUD paths the border, close X, insets, and centered title come
+--     from the Blizzard template — we don't paint them ourselves.
 --
 --   * Custom chrome (default): frame uses BackdropTemplate. We paint a flat
 --     background, our own title bar with header bg, a window edge hairline,

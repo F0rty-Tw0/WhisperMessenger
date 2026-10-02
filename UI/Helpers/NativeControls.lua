@@ -14,7 +14,6 @@ local NativeControls = {}
 NativeControls.CHECK_TEMPLATE = "UICheckButtonTemplate"
 NativeControls.CHECK_SIZE = 26
 NativeControls.BUTTON_TEMPLATE = "UIPanelButtonTemplate"
--- The Retail HUD will swap in MinimalSliderWithSteppersTemplate here.
 NativeControls.SLIDER_TEMPLATE = "OptionsSliderTemplate"
 -- OptionsSliderTemplate's thumb art width, for clients that can't report it.
 NativeControls.SLIDER_THUMB_SIZE = 32
