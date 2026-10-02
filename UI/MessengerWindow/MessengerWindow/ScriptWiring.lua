@@ -14,6 +14,9 @@ function ScriptWiring.Wire(options)
   if frameResult and frameResult.withSizeChangedRelayoutSuppressed then
     result.withSizeChangedRelayoutSuppressed = frameResult.withSizeChangedRelayoutSuppressed
   end
+  if frameResult and frameResult.applyWindowSize then
+    result.applyWindowSize = frameResult.applyWindowSize
+  end
   return result
 end
 

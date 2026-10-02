@@ -176,8 +176,10 @@ function Frame.WireFrame(refs, options)
     return ResizeBounds.Clamp(frame, frameTheme, width, height)
   end
 
-  local function applyCommittedWindowSize(nextWidth, nextHeight)
-    local stableLeft = getFrameLeft()
+  -- Keeps the top-left corner (or moves the left edge to `newLeft`, in the
+  -- frame's own units, e.g. to keep a widened window on screen).
+  local function applyCommittedWindowSize(nextWidth, nextHeight, newLeft)
+    local stableLeft = newLeft or getFrameLeft()
     local stableTop = getFrameTop()
     local parent = getFrameParent()
     local parentLeft = 0
@@ -266,6 +268,7 @@ function Frame.WireFrame(refs, options)
   })
   return {
     withSizeChangedRelayoutSuppressed = withSizeChangedRelayoutSuppressed,
+    applyWindowSize = applyCommittedWindowSize,
   }
 end
 
