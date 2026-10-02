@@ -12,9 +12,10 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 -- while a row has unread messages.
 local PinnedMarker = {}
 
+-- Not in the collapsed rail: the marker's slot is outside the icon.
 local function wanted(row)
   local item = row.item
-  return item ~= nil and item.pinned == true and (item.unreadCount or 0) == 0
+  return item ~= nil and item.pinned == true and (item.unreadCount or 0) == 0 and not row._wmCompact
 end
 
 -- Create once per pooled row (centered on the pin button) and refresh.

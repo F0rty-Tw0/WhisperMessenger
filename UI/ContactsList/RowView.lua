@@ -16,6 +16,7 @@ local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.Con
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
+local RowCompact = ns.ContactsListRowCompact or require("WhisperMessenger.UI.ContactsList.RowCompact")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local RowView = {}
@@ -55,6 +56,8 @@ local function bindRow(factory, parent, row, index, item, options)
   local ROW_HEIGHT = Theme.ContactRowHeight()
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
+  -- Collapsed contacts rail: icon-only rows (see RowCompact).
+  row._wmCompact = options ~= nil and options.compact == true
   -- 3px left inset on each row so contacts sit slightly tighter to the pane's
   -- left edge while keeping the right edge anchored to the parent.
   row:SetSize(parentWidth - 2, ROW_HEIGHT)
@@ -207,6 +210,7 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   RowElements.updateUnreadBadge(row, item)
   RowMarkers.updateBadge(row, item)
+  RowCompact.apply(row, item, isGroup, row._wmCompact)
 
   if row.Show then
     row:Show()

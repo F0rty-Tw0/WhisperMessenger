@@ -96,7 +96,8 @@ end
 
 function ActionButtons.showActions(row)
   local hasUnread = row.item and (row.item.unreadCount or 0) > 0
-  if hasUnread then
+  -- The collapsed rail has no room for actions; its right-click menu has them.
+  if hasUnread or row._wmCompact then
     return
   end
   if row.pinButton then

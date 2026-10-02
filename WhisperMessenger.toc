@@ -177,6 +177,7 @@ UI/ContactsList/RowMarkers.lua
 UI/ContactsList/RowTextAnchors.lua
 UI/ContactsList/RowElements.lua
 UI/ContactsList/RailAvatar.lua
+UI/ContactsList/RowCompact.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/ContextMenu.lua
