@@ -69,6 +69,7 @@ return function()
   Flavor.With(true, false, function()
     local settings = boot({})
     assert(settings.hudStyle == "retail", "fresh Retail install seeds Modern, got " .. tostring(settings.hudStyle))
+    assert(settings.themePreset == "wow_native", "fresh Retail install seeds Azeroth, got " .. tostring(settings.themePreset))
     resetLooks()
   end)
 
@@ -83,6 +84,7 @@ return function()
   Flavor.With(false, false, function()
     local settings = boot({})
     assert(settings.hudStyle == "off", "fresh Classic install keeps HUD off, got " .. tostring(settings.hudStyle))
+    assert(settings.themePreset == "wow_default", "fresh Classic install keeps Midnight, got " .. tostring(settings.themePreset))
     resetLooks()
   end)
 
@@ -107,12 +109,13 @@ return function()
     resetLooks()
   end
 
-  -- test_fresh_install_keeps_an_explicit_chat_choice
-  do
-    local settings = boot({ hideFromDefaultChat = false })
-    assert(settings.hideFromDefaultChat == false, "a saved choice is never overwritten")
+  -- test_old_account_without_first_run_flag_keeps_its_settings
+  Flavor.With(true, false, function()
+    local settings = boot({ nativeChrome = false })
+    assert(settings.hudStyle == "off", "an old account keeps HUD off, got " .. tostring(settings.hudStyle))
+    assert(settings.hideFromDefaultChat == nil, "an old account keeps whispers in default chat")
     resetLooks()
-  end
+  end)
 
   -- test_seed_classic_from_legacy_native_chrome
   do
