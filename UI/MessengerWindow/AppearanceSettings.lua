@@ -32,7 +32,7 @@ local DEFAULTS = {
   bubbleColorPreset = "default",
   themePreset = Theme.DEFAULT_PRESET or "wow_default",
   windowScale = 1.0,
-  nativeChrome = false,
+  hudStyle = "off",
 }
 
 local function pctFormat(v)
@@ -92,19 +92,13 @@ function AppearanceSettings.Create(factory, parent, config, options)
     })
   end
 
-  local nativeChromeToggle = panel:bind(
-    UIHelpers.createToggleRow(factory, frame, text("Native WoW HUD"), config.nativeChrome == true, SettingsControls.ToggleColors(Theme), {
-      width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-      height = 24,
-    }, function(v)
-      onChange("nativeChrome", v)
-    end, {
-      text("Native WoW HUD"),
-      text("Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply."),
-    }),
-    { type = "toggle", key = "nativeChrome", default = DEFAULTS.nativeChrome }
+  local hudStyleSelector = panel:bind(
+    sel(text("Native WoW HUD"), Options.BuildHudStyleOptions(), DEFAULTS.hudStyle, config.hudStyle or DEFAULTS.hudStyle, function(v)
+      onChange("hudStyle", v)
+    end),
+    { type = "selector", key = "hudStyle", default = DEFAULTS.hudStyle }
   )
-  nativeChromeToggle.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
+  hudStyleSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
   local themePresetSelector = panel:bind(
     sel(text("Theme Preset"), Options.BuildThemePresetOptions(), DEFAULTS.themePreset, config.themePreset or DEFAULTS.themePreset, function(v)
@@ -112,7 +106,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     end),
     { type = "selector", key = "themePreset", default = DEFAULTS.themePreset }
   )
-  themePresetSelector.row:SetPoint("TOPLEFT", nativeChromeToggle.row, "BOTTOMLEFT", 0, gap)
+  themePresetSelector.row:SetPoint("TOPLEFT", hudStyleSelector.row, "BOTTOMLEFT", 0, gap)
 
   local windowScaleRow = panel:bind(
     slider(text("Window Scale"), 0.75, 1.50, 0.05, config.windowScale or DEFAULTS.windowScale, pctFormat, function(v)
@@ -228,7 +222,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local function setLanguage()
     header.title:SetText(text("Appearance"))
     header.hint:SetText(text("Customize theme presets, fonts, and window opacity."))
-    nativeChromeToggle.label:SetText(text("Native WoW HUD"))
+    hudStyleSelector.label:SetText(text("Native WoW HUD"))
+    hudStyleSelector.setOptionsList(Options.BuildHudStyleOptions())
     themePresetSelector.label:SetText(text("Theme Preset"))
     themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
     windowScaleRow.label:SetText(text("Window Scale"))

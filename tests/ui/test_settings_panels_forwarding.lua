@@ -40,7 +40,7 @@ return function()
     bubbleColorPreset = "azeroth",
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
-    nativeChrome = true,
+    hudStyle = "classic",
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
@@ -110,6 +110,10 @@ return function()
   assert(
     appearanceCapture.config.bubbleColorPreset == "azeroth",
     "expected appearance config.bubbleColorPreset=azeroth, got: " .. tostring(appearanceCapture.config.bubbleColorPreset)
+  )
+  assert(
+    appearanceCapture.config.hudStyle == "classic",
+    "appearance config should carry hudStyle, got: " .. tostring(appearanceCapture.config.hudStyle)
   )
   assert(
     appearanceCapture.config.windowScale == 1.25,

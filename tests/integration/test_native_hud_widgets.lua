@@ -1,4 +1,5 @@
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local ComposerSurface = require("WhisperMessenger.UI.Composer.ComposerSurface")
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
@@ -14,14 +15,18 @@ local function bottomAnchorY(scrollFrame)
 end
 
 local function buildWindow(nativeChrome)
+  Hud.Configure(nativeChrome and "classic" or "off")
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.UIParent:SetSize(1280, 720)
   local window = MessengerWindow.Create(factory, {
     contacts = {},
-    settingsConfig = { showGroupChats = true, nativeChrome = nativeChrome },
+    -- The window follows the session's HUD style; the saved legacy flag is
+    -- set to the opposite to prove it is not what decides the chrome.
+    settingsConfig = { showGroupChats = true, nativeChrome = not nativeChrome },
   })
+  Hud.Configure("off")
   _G.UIParent = savedUIParent
   return window
 end

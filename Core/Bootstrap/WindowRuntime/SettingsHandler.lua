@@ -8,6 +8,9 @@ local Localization = ns.Localization or (type(require) == "function" and require
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
+local Presets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -218,13 +221,26 @@ function SettingsHandler.Create(options)
       end
     end
 
-    -- nativeChrome flips the messenger frame between BasicFrameTemplateWithInset
-    -- and our custom chrome. Templates can't be added/removed at runtime in
-    -- WoW, so we tell the user a /reload is required to apply.
-    if key == "nativeChrome" then
-      ChatPrint.Print(
-        Localization and Localization.Text("Native chrome change requires reload") or "Native WoW HUD change requires |cffffff00/reload|r to apply."
-      )
+    -- hudStyle swaps the window's frame templates, which WoW can't do at
+    -- runtime, so it applies after a reload: offer one now (Cancel keeps the
+    -- choice and reminds in chat). Reloading into a HUD style starts it on
+    -- the Azeroth preset, which stays free to change afterwards.
+    -- nativeChrome mirrors it for older addon versions that only read the
+    -- old flag.
+    if key == "hudStyle" then
+      accountSettings.nativeChrome = persistedValue ~= "off"
+      if Hud.Resolve(persistedValue) ~= Hud.Style() then
+        local question = "Reload the interface now to apply the new Native WoW HUD style?"
+        local notice = "Native WoW HUD change requires |cffffff00/reload|r to apply."
+        local hudOn = persistedValue ~= "off"
+        ReloadPrompt.Show(Localization and Localization.Text(question) or question, function()
+          ChatPrint.Print(Localization and Localization.Text(notice) or notice)
+        end, function()
+          if hudOn then
+            accountSettings.themePreset = Presets.WOW_NATIVE
+          end
+        end)
+      end
     end
 
     local icon = getIcon()

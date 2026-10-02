@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
 local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
@@ -77,12 +78,13 @@ function MessengerWindow.Create(factory, options)
   end
 
   -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips
-  -- the frame to BasicFrameTemplateWithInset (gold border, red X) — read
-  -- from saved settings so it persists across reloads.
-  StyledTextInputPopup.nativeChrome = settingsConfig.nativeChrome == true
+  -- the frame to BasicFrameTemplateWithInset (gold border, red X) — follows
+  -- the HUD style configured at boot, so a change applies after /reload.
+  local nativeChrome = Hud.IsOn()
+  StyledTextInputPopup.nativeChrome = nativeChrome
   local chrome = ChromeBuilder.Build(factory, parent, initialState, {
     title = options.title,
-    useNativeChrome = settingsConfig.nativeChrome == true,
+    useNativeChrome = nativeChrome,
     windowScale = initialScale,
     onMarkAllRead = options.onMarkAllRead,
   })
@@ -217,8 +219,8 @@ function MessengerWindow.Create(factory, options)
     onDeleteRequest = options.onDeleteRequest,
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
-    hideEmptyHeader = settingsConfig.nativeChrome == true,
-    nativeChrome = settingsConfig.nativeChrome == true,
+    hideEmptyHeader = nativeChrome,
+    nativeChrome = nativeChrome,
   })
   conversation.headerEmpty.setMode(contactsRuntime.getTabMode())
 

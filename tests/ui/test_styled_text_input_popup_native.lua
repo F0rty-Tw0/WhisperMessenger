@@ -7,6 +7,7 @@ local StyledTextInputPopup = require("WhisperMessenger.UI.Shared.StyledTextInput
 local StartConversationDialog = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons.StartConversationDialog")
 local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 
 local function makeButton(factory, parent, name)
   local button = factory.CreateFrame("Button", name, parent)
@@ -39,13 +40,17 @@ local function assertUnstyled(popup, label)
 end
 
 local function buildWindow(factory, nativeChrome)
+  Hud.Configure(nativeChrome and "classic" or "off")
   local savedUIParent = _G.UIParent
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
   _G.UIParent:SetSize(1280, 720)
   MessengerWindow.Create(factory, {
     contacts = {},
-    settingsConfig = { showGroupChats = true, nativeChrome = nativeChrome },
+    -- The window follows the session's HUD style; the saved legacy flag is
+    -- set to the opposite to prove it is not what decides the chrome.
+    settingsConfig = { showGroupChats = true, nativeChrome = not nativeChrome },
   })
+  Hud.Configure("off")
   _G.UIParent = savedUIParent
 end
 
