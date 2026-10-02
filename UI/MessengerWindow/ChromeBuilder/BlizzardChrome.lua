@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 
 local BlizzardChrome = {}
 
@@ -21,19 +22,13 @@ function BlizzardChrome.AttachCloseTooltip(closeButton)
     if previousOnEnter then
       previousOnEnter(...)
     end
-    if _G.GameTooltip and _G.GameTooltip.SetOwner then
-      _G.GameTooltip:SetOwner(closeButton, "ANCHOR_TOP")
-      _G.GameTooltip:SetText(Localization.Text("Close"))
-      _G.GameTooltip:Show()
-    end
+    PickerStyles.ShowTooltipText(closeButton, Localization.Text("Close"))
   end)
   closeButton:SetScript("OnLeave", function(...)
     if previousOnLeave then
       previousOnLeave(...)
     end
-    if _G.GameTooltip and _G.GameTooltip.Hide then
-      _G.GameTooltip:Hide()
-    end
+    PickerStyles.HideTooltip()
   end)
 end
 
