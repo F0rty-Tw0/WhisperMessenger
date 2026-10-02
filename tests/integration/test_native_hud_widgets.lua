@@ -4,6 +4,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local ComposerSurface = require("WhisperMessenger.UI.Composer.ComposerSurface")
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
+local RetailHud = require("tests.helpers.retail_hud")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 local RowHoverOverlay = require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 
@@ -144,4 +145,25 @@ return function()
     assert(row.selectionFill.texturePath == nil, "modern window: selected contact keeps the gradient fill")
     assert(row.accentBar.shown == true, "modern window: selected contact shows the accent bar")
   end
+
+  -- test_retail_window_uses_the_button_frame_template
+  RetailHud.With(function()
+    local window = buildWindow(true, false, "retail")
+    local frame = window.frame
+    assert(frame.template == "ButtonFrameTemplate", "Retail window: frame template, got " .. tostring(frame.template))
+    assert(frame.contentArea ~= nil, "Retail window: content area")
+    assert(window.contactsPane.parent == frame.contentArea, "Retail window: contacts pane in the content area")
+    assert(window.contentPane.parent == frame.contentArea, "Retail window: conversation pane in the content area")
+    assert(frame.contactsInset.points[1][2] == window.contactsPane, "Retail window: contacts inset follows the contacts pane")
+    assert(frame.Inset.points[1][2] == window.contentPane, "Retail window: template inset follows the conversation pane")
+    assert(window.contactsSearchInput.template == "SearchBoxTemplate", "Retail window: keeps the HUD search box")
+    window.refreshTheme()
+    local transcriptTrack = window.conversation.transcript.scrollBar.track
+    assert(
+      transcriptTrack.atlas == "!minimal-scrollbar-track-middle",
+      "Retail window: transcript scrollbar is the minimal scrollbar after a theme refresh"
+    )
+    local privacyLabel = assert(FindUI.text(window.generalSettings.frame, "Privacy"), "Retail window: Privacy section label")
+    assert(privacyLabel.points[1][2].atlas == "UI-Character-Info-Title", "Retail window: settings sections sit on the character-info banner")
+  end)
 end

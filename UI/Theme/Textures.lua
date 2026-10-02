@@ -8,6 +8,7 @@ local Textures = {
   faction_alliance = "Interface\\ICONS\\PVPCurrency-Honor-Alliance",
   faction_horde = "Interface\\ICONS\\PVPCurrency-Honor-Horde",
   bnet_icon = "Interface\\FriendsFrame\\UI-Toast-ChatInviteIcon",
+  addon_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
   -- Pin glyphs (bundled, white on transparent; tinted at runtime).
   pin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\pin.png",
   unpin_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\unpin.png",

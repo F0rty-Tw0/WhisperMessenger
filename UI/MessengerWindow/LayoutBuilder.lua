@@ -15,6 +15,7 @@ local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
+local RetailChrome = ns.MessengerWindowChromeBuilderRetail or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.RetailChrome")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local LayoutBuilder = {}
@@ -71,6 +72,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local threadPane = contentSection.threadPane
   local composerPane = contentSection.composerPane
   local headerDivider = nil
+  RetailChrome.AnchorInsets(frame, contactsPane, contentPane)
 
   local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {
     contactsWidth = contactsWidth,

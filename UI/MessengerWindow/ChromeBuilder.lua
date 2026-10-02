@@ -7,7 +7,10 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 local WindowScale = ns.MessengerWindowWindowScale or require("WhisperMessenger.UI.MessengerWindow.WindowScale")
 local Shapes = ns.UIHelpersShapes or require("WhisperMessenger.UI.Helpers.Shapes")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
+local RetailChrome = ns.MessengerWindowChromeBuilderRetail or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.RetailChrome")
 local ModernChrome = ns.MessengerWindowChromeBuilderModern or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ModernChrome")
 local Buttons = ns.MessengerWindowChromeBuilderButtons or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.Buttons")
 local ResizeGrip = ns.MessengerWindowChromeBuilderResizeGrip or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ResizeGrip")
@@ -30,12 +33,37 @@ local function applyResizeBounds(frame, parent, theme, windowScale)
   end
 end
 
+-- Retail HUD: ButtonFrameTemplate. A client that can't build it drops the
+-- session to the Classic HUD so every metric matches the frame on screen.
+local function createRetailFrame(factory, parent)
+  local frame = UIHelpers.createTemplatedFrame(factory, "Frame", "WhisperMessengerWindow", parent, "ButtonFrameTemplate")
+  if not frame then
+    Hud.Configure("classic")
+  end
+  return frame
+end
+
+local function createWindowFrame(factory, parent, useBlizzardChrome)
+  if not useBlizzardChrome then
+    -- BackdropTemplate mixin makes :SetBackdrop available on Retail 9.0+
+    -- (the modern path doesn't use SetBackdrop today, but keeping the mixin
+    -- lets us paint a backdrop later without recreating the frame).
+    return factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BackdropTemplate"), ModernChrome
+  end
+  local retailFrame = Hud.IsRetail() and createRetailFrame(factory, parent)
+  if retailFrame then
+    return retailFrame, RetailChrome
+  end
+  return factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BasicFrameTemplateWithInset"), BlizzardChrome
+end
+
 -- ChromeBuilder builds the messenger window with one of two chrome paths,
 -- chosen by the Native WoW HUD setting (independent of the color preset):
 --
---   * Native WoW HUD: frame uses BasicFrameTemplateWithInset. Gold border,
---     red close X, dark inset, and centered title come from the Blizzard
---     template — we don't paint them ourselves.
+--   * Native WoW HUD: frame uses BasicFrameTemplateWithInset (Classic) or
+--     ButtonFrameTemplate (Retail: round portrait, modern title bar). Border,
+--     close X, insets, and centered title come from the Blizzard template —
+--     we don't paint them ourselves.
 --
 --   * Custom chrome (default): frame uses BackdropTemplate. We paint a flat
 --     background, our own title bar with header bg, a window edge hairline,
@@ -56,15 +84,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- back to false (modern chrome) if the caller didn't pass it.
   local useBlizzardChrome = options.useNativeChrome == true
 
-  local frame
-  if useBlizzardChrome then
-    frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BasicFrameTemplateWithInset")
-  else
-    -- BackdropTemplate mixin makes :SetBackdrop available on Retail 9.0+
-    -- (the modern path doesn't use SetBackdrop today, but keeping the mixin
-    -- lets us paint a backdrop later without recreating the frame).
-    frame = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent, "BackdropTemplate")
-  end
+  local frame, chromeBranch = createWindowFrame(factory, parent, useBlizzardChrome)
   frame:SetScale(normalizedWindowScale)
 
   frame:SetSize(initialState.width or Theme.WINDOW_WIDTH, initialState.height or Theme.WINDOW_HEIGHT)
@@ -105,8 +125,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame.alpha = Theme.WINDOW_IDLE_ALPHA
   end
 
-  -- Chrome differs by setting (Blizzard template vs custom chrome).
-  local chromeBranch = useBlizzardChrome and BlizzardChrome or ModernChrome
+  -- Chrome differs by setting (Retail or Classic template vs custom chrome).
   local chrome = chromeBranch.Build(factory, frame, options, Theme)
   local title, closeButton = chrome.title, chrome.closeButton
   local applyChromePaint = chrome.applyChromePaint
@@ -128,6 +147,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     optionsButton = options_.button,
     backButton = back.button,
     blizzardChrome = useBlizzardChrome,
+    retailChrome = chromeBranch == RetailChrome,
   }
 
   local function applyTheme(activeTheme)

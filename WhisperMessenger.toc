@@ -232,6 +232,7 @@ UI/MessengerWindow/WindowBounds.lua
 UI/MessengerWindow/ChromeBuilder/IconButtonStyle.lua
 UI/MessengerWindow/ChromeBuilder/WindowShadow.lua
 UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
+UI/MessengerWindow/ChromeBuilder/RetailChrome.lua
 UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
 UI/MessengerWindow/ChromeBuilder/Buttons.lua
 UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
