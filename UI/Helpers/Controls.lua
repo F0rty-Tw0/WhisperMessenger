@@ -13,6 +13,9 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local Controls = {}
 
+-- Space between a toggle's label and its switch or checkbox.
+local TOGGLE_LABEL_GAP = 8
+
 function Controls.createOptionButton(factory, parent, label, colors, layout)
   local btnHeight = layout.height or Theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnWidth = layout.width or 200
@@ -156,6 +159,15 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
   labelFs:SetPoint("LEFT", row, "LEFT", 0, 0)
+  if labelFs.SetJustifyH then
+    labelFs:SetJustifyH("LEFT")
+  end
+  if labelFs.SetWordWrap then
+    labelFs:SetWordWrap(true)
+  end
+  if labelFs.SetNonSpaceWrap then
+    labelFs:SetNonSpaceWrap(true)
+  end
   labelFs:SetText(label)
 
   -- Native WoW HUD: Blizzard checkbox in place of the switch.
@@ -174,6 +186,22 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
   }
 
   local switch = not check and ToggleSwitch.Attach(dot) or nil
+
+  -- Long labels wrap short of the control and the row grows to fit them.
+  local rowWidth = toggleWidth
+  local controlWidth = check and NativeControls.CHECK_SIZE or ToggleSwitch.TRACK_WIDTH
+  local function fitLabel()
+    labelFs:SetWidth(math.max(1, rowWidth - controlWidth - TOGGLE_LABEL_GAP))
+    local labelHeight = labelFs.GetStringHeight and labelFs:GetStringHeight() or 0
+    row:SetSize(rowWidth, math.max(toggleHeight, math.ceil(labelHeight)))
+  end
+  -- Pages relabel through `.label:SetText` on a language change.
+  local setLabelText = labelFs.SetText
+  labelFs.SetText = function(self, value)
+    setLabelText(self, value)
+    fitLabel()
+  end
+  fitLabel()
 
   local enabled = initial == true
   local function updateVisual()
@@ -228,7 +256,8 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
       if type(nextWidth) ~= "number" or nextWidth <= 0 then
         return
       end
-      row:SetSize(nextWidth, toggleHeight)
+      rowWidth = nextWidth
+      fitLabel()
     end,
     applyThemeColors = function(nextColors)
       if type(nextColors) == "table" then
@@ -246,6 +275,8 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
         end
       end
       updateVisual()
+      -- Font size changes repaint through here.
+      fitLabel()
     end,
   }
 end
