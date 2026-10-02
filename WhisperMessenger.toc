@@ -266,7 +266,9 @@ UI/MessengerWindow/AppearanceSettings/NativeDropdown.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSelector.lua
 UI/Shared/SettingsControls/PanelRegistry.lua
 UI/Shared/SettingsControls/Divider.lua
+UI/Shared/SettingsControls/Banner.lua
 UI/Shared/SettingsControls/Header.lua
+UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
 UI/Shared/SettingsControls.lua
 UI/MessengerWindow/GeneralSettings.lua

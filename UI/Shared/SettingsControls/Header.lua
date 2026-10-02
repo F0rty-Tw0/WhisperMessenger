@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Divider = ns.SettingsControlsDivider or require("WhisperMessenger.UI.Shared.SettingsControls.Divider")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local Banner = ns.SettingsControlsBanner or require("WhisperMessenger.UI.Shared.SettingsControls.Banner")
 
 -- Settings panel header (title + hint). The title renders as a small
 -- "--- Title ---" section label: secondary colour, centered, with a
@@ -91,8 +92,50 @@ local function createNative(frame, opts)
   }
 end
 
+-- Retail: the title centred on the character window's section banner, which
+-- replaces the divider; the hint follows. No leftLine/rightLine. Clients
+-- whose textures can't draw atlases get the Classic header.
+local function createRetail(frame, opts)
+  local PADDING = Theme.CONTENT_PADDING
+  local bandWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
+
+  local banner = Banner.Create(frame, Banner.PageHeight(), Header.NATIVE_TITLE_FONT)
+  if not banner then
+    return createNative(frame, opts)
+  end
+  banner.texture:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING)
+  local title = banner.label
+  title:SetText(opts.title or "")
+
+  local hint = createHint(frame, opts, bandWidth)
+  hint:SetPoint("TOPLEFT", banner.texture, "BOTTOMLEFT", 0, -NATIVE_HINT_GAP)
+
+  local function applyTheme(activeTheme)
+    activeTheme = activeTheme or Theme
+    banner.applyTheme(activeTheme)
+    UIHelpers.setTextColor(hint, activeTheme.COLORS.text_secondary)
+    banner.setWidth(bandWidth)
+  end
+
+  applyTheme(Theme)
+
+  return {
+    title = title,
+    hint = hint,
+    banner = banner.texture,
+    refreshTheme = applyTheme,
+    refreshLayout = layoutRefresher(hint, function(width)
+      bandWidth = width
+      applyTheme(Theme)
+    end),
+  }
+end
+
 function Header.Create(frame, opts)
   opts = opts or {}
+  if Hud.IsRetail() then
+    return createRetail(frame, opts)
+  end
   if Hud.IsOn() then
     return createNative(frame, opts)
   end

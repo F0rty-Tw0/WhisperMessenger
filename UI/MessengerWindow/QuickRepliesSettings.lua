@@ -71,12 +71,12 @@ function QuickRepliesSettings.Create(factory, frame, anchor, options)
   local config = options.config
   local width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
 
-  local title = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  title:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-  UIHelpers.setTextColor(title, Theme.COLORS.text_secondary)
+  local titleSection = SettingsControls.CreateSectionLabel(frame)
+  titleSection.region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  local title = titleSection.label
 
   local list = factory.CreateFrame("Frame", nil, frame)
-  list:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -8)
+  list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -8)
 
   local section = { rows = {} }
   local addButton
@@ -146,7 +146,7 @@ function QuickRepliesSettings.Create(factory, frame, anchor, options)
   section.bottom = addButton
 
   function section.refreshTheme()
-    UIHelpers.setTextColor(title, Theme.COLORS.text_secondary)
+    titleSection.refreshTheme(Theme)
     for _, row in ipairs(section.rows) do
       UIHelpers.setTextColor(row.label, Theme.COLORS.text_primary)
       paintRemove(row.removeButton, false)
@@ -155,6 +155,7 @@ function QuickRepliesSettings.Create(factory, frame, anchor, options)
 
   function section.refreshLayout(nextWidth)
     width = nextWidth
+    titleSection.refreshLayout(nextWidth)
     redraw()
   end
 

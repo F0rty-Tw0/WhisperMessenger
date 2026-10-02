@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PanelRegistry = ns.SettingsControlsPanelRegistry or require("WhisperMessenger.UI.Shared.SettingsControls.PanelRegistry")
 local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.SettingsControls.Header")
+local SectionLabel = ns.SettingsControlsSectionLabel or require("WhisperMessenger.UI.Shared.SettingsControls.SectionLabel")
 local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
@@ -46,6 +47,9 @@ end
 
 -- Settings panel header (title + hint): see SettingsControls/Header.lua.
 SettingsControls.CreateHeader = Header.Create
+
+-- Sub-section label inside a page: see SettingsControls/SectionLabel.lua.
+SettingsControls.CreateSectionLabel = SectionLabel.Create
 
 -- Slider row ------------------------------------------------------------------
 
