@@ -136,6 +136,8 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   end
 
   parent.rows = rows
+  -- What the rows need; the content may be taller (filled to the viewport).
+  parent.rowsHeight = visibleCount * rowHeight
   parent.visibleCount = visibleCount
   parent.totalCount = #items
   ContactsList.SetSelected(rows, options.selectedConversationKey)

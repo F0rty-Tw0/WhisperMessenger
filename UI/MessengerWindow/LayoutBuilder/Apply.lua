@@ -128,7 +128,9 @@ function Apply.Relayout(layout, relayout, theme)
     cv.scrollBar:SetHeight(contactsListHeight)
     cv.viewportHeight = contactsListHeight
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
-    Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsListHeight))
+    -- Size from the rows, not the content: a short list's content was
+    -- filled to the old viewport and would keep a shrunk window scrolling.
+    Metrics.RefreshMetrics(cv, cv.content.rowsHeight or sizeValue(cv.content, "GetHeight", "height", contactsListHeight))
   end
 
   -- Resize options overlay to match new window dimensions. optionsPanel's
