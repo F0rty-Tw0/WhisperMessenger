@@ -21,8 +21,8 @@ local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
 local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
 local ChromeBuilder = {}
 
-local function applyResizeBounds(frame, parent, theme, windowScale)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale)
+local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed)
   if frame.SetResizeBounds then
     frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
   else
@@ -105,7 +105,10 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
   frame:SetResizable(true)
-  applyResizeBounds(frame, parent, Theme, normalizedWindowScale)
+  -- The rail lets the window shrink further (see WindowBounds).
+  local contactsCollapsed = initialState.contactsCollapsed == true
+  local currentScale = normalizedWindowScale
+  applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed)
   frame:SetClampedToScreen(true)
 
   local frameName = frame.GetName and frame:GetName() or frame.name
@@ -169,8 +172,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     local normalizedScale = WindowScale.Normalize(nextScale)
     frame:SetScale(normalizedScale)
     Shapes.refreshHairlines()
-    applyResizeBounds(frame, parent, Theme, normalizedScale)
+    currentScale = normalizedScale
+    applyResizeBounds(frame, parent, Theme, normalizedScale, contactsCollapsed)
     return normalizedScale
+  end
+
+  local function setContactsCollapsed(collapsed)
+    contactsCollapsed = collapsed == true
+    applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed)
   end
 
   applyTheme(Theme)
@@ -196,6 +205,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     resizeGrip = resize.grip,
     applyTheme = applyTheme,
     refreshScale = refreshScale,
+    setContactsCollapsed = setContactsCollapsed,
     setOptionsActive = setOptionsActive,
     setPatchNotesGlow = patchNotes.setGlowing,
     setMarkAllReadShown = markAllRead.setShown,
