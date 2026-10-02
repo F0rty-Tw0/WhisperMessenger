@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+
 -- Active Native WoW HUD style for this session: "off", "classic" or "retail".
 -- Configured once at boot from the saved setting; a change applies after
 -- /reload because frame templates can't be swapped at runtime.
@@ -39,6 +41,12 @@ function Hud.Resolve(style)
     nextStyle = "classic"
   end
   return nextStyle
+end
+
+-- The style new installs and Reset to Defaults use: Modern where the game
+-- ships its templates (Retail and Forever), Off on the Classic flavors.
+function Hud.DefaultStyle()
+  return (FlavorCompat.isRetail or FlavorCompat.isForever) and "retail" or "off"
 end
 
 function Hud.Configure(style)
