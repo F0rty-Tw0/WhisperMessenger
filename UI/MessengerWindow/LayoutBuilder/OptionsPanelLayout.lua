@@ -34,9 +34,11 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   -- SetSize would override the BOTTOMRIGHT anchor with the OUTER frame width
   -- (which is wider than Inset under the HUD), causing overflow past the
   -- gold border.
+  -- Native WoW HUD: clear of the panel borders the game draws inside.
+  local hudPadding = nativeChrome and theme.LAYOUT.HUD_PANEL_PADDING or 0
   if nativeChrome then
-    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 0)
+    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -hudPadding)
+    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, hudPadding)
   else
     optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -20)
     optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
@@ -52,7 +54,8 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local optionsMenuBg = optionsMenu:CreateTexture(nil, "BACKGROUND")
   optionsMenuBg:SetAllPoints(optionsMenu)
-  applyTexture(optionsMenuBg, theme.COLORS.bg_secondary)
+  -- Native WoW HUD keeps the options panes clear so the template art shows.
+  applyTexture(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_secondary)
 
   local menuPadding = theme.CONTENT_PADDING
   local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 430
@@ -65,7 +68,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   if optionsMenuScrollView.scrollBar.ClearAllPoints then
     optionsMenuScrollView.scrollBar:ClearAllPoints()
   end
-  optionsMenuScrollView.scrollBar:SetPoint("TOPRIGHT", optionsMenu, "TOPRIGHT", 0, 0)
+  optionsMenuScrollView.scrollBar:SetPoint("TOPRIGHT", optionsMenu, "TOPRIGHT", -hudPadding, 0)
 
   local function refreshOptionsMenuScrollGeometry()
     local menuWidth = sizeValue(optionsMenu, "GetWidth", "width", contactsWidth)
@@ -96,7 +99,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   local optionsContentPane = factory.CreateFrame("Frame", nil, optionsPanel)
   -- Native WoW HUD: flush to the content area on top and right.
   local contentTopGap = nativeChrome and 0 or 2
-  local contentRightInset = nativeChrome and 0 or 4
+  local contentRightInset = nativeChrome and hudPadding or 4
   optionsContentPane:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", theme.DIVIDER_THICKNESS, -contentTopGap)
   optionsContentPane:SetPoint("BOTTOMRIGHT", optionsPanel, "BOTTOMRIGHT", -contentRightInset, 0)
   -- Initial width/height as a fallback for environments that don't resolve
@@ -108,7 +111,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")
   optionsContentBg:SetAllPoints(optionsContentPane)
-  applyTexture(optionsContentBg, theme.COLORS.bg_primary)
+  applyTexture(optionsContentBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_primary)
 
   -- Initial content height before the per-tab measurement (in
   -- WindowScripts/Buttons selectTab) runs. RefreshMetrics floors the

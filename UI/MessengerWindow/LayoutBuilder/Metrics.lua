@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local Metrics = {}
 
@@ -57,17 +58,20 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local layout = resolvedTheme.LAYOUT or {}
 
   local contactsWidth = Metrics.ClampContactsWidth(width, requestedContactsWidth or layoutState.contactsWidth, resolvedTheme)
-  -- Native WoW HUD content area is shorter than the frame by the template
-  -- border (single-anchored divider/handle take this height).
-  local hudExtraHeight = layoutState.nativeChrome and (layout.HUD_INSET_BOTTOM + layout.HUD_CONTENT_INSET + layout.HUD_CONTENT_TOP_INSET) or 0
-  local contactsHeight = height - resolvedTheme.TOP_BAR_HEIGHT - hudExtraHeight
+  -- Native WoW HUD content area is smaller than the frame by the template
+  -- border and title bar (single-anchored divider/handle take this height).
+  local hudInsets = layoutState.nativeChrome and Hud.ContentInsets(layout)
+  local contactsHeight = hudInsets and (height - hudInsets.top - hudInsets.bottom) or (height - resolvedTheme.TOP_BAR_HEIGHT)
   local contentWidth = width - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
   -- Options content column: HUD fills the content area; modern keeps its
   -- 10px-per-side margin.
   local optionsContentWidth
-  if layoutState.nativeChrome then
-    local hudExtraWidth = layout.HUD_INSET_LEFT + layout.HUD_INSET_RIGHT + 2 * layout.HUD_CONTENT_INSET
-    optionsContentWidth = width - hudExtraWidth - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
+  if hudInsets then
+    -- The HUD conversation pane sits inside the template border too, so the
+    -- transcript and composer lay out at the pane's real width.
+    contentWidth = contentWidth - hudInsets.left - hudInsets.right
+    -- The options page also clears the panel's right border.
+    optionsContentWidth = contentWidth - (layout.HUD_PANEL_PADDING or 0)
   else
     optionsContentWidth = (width - 20) - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
   end
@@ -79,7 +83,8 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local searchTotalHeight = layoutState.contactsSearchTotalHeight or (searchHeight + (searchMargin * 2))
   -- Space reserved under the list for the Whispers/Groups tab toggle (0 when
   -- the toggle is hidden). Without it the last rows scroll underneath the tabs.
-  local contactsBottomInset = layoutState.contactsBottomInset or 0
+  -- Under the HUD the list also clears the panel's bottom border.
+  local contactsBottomInset = (layoutState.contactsBottomInset or 0) + (hudInsets and layout.HUD_PANEL_PADDING or 0)
   local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight - contactsBottomInset)
 
   return {

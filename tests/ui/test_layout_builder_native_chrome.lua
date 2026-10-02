@@ -65,26 +65,27 @@ return function()
     assert(isTransparent(layout.contactsPaneBg), "HUD: contacts pane bg should stay transparent after theme apply")
   end
 
-  -- test_native_chrome_options_panel_flush_to_content_area
+  -- test_native_chrome_options_panel_clears_the_panel_borders
   do
     local layout, frame = buildLayout(true, true)
+    local pad = Theme.LAYOUT.HUD_PANEL_PADDING
     local tl, br = layout.optionsPanel.points[1], layout.optionsPanel.points[2]
-    assert(tl[2] == frame.contentArea and tl[4] == 0 and tl[5] == 0, "HUD: options panel TOPLEFT flush, got y=" .. tostring(tl[5]))
-    assert(br[2] == frame.contentArea and br[4] == 0 and br[5] == 0, "HUD: options panel BOTTOMRIGHT flush, got y=" .. tostring(br[5]))
+    assert(tl[2] == frame.contentArea and tl[4] == 0 and tl[5] == -pad, "HUD: options panel TOPLEFT below the border, got y=" .. tostring(tl[5]))
+    assert(br[2] == frame.contentArea and br[4] == 0 and br[5] == pad, "HUD: options panel BOTTOMRIGHT above the border, got y=" .. tostring(br[5]))
   end
 
-  -- test_native_chrome_options_content_pane_flush_top_right
+  -- test_native_chrome_options_content_pane_flush_top_inside_the_right_border
   do
     local layout, frame = buildLayout(true, true)
     local pane = layout.optionsContentPane
     local tl, br = pane.points[1], pane.points[2]
     assert(tl[5] == 0, "HUD: options content pane top gap should be 0, got " .. tostring(tl[5]))
-    assert(br[4] == 0 and br[5] == 0, "HUD: options content pane BOTTOMRIGHT should be flush, got x=" .. tostring(br[4]))
-    local buildWidth = 920 - hudExtraWidth - layout.contactsWidth - Theme.DIVIDER_THICKNESS
+    assert(br[4] == -Theme.LAYOUT.HUD_PANEL_PADDING and br[5] == 0, "HUD: options content pane clears the right border, got x=" .. tostring(br[4]))
+    local buildWidth = 920 - hudExtraWidth - layout.contactsWidth - Theme.DIVIDER_THICKNESS - Theme.LAYOUT.HUD_PANEL_PADDING
     assert(pane.width == buildWidth, "HUD build: options pane width should be " .. buildWidth .. ", got " .. tostring(pane.width))
     assert(layout.optionsScrollView.totalWidth == buildWidth, "HUD build: options scroll width should fill the pane")
     local result = LayoutBuilder.Relayout(layout, 800, 500)
-    local width = 800 - hudExtraWidth - result.contactsWidth - Theme.DIVIDER_THICKNESS
+    local width = 800 - hudExtraWidth - result.contactsWidth - Theme.DIVIDER_THICKNESS - Theme.LAYOUT.HUD_PANEL_PADDING
     assert(pane.width == width, "HUD relayout: options pane width should be " .. width .. ", got " .. tostring(pane.width))
     assert(
       layout.optionsScrollView.totalWidth == width,

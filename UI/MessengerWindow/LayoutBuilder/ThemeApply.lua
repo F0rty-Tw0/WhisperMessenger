@@ -85,9 +85,11 @@ function ThemeApply.Create(options)
       applySearchSkin(activeTheme)
     end
 
-    applyColorTexture(optionsMenuBg, activeTheme.COLORS.bg_secondary)
+    -- Native WoW HUD keeps the options panes clear, like the contacts pane;
+    -- the menu/content divider stays the preset hairline.
+    applyColorTexture(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
     applyColorTexture(optionsMenuDivider, activeTheme.COLORS.divider)
-    applyColorTexture(optionsContentBg, activeTheme.COLORS.bg_primary)
+    applyColorTexture(optionsContentBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_primary)
     setTextColor(optionsHint, activeTheme.COLORS.text_secondary)
 
     local activeTabBg = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected
