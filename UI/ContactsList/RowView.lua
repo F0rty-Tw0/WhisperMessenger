@@ -17,6 +17,7 @@ local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.Con
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local RowView = {}
 
@@ -91,15 +92,18 @@ local function bindRow(factory, parent, row, index, item, options)
   local rowBaseBg = isGroup and mutedColor(whisperBaseBg) or whisperBaseBg
   applyColorTexture(row.bg, rowBaseBg)
 
-  -- Left accent bar (shown when selected).
-  if row.accentBar == nil then
-    row.accentBar = row:CreateTexture(nil, "BORDER")
-    row.accentBar:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-    row.accentBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+  -- Left accent bar (shown when selected). The Native WoW HUD marks the
+  -- selection with Blizzard highlight art instead.
+  if not Hud.IsOn() then
+    if row.accentBar == nil then
+      row.accentBar = row:CreateTexture(nil, "BORDER")
+      row.accentBar:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+      row.accentBar:SetPoint("BOTTOMLEFT", row, "BOTTOMLEFT", 0, 0)
+    end
+    row.accentBar:SetWidth(Theme.LAYOUT.CONTACT_ACCENT_BAR_W)
+    applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
+    row.accentBar:Hide()
   end
-  row.accentBar:SetWidth(Theme.LAYOUT.CONTACT_ACCENT_BAR_W)
-  applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)
-  row.accentBar:Hide()
 
   -- Event scripts (hover, click, drag).
   RowHoverOverlay.ensure(row)

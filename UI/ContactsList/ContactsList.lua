@@ -12,6 +12,7 @@ local setTextColor = UIHelpers.setTextColor
 local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local DataBuilder = ns.ContactsListDataBuilder or require("WhisperMessenger.UI.ContactsList.DataBuilder")
 local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
+local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local bindRow = RowView.bindRow
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
@@ -41,15 +42,8 @@ end
 function ContactsList.SetSelected(rows, selectedConversationKey)
   for _, row in ipairs(rows or {}) do
     row.selected = row.item ~= nil and row.item.conversationKey == selectedConversationKey
-    local baseColor = (row.item and row.item.pinned and Theme.COLORS.bg_contact_pinned) or Theme.COLORS.bg_secondary
     local keepActionsVisible = shouldKeepActionsVisible(row)
-
-    if row._wmApplyVisualState then
-      row._wmApplyVisualState()
-    elseif row.bg then
-      local c = row.selected and Theme.COLORS.bg_contact_selected or baseColor
-      applyColorTexture(row.bg, c)
-    end
+    RowHoverOverlay.paint(row)
 
     if row.accentBar then
       applyColorTexture(row.accentBar, Theme.COLORS.accent_bar)

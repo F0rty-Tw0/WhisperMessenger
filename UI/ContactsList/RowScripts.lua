@@ -3,10 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyColorTexture = UIHelpers.applyColorTexture
-
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
@@ -81,22 +77,6 @@ local function deferHideActions(row)
   end
 end
 
-local function applyRowVisualState(row)
-  local hovered = row._wmRowHover == true
-    or (row._wmActionHoverCount or 0) > 0
-    or ((row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row))
-  local overlayOwnsHover = RowHoverOverlay.update(row, hovered)
-  if row.selected and not overlayOwnsHover then
-    applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-  elseif hovered and not overlayOwnsHover then
-    applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
-  elseif row.item and row.item.pinned then
-    applyColorTexture(row.bg, Theme.COLORS.bg_contact_pinned)
-  else
-    applyColorTexture(row.bg, { 0, 0, 0, 0 })
-  end
-end
-
 local function installHoverWatchdog(row)
   if row._wmHoverWatchdogInstalled or not row.SetScript then
     return
@@ -131,11 +111,7 @@ local function installHoverWatchdog(row)
 
     self._wmRowHover = false
     self._wmActionHoverCount = 0
-    if self._wmApplyVisualState then
-      self._wmApplyVisualState()
-    else
-      applyRowVisualState(self)
-    end
+    RowHoverOverlay.paint(self)
 
     local AB = getActionButtons()
     if AB then
@@ -159,7 +135,7 @@ function RowScripts.bindHover(row)
       return isPointerInsideRow(row)
     end
     row._wmApplyVisualState = function()
-      applyRowVisualState(row)
+      RowHoverOverlay.paint(row)
     end
 
     if row.SetScript then

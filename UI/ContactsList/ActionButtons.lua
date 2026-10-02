@@ -6,10 +6,10 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local applyColorTexture = UIHelpers.applyColorTexture
 local applyVertexColor = UIHelpers.applyVertexColor
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local PinnedMarker = ns.ContactsListPinnedMarker or require("WhisperMessenger.UI.ContactsList.PinnedMarker")
+local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -19,11 +19,6 @@ local ActionButtons = {}
 local COLUMN_GAP = 2
 -- Pushes the button so its glyph (1px inset) ends on the timestamp's edge.
 local COLUMN_GLYPH_NUDGE_X = 1
-
-local function rowBaseBackgroundColor(row)
-  local item = row and row.item or nil
-  return item and item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
-end
 
 -- Pin action glyph: pin / unpin pushpins in the neutral action colour (the
 -- pinned state at rest is shown by the pinned marker).
@@ -67,17 +62,7 @@ local function isPointerInsideRow(row)
 end
 
 local function restoreRowVisualState(row)
-  if row._wmApplyVisualState then
-    row._wmApplyVisualState()
-    return
-  end
-  if row.selected then
-    applyColorTexture(row.bg, Theme.COLORS.bg_contact_selected)
-  elseif (row._wmActionHoverCount or 0) > 0 or isPointerInsideRow(row) then
-    applyColorTexture(row.bg, Theme.COLORS.bg_contact_hover)
-  else
-    applyColorTexture(row.bg, rowBaseBackgroundColor(row))
-  end
+  RowHoverOverlay.paint(row)
 end
 
 local function adjustActionHoverCount(row, delta)
