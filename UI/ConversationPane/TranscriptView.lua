@@ -157,6 +157,7 @@ local function layoutOptions(transcript)
   options.onReact = transcript.onReact
   options.canReact = transcript.canReact
   options.chatLocked = transcript.chatLocked
+  options.seenReceipts = transcript.seenReceipts
   options.onMessageAction = transcript.onMessageAction
   options.onReply = transcript.onReply
   options.canReply = transcript.canReply

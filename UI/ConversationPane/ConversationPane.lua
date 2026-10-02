@@ -59,6 +59,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   view.transcript.unreadDividerMessage = selectedContact and selectedContact.unreadDividerMessage or nil
+  view.transcript.seenReceipts = selectedContact ~= nil and (selectedContact.channel == "WOW" or selectedContact.channel == "BN")
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""

@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local SenderLabel = require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 
 local function findChildWithText(frame, text)
   for _, child in ipairs(frame.children or {}) do
@@ -72,5 +73,48 @@ return function()
     table.insert(messages, outgoing("e", 500, "w4", nil))
     Layout.LayoutMessages(factory, contentFrame, messages, 400, {})
     assert(countVisibleSeen(contentFrame) == 1, "Seen stays on the last seen group while a newer group waits")
+  end
+
+  local function countSeenScans(run)
+    local original = Layout.SeenLabelIndex
+    local calls = 0
+    Layout.SeenLabelIndex = function(...)
+      calls = calls + 1
+      return original(...)
+    end
+    run()
+    Layout.SeenLabelIndex = original
+    return calls
+  end
+
+  -- test_layout_skips_seen_scan_when_receipts_are_off
+  do
+    local contentFrame = factory.CreateFrame("Frame", nil, nil)
+    contentFrame:SetSize(400, 600)
+    local messages = { outgoing("a", 0, "w1", 5), outgoing("b", 1, "w2", 5), outgoing("c", 2, "w3", 5) }
+    local off = countSeenScans(function()
+      Layout.LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = false })
+    end)
+    assert(off == 0, "seenReceipts=false must skip the Seen scan, got " .. off)
+    local on = countSeenScans(function()
+      Layout.LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = true })
+    end)
+    assert(on == 1, "seenReceipts=true must scan once, got " .. on)
+  end
+
+  -- test_pane_scans_seen_only_for_whisper_conversations
+  do
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    parent:SetSize(600, 420)
+    local pane = ConversationPane.Create(factory, parent, nil, nil)
+    local conversation = { messages = { outgoing("a", 0, "w1", 5) } }
+    local group = countSeenScans(function()
+      ConversationPane.Refresh(pane, { conversationKey = "guild::Stormwind", channel = "GUILD", displayName = "Guild" }, conversation)
+    end)
+    assert(group == 0, "group conversations must skip the Seen scan, got " .. group)
+    local whisper = countSeenScans(function()
+      ConversationPane.Refresh(pane, { conversationKey = "wow::WOW::arthas", channel = "WOW", displayName = "Arthas" }, conversation)
+    end)
+    assert(whisper > 0, "whisper conversations must scan for Seen")
   end
 end
