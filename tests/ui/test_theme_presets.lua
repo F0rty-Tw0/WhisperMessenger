@@ -118,12 +118,9 @@ return function()
     assert(colorsMatch(Theme.COLORS.toggle_icon_bg, { 1.00, 0.82, 0.00, 1.0 }), "test_set_wow_native: toggle_icon_bg stays gold")
     assert(colorsMatch(Theme.COLORS.toggle_icon_ring, { 1.00, 0.82, 0.00, 0.75 }), "test_set_wow_native: toggle_icon_ring stays gold")
 
-    -- System text keeps SYSTEM yellow; outgoing bubble keeps whisper magenta
+    -- System text keeps SYSTEM yellow; outgoing bubble is dark bronze
     assert(colorsMatch(Theme.COLORS.text_system, { 1.00, 1.00, 0.00, 1.0 }), "test_set_wow_native: text_system stays system yellow")
-    assert(
-      colorsMatch(Theme.COLORS.bg_bubble_out, { 0.30, 0.13, 0.36, 0.82 }),
-      "test_set_wow_native: bg_bubble_out did not update to whisper-magenta"
-    )
+    assert(colorsMatch(Theme.COLORS.bg_bubble_out, { 0.24, 0.19, 0.09, 0.92 }), "test_set_wow_native: bg_bubble_out did not update to dark bronze")
 
     -- Blizzard standard status colors
     assert(colorsMatch(Theme.COLORS.online, { 0.10, 1.00, 0.10, 1.0 }), "test_set_wow_native: online did not update to GREEN_FONT_COLOR")
