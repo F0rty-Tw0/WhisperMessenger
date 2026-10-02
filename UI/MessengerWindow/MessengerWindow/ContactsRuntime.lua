@@ -210,15 +210,6 @@ function ContactsRuntime.Create(factory, options)
       contactsSearchController.bindInputScripts()
     end,
     refreshTabToggleVisibility = applyTabModes,
-    -- Height the contacts list must leave free at the pane bottom so rows
-    -- never scroll underneath the footer tabs (two rows when they wrap).
-    -- paneWidth: the width about to be applied; nil = the footer's current.
-    getContactsBottomInset = function(paneWidth)
-      if tabToggle and tabToggle.frame and tabToggle.frame:IsShown() then
-        return tabToggle.reservedHeightFor(paneWidth or tabToggle.frame:GetWidth())
-      end
-      return 0
-    end,
     setTabMode = function(mode)
       local resolved = mode or "whispers"
       if resolved == currentTabMode then

@@ -81,10 +81,9 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   local searchHeight = layoutState.contactsSearchHeight or (layout.CONTACT_SEARCH_HEIGHT or 30)
   local searchMargin = layoutState.contactsSearchMargin or (layout.CONTACT_SEARCH_MARGIN or 10)
   local searchTotalHeight = layoutState.contactsSearchTotalHeight or (searchHeight + (searchMargin * 2))
-  -- Space reserved under the list for the Whispers/Groups tab toggle (0 when
-  -- the toggle is hidden). Without it the last rows scroll underneath the tabs.
-  -- Under the HUD the list also clears the panel's bottom border.
-  local contactsBottomInset = (layoutState.contactsBottomInset or 0) + (hudInsets and layout.HUD_PANEL_PADDING or 0)
+  -- The tabs hang below the window, so only the HUD reserves space under
+  -- the list: it clears the panel's bottom border.
+  local contactsBottomInset = hudInsets and layout.HUD_PANEL_PADDING or 0
   local contactsListHeight = math.max(0, contactsHeight - searchTotalHeight - contactsBottomInset)
 
   return {

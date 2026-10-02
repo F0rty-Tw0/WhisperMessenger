@@ -1,7 +1,6 @@
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
-local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -28,8 +27,8 @@ return function()
   local contactsH = Theme.WINDOW_HEIGHT - Theme.TOP_BAR_HEIGHT
   local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
   local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
-  -- Whispers/Groups tab toggle is shown by default and reserves its height.
-  local contactsListH = math.max(0, contactsH - searchTotalHeight - TabToggle.HEIGHT)
+  -- The Whispers/Groups tabs hang below the window and reserve nothing.
+  local contactsListH = math.max(0, contactsH - searchTotalHeight)
   local expectedInitial = math.ceil(contactsListH / rowH) + 1
   if expectedInitial > 20 then
     expectedInitial = 20

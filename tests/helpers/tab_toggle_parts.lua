@@ -1,7 +1,7 @@
--- Locates the Whispers / Groups segments of a TabToggle through its frame
--- tree (see tests/helpers/find_ui.lua) instead of handles on the return value.
--- Each segment button owns, in creation order: hover texture, label,
--- underline texture and the unread badge frame.
+-- Locates the Whispers / Groups tabs of a TabToggle through its frame tree
+-- (see tests/helpers/find_ui.lua) instead of handles on the return value.
+-- Each tab button owns, in creation order: hover texture, label, underline
+-- texture, the unread badge frame, then its surface, tint and border textures.
 
 local FindUI = require("tests.helpers.find_ui")
 
@@ -14,6 +14,10 @@ local function segment(toggle, index)
     btn = btn,
     hover = textures[1],
     underline = textures[2],
+    surface = textures[3],
+    tint = textures[4],
+    -- Hairline outline pieces (left, right, bottom).
+    border = { textures[5], textures[6], textures[7] },
     label = FindUI.ofType(btn, "FontString")[1],
     badge = FindUI.ofType(btn, "Frame")[1],
   }
@@ -25,15 +29,6 @@ end
 
 function TabToggleParts.groups(toggle)
   return segment(toggle, 2)
-end
-
--- Bar textures, in creation order: top divider, bg fill, footer tint.
-function TabToggleParts.divider(toggle)
-  return FindUI.ofType(toggle.frame, "Texture")[1]
-end
-
-function TabToggleParts.footerTint(toggle)
-  return FindUI.ofType(toggle.frame, "Texture")[3]
 end
 
 -- Unread badge circle and count of a badge frame.

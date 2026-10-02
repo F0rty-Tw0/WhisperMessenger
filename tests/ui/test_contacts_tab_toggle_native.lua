@@ -83,8 +83,7 @@ return function()
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
     toggle.setModes({ "whispers", "groups", "requests" })
-    assert(toggle.reservedHeightFor(600) == 0, "HUD: hanging tabs leave the list its full height")
-    assert(toggle.reservedHeightFor(150) == 0, "HUD: hanging tabs never wrap into the list")
+    assert(toggle.reservedHeightFor == nil, "HUD: hanging tabs never take list height")
   end
 
   -- test_hud_tabs_chain_left_to_right_at_natural_width
@@ -207,18 +206,17 @@ return function()
   do
     local factory = TemplateFactory.missing(FakeUI.NewFactory(), "PanelTabButtonTemplate")
     local toggle = createToggle(factory, true)
-    assert(tabs(toggle)[1].template == nil, "fallback: modern segment buttons")
-    assert(toggle.reservedHeightFor(toggle.frame:GetWidth()) == TabToggle.HEIGHT, "fallback: modern reserves the bar height")
+    assert(tabs(toggle)[1].template == nil, "fallback: modern tab buttons")
   end
 
-  -- test_modern_tabs_unchanged
+  -- test_modern_tabs_hang_below_the_window_too
   do
-    local toggle, _, pane = createToggle(FakeUI.NewFactory(), false)
+    local toggle, window, pane = createToggle(FakeUI.NewFactory(), false)
     local pt = toggle.frame.points[1]
-    assert(pt[1] == "BOTTOMLEFT" and pt[2] == pane, "modern: bar anchored inside the contacts pane bottom")
-    assert(toggle.frame.height == TabToggle.HEIGHT, "modern: bar height unchanged")
+    assert(pt[1] == "TOPLEFT" and pt[2] == window and pt[3] == "BOTTOMLEFT", "modern: tabs hang from the window bottom-left")
+    assert(toggle.frame:GetParent() == pane, "modern: tabs hide with the contacts pane")
+    assert(toggle.frame.height == TabToggle.HEIGHT, "modern: one tab tall")
     assert(tabs(toggle)[1].template == nil, "modern: plain buttons")
-    assert(toggle.reservedHeightFor(toggle.frame:GetWidth()) == TabToggle.HEIGHT, "modern: reserves the bar height")
-    assert(#FindUI.ofType(toggle.frame, "Texture") == 3, "modern: divider, bg and footer tint stay")
+    assert(#FindUI.ofType(toggle.frame, "Texture") == 0, "modern: no in-pane footer bar")
   end
 end
