@@ -109,7 +109,6 @@ end
 function Navigation.ScrollBy(view, delta)
   return Navigation.SetVerticalScroll(view, Metrics.GetOffset(view) + (delta or 0))
 end
-
 local function wrapScriptWithCallback(target, scriptName, callback)
   if target == nil or type(target.SetScript) ~= "function" then
     return

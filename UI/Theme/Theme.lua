@@ -61,6 +61,12 @@ Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
 Theme.ChannelIcon = ThemeTextures.ChannelIcon
 
+-- Contact row height for the current font size. Never below the base row.
+function Theme.ContactRowHeight()
+  local grownPx = math.max(0, Fonts.GetFontSize() - Fonts.DEFAULT_BASE_SIZE)
+  return Layout.CONTACT_ROW_HEIGHT + grownPx * Layout.CONTACT_ROW_GROWTH_PER_FONT_PX
+end
+
 local BubbleColors = ns.ThemeBubbleColors
 if type(BubbleColors) ~= "table" and type(require) == "function" then
   local ok, mod = pcall(require, "WhisperMessenger.UI.Theme.BubbleColors")

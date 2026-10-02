@@ -27,6 +27,9 @@ local Layout = {
 
   -- Contact rows
   CONTACT_ROW_HEIGHT = 48,
+  -- Rows grow with the font slider above the default size: three text lines
+  -- (name, zone, preview) each need 1px per font px.
+  CONTACT_ROW_GROWTH_PER_FONT_PX = 3,
   CONTACT_ICON_SIZE = 34,
   CONTACT_FACTION_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,

@@ -9,6 +9,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Battle.net friends now show without the #1234 part of their BattleTag, handy for streaming and screenshots. Two friends with the same name keep their numbers so you can tell them apart. Turn it off under Options > General > Privacy ("Hide BattleTag numbers").
 - Shift-click the floating icon or the minimap icon to mark every chat as read without opening the window.
 - Fixed: pressing R to reply no longer types an "r" into the message box, even when the chat already had a half-typed message.
+- Fixed: with a big font size (14 and up), a contact's zone and last message no longer overlap in the contact list. Rows now get taller as the font grows.
+- Fixed: clicking the Window Scale slider's bar no longer jumps the window to a new size. Drag the handle to change the scale.
 
 ## [2.0.1] - 2026-09-26
 

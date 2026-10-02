@@ -299,6 +299,8 @@ function Fonts.GetFontSize()
   return currentFontSize
 end
 
+Fonts.DEFAULT_BASE_SIZE = DEFAULT_BASE_SIZE
+
 function Fonts.SetOutline(outline)
   currentOutline = outline or "NONE"
   applyFonts()

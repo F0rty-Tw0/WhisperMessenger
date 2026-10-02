@@ -167,6 +167,7 @@ UI/ContactsList/DragReorder.lua
 UI/ContactsList/StatusDot.lua
 UI/ContactsList/PinnedMarker.lua
 UI/ContactsList/RowMarkers.lua
+UI/ContactsList/RowTextAnchors.lua
 UI/ContactsList/RowElements.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua

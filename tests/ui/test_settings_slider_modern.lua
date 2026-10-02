@@ -16,7 +16,7 @@ local function colorsMatch(actual, expected)
   return true
 end
 
-local function newSlider(factory, initial)
+local function newSlider(factory, initial, commitOnRelease)
   local parent = factory.CreateFrame("Frame", nil, nil)
   return SettingsControls.CreateSliderRow(factory, parent, {
     label = "Size",
@@ -24,10 +24,21 @@ local function newSlider(factory, initial)
     max = 10,
     step = 1,
     initial = initial,
+    commitOnRelease = commitOnRelease,
     formatFn = function(v)
       return tostring(v) .. "px"
     end,
   })
+end
+
+local function trackBlockers(slider)
+  local out = {}
+  for _, child in ipairs(FindUI.ofType(slider, "Frame")) do
+    if child.mouseEnabled then
+      out[#out + 1] = child
+    end
+  end
+  return out
 end
 
 local function expectedFill(width, value)
@@ -83,6 +94,34 @@ return function()
     assert(colorsMatch(s.value.textColor, Theme.COLORS.text_primary), "value reads as primary")
     assert(colorsMatch(s.minLabel.textColor, Theme.COLORS.text_timestamp), "min label subtle")
     assert(colorsMatch(s.maxLabel.textColor, Theme.COLORS.text_timestamp), "max label subtle")
+  end
+
+  -- test_commit_on_release_slider_blocks_track_beside_thumb
+  do
+    local s = newSlider(factory, 5, true)
+    local blockers = trackBlockers(s.slider)
+    local travel = width - SliderSkin.THUMB_SIZE
+    assert(#blockers == 2, "track left and right of the thumb must catch clicks, got " .. #blockers)
+    assert(math.abs(blockers[1].width - travel / 2) < 0.01, "left blocker ends at thumb, got " .. tostring(blockers[1].width))
+    assert(math.abs(blockers[2].width - travel / 2) < 0.01, "right blocker starts after thumb, got " .. tostring(blockers[2].width))
+    s.slider:SetValue(10)
+    assert(math.abs(blockers[1].width - travel) < 0.01 and blockers[2].width == 0, "blockers follow the thumb to max")
+    s.setWidth(200)
+    assert(math.abs(blockers[1].width - (200 - SliderSkin.THUMB_SIZE)) < 0.01, "blockers follow a resize")
+  end
+
+  -- test_track_blockers_hug_opposite_ends_of_the_track
+  do
+    local s = newSlider(factory, 5, true)
+    local blockers = trackBlockers(s.slider)
+    assert(blockers[1].points[1][1] == "TOPLEFT", "left blocker grows from the left end")
+    assert(blockers[2].points[1][1] == "TOPRIGHT", "right blocker grows from the right end")
+  end
+
+  -- test_plain_slider_keeps_track_clicks
+  do
+    local s = newSlider(factory, 5)
+    assert(#trackBlockers(s.slider) == 0, "live sliders keep click-to-jump")
   end
 
   -- test_theme_change_repaints_slider

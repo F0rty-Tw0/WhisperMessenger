@@ -28,7 +28,8 @@ local INDICATOR_HEIGHT = 2
 -- Returns: { handleDragStart, handleDragStop, cancel }
 function DragController.Create(factory, controller, currentContactsRef, options)
   options = options or {}
-  local rowH = options.rowHeight or Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  -- Re-read on each drag start: the font size (and so the row height) can change.
+  local rowH = options.rowHeight or Theme.ContactRowHeight()
   local content = controller.content
   -- Ghost + indicator live outside the window so its strata flips can't bury them.
   local host = _G.UIParent or content
@@ -180,6 +181,7 @@ function DragController.Create(factory, controller, currentContactsRef, options)
 
   local function handleDragStart(sourceRow, sourceIndex)
     cancel()
+    rowH = options.rowHeight or Theme.ContactRowHeight()
     dragState.active = true
     dragState.sourceIndex = sourceIndex
     dragState.sourceRow = sourceRow

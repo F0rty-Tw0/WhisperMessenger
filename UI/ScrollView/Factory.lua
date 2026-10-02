@@ -130,7 +130,7 @@ function Factory.Create(factory, parent, options)
 
   if scrollFrame.SetScript then
     scrollFrame:SetScript("OnMouseWheel", function(_, delta)
-      Navigation.ScrollBy(view, -((delta or 0) * step))
+      Navigation.ScrollBy(view, -((delta or 0) * view.step))
     end)
     scrollFrame:SetScript("OnVerticalScroll", function(_, offset)
       if view.syncingScrollFrame then
