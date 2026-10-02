@@ -6,6 +6,7 @@ end
 local Base = ns.UIHelpersBase or require("WhisperMessenger.UI.Helpers.Base")
 local Shapes = ns.UIHelpersShapes or require("WhisperMessenger.UI.Helpers.Shapes")
 local Controls = ns.UIHelpersControls or require("WhisperMessenger.UI.Helpers.Controls")
+local DisabledState = ns.UIHelpersDisabledState or require("WhisperMessenger.UI.Helpers.DisabledState")
 
 local UIHelpers = {
   TRANSPARENT = Base.TRANSPARENT,
@@ -38,6 +39,7 @@ local UIHelpers = {
   createRoundedBackground = Shapes.createRoundedBackground,
   createOptionButton = Controls.createOptionButton,
   createToggleRow = Controls.createToggleRow,
+  attachDisabledState = DisabledState.Attach,
 }
 
 ns.UIHelpers = UIHelpers

@@ -77,6 +77,21 @@ function ButtonSelector.Create(factory, parent, options)
     end
   end
 
+  -- An option can be unavailable (opt.disabled): dimmed, unclickable, and
+  -- showing opt.disabledReason on hover.
+  local function applyAvailability(btn, opt)
+    if opt.disabled then
+      btn._availability = btn._availability or UIHelpers.attachDisabledState(factory, btn)
+      btn._availability.set(false, opt.disabledReason)
+    elseif btn._availability then
+      btn._availability.set(true)
+    end
+  end
+
+  local function isClickable(btn)
+    return btn._availability == nil or btn._availability.isEnabled()
+  end
+
   local function updateSelection(nextSelected)
     selected = hasOptionKey(nextSelected) and nextSelected or fallbackKey
     repaintButtons()
@@ -133,7 +148,12 @@ function ButtonSelector.Create(factory, parent, options)
     btn._tooltipText = opt.tooltip
     SelectorSkin.Attach(btn)
 
+    applyAvailability(btn, opt)
+
     btn:SetScript("OnClick", function()
+      if not isClickable(btn) then
+        return
+      end
       updateSelection(btn._key)
       if onChange then
         onChange(btn._key)
@@ -177,6 +197,7 @@ function ButtonSelector.Create(factory, parent, options)
           btn.label:SetText(opt.label)
           btn._tooltipTitle = opt.label
           btn._tooltipText = opt.tooltip
+          applyAvailability(btn, opt)
         end
       end
       -- New (localized) labels may be wider: refit.
