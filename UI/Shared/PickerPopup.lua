@@ -15,9 +15,8 @@ local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.
 -- outside click.
 local PickerPopup = {}
 
--- Native WoW HUD art: dropdown-menu entry hover, action-button hover and
--- action-button checked glow.
-PickerPopup.MENU_HIGHLIGHT = NativeArt.LIST_HOVER
+-- Native WoW HUD art: action-button hover and action-button checked glow.
+-- Dropdown-menu entries hover with NativeArt.LIST_HOVER.
 PickerPopup.ICON_HIGHLIGHT = "Interface\\Buttons\\ButtonHilight-Square"
 PickerPopup.ICON_CHECKED = "Interface\\Buttons\\CheckButtonHilight"
 
@@ -98,22 +97,6 @@ function PickerPopup.HandleEvent(frame, event, close, anchor)
   end
 end
 
--- Paints `texture` with Blizzard art, additive like the game's own
--- highlights. Theme refreshes leave it alone.
-PickerPopup.SetNativeArt = NativeArt.Set
-
--- Blizzard hover art on the button's HIGHLIGHT layer, which the game shows
--- while the mouse is over the button.
-function PickerPopup.AddNativeHighlight(button, path)
-  local highlight = button:CreateTexture(nil, "HIGHLIGHT")
-  highlight:SetAllPoints(button)
-  PickerPopup.SetNativeArt(highlight, path)
-  if type(button.SetHighlightTexture) == "function" then
-    button:SetHighlightTexture(highlight)
-  end
-  return highlight
-end
-
 local function applyColor(setter, frame, color)
   if type(frame[setter]) == "function" then
     frame[setter](frame, color[1], color[2], color[3], color[4])
@@ -169,7 +152,7 @@ end
 -- Dropdown-menu style entry: game font, Blizzard hover art.
 local function createNativeTextButton(factory, parent, key, onClick)
   local button = factory.CreateFrame("Button", nil, parent)
-  button._highlight = PickerPopup.AddNativeHighlight(button, PickerPopup.MENU_HIGHLIGHT)
+  button._highlight = NativeArt.AddHighlight(button, NativeArt.LIST_HOVER)
   local label = button:CreateFontString(nil, "OVERLAY")
   label:SetPoint("CENTER", button, "CENTER", 0, 0)
   UIHelpers.setFontObject(label, PickerPopup.MENU_FONT)

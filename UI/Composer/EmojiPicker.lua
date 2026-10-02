@@ -7,6 +7,7 @@ local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.Pick
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Popover = ns.ComposerPopover or require("WhisperMessenger.UI.Composer.Popover")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local EmojiPicker = {}
@@ -39,7 +40,7 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
 
     local highlight
     if Hud.IsOn() then
-      highlight = PickerPopup.AddNativeHighlight(button, PickerPopup.ICON_HIGHLIGHT)
+      highlight = NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT)
     else
       highlight = button:CreateTexture(nil, "BACKGROUND")
       highlight:SetAllPoints(button)

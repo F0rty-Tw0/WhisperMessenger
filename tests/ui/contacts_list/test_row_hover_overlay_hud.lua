@@ -1,6 +1,6 @@
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
-local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = require("WhisperMessenger.UI.Helpers.NativeArt")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
@@ -78,7 +78,7 @@ return function()
   end
 
   -- test_hud_hover_shows_quest_title_highlight
-  assertNativeArt(pinned.hoverFill, PickerPopup.MENU_HIGHLIGHT, "HUD hover")
+  assertNativeArt(pinned.hoverFill, NativeArt.LIST_HOVER, "HUD hover")
   pinned.mouseOver = true
   pinned.scripts.OnEnter(pinned)
   assert(pinned.hoverFill.shown == true, "HUD hover: art shown on hover")

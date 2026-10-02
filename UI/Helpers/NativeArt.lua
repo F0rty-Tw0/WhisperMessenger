@@ -38,23 +38,25 @@ NativeArt.SCROLL_THUMB_OVER = {
 
 local hoverTint = { 1, 1, 1, NativeArt.LIST_HOVER_ALPHA }
 
+-- Flags `texture` as Blizzard art so theme refreshes leave it alone.
+local function mark(texture, blendMode)
+  if type(texture.SetBlendMode) == "function" then
+    texture:SetBlendMode(blendMode)
+  end
+  texture._wmNativeArt = true
+end
+
 -- Paints `texture` with Blizzard art, additive like the game's own
 -- highlights. Theme refreshes leave it alone.
 function NativeArt.Set(texture, path)
   texture:SetTexture(path)
-  if type(texture.SetBlendMode) == "function" then
-    texture:SetBlendMode("ADD")
-  end
-  texture._wmNativeArt = true
+  mark(texture, "ADD")
 end
 
 -- Same as Set for opaque art (a scroll knob), drawn with normal blending.
 function NativeArt.SetOpaque(texture, path)
   texture:SetTexture(path)
-  if type(texture.SetBlendMode) == "function" then
-    texture:SetBlendMode("BLEND")
-  end
-  texture._wmNativeArt = true
+  mark(texture, "BLEND")
 end
 
 -- Paints `texture` with a Blizzard atlas, normal blending, untinted.
@@ -64,11 +66,22 @@ function NativeArt.SetAtlas(texture, atlas, useAtlasSize)
     return false
   end
   texture:SetAtlas(atlas, useAtlasSize)
-  if type(texture.SetBlendMode) == "function" then
-    texture:SetBlendMode("BLEND")
-  end
-  texture._wmNativeArt = true
+  mark(texture, "BLEND")
   return true
+end
+
+-- The client's info table for `atlas` (width, height, ...), or nil when the
+-- client can't report it.
+function NativeArt.AtlasInfo(atlas)
+  local textureApi = _G.C_Texture
+  if type(textureApi) ~= "table" or type(textureApi.GetAtlasInfo) ~= "function" then
+    return nil
+  end
+  local ok, info = pcall(textureApi.GetAtlasInfo, atlas)
+  if ok and type(info) == "table" then
+    return info
+  end
+  return nil
 end
 
 function NativeArt.AttachList(selection, hover)
@@ -76,14 +89,29 @@ function NativeArt.AttachList(selection, hover)
   NativeArt.Set(hover, NativeArt.LIST_HOVER)
 end
 
+local function createHighlight(button, path)
+  local texture = button:CreateTexture(nil, "HIGHLIGHT")
+  texture:SetAllPoints(button)
+  NativeArt.Set(texture, path)
+  return texture
+end
+
+-- Blizzard hover art on the button's HIGHLIGHT layer, which the game shows
+-- while the mouse is over the button.
+function NativeArt.AddHighlight(button, path)
+  local highlight = createHighlight(button, path)
+  if type(button.SetHighlightTexture) == "function" then
+    button:SetHighlightTexture(highlight)
+  end
+  return highlight
+end
+
 -- ICON_GLOW over the whole button, hidden until the caller shows it on
 -- hover. Not the button's highlight texture: launchers and Send are never
 -- Disable()d, and a disabled one must stay dark. The HIGHLIGHT layer still
 -- keeps it from drawing once the mouse has left.
 function NativeArt.CreateIconGlow(button)
-  local glow = button:CreateTexture(nil, "HIGHLIGHT")
-  glow:SetAllPoints(button)
-  NativeArt.Set(glow, NativeArt.ICON_GLOW)
+  local glow = createHighlight(button, NativeArt.ICON_GLOW)
   glow:Hide()
   return glow
 end

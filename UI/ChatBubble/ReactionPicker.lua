@@ -5,6 +5,7 @@ end
 
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
@@ -71,8 +72,8 @@ local function createPicker(factory)
     local selectedMark = button:CreateTexture(nil, "BACKGROUND")
     selectedMark:SetAllPoints(button)
     if native then
-      PickerPopup.SetNativeArt(selectedMark, PickerPopup.ICON_CHECKED)
-      PickerPopup.AddNativeHighlight(button, PickerPopup.ICON_HIGHLIGHT)
+      NativeArt.Set(selectedMark, PickerPopup.ICON_CHECKED)
+      NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT)
     else
       PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
     end

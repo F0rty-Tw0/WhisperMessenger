@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local Popover = ns.ComposerPopover or require("WhisperMessenger.UI.Composer.Popover")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 -- List of quick replies above the composer; clicking one hands its text to
@@ -21,7 +22,7 @@ local LABEL_INSET = 8
 
 -- Dropdown-menu entry look for the Native WoW HUD. Returns the label.
 local function addNativeArt(row)
-  row._highlight = PickerPopup.AddNativeHighlight(row, PickerPopup.MENU_HIGHLIGHT)
+  row._highlight = NativeArt.AddHighlight(row, NativeArt.LIST_HOVER)
   local label = row:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(label, PickerPopup.MENU_FONT)
   return label

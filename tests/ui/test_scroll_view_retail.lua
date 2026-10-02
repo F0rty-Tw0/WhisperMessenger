@@ -123,6 +123,20 @@ return function()
     assert(view.scrollBar.width == 11, "retail: width is the atlas width, got " .. tostring(view.scrollBar.width))
   end
 
+  -- test_retail_width_falls_back_when_the_atlas_lookup_throws
+  do
+    local saved = rawget(_G, "C_Texture")
+    rawset(_G, "C_Texture", {
+      GetAtlasInfo = function()
+        error("unknown atlas")
+      end,
+    })
+    local ok, view = pcall(newView)
+    rawset(_G, "C_Texture", saved)
+    assert(ok, view)
+    assert(view.scrollBar.width == retailWidth(), "retail: width falls back to the layout width, got " .. tostring(view.scrollBar.width))
+  end
+
   -- test_retail_theme_refresh_keeps_the_atlases
   do
     local view = newView()

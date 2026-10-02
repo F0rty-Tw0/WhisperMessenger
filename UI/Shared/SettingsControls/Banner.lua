@@ -22,12 +22,9 @@ Banner.SECTION_FONT = "GameFontNormal"
 -- The atlas's natural height, so a page banner keeps its art's proportions
 -- vertically while stretching horizontally.
 function Banner.PageHeight()
-  local textureApi = _G.C_Texture
-  if type(textureApi) == "table" and type(textureApi.GetAtlasInfo) == "function" then
-    local ok, info = pcall(textureApi.GetAtlasInfo, Banner.ATLAS)
-    if ok and type(info) == "table" and type(info.height) == "number" and info.height > 0 then
-      return info.height
-    end
+  local info = NativeArt.AtlasInfo(Banner.ATLAS)
+  if info and type(info.height) == "number" and info.height > 0 then
+    return info.height
   end
   return Banner.FALLBACK_HEIGHT
 end

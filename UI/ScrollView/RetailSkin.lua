@@ -22,12 +22,9 @@ end
 
 -- The thumb atlas's own width when the client reports it.
 function RetailSkin.Width()
-  local textureApi = _G.C_Texture
-  if type(textureApi) == "table" and type(textureApi.GetAtlasInfo) == "function" then
-    local info = textureApi.GetAtlasInfo(NativeArt.SCROLL_THUMB.top)
-    if type(info) == "table" and type(info.width) == "number" and info.width > 0 then
-      return info.width
-    end
+  local info = NativeArt.AtlasInfo(NativeArt.SCROLL_THUMB.top)
+  if info and type(info.width) == "number" and info.width > 0 then
+    return info.width
   end
   return Theme.LAYOUT.SCROLLBAR_WIDTH_RETAIL
 end
