@@ -119,6 +119,7 @@ UI/Theme/Hud.lua
 UI/Helpers/Base.lua
 UI/Helpers/Shapes.lua
 UI/Helpers/HoverFade.lua
+UI/Helpers/NativeArt.lua
 UI/Helpers/GhostButton.lua
 UI/Helpers/NavItem.lua
 UI/Helpers/ToggleSwitch.lua

@@ -58,6 +58,8 @@ local Layout = {
   -- Scrollbar
   SCROLLBAR_WIDTH = 4,
   SCROLLBAR_WIDTH_HOVER = 6,
+  -- Native WoW HUD: fits the classic scroll knob.
+  SCROLLBAR_WIDTH_HUD = 18,
   SCROLLBAR_THUMB_MIN_H = 20,
 
   -- Composer

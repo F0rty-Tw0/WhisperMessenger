@@ -4,6 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -16,6 +18,34 @@ local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.Scrol
 
 local SCROLLBAR_WIDTH = Metrics.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = Metrics.SCROLLBAR_INSET
+
+-- Native WoW HUD: the gold knob from UIPanelScrollBarTemplate, at the
+-- template's size and crop (the file pads the knob with empty space).
+local HUD_KNOB = "Interface\\Buttons\\UI-ScrollBar-Knob"
+local HUD_KNOB_HEIGHT = 24
+local HUD_KNOB_COORDS = { 0.20, 0.80, 0.125, 0.875 }
+-- The trough is the preset's scrollbar colour, fainter than the modern bar.
+local HUD_TRACK_ALPHA_SCALE = 0.5
+
+local hudTrackColor = { 0, 0, 0, 0 }
+
+-- Dresses the slider in Blizzard scroll art; returns the theme repaint,
+-- which refreshes the trough and leaves the knob alone.
+local function skinHud(track, thumb)
+  thumb:SetSize(Theme.LAYOUT.SCROLLBAR_WIDTH_HUD, HUD_KNOB_HEIGHT)
+  NativeArt.SetOpaque(thumb, HUD_KNOB)
+  if thumb.SetTexCoord then
+    thumb:SetTexCoord(unpackValues(HUD_KNOB_COORDS))
+  end
+  local function paintTrack()
+    local color = Theme.COLORS.scrollbar
+    hudTrackColor[1], hudTrackColor[2], hudTrackColor[3] = color[1], color[2], color[3]
+    hudTrackColor[4] = (color[4] or 1) * HUD_TRACK_ALPHA_SCALE
+    applyColorTexture(track, hudTrackColor)
+  end
+  paintTrack()
+  return paintTrack
+end
 
 local Factory = {}
 
@@ -45,9 +75,9 @@ function Factory.Create(factory, parent, options)
     scrollFrame:SetScrollChild(content)
   end
 
+  local hud = Hud.IsOn()
   local scrollBar = factory.CreateFrame("Slider", nil, parent)
   scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", SCROLLBAR_INSET, 0)
-  scrollBar:SetSize(SCROLLBAR_WIDTH, height)
   if scrollBar.SetOrientation then
     scrollBar:SetOrientation("VERTICAL")
   end
@@ -61,10 +91,8 @@ function Factory.Create(factory, parent, options)
     scrollBar:SetObeyStepOnDrag(true)
   end
 
-  -- Transparent track (slim Telegram-style bar — no dark background)
   local track = scrollBar:CreateTexture(nil, "BACKGROUND")
   track:SetAllPoints(scrollBar)
-  applyColorTexture(track, { 0, 0, 0, 0 })
   scrollBar.track = track
 
   -- Slim thumb using Theme colors and dimensions
@@ -76,7 +104,20 @@ function Factory.Create(factory, parent, options)
   local function paintThumb()
     applyColorTexture(thumb, Theme.COLORS.scrollbar)
   end
-  paintThumb()
+  local scrollbarWidth = SCROLLBAR_WIDTH
+  local rightGutter = 0
+  local refreshSkin = paintThumb
+  if hud then
+    scrollbarWidth = Theme.LAYOUT.SCROLLBAR_WIDTH_HUD
+    -- The wide knob sits flush with the parent's edge, in the caller's gutter.
+    rightGutter = options.rightGutter or 0
+    refreshSkin = skinHud(track, thumb)
+  else
+    -- Transparent track (slim Telegram-style bar — no dark background)
+    applyColorTexture(track, { 0, 0, 0, 0 })
+    paintThumb()
+  end
+  scrollBar:SetSize(scrollbarWidth, height)
 
   scrollBar.thumb = thumb
   if scrollBar.SetThumbTexture then
@@ -85,8 +126,9 @@ function Factory.Create(factory, parent, options)
 
   -- Hover behavior: brighten and widen the thumb only (never resize the
   -- Slider frame — resizing a Slider triggers OnValueChanged → Sync which
-  -- resets the size, causing an OnEnter/OnLeave flicker loop).
-  if scrollBar.SetScript then
+  -- resets the size, causing an OnEnter/OnLeave flicker loop). The HUD
+  -- knob stays as it is.
+  if scrollBar.SetScript and not hud then
     scrollBar:SetScript("OnEnter", function()
       applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
       if thumb.SetWidth then
@@ -121,7 +163,9 @@ function Factory.Create(factory, parent, options)
     syncingScrollFrame = false,
     syncingScrollBar = false,
     hasOverflow = false,
-    refreshSkin = paintThumb,
+    scrollbarWidth = scrollbarWidth,
+    rightGutter = rightGutter,
+    refreshSkin = refreshSkin,
   }
 
   if scrollFrame.EnableMouseWheel then

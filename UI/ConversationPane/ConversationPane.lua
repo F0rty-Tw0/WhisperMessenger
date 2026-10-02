@@ -153,6 +153,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     width = parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET,
     height = transcriptHeight,
     point = { "TOPLEFT", headerFrame, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 0 },
+    rightGutter = Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER,
     step = TRANSCRIPT_SCROLL_STEP,
   })
   transcript.factory = factory

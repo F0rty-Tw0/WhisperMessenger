@@ -8,6 +8,8 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
 local DragController = ns.MessengerWindowDragController or require("WhisperMessenger.UI.MessengerWindow.DragController")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local sizeValue = UIHelpers.sizeValue
 
 local ContactsController = {}
 
@@ -95,10 +97,16 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     rowOptions.hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview()
       or options.hideMessagePreview
 
+    local boundWidth = sizeValue(controller.content, "GetWidth", "width", 0)
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
     -- One wheel notch = one row; Sync pushes the step to the scroll bar.
     contactsView.step = Theme.ContactRowHeight()
     ScrollView.Sync(contactsView)
+    -- Gaining or losing overflow resizes the content around the scrollbar;
+    -- rebind so the rows end beside the bar instead of under it.
+    if sizeValue(controller.content, "GetWidth", "width", 0) ~= boundWidth then
+      controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
+    end
 
     return controller.rows
   end
