@@ -21,6 +21,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: an empty contact list no longer shows a scrollbar after you make the window smaller, and its hint text stays centered and wraps to fit the list.
 - Fixed: the scrollbars on the options pages and in the chat no longer slide out of view after you resize the window.
 - Fixed: the WoW: Forever beta no longer lists the addon as out of date.
+- Fixed: long option names in the settings no longer run underneath their on/off switch on a narrow window; they now wrap onto a second line.
 
 ## [2.0.1] - 2026-09-26
 
