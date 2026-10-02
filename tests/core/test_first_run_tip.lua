@@ -59,7 +59,20 @@ local function test_is_not_fresh_install_when_patch_notes_were_seen()
   assert(FirstRunTip.IsFreshInstall(accountState) == false, "an upgrader is not fresh")
 end
 
+local function test_is_not_fresh_install_with_any_saved_setting()
+  -- Accounts from before the first-run flag existed still saved settings.
+  local accountState = { settings = { nativeChrome = false }, conversations = {} }
+  assert(FirstRunTip.IsFreshInstall(accountState) == false, "an old account with saved settings is not fresh")
+end
+
+local function test_is_not_fresh_install_with_saved_conversations()
+  local accountState = { settings = {}, conversations = { ["wow::Someone"] = { messages = {} } } }
+  assert(FirstRunTip.IsFreshInstall(accountState) == false, "an account with conversations is not fresh")
+end
+
 test_fresh_state_prints_once_and_sets_flag()
+test_is_not_fresh_install_with_any_saved_setting()
+test_is_not_fresh_install_with_saved_conversations()
 test_is_fresh_install_for_an_empty_account()
 test_is_not_fresh_install_after_first_boot()
 test_is_not_fresh_install_when_patch_notes_were_seen()

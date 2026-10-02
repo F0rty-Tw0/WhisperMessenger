@@ -15,13 +15,14 @@ local function isExistingUser(accountState)
   return next(accountState.conversations or {}) ~= nil or accountState.settings.patchNotesSeenVersion ~= nil
 end
 
--- True only on the very first boot of a brand-new install. Call it before
--- Announce, which marks the account as booted.
+-- True only before anything was ever saved: no settings, no conversations.
+-- Call it before boot seeds any setting. Accounts from before the first-run
+-- flag existed still count as upgrades because they saved settings.
 function FirstRunTip.IsFreshInstall(accountState)
-  if accountState == nil or accountState.settings == nil or accountState.settings.firstRunTipShown ~= nil then
+  if accountState == nil then
     return false
   end
-  return not isExistingUser(accountState)
+  return next(accountState.settings or {}) == nil and next(accountState.conversations or {}) == nil
 end
 
 function FirstRunTip.Announce(accountState, options)
