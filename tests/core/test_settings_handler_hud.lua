@@ -3,6 +3,7 @@ local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.S
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Presets = require("WhisperMessenger.UI.Theme.Presets")
+local RetailHud = require("tests.helpers.retail_hud")
 
 local function makeRuntime()
   return { store = { config = {} } }
@@ -27,17 +28,21 @@ local function withChatFrame(fn)
   end
 end
 
--- Records StaticPopup_Show names and ReloadUI calls.
+-- Records StaticPopup_Show / StaticPopup_Hide names and ReloadUI calls.
 local function withPopups(fn)
   local saved = {
     dialogs = rawget(_G, "StaticPopupDialogs"),
     show = rawget(_G, "StaticPopup_Show"),
+    hide = rawget(_G, "StaticPopup_Hide"),
     reload = rawget(_G, "ReloadUI"),
   }
-  local popups = { shown = {}, reloads = 0 }
+  local popups = { shown = {}, hidden = {}, reloads = 0 }
   rawset(_G, "StaticPopupDialogs", {})
   rawset(_G, "StaticPopup_Show", function(name)
     popups.shown[#popups.shown + 1] = name
+  end)
+  rawset(_G, "StaticPopup_Hide", function(name)
+    popups.hidden[#popups.hidden + 1] = name
   end)
   rawset(_G, "ReloadUI", function()
     popups.reloads = popups.reloads + 1
@@ -45,6 +50,7 @@ local function withPopups(fn)
   local ok, err = pcall(fn, popups)
   rawset(_G, "StaticPopupDialogs", saved.dialogs)
   rawset(_G, "StaticPopup_Show", saved.show)
+  rawset(_G, "StaticPopup_Hide", saved.hide)
   rawset(_G, "ReloadUI", saved.reload)
   if not ok then
     error(err, 0)
@@ -150,6 +156,37 @@ return function()
     onChange("hudStyle", "classic")
     Hud.Configure("off")
     assert(#popups.shown == 0, "same style as this session: no popup")
+  end)
+
+  -- test_picking_the_running_style_again_closes_the_pending_popup
+  withPopups(function(popups)
+    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = {} })
+    onChange("hudStyle", "classic")
+    onChange("hudStyle", "off")
+    assert(#popups.hidden == 1 and popups.hidden[1] == popups.shown[1], "back to the running style hides the reload popup")
+  end)
+
+  -- test_a_stale_popup_does_not_switch_to_azeroth
+  withPopups(function(popups)
+    local accountSettings = { themePreset = "elvui_dark" }
+    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+    onChange("hudStyle", "classic")
+    onChange("hudStyle", "off")
+    _G.StaticPopupDialogs[popups.shown[1]].OnAccept()
+    assert(accountSettings.themePreset == "elvui_dark", "HUD back off: preset kept, got " .. tostring(accountSettings.themePreset))
+  end)
+
+  -- test_moving_between_hud_styles_keeps_the_preset
+  RetailHud.With(function()
+    Hud.Configure("classic")
+    withPopups(function(popups)
+      local accountSettings = { themePreset = "elvui_dark" }
+      local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+      onChange("hudStyle", "retail")
+      assert(#popups.shown == 1, "Classic to Modern offers a reload")
+      _G.StaticPopupDialogs[popups.shown[1]].OnAccept()
+      assert(accountSettings.themePreset == "elvui_dark", "Classic to Modern keeps the preset, got " .. tostring(accountSettings.themePreset))
+    end)
   end)
 
   -- test_theme_preset_still_applies_under_hud

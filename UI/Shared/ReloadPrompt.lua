@@ -46,5 +46,11 @@ function ReloadPrompt.Show(text, onCancel, onAccept)
   _G.StaticPopup_Show(ReloadPrompt.DIALOG)
 end
 
+function ReloadPrompt.Hide()
+  if type(_G.StaticPopup_Hide) == "function" then
+    _G.StaticPopup_Hide(ReloadPrompt.DIALOG)
+  end
+end
+
 ns.ReloadPrompt = ReloadPrompt
 return ReloadPrompt
