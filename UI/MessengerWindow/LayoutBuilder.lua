@@ -166,6 +166,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsSearchInput = contactsSearchInput,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
     contactsSearchClearButton = contactsSearchClearButton,
+    contactsRailSearchButton = contactsSection.railSearchButton,
     contactsSearchHeight = searchHeight,
     contactsSearchMargin = searchMargin,
     contactsSearchTotalHeight = searchTotalHeight,

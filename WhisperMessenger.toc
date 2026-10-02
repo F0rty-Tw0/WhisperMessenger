@@ -250,6 +250,7 @@ UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
 UI/MessengerWindow/LayoutBuilder/OptionsMenuButtons.lua
 UI/MessengerWindow/LayoutBuilder/OptionsPanelLayout.lua
+UI/MessengerWindow/LayoutBuilder/RailSearchButton.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSection.lua
 UI/MessengerWindow/LayoutBuilder/ContentSection.lua
 UI/MessengerWindow/LayoutBuilder.lua
