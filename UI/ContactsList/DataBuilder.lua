@@ -7,6 +7,7 @@ local DataBuilder = {}
 
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local SnapshotCache = ns.ContactsListSnapshotCache or require("WhisperMessenger.UI.ContactsList.SnapshotCache")
 
 local function compareItems(left, right)
   local leftPinned = left.pinned and true or false
@@ -108,7 +109,9 @@ local function resolveGuildOwnership(conversation, conversationKey, localProfile
   return keyOwner, keyOwner
 end
 
-function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
+-- cache (optional): a SnapshotCache. dirtyKeys nil rebuilds every snapshot;
+-- a set rebuilds only those keys and reuses the rest.
+function DataBuilder.BuildItemsForProfile(savedState, localProfileId, cache, dirtyKeys)
   local items = {}
   local battleTags = {}
   local profilePrefix = localProfileId .. "::"
@@ -116,7 +119,8 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
   local wowPrefix = "wow::"
   local playerClasses = savedState.playerClasses or {}
 
-  for conversationKey, conversation in pairs(savedState.conversations or {}) do
+  local conversations = savedState.conversations or {}
+  for conversationKey, conversation in pairs(conversations) do
     local include = false
     -- foreignOwner is set when a per-character group chat is owned by a
     -- different character than the current login. UI uses this hint to
@@ -180,7 +184,12 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
     end
 
     if include then
-      local snapshot = ConversationSnapshot.Build(conversationKey, conversation, savedState.settings)
+      local snapshot
+      if cache then
+        snapshot = SnapshotCache.Get(cache, conversationKey, conversation, savedState.settings, dirtyKeys)
+      else
+        snapshot = ConversationSnapshot.Build(conversationKey, conversation, savedState.settings)
+      end
       snapshot.ownerProfileId = foreignOwner
       snapshot.ownerClassTag = ownerClassTag
       table.insert(items, snapshot)
@@ -193,6 +202,9 @@ function DataBuilder.BuildItemsForProfile(savedState, localProfileId)
   -- Every stored Battle.net friend, before any tab or search filter, so a
   -- hidden row still counts toward a name clash.
   DisplayName.SetBattleTags(battleTags)
+  if cache then
+    SnapshotCache.Prune(cache, conversations)
+  end
   table.sort(items, compareItems)
   return items
 end

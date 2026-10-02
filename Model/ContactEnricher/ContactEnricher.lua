@@ -67,7 +67,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
   local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
   if contacts == nil and buildContactsFn then
-    contacts = buildContactsFn(runtime)
+    contacts = buildContactsFn()
   end
 
   ContactEnricher.EnrichContactsAvailability(contacts, runtime)
