@@ -11,6 +11,7 @@ local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMesse
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local Options = ns.AppearanceSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.Options")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local AppearanceSettings = {}
 
@@ -30,9 +31,7 @@ local DEFAULTS = {
   fontOutline = "NONE",
   fontColor = "default",
   bubbleColorPreset = "default",
-  themePreset = Theme.DEFAULT_PRESET or "wow_default",
   windowScale = 1.0,
-  hudStyle = "off",
 }
 
 local function pctFormat(v)
@@ -92,19 +91,21 @@ function AppearanceSettings.Create(factory, parent, config, options)
     })
   end
 
+  local hudDefault = Hud.DefaultStyle()
+  local presetDefault = Hud.DefaultPreset()
   local hudStyleSelector = panel:bind(
-    sel(text("Native WoW HUD"), Options.BuildHudStyleOptions(), DEFAULTS.hudStyle, config.hudStyle or DEFAULTS.hudStyle, function(v)
+    sel(text("Native WoW HUD"), Options.BuildHudStyleOptions(), hudDefault, config.hudStyle or hudDefault, function(v)
       onChange("hudStyle", v)
     end),
-    { type = "selector", key = "hudStyle", default = DEFAULTS.hudStyle }
+    { type = "selector", key = "hudStyle", default = hudDefault }
   )
   hudStyleSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
   local themePresetSelector = panel:bind(
-    sel(text("Theme Preset"), Options.BuildThemePresetOptions(), DEFAULTS.themePreset, config.themePreset or DEFAULTS.themePreset, function(v)
+    sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
       onChange("themePreset", v)
     end),
-    { type = "selector", key = "themePreset", default = DEFAULTS.themePreset }
+    { type = "selector", key = "themePreset", default = presetDefault }
   )
   themePresetSelector.row:SetPoint("TOPLEFT", hudStyleSelector.row, "BOTTOMLEFT", 0, gap)
 

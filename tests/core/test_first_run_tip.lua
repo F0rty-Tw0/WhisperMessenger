@@ -46,7 +46,36 @@ local function test_existing_user_with_conversations_prints_nothing_but_sets_fla
   assert(accountState.settings.firstRunTipShown == true, "flag should still be set silently")
 end
 
+local function test_is_fresh_install_for_an_empty_account()
+  assert(FirstRunTip.IsFreshInstall({ settings = {}, conversations = {} }) == true, "empty account is a fresh install")
+end
+
+local function test_is_not_fresh_install_after_first_boot()
+  assert(FirstRunTip.IsFreshInstall({ settings = { firstRunTipShown = true }, conversations = {} }) == false, "a booted account is not fresh")
+end
+
+local function test_is_not_fresh_install_when_patch_notes_were_seen()
+  local accountState = { settings = { patchNotesSeenVersion = "2.0.1" }, conversations = {} }
+  assert(FirstRunTip.IsFreshInstall(accountState) == false, "an upgrader is not fresh")
+end
+
+local function test_is_not_fresh_install_with_any_saved_setting()
+  -- Accounts from before the first-run flag existed still saved settings.
+  local accountState = { settings = { nativeChrome = false }, conversations = {} }
+  assert(FirstRunTip.IsFreshInstall(accountState) == false, "an old account with saved settings is not fresh")
+end
+
+local function test_is_not_fresh_install_with_saved_conversations()
+  local accountState = { settings = {}, conversations = { ["wow::Someone"] = { messages = {} } } }
+  assert(FirstRunTip.IsFreshInstall(accountState) == false, "an account with conversations is not fresh")
+end
+
 test_fresh_state_prints_once_and_sets_flag()
+test_is_not_fresh_install_with_any_saved_setting()
+test_is_not_fresh_install_with_saved_conversations()
+test_is_fresh_install_for_an_empty_account()
+test_is_not_fresh_install_after_first_boot()
+test_is_not_fresh_install_when_patch_notes_were_seen()
 test_flag_already_set_prints_nothing()
 test_existing_user_with_conversations_prints_nothing_but_sets_flag()
 
