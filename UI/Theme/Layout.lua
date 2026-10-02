@@ -12,6 +12,16 @@ local Layout = {
   CONTACTS_MIN_WIDTH = 180,
   CONTENT_MIN_WIDTH = 340,
   CONTACTS_RESIZE_HANDLE_WIDTH = 8,
+  -- Frame levels the divider handle sits above the contacts pane, so rail
+  -- rows, badges and the chat pane's edge never cover it.
+  CONTACTS_RESIZE_HANDLE_LEVEL_LIFT = 50,
+  -- Collapsed contacts "rail": the contact icon plus 6px each side. While
+  -- dragging the divider the pane becomes the rail below the collapse point
+  -- and expands again past the expand point; the gap between them stops a
+  -- jittery pointer flickering between the two.
+  CONTACTS_RAIL_WIDTH = 46,
+  CONTACTS_RAIL_COLLAPSE_BELOW = 110,
+  CONTACTS_RAIL_EXPAND_ABOVE = 125,
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
   COMPOSER_HEIGHT = 44,
