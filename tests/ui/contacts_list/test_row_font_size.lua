@@ -124,6 +124,16 @@ return function()
   assert(view.step == BASE_ROW + 6, "wheel step is one grown row, got " .. tostring(view.step))
   assert(view.scrollBar.valueStep == BASE_ROW + 6, "scroll bar step is one grown row, got " .. tostring(view.scrollBar.valueStep))
 
+  -- test_contacts_wheel_notch_scrolls_one_grown_row
+  local manyContacts = {}
+  for i = 1, 40 do
+    manyContacts[i] = item("W" .. i)
+  end
+  controller.refresh(manyContacts, nil)
+  view.scrollFrame:GetScript("OnMouseWheel")(view.scrollFrame, -1)
+  local offset = ScrollView.GetOffset(view)
+  assert(offset == BASE_ROW + 6, "one notch scrolls one grown row, got " .. tostring(offset))
+
   Fonts.SetFontSize(12)
   print("PASS: test_row_font_size")
 end

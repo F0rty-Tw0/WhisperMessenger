@@ -96,7 +96,8 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       or options.hideMessagePreview
 
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
-    ScrollView.SetStep(contactsView, Theme.ContactRowHeight())
+    -- One wheel notch = one row; Sync pushes the step to the scroll bar.
+    contactsView.step = Theme.ContactRowHeight()
     ScrollView.Sync(contactsView)
 
     return controller.rows

@@ -109,16 +109,6 @@ end
 function Navigation.ScrollBy(view, delta)
   return Navigation.SetVerticalScroll(view, Metrics.GetOffset(view) + (delta or 0))
 end
-
--- One wheel notch / scroll-bar step. Lists whose rows resize call this so a
--- notch keeps moving exactly one row.
-function Navigation.SetStep(view, step)
-  view.step = step
-  if view.scrollBar and view.scrollBar.SetValueStep then
-    view.scrollBar:SetValueStep(step)
-  end
-end
-
 local function wrapScriptWithCallback(target, scriptName, callback)
   if target == nil or type(target.SetScript) ~= "function" then
     return
