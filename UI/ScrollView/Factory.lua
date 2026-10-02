@@ -15,6 +15,7 @@ local clamp = TableUtils.clamp
 
 local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
 local Navigation = ns.ScrollViewNavigation or require("WhisperMessenger.UI.ScrollView.Navigation")
+local RetailSkin = ns.ScrollViewRetailSkin or require("WhisperMessenger.UI.ScrollView.RetailSkin")
 
 local SCROLLBAR_WIDTH = Metrics.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = Metrics.SCROLLBAR_INSET
@@ -107,7 +108,11 @@ function Factory.Create(factory, parent, options)
   local scrollbarWidth = SCROLLBAR_WIDTH
   local rightGutter = 0
   local refreshSkin = paintThumb
-  if hud then
+  if Hud.IsRetail() and RetailSkin.Supported(track) then
+    scrollbarWidth = RetailSkin.Width()
+    rightGutter = math.min(options.rightGutter or 0, Theme.LAYOUT.SCROLLBAR_RETAIL_GUTTER)
+    refreshSkin = RetailSkin.Apply(scrollBar, track, thumb, scrollbarWidth)
+  elseif hud then
     scrollbarWidth = Theme.LAYOUT.SCROLLBAR_WIDTH_HUD
     -- The wide knob sits flush with the parent's edge, in the caller's gutter.
     rightGutter = options.rightGutter or 0
@@ -127,7 +132,7 @@ function Factory.Create(factory, parent, options)
   -- Hover behavior: brighten and widen the thumb only (never resize the
   -- Slider frame — resizing a Slider triggers OnValueChanged → Sync which
   -- resets the size, causing an OnEnter/OnLeave flicker loop). The HUD
-  -- knob stays as it is.
+  -- knob stays as it is; the Retail skin swaps its own hover art.
   if scrollBar.SetScript and not hud then
     scrollBar:SetScript("OnEnter", function()
       applyColorTexture(thumb, Theme.COLORS.scrollbar_hover)
