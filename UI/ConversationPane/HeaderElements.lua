@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColor = UIHelpers.applyColor
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -200,7 +201,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
   -- button's own SetText, no child keys). Falls back to the modern button
   -- when the template is unavailable.
   local nativeButton = nativeChrome
-    and UIHelpers.createTemplatedFrame({ CreateFrame = createFrame }, "Button", nil, container, "UIPanelButtonTemplate")
+    and UIHelpers.createTemplatedFrame({ CreateFrame = createFrame }, "Button", nil, container, NativeControls.BUTTON_TEMPLATE)
   local button, buttonBg, buttonIcon, buttonText
   if nativeButton then
     button = nativeButton

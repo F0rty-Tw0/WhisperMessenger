@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local createOptionButton = UIHelpers.createOptionButton
 
@@ -75,7 +76,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, options)
     if not nativeChrome then
       return nil
     end
-    local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, optionsMenu, "UIPanelButtonTemplate")
+    local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, optionsMenu, NativeControls.BUTTON_TEMPLATE)
     if button then
       button:SetSize(btnLayout.width, btnH)
       button:SetText(Localization.Text(key))

@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 -- Native WoW HUD dropdown row. Prefers the game's dropdown
@@ -16,7 +17,6 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local NativeDropdown = {}
 
 NativeDropdown.DROPDOWN_TEMPLATE = "WowStyle1DropdownTemplate"
-NativeDropdown.BUTTON_TEMPLATE = "UIPanelButtonTemplate"
 
 local DEFAULT_ROW_WIDTH = 280
 local DEFAULT_LABEL_SPACING = 6
@@ -50,7 +50,7 @@ local function createMenuButton(factory, row)
   if not menuUtil() then
     return nil
   end
-  local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, row, NativeDropdown.BUTTON_TEMPLATE)
+  local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, row, NativeControls.BUTTON_TEMPLATE)
   if not button then
     return nil
   end

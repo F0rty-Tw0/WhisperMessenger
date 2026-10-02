@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 -- Message-request strip above the composer, in the AFK/DND banner slot:
@@ -18,7 +19,7 @@ local BUTTON_WIDTH = 72
 local BUTTON_GAP = 6
 
 local function createButton(factory, parent, key, nativeChrome, danger)
-  local native = nativeChrome and UIHelpers.createTemplatedFrame(factory, "Button", nil, parent, "UIPanelButtonTemplate")
+  local native = nativeChrome and UIHelpers.createTemplatedFrame(factory, "Button", nil, parent, NativeControls.BUTTON_TEMPLATE)
   if native then
     native:SetSize(BUTTON_WIDTH, BUTTON_HEIGHT + 2)
     native:SetText(Localization.Text(key))

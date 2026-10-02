@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.HoverFade")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -17,7 +18,6 @@ local SelectorSkin = {}
 SelectorSkin.PADDING_X = 12
 SelectorSkin.MIN_BUTTON_WIDTH = 40
 SelectorSkin.UNDERLINE_HEIGHT = 2
-SelectorSkin.NATIVE_TEMPLATE = "UIPanelButtonTemplate"
 
 function SelectorSkin.FitWidth(buttons)
   local widest = 0
@@ -62,7 +62,7 @@ function SelectorSkin.CreateNative(factory, parent)
   if not Hud.IsOn() then
     return nil
   end
-  local btn = UIHelpers.createTemplatedFrame(factory, "Button", nil, parent, SelectorSkin.NATIVE_TEMPLATE)
+  local btn = UIHelpers.createTemplatedFrame(factory, "Button", nil, parent, NativeControls.BUTTON_TEMPLATE)
   if btn then
     btn._native = true
   end
