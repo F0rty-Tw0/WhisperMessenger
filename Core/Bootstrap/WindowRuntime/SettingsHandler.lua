@@ -7,10 +7,7 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
-local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
-local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
-local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
-local Presets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
+local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -221,26 +218,8 @@ function SettingsHandler.Create(options)
       end
     end
 
-    -- hudStyle swaps the window's frame templates, which WoW can't do at
-    -- runtime, so it applies after a reload: offer one now (Cancel keeps the
-    -- choice and reminds in chat). Reloading into a HUD style starts it on
-    -- the Azeroth preset, which stays free to change afterwards.
-    -- nativeChrome mirrors it for older addon versions that only read the
-    -- old flag.
     if key == "hudStyle" then
-      accountSettings.nativeChrome = persistedValue ~= "off"
-      if Hud.Resolve(persistedValue) ~= Hud.Style() then
-        local question = "Reload the interface now to apply the new Native WoW HUD style?"
-        local notice = "Native WoW HUD change requires |cffffff00/reload|r to apply."
-        local hudOn = persistedValue ~= "off"
-        ReloadPrompt.Show(Localization and Localization.Text(question) or question, function()
-          ChatPrint.Print(Localization and Localization.Text(notice) or notice)
-        end, function()
-          if hudOn then
-            accountSettings.themePreset = Presets.WOW_NATIVE
-          end
-        end)
-      end
+      HudStyleSetting.Apply(accountSettings, persistedValue)
     end
 
     local icon = getIcon()
