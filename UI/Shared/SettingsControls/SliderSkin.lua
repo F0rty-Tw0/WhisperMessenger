@@ -36,7 +36,7 @@ end
 -- Native WoW HUD: the template draws track and thumb. The skin only knows
 -- the thumb width, so BlockTrackClicks still fits around it.
 function SliderSkin.AttachNative(slider, thumbSize)
-  return { slider = slider, thumbSize = thumbSize }
+  return { slider = slider, thumbSize = thumbSize, native = true }
 end
 
 -- The thumb's left edge travels 0..(width - thumb), so its centre sits at
@@ -77,11 +77,14 @@ function SliderSkin.BlockTrackClicks(skin, factory)
   SliderSkin.UpdateFill(skin)
 end
 
+-- The native skin has no textures to colour; it only re-fits the blockers.
 function SliderSkin.Apply(skin, activeTheme)
-  local colors = activeTheme.COLORS
-  UIHelpers.applyColorTexture(skin.track, colors.slider_track)
-  UIHelpers.applyColorTexture(skin.fill, colors.slider_fill)
-  UIHelpers.applyVertexColor(skin.thumb, colors.control_knob)
+  if not skin.native then
+    local colors = activeTheme.COLORS
+    UIHelpers.applyColorTexture(skin.track, colors.slider_track)
+    UIHelpers.applyColorTexture(skin.fill, colors.slider_fill)
+    UIHelpers.applyVertexColor(skin.thumb, colors.control_knob)
+  end
   SliderSkin.UpdateFill(skin)
 end
 
