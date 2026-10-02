@@ -91,10 +91,14 @@ end
 -- Retail needs game templates some clients lack; it shows but can't be picked.
 function Options.BuildHudStyleOptions()
   local options = localizeOptionSpecs(HUD_STYLE_SPECS)
-  if not Hud.RetailAvailable() then
-    local retail = options[#options]
-    retail.disabled = true
-    retail.disabledReason = Localization.Text("Not available on this game version.")
+  if Hud.RetailAvailable() then
+    return options
+  end
+  for _, option in ipairs(options) do
+    if option.key == "retail" then
+      option.disabled = true
+      option.disabledReason = Localization.Text("Not available on this game version.")
+    end
   end
   return options
 end
