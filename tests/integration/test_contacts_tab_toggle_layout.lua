@@ -2,7 +2,9 @@ local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local Theme = require("WhisperMessenger.UI.Theme")
 local LayoutMetrics = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local FakeUI = require("tests.helpers.fake_ui")
-local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
+
+-- The Whispers/Groups tabs hang below the window, so the contact list keeps
+-- its full height whether they show or not.
 
 local function bottomAnchorY(scrollFrame)
   for i = #(scrollFrame.points or {}), 1, -1 do
@@ -29,39 +31,21 @@ return function()
   local scrollFrame = window.contacts.scrollFrame
   local width = window.frame:GetWidth()
   local height = window.frame:GetHeight()
-  local tabHeight = TabToggle.HEIGHT
+  local fullHeight = LayoutMetrics.CalculateRelayout({}, width, height, nil, Theme).contactsListHeight
 
-  -- test_contacts_list_stops_above_tab_toggle_when_shown
-  do
-    local sizing = LayoutMetrics.CalculateRelayout({ contactsBottomInset = tabHeight }, width, height, nil, Theme)
-    assert(
-      bottomAnchorY(scrollFrame) == tabHeight,
-      "expected list bottom anchored " .. tabHeight .. "px above pane, got " .. tostring(bottomAnchorY(scrollFrame))
-    )
-    assert(
-      scrollFrame:GetHeight() == sizing.contactsListHeight,
-      "expected list height " .. sizing.contactsListHeight .. ", got " .. tostring(scrollFrame:GetHeight())
-    )
-  end
+  -- test_contacts_list_keeps_full_height_with_tabs_shown
+  assert(window.tabToggle.frame:IsShown() == true, "setup: tabs show with groups on")
+  assert(bottomAnchorY(scrollFrame) == 0, "list bottom flush with the pane, got " .. tostring(bottomAnchorY(scrollFrame)))
+  assert(scrollFrame:GetHeight() == fullHeight, "list keeps its full height, got " .. tostring(scrollFrame:GetHeight()))
 
-  -- test_contacts_list_reclaims_space_when_tab_toggle_hidden
-  do
-    settingsConfig.showGroupChats = false
-    window.refreshTabToggleVisibility()
-    local sizing = LayoutMetrics.CalculateRelayout({}, width, height, nil, Theme)
-    assert(bottomAnchorY(scrollFrame) == 0, "expected list bottom flush with pane when tabs hidden, got " .. tostring(bottomAnchorY(scrollFrame)))
-    assert(
-      scrollFrame:GetHeight() == sizing.contactsListHeight,
-      "expected full list height " .. sizing.contactsListHeight .. ", got " .. tostring(scrollFrame:GetHeight())
-    )
-  end
-
-  -- test_contacts_list_shrinks_again_when_tab_toggle_reshown
-  do
-    settingsConfig.showGroupChats = true
-    window.refreshTabToggleVisibility()
-    assert(bottomAnchorY(scrollFrame) == tabHeight, "expected list bottom re-raised above tabs, got " .. tostring(bottomAnchorY(scrollFrame)))
-  end
+  -- test_contacts_list_unchanged_when_tabs_hide_and_reshow
+  settingsConfig.showGroupChats = false
+  window.refreshTabToggleVisibility()
+  assert(window.tabToggle.frame:IsShown() == false, "tabs hide with a single mode")
+  assert(scrollFrame:GetHeight() == fullHeight, "list height unchanged with tabs hidden")
+  settingsConfig.showGroupChats = true
+  window.refreshTabToggleVisibility()
+  assert(bottomAnchorY(scrollFrame) == 0 and scrollFrame:GetHeight() == fullHeight, "list height unchanged with tabs reshown")
 
   _G.UIParent = savedUIParent
 end

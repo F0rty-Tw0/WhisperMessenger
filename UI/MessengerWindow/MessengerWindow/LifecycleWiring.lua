@@ -21,7 +21,6 @@ function LifecycleWiring.Setup(options)
     conversationPane = options.conversationPane,
     refreshContacts = options.refreshContacts,
     getSelectedConversationKey = options.getSelectedConversationKey,
-    getContactsBottomInset = options.getContactsBottomInset,
   })
   local relayoutWindow = relayoutController.relayoutWindow
 
@@ -62,6 +61,9 @@ function LifecycleWiring.Setup(options)
       applyState = function(nextState)
         local appliedState = options.windowGeometry.applyState(options.frame, nextState)
         relayoutWindow(appliedState.width, appliedState.height, appliedState.contactsWidth, true)
+        if options.onStateApplied then
+          options.onStateApplied(appliedState)
+        end
       end,
       refreshSelection = options.refreshSelection,
     },
@@ -82,6 +84,8 @@ function LifecycleWiring.Setup(options)
       Theme = options.theme,
       composerInput = options.composerInput,
       getAutoFocusChatInput = options.getAutoFocusChatInput,
+      isContactsCollapsed = options.isContactsCollapsed,
+      setContactsCollapsed = options.setContactsCollapsed,
     },
   })
 

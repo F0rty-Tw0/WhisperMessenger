@@ -36,7 +36,7 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
   local sizing = LayoutMetrics.CalculateRelayout(
-    { nativeChrome = frame.contentArea ~= nil },
+    { nativeChrome = frame.contentArea ~= nil, contactsCollapsed = initialState.contactsCollapsed == true },
     initialState.width,
     initialState.height,
     _options.contactsWidth or initialState.contactsWidth,
@@ -75,7 +75,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   RetailChrome.AnchorInsets(frame, contactsPane, contentPane)
 
   local optionsPanelLayout = OptionsPanelLayout.Build(factory, contentParent, initialState, {
-    contactsWidth = contactsWidth,
+    contactsWidth = sizing.optionsMenuWidth,
     contactsHeight = sizing.contactsHeight,
     optionsContentWidth = sizing.optionsContentWidth,
     nativeChrome = contactsSection.nativeChrome,
@@ -98,7 +98,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
 
   local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, {
     menuPadding = menuPadding,
-    contactsWidth = contactsWidth,
+    contactsWidth = sizing.optionsMenuWidth,
     nativeChrome = contactsSection.nativeChrome,
     theme = Theme,
   })
@@ -159,11 +159,14 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsDivider = contactsDivider,
     contactsResizeHandle = contactsResizeHandle,
     contactsWidth = contactsWidth,
+    contactsCollapsed = initialState.contactsCollapsed == true,
+    expandedContactsWidth = sizing.expandedContactsWidth,
     contactsHandleWidth = contactsHandleWidth,
     contactsSearchFrame = contactsSearchFrame,
     contactsSearchInput = contactsSearchInput,
     contactsSearchPlaceholder = contactsSearchPlaceholder,
     contactsSearchClearButton = contactsSearchClearButton,
+    contactsRailSearchButton = contactsSection.railSearchButton,
     contactsSearchHeight = searchHeight,
     contactsSearchMargin = searchMargin,
     contactsSearchTotalHeight = searchTotalHeight,

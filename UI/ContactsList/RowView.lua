@@ -16,7 +16,7 @@ local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.Con
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
-local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local RowCompact = ns.ContactsListRowCompact or require("WhisperMessenger.UI.ContactsList.RowCompact")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local RowView = {}
@@ -29,24 +29,6 @@ local function mutedColor(base)
   end
   local MUTE = 0.85
   return { (base[1] or 0) * MUTE, (base[2] or 0) * MUTE, (base[3] or 0) * MUTE, base[4] or 1 }
-end
-
--- Only explicitly-known Stage-4 group-ingest channel values get group-row
--- styling. Legacy values ("WOW", "BN", nil) render as normal whisper rows.
-local KNOWN_GROUP_CHANNELS = {
-  [ChannelType.BN_CONVERSATION] = true,
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-  [ChannelType.CHANNEL] = true,
-  [ChannelType.COMMUNITY] = true,
-}
-
--- isGroupItem returns true when the item represents a known group conversation.
-local function isGroupItem(item)
-  return item ~= nil and KNOWN_GROUP_CHANNELS[item.channel] == true
 end
 
 -- Resolve and cache the current player's class tag (e.g. "MAGE"). Group
@@ -74,10 +56,12 @@ local function bindRow(factory, parent, row, index, item, options)
   local ROW_HEIGHT = Theme.ContactRowHeight()
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
+  -- Collapsed contacts rail: icon-only rows (see RowCompact).
+  row._wmCompact = options ~= nil and options.compact == true
   -- 3px left inset on each row so contacts sit slightly tighter to the pane's
   -- left edge while keeping the right edge anchored to the parent.
-  row:SetSize(parentWidth - 2, ROW_HEIGHT)
-  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -((index - 1) * ROW_HEIGHT))
+  row:SetSize(parentWidth - Theme.LAYOUT.CONTACT_ROW_LEFT_INSET, ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.LAYOUT.CONTACT_ROW_LEFT_INSET, -((index - 1) * ROW_HEIGHT))
   if row.EnableMouse then
     row:EnableMouse(true)
   end
@@ -87,7 +71,7 @@ local function bindRow(factory, parent, row, index, item, options)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
   end
-  local isGroup = isGroupItem(item)
+  local isGroup = GroupLabel.IsGroupItem(item)
   local whisperBaseBg = item.pinned and Theme.COLORS.bg_contact_pinned or Theme.COLORS.bg_secondary
   local rowBaseBg = isGroup and mutedColor(whisperBaseBg) or whisperBaseBg
   applyColorTexture(row.bg, rowBaseBg)
@@ -165,26 +149,10 @@ local function bindRow(factory, parent, row, index, item, options)
     row.factionIcon:Hide()
   end
 
-  -- For group rows, override the display name with the channel label so the
-  -- row shows "Party", "Instance (BG)", etc. rather than the internal key.
+  -- For group rows, override the display name with the channel label.
   if isGroup and row.title then
-    local groupName
-    if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
-      groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
-    else
-      groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title)
-    end
-    if groupName == "" then
-      groupName = item.displayName or ""
-    end
-    -- Group chats carried over from another character get an owner prefix
-    -- ("Jaina — Guild") so the player can tell which alt's history this is.
-    local ownerName = GroupLabel.OwnerShortName and GroupLabel.OwnerShortName(item.ownerProfileId) or nil
-    if ownerName then
-      groupName = ownerName .. " - " .. groupName
-    end
     if row.title.SetText then
-      row.title:SetText(groupName)
+      row.title:SetText(GroupLabel.ForItem(item))
     end
     -- Tint the group row's title by the OWNER character's class color.
     -- `ownerClassTag` is populated from the saved player→class map when
@@ -242,6 +210,7 @@ local function bindRow(factory, parent, row, index, item, options)
   end
   RowElements.updateUnreadBadge(row, item)
   RowMarkers.updateBadge(row, item)
+  RowCompact.apply(row, item, isGroup, row._wmCompact)
 
   if row.Show then
     row:Show()

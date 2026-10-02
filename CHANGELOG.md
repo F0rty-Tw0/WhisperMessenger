@@ -11,17 +11,22 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - The Native WoW HUD option is now a choice: Off, Classic or Modern. If you had it turned on, you get Classic, the look you already know. Find it under Options > Appearance.
 - New Modern style: the window looks like the modern game's own windows, such as the professions window. It has the addon's round portrait in the corner, separate panels for your contacts and the chat, slim rounded scrollbars, and the title bar buttons on the right next to the settings gear. Options pages show their titles on the ornate banners from the character window. Modern is greyed out on game versions that can't show it.
 - Classic and Modern now dress the whole window, not just its frame: pop-ups and menus, chat bubbles, the contact list, the options, and the window's icon buttons and resize corner all use the game's own borders, highlights, checkboxes, sliders, scrollbars, buttons and menus, while keeping your theme's colors.
-- With Classic or Modern, the Whispers, Groups and Requests tabs hang below the window like the game's own tabs, and the contact list gets that space back.
+- With Classic or Modern, the title bar icons are now easier to see against the game's frame art.
+- The Send button now shows a simple arrow instead of a paper plane.
+- The Whispers, Groups and Requests tabs now hang below the window like the game's own tabs, in every look, and the contact list gets that space back.
 - New installs now start with the Modern style and the Azeroth theme on Retail and WoW: Forever, and with whispers hidden from the default chat window on every game version. "Reset to Defaults" in the options now picks these too. If you already use the addon, your settings stay as they are.
 - Changing the Native WoW HUD style now offers to reload the interface right away, so you don't have to type /reload. Turning on Classic or Modern from Off and pressing Reload UI also switches the theme to Azeroth to match; you can still pick any other theme afterwards, and moving between Classic and Modern keeps your theme.
 - The Azeroth theme's sent messages now sit on a dark bronze bubble instead of purple, to match its gold accents.
 - The options menu no longer shows an "Options" title, so the page list starts higher.
+- Drag the line between your contacts and the chat far to the left to fold the contact list into a slim strip of portraits: each friend's usual class icon, dimmed, with their initials on top (group chats keep their pictures). Drag back to the right and the full list follows your mouse out again; you can go back and forth as often as you like without letting go. Unread counts and online dots stay on each picture, hovering one shows who it is, their zone, status and last message, and the window can be made much narrower. The magnifier at the top of the strip opens search, and pinned friends can still be dragged into a new order. The window remembers which one you used.
+- Right-click a contact, in the full list or the slim strip, to pin, unpin or remove it.
 - Fixed: pressing R to reply no longer types an "r" into the message box, even when the chat already had a half-typed message.
 - Fixed: with a big font size (14 and up), a contact's zone and last message no longer overlap in the contact list. Rows now get taller as the font grows.
 - Fixed: clicking the Window Scale slider's bar no longer jumps the window to a new size. Drag the handle to change the scale.
 - Fixed: an empty contact list no longer shows a scrollbar after you make the window smaller, and its hint text stays centered and wraps to fit the list.
 - Fixed: the scrollbars on the options pages and in the chat no longer slide out of view after you resize the window.
 - Fixed: the WoW: Forever beta no longer lists the addon as out of date.
+- Fixed: long option names in the settings no longer run underneath their on/off switch on a narrow window; they now wrap onto a second line.
 
 ## [2.0.1] - 2026-09-26
 

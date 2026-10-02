@@ -31,6 +31,7 @@ local RelayoutController = ns.MessengerWindowRelayoutController or require("Whis
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PatchNotesRuntime")
 local LanguageRefresh = ns.MessengerWindowLanguageRefresh or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LanguageRefresh")
+local ContactsRail = ns.MessengerWindowContactsRail or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRail")
 local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
 local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
@@ -56,6 +57,7 @@ function MessengerWindow.Create(factory, options)
     width = state.width or Theme.WINDOW_WIDTH,
     height = state.height or Theme.WINDOW_HEIGHT,
     minimized = state.minimized or false,
+    contactsCollapsed = state.contactsCollapsed == true,
   }, Theme, initialScale)
   local windowGeometry = WindowGeometry.Create({
     parent = parent,
@@ -94,7 +96,7 @@ function MessengerWindow.Create(factory, options)
 
   -- Build layout (panes)
   local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
-  currentContactsWidth = layout.contactsWidth or currentContactsWidth
+  currentContactsWidth = layout.expandedContactsWidth or layout.contactsWidth or currentContactsWidth
   windowGeometry.setContactsWidth(currentContactsWidth)
   local contactsPane = layout.contactsPane
   local contentPane = layout.contentPane
@@ -170,6 +172,7 @@ function MessengerWindow.Create(factory, options)
     contactsView = contactsView,
     initialContacts = options.contacts or {},
     settingsConfig = settingsConfig,
+    isCompact = windowGeometry.isCollapsed,
     initialTabMode = options.initialTabMode,
     onTabModeChanged = function(mode)
       if conversation and conversation.headerEmpty then
@@ -202,13 +205,6 @@ function MessengerWindow.Create(factory, options)
   local getCurrentContacts = contactsRuntime.getCurrentContacts
   contactsRuntime.bindInputScripts()
 
-  -- The tab toggle is created after LayoutBuilder.Build, so the list was
-  -- sized without it. Reserve its height now and re-run the layout once.
-  layout.contactsBottomInset = contactsRuntime.getContactsBottomInset(currentContactsWidth)
-  if layout.contactsBottomInset > 0 then
-    LayoutBuilder.Relayout(layout, initialState.width, initialState.height, currentContactsWidth)
-  end
-
   -- Conversation pane
   local messageActions = MessageActions.Create(options.onMessageAction)
   conversation = ConversationPane.Create(factory, threadPane, options.selectedContact, options.conversation, {
@@ -226,6 +222,7 @@ function MessengerWindow.Create(factory, options)
   conversation.headerEmpty.setMode(contactsRuntime.getTabMode())
 
   -- Composer (created before wiring alpha so we have composer.input)
+  local contactsRail -- forward declaration (settings, divider drags and resets drive it)
   local composerSelectedContact = {}
 
   local windowVisibility = WindowVisibility.Create({
@@ -234,7 +231,12 @@ function MessengerWindow.Create(factory, options)
     contentPane = contentPane,
     frame = frame,
     onClose = options.onClose,
-    onOptionsVisibilityChanged = chrome.setOptionsActive,
+    onOptionsVisibilityChanged = function(visible)
+      chrome.setOptionsActive(visible)
+      if contactsRail then
+        contactsRail.setOptionsVisible(visible)
+      end
+    end,
   })
   local setOptionsVisible = windowVisibility.setOptionsVisible
   local closeWindow = windowVisibility.closeWindow
@@ -306,7 +308,6 @@ function MessengerWindow.Create(factory, options)
       return selectionController and selectionController.getSelectedConversationKey() or nil
     end,
     getCurrentContacts = getCurrentContacts,
-    getContactsBottomInset = contactsRuntime.getContactsBottomInset,
     selectedContact = options.selectedContact,
     initialConversation = options.conversation,
     initialStatus = options.status,
@@ -331,6 +332,22 @@ function MessengerWindow.Create(factory, options)
     getAutoFocusChatInput = function()
       return settingsConfig.autoFocusComposer == true
     end,
+    isContactsCollapsed = windowGeometry.isCollapsed,
+    setContactsCollapsed = function(collapsed, pointerWidth)
+      contactsRail.snap(collapsed, pointerWidth)
+    end,
+    onStateApplied = function(appliedState)
+      contactsRail.setCollapsed(appliedState.contactsCollapsed == true)
+    end,
+  })
+  contactsRail = ContactsRail.Create({
+    frame = frame,
+    layout = layout,
+    windowGeometry = windowGeometry,
+    chrome = chrome,
+    relayoutWindow = relayoutWindow,
+    applyWindowSize = scriptResult.applyWindowSize,
+    onPositionChanged = options.onPositionChanged,
   })
 
   -- Patch-notes "?" button: glows until the shipped release notes are read.
@@ -436,6 +453,7 @@ function MessengerWindow.Create(factory, options)
     contactsSearchInput = layout.contactsSearchInput,
     contactsSearchClearButton = layout.contactsSearchClearButton,
     contactsSearchPlaceholder = layout.contactsSearchPlaceholder,
+    contactsRailSearchButton = layout.contactsRailSearchButton,
     resizeGrip = chrome.resizeGrip,
     contactsResizeHandle = layout.contactsResizeHandle,
     tabToggle = contactsRuntime.tabToggle,
@@ -457,11 +475,7 @@ function MessengerWindow.Create(factory, options)
     end,
     setScale = setScale,
     refreshLanguage = refreshLanguage,
-    refreshTabToggleVisibility = function()
-      contactsRuntime.refreshTabToggleVisibility()
-      -- relayoutWindow re-measures the footer height under the list.
-      relayoutCurrentSize()
-    end,
+    refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,
     selectConversation = function(conversationKey)

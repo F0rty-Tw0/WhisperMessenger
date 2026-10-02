@@ -17,22 +17,13 @@ function RelayoutController.Create(options)
   local conversationPane = options.conversationPane
   local refreshContacts = options.refreshContacts
   local getSelectedConversationKey = options.getSelectedConversationKey
-  local getContactsBottomInset = options.getContactsBottomInset
 
   local controller = {}
 
   function controller.relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
     local metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
-    -- The footer tabs wrap to two rows on a narrow pane: re-measure the
-    -- space under the list at the new width and lay out again if it changed.
-    if getContactsBottomInset then
-      local inset = getContactsBottomInset(metrics.contactsWidth)
-      if inset ~= (layout.contactsBottomInset or 0) then
-        layout.contactsBottomInset = inset
-        metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
-      end
-    end
-    setContactsWidth(metrics.contactsWidth)
+    -- Remember the expanded width: the rail's width is not the one to return to.
+    setContactsWidth(metrics.expandedContactsWidth or metrics.contactsWidth)
 
     if composer and composer.relayout then
       composer.relayout(metrics.contentWidth)

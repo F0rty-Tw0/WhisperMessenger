@@ -25,7 +25,7 @@ return function()
   -- test_refresh_theme_repaints_tab_bar_for_new_preset
   Theme.SetPreset("wow_native")
   window.refreshTheme()
-  assert(TabParts.footerTint(tabToggle).shown == true, "footer tint stays shown on every preset")
+  assert(sameColor(TabParts.whispers(tabToggle).surface.color, Theme.COLORS.bg_primary), "tab surface repainted for the new preset")
   assert(sameColor(TabParts.whispers(tabToggle).underline.color, Theme.COLORS.accent_bar), "wow_native: underline repainted with the gold accent")
 
   _G.UIParent = savedUIParent

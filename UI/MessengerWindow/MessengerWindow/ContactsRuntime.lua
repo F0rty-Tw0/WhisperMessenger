@@ -26,6 +26,10 @@ function ContactsRuntime.Create(factory, options)
   local function getRequestsInbox()
     return settingsConfig.requestsInbox == true
   end
+  -- The contacts pane is the collapsed icon rail.
+  local function isCompact()
+    return options.isCompact ~= nil and options.isCompact() == true
+  end
   -- Footer tabs in order; the footer shows only when there is a choice.
   local function visibleTabModes()
     local modes = { "whispers" }
@@ -90,6 +94,7 @@ function ContactsRuntime.Create(factory, options)
     getHideMessagePreview = function()
       return settingsConfig.hideMessagePreview == true
     end,
+    getCompact = isCompact,
     onSelect = function(item)
       if options.onSelect then
         options.onSelect(item)
@@ -179,7 +184,10 @@ function ContactsRuntime.Create(factory, options)
       if emptyStateFrame == nil then
         return
       end
-      if currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
+      -- The rail has no room for the hint text.
+      if isCompact() then
+        EmptyState.Hide(emptyStateFrame)
+      elseif currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
         EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
       elseif currentTabMode == "requests" and #filtered == 0 and not hasSearchText() then
         EmptyState.Show(emptyStateFrame, Localization.Text(REQUESTS_EMPTY_KEY))
@@ -210,15 +218,6 @@ function ContactsRuntime.Create(factory, options)
       contactsSearchController.bindInputScripts()
     end,
     refreshTabToggleVisibility = applyTabModes,
-    -- Height the contacts list must leave free at the pane bottom so rows
-    -- never scroll underneath the footer tabs (two rows when they wrap).
-    -- paneWidth: the width about to be applied; nil = the footer's current.
-    getContactsBottomInset = function(paneWidth)
-      if tabToggle and tabToggle.frame and tabToggle.frame:IsShown() then
-        return tabToggle.reservedHeightFor(paneWidth or tabToggle.frame:GetWidth())
-      end
-      return 0
-    end,
     setTabMode = function(mode)
       local resolved = mode or "whispers"
       if resolved == currentTabMode then

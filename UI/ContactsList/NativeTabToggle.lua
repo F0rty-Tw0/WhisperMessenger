@@ -83,19 +83,6 @@ local function chainTabs(frame, visible)
   end
 end
 
--- Extends the window's screen clamp down over the hanging tabs while they
--- show (ContactsRuntime always calls setShown after Create); the window's
--- own insets are kept and restored when they hide.
-local function bindClamp(window)
-  if not (window.SetClampRectInsets and window.GetClampRectInsets) then
-    return function(_shown) end
-  end
-  local left, right, top, bottom = window:GetClampRectInsets()
-  return function(shown)
-    window:SetClampRectInsets(left, right, top, shown and bottom - HANG_HEIGHT or bottom)
-  end
-end
-
 -- options.windowFrame: the frame the tabs hang from (default: parent).
 function NativeTabToggle.Create(factory, parent, options)
   options = options or {}
@@ -141,7 +128,8 @@ function NativeTabToggle.Create(factory, parent, options)
     end,
   })
 
-  local applyClamp = bindClamp(window)
+  -- ContactsRuntime always calls setShown after Create.
+  local applyClamp = TabLayout.BindClamp(window, HANG_HEIGHT)
   local setShown = toggle.setShown
   toggle.setShown = function(shown)
     setShown(shown)

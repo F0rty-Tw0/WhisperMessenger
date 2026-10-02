@@ -34,6 +34,7 @@ Util/TimeFormat.lua
 Util/TextLimits.lua
 Util/ChatPrint.lua
 Util/DisplayName.lua
+Util/Initials.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
@@ -175,21 +176,24 @@ UI/ContactsList/PinnedMarker.lua
 UI/ContactsList/RowMarkers.lua
 UI/ContactsList/RowTextAnchors.lua
 UI/ContactsList/RowElements.lua
+UI/ContactsList/RailAvatar.lua
+UI/ContactsList/RowCompact.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua
+UI/ConversationPane/StatusLine.lua
+UI/ContactsList/GroupLabel.lua
+UI/ContactsList/RowTooltip.lua
 UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
-UI/ContactsList/GroupLabel.lua
 UI/ContactsList/EmptyState.lua
 UI/ContactsList/TabLayout.lua
 UI/ContactsList/NativeTabToggle.lua
 UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
-UI/ConversationPane/StatusLine.lua
 UI/ConversationPane/UnreadDividerPosition.lua
 UI/ConversationPane/TranscriptRows.lua
 UI/ConversationPane/TranscriptVirtualization.lua
@@ -246,6 +250,7 @@ UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
 UI/MessengerWindow/LayoutBuilder/OptionsMenuButtons.lua
 UI/MessengerWindow/LayoutBuilder/OptionsPanelLayout.lua
+UI/MessengerWindow/LayoutBuilder/RailSearchButton.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSection.lua
 UI/MessengerWindow/LayoutBuilder/ContentSection.lua
 UI/MessengerWindow/LayoutBuilder.lua
@@ -255,6 +260,7 @@ UI/MessengerWindow/ContactsController.lua
 UI/MessengerWindow/WindowScripts/Buttons/SettingsTabs.lua
 UI/MessengerWindow/WindowScripts/Buttons/StartConversationDialog.lua
 UI/MessengerWindow/WindowScripts/Buttons.lua
+UI/MessengerWindow/WindowScripts/Frame/ResizeBounds.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
@@ -300,6 +306,7 @@ UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
+UI/MessengerWindow/MessengerWindow/ContactsRail.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua

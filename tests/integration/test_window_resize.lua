@@ -1,7 +1,6 @@
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
-local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 
 local function assertNear(actual, expected, label)
   assert(
@@ -67,8 +66,8 @@ return function()
 
   -- Contacts scroll view should update
   local searchTotalHeight = (Theme.LAYOUT.CONTACT_SEARCH_HEIGHT or 30) + ((Theme.LAYOUT.CONTACT_SEARCH_MARGIN or 10) * 2)
-  -- Whispers/Groups tab toggle is shown by default and reserves its height.
-  local expectedContactsListH = expectedContactsH - searchTotalHeight - TabToggle.HEIGHT
+  -- The Whispers/Groups tabs hang below the window and reserve nothing.
+  local expectedContactsListH = expectedContactsH - searchTotalHeight
   assert(
     window.contacts.scrollFrame.height == expectedContactsListH,
     "expected contacts scrollFrame height " .. expectedContactsListH .. " but got " .. tostring(window.contacts.scrollFrame.height)

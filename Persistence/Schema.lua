@@ -25,6 +25,9 @@ function Schema.NewCharacterState()
       width = 900,
       height = 560,
       contactsWidth = 300,
+      -- Contacts pane collapsed to the icon rail (contactsWidth stays the
+      -- expanded width to return to).
+      contactsCollapsed = false,
       minimized = false,
     },
     icon = { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 },

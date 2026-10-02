@@ -83,6 +83,29 @@ local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
   addNotifyOnlineEntry(rootDescription, item, onUpdatePrefs)
 end
 
+-- Pin/Unpin and Remove: the row's hover-button actions, through the same
+-- handlers, so they are reachable in the collapsed rail too (no hover
+-- buttons there). rowActions: { onPin(item), onRemove(item) }.
+local function addRowActionButtons(rootDescription, item, rowActions)
+  if type(rowActions) ~= "table" then
+    return
+  end
+  if type(rowActions.onPin) == "function" then
+    rootDescription:CreateButton(Localization.Text(item.pinned and "Unpin" or "Pin to top"), function()
+      rowActions.onPin(item)
+    end)
+  end
+  if type(rowActions.onRemove) == "function" then
+    rootDescription:CreateButton(Localization.Text("Remove"), function()
+      rowActions.onRemove(item)
+    end)
+  end
+end
+
+local function hasRowActions(rowActions)
+  return type(rowActions) == "table" and (type(rowActions.onPin) == "function" or type(rowActions.onRemove) == "function")
+end
+
 -- Menu.ModifyMenu hook on Blizzard's FRIEND / BN_FRIEND player menus. Only
 -- acts when the menu was opened from one of our rows (contextData carries
 -- our item).
@@ -96,8 +119,9 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   local item = contextData.whisperMessengerItem
   local onMarkUnread = contextData.whisperMessengerOnMarkUnread
   local onUpdatePrefs = contextData.whisperMessengerOnUpdatePrefs
+  local rowActions = contextData.whisperMessengerRowActions
   -- No callbacks means no entries; skip the section rather than show it empty.
-  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" then
+  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" and not hasRowActions(rowActions) then
     return
   end
   -- Divider + gold title mark our entries apart from Blizzard's.
@@ -109,6 +133,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   end
   addMarkUnreadButton(rootDescription, item, onMarkUnread)
   addPrefsButtons(rootDescription, item, onUpdatePrefs, false)
+  addRowActionButtons(rootDescription, item, rowActions)
 end
 
 local function ensureModernMenu()
@@ -142,7 +167,7 @@ end
 -- Group rows are not players, so they get a small menu of our own instead of
 -- Blizzard's player menu. Returns false (row click selects) without the
 -- modern menu API.
-local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs)
+local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   local menuUtil = _G.MenuUtil
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
     return false
@@ -150,18 +175,20 @@ local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs)
   menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
     addMarkUnreadButton(rootDescription, item, onMarkUnread)
     addPrefsButtons(rootDescription, item, onUpdatePrefs, true)
+    addRowActionButtons(rootDescription, item, rowActions)
   end)
   return true
 end
 
 -- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
 -- text } / { note = text } / { notifyOnline = bool }.
-function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs)
+-- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
+function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   if type(item) ~= "table" then
     return false
   end
   if ContactsTabFilter.IsGroupChannel(item.channel) then
-    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs)
+    return openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   end
 
   local name = resolveMenuName(item)
@@ -191,6 +218,7 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs)
       whisperMessengerItem = item,
       whisperMessengerOnMarkUnread = onMarkUnread,
       whisperMessengerOnUpdatePrefs = onUpdatePrefs,
+      whisperMessengerRowActions = rowActions,
     })
     return true
   end

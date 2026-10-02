@@ -9,6 +9,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local LayoutMetrics = ns.MessengerWindowLayoutMetrics or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
 local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.HoverFade")
+local RailSearchButton = ns.MessengerWindowLayoutRailSearchButton or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.RailSearchButton")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local ContactsSection = {}
@@ -65,6 +66,18 @@ function ContactsSection.Build(factory, frame, sizing, options)
     uiHelpers = uiHelpers,
     nativeChrome = nativeChrome,
   })
+  -- Stands in for the search field while the pane is the collapsed rail.
+  local railSearchButton = RailSearchButton.Create(factory, contactsPane, {
+    theme = theme,
+    searchMargin = searchMargin,
+    searchHeight = searchHeight,
+    nativeChrome = nativeChrome,
+  })
+  local applySearchSkin = contactsSearch.applySkin
+  contactsSearch.applySkin = function(activeTheme)
+    applySearchSkin(activeTheme)
+    railSearchButton.applySkin(activeTheme)
+  end
 
   local contactsView = scrollView.Create(factory, contactsPane, {
     width = contactsWidth,
@@ -96,8 +109,8 @@ function ContactsSection.Build(factory, frame, sizing, options)
   contactsResizeHandle:SetSize(contactsHandleWidth, contactsHeight)
   contactsResizeHandle:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", -math.floor(contactsHandleWidth / 2), 0)
   contactsResizeHandle:EnableMouse(true)
-  if contactsResizeHandle.SetFrameLevel and frame.GetFrameLevel then
-    contactsResizeHandle:SetFrameLevel(frame:GetFrameLevel() + 15)
+  if contactsResizeHandle.SetFrameLevel and contactsPane.GetFrameLevel then
+    contactsResizeHandle:SetFrameLevel(contactsPane:GetFrameLevel() + L.CONTACTS_RESIZE_HANDLE_LEVEL_LIFT)
   end
   -- The hit zone stays invisible; hover/drag fades in this 2px line over the
   -- hairline divider.
@@ -113,6 +126,7 @@ function ContactsSection.Build(factory, frame, sizing, options)
     contactsPane = contactsPane,
     contactsPaneBg = contactsPaneBg,
     contactsSearch = contactsSearch,
+    railSearchButton = railSearchButton,
     contactsView = contactsView,
     contactsDivider = contactsDivider,
     contactsResizeHandle = contactsResizeHandle,

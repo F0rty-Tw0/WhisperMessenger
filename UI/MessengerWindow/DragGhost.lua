@@ -6,6 +6,8 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local RailAvatar = ns.ContactsListRailAvatar or require("WhisperMessenger.UI.ContactsList.RailAvatar")
+local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
 
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyBorderBoxColor = UIHelpers.applyBorderBoxColor
@@ -44,7 +46,6 @@ function DragGhost.Create(factory, parent)
 
   local iconSize = Theme.LAYOUT.CONTACT_ICON_SIZE
   local icon = UIHelpers.createCircularIcon(factory, frame, iconSize)
-  icon.frame:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.CONTACT_PADDING, 0)
 
   local label = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
   label:SetPoint("LEFT", icon.frame, "RIGHT", NAME_GAP, 0)
@@ -52,7 +53,30 @@ function DragGhost.Create(factory, parent)
   label:SetJustifyH("LEFT")
   label:SetWordWrap(false)
 
-  return { frame = frame, bg = bg, border = border, iconFrame = icon.frame, icon = icon.texture, label = label }
+  -- classIconFrame / classIcon: the same fields a row has, so the rail look
+  -- comes from RailAvatar itself.
+  return { frame = frame, bg = bg, border = border, classIconFrame = icon.frame, classIcon = icon.texture, label = label }
+end
+
+-- Full list: class icon on the left and the name. Rail: the rail icon
+-- (centred like the source row's, dimmed, initials on top), no name.
+local function layoutFor(ghost, sourceRow, item)
+  local iconFrame = ghost.classIconFrame
+  iconFrame:ClearAllPoints()
+  if not sourceRow._wmCompact then
+    iconFrame:SetPoint("LEFT", ghost.frame, "LEFT", Theme.LAYOUT.CONTACT_PADDING, 0)
+    ghost.label:Show()
+    RailAvatar.hide(ghost)
+    return
+  end
+  local _, _, _, offsetX = sourceRow.classIconFrame:GetPoint()
+  iconFrame:SetPoint("CENTER", ghost.frame, "CENTER", offsetX or 0, 0)
+  ghost.label:Hide()
+  if GroupLabel.IsGroupItem(item) then
+    RailAvatar.hide(ghost)
+  else
+    RailAvatar.update(ghost, item)
+  end
 end
 
 function DragGhost.Show(ghost, sourceRow, listFrame)
@@ -65,9 +89,10 @@ function DragGhost.Show(ghost, sourceRow, listFrame)
   local item = sourceRow.item or {}
   -- Same texture the row shows (class or channel icon); item class as fallback.
   local iconPath = sourceRow.classIcon and sourceRow.classIcon.GetTexture and sourceRow.classIcon:GetTexture() or nil
-  ghost.icon:SetTexture(iconPath or Theme.ClassIcon(item.classTag) or Theme.TEXTURES.bnet_icon)
+  ghost.classIcon:SetTexture(iconPath or Theme.ClassIcon(item.classTag) or Theme.TEXTURES.bnet_icon)
   ghost.label:SetText(DisplayName.Format(item.displayName) or "")
   applyClassColor(ghost.label, item.classTag, Theme.COLORS.text_primary)
+  layoutFor(ghost, sourceRow, item)
 
   if sourceRow.GetHeight then
     frame:SetHeight(sourceRow:GetHeight())

@@ -11,7 +11,7 @@ local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.
 -- Title-bar icon buttons: no fill, no border, a bundled line icon in
 -- text_secondary (text_primary when hovered/active) and a faint white circle
 -- that fades in behind it on hover. The Native WoW HUD swaps the circle for
--- the game's mouse-over glow.
+-- the game's mouse-over glow and draws the resting glyph opaque.
 local IconButtonStyle = {}
 
 local CIRCLE_TEXTURE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
@@ -56,6 +56,11 @@ function IconButtonStyle.Paint(button, emphasized, colors, danger)
     button._wmHoverFade.set(emphasized == true)
   end
   if not emphasized then
+    if button._wmHoverGlow then
+      -- Blizzard frame art is busy; the dimmed text_secondary alpha vanishes on it.
+      local c = colors.text_secondary
+      return { c[1], c[2], c[3], 1 }
+    end
     return colors.text_secondary
   end
   return danger and DANGER_GLYPH or colors.text_primary

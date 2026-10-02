@@ -58,7 +58,7 @@ function Navigation.Sync(view, skipValueSync)
   -- knob (Stage 2B) was leaking through the parent hide — we now flip the
   -- thumb explicitly to make the contract unambiguous in both fake_ui and
   -- live WoW.
-  if hasOverflow then
+  if hasOverflow and not view.barHidden then
     if view.scrollBar.Show then
       view.scrollBar:Show()
     end

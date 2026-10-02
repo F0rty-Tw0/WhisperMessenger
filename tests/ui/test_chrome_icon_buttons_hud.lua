@@ -72,6 +72,7 @@ return function()
     local chrome = build()
     for name, button in pairs(titleButtons(chrome)) do
       assert(sameRgb(button._wmGlyph.vertexColor, Theme.COLORS.text_secondary), name .. ": text_secondary glyph at rest")
+      assert(button._wmGlyph.vertexColor[4] == 1, name .. ": opaque glyph at rest so it reads on the Blizzard art")
       hover(button, true)
       assert(sameRgb(button._wmGlyph.vertexColor, Theme.COLORS.text_primary), name .. ": text_primary glyph on hover")
       hover(button, false)

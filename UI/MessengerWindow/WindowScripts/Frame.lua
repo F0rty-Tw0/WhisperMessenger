@@ -12,6 +12,8 @@ local ContactsResize = ns.MessengerWindowWindowScriptsFrameContactsResize
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.ContactsResize")
 local ScriptBindings = ns.MessengerWindowWindowScriptsFrameScriptBindings
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.ScriptBindings")
+local ResizeBounds = ns.MessengerWindowWindowScriptsFrameResizeBounds
+  or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.ResizeBounds")
 local unpackValues = table.unpack or _G.unpack
 
 local Frame = {}
@@ -20,14 +22,10 @@ local RESIZE_PREVIEW_FILL_ALPHA = 0.20
 local RESIZE_PREVIEW_BORDER_ALPHA = 0.85
 local RESIZE_DRAG_FRAME_ALPHA = 0.08
 
-local function isPositiveFiniteNumber(value)
-  return type(value) == "number" and value == value and value > 0 and value < math.huge
-end
-
 local function effectiveScaleOrOne(target)
   if target and type(target.GetEffectiveScale) == "function" then
     local scale = target:GetEffectiveScale()
-    if isPositiveFiniteNumber(scale) then
+    if ResizeBounds.IsPositiveFiniteNumber(scale) then
       return scale
     end
   end
@@ -46,6 +44,7 @@ end
 --   buildState, onPositionChanged, Theme
 --   relayout (optional), refreshContactsLayout (optional),
 --   getCursorX/getCursorY (optional), getFrameLeft/getFrameTop (optional)
+--   isContactsCollapsed/setContactsCollapsed (optional): contacts rail snap
 function Frame.WireFrame(refs, options)
   local frame = refs.frame
   local resizeGrip = refs.resizeGrip
@@ -173,46 +172,14 @@ function Frame.WireFrame(refs, options)
     return _G.UIParent
   end
 
-  local function resolveResizeBounds()
-    local themeLayout = frameTheme.LAYOUT or {}
-    local minWidth = themeLayout.WINDOW_MIN_WIDTH or frameTheme.WINDOW_MIN_WIDTH or 640
-    local minHeight = themeLayout.WINDOW_MIN_HEIGHT or frameTheme.WINDOW_MIN_HEIGHT or 420
-    local maxWidth, maxHeight = nil, nil
-
-    if frame and type(frame.GetResizeBounds) == "function" then
-      local nativeMinWidth, nativeMinHeight, nativeMaxWidth, nativeMaxHeight = frame:GetResizeBounds()
-      if isPositiveFiniteNumber(nativeMinWidth) then
-        minWidth = nativeMinWidth
-      end
-      if isPositiveFiniteNumber(nativeMinHeight) then
-        minHeight = nativeMinHeight
-      end
-      if isPositiveFiniteNumber(nativeMaxWidth) and nativeMaxWidth >= minWidth then
-        maxWidth = nativeMaxWidth
-      end
-      if isPositiveFiniteNumber(nativeMaxHeight) and nativeMaxHeight >= minHeight then
-        maxHeight = nativeMaxHeight
-      end
-    end
-
-    return minWidth, minHeight, maxWidth, maxHeight
-  end
-
   local function clampWindowSize(width, height)
-    local minWidth, minHeight, maxWidth, maxHeight = resolveResizeBounds()
-    local clampedWidth = math.max(minWidth, width or minWidth)
-    local clampedHeight = math.max(minHeight, height or minHeight)
-    if type(maxWidth) == "number" and maxWidth > 0 then
-      clampedWidth = math.min(clampedWidth, maxWidth)
-    end
-    if type(maxHeight) == "number" and maxHeight > 0 then
-      clampedHeight = math.min(clampedHeight, maxHeight)
-    end
-    return clampedWidth, clampedHeight
+    return ResizeBounds.Clamp(frame, frameTheme, width, height)
   end
 
-  local function applyCommittedWindowSize(nextWidth, nextHeight)
-    local stableLeft = getFrameLeft()
+  -- Keeps the top-left corner (or moves the left edge to `newLeft`, in the
+  -- frame's own units, e.g. to keep a widened window on screen).
+  local function applyCommittedWindowSize(nextWidth, nextHeight, newLeft)
+    local stableLeft = newLeft or getFrameLeft()
     local stableTop = getFrameTop()
     local parent = getFrameParent()
     local parentLeft = 0
@@ -276,6 +243,8 @@ function Frame.WireFrame(refs, options)
     frameWidth = frameWidth,
     frameHeight = frameHeight,
     relayoutWindow = relayoutWindow,
+    isCollapsed = options.isContactsCollapsed,
+    setCollapsed = options.setContactsCollapsed,
     buildState = options.buildState,
     onPositionChanged = options.onPositionChanged,
   })
@@ -299,6 +268,7 @@ function Frame.WireFrame(refs, options)
   })
   return {
     withSizeChangedRelayoutSuppressed = withSizeChangedRelayoutSuppressed,
+    applyWindowSize = applyCommittedWindowSize,
   }
 end
 

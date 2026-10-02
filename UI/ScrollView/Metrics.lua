@@ -25,8 +25,12 @@ local function barWidth(view)
 end
 
 -- Viewport width the bar takes on overflow. A bar may hang into empty
--- space right of the view (view.rightGutter); only the rest is taken.
+-- space right of the view (view.rightGutter); only the rest is taken. A view
+-- with barHidden (the contacts rail) scrolls by wheel only and takes none.
 local function reservedWidth(view)
+  if view.barHidden then
+    return 0
+  end
   return math.max(barWidth(view) + SCROLLBAR_INSET - (view.rightGutter or 0), 0)
 end
 

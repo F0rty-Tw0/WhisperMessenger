@@ -110,5 +110,44 @@ function GroupLabel.LabelForChannelAndTitle(channel, title)
   return GroupLabel.LabelForChannel(channel)
 end
 
+-- Only explicitly-known Stage-4 group-ingest channel values get group-row
+-- styling. Legacy values ("WOW", "BN", nil) render as normal whisper rows.
+local KNOWN_GROUP_CHANNELS = {
+  [ChannelType.BN_CONVERSATION] = true,
+  [ChannelType.PARTY] = true,
+  [ChannelType.RAID] = true,
+  [ChannelType.INSTANCE_CHAT] = true,
+  [ChannelType.GUILD] = true,
+  [ChannelType.OFFICER] = true,
+  [ChannelType.CHANNEL] = true,
+  [ChannelType.COMMUNITY] = true,
+}
+
+-- IsGroupItem returns true when the item represents a known group conversation.
+function GroupLabel.IsGroupItem(item)
+  return item ~= nil and KNOWN_GROUP_CHANNELS[item.channel] == true
+end
+
+-- ForItem returns the contact-row label for a group item: "Party",
+-- "Instance (BG)", a community's name, etc. rather than the internal key.
+-- Group chats carried over from another character get an owner prefix
+-- ("Jaina - Guild") so the player can tell which alt's history this is.
+function GroupLabel.ForItem(item)
+  local groupName
+  if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
+    groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
+  else
+    groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title)
+  end
+  if groupName == "" then
+    groupName = item.displayName or ""
+  end
+  local ownerName = GroupLabel.OwnerShortName(item.ownerProfileId)
+  if ownerName then
+    groupName = ownerName .. " - " .. groupName
+  end
+  return groupName
+end
+
 ns.ContactsListGroupLabel = GroupLabel
 return GroupLabel

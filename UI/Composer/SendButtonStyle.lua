@@ -9,7 +9,7 @@ local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
--- Send button paint: the bundled paper-plane glyph tinted with the accent
+-- Send button paint: the bundled right-pointing arrow glyph tinted with the accent
 -- (no border, no fill), a faint neutral circle fading in on hover and a
 -- slightly brighter glyph. The Native WoW HUD swaps the circle for the game's
 -- mouse-over glow. Returns paint(disabled, hovered).
