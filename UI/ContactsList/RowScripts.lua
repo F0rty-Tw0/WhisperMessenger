@@ -56,7 +56,7 @@ local function deferHideActions(row)
       local pointerInside = (row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row)
       if not pointerInside and effectiveActionHoverCount(row) == 0 then
         row._wmRowHover = false
-        row._wmApplyVisualState()
+        RowHoverOverlay.paint(row)
         if AB then
           AB.hideActions(row)
         end
@@ -68,7 +68,7 @@ local function deferHideActions(row)
     local pointerInside = (row._wmIsPointerInside and row._wmIsPointerInside()) or isPointerInsideRow(row)
     if not pointerInside and effectiveActionHoverCount(row) == 0 then
       row._wmRowHover = false
-      row._wmApplyVisualState()
+      RowHoverOverlay.paint(row)
       if AB then
         AB.hideActions(row)
       end
@@ -134,15 +134,12 @@ function RowScripts.bindHover(row)
     row._wmIsPointerInside = function()
       return isPointerInsideRow(row)
     end
-    row._wmApplyVisualState = function()
-      RowHoverOverlay.paint(row)
-    end
 
     if row.SetScript then
       row:SetScript("OnEnter", function()
         installHoverWatchdog(row)
         row._wmRowHover = true
-        row._wmApplyVisualState()
+        RowHoverOverlay.paint(row)
         local AB = getActionButtons()
         if AB then
           AB.showActions(row)
@@ -151,13 +148,13 @@ function RowScripts.bindHover(row)
 
       row:SetScript("OnLeave", function()
         row._wmRowHover = false
-        row._wmApplyVisualState()
+        RowHoverOverlay.paint(row)
         deferHideActions(row)
       end)
     end
   end
 
-  row._wmApplyVisualState()
+  RowHoverOverlay.paint(row)
 end
 
 --- Bind OnClick script to a row.

@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local TemplateFactory = require("tests.helpers.template_factory")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
+local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
 
 local function hasText(root, text)
   return FindUI.find(root, function(node)
@@ -67,7 +68,7 @@ return function()
     local point = toggle.frame.points[1]
     assert(point[1] == "TOPLEFT" and point[2] == window and point[3] == "BOTTOMLEFT", "HUD: strip hangs from the window bottom-left")
     assert(point[4] == 11 and point[5] == 2, "HUD: Blizzard tab offsets (11, 2), got " .. tostring(point[4]) .. ", " .. tostring(point[5]))
-    assert(toggle.frame.height == TabToggle.NATIVE_HEIGHT, "HUD: strip is one tab tall")
+    assert(toggle.frame.height == NativeTabToggle.HEIGHT, "HUD: strip is one tab tall")
   end
 
   -- test_hud_tabs_stay_in_the_contacts_pane_hierarchy
@@ -138,7 +139,7 @@ return function()
     local pane = factory.CreateFrame("Frame", nil, window)
     local toggle = TabToggle.Create(factory, pane, { nativeChrome = true, windowFrame = window })
     toggle.setShown(true)
-    local hang = TabToggle.NATIVE_HEIGHT - 2
+    local hang = NativeTabToggle.HEIGHT - 2
     local l, r, t, b = window:GetClampRectInsets()
     assert(l == -5 and r == 5 and t == 7, "HUD: other clamp insets kept")
     assert(b == 3 - hang, "HUD: bottom clamp extends by the visible tab height, got " .. tostring(b))

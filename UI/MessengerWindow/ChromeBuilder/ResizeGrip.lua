@@ -46,7 +46,6 @@ local function createNative(factory, frame)
   grip:SetHighlightTexture(NativeArt.SIZE_GRABBER_HIGHLIGHT)
   return {
     grip = grip,
-    lines = {},
     applyTheme = function(_nextTheme) end,
   }
 end

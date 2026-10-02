@@ -1,11 +1,9 @@
 -- Under the Native WoW HUD the options menu and content backgrounds stay
--- clear so the window template's art shows through, like the contacts pane;
--- the theme's nav paint leaves Blizzard art on nav items alone.
+-- clear so the window template's art shows through, like the contacts pane.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
-local ThemeApply = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ThemeApply")
 
 local function buildLayout(useNativeChrome)
   local factory = FakeUI.NewFactory()
@@ -32,14 +30,6 @@ local function isTransparent(texture)
   return texture.color ~= nil and texture.color[4] == 0
 end
 
-local function navTab(factory, nativeArt)
-  local tab = factory.CreateFrame("Button", nil, nil)
-  tab.bg = tab:CreateTexture(nil, "BACKGROUND")
-  tab.bg._wmNativeArt = nativeArt
-  tab.label = tab:CreateFontString(nil, "OVERLAY")
-  return tab
-end
-
 return function()
   -- test_hud_options_backgrounds_are_transparent_when_built
   do
@@ -63,23 +53,5 @@ return function()
     layout.applyTheme(Theme)
     assert(colorsMatch(fillOf(layout.optionsMenu).color, Theme.COLORS.bg_secondary), "modern: options menu bg")
     assert(colorsMatch(fillOf(layout.optionsContentPane).color, Theme.COLORS.bg_primary), "modern: options content bg")
-  end
-
-  -- test_nav_paint_skips_native_art
-  do
-    local factory = FakeUI.NewFactory()
-    local nativeTab = navTab(factory, true)
-    local flatTab = navTab(factory, nil)
-    nativeTab._wmIsActiveTab = true
-    local holder = factory.CreateFrame("Frame", nil, nil)
-    ThemeApply.Create({
-      nativeSearch = true,
-      optionsHint = holder:CreateFontString(nil, "OVERLAY"),
-      generalTab = nativeTab,
-      appearanceTab = flatTab,
-    }).applyTheme(Theme)
-    assert(nativeTab.bg.color == nil, "native nav art is not overpainted")
-    assert(colorsMatch(nativeTab.label.textColor, Theme.COLORS.option_button_text_active), "native nav label keeps the preset colour")
-    assert(colorsMatch(flatTab.bg.color, Theme.COLORS.option_button_bg), "flat nav fill still painted")
   end
 end

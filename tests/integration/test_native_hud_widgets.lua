@@ -5,8 +5,8 @@ local ComposerSurface = require("WhisperMessenger.UI.Composer.ComposerSurface")
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local RetailHud = require("tests.helpers.retail_hud")
-local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
-local RowHoverOverlay = require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
+local NativeArt = require("WhisperMessenger.UI.Helpers.NativeArt")
+local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
 
 local SCROLL_KNOB = "Interface\\Buttons\\UI-ScrollBar-Knob"
 local ICON_GLOW = "Interface\\Buttons\\UI-Common-MouseHilight"
@@ -99,7 +99,7 @@ return function()
     assert(tabPoint[2] == window.frame and tabPoint[3] == "BOTTOMLEFT", "HUD window: tabs hang below the window")
     local listBottom = bottomAnchorY(window.contacts.scrollFrame)
     assert(listBottom == Theme.LAYOUT.HUD_PANEL_PADDING, "HUD window: list stops above the panel border, got " .. tostring(listBottom))
-    assert(select(4, window.frame:GetClampRectInsets()) == -(TabToggle.NATIVE_HEIGHT - 2), "HUD window: clamp keeps the tabs on screen")
+    assert(select(4, window.frame:GetClampRectInsets()) == -(NativeTabToggle.HEIGHT - 2), "HUD window: clamp keeps the tabs on screen")
     window.refreshTheme()
     window.refreshLanguage()
     assert(
@@ -132,7 +132,7 @@ return function()
     local window = buildWindow(true, true)
     assert(bubbleBackdrop(window) ~= nil, "HUD window: chat bubble tooltip border")
     local row = window.contacts.rows[1]
-    assert(row.selectionFill.texturePath == RowHoverOverlay.SELECTED_ART, "HUD window: selected contact uses the quest log highlight")
+    assert(row.selectionFill.texturePath == NativeArt.LIST_SELECTED, "HUD window: selected contact uses the quest log highlight")
     assert(row.accentBar == nil, "HUD window: selected contact has no accent bar")
   end
 

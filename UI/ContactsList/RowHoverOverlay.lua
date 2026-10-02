@@ -19,8 +19,6 @@ local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 -- with the preset's colours.
 local RowHoverOverlay = {}
 
-RowHoverOverlay.SELECTED_ART = NativeArt.LIST_SELECTED
-
 local function createFill(row)
   local fill = row:CreateTexture(nil, "BACKGROUND", nil, 1)
   fill:SetAllPoints()

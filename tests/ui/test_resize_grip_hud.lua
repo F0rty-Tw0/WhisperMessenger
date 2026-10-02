@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local ResizeGrip = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ResizeGrip")
@@ -25,8 +26,8 @@ return function()
 
   -- test_hud_grip_draws_no_custom_dots
   do
-    local grip = build()
-    assert(#grip.lines == 0, "HUD: no dotted diagonals, got " .. #grip.lines)
+    local dots = FindUI.ofType(build().grip, "Texture")
+    assert(#dots == 0, "HUD: no dotted diagonals, got " .. #dots)
   end
 
   -- test_hud_grip_sits_inside_the_frame_border

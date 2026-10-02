@@ -51,8 +51,7 @@ function ThemeApply.Create(options)
       return
     end
 
-    -- Blizzard art on a Native WoW HUD nav item is not repainted.
-    if button.bg and not button.bg._wmNativeArt then
+    if button.bg then
       applyColorTexture(button.bg, backgroundColor)
     end
     if button.label then
