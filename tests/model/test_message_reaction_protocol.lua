@@ -280,4 +280,15 @@ return function()
   assert(Protocol.EncodeIdentity("bad id", "text") == nil, "invalid identity wire ID should not encode")
   assert(Protocol.EncodeReaction("toggle", "heart", "wire", "text", "fallback") == nil, "invalid operation should not encode")
   assert(Protocol.EncodeReaction("set", "rocket", "wire", "text", "fallback") == nil, "invalid key should not encode")
+
+  -- test_fingerprint_memoizes_last_text
+  do
+    Protocol._fingerprintComputeCount = 0
+    local a = Protocol.Fingerprint("WTS [Some Item] cheap")
+    local b = Protocol.Fingerprint("WTS [Some Item] cheap")
+    assert(a == b, "same text must give same fingerprint")
+    assert(Protocol._fingerprintComputeCount == 1, "repeat call must hit the memo, got " .. Protocol._fingerprintComputeCount)
+    Protocol.Fingerprint("other")
+    assert(Protocol._fingerprintComputeCount == 2, "new text must recompute")
+  end
 end

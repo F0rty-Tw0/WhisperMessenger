@@ -102,15 +102,31 @@ function Protocol.IsReactionKey(key)
   return reactionKeySet[key] == true
 end
 
-function Protocol.Fingerprint(text)
-  if type(text) ~= "string" then
-    text = ""
-  end
+Protocol._fingerprintComputeCount = 0
+
+local function computeFingerprint(text)
+  Protocol._fingerprintComputeCount = Protocol._fingerprintComputeCount + 1
   local hash = 5381
   for index = 1, #text do
     hash = (hash * 33 + string.byte(text, index)) % 4294967296
   end
   return string.format("%08x", math.floor(hash))
+end
+
+local lastFingerprintText
+local lastFingerprint
+
+-- Group ingest fingerprints the same line more than once; a one-entry memo
+-- skips the repeat per-byte hash. The function is pure, so nothing invalidates.
+function Protocol.Fingerprint(text)
+  if type(text) ~= "string" then
+    return computeFingerprint("")
+  end
+  if text ~= lastFingerprintText then
+    lastFingerprint = computeFingerprint(text)
+    lastFingerprintText = text
+  end
+  return lastFingerprint
 end
 
 function Protocol.NewWireId(state, now)
