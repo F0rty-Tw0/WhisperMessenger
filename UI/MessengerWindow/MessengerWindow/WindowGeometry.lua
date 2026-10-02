@@ -18,9 +18,11 @@ function WindowGeometry.Create(options)
   local sizeValue = options.sizeValue
   local initialState = options.initialState or {}
   local currentScale = WindowScale.Normalize(options.initialScale)
+  -- Contacts pane shown as the rail; contactsWidth stays the expanded width.
+  local collapsed = initialState.contactsCollapsed == true
 
   local currentContactsWidth =
-    clampContactsWidth(initialState.width, options.initialContactsWidth or initialState.contactsWidth or theme.CONTACTS_WIDTH, theme)
+    clampContactsWidth(initialState.width, options.initialContactsWidth or initialState.contactsWidth or theme.CONTACTS_WIDTH, theme, collapsed)
 
   local function getContactsWidth()
     return currentContactsWidth
@@ -33,6 +35,14 @@ function WindowGeometry.Create(options)
     currentContactsWidth = nextContactsWidth
   end
 
+  local function isCollapsed()
+    return collapsed
+  end
+
+  local function setCollapsed(nextCollapsed)
+    collapsed = nextCollapsed == true
+  end
+
   local function setScale(nextScale)
     currentScale = WindowScale.Normalize(nextScale)
     return currentScale
@@ -40,7 +50,7 @@ function WindowGeometry.Create(options)
 
   local function applyState(target, nextState)
     local clampedState = clampState(parent, nextState, theme, currentScale)
-    currentContactsWidth = clampContactsWidth(clampedState.width, clampedState.contactsWidth or theme.CONTACTS_WIDTH, theme)
+    currentContactsWidth = clampContactsWidth(clampedState.width, clampedState.contactsWidth or theme.CONTACTS_WIDTH, theme, collapsed)
 
     target:SetSize(clampedState.width or theme.WINDOW_WIDTH, clampedState.height or theme.WINDOW_HEIGHT)
     target:ClearAllPoints()
@@ -59,7 +69,8 @@ function WindowGeometry.Create(options)
     local pos = captureFramePosition(target)
     pos.width = sizeValue(target, "GetWidth", "width", initialState.width)
     pos.height = sizeValue(target, "GetHeight", "height", initialState.height)
-    pos.contactsWidth = clampContactsWidth(pos.width, currentContactsWidth, theme)
+    pos.contactsWidth = clampContactsWidth(pos.width, currentContactsWidth, theme, collapsed)
+    pos.contactsCollapsed = collapsed
     pos.minimized = false
     return clampState(parent, pos, theme, currentScale)
   end
@@ -67,6 +78,8 @@ function WindowGeometry.Create(options)
   return {
     getContactsWidth = getContactsWidth,
     setContactsWidth = setContactsWidth,
+    isCollapsed = isCollapsed,
+    setCollapsed = setCollapsed,
     setScale = setScale,
     applyState = applyState,
     buildState = buildState,

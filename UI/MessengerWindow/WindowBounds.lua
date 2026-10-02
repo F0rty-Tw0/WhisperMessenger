@@ -15,10 +15,15 @@ local function resolveTheme(theme)
   return theme or Theme
 end
 
-local function resolveMinBounds(theme)
+-- collapsed: the contacts pane is the rail, so the window only needs room
+-- for the rail, the divider and the minimum chat width.
+local function resolveMinBounds(theme, collapsed)
   local resolvedTheme = resolveTheme(theme)
   local layout = resolvedTheme.LAYOUT or {}
   local minWidth = layout.WINDOW_MIN_WIDTH or resolvedTheme.WINDOW_MIN_WIDTH or 640
+  if collapsed and layout.CONTACTS_RAIL_WIDTH and layout.CONTENT_MIN_WIDTH then
+    minWidth = layout.CONTACTS_RAIL_WIDTH + (resolvedTheme.DIVIDER_THICKNESS or 1) + layout.CONTENT_MIN_WIDTH
+  end
   local minHeight = layout.WINDOW_MIN_HEIGHT or resolvedTheme.WINDOW_MIN_HEIGHT or 420
   return minWidth, minHeight
 end
@@ -32,10 +37,10 @@ local function resolveMaxBound(parent, getterName, fieldName, scale)
   return bound / scale
 end
 
-function WindowBounds.GetResizeBounds(parent, theme, windowScale)
+function WindowBounds.GetResizeBounds(parent, theme, windowScale, collapsed)
   local resolvedTheme = resolveTheme(theme)
   local normalizedScale = WindowScale.Normalize(windowScale)
-  local configuredMinWidth, configuredMinHeight = resolveMinBounds(resolvedTheme)
+  local configuredMinWidth, configuredMinHeight = resolveMinBounds(resolvedTheme, collapsed)
   local maxWidth = resolveMaxBound(parent, "GetWidth", "width", normalizedScale) or resolvedTheme.WINDOW_WIDTH or configuredMinWidth
   local maxHeight = resolveMaxBound(parent, "GetHeight", "height", normalizedScale) or resolvedTheme.WINDOW_HEIGHT or configuredMinHeight
   local minWidth = math.min(configuredMinWidth, maxWidth)
@@ -46,7 +51,8 @@ end
 
 function WindowBounds.ClampState(parent, state, theme, windowScale)
   local resolvedTheme = resolveTheme(theme)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme, windowScale)
+  local collapsed = type(state) == "table" and state.contactsCollapsed == true
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme, windowScale, collapsed)
   local nextState = {}
 
   for key, value in pairs(state or {}) do
