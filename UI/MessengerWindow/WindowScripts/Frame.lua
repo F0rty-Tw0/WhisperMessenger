@@ -44,6 +44,7 @@ end
 --   buildState, onPositionChanged, Theme
 --   relayout (optional), refreshContactsLayout (optional),
 --   getCursorX/getCursorY (optional), getFrameLeft/getFrameTop (optional)
+--   isContactsCollapsed/setContactsCollapsed (optional): contacts rail snap
 function Frame.WireFrame(refs, options)
   local frame = refs.frame
   local resizeGrip = refs.resizeGrip
@@ -240,6 +241,8 @@ function Frame.WireFrame(refs, options)
     frameWidth = frameWidth,
     frameHeight = frameHeight,
     relayoutWindow = relayoutWindow,
+    isCollapsed = options.isContactsCollapsed,
+    setCollapsed = options.setContactsCollapsed,
     buildState = options.buildState,
     onPositionChanged = options.onPositionChanged,
   })

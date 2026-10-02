@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Metrics = ns.MessengerWindowLayoutMetrics or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.Metrics")
+
 local ContactsResize = {}
 
 function ContactsResize.New(options)
@@ -28,6 +30,21 @@ function ContactsResize.New(options)
     lineFade.set(isActive)
   end
 
+  -- Snaps the pane to or from the rail as the pointer crosses the snap
+  -- points (any number of times per drag; expanding starts at the pointer).
+  -- True when this frame needs no resize: it snapped, or the rail holds.
+  local function snap(requestedWidth)
+    if not options.isCollapsed then
+      return false
+    end
+    local collapsed = options.isCollapsed() == true
+    if Metrics.NextCollapsed(collapsed, requestedWidth, frameTheme) ~= collapsed then
+      options.setCollapsed(not collapsed, requestedWidth)
+      return true
+    end
+    return collapsed
+  end
+
   local function updateFromCursor()
     if not resizing then
       return
@@ -39,7 +56,11 @@ function ContactsResize.New(options)
       return
     end
 
-    options.relayoutWindow(options.frameWidth(), options.frameHeight(), cursorX - frameLeft, true)
+    local requestedWidth = cursorX - frameLeft
+    if snap(requestedWidth) then
+      return
+    end
+    options.relayoutWindow(options.frameWidth(), options.frameHeight(), requestedWidth, true)
   end
 
   local function stop(button)
