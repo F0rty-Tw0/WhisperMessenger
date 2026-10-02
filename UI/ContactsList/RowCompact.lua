@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local RailAvatar = ns.ContactsListRailAvatar or require("WhisperMessenger.UI.ContactsList.RailAvatar")
 local unpackValues = table.unpack or _G.unpack
 
@@ -16,6 +18,16 @@ local RowCompact = {}
 
 -- How far the badge pokes past the icon's corner.
 local BADGE_CORNER_OFFSET = 4
+
+-- Moves the icon from the row's centre to the rail's. Rows start
+-- CONTACT_ROW_LEFT_INSET in, and under the Native WoW HUD the list stops
+-- HUD_PANEL_PADDING short of the pane's right edge, so the row centre is off
+-- the pane centre (where the magnifier sits) by half the difference.
+local function railIconOffsetX()
+  local layout = Theme.LAYOUT
+  local rightInset = Hud.IsOn() and layout.HUD_PANEL_PADDING or 0
+  return (rightInset - layout.CONTACT_ROW_LEFT_INSET) / 2
+end
 
 local function setShown(region, shown)
   if region and region.SetShown then
@@ -73,7 +85,7 @@ function RowCompact.apply(row, item, isGroup, compact)
     return
   end
   row._wmCompactApplied = compact
-  reanchor(row.classIconFrame, "_wmFullIconPoint", row, compact, "CENTER", row, "CENTER", 0, 0)
+  reanchor(row.classIconFrame, "_wmFullIconPoint", row, compact, "CENTER", row, "CENTER", railIconOffsetX(), 0)
   local badgeFrame = row.unreadBadge and row.unreadBadge.frame
   reanchor(badgeFrame, "_wmFullBadgePoint", row, compact, "TOPRIGHT", row.classIconFrame, "TOPRIGHT", BADGE_CORNER_OFFSET, BADGE_CORNER_OFFSET)
   if compact then

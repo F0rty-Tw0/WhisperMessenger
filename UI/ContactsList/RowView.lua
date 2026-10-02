@@ -60,8 +60,8 @@ local function bindRow(factory, parent, row, index, item, options)
   row._wmCompact = options ~= nil and options.compact == true
   -- 3px left inset on each row so contacts sit slightly tighter to the pane's
   -- left edge while keeping the right edge anchored to the parent.
-  row:SetSize(parentWidth - 2, ROW_HEIGHT)
-  row:SetPoint("TOPLEFT", parent, "TOPLEFT", 2, -((index - 1) * ROW_HEIGHT))
+  row:SetSize(parentWidth - Theme.LAYOUT.CONTACT_ROW_LEFT_INSET, ROW_HEIGHT)
+  row:SetPoint("TOPLEFT", parent, "TOPLEFT", Theme.LAYOUT.CONTACT_ROW_LEFT_INSET, -((index - 1) * ROW_HEIGHT))
   if row.EnableMouse then
     row:EnableMouse(true)
   end

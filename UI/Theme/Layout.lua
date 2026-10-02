@@ -15,11 +15,14 @@ local Layout = {
   -- Frame levels the divider handle sits above the contacts pane, so rail
   -- rows, badges and the chat pane's edge never cover it.
   CONTACTS_RESIZE_HANDLE_LEVEL_LIFT = 50,
-  -- Collapsed contacts "rail": the contact icon plus 6px each side. While
+  -- Collapsed contacts "rail": the contact icon plus, on each side, the gap
+  -- an expanded row keeps left of its icon (CONTACT_ROW_LEFT_INSET +
+  -- CONTACT_PADDING = 8). Under the Native WoW HUD the panel border sits
+  -- inside that gap, as it does for expanded rows. While
   -- dragging the divider the pane becomes the rail below the collapse point
   -- and expands again past the expand point; the gap between them stops a
   -- jittery pointer flickering between the two.
-  CONTACTS_RAIL_WIDTH = 46,
+  CONTACTS_RAIL_WIDTH = 50,
   CONTACTS_RAIL_COLLAPSE_BELOW = 110,
   CONTACTS_RAIL_EXPAND_ABOVE = 125,
   TOP_BAR_HEIGHT = 24,
@@ -44,6 +47,8 @@ local Layout = {
   CONTACT_FACTION_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,
   CONTACT_PADDING = 6,
+  -- Rows start this far in from the list's left edge.
+  CONTACT_ROW_LEFT_INSET = 2,
   CONTACT_ACCENT_BAR_W = 2,
   -- Right column: time (~10) + 2 + pin 14 + 2 + remove 14 fits 48.
   CONTACT_ACTION_SIZE = 14,
