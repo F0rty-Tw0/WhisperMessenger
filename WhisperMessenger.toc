@@ -256,6 +256,7 @@ UI/MessengerWindow/ContactsController.lua
 UI/MessengerWindow/WindowScripts/Buttons/SettingsTabs.lua
 UI/MessengerWindow/WindowScripts/Buttons/StartConversationDialog.lua
 UI/MessengerWindow/WindowScripts/Buttons.lua
+UI/MessengerWindow/WindowScripts/Frame/ResizeBounds.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
