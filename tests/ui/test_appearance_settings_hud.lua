@@ -4,6 +4,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
+local Flavor = require("tests.helpers.flavor")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
@@ -130,12 +131,21 @@ return function()
     assert(hudButtons(result)[1]._selected == true, "no saved style shows Off")
   end
 
-  -- test_reset_turns_the_hud_off
-  do
+  -- test_reset_picks_modern_on_retail
+  Flavor.With(true, false, function()
     local result, changes = create({ hudStyle = "classic" })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
-    assert(changes.hudStyle == "off", "reset sets hudStyle off, got " .. tostring(changes.hudStyle))
-  end
+    assert(changes.hudStyle == "retail", "reset sets hudStyle Modern on Retail, got " .. tostring(changes.hudStyle))
+    assert(changes.themePreset == "wow_native", "reset pairs Modern with Azeroth, got " .. tostring(changes.themePreset))
+  end)
+
+  -- test_reset_turns_the_hud_off_on_classic
+  Flavor.With(false, false, function()
+    local result, changes = create({ hudStyle = "classic" })
+    FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
+    assert(changes.hudStyle == "off", "reset sets hudStyle off on Classic flavors, got " .. tostring(changes.hudStyle))
+    assert(changes.themePreset == "wow_default", "reset keeps Midnight on Classic flavors, got " .. tostring(changes.themePreset))
+  end)
 
   -- test_retail_is_unavailable_without_its_templates
   withTooltip(function(tip)

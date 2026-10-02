@@ -1,4 +1,5 @@
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
+local Flavor = require("tests.helpers.flavor")
 
 local RETAIL_TEMPLATES = { PortraitFrameTemplate = true, MinimalSliderWithSteppersTemplate = true }
 
@@ -22,6 +23,31 @@ local function retailClient()
 end
 
 return function()
+  -- test_default_style_is_modern_on_retail
+  Flavor.With(true, false, function()
+    assert(Hud.DefaultStyle() == "retail", "Retail defaults to Modern, got " .. tostring(Hud.DefaultStyle()))
+  end)
+
+  -- test_default_style_is_modern_on_forever
+  Flavor.With(false, true, function()
+    assert(Hud.DefaultStyle() == "retail", "Forever defaults to Modern, got " .. tostring(Hud.DefaultStyle()))
+  end)
+
+  -- test_default_preset_is_azeroth_with_modern
+  Flavor.With(true, false, function()
+    assert(Hud.DefaultPreset() == "wow_native", "Modern pairs with Azeroth, got " .. tostring(Hud.DefaultPreset()))
+  end)
+
+  -- test_default_preset_is_midnight_without_the_hud
+  Flavor.With(false, false, function()
+    assert(Hud.DefaultPreset() == "wow_default", "Classic flavors keep Midnight, got " .. tostring(Hud.DefaultPreset()))
+  end)
+
+  -- test_default_style_is_off_on_classic
+  Flavor.With(false, false, function()
+    assert(Hud.DefaultStyle() == "off", "Classic flavors default to Off, got " .. tostring(Hud.DefaultStyle()))
+  end)
+
   -- test_unknown_style_turns_the_hud_off
   withXmlUtil(nil, function()
     Hud.Configure("classic")
