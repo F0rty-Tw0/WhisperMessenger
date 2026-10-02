@@ -26,6 +26,10 @@ function ContactsRuntime.Create(factory, options)
   local function getRequestsInbox()
     return settingsConfig.requestsInbox == true
   end
+  -- The contacts pane is the collapsed icon rail.
+  local function isCompact()
+    return options.isCompact ~= nil and options.isCompact() == true
+  end
   -- Footer tabs in order; the footer shows only when there is a choice.
   local function visibleTabModes()
     local modes = { "whispers" }
@@ -90,6 +94,7 @@ function ContactsRuntime.Create(factory, options)
     getHideMessagePreview = function()
       return settingsConfig.hideMessagePreview == true
     end,
+    getCompact = isCompact,
     onSelect = function(item)
       if options.onSelect then
         options.onSelect(item)
@@ -179,7 +184,10 @@ function ContactsRuntime.Create(factory, options)
       if emptyStateFrame == nil then
         return
       end
-      if currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
+      -- The rail has no room for the hint text.
+      if isCompact() then
+        EmptyState.Hide(emptyStateFrame)
+      elseif currentTabMode == "groups" and getShowGroupChats() and #filtered == 0 then
         EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
       elseif currentTabMode == "requests" and #filtered == 0 and not hasSearchText() then
         EmptyState.Show(emptyStateFrame, Localization.Text(REQUESTS_EMPTY_KEY))

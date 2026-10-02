@@ -96,6 +96,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     rowOptions.visibleCount = visibleCount
     rowOptions.hideMessagePreview = type(options.getHideMessagePreview) == "function" and options.getHideMessagePreview()
       or options.hideMessagePreview
+    rowOptions.compact = type(options.getCompact) == "function" and options.getCompact() == true
 
     local boundWidth = sizeValue(controller.content, "GetWidth", "width", 0)
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
