@@ -175,6 +175,7 @@ function WindowRuntime.Create(options)
   })
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
+  runtime.scheduleIncomingRefresh = coordinator.scheduleIncomingRefresh
 
   local groupSendPolicy = GroupSendPolicy.Create({
     runtime = runtime,

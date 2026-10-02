@@ -82,6 +82,7 @@ local function makeRuntimeOptions()
         return nil
       end
       function coord.scheduleAvailabilityRefresh() end
+      function coord.scheduleIncomingRefresh() end
       trackers.coordinator = coord
       return coord
     end,
@@ -298,6 +299,10 @@ return function()
   -- Group send policy and availability refresh are exposed for the event bridge.
   assert(type(runtime.getGroupSendNotice) == "function", "runtime.getGroupSendNotice should be wired")
   assert(type(runtime.onAvailabilityChanged) == "function", "runtime.onAvailabilityChanged should be wired")
+  assert(
+    runtime.scheduleIncomingRefresh == trackers.coordinator.scheduleIncomingRefresh,
+    "runtime.scheduleIncomingRefresh should share the coordinator's coalesced refresh"
+  )
   assert(type(runtime.canReact) == "function", "runtime.canReact should expose dynamic reaction availability")
 
   -- ensureWindow creates exactly once and routes window options through real

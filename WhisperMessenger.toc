@@ -328,6 +328,7 @@ Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator/IconSurfaces.lua
 Core/Bootstrap/WindowCoordinator/RequestFollow.lua
+Core/Bootstrap/WindowCoordinator/IncomingRefresh.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua

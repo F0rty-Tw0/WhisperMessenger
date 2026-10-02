@@ -177,14 +177,16 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end)
   end
 
-  local handled, _, meta = GroupChatIngest.HandleEvent(runtime, eventName, payload)
+  local handled, conv, meta = GroupChatIngest.HandleEvent(runtime, eventName, payload)
   -- Only a line naming the player alerts in group chats (sound + flash, no
   -- popup or auto-open), even when the chat is muted.
   if meta and meta.mention then
     IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
   end
-  if handled and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
-    runtime.refreshWindow()
+  -- Coalesced: a busy chat must not rebuild the window per line. The
+  -- scheduler ignores lines while the window is hidden.
+  if handled and type(runtime.scheduleIncomingRefresh) == "function" then
+    runtime.scheduleIncomingRefresh(conv and conv.conversationKey)
   end
   return handled
 end

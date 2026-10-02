@@ -254,9 +254,11 @@ return function()
     assert(refreshes == 0, "hidden group event must not render contacts or transcript")
   end
 
-  -- A visible group surface is refreshed after the group mutation.
+  -- Visible group lines schedule one coalesced refresh keyed by their
+  -- conversation instead of refreshing the window per line.
   do
     local refreshes = 0
+    local scheduled = {}
     local runtime = makeRuntime({
       isWindowVisible = function()
         return true
@@ -264,26 +266,37 @@ return function()
       refreshWindow = function()
         refreshes = refreshes + 1
       end,
+      scheduleIncomingRefresh = function(key)
+        scheduled[#scheduled + 1] = key
+      end,
     })
 
-    EventBridge.RouteGroupEvent(
-      runtime,
-      "CHAT_MSG_PARTY",
-      "render while visible",
-      "Thrall-Aggamaggan",
-      "",
-      "",
-      "",
-      "",
-      0,
-      0,
-      "",
-      0,
-      802,
-      "Player-1084-00000099"
-    )
+    for lineID = 802, 804 do
+      EventBridge.RouteGroupEvent(
+        runtime,
+        "CHAT_MSG_GUILD",
+        "line " .. lineID,
+        "Thrall-Aggamaggan",
+        "",
+        "",
+        "",
+        "",
+        0,
+        0,
+        "",
+        0,
+        lineID,
+        "Player-1084-00000099"
+      )
+    end
 
-    assert(refreshes == 1, "visible group event should refresh its current surface")
+    local guildKey = next(runtime.store.conversations)
+    assert(guildKey ~= nil and string.find(guildKey, "guild::", 1, true) == 1, "guild lines should store a guild conversation")
+    assert(#scheduled == 3, "each visible group line should schedule a refresh, got " .. #scheduled)
+    for index = 1, 3 do
+      assert(scheduled[index] == guildKey, "schedule " .. index .. " should carry the guild key, got " .. tostring(scheduled[index]))
+    end
+    assert(refreshes == 0, "group lines must not refresh the window directly, got " .. refreshes)
   end
 
   -- Group fallback degradation refreshes only the group surface; it never
@@ -291,6 +304,7 @@ return function()
   do
     local now = 900
     local refreshes = 0
+    local scheduled = 0
     local runtime = makeRuntime({
       now = function()
         return now
@@ -300,6 +314,9 @@ return function()
       end,
       refreshWindow = function()
         refreshes = refreshes + 1
+      end,
+      scheduleIncomingRefresh = function()
+        scheduled = scheduled + 1
       end,
       pendingOutgoing = { sentinel = true },
       lastIncomingWhisperKey = "whisper-sentinel",
@@ -314,10 +331,10 @@ return function()
     }
     local fallback = Protocol.BuildGroupFallback("sad", "set", "late")
     EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_PARTY", fallback, "Late-Realm", "", "", "", "", 0, 0, "", 0, 900, "Player-late")
-    assert(refreshes == 1, "staged group control should receive normal visible group refresh")
+    assert(scheduled == 1 and refreshes == 0, "staged group control should schedule the normal group refresh")
     now = 915
     MessageReactions.Expire(runtime, now)
-    assert(refreshes == 2, "expired group control should refresh group surface")
+    assert(refreshes == 1, "expired group control should refresh group surface")
     assert(
       runtime.pendingOutgoing.sentinel == true and runtime.lastIncomingWhisperKey == "whisper-sentinel",
       "group degradation must not mutate whisper state"
