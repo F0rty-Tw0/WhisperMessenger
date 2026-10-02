@@ -110,6 +110,14 @@ return function()
     assert(math.abs(blockers[1].width - (200 - SliderSkin.THUMB_SIZE)) < 0.01, "blockers follow a resize")
   end
 
+  -- test_track_blockers_hug_opposite_ends_of_the_track
+  do
+    local s = newSlider(factory, 5, true)
+    local blockers = trackBlockers(s.slider)
+    assert(blockers[1].points[1][1] == "TOPLEFT", "left blocker grows from the left end")
+    assert(blockers[2].points[1][1] == "TOPRIGHT", "right blocker grows from the right end")
+  end
+
   -- test_plain_slider_keeps_track_clicks
   do
     local s = newSlider(factory, 5)
