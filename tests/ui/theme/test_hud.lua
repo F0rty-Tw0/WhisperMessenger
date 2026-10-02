@@ -33,6 +33,16 @@ return function()
     assert(Hud.DefaultStyle() == "retail", "Forever defaults to Modern, got " .. tostring(Hud.DefaultStyle()))
   end)
 
+  -- test_default_preset_is_azeroth_with_modern
+  Flavor.With(true, false, function()
+    assert(Hud.DefaultPreset() == "wow_native", "Modern pairs with Azeroth, got " .. tostring(Hud.DefaultPreset()))
+  end)
+
+  -- test_default_preset_is_midnight_without_the_hud
+  Flavor.With(false, false, function()
+    assert(Hud.DefaultPreset() == "wow_default", "Classic flavors keep Midnight, got " .. tostring(Hud.DefaultPreset()))
+  end)
+
   -- test_default_style_is_off_on_classic
   Flavor.With(false, false, function()
     assert(Hud.DefaultStyle() == "off", "Classic flavors default to Off, got " .. tostring(Hud.DefaultStyle()))
