@@ -124,6 +124,7 @@ UI/Helpers/GhostButton.lua
 UI/Helpers/NavItem.lua
 UI/Helpers/ToggleSwitch.lua
 UI/Helpers/DisabledState.lua
+UI/Helpers/NativeControls.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
 UI/Badge.lua

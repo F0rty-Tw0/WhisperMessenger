@@ -8,6 +8,8 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PanelRegistry = ns.SettingsControlsPanelRegistry or require("WhisperMessenger.UI.Shared.SettingsControls.PanelRegistry")
 local Header = ns.SettingsControlsHeader or require("WhisperMessenger.UI.Shared.SettingsControls.Header")
 local SliderSkin = ns.SettingsControlsSliderSkin or require("WhisperMessenger.UI.Shared.SettingsControls.SliderSkin")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local SettingsControls = {}
 
@@ -68,7 +70,9 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   local valueFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   valueFs:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
 
-  local slider = factory.CreateFrame("Slider", nil, row)
+  -- Native WoW HUD: Blizzard slider; the template draws track and thumb.
+  local nativeSlider = Hud.IsOn() and NativeControls.CreateSlider(factory, row) or nil
+  local slider = nativeSlider or factory.CreateFrame("Slider", nil, row)
   slider:SetSize(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, Theme.LAYOUT.SETTINGS_SLIDER_HEIGHT)
   slider:SetPoint("TOPLEFT", labelFs, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_LABEL_SPACING)
   if slider.SetOrientation then
@@ -81,7 +85,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   end
 
   -- Track; SliderSkin.Attach anchors it as a thin centred line.
-  local bg = slider:CreateTexture(nil, "BACKGROUND")
+  local bg = not nativeSlider and slider:CreateTexture(nil, "BACKGROUND") or nil
 
   local minLabel = slider:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   minLabel:SetPoint("TOPLEFT", slider, "BOTTOMLEFT", 0, -2)
@@ -91,7 +95,7 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   maxLabel:SetPoint("TOPRIGHT", slider, "BOTTOMRIGHT", 0, -2)
   maxLabel:SetText(formatFn and formatFn(max) or tostring(max))
 
-  local skin = SliderSkin.Attach(slider, bg)
+  local skin = nativeSlider and SliderSkin.AttachNative(slider, NativeControls.SliderThumbSize(slider)) or SliderSkin.Attach(slider, bg)
 
   local function paintLabels(activeTheme)
     local valueColor, rangeColor = SliderSkin.LabelColors(activeTheme)

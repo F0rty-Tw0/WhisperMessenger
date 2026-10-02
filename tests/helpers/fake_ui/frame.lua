@@ -557,6 +557,15 @@ local function makeCreateFrame()
       self.enabled = value
     end
 
+    -- CheckButton API.
+    function frame:SetChecked(value)
+      self.checked = value == true
+    end
+
+    function frame:GetChecked()
+      return self.checked == true
+    end
+
     function frame:SetNormalTexture(value)
       self.normalTexture = value
     end
