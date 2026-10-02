@@ -6,7 +6,6 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local applyColorTexture = UIHelpers.applyColorTexture
 local sizeValue = UIHelpers.sizeValue
 
@@ -84,10 +83,6 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   refreshOptionsMenuScrollGeometry()
 
-  local optionsHeader = optionsMenuScrollView.content:CreateFontString(nil, "OVERLAY", theme.FONTS.header_name)
-  optionsHeader:SetPoint("TOPLEFT", optionsMenuScrollView.content, "TOPLEFT", menuPadding, -menuPadding)
-  optionsHeader:SetText(Localization.Text("Options"))
-
   local optionsMenuDivider = optionsPanel:CreateTexture(nil, "BORDER")
   optionsMenuDivider:SetPoint("TOPLEFT", optionsMenu, "TOPRIGHT", 0, 0)
   optionsMenuDivider:SetPoint("BOTTOMLEFT", optionsMenu, "BOTTOMRIGHT", 0, 0)
@@ -141,10 +136,6 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     end)
   end
 
-  local function setLanguage()
-    optionsHeader:SetText(Localization.Text("Options"))
-  end
-
   return {
     optionsPanel = optionsPanel,
     optionsMenu = optionsMenu,
@@ -153,13 +144,11 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     optionsMenuScrollView = optionsMenuScrollView,
     optionsMenuMinimumContentHeight = OPTIONS_MENU_MIN_CONTENT_HEIGHT,
     refreshOptionsMenuScrollGeometry = refreshOptionsMenuScrollGeometry,
-    optionsHeader = optionsHeader,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,
     optionsContentBg = optionsContentBg,
     optionsScrollView = optionsScrollView,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
-    setLanguage = setLanguage,
   }
 end
 

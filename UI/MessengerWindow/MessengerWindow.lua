@@ -426,7 +426,6 @@ function MessengerWindow.Create(factory, options)
     notificationSettings = settingsRuntime.getSettings(4),
     iconSettings = settingsRuntime.getSettings(5),
     patchNotesSettings = settingsRuntime.getSettings(SettingsPanels.PATCH_NOTES_INDEX),
-    optionsHeader = layout.optionsHeader,
     optionsHint = layout.optionsHint,
     resetWindowButton = layout.resetWindowButton,
     resetIconButton = layout.resetIconButton,

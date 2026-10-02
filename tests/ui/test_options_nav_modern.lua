@@ -40,8 +40,7 @@ end
 
 local function buildMenu(factory)
   local menu = factory.CreateFrame("Frame", nil, nil)
-  local header = menu:CreateFontString(nil, "OVERLAY")
-  return OptionsMenuButtons.Build(factory, menu, header, { theme = Theme, menuPadding = 16, contactsWidth = 260 })
+  return OptionsMenuButtons.Build(factory, menu, { theme = Theme, menuPadding = 16, contactsWidth = 260 })
 end
 
 return function()

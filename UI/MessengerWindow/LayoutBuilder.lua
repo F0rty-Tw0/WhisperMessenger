@@ -30,7 +30,7 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 --
 -- Returns:
 --   contactsPane, contactsDivider, contactsResizeHandle, contentPane, headerDivider,
---   threadPane, composerPane, optionsPanel, optionsHeader, optionsHint,
+--   threadPane, composerPane, optionsPanel, optionsHint,
 --   resetWindowButton, resetIconButton, clearAllChatsButton, contactsView
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
@@ -85,7 +85,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local optionsMenu = optionsPanelLayout.optionsMenu
   local optionsMenuBg = optionsPanelLayout.optionsMenuBg
   local menuPadding = optionsPanelLayout.menuPadding
-  local optionsHeader = optionsPanelLayout.optionsHeader
   local optionsMenuDivider = optionsPanelLayout.optionsMenuDivider
   local optionsContentPane = optionsPanelLayout.optionsContentPane
   local optionsContentBg = optionsPanelLayout.optionsContentBg
@@ -95,7 +94,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT = optionsPanelLayout.optionsMenuMinimumContentHeight
   local refreshOptionsMenuScrollGeometry = optionsPanelLayout.refreshOptionsMenuScrollGeometry
 
-  local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, optionsHeader, {
+  local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, {
     menuPadding = menuPadding,
     contactsWidth = contactsWidth,
     nativeChrome = contactsSection.nativeChrome,
@@ -124,7 +123,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsMenuBg = optionsMenuBg,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentBg = optionsContentBg,
-    optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     generalTab = generalTab,
     appearanceTab = appearanceTab,
@@ -143,9 +141,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   -- exposes its own setLanguage. Aggregating here keeps callers from having
   -- to know which builder owns which strings.
   local function setLanguage()
-    if optionsPanelLayout.setLanguage then
-      optionsPanelLayout.setLanguage()
-    end
     if optionsMenuButtons.setLanguage then
       optionsMenuButtons.setLanguage()
     end
@@ -191,7 +186,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     notificationsTab = notificationsTab,
     iconsTab = iconsTab,
     whatsNewTab = whatsNewTab,
-    optionsHeader = optionsHeader,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,

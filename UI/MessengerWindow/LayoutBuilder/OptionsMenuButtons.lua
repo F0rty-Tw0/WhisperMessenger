@@ -14,7 +14,7 @@ local function optionButtonWidth(contactsWidth, menuPadding)
   return contactsWidth - (menuPadding * 2)
 end
 
-function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
+function OptionsMenuButtons.Build(factory, optionsMenu, options)
   options = options or {}
 
   local theme = options.theme or Theme
@@ -33,7 +33,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   local tabSpacing = 4
 
   local generalTab = optionButtonFactory(factory, optionsMenu, Localization.Text("General"), tabColors, tabLayout)
-  generalTab:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
+  generalTab:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
 
   local appearanceTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Appearance"), tabColors, tabLayout)
   appearanceTab:SetPoint("TOPLEFT", generalTab, "BOTTOMLEFT", 0, -tabSpacing)
