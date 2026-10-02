@@ -8,19 +8,19 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 - Battle.net friends now show without the #1234 part of their BattleTag, handy for streaming and screenshots. Two friends with the same name keep their numbers so you can tell them apart. Turn it off under Options > General > Privacy ("Hide BattleTag numbers").
 - Shift-click the floating icon or the minimap icon to mark every chat as read without opening the window.
+- The Native WoW HUD option is now a choice: Off, Classic or Modern. If you had it turned on, you get Classic, the look you already know. Find it under Options > Appearance.
+- New Modern style: the window looks like the modern game's own windows, such as the professions window. It has the addon's round portrait in the corner, separate panels for your contacts and the chat, slim rounded scrollbars, and the title bar buttons on the right next to the settings gear. Options pages show their titles on the ornate banners from the character window. Modern is greyed out on game versions that can't show it.
+- Classic and Modern now dress the whole window, not just its frame: pop-ups and menus, chat bubbles, the contact list, the options, and the window's icon buttons and resize corner all use the game's own borders, highlights, checkboxes, sliders, scrollbars, buttons and menus, while keeping your theme's colors.
+- With Classic or Modern, the Whispers, Groups and Requests tabs hang below the window like the game's own tabs, and the contact list gets that space back.
+- Changing the Native WoW HUD style now offers to reload the interface right away, so you don't have to type /reload. Picking Classic or Modern and pressing Reload UI also switches the theme to Azeroth to match; you can still pick any other theme afterwards.
+- The Azeroth theme's sent messages now sit on a dark bronze bubble instead of purple, to match its gold accents.
+- The options menu no longer shows an "Options" title, so the page list starts higher.
 - Fixed: pressing R to reply no longer types an "r" into the message box, even when the chat already had a half-typed message.
 - Fixed: with a big font size (14 and up), a contact's zone and last message no longer overlap in the contact list. Rows now get taller as the font grows.
 - Fixed: clicking the Window Scale slider's bar no longer jumps the window to a new size. Drag the handle to change the scale.
-- Fixed: an empty contact list no longer shows a scrollbar after you make the window smaller, and its hint text stays centred and wraps to fit the list.
+- Fixed: an empty contact list no longer shows a scrollbar after you make the window smaller, and its hint text stays centered and wraps to fit the list.
 - Fixed: the scrollbars on the options pages and in the chat no longer slide out of view after you resize the window.
 - Fixed: the WoW: Forever beta no longer lists the addon as out of date.
-- Reloading into the Classic or Modern Native WoW HUD style switches the theme to Azeroth to match. You can still pick any other theme afterwards.
-- With the Native WoW HUD, the Whispers, Groups and Requests tabs now hang below the window like the game's own tabs, and the contact list gets that space back.
-- The options menu drops its "Options" title, so the page list starts higher.
-- Switching the Native WoW HUD style now asks whether to reload the interface right away, so you no longer have to type /reload yourself.
-- The Azeroth theme's sent messages now sit on a dark bronze bubble instead of purple, to match its gold accents.
-- The Native WoW HUD now dresses the whole window, not just its frame: pop-ups and menus, chat bubbles, the contact list, the options, and the window's icon buttons and resize corner all use the game's own borders, highlights, checkboxes, sliders, scrollbars, buttons and menus, while keeping your theme's colors.
-- New Native WoW HUD style, Modern: the window takes the look of the modern game's own windows, like the professions window, with the addon's round portrait in the corner, separate panels for your contacts and the chat, and the modern title bar. The title bar buttons move to the right, next to the settings gear, and the contact list and chat get the slim, rounded scrollbars of the modern game. The options pages put their titles and section names on the ornate banners from the character window. Pick it under Options > Appearance > Native WoW HUD; Classic keeps the older look.
 
 ## [2.0.1] - 2026-09-26
 
