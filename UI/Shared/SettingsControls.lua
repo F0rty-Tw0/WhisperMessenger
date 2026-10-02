@@ -132,6 +132,10 @@ function SettingsControls.CreateSliderRow(factory, parent, spec)
   end)
 
   if commitOnRelease then
+    -- Release-committed values are disruptive to apply (window scale), so a
+    -- stray track click must not jump the value either.
+    SliderSkin.BlockTrackClicks(skin, factory)
+
     local originalOnMouseDown = slider:GetScript("OnMouseDown")
     local originalOnMouseUp = slider:GetScript("OnMouseUp")
 

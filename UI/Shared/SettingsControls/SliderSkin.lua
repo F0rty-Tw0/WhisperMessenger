@@ -41,9 +41,32 @@ function SliderSkin.UpdateFill(skin)
   local range = maxValue - minValue
   local fraction = range > 0 and (slider:GetValue() - minValue) / range or 0
   fraction = math.max(0, math.min(1, fraction))
-  local width = slider:GetWidth() or 0
   local knob = SliderSkin.THUMB_SIZE
-  skin.fill:SetWidth(math.max(knob / 2, knob / 2 + fraction * (width - knob)))
+  local travel = math.max(0, (slider:GetWidth() or 0) - knob)
+  local thumbLeft = fraction * travel
+  skin.fill:SetWidth(knob / 2 + thumbLeft)
+  if skin.leftBlocker then
+    skin.leftBlocker:SetWidth(thumbLeft)
+    skin.rightBlocker:SetWidth(travel - thumbLeft)
+  end
+end
+
+-- Invisible mouse-catching strips on both sides of the thumb. A click on the
+-- bare track lands on a strip instead of the slider, so only dragging the
+-- thumb changes the value (the native slider jumps to the click point).
+function SliderSkin.BlockTrackClicks(skin, factory)
+  local slider = skin.slider
+  local function strip(side)
+    local frame = factory.CreateFrame("Frame", nil, slider)
+    frame:SetPoint("TOP" .. side, slider, "TOP" .. side, 0, 0)
+    frame:SetPoint("BOTTOM" .. side, slider, "BOTTOM" .. side, 0, 0)
+    frame:SetFrameLevel(slider:GetFrameLevel() + 1)
+    frame:EnableMouse(true)
+    return frame
+  end
+  skin.leftBlocker = strip("LEFT")
+  skin.rightBlocker = strip("RIGHT")
+  SliderSkin.UpdateFill(skin)
 end
 
 function SliderSkin.Apply(skin, activeTheme)
