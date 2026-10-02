@@ -31,7 +31,6 @@ local DEFAULTS = {
   fontOutline = "NONE",
   fontColor = "default",
   bubbleColorPreset = "default",
-  themePreset = Theme.DEFAULT_PRESET or "wow_default",
   windowScale = 1.0,
 }
 
@@ -93,6 +92,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   end
 
   local hudDefault = Hud.DefaultStyle()
+  local presetDefault = Hud.DefaultPreset()
   local hudStyleSelector = panel:bind(
     sel(text("Native WoW HUD"), Options.BuildHudStyleOptions(), hudDefault, config.hudStyle or hudDefault, function(v)
       onChange("hudStyle", v)
@@ -102,10 +102,10 @@ function AppearanceSettings.Create(factory, parent, config, options)
   hudStyleSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
   local themePresetSelector = panel:bind(
-    sel(text("Theme Preset"), Options.BuildThemePresetOptions(), DEFAULTS.themePreset, config.themePreset or DEFAULTS.themePreset, function(v)
+    sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
       onChange("themePreset", v)
     end),
-    { type = "selector", key = "themePreset", default = DEFAULTS.themePreset }
+    { type = "selector", key = "themePreset", default = presetDefault }
   )
   themePresetSelector.row:SetPoint("TOPLEFT", hudStyleSelector.row, "BOTTOMLEFT", 0, gap)
 

@@ -136,6 +136,7 @@ return function()
     local result, changes = create({ hudStyle = "classic" })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     assert(changes.hudStyle == "retail", "reset sets hudStyle Modern on Retail, got " .. tostring(changes.hudStyle))
+    assert(changes.themePreset == "wow_native", "reset pairs Modern with Azeroth, got " .. tostring(changes.themePreset))
   end)
 
   -- test_reset_turns_the_hud_off_on_classic
@@ -143,6 +144,7 @@ return function()
     local result, changes = create({ hudStyle = "classic" })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     assert(changes.hudStyle == "off", "reset sets hudStyle off on Classic flavors, got " .. tostring(changes.hudStyle))
+    assert(changes.themePreset == "wow_default", "reset keeps Midnight on Classic flavors, got " .. tostring(changes.themePreset))
   end)
 
   -- test_retail_is_unavailable_without_its_templates
