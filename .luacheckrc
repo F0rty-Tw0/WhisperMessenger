@@ -105,6 +105,7 @@ read_globals = {
   "C_Clipboard",
   "C_DateAndTime",
   "C_RestrictedActions",
+  "C_XMLUtil",
 
   -- Unit and player info
   "UnitName",
