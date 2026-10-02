@@ -27,6 +27,14 @@ function Templates.Apply(frame, template, createFrame)
     frame.Instructions = frame:CreateFontString(nil, "ARTWORK")
     frame.clearButton = createFrame("Button", nil, frame, nil)
     frame.searchIcon = frame:CreateTexture(nil, "OVERLAY")
+  elseif template == "UIPanelButtonTemplate" then
+    -- Button widget methods only; the template's child keys are not faked.
+    function frame:LockHighlight()
+      self.highlightLocked = true
+    end
+    function frame:UnlockHighlight()
+      self.highlightLocked = false
+    end
   end
 end
 

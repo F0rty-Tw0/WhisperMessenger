@@ -68,6 +68,10 @@ function ButtonSelector.Create(factory, parent, options)
   -- the `colors` option and applyTheme's colour table are no longer needed.
   local function paintButton(entry, isHovered)
     entry._selected = entry._key == selected
+    if entry._native then
+      SelectorSkin.PaintNative(entry, entry._selected)
+      return
+    end
     SelectorSkin.Paint(entry, entry._selected, isHovered)
   end
 
@@ -132,9 +136,13 @@ function ButtonSelector.Create(factory, parent, options)
   end
 
   for _, opt in ipairs(optionsList) do
-    local btn = factory.CreateFrame("Button", nil, row)
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(btn)
+    local btn = SelectorSkin.CreateNative(factory, row)
+    if not btn then
+      btn = factory.CreateFrame("Button", nil, row)
+      local bg = btn:CreateTexture(nil, "BACKGROUND")
+      bg:SetAllPoints(btn)
+      btn.bg = bg
+    end
     local btnLabel = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
     btnLabel:SetPoint("CENTER", btn, "CENTER", 0, 0)
     btnLabel:SetText(opt.label)
@@ -142,11 +150,12 @@ function ButtonSelector.Create(factory, parent, options)
     btn._key = opt.key
     btn._selected = false
     btn._hovered = false
-    btn.bg = bg
     btn.label = btnLabel
     btn._tooltipTitle = opt.label
     btn._tooltipText = opt.tooltip
-    SelectorSkin.Attach(btn)
+    if not btn._native then
+      SelectorSkin.Attach(btn)
+    end
 
     applyAvailability(btn, opt)
 
