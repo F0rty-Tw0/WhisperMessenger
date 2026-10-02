@@ -6,10 +6,13 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local HoverFade = ns.UIHelpersHoverFade or require("WhisperMessenger.UI.Helpers.HoverFade")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
 -- Send button paint: the bundled paper-plane glyph tinted with the accent
 -- (no border, no fill), a faint neutral circle fading in on hover and a
--- slightly brighter glyph. Returns paint(disabled, hovered).
+-- slightly brighter glyph. The Native WoW HUD swaps the circle for the game's
+-- mouse-over glow. Returns paint(disabled, hovered).
 local SendButtonStyle = {}
 
 local ICON_SIZE = 18
@@ -21,13 +24,28 @@ local HOVER_BRIGHTEN = 0.25
 local HOVER_CIRCLE_SIZE = 26
 local HOVER_CIRCLE_TEXTURE = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
-function SendButtonStyle.Create(button)
+-- Returns setHover(shown, colors).
+local function createHover(button)
+  if Hud.IsOn() then
+    local glow = NativeArt.CreateIconGlow(button)
+    return function(shown)
+      glow:SetShown(shown == true)
+    end
+  end
   local circle = button:CreateTexture(nil, "BACKGROUND", nil, 1)
   circle:SetSize(HOVER_CIRCLE_SIZE, HOVER_CIRCLE_SIZE)
   circle:SetPoint("CENTER", button, "CENTER", 0, 0)
   circle:SetTexture(HOVER_CIRCLE_TEXTURE)
   circle:Hide()
   local circleFade = HoverFade.Attach(circle)
+  return function(shown, colors)
+    circleFade.paintVertex(colors.bg_contact_hover)
+    circleFade.set(shown)
+  end
+end
+
+function SendButtonStyle.Create(button)
+  local setHover = createHover(button)
 
   local icon = button:CreateTexture(nil, "ARTWORK")
   icon:SetSize(ICON_SIZE, ICON_SIZE)
@@ -48,8 +66,7 @@ function SendButtonStyle.Create(button)
       glyph = hoverGlyph
     end
     UIHelpers.applyVertexColor(icon, glyph)
-    circleFade.paintVertex(colors.bg_contact_hover)
-    circleFade.set(hovered and not disabled)
+    setHover(hovered and not disabled, colors)
   end
 end
 
