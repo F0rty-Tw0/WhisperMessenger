@@ -30,10 +30,7 @@ end
 
 -- Themed flat hover and label. Returns the label.
 local function addModernArt(row, picker)
-  local highlight = row:CreateTexture(nil, "BACKGROUND")
-  highlight:SetAllPoints(row)
-  PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
-  highlight:Hide()
+  local highlight = PickerPopup.CreateHoverFill(row)
   row._highlight = highlight
 
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
@@ -77,7 +74,7 @@ function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSel
   -- Rows match the panel, which follows the HUD style at creation.
   local picker = { frame = frame, rows = {}, enabled = true, native = Hud.IsOn() }
   -- A tooltip-border (HUD) panel shifts its rows clear of the border.
-  local padding = PADDING + (frame._nativeInset or 0)
+  local padding = PADDING + PickerPopup.BorderInset(frame)
 
   -- Returns the number of replies listed.
   local function rebuild()
@@ -134,7 +131,7 @@ function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSel
     if self.native then
       return
     end
-    local highlightColor = PickerStyles.HighlightColor(0.35)
+    local highlightColor = PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA)
     for _, row in ipairs(self.rows) do
       PickerStyles.ApplyColor(row._highlight, highlightColor)
       UIHelpers.setTextColor(row.label, Theme.COLORS.text_primary)

@@ -72,7 +72,7 @@ local function layoutButtons(frame, actions)
     end
   end
   -- A tooltip-border (HUD) menu shifts its rows clear of the border.
-  local pad = PAD + (frame._nativeInset or 0)
+  local pad = PAD + PickerPopup.BorderInset(frame)
   for index = 1, #actions do
     local button = frame._buttons[index]
     button:ClearAllPoints()

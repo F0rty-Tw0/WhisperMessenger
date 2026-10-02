@@ -149,6 +149,21 @@ function PickerPopup.CreatePanel(factory, parent, name, strata)
   return frame
 end
 
+-- Content offset that clears a HUD panel's tooltip border (0 otherwise).
+function PickerPopup.BorderInset(frame)
+  return frame._nativeInset or 0
+end
+
+-- Modern hover: a hidden themed fill behind `button`; the caller shows it
+-- on hover. (Under the Native WoW HUD, entries use NativeArt.AddHighlight.)
+function PickerPopup.CreateHoverFill(button)
+  local fill = button:CreateTexture(nil, "BACKGROUND")
+  fill:SetAllPoints(button)
+  PickerStyles.ApplyColor(fill, PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA))
+  fill:Hide()
+  return fill
+end
+
 -- Dropdown-menu style entry: game font, Blizzard hover art.
 local function createNativeTextButton(factory, parent, key, onClick)
   local button = factory.CreateFrame("Button", nil, parent)
@@ -167,11 +182,7 @@ function PickerPopup.CreateTextButton(factory, parent, key, onClick)
     return createNativeTextButton(factory, parent, key, onClick)
   end
   local button = factory.CreateFrame("Button", nil, parent)
-  local highlight = button:CreateTexture(nil, "BACKGROUND")
-  highlight:SetAllPoints(button)
-  PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
-  highlight:Hide()
-  button._highlight = highlight
+  button._highlight = PickerPopup.CreateHoverFill(button)
 
   local label = button:CreateFontString(nil, "OVERLAY")
   label:SetPoint("CENTER", button, "CENTER", 0, 0)
@@ -179,7 +190,7 @@ function PickerPopup.CreateTextButton(factory, parent, key, onClick)
   label:SetText(Localization.Text(key))
   UIHelpers.setTextColor(label, Theme.COLORS.option_button_text or Theme.COLORS.text_primary)
   button:SetScript("OnEnter", function(self)
-    PickerStyles.ApplyColor(self._highlight, PickerStyles.HighlightColor(0.35))
+    PickerStyles.ApplyColor(self._highlight, PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA))
     self._highlight:Show()
   end)
   button:SetScript("OnLeave", function(self)

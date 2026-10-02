@@ -12,6 +12,9 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local EmojiPicker = {}
 
+-- Gap between the panel edge and the emoji grid, on every side.
+local PADDING = 6
+
 function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local popover = Popover.Create(factory, parent, anchorFrame)
   local frame = popover.frame
@@ -26,9 +29,9 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local iconSize = layout.iconSize
   local buttonSize = layout.buttonSize
   -- A tooltip-border (HUD) panel shifts its cells clear of the border.
-  local inset = frame._nativeInset or 0
-  local pad = 6 + inset
-  frame:SetSize(layout.frameWidth + inset * 2, buttonSize * layout.rows + 12 + inset * 2)
+  local inset = PickerPopup.BorderInset(frame)
+  local pad = PADDING + inset
+  frame:SetSize(layout.frameWidth + inset * 2, buttonSize * layout.rows + PADDING * 2 + inset * 2)
 
   for index, key in ipairs(Assets.KEYS) do
     local slot = index - 1
@@ -38,14 +41,7 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
     button:SetSize(buttonSize, buttonSize)
     button:SetPoint("TOPLEFT", frame, "TOPLEFT", pad + column * buttonSize, -pad - row * buttonSize)
 
-    local highlight
-    if Hud.IsOn() then
-      highlight = NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT)
-    else
-      highlight = button:CreateTexture(nil, "BACKGROUND")
-      highlight:SetAllPoints(button)
-      PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
-    end
+    local highlight = Hud.IsOn() and NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT) or PickerPopup.CreateHoverFill(button)
     highlight:Hide()
     button._highlight = highlight
 
@@ -106,7 +102,7 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
 
   function picker:refreshTheme()
     popover.refreshTheme()
-    local highlightColor = PickerStyles.HighlightColor(0.35)
+    local highlightColor = PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA)
     for _, button in ipairs(self.buttons) do
       PickerStyles.ApplyColor(button._highlight, highlightColor)
     end

@@ -18,6 +18,8 @@ end
 -- Grey of secondary tooltip lines (hints, keybindings).
 PickerStyles.HINT_GREY = 0.6
 local HINT_GREY = PickerStyles.HINT_GREY
+-- Emphasis passed to HighlightColor for popup hovers and marks.
+PickerStyles.HOVER_ALPHA = 0.35
 -- One row of a popup list or settings list (quick replies, delivery actions,
 -- the reaction picker's bottom row).
 PickerStyles.ROW_HEIGHT = 24

@@ -21,7 +21,7 @@ local pickerFrame
 local function applyPickerLayout(frame)
   local layout = Assets.GetPickerLayout()
   -- A tooltip-border (HUD) picker shifts its contents clear of the border.
-  local inset = frame._nativeInset or 0
+  local inset = PickerPopup.BorderInset(frame)
   local padLeft, padTop = PAD_LEFT + inset, PAD_TOP + inset
   local copyOffsetY = layout.copyOffsetY - inset
   frame:SetSize(layout.frameWidth + inset * 2, layout.frameHeight + inset * 2)
@@ -75,7 +75,7 @@ local function createPicker(factory)
       NativeArt.Set(selectedMark, PickerPopup.ICON_CHECKED)
       NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT)
     else
-      PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
+      PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA))
     end
     selectedMark:Hide()
     button._selectedMark = selectedMark
@@ -89,7 +89,7 @@ local function createPicker(factory)
 
     button:SetScript("OnEnter", function(self)
       if not self._selected and not native then
-        PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
+        PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA))
         selectedMark:Show()
       end
       PickerStyles.ShowTooltip(self, key)
