@@ -6,6 +6,7 @@ end
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
+local RowTooltip = ns.ContactsListRowTooltip or require("WhisperMessenger.UI.ContactsList.RowTooltip")
 local isPointerInsideRowFrames = HoverPointer.isPointerInsideRowFrames
 local effectiveActionHoverCount = HoverPointer.effectiveActionHoverCount
 
@@ -144,9 +145,14 @@ function RowScripts.bindHover(row)
         if AB then
           AB.showActions(row)
         end
+        -- Rail rows carry no text, so hovering one names the contact.
+        if row._wmCompact then
+          RowTooltip.Show(row)
+        end
       end)
 
       row:SetScript("OnLeave", function()
+        RowTooltip.Hide(row)
         row._wmRowHover = false
         RowHoverOverlay.paint(row)
         deferHideActions(row)
