@@ -54,6 +54,7 @@ function ContactsRuntime.Create(factory, options)
     tabToggle = TabToggle.Create(factory, options.contactsPane, {
       initialMode = currentTabMode,
       nativeChrome = options.nativeChrome == true,
+      windowFrame = options.windowFrame,
       onModeChanged = function(mode)
         if mode == currentTabMode then
           return

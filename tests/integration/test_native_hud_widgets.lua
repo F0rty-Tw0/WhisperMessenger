@@ -5,15 +5,6 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 
-local function bottomAnchorY(scrollFrame)
-  for i = #(scrollFrame.points or {}), 1, -1 do
-    if scrollFrame.points[i][1] == "BOTTOMRIGHT" then
-      return scrollFrame.points[i][5]
-    end
-  end
-  return nil
-end
-
 local function buildWindow(nativeChrome)
   Hud.Configure(nativeChrome and "classic" or "off")
   local factory = FakeUI.NewFactory()
@@ -51,9 +42,9 @@ return function()
     assert(emptyStateButton(window).template == "UIPanelButtonTemplate", "HUD window: Start New Whisper button")
     assert(window.resetWindowButton.template == "UIPanelButtonTemplate", "HUD window: Reset Window button")
     assert(window.clearAllChatsButton.template == "UIPanelButtonTemplate", "HUD window: Clear All Chats button")
-    assert(window.tabToggle.frame.points[1][2] == window.contactsPane, "HUD window: tabs inside the contacts pane")
-    local listBottom = bottomAnchorY(window.contacts.scrollFrame)
-    assert(listBottom == TabToggle.NATIVE_HEIGHT, "HUD window: list stops above the tabs, got " .. tostring(listBottom))
+    local tabPoint = window.tabToggle.frame.points[1]
+    assert(tabPoint[2] == window.frame and tabPoint[3] == "BOTTOMLEFT", "HUD window: tabs hang below the window")
+    assert(select(4, window.frame:GetClampRectInsets()) == -(TabToggle.NATIVE_HEIGHT - 2), "HUD window: clamp keeps the tabs on screen")
     window.refreshTheme()
     window.refreshLanguage()
   end

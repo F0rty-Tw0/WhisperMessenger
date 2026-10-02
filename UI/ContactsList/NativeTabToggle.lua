@@ -3,35 +3,55 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
 
--- Native WoW HUD Whispers/Groups tabs: Blizzard PanelTabButtonTemplate tabs in
--- a strip at the bottom of the contacts pane (inside the window, so they are
--- never clipped or pushed off-screen). Same interface as TabToggle.Create;
--- returns nil when the template is unavailable so the caller builds the modern
--- bar instead.
+-- Native WoW HUD Whispers/Groups/Requests tabs: Blizzard PanelTabButtonTemplate
+-- tabs hanging below the window's bottom-left edge, each sized to its label,
+-- like the Character or Professions frame tabs. The strip is parented to the
+-- contacts pane (so it hides with it) but anchored to the window frame. Same
+-- interface as TabToggle.Create; returns nil when the template is unavailable
+-- so the caller builds the modern bar instead.
 local NativeTabToggle = {}
 
 local TAB_TEMPLATE = "PanelTabButtonTemplate"
 -- Global names: some clients' PanelTemplates_* look up _G[name .. "Left"].
 local TAB_NAMES = { "WhisperMessengerTab1", "WhisperMessengerTab2", "WhisperMessengerTab3" }
--- Tab art height; the contacts list reserves exactly this much.
 local TAB_HEIGHT = 32
 NativeTabToggle.HEIGHT = TAB_HEIGHT
+-- Blizzard's own tab anchors (CharacterFrameTab1/2): 11px in from the
+-- window's bottom-left, tab tops overlap the bottom border by 2px, 1px apart.
+local WINDOW_LEFT_OFFSET = 11
+local BORDER_OVERLAP = 2
+local TAB_SPACING = 1
+-- How far the tabs reach below the window; the screen clamp must include it.
+local HANG_HEIGHT = TAB_HEIGHT - BORDER_OVERLAP
 local BADGE_SIZE = 14
 local BADGE_INSET = 8
--- The tab template raises its own level (+4 on retail); stay clearly above it.
-local LINE_LEVEL_OFFSET = 10
+-- Extra width beyond the label. Retail's PanelTemplates_TabResize adds 20px
+-- of sides on top, so each side keeps (20 + 28) / 2 = 24px: room for the badge
+-- at the right inset (8 + 14) without touching the centred label.
+local TAB_PADDING = 28
+-- Width without PanelTemplates_TabResize: label + retail sides + padding.
+local FALLBACK_SIDES = 20
 
 -- Blizzard helpers vary per flavor; never let them error our UI.
 local function callPanelTemplates(fnName, ...)
   local fn = _G[fnName]
   if type(fn) == "function" then
     pcall(fn, ...)
+    return true
+  end
+  return false
+end
+
+-- The template's OnShow re-runs TabResize with the parent's tabPadding.
+local function sizeTab(tab)
+  if not callPanelTemplates("PanelTemplates_TabResize", tab.btn, TAB_PADDING) then
+    local textWidth = tab.btn.GetTextWidth and tab.btn:GetTextWidth() or 0
+    tab.btn:SetWidth(textWidth + FALLBACK_SIDES + TAB_PADDING)
   end
 end
 
@@ -44,50 +64,49 @@ local function createTab(factory, frame, index, textKey, mode)
   btn:SetText(Localization.Text(textKey))
   local badge = Badge.Create(factory, btn, { size = BADGE_SIZE, outline = true, dim = mode == "requests" })
   badge.frame:SetPoint("RIGHT", btn, "RIGHT", -BADGE_INSET, 0)
-  return { btn = btn, badge = badge, textKey = textKey, mode = mode, unread = 0 }
+  local tab = { btn = btn, badge = badge, textKey = textKey, mode = mode, unread = 0 }
+  sizeTab(tab)
+  return tab
 end
 
--- Width a tab needs on one row. The label is centred and the badge sits at
--- the right inset, so reserve badge room on both sides; the badge is always
--- counted so the wrap decision never flips with unread counts.
-local function naturalWidth(tab)
-  local textWidth = tab.btn.GetTextWidth and tab.btn:GetTextWidth() or 0
-  return textWidth + 2 * (BADGE_INSET + BADGE_SIZE)
+-- Visible tabs in a row from the strip's left edge, Blizzard spacing.
+local function chainTabs(frame, visible)
+  local previous = nil
+  for _, tab in ipairs(visible) do
+    tab.btn:ClearAllPoints()
+    if previous then
+      tab.btn:SetPoint("TOPLEFT", previous.btn, "TOPRIGHT", TAB_SPACING, 0)
+    else
+      tab.btn:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+    end
+    previous = tab
+  end
 end
 
+-- Extends the window's screen clamp down over the hanging tabs while they
+-- show (ContactsRuntime always calls setShown after Create); the window's
+-- own insets are kept and restored when they hide.
+local function bindClamp(window)
+  if not (window.SetClampRectInsets and window.GetClampRectInsets) then
+    return function(_shown) end
+  end
+  local left, right, top, bottom = window:GetClampRectInsets()
+  return function(shown)
+    window:SetClampRectInsets(left, right, top, shown and bottom - HANG_HEIGHT or bottom)
+  end
+end
+
+-- options.windowFrame: the frame the tabs hang from (default: parent).
 function NativeTabToggle.Create(factory, parent, options)
   options = options or {}
+  local window = options.windowFrame or parent
 
   local frame = factory.CreateFrame("Frame", nil, parent)
+  -- Read by the template's OnShow / DISPLAY_SIZE_CHANGED resize.
+  frame.tabPadding = TAB_PADDING
   frame:SetHeight(TAB_HEIGHT)
-  frame:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
-  frame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-
-  -- 1px lines: one along the strip top (separates it from the list) and one
-  -- on each seam between tabs. Drawn on an overlay frame because the tab
-  -- buttons render above any texture on the strip itself.
-  local lineLayer = factory.CreateFrame("Frame", nil, frame)
-  lineLayer:SetAllPoints(frame)
-  lineLayer:SetFrameLevel(frame:GetFrameLevel() + LINE_LEVEL_OFFSET)
-  local hairline = UIHelpers.hairlineThickness(frame, 1)
-
-  local topLine = lineLayer:CreateTexture(nil, "OVERLAY")
-  topLine:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
-  topLine:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
-  topLine:SetHeight(hairline)
-  UIHelpers.snapToPixelGrid(topLine)
-
-  local seams = {}
-  local function ensureSeam(index)
-    if seams[index] == nil then
-      local seam = lineLayer:CreateTexture(nil, "OVERLAY")
-      seam:SetWidth(hairline)
-      UIHelpers.snapToPixelGrid(seam)
-      seams[index] = seam
-    end
-    return seams[index]
-  end
-  ensureSeam(1)
+  frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
+  frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
 
   local whispers = createTab(factory, frame, 1, "Whispers", "whispers")
   local groups = whispers and createTab(factory, frame, 2, "Groups", "groups")
@@ -99,45 +118,7 @@ function NativeTabToggle.Create(factory, parent, options)
   local tabs = { whispers, groups, requests }
   local toggle = { frame = frame }
 
-  -- Two tabs share one seam at the strip centre; three tabs put a seam on
-  -- the left edge of the second and third tab (seam 2 is created the first
-  -- time three tabs show). Wrapped, only the top row has a seam.
-  local function anchorSeams(wrapped, visible)
-    local first = seams[1]
-    first:ClearAllPoints()
-    if wrapped then
-      first:SetPoint("TOP", visible[2].btn, "TOPLEFT", 0, 0)
-      first:SetPoint("BOTTOM", visible[2].btn, "BOTTOMLEFT", 0, 0)
-      if seams[2] then
-        seams[2]:Hide()
-      end
-      return
-    end
-    if #visible == 3 then
-      first:SetPoint("TOP", visible[2].btn, "TOPLEFT", 0, 0)
-      first:SetPoint("BOTTOM", visible[2].btn, "BOTTOMLEFT", 0, 0)
-      local second = ensureSeam(2)
-      second:ClearAllPoints()
-      second:SetPoint("TOP", visible[3].btn, "TOPLEFT", 0, 0)
-      second:SetPoint("BOTTOM", visible[3].btn, "BOTTOMLEFT", 0, 0)
-      second:Show()
-      return
-    end
-    first:SetPoint("TOP", frame, "TOP", 0, 0)
-    first:SetPoint("BOTTOM", frame, "BOTTOM", 0, 0)
-    if seams[2] then
-      seams[2]:Hide()
-    end
-  end
-
-  -- Lines use the vertical contacts divider's colour (same token + fallback),
-  -- read at paint time so theme refreshes repaint them.
   local function paintTabs(currentMode, visible)
-    local lineColor = Theme.COLORS.contacts_divider or Theme.COLORS.divider
-    UIHelpers.applyColorTexture(topLine, lineColor)
-    for _, seam in ipairs(seams) do
-      UIHelpers.applyColorTexture(seam, lineColor)
-    end
     for _, tab in ipairs(tabs) do
       tab.badge.setCount(tab.unread)
       tab.badge.paint()
@@ -147,20 +128,25 @@ function NativeTabToggle.Create(factory, parent, options)
     end
   end
 
-  -- Two-point anchors give each tab an explicit width, so the template's
-  -- own PanelTemplates_TabResize (OnShow) can't shrink it to 0.
   TabLayout.BindController(toggle, frame, { whispers = whispers, groups = groups, requests = requests }, {
     initialMode = options.initialMode,
     onModeChanged = options.onModeChanged,
-    tabHeight = TAB_HEIGHT,
-    topInset = 0,
-    naturalWidth = naturalWidth,
     paint = paintTabs,
     relabel = function(tab)
       tab.btn:SetText(Localization.Text(tab.textKey))
+      sizeTab(tab)
     end,
-    afterAnchor = anchorSeams,
+    anchor = function(visible)
+      chainTabs(frame, visible)
+    end,
   })
+
+  local applyClamp = bindClamp(window)
+  local setShown = toggle.setShown
+  toggle.setShown = function(shown)
+    setShown(shown)
+    applyClamp(shown)
+  end
   return toggle
 end
 

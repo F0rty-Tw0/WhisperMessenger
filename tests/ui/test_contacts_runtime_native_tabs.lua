@@ -14,18 +14,20 @@ local function makeRuntime(nativeChrome)
     contactsPane = pane,
     contactsView = contactsView,
     nativeChrome = nativeChrome,
+    windowFrame = window,
   })
-  return runtime, pane
+  return runtime, pane, window
 end
 
 return function()
-  -- test_hud_runtime_builds_native_tabs_inside_pane
+  -- test_hud_runtime_hangs_native_tabs_below_the_window
   do
-    local runtime, pane = makeRuntime(true)
+    local runtime, pane, window = makeRuntime(true)
     local tab = FindUI.ofType(runtime.tabToggle.frame, "Button")[1]
     assert(tab.template == "PanelTabButtonTemplate", "HUD runtime: native tabs")
-    assert(runtime.tabToggle.frame.points[1][2] == pane, "HUD runtime: tabs anchored inside the contacts pane")
-    assert(runtime.getContactsBottomInset() == TabToggle.NATIVE_HEIGHT, "HUD runtime: list stops above the tabs")
+    assert(runtime.tabToggle.frame:GetParent() == pane, "HUD runtime: tabs hide with the contacts pane")
+    assert(runtime.tabToggle.frame.points[1][2] == window, "HUD runtime: tabs anchored to the window")
+    assert(runtime.getContactsBottomInset() == 0, "HUD runtime: list keeps its full height")
   end
 
   -- test_modern_runtime_reserves_tab_bar

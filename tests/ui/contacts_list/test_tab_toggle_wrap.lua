@@ -4,13 +4,15 @@ local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
 -- On a narrow contacts pane the three footer tabs wrap: Requests moves to its
--- own row and the footer doubles in height. Both skins.
+-- own row and the footer doubles in height. Modern skin only: the Native WoW
+-- HUD tabs hang below the window at natural width and never wrap
+-- (tests/ui/test_contacts_tab_toggle_native.lua).
 
-local function createToggle(nativeChrome, width)
+local function createToggle(width)
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", nil, nil)
   parent:SetSize(width, 500)
-  local toggle = TabToggle.Create(factory, parent, { initialMode = "whispers", nativeChrome = nativeChrome })
+  local toggle = TabToggle.Create(factory, parent, { initialMode = "whispers" })
   toggle.frame:SetSize(width, 24)
   toggle.setModes({ "whispers", "groups", "requests" })
   return toggle
@@ -24,12 +26,12 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  for _, nativeChrome in ipairs({ false, true }) do
-    local skin = nativeChrome and "native" or "modern"
-    local rowHeight = nativeChrome and TabToggle.NATIVE_HEIGHT or TabToggle.HEIGHT
+  do
+    local skin = "modern"
+    local rowHeight = TabToggle.HEIGHT
 
     -- test_narrow_footer_doubles_its_height
-    local toggle = createToggle(nativeChrome, 210)
+    local toggle = createToggle(210)
     assert(toggle.frame.height == 2 * rowHeight, skin .. ": wrapped footer is two rows, got " .. tostring(toggle.frame.height))
     local reserved = toggle.reservedHeightFor(toggle.frame:GetWidth())
     assert(reserved == 2 * rowHeight, skin .. ": list reserves both rows, got " .. tostring(reserved))

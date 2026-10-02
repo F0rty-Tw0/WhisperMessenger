@@ -535,6 +535,15 @@ local function makeCreateFrame()
       self.clamped = value
     end
 
+    function frame:SetClampRectInsets(left, right, top, bottom)
+      self.clampRectInsets = { left, right, top, bottom }
+    end
+
+    function frame:GetClampRectInsets()
+      local insets = self.clampRectInsets or { 0, 0, 0, 0 }
+      return insets[1], insets[2], insets[3], insets[4]
+    end
+
     function frame:SetNormalFontObject(value)
       self.normalFontObject = value
     end

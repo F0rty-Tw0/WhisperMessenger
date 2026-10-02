@@ -18,7 +18,7 @@ local TAB_HEIGHT = 24
 -- Exported so layout code can reserve exactly this much space under the
 -- contacts list while the toggle is shown.
 TabToggle.HEIGHT = TAB_HEIGHT
--- Native WoW HUD strip height (Blizzard tab art).
+-- Native WoW HUD tab height (Blizzard tab art, hangs below the window).
 TabToggle.NATIVE_HEIGHT = NativeTabToggle.HEIGHT
 local UNDERLINE_HEIGHT = 2
 -- Unread badge beside the label; SetSize keeps its digits readable.
@@ -107,7 +107,8 @@ end
 --   parent        : parent frame
 --   initialMode   : "whispers" | "groups"  (default "whispers")
 --   onModeChanged : function(mode)
---   nativeChrome  : Native WoW HUD -> Blizzard tabs at the pane bottom
+--   nativeChrome  : Native WoW HUD -> Blizzard tabs hanging below the window
+--   windowFrame   : the window those native tabs hang from
 --
 -- Returns:
 --   { frame, reservedHeightFor, setMode, getMode, setModes, setShown,

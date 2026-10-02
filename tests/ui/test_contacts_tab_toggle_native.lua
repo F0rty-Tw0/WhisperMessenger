@@ -2,12 +2,6 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local TemplateFactory = require("tests.helpers.template_factory")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
-local Theme = require("WhisperMessenger.UI.Theme")
-local UIHelpers = require("WhisperMessenger.UI.Helpers")
-
-local function sameColor(a, b)
-  return a ~= nil and b ~= nil and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
-end
 
 local function hasText(root, text)
   return FindUI.find(root, function(node)
@@ -22,6 +16,7 @@ local function createToggle(factory, nativeChrome, onModeChanged)
   local toggle = TabToggle.Create(factory, pane, {
     initialMode = "whispers",
     nativeChrome = nativeChrome,
+    windowFrame = window,
     onModeChanged = onModeChanged,
   })
   return toggle, window, pane
@@ -29,20 +24,6 @@ end
 
 local function tabs(toggle)
   return FindUI.ofType(toggle.frame, "Button")
-end
-
--- Divider lines live on an overlay frame drawn above the tab art.
-local function overlay(toggle)
-  return FindUI.ofType(toggle.frame, "Frame")[1]
-end
-
-local function lines(toggle)
-  return FindUI.ofType(overlay(toggle), "Texture")
-end
-
--- Same token + fallback as the vertical contacts divider (ContactsSection).
-local function dividerColor()
-  return Theme.COLORS.contacts_divider or Theme.COLORS.divider
 end
 
 -- Records PanelTemplates_* calls the native tabs make on the live client.
@@ -78,76 +59,93 @@ return function()
     assert(buttons[1].text == "Whispers" and buttons[2].text == "Groups", "HUD: tab labels via SetText")
   end
 
-  -- test_hud_tabs_sit_inside_the_contacts_pane_and_reserve_space
+  -- test_hud_tabs_hang_below_the_window_bottom_left
   do
+    -- Blizzard's own tabs (CharacterFrameTab1): TOPLEFT to the frame's
+    -- BOTTOMLEFT, 11px in, overlapping the bottom border by 2px.
+    local toggle, window = createToggle(FakeUI.NewFactory(), true)
+    local point = toggle.frame.points[1]
+    assert(point[1] == "TOPLEFT" and point[2] == window and point[3] == "BOTTOMLEFT", "HUD: strip hangs from the window bottom-left")
+    assert(point[4] == 11 and point[5] == 2, "HUD: Blizzard tab offsets (11, 2), got " .. tostring(point[4]) .. ", " .. tostring(point[5]))
+    assert(toggle.frame.height == TabToggle.NATIVE_HEIGHT, "HUD: strip is one tab tall")
+  end
+
+  -- test_hud_tabs_stay_in_the_contacts_pane_hierarchy
+  do
+    -- Parented to the pane so they hide with it (options view), anchored
+    -- to the window so they sit outside it; nothing on the way clips.
     local toggle, _, pane = createToggle(FakeUI.NewFactory(), true)
-    local points = toggle.frame.points
-    assert(points[1][1] == "BOTTOMLEFT" and points[1][2] == pane, "HUD: strip anchored to the pane bottom-left (inside the window)")
-    assert(points[2][1] == "BOTTOMRIGHT" and points[2][2] == pane, "HUD: strip spans the pane width")
-    local reserved = toggle.reservedHeightFor(toggle.frame:GetWidth())
-    assert(reserved == TabToggle.NATIVE_HEIGHT and reserved > 0, "HUD: list reserves the strip height")
-    assert(toggle.frame.height == TabToggle.NATIVE_HEIGHT, "HUD: strip height matches the reserved space")
+    assert(toggle.frame:GetParent() == pane, "HUD: strip parented to the contacts pane")
   end
 
-  -- test_hud_tabs_get_explicit_width_from_anchors
+  -- test_hud_tabs_reserve_no_list_height
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
+    toggle.setModes({ "whispers", "groups", "requests" })
+    assert(toggle.reservedHeightFor(600) == 0, "HUD: hanging tabs leave the list its full height")
+    assert(toggle.reservedHeightFor(150) == 0, "HUD: hanging tabs never wrap into the list")
+  end
+
+  -- test_hud_tabs_chain_left_to_right_at_natural_width
+  do
+    local toggle = createToggle(FakeUI.NewFactory(), true)
+    toggle.setModes({ "whispers", "groups", "requests" })
     local buttons = tabs(toggle)
-    local w1, w2 = buttons[1].points, buttons[2].points
-    assert(#w1 == 2 and w1[1][1] == "TOPLEFT" and w1[2][1] == "BOTTOMRIGHT" and w1[2][3] == "BOTTOM", "HUD: whispers tab fills the left half")
-    assert(#w2 == 2 and w2[1][1] == "TOPLEFT" and w2[1][3] == "TOP" and w2[2][3] == "BOTTOMRIGHT", "HUD: groups tab fills the right half")
+    local p1, p2, p3 = buttons[1].points, buttons[2].points, buttons[3].points
+    assert(#p1 == 1 and p1[1][1] == "TOPLEFT" and p1[1][2] == toggle.frame and p1[1][3] == "TOPLEFT", "HUD: first tab at the strip start")
+    assert(#p2 == 1 and p2[1][1] == "TOPLEFT" and p2[1][2] == buttons[1] and p2[1][3] == "TOPRIGHT", "HUD: second tab follows the first")
+    assert(#p3 == 1 and p3[1][2] == buttons[2] and p3[1][4] == 1, "HUD: Blizzard 1px tab spacing")
+    toggle.setModes({ "whispers", "requests" })
+    assert(buttons[3].points[1][2] == buttons[1], "HUD: a hidden tab leaves no gap")
   end
 
-  -- test_hud_strip_has_top_line_in_fixed_native_colour
+  -- test_hud_tabs_size_to_their_text_with_badge_room
   do
+    local calls = stubPanelTemplates()
     local toggle = createToggle(FakeUI.NewFactory(), true)
-    assert(#FindUI.ofType(toggle.frame, "Texture") == 0, "HUD: no custom paint on the strip itself")
-    local textures = lines(toggle)
-    assert(#textures == 2, "HUD: top line + seam line only, got " .. #textures)
-    local line = textures[1]
-    local p1, p2 = line.points[1], line.points[2]
-    assert(p1[1] == "TOPLEFT" and p1[2] == toggle.frame and p2[1] == "TOPRIGHT" and p2[2] == toggle.frame, "HUD: top line spans the strip top")
-    assert(line.height == UIHelpers.hairlineThickness(toggle.frame, 1), "HUD: top line is one physical pixel")
-    assert(line.snapToPixelGrid == true, "HUD: top line snapped to the pixel grid")
-    assert(sameColor(line.color, dividerColor()), "HUD: top line matches the contacts divider")
+    local padding = toggle.frame.tabPadding
+    assert(type(padding) == "number" and padding > 0, "HUD: strip carries tabPadding for the template's own OnShow resize")
+    assert(#calls.resized >= 3, "HUD: every tab sized by PanelTemplates_TabResize")
+    for _, call in ipairs(calls.resized) do
+      assert(call.padding == padding, "HUD: TabResize gets the badge-room padding")
+    end
+    calls.resized = {}
+    toggle.setLanguage()
+    assert(#calls.resized >= 3, "HUD: a language switch re-sizes the tabs")
+    clearPanelTemplates()
   end
 
-  -- test_hud_seam_line_between_tabs
+  -- test_hud_tab_width_fallback_without_tab_resize
   do
-    local toggle = createToggle(FakeUI.NewFactory(), true)
-    local seam = lines(toggle)[2]
-    local p1, p2 = seam.points[1], seam.points[2]
-    assert(p1[1] == "TOP" and p1[2] == toggle.frame and p1[3] == "TOP", "HUD: seam starts at the strip top centre (the tab seam)")
-    assert(p2[1] == "BOTTOM" and p2[2] == toggle.frame and p2[3] == "BOTTOM", "HUD: seam spans to the strip bottom centre")
-    assert(seam.width == UIHelpers.hairlineThickness(toggle.frame, 1), "HUD: seam is one physical pixel wide")
-    assert(seam.snapToPixelGrid == true, "HUD: seam snapped to the pixel grid")
-    assert(sameColor(seam.color, dividerColor()), "HUD: seam matches the contacts divider")
+    local buttons = tabs(createToggle(FakeUI.NewFactory(), true))
+    assert(buttons[1].width > buttons[1]:GetTextWidth(), "HUD: tab wider than its label without PanelTemplates_TabResize")
   end
 
-  -- test_hud_lines_draw_above_the_tab_art
+  -- test_hud_tabs_draw_no_custom_lines
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
-    local layer = overlay(toggle)
-    assert(layer.allPoints == toggle.frame, "HUD: overlay covers the strip")
-    for _, tab in ipairs(tabs(toggle)) do
-      assert(layer:GetFrameLevel() > tab:GetFrameLevel(), "HUD: lines sit above the Blizzard tab art")
+    assert(#FindUI.ofType(toggle.frame, "Texture") == 0, "HUD: no custom paint on the strip")
+    for _, child in ipairs(FindUI.ofType(toggle.frame, "Frame")) do
+      assert(child:GetParent() ~= toggle.frame, "HUD: no overlay line layer, Blizzard tabs have no seams")
     end
   end
 
-  -- test_hud_lines_follow_divider_token_on_theme_refresh
+  -- test_hud_clamp_counts_the_hanging_tabs
   do
-    -- Every shipped preset shares one divider colour, so swap the token to
-    -- prove the lines re-read it on repaint (window.refreshTheme -> setMode).
-    local toggle = createToggle(FakeUI.NewFactory(), true)
-    local original = Theme.COLORS.contacts_divider
-    local changed = { 0.2, 0.4, 0.6, 0.5 }
-    Theme.COLORS.contacts_divider = changed
-    toggle.setMode(toggle.getMode())
-    local painted = lines(toggle)
-    Theme.COLORS.contacts_divider = original
-    for _, line in ipairs(painted) do
-      assert(sameColor(line.color, changed), "HUD: lines repaint with the current contacts divider colour")
-    end
+    local factory = FakeUI.NewFactory()
+    local window = factory.CreateFrame("Frame", nil, nil)
+    window:SetClampRectInsets(-5, 5, 7, 3)
+    local pane = factory.CreateFrame("Frame", nil, window)
+    local toggle = TabToggle.Create(factory, pane, { nativeChrome = true, windowFrame = window })
+    toggle.setShown(true)
+    local hang = TabToggle.NATIVE_HEIGHT - 2
+    local l, r, t, b = window:GetClampRectInsets()
+    assert(l == -5 and r == 5 and t == 7, "HUD: other clamp insets kept")
+    assert(b == 3 - hang, "HUD: bottom clamp extends by the visible tab height, got " .. tostring(b))
+    toggle.setShown(false)
+    assert(select(4, window:GetClampRectInsets()) == 3, "HUD: hidden tabs restore the window's own clamp")
+    toggle.setShown(true)
+    assert(select(4, window:GetClampRectInsets()) == 3 - hang, "HUD: shown again re-extends the clamp")
   end
 
   -- test_hud_selection_uses_panel_templates
@@ -185,7 +183,6 @@ return function()
     local groupsBadge = FindUI.ofType(tabs(toggle)[2], "Frame")[1]
     assert(whispersBadge and whispersBadge.shown ~= false and hasText(whispersBadge, "3"), "HUD: whispers badge shows 3")
     assert(groupsBadge and groupsBadge.shown == false, "HUD: groups badge hidden at 0")
-    assert(#calls.resized == 0, "HUD: width comes from anchors, never from TabResize")
     clearPanelTemplates()
   end
 

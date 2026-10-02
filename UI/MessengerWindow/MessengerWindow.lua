@@ -165,6 +165,7 @@ function MessengerWindow.Create(factory, options)
   })
   contactsRuntime = ContactsRuntime.Create(factory, {
     contactsPane = contactsPane,
+    windowFrame = frame,
     nativeChrome = layout.nativeChrome == true,
     contactsView = contactsView,
     initialContacts = options.contacts or {},
