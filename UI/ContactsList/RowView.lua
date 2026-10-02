@@ -11,6 +11,7 @@ local applyColorTexture = UIHelpers.applyColorTexture
 local ActionButtons = ns.ContactsListActionButtons or require("WhisperMessenger.UI.ContactsList.ActionButtons")
 local StatusDot = ns.ContactsListStatusDot or require("WhisperMessenger.UI.ContactsList.StatusDot")
 local RowElements = ns.ContactsListRowElements or require("WhisperMessenger.UI.ContactsList.RowElements")
+local RowTextAnchors = ns.ContactsListRowTextAnchors or require("WhisperMessenger.UI.ContactsList.RowTextAnchors")
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local RowScripts = ns.ContactsListRowScripts or require("WhisperMessenger.UI.ContactsList.RowScripts")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
@@ -69,7 +70,7 @@ end
 
 local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
-  local ROW_HEIGHT = Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  local ROW_HEIGHT = Theme.ContactRowHeight()
   row = row or factory.CreateFrame("Button", nil, parent)
   row.item = item
   -- 3px left inset on each row so contacts sit slightly tighter to the pane's
@@ -203,6 +204,7 @@ local function bindRow(factory, parent, row, index, item, options)
     RowElements.createPreview(row, item, parentWidth)
   end
   RowElements.updatePreview(row, item, parentWidth, options and options.hideMessagePreview, options and options.selectedConversationKey)
+  RowTextAnchors.anchorTextLines(row, ROW_HEIGHT)
 
   -- Location text (create once, update every bind). Group rows have no
   -- single member's zone to show, so it stays hidden for them.

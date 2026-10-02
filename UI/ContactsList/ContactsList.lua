@@ -123,7 +123,7 @@ function ContactsList.Refresh(factory, parent, rows, items, options)
   -- GetParent() works on both real WoW frames and test fakes; the bare
   -- `.parent` field only exists on fakes, which left this path dead in-game.
   local viewport = parent and ((type(parent.GetParent) == "function" and parent:GetParent()) or parent.parent) or nil
-  local rowHeight = Theme.LAYOUT.CONTACT_ROW_HEIGHT
+  local rowHeight = Theme.ContactRowHeight()
   local viewportHeight = sizeValue(viewport, "GetHeight", "height", visibleCount * rowHeight)
   local contentHeight = math.max(viewportHeight, visibleCount * rowHeight)
 

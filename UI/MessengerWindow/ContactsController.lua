@@ -26,6 +26,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   local currentContacts = initialContacts or {}
   local currentSelectedKey = options.initialSelectedKey
   local viewportH = contactsView.viewportHeight or 0
+  -- Base height: rows only grow with the font, so this never undercounts.
   local rowH = Theme.LAYOUT.CONTACT_ROW_HEIGHT
   local visibleCount = math.max(10, math.ceil(viewportH / rowH) + 1)
 
@@ -41,7 +42,6 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
     return currentContacts
   end, {
     onReorder = options.onReorder,
-    rowHeight = rowH,
   })
   -- Built once and mutated in place. refresh() runs on every background status
   -- tick, and a fresh table plus five wrapper closures per call was pure churn.
@@ -132,7 +132,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
   local function checkLoadMore()
     local range = ScrollView.GetRange(contactsView)
     local offset = ScrollView.GetOffset(contactsView)
-    if range > 0 and offset > 0 and offset >= range - Theme.LAYOUT.CONTACT_ROW_HEIGHT then
+    if range > 0 and offset > 0 and offset >= range - Theme.ContactRowHeight() then
       loadMore()
     end
   end

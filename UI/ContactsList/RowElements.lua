@@ -10,6 +10,7 @@ local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local RowTextAnchors = ns.ContactsListRowTextAnchors or require("WhisperMessenger.UI.ContactsList.RowTextAnchors")
 local createCircularIcon = UIHelpers.createCircularIcon
 local applyClassColor = UIHelpers.applyClassColor
 local setTextColor = UIHelpers.setTextColor
@@ -20,7 +21,7 @@ local UNREAD_BADGE_BOTTOM_OFFSET = 12
 
 local RowElements = {}
 
-local NAME_LABEL_LEFT_INSET = 10
+local NAME_LABEL_LEFT_INSET = RowTextAnchors.NAME_LABEL_LEFT_INSET
 local NAME_TO_ICON_GAP = 4
 local NAME_TO_TIME_GAP = 2
 local TIME_LABEL_FALLBACK_WIDTH = 14
@@ -100,7 +101,7 @@ end
 
 function RowElements.createNameLabel(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_name)
-  label:SetPoint("TOPLEFT", row.classIconFrame, "TOPRIGHT", NAME_LABEL_LEFT_INSET, Theme.LAYOUT.CONTACT_NAME_OFFSET_Y)
+  RowTextAnchors.anchorName(label, row.classIconFrame, 0)
   label:SetWidth(nameLabelWidth(row, parentWidth))
   label:SetJustifyH("LEFT")
   label:SetWordWrap(false)
@@ -231,7 +232,7 @@ end
 
 function RowElements.createPreview(row, item, parentWidth)
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.contact_preview)
-  label:SetPoint("BOTTOMLEFT", row.classIconFrame, "BOTTOMRIGHT", NAME_LABEL_LEFT_INSET, Theme.LAYOUT.CONTACT_PREVIEW_OFFSET_Y)
+  RowTextAnchors.anchorPreview(label, row.classIconFrame, 0)
   setTextColor(label, Theme.COLORS.text_secondary)
   label:SetWidth(previewLabelWidth(parentWidth))
   label:SetJustifyH("LEFT")
