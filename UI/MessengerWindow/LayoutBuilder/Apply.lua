@@ -180,11 +180,9 @@ function Apply.Relayout(layout, relayout, theme)
   -- Resize options scroll view.
   local osv = layout.optionsScrollView
   if osv then
-    osv.scrollFrame:SetSize(optionsContentWidth, optionsHeight)
-    osv.scrollBar:SetHeight(optionsHeight)
-    osv.viewportHeight = optionsHeight
-    osv.totalWidth = optionsContentWidth
+    -- Resize keeps the bar's share of the width, so the bar stays on the page.
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
+    Metrics.Resize(osv, optionsContentWidth, optionsHeight)
     Metrics.RefreshMetrics(osv, sizeValue(osv.content, "GetHeight", "height", layout.optionsContentHeight or 420))
   end
 

@@ -11,6 +11,7 @@ local ScrollView = {}
 ScrollView.GetRange = Metrics.GetRange
 ScrollView.GetOffset = Metrics.GetOffset
 ScrollView.RefreshMetrics = Metrics.RefreshMetrics
+ScrollView.Resize = Metrics.Resize
 ScrollView.Sync = Navigation.Sync
 ScrollView.SetVerticalScroll = Navigation.SetVerticalScroll
 ScrollView.ScrollBy = Navigation.ScrollBy

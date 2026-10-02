@@ -292,11 +292,7 @@ function ConversationPane.Relayout(view, width, height)
   local transcriptH = paneHeight - Theme.LAYOUT.HEADER_HEIGHT - bannerOffset
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
-  t.scrollFrame:SetSize(transcriptW, transcriptH)
-  t.content:SetSize(transcriptW, t.content.height or transcriptH)
-  t.scrollBar:SetHeight(transcriptH)
-  t.viewportHeight = transcriptH
-  t.totalWidth = transcriptW
+  ScrollView.Resize(t, transcriptW, transcriptH)
   if t.text and t.text.SetWidth then
     t.text:SetWidth(transcriptW)
   end
