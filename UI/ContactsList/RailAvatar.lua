@@ -13,7 +13,7 @@ local Initials = ns.Initials or require("WhisperMessenger.Util.Initials")
 local RailAvatar = {}
 
 -- Brightness of the class art under the initials.
-local DIMMED_ART = 0.6
+local DIMMED_ART = 0.7
 local INITIALS_COLOR = { 1, 1, 1, 1 }
 -- Dark edge so the white letters read on bright art (priest, rogue).
 local INITIALS_SHADOW = { 0, 0, 0, 1 }
