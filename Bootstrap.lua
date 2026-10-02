@@ -82,10 +82,20 @@ function Bootstrap.Initialize(factory, options)
   if accountState.settings.showGroupChats == nil then
     accountState.settings.showGroupChats = true
   end
+  -- Brand-new installs start on the Modern HUD (Retail and Forever) with
+  -- whispers hidden from default chat. Upgraders keep what they had.
+  local freshInstall = FirstRunTip.IsFreshInstall(accountState)
+  if freshInstall and accountState.settings.hideFromDefaultChat == nil then
+    accountState.settings.hideFromDefaultChat = true
+  end
   -- hudStyle replaces the old nativeChrome flag, which stays saved for
   -- older addon versions after a downgrade.
   if accountState.settings.hudStyle == nil then
-    accountState.settings.hudStyle = accountState.settings.nativeChrome == true and "classic" or "off"
+    if freshInstall then
+      accountState.settings.hudStyle = Hud.DefaultStyle()
+    else
+      accountState.settings.hudStyle = accountState.settings.nativeChrome == true and "classic" or "off"
+    end
   end
   Hud.Configure(accountState.settings.hudStyle)
   FirstRunTip.Announce(accountState)

@@ -7,6 +7,10 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
 local Presets = require("WhisperMessenger.UI.Theme.Presets")
 local BubbleColors = require("WhisperMessenger.UI.Theme.BubbleColors")
+local Flavor = require("tests.helpers.flavor")
+
+-- An account that already booted once, so fresh-install defaults skip it.
+local UPGRADED = { firstRunTipShown = true }
 
 local function sameColor(a, b)
   return a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and a[4] == b[4]
@@ -61,9 +65,58 @@ local function resetLooks()
 end
 
 return function()
+  -- test_fresh_install_on_retail_seeds_modern
+  Flavor.With(true, false, function()
+    local settings = boot({})
+    assert(settings.hudStyle == "retail", "fresh Retail install seeds Modern, got " .. tostring(settings.hudStyle))
+    resetLooks()
+  end)
+
+  -- test_fresh_install_on_forever_seeds_modern
+  Flavor.With(false, true, function()
+    local settings = boot({})
+    assert(settings.hudStyle == "retail", "fresh Forever install seeds Modern, got " .. tostring(settings.hudStyle))
+    resetLooks()
+  end)
+
+  -- test_fresh_install_on_classic_seeds_off
+  Flavor.With(false, false, function()
+    local settings = boot({})
+    assert(settings.hudStyle == "off", "fresh Classic install keeps HUD off, got " .. tostring(settings.hudStyle))
+    resetLooks()
+  end)
+
+  -- test_upgrade_on_retail_keeps_hud_off
+  Flavor.With(true, false, function()
+    local settings = boot({ firstRunTipShown = true })
+    assert(settings.hudStyle == "off", "upgraders keep their look, got " .. tostring(settings.hudStyle))
+    resetLooks()
+  end)
+
+  -- test_fresh_install_hides_whispers_from_default_chat
+  Flavor.With(false, false, function()
+    local settings = boot({})
+    assert(settings.hideFromDefaultChat == true, "fresh install hides whispers from default chat on every flavor")
+    resetLooks()
+  end)
+
+  -- test_upgrade_keeps_whispers_in_default_chat
+  do
+    local settings = boot({ firstRunTipShown = true })
+    assert(settings.hideFromDefaultChat == nil, "upgraders keep whispers in default chat")
+    resetLooks()
+  end
+
+  -- test_fresh_install_keeps_an_explicit_chat_choice
+  do
+    local settings = boot({ hideFromDefaultChat = false })
+    assert(settings.hideFromDefaultChat == false, "a saved choice is never overwritten")
+    resetLooks()
+  end
+
   -- test_seed_classic_from_legacy_native_chrome
   do
-    local settings = boot({ nativeChrome = true })
+    local settings = boot({ nativeChrome = true, firstRunTipShown = true })
     assert(settings.hudStyle == "classic", "nativeChrome=true seeds classic, got " .. tostring(settings.hudStyle))
     assert(settings.nativeChrome == true, "the legacy nativeChrome flag is kept for older versions")
     assert(Hud.Style() == "classic", "boot configures the session HUD from the seeded style")
@@ -72,7 +125,7 @@ return function()
 
   -- test_seed_off_when_native_chrome_is_false
   do
-    local settings = boot({ nativeChrome = false })
+    local settings = boot({ nativeChrome = false, firstRunTipShown = true })
     assert(settings.hudStyle == "off", "nativeChrome=false seeds off, got " .. tostring(settings.hudStyle))
     assert(settings.nativeChrome == false, "nativeChrome=false is kept")
     assert(Hud.IsOn() == false, "off HUD at boot")
@@ -81,7 +134,7 @@ return function()
 
   -- test_seed_off_when_native_chrome_is_missing
   do
-    local settings = boot({})
+    local settings = boot(UPGRADED)
     assert(settings.hudStyle == "off", "missing nativeChrome seeds off, got " .. tostring(settings.hudStyle))
     resetLooks()
   end
