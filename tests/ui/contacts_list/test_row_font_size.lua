@@ -7,6 +7,8 @@ local Fonts = require("WhisperMessenger.UI.Theme.Fonts")
 local RowView = require("WhisperMessenger.UI.ContactsList.RowView")
 local ContactsList = require("WhisperMessenger.UI.ContactsList.ContactsList")
 local DragController = require("WhisperMessenger.UI.MessengerWindow.DragController")
+local ContactsController = require("WhisperMessenger.UI.MessengerWindow.ContactsController")
+local ScrollView = require("WhisperMessenger.UI.ScrollView")
 
 local BASE_ROW = Theme.LAYOUT.CONTACT_ROW_HEIGHT
 local OPTIONS = { onSelect = function() end, onPin = function() end, onRemove = function() end }
@@ -96,6 +98,31 @@ return function()
   handlers.handleDragStop(sourceRow, 1)
   rawset(_G, "GetCursorPosition", savedCursor)
   assert(reordered == false, "a drop inside the first grown row is not a reorder")
+
+  -- test_drag_rereads_row_height_after_font_change
+  Fonts.SetFontSize(12)
+  local lateHandlers = DragController.Create(factory, { content = dragContent, scrollFrame = factory.CreateFrame("Frame") }, function()
+    return contacts
+  end, {
+    onReorder = function()
+      reordered = true
+    end,
+  })
+  Fonts.SetFontSize(14)
+  rawset(_G, "GetCursorPosition", function()
+    return 0, -50
+  end)
+  lateHandlers.handleDragStart(sourceRow, 1)
+  lateHandlers.handleDragStop(sourceRow, 1)
+  rawset(_G, "GetCursorPosition", savedCursor)
+  assert(reordered == false, "a font change after the drag controller exists still grows the hit rows")
+
+  -- test_contacts_scroll_step_follows_row_height
+  local view = ScrollView.Create(factory, parent, { width = 260, height = 400, step = BASE_ROW })
+  local controller = ContactsController.Create(factory, view, { item("A") }, {})
+  controller.refresh(nil, nil)
+  assert(view.step == BASE_ROW + 6, "wheel step is one grown row, got " .. tostring(view.step))
+  assert(view.scrollBar.valueStep == BASE_ROW + 6, "scroll bar step is one grown row, got " .. tostring(view.scrollBar.valueStep))
 
   Fonts.SetFontSize(12)
   print("PASS: test_row_font_size")

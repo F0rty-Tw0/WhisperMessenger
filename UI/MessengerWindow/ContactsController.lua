@@ -96,6 +96,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       or options.hideMessagePreview
 
     controller.rows = ContactsList.Refresh(factory, controller.content, controller.rows, currentContacts, rowOptions)
+    ScrollView.SetStep(contactsView, Theme.ContactRowHeight())
     ScrollView.Sync(contactsView)
 
     return controller.rows
