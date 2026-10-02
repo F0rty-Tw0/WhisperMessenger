@@ -22,7 +22,8 @@ function RelayoutController.Create(options)
 
   function controller.relayoutWindow(w, h, requestedContactsWidth, refreshContactsLayout)
     local metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
-    setContactsWidth(metrics.contactsWidth)
+    -- Remember the expanded width: the rail's width is not the one to return to.
+    setContactsWidth(metrics.expandedContactsWidth or metrics.contactsWidth)
 
     if composer and composer.relayout then
       composer.relayout(metrics.contentWidth)

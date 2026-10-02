@@ -24,6 +24,7 @@ function Apply.Relayout(layout, relayout, theme)
   local contactsListHeight = relayout.contactsListHeight
 
   layout.contactsWidth = contactsWidth
+  layout.expandedContactsWidth = relayout.expandedContactsWidth or contactsWidth
 
   layout.contactsPane:SetSize(contactsWidth, contactsHeight)
   -- Re-anchor so the pane keeps its edge insets after every relayout.
@@ -54,6 +55,11 @@ function Apply.Relayout(layout, relayout, theme)
       layout.contactsResizeHandle:ClearAllPoints()
     end
     layout.contactsResizeHandle:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", -math.floor(handleWidth / 2), 0)
+    -- Re-lift above the pane on every relayout: the window's own level moves
+    -- when it is raised, and rail rows or the chat edge must never cover it.
+    if layout.contactsResizeHandle.SetFrameLevel and layout.contactsPane.GetFrameLevel then
+      layout.contactsResizeHandle:SetFrameLevel(layout.contactsPane:GetFrameLevel() + layoutTheme.CONTACTS_RESIZE_HANDLE_LEVEL_LIFT)
+    end
   end
 
   if layout.contactsSearchFrame then
@@ -143,13 +149,15 @@ function Apply.Relayout(layout, relayout, theme)
   -- Inner content width (Metrics): options panel width minus the menu
   -- column + divider.
   local optionsContentWidth = relayout.optionsContentWidth
-  layout.optionsMenu:SetSize(contactsWidth, optionsHeight)
+  -- The settings nav keeps the expanded width while the contacts pane is the rail.
+  local optionsMenuWidth = relayout.optionsMenuWidth or contactsWidth
+  layout.optionsMenu:SetSize(optionsMenuWidth, optionsHeight)
   layout.optionsMenuDivider:SetSize(resolvedTheme.DIVIDER_THICKNESS, optionsHeight)
   layout.optionsContentPane:SetSize(optionsContentWidth, optionsHeight)
   layout.refreshOptionsMenuScrollGeometry()
 
   local menuPadding = layout.menuPadding or resolvedTheme.CONTENT_PADDING
-  local optionsButtonWidth = math.max(0, contactsWidth - (menuPadding * 2))
+  local optionsButtonWidth = math.max(0, optionsMenuWidth - (menuPadding * 2))
   local optionsButtonHeight = layout.optionsButtonHeight or layoutTheme.OPTION_BUTTON_HEIGHT
   if layout.optionsHint then
     if layout.optionsHint.SetWidth then
@@ -189,6 +197,7 @@ function Apply.Relayout(layout, relayout, theme)
 
   return {
     contactsWidth = contactsWidth,
+    expandedContactsWidth = layout.expandedContactsWidth,
     contentWidth = contentWidth,
     contactsHeight = contactsHeight,
     contactsListHeight = contactsListHeight,

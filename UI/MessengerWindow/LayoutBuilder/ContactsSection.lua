@@ -96,8 +96,8 @@ function ContactsSection.Build(factory, frame, sizing, options)
   contactsResizeHandle:SetSize(contactsHandleWidth, contactsHeight)
   contactsResizeHandle:SetPoint("TOPLEFT", contactsPane, "TOPRIGHT", -math.floor(contactsHandleWidth / 2), 0)
   contactsResizeHandle:EnableMouse(true)
-  if contactsResizeHandle.SetFrameLevel and frame.GetFrameLevel then
-    contactsResizeHandle:SetFrameLevel(frame:GetFrameLevel() + 15)
+  if contactsResizeHandle.SetFrameLevel and contactsPane.GetFrameLevel then
+    contactsResizeHandle:SetFrameLevel(contactsPane:GetFrameLevel() + L.CONTACTS_RESIZE_HANDLE_LEVEL_LIFT)
   end
   -- The hit zone stays invisible; hover/drag fades in this 2px line over the
   -- hairline divider.
