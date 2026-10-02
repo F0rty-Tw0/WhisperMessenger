@@ -71,13 +71,15 @@ local function layoutButtons(frame, actions)
       button:Hide()
     end
   end
+  -- A tooltip-border (HUD) menu shifts its rows clear of the border.
+  local pad = PAD + (frame._nativeInset or 0)
   for index = 1, #actions do
     local button = frame._buttons[index]
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD, -PAD - (index - 1) * ROW_HEIGHT)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", pad, -pad - (index - 1) * ROW_HEIGHT)
     button:SetSize(width, ROW_HEIGHT)
   end
-  frame:SetSize(width + PAD * 2, #actions * ROW_HEIGHT + PAD * 2)
+  frame:SetSize(width + pad * 2, #actions * ROW_HEIGHT + pad * 2)
 end
 
 -- actions: display-ordered keys from OutgoingDelivery.Actions.

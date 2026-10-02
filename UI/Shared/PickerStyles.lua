@@ -8,8 +8,9 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local PickerStyles = {}
 
+-- Textures showing Blizzard art (PickerPopup.SetNativeArt) keep it.
 function PickerStyles.ApplyColor(texture, color)
-  if texture and type(texture.SetColorTexture) == "function" then
+  if texture and not texture._wmNativeArt and type(texture.SetColorTexture) == "function" then
     texture:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
   end
 end

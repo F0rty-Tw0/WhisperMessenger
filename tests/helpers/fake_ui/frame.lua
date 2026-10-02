@@ -398,6 +398,7 @@ local function makeCreateFrame()
     function frame:CreateTexture(childName, layer, inheritedTemplate)
       local texture = createFrame("Texture", childName or (self.name or "frame") .. "Texture", self, inheritedTemplate)
       Texture.Augment(texture)
+      texture.drawLayer = layer
       return texture
     end
 

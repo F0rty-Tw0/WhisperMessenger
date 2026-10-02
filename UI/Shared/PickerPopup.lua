@@ -7,11 +7,35 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
 -- Behaviour shared by the small popups (reaction picker, delivery menu,
 -- composer popovers): panel, text buttons, Escape to close, close on an
 -- outside click.
 local PickerPopup = {}
+
+-- Native WoW HUD art: dropdown-menu entry hover, action-button hover and
+-- action-button checked glow.
+PickerPopup.MENU_HIGHLIGHT = NativeArt.LIST_HOVER
+PickerPopup.ICON_HIGHLIGHT = "Interface\\Buttons\\ButtonHilight-Square"
+PickerPopup.ICON_CHECKED = "Interface\\Buttons\\CheckButtonHilight"
+
+-- Same size as the modern label font (WM_Highlight is built from it).
+PickerPopup.MENU_FONT = "GameFontHighlight"
+local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
+-- Fallback when the client lacks TooltipBackdropTemplate: GameTooltip's
+-- backdrop and default colours.
+local TOOLTIP_BACKDROP = {
+  bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+  edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+  tile = true,
+  tileSize = 16,
+  edgeSize = 16,
+  insets = { left = 4, right = 4, top = 4, bottom = 4 },
+}
+local TOOLTIP_BACKGROUND_COLOR = { 0.09, 0.09, 0.19, 0.9 }
+local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 
 -- Escape closes the named frame.
 function PickerPopup.RegisterEscape(frameName)
@@ -74,11 +98,50 @@ function PickerPopup.HandleEvent(frame, event, close, anchor)
   end
 end
 
+-- Paints `texture` with Blizzard art, additive like the game's own
+-- highlights. Theme refreshes leave it alone.
+PickerPopup.SetNativeArt = NativeArt.Set
+
+-- Blizzard hover art on the button's HIGHLIGHT layer, which the game shows
+-- while the mouse is over the button.
+function PickerPopup.AddNativeHighlight(button, path)
+  local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+  highlight:SetAllPoints(button)
+  PickerPopup.SetNativeArt(highlight, path)
+  if type(button.SetHighlightTexture) == "function" then
+    button:SetHighlightTexture(highlight)
+  end
+  return highlight
+end
+
+local function applyColor(setter, frame, color)
+  if type(frame[setter]) == "function" then
+    frame[setter](frame, color[1], color[2], color[3], color[4])
+  end
+end
+
+-- A frame that draws like GameTooltip (popups, Native HUD chat bubbles).
+function PickerPopup.CreateTooltipFrame(factory, parent, name)
+  local frame = UIHelpers.createTemplatedFrame(factory, "Frame", name, parent, TOOLTIP_TEMPLATE)
+  if frame then
+    return frame
+  end
+  frame = factory.CreateFrame("Frame", name, parent, "BackdropTemplate")
+  if type(frame.SetBackdrop) == "function" then
+    frame:SetBackdrop(TOOLTIP_BACKDROP)
+    applyColor("SetBackdropColor", frame, TOOLTIP_BACKGROUND_COLOR)
+    applyColor("SetBackdropBorderColor", frame, TOOLTIP_BORDER_COLOR)
+  end
+  return frame
+end
+
 -- Hidden, screen-clamped, mouse-enabled panel with the picker background
 -- (frame._background) and border (frame._border). Paint with
--- PickerStyles.ApplyPanelTheme.
+-- PickerStyles.ApplyPanelTheme. Under the Native WoW HUD it is a tooltip
+-- frame instead and has neither.
 function PickerPopup.CreatePanel(factory, parent, name, strata)
-  local frame = factory.CreateFrame("Frame", name, parent)
+  local native = Hud.IsOn()
+  local frame = native and PickerPopup.CreateTooltipFrame(factory, parent, name) or factory.CreateFrame("Frame", name, parent)
   frame:Hide()
   if frame.SetFrameStrata then
     frame:SetFrameStrata(strata)
@@ -89,6 +152,11 @@ function PickerPopup.CreatePanel(factory, parent, name, strata)
   if frame.EnableMouse then
     frame:EnableMouse(true)
   end
+  if native then
+    -- Contents shift by this so they clear the tooltip border.
+    frame._nativeInset = Theme.LAYOUT.NATIVE_BORDER_INSET
+    return frame
+  end
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   frame._background = background
@@ -98,8 +166,23 @@ function PickerPopup.CreatePanel(factory, parent, name, strata)
   return frame
 end
 
+-- Dropdown-menu style entry: game font, Blizzard hover art.
+local function createNativeTextButton(factory, parent, key, onClick)
+  local button = factory.CreateFrame("Button", nil, parent)
+  button._highlight = PickerPopup.AddNativeHighlight(button, PickerPopup.MENU_HIGHLIGHT)
+  local label = button:CreateFontString(nil, "OVERLAY")
+  label:SetPoint("CENTER", button, "CENTER", 0, 0)
+  UIHelpers.setFontObject(label, PickerPopup.MENU_FONT)
+  label:SetText(Localization.Text(key))
+  button:SetScript("OnClick", onClick)
+  return button, label
+end
+
 -- Full-width text button with a hover highlight. Returns button, label.
 function PickerPopup.CreateTextButton(factory, parent, key, onClick)
+  if Hud.IsOn() then
+    return createNativeTextButton(factory, parent, key, onClick)
+  end
   local button = factory.CreateFrame("Button", nil, parent)
   local highlight = button:CreateTexture(nil, "BACKGROUND")
   highlight:SetAllPoints(button)

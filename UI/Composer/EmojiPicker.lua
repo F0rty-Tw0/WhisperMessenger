@@ -6,6 +6,8 @@ end
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Popover = ns.ComposerPopover or require("WhisperMessenger.UI.Composer.Popover")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local EmojiPicker = {}
 
@@ -22,7 +24,10 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local layout = Assets.GetPickerLayout()
   local iconSize = layout.iconSize
   local buttonSize = layout.buttonSize
-  frame:SetSize(layout.frameWidth, buttonSize * layout.rows + 12)
+  -- A tooltip-border (HUD) panel shifts its cells clear of the border.
+  local inset = frame._nativeInset or 0
+  local pad = 6 + inset
+  frame:SetSize(layout.frameWidth + inset * 2, buttonSize * layout.rows + 12 + inset * 2)
 
   for index, key in ipairs(Assets.KEYS) do
     local slot = index - 1
@@ -30,11 +35,16 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
     local row = math.floor(slot / layout.columns)
     local button = factory.CreateFrame("Button", nil, frame)
     button:SetSize(buttonSize, buttonSize)
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * buttonSize, -6 - row * buttonSize)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", pad + column * buttonSize, -pad - row * buttonSize)
 
-    local highlight = button:CreateTexture(nil, "BACKGROUND")
-    highlight:SetAllPoints(button)
-    PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
+    local highlight
+    if Hud.IsOn() then
+      highlight = PickerPopup.AddNativeHighlight(button, PickerPopup.ICON_HIGHLIGHT)
+    else
+      highlight = button:CreateTexture(nil, "BACKGROUND")
+      highlight:SetAllPoints(button)
+      PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
+    end
     highlight:Hide()
     button._highlight = highlight
 

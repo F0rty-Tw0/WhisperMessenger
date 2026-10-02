@@ -46,6 +46,9 @@ local Layout = {
   BUBBLE_MAX_WIDTH_PCT = 0.75,
   BUBBLE_PADDING_H = 12,
   BUBBLE_PADDING_V = 8,
+  -- Native WoW HUD bubbles and pop-ups draw the tooltip border, whose inner edge sits
+  -- this far in; their padding grows by it so content keeps the modern gap.
+  NATIVE_BORDER_INSET = 4,
   BUBBLE_SPACING = 4,
   BUBBLE_GROUP_SPACING = 12,
   BUBBLE_ICON_SIZE = 24,

@@ -8,6 +8,7 @@ local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.Picker
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local ReactionPicker = {}
 local PICKER_FRAME_NAME = "WhisperMessengerReactionPicker"
@@ -18,30 +19,34 @@ local pickerFrame
 
 local function applyPickerLayout(frame)
   local layout = Assets.GetPickerLayout()
-  frame:SetSize(layout.frameWidth, layout.frameHeight)
+  -- A tooltip-border (HUD) picker shifts its contents clear of the border.
+  local inset = frame._nativeInset or 0
+  local padLeft, padTop = PAD_LEFT + inset, PAD_TOP + inset
+  local copyOffsetY = layout.copyOffsetY - inset
+  frame:SetSize(layout.frameWidth + inset * 2, layout.frameHeight + inset * 2)
   for index, button in ipairs(frame._reactionButtons) do
     local slot = index - 1
     local column = slot % layout.columns
     local row = math.floor(slot / layout.columns)
     button:SetSize(layout.buttonSize, layout.buttonSize)
     button:ClearAllPoints()
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD_LEFT + column * layout.buttonSize, -PAD_TOP - row * layout.buttonSize)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", padLeft + column * layout.buttonSize, -padTop - row * layout.buttonSize)
     button._icon:SetSize(layout.iconSize, layout.iconSize)
   end
   -- With a reply handler the bottom row splits into [Reply][Copy text].
-  local copyX, copyWidth = PAD_LEFT, layout.copyWidth
+  local copyX, copyWidth = padLeft, layout.copyWidth
   frame._replyButton:ClearAllPoints()
   if frame._onReply then
     local half = math.floor(layout.copyWidth / 2)
-    frame._replyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", PAD_LEFT, layout.copyOffsetY)
+    frame._replyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", padLeft, copyOffsetY)
     frame._replyButton:SetSize(half, PickerStyles.ROW_HEIGHT)
     frame._replyButton:Show()
-    copyX, copyWidth = PAD_LEFT + half, layout.copyWidth - half
+    copyX, copyWidth = padLeft + half, layout.copyWidth - half
   else
     frame._replyButton:Hide()
   end
   frame._copyButton:ClearAllPoints()
-  frame._copyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", copyX, layout.copyOffsetY)
+  frame._copyButton:SetPoint("TOPLEFT", frame, "TOPLEFT", copyX, copyOffsetY)
   frame._copyButton:SetSize(copyWidth, PickerStyles.ROW_HEIGHT)
 end
 
@@ -55,6 +60,9 @@ local function createPicker(factory)
   frame._factory = factory
   frame._reactionButtons = {}
   PickerStyles.ApplyPanelTheme(frame, frame._border)
+  -- Native WoW HUD: action-button hover and checked art; the selected mark
+  -- then only marks the selection.
+  local native = Hud.IsOn()
 
   for index, key in ipairs(Assets.KEYS) do
     local button = factory.CreateFrame("Button", nil, frame)
@@ -62,7 +70,12 @@ local function createPicker(factory)
 
     local selectedMark = button:CreateTexture(nil, "BACKGROUND")
     selectedMark:SetAllPoints(button)
-    PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
+    if native then
+      PickerPopup.SetNativeArt(selectedMark, PickerPopup.ICON_CHECKED)
+      PickerPopup.AddNativeHighlight(button, PickerPopup.ICON_HIGHLIGHT)
+    else
+      PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
+    end
     selectedMark:Hide()
     button._selectedMark = selectedMark
 
@@ -74,14 +87,14 @@ local function createPicker(factory)
     button._icon = icon
 
     button:SetScript("OnEnter", function(self)
-      if not self._selected then
+      if not self._selected and not native then
         PickerStyles.ApplyColor(selectedMark, PickerStyles.HighlightColor(0.35))
         selectedMark:Show()
       end
       PickerStyles.ShowTooltip(self, key)
     end)
     button:SetScript("OnLeave", function(self)
-      if not self._selected then
+      if not self._selected and not native then
         selectedMark:Hide()
       end
       PickerStyles.HideTooltip()
