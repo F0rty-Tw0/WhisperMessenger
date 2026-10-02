@@ -24,15 +24,20 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  for _, nativeChrome in ipairs({ false, true }) do
-    local skin = nativeChrome and "native" or "modern"
-    local rowHeight = nativeChrome and TabToggle.NATIVE_HEIGHT or TabToggle.HEIGHT
-    local runtime = makeRuntime(nativeChrome)
+  do
+    local runtime = makeRuntime(false)
 
     -- test_narrow_pane_reserves_two_footer_rows
-    assert(runtime.getContactsBottomInset(210) == 2 * rowHeight, skin .. ": narrow pane reserves two rows")
+    assert(runtime.getContactsBottomInset(210) == 2 * TabToggle.HEIGHT, "modern: narrow pane reserves two rows")
 
     -- test_wide_pane_reserves_one_footer_row
-    assert(runtime.getContactsBottomInset(600) == rowHeight, skin .. ": wide pane reserves one row")
+    assert(runtime.getContactsBottomInset(600) == TabToggle.HEIGHT, "modern: wide pane reserves one row")
+  end
+
+  -- test_hud_tabs_hang_outside_so_reserve_nothing
+  do
+    local runtime = makeRuntime(true)
+    assert(runtime.getContactsBottomInset(210) == 0, "native: narrow pane reserves nothing")
+    assert(runtime.getContactsBottomInset(600) == 0, "native: wide pane reserves nothing")
   end
 end

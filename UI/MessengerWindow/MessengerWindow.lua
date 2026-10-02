@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local ConversationPane = ns.ConversationPane or require("WhisperMessenger.UI.ConversationPane")
 local Composer = ns.Composer or require("WhisperMessenger.UI.Composer")
 local AlphaController = ns.MessengerWindowAlphaController or require("WhisperMessenger.UI.MessengerWindow.AlphaController")
@@ -76,13 +77,14 @@ function MessengerWindow.Create(factory, options)
     return target ~= nil and target.shown == true
   end
 
-  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips
-  -- the frame to BasicFrameTemplateWithInset (gold border, red X) — read
-  -- from saved settings so it persists across reloads.
-  StyledTextInputPopup.nativeChrome = settingsConfig.nativeChrome == true
+  -- Build chrome (outer frame, buttons, etc.). useNativeChrome flips the
+  -- frame to the HUD style's Blizzard template (see ChromeBuilder), set at
+  -- boot, so a change applies after /reload.
+  local nativeChrome = Hud.IsOn()
+  StyledTextInputPopup.nativeChrome = nativeChrome
   local chrome = ChromeBuilder.Build(factory, parent, initialState, {
     title = options.title,
-    useNativeChrome = settingsConfig.nativeChrome == true,
+    useNativeChrome = nativeChrome,
     windowScale = initialScale,
     onMarkAllRead = options.onMarkAllRead,
   })
@@ -163,6 +165,7 @@ function MessengerWindow.Create(factory, options)
   })
   contactsRuntime = ContactsRuntime.Create(factory, {
     contactsPane = contactsPane,
+    windowFrame = frame,
     nativeChrome = layout.nativeChrome == true,
     contactsView = contactsView,
     initialContacts = options.contacts or {},
@@ -217,8 +220,8 @@ function MessengerWindow.Create(factory, options)
     onDeleteRequest = options.onDeleteRequest,
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
-    hideEmptyHeader = settingsConfig.nativeChrome == true,
-    nativeChrome = settingsConfig.nativeChrome == true,
+    hideEmptyHeader = nativeChrome,
+    nativeChrome = nativeChrome,
   })
   conversation.headerEmpty.setMode(contactsRuntime.getTabMode())
 
@@ -426,7 +429,6 @@ function MessengerWindow.Create(factory, options)
     notificationSettings = settingsRuntime.getSettings(4),
     iconSettings = settingsRuntime.getSettings(5),
     patchNotesSettings = settingsRuntime.getSettings(SettingsPanels.PATCH_NOTES_INDEX),
-    optionsHeader = layout.optionsHeader,
     optionsHint = layout.optionsHint,
     resetWindowButton = layout.resetWindowButton,
     resetIconButton = layout.resetIconButton,

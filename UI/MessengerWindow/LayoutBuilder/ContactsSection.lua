@@ -78,7 +78,9 @@ function ContactsSection.Build(factory, frame, sizing, options)
   -- Without this, the scrollFrame extends a few px past the pane bottom and
   -- the last row paints over the pane border into the window chrome.
   if contactsView.scrollFrame and contactsView.scrollFrame.SetPoint then
-    contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", 0, 0)
+    -- Native WoW HUD: the scrollbar clears the panel's right border.
+    local rightInset = nativeChrome and L.HUD_PANEL_PADDING or 0
+    contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", -rightInset, sizing.contactsBottomInset or 0)
   end
 
   local contentParent = contactsPaneParent

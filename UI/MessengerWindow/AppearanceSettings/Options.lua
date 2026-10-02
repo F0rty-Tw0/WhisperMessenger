@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local Options = {}
 
@@ -25,6 +26,16 @@ local PRESET_LABELS = {
   plumber_warm = { label = "Draenor", tooltip = "Warm tones with softer contrast." },
   jade_dark = { label = "Pandaria", tooltip = "Dark charcoal with jade accents, inspired by EllesmereUI." },
   wow_native = { label = "Azeroth", tooltip = "Native WoW colors with gold accents." },
+}
+
+local HUD_STYLE_SPECS = {
+  { key = "off", label = "Off", tooltip = "Uses the messenger's own window style. Requires /reload to apply." },
+  {
+    key = "classic",
+    label = "Classic",
+    tooltip = "Replaces the messenger window border, title bar, and close button with Blizzard's default UI style. Requires /reload to apply.",
+  },
+  { key = "retail", label = "Modern", tooltip = "Uses the modern game window style. Requires /reload to apply." },
 }
 
 local BUBBLE_COLOR_LABELS = {
@@ -75,6 +86,21 @@ function Options.BuildFontColorOptions()
     }
   end
   return result
+end
+
+-- Retail needs game templates some clients lack; it shows but can't be picked.
+function Options.BuildHudStyleOptions()
+  local options = localizeOptionSpecs(HUD_STYLE_SPECS)
+  if Hud.RetailAvailable() then
+    return options
+  end
+  for _, option in ipairs(options) do
+    if option.key == "retail" then
+      option.disabled = true
+      option.disabledReason = Localization.Text("Not available on this game version.")
+    end
+  end
+  return options
 end
 
 function Options.BuildThemePresetOptions()

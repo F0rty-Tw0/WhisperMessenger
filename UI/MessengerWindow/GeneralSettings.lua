@@ -123,10 +123,8 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   retentionRow.row:SetPoint("TOPLEFT", conversationsRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  local privacyLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  privacyLabel:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-  privacyLabel:SetText(text("Privacy"))
-  UIHelpers.setTextColor(privacyLabel, Theme.COLORS.text_secondary)
+  local privacySection = SettingsControls.CreateSectionLabel(frame, text("Privacy"))
+  privacySection.region:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local function privacyToggle(key, label, tooltip, initial, anchor)
     local toggle = panel:bind(
@@ -144,7 +142,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     "Clear on logout",
     "Deletes all saved conversations and contacts when you log out.",
     config.clearOnLogout == true,
-    privacyLabel
+    privacySection.region
   )
   local hidePreviewToggle = privacyToggle(
     "hideMessagePreview",
@@ -161,10 +159,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     hidePreviewToggle.row
   )
 
-  local timeLabel = frame:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-  timeLabel:SetPoint("TOPLEFT", hideBattleTagToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
-  timeLabel:SetText(text("Time Display"))
-  UIHelpers.setTextColor(timeLabel, Theme.COLORS.text_secondary)
+  local timeSection = SettingsControls.CreateSectionLabel(frame, text("Time Display"))
+  timeSection.region:SetPoint("TOPLEFT", hideBattleTagToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local timeFormatSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
@@ -181,7 +177,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     }),
     { type = "selector", key = "timeFormat", default = DEFAULTS.timeFormat }
   )
-  timeFormatSelector.row:SetPoint("TOPLEFT", timeLabel, "BOTTOMLEFT", 0, -12)
+  timeFormatSelector.row:SetPoint("TOPLEFT", timeSection.region, "BOTTOMLEFT", 0, -12)
 
   local timeSourceSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
@@ -243,11 +239,11 @@ function GeneralSettings.Create(factory, parent, config, options)
     messagesRow.label:SetText(text("Max Messages Per Contact"))
     conversationsRow.label:SetText(text("Max Contacts"))
     retentionRow.label:SetText(text("Message Retention (hours)"))
-    privacyLabel:SetText(text("Privacy"))
+    privacySection.label:SetText(text("Privacy"))
     clearOnLogoutToggle.label:SetText(text("Clear on logout"))
     hidePreviewToggle.label:SetText(text("Hide message preview"))
     hideBattleTagToggle.label:SetText(text("Hide BattleTag numbers"))
-    timeLabel:SetText(text("Time Display"))
+    timeSection.label:SetText(text("Time Display"))
     timeFormatSelector.label:SetText(text("Time Format"))
     timeFormatSelector.setOptionsList(buildTimeFormatOptions(interfaceLanguage))
     timeSourceSelector.label:SetText(text("Time Source"))
@@ -266,8 +262,8 @@ function GeneralSettings.Create(factory, parent, config, options)
   local function refreshTheme(activeTheme)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
-    UIHelpers.setTextColor(privacyLabel, activeTheme.COLORS.text_secondary)
-    UIHelpers.setTextColor(timeLabel, activeTheme.COLORS.text_secondary)
+    privacySection.refreshTheme(activeTheme)
+    timeSection.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
   end
 
@@ -280,6 +276,8 @@ function GeneralSettings.Create(factory, parent, config, options)
     local maxWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
     local effective = math.min(maxWidth, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
+    privacySection.refreshLayout(effective)
+    timeSection.refreshLayout(effective)
     panel:refreshLayout(effective)
   end
 

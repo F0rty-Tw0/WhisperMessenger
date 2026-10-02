@@ -5,8 +5,42 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 
 local BlizzardChrome = {}
+
+-- Adds a localized "Close" tooltip to a template close button, keeping any
+-- hover scripts the template already set.
+function BlizzardChrome.AttachCloseTooltip(closeButton)
+  if not (closeButton and closeButton.SetScript) then
+    return
+  end
+  local previousOnEnter = closeButton.GetScript and closeButton:GetScript("OnEnter")
+  local previousOnLeave = closeButton.GetScript and closeButton:GetScript("OnLeave")
+  closeButton:SetScript("OnEnter", function(...)
+    if previousOnEnter then
+      previousOnEnter(...)
+    end
+    PickerStyles.ShowTooltipText(closeButton, Localization.Text("Close"))
+  end)
+  closeButton:SetScript("OnLeave", function(...)
+    if previousOnLeave then
+      previousOnLeave(...)
+    end
+    PickerStyles.HideTooltip()
+  end)
+end
+
+-- The addon-owned frame every pane parents to, inside the active HUD
+-- template's border and below its title bar.
+function BlizzardChrome.CreateContentArea(factory, frame, layout)
+  local insets = Hud.ContentInsets(layout)
+  local contentArea = factory.CreateFrame("Frame", nil, frame)
+  contentArea:SetPoint("TOPLEFT", frame, "TOPLEFT", insets.left, -insets.top)
+  contentArea:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -insets.right, insets.bottom)
+  return contentArea
+end
 
 -- Builds the Blizzard-template chrome branch. The outer frame is already
 -- created with BasicFrameTemplateWithInset by ChromeBuilder.Build and passed
@@ -27,35 +61,8 @@ function BlizzardChrome.Build(factory, frame, options, theme)
   local title = frame.TitleText
   local closeButton = frame.CloseButton
 
-  if closeButton and closeButton.SetScript then
-    local previousOnEnter = closeButton.GetScript and closeButton:GetScript("OnEnter")
-    local previousOnLeave = closeButton.GetScript and closeButton:GetScript("OnLeave")
-    closeButton:SetScript("OnEnter", function(...)
-      if previousOnEnter then
-        previousOnEnter(...)
-      end
-      if _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(closeButton, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(Localization.Text("Close"))
-        _G.GameTooltip:Show()
-      end
-    end)
-    closeButton:SetScript("OnLeave", function(...)
-      if previousOnLeave then
-        previousOnLeave(...)
-      end
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
-  end
-
-  local L = theme.LAYOUT
-  local pad = L.HUD_CONTENT_INSET
-  local contentArea = factory.CreateFrame("Frame", nil, frame)
-  contentArea:SetPoint("TOPLEFT", frame, "TOPLEFT", L.HUD_INSET_LEFT + pad, -(L.TOP_BAR_HEIGHT + L.HUD_CONTENT_TOP_INSET))
-  contentArea:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -(L.HUD_INSET_RIGHT + pad), L.HUD_INSET_BOTTOM + pad)
-  frame.contentArea = contentArea
+  BlizzardChrome.AttachCloseTooltip(closeButton)
+  frame.contentArea = BlizzardChrome.CreateContentArea(factory, frame, theme.LAYOUT)
 
   -- The template paints all of its own chrome.
   local function applyChromePaint(_activeTheme) end

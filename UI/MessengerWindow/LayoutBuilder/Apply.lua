@@ -124,11 +124,14 @@ function Apply.Relayout(layout, relayout, theme)
     -- dual-anchored height, so rows can't paint past the pane border.
     cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
     cv.scrollFrame:SetSize(contactsWidth, contactsListHeight)
-    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", 0, relayout.contactsBottomInset or 0)
+    local rightInset = layout.nativeChrome and resolvedTheme.LAYOUT.HUD_PANEL_PADDING or 0
+    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", -rightInset, relayout.contactsBottomInset or 0)
     cv.scrollBar:SetHeight(contactsListHeight)
     cv.viewportHeight = contactsListHeight
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
-    Metrics.RefreshMetrics(cv, sizeValue(cv.content, "GetHeight", "height", contactsListHeight))
+    -- Size from the rows, not the content: a short list's content was
+    -- filled to the old viewport and would keep a shrunk window scrolling.
+    Metrics.RefreshMetrics(cv, cv.content.rowsHeight or sizeValue(cv.content, "GetHeight", "height", contactsListHeight))
   end
 
   -- Resize options overlay to match new window dimensions. optionsPanel's
@@ -178,11 +181,9 @@ function Apply.Relayout(layout, relayout, theme)
   -- Resize options scroll view.
   local osv = layout.optionsScrollView
   if osv then
-    osv.scrollFrame:SetSize(optionsContentWidth, optionsHeight)
-    osv.scrollBar:SetHeight(optionsHeight)
-    osv.viewportHeight = optionsHeight
-    osv.totalWidth = optionsContentWidth
+    -- Resize keeps the bar's share of the width, so the bar stays on the page.
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
+    Metrics.Resize(osv, optionsContentWidth, optionsHeight)
     Metrics.RefreshMetrics(osv, sizeValue(osv.content, "GetHeight", "height", layout.optionsContentHeight or 420))
   end
 

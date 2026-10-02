@@ -46,6 +46,9 @@ local Layout = {
   BUBBLE_MAX_WIDTH_PCT = 0.75,
   BUBBLE_PADDING_H = 12,
   BUBBLE_PADDING_V = 8,
+  -- Native WoW HUD bubbles and pop-ups draw the tooltip border, whose inner edge sits
+  -- this far in; their padding grows by it so content keeps the modern gap.
+  NATIVE_BORDER_INSET = 4,
   BUBBLE_SPACING = 4,
   BUBBLE_GROUP_SPACING = 12,
   BUBBLE_ICON_SIZE = 24,
@@ -58,6 +61,13 @@ local Layout = {
   -- Scrollbar
   SCROLLBAR_WIDTH = 4,
   SCROLLBAR_WIDTH_HOVER = 6,
+  -- Native WoW HUD: fits the classic scroll knob.
+  SCROLLBAR_WIDTH_HUD = 18,
+  -- Retail HUD: the minimal scrollbar's thumb width, for clients that can't
+  -- report the atlas size.
+  SCROLLBAR_WIDTH_RETAIL = 8,
+  -- How far the Modern HUD bar moves into a caller's right gutter.
+  SCROLLBAR_RETAIL_GUTTER = 5,
   SCROLLBAR_THUMB_MIN_H = 20,
 
   -- Composer
@@ -109,6 +119,18 @@ local Layout = {
   -- Top edge only, below TOP_BAR_HEIGHT (negative = tucks up under the
   -- title bar border). ponytail: tuned in-game from a screenshot.
   HUD_CONTENT_TOP_INSET = -1,
+  -- Retail Native WoW HUD (ButtonFrameTemplate): content edges measured from
+  -- the window's outer edges. The top clears the round portrait that hangs
+  -- below the title bar, the depth Blizzard's own panels start their inset at.
+  -- ponytail: read off Blizzard's template offsets, not measured; tune in-game.
+  RETAIL_HUD_INSET_LEFT = 4,
+  RETAIL_HUD_INSET_RIGHT = 6,
+  RETAIL_HUD_INSET_TOP = 60,
+  RETAIL_HUD_INSET_BOTTOM = 4,
+  -- Native WoW HUD: the game draws a panel's border inside the panel, so
+  -- scroll areas keep this far from its edges.
+  -- ponytail: estimated from screenshots, not read from the atlas; tune in-game.
+  HUD_PANEL_PADDING = 4,
 
   -- Status dot corner offset over icon (header + contact row)
   STATUS_DOT_CORNER_OFFSET = 2,

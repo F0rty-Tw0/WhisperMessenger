@@ -7,6 +7,9 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local Popover = ns.ComposerPopover or require("WhisperMessenger.UI.Composer.Popover")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 -- List of quick replies above the composer; clicking one hands its text to
 -- onSelect. Rebuilt on every open so settings edits show up immediately.
@@ -17,23 +20,21 @@ local ROW_HEIGHT = PickerStyles.ROW_HEIGHT
 local PADDING = 6
 local LABEL_INSET = 8
 
-local function createRow(factory, frame, picker, onSelect)
-  local row = factory.CreateFrame("Button", nil, frame)
-  row:SetSize(ROW_WIDTH, ROW_HEIGHT)
+-- Dropdown-menu entry look for the Native WoW HUD. Returns the label.
+local function addNativeArt(row)
+  row._highlight = NativeArt.AddHighlight(row, NativeArt.LIST_HOVER)
+  local label = row:CreateFontString(nil, "OVERLAY")
+  UIHelpers.setFontObject(label, PickerPopup.MENU_FONT)
+  return label
+end
 
-  local highlight = row:CreateTexture(nil, "BACKGROUND")
-  highlight:SetAllPoints(row)
-  PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
-  highlight:Hide()
+-- Themed flat hover and label. Returns the label.
+local function addModernArt(row, picker)
+  local highlight = PickerPopup.CreateHoverFill(row)
   row._highlight = highlight
 
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
-  label:SetPoint("LEFT", row, "LEFT", LABEL_INSET, 0)
-  label:SetWidth(ROW_WIDTH - LABEL_INSET * 2)
-  label:SetJustifyH("LEFT")
-  label:SetWordWrap(false)
   UIHelpers.setTextColor(label, Theme.COLORS.text_primary)
-  row.label = label
 
   row:SetScript("OnEnter", function()
     if picker.enabled then
@@ -43,6 +44,20 @@ local function createRow(factory, frame, picker, onSelect)
   row:SetScript("OnLeave", function()
     highlight:Hide()
   end)
+  return label
+end
+
+local function createRow(factory, frame, picker, onSelect)
+  local row = factory.CreateFrame("Button", nil, frame)
+  row:SetSize(ROW_WIDTH, ROW_HEIGHT)
+
+  local label = picker.native and addNativeArt(row) or addModernArt(row, picker)
+  label:SetPoint("LEFT", row, "LEFT", LABEL_INSET, 0)
+  label:SetWidth(ROW_WIDTH - LABEL_INSET * 2)
+  label:SetJustifyH("LEFT")
+  label:SetWordWrap(false)
+  row.label = label
+
   row:SetScript("OnClick", function()
     if not picker.enabled or row.replyText == nil then
       return
@@ -56,7 +71,10 @@ end
 function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSelect)
   local popover = Popover.Create(factory, parent, anchorFrame)
   local frame = popover.frame
-  local picker = { frame = frame, rows = {}, enabled = true }
+  -- Rows match the panel, which follows the HUD style at creation.
+  local picker = { frame = frame, rows = {}, enabled = true, native = Hud.IsOn() }
+  -- A tooltip-border (HUD) panel shifts its rows clear of the border.
+  local padding = PADDING + PickerPopup.BorderInset(frame)
 
   -- Returns the number of replies listed.
   local function rebuild()
@@ -65,7 +83,7 @@ function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSel
       local row = picker.rows[index]
       if row == nil then
         row = createRow(factory, frame, picker, onSelect)
-        row:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING, -PADDING - (index - 1) * ROW_HEIGHT)
+        row:SetPoint("TOPLEFT", frame, "TOPLEFT", padding, -padding - (index - 1) * ROW_HEIGHT)
         picker.rows[index] = row
       end
       row.replyText = text
@@ -76,7 +94,7 @@ function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSel
       picker.rows[index].replyText = nil
       picker.rows[index]:Hide()
     end
-    frame:SetSize(ROW_WIDTH + PADDING * 2, #replies * ROW_HEIGHT + PADDING * 2)
+    frame:SetSize(ROW_WIDTH + padding * 2, #replies * ROW_HEIGHT + padding * 2)
     return #replies
   end
 
@@ -110,7 +128,10 @@ function QuickReplyPicker.Create(factory, parent, anchorFrame, getReplies, onSel
 
   function picker:refreshTheme()
     popover.refreshTheme()
-    local highlightColor = PickerStyles.HighlightColor(0.35)
+    if self.native then
+      return
+    end
+    local highlightColor = PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA)
     for _, row in ipairs(self.rows) do
       PickerStyles.ApplyColor(row._highlight, highlightColor)
       UIHelpers.setTextColor(row.label, Theme.COLORS.text_primary)

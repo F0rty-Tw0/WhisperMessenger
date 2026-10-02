@@ -51,6 +51,7 @@ function Bootstrap.Initialize(factory, options)
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
   local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
+  local Hud = loadModule("WhisperMessenger.UI.Theme.Hud", "Hud")
   local WindowScale = loadModule("WhisperMessenger.UI.MessengerWindow.WindowScale", "MessengerWindowWindowScale")
 
   local uiFactory = factory or _G
@@ -81,6 +82,12 @@ function Bootstrap.Initialize(factory, options)
   if accountState.settings.showGroupChats == nil then
     accountState.settings.showGroupChats = true
   end
+  -- hudStyle replaces the old nativeChrome flag, which stays saved for
+  -- older addon versions after a downgrade.
+  if accountState.settings.hudStyle == nil then
+    accountState.settings.hudStyle = accountState.settings.nativeChrome == true and "classic" or "off"
+  end
+  Hud.Configure(accountState.settings.hudStyle)
   FirstRunTip.Announce(accountState)
   if Fonts.Initialize then
     Fonts.Initialize(accountState.settings.fontFamily or "default")

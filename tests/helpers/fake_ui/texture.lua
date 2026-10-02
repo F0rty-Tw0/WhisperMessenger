@@ -35,8 +35,9 @@ function Texture.Augment(frame)
     self.mask = mask
   end
 
-  function frame:SetAtlas(atlas)
+  function frame:SetAtlas(atlas, useAtlasSize)
     self.atlas = atlas
+    self.useAtlasSize = useAtlasSize
   end
 
   function frame:SetBlendMode(mode)

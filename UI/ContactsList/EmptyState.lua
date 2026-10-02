@@ -9,22 +9,30 @@ local setFontObject = UIHelpers.setFontObject
 
 local EmptyState = {}
 
+-- Side gap between the hint text and the pane edges.
+local FALLBACK_SIDE_PADDING = 16
+
 -- Create builds a hidden frame hosting a centered FontString.
 -- parent: the contacts list content frame
 -- theme: optional theme override (defaults to the shared Theme module)
 function EmptyState.Create(parent, theme)
   local resolvedTheme = theme or Theme
   local frame = _G.CreateFrame("Frame", nil, parent)
-  frame:SetAllPoints(parent)
+  -- The scroll content can be taller than the list; centre the hint in
+  -- the visible viewport (the content's scroll frame) instead.
+  local viewport = parent and parent.GetParent and parent:GetParent() or nil
+  frame:SetAllPoints(viewport or parent)
   frame:Hide()
 
+  -- Spans the pane width, so the text wraps to whatever width the pane has.
+  local padding = resolvedTheme.CONTENT_PADDING or FALLBACK_SIDE_PADDING
   local label = frame:CreateFontString(nil, "ARTWORK")
   setFontObject(label, (resolvedTheme.FONTS and resolvedTheme.FONTS.empty_state) or "GameFontNormal")
-  label:SetPoint("CENTER", frame, "CENTER", 0, 0)
+  label:SetPoint("LEFT", frame, "LEFT", padding, 0)
+  label:SetPoint("RIGHT", frame, "RIGHT", -padding, 0)
   label:SetJustifyH("CENTER")
   label:SetJustifyV("MIDDLE")
   label:SetWordWrap(true)
-  label:SetWidth(180)
   label:SetText("")
 
   local colors = resolvedTheme.COLORS or {}

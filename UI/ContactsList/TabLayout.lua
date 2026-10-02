@@ -123,7 +123,9 @@ end
 --   naturalWidth(tab)  : one-row width a tab needs (see NeedsWrap)
 --   paint(mode, visible)
 --   relabel(tab)       : re-reads the tab's label from the active locale
---   afterAnchor(wrapped, visible) : optional, runs after every re-anchor
+--   anchor(visible)    : optional; replaces the equal-segment anchoring for
+--                        tabs that hang outside the pane at natural width,
+--                        which never wrap and reserve no list height
 function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local onModeChanged = opts.onModeChanged or function(_mode) end
   local currentMode = opts.initialMode or "whispers"
@@ -137,18 +139,22 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
 
   -- Footer height at a pane width: two rows when the three tabs wrap.
   local function reservedHeightFor(width)
+    if opts.anchor then
+      return 0
+    end
     return TabLayout.NeedsWrap(visible, width, opts.naturalWidth) and 2 * tabHeight or tabHeight
   end
 
   -- Wraps or unwraps for the current width; no allocation (runs on resize).
   local function anchorTabs()
+    if opts.anchor then
+      opts.anchor(visible)
+      return
+    end
     local height = reservedHeightFor(frame:GetWidth())
     local wrapped = height > tabHeight
     frame:SetHeight(height)
     TabLayout.Anchor(frame, visible, opts.topInset, wrapped and tabHeight or nil)
-    if opts.afterAnchor then
-      opts.afterAnchor(wrapped, visible)
-    end
   end
 
   local function setMode(mode)

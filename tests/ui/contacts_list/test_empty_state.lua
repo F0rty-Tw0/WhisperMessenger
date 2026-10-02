@@ -6,7 +6,37 @@ local function makeParent()
   return factory.CreateFrame("Frame", "TestParent", nil, nil)
 end
 
+local function makeScrolledContent()
+  local factory = FakeUI.NewFactory()
+  local viewport = factory.CreateFrame("ScrollFrame", "TestViewport", nil, nil)
+  local content = factory.CreateFrame("Frame", "TestContent", viewport, nil)
+  return content, viewport
+end
+
+local function anchorTargets(region)
+  local targets = {}
+  for _, point in ipairs(region.points or {}) do
+    targets[point[1]] = point[2]
+  end
+  return targets
+end
+
 return function()
+  -- test_fills_the_visible_viewport_not_the_scrolled_content
+  do
+    local content, viewport = makeScrolledContent()
+    local frame = EmptyState.Create(content)
+    assert(frame.allPoints == viewport, "the hint centres in what the player sees, not in the scroll content")
+  end
+
+  -- test_label_width_follows_the_pane
+  do
+    local frame = EmptyState.Create(makeParent())
+    local targets = anchorTargets(frame.label)
+    assert(targets.LEFT == frame and targets.RIGHT == frame, "label spans the pane width so its text wraps to fit")
+    assert(frame.label.width == nil, "no fixed label width")
+  end
+
   -- test_create_returns_frame_with_label
   do
     local parent = makeParent()

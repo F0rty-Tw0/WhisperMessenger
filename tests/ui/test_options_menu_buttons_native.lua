@@ -7,8 +7,7 @@ local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder
 
 local function build(factory, nativeChrome)
   local menu = factory.CreateFrame("Frame", nil, nil)
-  local header = menu:CreateFontString(nil, "OVERLAY")
-  return OptionsMenuButtons.Build(factory, menu, header, { menuPadding = 8, contactsWidth = 260, nativeChrome = nativeChrome })
+  return OptionsMenuButtons.Build(factory, menu, { menuPadding = 8, contactsWidth = 260, nativeChrome = nativeChrome })
 end
 
 local function actionButtons(result)

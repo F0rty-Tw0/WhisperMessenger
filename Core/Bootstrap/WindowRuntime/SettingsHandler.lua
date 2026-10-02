@@ -7,7 +7,7 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
-local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -218,13 +218,8 @@ function SettingsHandler.Create(options)
       end
     end
 
-    -- nativeChrome flips the messenger frame between BasicFrameTemplateWithInset
-    -- and our custom chrome. Templates can't be added/removed at runtime in
-    -- WoW, so we tell the user a /reload is required to apply.
-    if key == "nativeChrome" then
-      ChatPrint.Print(
-        Localization and Localization.Text("Native chrome change requires reload") or "Native WoW HUD change requires |cffffff00/reload|r to apply."
-      )
+    if key == "hudStyle" then
+      HudStyleSetting.Apply(accountSettings, persistedValue)
     end
 
     local icon = getIcon()

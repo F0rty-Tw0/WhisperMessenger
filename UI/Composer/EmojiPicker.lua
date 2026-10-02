@@ -6,8 +6,14 @@ end
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local Assets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local Popover = ns.ComposerPopover or require("WhisperMessenger.UI.Composer.Popover")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local EmojiPicker = {}
+
+-- Gap between the panel edge and the emoji grid, on every side.
+local PADDING = 6
 
 function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local popover = Popover.Create(factory, parent, anchorFrame)
@@ -22,7 +28,10 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
   local layout = Assets.GetPickerLayout()
   local iconSize = layout.iconSize
   local buttonSize = layout.buttonSize
-  frame:SetSize(layout.frameWidth, buttonSize * layout.rows + 12)
+  -- A tooltip-border (HUD) panel shifts its cells clear of the border.
+  local inset = PickerPopup.BorderInset(frame)
+  local pad = PADDING + inset
+  frame:SetSize(layout.frameWidth + inset * 2, buttonSize * layout.rows + PADDING * 2 + inset * 2)
 
   for index, key in ipairs(Assets.KEYS) do
     local slot = index - 1
@@ -30,11 +39,9 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
     local row = math.floor(slot / layout.columns)
     local button = factory.CreateFrame("Button", nil, frame)
     button:SetSize(buttonSize, buttonSize)
-    button:SetPoint("TOPLEFT", frame, "TOPLEFT", 6 + column * buttonSize, -6 - row * buttonSize)
+    button:SetPoint("TOPLEFT", frame, "TOPLEFT", pad + column * buttonSize, -pad - row * buttonSize)
 
-    local highlight = button:CreateTexture(nil, "BACKGROUND")
-    highlight:SetAllPoints(button)
-    PickerStyles.ApplyColor(highlight, PickerStyles.HighlightColor(0.35))
+    local highlight = Hud.IsOn() and NativeArt.AddHighlight(button, PickerPopup.ICON_HIGHLIGHT) or PickerPopup.CreateHoverFill(button)
     highlight:Hide()
     button._highlight = highlight
 
@@ -95,7 +102,7 @@ function EmojiPicker.Create(factory, parent, anchorFrame, onSelect)
 
   function picker:refreshTheme()
     popover.refreshTheme()
-    local highlightColor = PickerStyles.HighlightColor(0.35)
+    local highlightColor = PickerStyles.HighlightColor(PickerStyles.HOVER_ALPHA)
     for _, button in ipairs(self.buttons) do
       PickerStyles.ApplyColor(button._highlight, highlightColor)
     end

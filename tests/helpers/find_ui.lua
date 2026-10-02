@@ -90,6 +90,17 @@ function FindUI.dropdownOptions(row)
   return listed
 end
 
+-- Shown mouse-catching cover laid over a disabled control (DisabledState);
+-- nil while the control is enabled.
+function FindUI.disabledCover(target)
+  for _, child in ipairs(FindUI.ofType(target, "Frame")) do
+    if child.allPoints == target and child.mouseEnabled and child:IsShown() then
+      return child
+    end
+  end
+  return nil
+end
+
 function FindUI.click(button)
   local onClick = button:GetScript("OnClick")
   assert(onClick, "button has no OnClick handler")

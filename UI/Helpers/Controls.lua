@@ -8,12 +8,21 @@ local Base = ns.UIHelpersBase or require("WhisperMessenger.UI.Helpers.Base")
 local GhostButton = ns.UIHelpersGhostButton or require("WhisperMessenger.UI.Helpers.GhostButton")
 local NavItem = ns.UIHelpersNavItem or require("WhisperMessenger.UI.Helpers.NavItem")
 local ToggleSwitch = ns.UIHelpersToggleSwitch or require("WhisperMessenger.UI.Helpers.ToggleSwitch")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 local Controls = {}
 
 function Controls.createOptionButton(factory, parent, label, colors, layout)
   local btnHeight = layout.height or Theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnWidth = layout.width or 200
+
+  -- Native WoW HUD: action buttons (ghost and danger too) are Blizzard panel
+  -- buttons; nav items stay list items.
+  local native = Hud.IsOn() and not layout.nav and NativeControls.CreateButton(factory, parent, label, btnWidth, btnHeight)
+  if native then
+    return native
+  end
 
   local button = factory.CreateFrame("Button", nil, parent)
   button:SetSize(btnWidth, btnHeight)
@@ -149,8 +158,12 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
   labelFs:SetPoint("LEFT", row, "LEFT", 0, 0)
   labelFs:SetText(label)
 
-  local dot = factory.CreateFrame("Button", nil, row)
-  dot:SetSize(ToggleSwitch.TRACK_WIDTH, ToggleSwitch.TRACK_HEIGHT)
+  -- Native WoW HUD: Blizzard checkbox in place of the switch.
+  local check = Hud.IsOn() and NativeControls.CreateCheckButton(factory, row) or nil
+  local dot = check or factory.CreateFrame("Button", nil, row)
+  if not check then
+    dot:SetSize(ToggleSwitch.TRACK_WIDTH, ToggleSwitch.TRACK_HEIGHT)
+  end
   dot:SetPoint("RIGHT", row, "RIGHT", 0, 0)
 
   row._wmColors = {
@@ -160,12 +173,16 @@ function Controls.createToggleRow(factory, parent, label, initial, colors, layou
     knob = colors.knob or Theme.COLORS.control_knob,
   }
 
-  local switch = ToggleSwitch.Attach(dot)
+  local switch = not check and ToggleSwitch.Attach(dot) or nil
 
   local enabled = initial == true
   local function updateVisual()
     Base.setTextColor(labelFs, row._wmColors.text)
-    ToggleSwitch.Paint(switch, dot, enabled, row._wmColors)
+    if check then
+      check:SetChecked(enabled)
+    else
+      ToggleSwitch.Paint(switch, dot, enabled, row._wmColors)
+    end
   end
   updateVisual()
 

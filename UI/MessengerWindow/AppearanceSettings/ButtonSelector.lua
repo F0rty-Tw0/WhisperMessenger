@@ -68,6 +68,10 @@ function ButtonSelector.Create(factory, parent, options)
   -- the `colors` option and applyTheme's colour table are no longer needed.
   local function paintButton(entry, isHovered)
     entry._selected = entry._key == selected
+    if entry._native then
+      SelectorSkin.PaintNative(entry, entry._selected)
+      return
+    end
     SelectorSkin.Paint(entry, entry._selected, isHovered)
   end
 
@@ -75,6 +79,21 @@ function ButtonSelector.Create(factory, parent, options)
     for _, entry in ipairs(buttons) do
       paintButton(entry, entry._hovered == true)
     end
+  end
+
+  -- An option can be unavailable (opt.disabled): dimmed, unclickable, and
+  -- showing opt.disabledReason on hover.
+  local function applyAvailability(btn, opt)
+    if opt.disabled then
+      btn._availability = btn._availability or UIHelpers.attachDisabledState(factory, btn)
+      btn._availability.set(false, opt.disabledReason)
+    elseif btn._availability then
+      btn._availability.set(true)
+    end
+  end
+
+  local function isClickable(btn)
+    return btn._availability == nil or btn._availability.isEnabled()
   end
 
   local function updateSelection(nextSelected)
@@ -117,9 +136,13 @@ function ButtonSelector.Create(factory, parent, options)
   end
 
   for _, opt in ipairs(optionsList) do
-    local btn = factory.CreateFrame("Button", nil, row)
-    local bg = btn:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(btn)
+    local btn = SelectorSkin.CreateNative(factory, row)
+    if not btn then
+      btn = factory.CreateFrame("Button", nil, row)
+      local bg = btn:CreateTexture(nil, "BACKGROUND")
+      bg:SetAllPoints(btn)
+      btn.bg = bg
+    end
     local btnLabel = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
     btnLabel:SetPoint("CENTER", btn, "CENTER", 0, 0)
     btnLabel:SetText(opt.label)
@@ -127,13 +150,19 @@ function ButtonSelector.Create(factory, parent, options)
     btn._key = opt.key
     btn._selected = false
     btn._hovered = false
-    btn.bg = bg
     btn.label = btnLabel
     btn._tooltipTitle = opt.label
     btn._tooltipText = opt.tooltip
-    SelectorSkin.Attach(btn)
+    if not btn._native then
+      SelectorSkin.Attach(btn)
+    end
+
+    applyAvailability(btn, opt)
 
     btn:SetScript("OnClick", function()
+      if not isClickable(btn) then
+        return
+      end
       updateSelection(btn._key)
       if onChange then
         onChange(btn._key)
@@ -177,6 +206,7 @@ function ButtonSelector.Create(factory, parent, options)
           btn.label:SetText(opt.label)
           btn._tooltipTitle = opt.label
           btn._tooltipText = opt.tooltip
+          applyAvailability(btn, opt)
         end
       end
       -- New (localized) labels may be wider: refit.

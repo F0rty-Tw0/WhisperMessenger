@@ -100,7 +100,7 @@ function SettingsPanels.Create(factory, options)
         bubbleColorPreset = settingsConfig.bubbleColorPreset,
         windowOpacityInactive = settingsConfig.windowOpacityInactive,
         windowOpacityActive = settingsConfig.windowOpacityActive,
-        nativeChrome = settingsConfig.nativeChrome,
+        hudStyle = settingsConfig.hudStyle,
       },
     },
     {

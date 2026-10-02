@@ -58,15 +58,18 @@ return function()
     local label = nativeChrome and btn.text or FindUI.ofType(btn, "FontString")[1].text
     assert(label == "Requests", skin .. ": label is Requests, got " .. tostring(label))
 
-    -- test_three_tabs_split_the_strip_in_thirds
-    local first = FindUI.ofType(toggle.frame, "Button")[1]
-    assert(first.points[2][1] == "BOTTOMRIGHT" and first.points[2][4] == 100, skin .. ": first tab is a third of 300px")
-    assert(btn.points[1][1] == "TOPLEFT" and btn.points[1][4] == -100, skin .. ": last tab starts a third from the right")
+    -- test_three_tabs_split_the_strip_in_thirds (modern; native tabs sit
+    -- at natural width, see test_contacts_tab_toggle_native.lua)
+    if not nativeChrome then
+      local first = FindUI.ofType(toggle.frame, "Button")[1]
+      assert(first.points[2][1] == "BOTTOMRIGHT" and first.points[2][4] == 100, skin .. ": first tab is a third of 300px")
+      assert(btn.points[1][1] == "TOPLEFT" and btn.points[1][4] == -100, skin .. ": last tab starts a third from the right")
 
-    -- test_resize_reanchors_the_thirds
-    toggle.frame:SetSize(600, 24)
-    toggle.frame.scripts.OnSizeChanged(toggle.frame)
-    assert(first.points[2][4] == 200, skin .. ": thirds follow the new width")
+      -- test_resize_reanchors_the_thirds
+      toggle.frame:SetSize(600, 24)
+      toggle.frame.scripts.OnSizeChanged(toggle.frame)
+      assert(first.points[2][4] == 200, skin .. ": thirds follow the new width")
+    end
 
     -- test_clicking_requests_switches_mode
     btn.scripts.OnClick(btn)

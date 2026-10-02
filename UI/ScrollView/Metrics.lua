@@ -19,16 +19,27 @@ Metrics.SCROLLBAR_WIDTH = SCROLLBAR_WIDTH
 Metrics.SCROLLBAR_INSET = SCROLLBAR_INSET
 Metrics.MICRO_OVERFLOW_TOLERANCE = MICRO_OVERFLOW_TOLERANCE
 
+-- The Native WoW HUD builds wider bars; the view records its own width.
+local function barWidth(view)
+  return view.scrollbarWidth or SCROLLBAR_WIDTH
+end
+
+-- Viewport width the bar takes on overflow. A bar may hang into empty
+-- space right of the view (view.rightGutter); only the rest is taken.
+local function reservedWidth(view)
+  return math.max(barWidth(view) + SCROLLBAR_INSET - (view.rightGutter or 0), 0)
+end
+
 local function captureLiveGeometry(view)
   if view == nil or view.scrollFrame == nil then
     return 0, 0
   end
 
-  local fallbackViewportWidth = view.hasOverflow and math.max((view.totalWidth or 0) - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0) or (view.totalWidth or 0)
+  local fallbackViewportWidth = view.hasOverflow and math.max((view.totalWidth or 0) - reservedWidth(view), 0) or (view.totalWidth or 0)
   local liveViewportWidth = sizeValue(view.scrollFrame, "GetWidth", "width", fallbackViewportWidth)
   local liveViewportHeight = sizeValue(view.scrollFrame, "GetHeight", "height", view.viewportHeight or 0)
 
-  view.totalWidth = liveViewportWidth + (view.hasOverflow and (SCROLLBAR_WIDTH + SCROLLBAR_INSET) or 0)
+  view.totalWidth = liveViewportWidth + (view.hasOverflow and reservedWidth(view) or 0)
   view.viewportHeight = liveViewportHeight
   view.viewportWidth = liveViewportWidth
   return liveViewportWidth, liveViewportHeight
@@ -41,7 +52,7 @@ local function applyViewportLayout(view, hasOverflow)
 
   local totalWidth = view.totalWidth or 0
   local viewportHeight = view.viewportHeight or 0
-  local scrollFrameWidth = hasOverflow and math.max(totalWidth - SCROLLBAR_WIDTH - SCROLLBAR_INSET, 0) or totalWidth
+  local scrollFrameWidth = hasOverflow and math.max(totalWidth - reservedWidth(view), 0) or totalWidth
   local contentHeight = sizeValue(view.content, "GetHeight", "height", viewportHeight)
 
   if view.scrollFrame.SetSize then
@@ -55,13 +66,23 @@ local function applyViewportLayout(view, hasOverflow)
   if view.scrollBar and view.scrollBar.SetSize then
     local wasSyncingScrollBar = view.syncingScrollBar
     view.syncingScrollBar = true
-    view.scrollBar:SetSize(SCROLLBAR_WIDTH, viewportHeight)
+    view.scrollBar:SetSize(barWidth(view), viewportHeight)
     view.syncingScrollBar = wasSyncingScrollBar
   end
 
   view.viewportWidth = scrollFrameWidth
   view.hasOverflow = hasOverflow
   return scrollFrameWidth
+end
+
+-- New outer size for the view; the bar's share is kept while it shows.
+function Metrics.Resize(view, totalWidth, viewportHeight)
+  if view == nil then
+    return
+  end
+  view.totalWidth = totalWidth
+  view.viewportHeight = viewportHeight
+  applyViewportLayout(view, view.hasOverflow == true)
 end
 
 -- Export internal helpers for Factory and Navigation to use

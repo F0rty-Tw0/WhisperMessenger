@@ -33,8 +33,8 @@ local roles = {
   -- Pinned reads through ordering and the hover pin, not a colour.
   contact_pinned = withAlpha(accentRgb, 0.05),
   bubble_in = { 0.18, 0.20, 0.26, 0.95 },
-  -- Outgoing whisper bubble carries the WHISPER magenta tint.
-  bubble_out = { 0.30, 0.13, 0.36, 0.82 },
+  -- Outgoing bubble: dark bronze under the gold sent text.
+  bubble_out = { 0.24, 0.19, 0.09, 0.92 },
   bubble_system = { 0.14, 0.12, 0.08, 0.65 },
   -- Warm-bronze field a step lighter than the chrome surfaces.
   input_bg = { 0.16, 0.14, 0.10, 1.0 },

@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local createOptionButton = UIHelpers.createOptionButton
 
@@ -14,7 +15,7 @@ local function optionButtonWidth(contactsWidth, menuPadding)
   return contactsWidth - (menuPadding * 2)
 end
 
-function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
+function OptionsMenuButtons.Build(factory, optionsMenu, options)
   options = options or {}
 
   local theme = options.theme or Theme
@@ -33,7 +34,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
   local tabSpacing = 4
 
   local generalTab = optionButtonFactory(factory, optionsMenu, Localization.Text("General"), tabColors, tabLayout)
-  generalTab:SetPoint("TOPLEFT", optionsHeader, "BOTTOMLEFT", 0, -menuPadding)
+  generalTab:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
 
   local appearanceTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Appearance"), tabColors, tabLayout)
   appearanceTab:SetPoint("TOPLEFT", generalTab, "BOTTOMLEFT", 0, -tabSpacing)
@@ -75,7 +76,7 @@ function OptionsMenuButtons.Build(factory, optionsMenu, optionsHeader, options)
     if not nativeChrome then
       return nil
     end
-    local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, optionsMenu, "UIPanelButtonTemplate")
+    local button = UIHelpers.createTemplatedFrame(factory, "Button", nil, optionsMenu, NativeControls.BUTTON_TEMPLATE)
     if button then
       button:SetSize(btnLayout.width, btnH)
       button:SetText(Localization.Text(key))

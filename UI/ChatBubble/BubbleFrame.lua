@@ -20,6 +20,7 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local BubbleColors = ns.ThemeBubbleColors or require("WhisperMessenger.UI.Theme.BubbleColors")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
 -- Queued / not-sent bubbles fade so they read as "didn't go out".
 local UNSENT_BUBBLE_ALPHA = 0.55
@@ -31,6 +32,9 @@ local function reactionsAllowed(message, canReact)
   end
   return MessageReactions.IsEligible(message)
 end
+
+-- How far a HUD bubble's border moves from its fill colour toward white.
+local NATIVE_BORDER_LIGHTEN = 0.35
 
 local function applyBubbleColor(frame, colorTable, alphaScale)
   local r, g, b = colorTable[1], colorTable[2], colorTable[3]
@@ -44,6 +48,16 @@ local function applyBubbleColor(frame, colorTable, alphaScale)
     if part.SetVertexColor then
       part:SetVertexColor(r, g, b, a)
     end
+  end
+  local backdrop = frame._nativeBackdrop
+  if backdrop and backdrop.SetBackdropColor then
+    backdrop:SetBackdropColor(r, g, b, a)
+  end
+  -- The stock tooltip edge is near-white and glares; edge the bubble in its
+  -- own fill colour, lightened, so it follows the preset.
+  if backdrop and backdrop.SetBackdropBorderColor then
+    local k = NATIVE_BORDER_LIGHTEN
+    backdrop:SetBackdropBorderColor(r + (1 - r) * k, g + (1 - g) * k, b + (1 - b) * k, a)
   end
 end
 
@@ -140,6 +154,10 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
     pH = 8
     pV = 4
   end
+  if Hud.IsOn() then
+    pH = pH + Theme.LAYOUT.NATIVE_BORDER_INSET
+    pV = pV + Theme.LAYOUT.NATIVE_BORDER_INSET
+  end
 
   -- Button is required for WoW's native OnDoubleClick script.
   local frame = factory.CreateFrame("Button", nil, parent)
@@ -161,7 +179,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local bgCorners = frame._bgCorners
   local textFS = frame._textFS
   if not textFS then
-    bgFills, bgCorners, textFS = BubbleStructure.createStructure(frame)
+    bgFills, bgCorners, textFS = BubbleStructure.createStructure(frame, options.persistentFactory or factory)
   else
     -- Re-show cached regions (hidden during pool release)
     for _, part in ipairs(bgFills) do
@@ -178,6 +196,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
       textFS:Show()
     end
   end
+  BubbleStructure.showNativeBackdrop(frame)
 
   local fontColorOverride = Fonts.GetFontColorRGBA and Fonts.GetFontColorRGBA() or nil
 

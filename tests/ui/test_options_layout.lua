@@ -41,7 +41,6 @@ return function()
   do
     local scrollContent = layout.optionsMenuScrollView.content
     local menuControls = {
-      { name = "optionsHeader", control = layout.optionsHeader },
       { name = "generalTab", control = layout.generalTab },
       { name = "appearanceTab", control = layout.appearanceTab },
       { name = "behaviorTab", control = layout.behaviorTab },
@@ -142,9 +141,13 @@ return function()
   assert(layout.resetIconButton ~= nil, "resetIconButton should exist")
   assert(layout.clearAllChatsButton ~= nil, "clearAllChatsButton should exist")
 
-  -- test_options_header_still_exists
+  -- test_options_menu_has_no_title
 
-  assert(layout.optionsHeader ~= nil, "optionsHeader should exist")
+  do
+    assert(layout.optionsHeader == nil, "the options menu has no title")
+    local point = layout.generalTab.points[1]
+    assert(point[2] == layout.optionsMenuScrollView.content, "first tab anchors to the menu top, not a title")
+  end
 
   -- test_tabs_have_labels
 
@@ -180,7 +183,6 @@ return function()
       return false
     end
 
-    assert(localizedLayout.optionsHeader.text == "Параметры", "options header should be localized")
     assert(hasLabel(localizedLayout.generalTab, "Общие"), "general tab should be localized")
     assert(hasLabel(localizedLayout.appearanceTab, "Внешний вид"), "appearance tab should be localized")
     assert(hasLabel(localizedLayout.behaviorTab, "Поведение"), "behavior tab should be localized")

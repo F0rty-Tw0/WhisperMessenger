@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
+local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local DropdownSelector = {}
@@ -15,6 +16,10 @@ local DEFAULT_MENU_HEIGHT = 156
 
 function DropdownSelector.Create(factory, parent, options)
   options = options or {}
+  local native = NativeDropdown.Create(factory, parent, options)
+  if native then
+    return native
+  end
 
   local labelText = options.labelText
   local optionsList = type(options.optionsList) == "table" and options.optionsList or {}

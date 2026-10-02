@@ -398,6 +398,7 @@ local function makeCreateFrame()
     function frame:CreateTexture(childName, layer, inheritedTemplate)
       local texture = createFrame("Texture", childName or (self.name or "frame") .. "Texture", self, inheritedTemplate)
       Texture.Augment(texture)
+      texture.drawLayer = layer
       return texture
     end
 
@@ -535,6 +536,15 @@ local function makeCreateFrame()
       self.clamped = value
     end
 
+    function frame:SetClampRectInsets(left, right, top, bottom)
+      self.clampRectInsets = { left, right, top, bottom }
+    end
+
+    function frame:GetClampRectInsets()
+      local insets = self.clampRectInsets or { 0, 0, 0, 0 }
+      return insets[1], insets[2], insets[3], insets[4]
+    end
+
     function frame:SetNormalFontObject(value)
       self.normalFontObject = value
     end
@@ -545,6 +555,15 @@ local function makeCreateFrame()
 
     function frame:SetEnabled(value)
       self.enabled = value
+    end
+
+    -- CheckButton API.
+    function frame:SetChecked(value)
+      self.checked = value == true
+    end
+
+    function frame:GetChecked()
+      return self.checked == true
     end
 
     function frame:SetNormalTexture(value)
