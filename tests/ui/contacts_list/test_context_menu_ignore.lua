@@ -89,8 +89,8 @@ return function()
       return "Mage", "MAGE", "Human", "Human", 2, "Arthas", "Area 52"
     end
   end)
-  local saved = { channel = "WOW", displayName = "Boss", guid = "Player-3676-0A", conversationKey = "wow::WOW::boss" }
-  ContextMenu.Open(saved, anchor, nil, nil, rowActions)
+  local nicknamed = { channel = "WOW", displayName = "Boss", guid = "Player-3676-0A", conversationKey = "wow::WOW::boss" }
+  ContextMenu.Open(nicknamed, anchor, nil, nil, rowActions)
   root = newRoot()
   modifiers["MENU_UNIT_FRIEND"](anchor, root, openedContext)
   findButton(root, "Ignore…").callback()
