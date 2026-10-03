@@ -14,12 +14,13 @@ local DuplicateCollapse = {}
 local gsub = string.gsub
 local lower = string.lower
 local ipairs = ipairs
+local pairs = pairs
 
 -- Entry count per conversation's entries table. Remember only adds, so a
--- busy chat is rebuilt from its retained messages once the count passes
--- max(MIN_REBUILD_AT, 2 x retained messages). Weak keys: a dropped entries
+-- busy chat drops entries for trimmed messages once the count passes
+-- max(MIN_PRUNE_AT, 2 x retained messages). Weak keys: a dropped entries
 -- table takes its count with it.
-local MIN_REBUILD_AT = 32
+local MIN_PRUNE_AT = 32
 local entryCounts = setmetatable({}, { __mode = "k" })
 
 -- Same sender key as the ignore list: lowercased short name, nil for secrets.
@@ -64,7 +65,7 @@ end
 
 local function isOverfull(entries, conversation)
   local retained = conversation.messages and #conversation.messages or 0
-  return (entryCounts[entries] or 0) > math.max(MIN_REBUILD_AT, 2 * retained)
+  return (entryCounts[entries] or 0) > math.max(MIN_PRUNE_AT, 2 * retained)
 end
 
 -- A remembered message is still in the conversation only while it is the
@@ -77,15 +78,31 @@ local function isRetained(message, conversation)
   return message == oldest or (tonumber(message.sentAt) or 0) > (tonumber(oldest.sentAt) or 0)
 end
 
+-- Drops entries whose message was trimmed. Reads only the stored keys, so
+-- nothing is normalized again.
+local function prune(entries, conversation)
+  local count = 0
+  for key, message in pairs(entries) do
+    if isRetained(message, conversation) then
+      count = count + 1
+    else
+      entries[key] = nil
+    end
+  end
+  entryCounts[entries] = count
+end
+
 function DuplicateCollapse.Find(index, conversation, senderKey, normalized)
   local conversationKey = conversation and conversation.conversationKey
   if conversationKey == nil or senderKey == nil or normalized == nil then
     return nil
   end
   local entries = index[conversationKey]
-  if entries == nil or isOverfull(entries, conversation) then
+  if entries == nil then
     entries = buildEntries(conversation)
     index[conversationKey] = entries
+  elseif isOverfull(entries, conversation) then
+    prune(entries, conversation)
   end
   local message = entries[entryKey(senderKey, normalized)]
   if message == nil or not isRetained(message, conversation) then

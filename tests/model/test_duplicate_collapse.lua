@@ -106,6 +106,30 @@ return function()
     assert(hit == last, "a retained line still collapses after a rebuild")
   end
 
+  -- test_overfull_index_prunes_without_normalizing
+  do
+    local state = Store.New({ maxMessagesPerConversation = 5 })
+    local index = {}
+    for n = 1, 33 do
+      ingest(state, index, incoming(tostring(n), "Sender" .. n, "line number " .. n, n))
+    end
+    local original = DuplicateCollapse.NormalizeText
+    local normalizations = 0
+    rawset(DuplicateCollapse, "NormalizeText", function(...)
+      normalizations = normalizations + 1
+      return original(...)
+    end)
+    local hit = DuplicateCollapse.Find(index, state.conversations[KEY], DuplicateCollapse.SenderKey("Sender33"), "line number 33")
+    rawset(DuplicateCollapse, "NormalizeText", original)
+    assert(normalizations == 0, "pruning re-normalizes nothing, got " .. normalizations)
+    assert(hit == state.conversations[KEY].messages[5], "a retained line survives the prune")
+    local entries = 0
+    for _ in pairs(index[KEY]) do
+      entries = entries + 1
+    end
+    assert(entries == 5, "only retained lines stay indexed, got " .. entries)
+  end
+
   -- test_same_text_from_different_senders_never_matches
   do
     local state = Store.New({ maxMessagesPerConversation = 50 })
