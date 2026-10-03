@@ -5,8 +5,11 @@ end
 
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
+local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
+local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 local GroupRouter = {}
 
@@ -148,6 +151,13 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end
   end
 
+  -- Ignored senders and keyword-blocked lines are handled by dropping them;
+  -- the player's own lines are never filtered.
+  local isSelf = Direction.IsLocalSender(eventName, guid, bnSenderID, runtime)
+  if IncomingFilter.Evaluate(runtime, "group", playerName, text, lineID, eventName, isSelf) ~= "pass" then
+    return true
+  end
+
   -- Resolve sender class/race/faction from guid so the chat bubble can
   -- render a class icon and class-colored name. BN_CONVERSATION events
   -- don't carry a guid (BNet identity instead) — skip for that surface.
@@ -177,14 +187,19 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end)
   end
 
-  local handled, _, meta = GroupChatIngest.HandleEvent(runtime, eventName, payload)
+  local handled, conv, meta = GroupChatIngest.HandleEvent(runtime, eventName, payload)
   -- Only a line naming the player alerts in group chats (sound + flash, no
   -- popup or auto-open), even when the chat is muted.
   if meta and meta.mention then
     IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
   end
-  if handled and type(runtime.isWindowVisible) == "function" and runtime.isWindowVisible() and type(runtime.refreshWindow) == "function" then
-    runtime.refreshWindow()
+  -- Coalesced: a busy chat must not rebuild the window per line. The
+  -- scheduler ignores lines while the window is hidden.
+  if handled then
+    PerfCounters.Increment("groupLines")
+    if type(runtime.scheduleIncomingRefresh) == "function" then
+      runtime.scheduleIncomingRefresh(conv and conv.conversationKey)
+    end
   end
   return handled
 end

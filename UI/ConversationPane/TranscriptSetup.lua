@@ -10,6 +10,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Hyperlinks = ns.UIHyperlinks or require("WhisperMessenger.UI.Hyperlinks")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PlayerMenu = ns.ChatBubblePlayerMenu or require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
+local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.IgnorePrompt")
 local sizeValue = UIHelpers.sizeValue
 
 local TranscriptSetup = {}
@@ -34,14 +35,37 @@ function TranscriptSetup.BindMessageActions(transcript, view, onMessageAction)
   end
 end
 
+-- Whisper chats have one other player, ignored from the contact row menu.
+-- Battle.net conversation senders are accounts, not characters.
+local NO_IGNORE_SENDER_CHANNELS = { WOW = true, BN = true, BN_CONVERSATION = true }
+
 -- Sender name / portrait right-click: player menu for the selected contact,
--- with the same Mark unread / prefs callbacks the contact rows use.
+-- with the same Mark unread / prefs callbacks the contact rows use. Bubble
+-- right-click in group and channel chats: "Ignore sender…" for other
+-- players' lines (options.onIgnorePlayer(name, reason)).
 function TranscriptSetup.BindPlayerMenu(transcript, view, options)
+  if type(options.onIgnorePlayer) == "function" then
+    transcript.canIgnoreSender = function(message)
+      local contact = view._selectedContact
+      return contact ~= nil
+        and not NO_IGNORE_SENDER_CHANNELS[contact.channel]
+        and message.direction == "in"
+        and message.kind == "user"
+        and type(message.playerName) == "string"
+        and not string.find(message.playerName, "|K", 1, true)
+    end
+    transcript.onIgnoreSender = function(message)
+      IgnorePrompt.AskReason(function(reason)
+        options.onIgnorePlayer(message.playerName, reason)
+      end)
+    end
+  end
   transcript.openPlayerMenu = function(message, anchor)
     return PlayerMenu.Open(message, anchor, nil, {
       contact = view._selectedContact,
       onMarkUnread = options.onMarkUnread,
       onUpdatePrefs = options.onUpdatePrefs,
+      onIgnorePlayer = options.onIgnorePlayer,
     })
   end
 end

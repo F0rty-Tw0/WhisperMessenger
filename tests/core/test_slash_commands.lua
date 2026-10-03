@@ -56,6 +56,23 @@ return function()
   assert(_G.SLASH_WHISPERMESSENGER1 ~= nil, "SLASH_WHISPERMESSENGER1 should be set")
   assert(_G.SlashCmdList["WHISPERMESSENGER"] ~= nil, "SlashCmdList.WHISPERMESSENGER should be set")
 
+  -- 6. /wmsg perf prints the debug counters instead of toggling.
+  local perfCalls = 0
+  local perfToggles = 0
+  SlashCommands.Register({
+    toggle = function()
+      perfToggles = perfToggles + 1
+    end,
+    perf = function()
+      perfCalls = perfCalls + 1
+    end,
+  })
+  _G.SlashCmdList["WHISPERMESSENGER"]("perf")
+  assert(perfCalls == 1, "/wmsg perf should call the perf handler")
+  assert(perfToggles == 0, "/wmsg perf must not toggle the messenger")
+  _G.SlashCmdList["WHISPERMESSENGER"]("other")
+  assert(perfToggles == 1, "any other word still toggles")
+
   -- Cleanup
   _G.SLASH_WHISPERMESSENGER1 = savedSlash1
   _G.SLASH_WHISPERMESSENGER2 = savedSlash2

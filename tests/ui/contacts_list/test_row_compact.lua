@@ -91,6 +91,22 @@ return function()
     assert(row.statusDot.shown == false, "no status dot on a group")
   end
 
+  local trade =
+    { conversationKey = "channel::me-realm::trade", displayName = "Trade", channel = ChannelType.CHANNEL, unreadCount = 0, lastActivityAt = 1 }
+
+  -- test_channel_row_shows_its_own_channel_icon
+  do
+    local row = RowView.bindRow(factory, newParent(factory, 260), nil, 1, trade, {})
+    assert(row.classIcon.texturePath == "Interface\\ICONS\\INV_Misc_Coin_01", "Trade icon, got " .. tostring(row.classIcon.texturePath))
+  end
+
+  -- test_compact_channel_row_shows_its_initials
+  do
+    local row = RowView.bindRow(factory, newParent(factory, RAIL_ROW_PARENT_WIDTH), nil, 1, trade, compact)
+    assert(row.railAvatar ~= nil and row.railAvatar.label.shown == true, "initials shown on a channel chat")
+    assert(row.railAvatar.label.text == "TR", "initials of Trade, got " .. tostring(row.railAvatar.label.text))
+  end
+
   -- test_rebinding_expanded_restores_the_full_row
   do
     local parent = newParent(factory, RAIL_ROW_PARENT_WIDTH)

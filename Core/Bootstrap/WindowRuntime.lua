@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ContactsList = ns.ContactsList or require("WhisperMessenger.UI.ContactsList")
+local SnapshotCache = ns.ContactsListSnapshotCache or require("WhisperMessenger.UI.ContactsList.SnapshotCache")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
@@ -72,8 +73,10 @@ function WindowRuntime.Create(options)
   local minimapIcon
   local minimapRuntime
 
-  local function buildContacts()
-    return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId)
+  -- dirtyKeys nil (every direct caller) rebuilds all contact snapshots.
+  local snapshotCache = SnapshotCache.New()
+  local function buildContacts(dirtyKeys)
+    return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId, snapshotCache, dirtyKeys)
   end
 
   -- Create the selected icon surface and initialize the minimap runtime for
@@ -172,6 +175,7 @@ function WindowRuntime.Create(options)
   })
 
   runtime.onAvailabilityChanged = coordinator.scheduleAvailabilityRefresh
+  runtime.scheduleIncomingRefresh = coordinator.scheduleIncomingRefresh
 
   local groupSendPolicy = GroupSendPolicy.Create({
     runtime = runtime,
@@ -292,6 +296,7 @@ function WindowRuntime.Create(options)
       initialTabMode = characterState.contactsTabMode or "whispers",
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,
+      filters = accountState.filters,
       onSettingChanged = onSettingChanged,
     }
     -- Every window callback passes straight through.

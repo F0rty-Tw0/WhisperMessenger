@@ -50,4 +50,15 @@ return function()
 
   memory.onTabModeSwapSelection("groups", "whispers")
   assert(activeKey == "wow::WOW::Thrall", "latest whisper selection should restore on return")
+
+  -- test_channels_tab_remembers_its_own_selection
+  local trade = { channel = ChannelType.CHANNEL, conversationKey = "CHANNEL::trade", displayName = "Trade", inChannelsTab = true }
+  currentContacts[#currentContacts + 1] = trade
+  memory.onTabModeSwapSelection("whispers", "channels")
+  assert(activeKey == nil, "channels should clear when no remembered selection exists")
+  memory.onSelect(trade)
+  memory.onTabModeSwapSelection("channels", "groups")
+  assert(activeKey == "PARTY::1", "groups keeps its own selection, not the channel chat")
+  memory.onTabModeSwapSelection("groups", "channels")
+  assert(activeKey == "CHANNEL::trade", "channel selection should restore on return")
 end

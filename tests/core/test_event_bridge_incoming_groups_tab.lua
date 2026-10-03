@@ -38,7 +38,8 @@ end
 
 return function()
   -- test_incoming_whisper_on_groups_tab_does_not_call_onAutoOpen
-  do
+  -- test_incoming_whisper_on_channels_tab_does_not_call_onAutoOpen
+  for _, readingTab in ipairs({ "groups", "channels" }) do
     stubGlobals()
     local autoOpenCalls = {}
     local runtime = {
@@ -55,7 +56,7 @@ return function()
       pendingOutgoing = {},
       window = {
         getTabMode = function()
-          return "groups"
+          return readingTab
         end,
       },
     }
@@ -65,7 +66,7 @@ return function()
 
     EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_WHISPER", unpackArgs(WHISPER_ARGS))
 
-    assert(#autoOpenCalls == 0, "expected zero onAutoOpen calls when on groups tab; got " .. #autoOpenCalls)
+    assert(#autoOpenCalls == 0, "expected zero onAutoOpen calls when on " .. readingTab .. " tab; got " .. #autoOpenCalls)
     assert(
       runtime.activeConversationKey == "PARTY::1",
       "activeConversationKey must remain on the selected group; got " .. tostring(runtime.activeConversationKey)

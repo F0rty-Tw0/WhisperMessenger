@@ -54,6 +54,11 @@ end
 -- the secret value unchanged and crash at the caller.
 local function readPlayerSpeed()
   local speed = _G.GetUnitSpeed("player")
+  -- A blocked comparison is still logged as taint, 10 a second in Mythic+.
+  local isSecret = _G.issecretvalue
+  if type(isSecret) == "function" and isSecret(speed) then
+    return false
+  end
   return type(speed) == "number" and speed > 0
 end
 

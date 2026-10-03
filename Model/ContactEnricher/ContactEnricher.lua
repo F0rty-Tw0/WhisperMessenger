@@ -7,9 +7,26 @@ end
 local AvailabilityEnricher = ns.AvailabilityEnricher or require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
 local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 -- stylua: ignore end
 
 local ContactEnricher = {}
+
+local PAUSED_WHISPER_HINT = "To reply now, type /w and their name in the game's chat."
+
+-- While sending is paused our composer is locked, but the game's own chat
+-- can still whisper, so whisper chats point there.
+local function buildNotice(runtime, selectedContact, conversation)
+  local notice = runtime.messagingNotice
+  if notice == nil then
+    return type(runtime.getGroupSendNotice) == "function" and runtime.getGroupSendNotice(conversation) or nil
+  end
+  local channel = selectedContact and selectedContact.channel
+  if channel == "WOW" or channel == "BN" then
+    return notice .. " " .. Localization.Text(PAUSED_WHISPER_HINT)
+  end
+  return notice
+end
 
 -- Re-export availability functions for backward compatibility
 ContactEnricher.ShouldRequestAvailability = AvailabilityEnricher.ShouldRequestAvailability
@@ -67,7 +84,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local BNetStatus = ns.ContactEnricherBNetStatus or require("WhisperMessenger.Model.ContactEnricher.BNetStatus")
   local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
   if contacts == nil and buildContactsFn then
-    contacts = buildContactsFn(runtime)
+    contacts = buildContactsFn()
   end
 
   ContactEnricher.EnrichContactsAvailability(contacts, runtime)
@@ -115,7 +132,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
     selectedContact = selectedContact,
     conversation = conversation,
     status = selectedContact and selectedContact.availability or ContactEnricher.BuildConversationStatus(runtime, conversationKey, conversation),
-    notice = runtime.messagingNotice or (type(runtime.getGroupSendNotice) == "function" and runtime.getGroupSendNotice(conversation) or nil),
+    notice = buildNotice(runtime, selectedContact, conversation),
   }
 end
 

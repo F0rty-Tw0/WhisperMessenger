@@ -11,13 +11,13 @@ local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.Pick
 local QuickReplies = ns.QuickReplies or require("WhisperMessenger.Model.QuickReplies")
 local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local RemoveButton = ns.RemoveButton or require("WhisperMessenger.UI.Shared.RemoveButton")
 
 -- "Quick replies" section of the Behavior page: the saved replies, each with
 -- a remove button, and an add button (up to QuickReplies.MAX_ENTRIES).
 local QuickRepliesSettings = {}
 
 local ROW_HEIGHT = PickerStyles.ROW_HEIGHT
-local REMOVE_SIZE = 16
 -- Add button alpha once the list holds QuickReplies.MAX_ENTRIES.
 local FULL_LIST_ADD_ALPHA = 0.5
 local ADD_DIALOG_NAME = "WHISPER_MESSENGER_ADD_QUICK_REPLY"
@@ -26,33 +26,14 @@ local function text(key)
   return Localization.Text(key)
 end
 
-local function paintRemove(button, hovered)
-  UIHelpers.applyVertexColor(button.icon, hovered and Theme.COLORS.danger_text or Theme.COLORS.action_icon or Theme.COLORS.text_secondary)
-end
-
 local function createRow(factory, list, onRemove)
   local row = factory.CreateFrame("Frame", nil, list)
   row:SetHeight(ROW_HEIGHT)
 
-  local removeButton = factory.CreateFrame("Button", nil, row)
-  removeButton:SetSize(REMOVE_SIZE, REMOVE_SIZE)
-  removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-  removeButton.icon = removeButton:CreateTexture(nil, "ARTWORK")
-  removeButton.icon:SetAllPoints(removeButton)
-  removeButton.icon:SetTexture(Theme.TEXTURES.trash_icon)
-  paintRemove(removeButton, false)
-  removeButton:SetScript("OnEnter", function(self)
-    paintRemove(self, true)
-    PickerStyles.ShowTooltipText(self, text("Remove"))
-  end)
-  removeButton:SetScript("OnLeave", function(self)
-    paintRemove(self, false)
-    PickerStyles.HideTooltip()
-  end)
-  removeButton:SetScript("OnClick", function()
-    PickerStyles.HideTooltip()
+  local removeButton = RemoveButton.Create(factory, row, function()
     onRemove(row.index)
   end)
+  removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
   row.removeButton = removeButton
 
   local label = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
@@ -149,7 +130,7 @@ function QuickRepliesSettings.Create(factory, frame, anchor, options)
     titleSection.refreshTheme(Theme)
     for _, row in ipairs(section.rows) do
       UIHelpers.setTextColor(row.label, Theme.COLORS.text_primary)
-      paintRemove(row.removeButton, false)
+      RemoveButton.Paint(row.removeButton, false)
     end
   end
 

@@ -104,6 +104,50 @@ return function()
     assert(opened.onMarkUnread == nil and opened.onUpdatePrefs == nil, "expected no WM callbacks for group senders")
   end
 
+  -- test_open_on_channel_line_sender_opens_player_menu
+  -- Channel and group lines store their chat type ("CHANNEL", "GUILD") on
+  -- the message; the sender is still a WoW player, not the chat.
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+    local trade = { channel = "CHANNEL", conversationKey = "channel::me::trade", displayName = "Trade" }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Guldanhand-Kazzak", guid = "Player-1-0A" },
+      anchor,
+      stub,
+      { contact = trade }
+    )
+
+    assert(opened.channel == "WOW", "expected the sender as a WOW player, got " .. tostring(opened.channel))
+  end
+
+  -- test_channel_sender_menu_offers_our_ignore
+  do
+    local opened
+    local stub = {
+      Open = function(item, _anchorFrame, _onMarkUnread, _onUpdatePrefs, rowActions)
+        opened = { item = item, rowActions = rowActions }
+        return true
+      end,
+    }
+    local onIgnorePlayer = function() end
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak" },
+      anchor,
+      stub,
+      { contact = { channel = "CHANNEL" }, onIgnorePlayer = onIgnorePlayer }
+    )
+
+    assert(opened.rowActions and opened.rowActions.onIgnorePlayer == onIgnorePlayer, "group senders get our Ignore… entry")
+  end
+
   -- test_open_refuses_outgoing_messages
   -- You don't open a player menu on yourself.
   do
@@ -150,5 +194,68 @@ return function()
     -- Without a contacts ContextMenu impl injected and no ns lookup in the
     -- test sandbox, Open should fail gracefully instead of erroring.
     assert(ok == false, "expected Open to return false when the menu impl is unavailable")
+  end
+  -- test_channel_sender_item_carries_line_and_chat_type
+  -- Blizzard's player menu needs both to offer Report Player for the line.
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak", lineID = 4242 },
+      anchor,
+      stub,
+      { contact = { channel = "CHANNEL" } }
+    )
+
+    assert(opened.lineID == 4242, "expected the line ID, got " .. tostring(opened.lineID))
+    assert(opened.chatType == "CHANNEL", "expected chat type CHANNEL, got " .. tostring(opened.chatType))
+  end
+
+  -- test_guild_sender_item_carries_guild_chat_type
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "GUILD", playerName = "Thrall-Doomhammer", lineID = 7 },
+      anchor,
+      stub,
+      { contact = { channel = "GUILD" } }
+    )
+
+    assert(opened.lineID == 7 and opened.chatType == "GUILD", "expected the guild line and chat type")
+  end
+
+  -- test_protected_name_opens_no_player_menu
+  -- A |K token is a protected Battle.net name; the WoW player menu can't use it.
+  do
+    local called = false
+    local stub = {
+      Open = function()
+        called = true
+        return true
+      end,
+    }
+
+    local ok = PlayerMenu.Open(
+      { direction = "in", channel = "COMMUNITY", playerName = "|Kq1|k", lineID = 8 },
+      anchor,
+      stub,
+      { contact = { channel = "COMMUNITY" } }
+    )
+
+    assert(ok == false, "expected no menu for a protected name")
+    assert(called == false, "expected ContextMenu.Open NOT to be called")
   end
 end

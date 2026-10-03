@@ -29,6 +29,8 @@ local MESSAGE_FIELDS = {
   "delivery",
   "replyTo",
   "reaction",
+  "repeatCount",
+  "lastSeenAt",
 }
 local MESSAGE_FIELD_COUNT = #MESSAGE_FIELDS
 
@@ -62,39 +64,64 @@ local function snapshot(row, message)
   row.pendingReactionOperation = pending and pending.operation or nil
 end
 
+local WEAK_KEYS = { __mode = "k" }
+
+local function newState()
+  return { rows = {}, spareRows = {}, rowByMessage = setmetatable({}, WEAK_KEYS), pass = 0 }
+end
+
+-- Drops index entries for rows whose message left the transcript, then
+-- recycles the old row array as the next pass's spare.
+local function retireRows(state, oldRows, pass)
+  local rowByMessage = state.rowByMessage
+  for index = #oldRows, 1, -1 do
+    local row = oldRows[index]
+    if row.pass ~= pass and rowByMessage[row.message] == row then
+      rowByMessage[row.message] = nil
+    end
+    oldRows[index] = nil
+  end
+  state.spareRows = oldRows
+end
+
 -- Returns the transcript's virtual state and whether any row changed.
+-- Rows follow their message: a cap shift keeps measured heights.
 function TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
   local state = transcript._virtualState
   if state == nil then
-    state = { rows = {} }
+    state = newState()
     transcript._virtualState = state
   end
 
-  local rows = state.rows
+  local oldRows = state.rows
+  local rows = state.spareRows
+  local rowByMessage = state.rowByMessage
+  local pass = state.pass + 1
+  state.pass = pass
   local widthChanged = state.paneWidth ~= paneWidth
   local geometryRevision = ChatBubbleLayout.GetGeometryRevision()
   local geometryChanged = state.geometryRevision ~= geometryRevision
-  local previousRowCount = #rows
-  local anyChanged = widthChanged or geometryChanged or previousRowCount ~= #messages
+  local anyChanged = widthChanged or geometryChanged or #oldRows ~= #messages
   local offset = CONTENT_PAD
   for index, message in ipairs(messages) do
-    local row = rows[index]
+    local row = rowByMessage[message]
     if row == nil then
       row = {}
-      rows[index] = row
+      rowByMessage[message] = row
     end
+    rows[index] = row
 
     local estimatedHeight = ChatBubbleLayout.EstimateRowHeight(messages[index - 1], message, paneWidth, index == 1, message == dividerMessage)
-    local changed = widthChanged
-      or geometryChanged
-      or row.message ~= message
-      or snapshotChanged(row, message)
-      or row.estimatedHeight ~= estimatedHeight
+    local changed = widthChanged or geometryChanged or snapshotChanged(row, message) or row.estimatedHeight ~= estimatedHeight
 
     if changed then
       row.height = estimatedHeight
       anyChanged = true
     end
+    if row.index ~= index then
+      anyChanged = true
+    end
+    row.pass = pass
     row.index = index
     row.message = message
     row.offset = offset
@@ -102,9 +129,8 @@ function TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
     row.estimatedHeight = estimatedHeight
     offset = offset + row.height
   end
-  for index = #messages + 1, #rows do
-    rows[index] = nil
-  end
+  state.rows = rows
+  retireRows(state, oldRows, pass)
 
   state.messages = messages
   state.paneWidth = paneWidth

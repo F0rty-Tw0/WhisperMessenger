@@ -128,4 +128,17 @@ return function()
     assert(GroupLabel.LabelForSession(ChannelType.COMMUNITY, false, nil, 123) == "Community", "COMMUNITY must stay unchanged")
     assert(GroupLabel.LabelForSession(ChannelType.BN_CONVERSATION, false, nil, 123) == "Battle.net Group", "BN_CONVERSATION must stay unchanged")
   end
+
+  -- test_channel_row_shows_the_channel_name
+  do
+    local item = { channel = ChannelType.CHANNEL, displayName = "Trade", title = nil }
+    local label = GroupLabel.ForItem(item)
+    assert(label == "Trade", "a channel chat row shows the channel's name, got: " .. tostring(label))
+  end
+
+  -- test_channel_without_a_name_falls_back_to_Channel
+  do
+    local label = GroupLabel.LabelForChannelAndTitle(ChannelType.CHANNEL, nil, nil)
+    assert(label == "Channel", "a channel chat without a name shows 'Channel', got: " .. tostring(label))
+  end
 end

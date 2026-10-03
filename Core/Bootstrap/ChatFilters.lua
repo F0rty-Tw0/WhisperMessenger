@@ -3,23 +3,19 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FilterApi = ns.BootstrapChatFilterApi or require("WhisperMessenger.Core.Bootstrap.ChatFilters.FilterApi")
+local ConditionalFilters = ns.BootstrapChatFiltersConditionalFilters or require("WhisperMessenger.Core.Bootstrap.ChatFilters.ConditionalFilters")
+
 local ChatFilters = {}
 
--- Route Blizzard filter-table mutations through `securecall` so the write
--- happens inside Blizzard's own function body, not in our addon stack.
--- Without this, the filter table becomes tainted; the next CHAT_MSG_WHISPER
--- dispatch iterates the tainted table and propagates taint into
--- ChatEdit_SetLastTellTarget, crashing /r, R-keybind, and right-click-Whisper
--- during encounters or after returning from Mythic+ / PvP content.
-local function secureCallBlizzard(fn, ...)
-  local sc = _G.securecall
-  if type(sc) == "function" then
-    return sc(fn, ...)
-  end
-  return fn(...)
-end
+-- Hiding only some lines (ignored players, keyword rules, enabled channels)
+-- needs filters that can return false. On since the in-game taint probe
+-- (2026-10-03) found no reply-path taint from channel and say filters. Turning
+-- it off keeps every conditional filter unregistered.
+ChatFilters.SELECTIVE_HIDING = true
 
-function ChatFilters.Configure(Bootstrap, accountState)
+-- runtime: optional; without it only the whisper filters exist.
+function ChatFilters.Configure(Bootstrap, accountState, runtime)
   -- Filter functions are intentionally trivial — they ALWAYS return true
   -- (suppress). We control WHEN they run via register/unregister, never
   -- via dynamic checks inside the filter body. Any addon code executing
@@ -36,46 +32,55 @@ function ChatFilters.Configure(Bootstrap, accountState)
 
   Bootstrap._filtersRegistered = false
 
+  -- Channel, say, yell and emote filters; never on whisper events.
+  local conditional = runtime and ConditionalFilters.New(runtime) or nil
+
   Bootstrap.registerChatFilters = function()
-    if Bootstrap._filtersRegistered or type(_G.ChatFrame_AddMessageEventFilter) ~= "function" then
+    if Bootstrap._filtersRegistered or not FilterApi.IsAvailable() then
       return
     end
 
-    local addFilter = _G.ChatFrame_AddMessageEventFilter
-    secureCallBlizzard(addFilter, "CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
+    FilterApi.Add("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+    FilterApi.Add("CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
+    FilterApi.Add("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+    FilterApi.Add("CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
     Bootstrap._filtersRegistered = true
   end
 
-  Bootstrap.unregisterChatFilters = function()
+  local function unregisterWhisperFilters()
     if not Bootstrap._filtersRegistered then
       return
     end
 
-    if type(_G.ChatFrame_RemoveMessageEventFilter) == "function" then
-      local removeFilter = _G.ChatFrame_RemoveMessageEventFilter
-      secureCallBlizzard(removeFilter, "CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
-    end
+    FilterApi.Remove("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+    FilterApi.Remove("CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
+    FilterApi.Remove("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+    FilterApi.Remove("CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
 
     Bootstrap._filtersRegistered = false
   end
 
+  -- Drops every filter. Mythic+ suspend calls this without a resync, so the
+  -- conditional filters go too, even when the whisper ones were never on.
+  Bootstrap.unregisterChatFilters = function()
+    if conditional then
+      conditional.Sync(false)
+    end
+    unregisterWhisperFilters()
+  end
+
   Bootstrap.syncChatFilters = function()
-    local shouldFilter = accountState.settings.hideFromDefaultChat == true
-      and not Bootstrap._inCompetitiveContent
-      and not Bootstrap._inMythicContent
-      and not Bootstrap._inEncounter
-      and not _G._wmSuspended
+    local allowed = not Bootstrap._inCompetitiveContent and not Bootstrap._inMythicContent and not Bootstrap._inEncounter and not _G._wmSuspended
+    local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed
 
     if shouldFilter and not Bootstrap._filtersRegistered then
       Bootstrap.registerChatFilters()
     elseif not shouldFilter and Bootstrap._filtersRegistered then
-      Bootstrap.unregisterChatFilters()
+      unregisterWhisperFilters()
+    end
+
+    if conditional then
+      conditional.Sync(allowed and ChatFilters.SELECTIVE_HIDING == true)
     end
   end
 end

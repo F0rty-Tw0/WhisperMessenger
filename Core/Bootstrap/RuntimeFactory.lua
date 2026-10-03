@@ -10,6 +10,8 @@ local ContentDetector = ns.ContentDetector or require("WhisperMessenger.Core.Con
 local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
+local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
+local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -84,6 +86,20 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   local channelMessageStore = ChannelMessageStore.Restore(accountState.channelMessages, nil, nowValue)
   accountState.channelMessages = channelMessageStore
 
+  -- Ignore entries expire lazily; this login sweep drops the ones that ran
+  -- out while the player was offline.
+  local filters = IgnoreList.Ensure(accountState)
+  IgnoreList.Sweep(filters, nowValue)
+  RulePresets.Seed(filters)
+
+  -- Channels the player turned into chats; none until picked in Options.
+  accountState.settings = accountState.settings or {}
+  accountState.settings.enabledChannels = accountState.settings.enabledChannels or {}
+  -- Seeded so the saved value matches the Chats page toggle, which starts on.
+  if accountState.settings.hideChannelsFromDefaultChat == nil then
+    accountState.settings.hideChannelsFromDefaultChat = true
+  end
+
   -- Resolve local player identity for group-chat direction detection.
   -- UnitGUID("player") returns nil during very early load or in minimal test
   -- environments; pcall-guard and let it stay nil — direction falls back to
@@ -124,6 +140,8 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
     localFaction = options.localFaction or (type(_G["UnitFactionGroup"]) == "function" and _G["UnitFactionGroup"]("player") or nil),
     store = store,
     channelMessageStore = channelMessageStore,
+    -- Duplicate-collapse index: session only, rebuilt lazily per chat.
+    collapseIndex = {},
     now = nowFn,
     isMythicLockdown = options.isMythicLockdown or function()
       return ContentDetector.IsMythicRestricted(_G.GetInstanceInfo)
@@ -145,6 +163,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
       MessageReactions.ClearConversation(runtime, key)
     end
     runtime.sendStatusByConversation[key] = nil
+    runtime.collapseIndex[key] = nil
 
     clearGUIDCachesIfUnowned(conversation.guid)
 

@@ -6,6 +6,22 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- Busy group chats no longer slow the game down while the window is open.
+- Repeated messages from the same player now show once with a counter (like ×3) in your theme's accent color.
+- Trade, General, Local Defense, LFG and your custom channels can now appear as chats (turn them on in Options). Each one is named after its channel and lives in a new Channels tab, which shows up once you turn on at least one channel. Trade, General, Local Defense, World Defense, LFG and Trade (Services) each get their own icon, and in the narrow contact list channel chats show their initials like your contacts do.
+- Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other unread chats. Muting a channel chat also silences the alert for your name.
+- When someone says your name in a group or channel chat, with or without an @ in front, your name in their message now shows in your class color.
+- Right-click a player in your contacts and choose Ignore…, or right-click one of their messages in a group or channel chat and choose Ignore sender…, to stop seeing anything they send. You can add a note saying why.
+- Options are split into Behavior, Whispers, Chats and Filters pages; the new Filters page manages ignored players and keyword rules, and starts with a short guide to what each one hides and how to write rules.
+- Keyword rules come with ready-made spam filters borrowed from Global Ignore List: "Anal" link spam and Thunderfury links (on), plus Mythic+ and raid sellers, profession sellers, power-leveling sellers, guild recruitment, community recruitment and WTS / WTB (off until you turn them on). The ready-made filters only apply to channels such as Trade, never to your guild, party or raid. Click any rule to change its words; separate words with / when any one of them should count, and put a word or phrase in "quotes" to match only that whole word or phrase (so "anal" no longer catches canal or analysis). A ready-made filter you remove stays removed until you press Reset to Defaults, which brings them all back and clears your own rules.
+- The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
+- The notice shown during Mythic+ and PvP now says messages are paused, not just whispers, since group and channel chats pause too. In a whisper chat it also tells you how to reply right away from the game's own chat.
+- Fixed: the Mythic+ pause notice now shows in your game's language instead of always in English.
+- Ignored players are now also hidden from the game's own chat window (say, yell, emotes and channels), and so are channel lines your keyword rules block. Channels you read in WhisperMessenger are hidden there too; turn this off with "Hide channels from default chat" under Options > Chats. None of this hiding happens in Mythic+, boss fights or PvP.
+- Entering or leaving a Mythic+ dungeon no longer posts "Suspended" and "Resumed" lines in your chat; the window and its icon already show that messages are paused.
+- Fixed: right-clicking a player's name in a group or channel chat now opens that player's menu instead of the chat's own menu, with WhisperMessenger's Ignore… at the bottom.
+- Fixed: Opening the window now jumps to the newest unread chat on the tab you're looking at, instead of skipping it when an unread chat on another tab is newer.
+
 ## [2.0.2] - 2026-10-02
 
 - Battle.net friends now show without the #1234 part of their BattleTag, handy for streaming and screenshots. Two friends with the same name keep their numbers so you can tell them apart. Turn it off under Options > General > Privacy ("Hide BattleTag numbers").

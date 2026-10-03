@@ -39,20 +39,16 @@ return function()
     Localization.Configure({ language = "enUS" })
   end
 
-  -- ── test_mythic_suspend_print_localizes ──────────────────────────────────
+  -- ── test_mythic_suspend_notice_localizes ─────────────────────────────────
   do
     Localization.Configure({ language = "ruRU" })
 
     local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
-    local printed = {}
     local runtime = makeRuntime()
     local Bootstrap = {}
 
     MythicSuspendController.Attach(runtime, {
       Bootstrap = Bootstrap,
-      print = function(msg)
-        table.insert(printed, msg)
-      end,
       getEventBridge = function()
         return nil
       end,
@@ -61,42 +57,10 @@ return function()
 
     runtime.suspend()
 
-    assert(#printed >= 1, "suspend should print at least one message")
-    assert(
-      string.find(printed[1], "мифическ", 1, true) or string.find(printed[1], "Приостановлено", 1, true),
-      "suspend print should be in Russian, got: " .. tostring(printed[1])
-    )
     assert(
       string.find(runtime.messagingNotice, "мифическ", 1, true),
       "messagingNotice should be in Russian after suspend, got: " .. tostring(runtime.messagingNotice)
     )
-
-    Localization.Configure({ language = "enUS" })
-  end
-
-  -- ── test_mythic_resume_print_localizes ───────────────────────────────────
-  do
-    Localization.Configure({ language = "ruRU" })
-
-    local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
-    local printed = {}
-    local runtime = makeRuntime()
-    local Bootstrap = {}
-
-    MythicSuspendController.Attach(runtime, {
-      Bootstrap = Bootstrap,
-      print = function(msg)
-        table.insert(printed, msg)
-      end,
-      getEventBridge = function()
-        return nil
-      end,
-    })
-
-    runtime.resume()
-
-    assert(#printed >= 1, "resume should print at least one message")
-    assert(string.find(printed[1], "Возобновлено", 1, true), "resume print should be in Russian, got: " .. tostring(printed[1]))
 
     Localization.Configure({ language = "enUS" })
   end

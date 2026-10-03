@@ -91,10 +91,15 @@ end
 -- LabelForChannelAndTitle returns the display label for a channel, using
 -- conversation.title when available for channels whose identity is not a
 -- singleton (BN_CONVERSATION with its conversationID, COMMUNITY with its
--- stream name). For other channels the title is ignored. Guild stays as
--- the canonical "Guild" here so the contact row keeps a compact label;
--- the conversation header resolves the live guild name separately.
-function GroupLabel.LabelForChannelAndTitle(channel, title)
+-- stream name). CHANNEL chats are named by displayName, the channel's base
+-- name ("Trade") that ingest stamps on every line. For other channels the
+-- title is ignored. Guild stays as the canonical "Guild" here so the
+-- contact row keeps a compact label; the conversation header resolves the
+-- live guild name separately.
+function GroupLabel.LabelForChannelAndTitle(channel, title, displayName)
+  if channel == ChannelType.CHANNEL and type(displayName) == "string" and displayName ~= "" then
+    return displayName
+  end
   if channel == ChannelType.BN_CONVERSATION then
     if type(title) == "string" and title ~= "" then
       return title
@@ -137,7 +142,7 @@ function GroupLabel.ForItem(item)
   if item.channel == ChannelType.PARTY or item.channel == ChannelType.RAID or item.channel == ChannelType.INSTANCE_CHAT then
     groupName = GroupLabel.LabelForSession(item.channel, item.leftGroup, item.ownerProfileId, item.lastActivityAt)
   else
-    groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title)
+    groupName = GroupLabel.LabelForChannelAndTitle(item.channel, item.title, item.displayName)
   end
   if groupName == "" then
     groupName = item.displayName or ""

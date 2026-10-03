@@ -73,6 +73,23 @@ return function()
   assert(ok, "isExternalActivityActive must not propagate tainted-value errors: " .. tostring(result))
   assert(result == false, "expected false when all activity probes error, got " .. tostring(result))
 
+  -- test_secret_speed_is_never_compared
+  -- A secret speed still has type "number"; comparing it is blocked and
+  -- logged as taint (10 a second in Mythic+), so it is skipped first.
+  local savedIsSecretValue = _G.issecretvalue
+  local checked = nil
+  rawset(_G, "issecretvalue", function(value)
+    checked = value
+    return true
+  end)
+  rawset(_G, "GetUnitSpeed", function()
+    return 7
+  end)
+  local moving = AlphaController.isExternalActivityActive()
+  rawset(_G, "issecretvalue", savedIsSecretValue)
+  assert(checked == 7, "the speed is checked for secrecy")
+  assert(moving == false, "a secret speed counts as not moving")
+
   rawset(_G, "GetUnitSpeed", savedGetUnitSpeed)
   rawset(_G, "IsMouselooking", savedIsMouselooking)
   rawset(_G, "IsMouseButtonDown", savedIsMouseButtonDown)

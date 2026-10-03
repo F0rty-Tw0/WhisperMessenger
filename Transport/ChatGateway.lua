@@ -5,6 +5,7 @@ end
 
 local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.WhisperGateway")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+local ChannelIndex = ns.ChannelIndex or require("WhisperMessenger.Transport.ChannelIndex")
 
 local Gateway = {}
 
@@ -201,15 +202,7 @@ local senderAvailability = {
     return true
   end,
   [ChannelType.CHANNEL] = function(api, conversation)
-    if resolveChatSender(api) == nil then
-      return false
-    end
-    if type(_G.GetChannelName) == "function" then
-      local baseName = type(conversation) == "table" and conversation.channelBaseName or nil
-      local ok, index = pcall(_G.GetChannelName, baseName)
-      return ok and type(index) == "number" and index ~= 0
-    end
-    return true
+    return resolveChatSender(api) ~= nil and ChannelIndex.Resolve(conversation.channelBaseName) ~= nil
   end,
 }
 
@@ -253,7 +246,12 @@ function Gateway.Send(api, conversation, text)
   elseif channel == ChannelType.OFFICER then
     return Gateway.SendOfficer(api, text)
   elseif channel == ChannelType.CHANNEL then
-    return Gateway.SendChannel(api, conversation.channelIndex, text)
+    -- The stored number goes stale when channels renumber; resolve it live.
+    local channelIndex = ChannelIndex.Resolve(conversation.channelBaseName)
+    if channelIndex == nil then
+      error("Not in channel: " .. tostring(conversation.channelBaseName))
+    end
+    return Gateway.SendChannel(api, channelIndex, text)
   elseif channel == ChannelType.COMMUNITY then
     error("COMMUNITY is receive-only: addon sends are blocked by Blizzard C_Club protection")
   else

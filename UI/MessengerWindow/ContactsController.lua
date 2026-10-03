@@ -73,6 +73,7 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
         options.onUpdatePrefs(item, changes)
       end
     end,
+    onIgnorePlayer = options.onIgnorePlayer,
     onDragStart = dragHandlers.handleDragStart,
     onDragStop = dragHandlers.handleDragStop,
   }

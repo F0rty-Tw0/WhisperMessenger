@@ -8,7 +8,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
 
--- Native WoW HUD Whispers/Groups/Requests tabs: Blizzard PanelTabButtonTemplate
+-- Native WoW HUD Whispers/Groups/Channels/Requests tabs: Blizzard PanelTabButtonTemplate
 -- tabs hanging below the window's bottom-left edge, each sized to its label,
 -- like the Character or Professions frame tabs. The strip is parented to the
 -- contacts pane (so it hides with it) but anchored to the window frame. Same
@@ -18,7 +18,7 @@ local NativeTabToggle = {}
 
 local TAB_TEMPLATE = "PanelTabButtonTemplate"
 -- Global names: some clients' PanelTemplates_* look up _G[name .. "Left"].
-local TAB_NAMES = { "WhisperMessengerTab1", "WhisperMessengerTab2", "WhisperMessengerTab3" }
+local TAB_NAMES = { "WhisperMessengerTab1", "WhisperMessengerTab2", "WhisperMessengerTab3", "WhisperMessengerTab4" }
 local TAB_HEIGHT = 32
 NativeTabToggle.HEIGHT = TAB_HEIGHT
 -- Blizzard's own tab anchors (CharacterFrameTab1/2): 11px in from the
@@ -98,11 +98,12 @@ function NativeTabToggle.Create(factory, parent, options)
   local whispers = createTab(factory, frame, 1, "Whispers", "whispers")
   local groups = whispers and createTab(factory, frame, 2, "Groups", "groups")
   local requests = groups and createTab(factory, frame, 3, "Requests", "requests")
-  if whispers == nil or groups == nil or requests == nil then
+  local channels = requests and createTab(factory, frame, 4, "Channels", "channels")
+  if whispers == nil or groups == nil or requests == nil or channels == nil then
     frame:Hide()
     return nil
   end
-  local tabs = { whispers, groups, requests }
+  local tabs = { whispers, groups, requests, channels }
   local toggle = { frame = frame }
 
   local function paintTabs(currentMode, visible)
@@ -115,7 +116,7 @@ function NativeTabToggle.Create(factory, parent, options)
     end
   end
 
-  TabLayout.BindController(toggle, frame, { whispers = whispers, groups = groups, requests = requests }, {
+  TabLayout.BindController(toggle, frame, { whispers = whispers, groups = groups, channels = channels, requests = requests }, {
     initialMode = options.initialMode,
     onModeChanged = options.onModeChanged,
     paint = paintTabs,

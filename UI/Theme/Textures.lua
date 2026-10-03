@@ -79,7 +79,26 @@ local CHANNEL_ICONS = {
   CHANNEL = "Interface\\ICONS\\Achievement_Profession_Fishing_OldManBarlowned",
 }
 
-local function ChannelIcon(channel)
+-- Built-in chat channels by the slug that ends their conversation key
+-- ("channel::<profile>::trade"). Vanilla-era art so every flavor has it;
+-- custom channels ("c:<name>") keep the shared CHANNEL icon.
+local BUILT_IN_CHANNEL_ICONS = {
+  general = "Interface\\ICONS\\Ability_Warrior_BattleShout",
+  trade = "Interface\\ICONS\\INV_Misc_Coin_01",
+  tradeservices = "Interface\\ICONS\\Trade_BlackSmithing",
+  localdefense = "Interface\\ICONS\\Ability_Warrior_DefensiveStance",
+  worlddefense = "Interface\\ICONS\\INV_Shield_06",
+  lfg = "Interface\\ICONS\\Spell_Holy_PrayerOfFortitude",
+}
+
+local function ChannelIcon(channel, conversationKey)
+  if channel == "CHANNEL" and type(conversationKey) == "string" then
+    local slug = string.match(conversationKey, "^channel::.-::(.+)$")
+    local icon = slug and BUILT_IN_CHANNEL_ICONS[slug]
+    if icon then
+      return icon
+    end
+  end
   return CHANNEL_ICONS[channel]
 end
 

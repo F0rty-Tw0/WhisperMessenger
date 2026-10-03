@@ -13,6 +13,7 @@ local StoreRetention = {}
 StoreRetention.REASON_CAPACITY = "capacity"
 StoreRetention.REASON_EXPLICIT = "explicit"
 StoreRetention.REASON_RETENTION = "retention"
+StoreRetention.SWEEP_INTERVAL = 60
 
 function StoreRetention.Remove(state, key, reason)
   local conversation = state.conversations[key]
@@ -138,6 +139,15 @@ function StoreRetention.AfterAppend(state, key, conversation, message)
   if not conversation.pinned and trackedBoundary ~= nil then
     state.messageRetentionAt[key] = earlierBoundary(trackedBoundary, message.sentAt, state.config.messageMaxAge)
   end
+
+  -- The cross-conversation sweep is throttled: a busy chat appends many lines
+  -- a second. Apply still does the full pass on window open and status tick.
+  local lastSweepAt = state.lastRetentionSweepAt
+  if lastSweepAt ~= nil and type(now) == "number" and now >= lastSweepAt and now - lastSweepAt < StoreRetention.SWEEP_INTERVAL then
+    expireConversationMessages(state, key, conversation, now, false)
+    return
+  end
+  state.lastRetentionSweepAt = now
 
   for conversationKey, candidate in pairs(state.conversations) do
     if conversationKey ~= key and StoreRetention.IsExpired(state, candidate, candidate.lastActivityAt, now) then

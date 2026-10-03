@@ -82,6 +82,7 @@ local function makeRuntimeOptions()
         return nil
       end
       function coord.scheduleAvailabilityRefresh() end
+      function coord.scheduleIncomingRefresh() end
       trackers.coordinator = coord
       return coord
     end,
@@ -203,7 +204,9 @@ local function makeRuntimeOptions()
     uiFactory = fakeFactory,
     bootstrap = { _inMythicContent = false },
     contactsList = {
-      BuildItemsForProfile = function()
+      BuildItemsForProfile = function(_savedState, _profileId, cache, dirtyKeys)
+        trackers.buildCache = cache
+        trackers.buildDirtyKeys = dirtyKeys
         local convo = runtime.store.conversations[conversationKey]
         return {
           {
@@ -274,6 +277,16 @@ return function()
   assert(runtime.icon ~= nil, "runtime.icon should be wired immediately")
   assert(runtime.window == nil, "runtime.window should stay nil before first ensureWindow")
 
+  -- buildContacts keeps one snapshot cache and forwards the dirty keys.
+  controller.buildContacts()
+  local firstCache = trackers.buildCache
+  assert(type(firstCache) == "table", "buildContacts should pass a snapshot cache")
+  assert(trackers.buildDirtyKeys == nil, "a direct build passes no dirty keys")
+  local dirty = { [conversationKey] = true }
+  controller.buildContacts(dirty)
+  assert(trackers.buildCache == firstCache, "every build should share one snapshot cache")
+  assert(trackers.buildDirtyKeys == dirty, "buildContacts should forward the dirty keys")
+
   -- Runtime exposes the controller's flow methods so external callers (event
   -- bridge, slash commands) can drive the window without reaching into it.
   assert(runtime.toggle == controller.toggle, "runtime.toggle should share controller toggle")
@@ -286,6 +299,10 @@ return function()
   -- Group send policy and availability refresh are exposed for the event bridge.
   assert(type(runtime.getGroupSendNotice) == "function", "runtime.getGroupSendNotice should be wired")
   assert(type(runtime.onAvailabilityChanged) == "function", "runtime.onAvailabilityChanged should be wired")
+  assert(
+    runtime.scheduleIncomingRefresh == trackers.coordinator.scheduleIncomingRefresh,
+    "runtime.scheduleIncomingRefresh should share the coordinator's coalesced refresh"
+  )
   assert(type(runtime.canReact) == "function", "runtime.canReact should expose dynamic reaction availability")
 
   -- ensureWindow creates exactly once and routes window options through real

@@ -10,6 +10,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 -- stylua: ignore start
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local RequestFollow = ns.BootstrapWindowCoordinatorRequestFollow or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.RequestFollow")
+local IncomingRefresh = ns.BootstrapWindowCoordinatorIncomingRefresh or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IncomingRefresh")
 -- stylua: ignore end
 
 local STATUS_REFRESH_INTERVAL = 30
@@ -22,7 +23,7 @@ function WindowCoordinator.Create(options)
   options = options or {}
 
   local runtime = options.runtime or {}
-  local buildContacts = options.buildContacts or function()
+  local buildContacts = options.buildContacts or function(_dirtyKeys)
     return {}
   end
   local getWindow = options.getWindow or function()
@@ -175,8 +176,9 @@ function WindowCoordinator.Create(options)
     getLdbObject = getLdbObject,
   }
 
-  function coordinator.refreshContacts()
-    local freshContacts = buildContacts()
+  -- dirtyKeys nil rebuilds every contact; a set rebuilds only those keys.
+  function coordinator.refreshContacts(dirtyKeys)
+    local freshContacts = buildContacts(dirtyKeys)
     local previousRequestKeys = requestFollow.takeRequestKeys(freshContacts)
     pruneAvailabilityCaches(freshContacts)
 
@@ -205,8 +207,8 @@ function WindowCoordinator.Create(options)
     IconSurfaces.Update(freshContacts, iconSurfaces)
     return nextState
   end
-  function coordinator.refreshWindow(affectedConversationKey)
-    local nextState = coordinator.refreshContacts()
+  function coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
+    local nextState = coordinator.refreshContacts(dirtyKeys)
     local window = getWindow()
 
     if coordinator.isWindowVisible() and window then
@@ -243,40 +245,27 @@ function WindowCoordinator.Create(options)
     end
   end
 
-  local refreshScheduled = false
-  local pendingAvailabilityGUIDs = {}
-
-  function coordinator.scheduleAvailabilityRefresh(guid)
-    if not coordinator.isWindowVisible() then
-      return
-    end
-    if guid ~= nil then
-      pendingAvailabilityGUIDs[guid] = true
-    end
-    if refreshScheduled then
-      return
-    end
-    refreshScheduled = true
-    local function refresh()
-      refreshScheduled = false
-      local changedGUIDs = pendingAvailabilityGUIDs
-      pendingAvailabilityGUIDs = {}
-      if coordinator.isWindowVisible() then
-        refreshAvailabilitySurfaces(changedGUIDs)
-      end
-    end
-    if cTimer and type(cTimer.After) == "function" then
-      cTimer.After(AVAILABILITY_REFRESH_DEBOUNCE, refresh)
-    else
-      refresh()
-    end
+  -- Late-bound so a replaced coordinator method (tests, hooks) is honoured.
+  local function isWindowVisible()
+    return coordinator.isWindowVisible()
   end
+  coordinator.scheduleAvailabilityRefresh =
+    IncomingRefresh.Debounce(cTimer, AVAILABILITY_REFRESH_DEBOUNCE, isWindowVisible, refreshAvailabilitySurfaces)
+  coordinator.scheduleIncomingRefresh = IncomingRefresh.Create({
+    cTimer = cTimer,
+    isWindowVisible = isWindowVisible,
+    refreshWindow = function(focusKey, dirtyKeys)
+      return coordinator.refreshWindow(focusKey, dirtyKeys)
+    end,
+    getSelectedKey = function()
+      return runtime.activeConversationKey
+    end,
+  }).schedule
 
-  function coordinator.findLatestUnreadKey()
-    local freshContacts = buildContacts()
-
-    for _, item in ipairs(freshContacts) do
-      if BadgeFilter.BadgeUnread(item) > 0 then
+  -- accept(key), when given, limits the search (e.g. to the open tab).
+  function coordinator.findLatestUnreadKey(accept)
+    for _, item in ipairs(buildContacts()) do
+      if BadgeFilter.BadgeUnread(item) > 0 and (accept == nil or accept(item.conversationKey)) then
         return item.conversationKey
       end
     end

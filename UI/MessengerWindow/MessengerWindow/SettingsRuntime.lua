@@ -7,6 +7,9 @@ local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMesse
 local GeneralSettings = ns.GeneralSettings or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
 local AppearanceSettings = ns.AppearanceSettings or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local BehaviorSettings = ns.BehaviorSettings or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
+local WhispersSettings = ns.WhispersSettings or require("WhisperMessenger.UI.MessengerWindow.WhispersSettings")
+local ChatsSettings = ns.ChatsSettings or require("WhisperMessenger.UI.MessengerWindow.ChatsSettings")
+local FiltersSettings = ns.FiltersSettings or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings")
 local NotificationSettings = ns.NotificationSettings or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings")
 local IconSettings = ns.IconSettings or require("WhisperMessenger.UI.MessengerWindow.IconSettings")
 local PatchNotesSettings = ns.PatchNotesSettings or require("WhisperMessenger.UI.MessengerWindow.PatchNotesSettings")
@@ -21,6 +24,9 @@ function SettingsRuntime.Create(factory, options)
   local generalCreate = options.generalCreate or GeneralSettings.Create
   local appearanceCreate = options.appearanceCreate or AppearanceSettings.Create
   local behaviorCreate = options.behaviorCreate or BehaviorSettings.Create
+  local whispersCreate = options.whispersCreate or WhispersSettings.Create
+  local chatsCreate = options.chatsCreate or ChatsSettings.Create
+  local filtersCreate = options.filtersCreate or FiltersSettings.Create
   local notificationCreate = options.notificationCreate or NotificationSettings.Create
   local iconCreate = options.iconCreate or IconSettings.Create
   local patchNotesCreate = options.patchNotesCreate or PatchNotesSettings.Create
@@ -29,8 +35,16 @@ function SettingsRuntime.Create(factory, options)
   local currentComposer = nil
   local refreshThemeVisuals
   local runtime = {}
-  local panelKeys = { "generalPanel", "appearancePanel", "behaviorPanel", "notificationsPanel", "iconsPanel", "patchNotesPanel" }
-  local settingsKeys = { "generalSettings", "appearanceSettings", "behaviorSettings", "notificationSettings", "iconSettings", "patchNotesSettings" }
+  -- stylua: ignore start
+  local panelKeys = {
+    "generalPanel", "appearancePanel", "behaviorPanel", "whispersPanel", "chatsPanel", "filtersPanel",
+    "notificationsPanel", "iconsPanel", "patchNotesPanel",
+  }
+  local settingsKeys = {
+    "generalSettings", "appearanceSettings", "behaviorSettings", "whispersSettings", "chatsSettings", "filtersSettings",
+    "notificationSettings", "iconSettings", "patchNotesSettings",
+  }
+  -- stylua: ignore end
   local function onSettingChanged(key, value)
     if options.onSettingChanged then
       options.onSettingChanged(key, value)
@@ -51,10 +65,14 @@ function SettingsRuntime.Create(factory, options)
     parent = options.parent,
     settingsConfig = options.settingsConfig or {},
     storeConfig = options.storeConfig or {},
+    filters = options.filters,
     onSettingChanged = onSettingChanged,
     generalCreate = generalCreate,
     appearanceCreate = appearanceCreate,
     behaviorCreate = behaviorCreate,
+    whispersCreate = whispersCreate,
+    chatsCreate = chatsCreate,
+    filtersCreate = filtersCreate,
     notificationCreate = notificationCreate,
     iconCreate = iconCreate,
     patchNotesCreate = patchNotesCreate,

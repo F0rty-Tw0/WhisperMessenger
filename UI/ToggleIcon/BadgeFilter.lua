@@ -61,11 +61,23 @@ function BadgeFilter.SumWhisperUnread(contacts)
 end
 
 -- SumGroupUnread returns the aggregate unread count across all group
--- conversations only. Used for the Groups tab label counter.
+-- conversations only. Used for the Groups tab label counter; channel chats
+-- in the Channels tab count there instead.
 function BadgeFilter.SumGroupUnread(contacts)
   local total = 0
   for _, contact in ipairs(contacts or {}) do
-    if isGroupChannel(contact.channel) then
+    if isGroupChannel(contact.channel) and contact.inChannelsTab ~= true then
+      total = total + badgeUnread(contact)
+    end
+  end
+  return total
+end
+
+-- SumChannelUnread feeds the Channels tab counter.
+function BadgeFilter.SumChannelUnread(contacts)
+  local total = 0
+  for _, contact in ipairs(contacts or {}) do
+    if contact.inChannelsTab == true then
       total = total + badgeUnread(contact)
     end
   end

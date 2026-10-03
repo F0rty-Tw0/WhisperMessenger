@@ -9,7 +9,13 @@ ns.SlashCommands = SlashCommands
 function SlashCommands.Register(handlers)
   handlers = handlers or {}
 
-  local function handleCommand(_msg)
+  -- "/wmsg perf" prints the debug counters; anything else toggles.
+  local function handleCommand(msg)
+    local word = type(msg) == "string" and string.lower(string.match(msg, "^%s*(.-)%s*$")) or ""
+    if word == "perf" and handlers.perf then
+      handlers.perf()
+      return
+    end
     if handlers.toggle then
       handlers.toggle()
     end
