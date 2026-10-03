@@ -42,6 +42,19 @@ return function()
     assert(filters.ignored["spammer"] == nil, "expired entry is deleted on lookup")
   end
 
+  -- test_add_without_now_uses_the_clock
+  do
+    local savedTime = rawget(_G, "time")
+    rawset(_G, "time", function()
+      return 1000
+    end)
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { duration = 86400 }))
+    rawset(_G, "time", savedTime)
+    assert(entry.addedAt == 1000, "addedAt defaults to now")
+    assert(entry.expiresAt == 1000 + 86400, "a timed entry without now still expires, got " .. tostring(entry.expiresAt))
+  end
+
   -- test_remove_deletes_entry
   do
     local filters = newFilters()

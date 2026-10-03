@@ -68,18 +68,23 @@ function IgnoreList.Ensure(accountState)
   return filters
 end
 
--- opts.duration: seconds until expiry, nil for forever.
+-- opts.duration: seconds until expiry, nil for forever. opts.now defaults
+-- to the clock.
 function IgnoreList.Add(filters, name, opts)
   local key = IgnoreList.Key(name)
   if key == nil then
     return nil
   end
   opts = opts or {}
+  local now = opts.now
+  if now == nil and type(_G.time) == "function" then
+    now = _G.time()
+  end
   local entry = {
     name = name,
     reason = opts.reason,
-    addedAt = opts.now,
-    expiresAt = opts.duration and opts.now and (opts.now + opts.duration) or nil,
+    addedAt = now,
+    expiresAt = opts.duration and now and (now + opts.duration) or nil,
     blocked = 0,
   }
   filters.ignored[key] = entry
