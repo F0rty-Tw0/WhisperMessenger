@@ -15,6 +15,13 @@ local gsub = string.gsub
 local lower = string.lower
 local ipairs = ipairs
 
+-- Entry count per conversation's entries table. Remember only adds, so a
+-- busy chat is rebuilt from its retained messages once the count passes
+-- max(MIN_REBUILD_AT, 2 x retained messages). Weak keys: a dropped entries
+-- table takes its count with it.
+local MIN_REBUILD_AT = 32
+local entryCounts = setmetatable({}, { __mode = "k" })
+
 -- Same sender key as the ignore list: lowercased short name, nil for secrets.
 DuplicateCollapse.SenderKey = IgnoreList.Key
 
@@ -38,15 +45,26 @@ end
 -- so a repeat after /reload still finds the row saved before it.
 local function buildEntries(conversation)
   local entries = {}
+  local count = 0
   for _, message in ipairs(conversation.messages or {}) do
     if message.kind == "user" and message.direction == "in" and type(message.text) == "string" then
       local senderKey = DuplicateCollapse.SenderKey(message.playerName)
       if senderKey ~= nil then
-        entries[entryKey(senderKey, DuplicateCollapse.NormalizeText(message.text))] = message
+        local key = entryKey(senderKey, DuplicateCollapse.NormalizeText(message.text))
+        if entries[key] == nil then
+          count = count + 1
+        end
+        entries[key] = message
       end
     end
   end
+  entryCounts[entries] = count
   return entries
+end
+
+local function isOverfull(entries, conversation)
+  local retained = conversation.messages and #conversation.messages or 0
+  return (entryCounts[entries] or 0) > math.max(MIN_REBUILD_AT, 2 * retained)
 end
 
 -- A remembered message is still in the conversation only while it is the
@@ -65,7 +83,7 @@ function DuplicateCollapse.Find(index, conversation, senderKey, normalized)
     return nil
   end
   local entries = index[conversationKey]
-  if entries == nil then
+  if entries == nil or isOverfull(entries, conversation) then
     entries = buildEntries(conversation)
     index[conversationKey] = entries
   end
@@ -85,7 +103,11 @@ function DuplicateCollapse.Remember(index, conversationKey, senderKey, normalize
     entries = {}
     index[conversationKey] = entries
   end
-  entries[entryKey(senderKey, normalized)] = message
+  local key = entryKey(senderKey, normalized)
+  if entries[key] == nil then
+    entryCounts[entries] = (entryCounts[entries] or 0) + 1
+  end
+  entries[key] = message
 end
 
 ns.DuplicateCollapse = DuplicateCollapse

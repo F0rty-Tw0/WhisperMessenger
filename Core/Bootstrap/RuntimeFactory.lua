@@ -156,6 +156,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
       MessageReactions.ClearConversation(runtime, key)
     end
     runtime.sendStatusByConversation[key] = nil
+    runtime.collapseIndex[key] = nil
 
     clearGUIDCachesIfUnowned(conversation.guid)
 

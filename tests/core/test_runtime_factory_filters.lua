@@ -23,6 +23,12 @@ return function()
   assert(type(accountState.filters.rules) == "table", "missing keyword rules are backfilled")
   assert(type(runtime.collapseIndex) == "table" and next(runtime.collapseIndex) == nil, "the collapse index starts empty")
 
+  local Store = require("WhisperMessenger.Model.ConversationStore")
+  Store.EnsureConversation(runtime.store, "channel::testplayer::trade")
+  runtime.collapseIndex["channel::testplayer::trade"] = {}
+  Store.Remove(runtime.store, "channel::testplayer::trade")
+  assert(runtime.collapseIndex["channel::testplayer::trade"] == nil, "a removed chat drops its collapse entries")
+
   local fresh = { conversations = {} }
   RuntimeFactory.CreateRuntimeState(fresh, { activeConversationKey = nil }, "testplayer", {})
   assert(type(fresh.filters) == "table" and type(fresh.filters.ignored) == "table", "old saved variables get filters")

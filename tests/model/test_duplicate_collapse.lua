@@ -88,6 +88,24 @@ return function()
     assert(outgoing == nil, "only incoming user messages are indexed")
   end
 
+  -- test_index_stays_bounded_on_a_busy_chat
+  do
+    local state = Store.New({ maxMessagesPerConversation = 5 })
+    local index = {}
+    for n = 1, 500 do
+      ingest(state, index, incoming(tostring(n), "Sender" .. (n % 7), "line number " .. n, n))
+    end
+    local entries = 0
+    for _ in pairs(index[KEY]) do
+      entries = entries + 1
+    end
+    assert(entries <= 33, "the index is rebuilt instead of growing, got " .. entries .. " entries")
+
+    local last = state.conversations[KEY].messages[5]
+    local hit = DuplicateCollapse.Find(index, state.conversations[KEY], DuplicateCollapse.SenderKey(last.playerName), "line number 500")
+    assert(hit == last, "a retained line still collapses after a rebuild")
+  end
+
   -- test_same_text_from_different_senders_never_matches
   do
     local state = Store.New({ maxMessagesPerConversation = 50 })
