@@ -100,4 +100,48 @@ return function()
     rawset(_G, "ChatFrame_AddMessageEventFilter", savedAdd)
     rawset(_G, "securecall", savedSecurecall)
   end
+  -- test_registers_through_chat_frame_util_without_globals
+
+  -- The ChatFrame_* globals are deprecated aliases that the next expansion
+  -- removes. With only ChatFrameUtil present the whisper filters must still
+  -- register and unregister.
+  do
+    local savedAdd = _G.ChatFrame_AddMessageEventFilter
+    local savedRemove = _G.ChatFrame_RemoveMessageEventFilter
+    local savedUtil = _G.ChatFrameUtil
+
+    local added, removed = {}, {}
+    rawset(_G, "ChatFrame_AddMessageEventFilter", nil)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", nil)
+    rawset(_G, "ChatFrameUtil", {
+      AddMessageEventFilter = function(event)
+        table.insert(added, event)
+      end,
+      RemoveMessageEventFilter = function(event)
+        table.insert(removed, event)
+      end,
+    })
+
+    local Bootstrap = { _inCompetitiveContent = false, _inMythicContent = false, _inEncounter = false }
+    ChatFilters.Configure(Bootstrap, { settings = { hideFromDefaultChat = true } })
+    Bootstrap.syncChatFilters()
+
+    assert(Bootstrap._filtersRegistered == true, "filters should register through ChatFrameUtil")
+    assert(#added == 4, "expected 4 ChatFrameUtil registrations, got " .. #added)
+
+    Bootstrap._inEncounter = true
+    Bootstrap.syncChatFilters()
+    assert(Bootstrap._filtersRegistered == false, "filters should unregister during encounter")
+    assert(#removed == 4, "expected 4 ChatFrameUtil removals, got " .. #removed)
+
+    rawset(_G, "ChatFrame_AddMessageEventFilter", savedAdd)
+    rawset(_G, "ChatFrame_RemoveMessageEventFilter", savedRemove)
+    rawset(_G, "ChatFrameUtil", savedUtil)
+  end
+
+  -- test_exposes_selective_hiding_off_until_probe
+
+  do
+    assert(ChatFilters.SELECTIVE_HIDING == false, "selective hiding stays off until the in-game taint probe passes")
+  end
 end

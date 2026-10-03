@@ -3,21 +3,13 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FilterApi = ns.BootstrapChatFilterApi or require("WhisperMessenger.Core.Bootstrap.ChatFilters.FilterApi")
+
 local ChatFilters = {}
 
--- Route Blizzard filter-table mutations through `securecall` so the write
--- happens inside Blizzard's own function body, not in our addon stack.
--- Without this, the filter table becomes tainted; the next CHAT_MSG_WHISPER
--- dispatch iterates the tainted table and propagates taint into
--- ChatEdit_SetLastTellTarget, crashing /r, R-keybind, and right-click-Whisper
--- during encounters or after returning from Mythic+ / PvP content.
-local function secureCallBlizzard(fn, ...)
-  local sc = _G.securecall
-  if type(sc) == "function" then
-    return sc(fn, ...)
-  end
-  return fn(...)
-end
+-- Hiding only some lines (ignored players, keyword rules, enabled channels)
+-- needs filters that can return false. Off pending the in-game taint probe.
+ChatFilters.SELECTIVE_HIDING = false
 
 function ChatFilters.Configure(Bootstrap, accountState)
   -- Filter functions are intentionally trivial — they ALWAYS return true
@@ -37,15 +29,14 @@ function ChatFilters.Configure(Bootstrap, accountState)
   Bootstrap._filtersRegistered = false
 
   Bootstrap.registerChatFilters = function()
-    if Bootstrap._filtersRegistered or type(_G.ChatFrame_AddMessageEventFilter) ~= "function" then
+    if Bootstrap._filtersRegistered or not FilterApi.IsAvailable() then
       return
     end
 
-    local addFilter = _G.ChatFrame_AddMessageEventFilter
-    secureCallBlizzard(addFilter, "CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-    secureCallBlizzard(addFilter, "CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
+    FilterApi.Add("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+    FilterApi.Add("CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
+    FilterApi.Add("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+    FilterApi.Add("CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
     Bootstrap._filtersRegistered = true
   end
 
@@ -54,13 +45,10 @@ function ChatFilters.Configure(Bootstrap, accountState)
       return
     end
 
-    if type(_G.ChatFrame_RemoveMessageEventFilter) == "function" then
-      local removeFilter = _G.ChatFrame_RemoveMessageEventFilter
-      secureCallBlizzard(removeFilter, "CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
-      secureCallBlizzard(removeFilter, "CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
-    end
+    FilterApi.Remove("CHAT_MSG_WHISPER", Bootstrap._whisperFilter)
+    FilterApi.Remove("CHAT_MSG_WHISPER_INFORM", Bootstrap._whisperFilter)
+    FilterApi.Remove("CHAT_MSG_BN_WHISPER", Bootstrap._bnWhisperFilter)
+    FilterApi.Remove("CHAT_MSG_BN_WHISPER_INFORM", Bootstrap._bnWhisperFilter)
 
     Bootstrap._filtersRegistered = false
   end
