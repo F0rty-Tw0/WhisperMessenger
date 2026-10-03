@@ -78,6 +78,9 @@ function ChannelContextMerger.Merge(messages, selectedContact, deps)
   if not store or not state then
     return messages
   end
+  if type(selectedContact) == "table" and selectedContact.channel ~= nil and not WHISPER_CHANNELS[selectedContact.channel] then
+    return messages
+  end
 
   local lookupName = lookupNameFor(selectedContact)
   if lookupName == nil then
