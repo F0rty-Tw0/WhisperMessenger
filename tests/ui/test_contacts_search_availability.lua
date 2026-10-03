@@ -46,10 +46,10 @@ return function()
     local searchInput = factory.CreateFrame("EditBox", nil, nil)
     searchInput:SetText("nomatch")
     local available = nil
-    local runtime = makeRuntime(factory, { whisper() }, searchInput, function(value)
+    local runtime = makeRuntime(factory, {}, searchInput, function(value)
       available = value
     end)
-    runtime.refreshContacts(nil, nil, true)
-    assert(available == true, "search with text stays available")
+    runtime.refreshContacts({}, nil, true)
+    assert(available == true, "search with text stays available on an empty result")
   end
 end
