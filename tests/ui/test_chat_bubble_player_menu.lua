@@ -127,6 +127,27 @@ return function()
     assert(opened.channel == "WOW", "expected the sender as a WOW player, got " .. tostring(opened.channel))
   end
 
+  -- test_channel_sender_menu_offers_our_ignore
+  do
+    local opened
+    local stub = {
+      Open = function(item, _anchorFrame, _onMarkUnread, _onUpdatePrefs, rowActions)
+        opened = { item = item, rowActions = rowActions }
+        return true
+      end,
+    }
+    local onIgnorePlayer = function() end
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak" },
+      anchor,
+      stub,
+      { contact = { channel = "CHANNEL" }, onIgnorePlayer = onIgnorePlayer }
+    )
+
+    assert(opened.rowActions and opened.rowActions.onIgnorePlayer == onIgnorePlayer, "group senders get our Ignore… entry")
+  end
+
   -- test_open_refuses_outgoing_messages
   -- You don't open a player menu on yourself.
   do

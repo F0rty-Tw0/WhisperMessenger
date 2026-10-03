@@ -18,7 +18,7 @@ local function buildItem(message)
   }
 end
 
--- conversation (optional): { contact, onMarkUnread, onUpdatePrefs }. In a
+-- conversation (optional): { contact, onMarkUnread, onUpdatePrefs, onIgnorePlayer }. In a
 -- whisper conversation the sender is the selected contact, so the menu gets
 -- that contact and our entries; group senders get a bare item.
 function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
@@ -42,7 +42,13 @@ function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
     return CM.Open(contact, anchorFrame, conversation.onMarkUnread, conversation.onUpdatePrefs) and true or false
   end
 
-  return CM.Open(buildItem(message), anchorFrame) and true or false
+  -- Group and channel senders: our Ignore… entry (Battle.net names can't be ignored).
+  local rowActions = nil
+  local onIgnorePlayer = type(conversation) == "table" and conversation.onIgnorePlayer or nil
+  if type(onIgnorePlayer) == "function" and not string.find(message.playerName, "|K", 1, true) then
+    rowActions = { onIgnorePlayer = onIgnorePlayer }
+  end
+  return CM.Open(buildItem(message), anchorFrame, nil, nil, rowActions) and true or false
 end
 
 ns.ChatBubblePlayerMenu = PlayerMenu

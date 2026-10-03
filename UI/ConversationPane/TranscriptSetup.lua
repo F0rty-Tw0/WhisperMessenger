@@ -65,6 +65,7 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, options)
       contact = view._selectedContact,
       onMarkUnread = options.onMarkUnread,
       onUpdatePrefs = options.onUpdatePrefs,
+      onIgnorePlayer = options.onIgnorePlayer,
     })
   end
 end

@@ -121,6 +121,21 @@ return function()
     assert(menuButton(menu, "Ignore sender…") == nil, "a Battle.net name token is not a character name")
   end
 
+  -- test_sender_name_menu_gets_the_ignore_handler
+  do
+    local PlayerMenu = require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
+    local realOpen, passed = PlayerMenu.Open, nil
+    rawset(PlayerMenu, "Open", function(_message, _anchor, _contextMenu, conversation)
+      passed = conversation
+      return true
+    end)
+    local transcript = {}
+    TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, { onIgnorePlayer = onIgnorePlayer })
+    transcript.openPlayerMenu(incoming, parent)
+    rawset(PlayerMenu, "Open", realOpen)
+    assert(passed and passed.onIgnorePlayer == onIgnorePlayer, "the name menu can offer our Ignore…")
+  end
+
   rawset(_G, "MenuUtil", nil)
   _G.StaticPopupDialogs = nil
   rawset(_G, "StaticPopup_Show", nil)
