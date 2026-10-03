@@ -34,6 +34,9 @@ local function restore(card, base)
 end
 
 -- dirtyKeys nil means a full rebuild; otherwise only listed keys rebuild.
+-- Code that writes to a conversation without a full refresh must mark its
+-- key dirty, or the cached card keeps the old values (drafts rely on the
+-- full refresh a selection change does).
 function SnapshotCache.Get(cache, conversationKey, conversation, settings, dirtyKeys)
   local entry = cache[conversationKey]
   if dirtyKeys == nil or dirtyKeys[conversationKey] or entry == nil or entry.conversation ~= conversation then
