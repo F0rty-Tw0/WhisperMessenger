@@ -217,6 +217,21 @@ return function()
     assert(cache["wow::WOW::c"] == nil, "a removed conversation must be pruned from the cache")
   end
 
+  -- test_full_rebuild_refills_the_same_card
+  do
+    local state = newState()
+    local cache = SnapshotCache.New()
+    local conversation = state.conversations["wow::WOW::a"]
+    local first = SnapshotCache.Get(cache, "wow::WOW::a", conversation, {}, nil)
+    first.isTyping = true
+    conversation.displayName = "A2"
+    local second = SnapshotCache.Get(cache, "wow::WOW::a", conversation, {}, nil)
+    assert(second == first, "a full rebuild keeps the card table")
+    local ok, where = deepEqual(second, cache["wow::WOW::a"].base, "card")
+    assert(ok, "the refilled card equals the new base, differs at " .. tostring(where))
+    assert(second.displayName == "A2", "the refilled card reads the new conversation")
+  end
+
   -- test_snapshot_builds_counter_counts_cache_misses
   do
     local state = newState()

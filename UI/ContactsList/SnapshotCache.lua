@@ -47,7 +47,11 @@ function SnapshotCache.Get(cache, conversationKey, conversation, settings, dirty
     PerfCounters.Increment("snapshotBuilds")
     entry.conversation = conversation
     entry.base = ConversationSnapshot.Build(conversationKey, conversation, settings)
-    entry.card = shallowCopy(entry.base)
+    if entry.card == nil then
+      entry.card = shallowCopy(entry.base)
+    else
+      restore(entry.card, entry.base)
+    end
     return entry.card
   end
   restore(entry.card, entry.base)
