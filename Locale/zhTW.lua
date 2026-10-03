@@ -380,6 +380,7 @@ local TraditionalChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "刪除",
   ["No message requests."] = "沒有訊息請求。",
+  ["No channel messages yet."] = "還沒有頻道訊息。",
   ["Last seen %s"] = "最後見到：%s",
   ["Last online %s"] = "上次上線：%s",
   ["Notify when online"] = "上線時通知",

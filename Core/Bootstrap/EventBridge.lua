@@ -81,7 +81,9 @@ local function applyIncomingEffects(runtime, result)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey
-    local inGroupsTab = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode() == "groups"
+    -- Reading group or channel chat: a whisper must not take over the pane.
+    local tabMode = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode()
+    local inGroupsTab = tabMode == "groups" or tabMode == "channels"
     if
       shouldAlert
       and settings

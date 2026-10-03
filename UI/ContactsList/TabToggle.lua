@@ -12,7 +12,7 @@ local NativeTabToggle = ns.ContactsListNativeTabToggle or require("WhisperMessen
 local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.ContactsList.TabLayout")
 local applyColorTexture = UIHelpers.applyColorTexture
 
--- Whispers/Groups(/Requests) tabs. They hang below the window's bottom-left
+-- Whispers/Groups(/Channels/Requests) tabs. They hang below the window's bottom-left
 -- edge, each at its natural width (like the game's own window tabs), so the
 -- contact list keeps its full height. The Native WoW HUD uses Blizzard's tab
 -- art (NativeTabToggle); the modern skin draws its own.
@@ -136,7 +136,7 @@ local function chainTabs(frame, visible)
 end
 
 -- options:
---   initialMode   : "whispers" | "groups" | "requests" (default "whispers")
+--   initialMode   : "whispers" | "groups" | "channels" | "requests" (default "whispers")
 --   onModeChanged : function(mode)
 --   nativeChrome  : Native WoW HUD -> Blizzard tab art
 --   windowFrame   : the window the tabs hang from (default: parent)
@@ -162,6 +162,7 @@ function TabToggle.Create(factory, parent, options)
     whispers = createTab(factory, frame, "Whispers", "whispers"),
     groups = createTab(factory, frame, "Groups", "groups"),
     requests = createTab(factory, frame, "Requests", "requests"),
+    channels = createTab(factory, frame, "Channels", "channels"),
   }
   local toggle = { frame = frame }
 

@@ -20,7 +20,7 @@ function TabSelectionMemory.Create(options)
   local handleContactSelected = options.handleContactSelected or function() end
   local refreshSelection = options.refreshSelection or function() end
 
-  local tabSelections = { whispers = nil, groups = nil, requests = nil }
+  local tabSelections = { whispers = nil, groups = nil, channels = nil, requests = nil }
 
   local function saveLiveSelection(oldMode)
     local liveKey = getSelectedConversationKey()

@@ -380,6 +380,7 @@ local Russian = {
   ["Accept"] = "Принять",
   ["Delete"] = "Удалить",
   ["No message requests."] = "Нет запросов на переписку.",
+  ["No channel messages yet."] = "Сообщений в каналах пока нет.",
   ["Last seen %s"] = "Был(а) в сети: %s",
   ["Last online %s"] = "Последний вход: %s",
   ["Notify when online"] = "Сообщить о входе в сеть",

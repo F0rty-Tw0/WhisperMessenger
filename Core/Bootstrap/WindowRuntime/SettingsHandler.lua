@@ -7,6 +7,7 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
@@ -181,6 +182,16 @@ function SettingsHandler.Create(options)
       end
       if runtime.refreshWindow then
         runtime.refreshWindow()
+      end
+    end
+    if key == "enabledChannels" then
+      local window = runtime.window
+      local hasTab = ConversationSnapshot.HasChannelsTab(accountSettings)
+      if not hasTab and window and window.getTabMode and window.getTabMode() == "channels" and window.setTabMode then
+        window.setTabMode("whispers")
+      end
+      if window and window.refreshTabToggleVisibility then
+        window.refreshTabToggleVisibility()
       end
     end
     if

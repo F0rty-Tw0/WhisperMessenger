@@ -380,6 +380,7 @@ local Spanish = {
   ["Accept"] = "Aceptar",
   ["Delete"] = "Eliminar",
   ["No message requests."] = "No hay solicitudes de mensajes.",
+  ["No channel messages yet."] = "Aún no hay mensajes de canal.",
   ["Last seen %s"] = "Visto por última vez: %s",
   ["Last online %s"] = "Última conexión: %s",
   ["Notify when online"] = "Avisar cuando se conecte",

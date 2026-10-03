@@ -380,6 +380,7 @@ local SimplifiedChinese = {
   ["Accept"] = "接受",
   ["Delete"] = "删除",
   ["No message requests."] = "没有消息请求。",
+  ["No channel messages yet."] = "还没有频道消息。",
   ["Last seen %s"] = "最后见到：%s",
   ["Last online %s"] = "上次在线：%s",
   ["Notify when online"] = "上线时通知",

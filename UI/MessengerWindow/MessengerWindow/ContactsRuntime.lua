@@ -12,6 +12,7 @@ local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.C
 local EmptyState = ns.ContactsListEmptyState or require("WhisperMessenger.UI.ContactsList.EmptyState")
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 
 local ContactsRuntime = {}
 
@@ -26,6 +27,9 @@ function ContactsRuntime.Create(factory, options)
   local function getRequestsInbox()
     return settingsConfig.requestsInbox == true
   end
+  local function getChannelsTab()
+    return ConversationSnapshot.HasChannelsTab(settingsConfig)
+  end
   -- The contacts pane is the collapsed icon rail.
   local function isCompact()
     return options.isCompact ~= nil and options.isCompact() == true
@@ -36,6 +40,9 @@ function ContactsRuntime.Create(factory, options)
     if getShowGroupChats() then
       modes[#modes + 1] = "groups"
     end
+    if getChannelsTab() then
+      modes[#modes + 1] = "channels"
+    end
     if getRequestsInbox() then
       modes[#modes + 1] = "requests"
     end
@@ -44,7 +51,7 @@ function ContactsRuntime.Create(factory, options)
 
   -- Tab toggle mode — persists in characterState via onTabModeChanged
   local currentTabMode = (options.initialTabMode and options.initialTabMode ~= "") and options.initialTabMode or "whispers"
-  if currentTabMode == "requests" and not getRequestsInbox() then
+  if (currentTabMode == "requests" and not getRequestsInbox()) or (currentTabMode == "channels" and not getChannelsTab()) then
     currentTabMode = "whispers"
   end
 
@@ -148,6 +155,7 @@ function ContactsRuntime.Create(factory, options)
   -- state stayed in the previous language until reload.
   local GROUPS_EMPTY_KEY = "No group chats yet.\nJoin a party or instance to see messages here."
   local REQUESTS_EMPTY_KEY = "No message requests."
+  local CHANNELS_EMPTY_KEY = "No channel messages yet."
   local WHISPERS_EMPTY_KEY = "No conversations yet. Click Start New Whisper to message a friend."
 
   -- True while the search box has text, so the whispers empty-state hint
@@ -177,7 +185,12 @@ function ContactsRuntime.Create(factory, options)
       -- Per-tab unread counters rendered as circular badges next to the labels.
       if tabToggle and tabToggle.setUnreadCounts then
         local source = allContacts or filtered
-        tabToggle.setUnreadCounts(BadgeFilter.SumWhisperUnread(source), BadgeFilter.SumGroupUnread(source), BadgeFilter.SumRequestUnread(source))
+        tabToggle.setUnreadCounts(
+          BadgeFilter.SumWhisperUnread(source),
+          BadgeFilter.SumGroupUnread(source),
+          BadgeFilter.SumRequestUnread(source),
+          BadgeFilter.SumChannelUnread(source)
+        )
       end
       if options.onAllContactsRefreshed then
         options.onAllContactsRefreshed(allContacts or filtered)
@@ -192,6 +205,8 @@ function ContactsRuntime.Create(factory, options)
         EmptyState.Show(emptyStateFrame, Localization.Text(GROUPS_EMPTY_KEY))
       elseif currentTabMode == "requests" and #filtered == 0 and not hasSearchText() then
         EmptyState.Show(emptyStateFrame, Localization.Text(REQUESTS_EMPTY_KEY))
+      elseif currentTabMode == "channels" and #filtered == 0 and not hasSearchText() then
+        EmptyState.Show(emptyStateFrame, Localization.Text(CHANNELS_EMPTY_KEY))
       elseif currentTabMode == "whispers" and #filtered == 0 and not hasSearchText() then
         EmptyState.Show(emptyStateFrame, Localization.Text(WHISPERS_EMPTY_KEY))
       else
