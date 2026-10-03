@@ -17,6 +17,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
 - The notice shown during Mythic+ and PvP now says messages are paused, not just whispers, since group and channel chats pause too. In a whisper chat it also tells you how to reply right away from the game's own chat.
 - Fixed: the Mythic+ pause notice now shows in your game's language instead of always in English.
+- Entering or leaving a Mythic+ dungeon no longer posts "Suspended" and "Resumed" lines in your chat; the window and its icon already show that messages are paused.
 - Fixed: right-clicking a player's name in a group or channel chat now opens that player's menu instead of the chat's own menu, with WhisperMessenger's Ignore… at the bottom.
 - Fixed: Opening the window now jumps to the newest unread chat on the tab you're looking at, instead of skipping it when an unread chat on another tab is newer.
 

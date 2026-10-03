@@ -243,9 +243,6 @@ local French = {
   ["unread"] = "non lus",
   ["Paused in M+"] = "En pause en M+",
   -- Dungeon/competitive chat log messages
-  ["Suspended for mythic content. Whispers will resume when you leave."] = "En pause pour contenu mythique. Les chuchotements reprendront à votre sortie.",
-  ["Resumed. Whispers are active again."] = "Reprise. Les chuchotements sont à nouveau actifs.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r et la touche R peuvent échouer en Mythique tant que "Masquer les chuchotements du chat par défaut" est actif. Utilisez |cffffff00/wr|r pour répondre (ou liez-le à R via une macro).',
   ["Messages are paused in Mythic content and will resume after you leave."] = "Les messages sont en pause en contenu mythique et reprendront à votre sortie.",
   ["To reply now, type /w and their name in the game's chat."] = "Pour répondre maintenant, tapez /w suivi de son nom dans le chat du jeu.",
   ["Messages are paused in competitive content and will resume when you leave."] = "Les messages sont en pause en contenu compétitif et reprendront à votre sortie.",

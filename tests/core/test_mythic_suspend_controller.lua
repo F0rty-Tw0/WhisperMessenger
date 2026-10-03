@@ -70,10 +70,9 @@ return function()
         == "isWindowVisible,setWindowVisible:false,unregisterChatFilters,UnregisterLiveEvents,UnregisterSuspendableLifecycleEvents",
       "suspend should hide window, unregister chat filters, then unregister event bridge hooks"
     )
-    assert(
-      printed[1] == "|cff888888[WhisperMessenger]|r Suspended for mythic content. Whispers will resume when you leave.",
-      "suspend should print the existing pause message"
-    )
+    -- Printing to the game's chat taints its line fading; the window notice
+    -- and the icon already say messages are paused.
+    assert(#printed == 0, "suspend prints nothing to the game's chat")
 
     calls = {}
     runtime.resume()
@@ -85,7 +84,7 @@ return function()
       table.concat(calls, ",") == "RegisterLiveEvents,RegisterSuspendableLifecycleEvents,registerChatFilters,setWindowVisible:true,refreshWindow",
       "resume should restore event bridge hooks before chat filters, then show and refresh the window"
     )
-    assert(printed[2] == "|cff888888[WhisperMessenger]|r Resumed. Whispers are active again.", "resume should print the existing resume message")
+    assert(#printed == 0, "resume prints nothing to the game's chat")
 
     _G._wmSuspended = savedSuspended
   end

@@ -243,9 +243,6 @@ local Spanish = {
   ["unread"] = "sin leer",
   ["Paused in M+"] = "Pausado en M+",
   -- Dungeon/competitive chat log messages
-  ["Suspended for mythic content. Whispers will resume when you leave."] = "Pausado por contenido mítico. Los susurros se reanudarán al salir.",
-  ["Resumed. Whispers are active again."] = "Reanudado. Los susurros están activos de nuevo.",
-  ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r y la tecla R pueden fallar en Mítico+ mientras "Ocultar susurros del chat por defecto" esté activo. Usa |cffffff00/wr|r para responder (o asígnalo a R con una macro).',
   ["Messages are paused in Mythic content and will resume after you leave."] = "Los mensajes están pausados en contenido mítico y se reanudarán al salir.",
   ["To reply now, type /w and their name in the game's chat."] = "Para responder ahora, escribe /w y su nombre en el chat del juego.",
   ["Messages are paused in competitive content and will resume when you leave."] = "Los mensajes están pausados en contenido competitivo y se reanudarán al salir.",
