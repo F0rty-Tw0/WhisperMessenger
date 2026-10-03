@@ -72,4 +72,12 @@ return function()
     local current = inMsg("Bob", 150)
     assert(Grouping.ShouldGroup(prev, current) == true, "incoming messages from same player must still group")
   end
+
+  -- A collapsed repeat starts its own group so its label shows the counter.
+  do
+    local prev = inMsg("Bob", 100)
+    local current = inMsg("Bob", 150)
+    current.repeatCount = 2
+    assert(Grouping.ShouldGroup(prev, current) == false, "a collapsed repeat never groups under the previous label")
+  end
 end
