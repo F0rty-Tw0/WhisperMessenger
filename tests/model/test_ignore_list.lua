@@ -73,6 +73,38 @@ return function()
     assert(filters.ignored["forever"] ~= nil, "forever entry stays")
   end
 
+  -- test_key_is_name_realm_regardless_of_the_local_realm
+  do
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    local savedRealm = rawget(_G, "GetNormalizedRealmName")
+    local localRealm = "Area52"
+    -- Ambiguate(name, "none") drops the realm only for same-realm players.
+    rawset(_G, "Ambiguate", function(name)
+      local character, realm = string.match(name, "^(.-)%-(.+)$")
+      if realm == localRealm then
+        return character
+      end
+      return name
+    end)
+    rawset(_G, "GetNormalizedRealmName", function()
+      return localRealm
+    end)
+
+    assert(IgnoreList.Key("Bob") == "bob-area52", "a bare same-realm name gets the local realm, got " .. tostring(IgnoreList.Key("Bob")))
+    assert(IgnoreList.Key("Bob-Area52") == IgnoreList.Key("Bob"), "same-realm full and bare names share a key")
+    assert(IgnoreList.Key("Bob-Stormrage") == "bob-stormrage", "a cross-realm name keeps its realm")
+    assert(IgnoreList.Key("Bob-Area 52") == "bob-area52", "spaces in a typed realm are dropped")
+
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Bob", { now = 1 })
+    localRealm = "Stormrage"
+    assert(IgnoreList.Lookup(filters, "Bob", 2) == nil, "another realm's Bob is not the ignored player")
+    assert(IgnoreList.Lookup(filters, "Bob-Area52", 2) ~= nil, "the ignored Bob is still found from another realm")
+
+    rawset(_G, "Ambiguate", savedAmbiguate)
+    rawset(_G, "GetNormalizedRealmName", savedRealm)
+  end
+
   -- test_ensure_backfills_filters_for_old_saved_variables
   do
     local accountState = { conversations = {} }

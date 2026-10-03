@@ -10,16 +10,43 @@ local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 -- Expiry is lazy (checked on lookup, plus a sweep at login); no timers.
 local IgnoreList = {}
 
+local find = string.find
+local gsub = string.gsub
 local lower = string.lower
 local pairs = pairs
 
--- Lowercased short name, or nil for non-strings and secret values
--- (string.lower throws on a secret string).
+local function localRealm()
+  if type(_G.GetNormalizedRealmName) ~= "function" then
+    return nil
+  end
+  local ok, realm = pcall(_G.GetNormalizedRealmName)
+  if ok and type(realm) == "string" and realm ~= "" then
+    return realm
+  end
+  return nil
+end
+
+-- The list is account-wide, so a bare same-realm name gets the local realm:
+-- "Bob" on Area52 and "Bob-Area52" anywhere are the same player. Falls back
+-- to the bare name when the realm is unknown.
+local function fullName(name)
+  name = Identity.ShortName(name)
+  if not find(name, "-", 1, true) then
+    local realm = localRealm()
+    if realm ~= nil then
+      name = name .. "-" .. realm
+    end
+  end
+  return (gsub(lower(name), "%s", ""))
+end
+
+-- Lowercased "name-realm", or nil for non-strings and secret values
+-- (string operations throw on a secret string).
 function IgnoreList.Key(name)
   if type(name) ~= "string" then
     return nil
   end
-  local ok, key = pcall(lower, Identity.ShortName(name))
+  local ok, key = pcall(fullName, name)
   if not ok or type(key) ~= "string" then
     return nil
   end
