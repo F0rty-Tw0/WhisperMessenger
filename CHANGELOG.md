@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- Busy group chats no longer slow the game down while the window is open.
+
 ## [2.0.2] - 2026-10-02
 
 - Battle.net friends now show without the #1234 part of their BattleTag, handy for streaming and screenshots. Two friends with the same name keep their numbers so you can tell them apart. Turn it off under Options > General > Privacy ("Hide BattleTag numbers").
