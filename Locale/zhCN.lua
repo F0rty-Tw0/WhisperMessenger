@@ -417,10 +417,10 @@ local SimplifiedChinese = {
   -- Filters options page
   ["Filters"] = "过滤",
   ["Silently hide messages from players and lines you don't want to see."] = "静默隐藏你不想看到的玩家消息和内容。",
-  ["Ignored players"] = "已屏蔽的玩家",
+  ["Blocked players"] = "已屏蔽的玩家",
   ["Add player…"] = "添加玩家…",
   ["Reason (optional)"] = "原因（可选）",
-  ["Ignore for"] = "屏蔽时长",
+  ["Block for"] = "屏蔽时长",
   ["1 day"] = "1天",
   ["7 days"] = "7天",
   ["Forever"] = "永久",
@@ -429,7 +429,7 @@ local SimplifiedChinese = {
   ["Keyword rules"] = "关键词规则",
   ["Add rule…"] = "添加规则…",
   ["How filters work"] = "过滤器如何运作",
-  ["Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "已忽略的玩家：他们的密语、队伍和频道消息会在 WhisperMessenger 中隐藏，他们的说、大喊、表情和频道消息也会在游戏聊天中隐藏。",
+  ["Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "已屏蔽的玩家：他们的密语、队伍和频道消息会在 WhisperMessenger 中隐藏，他们的说、大喊、表情和频道消息也会在游戏聊天中隐藏。",
   ["Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages."] = "关键词规则：在 WhisperMessenger 中隐藏匹配的队伍和频道消息，并在游戏聊天中隐藏匹配的频道消息。绝不会隐藏密语或你自己的消息。",
   ["Ready-made rules only filter channels such as Trade, never group chats."] = "预设规则只过滤交易等频道，绝不过滤队伍聊天。",
   ["WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP."] = "在史诗钥石地下城、首领战和 PvP 中，WhisperMessenger 不会隐藏游戏聊天中的任何内容。",
@@ -447,9 +447,9 @@ local SimplifiedChinese = {
   ["Guild recruitment"] = "公会招募",
   ["Community recruitment"] = "社区招募",
   ["WTS / WTB"] = "WTS / WTB",
-  -- Ignore from the right-click menus
-  ["Ignore…"] = "屏蔽…",
-  ["Ignore sender…"] = "屏蔽发送者…",
+  -- Blocking: right-click menus, chat header, block list
+  ["Block…"] = "屏蔽…",
+  ["Block sender…"] = "屏蔽发送者…",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
 }

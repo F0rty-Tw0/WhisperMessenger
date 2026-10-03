@@ -6,8 +6,8 @@ end
 local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
--- Asks for the optional reason before a player goes on the silent ignore
--- list. Shared by the Filters page and the right-click "Ignore…" menus.
+-- Asks for the optional reason before a player goes on the silent block
+-- list. Shared by the Filters page and the right-click "Block…" menus.
 local IgnorePrompt = {}
 
 local REASON_DIALOG = "WHISPER_MESSENGER_IGNORE_REASON"

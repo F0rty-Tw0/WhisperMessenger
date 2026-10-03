@@ -66,14 +66,14 @@ local function openModernMenu(normalized, anchorFrame, options)
       ContextMenu.CopyText(normalized)
     end)
     if type(options.onIgnoreSender) == "function" then
-      rootDescription:CreateButton(Localization.Text("Ignore sender…"), options.onIgnoreSender)
+      rootDescription:CreateButton(Localization.Text("Block sender…"), options.onIgnoreSender)
     end
   end)
   return true
 end
 
 -- options.onReply() / options.onIgnoreSender(): optional; add "Reply" /
--- "Ignore sender…" to whichever menu opens.
+-- "Block sender…" to whichever menu opens.
 function ContextMenu.Open(text, anchorFrame, options)
   local normalized = type(ManualCopy) == "table" and type(ManualCopy.NormalizeText) == "function" and ManualCopy.NormalizeText(text) or nil
   if normalized == nil then

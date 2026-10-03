@@ -417,10 +417,10 @@ local Korean = {
   -- Filters options page
   ["Filters"] = "필터",
   ["Silently hide messages from players and lines you don't want to see."] = "보고 싶지 않은 플레이어의 메시지와 문구를 조용히 숨깁니다.",
-  ["Ignored players"] = "무시한 플레이어",
+  ["Blocked players"] = "차단한 플레이어",
   ["Add player…"] = "플레이어 추가…",
   ["Reason (optional)"] = "사유 (선택)",
-  ["Ignore for"] = "무시 기간",
+  ["Block for"] = "차단 기간",
   ["1 day"] = "1일",
   ["7 days"] = "7일",
   ["Forever"] = "영구",
@@ -429,7 +429,7 @@ local Korean = {
   ["Keyword rules"] = "키워드 규칙",
   ["Add rule…"] = "규칙 추가…",
   ["How filters work"] = "필터 작동 방식",
-  ["Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "무시한 플레이어: 그 플레이어의 귓속말과 파티 및 채널 메시지는 WhisperMessenger에서 숨겨지고, 일반 대화, 외치기, 감정 표현 및 채널 메시지는 게임 채팅에서도 숨겨집니다.",
+  ["Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "차단한 플레이어: 그 플레이어의 귓속말과 파티 및 채널 메시지는 WhisperMessenger에서 숨겨지고, 일반 대화, 외치기, 감정 표현 및 채널 메시지는 게임 채팅에서도 숨겨집니다.",
   ["Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages."] = "키워드 규칙: 일치하는 파티 및 채널 메시지를 WhisperMessenger에서 숨기고, 일치하는 채널 메시지를 게임 채팅에서 숨깁니다. 귓속말이나 내 메시지는 숨기지 않습니다.",
   ["Ready-made rules only filter channels such as Trade, never group chats."] = "기본 규칙은 거래 같은 채널만 걸러내며, 파티 대화에는 적용되지 않습니다.",
   ["WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP."] = "신화+, 우두머리 전투, PvP 중에는 WhisperMessenger가 게임 채팅에서 아무것도 숨기지 않습니다.",
@@ -447,9 +447,9 @@ local Korean = {
   ["Guild recruitment"] = "길드 모집",
   ["Community recruitment"] = "커뮤니티 모집",
   ["WTS / WTB"] = "WTS / WTB",
-  -- Ignore from the right-click menus
-  ["Ignore…"] = "무시…",
-  ["Ignore sender…"] = "보낸 사람 무시…",
+  -- Blocking: right-click menus, chat header, block list
+  ["Block…"] = "차단…",
+  ["Block sender…"] = "보낸 사람 차단…",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "채팅 설정에서 선택한 채널이 여기에 표시됩니다. 왼쪽에서 채널을 선택하세요.",
 }

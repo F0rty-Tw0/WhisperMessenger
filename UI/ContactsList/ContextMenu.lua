@@ -104,13 +104,13 @@ local function addRowActionButtons(rootDescription, item, rowActions)
   end
 end
 
--- "Ignore…" for WoW whisper rows only (Battle.net friends and groups aren't one character). rowActions.onIgnorePlayer(name, reason).
+-- "Block…" for WoW whisper rows only (Battle.net friends and groups aren't one character). rowActions.onIgnorePlayer(name, reason).
 local function addIgnoreButton(rootDescription, item, rowActions)
   local onIgnorePlayer = type(rowActions) == "table" and rowActions.onIgnorePlayer
   if type(onIgnorePlayer) ~= "function" or item.channel ~= "WOW" or item.displayName == nil then
     return
   end
-  rootDescription:CreateButton(Localization.Text("Ignore…"), function()
+  rootDescription:CreateButton(Localization.Text("Block…"), function()
     IgnorePrompt.AskReason(function(reason)
       onIgnorePlayer(IgnoreList.CharacterName(item.displayName, item.guid), reason)
     end)

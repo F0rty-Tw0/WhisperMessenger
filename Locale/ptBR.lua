@@ -417,10 +417,10 @@ local Portuguese = {
   -- Filters options page
   ["Filters"] = "Filtros",
   ["Silently hide messages from players and lines you don't want to see."] = "Oculta silenciosamente mensagens de jogadores e linhas que você não quer ver.",
-  ["Ignored players"] = "Jogadores ignorados",
+  ["Blocked players"] = "Jogadores bloqueados",
   ["Add player…"] = "Adicionar jogador…",
   ["Reason (optional)"] = "Motivo (opcional)",
-  ["Ignore for"] = "Ignorar por",
+  ["Block for"] = "Bloquear por",
   ["1 day"] = "1 dia",
   ["7 days"] = "7 dias",
   ["Forever"] = "Para sempre",
@@ -429,7 +429,7 @@ local Portuguese = {
   ["Keyword rules"] = "Regras de palavras-chave",
   ["Add rule…"] = "Adicionar regra…",
   ["How filters work"] = "Como os filtros funcionam",
-  ["Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "Jogadores ignorados: os sussurros e as mensagens de grupo e de canal deles ficam ocultos no WhisperMessenger, e as mensagens de dizer, gritar, emotes e de canal também no bate-papo do jogo.",
+  ["Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "Jogadores bloqueados: os sussurros e as mensagens de grupo e de canal deles ficam ocultos no WhisperMessenger, e as mensagens de dizer, gritar, emotes e de canal também no bate-papo do jogo.",
   ["Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages."] = "Regras de palavras-chave: ocultam mensagens de grupo e de canal correspondentes no WhisperMessenger, e mensagens de canal correspondentes no bate-papo do jogo. Nunca sussurros ou suas próprias mensagens.",
   ["Ready-made rules only filter channels such as Trade, never group chats."] = "As regras predefinidas só filtram canais como Comércio, nunca bate-papos de grupo.",
   ["WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP."] = "O WhisperMessenger nunca oculta nada do bate-papo do jogo em Mítica+, lutas contra chefes ou JxJ.",
@@ -447,9 +447,9 @@ local Portuguese = {
   ["Guild recruitment"] = "Recrutamento de guildas",
   ["Community recruitment"] = "Recrutamento de comunidades",
   ["WTS / WTB"] = "WTS / WTB",
-  -- Ignore from the right-click menus
-  ["Ignore…"] = "Ignorar…",
-  ["Ignore sender…"] = "Ignorar remetente…",
+  -- Blocking: right-click menus, chat header, block list
+  ["Block…"] = "Bloquear…",
+  ["Block sender…"] = "Bloquear remetente…",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Os canais que você marcar nas configurações de Bate-papos aparecem aqui. Escolha um canal à esquerda.",
 }

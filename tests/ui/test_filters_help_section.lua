@@ -6,7 +6,7 @@ local FiltersSettings = require("WhisperMessenger.UI.MessengerWindow.FiltersSett
 
 local HELP_TITLE = "How filters work"
 local HELP_LINES = {
-  "Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too.",
+  "Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too.",
   "Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages.",
   "Ready-made rules only filter channels such as Trade, never group chats.",
   "WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP.",
@@ -44,7 +44,7 @@ return function()
   -- test_help_block_sits_above_ignored_players
   do
     local result = create()
-    local ignoredTitle = assert(startsWith(result.frame, "Ignored players ("), "ignored players title")
+    local ignoredTitle = assert(startsWith(result.frame, "Blocked players ("), "ignored players title")
     local lastLine = FindUI.text(result.frame, HELP_LINES[#HELP_LINES])
     assert(ignoredTitle.point[2] == lastLine, "ignored players hangs below the last help line")
   end

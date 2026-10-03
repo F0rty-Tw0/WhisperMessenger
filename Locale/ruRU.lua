@@ -417,10 +417,10 @@ local Russian = {
   -- Filters options page
   ["Filters"] = "Фильтры",
   ["Silently hide messages from players and lines you don't want to see."] = "Тихо скрывайте сообщения игроков и строки, которые не хотите видеть.",
-  ["Ignored players"] = "Игнорируемые игроки",
+  ["Blocked players"] = "Заблокированные игроки",
   ["Add player…"] = "Добавить игрока…",
   ["Reason (optional)"] = "Причина (необязательно)",
-  ["Ignore for"] = "Игнорировать",
+  ["Block for"] = "Заблокировать на",
   ["1 day"] = "1 день",
   ["7 days"] = "7 дней",
   ["Forever"] = "Навсегда",
@@ -429,7 +429,7 @@ local Russian = {
   ["Keyword rules"] = "Правила по словам",
   ["Add rule…"] = "Добавить правило…",
   ["How filters work"] = "Как работают фильтры",
-  ["Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "Игнорируемые игроки: их шепот, сообщения в группах и каналах скрываются в WhisperMessenger, а их реплики, крики, эмоции и сообщения в каналах — и в чате игры.",
+  ["Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too."] = "Заблокированные игроки: их шепот, сообщения в группах и каналах скрываются в WhisperMessenger, а их реплики, крики, эмоции и сообщения в каналах — и в чате игры.",
   ["Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages."] = "Правила по словам: скрывают подходящие сообщения в группах и каналах в WhisperMessenger и подходящие сообщения в каналах в чате игры. Никогда не шепот и не ваши собственные сообщения.",
   ["Ready-made rules only filter channels such as Trade, never group chats."] = "Готовые правила фильтруют только каналы, например Торговлю, но никогда групповые чаты.",
   ["WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP."] = "В эпохальных+ подземельях, боях с боссами и PvP WhisperMessenger ничего не скрывает в чате игры.",
@@ -447,9 +447,9 @@ local Russian = {
   ["Guild recruitment"] = "Набор в гильдии",
   ["Community recruitment"] = "Набор в сообщества",
   ["WTS / WTB"] = "WTS / WTB",
-  -- Ignore from the right-click menus
-  ["Ignore…"] = "Игнорировать…",
-  ["Ignore sender…"] = "Игнорировать отправителя…",
+  -- Blocking: right-click menus, chat header, block list
+  ["Block…"] = "Заблокировать…",
+  ["Block sender…"] = "Заблокировать отправителя…",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
 }

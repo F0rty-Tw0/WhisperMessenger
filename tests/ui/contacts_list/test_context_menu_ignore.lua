@@ -2,7 +2,7 @@ local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FakeUI = require("tests.helpers.fake_ui")
 
--- Right-click "Ignore…" on a whisper row asks for a reason, then reports the
+-- Right-click "Block…" on a whisper row asks for a reason, then reports the
 -- player to the silent ignore list. Group rows are not players: no entry.
 
 local function newRoot()
@@ -72,8 +72,8 @@ return function()
   assert(ContextMenu.Open(whisper, anchor, nil, nil, rowActions) == true, "whisper menu opens")
   local root = newRoot()
   modifiers["MENU_UNIT_FRIEND"](anchor, root, openedContext)
-  local ignore = findButton(root, "Ignore…")
-  assert(ignore ~= nil, "whisper row offers Ignore…")
+  local ignore = findButton(root, "Block…")
+  assert(ignore ~= nil, "whisper row offers Block…")
 
   -- test_accepting_the_dialog_ignores_with_the_reason
   stubPopup("  spam ")
@@ -93,7 +93,7 @@ return function()
   ContextMenu.Open(nicknamed, anchor, nil, nil, rowActions)
   root = newRoot()
   modifiers["MENU_UNIT_FRIEND"](anchor, root, openedContext)
-  findButton(root, "Ignore…").callback()
+  findButton(root, "Block…").callback()
   rawset(_G, "GetPlayerInfoByGUID", savedPlayerInfo)
   assert(ignored[2] and ignored[2].name == "Arthas-Area52", "ignores the character's full name, got " .. tostring(ignored[2] and ignored[2].name))
 
@@ -102,7 +102,7 @@ return function()
   ContextMenu.Open(bnet, anchor, nil, nil, rowActions)
   root = newRoot()
   modifiers["MENU_UNIT_BN_FRIEND"](anchor, root, openedContext)
-  assert(findButton(root, "Ignore…") == nil, "Battle.net rows have no Ignore…")
+  assert(findButton(root, "Block…") == nil, "Battle.net rows have no Block…")
 
   -- test_guild_row_has_no_ignore
   local groupRoot = newRoot()
@@ -113,12 +113,12 @@ return function()
   })
   local guild = { channel = "GUILD", displayName = "Guild", conversationKey = "guild::x" }
   assert(ContextMenu.Open(guild, anchor, nil, function() end, rowActions) == true, "group menu opens")
-  assert(findButton(groupRoot, "Ignore…") == nil, "guild rows have no Ignore…")
+  assert(findButton(groupRoot, "Block…") == nil, "guild rows have no Block…")
 
   -- test_ignore_entries_are_translated
   Localization.Configure({ language = "ruRU" })
-  assert(Localization.Text("Ignore…") ~= "Ignore…", "row entry translated")
-  assert(Localization.Text("Ignore sender…") ~= "Ignore sender…", "message entry translated")
+  assert(Localization.Text("Block…") ~= "Block…", "row entry translated")
+  assert(Localization.Text("Block sender…") ~= "Block sender…", "message entry translated")
   Localization.Configure({ language = "enUS" })
 
   _G.Menu = saved.Menu

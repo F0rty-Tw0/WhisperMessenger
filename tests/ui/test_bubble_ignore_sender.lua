@@ -80,8 +80,8 @@ return function()
   do
     local menu = stubMenuUtil()
     rightClick(factory, parent, incoming, bindTranscript("CHANNEL", onIgnorePlayer))
-    local ignore = menuButton(menu, "Ignore sender…")
-    assert(ignore ~= nil, "incoming channel line offers Ignore sender…")
+    local ignore = menuButton(menu, "Block sender…")
+    assert(ignore ~= nil, "incoming channel line offers Block sender…")
 
     -- test_accepting_ignores_the_sender_with_the_reason
     stubPopup("gold spam")
@@ -95,14 +95,14 @@ return function()
   do
     local menu = stubMenuUtil()
     rightClick(factory, parent, outgoing, bindTranscript("CHANNEL", onIgnorePlayer))
-    assert(menuButton(menu, "Ignore sender…") == nil, "own lines cannot be ignored")
+    assert(menuButton(menu, "Block sender…") == nil, "own lines cannot be ignored")
   end
 
   -- test_whisper_conversation_has_no_ignore_sender
   do
     local menu = stubMenuUtil()
     rightClick(factory, parent, { direction = "in", kind = "user", text = "hi", playerName = "Jaina-Realm" }, bindTranscript("WOW", onIgnorePlayer))
-    assert(menuButton(menu, "Ignore sender…") == nil, "whisper chats use the contact menu instead")
+    assert(menuButton(menu, "Block sender…") == nil, "whisper chats use the contact menu instead")
   end
 
   -- test_bnet_conversation_has_no_ignore_sender
@@ -110,7 +110,7 @@ return function()
     local menu = stubMenuUtil()
     local line = { direction = "in", kind = "user", text = "hi", playerName = "Jaina-Realm", channel = "BN_CONVERSATION" }
     rightClick(factory, parent, line, bindTranscript("BN_CONVERSATION", onIgnorePlayer))
-    assert(menuButton(menu, "Ignore sender…") == nil, "Battle.net conversation senders are not characters")
+    assert(menuButton(menu, "Block sender…") == nil, "Battle.net conversation senders are not characters")
   end
 
   -- test_bnet_token_sender_has_no_ignore_sender
@@ -118,7 +118,7 @@ return function()
     local menu = stubMenuUtil()
     local line = { direction = "in", kind = "user", text = "hi", playerName = "|Kq12|k", channel = "GUILD" }
     rightClick(factory, parent, line, bindTranscript("GUILD", onIgnorePlayer))
-    assert(menuButton(menu, "Ignore sender…") == nil, "a Battle.net name token is not a character name")
+    assert(menuButton(menu, "Block sender…") == nil, "a Battle.net name token is not a character name")
   end
 
   -- test_sender_name_menu_gets_the_ignore_handler

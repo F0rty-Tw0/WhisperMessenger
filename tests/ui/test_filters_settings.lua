@@ -99,7 +99,7 @@ return function()
   -- test_title_counts_every_ignored_player
   do
     local result = create(filtersWith({ "A", "B", "C", "D", "E", "F", "G", "H" }))
-    assert(FindUI.text(result.frame, "Ignored players (8)") ~= nil, "title shows the full count while rows scroll")
+    assert(FindUI.text(result.frame, "Blocked players (8)") ~= nil, "title shows the full count while rows scroll")
   end
 
   -- test_row_shows_reason_blocked_count_and_last_text

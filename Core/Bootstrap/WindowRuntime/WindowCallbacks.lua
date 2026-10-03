@@ -221,7 +221,7 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
-    -- "Ignore…" from a contact row or a message.
+    -- "Block…" from a contact row or a message.
     onIgnorePlayer = function(name, reason)
       if IgnoreList.Add(IgnoreList.Ensure(accountState), name, { reason = reason }) ~= nil then
         if runtime.syncChatFilters then

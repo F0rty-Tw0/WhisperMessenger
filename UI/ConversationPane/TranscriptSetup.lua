@@ -41,7 +41,7 @@ local NO_IGNORE_SENDER_CHANNELS = { WOW = true, BN = true, BN_CONVERSATION = tru
 
 -- Sender name / portrait right-click: player menu for the selected contact,
 -- with the same Mark unread / prefs callbacks the contact rows use. Bubble
--- right-click in group and channel chats: "Ignore sender…" for other
+-- right-click in group and channel chats: "Block sender…" for other
 -- players' lines (options.onIgnorePlayer(name, reason)).
 function TranscriptSetup.BindPlayerMenu(transcript, view, options)
   if type(options.onIgnorePlayer) == "function" then

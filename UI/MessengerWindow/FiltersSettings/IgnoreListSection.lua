@@ -13,8 +13,8 @@ local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.Igno
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local IgnoreRow = ns.FiltersSettingsIgnoreRow or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreRow")
 
--- "Ignored players" section of the Filters page: a scrolling list that only ever builds VISIBLE_ROWS row frames (re-bound on scroll), the
--- "Ignore for" choice and an "Add player…" button.
+-- "Blocked players" section of the Filters page: a scrolling list that only ever builds VISIBLE_ROWS row frames (re-bound on scroll), the
+-- "Block for" choice and an "Add player…" button.
 local IgnoreListSection = {}
 
 IgnoreListSection.VISIBLE_ROWS = 6
@@ -89,7 +89,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   local offset, entries, entryKeys = 0, {}, {}
   local selectedDuration = DEFAULT_DURATION
 
-  local titleSection = SettingsControls.CreateSectionLabel(frame, text("Ignored players"))
+  local titleSection = SettingsControls.CreateSectionLabel(frame, text("Blocked players"))
   titleSection.region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local list = factory.CreateFrame("Frame", nil, frame)
@@ -133,7 +133,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
 
   local durationSelector = options.panel:bind(
     ButtonSelector.Create(factory, frame, {
-      labelText = text("Ignore for"),
+      labelText = text("Block for"),
       optionsList = durationOptions(),
       fallbackKey = DEFAULT_DURATION,
       initial = DEFAULT_DURATION,
@@ -181,7 +181,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     IgnoreList.Sweep(filters, now())
     entryKeys = {}
     entries = sortedEntries(filters, entryKeys)
-    titleSection.label:SetText(string.format("%s (%d)", text("Ignored players"), countEntries(filters)))
+    titleSection.label:SetText(string.format("%s (%d)", text("Blocked players"), countEntries(filters)))
     offset = math.min(offset, math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS))
     bindRows()
     local shown = math.min(#entries, IgnoreListSection.VISIBLE_ROWS)
@@ -205,7 +205,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   end
 
   function section.setLanguage()
-    durationSelector.label:SetText(text("Ignore for"))
+    durationSelector.label:SetText(text("Block for"))
     durationSelector.setOptionsList(durationOptions())
     addButton.label:SetText(text("Add player…"))
     section.redraw()
