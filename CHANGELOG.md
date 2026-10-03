@@ -30,6 +30,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Point at a player in the Filters page's block list to read their full last blocked message, the reason and this session's count.
 - You can name your own keyword rules: Add rule asks for a name and the words, and clicking one of your rules lets you change both.
 - Blocked counts on the Filters page now count only the current session and start again from zero every time you log in or reload.
+- Fixed: with a large font size, the welcome message no longer runs past the edges of the chat area, and the right edge of Options pages is no longer cut off.
 - Fixed: scrolling the Filters page with the mouse wheel no longer stops when the blocked players list passes under the pointer.
 
 ## [2.0.2] - 2026-10-02

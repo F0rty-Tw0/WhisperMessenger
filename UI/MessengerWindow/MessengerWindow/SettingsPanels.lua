@@ -11,15 +11,15 @@ local SettingsPanels = {}
 -- and the sidebar tab select the same page without a magic number.
 SettingsPanels.PATCH_NOTES_INDEX = 9
 
-local SETTINGS_RIGHT_PADDING_TRIM = 20
-local SETTINGS_SCROLLBAR_RESERVE = 4
-
+-- Controls start CONTENT_PADDING in from the left; the same gap on the right
+-- keeps right-aligned values and button art clear of the scroll clip. The
+-- scroll view already narrows its viewport for its own bar.
 local function paneInnerWidth(outerWidth)
   local padding = (Theme.CONTENT_PADDING or 16) * 2
   if type(outerWidth) ~= "number" or outerWidth <= 0 then
     return nil
   end
-  return outerWidth - padding + SETTINGS_RIGHT_PADDING_TRIM - SETTINGS_SCROLLBAR_RESERVE
+  return outerWidth - padding
 end
 
 local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
