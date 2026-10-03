@@ -35,7 +35,7 @@ return function()
 
     MythicSuspendController.Attach(runtime, {
       Bootstrap = Bootstrap,
-      mythicPauseNotice = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave.",
+      mythicPauseNotice = "Messages are paused in Mythic content and will resume after you leave.",
       isWindowVisible = function()
         calls[#calls + 1] = "isWindowVisible"
         return true
@@ -60,7 +60,7 @@ return function()
     runtime.suspend()
 
     assert(
-      runtime.messagingNotice == "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave.",
+      runtime.messagingNotice == "Messages are paused in Mythic content and will resume after you leave.",
       "suspend should set the mythic pause notice"
     )
     assert(Bootstrap._wasVisibleBeforeMythic == true, "suspend should capture previous window visibility")

@@ -10,7 +10,7 @@ end
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local Common = {}
 
-Common.COMPETITIVE_NOTICE = "Whispers are paused in competitive content. Messages will resume when you leave."
+Common.COMPETITIVE_NOTICE = "Messages are paused in competitive content and will resume when you leave."
 
 function Common.refreshRuntimeWindow(Bootstrap)
   if Bootstrap.runtime and Bootstrap.runtime.refreshWindow then

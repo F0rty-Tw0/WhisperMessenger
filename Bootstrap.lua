@@ -30,7 +30,6 @@ end
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
-local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
 
@@ -256,7 +255,6 @@ function Bootstrap.Initialize(factory, options)
 
   MythicSuspendController.Attach(runtime, {
     Bootstrap = Bootstrap,
-    mythicPauseNotice = MYTHIC_PAUSE_NOTICE,
     isWindowVisible = windowRuntime.isWindowVisible,
     setWindowVisible = runtime.setWindowVisible,
     refreshWindow = runtime.refreshWindow,
