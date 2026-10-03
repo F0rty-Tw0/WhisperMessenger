@@ -76,8 +76,8 @@ local function sizeTab(tab, maxWidth)
 end
 
 -- Caps every visible tab at an equal share of the strip so the row never
--- runs past the window. maxTabWidth is also read by the template's own
--- OnShow / DISPLAY_SIZE_CHANGED resize.
+-- runs past the window. maxTabWidth is also read by each tab's OnShow /
+-- DISPLAY_SIZE_CHANGED resize (set in createTab).
 local function fitTabs(frame, visible)
   local count = #visible
   local width = frame.GetWidth and frame:GetWidth() or 0
