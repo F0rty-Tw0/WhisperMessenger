@@ -141,7 +141,18 @@ function OptionsMenuButtons.Build(factory, optionsMenu, options)
     optionsHint:SetText(Localization.Text("Reset positions or clear all conversation history."))
   end
 
+  -- Height the tab list plus the footer need; a shorter menu scrolls
+  -- instead of drawing the hint over the last tabs.
+  local function contentHeight()
+    local tabCount = #settingsTabs
+    local tabsHeight = menuPadding + tabCount * tabLayout.height + (tabCount - 1) * tabSpacing
+    local hintHeight = optionsHint.GetStringHeight and optionsHint:GetStringHeight() or 0
+    local footerHeight = hintHeight + menuPadding + 3 * btnH + 2 * btnSpacing + menuPadding
+    return tabsHeight + menuPadding + footerHeight
+  end
+
   local result = {
+    contentHeight = contentHeight,
     settingsTabs = settingsTabs,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
