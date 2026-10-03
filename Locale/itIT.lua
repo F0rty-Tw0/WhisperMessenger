@@ -450,6 +450,8 @@ local Italian = {
   -- Ignore from the right-click menus
   ["Ignore…"] = "Ignora…",
   ["Ignore sender…"] = "Ignora mittente…",
+  -- The empty Channels tab
+  ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "I canali che spunti nelle impostazioni Chat compaiono qui. Scegli un canale a sinistra.",
 }
 
 ns.Locale_itIT = Italian

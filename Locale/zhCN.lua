@@ -450,6 +450,8 @@ local SimplifiedChinese = {
   -- Ignore from the right-click menus
   ["Ignore…"] = "屏蔽…",
   ["Ignore sender…"] = "屏蔽发送者…",
+  -- The empty Channels tab
+  ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

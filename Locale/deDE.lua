@@ -450,6 +450,8 @@ local German = {
   -- Ignore from the right-click menus
   ["Ignore…"] = "Ignorieren…",
   ["Ignore sender…"] = "Absender ignorieren…",
+  -- The empty Channels tab
+  ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Die Kanäle, die du in den Chats-Einstellungen ankreuzt, erscheinen hier. Wähle links einen Kanal.",
 }
 
 ns.Locale_deDE = German

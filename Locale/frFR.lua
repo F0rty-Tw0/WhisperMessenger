@@ -450,6 +450,8 @@ local French = {
   -- Ignore from the right-click menus
   ["Ignore…"] = "Ignorer…",
   ["Ignore sender…"] = "Ignorer l'expéditeur…",
+  -- The empty Channels tab
+  ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Les canaux cochés dans les paramètres Discussions apparaissent ici. Choisissez un canal à gauche.",
 }
 
 ns.Locale_frFR = French

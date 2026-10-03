@@ -168,7 +168,12 @@ local EMPTY_SUBTITLE_WIDTH = 260
 local EMPTY_BUTTON_WIDTH = 150
 local EMPTY_BUTTON_HEIGHT = 24
 local NATIVE_BUTTON_HEIGHT = 22
-local GROUPS_SUBTITLE_KEY = "Party, raid, instance and guild chats show up here. Join a group or pick a chat on the left."
+-- Empty-state copy per contacts tab; any other mode gets the whispers copy.
+local EMPTY_COPY = {
+  whispers = { title = "Welcome to WhisperMessenger", subtitle = "Pick a conversation on the left, or start a new one." },
+  groups = { title = "Group Chats", subtitle = "Party, raid, instance and guild chats show up here. Join a group or pick a chat on the left." },
+  channels = { title = "Channels", subtitle = "The channels you tick in the Chats settings show up here. Pick a channel on the left." },
+}
 
 local function paintEmptyButtonBg(buttonBg, hovered)
   applyColorTexture(buttonBg, UIHelpers.hoverButtonFill(Theme.COLORS.bg_contact_hover, hovered))
@@ -245,17 +250,12 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
   end
 
   button:Show()
-  -- "groups" swaps to group-chat copy; the Start New Whisper button is
-  -- whisper-only, so it hides there.
+  -- "groups" and "channels" swap to their own copy; the Start New Whisper
+  -- button is whisper-only, so it hides there.
   local mode = "whispers"
   container.setLanguage = function()
-    if mode == "groups" then
-      title:SetText(Localization.Text("Group Chats"))
-      subtitle:SetText(Localization.Text(GROUPS_SUBTITLE_KEY))
-    else
-      title:SetText(Localization.Text("Welcome to WhisperMessenger"))
-      subtitle:SetText(Localization.Text("Pick a conversation on the left, or start a new one."))
-    end
+    title:SetText(Localization.Text(EMPTY_COPY[mode].title))
+    subtitle:SetText(Localization.Text(EMPTY_COPY[mode].subtitle))
     if buttonText then
       buttonText:SetText(Localization.Text("Start New Whisper"))
     else
@@ -273,8 +273,8 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
     end
   end
   container.setMode = function(nextMode)
-    mode = nextMode == "groups" and "groups" or "whispers"
-    button:SetShown(mode ~= "groups")
+    mode = EMPTY_COPY[nextMode] and nextMode or "whispers"
+    button:SetShown(mode == "whispers")
     container.setLanguage()
   end
   container.setLanguage()

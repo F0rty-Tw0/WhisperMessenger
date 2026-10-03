@@ -450,6 +450,8 @@ local TraditionalChinese = {
   -- Ignore from the right-click menus
   ["Ignore…"] = "屏蔽…",
   ["Ignore sender…"] = "屏蔽發送者…",
+  -- The empty Channels tab
+  ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天設定中勾選的頻道會顯示在這裡。請在左側選擇一個頻道。",
 }
 
 ns.Locale_zhTW = TraditionalChinese
