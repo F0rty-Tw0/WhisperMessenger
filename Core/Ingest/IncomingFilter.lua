@@ -26,12 +26,14 @@ local lower = string.lower
 local next = next
 local ipairs = ipairs
 
+-- The ring only decides eviction order; lookups go through slotById.
 local ringIds = {}
 local ringDecisions = {}
 for slot = 1, RING_SIZE do
   ringIds[slot] = false
   ringDecisions[slot] = false
 end
+local slotById = {}
 local cursor = 0
 
 -- Only real chat lineIDs are cached; 0 or a missing ID would share a slot.
@@ -43,12 +45,8 @@ function IncomingFilter.DecisionFor(lineID)
   if not isCacheable(lineID) then
     return nil
   end
-  for slot = 1, RING_SIZE do
-    if ringIds[slot] == lineID then
-      return ringDecisions[slot]
-    end
-  end
-  return nil
+  local slot = slotById[lineID]
+  return slot and ringDecisions[slot] or nil
 end
 
 local function remember(lineID, decision)
@@ -56,8 +54,13 @@ local function remember(lineID, decision)
     return
   end
   cursor = cursor % RING_SIZE + 1
+  local evicted = ringIds[cursor]
+  if evicted and slotById[evicted] == cursor then
+    slotById[evicted] = nil
+  end
   ringIds[cursor] = lineID
   ringDecisions[cursor] = decision
+  slotById[lineID] = cursor
 end
 
 local function hasEnabledRule(rules)

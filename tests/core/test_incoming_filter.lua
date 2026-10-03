@@ -82,6 +82,30 @@ return function()
     assert(entry.blocked == 66, "an evicted line is recomputed")
   end
 
+  -- test_cache_lookup_does_not_scan_the_ring
+  do
+    local steps = 0
+    debug.sethook(function()
+      steps = steps + 1
+    end, "", 1)
+    IncomingFilter.DecisionFor(987654)
+    debug.sethook()
+    assert(steps < 60, "a cache miss is a direct lookup, not a scan of every slot, took " .. steps .. " steps")
+  end
+
+  -- test_re_remembered_line_evicts_the_slot_it_reuses
+  do
+    local runtime, filters = makeRuntime()
+    IgnoreList.Add(filters, "Spammer", { now = 1 })
+    for lineID = 2001, 2065 do
+      IncomingFilter.Evaluate(runtime, "channel", "Spammer", "spam", lineID, "Trade")
+    end
+    IncomingFilter.Evaluate(runtime, "channel", "Spammer", "spam", 2001, "Trade")
+    assert(IncomingFilter.DecisionFor(2001) == "ignored", "the recomputed line is cached again")
+    assert(IncomingFilter.DecisionFor(2002) == nil, "the slot it took evicted the next oldest line")
+    assert(IncomingFilter.DecisionFor(2065) == "ignored", "newer lines stay cached")
+  end
+
   -- test_non_string_values_pass
   do
     local runtime, filters = makeRuntime()
