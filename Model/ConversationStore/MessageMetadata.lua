@@ -38,9 +38,12 @@ end
 
 function MessageMetadata.ApplyContact(state, key, conversation, message)
   local oldGuid = conversation.guid
-  conversation.displayName = message.playerName or conversation.displayName
+  -- A channel chat is titled after the channel, never after its last sender.
+  if conversation.channel ~= "CHANNEL" and message.channel ~= "CHANNEL" then
+    conversation.displayName = message.playerName or conversation.displayName
+    conversation.guid = message.guid or conversation.guid
+  end
   conversation.channel = message.channel or conversation.channel or "WOW"
-  conversation.guid = message.guid or conversation.guid
   conversation.bnetAccountID = message.bnetAccountID or conversation.bnetAccountID
   conversation.battleTag = message.battleTag or conversation.battleTag
   conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName

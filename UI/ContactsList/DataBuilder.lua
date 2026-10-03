@@ -60,6 +60,7 @@ local PER_CHARACTER_GROUP_PREFIXES = {
   "party::",
   "raid::",
   "instance::",
+  "channel::",
 }
 
 -- Account-wide group prefixes: keys use their own IDs and are shared across
