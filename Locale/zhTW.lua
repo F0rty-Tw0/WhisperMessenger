@@ -399,6 +399,8 @@ local TraditionalChinese = {
   ["Shift-click: mark all as read"] = "Shift-點擊：全部標記為已讀",
   ["Reply: %s"] = "回覆：%s",
   ["Edit this list in Options > Behavior."] = "可在「選項 > 行為」中編輯此清單。",
+  -- Whispers options page
+  ["Control how whispers behave."] = "控制密語的行為。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

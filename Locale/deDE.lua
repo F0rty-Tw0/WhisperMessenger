@@ -399,6 +399,8 @@ local German = {
   ["Shift-click: mark all as read"] = "Umschalt-Klick: alle als gelesen markieren",
   ["Reply: %s"] = "Antworten: %s",
   ["Edit this list in Options > Behavior."] = "Diese Liste unter Optionen > Verhalten bearbeiten.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "Lege fest, wie sich Flüsternachrichten verhalten.",
 }
 
 ns.Locale_deDE = German

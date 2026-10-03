@@ -399,6 +399,8 @@ local Italian = {
   ["Shift-click: mark all as read"] = "Maiusc-clic: segna tutto come letto",
   ["Reply: %s"] = "Rispondi: %s",
   ["Edit this list in Options > Behavior."] = "Modifica questo elenco in Opzioni > Comportamento.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "Controlla il comportamento dei sussurri.",
 }
 
 ns.Locale_itIT = Italian

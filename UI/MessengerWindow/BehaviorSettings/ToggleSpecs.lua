@@ -13,15 +13,9 @@ local ToggleSpecs = {}
 ToggleSpecs.DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
-  hideFromDefaultChat = true,
-  autoOpenIncoming = false,
-  autoOpenOutgoing = false,
   doubleEscapeToClose = false,
   showGroupChats = true,
-  requestsInbox = false,
   hideOnCombat = false,
-  shareTypingStatus = true,
-  shareReadReceipts = true,
   collapseDuplicates = true,
   hideChannelsFromDefaultChat = true,
 }
@@ -60,25 +54,16 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      key = "hideFromDefaultChat",
-      labelKey = "Hide whispers from default chat",
-      initial = config.hideFromDefaultChat == true,
-      onChange = function(value)
-        onChange("hideFromDefaultChat", value)
-      end,
-      tooltipLines = {
-        text("Hide whispers from default chat"),
-        text("Prevents whisper messages from appearing in the default WoW chat frame."),
-        " ",
-        text(
-          "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."
-        ),
-      },
-    },
-    {
       key = "profanityFilter",
       labelKey = "Enable profanity filter",
       initial = profanityEnabled,
+      -- Blizzard's game-wide mature-language CVar has no addon default;
+      -- "Reset to Defaults" must not silently flip it. Just re-sync the
+      -- toggle display to the live value.
+      reset = function(control)
+        local live = _G.GetCVar and _G.GetCVar("profanityFilter") == "1"
+        control.setValue(live == true)
+      end,
       onChange = function(value)
         if _G.SetCVar then
           _G.SetCVar("profanityFilter", value and "1" or "0")
@@ -87,30 +72,6 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Enable profanity filter"),
         text("Uses Blizzard's built-in filter to censor profanity in messages."),
-      },
-    },
-    {
-      key = "autoOpenIncoming",
-      labelKey = "Auto-open on incoming whisper",
-      initial = config.autoOpenIncoming == true,
-      onChange = function(value)
-        onChange("autoOpenIncoming", value)
-      end,
-      tooltipLines = {
-        text("Auto-open on incoming whisper"),
-        text("Opens the messenger when you receive a whisper. Disabled during combat."),
-      },
-    },
-    {
-      key = "autoOpenOutgoing",
-      labelKey = "Auto-open on outgoing whisper",
-      initial = config.autoOpenOutgoing == true,
-      onChange = function(value)
-        onChange("autoOpenOutgoing", value)
-      end,
-      tooltipLines = {
-        text("Auto-open on outgoing whisper"),
-        text("Opens the messenger when you send a whisper, press Reply, or whisper from the friends list. Disabled during combat."),
       },
     },
     {
@@ -148,44 +109,6 @@ function ToggleSpecs.Build(config, onChange)
         text("Show group chats"),
         text("Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."),
         text("When off, only whispers appear."),
-      },
-    },
-    {
-      key = "requestsInbox",
-      labelKey = "Put whispers from strangers in Requests",
-      initial = config.requestsInbox == true,
-      onChange = function(value)
-        onChange("requestsInbox", value)
-      end,
-      tooltipLines = {
-        text("Put whispers from strangers in Requests"),
-        text(
-          "Whispers from players who are not your friends, guildmates or group members wait quietly in a Requests tab: no sound, no pop-up, no badge."
-        ),
-      },
-    },
-    {
-      key = "shareTypingStatus",
-      labelKey = "Share typing status",
-      initial = config.shareTypingStatus ~= false,
-      onChange = function(value)
-        onChange("shareTypingStatus", value)
-      end,
-      tooltipLines = {
-        text("Share typing status"),
-        text("Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."),
-      },
-    },
-    {
-      key = "shareReadReceipts",
-      labelKey = "Send read receipts",
-      initial = config.shareReadReceipts ~= false,
-      onChange = function(value)
-        onChange("shareReadReceipts", value)
-      end,
-      tooltipLines = {
-        text("Send read receipts"),
-        text("Lets contacts who also use WhisperMessenger see when you have read their whispers."),
       },
     },
   }

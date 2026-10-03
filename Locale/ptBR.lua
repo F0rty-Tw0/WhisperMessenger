@@ -399,6 +399,8 @@ local Portuguese = {
   ["Shift-click: mark all as read"] = "Shift-clique: marcar tudo como lido",
   ["Reply: %s"] = "Responder: %s",
   ["Edit this list in Options > Behavior."] = "Edite esta lista em Opções > Comportamento.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "Controle como os sussurros se comportam.",
 }
 
 ns.Locale_ptBR = Portuguese

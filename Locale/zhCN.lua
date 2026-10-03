@@ -399,6 +399,8 @@ local SimplifiedChinese = {
   ["Shift-click: mark all as read"] = "Shift-点击：全部标记为已读",
   ["Reply: %s"] = "回复：%s",
   ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
+  -- Whispers options page
+  ["Control how whispers behave."] = "控制密语的行为。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

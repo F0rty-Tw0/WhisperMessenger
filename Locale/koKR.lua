@@ -399,6 +399,8 @@ local Korean = {
   ["Shift-click: mark all as read"] = "Shift-클릭: 모두 읽음으로 표시",
   ["Reply: %s"] = "답장: %s",
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "귓속말 동작을 설정합니다.",
 }
 
 ns.Locale_koKR = Korean

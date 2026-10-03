@@ -293,6 +293,8 @@ UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
 UI/MessengerWindow/BehaviorSettings.lua
+UI/MessengerWindow/WhispersSettings/ToggleSpecs.lua
+UI/MessengerWindow/WhispersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua

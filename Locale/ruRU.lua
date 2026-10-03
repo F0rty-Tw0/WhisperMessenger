@@ -399,6 +399,8 @@ local Russian = {
   ["Shift-click: mark all as read"] = "Shift-клик: отметить все как прочитанные",
   ["Reply: %s"] = "Ответить: %s",
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "Настройте поведение шепота.",
 }
 
 ns.Locale_ruRU = Russian

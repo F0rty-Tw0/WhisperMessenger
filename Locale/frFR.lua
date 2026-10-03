@@ -399,6 +399,8 @@ local French = {
   ["Shift-click: mark all as read"] = "Maj-clic : tout marquer comme lu",
   ["Reply: %s"] = "Répondre : %s",
   ["Edit this list in Options > Behavior."] = "Modifiez cette liste dans Options > Comportement.",
+  -- Whispers options page
+  ["Control how whispers behave."] = "Réglez le comportement des chuchotements.",
 }
 
 ns.Locale_frFR = French

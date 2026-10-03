@@ -39,23 +39,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
 
   local panel = SettingsControls.NewPanelRegistry()
-  for i, spec in ipairs(toggleSpecs) do
-    if spec.key == "profanityFilter" then
-      -- Profanity filter writes a CVar instead of routing through onChange.
-      panel:bind(toggles[i], {
-        type = "toggle",
-        reset = function(control)
-          -- Blizzard's game-wide mature-language CVar has no addon default;
-          -- "Reset to Defaults" must not silently flip it. Just re-sync the
-          -- toggle display to the live value.
-          local live = _G.GetCVar and _G.GetCVar("profanityFilter") == "1"
-          control.setValue(live == true)
-        end,
-      })
-    else
-      panel:bind(toggles[i], { type = "toggle", key = spec.key, default = DEFAULTS[spec.key] })
-    end
-  end
+  SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, DEFAULTS)
 
   -- Not bound to Reset to Defaults: it would wipe replies the player typed.
   local quickReplies = QuickRepliesSettings.Create(factory, frame, toggles[#toggles].row, {
@@ -100,9 +84,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local function setLanguage()
     header.title:SetText(text("Behavior"))
     header.hint:SetText(text("Control how the messenger window behaves."))
-    for i, spec in ipairs(toggleSpecs) do
-      toggles[i].label:SetText(text(spec.labelKey))
-    end
+    SettingsControls.RelabelToggles(toggles, toggleSpecs, text)
     resetButton.label:SetText(text("Reset to Defaults"))
     quickReplies.setLanguage()
     -- Tooltip lines were captured into closure-frozen arrays at construction
