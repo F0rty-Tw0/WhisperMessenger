@@ -247,6 +247,7 @@ local Italian = {
   ["Resumed. Whispers are active again."] = "Ripreso. I sussurri sono di nuovo attivi.",
   ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = '/r e il tasto R possono non funzionare in Mitico+ mentre "Nascondi sussurri dalla chat predefinita" è attivo. Usa |cffffff00/wr|r per rispondere (o assegnalo a R con una macro).',
   ["Messages are paused in Mythic content and will resume after you leave."] = "I messaggi sono in pausa nei contenuti mitici e riprenderanno all'uscita.",
+  ["To reply now, type /w and their name in the game's chat."] = "Per rispondere ora, scrivi /w e il suo nome nella chat del gioco.",
   ["Messages are paused in competitive content and will resume when you leave."] = "I messaggi sono in pausa nei contenuti competitivi e riprenderanno all'uscita.",
   ["Left party"] = "Hai lasciato il gruppo",
   ["Left instance"] = "Hai lasciato l'istanza",

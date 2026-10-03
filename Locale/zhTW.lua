@@ -247,6 +247,7 @@ local TraditionalChinese = {
   ["Resumed. Whispers are active again."] = "已恢復。密語再次啟用。",
   ['/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'] = "啟用「在預設聊天中隱藏密語」時,/r 和 R 鍵在傳奇鑰石+中可能失敗。請使用 |cffffff00/wr|r 回覆(或透過宏綁定到 R)。",
   ["Messages are paused in Mythic content and will resume after you leave."] = "訊息在傳奇內容中已暫停，離開後將恢復。",
+  ["To reply now, type /w and their name in the game's chat."] = "若要立即回覆，請在遊戲聊天中輸入 /w 和對方的名字。",
   ["Messages are paused in competitive content and will resume when you leave."] = "訊息在競技內容中已暫停，離開後將恢復。",
   ["Left party"] = "離開小隊",
   ["Left instance"] = "離開副本",

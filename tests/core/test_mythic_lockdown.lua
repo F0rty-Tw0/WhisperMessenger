@@ -524,7 +524,7 @@ return function()
     assert(runtime.window.frame.shown == true, "window should reopen during mythic suspend")
     assert(
       runtime.window.conversation.activeStatusBanner.text
-        == "Messages are paused in Mythic content and will resume after you leave.",
+        == "Messages are paused in Mythic content and will resume after you leave." .. " To reply now, type /w and their name in the game's chat.",
       "window should show a mythic pause notice when reopened during suspend"
     )
     assert(runtime.window.conversation.activeStatusBanner.shown == true, "mythic pause notice should be visible")
