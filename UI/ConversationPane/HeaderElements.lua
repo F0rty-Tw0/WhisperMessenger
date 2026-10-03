@@ -164,7 +164,7 @@ local EMPTY_LOGO_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png
 local EMPTY_WIDTH = 280
 local EMPTY_HEIGHT = 170
 local EMPTY_LOGO_SIZE = 48
-local EMPTY_SUBTITLE_WIDTH = 260
+local EMPTY_TEXT_WIDTH = 260
 local EMPTY_BUTTON_WIDTH = 150
 local EMPTY_BUTTON_HEIGHT = 24
 local NATIVE_BUTTON_HEIGHT = 22
@@ -177,6 +177,15 @@ local EMPTY_COPY = {
 
 local function paintEmptyButtonBg(buttonBg, hovered)
   applyColorTexture(buttonBg, UIHelpers.hoverButtonFill(Theme.COLORS.bg_contact_hover, hovered))
+end
+
+-- Big fonts wrap onto more lines instead of running past the pane.
+local function wrapCentred(fontString)
+  fontString:SetWidth(EMPTY_TEXT_WIDTH)
+  fontString:SetJustifyH("CENTER")
+  if type(fontString.SetWordWrap) == "function" then
+    fontString:SetWordWrap(true)
+  end
 end
 
 -- nativeChrome: Native WoW HUD -> Blizzard button art.
@@ -193,14 +202,11 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
 
   local title = container:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
   title:SetPoint("TOP", logo, "BOTTOM", 0, -12)
+  wrapCentred(title)
 
   local subtitle = container:CreateFontString(nil, "OVERLAY", Theme.FONTS.empty_state)
   subtitle:SetPoint("TOP", title, "BOTTOM", 0, -6)
-  subtitle:SetWidth(EMPTY_SUBTITLE_WIDTH)
-  subtitle:SetJustifyH("CENTER")
-  if type(subtitle.SetWordWrap) == "function" then
-    subtitle:SetWordWrap(true)
-  end
+  wrapCentred(subtitle)
 
   -- Native WoW HUD: Blizzard red-gold UIPanelButtonTemplate (label via the
   -- button's own SetText, no child keys). Falls back to the modern button
