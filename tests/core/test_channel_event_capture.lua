@@ -124,6 +124,10 @@ return function()
     assert(flashes == 0, "a plain channel line is silent")
     tradeLine(runtime, "Arthas you still need ore?", "Seller", 8106, 2)
     assert(flashes == 1, "a channel line naming the player alerts")
+    -- test_muted_channel_mention_is_silent
+    runtime.store.conversations[TRADE_KEY].muted = true
+    tradeLine(runtime, "Arthas, ore?", "Buyer", 8107, 2)
+    assert(flashes == 1, "a muted channel chat never alerts, even on a mention")
     rawset(_G, "UnitName", savedUnitName)
     rawset(_G, "FlashClientIcon", nil)
   end
