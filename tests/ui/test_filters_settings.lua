@@ -232,6 +232,67 @@ return function()
     assert(#trashButtons(result.frame) == 0, "rule list redrawn without the rule")
   end
 
+  -- test_preset_rule_shows_its_name
+  do
+    local filters = { ignored = {}, rules = { { name = "WTS / WTB", words = { "wts/wtb" }, enabled = false, blocked = 0 } } }
+    local result = create(filters)
+    assert(visibleText(result.frame, "WTS / WTB") ~= nil, "named rule listed by its name")
+    assert(visibleText(result.frame, "wts/wtb") == nil, "its words stay out of the list")
+  end
+
+  -- test_clicking_a_rule_edits_its_words
+  do
+    local filters = { ignored = {}, rules = { { name = "WTS / WTB", words = { "wts/wtb" }, enabled = true, blocked = 2 } } }
+    local result = create(filters)
+    local primed
+    _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+    rawset(_G, "StaticPopup_Show", function(name, _textArg, _textArg2, value)
+      primed = value
+      _G.StaticPopupDialogs[name].OnAccept({
+        editBox = {
+          frameType = "EditBox",
+          GetText = function()
+            return "WTS/wtb + gold"
+          end,
+          SetText = function() end,
+        },
+      })
+    end)
+    local row = visibleText(result.frame, "WTS / WTB").parent:GetParent()
+    FindUI.click(row.editButton)
+    assert(primed == "wts/wtb", "dialog opens with the current words")
+    local rule = filters.rules[1]
+    assert(rule.words[1] == "wts/wtb" and rule.words[2] == "gold", "edited words saved")
+    assert(rule.blocked == 2 and rule.enabled == true, "count and state kept")
+  end
+
+  -- test_reset_rules_confirms_then_restores_presets
+  do
+    local RulePresets = require("WhisperMessenger.Model.Filters.RulePresets")
+    local filters = { ignored = {}, rules = { { words = { "mine" }, enabled = true, blocked = 1 } } }
+    local result = create(filters)
+    local asked
+    _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+    rawset(_G, "StaticPopup_Show", function(name)
+      asked = name
+      _G.StaticPopupDialogs[name].OnAccept()
+    end)
+    FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
+    assert(asked ~= nil, "asks before resetting")
+    assert(#filters.rules == #RulePresets.LIST, "own rule gone, presets back")
+    assert(visibleText(result.frame, "mine") == nil, "list redrawn without the own rule")
+    assert(visibleText(result.frame, "WTS / WTB") ~= nil, "presets listed")
+  end
+
+  -- test_reset_rules_cancelled_keeps_rules
+  do
+    local filters = { ignored = {}, rules = { { words = { "mine" }, enabled = true, blocked = 1 } } }
+    local result = create(filters)
+    rawset(_G, "StaticPopup_Show", function() end)
+    FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
+    assert(#filters.rules == 1 and filters.rules[1].words[1] == "mine", "nothing changes until confirmed")
+  end
+
   -- test_russian_localizes_filters_panel
   do
     Localization.Configure({ language = "ruRU" })
