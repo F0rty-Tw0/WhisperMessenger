@@ -109,6 +109,15 @@ return function()
     assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "spammer") == nil, "an ignored sender's line is not kept")
   end
 
+  -- test_own_line_matching_a_rule_is_stored_outgoing
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.filters.rules = { { words = { "ore" }, enabled = true, blocked = 0 } }
+    tradeLine(runtime, "WTS ore", "SELF", 8109, 2)
+    local conversation = assert(runtime.store.conversations[TRADE_KEY], "the player's own line is never blocked by a rule")
+    assert(conversation.messages[1].direction == "out", "the player's own line is stored as sent")
+  end
+
   -- test_disabled_channel_skips_ingest
   do
     local ChannelChatIngest = require("WhisperMessenger.Core.Ingest.ChannelChatIngest")
