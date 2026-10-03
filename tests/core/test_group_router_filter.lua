@@ -6,8 +6,8 @@ local KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules")
 
 -- Filtered group lines are dropped before ingest: no store change, no refresh.
 
-local function guildLine(runtime, sender, text, lineID)
-  return EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_GUILD", text, sender, "", "", "", "", 0, 0, "", 0, lineID, "Player-1-OTHER")
+local function guildLine(runtime, sender, text, lineID, guid)
+  return EventBridge.RouteGroupEvent(runtime, "CHAT_MSG_GUILD", text, sender, "", "", "", "", 0, 0, "", 0, lineID, guid or "Player-1-OTHER")
 end
 
 local function makeRuntime()
@@ -67,6 +67,20 @@ return function()
     assert(guildLine(runtime, "Friend-Area52", "anyone for Arathi?", 7003) == true)
     assert(ingestCalls == 1, "a clean line is ingested")
     assert(runtime.store.conversations["guild::arthas-area52"] ~= nil, "the line is stored")
+  end
+
+  -- test_own_line_is_never_filtered
+  do
+    local runtime = makeRuntime()
+    KeywordRules.Add(runtime.accountState.filters, "wts boost")
+    IgnoreList.Add(runtime.accountState.filters, "Arthas-Area52", { now = 1 })
+    assert(guildLine(runtime, "Arthas-Area52", "WTS boost cheap", 7004, "Player-1-SELF") == true)
+    local guild = runtime.store.conversations["guild::arthas-area52"]
+    assert(guild ~= nil and #guild.messages == 1, "the player's own line with a blocked word is stored")
+    assert(guild.messages[1].direction == "out", "the stored line is the player's own")
+
+    assert(guildLine(runtime, "Seller-Area52", "WTS boost cheap", 7005) == true)
+    assert(#guild.messages == 1, "another player's identical line is dropped")
   end
 
   rawset(GroupChatIngest, "HandleEvent", realHandleEvent)

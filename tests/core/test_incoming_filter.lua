@@ -90,6 +90,17 @@ return function()
     assert(IncomingFilter.Evaluate(runtime, "channel", "Spammer", nil, 107, "Trade") == "pass", "nil text passes")
   end
 
+  -- test_own_line_always_passes
+  do
+    PerfCounters.Reset()
+    local runtime, filters = makeRuntime()
+    local entry = assert(IgnoreList.Add(filters, "Me", { now = 1 }))
+    local rule = assert(KeywordRules.Add(filters, "wts boost"))
+    assert(IncomingFilter.Evaluate(runtime, "group", "Me", "wts boost", 109, "GUILD", true) == "pass", "the player's own line passes")
+    assert(entry.blocked == 0 and rule.blocked == 0, "own lines count nothing")
+    assert(PerfCounters.Get("ignored") == 0 and PerfCounters.Get("ruleBlocked") == 0, "own lines move no counter")
+  end
+
   -- test_missing_filters_pass
   do
     assert(IncomingFilter.Evaluate({ accountState = {} }, "channel", "Spammer", "spam", 108, "Trade") == "pass", "no filters state passes")

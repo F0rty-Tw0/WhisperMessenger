@@ -80,9 +80,11 @@ local function decide(runtime, kind, playerName, text, channelLabel)
   return PASS
 end
 
--- kind: "whisper", "group" or "channel". Returns "pass", "ignored" or "blocked".
-function IncomingFilter.Evaluate(runtime, kind, playerName, text, lineID, channelLabel)
-  if type(playerName) ~= "string" or type(text) ~= "string" then
+-- kind: "whisper", "group" or "channel". isSelf: the caller found the line is
+-- the player's own (Direction.IsLocalSender); own lines always pass.
+-- Returns "pass", "ignored" or "blocked".
+function IncomingFilter.Evaluate(runtime, kind, playerName, text, lineID, channelLabel, isSelf)
+  if isSelf or type(playerName) ~= "string" or type(text) ~= "string" then
     return PASS
   end
   if SecretString.IsSecretString(playerName) or SecretString.IsSecretString(text) then

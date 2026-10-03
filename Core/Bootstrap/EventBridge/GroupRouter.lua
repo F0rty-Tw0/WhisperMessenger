@@ -5,6 +5,7 @@ end
 
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
+local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
@@ -150,8 +151,10 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     end
   end
 
-  -- Ignored senders and keyword-blocked lines are handled by dropping them.
-  if IncomingFilter.Evaluate(runtime, "group", playerName, text, lineID, eventName) ~= "pass" then
+  -- Ignored senders and keyword-blocked lines are handled by dropping them;
+  -- the player's own lines are never filtered.
+  local isSelf = Direction.IsLocalSender(eventName, guid, bnSenderID, runtime)
+  if IncomingFilter.Evaluate(runtime, "group", playerName, text, lineID, eventName, isSelf) ~= "pass" then
     return true
   end
 
