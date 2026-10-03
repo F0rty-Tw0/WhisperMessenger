@@ -21,6 +21,8 @@ local PASS = "pass"
 local IGNORED = "ignored"
 local BLOCKED = "blocked"
 local RING_SIZE = 64
+-- Keyword rules cover group and channel lines, not whispers or say/yell/emote.
+local RULE_KINDS = { group = true, channel = true }
 
 local lower = string.lower
 local next = next
@@ -89,7 +91,7 @@ local function decide(runtime, kind, playerName, text, channelLabel)
     end
   end
 
-  if kind == "whisper" or type(filters.rules) ~= "table" or not hasEnabledRule(filters.rules) then
+  if not RULE_KINDS[kind] or type(filters.rules) ~= "table" or not hasEnabledRule(filters.rules) then
     return PASS
   end
   local rule = KeywordRules.Match(filters, lower(text))
@@ -101,8 +103,9 @@ local function decide(runtime, kind, playerName, text, channelLabel)
   return PASS
 end
 
--- kind: "whisper", "group" or "channel". isSelf: the caller found the line is
--- the player's own (Direction.IsLocalSender); own lines always pass.
+-- kind: "whisper", "group", "channel" or "speech" (say, yell, emote).
+-- isSelf: the caller found the line is the player's own
+-- (Direction.IsLocalSender); own lines always pass.
 -- Returns "pass", "ignored" or "blocked".
 function IncomingFilter.Evaluate(runtime, kind, playerName, text, lineID, channelLabel, isSelf)
   if isSelf or type(playerName) ~= "string" or type(text) ~= "string" then

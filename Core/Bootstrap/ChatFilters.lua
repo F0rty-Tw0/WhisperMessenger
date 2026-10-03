@@ -4,14 +4,18 @@ if type(ns) ~= "table" then
 end
 
 local FilterApi = ns.BootstrapChatFilterApi or require("WhisperMessenger.Core.Bootstrap.ChatFilters.FilterApi")
+local ConditionalFilters = ns.BootstrapChatFiltersConditionalFilters or require("WhisperMessenger.Core.Bootstrap.ChatFilters.ConditionalFilters")
 
 local ChatFilters = {}
 
 -- Hiding only some lines (ignored players, keyword rules, enabled channels)
--- needs filters that can return false. Off pending the in-game taint probe.
-ChatFilters.SELECTIVE_HIDING = false
+-- needs filters that can return false. On since the in-game taint probe
+-- (2026-10-03) found no reply-path taint from channel and say filters. Turning
+-- it off keeps every conditional filter unregistered.
+ChatFilters.SELECTIVE_HIDING = true
 
-function ChatFilters.Configure(Bootstrap, accountState)
+-- runtime: optional; without it only the whisper filters exist.
+function ChatFilters.Configure(Bootstrap, accountState, runtime)
   -- Filter functions are intentionally trivial — they ALWAYS return true
   -- (suppress). We control WHEN they run via register/unregister, never
   -- via dynamic checks inside the filter body. Any addon code executing
@@ -28,6 +32,9 @@ function ChatFilters.Configure(Bootstrap, accountState)
 
   Bootstrap._filtersRegistered = false
 
+  -- Channel, say, yell and emote filters; never on whisper events.
+  local conditional = runtime and ConditionalFilters.New(runtime) or nil
+
   Bootstrap.registerChatFilters = function()
     if Bootstrap._filtersRegistered or not FilterApi.IsAvailable() then
       return
@@ -40,7 +47,12 @@ function ChatFilters.Configure(Bootstrap, accountState)
     Bootstrap._filtersRegistered = true
   end
 
+  -- Drops every filter. Mythic+ suspend calls this without a resync, so the
+  -- conditional filters go too, even when the whisper ones were never on.
   Bootstrap.unregisterChatFilters = function()
+    if conditional then
+      conditional.Sync(false)
+    end
     if not Bootstrap._filtersRegistered then
       return
     end
@@ -54,16 +66,17 @@ function ChatFilters.Configure(Bootstrap, accountState)
   end
 
   Bootstrap.syncChatFilters = function()
-    local shouldFilter = accountState.settings.hideFromDefaultChat == true
-      and not Bootstrap._inCompetitiveContent
-      and not Bootstrap._inMythicContent
-      and not Bootstrap._inEncounter
-      and not _G._wmSuspended
+    local allowed = not Bootstrap._inCompetitiveContent and not Bootstrap._inMythicContent and not Bootstrap._inEncounter and not _G._wmSuspended
+    local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed
 
     if shouldFilter and not Bootstrap._filtersRegistered then
       Bootstrap.registerChatFilters()
     elseif not shouldFilter and Bootstrap._filtersRegistered then
       Bootstrap.unregisterChatFilters()
+    end
+
+    if conditional then
+      conditional.Sync(allowed and ChatFilters.SELECTIVE_HIDING == true)
     end
   end
 end

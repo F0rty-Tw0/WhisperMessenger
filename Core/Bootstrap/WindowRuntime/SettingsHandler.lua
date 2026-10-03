@@ -49,6 +49,13 @@ function SettingsHandler.Create(options)
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
   return function(key, value)
+    -- Not a setting: the Filters page changed the ignore list or rules.
+    if key == "filters" then
+      if runtime.syncChatFilters then
+        runtime.syncChatFilters()
+      end
+      return
+    end
     local persistedValue = value
     if key == "windowScale" and windowScale.Normalize then
       persistedValue = windowScale.Normalize(value)
@@ -149,13 +156,11 @@ function SettingsHandler.Create(options)
         runtime.window.refreshLanguage(persistedValue)
       end
     end
-    if key == "hideFromDefaultChat" then
-      if runtime.syncChatFilters then
-        runtime.syncChatFilters()
-      end
-      if runtime.syncReplyKey then
-        runtime.syncReplyKey()
-      end
+    if (key == "hideFromDefaultChat" or key == "hideChannelsFromDefaultChat" or key == "enabledChannels") and runtime.syncChatFilters then
+      runtime.syncChatFilters()
+    end
+    if key == "hideFromDefaultChat" and runtime.syncReplyKey then
+      runtime.syncReplyKey()
     end
     if key == "autoOpenOutgoing" and persistedValue == true and ChatReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)

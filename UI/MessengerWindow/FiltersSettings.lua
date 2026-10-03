@@ -31,7 +31,19 @@ function FiltersSettings.Create(factory, parent, config, options)
 
   local header = SettingsControls.CreateHeader(frame, { title = text(TITLE), hint = text(HINT) })
   local panel = SettingsControls.NewPanelRegistry()
-  local sectionOptions = { filters = filters, panel = panel, onLayoutChanged = options.onLayoutChanged }
+  local onChange = options.onChange
+  local sectionOptions = {
+    filters = filters,
+    panel = panel,
+    onLayoutChanged = options.onLayoutChanged,
+    -- The ignore list and rules are edited in place; this tells the runtime
+    -- to resync what the game's chat hides.
+    onFiltersChanged = function()
+      if onChange then
+        onChange("filters")
+      end
+    end,
+  }
 
   local helpSection = HelpSection.Create(frame, header.hint)
   local ignoreSection = IgnoreListSection.Create(factory, frame, helpSection.bottom, sectionOptions)

@@ -349,6 +349,7 @@ Core/Bootstrap/LivePresenceSender.lua
 Core/Bootstrap/ReactionHandler.lua
 Core/Bootstrap/InviteHandler.lua
 Core/Bootstrap/ChatFilters/FilterApi.lua
+Core/Bootstrap/ChatFilters/ConditionalFilters.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator/IconSurfaces.lua

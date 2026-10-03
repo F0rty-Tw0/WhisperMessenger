@@ -52,13 +52,18 @@ local function confirmReset(onAccept)
   _G.StaticPopup_Show(RESET_DIALOG)
 end
 
--- options = { filters, panel, onLayoutChanged }. Returns the section with
--- `bottom` and `redraw`.
+-- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
+-- the section with `bottom` and `redraw`.
 function RulesSection.Create(factory, frame, anchor, options)
   local filters = options.filters
   local width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
   local toggleColors = SettingsControls.ToggleColors(Theme)
   local section = { rows = {} }
+
+  local function changed()
+    section.redraw()
+    options.onFiltersChanged()
+  end
 
   local titleSection = SettingsControls.CreateSectionLabel(frame, text("Keyword rules"))
   titleSection.region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
@@ -78,13 +83,14 @@ function RulesSection.Create(factory, frame, anchor, options)
     row:SetHeight(ROW_HEIGHT)
     row.toggle = UIHelpers.createToggleRow(factory, row, "", false, toggleColors, { width = width, height = ROW_HEIGHT }, function(value)
       KeywordRules.SetEnabled(filters, row.index, value)
+      options.onFiltersChanged()
     end)
     row.toggle.row:SetPoint("LEFT", row, "LEFT", 0, 0)
     row.toggle.row:Show()
     options.panel:bind(row.toggle, { type = "toggle" })
     row.removeButton = RemoveButton.Create(factory, row, function()
       KeywordRules.Remove(filters, row.index)
-      section.redraw()
+      changed()
     end)
     row.removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
     row.blockedText = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
@@ -109,7 +115,7 @@ function RulesSection.Create(factory, frame, anchor, options)
         value = KeywordRules.Format(filters.rules[index]),
         onAccept = function(typed)
           if KeywordRules.SetWords(filters, index, typed) ~= nil then
-            section.redraw()
+            changed()
           end
         end,
       })
@@ -169,7 +175,7 @@ function RulesSection.Create(factory, frame, anchor, options)
       maxLetters = RULE_MAX_LETTERS,
       onAccept = function(typed)
         if KeywordRules.Add(filters, typed) ~= nil then
-          section.redraw()
+          changed()
         end
       end,
     })
@@ -180,7 +186,7 @@ function RulesSection.Create(factory, frame, anchor, options)
   resetButton:SetScript("OnClick", function()
     confirmReset(function()
       RulePresets.Reset(filters)
-      section.redraw()
+      changed()
     end)
   end)
   section.bottom = resetButton

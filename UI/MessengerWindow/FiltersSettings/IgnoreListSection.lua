@@ -79,8 +79,9 @@ local function countEntries(filters)
   return count
 end
 
--- options = { filters, panel, onLayoutChanged }. Returns the section with
--- `bottom` (the frame the next control anchors below) and `redraw`.
+-- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
+-- the section with `bottom` (the frame the next control anchors below) and
+-- `redraw`.
 function IgnoreListSection.Create(factory, frame, anchor, options)
   local filters = options.filters
   local width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
@@ -95,9 +96,14 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
   list:EnableMouseWheel(true)
 
+  local function changed()
+    section.redraw()
+    options.onFiltersChanged()
+  end
+
   local function remove(key)
     IgnoreList.RemoveKey(filters, key)
-    section.redraw()
+    changed()
   end
 
   local function bindRows()
@@ -164,7 +170,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
         end
         IgnorePrompt.AskReason(function(reason)
           IgnoreList.Add(filters, name, { reason = reason, duration = durationSeconds(selectedDuration) })
-          section.redraw()
+          changed()
         end)
       end,
     })

@@ -139,9 +139,9 @@ return function()
     rawset(_G, "ChatFrameUtil", savedUtil)
   end
 
-  -- test_exposes_selective_hiding_off_until_probe
+  -- test_exposes_selective_hiding_on_after_probe
 
   do
-    assert(ChatFilters.SELECTIVE_HIDING == false, "selective hiding stays off until the in-game taint probe passes")
+    assert(ChatFilters.SELECTIVE_HIDING == true, "selective hiding is on since the in-game taint probe passed")
   end
 end

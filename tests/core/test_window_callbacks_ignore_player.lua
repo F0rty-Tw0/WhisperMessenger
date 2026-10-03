@@ -27,6 +27,23 @@ return function()
     assert(refreshes == 1, "window refreshed")
   end
 
+  -- test_ignore_player_resyncs_chat_filters
+  do
+    local syncs = 0
+    local callbacks = WindowCallbacks.Create({
+      runtime = {
+        syncChatFilters = function()
+          syncs = syncs + 1
+        end,
+      },
+      accountState = {},
+      characterState = {},
+      refreshWindow = function() end,
+    })
+    callbacks.onIgnorePlayer("Spammer-Realm", "spam")
+    assert(syncs == 1, "game-chat filters resynced so the player is hidden there too, got " .. syncs)
+  end
+
   -- test_ignore_player_without_a_name_does_nothing
   do
     local refreshes = 0

@@ -224,6 +224,9 @@ function WindowCallbacks.Create(options)
     -- "Ignore…" from a contact row or a message.
     onIgnorePlayer = function(name, reason)
       if IgnoreList.Add(IgnoreList.Ensure(accountState), name, { reason = reason }) ~= nil then
+        if runtime.syncChatFilters then
+          runtime.syncChatFilters()
+        end
         refreshWindow()
       end
     end,

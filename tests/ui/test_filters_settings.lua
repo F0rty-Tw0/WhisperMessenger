@@ -1,6 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
-local Theme = require("WhisperMessenger.UI.Theme")
+local FiltersSettingsUI = require("tests.helpers.filters_settings_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FiltersSettings = require("WhisperMessenger.UI.MessengerWindow.FiltersSettings")
 local IgnoreListSection = require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreListSection")
@@ -38,40 +38,8 @@ local function visibleContaining(root, fragment)
   end)
 end
 
--- Shown remove buttons (trash icon), in tree order.
-local function trashButtons(root)
-  local buttons = {}
-  local function walk(node)
-    for _, child in ipairs(node.children or {}) do
-      if child.texturePath == Theme.TEXTURES.trash_icon and child.parent.parent:IsShown() then
-        buttons[#buttons + 1] = child.parent
-      end
-      walk(child)
-    end
-  end
-  walk(root)
-  return buttons
-end
-
--- Each StaticPopup_Show accepts at once with the next queued text.
-local function stubPopups(answers)
-  local shown = {}
-  _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
-  rawset(_G, "StaticPopup_Show", function(name)
-    local typed = table.remove(answers, 1)
-    shown[#shown + 1] = name
-    _G.StaticPopupDialogs[name].OnAccept({
-      editBox = {
-        frameType = "EditBox",
-        GetText = function()
-          return typed
-        end,
-        SetText = function() end,
-      },
-    })
-  end)
-  return shown
-end
+local trashButtons = FiltersSettingsUI.trashButtons
+local stubPopups = FiltersSettingsUI.stubPopups
 
 local function filtersWith(names)
   local filters = { ignored = {}, rules = {} }

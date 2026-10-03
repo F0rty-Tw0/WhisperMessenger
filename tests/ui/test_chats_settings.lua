@@ -7,6 +7,8 @@ local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSe
 
 local TIP = "To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."
 local BUILT_IN_LABELS = { "General", "Trade", "Trade (Services)", "Local Defense", "World Defense", "Looking for Group" }
+-- Show group chats, hide channels from default chat, collapse repeated messages.
+local PAGE_TOGGLES = 3
 
 local function create(config)
   local factory = FakeUI.NewFactory()
@@ -71,26 +73,26 @@ return function()
 
   -- test_hide_channels_toggle_hidden_and_tip_shown_without_selective_hiding
   do
-    assert(ChatFilters.SELECTIVE_HIDING == false, "selective hiding is off")
-    local result = create({})
-    assert(FindUI.text(result.frame, "Hide channels from default chat") == nil, "toggle is hidden")
-    local tip = FindUI.text(result.frame, TIP)
-    assert(tip ~= nil, "fallback tip is shown")
+    rawset(ChatFilters, "SELECTIVE_HIDING", false)
+    local ok, err = pcall(function()
+      local result = create({})
+      assert(FindUI.text(result.frame, "Hide channels from default chat") == nil, "toggle is hidden")
+      local tip = FindUI.text(result.frame, TIP)
+      assert(tip ~= nil, "fallback tip is shown")
+    end)
+    rawset(ChatFilters, "SELECTIVE_HIDING", true)
+    assert(ok, err)
   end
 
   -- test_hide_channels_toggle_shown_with_selective_hiding
   do
-    rawset(ChatFilters, "SELECTIVE_HIDING", true)
-    local ok, err = pcall(function()
-      local result, calls = create({})
-      local toggle = FindUI.toggle(result.frame, "Hide channels from default chat")
-      assert(FindUI.isToggleOn(toggle) == true, "hiding defaults on")
-      FindUI.click(toggle)
-      assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == false, "reports its key")
-      assert(FindUI.text(result.frame, TIP) == nil, "no tip when hiding works")
-    end)
-    rawset(ChatFilters, "SELECTIVE_HIDING", false)
-    assert(ok, err)
+    assert(ChatFilters.SELECTIVE_HIDING == true, "selective hiding is on")
+    local result, calls = create({})
+    local toggle = FindUI.toggle(result.frame, "Hide channels from default chat")
+    assert(FindUI.isToggleOn(toggle) == true, "hiding defaults on")
+    FindUI.click(toggle)
+    assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == false, "reports its key")
+    assert(FindUI.text(result.frame, TIP) == nil, "no tip when hiding works")
   end
 
   -- test_custom_channels_are_listed_from_the_game
@@ -105,7 +107,7 @@ return function()
     local result, calls = create({})
     FindUI.click(FindUI.toggle(result.frame, "CraftScan"))
     assert(calls[#calls].value["c:craftscan"] == true, "custom channel keyed c:craftscan")
-    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS + 1, "server General and community channels are not listed")
+    assert(FindUI.countToggles(result.frame) == PAGE_TOGGLES + #BUILT_IN_LABELS + 1, "server General and community channels are not listed")
     assert(FindUI.text(result.frame, "Community:123:1") == nil, "raw community channel ids are hidden")
   end)
 
@@ -126,7 +128,7 @@ return function()
     },
   }, function()
     local result = create({})
-    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS + 1, "only CraftScan is listed as custom")
+    assert(FindUI.countToggles(result.frame) == PAGE_TOGGLES + #BUILT_IN_LABELS + 1, "only CraftScan is listed as custom")
   end)
 
   -- test_ticked_channel_the_character_left_can_still_be_unticked
@@ -152,7 +154,7 @@ return function()
     for _, label in ipairs(BUILT_IN_LABELS) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "built-in channel row: " .. label)
     end
-    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS, "two page toggles plus the built-in channels")
+    assert(FindUI.countToggles(result.frame) == PAGE_TOGGLES + #BUILT_IN_LABELS, "three page toggles plus the built-in channels")
   end)
 
   -- test_reset_restores_chat_defaults_and_keeps_channels

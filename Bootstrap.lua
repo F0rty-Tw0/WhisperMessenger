@@ -225,7 +225,7 @@ function Bootstrap.Initialize(factory, options)
   -- Blizzard's chat processing context. Filters are only registered when
   -- they should suppress (hideFromDefaultChat=true, not in competitive
   -- content or mythic). syncChatFilters manages this dynamically.
-  ChatFilters.Configure(Bootstrap, accountState)
+  ChatFilters.Configure(Bootstrap, accountState, runtime)
   Bootstrap.syncChatFilters()
 
   runtime.syncChatFilters = Bootstrap.syncChatFilters
