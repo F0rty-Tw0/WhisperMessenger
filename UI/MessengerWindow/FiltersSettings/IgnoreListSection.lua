@@ -94,7 +94,6 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
 
   local list = factory.CreateFrame("Frame", nil, frame)
   list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
-  list:EnableMouseWheel(true)
 
   local function changed()
     section.redraw()
@@ -187,6 +186,9 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     bindRows()
     local shown = math.min(#entries, IgnoreListSection.VISIBLE_ROWS)
     list:SetSize(width, math.max(shown * Theme.FilterRowHeight(), 1))
+    -- Only a list with more players than rows takes the wheel; otherwise it
+    -- would swallow the page's scroll when it slides under a still cursor.
+    list:EnableMouseWheel(#entries > IgnoreListSection.VISIBLE_ROWS)
     if options.onLayoutChanged then
       options.onLayoutChanged()
     end

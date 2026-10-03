@@ -29,6 +29,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: on the Filters page, long rule and player names no longer run into the blocked count at large font sizes. Each row now shows the name on one line with "Blocked N this session" underneath.
 - Point at a player in the Filters page's block list to read their full last blocked message, the reason and this session's count.
 - Blocked counts on the Filters page now count only the current session and start again from zero every time you log in or reload.
+- Fixed: scrolling the Filters page with the mouse wheel no longer stops when the blocked players list passes under the pointer.
 
 ## [2.0.2] - 2026-10-02
 
