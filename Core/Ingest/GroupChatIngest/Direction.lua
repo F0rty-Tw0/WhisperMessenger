@@ -4,7 +4,11 @@ if type(ns) ~= "table" then
 end
 
 local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
+local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = {}
+
+-- Swappable so tests can simulate 12.0 secret strings.
+Direction._isSecretString = SecretString.IsSecretString
 
 local function rawGuidEqual(a, b)
   return a == b
@@ -54,7 +58,12 @@ function Direction.IsLocalSender(eventName, guid, bnSenderID, state)
     return localBnetAccountID ~= nil and bnSenderID == localBnetAccountID
   end
 
-  -- For every other surface: compare guid to the local player's guid.
+  -- For every other surface: compare guid to the local player's guid. Filters
+  -- ask before the secret drop, and a secret guid can't be compared, so it
+  -- counts as another player's line.
+  if Direction._isSecretString(guid) then
+    return false
+  end
   return compareGuids(guid, resolveLocalPlayerGuid(state))
 end
 
