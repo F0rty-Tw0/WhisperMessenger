@@ -289,6 +289,7 @@ local TraditionalChinese = {
   ["Another character's history — read-only."] = "其他角色的紀錄 — 唯讀。",
   ["Historical group chat — read-only."] = "歷史群組聊天 — 唯讀。",
   ["Not in group — can't send."] = "不在隊伍中 — 無法傳送。",
+  ["Not in this channel — can't send."] = "不在此頻道中 — 無法傳送。",
   ["Mythic Lockdown"] = "傳奇鎖定",
   ["Competitive Content"] = "競技內容",
 

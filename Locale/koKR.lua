@@ -289,6 +289,7 @@ local Korean = {
   ["Another character's history — read-only."] = "다른 캐릭터의 기록 — 읽기 전용.",
   ["Historical group chat — read-only."] = "이전 그룹 채팅 — 읽기 전용.",
   ["Not in group — can't send."] = "그룹에 속해 있지 않음 — 보낼 수 없습니다.",
+  ["Not in this channel — can't send."] = "이 채널에 없음 — 보낼 수 없습니다.",
   ["Mythic Lockdown"] = "신화 잠금",
   ["Competitive Content"] = "경쟁 콘텐츠",
 

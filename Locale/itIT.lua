@@ -289,6 +289,7 @@ local Italian = {
   ["Another character's history — read-only."] = "Cronologia di un altro personaggio — sola lettura.",
   ["Historical group chat — read-only."] = "Chat di gruppo storico — sola lettura.",
   ["Not in group — can't send."] = "Non sei nel gruppo — invio non possibile.",
+  ["Not in this channel — can't send."] = "Non sei in questo canale — invio non possibile.",
   ["Mythic Lockdown"] = "Blocco Mitico",
   ["Competitive Content"] = "Contenuto competitivo",
 

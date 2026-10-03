@@ -289,6 +289,7 @@ local German = {
   ["Another character's history — read-only."] = "Verlauf eines anderen Charakters — nur lesbar.",
   ["Historical group chat — read-only."] = "Historischer Gruppenchat — nur lesbar.",
   ["Not in group — can't send."] = "Nicht in der Gruppe — Senden nicht möglich.",
+  ["Not in this channel — can't send."] = "Nicht in diesem Kanal — Senden nicht möglich.",
   ["Mythic Lockdown"] = "Mythische Sperre",
   ["Competitive Content"] = "PvP-Inhalt",
 

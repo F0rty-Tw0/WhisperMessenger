@@ -289,6 +289,7 @@ local French = {
   ["Another character's history — read-only."] = "Historique d'un autre personnage — lecture seule.",
   ["Historical group chat — read-only."] = "Chat de groupe historique — lecture seule.",
   ["Not in group — can't send."] = "Pas dans le groupe — envoi impossible.",
+  ["Not in this channel — can't send."] = "Pas dans ce canal — envoi impossible.",
   ["Mythic Lockdown"] = "Verrouillage mythique",
   ["Competitive Content"] = "Contenu compétitif",
 

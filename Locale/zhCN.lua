@@ -289,6 +289,7 @@ local SimplifiedChinese = {
   ["Another character's history — read-only."] = "其他角色的历史 — 只读。",
   ["Historical group chat — read-only."] = "历史群组聊天 — 只读。",
   ["Not in group — can't send."] = "不在队伍中 — 无法发送。",
+  ["Not in this channel — can't send."] = "不在此频道中 — 无法发送。",
   ["Mythic Lockdown"] = "史诗锁定",
   ["Competitive Content"] = "竞技内容",
 
