@@ -204,7 +204,10 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
         if name == "" then
           return
         end
-        IgnorePrompt.Ask(filters, name, { duration = durationSeconds(selectedDuration), onIgnored = section.redraw })
+        IgnorePrompt.AskReason(function(reason)
+          IgnoreList.Add(filters, name, { reason = reason, duration = durationSeconds(selectedDuration) })
+          section.redraw()
+        end)
       end,
     })
   end)

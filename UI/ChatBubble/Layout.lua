@@ -189,6 +189,8 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.canReact = options and options.canReact or nil
   bubbleOptions.onReply = options and options.onReply or nil
   bubbleOptions.canReply = options and options.canReply or nil
+  bubbleOptions.onIgnoreSender = options and options.onIgnoreSender or nil
+  bubbleOptions.canIgnoreSender = options and options.canIgnoreSender or nil
   bubbleOptions.onQuoteClick = options and options.onQuoteClick or nil
   bubbleOptions.openPlayerMenu = options and options.openPlayerMenu or nil
 

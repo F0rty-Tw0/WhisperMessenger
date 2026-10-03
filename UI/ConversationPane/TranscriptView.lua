@@ -161,6 +161,8 @@ local function layoutOptions(transcript)
   options.onMessageAction = transcript.onMessageAction
   options.onReply = transcript.onReply
   options.canReply = transcript.canReply
+  options.onIgnoreSender = transcript.onIgnoreSender
+  options.canIgnoreSender = transcript.canIgnoreSender
   options.onQuoteClick = transcript.onQuoteClick
   options.openPlayerMenu = transcript.openPlayerMenu
   return options

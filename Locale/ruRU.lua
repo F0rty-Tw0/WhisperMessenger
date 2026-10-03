@@ -430,6 +430,9 @@ local Russian = {
   ["Keyword rules"] = "Правила по словам",
   ["Add rule…"] = "Добавить правило…",
   ["All words must match"] = "Должны совпасть все слова",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Игнорировать…",
+  ["Ignore sender…"] = "Игнорировать отправителя…",
 }
 
 ns.Locale_ruRU = Russian

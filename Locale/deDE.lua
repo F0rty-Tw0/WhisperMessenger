@@ -430,6 +430,9 @@ local German = {
   ["Keyword rules"] = "Stichwortregeln",
   ["Add rule…"] = "Regel hinzufügen…",
   ["All words must match"] = "Alle Wörter müssen vorkommen",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Ignorieren…",
+  ["Ignore sender…"] = "Absender ignorieren…",
 }
 
 ns.Locale_deDE = German

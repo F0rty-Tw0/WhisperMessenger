@@ -430,6 +430,9 @@ local SimplifiedChinese = {
   ["Keyword rules"] = "关键词规则",
   ["Add rule…"] = "添加规则…",
   ["All words must match"] = "所有词语都必须匹配",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "屏蔽…",
+  ["Ignore sender…"] = "屏蔽发送者…",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

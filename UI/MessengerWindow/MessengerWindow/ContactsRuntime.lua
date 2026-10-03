@@ -120,6 +120,7 @@ function ContactsRuntime.Create(factory, options)
         options.onUpdatePrefs(item, changes)
       end
     end,
+    onIgnorePlayer = options.onIgnorePlayer,
     onReorder = function(orders)
       if options.onReorder then
         options.onReorder(orders)

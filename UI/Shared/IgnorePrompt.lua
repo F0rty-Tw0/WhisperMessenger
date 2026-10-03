@@ -3,12 +3,11 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
--- Asks for an optional reason, then adds a player to the silent ignore list.
--- Shared by the Filters page and the right-click "Ignore…" menus.
+-- Asks for the optional reason before a player goes on the silent ignore
+-- list. Shared by the Filters page and the right-click "Ignore…" menus.
 local IgnorePrompt = {}
 
 local REASON_DIALOG = "WHISPER_MESSENGER_IGNORE_REASON"
@@ -18,22 +17,16 @@ local function trim(value)
   return string.match(value or "", "^%s*(.-)%s*$")
 end
 
--- opts = { duration (seconds; nil = forever), onIgnored(entry) }.
-function IgnorePrompt.Ask(filters, name, opts)
-  opts = opts or {}
+-- onReason(reason): the trimmed reason, or nil when left empty. Not called
+-- when the player cancels.
+function IgnorePrompt.AskReason(onReason)
   return TextInputDialog.Show(REASON_DIALOG, {
     prompt = Localization.Text("Reason (optional)"),
     accept = Localization.Text("OK"),
     maxLetters = REASON_MAX_LETTERS,
     onAccept = function(typed)
       local reason = trim(typed)
-      local entry = IgnoreList.Add(filters, name, {
-        reason = reason ~= "" and reason or nil,
-        duration = opts.duration,
-      })
-      if entry ~= nil and opts.onIgnored then
-        opts.onIgnored(entry)
-      end
+      onReason(reason ~= "" and reason or nil)
     end,
   })
 end

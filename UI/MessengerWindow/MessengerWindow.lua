@@ -192,6 +192,7 @@ function MessengerWindow.Create(factory, options)
     onRemove = options.onRemove,
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
+    onIgnorePlayer = options.onIgnorePlayer,
     onReorder = options.onReorder,
     onAllContactsRefreshed = function(allContacts)
       chrome.setMarkAllReadShown(MarkAllReadButton.HasUnread(allContacts))
@@ -220,6 +221,7 @@ function MessengerWindow.Create(factory, options)
     onDeleteRequest = options.onDeleteRequest,
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
+    onIgnorePlayer = options.onIgnorePlayer,
     hideEmptyHeader = nativeChrome,
     nativeChrome = nativeChrome,
   })

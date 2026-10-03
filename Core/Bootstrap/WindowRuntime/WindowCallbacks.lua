@@ -12,6 +12,7 @@ local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Mo
 local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
+local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 
 local WindowCallbacks = {}
@@ -218,6 +219,13 @@ function WindowCallbacks.Create(options)
         OnlineWatch.Observe(runtime, key, OnlineWatch.ReadOnline(runtime, runtime.store.conversations[key]))
       end
       refreshWindow()
+    end,
+
+    -- "Ignore…" from a contact row or a message.
+    onIgnorePlayer = function(name, reason)
+      if IgnoreList.Add(IgnoreList.Ensure(accountState), name, { reason = reason }) ~= nil then
+        refreshWindow()
+      end
     end,
 
     onReorder = function(orders)

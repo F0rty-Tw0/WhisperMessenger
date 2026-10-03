@@ -430,6 +430,9 @@ local Korean = {
   ["Keyword rules"] = "키워드 규칙",
   ["Add rule…"] = "규칙 추가…",
   ["All words must match"] = "모든 단어가 일치해야 합니다",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "무시…",
+  ["Ignore sender…"] = "보낸 사람 무시…",
 }
 
 ns.Locale_koKR = Korean

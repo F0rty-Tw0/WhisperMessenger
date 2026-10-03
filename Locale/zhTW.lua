@@ -430,6 +430,9 @@ local TraditionalChinese = {
   ["Keyword rules"] = "關鍵字規則",
   ["Add rule…"] = "新增規則…",
   ["All words must match"] = "所有詞語都必須符合",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "屏蔽…",
+  ["Ignore sender…"] = "屏蔽發送者…",
 }
 
 ns.Locale_zhTW = TraditionalChinese

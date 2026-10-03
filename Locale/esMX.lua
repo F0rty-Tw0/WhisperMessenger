@@ -434,6 +434,9 @@ local Spanish = {
   ["Keyword rules"] = "Reglas de palabras clave",
   ["Add rule…"] = "Agregar regla…",
   ["All words must match"] = "Deben coincidir todas las palabras",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Ignorar…",
+  ["Ignore sender…"] = "Ignorar al remitente…",
 }
 
 ns.Locale_esMX = Spanish

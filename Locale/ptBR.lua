@@ -430,6 +430,9 @@ local Portuguese = {
   ["Keyword rules"] = "Regras de palavras-chave",
   ["Add rule…"] = "Adicionar regra…",
   ["All words must match"] = "Todas as palavras devem corresponder",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Ignorar…",
+  ["Ignore sender…"] = "Ignorar remetente…",
 }
 
 ns.Locale_ptBR = Portuguese

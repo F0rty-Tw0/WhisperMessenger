@@ -430,6 +430,9 @@ local Italian = {
   ["Keyword rules"] = "Regole per parole chiave",
   ["Add rule…"] = "Aggiungi regola…",
   ["All words must match"] = "Tutte le parole devono corrispondere",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Ignora…",
+  ["Ignore sender…"] = "Ignora mittente…",
 }
 
 ns.Locale_itIT = Italian

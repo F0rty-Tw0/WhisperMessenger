@@ -105,6 +105,13 @@ local function openBubbleMenu(frame)
       onReply(message)
     end
   end
+  options.onIgnoreSender = nil
+  local onIgnoreSender, canIgnoreSender = frame._wmOnIgnoreSender, frame._wmCanIgnoreSender
+  if type(onIgnoreSender) == "function" and type(canIgnoreSender) == "function" and canIgnoreSender(message) then
+    options.onIgnoreSender = function()
+      onIgnoreSender(message)
+    end
+  end
   ContextMenu.Open(message.text or "", frame, options)
 end
 
@@ -171,6 +178,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   frame._wmCanReact = options.canReact
   frame._wmOnReply = options.onReply
   frame._wmCanReply = options.canReply
+  frame._wmOnIgnoreSender = options.onIgnoreSender
+  frame._wmCanIgnoreSender = options.canIgnoreSender
   frame._wmPersistentFactory = options.persistentFactory or factory
   frame._wmOpenedOnMouseDown = false
 

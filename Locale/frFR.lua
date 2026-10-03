@@ -430,6 +430,9 @@ local French = {
   ["Keyword rules"] = "Règles de mots-clés",
   ["Add rule…"] = "Ajouter une règle…",
   ["All words must match"] = "Tous les mots doivent correspondre",
+  -- Ignore from the right-click menus
+  ["Ignore…"] = "Ignorer…",
+  ["Ignore sender…"] = "Ignorer l'expéditeur…",
 }
 
 ns.Locale_frFR = French
