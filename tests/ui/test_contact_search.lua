@@ -63,4 +63,29 @@ return function()
     table.remove(conversation.messages, 2)
     assert(#visibleFor("old retained") == 0, "trimmed message text should stop matching immediately")
   end
+
+  -- test_repeated_sender_name_is_lowered_once_per_run
+  do
+    local messages = {}
+    for index = 1, 5 do
+      messages[index] = { text = "hello " .. index, playerName = "Khadgar" }
+    end
+    local items = { { displayName = "Arthas", conversation = { messages = messages } } }
+
+    local originalLower = string.lower
+    local senderLowers = 0
+    rawset(string, "lower", function(value)
+      if value == "Khadgar" then
+        senderLowers = senderLowers + 1
+      end
+      return originalLower(value)
+    end)
+    local ok, err = pcall(ContactSearch.BuildVisibleContacts, items, "zzz")
+    rawset(string, "lower", originalLower)
+    if not ok then
+      error(err, 0)
+    end
+
+    assert(senderLowers == 1, "a sender repeated across messages should be checked once; lowered " .. senderLowers .. " times")
+  end
 end
