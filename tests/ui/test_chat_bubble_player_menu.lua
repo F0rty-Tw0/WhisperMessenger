@@ -104,6 +104,29 @@ return function()
     assert(opened.onMarkUnread == nil and opened.onUpdatePrefs == nil, "expected no WM callbacks for group senders")
   end
 
+  -- test_open_on_channel_line_sender_opens_player_menu
+  -- Channel and group lines store their chat type ("CHANNEL", "GUILD") on
+  -- the message; the sender is still a WoW player, not the chat.
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+    local trade = { channel = "CHANNEL", conversationKey = "channel::me::trade", displayName = "Trade" }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Guldanhand-Kazzak", guid = "Player-1-0A" },
+      anchor,
+      stub,
+      { contact = trade }
+    )
+
+    assert(opened.channel == "WOW", "expected the sender as a WOW player, got " .. tostring(opened.channel))
+  end
+
   -- test_open_refuses_outgoing_messages
   -- You don't open a player menu on yourself.
   do

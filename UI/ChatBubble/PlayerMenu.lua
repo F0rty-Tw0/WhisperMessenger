@@ -5,9 +5,11 @@ end
 
 local PlayerMenu = {}
 
+-- Group and channel lines carry their chat type ("GUILD", "CHANNEL") as
+-- message.channel; their sender is still a WoW player.
 local function buildItem(message)
   return {
-    channel = message.channel or "WOW",
+    channel = message.channel == "BN" and "BN" or "WOW",
     displayName = message.playerName,
     guid = message.guid,
     bnetAccountID = message.bnetAccountID,
