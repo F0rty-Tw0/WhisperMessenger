@@ -16,6 +16,7 @@ function SettingsPanelsBootstrap.Create(factory, options)
     parent = options.parent,
     settingsConfig = options.settingsConfig or {},
     storeConfig = options.storeConfig or {},
+    filters = options.filters,
     onSettingChanged = options.onSettingChanged,
     theme = options.theme,
     chrome = options.chrome,

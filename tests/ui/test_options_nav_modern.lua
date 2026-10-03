@@ -85,6 +85,21 @@ return function()
     assert(nav.nav.bar.shown ~= true, "deselect hides bar")
   end
 
+  -- test_settings_tabs_list_every_page_in_order
+  do
+    local menu = buildMenu(factory)
+    local expected = { "General", "Appearance", "Behavior", "Whispers", "Chats", "Filters", "Notifications", "Icons", "What's New" }
+    assert(#menu.settingsTabs == #expected, "expected " .. #expected .. " tabs, got " .. #menu.settingsTabs)
+    for index, label in ipairs(expected) do
+      local tab = menu.settingsTabs[index]
+      assert(tab.label.text == label, "tab " .. index .. " should be " .. label .. ", got " .. tostring(tab.label.text))
+      if index > 1 then
+        assert(tab.point[2] == menu.settingsTabs[index - 1], label .. " hangs below the previous tab")
+      end
+    end
+    assert(menu.whispersTab == menu.settingsTabs[4] and menu.filtersTab == menu.settingsTabs[6], "tabs exposed by name")
+  end
+
   -- test_settings_tabs_drive_nav_selection_without_box_paint
   do
     local menu = buildMenu(factory)

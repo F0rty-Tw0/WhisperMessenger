@@ -296,6 +296,7 @@ function WindowRuntime.Create(options)
       initialTabMode = characterState.contactsTabMode or "whispers",
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,
+      filters = accountState.filters,
       onSettingChanged = onSettingChanged,
     }
     -- Every window callback passes straight through.

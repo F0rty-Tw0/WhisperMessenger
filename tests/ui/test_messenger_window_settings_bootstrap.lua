@@ -33,6 +33,7 @@ return function()
   local settingsConfig = { autoFocusComposer = true }
   local storeConfig = { maxConversations = 100 }
   local function onSettingChanged(_, _) end
+  local filters = { ignored = {}, rules = {} }
 
   local result = SettingsPanelsBootstrap.Create(factory, {
     parent = parent,
@@ -43,6 +44,7 @@ return function()
     chrome = chrome,
     layout = layout,
     settingsRuntimeCreate = fakeRuntimeCreate,
+    filters = filters,
   })
 
   assert(capturedFactory == factory, "expected factory to be forwarded to SettingsRuntime.Create")
@@ -54,6 +56,7 @@ return function()
   assert(capturedOptions.theme == theme, "expected theme forwarded")
   assert(capturedOptions.chrome == chrome, "expected chrome forwarded")
   assert(capturedOptions.layout == layout, "expected layout forwarded")
+  assert(capturedOptions.filters == filters, "expected filters forwarded")
 
   assert(result.generalPanel == fakeRuntime.generalPanel, "expected generalPanel passthrough")
   assert(result.generalSettings == fakeRuntime.generalSettings, "expected generalSettings passthrough")

@@ -11,6 +11,20 @@ local createOptionButton = UIHelpers.createOptionButton
 
 local OptionsMenuButtons = {}
 
+-- Settings pages in nav order; SettingsPanels defines the pages in the same
+-- order, so tab N opens page N.
+local SETTINGS_TABS = {
+  { name = "generalTab", label = "General" },
+  { name = "appearanceTab", label = "Appearance" },
+  { name = "behaviorTab", label = "Behavior" },
+  { name = "whispersTab", label = "Whispers" },
+  { name = "chatsTab", label = "Chats" },
+  { name = "filtersTab", label = "Filters" },
+  { name = "notificationsTab", label = "Notifications" },
+  { name = "iconsTab", label = "Icons" },
+  { name = "whatsNewTab", label = "What's New" },
+}
+
 local function optionButtonWidth(contactsWidth, menuPadding)
   return contactsWidth - (menuPadding * 2)
 end
@@ -33,22 +47,19 @@ function OptionsMenuButtons.Build(factory, optionsMenu, options)
   local tabLayout = { height = theme.LAYOUT.OPTION_BUTTON_HEIGHT, width = optionButtonWidth(contactsWidth, menuPadding), nav = true }
   local tabSpacing = 4
 
-  local generalTab = optionButtonFactory(factory, optionsMenu, Localization.Text("General"), tabColors, tabLayout)
-  generalTab:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
-
-  local appearanceTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Appearance"), tabColors, tabLayout)
-  appearanceTab:SetPoint("TOPLEFT", generalTab, "BOTTOMLEFT", 0, -tabSpacing)
-
-  local behaviorTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Behavior"), tabColors, tabLayout)
-  behaviorTab:SetPoint("TOPLEFT", appearanceTab, "BOTTOMLEFT", 0, -tabSpacing)
-
-  local notificationsTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Notifications"), tabColors, tabLayout)
-  notificationsTab:SetPoint("TOPLEFT", behaviorTab, "BOTTOMLEFT", 0, -tabSpacing)
-  local iconsTab = optionButtonFactory(factory, optionsMenu, Localization.Text("Icons"), tabColors, tabLayout)
-  iconsTab:SetPoint("TOPLEFT", notificationsTab, "BOTTOMLEFT", 0, -tabSpacing)
-
-  local whatsNewTab = optionButtonFactory(factory, optionsMenu, Localization.Text("What's New"), tabColors, tabLayout)
-  whatsNewTab:SetPoint("TOPLEFT", iconsTab, "BOTTOMLEFT", 0, -tabSpacing)
+  -- One nav tab per settings page, top to bottom in page order.
+  local settingsTabs = {}
+  local tabsByName = {}
+  for index, tabSpec in ipairs(SETTINGS_TABS) do
+    local tab = optionButtonFactory(factory, optionsMenu, Localization.Text(tabSpec.label), tabColors, tabLayout)
+    if index == 1 then
+      tab:SetPoint("TOPLEFT", optionsMenu, "TOPLEFT", menuPadding, -menuPadding)
+    else
+      tab:SetPoint("TOPLEFT", settingsTabs[index - 1], "BOTTOMLEFT", 0, -tabSpacing)
+    end
+    settingsTabs[index] = tab
+    tabsByName[tabSpec.name] = tab
+  end
 
   local btnH = theme.LAYOUT.OPTION_BUTTON_HEIGHT
   local btnSpacing = theme.LAYOUT.OPTION_BUTTON_SPACING
@@ -121,31 +132,27 @@ function OptionsMenuButtons.Build(factory, optionsMenu, options)
   end
 
   local function setLanguage()
-    setButtonText(generalTab, "General")
-    setButtonText(appearanceTab, "Appearance")
-    setButtonText(behaviorTab, "Behavior")
-    setButtonText(notificationsTab, "Notifications")
-    setButtonText(iconsTab, "Icons")
-    setButtonText(whatsNewTab, "What's New")
+    for index, tabSpec in ipairs(SETTINGS_TABS) do
+      setButtonText(settingsTabs[index], tabSpec.label)
+    end
     setButtonText(clearAllChatsButton, "Clear All Chats")
     setButtonText(resetIconButton, "Reset Icon")
     setButtonText(resetWindowButton, "Reset Window")
     optionsHint:SetText(Localization.Text("Reset positions or clear all conversation history."))
   end
 
-  return {
-    generalTab = generalTab,
-    appearanceTab = appearanceTab,
-    behaviorTab = behaviorTab,
-    notificationsTab = notificationsTab,
-    iconsTab = iconsTab,
-    whatsNewTab = whatsNewTab,
+  local result = {
+    settingsTabs = settingsTabs,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
     optionsHint = optionsHint,
     setLanguage = setLanguage,
   }
+  for name, tab in pairs(tabsByName) do
+    result[name] = tab
+  end
+  return result
 end
 
 ns.MessengerWindowLayoutOptionsMenuButtons = OptionsMenuButtons

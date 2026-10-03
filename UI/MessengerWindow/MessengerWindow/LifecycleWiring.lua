@@ -46,7 +46,7 @@ function LifecycleWiring.Setup(options)
       resetIconButton = layout.resetIconButton,
       clearAllChatsButton = layout.clearAllChatsButton,
       optionsPanel = layout.optionsPanel,
-      settingsTabs = { layout.generalTab, layout.appearanceTab, layout.behaviorTab, layout.notificationsTab, layout.iconsTab, layout.whatsNewTab },
+      settingsTabs = layout.settingsTabs,
       settingsPanels = options.settingsPanels,
       optionsScrollView = layout.optionsScrollView,
     },
