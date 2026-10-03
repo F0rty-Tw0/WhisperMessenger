@@ -105,7 +105,7 @@ local function bindRow(factory, parent, row, index, item, options)
   if row.classIcon and row.classIcon.SetTexture then
     local iconPath
     if isGroup then
-      iconPath = Theme.ChannelIcon and Theme.ChannelIcon(item.channel) or nil
+      iconPath = Theme.ChannelIcon and Theme.ChannelIcon(item.channel, item.conversationKey) or nil
     else
       iconPath = Theme.ClassIcon(item.classTag)
     end

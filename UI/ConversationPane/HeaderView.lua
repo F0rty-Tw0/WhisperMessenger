@@ -188,7 +188,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerClassIcon then
       local iconPath
       if vm and vm.isGroup then
-        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel) or nil
+        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact.channel, selectedContact.conversationKey) or nil
       else
         iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
       end
