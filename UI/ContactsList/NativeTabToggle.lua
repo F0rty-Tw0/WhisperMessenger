@@ -28,14 +28,17 @@ local BORDER_OVERLAP = 2
 local TAB_SPACING = 1
 -- How far the tabs reach below the window; the screen clamp must include it.
 local HANG_HEIGHT = TAB_HEIGHT - BORDER_OVERLAP
+-- The badge sits on the tab's top-right corner, so tabs keep Blizzard's own
+-- width (label + sides) and never widen for it.
 local BADGE_SIZE = 14
-local BADGE_INSET = 8
--- Extra width beyond the label. Retail's PanelTemplates_TabResize adds 20px
--- of sides on top, so each side keeps (20 + 28) / 2 = 24px: room for the badge
--- at the right inset (8 + 14) without touching the centred label.
-local TAB_PADDING = 28
--- Width without PanelTemplates_TabResize: label + retail sides + padding.
-local FALLBACK_SIDES = 20
+-- Pulls the badge in from the corner so it sits over its own tab, not the gap.
+local BADGE_CORNER_INSET = 4
+-- Retail's tab sides: a tab is label + this. Tabs size themselves because
+-- Classic clients' PanelTemplates_TabResize adds both edge pieces on top of
+-- label + 24 and caps only the label, making tabs about twice as wide.
+local TAB_SIDES = 20
+-- The last tab's right art reaches this far past its button.
+local RIGHT_ART_OVERHANG = 7
 
 -- Blizzard helpers vary per flavor; never let them error our UI.
 local function callPanelTemplates(fnName, ...)
@@ -47,11 +50,44 @@ local function callPanelTemplates(fnName, ...)
   return false
 end
 
--- The template's OnShow re-runs TabResize with the parent's tabPadding.
-local function sizeTab(tab)
-  if not callPanelTemplates("PanelTemplates_TabResize", tab.btn, TAB_PADDING) then
-    local textWidth = tab.btn.GetTextWidth and tab.btn:GetTextWidth() or 0
-    tab.btn:SetWidth(textWidth + FALLBACK_SIDES + TAB_PADDING)
+local function regionWidth(region)
+  return region and region.GetWidth and region:GetWidth() or 0
+end
+
+-- Never narrower than the left + right edge art, which would overlap.
+-- maxWidth: the strip's cap (nil = natural width); a capped label truncates
+-- and the template's OnEnter shows it in full.
+local function sizeTab(tab, maxWidth)
+  local btn = tab.btn
+  local label = btn.Text
+  if label and label.SetWidth then
+    label:SetWidth(0)
+  end
+  local textWidth = btn.GetTextWidth and btn:GetTextWidth() or 0
+  local artWidth = regionWidth(btn.Left) + regionWidth(btn.Right)
+  local width = math.max(textWidth + TAB_SIDES, artWidth)
+  if maxWidth and width > maxWidth then
+    width = math.max(maxWidth, artWidth)
+    if label and label.SetWidth then
+      label:SetWidth(math.max(0, width - TAB_SIDES))
+    end
+  end
+  btn:SetWidth(width)
+end
+
+-- Caps every visible tab at an equal share of the strip so the row never
+-- runs past the window. maxTabWidth is also read by the template's own
+-- OnShow / DISPLAY_SIZE_CHANGED resize.
+local function fitTabs(frame, visible)
+  local count = #visible
+  local width = frame.GetWidth and frame:GetWidth() or 0
+  local cap = nil
+  if count > 0 and width > 0 then
+    cap = math.floor((width - RIGHT_ART_OVERHANG - TAB_SPACING * (count - 1)) / count)
+  end
+  frame.maxTabWidth = cap
+  for _, tab in ipairs(visible) do
+    sizeTab(tab, cap)
   end
 end
 
@@ -63,9 +99,16 @@ local function createTab(factory, frame, index, textKey, mode)
   end
   btn:SetText(Localization.Text(textKey))
   local badge = Badge.Create(factory, btn, { size = BADGE_SIZE, outline = true, dim = mode == "requests" })
-  badge.frame:SetPoint("RIGHT", btn, "RIGHT", -BADGE_INSET, 0)
+  badge.frame:SetPoint("CENTER", btn, "TOPRIGHT", -BADGE_CORNER_INSET, -BORDER_OVERLAP)
   local tab = { btn = btn, badge = badge, textKey = textKey, mode = mode, unread = 0 }
-  sizeTab(tab)
+  -- Replaces the template's OnShow / DISPLAY_SIZE_CHANGED handlers, which
+  -- would re-run the flavor's own TabResize.
+  local function resize()
+    sizeTab(tab, frame.maxTabWidth)
+  end
+  btn:SetScript("OnShow", resize)
+  btn:SetScript("OnEvent", resize)
+  resize()
   return tab
 end
 
@@ -89,8 +132,6 @@ function NativeTabToggle.Create(factory, parent, options)
   local window = options.windowFrame or parent
 
   local frame = factory.CreateFrame("Frame", nil, parent)
-  -- Read by the template's OnShow / DISPLAY_SIZE_CHANGED resize.
-  frame.tabPadding = TAB_PADDING
   frame:SetHeight(TAB_HEIGHT)
   frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
   frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
@@ -105,6 +146,10 @@ function NativeTabToggle.Create(factory, parent, options)
   end
   local tabs = { whispers, groups, requests, channels }
   local toggle = { frame = frame }
+  local visibleTabs = {}
+  frame:SetScript("OnSizeChanged", function()
+    fitTabs(frame, visibleTabs)
+  end)
 
   local function paintTabs(currentMode, visible)
     for _, tab in ipairs(tabs) do
@@ -122,9 +167,11 @@ function NativeTabToggle.Create(factory, parent, options)
     paint = paintTabs,
     relabel = function(tab)
       tab.btn:SetText(Localization.Text(tab.textKey))
-      sizeTab(tab)
+      sizeTab(tab, frame.maxTabWidth)
     end,
     anchor = function(visible)
+      visibleTabs = visible
+      fitTabs(frame, visible)
       chainTabs(frame, visible)
     end,
   })
