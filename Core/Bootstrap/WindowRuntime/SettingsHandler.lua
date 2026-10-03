@@ -54,6 +54,10 @@ function SettingsHandler.Create(options)
       if runtime.syncChatFilters then
         runtime.syncChatFilters()
       end
+      -- The open whisper's header shows whether that player is blocked.
+      if runtime.refreshWindow then
+        runtime.refreshWindow()
+      end
       return
     end
     local persistedValue = value

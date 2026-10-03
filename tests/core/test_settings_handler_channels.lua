@@ -53,4 +53,17 @@ return function()
     assert(counter.syncs == 1, "chat filters resynced once, got " .. counter.syncs)
     assert(settings.filters == nil, "the ignore list and rules are not a setting")
   end
+
+  -- test_filters_change_refreshes_the_window
+  do
+    local refreshes = 0
+    local runtime = {
+      store = { config = {} },
+      refreshWindow = function()
+        refreshes = refreshes + 1
+      end,
+    }
+    SettingsHandler.Create({ runtime = runtime, accountSettings = {} })("filters")
+    assert(refreshes == 1, "window refreshed so the header shows the block state, got " .. refreshes)
+  end
 end

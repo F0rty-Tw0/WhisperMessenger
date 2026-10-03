@@ -454,6 +454,7 @@ local Spanish = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Bloquear…",
   ["Block sender…"] = "Bloquear al remitente…",
+  ["Blocked"] = "Bloqueado",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Los canales que marques en la configuración de Chats aparecen aquí. Elige un canal a la izquierda.",
 }

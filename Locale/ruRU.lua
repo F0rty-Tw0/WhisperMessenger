@@ -450,6 +450,7 @@ local Russian = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Заблокировать…",
   ["Block sender…"] = "Заблокировать отправителя…",
+  ["Blocked"] = "Заблокирован",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
 }

@@ -8,6 +8,7 @@ local AvailabilityEnricher = ns.AvailabilityEnricher or require("WhisperMessenge
 local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMessenger.Model.ContactEnricher.Disambiguation")
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 -- stylua: ignore end
 
 local ContactEnricher = {}
@@ -26,6 +27,18 @@ local function buildNotice(runtime, selectedContact, conversation)
     return notice .. " " .. Localization.Text(PAUSED_WHISPER_HINT)
   end
   return notice
+end
+
+-- WoW whisper contacts only: Battle.net friends and groups aren't one
+-- character on the block list.
+local function isBlocked(runtime, contact)
+  local filters = runtime.accountState and runtime.accountState.filters
+  if contact.channel ~= "WOW" or type(filters) ~= "table" or type(filters.ignored) ~= "table" then
+    return false
+  end
+  local now = type(runtime.now) == "function" and runtime.now() or nil
+  -- Same name the contact menu's Block / Unblock uses.
+  return IgnoreList.Lookup(filters, IgnoreList.CharacterName(contact.displayName, contact.guid), now) ~= nil
 end
 
 -- Re-export availability functions for backward compatibility
@@ -108,6 +121,7 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
   local divider = runtime.unreadDivider
   if selectedContact then
     selectedContact.unreadDividerMessage = divider and divider.conversationKey == conversationKey and divider.message or nil
+    selectedContact.isBlocked = isBlocked(runtime, selectedContact)
   end
 
   -- Enrich selected contact with live BNet metadata for display

@@ -450,6 +450,7 @@ local SimplifiedChinese = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "屏蔽…",
   ["Block sender…"] = "屏蔽发送者…",
+  ["Blocked"] = "已屏蔽",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
 }

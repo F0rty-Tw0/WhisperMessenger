@@ -450,6 +450,7 @@ local Portuguese = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Bloquear…",
   ["Block sender…"] = "Bloquear remetente…",
+  ["Blocked"] = "Bloqueado",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Os canais que você marcar nas configurações de Bate-papos aparecem aqui. Escolha um canal à esquerda.",
 }

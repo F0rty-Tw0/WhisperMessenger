@@ -450,6 +450,7 @@ local Korean = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "차단…",
   ["Block sender…"] = "보낸 사람 차단…",
+  ["Blocked"] = "차단됨",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "채팅 설정에서 선택한 채널이 여기에 표시됩니다. 왼쪽에서 채널을 선택하세요.",
 }

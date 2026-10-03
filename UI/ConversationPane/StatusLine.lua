@@ -6,6 +6,8 @@ end
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -79,6 +81,10 @@ function StatusLine.Build(selectedContact, status)
 
   local line2 = {}
   local dotColor = nil
+
+  if selectedContact.isBlocked then
+    table.insert(line2, UIHelpers.colorEscape(Theme.COLORS.danger_text) .. Localization.Text("Blocked") .. "|r")
+  end
 
   -- A live typing indicator replaces the availability label while it lasts.
   local statusKey = status and status.status or nil

@@ -450,6 +450,7 @@ local TraditionalChinese = {
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "封鎖…",
   ["Block sender…"] = "封鎖發送者…",
+  ["Blocked"] = "已封鎖",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天設定中勾選的頻道會顯示在這裡。請在左側選擇一個頻道。",
 }
