@@ -7,7 +7,7 @@ local Italian = {
   -- General settings
   ["General Settings"] = "Impostazioni generali",
   ["Configure message storage, retention, and interface language."] = "Configura archiviazione, conservazione dei messaggi e lingua dell'interfaccia.",
-  ["Max Messages Per Contact"] = "Mass. messaggi per contatto",
+  ["Max Messages Per Chat"] = "Mass. messaggi per chat",
   ["Max Contacts"] = "Mass. contatti",
   ["Message Retention (hours)"] = "Conservazione (ore)",
   ["Privacy"] = "Privacy",

@@ -7,7 +7,7 @@ local French = {
   -- General settings
   ["General Settings"] = "Paramètres généraux",
   ["Configure message storage, retention, and interface language."] = "Configurez le stockage, la durée de conservation et la langue de l'interface.",
-  ["Max Messages Per Contact"] = "Messages max. par contact",
+  ["Max Messages Per Chat"] = "Messages max. par discussion",
   ["Max Contacts"] = "Contacts max.",
   ["Message Retention (hours)"] = "Conservation (heures)",
   ["Privacy"] = "Confidentialité",

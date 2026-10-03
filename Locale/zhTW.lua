@@ -7,7 +7,7 @@ local TraditionalChinese = {
   -- General settings
   ["General Settings"] = "一般設定",
   ["Configure message storage, retention, and interface language."] = "設定訊息儲存、保留時間與介面語言。",
-  ["Max Messages Per Contact"] = "每位聯絡人最大訊息數",
+  ["Max Messages Per Chat"] = "每個聊天最大訊息數",
   ["Max Contacts"] = "最大聯絡人數",
   ["Message Retention (hours)"] = "訊息保留(小時)",
   ["Privacy"] = "隱私",

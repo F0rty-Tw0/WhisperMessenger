@@ -7,7 +7,7 @@ local Korean = {
   -- General settings
   ["General Settings"] = "일반 설정",
   ["Configure message storage, retention, and interface language."] = "메시지 저장, 보관 기간 및 인터페이스 언어를 설정합니다.",
-  ["Max Messages Per Contact"] = "연락처당 최대 메시지",
+  ["Max Messages Per Chat"] = "채팅당 최대 메시지",
   ["Max Contacts"] = "최대 연락처 수",
   ["Message Retention (hours)"] = "메시지 보관 (시간)",
   ["Privacy"] = "개인 정보",

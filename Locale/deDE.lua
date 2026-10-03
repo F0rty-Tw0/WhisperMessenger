@@ -7,7 +7,7 @@ local German = {
   -- General settings
   ["General Settings"] = "Allgemeine Einstellungen",
   ["Configure message storage, retention, and interface language."] = "Speicherung, Aufbewahrung und Oberflächensprache anpassen.",
-  ["Max Messages Per Contact"] = "Max. Nachrichten pro Kontakt",
+  ["Max Messages Per Chat"] = "Max. Nachrichten pro Chat",
   ["Max Contacts"] = "Max. Kontakte",
   ["Message Retention (hours)"] = "Aufbewahrung (Stunden)",
   ["Privacy"] = "Datenschutz",

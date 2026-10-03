@@ -7,7 +7,7 @@ local SimplifiedChinese = {
   -- General settings
   ["General Settings"] = "常规设置",
   ["Configure message storage, retention, and interface language."] = "配置消息存储、保留时长和界面语言。",
-  ["Max Messages Per Contact"] = "每个联系人最大消息数",
+  ["Max Messages Per Chat"] = "每个聊天最大消息数",
   ["Max Contacts"] = "最大联系人数",
   ["Message Retention (hours)"] = "消息保留(小时)",
   ["Privacy"] = "隐私",

@@ -11,7 +11,7 @@ local Spanish = {
   -- General settings
   ["General Settings"] = "Ajustes generales",
   ["Configure message storage, retention, and interface language."] = "Configura el almacenamiento, retención y el idioma de la interfaz.",
-  ["Max Messages Per Contact"] = "Máx. mensajes por contacto",
+  ["Max Messages Per Chat"] = "Máx. mensajes por chat",
   ["Max Contacts"] = "Máx. contactos",
   ["Message Retention (hours)"] = "Retención (horas)",
   ["Privacy"] = "Privacidad",

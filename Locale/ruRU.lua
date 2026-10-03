@@ -7,7 +7,7 @@ local Russian = {
   -- General settings
   ["General Settings"] = "Общие настройки",
   ["Configure message storage, retention, and interface language."] = "Настройте хранение сообщений, сроки хранения и язык интерфейса.",
-  ["Max Messages Per Contact"] = "Макс. сообщений на контакт",
+  ["Max Messages Per Chat"] = "Макс. сообщений на чат",
   ["Max Contacts"] = "Макс. контактов",
   ["Message Retention (hours)"] = "Хранить сообщения (часы)",
   ["Privacy"] = "Конфиденциальность",
