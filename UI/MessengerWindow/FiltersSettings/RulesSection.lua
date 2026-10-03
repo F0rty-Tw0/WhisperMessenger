@@ -52,6 +52,15 @@ local function confirmReset(onAccept)
   _G.StaticPopup_Show(RESET_DIALOG)
 end
 
+local function indexOf(rules, rule)
+  for index, candidate in ipairs(rules) do
+    if candidate == rule then
+      return index
+    end
+  end
+  return nil
+end
+
 -- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
 -- the section with `bottom` and `redraw`.
 function RulesSection.Create(factory, frame, anchor, options)
@@ -107,14 +116,16 @@ function RulesSection.Create(factory, frame, anchor, options)
     end)
     row.editButton:SetScript("OnClick", function()
       PickerStyles.HideTooltip()
-      local index = row.index
+      local rule = filters.rules[row.index]
       TextInputDialog.Show(EDIT_DIALOG, {
         prompt = text("Edit rule…"),
         accept = text("Save"),
         maxLetters = RULE_MAX_LETTERS,
-        value = KeywordRules.Format(filters.rules[index]),
+        value = KeywordRules.Format(rule),
+        -- The dialog doesn't block the page: rules may move or go before Save.
         onAccept = function(typed)
-          if KeywordRules.SetWords(filters, index, typed) ~= nil then
+          local index = indexOf(filters.rules, rule)
+          if index ~= nil and KeywordRules.SetWords(filters, index, typed) ~= nil then
             changed()
           end
         end,

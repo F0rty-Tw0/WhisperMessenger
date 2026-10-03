@@ -3,10 +3,33 @@ local FindUI = require("tests.helpers.find_ui")
 local FiltersSettingsUI = require("tests.helpers.filters_settings_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FiltersSettings = require("WhisperMessenger.UI.MessengerWindow.FiltersSettings")
+local KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules")
 
 -- Every change to the ignore list or the rules reports "filters", so the
 -- game-chat filters follow without waiting for a reload.
 local NOW = 1000000
+
+-- Opens the edit dialog for the rule labelled `label` and returns a function
+-- that saves `typed` later, as if the player clicked Save after other changes.
+local function openEditDialog(result, label)
+  local dialog
+  _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+  rawset(_G, "StaticPopup_Show", function(name)
+    dialog = _G.StaticPopupDialogs[name]
+  end)
+  FindUI.click(FindUI.text(result.frame, label).parent:GetParent().editButton)
+  return function(typed)
+    dialog.OnAccept({
+      editBox = {
+        frameType = "EditBox",
+        GetText = function()
+          return typed
+        end,
+        SetText = function() end,
+      },
+    })
+  end
+end
 
 local function create(filters)
   local factory = FakeUI.NewFactory()
@@ -84,6 +107,29 @@ return function()
     end)
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     assert(reports.count == 1, "reset reported once, got " .. reports.count)
+  end
+
+  -- test_edit_saves_to_the_same_rule_after_an_earlier_one_is_removed
+  do
+    local filters = { ignored = {}, rules = { { words = { "aaa" }, enabled = true }, { words = { "bbb" }, enabled = true } } }
+    local result = create(filters)
+    local save = openEditDialog(result, "bbb")
+    local edited = filters.rules[2]
+    KeywordRules.Remove(filters, 1)
+    save("ccc")
+    assert(edited.words[1] == "ccc", "the rule being edited gets the new words")
+    assert(#filters.rules == 1 and filters.rules[1] == edited, "no other rule changes")
+  end
+
+  -- test_edit_saves_nothing_once_its_rule_is_gone
+  do
+    local filters = { ignored = {}, rules = { { words = { "aaa" }, enabled = true }, { words = { "bbb" }, enabled = true } } }
+    local result, reports = create(filters)
+    local save = openEditDialog(result, "aaa")
+    KeywordRules.Remove(filters, 1)
+    save("ccc")
+    assert(filters.rules[1].words[1] == "bbb", "another rule is never overwritten")
+    assert(reports.count == 0, "nothing reported")
   end
 
   rawset(_G, "time", nil)
