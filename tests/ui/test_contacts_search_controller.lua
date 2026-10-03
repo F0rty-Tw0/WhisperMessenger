@@ -50,6 +50,7 @@ end
 local function buildHarness()
   local input = makeInput()
   local filterCalls = {}
+  local pagingResets = {}
   local contactSearch = {
     NormalizeSearchQuery = function(raw)
       return string.lower(raw or "")
@@ -65,7 +66,8 @@ local function buildHarness()
   local controller = ContactsSearchController.Create({
     contacts = {},
     contactsController = {
-      refresh = function()
+      refresh = function(_rows, _selectedKey, resetPaging)
+        pagingResets[#pagingResets + 1] = resetPaging == true
         return {}
       end,
     },
@@ -80,7 +82,13 @@ local function buildHarness()
     input.scripts.OnTextChanged(input, true)
   end
 
-  return { input = input, filterCalls = filterCalls, typeText = typeText }
+  return {
+    input = input,
+    filterCalls = filterCalls,
+    pagingResets = pagingResets,
+    controller = controller,
+    typeText = typeText,
+  }
 end
 
 local function withFakeTimer(fn)
@@ -131,6 +139,15 @@ return function()
     h.typeText("")
     fake.fireRaw(fake.timers[1])
     assert(#h.filterCalls == 1, "timer scheduled before clear must not filter again; got " .. #h.filterCalls)
+  end)
+
+  -- test_refresh_during_debounce_still_resets_paging
+  withFakeTimer(function()
+    local h = buildHarness()
+    h.typeText("art")
+    h.controller.refresh({}, nil)
+    assert(#h.pagingResets == 1, "external refresh must apply the pending query; got " .. #h.pagingResets)
+    assert(h.pagingResets[1] == true, "a new query must start the list from the top even when another refresh applies it")
   end)
 
   -- test_without_new_timer_filters_immediately

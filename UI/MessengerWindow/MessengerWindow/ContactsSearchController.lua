@@ -47,6 +47,9 @@ function ContactsSearchController.Create(options)
   end
 
   local function refresh(nextContacts, selectedConversationKey, resetPaging)
+    -- A pending search pass would have reset paging; whoever applies the new
+    -- query in its place must do the same.
+    resetPaging = resetPaging or pendingRefreshTimer ~= nil
     cancelPendingRefresh()
     if nextContacts ~= nil then
       currentContacts = nextContacts
