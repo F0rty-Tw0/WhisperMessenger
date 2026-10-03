@@ -138,7 +138,10 @@ function ChannelChatIngest.HandleEvent(state, payload)
   if isSelf then
     Store.AppendOutgoing(state.store, key, message)
   else
-    Store.AppendIncoming(state.store, key, message, state.activeConversationKey == key)
+    -- Only a line naming the player counts as unread: busy Trade must not
+    -- bury real unread chats. AppendIncoming skips unread for "active".
+    local skipUnread = state.activeConversationKey == key or not message.mention
+    Store.AppendIncoming(state.store, key, message, skipUnread)
   end
   conversation = state.store.conversations[key]
   if conversation == nil then

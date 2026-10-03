@@ -162,4 +162,23 @@ return function()
     end
     assert(found, "the channel chat reaches the contacts list")
   end
+
+  -- test_plain_channel_line_adds_no_unread
+  do
+    local state = makeState()
+    local conversation = ingested(state, tradeLine("WTS ore", "Seller", 9115))
+    assert(conversation.unreadCount == 0, "an ordinary channel line is not unread, got " .. tostring(conversation.unreadCount))
+  end
+
+  -- test_channel_mention_adds_unread
+  do
+    local savedUnitName = _G.UnitName
+    rawset(_G, "UnitName", function()
+      return "Arthas"
+    end)
+    local state = makeState()
+    local conversation = ingested(state, tradeLine("Arthas, still need ore?", "Seller", 9116))
+    rawset(_G, "UnitName", savedUnitName)
+    assert(conversation.unreadCount == 1, "a line naming the player is unread, got " .. tostring(conversation.unreadCount))
+  end
 end
