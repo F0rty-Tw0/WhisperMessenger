@@ -7,6 +7,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 ## [Unreleased]
 
 - Busy group chats no longer slow the game down while the window is open.
+- Repeated messages from the same player now show once with a counter.
 
 ## [2.0.2] - 2026-10-02
 
