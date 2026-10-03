@@ -158,6 +158,7 @@ return function()
   -- every click, so we use it to detect "user engaged with another window".
   do
     local h = buildHarness({})
+    h.frame:Show()
     h.scripts.OnMouseDown(h.frame, "LeftButton")
     assert(h.frame.frameStrata == "HIGH", "precondition: window promoted after click")
 

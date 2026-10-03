@@ -122,8 +122,24 @@ function ScriptBindings.Bind(options)
     end)
   end
 
+  -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
+  -- to detect "user engaged with another window" — when they click
+  -- somewhere the messenger isn't, drop our strata so their target
+  -- window comes forward. Clicks on our own frame hit OnMouseDown which
+  -- promotes instead, and the OnEvent handler skips demotion when the
+  -- cursor is still over us. Listen only while shown so a hidden window
+  -- costs nothing per click.
+  local function setOutsideClickListening(listening)
+    if listening and type(frame.RegisterEvent) == "function" then
+      frame:RegisterEvent("GLOBAL_MOUSE_DOWN")
+    elseif not listening and type(frame.UnregisterEvent) == "function" then
+      frame:UnregisterEvent("GLOBAL_MOUSE_DOWN")
+    end
+  end
+
   if frame and frame.SetScript then
     frame:SetScript("OnShow", function()
+      setOutsideClickListening(true)
       startAlphaTicker()
       options.refreshWindowAlpha(true)
       -- Promote on Show so we sit above HIGH-strata frames the user already
@@ -135,6 +151,7 @@ function ScriptBindings.Bind(options)
     end)
 
     frame:SetScript("OnHide", function()
+      setOutsideClickListening(false)
       stopAlphaTicker()
       contactsResize.reset()
       windowResize.reset()
@@ -163,14 +180,8 @@ function ScriptBindings.Bind(options)
       -- our frame should, handled via GLOBAL_MOUSE_DOWN below.
     end)
 
-    -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
-    -- to detect "user engaged with another window" — when they click
-    -- somewhere the messenger isn't, drop our strata so their target
-    -- window comes forward. Clicks on our own frame hit OnMouseDown which
-    -- promotes instead, and here we skip demotion when the cursor is
-    -- still over us.
-    if type(frame.RegisterEvent) == "function" then
-      frame:RegisterEvent("GLOBAL_MOUSE_DOWN")
+    if type(frame.IsShown) == "function" and frame:IsShown() then
+      setOutsideClickListening(true)
     end
     frame:SetScript("OnEvent", function(self, event)
       if event == "GLOBAL_MOUSE_DOWN" and not isMouseOverFrame() then
