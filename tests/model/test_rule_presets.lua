@@ -59,7 +59,7 @@ return function()
   -- test_seed_keeps_player_rules_first
   do
     local filters = { ignored = {}, rules = {} }
-    local own = KeywordRules.Add(filters, "gold")
+    local own = assert(KeywordRules.Add(filters, "gold"))
     RulePresets.Seed(filters)
     assert(filters.rules[1] == own, "existing rules keep their place")
   end
@@ -116,5 +116,30 @@ return function()
         assert(catalog[preset.name] ~= nil, code .. " has no translation for preset " .. preset.name)
       end
     end
+  end
+  -- test_presets_apply_to_channels_only
+  do
+    local filters = seeded()
+    for _, rule in ipairs(filters.rules) do
+      assert(rule.scope == "channel", "preset " .. rule.presetId .. " is channel-only")
+    end
+    local own = assert(KeywordRules.Add(filters, "gold"))
+    assert(own.scope == nil, "the player's own rules have no scope")
+  end
+
+  -- test_seed_scopes_presets_saved_by_older_builds
+  do
+    local filters = seeded()
+    for _, rule in ipairs(filters.rules) do
+      rule.scope = nil
+    end
+    local own = assert(KeywordRules.Add(filters, "gold"))
+    RulePresets.Seed(filters)
+    for _, rule in ipairs(filters.rules) do
+      if rule ~= own then
+        assert(rule.scope == "channel", "saved preset " .. rule.presetId .. " becomes channel-only")
+      end
+    end
+    assert(own.scope == nil, "the player's own rule keeps applying everywhere")
   end
 end

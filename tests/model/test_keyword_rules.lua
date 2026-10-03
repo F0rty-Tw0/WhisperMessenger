@@ -129,4 +129,44 @@ return function()
     assert(KeywordRules.Match(filters, "selling m+ runs") ~= nil, "plus is literal")
     assert(KeywordRules.Match(filters, "selling mm runs") == nil, "plus is not a repeat")
   end
+  -- test_quoted_phrase_is_one_whole_word
+  do
+    local filters = newFilters()
+    local rule = assert(KeywordRules.Add(filters, '"Gold  seller" + cheap'))
+    assert(#rule.words == 2 and rule.words[1] == '"gold seller"', "a quoted phrase stays one word, got " .. tostring(rule.words[1]))
+    assert(KeywordRules.Match(filters, "cheap gold seller here") == rule, "the phrase matches")
+    assert(KeywordRules.Match(filters, "cheap gold sellers here") == nil, "the phrase is whole-word only")
+    assert(KeywordRules.Match(filters, "cheap seller of gold") == nil, "the words must be together")
+    local again = assert(KeywordRules.Add(filters, KeywordRules.Format(rule)))
+    assert(again.words[1] == '"gold seller"' and again.words[2] == "cheap", "a phrase round-trips through Format")
+  end
+
+  -- test_quoted_phrase_mixes_with_alternatives
+  do
+    local filters = newFilters()
+    local rule = assert(KeywordRules.Add(filters, '"gold seller"/wts'))
+    assert(#rule.words == 1, "the phrase and its alternative stay one word")
+    assert(KeywordRules.Match(filters, "wts mounts") == rule, "the plain alternative matches")
+    assert(KeywordRules.Match(filters, "a gold seller") == rule, "the phrase alternative matches")
+  end
+
+  -- test_unpaired_quote_is_dropped
+  do
+    local filters = newFilters()
+    local rule = assert(KeywordRules.Add(filters, '"gold seller'))
+    assert(#rule.words == 2 and rule.words[1] == "gold" and rule.words[2] == "seller", "a stray quote is dropped")
+    assert(KeywordRules.Match(filters, "gold seller") == rule, "the words still match")
+  end
+
+  -- test_malformed_saved_rule_never_matches
+  do
+    local filters = newFilters()
+    filters.rules[1] = { enabled = true, blocked = 0 }
+    filters.rules[2] = { enabled = true, blocked = 0, words = "spam" }
+    filters.rules[3] = { enabled = true, blocked = 0, words = {} }
+    filters.rules[4] = { enabled = true, blocked = 0, words = { {} } }
+    local ok, rule = pcall(KeywordRules.Match, filters, "spam")
+    assert(ok, "a malformed rule does not throw: " .. tostring(rule))
+    assert(rule == nil, "a malformed rule blocks nothing")
+  end
 end

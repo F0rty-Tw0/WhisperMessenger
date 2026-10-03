@@ -168,4 +168,27 @@ return function()
     local filters = ConditionalFilters.New(runtime)
     assert(speechLine(filters, "CHAT_MSG_SAY", { text = "hi", player = "Me", lineID = 19, guid = SELF_GUID }) == false, "own say line shows")
   end
+  -- test_malformed_saved_rule_fails_open
+  do
+    local runtime, state = makeRuntime({})
+    state.rules[1] = { enabled = true, blocked = 0 }
+    state.rules[2] = { enabled = true, blocked = 0, words = "spam" }
+    local filters = ConditionalFilters.New(runtime)
+    local ok, hidden = pcall(channelLine, filters, { text = "spam", player = "Seller", lineID = 20 })
+    assert(ok, "a malformed rule does not throw: " .. tostring(hidden))
+    assert(hidden == false, "a malformed rule shows the line")
+  end
+
+  -- test_secret_channel_name_fails_open
+  do
+    local runtime = makeRuntime({ hideChannelsFromDefaultChat = true, enabledChannels = { trade = true } })
+    local filters = ConditionalFilters.New(runtime)
+    local secretName = "Trade - Stormwind City"
+    rawset(_G, "issecretvalue", function(value)
+      return value == secretName
+    end)
+    local ok, hidden = pcall(channelLine, filters, { text = "lfm", player = "Friend", lineID = 21, baseName = secretName })
+    rawset(_G, "issecretvalue", nil)
+    assert(ok and hidden == false, "a secret channel name shows the line")
+  end
 end

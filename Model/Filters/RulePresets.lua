@@ -9,10 +9,14 @@ end
 -- `filters.seededPresets` keep a removed preset from coming back. Words are
 -- lowercase. "|H<type>:" link codes match as "h<type>:" because rule text
 -- never contains "|", WoW's escape character. GIL's non-Latin and politics
--- filters need whole-word or script matching and are left out.
+-- filters need whole-word or script matching and are left out. Presets only
+-- filter channels (scope "channel"): guild, party and raid lines are people
+-- the player plays with, not spam.
 local RulePresets = {}
 
 local ipairs = ipairs
+
+local SCOPE = "channel"
 
 local ANY_LINK = "hitem:/hspell:/hachievement:/hmount:/hbattlepet:/hjournal:/hquest:"
 
@@ -57,11 +61,18 @@ function RulePresets.Seed(filters)
     seededIds = {}
     filters.seededPresets = seededIds
   end
+  -- Presets saved before scopes existed applied to group lines too.
+  for _, rule in ipairs(filters.rules) do
+    if type(rule) == "table" and rule.presetId ~= nil and rule.scope == nil then
+      rule.scope = SCOPE
+    end
+  end
   for _, preset in ipairs(RulePresets.LIST) do
     if not seededIds[preset.id] then
       filters.rules[#filters.rules + 1] = {
         presetId = preset.id,
         name = preset.name,
+        scope = SCOPE,
         words = copyWords(preset.words),
         enabled = preset.enabled == true,
         blocked = 0,

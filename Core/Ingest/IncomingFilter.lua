@@ -21,7 +21,8 @@ local PASS = "pass"
 local IGNORED = "ignored"
 local BLOCKED = "blocked"
 local RING_SIZE = 64
--- Keyword rules cover group and channel lines, not whispers or say/yell/emote.
+-- Keyword rules cover group and channel lines, not whispers or say/yell/emote;
+-- a rule's scope (ready-made rules: "channel") narrows that further.
 local RULE_KINDS = { group = true, channel = true }
 
 local lower = string.lower
@@ -65,9 +66,9 @@ local function remember(lineID, decision)
   slotById[lineID] = cursor
 end
 
-local function hasEnabledRule(rules)
+local function hasEnabledRule(rules, kind)
   for _, rule in ipairs(rules) do
-    if rule.enabled then
+    if rule.enabled and (rule.scope == nil or rule.scope == kind) then
       return true
     end
   end
@@ -91,10 +92,10 @@ local function decide(runtime, kind, playerName, text, channelLabel)
     end
   end
 
-  if not RULE_KINDS[kind] or type(filters.rules) ~= "table" or not hasEnabledRule(filters.rules) then
+  if not RULE_KINDS[kind] or type(filters.rules) ~= "table" or not hasEnabledRule(filters.rules, kind) then
     return PASS
   end
-  local rule = KeywordRules.Match(filters, lower(text))
+  local rule = KeywordRules.Match(filters, lower(text), kind)
   if rule ~= nil then
     rule.blocked = (rule.blocked or 0) + 1
     PerfCounters.Increment("ruleBlocked")

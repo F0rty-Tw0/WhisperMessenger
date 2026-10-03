@@ -2,6 +2,9 @@ local IncomingFilter = require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList")
 local KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules")
 local PerfCounters = require("WhisperMessenger.Util.PerfCounters")
+local RulePresets = require("WhisperMessenger.Model.Filters.RulePresets")
+
+local THUNDERFURY = "|cffff8000|Hitem:19019::::::::80:::::|h[Thunderfury, Blessed Blade of the Windseeker]|h|r"
 
 local function makeRuntime()
   local filters = { ignored = {}, rules = {} }
@@ -170,5 +173,29 @@ return function()
   -- test_missing_filters_pass
   do
     assert(IncomingFilter.Evaluate({ accountState = {} }, "channel", "Spammer", "spam", 108, "Trade") == "pass", "no filters state passes")
+  end
+  -- test_ready_made_rules_skip_group_lines
+  do
+    local runtime, filters = makeRuntime()
+    RulePresets.Seed(filters)
+    local line = "Did someone say " .. THUNDERFURY
+    assert(IncomingFilter.Evaluate(runtime, "group", "Linker", line, 112, "GUILD") == "pass", "a preset never blocks guild lines")
+  end
+
+  -- test_ready_made_rules_block_channel_lines
+  do
+    local runtime, filters = makeRuntime()
+    RulePresets.Seed(filters)
+    local line = "Did someone say " .. THUNDERFURY
+    assert(IncomingFilter.Evaluate(runtime, "channel", "Linker", line, 113, "Trade") == "blocked", "a preset blocks Trade lines")
+  end
+
+  -- test_own_rules_still_block_group_lines_beside_presets
+  do
+    local runtime, filters = makeRuntime()
+    RulePresets.Seed(filters)
+    KeywordRules.Add(filters, "thunderfury")
+    local line = "Did someone say " .. THUNDERFURY
+    assert(IncomingFilter.Evaluate(runtime, "group", "Linker", line, 114, "GUILD") == "blocked", "the player's rule blocks guild lines")
   end
 end

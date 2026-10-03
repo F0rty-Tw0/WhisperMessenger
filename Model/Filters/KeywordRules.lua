@@ -6,9 +6,10 @@ end
 -- Keyword rules: plain, case-insensitive words. A rule matches a line only
 -- when every one of its words appears; a word written "a/b" is satisfied by
 -- any one of its alternatives. An alternative in double quotes only matches
--- as a whole word ("anal" skips "canal"); letters are ASCII letters, digits
--- and any non-ASCII byte, so Cyrillic and CJK words keep their edges. Words
--- are lowercased on save, so matching never lowers them again.
+-- as a whole word ("anal" skips "canal"); a quoted phrase ("gold seller") is
+-- one such word. Letters are ASCII letters, digits and any non-ASCII byte,
+-- so Cyrillic and CJK words keep their edges. Words are lowercased on save,
+-- so matching never lowers them again.
 local KeywordRules = {}
 
 local find = string.find
@@ -18,16 +19,33 @@ local sub = string.sub
 local ipairs = ipairs
 
 local WORD_SEPARATOR = " + "
+-- Stands in for spaces inside a quoted phrase while the text is split.
+local PHRASE_SPACE = ""
+
+-- Quotes pair up left to right, so an odd one out is the last.
+local function dropUnpairedQuote(text)
+  local _, quotes = gsub(text, '"', "")
+  if quotes % 2 == 1 then
+    text = gsub(text, '^(.*)"', "%1")
+  end
+  return text
+end
+
+local function joinPhrase(quoted)
+  return (gsub(quoted, "%s+", PHRASE_SPACE))
+end
 
 -- A lone "+" only separates words, so formatted rules parse back unchanged.
+-- A quoted phrase ("gold seller") stays one whole-word word.
 local function parseWords(wordsText)
   if type(wordsText) ~= "string" then
     return nil
   end
+  local text = gsub(dropUnpairedQuote(string.lower(wordsText)), '"[^"]*"', joinPhrase)
   local words = {}
-  for word in gmatch(string.lower(wordsText), "%S+") do
+  for word in gmatch(text, "%S+") do
     if word ~= "+" then
-      words[#words + 1] = word
+      words[#words + 1] = (gsub(word, PHRASE_SPACE, " "))
     end
   end
   if #words == 0 then
@@ -126,19 +144,32 @@ local function matchesAny(word, lowerText)
   return false
 end
 
+-- A damaged saved rule (no words, or words that are not text) matches
+-- nothing, so it never hides a line.
 local function matchesAll(words, lowerText)
+  if type(words) ~= "table" or words[1] == nil then
+    return false
+  end
   for _, word in ipairs(words) do
-    if not matchesAny(word, lowerText) then
+    if type(word) ~= "string" or not matchesAny(word, lowerText) then
       return false
     end
   end
   return true
 end
 
--- First enabled rule whose words all appear in the already-lowercased text.
-function KeywordRules.Match(filters, lowerText)
+-- Whether a rule applies to a line kind ("group", "channel"). A rule without
+-- a scope applies to every kind; a scoped one (the ready-made rules) only to
+-- its own. A nil kind skips the check.
+local function inScope(rule, kind)
+  return kind == nil or rule.scope == nil or rule.scope == kind
+end
+
+-- First enabled in-scope rule whose words all appear in the
+-- already-lowercased text.
+function KeywordRules.Match(filters, lowerText, kind)
   for _, rule in ipairs(filters.rules) do
-    if rule.enabled and matchesAll(rule.words, lowerText) then
+    if rule.enabled and inScope(rule, kind) and matchesAll(rule.words, lowerText) then
       return rule
     end
   end
