@@ -109,6 +109,26 @@ return function()
     assert(FindUI.text(result.frame, "Community:123:1") == nil, "raw community channel ids are hidden")
   end)
 
+  -- test_zone_channel_missing_from_the_server_list_is_not_custom
+  -- Away from a capital the server list drops Trade while the character is
+  -- still in it; the channel's own type says it is a zone channel.
+  withGlobals({
+    GetChannelList = function()
+      return 1, "General", false, 2, "Trade", false, 5, "CraftScan", false
+    end,
+    EnumerateServerChannels = function()
+      return "General"
+    end,
+    C_ChatInfo = {
+      GetChannelInfoFromIdentifier = function(name)
+        return { name = name, channelType = name == "CraftScan" and 3 or 1 }
+      end,
+    },
+  }, function()
+    local result = create({})
+    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS + 1, "only CraftScan is listed as custom")
+  end)
+
   -- test_ticked_channel_the_character_left_can_still_be_unticked
   withGlobals({
     GetChannelList = function()

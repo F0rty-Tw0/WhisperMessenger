@@ -97,6 +97,7 @@ Transport/AddonComm.lua
 Transport/WhisperGateway.lua
 Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Transport/ChannelIndex.lua
+Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 

@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local JoinedChannels = ns.JoinedChannels or require("WhisperMessenger.Transport.JoinedChannels")
 
 -- "Channels" section of the Chats page: one toggle per built-in channel plus
 -- one per custom channel the character has joined. Ticking a channel saves a
@@ -23,68 +24,11 @@ local BUILT_INS = {
   { id = 23, labelKey = "World Defense" },
   { id = 26, labelKey = "Looking for Group" },
 }
-local CUSTOM_ZONE_ID = 0
--- GetChannelList returns (id, name, disabled) per joined channel.
-local CHANNEL_LIST_STRIDE = 3
--- Community streams are listed as raw "Community:<club>:<stream>" ids.
-local COMMUNITY_PREFIX = "Community:"
 -- Custom channel slugs are "c:<lowercased name>".
 local CUSTOM_SLUG_PATTERN = "^c:."
 
 local function text(key)
   return Localization.Text(key)
-end
-
-local function pack(...)
-  return { n = select("#", ...), ... }
-end
-
--- Lowercased names of the server's built-in channels, which GetChannelList
--- also reports but the built-in rows already cover.
-local function serverChannelNames()
-  local names = {}
-  local enumerate = rawget(_G, "EnumerateServerChannels")
-  if type(enumerate) ~= "function" then
-    return names
-  end
-  local ok, list = pcall(pack, enumerate())
-  if not ok then
-    return names
-  end
-  for i = 1, list.n do
-    if type(list[i]) == "string" then
-      names[string.lower(list[i])] = true
-    end
-  end
-  return names
-end
-
--- Custom channels as { slug, label }, in the game's channel order.
-local function customChannels()
-  local channels = {}
-  local getList = _G.GetChannelList
-  if type(getList) ~= "function" then
-    return channels
-  end
-  local ok, list = pcall(function()
-    return pack(getList())
-  end)
-  if not ok then
-    return channels
-  end
-  local skip = serverChannelNames()
-  local seen = {}
-  for i = 1, list.n, CHANNEL_LIST_STRIDE do
-    local name = list[i + 1]
-    if type(name) == "string" and name ~= "" and not skip[string.lower(name)] and not string.find(name, COMMUNITY_PREFIX, 1, true) then
-      local slug = ChannelKey.Slug(CUSTOM_ZONE_ID, name)
-      if slug and not seen[slug] then
-        seen[slug] = true
-        channels[#channels + 1] = { slug = slug, label = name }
-      end
-    end
-  end
-  return channels
 end
 
 -- Ticked custom channels missing from `listed` (left on this character, or
@@ -179,7 +123,7 @@ function ChannelPicker.Create(factory, frame, anchor, options)
       entry.toggle.setValue(isEnabled(entry.slug))
       visible[#visible + 1] = entry
     end
-    local custom = customChannels()
+    local custom = JoinedChannels.Custom()
     local listed = {}
     for _, channel in ipairs(custom) do
       listed[channel.slug] = true
