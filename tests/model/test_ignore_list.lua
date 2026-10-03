@@ -118,6 +118,41 @@ return function()
     rawset(_G, "GetNormalizedRealmName", savedRealm)
   end
 
+  -- test_re_adding_keeps_the_blocked_history
+  do
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { reason = "old", now = 1 }))
+    IgnoreList.RecordBlocked(entry, "wts gold", "Trade", 50)
+    local again = assert(IgnoreList.Add(filters, "SPAMMER", { reason = "new", now = 100, duration = 10 }))
+    assert(again == entry, "the existing entry is updated in place")
+    assert(again.reason == "new" and again.expiresAt == 110, "reason and expiry are updated")
+    assert(again.blocked == 1 and again.lastText == "wts gold", "blocked count and last line are kept")
+    assert(again.lastChannel == "Trade" and again.lastAt == 50, "last channel and time are kept")
+    assert(again.addedAt == 1, "the original add date is kept")
+  end
+
+  -- test_remove_key_deletes_the_stored_entry
+  do
+    local filters = newFilters()
+    filters.ignored["bob-area52"] = { name = "Bob", blocked = 0 }
+    IgnoreList.RemoveKey(filters, "bob-area52")
+    assert(filters.ignored["bob-area52"] == nil, "entry removed by its stored key")
+  end
+
+  -- test_bare_name_is_saved_with_the_local_realm
+  do
+    local savedRealm = rawget(_G, "GetNormalizedRealmName")
+    rawset(_G, "GetNormalizedRealmName", function()
+      return "Area52"
+    end)
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Bob", { now = 1 }))
+    local cross = assert(IgnoreList.Add(filters, "Kim-Stormrage", { now = 1 }))
+    rawset(_G, "GetNormalizedRealmName", savedRealm)
+    assert(entry.name == "Bob-Area52", "a bare name shows which realm it is, got " .. tostring(entry.name))
+    assert(cross.name == "Kim-Stormrage", "a full name is kept as typed")
+  end
+
   -- test_ensure_backfills_filters_for_old_saved_variables
   do
     local accountState = { conversations = {} }

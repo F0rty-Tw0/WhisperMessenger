@@ -40,6 +40,16 @@ local function fullName(name)
   return (gsub(lower(name), "%s", ""))
 end
 
+-- "Bob" -> "Bob-Area52" when the local realm is known, so the list shows
+-- which player it means; full names are kept as typed.
+local function withRealm(name)
+  if find(name, "-", 1, true) then
+    return name
+  end
+  local realm = localRealm()
+  return realm and (name .. "-" .. realm) or name
+end
+
 -- Lowercased "name-realm", or nil for non-strings and secret values
 -- (string operations throw on a secret string).
 function IgnoreList.Key(name)
@@ -80,11 +90,20 @@ function IgnoreList.Add(filters, name, opts)
   if now == nil and type(_G.time) == "function" then
     now = _G.time()
   end
+  local expiresAt = opts.duration and now and (now + opts.duration) or nil
+  -- Re-adding a player updates the reason and expiry but keeps what the
+  -- entry has blocked so far.
+  local existing = filters.ignored[key]
+  if existing ~= nil then
+    existing.reason = opts.reason
+    existing.expiresAt = expiresAt
+    return existing
+  end
   local entry = {
-    name = name,
+    name = withRealm(name),
     reason = opts.reason,
     addedAt = now,
-    expiresAt = opts.duration and now and (now + opts.duration) or nil,
+    expiresAt = expiresAt,
     blocked = 0,
   }
   filters.ignored[key] = entry
@@ -96,6 +115,12 @@ function IgnoreList.Remove(filters, name)
   if key ~= nil then
     filters.ignored[key] = nil
   end
+end
+
+-- Removes the entry stored under `key` as is: the list may hold keys made on
+-- another realm, which Key(name) would rebuild differently here.
+function IgnoreList.RemoveKey(filters, key)
+  filters.ignored[key] = nil
 end
 
 local function isExpired(entry, now)
