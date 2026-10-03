@@ -85,6 +85,8 @@ return function()
     assert(matchesOnly(filters, "guildRecruitment", "<Raid Team> is recruiting for mythic"), "guild recruitment")
     assert(matchesOnly(filters, "wtsWtb", "WTB [Linen Cloth]"), "WTB")
     assert(matchesOnly(filters, "wtsWtb", "LFW any enchanter, tips welcome"), "LFW")
+    assert(not matchesOnly(filters, "wtsWtb", "gotta go halfway across the map"), "halfway is not LFW")
+    assert(not matchesOnly(filters, "wtsWtb", "Wolfwood Guild LF members"), "Wolfwood is not LFW")
     assert(matchesOnly(filters, "professionSellers", "Free crafting |Htrade:Player-1:2:3|h[Tailoring]|h"), "profession seller")
     assert(matchesOnly(filters, "communityRecruitment", "Join us |HclubFinder:ClubFinder-1-2|h[Community]|h"), "community link")
     assert(not matchesOnly(filters, "mythicSellers", "LF healer for +10 keys"), "a group ad is not a sale")
@@ -152,12 +154,18 @@ return function()
     local filters = { rules = { old }, seededPresets = { wtsWtb = true } }
     RulePresets.Seed(filters)
     assert(old.name == "WTS / WTB / LFW", "title follows the preset, got " .. tostring(old.name))
-    assert(old.words[1] == "wts/wtb/lfw" and #old.words == 1, "untouched default words upgraded, got " .. tostring(old.words[1]))
+    assert(old.words[1] == 'wts/wtb/"lfw"' and #old.words == 1, "untouched default words upgraded, got " .. tostring(old.words[1]))
     assert(old.enabled == true, "on/off state kept")
 
     local edited = { name = "WTS / WTB", presetId = "wtsWtb", scope = "channel", words = { "wts" }, enabled = false, blocked = 0 }
     filters = { rules = { edited }, seededPresets = { wtsWtb = true } }
     RulePresets.Seed(filters)
     assert(edited.words[1] == "wts", "the player's own words stay")
+
+    -- An earlier build saved "lfw" unquoted, which also caught "halfway".
+    local unquoted = { name = "WTS / WTB / LFW", presetId = "wtsWtb", scope = "channel", words = { "wts/wtb/lfw" }, enabled = true, blocked = 0 }
+    filters = { rules = { unquoted }, seededPresets = { wtsWtb = true } }
+    RulePresets.Seed(filters)
+    assert(unquoted.words[1] == 'wts/wtb/"lfw"', "unquoted lfw upgraded, got " .. tostring(unquoted.words[1]))
   end
 end

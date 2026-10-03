@@ -45,7 +45,13 @@ RulePresets.LIST = {
   { id = "guildRecruitment", name = "Guild recruitment", words = { "guild/</hclubfinder:", "recruit/progress/seek" } },
   { id = "communityRecruitment", name = "Community recruitment", words = { "hclubfinder:" } },
   -- previousWords: older default word lists, upgraded at load when unedited.
-  { id = "wtsWtb", name = "WTS / WTB / LFW", words = { "wts/wtb/lfw" }, previousWords = { { "wts/wtb" } } },
+  -- "lfw" quoted: as a bare substring it also caught "halfway" and "Wolfwood".
+  {
+    id = "wtsWtb",
+    name = "WTS / WTB / LFW",
+    words = { 'wts/wtb/"lfw"' },
+    previousWords = { { "wts/wtb" }, { "wts/wtb/lfw" } },
+  },
 }
 
 local function copyWords(words)
