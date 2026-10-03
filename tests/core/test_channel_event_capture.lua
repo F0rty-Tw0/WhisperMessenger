@@ -109,6 +109,23 @@ return function()
     assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "spammer") == nil, "an ignored sender's line is not kept")
   end
 
+  -- test_disabled_channel_skips_ingest
+  do
+    local ChannelChatIngest = require("WhisperMessenger.Core.Ingest.ChannelChatIngest")
+    local realHandleEvent = ChannelChatIngest.HandleEvent
+    local ingestCalls = 0
+    rawset(ChannelChatIngest, "HandleEvent", function(...)
+      ingestCalls = ingestCalls + 1
+      return realHandleEvent(...)
+    end)
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = {}
+    tradeLine(runtime, "WTS ore", "Seller", 8108, 2)
+    rawset(ChannelChatIngest, "HandleEvent", realHandleEvent)
+    assert(ingestCalls == 0, "a channel that is not a chat never reaches ingest")
+    assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "seller") ~= nil, "the line is still kept as context")
+  end
+
   -- test_channel_mention_alerts
   do
     local flashes = 0

@@ -59,7 +59,9 @@ function ChannelRouter.RouteChannelEvent(runtime, eventName, ...)
     ChannelMessageStore.Record(store, playerName, text, channelLabel, sentAt)
   end
 
-  if not (runtime.isChannelIngestSuspended and runtime.isChannelIngestSuspended()) then
+  -- Channels that are not chats stop here and build no payload.
+  local isChat = ChannelChatIngest.IsEnabled(runtime, zoneChannelID, channelBaseName)
+  if isChat and not (runtime.isChannelIngestSuspended and runtime.isChannelIngestSuspended()) then
     ingest(runtime, {
       text = text,
       playerName = playerName,

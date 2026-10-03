@@ -95,6 +95,13 @@ local function isEnabled(state, slug)
   return type(enabled) == "table" and enabled[ChannelKey.SettingKey(slug)] == true
 end
 
+-- True when the player turned this channel into a chat. Cheap, so callers
+-- can skip building a payload for channels that are not chats.
+function ChannelChatIngest.IsEnabled(state, zoneChannelID, channelBaseName)
+  local slug = ChannelKey.Slug(zoneChannelID, channelBaseName)
+  return slug ~= nil and isEnabled(state, slug)
+end
+
 local function stamp(conversation, key, payload, state, zoneLabel)
   conversation.conversationKey = key
   conversation.channel = CHANNEL
