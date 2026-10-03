@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local HelpSection = ns.FiltersSettingsHelpSection or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.HelpSection")
 local IgnoreListSection = ns.FiltersSettingsIgnoreListSection or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreListSection")
 local RulesSection = ns.FiltersSettingsRulesSection or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.RulesSection")
 
@@ -32,7 +33,8 @@ function FiltersSettings.Create(factory, parent, config, options)
   local panel = SettingsControls.NewPanelRegistry()
   local sectionOptions = { filters = filters, panel = panel, onLayoutChanged = options.onLayoutChanged }
 
-  local ignoreSection = IgnoreListSection.Create(factory, frame, header.hint, sectionOptions)
+  local helpSection = HelpSection.Create(frame, header.hint)
+  local ignoreSection = IgnoreListSection.Create(factory, frame, helpSection.bottom, sectionOptions)
   local rulesSection = RulesSection.Create(factory, frame, ignoreSection.bottom, sectionOptions)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -51,6 +53,7 @@ function FiltersSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
+    helpSection.refreshTheme()
     ignoreSection.refreshTheme()
     rulesSection.refreshTheme()
   end
@@ -60,6 +63,7 @@ function FiltersSettings.Create(factory, parent, config, options)
   local function setLanguage()
     header.title:SetText(text(TITLE))
     header.hint:SetText(text(HINT))
+    helpSection.setLanguage()
     ignoreSection.setLanguage()
     rulesSection.setLanguage()
   end
@@ -71,6 +75,7 @@ function FiltersSettings.Create(factory, parent, config, options)
     local effective = math.min(Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, math.max(160, math.floor(width)))
     header.refreshLayout(effective)
     panel:refreshLayout(effective)
+    helpSection.refreshLayout(effective)
     ignoreSection.refreshLayout(effective)
     rulesSection.refreshLayout(effective)
   end
