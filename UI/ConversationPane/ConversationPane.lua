@@ -25,7 +25,6 @@ local applyColor = UIHelpers.applyColor
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
-local ACTIVE_STATUS_BANNER_HEIGHT = BottomBanner.HEIGHT
 
 -- Viewport-size and theme changes must re-lay-out the bubbles even though
 -- no individual message changed.
@@ -289,7 +288,9 @@ function ConversationPane.Relayout(view, width, height)
   if view.transcript == nil then
     return
   end
-  local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
+  -- Re-measured here: a width or font change can re-wrap the notice.
+  local bannerOffset = BottomBanner.ReservedHeight(view)
+  view._bannerReserved = bannerOffset
   -- The pane is dual-anchored in the live client, so its real height can
   -- differ from the window-derived metric; size the transcript to what the
   -- pane actually is so bubbles reach the composer instead of stopping short.
