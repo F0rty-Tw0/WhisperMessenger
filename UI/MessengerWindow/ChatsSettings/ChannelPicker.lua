@@ -39,7 +39,7 @@ end
 -- also reports but the built-in rows already cover.
 local function serverChannelNames()
   local names = {}
-  local enumerate = _G.EnumerateServerChannels
+  local enumerate = rawget(_G, "EnumerateServerChannels")
   if type(enumerate) ~= "function" then
     return names
   end

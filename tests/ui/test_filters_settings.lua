@@ -54,9 +54,12 @@ local function trashButtons(root)
 end
 
 local function typeSearch(root, value)
-  local input = FindUI.find(root, function(node)
-    return node.frameType == "EditBox"
-  end)
+  local input = assert(
+    FindUI.find(root, function(node)
+      return node.frameType == "EditBox"
+    end),
+    "Filters page has a search box"
+  )
   input:SetText(value)
   input:GetScript("OnTextChanged")(input)
 end
