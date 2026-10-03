@@ -414,6 +414,22 @@ local Korean = {
   ["World Defense"] = "전쟁",
   ["Looking for Group"] = "파티찾기",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "게임 채팅에서 채널을 숨기려면 채팅 탭을 마우스 오른쪽 버튼으로 클릭하고 설정을 연 다음 선택을 해제하세요.",
+  -- Filters options page
+  ["Filters"] = "필터",
+  ["Silently hide messages from players and lines you don't want to see."] = "보고 싶지 않은 플레이어의 메시지와 문구를 조용히 숨깁니다.",
+  ["Ignored players"] = "무시한 플레이어",
+  ["Search"] = "검색",
+  ["Add player…"] = "플레이어 추가…",
+  ["Reason (optional)"] = "사유 (선택)",
+  ["Ignore for"] = "무시 기간",
+  ["1 day"] = "1일",
+  ["7 days"] = "7일",
+  ["Forever"] = "영구",
+  ["Blocked %d"] = "%d개 차단됨",
+  ["Last: %s"] = "최근: %s",
+  ["Keyword rules"] = "키워드 규칙",
+  ["Add rule…"] = "규칙 추가…",
+  ["All words must match"] = "모든 단어가 일치해야 합니다",
 }
 
 ns.Locale_koKR = Korean

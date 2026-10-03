@@ -414,6 +414,22 @@ local French = {
   ["World Defense"] = "Défense universelle",
   ["Looking for Group"] = "Recherche de groupe",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Pour masquer un canal dans la discussion du jeu, faites un clic droit sur l'onglet, ouvrez Paramètres et décochez-le.",
+  -- Filters options page
+  ["Filters"] = "Filtres",
+  ["Silently hide messages from players and lines you don't want to see."] = "Masque discrètement les messages de joueurs et les lignes que vous ne voulez pas voir.",
+  ["Ignored players"] = "Joueurs ignorés",
+  ["Search"] = "Rechercher",
+  ["Add player…"] = "Ajouter un joueur…",
+  ["Reason (optional)"] = "Raison (facultatif)",
+  ["Ignore for"] = "Ignorer pendant",
+  ["1 day"] = "1 jour",
+  ["7 days"] = "7 jours",
+  ["Forever"] = "Toujours",
+  ["Blocked %d"] = "Bloqués : %d",
+  ["Last: %s"] = "Dernier : %s",
+  ["Keyword rules"] = "Règles de mots-clés",
+  ["Add rule…"] = "Ajouter une règle…",
+  ["All words must match"] = "Tous les mots doivent correspondre",
 }
 
 ns.Locale_frFR = French

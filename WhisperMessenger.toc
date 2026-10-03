@@ -160,6 +160,8 @@ UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/ButtonStyling.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Styling.lua
 UI/Shared/StyledTextInputPopup.lua
 UI/Shared/TextInputDialog.lua
+UI/Shared/RemoveButton.lua
+UI/Shared/IgnorePrompt.lua
 UI/Shared/ReloadPrompt.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
@@ -297,6 +299,10 @@ UI/MessengerWindow/WhispersSettings/ToggleSpecs.lua
 UI/MessengerWindow/WhispersSettings.lua
 UI/MessengerWindow/ChatsSettings/ChannelPicker.lua
 UI/MessengerWindow/ChatsSettings.lua
+UI/MessengerWindow/FiltersSettings/IgnoreRow.lua
+UI/MessengerWindow/FiltersSettings/IgnoreListSection.lua
+UI/MessengerWindow/FiltersSettings/RulesSection.lua
+UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua

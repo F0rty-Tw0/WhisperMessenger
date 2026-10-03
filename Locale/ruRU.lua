@@ -414,6 +414,22 @@ local Russian = {
   ["World Defense"] = "Оборона: глобальный",
   ["Looking for Group"] = "Поиск спутников",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Чтобы скрыть канал из игрового чата, щелкните правой кнопкой по вкладке чата, откройте настройки и снимите флажок.",
+  -- Filters options page
+  ["Filters"] = "Фильтры",
+  ["Silently hide messages from players and lines you don't want to see."] = "Тихо скрывайте сообщения игроков и строки, которые не хотите видеть.",
+  ["Ignored players"] = "Игнорируемые игроки",
+  ["Search"] = "Поиск",
+  ["Add player…"] = "Добавить игрока…",
+  ["Reason (optional)"] = "Причина (необязательно)",
+  ["Ignore for"] = "Игнорировать",
+  ["1 day"] = "1 день",
+  ["7 days"] = "7 дней",
+  ["Forever"] = "Навсегда",
+  ["Blocked %d"] = "Заблокировано: %d",
+  ["Last: %s"] = "Последнее: %s",
+  ["Keyword rules"] = "Правила по словам",
+  ["Add rule…"] = "Добавить правило…",
+  ["All words must match"] = "Должны совпасть все слова",
 }
 
 ns.Locale_ruRU = Russian

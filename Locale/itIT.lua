@@ -414,6 +414,22 @@ local Italian = {
   ["World Defense"] = "Difesa mondiale",
   ["Looking for Group"] = "Cerca gruppo",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Per nascondere un canale dalla chat del gioco, fai clic destro sulla scheda della chat, apri Impostazioni e deselezionalo.",
+  -- Filters options page
+  ["Filters"] = "Filtri",
+  ["Silently hide messages from players and lines you don't want to see."] = "Nascondi in silenzio i messaggi di giocatori e le righe che non vuoi vedere.",
+  ["Ignored players"] = "Giocatori ignorati",
+  ["Search"] = "Cerca",
+  ["Add player…"] = "Aggiungi giocatore…",
+  ["Reason (optional)"] = "Motivo (facoltativo)",
+  ["Ignore for"] = "Ignora per",
+  ["1 day"] = "1 giorno",
+  ["7 days"] = "7 giorni",
+  ["Forever"] = "Per sempre",
+  ["Blocked %d"] = "Bloccati: %d",
+  ["Last: %s"] = "Ultimo: %s",
+  ["Keyword rules"] = "Regole per parole chiave",
+  ["Add rule…"] = "Aggiungi regola…",
+  ["All words must match"] = "Tutte le parole devono corrispondere",
 }
 
 ns.Locale_itIT = Italian

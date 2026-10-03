@@ -414,6 +414,22 @@ local German = {
   ["World Defense"] = "Weltverteidigung",
   ["Looking for Group"] = "Gruppensuche",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Um einen Kanal im Spielchat auszublenden, klicke mit der rechten Maustaste auf den Chatreiter, öffne die Einstellungen und entferne das Häkchen.",
+  -- Filters options page
+  ["Filters"] = "Filter",
+  ["Silently hide messages from players and lines you don't want to see."] = "Blende Nachrichten von Spielern und Zeilen, die du nicht sehen willst, still aus.",
+  ["Ignored players"] = "Ignorierte Spieler",
+  ["Search"] = "Suchen",
+  ["Add player…"] = "Spieler hinzufügen…",
+  ["Reason (optional)"] = "Grund (optional)",
+  ["Ignore for"] = "Ignorieren für",
+  ["1 day"] = "1 Tag",
+  ["7 days"] = "7 Tage",
+  ["Forever"] = "Für immer",
+  ["Blocked %d"] = "%d blockiert",
+  ["Last: %s"] = "Zuletzt: %s",
+  ["Keyword rules"] = "Stichwortregeln",
+  ["Add rule…"] = "Regel hinzufügen…",
+  ["All words must match"] = "Alle Wörter müssen vorkommen",
 }
 
 ns.Locale_deDE = German

@@ -418,6 +418,22 @@ local Spanish = {
   ["World Defense"] = "Defensa general",
   ["Looking for Group"] = "Buscar grupo",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Para ocultar un canal del chat del juego, haz clic derecho en la pestaña del chat, abre Configuración y desmárcalo.",
+  -- Filters options page
+  ["Filters"] = "Filtros",
+  ["Silently hide messages from players and lines you don't want to see."] = "Oculta en silencio los mensajes de jugadores y las líneas que no quieres ver.",
+  ["Ignored players"] = "Jugadores ignorados",
+  ["Search"] = "Buscar",
+  ["Add player…"] = "Agregar jugador…",
+  ["Reason (optional)"] = "Motivo (opcional)",
+  ["Ignore for"] = "Ignorar durante",
+  ["1 day"] = "1 día",
+  ["7 days"] = "7 días",
+  ["Forever"] = "Siempre",
+  ["Blocked %d"] = "Bloqueados: %d",
+  ["Last: %s"] = "Último: %s",
+  ["Keyword rules"] = "Reglas de palabras clave",
+  ["Add rule…"] = "Agregar regla…",
+  ["All words must match"] = "Deben coincidir todas las palabras",
 }
 
 ns.Locale_esMX = Spanish

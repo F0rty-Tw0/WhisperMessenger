@@ -414,6 +414,22 @@ local SimplifiedChinese = {
   ["World Defense"] = "世界防务",
   ["Looking for Group"] = "寻求组队",
   ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "要在游戏聊天中隐藏频道，请右键点击聊天标签，打开设置并取消勾选。",
+  -- Filters options page
+  ["Filters"] = "过滤",
+  ["Silently hide messages from players and lines you don't want to see."] = "静默隐藏你不想看到的玩家消息和内容。",
+  ["Ignored players"] = "已屏蔽的玩家",
+  ["Search"] = "搜索",
+  ["Add player…"] = "添加玩家…",
+  ["Reason (optional)"] = "原因（可选）",
+  ["Ignore for"] = "屏蔽时长",
+  ["1 day"] = "1天",
+  ["7 days"] = "7天",
+  ["Forever"] = "永久",
+  ["Blocked %d"] = "已拦截 %d",
+  ["Last: %s"] = "最近：%s",
+  ["Keyword rules"] = "关键词规则",
+  ["Add rule…"] = "添加规则…",
+  ["All words must match"] = "所有词语都必须匹配",
 }
 
 ns.Locale_zhCN = SimplifiedChinese
