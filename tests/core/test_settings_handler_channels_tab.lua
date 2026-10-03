@@ -49,4 +49,12 @@ return function()
     SettingsHandler.Create({ runtime = runtime, accountSettings = {} })("enabledChannels", { trade = false, general = true })
     assert(#calls.setTabMode == 0, "Channels tab kept while a channel is still ticked")
   end
+
+  -- test_hiding_group_chats_keeps_the_channels_tab
+  do
+    local runtime, calls = makeRuntime("channels")
+    SettingsHandler.Create({ runtime = runtime, accountSettings = { showGroupChats = true } })("showGroupChats", false)
+    assert(#calls.setTabMode == 0, "Channels tab ignores Show group chats")
+    assert(calls.visibility == 1, "Groups tab hidden")
+  end
 end

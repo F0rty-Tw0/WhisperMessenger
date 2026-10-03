@@ -162,7 +162,7 @@ function SettingsHandler.Create(options)
     end
     if key == "showGroupChats" then
       local window = runtime.window
-      if persistedValue == false and window and window.setTabMode then
+      if persistedValue == false and window and window.getTabMode and window.getTabMode() == "groups" and window.setTabMode then
         window.setTabMode("whispers")
       end
       if window and window.refreshTabToggleVisibility then
