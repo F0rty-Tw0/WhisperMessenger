@@ -51,14 +51,24 @@ return function()
     assert(view.scrollBar.thumb.texturePath == KNOB, "HUD: refresh keeps the knob art")
   end
 
-  -- test_hud_track_uses_the_preset_scrollbar_colour
+  -- test_hud_knob_has_no_trough_behind_it
   do
     local view = newView("classic")
+    view.refreshSkin()
     local color = view.scrollBar.track.color
-    local preset = Theme.COLORS.scrollbar
-    assert(color ~= nil, "HUD: track is painted")
-    assert(color[1] == preset[1] and color[2] == preset[2] and color[3] == preset[3], "HUD: track takes the preset scrollbar colour")
-    assert(color[4] > 0 and color[4] < (preset[4] or 1), "HUD: track is a faint strip, got alpha " .. tostring(color[4]))
+    assert(color == nil or color[4] == 0, "HUD: no trough behind the knob")
+  end
+
+  -- test_hud_knob_is_slim_and_keeps_its_proportions
+  do
+    -- Blizzard's knob is 18x24; ours is scaled down whole so it never squashes.
+    local view = newView("classic")
+    local thumb = view.scrollBar.thumb
+    assert(thumb.width <= 12, "HUD: knob at most 12px wide, got " .. tostring(thumb.width))
+    assert(
+      thumb.width * 24 == thumb.height * 18,
+      "HUD: knob keeps the 18:24 art ratio, got " .. tostring(thumb.width) .. "x" .. tostring(thumb.height)
+    )
   end
 
   -- test_hud_thumb_does_not_widen_on_hover
@@ -93,9 +103,9 @@ return function()
   do
     local view = newView("classic", RIGHT_GUTTER)
     ScrollView.RefreshMetrics(view, 500)
-    local expected = VIEW_WIDTH - (hudWidth() - RIGHT_GUTTER)
+    local expected = VIEW_WIDTH - math.max(0, hudWidth() - RIGHT_GUTTER)
     assert(view.scrollFrame.width == expected, "HUD: viewport only gives up what the gutter can't hold, got " .. tostring(view.scrollFrame.width))
-    assert(view.scrollFrame.width + view.scrollBar.width == VIEW_WIDTH + RIGHT_GUTTER, "HUD: knob ends at the gutter's outer edge")
+    assert(view.scrollFrame.width + view.scrollBar.width <= VIEW_WIDTH + RIGHT_GUTTER, "HUD: knob stays inside the gutter")
   end
 
   -- test_modern_bar_ignores_the_right_gutter

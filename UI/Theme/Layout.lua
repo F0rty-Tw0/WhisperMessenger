@@ -82,7 +82,7 @@ local Layout = {
   SCROLLBAR_WIDTH = 4,
   SCROLLBAR_WIDTH_HOVER = 6,
   -- Native WoW HUD: fits the classic scroll knob.
-  SCROLLBAR_WIDTH_HUD = 18,
+  SCROLLBAR_WIDTH_HUD = 12,
   -- Retail HUD: the minimal scrollbar's thumb width, for clients that can't
   -- report the atlas size.
   SCROLLBAR_WIDTH_RETAIL = 8,

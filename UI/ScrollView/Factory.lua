@@ -20,32 +20,25 @@ local RetailSkin = ns.ScrollViewRetailSkin or require("WhisperMessenger.UI.Scrol
 local SCROLLBAR_WIDTH = Metrics.SCROLLBAR_WIDTH
 local SCROLLBAR_INSET = Metrics.SCROLLBAR_INSET
 
--- Native WoW HUD: the gold knob from UIPanelScrollBarTemplate, at the
--- template's size and crop (the file pads the knob with empty space).
+-- Native WoW HUD: the gold knob from UIPanelScrollBarTemplate, scaled down
+-- whole from its 18x24 template size (the file pads the knob with empty
+-- space, hence the crop) and floating with no trough, so it takes little room.
 local HUD_KNOB = "Interface\\Buttons\\UI-ScrollBar-Knob"
-local HUD_KNOB_HEIGHT = 24
+local HUD_KNOB_ASPECT = 24 / 18
 local HUD_KNOB_COORDS = { 0.20, 0.80, 0.125, 0.875 }
--- The trough is the preset's scrollbar colour, fainter than the modern bar.
-local HUD_TRACK_ALPHA_SCALE = 0.5
+local CLEAR = { 0, 0, 0, 0 }
 
-local hudTrackColor = { 0, 0, 0, 0 }
-
--- Dresses the slider in Blizzard scroll art; returns the theme repaint,
--- which refreshes the trough and leaves the knob alone.
+-- Dresses the slider in Blizzard scroll art; returns the theme repaint, a
+-- no-op since the knob keeps its own colours.
 local function skinHud(track, thumb)
-  thumb:SetSize(Theme.LAYOUT.SCROLLBAR_WIDTH_HUD, HUD_KNOB_HEIGHT)
+  local width = Theme.LAYOUT.SCROLLBAR_WIDTH_HUD
+  thumb:SetSize(width, width * HUD_KNOB_ASPECT)
   NativeArt.SetOpaque(thumb, HUD_KNOB)
   if thumb.SetTexCoord then
     thumb:SetTexCoord(unpackValues(HUD_KNOB_COORDS))
   end
-  local function paintTrack()
-    local color = Theme.COLORS.scrollbar
-    hudTrackColor[1], hudTrackColor[2], hudTrackColor[3] = color[1], color[2], color[3]
-    hudTrackColor[4] = (color[4] or 1) * HUD_TRACK_ALPHA_SCALE
-    applyColorTexture(track, hudTrackColor)
-  end
-  paintTrack()
-  return paintTrack
+  applyColorTexture(track, CLEAR)
+  return function() end
 end
 
 local Factory = {}
@@ -114,8 +107,10 @@ function Factory.Create(factory, parent, options)
     refreshSkin = RetailSkin.Apply(scrollBar, track, thumb, scrollbarWidth)
   elseif hud then
     scrollbarWidth = Theme.LAYOUT.SCROLLBAR_WIDTH_HUD
-    -- The wide knob sits flush with the parent's edge, in the caller's gutter.
+    -- The knob sits flush with the parent's edge, in the caller's gutter.
     rightGutter = options.rightGutter or 0
+    scrollBar:ClearAllPoints()
+    scrollBar:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", SCROLLBAR_INSET + math.max(0, rightGutter - scrollbarWidth), 0)
     refreshSkin = skinHud(track, thumb)
   else
     -- Transparent track (slim Telegram-style bar — no dark background)

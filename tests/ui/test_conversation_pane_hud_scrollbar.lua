@@ -25,7 +25,8 @@ end
 -- Right edge of the scrollbar, measured from the pane's left edge.
 local function barRightEdge(view)
   local t = view.transcript
-  return Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + t.scrollFrame:GetWidth() + t.scrollBar:GetWidth()
+  local offset = t.scrollBar.points[1][4] or 0
+  return Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER + t.scrollFrame:GetWidth() + offset + t.scrollBar:GetWidth()
 end
 
 return function()
