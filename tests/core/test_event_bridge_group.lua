@@ -221,15 +221,21 @@ return function()
     _G.BNGetConversationMemberInfo = savedGetMemberInfo
   end
 
-  -- Hidden group messages are stored but do not rebuild contacts or transcript.
+  -- Hidden group messages are stored but do not rebuild contacts or
+  -- transcript: the router only hands the key to the coalesced scheduler,
+  -- which skips work while the window is hidden.
   do
     local refreshes = 0
+    local scheduled = {}
     local runtime = makeRuntime({
       isWindowVisible = function()
         return false
       end,
       refreshWindow = function()
         refreshes = refreshes + 1
+      end,
+      scheduleIncomingRefresh = function(key)
+        scheduled[#scheduled + 1] = key
       end,
     })
 
@@ -253,6 +259,7 @@ return function()
     assert(handled == true, "hidden group event should still persist")
     assert(runtime.store.conversations["party::arthas-area52"] ~= nil, "hidden group event should create its conversation")
     assert(refreshes == 0, "hidden group event must not render contacts or transcript")
+    assert(#scheduled == 1 and scheduled[1] == "party::arthas-area52", "the hidden line goes to the scheduler with its key")
   end
 
   -- Visible group lines schedule one coalesced refresh keyed by their
