@@ -6,6 +6,8 @@ end
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 -- The Behavior panel's toggle rows, in display order, plus their defaults.
+-- Each spec carries its setting `key` and the English `labelKey` it is
+-- labelled with, so the panel binds and relabels rows by key.
 local ToggleSpecs = {}
 
 ToggleSpecs.DEFAULTS = {
@@ -31,9 +33,10 @@ end
 function ToggleSpecs.Build(config, onChange)
   local profanityEnabled = _G.GetCVar and _G.GetCVar("profanityFilter") == "1" or false
 
-  return {
+  local specs = {
     {
-      label = text("Dim when moving"),
+      key = "dimWhenMoving",
+      labelKey = "Dim when moving",
       initial = config.dimWhenMoving ~= false,
       onChange = function(value)
         onChange("dimWhenMoving", value)
@@ -45,7 +48,8 @@ function ToggleSpecs.Build(config, onChange)
       anchorOffsetY = -24,
     },
     {
-      label = text("Auto-focus chat input"),
+      key = "autoFocusComposer",
+      labelKey = "Auto-focus chat input",
       initial = config.autoFocusComposer == true,
       onChange = function(value)
         onChange("autoFocusComposer", value)
@@ -56,7 +60,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Hide whispers from default chat"),
+      key = "hideFromDefaultChat",
+      labelKey = "Hide whispers from default chat",
       initial = config.hideFromDefaultChat == true,
       onChange = function(value)
         onChange("hideFromDefaultChat", value)
@@ -71,7 +76,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Enable profanity filter"),
+      key = "profanityFilter",
+      labelKey = "Enable profanity filter",
       initial = profanityEnabled,
       onChange = function(value)
         if _G.SetCVar then
@@ -84,7 +90,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Auto-open on incoming whisper"),
+      key = "autoOpenIncoming",
+      labelKey = "Auto-open on incoming whisper",
       initial = config.autoOpenIncoming == true,
       onChange = function(value)
         onChange("autoOpenIncoming", value)
@@ -95,7 +102,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Auto-open on outgoing whisper"),
+      key = "autoOpenOutgoing",
+      labelKey = "Auto-open on outgoing whisper",
       initial = config.autoOpenOutgoing == true,
       onChange = function(value)
         onChange("autoOpenOutgoing", value)
@@ -106,7 +114,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Hide on entering combat"),
+      key = "hideOnCombat",
+      labelKey = "Hide on entering combat",
       initial = config.hideOnCombat == true,
       onChange = function(value)
         onChange("hideOnCombat", value)
@@ -117,7 +126,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Double ESC to close"),
+      key = "doubleEscapeToClose",
+      labelKey = "Double ESC to close",
       initial = config.doubleEscapeToClose == true,
       onChange = function(value)
         onChange("doubleEscapeToClose", value)
@@ -128,7 +138,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Show group chats"),
+      key = "showGroupChats",
+      labelKey = "Show group chats",
       initial = config.showGroupChats ~= false,
       onChange = function(value)
         onChange("showGroupChats", value)
@@ -140,7 +151,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Put whispers from strangers in Requests"),
+      key = "requestsInbox",
+      labelKey = "Put whispers from strangers in Requests",
       initial = config.requestsInbox == true,
       onChange = function(value)
         onChange("requestsInbox", value)
@@ -153,7 +165,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Share typing status"),
+      key = "shareTypingStatus",
+      labelKey = "Share typing status",
       initial = config.shareTypingStatus ~= false,
       onChange = function(value)
         onChange("shareTypingStatus", value)
@@ -164,7 +177,8 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
     {
-      label = text("Send read receipts"),
+      key = "shareReadReceipts",
+      labelKey = "Send read receipts",
       initial = config.shareReadReceipts ~= false,
       onChange = function(value)
         onChange("shareReadReceipts", value)
@@ -175,6 +189,10 @@ function ToggleSpecs.Build(config, onChange)
       },
     },
   }
+  for _, spec in ipairs(specs) do
+    spec.label = text(spec.labelKey)
+  end
+  return specs
 end
 
 ns.MessengerWindowBehaviorToggleSpecs = ToggleSpecs
