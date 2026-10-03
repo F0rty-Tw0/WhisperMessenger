@@ -78,12 +78,12 @@ return function()
   local function countSeenScans(run)
     local original = Layout.SeenLabelIndex
     local calls = 0
-    Layout.SeenLabelIndex = function(...)
+    rawset(Layout, "SeenLabelIndex", function(...)
       calls = calls + 1
       return original(...)
-    end
+    end)
     run()
-    Layout.SeenLabelIndex = original
+    rawset(Layout, "SeenLabelIndex", original)
     return calls
   end
 

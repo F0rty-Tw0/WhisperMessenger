@@ -23,7 +23,7 @@ function WindowCoordinator.Create(options)
   options = options or {}
 
   local runtime = options.runtime or {}
-  local buildContacts = options.buildContacts or function()
+  local buildContacts = options.buildContacts or function(_dirtyKeys)
     return {}
   end
   local getWindow = options.getWindow or function()
