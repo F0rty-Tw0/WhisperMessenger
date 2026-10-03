@@ -252,6 +252,7 @@ local Korean = {
   ["Left instance"] = "인스턴스 떠남",
   ["Left raid"] = "공격대 떠남",
   ["Left group"] = "그룹 떠남",
+  ["Zone: %s"] = "지역: %s",
   ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "기본 인터페이스 변경에는 |cffffff00/reload|r가 필요합니다.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "새 기본 WoW 인터페이스 스타일을 적용하려면 지금 인터페이스를 다시 불러올까요?",
   -- Classes

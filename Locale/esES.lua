@@ -252,6 +252,7 @@ local Spanish = {
   ["Left instance"] = "Saliste de la instancia",
   ["Left raid"] = "Saliste de la banda",
   ["Left group"] = "Saliste del grupo",
+  ["Zone: %s"] = "Zona: %s",
   ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "El cambio de interfaz nativa requiere |cffffff00/reload|r.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "¿Recargar la interfaz ahora para aplicar el nuevo estilo de interfaz nativa de WoW?",
   -- Classes

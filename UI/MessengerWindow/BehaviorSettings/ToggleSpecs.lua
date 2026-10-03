@@ -20,6 +20,8 @@ ToggleSpecs.DEFAULTS = {
   hideOnCombat = false,
   shareTypingStatus = true,
   shareReadReceipts = true,
+  collapseDuplicates = true,
+  hideChannelsFromDefaultChat = true,
 }
 
 local function text(key)

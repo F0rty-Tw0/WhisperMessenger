@@ -252,6 +252,7 @@ local German = {
   ["Left instance"] = "Instanz verlassen",
   ["Left raid"] = "Schlachtzug verlassen",
   ["Left group"] = "Gruppe verlassen",
+  ["Zone: %s"] = "Zone: %s",
   ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "Änderung der nativen Oberfläche erfordert |cffffff00/reload|r.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Oberfläche jetzt neu laden, um den neuen nativen WoW-Oberflächenstil anzuwenden?",
   -- Classes

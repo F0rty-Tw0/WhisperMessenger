@@ -252,6 +252,7 @@ local French = {
   ["Left instance"] = "Instance quittée",
   ["Left raid"] = "Raid quitté",
   ["Left group"] = "Groupe quitté",
+  ["Zone: %s"] = "Zone : %s",
   ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "Le changement d'interface native nécessite |cffffff00/reload|r.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Recharger l'interface maintenant pour appliquer le nouveau style d'interface WoW native ?",
   -- Classes

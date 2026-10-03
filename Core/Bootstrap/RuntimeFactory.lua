@@ -89,6 +89,10 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   -- out while the player was offline.
   IgnoreList.Sweep(IgnoreList.Ensure(accountState), nowValue)
 
+  -- Channels the player turned into chats; none until picked in Options.
+  accountState.settings = accountState.settings or {}
+  accountState.settings.enabledChannels = accountState.settings.enabledChannels or {}
+
   -- Resolve local player identity for group-chat direction detection.
   -- UnitGUID("player") returns nil during very early load or in minimal test
   -- environments; pcall-guard and let it stay nil — direction falls back to

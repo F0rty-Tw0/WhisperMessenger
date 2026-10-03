@@ -26,4 +26,6 @@ return function()
   local fresh = { conversations = {} }
   RuntimeFactory.CreateRuntimeState(fresh, { activeConversationKey = nil }, "testplayer", {})
   assert(type(fresh.filters) == "table" and type(fresh.filters.ignored) == "table", "old saved variables get filters")
+  assert(type(fresh.settings) == "table" and type(fresh.settings.enabledChannels) == "table", "old saved variables get an empty channel picker")
+  assert(next(fresh.settings.enabledChannels) == nil, "no channel is a chat until the player turns it on")
 end
