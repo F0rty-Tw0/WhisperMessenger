@@ -37,7 +37,7 @@ function ToggleFlow.Create(options)
   local getWindow = options.getWindow or function()
     return nil
   end
-  local findLatestUnreadKey = options.findLatestUnreadKey or function()
+  local findLatestUnreadKey = options.findLatestUnreadKey or function(_accept)
     return nil
   end
   local selectConversation = options.selectConversation or function() end

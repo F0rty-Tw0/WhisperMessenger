@@ -28,7 +28,7 @@ end
 local function ingest(runtime, payload)
   local handled, conversation, meta = ChannelChatIngest.HandleEvent(runtime, payload)
   -- Unlike group chats, muting a channel silences mentions too.
-  if meta and meta.mention and not conversation.muted then
+  if meta and meta.mention and conversation and not conversation.muted then
     IncomingAlerts.Notify(runtime.accountState and runtime.accountState.settings)
   end
   -- Coalesced and keyed; the scheduler ignores lines while the window is hidden.
