@@ -6,8 +6,10 @@ local FiltersSettings = require("WhisperMessenger.UI.MessengerWindow.FiltersSett
 
 local HELP_TITLE = "How filters work"
 local HELP_LINES = {
-  "Ignored players: their whispers and their messages in group and channel chats are hidden from WhisperMessenger.",
-  "Keyword rules: hide matching messages in group and channel chats only, never whispers or your own messages.",
+  "Ignored players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too.",
+  "Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages.",
+  "Ready-made rules only filter channels such as Trade, never group chats.",
+  "WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP.",
   "gold + cheap: both words must appear, in any order.",
   "wts/wtb: either word is enough.",
   '"lf": whole word only, so "half" doesn\'t match.',
@@ -76,6 +78,7 @@ return function()
     assert(Localization.Text(HELP_TITLE) ~= HELP_TITLE, "help title has a German translation")
     assert(FindUI.text(result.frame, Localization.Text(HELP_TITLE)) ~= nil, "help title switches language")
     for _, line in ipairs(HELP_LINES) do
+      assert(Localization.Text(line) ~= line, "help line has a German translation: " .. line)
       assert(FindUI.text(result.frame, Localization.Text(line)) ~= nil, "help line switches language: " .. line)
     end
     assert(FindUI.text(result.frame, Localization.Text(CLICK_HINT)) ~= nil, "click hint switches language")
