@@ -103,6 +103,9 @@ local Layout = {
 
   -- Header
   HEADER_HEIGHT = 56,
+  -- The header grows with the font slider above the default size: three text
+  -- rows (name, status, detail) each grow 1px per font px plus line leading.
+  HEADER_GROWTH_PER_FONT_PX = 4,
   HEADER_ICON_SIZE = 32,
   -- Gap between the class icon and the name / status text.
   HEADER_NAME_GAP = 10,

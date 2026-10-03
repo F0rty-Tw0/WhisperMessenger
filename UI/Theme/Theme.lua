@@ -75,6 +75,11 @@ function Theme.FilterRowHeight()
   return Layout.FILTER_ROW_HEIGHT + grownFontPx() * Layout.FILTER_ROW_GROWTH_PER_FONT_PX
 end
 
+-- Conversation header height for the current font size. Never below the base.
+function Theme.HeaderHeight()
+  return Layout.HEADER_HEIGHT + grownFontPx() * Layout.HEADER_GROWTH_PER_FONT_PX
+end
+
 local BubbleColors = ns.ThemeBubbleColors
 if type(BubbleColors) ~= "table" and type(require) == "function" then
   local ok, mod = pcall(require, "WhisperMessenger.UI.Theme.BubbleColors")
