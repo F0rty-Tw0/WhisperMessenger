@@ -10,7 +10,16 @@ local PopupResolvers = ns.ChatBubbleContextMenuManualCopyPopupUIResolvers
 local PopupButtonStyling = ns.ChatBubbleContextMenuManualCopyPopupUIButtonStyling
   or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI.ButtonStyling")
 
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+
 local StyledTextInputPopup = {}
+
+-- Classic clients' StaticPopup widens the dialog from its current width when
+-- editBoxWidth is over 260, so a reused popup grows on every open; Retail
+-- widens from a fixed minimum. Read at call time.
+function StyledTextInputPopup.EditBoxWidth()
+  return FlavorCompat.isRetail and 340 or 260
+end
 
 -- Native WoW HUD: set once when the window is built (the setting applies after
 -- /reload). When true the popups keep Blizzard's StaticPopup art (dialog
@@ -32,7 +41,7 @@ StyledTextInputPopup.RESTORE_STYLE = { styleSecondaryButton = true, clearEditBox
 function StyledTextInputPopup.NewDialog()
   return {
     hasEditBox = true,
-    editBoxWidth = 340,
+    editBoxWidth = StyledTextInputPopup.EditBoxWidth(),
     timeout = 0,
     whileDead = true,
     hideOnEscape = true,

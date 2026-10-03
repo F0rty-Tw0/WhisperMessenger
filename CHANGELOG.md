@@ -24,6 +24,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: Opening the window now jumps to the newest unread chat on the tab you're looking at, instead of skipping it when an unread chat on another tab is newer.
 - Fixed: with the Native WoW HUD on, the Whispers, Groups and Channels tabs under the window are now the same size as the game's own window tabs instead of oversized. Unread counts sit on each tab's top corner.
 - Fixed: the tabs under the window now always fit its width, even with Requests turned on; a long tab name is shortened and shows in full when you point at it.
+- Fixed: on Classic game versions, text boxes in pop-ups (editing a filter rule, starting a whisper, copying a message) no longer stick out past the pop-up's edges, and the pop-up no longer gets wider each time it opens.
 - Fixed: on Classic game versions, the tabs under the window with the Native WoW HUD on were about twice as wide as they should be.
 
 ## [2.0.2] - 2026-10-02
