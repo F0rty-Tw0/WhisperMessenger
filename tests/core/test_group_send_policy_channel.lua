@@ -62,4 +62,17 @@ return function()
     end)
     assert(#sent == 0, "nothing is sent")
   end
+
+  -- test_other_characters_channel_chat_is_read_only
+  do
+    local sent = {}
+    local policy, conversation = makePolicy(sent)
+    conversation.conversationKey = "channel::thrall-draenor::trade"
+    conversation.ownerProfileId = "thrall-draenor"
+    withChannels(function()
+      return 2, "Trade", false
+    end, function()
+      assert(policy.getNotice(conversation) == "Another character's history — read-only.", "an alt's channel chat is read-only")
+    end)
+  end
 end

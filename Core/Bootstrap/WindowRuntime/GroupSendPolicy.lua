@@ -10,7 +10,7 @@ local Localization = ns.Localization or (type(require) == "function" and require
 
 local GroupSendPolicy = {}
 
-local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::" }
+local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::", "channel::" }
 
 local GROUP_REACTION_ADDON_PREFIX = "WMRX"
 local PENDING_MATCH_WINDOW_SECONDS = 15
