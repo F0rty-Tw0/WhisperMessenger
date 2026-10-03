@@ -36,6 +36,12 @@ return function()
   -- test_leading_spaces_are_skipped
   check("  anna", "AN")
 
+  -- test_leading_punctuation_in_a_word_is_skipped
+  check("Trade (Services)", "TS")
+
+  -- test_a_word_of_only_punctuation_is_ignored
+  check("Trade & Craft", "TC")
+
   -- test_empty_and_nil_give_empty_string
   check("", "")
   check("   ", "")
