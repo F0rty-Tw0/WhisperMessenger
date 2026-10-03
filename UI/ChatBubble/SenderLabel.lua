@@ -90,7 +90,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     timeStr = ns.TimeFormat.MessageTime(SenderLabel.ShownTimestamp(message)) or ""
   end
   if repeatCount > 1 then
-    timeStr = timeStr .. " ×" .. repeatCount
+    timeStr = timeStr .. " " .. UIHelpers.colorEscape(Theme.COLORS.accent) .. "×" .. repeatCount .. "|r"
   end
   local timeFS = ensureFontString(frame, "_wmSenderTimeFS")
   setFontObject(timeFS, Theme.FONTS.message_time)

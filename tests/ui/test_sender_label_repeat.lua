@@ -30,6 +30,16 @@ return function()
     assert(string.find(texts, "×3", 1, true), "collapsed row shows ×3, got: " .. texts)
   end
 
+  -- test_repeat_counter_uses_the_accent_color
+  do
+    local UIHelpers = require("WhisperMessenger.UI.Helpers")
+    local Theme = require("WhisperMessenger.UI.Theme")
+    local result = SenderLabel.CreateSenderLabel(factory, contentFrame, incoming(3), 400, 0)
+    local texts = labelTexts(result.frame)
+    local accent = UIHelpers.colorEscape(Theme.COLORS.accent)
+    assert(string.find(texts, accent .. "×3|r", 1, true), "the counter is accent-coloured, got: " .. texts)
+  end
+
   -- test_single_message_shows_no_counter
   do
     local result = SenderLabel.CreateSenderLabel(factory, contentFrame, incoming(nil), 400, 0)
