@@ -11,6 +11,7 @@ local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatc
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.IgnorePrompt")
+local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 
 local ContextMenu = {}
 
@@ -103,8 +104,7 @@ local function addRowActionButtons(rootDescription, item, rowActions)
   end
 end
 
--- "Ignore…" for WoW whisper rows only: Battle.net friends and group chats
--- are not a single character. rowActions.onIgnorePlayer(name, reason).
+-- "Ignore…" for WoW whisper rows only (Battle.net friends and groups aren't one character). rowActions.onIgnorePlayer(name, reason).
 local function addIgnoreButton(rootDescription, item, rowActions)
   local onIgnorePlayer = type(rowActions) == "table" and rowActions.onIgnorePlayer
   if type(onIgnorePlayer) ~= "function" or item.channel ~= "WOW" or item.displayName == nil then
@@ -112,7 +112,7 @@ local function addIgnoreButton(rootDescription, item, rowActions)
   end
   rootDescription:CreateButton(Localization.Text("Ignore…"), function()
     IgnorePrompt.AskReason(function(reason)
-      onIgnorePlayer(item.displayName, reason)
+      onIgnorePlayer(IgnoreList.CharacterName(item.displayName, item.guid), reason)
     end)
   end)
 end

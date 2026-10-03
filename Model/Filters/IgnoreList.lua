@@ -63,6 +63,23 @@ function IgnoreList.Key(name)
   return key
 end
 
+-- "Name-Realm" of the character behind guid when the client knows it, so a
+-- saved realm-less name can't be taken for a player on the current realm.
+-- Falls back to name.
+function IgnoreList.CharacterName(name, guid)
+  if type(guid) ~= "string" or type(_G.GetPlayerInfoByGUID) ~= "function" then
+    return name
+  end
+  local ok, _, _, _, _, _, guidName, realm = pcall(_G.GetPlayerInfoByGUID, guid)
+  if not ok or type(guidName) ~= "string" or guidName == "" then
+    return name
+  end
+  if type(realm) == "string" and realm ~= "" then
+    return guidName .. "-" .. gsub(realm, "%s", "")
+  end
+  return guidName
+end
+
 function IgnoreList.Ensure(accountState)
   local filters = accountState.filters
   if type(filters) ~= "table" then

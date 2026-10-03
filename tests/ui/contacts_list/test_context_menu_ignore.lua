@@ -82,6 +82,21 @@ return function()
   assert(ignored[1].name == "Arthas-Area52", "ignores the character, not the nickname")
   assert(ignored[1].reason == "spam", "trimmed reason passed on")
 
+  -- test_ignore_uses_the_character_behind_the_guid
+  local savedPlayerInfo = _G.GetPlayerInfoByGUID
+  rawset(_G, "GetPlayerInfoByGUID", function(guid)
+    if guid == "Player-3676-0A" then
+      return "Mage", "MAGE", "Human", "Human", 2, "Arthas", "Area 52"
+    end
+  end)
+  local saved = { channel = "WOW", displayName = "Boss", guid = "Player-3676-0A", conversationKey = "wow::WOW::boss" }
+  ContextMenu.Open(saved, anchor, nil, nil, rowActions)
+  root = newRoot()
+  modifiers["MENU_UNIT_FRIEND"](anchor, root, openedContext)
+  findButton(root, "Ignore…").callback()
+  rawset(_G, "GetPlayerInfoByGUID", savedPlayerInfo)
+  assert(ignored[2] and ignored[2].name == "Arthas-Area52", "ignores the character's full name, got " .. tostring(ignored[2] and ignored[2].name))
+
   -- test_battle_net_row_has_no_ignore
   local bnet = { channel = "BN", displayName = "Jaina", battleTag = "Jaina#1234", conversationKey = "bn::jaina" }
   ContextMenu.Open(bnet, anchor, nil, nil, rowActions)
