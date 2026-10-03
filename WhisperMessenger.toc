@@ -104,6 +104,7 @@ Core/Ingest/GroupChatIngest/Mention.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
+Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter.lua
