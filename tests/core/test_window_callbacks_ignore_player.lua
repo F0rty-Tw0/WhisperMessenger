@@ -61,5 +61,29 @@ return function()
     assert(refreshes == 0, "no refresh")
   end
 
+  -- test_unblock_player_removes_the_entry_and_resyncs
+  do
+    local refreshes, syncs = 0, 0
+    local accountState = {}
+    local callbacks = WindowCallbacks.Create({
+      runtime = {
+        syncChatFilters = function()
+          syncs = syncs + 1
+        end,
+      },
+      accountState = accountState,
+      characterState = {},
+      refreshWindow = function()
+        refreshes = refreshes + 1
+      end,
+    })
+    callbacks.onIgnorePlayer("Spammer-Realm", "spam")
+    assert(callbacks.isPlayerBlocked("Spammer-Realm") == true, "blocked after Block…")
+    callbacks.onUnblockPlayer("Spammer-Realm")
+    assert(accountState.filters.ignored["spammer-realm"] == nil, "entry removed")
+    assert(callbacks.isPlayerBlocked("Spammer-Realm") == false, "no longer blocked")
+    assert(syncs == 2 and refreshes == 2, "unblock resyncs chat filters and refreshes the window")
+  end
+
   rawset(_G, "time", nil)
 end

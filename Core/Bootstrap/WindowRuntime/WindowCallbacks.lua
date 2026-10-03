@@ -77,6 +77,14 @@ function WindowCallbacks.Create(options)
     return groupSendPolicy.getNotice(selectedContact.conversation or selectedContact) == nil
   end
 
+  -- The block list changed: hide or show the player in the game's chat too.
+  local function filtersChanged()
+    if runtime.syncChatFilters then
+      runtime.syncChatFilters()
+    end
+    refreshWindow()
+  end
+
   local function removeConversation(item)
     local key = item and item.conversationKey
     if key == nil then
@@ -253,11 +261,19 @@ function WindowCallbacks.Create(options)
     -- "Block…" from a contact row or a message.
     onIgnorePlayer = function(name, reason)
       if IgnoreList.Add(IgnoreList.Ensure(accountState), name, { reason = reason }) ~= nil then
-        if runtime.syncChatFilters then
-          runtime.syncChatFilters()
-        end
-        refreshWindow()
+        filtersChanged()
       end
+    end,
+
+    -- "Unblock" from a blocked player's contact row.
+    onUnblockPlayer = function(name)
+      IgnoreList.Remove(IgnoreList.Ensure(accountState), name)
+      filtersChanged()
+    end,
+
+    isPlayerBlocked = function(name)
+      local now = type(runtime.now) == "function" and runtime.now() or nil
+      return IgnoreList.Lookup(IgnoreList.Ensure(accountState), name, now) ~= nil
     end,
 
     onReorder = function(orders)

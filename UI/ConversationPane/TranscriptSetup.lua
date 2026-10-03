@@ -53,6 +53,8 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, options)
         and message.kind == "user"
         and type(message.playerName) == "string"
         and not string.find(message.playerName, "|K", 1, true)
+        -- Blocking again would drop a timed block's end date.
+        and not (type(options.isPlayerBlocked) == "function" and options.isPlayerBlocked(message.playerName) == true)
     end
     transcript.onIgnoreSender = function(message)
       IgnorePrompt.AskReason(function(reason)
@@ -66,6 +68,8 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, options)
       onMarkUnread = options.onMarkUnread,
       onUpdatePrefs = options.onUpdatePrefs,
       onIgnorePlayer = options.onIgnorePlayer,
+      isPlayerBlocked = options.isPlayerBlocked,
+      onUnblockPlayer = options.onUnblockPlayer,
     })
   end
 end

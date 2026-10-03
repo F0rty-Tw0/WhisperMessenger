@@ -148,6 +148,28 @@ return function()
     assert(opened.rowActions and opened.rowActions.onIgnorePlayer == onIgnorePlayer, "group senders get our Ignore… entry")
   end
 
+  -- test_channel_sender_menu_knows_who_is_blocked
+  do
+    local opened
+    local stub = {
+      Open = function(_item, _anchorFrame, _onMarkUnread, _onUpdatePrefs, rowActions)
+        opened = rowActions
+        return true
+      end,
+    }
+    local isPlayerBlocked, onUnblockPlayer = function() end, function() end
+    PlayerMenu.Open({ direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak" }, anchor, stub, {
+      contact = { channel = "CHANNEL" },
+      onIgnorePlayer = function() end,
+      isPlayerBlocked = isPlayerBlocked,
+      onUnblockPlayer = onUnblockPlayer,
+    })
+    assert(
+      opened.isPlayerBlocked == isPlayerBlocked and opened.onUnblockPlayer == onUnblockPlayer,
+      "a blocked sender gets Unblock, not Block… again"
+    )
+  end
+
   -- test_open_refuses_outgoing_messages
   -- You don't open a player menu on yourself.
   do

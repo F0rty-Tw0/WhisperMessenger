@@ -24,7 +24,8 @@ local function buildItem(message)
   }
 end
 
--- conversation (optional): { contact, onMarkUnread, onUpdatePrefs, onIgnorePlayer }. In a
+-- conversation (optional): { contact, onMarkUnread, onUpdatePrefs, onIgnorePlayer,
+-- isPlayerBlocked, onUnblockPlayer }. In a
 -- whisper conversation the sender is the selected contact, so the menu gets
 -- that contact and our entries; group senders get a bare item.
 function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
@@ -55,11 +56,15 @@ function PlayerMenu.Open(message, anchorFrame, contextMenu, conversation)
     return false
   end
 
-  -- Group and channel senders: our Ignore… entry.
+  -- Group and channel senders: our Block… entry, or Unblock when blocked.
   local rowActions = nil
   local onIgnorePlayer = type(conversation) == "table" and conversation.onIgnorePlayer or nil
   if type(onIgnorePlayer) == "function" and not isProtected then
-    rowActions = { onIgnorePlayer = onIgnorePlayer }
+    rowActions = {
+      onIgnorePlayer = onIgnorePlayer,
+      isPlayerBlocked = conversation.isPlayerBlocked,
+      onUnblockPlayer = conversation.onUnblockPlayer,
+    }
   end
   return CM.Open(buildItem(message), anchorFrame, nil, nil, rowActions) and true or false
 end

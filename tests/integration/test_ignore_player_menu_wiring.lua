@@ -26,6 +26,12 @@ return function()
       onIgnorePlayer = function(name, reason)
         ignored = { name = name, reason = reason }
       end,
+      onUnblockPlayer = function(name)
+        ignored = { unblocked = name }
+      end,
+      isPlayerBlocked = function(name)
+        return name == "Arthas"
+      end,
     })
   end
   local window = createWindow("whispers")
@@ -43,6 +49,9 @@ return function()
   assert(rowActions and type(rowActions.onIgnorePlayer) == "function", "row menu gets onIgnorePlayer")
   rowActions.onIgnorePlayer("Arthas", "spam")
   assert(ignored and ignored.name == "Arthas" and ignored.reason == "spam", "row callback reaches the window option")
+  assert(type(rowActions.isPlayerBlocked) == "function" and rowActions.isPlayerBlocked("Arthas") == true, "row menu can tell who is blocked")
+  rowActions.onUnblockPlayer("Arthas")
+  assert(ignored.unblocked == "Arthas", "unblock reaches the window option")
 
   -- test_channel_message_menu_offers_ignore_sender
   window = createWindow("groups")
@@ -66,4 +75,18 @@ return function()
   bubble.scripts.OnMouseDown(bubble, "RightButton")
   rawset(BubbleContextMenu, "Open", originalBubbleOpen)
   assert(menuOptions and type(menuOptions.onIgnoreSender) == "function", "message menu offers Ignore sender…")
+
+  -- test_sender_menu_receives_the_block_state
+  local PlayerMenu = require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
+  local senderConversation
+  local originalPlayerOpen = PlayerMenu.Open
+  rawset(PlayerMenu, "Open", function(_message, _anchor, _contextMenu, conversation)
+    senderConversation = conversation
+    return true
+  end)
+  window.conversation.transcript.openPlayerMenu(incoming, nil)
+  rawset(PlayerMenu, "Open", originalPlayerOpen)
+  assert(senderConversation and senderConversation.isPlayerBlocked("Arthas") == true, "sender menu can tell who is blocked")
+  senderConversation.onUnblockPlayer("Spammer-Realm")
+  assert(ignored.unblocked == "Spammer-Realm", "sender menu unblock reaches the window option")
 end

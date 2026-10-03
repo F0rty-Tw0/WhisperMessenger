@@ -74,6 +74,8 @@ function ContactsController.Create(factory, contactsView, initialContacts, optio
       end
     end,
     onIgnorePlayer = options.onIgnorePlayer,
+    onUnblockPlayer = options.onUnblockPlayer,
+    isPlayerBlocked = options.isPlayerBlocked,
     onDragStart = dragHandlers.handleDragStart,
     onDragStop = dragHandlers.handleDragStop,
   }

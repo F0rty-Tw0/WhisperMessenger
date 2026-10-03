@@ -193,6 +193,8 @@ function MessengerWindow.Create(factory, options)
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
     onIgnorePlayer = options.onIgnorePlayer,
+    onUnblockPlayer = options.onUnblockPlayer,
+    isPlayerBlocked = options.isPlayerBlocked,
     onReorder = options.onReorder,
     onAllContactsRefreshed = function(allContacts)
       chrome.setMarkAllReadShown(MarkAllReadButton.HasUnread(allContacts))
@@ -225,6 +227,8 @@ function MessengerWindow.Create(factory, options)
     onMarkUnread = options.onMarkUnread,
     onUpdatePrefs = options.onUpdatePrefs,
     onIgnorePlayer = options.onIgnorePlayer,
+    isPlayerBlocked = options.isPlayerBlocked,
+    onUnblockPlayer = options.onUnblockPlayer,
     hideEmptyHeader = nativeChrome,
     nativeChrome = nativeChrome,
   })

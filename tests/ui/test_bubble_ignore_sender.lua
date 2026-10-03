@@ -54,6 +54,43 @@ local function bindTranscript(channel, onIgnorePlayer)
   return { onIgnoreSender = transcript.onIgnoreSender, canIgnoreSender = transcript.canIgnoreSender }
 end
 
+-- test_sender_menu_gets_the_block_state (run from the main function)
+local function senderMenuGetsBlockState()
+  local PlayerMenu = require("WhisperMessenger.UI.ChatBubble.PlayerMenu")
+  local captured
+  local originalOpen = PlayerMenu.Open
+  rawset(PlayerMenu, "Open", function(_message, _anchor, _contextMenu, conversation)
+    captured = conversation
+    return true
+  end)
+  local transcript = {}
+  local options = {
+    onIgnorePlayer = function() end,
+    isPlayerBlocked = function() end,
+    onUnblockPlayer = function() end,
+  }
+  TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, options)
+  transcript.openPlayerMenu({ direction = "in", playerName = "Hilan" }, nil)
+  rawset(PlayerMenu, "Open", originalOpen)
+  assert(captured.isPlayerBlocked == options.isPlayerBlocked, "sender menu can tell who is blocked")
+  assert(captured.onUnblockPlayer == options.onUnblockPlayer, "sender menu can unblock")
+end
+
+-- test_blocked_sender_has_no_block_sender (run from the main function)
+local function blockedSenderHasNoBlockSender()
+  local transcript = {}
+  TranscriptSetup.BindPlayerMenu(transcript, { _selectedContact = { channel = "CHANNEL" } }, {
+    onIgnorePlayer = function() end,
+    isPlayerBlocked = function(name)
+      return name == "Spammer-Realm"
+    end,
+  })
+  local line = { direction = "in", kind = "user", playerName = "Spammer-Realm" }
+  assert(transcript.canIgnoreSender(line) == false, "re-blocking would turn a timed block into Forever")
+  line.playerName = "Hilan-Kazzak"
+  assert(transcript.canIgnoreSender(line) == true, "other senders keep Block sender…")
+end
+
 local function rightClick(factory, parent, message, bubbleOptions)
   bubbleOptions.persistentFactory = factory
   local bubble = BubbleFrame.CreateBubble(factory, parent, message, bubbleOptions)
@@ -61,6 +98,8 @@ local function rightClick(factory, parent, message, bubbleOptions)
 end
 
 return function()
+  senderMenuGetsBlockState()
+  blockedSenderHasNoBlockSender()
   Localization.Configure({ language = "enUS" })
   local factory = FakeUI.NewFactory()
   local savedUIParent = _G.UIParent
