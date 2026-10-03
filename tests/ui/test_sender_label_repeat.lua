@@ -37,6 +37,15 @@ return function()
     assert(not string.find(texts, "×", 1, true), "a single message shows no counter, got: " .. texts)
   end
 
+  -- test_time_shows_last_seen_only_for_repeats
+  do
+    assert(SenderLabel.ShownTimestamp(incoming(3)) == 1060, "a repeat shows its last-seen time")
+    assert(SenderLabel.ShownTimestamp(incoming(nil)) == 1000, "a single message shows its sent time")
+    local unstamped = incoming(2)
+    unstamped.lastSeenAt = nil
+    assert(SenderLabel.ShownTimestamp(unstamped) == 1000, "a repeat without a last-seen time falls back to sent time")
+  end
+
   -- test_repeat_inside_a_same_sender_run_keeps_its_label
   do
     local frame = factory.CreateFrame("Frame", nil, nil)

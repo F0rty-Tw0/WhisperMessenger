@@ -65,6 +65,14 @@ local function hideCached(frame, cacheKey)
   end
 end
 
+-- The label's time: a collapsed repeat shows when it was last seen.
+function SenderLabel.ShownTimestamp(message)
+  if (tonumber(message.repeatCount) or 1) > 1 and message.lastSeenAt ~= nil then
+    return message.lastSeenAt
+  end
+  return message.sentAt
+end
+
 function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth, yOffset, options)
   options = options or {}
   local frame = factory.CreateFrame("Frame", nil, contentFrame)
@@ -77,13 +85,9 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
 
   -- A collapsed repeat shows when it was last seen and how often ("×3").
   local repeatCount = tonumber(message.repeatCount) or 1
-  local shownAt = message.sentAt
-  if repeatCount > 1 then
-    shownAt = message.lastSeenAt or message.sentAt
-  end
   local timeStr = ""
   if ns.TimeFormat and ns.TimeFormat.MessageTime then
-    timeStr = ns.TimeFormat.MessageTime(shownAt) or ""
+    timeStr = ns.TimeFormat.MessageTime(SenderLabel.ShownTimestamp(message)) or ""
   end
   if repeatCount > 1 then
     timeStr = timeStr .. " ×" .. repeatCount
