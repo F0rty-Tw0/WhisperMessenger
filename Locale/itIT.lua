@@ -251,7 +251,6 @@ local Italian = {
   ["Left raid"] = "Hai lasciato l'incursione",
   ["Left group"] = "Hai lasciato il gruppo",
   ["Zone: %s"] = "Zona: %s",
-  ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "Il cambio dell'interfaccia nativa richiede |cffffff00/reload|r.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Ricaricare l'interfaccia ora per applicare il nuovo stile dell'interfaccia WoW nativa?",
   -- Classes
   ["WARRIOR"] = "Guerriero",

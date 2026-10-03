@@ -251,7 +251,6 @@ local TraditionalChinese = {
   ["Left raid"] = "離開團隊",
   ["Left group"] = "離開隊伍",
   ["Zone: %s"] = "區域：%s",
-  ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "變更原生介面需要 |cffffff00/reload|r。",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "現在重新載入介面以套用新的原生WoW介面樣式嗎？",
   -- Classes
   ["WARRIOR"] = "戰士",

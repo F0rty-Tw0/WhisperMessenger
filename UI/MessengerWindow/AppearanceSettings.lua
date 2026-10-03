@@ -257,6 +257,10 @@ function AppearanceSettings.Create(factory, parent, config, options)
     refreshLayout = refreshLayout,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
+    -- Shows a style on the picker without saving it (a cancelled reload).
+    setHudStyle = function(style)
+      hudStyleSelector.setSelected(style or hudDefault)
+    end,
   }
 end
 

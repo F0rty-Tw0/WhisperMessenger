@@ -60,6 +60,16 @@ function SettingsHandler.Create(options)
       end
       return
     end
+    -- Saved by HudStyleSetting only when the player reloads.
+    if key == "hudStyle" then
+      HudStyleSetting.Apply(accountSettings, value, function(savedStyle)
+        local appearance = runtime.window and runtime.window.appearanceSettings
+        if appearance and appearance.setHudStyle then
+          appearance.setHudStyle(savedStyle)
+        end
+      end)
+      return
+    end
     local persistedValue = value
     if key == "windowScale" and windowScale.Normalize then
       persistedValue = windowScale.Normalize(value)
@@ -237,10 +247,6 @@ function SettingsHandler.Create(options)
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end
-    end
-
-    if key == "hudStyle" then
-      HudStyleSetting.Apply(accountSettings, persistedValue)
     end
 
     local icon = getIcon()

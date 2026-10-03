@@ -251,7 +251,6 @@ local Russian = {
   ["Left raid"] = "Покинул рейд",
   ["Left group"] = "Покинул группу",
   ["Zone: %s"] = "Зона: %s",
-  ["Native WoW HUD change requires |cffffff00/reload|r to apply."] = "Для применения изменения интерфейса требуется |cffffff00/reload|r.",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Перезагрузить интерфейс сейчас, чтобы применить новый стиль стандартного интерфейса WoW?",
   -- Classes
   ["WARRIOR"] = "Воин",
