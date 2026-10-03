@@ -45,13 +45,16 @@ function TabSelectionMemory.Create(options)
       return
     end
 
+    -- A remembered chat that moved tabs (an accepted request now lives on
+    -- Whispers) is forgotten here, so the tab shows its empty state.
     for _, item in ipairs(getCurrentContacts() or {}) do
-      if item ~= nil and item.conversationKey == nextKey then
+      if item ~= nil and item.conversationKey == nextKey and contactsTabFilter.ModeOf(item) == newMode then
         handleContactSelected(item)
         return
       end
     end
 
+    tabSelections[newMode] = nil
     refreshSelection({})
   end
 
