@@ -36,7 +36,8 @@ function TranscriptSetup.BindMessageActions(transcript, view, onMessageAction)
 end
 
 -- Whisper chats have one other player, ignored from the contact row menu.
-local ONE_TO_ONE_CHANNELS = { WOW = true, BN = true }
+-- Battle.net conversation senders are accounts, not characters.
+local NO_IGNORE_SENDER_CHANNELS = { WOW = true, BN = true, BN_CONVERSATION = true }
 
 -- Sender name / portrait right-click: player menu for the selected contact,
 -- with the same Mark unread / prefs callbacks the contact rows use. Bubble
@@ -47,10 +48,11 @@ function TranscriptSetup.BindPlayerMenu(transcript, view, options)
     transcript.canIgnoreSender = function(message)
       local contact = view._selectedContact
       return contact ~= nil
-        and not ONE_TO_ONE_CHANNELS[contact.channel]
+        and not NO_IGNORE_SENDER_CHANNELS[contact.channel]
         and message.direction == "in"
         and message.kind == "user"
         and type(message.playerName) == "string"
+        and not string.find(message.playerName, "|K", 1, true)
     end
     transcript.onIgnoreSender = function(message)
       IgnorePrompt.AskReason(function(reason)

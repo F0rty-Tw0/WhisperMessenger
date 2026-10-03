@@ -105,6 +105,22 @@ return function()
     assert(menuButton(menu, "Ignore sender…") == nil, "whisper chats use the contact menu instead")
   end
 
+  -- test_bnet_conversation_has_no_ignore_sender
+  do
+    local menu = stubMenuUtil()
+    local line = { direction = "in", kind = "user", text = "hi", playerName = "Jaina-Realm", channel = "BN_CONVERSATION" }
+    rightClick(factory, parent, line, bindTranscript("BN_CONVERSATION", onIgnorePlayer))
+    assert(menuButton(menu, "Ignore sender…") == nil, "Battle.net conversation senders are not characters")
+  end
+
+  -- test_bnet_token_sender_has_no_ignore_sender
+  do
+    local menu = stubMenuUtil()
+    local line = { direction = "in", kind = "user", text = "hi", playerName = "|Kq12|k", channel = "GUILD" }
+    rightClick(factory, parent, line, bindTranscript("GUILD", onIgnorePlayer))
+    assert(menuButton(menu, "Ignore sender…") == nil, "a Battle.net name token is not a character name")
+  end
+
   rawset(_G, "MenuUtil", nil)
   _G.StaticPopupDialogs = nil
   rawset(_G, "StaticPopup_Show", nil)
