@@ -1,4 +1,6 @@
 local ChatFilters = require("WhisperMessenger.Core.Bootstrap.ChatFilters")
+local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
+local RulePresets = require("WhisperMessenger.Model.Filters.RulePresets")
 
 -- The channel, say, yell and emote filters register only while something can
 -- be hidden, and never in restricted content. Whisper events only ever get
@@ -11,7 +13,7 @@ local WHISPER_EVENTS = {
 }
 
 local function setup(settings, filterState)
-  local active, log = {}, {}
+  local active, log, removes = {}, {}, {}
   local savedUtil = rawget(_G, "ChatFrameUtil")
   rawset(_G, "ChatFrameUtil", {
     AddMessageEventFilter = function(event, fn)
@@ -19,6 +21,7 @@ local function setup(settings, filterState)
       log[#log + 1] = { event = event, fn = fn }
     end,
     RemoveMessageEventFilter = function(event, fn)
+      removes[#removes + 1] = event
       if active[event] == fn then
         active[event] = nil
       end
@@ -31,7 +34,7 @@ local function setup(settings, filterState)
   local function restore()
     rawset(_G, "ChatFrameUtil", savedUtil)
   end
-  return Bootstrap, active, log, restore, accountState
+  return Bootstrap, active, log, restore, accountState, removes
 end
 
 local function run(fn)
@@ -153,5 +156,52 @@ return function()
     Bootstrap.unregisterChatFilters()
     restore()
     assert(next(active) == nil, "no filter stays registered after unregister")
+  end)
+  -- test_whisper_hiding_off_keeps_conditional_filters_in_place
+  -- Turning off whisper hiding only drops the whisper filters; the channel
+  -- and speech filters stay registered without a remove and re-add.
+  run(function()
+    local Bootstrap, active, log, restore, accountState, removes = setup(
+      { hideFromDefaultChat = true },
+      { ignored = { ["spammer-realm"] = { name = "Spammer-Realm" } }, rules = {} }
+    )
+    Bootstrap.syncChatFilters()
+    local channelFilter = active.CHAT_MSG_CHANNEL
+    local addsBefore = #log
+    accountState.settings.hideFromDefaultChat = false
+    Bootstrap.syncChatFilters()
+    restore()
+    assert(active.CHAT_MSG_WHISPER == nil, "the whisper filter is removed")
+    assert(active.CHAT_MSG_CHANNEL == channelFilter and active.CHAT_MSG_SAY ~= nil, "conditional filters stay registered")
+    assert(#log == addsBefore, "nothing is added again, got " .. (#log - addsBefore))
+    for _, event in ipairs(removes) do
+      assert(event ~= "CHAT_MSG_CHANNEL" and event ~= "CHAT_MSG_SAY", event .. " was removed")
+    end
+  end)
+
+  -- test_resume_after_mythic_re_registers_conditional_filters
+  run(function()
+    local Bootstrap, active, _, restore = setup({}, { ignored = { ["spammer-realm"] = { name = "Spammer-Realm" } }, rules = {} })
+    local runtime = {}
+    MythicSuspendController.Attach(runtime, { Bootstrap = Bootstrap })
+    Bootstrap.syncChatFilters()
+    runtime.suspend()
+    local suspendedEmpty = next(active) == nil
+    runtime.resume()
+    rawset(_G, "_wmSuspended", nil)
+    restore()
+    assert(suspendedEmpty, "Mythic+ drops every filter")
+    assert(active.CHAT_MSG_CHANNEL ~= nil and active.CHAT_MSG_SAY ~= nil, "resume registers the conditional filters again")
+  end)
+
+  -- test_ready_made_rules_register_the_channel_filter
+  run(function()
+    local state = { ignored = {}, rules = {} }
+    RulePresets.Seed(state)
+    local Bootstrap, active, _, restore = setup({}, state)
+    Bootstrap.syncChatFilters()
+    restore()
+    assert(active.CHAT_MSG_CHANNEL ~= nil, "the ready-made rules on by default still filter channels")
+    assert(active.CHAT_MSG_SAY == nil, "ready-made rules never hide say")
   end)
 end

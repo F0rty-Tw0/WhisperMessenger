@@ -47,12 +47,7 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
     Bootstrap._filtersRegistered = true
   end
 
-  -- Drops every filter. Mythic+ suspend calls this without a resync, so the
-  -- conditional filters go too, even when the whisper ones were never on.
-  Bootstrap.unregisterChatFilters = function()
-    if conditional then
-      conditional.Sync(false)
-    end
+  local function unregisterWhisperFilters()
     if not Bootstrap._filtersRegistered then
       return
     end
@@ -65,6 +60,15 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
     Bootstrap._filtersRegistered = false
   end
 
+  -- Drops every filter. Mythic+ suspend calls this without a resync, so the
+  -- conditional filters go too, even when the whisper ones were never on.
+  Bootstrap.unregisterChatFilters = function()
+    if conditional then
+      conditional.Sync(false)
+    end
+    unregisterWhisperFilters()
+  end
+
   Bootstrap.syncChatFilters = function()
     local allowed = not Bootstrap._inCompetitiveContent and not Bootstrap._inMythicContent and not Bootstrap._inEncounter and not _G._wmSuspended
     local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed
@@ -72,7 +76,7 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
     if shouldFilter and not Bootstrap._filtersRegistered then
       Bootstrap.registerChatFilters()
     elseif not shouldFilter and Bootstrap._filtersRegistered then
-      Bootstrap.unregisterChatFilters()
+      unregisterWhisperFilters()
     end
 
     if conditional then
