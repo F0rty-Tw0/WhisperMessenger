@@ -126,6 +126,23 @@ return function()
     assert(lookups == 0, "no ignore lookup runs while the list is empty, got " .. lookups)
   end
 
+  -- test_disabled_rules_skip_matching
+  do
+    local runtime, filters = makeRuntime()
+    KeywordRules.Add(filters, "wts boost")
+    KeywordRules.SetEnabled(filters, 1, false)
+    local realMatch = KeywordRules.Match
+    local matches = 0
+    rawset(KeywordRules, "Match", function(...)
+      matches = matches + 1
+      return realMatch(...)
+    end)
+    local decision = IncomingFilter.Evaluate(runtime, "channel", "Seller", "wts boost", 111, "Trade")
+    rawset(KeywordRules, "Match", realMatch)
+    assert(decision == "pass", "a disabled rule blocks nothing")
+    assert(matches == 0, "no rule matching runs while every rule is off, got " .. matches)
+  end
+
   -- test_missing_filters_pass
   do
     assert(IncomingFilter.Evaluate({ accountState = {} }, "channel", "Spammer", "spam", 108, "Trade") == "pass", "no filters state passes")

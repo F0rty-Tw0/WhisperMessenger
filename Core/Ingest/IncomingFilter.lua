@@ -11,8 +11,10 @@ local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger
 -- Decides whether an incoming line reaches the store: ignore list first (every
 -- kind), then keyword rules (group and channel lines only). Several chat
 -- frames see the same line, so each decision is cached by lineID in a fixed
--- ring and its counters move once. Nothing here allocates per line beyond
--- lowercasing the text once.
+-- ring and its counters move once. Per line, the ignore lookup builds one
+-- name-realm key while the ignore list is non-empty, and rule matching makes
+-- one lowercased copy of the text while a rule is enabled. Nothing else
+-- allocates.
 local IncomingFilter = {}
 
 local PASS = "pass"
@@ -22,6 +24,7 @@ local RING_SIZE = 64
 
 local lower = string.lower
 local next = next
+local ipairs = ipairs
 
 local ringIds = {}
 local ringDecisions = {}
@@ -57,6 +60,15 @@ local function remember(lineID, decision)
   ringDecisions[cursor] = decision
 end
 
+local function hasEnabledRule(rules)
+  for _, rule in ipairs(rules) do
+    if rule.enabled then
+      return true
+    end
+  end
+  return false
+end
+
 local function decide(runtime, kind, playerName, text, channelLabel)
   local filters = runtime and runtime.accountState and runtime.accountState.filters
   if type(filters) ~= "table" then
@@ -74,7 +86,7 @@ local function decide(runtime, kind, playerName, text, channelLabel)
     end
   end
 
-  if kind == "whisper" or type(filters.rules) ~= "table" or next(filters.rules) == nil then
+  if kind == "whisper" or type(filters.rules) ~= "table" or not hasEnabledRule(filters.rules) then
     return PASS
   end
   local rule = KeywordRules.Match(filters, lower(text))
