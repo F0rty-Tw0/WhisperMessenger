@@ -401,6 +401,19 @@ local Spanish = {
   ["Edit this list in Options > Behavior."] = "Edita esta lista en Opciones > Comportamiento.",
   -- Whispers options page
   ["Control how whispers behave."] = "Controla el comportamiento de los susurros.",
+  -- Chats options page
+  ["Chats"] = "Chats",
+  ["Choose which group chats and channels appear."] = "Elige qué chats de grupo y canales aparecen.",
+  ["Hide channels from default chat"] = "Ocultar canales del chat predeterminado",
+  ["Collapse repeated messages"] = "Agrupar mensajes repetidos",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "Cuando un jugador repite un mensaje en un canal, se muestra una vez con un contador.",
+  ["Channels"] = "Canales",
+  ["Trade"] = "Comercio",
+  ["Trade (Services)"] = "Comercio (Servicios)",
+  ["Local Defense"] = "Defensa local",
+  ["World Defense"] = "Defensa general",
+  ["Looking for Group"] = "Buscar grupo",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Para ocultar un canal del chat del juego, haz clic derecho en la pestaña del chat, abre Configuración y desmárcalo.",
 }
 
 ns.Locale_esES = Spanish

@@ -1,6 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
-local ToggleSwitch = require("WhisperMessenger.UI.Helpers.ToggleSwitch")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local WhispersSettings = require("WhisperMessenger.UI.MessengerWindow.WhispersSettings")
 local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
@@ -13,20 +12,6 @@ local WHISPER_LABELS = {
   "Share typing status",
   "Send read receipts",
 }
-
-local function countToggles(root)
-  local count = 0
-  local function walk(node)
-    for _, child in ipairs(node.children or {}) do
-      if child.texturePath == ToggleSwitch.KNOB_TEXTURE and child.width == ToggleSwitch.KNOB_SIZE then
-        count = count + 1
-      end
-      walk(child)
-    end
-  end
-  walk(root)
-  return count
-end
 
 local function create(config)
   local factory = FakeUI.NewFactory()
@@ -49,7 +34,7 @@ return function()
     for _, label in ipairs(WHISPER_LABELS) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "missing whisper toggle: " .. label)
     end
-    assert(countToggles(result.frame) == #WHISPER_LABELS, "expected 6 toggles, got " .. countToggles(result.frame))
+    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 6 toggles, got " .. FindUI.countToggles(result.frame))
   end
 
   -- test_behavior_no_longer_shows_whisper_toggles

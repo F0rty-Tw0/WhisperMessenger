@@ -401,6 +401,19 @@ local German = {
   ["Edit this list in Options > Behavior."] = "Diese Liste unter Optionen > Verhalten bearbeiten.",
   -- Whispers options page
   ["Control how whispers behave."] = "Lege fest, wie sich Flüsternachrichten verhalten.",
+  -- Chats options page
+  ["Chats"] = "Chats",
+  ["Choose which group chats and channels appear."] = "Lege fest, welche Gruppenchats und Kanäle angezeigt werden.",
+  ["Hide channels from default chat"] = "Kanäle im Standardchat ausblenden",
+  ["Collapse repeated messages"] = "Wiederholte Nachrichten zusammenfassen",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "Wiederholt ein Spieler eine Nachricht in einem Kanal, erscheint sie einmal mit einem Zähler.",
+  ["Channels"] = "Kanäle",
+  ["Trade"] = "Handel",
+  ["Trade (Services)"] = "Handel (Dienstleistungen)",
+  ["Local Defense"] = "Lokale Verteidigung",
+  ["World Defense"] = "Weltverteidigung",
+  ["Looking for Group"] = "Gruppensuche",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Um einen Kanal im Spielchat auszublenden, klicke mit der rechten Maustaste auf den Chatreiter, öffne die Einstellungen und entferne das Häkchen.",
 }
 
 ns.Locale_deDE = German

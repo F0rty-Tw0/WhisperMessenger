@@ -401,6 +401,19 @@ local Korean = {
   ["Edit this list in Options > Behavior."] = "옵션 > 동작에서 이 목록을 편집할 수 있습니다.",
   -- Whispers options page
   ["Control how whispers behave."] = "귓속말 동작을 설정합니다.",
+  -- Chats options page
+  ["Chats"] = "채팅",
+  ["Choose which group chats and channels appear."] = "표시할 그룹 채팅과 채널을 선택합니다.",
+  ["Hide channels from default chat"] = "기본 채팅에서 채널 숨기기",
+  ["Collapse repeated messages"] = "반복 메시지 묶기",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "플레이어가 채널에서 같은 메시지를 반복하면 횟수와 함께 한 번만 표시됩니다.",
+  ["Channels"] = "채널",
+  ["Trade"] = "거래",
+  ["Trade (Services)"] = "거래 (서비스)",
+  ["Local Defense"] = "지역방어",
+  ["World Defense"] = "전쟁",
+  ["Looking for Group"] = "파티찾기",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "게임 채팅에서 채널을 숨기려면 채팅 탭을 마우스 오른쪽 버튼으로 클릭하고 설정을 연 다음 선택을 해제하세요.",
 }
 
 ns.Locale_koKR = Korean

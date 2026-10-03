@@ -235,7 +235,6 @@ return function()
     assert(texts["Поведение"], "Russian behavior panel should translate title")
     assert(texts["Настройте поведение окна мессенджера."], "Russian behavior panel should translate hint")
     assert(FindUI.toggle(result.frame, "Автофокус ввода чата") ~= nil, "Auto-focus toggle should be localized")
-    assert(FindUI.toggle(result.frame, "Показывать групповые чаты") ~= nil, "Group chats toggle should be localized")
     assert(FindUI.byLabel(result.frame, "Сбросить настройки").frameType == "Button", "Reset button should be localized")
     Localization.Configure({ language = "enUS" })
   end

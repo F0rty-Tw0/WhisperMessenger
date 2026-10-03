@@ -196,6 +196,7 @@ function SettingsHandler.Create(options)
         or key == "timeFormat"
         or key == "timeSource"
         or key == "interfaceLanguage"
+        or key == "enabledChannels"
       ) and runtime.refreshWindow
     then
       runtime.refreshWindow()

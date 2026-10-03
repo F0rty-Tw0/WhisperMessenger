@@ -14,10 +14,7 @@ ToggleSpecs.DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
   doubleEscapeToClose = false,
-  showGroupChats = true,
   hideOnCombat = false,
-  collapseDuplicates = true,
-  hideChannelsFromDefaultChat = true,
 }
 
 local function text(key)
@@ -96,19 +93,6 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Double ESC to close"),
         text("First Esc clears the chat input; second Esc closes the window."),
-      },
-    },
-    {
-      key = "showGroupChats",
-      labelKey = "Show group chats",
-      initial = config.showGroupChats ~= false,
-      onChange = function(value)
-        onChange("showGroupChats", value)
-      end,
-      tooltipLines = {
-        text("Show group chats"),
-        text("Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."),
-        text("When off, only whispers appear."),
       },
     },
   }

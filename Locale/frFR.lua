@@ -401,6 +401,19 @@ local French = {
   ["Edit this list in Options > Behavior."] = "Modifiez cette liste dans Options > Comportement.",
   -- Whispers options page
   ["Control how whispers behave."] = "Réglez le comportement des chuchotements.",
+  -- Chats options page
+  ["Chats"] = "Discussions",
+  ["Choose which group chats and channels appear."] = "Choisissez les discussions de groupe et les canaux affichés.",
+  ["Hide channels from default chat"] = "Masquer les canaux dans la discussion par défaut",
+  ["Collapse repeated messages"] = "Regrouper les messages répétés",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "Quand un joueur répète un message dans un canal, il s'affiche une seule fois avec un compteur.",
+  ["Channels"] = "Canaux",
+  ["Trade"] = "Commerce",
+  ["Trade (Services)"] = "Commerce (Services)",
+  ["Local Defense"] = "Défense locale",
+  ["World Defense"] = "Défense universelle",
+  ["Looking for Group"] = "Recherche de groupe",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Pour masquer un canal dans la discussion du jeu, faites un clic droit sur l'onglet, ouvrez Paramètres et décochez-le.",
 }
 
 ns.Locale_frFR = French

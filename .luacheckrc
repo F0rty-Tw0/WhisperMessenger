@@ -140,6 +140,8 @@ read_globals = {
   "ChatEdit_DeactivateChat",
   "ChatEdit_UpdateHeader",
   "ChatFrameUtil",
+  "EnumerateServerChannels",
+  "GetChannelList",
   "ChatFrame_OpenChat",
   "ChatFrame_ReplyTell",
   "ChatFrame_SendBNetTell",

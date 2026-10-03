@@ -401,6 +401,19 @@ local Russian = {
   ["Edit this list in Options > Behavior."] = "Список можно изменить в разделе Параметры > Поведение.",
   -- Whispers options page
   ["Control how whispers behave."] = "Настройте поведение шепота.",
+  -- Chats options page
+  ["Chats"] = "Чаты",
+  ["Choose which group chats and channels appear."] = "Выберите, какие групповые чаты и каналы показывать.",
+  ["Hide channels from default chat"] = "Скрывать каналы из стандартного чата",
+  ["Collapse repeated messages"] = "Сворачивать повторяющиеся сообщения",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "Если игрок повторяет сообщение в канале, оно показывается один раз со счетчиком.",
+  ["Channels"] = "Каналы",
+  ["Trade"] = "Торговля",
+  ["Trade (Services)"] = "Торговля (услуги)",
+  ["Local Defense"] = "Оборона: локальный",
+  ["World Defense"] = "Оборона: глобальный",
+  ["Looking for Group"] = "Поиск спутников",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Чтобы скрыть канал из игрового чата, щелкните правой кнопкой по вкладке чата, откройте настройки и снимите флажок.",
 }
 
 ns.Locale_ruRU = Russian

@@ -401,6 +401,19 @@ local Portuguese = {
   ["Edit this list in Options > Behavior."] = "Edite esta lista em Opções > Comportamento.",
   -- Whispers options page
   ["Control how whispers behave."] = "Controle como os sussurros se comportam.",
+  -- Chats options page
+  ["Chats"] = "Bate-papos",
+  ["Choose which group chats and channels appear."] = "Escolha quais bate-papos de grupo e canais aparecem.",
+  ["Hide channels from default chat"] = "Ocultar canais do bate-papo padrão",
+  ["Collapse repeated messages"] = "Agrupar mensagens repetidas",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "Quando um jogador repete uma mensagem em um canal, ela aparece uma vez com um contador.",
+  ["Channels"] = "Canais",
+  ["Trade"] = "Comércio",
+  ["Trade (Services)"] = "Comércio (Serviços)",
+  ["Local Defense"] = "Defesa Local",
+  ["World Defense"] = "Defesa Global",
+  ["Looking for Group"] = "Procurando Grupo",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "Para ocultar um canal do bate-papo do jogo, clique com o botão direito na aba do bate-papo, abra Configurações e desmarque-o.",
 }
 
 ns.Locale_ptBR = Portuguese

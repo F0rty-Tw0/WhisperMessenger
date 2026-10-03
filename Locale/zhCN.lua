@@ -401,6 +401,19 @@ local SimplifiedChinese = {
   ["Edit this list in Options > Behavior."] = "可在“选项 > 行为”中编辑此列表。",
   -- Whispers options page
   ["Control how whispers behave."] = "控制密语的行为。",
+  -- Chats options page
+  ["Chats"] = "聊天",
+  ["Choose which group chats and channels appear."] = "选择显示哪些群组聊天和频道。",
+  ["Hide channels from default chat"] = "在默认聊天中隐藏频道",
+  ["Collapse repeated messages"] = "合并重复消息",
+  ["When a player repeats a message in a channel, it shows once with a count."] = "玩家在频道中重复发送的消息只显示一次，并附带次数。",
+  ["Channels"] = "频道",
+  ["Trade"] = "交易",
+  ["Trade (Services)"] = "交易（服务）",
+  ["Local Defense"] = "本地防务",
+  ["World Defense"] = "世界防务",
+  ["Looking for Group"] = "寻求组队",
+  ["To hide a channel from the game's chat, right-click the chat tab, open Settings and untick it."] = "要在游戏聊天中隐藏频道，请右键点击聊天标签，打开设置并取消勾选。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese
