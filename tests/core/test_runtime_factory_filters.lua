@@ -21,6 +21,7 @@ return function()
   assert(accountState.filters.ignored.expired == nil, "an entry that expired offline is swept at load")
   assert(accountState.filters.ignored.forever ~= nil, "a forever entry stays")
   assert(type(accountState.filters.rules) == "table", "missing keyword rules are backfilled")
+  assert(accountState.filters.rules[1] ~= nil and accountState.filters.rules[1].presetId ~= nil, "preset rules are seeded at load")
   assert(type(runtime.collapseIndex) == "table" and next(runtime.collapseIndex) == nil, "the collapse index starts empty")
 
   local Store = require("WhisperMessenger.Model.ConversationStore")

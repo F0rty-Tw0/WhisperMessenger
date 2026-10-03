@@ -11,6 +11,7 @@ local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdent
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
+local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local RuntimeFactory = {}
 
 local function currentTime()
@@ -87,7 +88,9 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
 
   -- Ignore entries expire lazily; this login sweep drops the ones that ran
   -- out while the player was offline.
-  IgnoreList.Sweep(IgnoreList.Ensure(accountState), nowValue)
+  local filters = IgnoreList.Ensure(accountState)
+  IgnoreList.Sweep(filters, nowValue)
+  RulePresets.Seed(filters)
 
   -- Channels the player turned into chats; none until picked in Options.
   accountState.settings = accountState.settings or {}
