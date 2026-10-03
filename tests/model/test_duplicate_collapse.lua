@@ -73,6 +73,16 @@ return function()
     assert(hit == nil, "a trimmed message is never a collapse target")
   end
 
+  -- test_same_second_burst_repeat_collapses
+  do
+    local state = Store.New({ maxMessagesPerConversation = 50 })
+    local index = {}
+    ingest(state, index, incoming("b", "Other", "LFM heroic", 10))
+    local a = ingest(state, index, incoming("a", "Spammer", "WTS boost", 10))
+    assert(ingest(state, index, incoming("a2", "Spammer", "WTS boost", 10)) == a, "a repeat in the oldest row's second collapses")
+    assert(#state.conversations[KEY].messages == 2, "the burst repeat adds no row")
+  end
+
   -- test_fresh_index_rebuilds_from_stored_conversation (Review Focus 2)
   do
     local state = Store.New({ maxMessagesPerConversation = 50 })

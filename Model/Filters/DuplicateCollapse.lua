@@ -68,14 +68,29 @@ local function isOverfull(entries, conversation)
   return (entryCounts[entries] or 0) > math.max(MIN_PRUNE_AT, 2 * retained)
 end
 
--- A remembered message is still in the conversation only while it is the
--- oldest retained row or newer than it; anything else was trimmed.
+-- A remembered message is still in the conversation while it is newer than
+-- the oldest retained row. One from that row's second is retained only if
+-- it is among the rows of that second; a trimmed one from it is not.
 local function isRetained(message, conversation)
-  local oldest = conversation.messages and conversation.messages[1]
+  local messages = conversation.messages
+  local oldest = messages and messages[1]
   if oldest == nil then
     return false
   end
-  return message == oldest or (tonumber(message.sentAt) or 0) > (tonumber(oldest.sentAt) or 0)
+  local sentAt = tonumber(message.sentAt) or 0
+  local oldestAt = tonumber(oldest.sentAt) or 0
+  if sentAt ~= oldestAt then
+    return sentAt > oldestAt
+  end
+  for _, row in ipairs(messages) do
+    if row == message then
+      return true
+    end
+    if (tonumber(row.sentAt) or 0) ~= oldestAt then
+      return false
+    end
+  end
+  return false
 end
 
 -- Drops entries whose message was trimmed. Reads only the stored keys, so
