@@ -181,4 +181,17 @@ return function()
     rawset(_G, "UnitName", savedUnitName)
     assert(conversation.unreadCount == 1, "a line naming the player is unread, got " .. tostring(conversation.unreadCount))
   end
+
+  -- test_channel_line_carries_sender_class
+  do
+    local state = makeState()
+    state.playerInfoByGUID = function(guid)
+      if guid == "Player-1-Seller" then
+        return "Mage", "MAGE", "Human", "Human"
+      end
+    end
+    local conversation = ingested(state, tradeLine("WTS ore", "Seller", 9117))
+    assert(conversation.messages[1].classTag == "MAGE", "the bubble gets the sender's class")
+    assert(conversation.classTag == nil, "the channel chat itself takes no sender class")
+  end
 end

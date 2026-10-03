@@ -10,6 +10,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local DuplicateCollapse = ns.DuplicateCollapse or require("WhisperMessenger.Model.Filters.DuplicateCollapse")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
+local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
@@ -28,7 +29,11 @@ local EVENT_NAME = "CHAT_MSG_CHANNEL"
 -- Tells the router a mention arrived so it can alert. Read-only, shared.
 local MENTION_META = { mention = true }
 
-local function buildMessage(payload, direction, sentAt)
+-- Shared and read-only, so a line without player info allocates nothing.
+local NO_PLAYER_INFO = {}
+
+local function buildMessage(payload, direction, sentAt, playerInfo)
+  playerInfo = playerInfo or NO_PLAYER_INFO
   local message = {
     id = tostring(payload.lineID or sentAt),
     direction = direction,
@@ -39,10 +44,15 @@ local function buildMessage(payload, direction, sentAt)
     guid = payload.guid,
     playerName = payload.playerName,
     channel = CHANNEL,
+    -- Class icon and colour for the bubble, as on group lines.
+    className = playerInfo.className,
+    classTag = playerInfo.classTag,
+    raceName = playerInfo.raceName,
+    raceTag = playerInfo.raceTag,
   }
   if direction == "out" then
     -- Same frozen sender fields as the player's own group lines.
-    message.senderClassTag = LocalPlayer.ClassTag()
+    message.senderClassTag = playerInfo.classTag or LocalPlayer.ClassTag()
     message.senderName = LocalPlayer.Name()
   elseif Mention.Matches(payload.text, Mention.PlayerName()) then
     message.mention = true
@@ -134,7 +144,8 @@ function ChannelChatIngest.HandleEvent(state, payload)
 
   local zoneLabel = ChannelKey.ZoneLabel(payload.channelName)
   appendZoneDivider(state, key, conversation, zoneLabel, sentAt)
-  local message = buildMessage(payload, isSelf and "out" or "in", sentAt)
+  local playerInfo = BNetResolver.ResolvePlayerInfo(state.playerInfoByGUID, payload.guid)
+  local message = buildMessage(payload, isSelf and "out" or "in", sentAt, playerInfo)
   if isSelf then
     Store.AppendOutgoing(state.store, key, message)
   else

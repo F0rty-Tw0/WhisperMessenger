@@ -20,9 +20,17 @@ return function()
       playerName = "Seller-Area52",
       guid = "Player-1-SELLER",
       channel = "CHANNEL",
+      className = "Mage",
+      classTag = "MAGE",
+      raceName = "Human",
+      raceTag = "Human",
+      factionName = "Alliance",
     }, false)
     assert(conversation.displayName == "Trade", "the sender does not rename the channel chat, got " .. tostring(conversation.displayName))
     assert(conversation.guid == nil, "the channel chat takes no sender guid")
+    assert(conversation.classTag == nil and conversation.className == nil, "the channel chat takes no sender class")
+    assert(conversation.raceTag == nil and conversation.raceName == nil, "the channel chat takes no sender race")
+    assert(conversation.factionName == nil, "the channel chat takes no sender faction")
   end
 
   -- test_whisper_line_still_updates_contact
