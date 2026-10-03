@@ -149,6 +149,14 @@ return function()
     assert(conversation.messages[1].direction == "out", "the player's own channel line is stored as sent")
   end
 
+  -- test_own_repeated_line_does_not_collapse
+  do
+    local state = makeState()
+    ChannelChatIngest.HandleEvent(state, tradeLine("LF tailor", "Arthas", 9118, "Player-1-SELF"))
+    local conversation = ingested(state, tradeLine("LF tailor", "Arthas", 9119, "Player-1-SELF"))
+    assert(#conversation.messages == 2, "the player's own repeat is its own row, got " .. #conversation.messages)
+  end
+
   -- test_contacts_list_includes_channel_for_owner
   do
     local state = makeState()
