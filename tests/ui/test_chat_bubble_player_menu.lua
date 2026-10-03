@@ -195,4 +195,67 @@ return function()
     -- test sandbox, Open should fail gracefully instead of erroring.
     assert(ok == false, "expected Open to return false when the menu impl is unavailable")
   end
+  -- test_channel_sender_item_carries_line_and_chat_type
+  -- Blizzard's player menu needs both to offer Report Player for the line.
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "CHANNEL", playerName = "Hilan-Kazzak", lineID = 4242 },
+      anchor,
+      stub,
+      { contact = { channel = "CHANNEL" } }
+    )
+
+    assert(opened.lineID == 4242, "expected the line ID, got " .. tostring(opened.lineID))
+    assert(opened.chatType == "CHANNEL", "expected chat type CHANNEL, got " .. tostring(opened.chatType))
+  end
+
+  -- test_guild_sender_item_carries_guild_chat_type
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "GUILD", playerName = "Thrall-Doomhammer", lineID = 7 },
+      anchor,
+      stub,
+      { contact = { channel = "GUILD" } }
+    )
+
+    assert(opened.lineID == 7 and opened.chatType == "GUILD", "expected the guild line and chat type")
+  end
+
+  -- test_protected_name_opens_no_player_menu
+  -- A |K token is a protected Battle.net name; the WoW player menu can't use it.
+  do
+    local called = false
+    local stub = {
+      Open = function()
+        called = true
+        return true
+      end,
+    }
+
+    local ok = PlayerMenu.Open(
+      { direction = "in", channel = "COMMUNITY", playerName = "|Kq1|k", lineID = 8 },
+      anchor,
+      stub,
+      { contact = { channel = "COMMUNITY" } }
+    )
+
+    assert(ok == false, "expected no menu for a protected name")
+    assert(called == false, "expected ContextMenu.Open NOT to be called")
+  end
 end
