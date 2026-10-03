@@ -161,8 +161,9 @@ return function()
   do
     local filters = { ignored = {}, rules = {} }
     local result = create(filters)
-    stubPopups({ "WTS boost" })
+    local _, restore = FiltersSettingsUI.stubTwoFieldDialog({ { "", "WTS boost" } })
     FindUI.click(FindUI.byLabel(result.frame, "Add rule…"))
+    restore()
     assert(#filters.rules == 1, "rule created")
     assert(filters.rules[1].words[1] == "wts" and filters.rules[1].words[2] == "boost", "words saved lowercased")
     assert(visibleText(result.frame, "wts + boost") ~= nil, "rule listed with its words joined")
@@ -188,9 +189,9 @@ return function()
     assert(visibleText(result.frame, "wts/wtb") == nil, "its words stay out of the list")
   end
 
-  -- test_clicking_a_rule_edits_its_words
+  -- test_clicking_a_ready_made_rule_edits_its_words
   do
-    local filters = { ignored = {}, rules = { { name = "WTS / WTB", words = { "wts/wtb" }, enabled = true, blocked = 2 } } }
+    local filters = { ignored = {}, rules = { { presetId = "wtsWtb", name = "WTS / WTB", words = { "wts/wtb" }, enabled = true, blocked = 2 } } }
     local result = create(filters)
     local primed
     _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}

@@ -54,13 +54,32 @@ local function parseWords(wordsText)
   return words
 end
 
-function KeywordRules.Add(filters, wordsText)
+-- A blank or missing name is none: the list then shows the rule's words.
+local function trimName(nameText)
+  if type(nameText) ~= "string" then
+    return nil
+  end
+  local name = string.match(nameText, "^%s*(.-)%s*$")
+  return name ~= "" and name or nil
+end
+
+function KeywordRules.Add(filters, wordsText, nameText)
   local words = parseWords(wordsText)
   if words == nil then
     return nil
   end
-  local rule = { words = words, enabled = true, blocked = 0 }
+  local rule = { name = trimName(nameText), words = words, enabled = true, blocked = 0 }
   filters.rules[#filters.rules + 1] = rule
+  return rule
+end
+
+-- Renames an own rule. Ready-made rules keep their title.
+function KeywordRules.SetName(filters, index, nameText)
+  local rule = filters.rules[index]
+  if rule == nil or rule.presetId ~= nil then
+    return nil
+  end
+  rule.name = trimName(nameText)
   return rule
 end
 

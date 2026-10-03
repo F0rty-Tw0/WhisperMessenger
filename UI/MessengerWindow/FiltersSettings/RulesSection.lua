@@ -8,22 +8,19 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeywordRules = ns.KeywordRules or require("WhisperMessenger.Model.Filters.KeywordRules")
-local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local RemoveButton = ns.RemoveButton or require("WhisperMessenger.UI.Shared.RemoveButton")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
 local BlockedCount = ns.FiltersSettingsBlockedCount or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.BlockedCount")
+local RuleDialogs = ns.FiltersSettingsRuleDialogs or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.RuleDialogs")
 
 -- "Keyword rules" section of the Filters page: each rule's name (presets) or
 -- words joined by " + " on one truncated line, this session's blocked count
 -- below it, an on/off toggle and a remove button, then "Add rule…" and
--- "Reset to Defaults" buttons. Clicking a rule's label edits its words.
+-- "Reset to Defaults" buttons. Clicking a rule's label edits it.
 local RulesSection = {}
 
-local ADD_DIALOG = "WHISPER_MESSENGER_ADD_KEYWORD_RULE"
-local EDIT_DIALOG = "WHISPER_MESSENGER_EDIT_KEYWORD_RULE"
 local RESET_DIALOG = "WHISPER_MESSENGER_RESET_KEYWORD_RULES"
-local RULE_MAX_LETTERS = 255
 local GAP = 8
 -- Half the space between the name line and the count line, at the row's centre.
 local LINE_GAP = 1
@@ -64,13 +61,13 @@ local function singleLine(label)
   end
 end
 
-local function indexOf(rules, rule)
-  for index, candidate in ipairs(rules) do
-    if candidate == rule then
-      return index
-    end
+-- Ready-made titles are English locale keys; a player's own title is shown
+-- as typed. A rule without one shows its words.
+local function ruleLabel(rule)
+  if rule.name == nil then
+    return KeywordRules.Format(rule)
   end
-  return nil
+  return rule.presetId and text(rule.name) or rule.name
 end
 
 -- options = { filters, panel, onLayoutChanged, onFiltersChanged }. Returns
@@ -136,20 +133,7 @@ function RulesSection.Create(factory, frame, anchor, options)
     end)
     row.editButton:SetScript("OnClick", function()
       PickerStyles.HideTooltip()
-      local rule = filters.rules[row.index]
-      TextInputDialog.Show(EDIT_DIALOG, {
-        prompt = text("Edit rule…"),
-        accept = text("Save"),
-        maxLetters = RULE_MAX_LETTERS,
-        value = KeywordRules.Format(rule),
-        -- The dialog doesn't block the page: rules may move or go before Save.
-        onAccept = function(typed)
-          local index = indexOf(filters.rules, rule)
-          if index ~= nil and KeywordRules.SetWords(filters, index, typed) ~= nil then
-            changed()
-          end
-        end,
-      })
+      RuleDialogs.Edit(factory, filters, filters.rules[row.index], changed)
     end)
     return row
   end
@@ -171,7 +155,7 @@ function RulesSection.Create(factory, frame, anchor, options)
       row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * rowHeight)
       row:SetSize(width, rowHeight)
       row.toggle.setWidth(toggleWidth())
-      row.toggle.label:SetText(rule.name and text(rule.name) or KeywordRules.Format(rule))
+      row.toggle.label:SetText(ruleLabel(rule))
       row.toggle.setValue(rule.enabled ~= false)
       row.countText:SetText(BlockedCount.Text(rule.blocked))
       row:Show()
@@ -201,16 +185,7 @@ function RulesSection.Create(factory, frame, anchor, options)
   local addButton = optionButton("Add rule…")
   addButton:SetPoint("TOPLEFT", list, "BOTTOMLEFT", 0, -GAP)
   addButton:SetScript("OnClick", function()
-    TextInputDialog.Show(ADD_DIALOG, {
-      prompt = text("Add rule…"),
-      accept = text("Add"),
-      maxLetters = RULE_MAX_LETTERS,
-      onAccept = function(typed)
-        if KeywordRules.Add(filters, typed) ~= nil then
-          changed()
-        end
-      end,
-    })
+    RuleDialogs.Add(factory, filters, changed)
   end)
 
   local resetButton = optionButton("Reset to Defaults")

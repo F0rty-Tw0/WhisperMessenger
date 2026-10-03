@@ -9,7 +9,7 @@ local KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules")
 -- game-chat filters follow without waiting for a reload.
 local NOW = 1000000
 
--- Opens the edit dialog for the rule labelled `label` and returns a function
+-- Opens the words-only edit dialog of the ready-made rule labelled `label` and returns a function
 -- that saves `typed` later, as if the player clicked Save after other changes.
 local function openEditDialog(result, label)
   local dialog
@@ -71,8 +71,9 @@ return function()
   -- test_adding_a_rule_reports_a_change
   do
     local result, reports = create({ ignored = {}, rules = {} })
-    FiltersSettingsUI.stubPopups({ "wts boost" })
+    local _, restore = FiltersSettingsUI.stubTwoFieldDialog({ { "", "wts boost" } })
     FindUI.click(FindUI.byLabel(result.frame, "Add rule…"))
+    restore()
     assert(reports.count == 1, "rule add reported once, got " .. reports.count)
   end
 
@@ -93,8 +94,9 @@ return function()
   -- test_editing_a_rule_reports_a_change
   do
     local result, reports = create({ ignored = {}, rules = { { words = { "wts" }, enabled = true, blocked = 0 } } })
-    FiltersSettingsUI.stubPopups({ "wts gold" })
+    local _, restore = FiltersSettingsUI.stubTwoFieldDialog({ { "", "wts gold" } })
     FindUI.click(FindUI.text(result.frame, "wts").parent:GetParent().editButton)
+    restore()
     assert(reports.count == 1, "rule edit reported once, got " .. reports.count)
   end
 
@@ -109,9 +111,10 @@ return function()
     assert(reports.count == 1, "reset reported once, got " .. reports.count)
   end
 
-  -- test_edit_saves_to_the_same_rule_after_an_earlier_one_is_removed
+  -- test_preset_edit_saves_to_the_same_rule_after_an_earlier_one_is_removed
   do
-    local filters = { ignored = {}, rules = { { words = { "aaa" }, enabled = true }, { words = { "bbb" }, enabled = true } } }
+    local filters =
+      { ignored = {}, rules = { { presetId = "a", words = { "aaa" }, enabled = true }, { presetId = "b", words = { "bbb" }, enabled = true } } }
     local result = create(filters)
     local save = openEditDialog(result, "bbb")
     local edited = filters.rules[2]
@@ -121,9 +124,10 @@ return function()
     assert(#filters.rules == 1 and filters.rules[1] == edited, "no other rule changes")
   end
 
-  -- test_edit_saves_nothing_once_its_rule_is_gone
+  -- test_preset_edit_saves_nothing_once_its_rule_is_gone
   do
-    local filters = { ignored = {}, rules = { { words = { "aaa" }, enabled = true }, { words = { "bbb" }, enabled = true } } }
+    local filters =
+      { ignored = {}, rules = { { presetId = "a", words = { "aaa" }, enabled = true }, { presetId = "b", words = { "bbb" }, enabled = true } } }
     local result, reports = create(filters)
     local save = openEditDialog(result, "aaa")
     KeywordRules.Remove(filters, 1)

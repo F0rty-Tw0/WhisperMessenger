@@ -39,4 +39,23 @@ function FiltersSettingsUI.stubPopups(answers)
   return shown
 end
 
+-- Replaces TwoFieldDialog.Show: records each spec and, for each queued
+-- { name, words } answer, accepts at once (no answer leaves it open).
+-- Returns the recorded specs and a function that puts Show back.
+function FiltersSettingsUI.stubTwoFieldDialog(answers)
+  local TwoFieldDialog = require("WhisperMessenger.UI.Shared.TwoFieldDialog")
+  local original = TwoFieldDialog.Show
+  local specs = {}
+  rawset(TwoFieldDialog, "Show", function(_factory, spec)
+    specs[#specs + 1] = spec
+    local answer = table.remove(answers, 1)
+    if answer then
+      spec.onAccept(answer[1], answer[2])
+    end
+  end)
+  return specs, function()
+    rawset(TwoFieldDialog, "Show", original)
+  end
+end
+
 return FiltersSettingsUI

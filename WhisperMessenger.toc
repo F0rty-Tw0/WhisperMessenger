@@ -293,6 +293,7 @@ UI/Shared/SettingsControls/Header.lua
 UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
 UI/Shared/SettingsControls.lua
+UI/Shared/TwoFieldDialog.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
@@ -307,6 +308,7 @@ UI/MessengerWindow/FiltersSettings/HelpSection.lua
 UI/MessengerWindow/FiltersSettings/BlockedCount.lua
 UI/MessengerWindow/FiltersSettings/IgnoreRow.lua
 UI/MessengerWindow/FiltersSettings/IgnoreListSection.lua
+UI/MessengerWindow/FiltersSettings/RuleDialogs.lua
 UI/MessengerWindow/FiltersSettings/RulesSection.lua
 UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
