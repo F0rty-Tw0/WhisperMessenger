@@ -12,6 +12,7 @@ function Schema.NewAccountState()
     contacts = {},
     pendingHydration = {},
     channelMessages = {},
+    filters = { ignored = {}, rules = {} },
   }
 end
 

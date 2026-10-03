@@ -4,7 +4,11 @@ if type(ns) ~= "table" then
 end
 
 local BNetIdentity = ns.BNetIdentity or require("WhisperMessenger.Core.BNetIdentity")
+local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = {}
+
+-- Swappable so tests can simulate 12.0 secret strings.
+Direction._isSecretString = SecretString.IsSecretString
 
 local function rawGuidEqual(a, b)
   return a == b
@@ -44,22 +48,29 @@ local function resolveLocalBnetAccountID(state)
   return accountID
 end
 
--- Resolve returns "out" when the message was sent by the local player,
--- "in" otherwise.
-function Direction.Resolve(eventName, payload, state)
+-- True when the line was sent by the local player. Takes the raw fields so
+-- callers can ask before building a payload table.
+function Direction.IsLocalSender(eventName, guid, bnSenderID, state)
   if eventName == "CHAT_MSG_BN_CONVERSATION" then
     -- No guid on BN conversation events; use the cached or lazily resolved
     -- local BNet account ID. A missing early API result remains retryable.
     local localBnetAccountID = resolveLocalBnetAccountID(state)
-    if localBnetAccountID ~= nil and payload.bnSenderID == localBnetAccountID then
-      return "out"
-    end
-    return "in"
+    return localBnetAccountID ~= nil and bnSenderID == localBnetAccountID
   end
 
-  -- For every other group surface: compare guid to the local player's guid.
-  local localGuid = resolveLocalPlayerGuid(state)
-  if compareGuids(payload.guid, localGuid) then
+  -- For every other surface: compare guid to the local player's guid. Filters
+  -- ask before the secret drop, and a secret guid can't be compared, so it
+  -- counts as another player's line.
+  if Direction._isSecretString(guid) then
+    return false
+  end
+  return compareGuids(guid, resolveLocalPlayerGuid(state))
+end
+
+-- Resolve returns "out" when the message was sent by the local player,
+-- "in" otherwise.
+function Direction.Resolve(eventName, payload, state)
+  if Direction.IsLocalSender(eventName, payload.guid, payload.bnSenderID, state) then
     return "out"
   end
   return "in"

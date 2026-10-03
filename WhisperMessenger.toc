@@ -33,6 +33,7 @@ Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
 Util/ChatPrint.lua
+Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
 Locale/ruRU.lua
@@ -54,7 +55,12 @@ Model/Retention.lua
 Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
+Model/ConversationStore/RepeatCollapse.lua
 Model/ConversationStore.lua
+Model/Filters/IgnoreList.lua
+Model/Filters/KeywordRules.lua
+Model/Filters/RulePresets.lua
+Model/Filters/DuplicateCollapse.lua
 Util/ChatReplyState.lua
 Model/ConversationDrafts.lua
 Model/OutgoingDelivery.lua
@@ -89,6 +95,9 @@ Transport/Types.lua
 Transport/Availability.lua
 Transport/AddonComm.lua
 Transport/WhisperGateway.lua
+Core/Ingest/ChannelChatIngest/ChannelKey.lua
+Transport/ChannelIndex.lua
+Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua
 
@@ -98,6 +107,8 @@ Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest/Mention.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest.lua
+Core/Ingest/IncomingFilter.lua
+Core/Ingest/ChannelChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter.lua
@@ -152,6 +163,8 @@ UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/ButtonStyling.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Styling.lua
 UI/Shared/StyledTextInputPopup.lua
 UI/Shared/TextInputDialog.lua
+UI/Shared/RemoveButton.lua
+UI/Shared/IgnorePrompt.lua
 UI/Shared/ReloadPrompt.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI.lua
 UI/ChatBubble/ContextMenu/ManualCopy/Clipboard.lua
@@ -160,6 +173,7 @@ UI/ChatBubble/ContextMenu.lua
 UI/ChatBubble/HoverCopy.lua
 UI/ChatBubble/ReplyQuote.lua
 UI/ChatBubble/ReactionBadge.lua
+UI/ChatBubble/MentionHighlight.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
@@ -169,6 +183,7 @@ UI/ChatBubble/SenderLabel.lua
 UI/ChatBubble/PlayerMenu.lua
 UI/ChatBubble/Layout.lua
 UI/ChatBubble/ChatBubble.lua
+UI/ContactsList/SnapshotCache.lua
 UI/ContactsList/DataBuilder.lua
 UI/ContactsList/DragReorder.lua
 UI/ContactsList/StatusDot.lua
@@ -180,6 +195,7 @@ UI/ContactsList/RailAvatar.lua
 UI/ContactsList/RowCompact.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
+UI/ContactsList/BlockMenuEntry.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua
@@ -202,6 +218,7 @@ UI/ConversationPane/HeaderElements.lua
 UI/ConversationPane/GroupHeaderViewModel.lua
 UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderContactExtras.lua
+UI/ConversationPane/HeaderFit.lua
 UI/ConversationPane/HeaderView.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
@@ -278,12 +295,24 @@ UI/Shared/SettingsControls/Header.lua
 UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
 UI/Shared/SettingsControls.lua
+UI/Shared/TwoFieldDialog.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
 UI/MessengerWindow/BehaviorSettings.lua
+UI/MessengerWindow/WhispersSettings/ToggleSpecs.lua
+UI/MessengerWindow/WhispersSettings.lua
+UI/MessengerWindow/ChatsSettings/ChannelPicker.lua
+UI/MessengerWindow/ChatsSettings.lua
+UI/MessengerWindow/FiltersSettings/HelpSection.lua
+UI/MessengerWindow/FiltersSettings/BlockedCount.lua
+UI/MessengerWindow/FiltersSettings/IgnoreRow.lua
+UI/MessengerWindow/FiltersSettings/IgnoreListSection.lua
+UI/MessengerWindow/FiltersSettings/RuleDialogs.lua
+UI/MessengerWindow/FiltersSettings/RulesSection.lua
+UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua
@@ -315,6 +344,7 @@ Core/Bootstrap/EventBridge/Registration.lua
 Core/Bootstrap/EventBridge/LivePayload.lua
 Core/Bootstrap/EventBridge/IncomingAlerts.lua
 Core/Bootstrap/EventBridge/GroupRouter.lua
+Core/Bootstrap/EventBridge/ChannelRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
@@ -323,10 +353,13 @@ Core/Bootstrap/QueuedSends.lua
 Core/Bootstrap/LivePresenceSender.lua
 Core/Bootstrap/ReactionHandler.lua
 Core/Bootstrap/InviteHandler.lua
+Core/Bootstrap/ChatFilters/FilterApi.lua
+Core/Bootstrap/ChatFilters/ConditionalFilters.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
 Core/Bootstrap/WindowCoordinator/IconSurfaces.lua
 Core/Bootstrap/WindowCoordinator/RequestFollow.lua
+Core/Bootstrap/WindowCoordinator/IncomingRefresh.lua
 Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua

@@ -38,6 +38,9 @@ return function()
       )
     end
 
+    -- test_zone_divider_is_translated
+    assert(catalog["Zone: %s"] ~= nil, code .. " is missing the channel zone divider")
+
     -- test_edit_hint_names_the_translated_pages
     local hint = catalog["Edit this list in Options > Behavior."]
     assert(string.find(hint, catalog["Options"], 1, true), code .. " edit hint should name the translated Options page")

@@ -6,8 +6,7 @@ end
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 -- Game popup asking to reload the interface now. Reload UI runs onAccept,
--- then reloads; Cancel runs onCancel (the change then applies on the next
--- reload).
+-- then reloads; Cancel runs onCancel.
 local ReloadPrompt = {}
 
 ReloadPrompt.DIALOG = "WHISPER_MESSENGER_RELOAD_UI"
@@ -33,8 +32,11 @@ function ReloadPrompt.Show(text, onCancel, onAccept)
         _G.ReloadUI()
       end
     end,
-    OnCancel = function()
-      if onCancel then
+    -- Showing the prompt again while it is up cancels the visible one with
+    -- reason "override"; that is not the player's Cancel.
+    noCancelOnReuse = true,
+    OnCancel = function(_dialog, _data, reason)
+      if onCancel and reason ~= "override" then
         onCancel()
       end
     end,

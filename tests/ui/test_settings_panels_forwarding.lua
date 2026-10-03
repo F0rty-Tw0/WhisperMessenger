@@ -19,6 +19,9 @@ return function()
   local generalCapture = {}
   local appearanceCapture = {}
   local behaviorCapture = {}
+  local whispersCapture = {}
+  local chatsCapture = {}
+  local filtersCapture = {}
   local notificationCapture = {}
   local iconsCapture = {}
 
@@ -51,6 +54,12 @@ return function()
     showGroupChats = false,
     requestsInbox = true,
     quickReplies = { "brb" },
+    shareTypingStatus = false,
+    shareReadReceipts = false,
+    -- chats
+    enabledChannels = { trade = true },
+    collapseDuplicates = false,
+    hideChannelsFromDefaultChat = false,
     -- notifications and icons
     lockToggleIcon = true,
     shareWidgetPosition = true,
@@ -69,9 +78,11 @@ return function()
     widgetPreviewPosition = "top",
   }
 
+  local filters = { ignored = {}, rules = {} }
   local panels = SettingsPanels.Create(factory, {
     parent = parent,
     settingsConfig = settingsConfig,
+    filters = filters,
     storeConfig = {
       maxMessagesPerConversation = 200,
       maxConversations = 100,
@@ -81,10 +92,13 @@ return function()
     generalCreate = captureCreate(generalCapture),
     appearanceCreate = captureCreate(appearanceCapture),
     behaviorCreate = captureCreate(behaviorCapture),
+    whispersCreate = captureCreate(whispersCapture),
+    chatsCreate = captureCreate(chatsCapture),
+    filtersCreate = captureCreate(filtersCapture),
     notificationCreate = captureCreate(notificationCapture),
     iconCreate = captureCreate(iconsCapture),
   })
-  for index = 1, 5 do
+  for index = 1, SettingsPanels.PATCH_NOTES_INDEX - 1 do
     panels.getPanel(index)
   end
 
@@ -103,7 +117,25 @@ return function()
   -- Behavior: the saved quick replies reach the page, which can ask the
   -- options scroll view to re-measure after the list grows or shrinks.
   assert(behaviorCapture.config.quickReplies == settingsConfig.quickReplies, "behavior config should carry quickReplies")
-  assert(behaviorCapture.config.requestsInbox == true, "behavior config should carry requestsInbox")
+  assert(behaviorCapture.config.hideFromDefaultChat == nil, "whisper keys moved off the Behavior page")
+  assert(behaviorCapture.config.showGroupChats == nil, "group chat key moved off the Behavior page")
+
+  -- Whispers owns the whisper toggles.
+  assert(whispersCapture.config.hideFromDefaultChat == true, "whispers config should carry hideFromDefaultChat")
+  assert(whispersCapture.config.autoOpenIncoming == true, "whispers config should carry autoOpenIncoming")
+  assert(whispersCapture.config.autoOpenOutgoing == true, "whispers config should carry autoOpenOutgoing")
+  assert(whispersCapture.config.requestsInbox == true, "whispers config should carry requestsInbox")
+  assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
+  assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
+
+  -- Chats owns group chats and channels.
+  assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")
+  assert(chatsCapture.config.enabledChannels == settingsConfig.enabledChannels, "chats config should carry enabledChannels")
+  assert(chatsCapture.config.collapseDuplicates == false, "chats config should carry collapseDuplicates")
+  assert(chatsCapture.config.hideChannelsFromDefaultChat == false, "chats config should carry hideChannelsFromDefaultChat")
+
+  -- Filters edits the saved filters table in place.
+  assert(filtersCapture.config.filters == filters, "filters config should carry the saved filters")
   assert(type(behaviorCapture.options.onLayoutChanged) == "function", "behavior page gets an onLayoutChanged hook")
 
   -- Appearance: bubbleColorPreset must round-trip.

@@ -51,22 +51,29 @@ function ContextMenu.CopyText(text)
   return ManualCopy.CopyText(text)
 end
 
--- Retail's menu API: Reply + Copy text. False when the API is missing.
-local function openModernMenu(normalized, anchorFrame, onReply)
+-- Retail's menu API: Reply, Copy text and Ignore sender (the first and last
+-- only with a handler). False when the API is missing.
+local function openModernMenu(normalized, anchorFrame, options)
   local menuUtil = _G.MenuUtil
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
     return false
   end
   menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
-    rootDescription:CreateButton(Localization.Text("Reply"), onReply)
+    if type(options.onReply) == "function" then
+      rootDescription:CreateButton(Localization.Text("Reply"), options.onReply)
+    end
     rootDescription:CreateButton(Localization.Text("Copy text"), function()
       ContextMenu.CopyText(normalized)
     end)
+    if type(options.onIgnoreSender) == "function" then
+      rootDescription:CreateButton(Localization.Text("Block sender…"), options.onIgnoreSender)
+    end
   end)
   return true
 end
 
--- options.onReply(): optional; adds "Reply" to whichever menu opens.
+-- options.onReply() / options.onIgnoreSender(): optional; add "Reply" /
+-- "Block sender…" to whichever menu opens.
 function ContextMenu.Open(text, anchorFrame, options)
   local normalized = type(ManualCopy) == "table" and type(ManualCopy.NormalizeText) == "function" and ManualCopy.NormalizeText(text) or nil
   if normalized == nil then
@@ -91,7 +98,8 @@ function ContextMenu.Open(text, anchorFrame, options)
     end
   end
 
-  if type(options.onReply) == "function" and openModernMenu(normalized, anchorFrame, options.onReply) then
+  local hasMenuActions = type(options.onReply) == "function" or type(options.onIgnoreSender) == "function"
+  if hasMenuActions and openModernMenu(normalized, anchorFrame, options) then
     return true
   end
 

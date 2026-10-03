@@ -140,4 +140,16 @@ return function()
     assert(third[2] ~= second[2], "a newer store entry should build a fresh channel message")
     assert(third[2].text == "newer entry", "the rebuilt message should carry the new text")
   end
+
+  ----------------------------------------------------------------------------
+  -- A channel chat never merges a sender's channel post: its own lines are
+  -- the channel.
+  ----------------------------------------------------------------------------
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Trade", "WTS ore", "Trade", 9800)
+    local messages = { { id = "1", sentAt = 9000, kind = "user" } }
+    local result = ChannelContextMerger.Merge(messages, { displayName = "Trade", channel = "CHANNEL" }, makeDeps(state))
+    assert(result == messages, "a channel chat gets its messages back unchanged")
+  end
 end

@@ -43,6 +43,11 @@ local Layout = {
   -- Rows grow with the font slider above the default size: three text lines
   -- (name, zone, preview) each need 1px per font px.
   CONTACT_ROW_GROWTH_PER_FONT_PX = 3,
+
+  -- Filters page rows (keyword rules, ignored players): name over a smaller
+  -- count line, so each grows 2px per font px above the default size.
+  FILTER_ROW_HEIGHT = 36,
+  FILTER_ROW_GROWTH_PER_FONT_PX = 2,
   CONTACT_ICON_SIZE = 34,
   CONTACT_FACTION_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,
@@ -77,7 +82,7 @@ local Layout = {
   SCROLLBAR_WIDTH = 4,
   SCROLLBAR_WIDTH_HOVER = 6,
   -- Native WoW HUD: fits the classic scroll knob.
-  SCROLLBAR_WIDTH_HUD = 18,
+  SCROLLBAR_WIDTH_HUD = 12,
   -- Retail HUD: the minimal scrollbar's thumb width, for clients that can't
   -- report the atlas size.
   SCROLLBAR_WIDTH_RETAIL = 8,
@@ -98,6 +103,9 @@ local Layout = {
 
   -- Header
   HEADER_HEIGHT = 56,
+  -- The header grows with the font slider above the default size: three text
+  -- rows (name, status, detail) each grow 1px per font px plus line leading.
+  HEADER_GROWTH_PER_FONT_PX = 4,
   HEADER_ICON_SIZE = 32,
   -- Gap between the class icon and the name / status text.
   HEADER_NAME_GAP = 10,

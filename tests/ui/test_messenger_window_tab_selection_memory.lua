@@ -50,4 +50,50 @@ return function()
 
   memory.onTabModeSwapSelection("groups", "whispers")
   assert(activeKey == "wow::WOW::Thrall", "latest whisper selection should restore on return")
+
+  -- test_channels_tab_remembers_its_own_selection
+  local trade = { channel = ChannelType.CHANNEL, conversationKey = "CHANNEL::trade", displayName = "Trade", inChannelsTab = true }
+  currentContacts[#currentContacts + 1] = trade
+  memory.onTabModeSwapSelection("whispers", "channels")
+  assert(activeKey == nil, "channels should clear when no remembered selection exists")
+  memory.onSelect(trade)
+  memory.onTabModeSwapSelection("channels", "groups")
+  assert(activeKey == "PARTY::1", "groups keeps its own selection, not the channel chat")
+  memory.onTabModeSwapSelection("groups", "channels")
+  assert(activeKey == "CHANNEL::trade", "channel selection should restore on return")
+
+  -- test_accepted_request_is_not_restored_on_the_requests_tab
+  do
+    -- Accepting moves the chat to Whispers; Requests then shows its empty
+    -- state instead of the remembered chat.
+    local stranger = makeItem(ChannelType.WHISPER, "wow::WOW::Chaos", "Chaos")
+    stranger.isRequest = true
+    local selected = nil
+    local requestMemory = TabSelectionMemory.Create({
+      getSelectedConversationKey = function()
+        return selected
+      end,
+      getCurrentContacts = function()
+        return { stranger }
+      end,
+      handleContactSelected = function(item)
+        selected = item and item.conversationKey or nil
+      end,
+      refreshSelection = function()
+        selected = nil
+      end,
+    })
+    requestMemory.onSelect(stranger)
+    stranger.isRequest = nil
+    requestMemory.onTabModeSwapSelection("requests", "whispers")
+    selected = nil
+    requestMemory.onTabModeSwapSelection("whispers", "requests")
+    assert(selected == nil, "Requests must not reopen a chat that moved to Whispers")
+
+    -- The moved chat is forgotten for good, not just skipped once.
+    stranger.isRequest = true
+    requestMemory.onTabModeSwapSelection("requests", "whispers")
+    requestMemory.onTabModeSwapSelection("whispers", "requests")
+    assert(selected == nil, "Requests forgot the moved chat")
+  end
 end

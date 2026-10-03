@@ -115,7 +115,7 @@ end
 -- of the group holding the newest seen outgoing message, and only when that
 -- whole group has been seen. Newer unseen groups simply show nothing, like
 -- other messengers. Returns nil when there is nothing to mark.
-local function seenLabelIndex(messages)
+function Layout.SeenLabelIndex(messages)
   local lastSeen
   for index = #messages, 1, -1 do
     local message = messages[index]
@@ -189,6 +189,8 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.canReact = options and options.canReact or nil
   bubbleOptions.onReply = options and options.onReply or nil
   bubbleOptions.canReply = options and options.canReply or nil
+  bubbleOptions.onIgnoreSender = options and options.onIgnoreSender or nil
+  bubbleOptions.canIgnoreSender = options and options.canIgnoreSender or nil
   bubbleOptions.onQuoteClick = options and options.onQuoteClick or nil
   bubbleOptions.openPlayerMenu = options and options.openPlayerMenu or nil
 
@@ -207,7 +209,11 @@ function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, l
   local pooledFactory = FramePool.getFactory(factory, contentFrame)
   local yOffset = rows[firstIndex].offset
   local firstChanged
-  local seenIndex = seenLabelIndex(messages)
+  -- Only whispers carry read receipts; group chats skip the O(n) scan.
+  local seenIndex
+  if not (options and options.seenReceipts == false) then
+    seenIndex = Layout.SeenLabelIndex(messages)
+  end
   local activeFrames = contentFrame._activeFrames
   for index = firstIndex, lastIndex do
     local row = rows[index]

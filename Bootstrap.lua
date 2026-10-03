@@ -30,7 +30,6 @@ end
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
 
-local MYTHIC_PAUSE_NOTICE = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
 function Bootstrap.Initialize(factory, options)
   options = options or {}
 
@@ -48,6 +47,8 @@ function Bootstrap.Initialize(factory, options)
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
   local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
   local ReplyToLast = loadModule("WhisperMessenger.Core.SlashCommands.ReplyToLast", "SlashCommandsReplyToLast")
+  local PerfCounters = loadModule("WhisperMessenger.Util.PerfCounters", "PerfCounters")
+  local ChatPrint = loadModule("WhisperMessenger.Util.ChatPrint", "ChatPrint")
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
   local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
@@ -185,6 +186,19 @@ function Bootstrap.Initialize(factory, options)
     return Bootstrap._inMythicContent == true
   end
 
+  -- Channel chats pause wherever chat may carry secret values.
+  runtime.isChannelIngestSuspended = function()
+    if runtime.isMythicLockdown() or runtime.isCompetitiveContent() then
+      return true
+    end
+    local chatInfo = _G.C_ChatInfo
+    if type(chatInfo) ~= "table" or type(chatInfo.InChatMessagingLockdown) ~= "function" then
+      return false
+    end
+    local ok, locked = pcall(chatInfo.InChatMessagingLockdown)
+    return ok and locked == true
+  end
+
   Bootstrap.onCompetitiveStateChanged = function(isActive)
     local ic = windowRuntime.getIcon()
     if ic and ic.setCompetitiveContent then
@@ -211,7 +225,7 @@ function Bootstrap.Initialize(factory, options)
   -- Blizzard's chat processing context. Filters are only registered when
   -- they should suppress (hideFromDefaultChat=true, not in competitive
   -- content or mythic). syncChatFilters manages this dynamically.
-  ChatFilters.Configure(Bootstrap, accountState)
+  ChatFilters.Configure(Bootstrap, accountState, runtime)
   Bootstrap.syncChatFilters()
 
   runtime.syncChatFilters = Bootstrap.syncChatFilters
@@ -232,11 +246,15 @@ function Bootstrap.Initialize(factory, options)
   SlashCommands.Register({
     toggle = runtime.toggle,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
+    perf = function()
+      for _, line in ipairs(PerfCounters.Lines(addonName)) do
+        ChatPrint.Print(line)
+      end
+    end,
   })
 
   MythicSuspendController.Attach(runtime, {
     Bootstrap = Bootstrap,
-    mythicPauseNotice = MYTHIC_PAUSE_NOTICE,
     isWindowVisible = windowRuntime.isWindowVisible,
     setWindowVisible = runtime.setWindowVisible,
     refreshWindow = runtime.refreshWindow,

@@ -13,6 +13,9 @@ local function makeRuntime()
   local runtime = {
     store = { config = {} },
     window = {
+      getTabMode = function()
+        return "groups"
+      end,
       setTabMode = function(mode)
         table.insert(calls.setTabMode, mode)
       end,
@@ -91,7 +94,7 @@ local function makeIcon()
 end
 
 return function()
-  -- showGroupChats=false forces the Whispers tab and refreshes visibility.
+  -- showGroupChats=false moves the Groups tab to Whispers and refreshes visibility.
   do
     local runtime, calls = makeRuntime()
     local accountSettings = { showGroupChats = true }

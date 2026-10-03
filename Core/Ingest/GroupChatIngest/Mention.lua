@@ -18,20 +18,25 @@ local function isWordByte(byte)
   return byte >= 0x80 or string.find(string.char(byte), "%w") ~= nil
 end
 
-local function containsWord(text, name)
+-- Byte range of the first whole-word hit of name at or after start, or nil.
+-- string.lower keeps byte lengths, so the range indexes the original text.
+function Mention.FindWord(text, name, start)
   local haystack = string.lower(text)
   local needle = string.lower(name)
-  local start = 1
   while true do
     local first, last = string.find(haystack, needle, start, true)
     if first == nil then
-      return false
+      return nil
     end
     if not isWordByte(string.byte(haystack, first - 1)) and not isWordByte(string.byte(haystack, last + 1)) then
-      return true
+      return first, last
     end
     start = first + 1
   end
+end
+
+local function containsWord(text, name)
+  return Mention.FindWord(text, name, 1) ~= nil
 end
 
 -- GroupChatIngest drops secret-string payloads before calling here. The

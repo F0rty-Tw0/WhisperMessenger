@@ -26,6 +26,21 @@ local function effectiveScale(target)
   return (type(scale) == "number" and scale > 0) and scale or 1
 end
 
+-- Search shows only while the current tab has something to search (see
+-- ContactsRuntime onSearchAvailableChanged): the box on the expanded pane,
+-- the magnifier on the rail.
+local function showSearch(layout)
+  local available = layout.contactsSearchAvailable ~= false
+  local collapsed = layout.contactsCollapsed == true
+  setShown(layout.contactsSearchFrame, available and not collapsed)
+  setShown(layout.contactsRailSearchButton, available and collapsed)
+end
+
+function ContactsRail.SetSearchAvailable(layout, available)
+  layout.contactsSearchAvailable = available == true
+  showSearch(layout)
+end
+
 -- options:
 --   frame, layout, windowGeometry, chrome
 --   relayoutWindow(w, h, contactsWidth, refreshContacts)
@@ -42,8 +57,7 @@ function ContactsRail.Create(options)
     if layout.contactsView then
       layout.contactsView.barHidden = collapsed
     end
-    setShown(layout.contactsSearchFrame, not collapsed)
-    setShown(layout.contactsRailSearchButton, collapsed)
+    showSearch(layout)
     options.chrome.setContactsCollapsed(collapsed)
   end
 

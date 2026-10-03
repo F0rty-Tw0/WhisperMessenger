@@ -23,6 +23,15 @@ local Textures = {
   title_mark_read_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\mark_read.png",
   quick_reply_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\quick_reply.png",
   muted_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\muted.png",
+  -- Settings-nav page icons (white on transparent; tinted like the label).
+  nav_general_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_general.png",
+  nav_appearance_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_appearance.png",
+  nav_behavior_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_behavior.png",
+  nav_whispers_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_whispers.png",
+  nav_chats_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_chats.png",
+  nav_filters_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_filters.png",
+  nav_notifications_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_notifications.png",
+  nav_icons_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_icons.png",
 }
 
 -- Class tokens with a matching ClassIcon_* texture. Unknown tags must
@@ -79,7 +88,26 @@ local CHANNEL_ICONS = {
   CHANNEL = "Interface\\ICONS\\Achievement_Profession_Fishing_OldManBarlowned",
 }
 
-local function ChannelIcon(channel)
+-- Built-in chat channels by the slug that ends their conversation key
+-- ("channel::<profile>::trade"). Vanilla-era art so every flavor has it;
+-- custom channels ("c:<name>") keep the shared CHANNEL icon.
+local BUILT_IN_CHANNEL_ICONS = {
+  general = "Interface\\ICONS\\Ability_Warrior_BattleShout",
+  trade = "Interface\\ICONS\\INV_Misc_Coin_01",
+  tradeservices = "Interface\\ICONS\\Trade_BlackSmithing",
+  localdefense = "Interface\\ICONS\\Ability_Warrior_DefensiveStance",
+  worlddefense = "Interface\\ICONS\\INV_Shield_06",
+  lfg = "Interface\\ICONS\\Spell_Holy_PrayerOfFortitude",
+}
+
+local function ChannelIcon(channel, conversationKey)
+  if channel == "CHANNEL" and type(conversationKey) == "string" then
+    local slug = string.match(conversationKey, "^channel::.-::(.+)$")
+    local icon = slug and BUILT_IN_CHANNEL_ICONS[slug]
+    if icon then
+      return icon
+    end
+  end
   return CHANNEL_ICONS[channel]
 end
 

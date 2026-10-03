@@ -26,4 +26,14 @@ return function()
   -- test_muted_group_with_mention_counts
   contacts = { { conversationKey = "party", channel = "PARTY", unreadCount = 1, muted = true, hasUnreadMention = true } }
   assert(coordinator.findLatestUnreadKey() == "party", "a mention breaks through mute")
+
+  -- test_returns_first_unread_the_caller_accepts
+  contacts = {
+    { conversationKey = "whisper", channel = "WOW", unreadCount = 1 },
+    { conversationKey = "party", channel = "PARTY", unreadCount = 1 },
+  }
+  local found = coordinator.findLatestUnreadKey(function(key)
+    return key == "party"
+  end)
+  assert(found == "party", "the first unread chat on the open tab is found, got " .. tostring(found))
 end

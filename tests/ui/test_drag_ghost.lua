@@ -44,6 +44,13 @@ return function()
     assert(ghost.classIcon.vertexColor[1] == 1, "group art not dimmed")
   end
 
+  -- test_rail_channel_ghost_shows_its_initials
+  do
+    local trade = { conversationKey = "channel::me-realm::trade", displayName = "Trade", channel = "CHANNEL", pinned = true }
+    DragGhost.Show(ghost, bindRow(factory, list, trade, true), list)
+    assert(ghost.railAvatar.label.shown == true and ghost.railAvatar.label.text == "TR", "initials on a channel ghost")
+  end
+
   -- test_full_list_ghost_is_unchanged_after_a_rail_drag
   do
     local row = bindRow(factory, list, jaina, false)

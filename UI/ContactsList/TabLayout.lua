@@ -8,11 +8,12 @@ end
 -- clamp over the hanging strip.
 local TabLayout = {}
 
-TabLayout.MODES = { "whispers", "groups", "requests" }
+TabLayout.MODES = { "whispers", "groups", "channels", "requests" }
 
 local DEFAULT_MODES = { "whispers", "groups" }
 
--- tabs: { whispers = tab, groups = tab, requests = tab }, each with `.btn`.
+-- tabs: { whispers = tab, groups = tab, channels = tab, requests = tab },
+-- each with `.btn`.
 -- Returns the visible tabs in MODES order.
 function TabLayout.VisibleTabs(tabs, modes)
   local wanted = {}
@@ -60,7 +61,7 @@ end
 -- binds each tab's OnClick, and returns the paint function (for hover
 -- handlers).
 --
--- tabsByMode: { whispers = tab, groups = tab, requests = tab }; each tab has
+-- tabsByMode: one tab per TabLayout.MODES entry; each tab has
 -- `.btn`, `.mode` and a writable `.unread`.
 -- opts:
 --   initialMode, onModeChanged(mode)
@@ -102,7 +103,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   toggle.getMode = function()
     return currentMode
   end
-  -- modes: visible tabs, e.g. { "whispers", "groups", "requests" }.
+  -- modes: visible tabs, e.g. { "whispers", "groups", "channels", "requests" }.
   toggle.setModes = function(modes)
     visibleModes = modes
     relayout()
@@ -111,10 +112,11 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   toggle.setShown = function(shown)
     frame:SetShown(shown)
   end
-  toggle.setUnreadCounts = function(whispersCount, groupsCount, requestsCount)
+  toggle.setUnreadCounts = function(whispersCount, groupsCount, requestsCount, channelsCount)
     tabsByMode.whispers.unread = tonumber(whispersCount) or 0
     tabsByMode.groups.unread = tonumber(groupsCount) or 0
     tabsByMode.requests.unread = tonumber(requestsCount) or 0
+    tabsByMode.channels.unread = tonumber(channelsCount) or 0
     paint()
   end
   toggle.setLanguage = function()

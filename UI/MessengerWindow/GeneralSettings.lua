@@ -72,7 +72,7 @@ function GeneralSettings.Create(factory, parent, config, options)
 
   local messagesRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
-      label = text("Max Messages Per Contact"),
+      label = text("Max Messages Per Chat"),
       min = 50,
       max = 500,
       step = 10,
@@ -236,7 +236,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     interfaceLanguage = nextLanguage or DEFAULTS.interfaceLanguage
     header.title:SetText(text("General Settings"))
     header.hint:SetText(text("Configure message storage, retention, and interface language."))
-    messagesRow.label:SetText(text("Max Messages Per Contact"))
+    messagesRow.label:SetText(text("Max Messages Per Chat"))
     conversationsRow.label:SetText(text("Max Contacts"))
     retentionRow.label:SetText(text("Message Retention (hours)"))
     privacySection.label:SetText(text("Privacy"))

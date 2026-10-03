@@ -17,8 +17,12 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local NavItem = {}
 
 NavItem.PADDING_X = 12
+NavItem.ICON_SIZE = 16
+NavItem.ICON_GAP = 8
 
-function NavItem.Attach(button)
+-- iconPath (optional): the page glyph left of the label, modern look only;
+-- the Native WoW HUD list stays text-only like Blizzard's own.
+function NavItem.Attach(button, iconPath)
   local selection = button:CreateTexture(nil, "BACKGROUND", nil, 1)
   selection:SetAllPoints(button)
   selection:Hide()
@@ -33,7 +37,14 @@ function NavItem.Attach(button)
   bar:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
   bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
   bar:Hide()
-  return { selection = selection, hover = hover, hoverFade = HoverFade.Attach(hover), bar = bar }
+  local icon
+  if iconPath then
+    icon = button:CreateTexture(nil, "ARTWORK")
+    icon:SetSize(NavItem.ICON_SIZE, NavItem.ICON_SIZE)
+    icon:SetPoint("LEFT", button, "LEFT", NavItem.PADDING_X, 0)
+    icon:SetTexture(iconPath)
+  end
+  return { selection = selection, hover = hover, hoverFade = HoverFade.Attach(hover), bar = bar, icon = icon }
 end
 
 function NavItem.Paint(nav, label, active, hovered)
@@ -49,7 +60,11 @@ function NavItem.Paint(nav, label, active, hovered)
   end
   nav.selection:SetShown(active)
   nav.hoverFade.set(hovered and not active)
-  Base.setTextColor(label, (active or hovered) and colors.text_primary or colors.text_secondary)
+  local textColor = (active or hovered) and colors.text_primary or colors.text_secondary
+  Base.setTextColor(label, textColor)
+  if nav.icon then
+    Base.applyVertexColor(nav.icon, textColor)
+  end
 end
 
 ns.UIHelpersNavItem = NavItem

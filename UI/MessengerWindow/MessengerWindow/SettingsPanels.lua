@@ -9,17 +9,17 @@ local SettingsPanels = {}
 
 -- Single source of truth for the What's New tab position, so the "?" button
 -- and the sidebar tab select the same page without a magic number.
-SettingsPanels.PATCH_NOTES_INDEX = 6
+SettingsPanels.PATCH_NOTES_INDEX = 9
 
-local SETTINGS_RIGHT_PADDING_TRIM = 20
-local SETTINGS_SCROLLBAR_RESERVE = 4
-
+-- Controls start CONTENT_PADDING in from the left; the same gap on the right
+-- keeps right-aligned values and button art clear of the scroll clip. The
+-- scroll view already narrows its viewport for its own bar.
 local function paneInnerWidth(outerWidth)
   local padding = (Theme.CONTENT_PADDING or 16) * 2
   if type(outerWidth) ~= "number" or outerWidth <= 0 then
     return nil
   end
-  return outerWidth - padding + SETTINGS_RIGHT_PADDING_TRIM - SETTINGS_SCROLLBAR_RESERVE
+  return outerWidth - padding
 end
 
 local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
@@ -110,14 +110,41 @@ function SettingsPanels.Create(factory, options)
       config = {
         dimWhenMoving = settingsConfig.dimWhenMoving,
         autoFocusComposer = settingsConfig.autoFocusComposer,
+        hideOnCombat = settingsConfig.hideOnCombat,
+        doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
+        quickReplies = settingsConfig.quickReplies,
+      },
+    },
+    {
+      panelKey = "whispersPanel",
+      settingsKey = "whispersSettings",
+      create = options.whispersCreate,
+      config = {
         hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
         autoOpenIncoming = settingsConfig.autoOpenIncoming,
         autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
-        hideOnCombat = settingsConfig.hideOnCombat,
-        doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
-        showGroupChats = settingsConfig.showGroupChats,
         requestsInbox = settingsConfig.requestsInbox,
-        quickReplies = settingsConfig.quickReplies,
+        shareTypingStatus = settingsConfig.shareTypingStatus,
+        shareReadReceipts = settingsConfig.shareReadReceipts,
+      },
+    },
+    {
+      panelKey = "chatsPanel",
+      settingsKey = "chatsSettings",
+      create = options.chatsCreate,
+      config = {
+        showGroupChats = settingsConfig.showGroupChats,
+        enabledChannels = settingsConfig.enabledChannels,
+        collapseDuplicates = settingsConfig.collapseDuplicates,
+        hideChannelsFromDefaultChat = settingsConfig.hideChannelsFromDefaultChat,
+      },
+    },
+    {
+      panelKey = "filtersPanel",
+      settingsKey = "filtersSettings",
+      create = options.filtersCreate,
+      config = {
+        filters = options.filters or { ignored = {}, rules = {} },
       },
     },
     {
@@ -159,7 +186,7 @@ function SettingsPanels.Create(factory, options)
       },
     },
   }
-  local settingsPanels = { false, false, false, false, false, false }
+  local settingsPanels = { false, false, false, false, false, false, false, false, false }
   local result = { settingsPanels = settingsPanels }
   local currentTheme = nil
   local currentOuterWidth = nil

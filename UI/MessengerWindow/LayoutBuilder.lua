@@ -93,7 +93,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local optionsScrollView = optionsPanelLayout.optionsScrollView
   local optionsMenuScrollView = optionsPanelLayout.optionsMenuScrollView
   local OPTIONS_CONTENT_HEIGHT = optionsPanelLayout.optionsContentHeight
-  local OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT = optionsPanelLayout.optionsMenuMinimumContentHeight
   local refreshOptionsMenuScrollGeometry = optionsPanelLayout.refreshOptionsMenuScrollGeometry
 
   local optionsMenuButtons = OptionsMenuButtons.Build(factory, optionsMenuScrollView.content, {
@@ -102,6 +101,8 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     nativeChrome = contactsSection.nativeChrome,
     theme = Theme,
   })
+  optionsPanelLayout.setMenuContentMeasure(optionsMenuButtons.contentHeight)
+  refreshOptionsMenuScrollGeometry()
   local generalTab = optionsMenuButtons.generalTab
   local appearanceTab = optionsMenuButtons.appearanceTab
   local behaviorTab = optionsMenuButtons.behaviorTab
@@ -126,12 +127,7 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     optionsMenuDivider = optionsMenuDivider,
     optionsContentBg = optionsContentBg,
     optionsHint = optionsHint,
-    generalTab = generalTab,
-    appearanceTab = appearanceTab,
-    behaviorTab = behaviorTab,
-    notificationsTab = notificationsTab,
-    iconsTab = iconsTab,
-    whatsNewTab = whatsNewTab,
+    settingsTabs = optionsMenuButtons.settingsTabs,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,
     clearAllChatsButton = clearAllChatsButton,
@@ -173,7 +169,6 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     contactsListHeight = contactsListHeight,
     contactsView = contactsView,
     optionsContentHeight = OPTIONS_CONTENT_HEIGHT,
-    optionsMenuMinimumContentHeight = OPTIONS_MENU_MINIMUM_CONTENT_HEIGHT,
     contentPane = contentPane,
     headerDivider = headerDivider,
     threadPane = threadPane,
@@ -191,6 +186,10 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
     notificationsTab = notificationsTab,
     iconsTab = iconsTab,
     whatsNewTab = whatsNewTab,
+    whispersTab = optionsMenuButtons.whispersTab,
+    chatsTab = optionsMenuButtons.chatsTab,
+    filtersTab = optionsMenuButtons.filtersTab,
+    settingsTabs = optionsMenuButtons.settingsTabs,
     optionsHint = optionsHint,
     resetWindowButton = resetWindowButton,
     resetIconButton = resetIconButton,

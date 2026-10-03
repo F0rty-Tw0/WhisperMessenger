@@ -58,7 +58,8 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   applyTexture(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_secondary)
 
   local menuPadding = theme.CONTENT_PADDING
-  local OPTIONS_MENU_MIN_CONTENT_HEIGHT = 430
+  -- Set once the nav buttons exist (OptionsMenuButtons contentHeight).
+  local measureMenuContent = nil
   local optionsMenuViewportHeight = nativeChrome and options.contactsHeight or (initialState.height - theme.TOP_BAR_HEIGHT)
   local optionsMenuScrollView = scrollView.Create(factory, optionsMenu, {
     width = contactsWidth,
@@ -73,7 +74,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   local function refreshOptionsMenuScrollGeometry()
     local menuWidth = sizeValue(optionsMenu, "GetWidth", "width", contactsWidth)
     local menuHeight = sizeValue(optionsMenu, "GetHeight", "height", optionsMenuViewportHeight)
-    local menuContentHeight = math.max(menuHeight, OPTIONS_MENU_MIN_CONTENT_HEIGHT)
+    local menuContentHeight = math.max(menuHeight, measureMenuContent and measureMenuContent() or 0)
 
     optionsMenuScrollView.totalWidth = menuWidth
     optionsMenuScrollView.viewportHeight = menuHeight
@@ -145,7 +146,9 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
     optionsMenuBg = optionsMenuBg,
     menuPadding = menuPadding,
     optionsMenuScrollView = optionsMenuScrollView,
-    optionsMenuMinimumContentHeight = OPTIONS_MENU_MIN_CONTENT_HEIGHT,
+    setMenuContentMeasure = function(measure)
+      measureMenuContent = measure
+    end,
     refreshOptionsMenuScrollGeometry = refreshOptionsMenuScrollGeometry,
     optionsMenuDivider = optionsMenuDivider,
     optionsContentPane = optionsContentPane,

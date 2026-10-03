@@ -61,12 +61,12 @@ return function()
 
   do
     local optionsMenuScrollView = layout.optionsMenuScrollView
-    layout.optionsMenu:SetHeight(473)
+    layout.optionsMenu:SetHeight(540)
     layout.optionsPanel:Show()
 
-    assert(optionsMenuScrollView.scrollFrame:GetHeight() == 473, "473px live options menu should set a 473px scroll viewport")
-    assert(optionsMenuScrollView.content:GetHeight() == 473, "473px live options menu should set 473px scroll content despite a 580px outer window")
-    assert(optionsMenuScrollView.hasOverflow == false, "473px live options menu should not overflow")
+    assert(optionsMenuScrollView.scrollFrame:GetHeight() == 540, "540px live options menu should set a 540px scroll viewport")
+    assert(optionsMenuScrollView.content:GetHeight() == 540, "540px live options menu should set 540px scroll content despite a 580px outer window")
+    assert(optionsMenuScrollView.hasOverflow == false, "540px live options menu should not overflow")
   end
 
   -- test_options_menu_overflows_below_live_content_minimum
@@ -77,7 +77,8 @@ return function()
     layout.optionsPanel:Show()
 
     assert(optionsMenuScrollView.scrollFrame:GetHeight() == 213, "213px live options menu should set a 213px scroll viewport")
-    assert(optionsMenuScrollView.content:GetHeight() == 430, "213px live options menu should keep its 430px minimum content height")
+    -- The exact floor (every tab plus the footer) is pinned in test_options_menu_height.
+    assert(optionsMenuScrollView.content:GetHeight() > 213, "213px live options menu should keep its measured minimum content height")
     assert(optionsMenuScrollView.hasOverflow == true, "213px live options menu should overflow")
 
     optionsMenuScrollView.scrollFrame:SetVerticalScroll(100)
@@ -91,7 +92,7 @@ return function()
 
   do
     local optionsMenuScrollView = layout.optionsMenuScrollView
-    layout.optionsMenu:SetHeight(473)
+    layout.optionsMenu:SetHeight(540)
     layout.optionsPanel:Show()
 
     assert(optionsMenuScrollView.hasOverflow == false, "grown live options menu should clear overflow")

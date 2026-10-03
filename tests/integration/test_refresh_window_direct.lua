@@ -1,3 +1,7 @@
+-- Direct refreshWindow calls (mark read, pin, mute, presence, status tick)
+-- stay synchronous and unthrottled: each call enriches contacts once. Only
+-- incoming chat lines are coalesced (see tests/core/test_incoming_refresh.lua).
+
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local FakeUI = require("tests.helpers.fake_ui")
 local ContactEnricher = require("WhisperMessenger.Model.ContactEnricher")

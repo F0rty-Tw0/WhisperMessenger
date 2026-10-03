@@ -1,0 +1,175 @@
+local IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList")
+
+local function newFilters()
+  return { ignored = {}, rules = {} }
+end
+
+return function()
+  -- test_add_then_lookup_returns_entry_with_reason
+  do
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Spammer-Realm", { reason = "gold seller", now = 100 })
+    local entry = IgnoreList.Lookup(filters, "Spammer-Realm", 200)
+    assert(entry ~= nil, "added name is found")
+    assert(entry.reason == "gold seller", "entry keeps its reason")
+    assert(entry.name == "Spammer-Realm", "entry keeps the typed name")
+    assert(entry.addedAt == 100, "entry records when it was added")
+    assert(entry.expiresAt == nil, "no duration means forever")
+    assert(entry.blocked == 0, "a new entry has blocked nothing")
+  end
+
+  -- test_lookup_is_case_insensitive
+  do
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Spammer-Realm", { now = 1 })
+    assert(IgnoreList.Lookup(filters, "spammer-realm", 2) ~= nil, "lowercase lookup finds the entry")
+    assert(IgnoreList.Key("SPAMMER-Realm") == "spammer-realm", "key is lowercased")
+  end
+
+  -- test_key_is_nil_for_non_strings
+  do
+    assert(IgnoreList.Key(nil) == nil, "nil name has no key")
+    assert(IgnoreList.Key(42) == nil, "number name has no key")
+    assert(IgnoreList.Lookup(newFilters(), nil, 1) == nil, "lookup of nil name is nil")
+  end
+
+  -- test_expired_entry_passes_and_is_removed (Review Focus 4)
+  do
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Spammer", { now = 1000, duration = 86400 })
+    assert(filters.ignored["spammer"].expiresAt == 1000 + 86400, "expiry is now + duration")
+    assert(IgnoreList.Lookup(filters, "Spammer", 1000 + 86401) == nil, "expired entry no longer ignores")
+    assert(filters.ignored["spammer"] == nil, "expired entry is deleted on lookup")
+  end
+
+  -- test_add_without_now_uses_the_clock
+  do
+    local savedTime = rawget(_G, "time")
+    rawset(_G, "time", function()
+      return 1000
+    end)
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { duration = 86400 }))
+    rawset(_G, "time", savedTime)
+    assert(entry.addedAt == 1000, "addedAt defaults to now")
+    assert(entry.expiresAt == 1000 + 86400, "a timed entry without now still expires, got " .. tostring(entry.expiresAt))
+  end
+
+  -- test_remove_deletes_entry
+  do
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Spammer", { now = 1 })
+    IgnoreList.Remove(filters, "SPAMMER")
+    assert(filters.ignored["spammer"] == nil, "remove is case-insensitive")
+  end
+
+  -- test_record_blocked_caps_last_text
+  do
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { now = 1 }))
+    IgnoreList.RecordBlocked(entry, string.rep("a", 400), "Trade", 50)
+    assert(entry.blocked == 1, "blocked counter increments")
+    assert(#entry.lastText <= 255, "last text is capped at 255 bytes, got " .. #entry.lastText)
+    assert(entry.lastChannel == "Trade", "last channel is stored")
+    assert(entry.lastAt == 50, "last time is stored")
+  end
+
+  -- test_sweep_removes_only_expired_entries
+  do
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Old", { now = 0, duration = 86400 })
+    IgnoreList.Add(filters, "Week", { now = 0, duration = 604800 })
+    IgnoreList.Add(filters, "Forever", { now = 0 })
+    IgnoreList.Sweep(filters, 100000)
+    assert(filters.ignored["old"] == nil, "expired entry is swept")
+    assert(filters.ignored["week"] ~= nil, "unexpired entry stays")
+    assert(filters.ignored["forever"] ~= nil, "forever entry stays")
+  end
+
+  -- test_key_is_name_realm_regardless_of_the_local_realm
+  do
+    local savedAmbiguate = rawget(_G, "Ambiguate")
+    local savedRealm = rawget(_G, "GetNormalizedRealmName")
+    local localRealm = "Area52"
+    -- Ambiguate(name, "none") drops the realm only for same-realm players.
+    rawset(_G, "Ambiguate", function(name)
+      local character, realm = string.match(name, "^(.-)%-(.+)$")
+      if realm == localRealm then
+        return character
+      end
+      return name
+    end)
+    rawset(_G, "GetNormalizedRealmName", function()
+      return localRealm
+    end)
+
+    assert(IgnoreList.Key("Bob") == "bob-area52", "a bare same-realm name gets the local realm, got " .. tostring(IgnoreList.Key("Bob")))
+    assert(IgnoreList.Key("Bob-Area52") == IgnoreList.Key("Bob"), "same-realm full and bare names share a key")
+    assert(IgnoreList.Key("Bob-Stormrage") == "bob-stormrage", "a cross-realm name keeps its realm")
+    assert(IgnoreList.Key("Bob-Area 52") == "bob-area52", "spaces in a typed realm are dropped")
+
+    local filters = newFilters()
+    IgnoreList.Add(filters, "Bob", { now = 1 })
+    localRealm = "Stormrage"
+    assert(IgnoreList.Lookup(filters, "Bob", 2) == nil, "another realm's Bob is not the ignored player")
+    assert(IgnoreList.Lookup(filters, "Bob-Area52", 2) ~= nil, "the ignored Bob is still found from another realm")
+
+    rawset(_G, "Ambiguate", savedAmbiguate)
+    rawset(_G, "GetNormalizedRealmName", savedRealm)
+  end
+
+  -- test_re_adding_keeps_the_blocked_history
+  do
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { reason = "old", now = 1 }))
+    IgnoreList.RecordBlocked(entry, "wts gold", "Trade", 50)
+    local again = assert(IgnoreList.Add(filters, "SPAMMER", { reason = "new", now = 100, duration = 10 }))
+    assert(again == entry, "the existing entry is updated in place")
+    assert(again.reason == "new" and again.expiresAt == 110, "reason and expiry are updated")
+    assert(again.blocked == 1 and again.lastText == "wts gold", "blocked count and last line are kept")
+    assert(again.lastChannel == "Trade" and again.lastAt == 50, "last channel and time are kept")
+    assert(again.addedAt == 1, "the original add date is kept")
+  end
+
+  -- test_remove_key_deletes_the_stored_entry
+  do
+    local filters = newFilters()
+    filters.ignored["bob-area52"] = { name = "Bob", blocked = 0 }
+    IgnoreList.RemoveKey(filters, "bob-area52")
+    assert(filters.ignored["bob-area52"] == nil, "entry removed by its stored key")
+  end
+
+  -- test_bare_name_is_saved_with_the_local_realm
+  do
+    local savedRealm = rawget(_G, "GetNormalizedRealmName")
+    rawset(_G, "GetNormalizedRealmName", function()
+      return "Area52"
+    end)
+    local filters = newFilters()
+    local entry = assert(IgnoreList.Add(filters, "Bob", { now = 1 }))
+    local cross = assert(IgnoreList.Add(filters, "Kim-Stormrage", { now = 1 }))
+    rawset(_G, "GetNormalizedRealmName", savedRealm)
+    assert(entry.name == "Bob-Area52", "a bare name shows which realm it is, got " .. tostring(entry.name))
+    assert(cross.name == "Kim-Stormrage", "a full name is kept as typed")
+  end
+
+  -- test_clear_blocked_counts_zeroes_rules_and_players
+  do
+    local filters = { ignored = { bob = { name = "Bob", blocked = 7, lastText = "wts" } }, rules = { { words = { "wts" }, blocked = 4 } } }
+    IgnoreList.ClearBlockedCounts(filters)
+    assert(filters.ignored.bob.blocked == 0, "a player's count starts the session at 0")
+    assert(filters.rules[1].blocked == 0, "a rule's count starts the session at 0")
+    assert(filters.ignored.bob.lastText == "wts", "the last blocked line stays")
+  end
+
+  -- test_ensure_backfills_filters_for_old_saved_variables
+  do
+    local accountState = { conversations = {} }
+    local filters = IgnoreList.Ensure(accountState)
+    assert(accountState.filters == filters, "filters are stored on the account")
+    assert(type(filters.ignored) == "table" and type(filters.rules) == "table", "both lists exist")
+    local kept = { ignored = { x = {} } }
+    accountState.filters = kept
+    assert(IgnoreList.Ensure(accountState) == kept and type(kept.rules) == "table", "existing filters are kept and completed")
+  end
+end

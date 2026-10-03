@@ -67,6 +67,21 @@ function FindUI.isToggleOn(switchButton)
   return knob.point[1] == "RIGHT"
 end
 
+-- Number of toggle switches below `root` (one knob each).
+function FindUI.countToggles(root)
+  local count = 0
+  local function walk(node)
+    for _, child in ipairs(node.children or {}) do
+      if child.texturePath == ToggleSwitch.KNOB_TEXTURE and child.width == ToggleSwitch.KNOB_SIZE then
+        count = count + 1
+      end
+      walk(child)
+    end
+  end
+  walk(root)
+  return count
+end
+
 -- Option buttons of the ButtonSelector row labelled `labelText`.
 function FindUI.selectorButtons(root, labelText)
   return FindUI.ofType(FindUI.byLabel(root, labelText), "Button")

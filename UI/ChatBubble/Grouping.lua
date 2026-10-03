@@ -18,8 +18,9 @@ function Grouping.ShouldGroup(prev, current)
   if prev.kind == "channel_context" or current.kind == "channel_context" then
     return false
   end
-  -- Queued / failed messages carry their own status label.
-  if prev.delivery ~= nil or current.delivery ~= nil then
+  -- Queued / failed messages carry their own status label, and a collapsed
+  -- repeat needs its label for the "×N" counter.
+  if prev.delivery ~= nil or current.delivery ~= nil or (tonumber(current.repeatCount) or 1) > 1 then
     return false
   end
   if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then

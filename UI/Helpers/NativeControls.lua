@@ -14,6 +14,7 @@ local NativeControls = {}
 NativeControls.CHECK_TEMPLATE = "UICheckButtonTemplate"
 NativeControls.CHECK_SIZE = 26
 NativeControls.BUTTON_TEMPLATE = "UIPanelButtonTemplate"
+NativeControls.BUTTON_HIGHLIGHT = "Interface\\Buttons\\UI-Panel-Button-Highlight"
 NativeControls.SLIDER_TEMPLATE = "OptionsSliderTemplate"
 -- OptionsSliderTemplate's thumb art width, for clients that can't report it.
 NativeControls.SLIDER_THUMB_SIZE = 32
@@ -36,6 +37,20 @@ function NativeControls.CreateCheckButton(factory, parent)
   return check
 end
 
+-- The live Retail client can hand back a panel button without the
+-- template's hover glow; add the same art (UIPanelButtonHighlightTexture).
+local function ensureHoverGlow(button)
+  if type(button.GetHighlightTexture) == "function" and button:GetHighlightTexture() ~= nil then
+    return
+  end
+  local glow = button:CreateTexture(nil, "HIGHLIGHT")
+  glow:SetAllPoints(button)
+  glow:SetTexture(NativeControls.BUTTON_HIGHLIGHT)
+  glow:SetTexCoord(0, 0.625, 0, 0.6875)
+  glow:SetBlendMode("ADD")
+  button:SetHighlightTexture(glow)
+end
+
 -- Red-gold panel button in Blizzard's own text colours. Keeps the option
 -- button API: callers relabel through `.label:SetText`, and theme refreshes
 -- have nothing to paint.
@@ -44,6 +59,7 @@ function NativeControls.CreateButton(factory, parent, text, width, height)
   if not button then
     return nil
   end
+  ensureHoverGlow(button)
   button:SetSize(width, height)
   button:SetText(text)
   button.label = {

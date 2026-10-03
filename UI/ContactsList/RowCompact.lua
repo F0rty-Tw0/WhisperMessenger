@@ -10,10 +10,10 @@ local unpackValues = table.unpack or _G.unpack
 
 -- Compact ("rail") look of a bound contact row: only the icon is left,
 -- centred, with the unread badge on its top-right corner and the status dot
--- on its bottom-right. People get an initials avatar, group chats keep their
--- achievement art; both stay in the class icons' squircle. Runs at the end
--- of every bind; the full row is restored when a row that was compact binds
--- expanded again.
+-- on its bottom-right. People and channel chats get an initials avatar,
+-- other group chats keep their achievement art; all stay in the class icons'
+-- squircle. Runs at the end of every bind; the full row is restored when a
+-- row that was compact binds expanded again.
 local RowCompact = {}
 
 -- How far the badge pokes past the icon's corner.
@@ -63,12 +63,8 @@ local function applyCompact(row, item, isGroup)
   setShown(row.removeButton, false)
   setShown(row.pinnedMarker, false)
 
-  -- Group art was already set on the class icon by the bind.
-  if isGroup then
-    RailAvatar.hide(row)
-  else
-    RailAvatar.update(row, item)
-  end
+  -- The class or group art was already set on the icon by the bind.
+  RailAvatar.apply(row, item, isGroup)
 end
 
 -- Location, faction, muted and action visibility were already set by the

@@ -10,11 +10,7 @@ local function L(key)
 end
 
 local MythicSuspendController = {}
-local DEFAULT_MYTHIC_PAUSE_NOTICE_KEY = "Whispers are paused in Mythic content. Incoming and outgoing messages will resume after you leave."
-local SUSPEND_PRINT_KEY = "Suspended for mythic content. Whispers will resume when you leave."
-local RESUME_PRINT_KEY = "Resumed. Whispers are active again."
-local R_REPLY_ADVISORY_KEY =
-  '/r and R-key may fail in Mythic while "Hide whispers from default chat" is on. Use |cffffff00/wr|r to reply (or bind it to R via macro).'
+local DEFAULT_MYTHIC_PAUSE_NOTICE_KEY = "Messages are paused in Mythic content and will resume after you leave."
 
 function MythicSuspendController.Attach(runtime, deps)
   deps = deps or {}
@@ -59,23 +55,13 @@ function MythicSuspendController.Attach(runtime, deps)
       runtime.syncReplyKey()
     end
 
-    local printFn = deps.print or _G.print
-    if type(printFn) == "function" then
-      printFn("|cff888888[WhisperMessenger]|r " .. L(SUSPEND_PRINT_KEY))
-      local settings = runtime.accountState and runtime.accountState.settings
-      if settings and settings.hideFromDefaultChat == true then
-        printFn("|cff888888[WhisperMessenger]|r " .. L(R_REPLY_ADVISORY_KEY))
-      end
-    end
+    -- No chat print: printing to the game's chat taints its line fading.
+    -- The window notice and the icon say messages are paused.
   end
 
   runtime.resume = function()
     runtime.messagingNotice = nil
     _G._wmSuspended = nil
-    local printFn = deps.print or _G.print
-    if type(printFn) == "function" then
-      printFn("|cff888888[WhisperMessenger]|r " .. L(RESUME_PRINT_KEY))
-    end
 
     -- Clear our own stale reply key. We did NOT receive whispers during M+
     -- (LIVE_EVENTS were unregistered), so any value here is pre-M+ and not
