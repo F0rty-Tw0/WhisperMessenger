@@ -55,13 +55,12 @@ function ToggleFlow.Create(options)
     if nextVisible then
       local window = getWindow()
       local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or nil
-      local unreadKey = findLatestUnreadKey()
-      -- Gate the "jump to unread" shortcut by the current tab: on the Groups
-      -- tab we don't want a freshly-received whisper to steal the selection,
-      -- and on the Whispers tab an unread party message shouldn't.
-      if unreadKey and not matchesTab(unreadKey, tabMode) then
-        unreadKey = nil
-      end
+      -- Jump to the latest unread chat on the open tab: on the Groups tab a
+      -- fresh whisper must not steal the selection, and on the Whispers tab
+      -- an unread party message must not either.
+      local unreadKey = findLatestUnreadKey(function(conversationKey)
+        return matchesTab(conversationKey, tabMode)
+      end)
 
       local targetKey = unreadKey or runtime.activeConversationKey
       if targetKey ~= nil and matchesTab(targetKey, tabMode) then

@@ -262,11 +262,10 @@ function WindowCoordinator.Create(options)
     end,
   }).schedule
 
-  function coordinator.findLatestUnreadKey()
-    local freshContacts = buildContacts()
-
-    for _, item in ipairs(freshContacts) do
-      if BadgeFilter.BadgeUnread(item) > 0 then
+  -- accept(key), when given, limits the search (e.g. to the open tab).
+  function coordinator.findLatestUnreadKey(accept)
+    for _, item in ipairs(buildContacts()) do
+      if BadgeFilter.BadgeUnread(item) > 0 and (accept == nil or accept(item.conversationKey)) then
         return item.conversationKey
       end
     end
