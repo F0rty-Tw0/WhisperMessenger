@@ -424,7 +424,7 @@ local Italian = {
   ["1 day"] = "1 giorno",
   ["7 days"] = "7 giorni",
   ["Forever"] = "Per sempre",
-  ["Blocked %d"] = "Bloccati: %d",
+  ["Blocked %s this session"] = "Bloccati in questa sessione: %s",
   ["Last: %s"] = "Ultimo: %s",
   ["Keyword rules"] = "Regole per parole chiave",
   ["Add rule…"] = "Aggiungi regola…",
@@ -451,6 +451,7 @@ local Italian = {
   ["Block…"] = "Blocca…",
   ["Block sender…"] = "Blocca mittente…",
   ["Blocked"] = "Bloccato",
+  ["Unblock"] = "Sblocca",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "I canali che spunti nelle impostazioni Chat compaiono qui. Scegli un canale a sinistra.",
 }

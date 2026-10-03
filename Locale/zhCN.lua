@@ -424,7 +424,7 @@ local SimplifiedChinese = {
   ["1 day"] = "1天",
   ["7 days"] = "7天",
   ["Forever"] = "永久",
-  ["Blocked %d"] = "已拦截 %d",
+  ["Blocked %s this session"] = "本次登录已拦截 %s",
   ["Last: %s"] = "最近：%s",
   ["Keyword rules"] = "关键词规则",
   ["Add rule…"] = "添加规则…",
@@ -451,6 +451,7 @@ local SimplifiedChinese = {
   ["Block…"] = "屏蔽…",
   ["Block sender…"] = "屏蔽发送者…",
   ["Blocked"] = "已屏蔽",
+  ["Unblock"] = "取消屏蔽",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
 }

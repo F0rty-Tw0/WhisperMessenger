@@ -120,6 +120,7 @@ return function()
   assert(Localization.Text("Block…") ~= "Block…", "row entry translated")
   assert(Localization.Text("Block sender…") ~= "Block sender…", "message entry translated")
   assert(Localization.Text("Blocked") ~= "Blocked", "header status translated")
+  assert(Localization.Text("Unblock") ~= "Unblock", "remove tooltip translated")
   Localization.Configure({ language = "enUS" })
 
   _G.Menu = saved.Menu

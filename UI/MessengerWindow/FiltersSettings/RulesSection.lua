@@ -12,19 +12,21 @@ local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Share
 local RemoveButton = ns.RemoveButton or require("WhisperMessenger.UI.Shared.RemoveButton")
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 local RulePresets = ns.RulePresets or require("WhisperMessenger.Model.Filters.RulePresets")
+local BlockedCount = ns.FiltersSettingsBlockedCount or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.BlockedCount")
 
 -- "Keyword rules" section of the Filters page: each rule's name (presets) or
--- words joined by " + ", an on/off toggle, its blocked count and a remove
--- button, then "Add rule…" and "Reset to Defaults" buttons. Clicking a rule's
--- label edits its words.
+-- words joined by " + " on one truncated line, this session's blocked count
+-- below it, an on/off toggle and a remove button, then "Add rule…" and
+-- "Reset to Defaults" buttons. Clicking a rule's label edits its words.
 local RulesSection = {}
 
 local ADD_DIALOG = "WHISPER_MESSENGER_ADD_KEYWORD_RULE"
 local EDIT_DIALOG = "WHISPER_MESSENGER_EDIT_KEYWORD_RULE"
 local RESET_DIALOG = "WHISPER_MESSENGER_RESET_KEYWORD_RULES"
 local RULE_MAX_LETTERS = 255
-local ROW_HEIGHT = 24
 local GAP = 8
+-- Half the space between the name line and the count line, at the row's centre.
+local LINE_GAP = 1
 -- The syntax lives in the page's "How filters work" section.
 local HINT = "Click a rule to edit its words."
 local RESET_PROMPT = "Reset keyword rules? Your own rules are deleted and the ready-made ones restored."
@@ -50,6 +52,16 @@ local function confirmReset(onAccept)
     preferredIndex = 3,
   }
   _G.StaticPopup_Show(RESET_DIALOG)
+end
+
+local function singleLine(label)
+  label:SetWordWrap(false)
+  if label.SetNonSpaceWrap then
+    label:SetNonSpaceWrap(false)
+  end
+  if label.SetMaxLines then
+    label:SetMaxLines(1)
+  end
 end
 
 local function indexOf(rules, rule)
@@ -89,8 +101,8 @@ function RulesSection.Create(factory, frame, anchor, options)
 
   local function createRow()
     local row = factory.CreateFrame("Frame", nil, list)
-    row:SetHeight(ROW_HEIGHT)
-    row.toggle = UIHelpers.createToggleRow(factory, row, "", false, toggleColors, { width = width, height = ROW_HEIGHT }, function(value)
+    local layout = { width = width, height = Theme.FilterRowHeight() }
+    row.toggle = UIHelpers.createToggleRow(factory, row, "", false, toggleColors, layout, function(value)
       KeywordRules.SetEnabled(filters, row.index, value)
       options.onFiltersChanged()
     end)
@@ -102,12 +114,20 @@ function RulesSection.Create(factory, frame, anchor, options)
       changed()
     end)
     row.removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
-    row.blockedText = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-    row.blockedText:SetPoint("RIGHT", row.toggle.dot, "LEFT", -GAP, 0)
-    UIHelpers.setTextColor(row.blockedText, Theme.COLORS.text_secondary)
+    -- The name and count lines meet at the row's centre, level with the toggle.
+    local name = row.toggle.label
+    singleLine(name)
+    name:ClearAllPoints()
+    name:SetPoint("BOTTOMLEFT", row, "LEFT", 0, LINE_GAP)
+    row.countText = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
+    row.countText:SetJustifyH("LEFT")
+    singleLine(row.countText)
+    row.countText:SetPoint("TOPLEFT", row, "LEFT", 0, -LINE_GAP)
+    row.countText:SetPoint("TOPRIGHT", row.toggle.dot, "LEFT", -GAP, -LINE_GAP)
+    UIHelpers.setTextColor(row.countText, Theme.COLORS.text_secondary)
     row.editButton = factory.CreateFrame("Button", nil, row)
     row.editButton:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
-    row.editButton:SetPoint("BOTTOMRIGHT", row.blockedText, "BOTTOMLEFT", -GAP, 0)
+    row.editButton:SetPoint("BOTTOMRIGHT", row.countText, "BOTTOMRIGHT", 0, 0)
     row.editButton:SetScript("OnEnter", function(self)
       PickerStyles.ShowTooltipText(self, KeywordRules.Format(filters.rules[row.index]))
     end)
@@ -140,25 +160,26 @@ function RulesSection.Create(factory, frame, anchor, options)
 
   function section.redraw()
     local rules = filters.rules
+    local rowHeight = Theme.FilterRowHeight()
     for index, rule in ipairs(rules) do
       local row = section.rows[index]
       if row == nil then
         row = createRow()
-        row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * (ROW_HEIGHT + GAP))
         section.rows[index] = row
       end
       row.index = index
-      row:SetWidth(width)
+      row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * rowHeight)
+      row:SetSize(width, rowHeight)
       row.toggle.setWidth(toggleWidth())
       row.toggle.label:SetText(rule.name and text(rule.name) or KeywordRules.Format(rule))
       row.toggle.setValue(rule.enabled ~= false)
-      row.blockedText:SetText(string.format(text("Blocked %d"), rule.blocked or 0))
+      row.countText:SetText(BlockedCount.Text(rule.blocked))
       row:Show()
     end
     for index = #rules + 1, #section.rows do
       section.rows[index]:Hide()
     end
-    list:SetSize(width, math.max(#rules * (ROW_HEIGHT + GAP), 1))
+    list:SetSize(width, math.max(#rules * rowHeight, 1))
     if options.onLayoutChanged then
       options.onLayoutChanged()
     end
@@ -206,7 +227,7 @@ function RulesSection.Create(factory, frame, anchor, options)
     titleSection.refreshTheme(Theme)
     UIHelpers.setTextColor(hint, Theme.COLORS.text_secondary)
     for _, row in ipairs(section.rows) do
-      UIHelpers.setTextColor(row.blockedText, Theme.COLORS.text_secondary)
+      UIHelpers.setTextColor(row.countText, Theme.COLORS.text_secondary)
       RemoveButton.Paint(row.removeButton, false)
     end
   end

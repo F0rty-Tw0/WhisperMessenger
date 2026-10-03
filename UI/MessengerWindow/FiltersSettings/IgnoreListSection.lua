@@ -107,16 +107,17 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   end
 
   local function bindRows()
+    local rowHeight = Theme.FilterRowHeight()
     for index = 1, IgnoreListSection.VISIBLE_ROWS do
       local entry = entries[offset + index]
       local row = section.rows[index]
       if entry ~= nil then
         if row == nil then
           row = IgnoreRow.Create(factory, list, remove)
-          row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * IgnoreRow.HEIGHT)
           section.rows[index] = row
         end
-        row:SetWidth(width)
+        row:SetPoint("TOPLEFT", list, "TOPLEFT", 0, -(index - 1) * rowHeight)
+        row:SetSize(width, rowHeight)
         IgnoreRow.Bind(row, entry, entryKeys[entry])
         row:Show()
       elseif row ~= nil then
@@ -185,7 +186,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
     offset = math.min(offset, math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS))
     bindRows()
     local shown = math.min(#entries, IgnoreListSection.VISIBLE_ROWS)
-    list:SetSize(width, math.max(shown * IgnoreRow.HEIGHT, 1))
+    list:SetSize(width, math.max(shown * Theme.FilterRowHeight(), 1))
     if options.onLayoutChanged then
       options.onLayoutChanged()
     end

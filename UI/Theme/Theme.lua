@@ -61,10 +61,18 @@ Theme.ClassIcon = ThemeTextures.ClassIcon
 Theme.FactionIcon = ThemeTextures.FactionIcon
 Theme.ChannelIcon = ThemeTextures.ChannelIcon
 
+local function grownFontPx()
+  return math.max(0, Fonts.GetFontSize() - Fonts.DEFAULT_BASE_SIZE)
+end
+
 -- Contact row height for the current font size. Never below the base row.
 function Theme.ContactRowHeight()
-  local grownPx = math.max(0, Fonts.GetFontSize() - Fonts.DEFAULT_BASE_SIZE)
-  return Layout.CONTACT_ROW_HEIGHT + grownPx * Layout.CONTACT_ROW_GROWTH_PER_FONT_PX
+  return Layout.CONTACT_ROW_HEIGHT + grownFontPx() * Layout.CONTACT_ROW_GROWTH_PER_FONT_PX
+end
+
+-- Filters page row height (rules, ignored players) for the current font size.
+function Theme.FilterRowHeight()
+  return Layout.FILTER_ROW_HEIGHT + grownFontPx() * Layout.FILTER_ROW_GROWTH_PER_FONT_PX
 end
 
 local BubbleColors = ns.ThemeBubbleColors

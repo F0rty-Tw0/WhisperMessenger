@@ -428,7 +428,7 @@ local Spanish = {
   ["1 day"] = "1 día",
   ["7 days"] = "7 días",
   ["Forever"] = "Siempre",
-  ["Blocked %d"] = "Bloqueados: %d",
+  ["Blocked %s this session"] = "Bloqueados en esta sesión: %s",
   ["Last: %s"] = "Último: %s",
   ["Keyword rules"] = "Reglas de palabras clave",
   ["Add rule…"] = "Agregar regla…",
@@ -455,6 +455,7 @@ local Spanish = {
   ["Block…"] = "Bloquear…",
   ["Block sender…"] = "Bloquear al remitente…",
   ["Blocked"] = "Bloqueado",
+  ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Los canales que marques en la configuración de Chats aparecen aquí. Elige un canal a la izquierda.",
 }

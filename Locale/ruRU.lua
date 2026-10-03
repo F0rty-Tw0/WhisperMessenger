@@ -424,7 +424,7 @@ local Russian = {
   ["1 day"] = "1 день",
   ["7 days"] = "7 дней",
   ["Forever"] = "Навсегда",
-  ["Blocked %d"] = "Заблокировано: %d",
+  ["Blocked %s this session"] = "Заблокировано за сеанс: %s",
   ["Last: %s"] = "Последнее: %s",
   ["Keyword rules"] = "Правила по словам",
   ["Add rule…"] = "Добавить правило…",
@@ -451,6 +451,7 @@ local Russian = {
   ["Block…"] = "Заблокировать…",
   ["Block sender…"] = "Заблокировать отправителя…",
   ["Blocked"] = "Заблокирован",
+  ["Unblock"] = "Разблокировать",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
 }

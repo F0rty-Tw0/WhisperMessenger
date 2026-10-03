@@ -424,7 +424,7 @@ local TraditionalChinese = {
   ["1 day"] = "1天",
   ["7 days"] = "7天",
   ["Forever"] = "永久",
-  ["Blocked %d"] = "已攔截 %d",
+  ["Blocked %s this session"] = "本次登入已攔截 %s",
   ["Last: %s"] = "最近：%s",
   ["Keyword rules"] = "關鍵字規則",
   ["Add rule…"] = "新增規則…",
@@ -451,6 +451,7 @@ local TraditionalChinese = {
   ["Block…"] = "封鎖…",
   ["Block sender…"] = "封鎖發送者…",
   ["Blocked"] = "已封鎖",
+  ["Unblock"] = "解除封鎖",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天設定中勾選的頻道會顯示在這裡。請在左側選擇一個頻道。",
 }

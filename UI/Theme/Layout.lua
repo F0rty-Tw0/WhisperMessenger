@@ -43,6 +43,11 @@ local Layout = {
   -- Rows grow with the font slider above the default size: three text lines
   -- (name, zone, preview) each need 1px per font px.
   CONTACT_ROW_GROWTH_PER_FONT_PX = 3,
+
+  -- Filters page rows (keyword rules, ignored players): name over a smaller
+  -- count line, so each grows 2px per font px above the default size.
+  FILTER_ROW_HEIGHT = 36,
+  FILTER_ROW_GROWTH_PER_FONT_PX = 2,
   CONTACT_ICON_SIZE = 34,
   CONTACT_FACTION_SIZE = 14,
   CONTACT_STATUS_SIZE = 10,

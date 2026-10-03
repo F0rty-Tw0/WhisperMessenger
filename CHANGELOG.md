@@ -26,6 +26,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: the tabs under the window now always fit its width, even with Requests turned on; a long tab name is shortened and shows in full when you point at it.
 - Fixed: on Classic game versions, text boxes in pop-ups (editing a filter rule, starting a whisper, copying a message) no longer stick out past the pop-up's edges, and the pop-up no longer gets wider each time it opens.
 - Fixed: on Classic game versions, the tabs under the window with the Native WoW HUD on were about twice as wide as they should be.
+- Fixed: on the Filters page, long rule and player names no longer run into the blocked count at large font sizes. Each row now shows the name on one line with "Blocked N this session" underneath.
+- Point at a player in the Filters page's block list to read their full last blocked message, the reason and this session's count.
 - Blocked counts on the Filters page now count only the current session and start again from zero every time you log in or reload.
 
 ## [2.0.2] - 2026-10-02

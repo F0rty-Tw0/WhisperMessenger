@@ -9,7 +9,8 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local PickerStyles = ns.PickerStyles or require("WhisperMessenger.UI.Shared.PickerStyles")
 
 -- Small trash-icon button for list rows on the settings pages: dims to the
--- icon colour, turns red on hover and shows a "Remove" tooltip.
+-- icon colour, turns red on hover and shows a "Remove" tooltip (or
+-- tooltipKey, e.g. "Unblock").
 local RemoveButton = {}
 
 RemoveButton.SIZE = 16
@@ -18,7 +19,7 @@ function RemoveButton.Paint(button, hovered)
   UIHelpers.applyVertexColor(button.icon, hovered and Theme.COLORS.danger_text or Theme.COLORS.action_icon or Theme.COLORS.text_secondary)
 end
 
-function RemoveButton.Create(factory, parent, onClick)
+function RemoveButton.Create(factory, parent, onClick, tooltipKey)
   local button = factory.CreateFrame("Button", nil, parent)
   button:SetSize(RemoveButton.SIZE, RemoveButton.SIZE)
   button.icon = button:CreateTexture(nil, "ARTWORK")
@@ -27,7 +28,7 @@ function RemoveButton.Create(factory, parent, onClick)
   RemoveButton.Paint(button, false)
   button:SetScript("OnEnter", function(self)
     RemoveButton.Paint(self, true)
-    PickerStyles.ShowTooltipText(self, Localization.Text("Remove"))
+    PickerStyles.ShowTooltipText(self, Localization.Text(tooltipKey or "Remove"))
   end)
   button:SetScript("OnLeave", function(self)
     RemoveButton.Paint(self, false)

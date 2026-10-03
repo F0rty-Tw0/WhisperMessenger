@@ -424,7 +424,7 @@ local Portuguese = {
   ["1 day"] = "1 dia",
   ["7 days"] = "7 dias",
   ["Forever"] = "Para sempre",
-  ["Blocked %d"] = "Bloqueadas: %d",
+  ["Blocked %s this session"] = "Bloqueadas nesta sessão: %s",
   ["Last: %s"] = "Última: %s",
   ["Keyword rules"] = "Regras de palavras-chave",
   ["Add rule…"] = "Adicionar regra…",
@@ -451,6 +451,7 @@ local Portuguese = {
   ["Block…"] = "Bloquear…",
   ["Block sender…"] = "Bloquear remetente…",
   ["Blocked"] = "Bloqueado",
+  ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Os canais que você marcar nas configurações de Bate-papos aparecem aqui. Escolha um canal à esquerda.",
 }

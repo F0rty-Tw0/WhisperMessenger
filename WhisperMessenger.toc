@@ -304,6 +304,7 @@ UI/MessengerWindow/WhispersSettings.lua
 UI/MessengerWindow/ChatsSettings/ChannelPicker.lua
 UI/MessengerWindow/ChatsSettings.lua
 UI/MessengerWindow/FiltersSettings/HelpSection.lua
+UI/MessengerWindow/FiltersSettings/BlockedCount.lua
 UI/MessengerWindow/FiltersSettings/IgnoreRow.lua
 UI/MessengerWindow/FiltersSettings/IgnoreListSection.lua
 UI/MessengerWindow/FiltersSettings/RulesSection.lua

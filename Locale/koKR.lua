@@ -424,7 +424,7 @@ local Korean = {
   ["1 day"] = "1일",
   ["7 days"] = "7일",
   ["Forever"] = "영구",
-  ["Blocked %d"] = "%d개 차단됨",
+  ["Blocked %s this session"] = "이번 세션에서 %s개 차단됨",
   ["Last: %s"] = "최근: %s",
   ["Keyword rules"] = "키워드 규칙",
   ["Add rule…"] = "규칙 추가…",
@@ -451,6 +451,7 @@ local Korean = {
   ["Block…"] = "차단…",
   ["Block sender…"] = "보낸 사람 차단…",
   ["Blocked"] = "차단됨",
+  ["Unblock"] = "차단 해제",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "채팅 설정에서 선택한 채널이 여기에 표시됩니다. 왼쪽에서 채널을 선택하세요.",
 }
