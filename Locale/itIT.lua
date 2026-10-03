@@ -446,7 +446,7 @@ local Italian = {
   ["Power-leveling sellers"] = "Venditori di power leveling",
   ["Guild recruitment"] = "Reclutamento di gilde",
   ["Community recruitment"] = "Reclutamento di comunità",
-  ["WTS / WTB"] = "WTS / WTB",
+  ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Blocca…",
   ["Block sender…"] = "Blocca mittente…",

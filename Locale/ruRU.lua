@@ -446,7 +446,7 @@ local Russian = {
   ["Power-leveling sellers"] = "Продавцы прокачки",
   ["Guild recruitment"] = "Набор в гильдии",
   ["Community recruitment"] = "Набор в сообщества",
-  ["WTS / WTB"] = "WTS / WTB",
+  ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Заблокировать…",
   ["Block sender…"] = "Заблокировать отправителя…",

@@ -446,7 +446,7 @@ local French = {
   ["Power-leveling sellers"] = "Vendeurs de montée de niveau",
   ["Guild recruitment"] = "Recrutement de guilde",
   ["Community recruitment"] = "Recrutement de communauté",
-  ["WTS / WTB"] = "WTS / WTB",
+  ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Bloquer…",
   ["Block sender…"] = "Bloquer l'expéditeur…",

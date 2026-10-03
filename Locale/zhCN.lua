@@ -446,7 +446,7 @@ local SimplifiedChinese = {
   ["Power-leveling sellers"] = "代练升级",
   ["Guild recruitment"] = "公会招募",
   ["Community recruitment"] = "社区招募",
-  ["WTS / WTB"] = "WTS / WTB",
+  ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "屏蔽…",
   ["Block sender…"] = "屏蔽发送者…",

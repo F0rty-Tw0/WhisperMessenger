@@ -44,7 +44,8 @@ RulePresets.LIST = {
   },
   { id = "guildRecruitment", name = "Guild recruitment", words = { "guild/</hclubfinder:", "recruit/progress/seek" } },
   { id = "communityRecruitment", name = "Community recruitment", words = { "hclubfinder:" } },
-  { id = "wtsWtb", name = "WTS / WTB", words = { "wts/wtb" } },
+  -- previousWords: older default word lists, upgraded at load when unedited.
+  { id = "wtsWtb", name = "WTS / WTB / LFW", words = { "wts/wtb/lfw" }, previousWords = { { "wts/wtb" } } },
 }
 
 local function copyWords(words)
@@ -55,16 +56,49 @@ local function copyWords(words)
   return copy
 end
 
+local function sameWords(a, b)
+  if #a ~= #b then
+    return false
+  end
+  for index, word in ipairs(a) do
+    if b[index] ~= word then
+      return false
+    end
+  end
+  return true
+end
+
+-- A saved ready-made rule takes the preset's current title (players can't
+-- rename rules) and its current words if it still holds an older default.
+local function refreshSaved(rule, preset)
+  rule.name = preset.name
+  for _, oldWords in ipairs(preset.previousWords or {}) do
+    if type(rule.words) == "table" and sameWords(rule.words, oldWords) then
+      rule.words = copyWords(preset.words)
+      return
+    end
+  end
+end
+
 function RulePresets.Seed(filters)
   local seededIds = filters.seededPresets
   if type(seededIds) ~= "table" then
     seededIds = {}
     filters.seededPresets = seededIds
   end
-  -- Presets saved before scopes existed applied to group lines too.
+  local presetsById = {}
+  for _, preset in ipairs(RulePresets.LIST) do
+    presetsById[preset.id] = preset
+  end
   for _, rule in ipairs(filters.rules) do
-    if type(rule) == "table" and rule.presetId ~= nil and rule.scope == nil then
-      rule.scope = SCOPE
+    if type(rule) == "table" and rule.presetId ~= nil then
+      -- Presets saved before scopes existed applied to group lines too.
+      if rule.scope == nil then
+        rule.scope = SCOPE
+      end
+      if presetsById[rule.presetId] then
+        refreshSaved(rule, presetsById[rule.presetId])
+      end
     end
   end
   for _, preset in ipairs(RulePresets.LIST) do

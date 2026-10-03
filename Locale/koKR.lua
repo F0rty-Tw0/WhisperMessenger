@@ -446,7 +446,7 @@ local Korean = {
   ["Power-leveling sellers"] = "레벨업 대리 판매",
   ["Guild recruitment"] = "길드 모집",
   ["Community recruitment"] = "커뮤니티 모집",
-  ["WTS / WTB"] = "WTS / WTB",
+  ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "차단…",
   ["Block sender…"] = "보낸 사람 차단…",

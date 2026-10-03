@@ -229,7 +229,7 @@ return function()
     assert(asked ~= nil, "asks before resetting")
     assert(#filters.rules == #RulePresets.LIST, "own rule gone, presets back")
     assert(visibleText(result.frame, "mine") == nil, "list redrawn without the own rule")
-    assert(visibleText(result.frame, "WTS / WTB") ~= nil, "presets listed")
+    assert(visibleText(result.frame, "WTS / WTB / LFW") ~= nil, "presets listed")
   end
 
   -- test_reset_rules_cancelled_keeps_rules
