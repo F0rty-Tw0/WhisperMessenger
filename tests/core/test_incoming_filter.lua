@@ -101,6 +101,31 @@ return function()
     assert(PerfCounters.Get("ignored") == 0 and PerfCounters.Get("ruleBlocked") == 0, "own lines move no counter")
   end
 
+  -- test_line_id_zero_is_never_cached
+  do
+    local runtime, filters = makeRuntime()
+    local entry = assert(IgnoreList.Add(filters, "Spammer", { now = 1 }))
+    IncomingFilter.Evaluate(runtime, "channel", "Spammer", "first", 0, "Trade")
+    IncomingFilter.Evaluate(runtime, "channel", "Spammer", "second", 0, "Trade")
+    assert(entry.blocked == 2, "two lines without a real lineID are each evaluated, got " .. entry.blocked)
+    assert(entry.lastText == "second", "the second line was evaluated")
+    assert(IncomingFilter.DecisionFor(0) == nil, "lineID 0 is not cached")
+  end
+
+  -- test_empty_ignore_list_skips_the_lookup
+  do
+    local runtime = makeRuntime()
+    local realLookup = IgnoreList.Lookup
+    local lookups = 0
+    rawset(IgnoreList, "Lookup", function(...)
+      lookups = lookups + 1
+      return realLookup(...)
+    end)
+    IncomingFilter.Evaluate(runtime, "channel", "Someone", "hello", 110, "Trade")
+    rawset(IgnoreList, "Lookup", realLookup)
+    assert(lookups == 0, "no ignore lookup runs while the list is empty, got " .. lookups)
+  end
+
   -- test_missing_filters_pass
   do
     assert(IncomingFilter.Evaluate({ accountState = {} }, "channel", "Spammer", "spam", 108, "Trade") == "pass", "no filters state passes")

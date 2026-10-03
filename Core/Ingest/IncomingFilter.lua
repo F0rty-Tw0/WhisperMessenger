@@ -31,8 +31,13 @@ for slot = 1, RING_SIZE do
 end
 local cursor = 0
 
+-- Only real chat lineIDs are cached; 0 or a missing ID would share a slot.
+local function isCacheable(lineID)
+  return type(lineID) == "number" and lineID > 0
+end
+
 function IncomingFilter.DecisionFor(lineID)
-  if lineID == nil then
+  if not isCacheable(lineID) then
     return nil
   end
   for slot = 1, RING_SIZE do
@@ -44,7 +49,7 @@ function IncomingFilter.DecisionFor(lineID)
 end
 
 local function remember(lineID, decision)
-  if lineID == nil then
+  if not isCacheable(lineID) then
     return
   end
   cursor = cursor % RING_SIZE + 1
@@ -59,7 +64,8 @@ local function decide(runtime, kind, playerName, text, channelLabel)
   end
   local now = type(runtime.now) == "function" and runtime.now() or 0
 
-  if type(filters.ignored) == "table" then
+  -- An empty list skips the name lookup (Ambiguate + lower) entirely.
+  if type(filters.ignored) == "table" and next(filters.ignored) ~= nil then
     local entry = IgnoreList.Lookup(filters, playerName, now)
     if entry ~= nil then
       IgnoreList.RecordBlocked(entry, text, channelLabel, now)
