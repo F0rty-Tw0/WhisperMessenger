@@ -7,7 +7,7 @@ end
 -- The readout is a developer debug aid, so its lines are not localized.
 local PerfCounters = {}
 
-local ORDER = { "groupLines", "channelLines", "ignored", "ruleBlocked", "collapsed", "refreshes", "snapshotBuilds" }
+local ORDER = { "groupLines", "channelLines", "unknownChannelIDs", "ignored", "ruleBlocked", "collapsed", "refreshes", "snapshotBuilds" }
 
 local counts = {}
 

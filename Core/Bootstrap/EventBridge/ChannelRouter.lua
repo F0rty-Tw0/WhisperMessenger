@@ -8,6 +8,8 @@ local ChannelChatIngest = ns.ChannelChatIngest or require("WhisperMessenger.Core
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
+local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 -- Public channel lines: filtered first, then kept as whisper-chat context
 -- (ChannelMessageStore) and, for channels the player turned on, stored as
@@ -45,6 +47,9 @@ function ChannelRouter.RouteChannelEvent(runtime, eventName, ...)
   end
   local text, playerName, _, channelName, _, _, zoneChannelID, channelIndex, channelBaseName, _, lineID, guid = ...
   local channelLabel = channelLabelFor(channelName)
+  if ChannelKey.IsUnknownZoneID(zoneChannelID) then
+    PerfCounters.Increment("unknownChannelIDs")
+  end
 
   -- Ignored players and blocked lines are dropped everywhere, including the
   -- context kept for whisper chats. The player's own lines always pass.

@@ -27,9 +27,10 @@ return function()
     PerfCounters.Reset()
     PerfCounters.Increment("groupLines")
     local lines = PerfCounters.Lines("WhisperMessenger")
-    assert(#lines == 7, "one line per counter without the profiler, got " .. #lines)
+    assert(#lines == 8, "one line per counter without the profiler, got " .. #lines)
     assert(string.find(lines[1], "groupLines", 1, true) and string.find(lines[1], "1", 1, true), "first line is groupLines: " .. lines[1])
-    assert(string.find(lines[7], "snapshotBuilds", 1, true), "last line is snapshotBuilds: " .. lines[7])
+    assert(string.find(lines[3], "unknownChannelIDs", 1, true), "unknownChannelIDs follows channelLines: " .. lines[3])
+    assert(string.find(lines[8], "snapshotBuilds", 1, true), "last line is snapshotBuilds: " .. lines[8])
   end
 
   -- test_lines_append_profiler_metric_when_available
@@ -43,9 +44,9 @@ return function()
       end,
     })
     local lines = PerfCounters.Lines("WhisperMessenger")
-    assert(#lines == 8, "profiler adds one line, got " .. #lines)
+    assert(#lines == 9, "profiler adds one line, got " .. #lines)
     assert(asked and asked.name == "WhisperMessenger" and asked.metric == 3, "asks the profiler for this addon's recent average")
-    assert(string.find(lines[8], "0.25", 1, true), "profiler line shows the metric: " .. lines[8])
+    assert(string.find(lines[9], "0.25", 1, true), "profiler line shows the metric: " .. lines[9])
   end
 
   rawset(_G, "C_AddOnProfiler", savedProfiler)

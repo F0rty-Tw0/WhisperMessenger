@@ -25,6 +25,7 @@ end
 
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList")
+local PerfCounters = require("WhisperMessenger.Util.PerfCounters")
 
 local TRADE_KEY = "channel::arthas-area52::trade"
 
@@ -98,6 +99,17 @@ return function()
     runtime.accountState.settings.enabledChannels = { ["c:trade"] = true }
     tradeLine(runtime, "WTS ore", "Seller", 8103, nil)
     assert(runtime.store.conversations["channel::arthas-area52::c:trade"] ~= nil, "without a zone ID the chat keys by name")
+  end
+
+  -- test_unknown_zone_channel_id_is_counted_once
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = { ["c:trade"] = true }
+    PerfCounters.Reset()
+    tradeLine(runtime, "WTS ore", "Seller", 8110, 99)
+    tradeLine(runtime, "WTS ore", "Seller", 8111, 2)
+    tradeLine(runtime, "WTS ore", "Seller", 8112, 0)
+    assert(PerfCounters.Get("unknownChannelIDs") == 1, "only the unknown non-zero ID counts, got " .. PerfCounters.Get("unknownChannelIDs"))
   end
 
   -- test_ignored_sender_is_not_kept_as_context

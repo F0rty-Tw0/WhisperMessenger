@@ -33,7 +33,7 @@ return function()
 
   _G.SlashCmdList["WHISPERMESSENGER"]("perf")
 
-  assert(#printed == 7, "perf prints one line per counter, got " .. #printed)
+  assert(#printed == 8, "perf prints one line per counter, got " .. #printed)
   assert(string.find(printed[1], "groupLines", 1, true), "first line names groupLines: " .. tostring(printed[1]))
   assert(runtime.window == nil, "perf must not open the messenger window")
 

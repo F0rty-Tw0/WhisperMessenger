@@ -37,6 +37,12 @@ function ChannelKey.Slug(zoneChannelID, channelBaseName)
   return baseName and (CUSTOM_PREFIX .. string.lower(baseName)) or nil
 end
 
+-- A non-zero zone channel ID missing from ZONE_CHANNEL_IDS: the line keys by
+-- its (localized) name instead, so /wmsg perf counts these.
+function ChannelKey.IsUnknownZoneID(zoneChannelID)
+  return type(zoneChannelID) == "number" and zoneChannelID ~= 0 and ChannelKey.ZONE_CHANNEL_IDS[zoneChannelID] == nil
+end
+
 function ChannelKey.ContactKey(zoneChannelID, channelBaseName)
   local slug = ChannelKey.Slug(zoneChannelID, channelBaseName)
   return slug and ("CHANNEL::" .. slug) or nil
