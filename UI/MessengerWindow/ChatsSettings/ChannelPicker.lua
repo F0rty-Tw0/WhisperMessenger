@@ -28,6 +28,8 @@ local CUSTOM_ZONE_ID = 0
 local CHANNEL_LIST_STRIDE = 3
 -- Community streams are listed as raw "Community:<club>:<stream>" ids.
 local COMMUNITY_PREFIX = "Community:"
+-- Custom channel slugs are "c:<lowercased name>".
+local CUSTOM_SLUG_PATTERN = "^c:."
 
 local function text(key)
   return Localization.Text(key)
@@ -81,6 +83,25 @@ local function customChannels()
         channels[#channels + 1] = { slug = slug, label = name }
       end
     end
+  end
+  return channels
+end
+
+-- Ticked custom channels missing from `listed` (left on this character, or
+-- ticked on an alt that never joined), so they can still be unticked. The
+-- saved key is lowercase, so the label only gets its first letter raised.
+local function leftChannels(enabledChannels, listed)
+  local slugs = {}
+  for slug, enabled in pairs(type(enabledChannels) == "table" and enabledChannels or {}) do
+    if enabled == true and not listed[slug] and string.find(slug, CUSTOM_SLUG_PATTERN) then
+      slugs[#slugs + 1] = slug
+    end
+  end
+  table.sort(slugs)
+  local channels = {}
+  for index, slug in ipairs(slugs) do
+    local name = string.sub(slug, 3)
+    channels[index] = { slug = slug, label = string.upper(string.sub(name, 1, 1)) .. string.sub(name, 2) }
   end
   return channels
 end
@@ -159,6 +180,13 @@ function ChannelPicker.Create(factory, frame, anchor, options)
       visible[#visible + 1] = entry
     end
     local custom = customChannels()
+    local listed = {}
+    for _, channel in ipairs(custom) do
+      listed[channel.slug] = true
+    end
+    for _, channel in ipairs(leftChannels(config.enabledChannels, listed)) do
+      custom[#custom + 1] = channel
+    end
     for index, channel in ipairs(custom) do
       local entry = customRows[index] or createRow(channel.label)
       customRows[index] = entry

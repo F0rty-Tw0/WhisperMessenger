@@ -109,6 +109,22 @@ return function()
     assert(FindUI.text(result.frame, "Community:123:1") == nil, "raw community channel ids are hidden")
   end)
 
+  -- test_ticked_channel_the_character_left_can_still_be_unticked
+  withGlobals({
+    GetChannelList = function()
+      return 1, "General", false
+    end,
+    EnumerateServerChannels = function()
+      return "General"
+    end,
+  }, function()
+    local result, calls = create({ enabledChannels = { ["c:craftscan"] = true } })
+    local toggle = FindUI.toggle(result.frame, "Craftscan")
+    assert(toggle ~= nil and FindUI.isToggleOn(toggle) == true, "a ticked channel that was left keeps its row")
+    FindUI.click(toggle)
+    assert(calls[#calls].value["c:craftscan"] == nil, "unticking it removes the channel")
+  end)
+
   -- test_built_ins_only_without_the_channel_api
   withGlobals({ GetChannelList = false }, function()
     rawset(_G, "GetChannelList", nil)
