@@ -8,11 +8,14 @@ local ChannelMessageStore = {}
 local DEFAULT_MAX_ENTRIES = 200
 local DEFAULT_TTL_SECONDS = 1800 -- 30 minutes
 
+-- The store table is saved as-is in SavedVariables, so its lookup indexes live
+-- here instead and are rebuilt from entries the first time a store is used.
+local indexes = setmetatable({}, { __mode = "k" })
+
 function ChannelMessageStore.New(config)
   config = config or {}
   return {
     entries = {},
-    baseIndex = {},
     entryCount = 0,
     maxEntries = config.maxEntries or DEFAULT_MAX_ENTRIES,
     ttl = config.ttl or DEFAULT_TTL_SECONDS,
@@ -20,13 +23,15 @@ function ChannelMessageStore.New(config)
   }
 end
 
+local function lowerName(name)
+  if name == nil or name == "" then
+    return ""
+  end
+  return string.lower(name)
+end
+
 local function normalizeKey(name)
-  local ok, result = pcall(function()
-    if name == nil or name == "" then
-      return ""
-    end
-    return string.lower(name)
-  end)
+  local ok, result = pcall(lowerName, name)
   -- If name is a secret/tainted value, comparison throws; treat as empty.
   return ok and result or ""
 end
@@ -43,59 +48,126 @@ local function entrySequence(entry)
   return tonumber(entry and entry.sequence) or 0
 end
 
-local function shouldPreferEntry(existing, candidate)
-  if existing == nil then
-    return true
+-- Age order: earlier sentAt first, then earlier sequence for equal times.
+local function isOlder(entry, other)
+  local entrySentAt = entry.sentAt or 0
+  local otherSentAt = other.sentAt or 0
+  if entrySentAt ~= otherSentAt then
+    return entrySentAt < otherSentAt
   end
-
-  local existingSentAt = existing.sentAt or 0
-  local candidateSentAt = candidate.sentAt or 0
-  if existingSentAt ~= candidateSentAt then
-    return existingSentAt < candidateSentAt
-  end
-
-  return entrySequence(existing) < entrySequence(candidate)
+  return entrySequence(entry) < entrySequence(other)
 end
 
-local function rememberBaseEntry(state, key, entry)
+local function trackBase(index, state, key, entry, isNewKey)
   local base = baseName(key)
-  local existing = state.baseIndex[base]
-  if shouldPreferEntry(existing, entry) then
-    state.baseIndex[base] = entry
+  if isNewKey then
+    index.baseCount[base] = (index.baseCount[base] or 0) + 1
+  end
+  local latestKey = index.baseLatest[base]
+  local latest = latestKey and state.entries[latestKey]
+  if not latest or isOlder(latest, entry) then
+    index.baseLatest[base] = key
   end
 end
 
-local function rebuildBaseIndex(state)
-  state.baseIndex = {}
-  for key, entry in pairs(state.entries) do
-    rememberBaseEntry(state, key, entry)
-  end
+-- The queue holds every recorded line oldest first, from head to tail. A slot
+-- whose entry was since replaced or removed is stale and skipped.
+local function isLive(state, key, entry)
+  return state.entries[key] == entry
 end
 
-local function removeEntry(state, key)
-  local entry = state.entries[key]
-  if entry == nil then
+local function buildIndex(state)
+  local index = { queueKeys = {}, queueEntries = {}, head = 1, tail = 0, baseLatest = {}, baseCount = {} }
+  local keys = index.queueKeys
+  for key in pairs(state.entries) do
+    keys[#keys + 1] = key
+  end
+  table.sort(keys, function(a, b)
+    return isOlder(state.entries[a], state.entries[b])
+  end)
+  for i, key in ipairs(keys) do
+    local entry = state.entries[key]
+    index.queueEntries[i] = entry
+    trackBase(index, state, key, entry, true)
+  end
+  index.tail = #keys
+  return index
+end
+
+local function indexFor(state)
+  local index = indexes[state]
+  if index == nil then
+    index = buildIndex(state)
+    indexes[state] = index
+  end
+  return index
+end
+
+local function enqueue(index, key, entry)
+  local keys, entries = index.queueKeys, index.queueEntries
+  local slot = index.tail + 1
+  -- Lines arrive in time order almost always; walk back only for one that didn't.
+  while slot > index.head and isOlder(entry, entries[slot - 1]) do
+    keys[slot], entries[slot] = keys[slot - 1], entries[slot - 1]
+    slot = slot - 1
+  end
+  keys[slot], entries[slot] = key, entry
+  index.tail = index.tail + 1
+end
+
+local function compactQueue(state, index)
+  local keys, entries = index.queueKeys, index.queueEntries
+  local write = 0
+  for read = index.head, index.tail do
+    local key, entry = keys[read], entries[read]
+    keys[read], entries[read] = nil, nil
+    if isLive(state, key, entry) then
+      write = write + 1
+      keys[write], entries[write] = key, entry
+    end
+  end
+  index.head, index.tail = 1, write
+end
+
+local function removeEntry(state, index, key)
+  if state.entries[key] == nil then
     return false
   end
 
   state.entries[key] = nil
   state.entryCount = math.max(0, countEntries(state) - 1)
-  if state.baseIndex[baseName(key)] == entry then
-    rebuildBaseIndex(state)
+
+  local base = baseName(key)
+  local remaining = (index.baseCount[base] or 1) - 1
+  if remaining <= 0 then
+    index.baseCount[base] = nil
+    index.baseLatest[base] = nil
+    return true
+  end
+
+  index.baseCount[base] = remaining
+  if index.baseLatest[base] == key then
+    -- Only reached when one name posts from several realms and the newest
+    -- of them expires first; eviction always takes the older ones before it.
+    index.baseLatest[base] = nil
+    for candidateKey, candidate in pairs(state.entries) do
+      if baseName(candidateKey) == base then
+        trackBase(index, state, candidateKey, candidate, false)
+      end
+    end
   end
   return true
 end
 
-local function pruneExpiredEntries(state, now)
-  local expiredKeys = {}
-  for key, entry in pairs(state.entries) do
-    if type(entry) ~= "table" or type(entry.sentAt) ~= "number" or (now - entry.sentAt) > state.ttl then
-      expiredKeys[#expiredKeys + 1] = key
+local function evictOverflow(state, index)
+  local keys, entries = index.queueKeys, index.queueEntries
+  while countEntries(state) > state.maxEntries and index.head <= index.tail do
+    local key, entry = keys[index.head], entries[index.head]
+    keys[index.head], entries[index.head] = nil, nil
+    index.head = index.head + 1
+    if isLive(state, key, entry) then
+      removeEntry(state, index, key)
     end
-  end
-
-  for _, key in ipairs(expiredKeys) do
-    removeEntry(state, key)
   end
 end
 
@@ -118,26 +190,12 @@ local function normalizeEntry(entry)
   }
 end
 
-local function evictOldest(state)
-  if countEntries(state) <= state.maxEntries then
-    return
-  end
-
-  local oldestKey = nil
-  local oldestTime = math.huge
-  local oldestSequence = math.huge
+local function pruneExpiredEntries(state, now)
   for key, entry in pairs(state.entries) do
-    local entrySentAt = entry.sentAt or 0
-    local entrySequenceValue = entrySequence(entry)
-    if entrySentAt < oldestTime or (entrySentAt == oldestTime and entrySequenceValue < oldestSequence) then
-      oldestTime = entrySentAt
-      oldestSequence = entrySequenceValue
-      oldestKey = key
+    if (now - entry.sentAt) > state.ttl then
+      state.entries[key] = nil
+      state.entryCount = state.entryCount - 1
     end
-  end
-
-  if oldestKey then
-    removeEntry(state, oldestKey)
   end
 end
 
@@ -168,11 +226,7 @@ function ChannelMessageStore.Restore(savedState, config, now)
     pruneExpiredEntries(restored, now)
   end
 
-  rebuildBaseIndex(restored)
-  while countEntries(restored) > restored.maxEntries do
-    evictOldest(restored)
-  end
-
+  evictOverflow(restored, indexFor(restored))
   return restored
 end
 
@@ -187,6 +241,7 @@ function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentA
     return
   end
 
+  local index = indexFor(state)
   state.nextSequence = (tonumber(state.nextSequence) or 0) + 1
   local entry = {
     text = text,
@@ -200,9 +255,15 @@ function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentA
   if existing == nil then
     state.entryCount = countEntries(state) + 1
   end
-  rememberBaseEntry(state, key, entry)
+  trackBase(index, state, key, entry, existing == nil)
+  enqueue(index, key, entry)
 
-  evictOldest(state)
+  evictOverflow(state, index)
+  -- Stale slots from senders who posted again pile up below the cap; dropping
+  -- them once the queue doubles keeps the cleanup O(1) per line on average.
+  if index.tail - index.head >= 2 * state.maxEntries then
+    compactQueue(state, index)
+  end
 end
 
 function ChannelMessageStore.GetLatest(state, canonicalName, now)
@@ -211,19 +272,13 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
     return nil
   end
 
-  local entry = state.entries[key]
   local entryKey = key
+  local entry = state.entries[key]
   if not entry then
     -- Fallback: try base name match
-    local base = baseName(key)
-    entry = state.baseIndex[base]
-    if entry then
-      for candidateKey, candidateEntry in pairs(state.entries) do
-        if candidateEntry == entry then
-          entryKey = candidateKey
-          break
-        end
-      end
+    entryKey = indexFor(state).baseLatest[baseName(key)]
+    if entryKey then
+      entry = state.entries[entryKey]
     end
   end
 
@@ -233,7 +288,7 @@ function ChannelMessageStore.GetLatest(state, canonicalName, now)
 
   -- Expiry check
   if now and (now - entry.sentAt) > state.ttl then
-    removeEntry(state, entryKey)
+    removeEntry(state, indexFor(state), entryKey)
     return nil
   end
 
