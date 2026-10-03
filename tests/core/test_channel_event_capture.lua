@@ -23,7 +23,111 @@ do
   EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 end
 
+local Store = require("WhisperMessenger.Model.ConversationStore")
+local IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList")
+
+local TRADE_KEY = "channel::arthas-area52::trade"
+
+-- All 18 CHAT_MSG_CHANNEL arguments, as the live client sends them.
+local function tradeLine(runtime, text, sender, lineID, zoneChannelID)
+  return EventBridge.RouteChannelEvent(
+    runtime,
+    "CHAT_MSG_CHANNEL",
+    text,
+    sender,
+    "Common",
+    "2. Trade - Stormwind City",
+    sender,
+    "",
+    zoneChannelID,
+    2,
+    "Trade - Stormwind City",
+    7,
+    lineID,
+    "Player-1-" .. sender,
+    0,
+    false,
+    false,
+    false
+  )
+end
+
+local function makeRuntime()
+  local refreshKeys = {}
+  local runtime = {
+    localProfileId = "arthas-area52",
+    localPlayerGuid = "Player-1-SELF",
+    store = Store.New({ maxMessagesPerConversation = 50 }),
+    channelMessageStore = ChannelMessageStore.New(),
+    accountState = { settings = { enabledChannels = { trade = true } }, filters = { ignored = {}, rules = {} } },
+    collapseIndex = {},
+    now = function()
+      return 100
+    end,
+    scheduleIncomingRefresh = function(key)
+      refreshKeys[#refreshKeys + 1] = key
+    end,
+  }
+  return runtime, refreshKeys
+end
+
 return function()
+  -- test_enabled_trade_line_creates_chat_and_schedules_one_refresh
+  do
+    local runtime, refreshKeys = makeRuntime()
+    tradeLine(runtime, "WTS ore", "Seller", 8101, 2)
+    assert(runtime.store.conversations[TRADE_KEY] ~= nil, "the Trade line becomes a channel chat")
+    assert(#refreshKeys == 1 and refreshKeys[1] == TRADE_KEY, "one keyed refresh is scheduled")
+  end
+
+  -- test_suspended_ingest_still_records_channel_context
+  do
+    local runtime, refreshKeys = makeRuntime()
+    runtime.isChannelIngestSuspended = function()
+      return true
+    end
+    tradeLine(runtime, "WTS ore", "Seller", 8102, 2)
+    assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "seller") ~= nil, "the line is still kept as context")
+    assert(next(runtime.store.conversations) == nil, "no channel chat while suspended")
+    assert(#refreshKeys == 0, "no refresh while suspended")
+  end
+
+  -- test_missing_zone_id_keys_by_name
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = { ["c:trade"] = true }
+    tradeLine(runtime, "WTS ore", "Seller", 8103, nil)
+    assert(runtime.store.conversations["channel::arthas-area52::c:trade"] ~= nil, "without a zone ID the chat keys by name")
+  end
+
+  -- test_ignored_sender_is_not_kept_as_context
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = {}
+    IgnoreList.Add(runtime.accountState.filters, "Spammer", { now = 1 })
+    assert(tradeLine(runtime, "cheap gold", "Spammer", 8104, 2), "the dropped line counts as handled")
+    assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "spammer") == nil, "an ignored sender's line is not kept")
+  end
+
+  -- test_channel_mention_alerts
+  do
+    local flashes = 0
+    local savedUnitName = _G.UnitName
+    rawset(_G, "UnitName", function()
+      return "Arthas"
+    end)
+    rawset(_G, "FlashClientIcon", function()
+      flashes = flashes + 1
+    end)
+    local runtime = makeRuntime()
+    tradeLine(runtime, "WTS ore", "Seller", 8105, 2)
+    assert(flashes == 0, "a plain channel line is silent")
+    tradeLine(runtime, "Arthas you still need ore?", "Seller", 8106, 2)
+    assert(flashes == 1, "a channel line naming the player alerts")
+    rawset(_G, "UnitName", savedUnitName)
+    rawset(_G, "FlashClientIcon", nil)
+  end
+
   -- test_route_channel_event_records_message
   do
     local clockTime = 5000

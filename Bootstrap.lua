@@ -187,6 +187,19 @@ function Bootstrap.Initialize(factory, options)
     return Bootstrap._inMythicContent == true
   end
 
+  -- Channel chats pause wherever chat may carry secret values.
+  runtime.isChannelIngestSuspended = function()
+    if runtime.isMythicLockdown() or runtime.isCompetitiveContent() then
+      return true
+    end
+    local chatInfo = _G.C_ChatInfo
+    if type(chatInfo) ~= "table" or type(chatInfo.InChatMessagingLockdown) ~= "function" then
+      return false
+    end
+    local ok, locked = pcall(chatInfo.InChatMessagingLockdown)
+    return ok and locked == true
+  end
+
   Bootstrap.onCompetitiveStateChanged = function(isActive)
     local ic = windowRuntime.getIcon()
     if ic and ic.setCompetitiveContent then

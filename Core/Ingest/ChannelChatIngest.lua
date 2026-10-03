@@ -28,13 +28,6 @@ local EVENT_NAME = "CHAT_MSG_CHANNEL"
 -- Tells the router a mention arrived so it can alert. Read-only, shared.
 local MENTION_META = { mention = true }
 
-local function displayNameFor(channelBaseName)
-  if type(channelBaseName) ~= "string" then
-    return nil
-  end
-  return string.match(channelBaseName, "^(.-) %- ") or channelBaseName
-end
-
 local function buildMessage(payload, direction, sentAt)
   local message = {
     id = tostring(payload.lineID or sentAt),
@@ -95,7 +88,7 @@ end
 local function stamp(conversation, key, payload, state, zoneLabel)
   conversation.conversationKey = key
   conversation.channel = CHANNEL
-  conversation.displayName = displayNameFor(payload.channelBaseName) or conversation.displayName
+  conversation.displayName = ChannelKey.BaseName(payload.channelBaseName) or conversation.displayName
   conversation.channelIndex = payload.channelIndex or conversation.channelIndex
   conversation.channelBaseName = payload.channelBaseName or conversation.channelBaseName
   conversation.ownerProfileId = state.localProfileId
@@ -117,7 +110,7 @@ function ChannelChatIngest.HandleEvent(state, payload)
   end
 
   local isSelf = Direction.IsLocalSender(EVENT_NAME, payload.guid, nil, state)
-  local label = displayNameFor(payload.channelBaseName)
+  local label = ChannelKey.BaseName(payload.channelBaseName)
   if IncomingFilter.Evaluate(state, "channel", payload.playerName, payload.text, payload.lineID, label, isSelf) ~= "pass" then
     return true, nil
   end

@@ -12,6 +12,9 @@ return function()
   -- test_unknown_zone_id_falls_back_to_name
   assert(ChannelKey.ContactKey(99, "Mystery") == "CHANNEL::c:mystery", "an unknown ID falls back to the name")
 
+  -- test_name_keying_drops_the_zone
+  assert(ChannelKey.ContactKey(nil, "General - Elwynn Forest") == "CHANNEL::c:general", "without an ID, one chat spans every zone")
+
   -- test_missing_id_and_name_gives_nil
   assert(ChannelKey.ContactKey(nil, nil) == nil, "no ID and no name gives no key")
 

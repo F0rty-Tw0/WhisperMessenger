@@ -19,16 +19,22 @@ ChannelKey.ZONE_CHANNEL_IDS = {
 
 local CUSTOM_PREFIX = "c:"
 
+-- "General - Stormwind City" -> "General"; names without a zone unchanged.
+function ChannelKey.BaseName(channelBaseName)
+  if type(channelBaseName) ~= "string" or channelBaseName == "" then
+    return nil
+  end
+  return string.match(channelBaseName, "^(.-) %- ") or channelBaseName
+end
+
 -- The slug behind "CHANNEL::<slug>", or nil when the line names no channel.
 function ChannelKey.Slug(zoneChannelID, channelBaseName)
   local builtIn = ChannelKey.ZONE_CHANNEL_IDS[zoneChannelID]
   if builtIn ~= nil then
     return builtIn
   end
-  if type(channelBaseName) ~= "string" or channelBaseName == "" then
-    return nil
-  end
-  return CUSTOM_PREFIX .. string.lower(channelBaseName)
+  local baseName = ChannelKey.BaseName(channelBaseName)
+  return baseName and (CUSTOM_PREFIX .. string.lower(baseName)) or nil
 end
 
 function ChannelKey.ContactKey(zoneChannelID, channelBaseName)

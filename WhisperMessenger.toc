@@ -324,6 +324,7 @@ Core/Bootstrap/EventBridge/Registration.lua
 Core/Bootstrap/EventBridge/LivePayload.lua
 Core/Bootstrap/EventBridge/IncomingAlerts.lua
 Core/Bootstrap/EventBridge/GroupRouter.lua
+Core/Bootstrap/EventBridge/ChannelRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
