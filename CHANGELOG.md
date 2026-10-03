@@ -31,6 +31,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - You can name your own keyword rules: Add rule asks for a name and the words, and clicking one of your rules lets you change both.
 - Blocked counts on the Filters page now count only the current session and start again from zero every time you log in or reload.
 - Fixed: with a large font size, the welcome message no longer runs past the edges of the chat area, and the right edge of Options pages is no longer cut off.
+- The search box, and the magnifier on the narrow contact list, are hidden on a tab that has no chats to search.
 - Fixed: scrolling the Filters page with the mouse wheel no longer stops when the blocked players list passes under the pointer.
 - Fixed: with a large font size, the name, status and zone at the top of a chat no longer spill into the messages below, and the paused-in-Mythic+ notice no longer covers the last message.
 - Fixed: with a large font size, the message request bar above the text box grows to fit its text instead of spilling over the chat, and a long name at the top of a chat is shortened so "(Invite to WM)" stays inside the window.

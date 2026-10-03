@@ -197,6 +197,9 @@ function MessengerWindow.Create(factory, options)
     onAllContactsRefreshed = function(allContacts)
       chrome.setMarkAllReadShown(MarkAllReadButton.HasUnread(allContacts))
     end,
+    onSearchAvailableChanged = function(available)
+      ContactsRail.SetSearchAvailable(layout, available)
+    end,
     contactsSearchInput = contactsSearchInput,
     contactsSearchClearButton = contactsSearchClearButton,
     contactsSearchPlaceholder = contactsSearchPlaceholder,

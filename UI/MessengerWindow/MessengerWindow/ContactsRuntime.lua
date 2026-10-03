@@ -195,6 +195,11 @@ function ContactsRuntime.Create(factory, options)
       if options.onAllContactsRefreshed then
         options.onAllContactsRefreshed(allContacts or filtered)
       end
+      -- Nothing to search on an empty tab; a query with no matches keeps the
+      -- box so it can be cleared.
+      if options.onSearchAvailableChanged then
+        options.onSearchAvailableChanged(#filtered > 0 or hasSearchText())
+      end
       if emptyStateFrame == nil then
         return
       end
