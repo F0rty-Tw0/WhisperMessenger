@@ -2,6 +2,7 @@
 -- carrying every conversation key that changed in that window.
 
 local IncomingRefresh = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IncomingRefresh")
+local PerfCounters = require("WhisperMessenger.Util.PerfCounters")
 
 local function harness(visible)
   local h = { timers = {}, delays = {}, calls = {}, visible = visible ~= false }
@@ -78,5 +79,17 @@ return function()
     h.refresh.schedule(nil)
     h.timers[1]()
     assert(#h.calls == 1 and h.calls[1].dirty == nil, "an unkeyed line must request a full rebuild")
+  end
+
+  -- test_each_flush_counts_one_refresh
+  do
+    PerfCounters.Reset()
+    local h = harness()
+    h.refresh.schedule("a")
+    h.refresh.schedule("b")
+    h.timers[1]()
+    h.refresh.schedule(nil)
+    h.timers[2]()
+    assert(PerfCounters.Get("refreshes") == 2, "each flush counts one refresh, got " .. PerfCounters.Get("refreshes"))
   end
 end

@@ -97,6 +97,8 @@ read_globals = {
   "ClearOverrideBindings",
 
   -- Namespaced C_ APIs (used by WhisperMessenger)
+  "C_AddOnProfiler",
+  "Enum",
   "C_ChatInfo",
   "C_BattleNet",
   "C_Timer",

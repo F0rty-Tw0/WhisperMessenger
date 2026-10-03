@@ -7,6 +7,7 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 local GroupRouter = {}
 
@@ -185,8 +186,11 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
   end
   -- Coalesced: a busy chat must not rebuild the window per line. The
   -- scheduler ignores lines while the window is hidden.
-  if handled and type(runtime.scheduleIncomingRefresh) == "function" then
-    runtime.scheduleIncomingRefresh(conv and conv.conversationKey)
+  if handled then
+    PerfCounters.Increment("groupLines")
+    if type(runtime.scheduleIncomingRefresh) == "function" then
+      runtime.scheduleIncomingRefresh(conv and conv.conversationKey)
+    end
   end
   return handled
 end

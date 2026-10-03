@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 -- Contact snapshots kept between incoming-line refreshes. Contact enrichers
 -- write status onto the returned card in place, so each entry also keeps an
@@ -40,6 +41,7 @@ function SnapshotCache.Get(cache, conversationKey, conversation, settings, dirty
       entry = {}
       cache[conversationKey] = entry
     end
+    PerfCounters.Increment("snapshotBuilds")
     entry.conversation = conversation
     entry.base = ConversationSnapshot.Build(conversationKey, conversation, settings)
     entry.card = shallowCopy(entry.base)

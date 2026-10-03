@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
+
 -- Coalesced window refreshes. Busy chats deliver several lines a second;
 -- each line records its key and one timer refreshes the window once for all.
 local IncomingRefresh = {}
@@ -52,6 +54,7 @@ function IncomingRefresh.Create(options)
   local fullRefresh = false
 
   local schedule = IncomingRefresh.Debounce(options.cTimer, options.delay or IncomingRefresh.DELAY, options.isWindowVisible, function(dirtyKeys)
+    PerfCounters.Increment("refreshes")
     if fullRefresh then
       fullRefresh = false
       refreshWindow(nil, nil)

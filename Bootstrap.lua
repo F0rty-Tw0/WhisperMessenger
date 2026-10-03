@@ -48,6 +48,8 @@ function Bootstrap.Initialize(factory, options)
   local SlashCommands = loadModule("WhisperMessenger.Core.SlashCommands", "SlashCommands")
   local PresenceCache = loadModule("WhisperMessenger.Model.PresenceCache", "PresenceCache")
   local ReplyToLast = loadModule("WhisperMessenger.Core.SlashCommands.ReplyToLast", "SlashCommandsReplyToLast")
+  local PerfCounters = loadModule("WhisperMessenger.Util.PerfCounters", "PerfCounters")
+  local ChatPrint = loadModule("WhisperMessenger.Util.ChatPrint", "ChatPrint")
 
   local Fonts = loadModule("WhisperMessenger.UI.Theme.Fonts", "ThemeFonts")
   local Theme = loadModule("WhisperMessenger.UI.Theme", "Theme")
@@ -232,6 +234,11 @@ function Bootstrap.Initialize(factory, options)
   SlashCommands.Register({
     toggle = runtime.toggle,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
+    perf = function()
+      for _, line in ipairs(PerfCounters.Lines(addonName)) do
+        ChatPrint.Print(line)
+      end
+    end,
   })
 
   MythicSuspendController.Attach(runtime, {

@@ -9,6 +9,7 @@ local ContactEnricher = require("WhisperMessenger.Model.ContactEnricher")
 local LivePresence = require("WhisperMessenger.Model.LivePresence")
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 local Availability = require("WhisperMessenger.Transport.Availability")
+local PerfCounters = require("WhisperMessenger.Util.PerfCounters")
 
 local NOW = 100
 
@@ -214,5 +215,15 @@ return function()
     state.conversations["wow::WOW::c"] = nil
     DataBuilder.BuildItemsForProfile(state, "me", cache, {})
     assert(cache["wow::WOW::c"] == nil, "a removed conversation must be pruned from the cache")
+  end
+
+  -- test_snapshot_builds_counter_counts_cache_misses
+  do
+    local state = newState()
+    local cache = SnapshotCache.New()
+    PerfCounters.Reset()
+    DataBuilder.BuildItemsForProfile(state, "me", cache, nil)
+    DataBuilder.BuildItemsForProfile(state, "me", cache, { ["party::me"] = true })
+    assert(PerfCounters.Get("snapshotBuilds") == 7, "6 full builds plus 1 dirty build, got " .. PerfCounters.Get("snapshotBuilds"))
   end
 end

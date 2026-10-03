@@ -2,6 +2,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelType = require("WhisperMessenger.Model.Identity.ChannelType")
 local Protocol = require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = require("WhisperMessenger.Model.MessageReactions")
+local PerfCounters = require("WhisperMessenger.Util.PerfCounters")
 
 -- Stub dependencies so EventBridge loads cleanly
 local EventBridge
@@ -271,6 +272,7 @@ return function()
       end,
     })
 
+    PerfCounters.Reset()
     for lineID = 802, 804 do
       EventBridge.RouteGroupEvent(
         runtime,
@@ -297,6 +299,7 @@ return function()
       assert(scheduled[index] == guildKey, "schedule " .. index .. " should carry the guild key, got " .. tostring(scheduled[index]))
     end
     assert(refreshes == 0, "group lines must not refresh the window directly, got " .. refreshes)
+    assert(PerfCounters.Get("groupLines") == 3, "each handled group line is counted, got " .. PerfCounters.Get("groupLines"))
   end
 
   -- Group fallback degradation refreshes only the group surface; it never
