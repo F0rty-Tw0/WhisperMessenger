@@ -8,8 +8,9 @@ return function()
     filters = {
       ignored = {
         expired = { name = "Expired", addedAt = 0, expiresAt = 50, blocked = 0 },
-        forever = { name = "Forever", addedAt = 0, blocked = 0 },
+        forever = { name = "Forever", addedAt = 0, blocked = 9 },
       },
+      rules = { { words = { "wts" }, enabled = true, blocked = 4 } },
     },
   }
   local runtime = RuntimeFactory.CreateRuntimeState(accountState, { activeConversationKey = nil }, "testplayer", {
@@ -21,7 +22,10 @@ return function()
   assert(accountState.filters.ignored.expired == nil, "an entry that expired offline is swept at load")
   assert(accountState.filters.ignored.forever ~= nil, "a forever entry stays")
   assert(type(accountState.filters.rules) == "table", "missing keyword rules are backfilled")
-  assert(accountState.filters.rules[1] ~= nil and accountState.filters.rules[1].presetId ~= nil, "preset rules are seeded at load")
+  assert(accountState.filters.rules[2] ~= nil and accountState.filters.rules[2].presetId ~= nil, "preset rules are seeded at load")
+  -- test_blocked_counts_reset_every_session
+  assert(accountState.filters.ignored.forever.blocked == 0, "a saved player count never carries into a new session")
+  assert(accountState.filters.rules[1].blocked == 0, "a saved rule count never carries into a new session")
   assert(type(runtime.collapseIndex) == "table" and next(runtime.collapseIndex) == nil, "the collapse index starts empty")
 
   local Store = require("WhisperMessenger.Model.ConversationStore")

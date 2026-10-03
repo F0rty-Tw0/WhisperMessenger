@@ -90,6 +90,7 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   -- out while the player was offline.
   local filters = IgnoreList.Ensure(accountState)
   IgnoreList.Sweep(filters, nowValue)
+  IgnoreList.ClearBlockedCounts(filters)
   RulePresets.Seed(filters)
 
   -- Channels the player turned into chats; none until picked in Options.

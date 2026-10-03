@@ -177,5 +177,19 @@ function IgnoreList.Sweep(filters, now)
   end
 end
 
+-- Blocked counts cover one session: the login zeroes what the last one saved.
+function IgnoreList.ClearBlockedCounts(filters)
+  for _, entry in pairs(filters.ignored) do
+    if type(entry) == "table" then
+      entry.blocked = 0
+    end
+  end
+  for _, rule in ipairs(filters.rules) do
+    if type(rule) == "table" then
+      rule.blocked = 0
+    end
+  end
+end
+
 ns.IgnoreList = IgnoreList
 return IgnoreList

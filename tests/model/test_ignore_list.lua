@@ -153,6 +153,15 @@ return function()
     assert(cross.name == "Kim-Stormrage", "a full name is kept as typed")
   end
 
+  -- test_clear_blocked_counts_zeroes_rules_and_players
+  do
+    local filters = { ignored = { bob = { name = "Bob", blocked = 7, lastText = "wts" } }, rules = { { words = { "wts" }, blocked = 4 } } }
+    IgnoreList.ClearBlockedCounts(filters)
+    assert(filters.ignored.bob.blocked == 0, "a player's count starts the session at 0")
+    assert(filters.rules[1].blocked == 0, "a rule's count starts the session at 0")
+    assert(filters.ignored.bob.lastText == "wts", "the last blocked line stays")
+  end
+
   -- test_ensure_backfills_filters_for_old_saved_variables
   do
     local accountState = { conversations = {} }
