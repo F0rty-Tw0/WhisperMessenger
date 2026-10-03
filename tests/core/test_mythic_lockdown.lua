@@ -228,7 +228,8 @@ return function()
       },
     })
 
-    -- Simulate mythic lockdown then call refreshWindow
+    -- Simulate mythic lockdown then call refreshWindow on the open window
+    runtime.toggle()
     Bootstrap._inMythicContent = true
     availabilityRequests = {}
     buildSelectionCalls = 0
