@@ -9,6 +9,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Busy group chats no longer slow the game down while the window is open.
 - Repeated messages from the same player now show once with a counter (like ×3) in your theme's accent color.
 - Trade, General, Local Defense, LFG and your custom channels can now appear as chats (turn them on in Options). Each one is named after its channel and lives in a new Channels tab, which shows up once you turn on at least one channel. Trade, General, Local Defense, World Defense, LFG and Trade (Services) each get their own icon, and in the narrow contact list channel chats show their initials like your contacts do.
+- Channel chats such as General and Local Defense show their zone (like Durotar) under the channel name at the top of the chat.
 - Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other unread chats. Muting a channel chat also silences the alert for your name.
 - When someone says your name in a group or channel chat, with or without an @ in front, your name in their message now shows in your class color.
 - Right-click a player in your contacts and choose Block…, or right-click one of their messages in a group or channel chat and choose Block sender…, to stop seeing anything they send. You can add a note saying why.

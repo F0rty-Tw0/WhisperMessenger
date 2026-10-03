@@ -37,6 +37,8 @@ end
 --   showFactionIcon boolean   — show Alliance/Horde faction icon
 --   showStatusLine  boolean   — show zone/last-seen status text
 --   channelChip     string|nil — short label chip shown near title for groups
+--   statusText      string|nil — status line in place of presence (a channel
+--                                chat's zone, e.g. "Durotar" for General)
 function GroupHeaderViewModel.Build(contact, conversation)
   if contact == nil then
     return nil
@@ -100,6 +102,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
     showFactionIcon = false,
     showStatusLine = false,
     channelChip = chip,
+    statusText = channel == ChannelType.CHANNEL and conversation and conversation.lastZoneLabel or nil,
   }
 end
 

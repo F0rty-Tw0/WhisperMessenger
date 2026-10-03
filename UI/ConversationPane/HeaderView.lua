@@ -236,8 +236,14 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
       end
     end
 
-    local showStatusLine = hasContact and (vm == nil or vm.showStatusLine)
-    local line1, line2, dotColorKey = StatusLine.Build(selectedContact, status)
+    local statusText = vm and vm.statusText or nil
+    local showStatusLine = hasContact and (vm == nil or vm.showStatusLine or statusText ~= nil)
+    local line1, line2, dotColorKey
+    if statusText then
+      line1, line2 = statusText, ""
+    else
+      line1, line2, dotColorKey = StatusLine.Build(selectedContact, status)
+    end
     view._headerStatusFullText = line1 or ""
     view._headerStatusVisible = showStatusLine
     view._headerStatusDetailFullText = line2 or ""
