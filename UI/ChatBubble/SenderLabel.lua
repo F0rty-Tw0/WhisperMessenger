@@ -75,9 +75,18 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   setFontObject(nameFS, Theme.FONTS.message_time)
   setTextColor(nameFS, Theme.COLORS.text_secondary)
 
+  -- A collapsed repeat shows when it was last seen and how often ("×3").
+  local repeatCount = tonumber(message.repeatCount) or 1
+  local shownAt = message.sentAt
+  if repeatCount > 1 then
+    shownAt = message.lastSeenAt or message.sentAt
+  end
   local timeStr = ""
   if ns.TimeFormat and ns.TimeFormat.MessageTime then
-    timeStr = ns.TimeFormat.MessageTime(message.sentAt) or ""
+    timeStr = ns.TimeFormat.MessageTime(shownAt) or ""
+  end
+  if repeatCount > 1 then
+    timeStr = timeStr .. " ×" .. repeatCount
   end
   local timeFS = ensureFontString(frame, "_wmSenderTimeFS")
   setFontObject(timeFS, Theme.FONTS.message_time)
