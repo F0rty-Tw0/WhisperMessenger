@@ -80,14 +80,15 @@ function IgnoreRow.Create(factory, list, onRemove)
   row.removeButton = RemoveButton.Create(factory, row, function()
     onRemove(row.entryKey)
   end)
-  row.removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+  -- The name, the count and the button share the top line's centre.
+  row.removeButton:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
 
   row.blockedText = createText(row, Theme.FONTS.system_text)
-  row.blockedText:SetPoint("TOPRIGHT", row, "TOPRIGHT", -(RemoveButton.SIZE + TEXT_GAP), 0)
+  row.blockedText:SetPoint("RIGHT", row.removeButton, "LEFT", -TEXT_GAP, 0)
   row.blockedText:SetJustifyH("RIGHT")
 
   row.nameText = createText(row, Theme.FONTS.icon_label)
-  row.nameText:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+  row.nameText:SetPoint("LEFT", row, "TOPLEFT", 0, -RemoveButton.SIZE / 2)
   row.nameText:SetPoint("RIGHT", row.blockedText, "LEFT", -TEXT_GAP, 0)
 
   row.detailText = createText(row, Theme.FONTS.system_text)
