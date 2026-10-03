@@ -14,6 +14,7 @@ local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.Me
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
+local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 
 local WindowCallbacks = {}
 
@@ -52,6 +53,9 @@ function WindowCallbacks.Create(options)
   local inviteHandler = options.inviteHandler or InviteHandler
   local livePresenceSender = options.livePresenceSender
   local refreshWindow = options.refreshWindow or function() end
+  local buildContacts = options.buildContacts or function()
+    return {}
+  end
   local selectConversation = options.selectConversation or function(_conversationKey) end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
@@ -85,6 +89,19 @@ function WindowCallbacks.Create(options)
       characterState.activeConversationKey = nil
     end
     refreshWindow()
+  end
+
+  -- The request below `key` on the Requests tab, or the one above when it
+  -- is the last; nil when it is the only one.
+  local function neighbourRequestKey(key)
+    local requests = ContactsTabFilter.FilterRequests(buildContacts())
+    for index, item in ipairs(requests) do
+      if item.conversationKey == key then
+        local neighbour = requests[index + 1] or requests[index - 1]
+        return neighbour and neighbour.conversationKey or nil
+      end
+    end
+    return nil
   end
 
   return {
@@ -189,7 +206,19 @@ function WindowCallbacks.Create(options)
       end
       selectConversation(key)
     end,
-    onDeleteRequest = removeConversation,
+    -- Request banner: Delete opens the next request, so the empty page
+    -- shows only once none are left.
+    onDeleteRequest = function(item)
+      local key = item and item.conversationKey
+      if key == nil then
+        return
+      end
+      local nextKey = neighbourRequestKey(key)
+      removeConversation(item)
+      if nextKey then
+        selectConversation(nextKey)
+      end
+    end,
 
     onMarkUnread = function(item)
       local key = item and item.conversationKey

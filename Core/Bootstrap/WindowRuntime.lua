@@ -250,6 +250,7 @@ function WindowRuntime.Create(options)
     reactionHandler = options.reactionHandler,
     livePresenceSender = livePresenceSender,
     refreshWindow = refreshWindow,
+    buildContacts = buildContacts,
     selectConversation = selectConversation,
     startConversation = startConversation,
     setWindowVisible = setWindowVisible,

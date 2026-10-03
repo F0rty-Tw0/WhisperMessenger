@@ -42,6 +42,34 @@ return function()
   assert(runtime.activeConversationKey == nil, "nothing left selected")
   assert(refreshes == 1, "window refreshed after delete")
 
+  -- test_delete_opens_the_next_request_in_list_order
+  do
+    local picked = {}
+    local contacts = {
+      { conversationKey = "a", channel = "WOW", isRequest = true },
+      { conversationKey = "w", channel = "WOW" },
+      { conversationKey = "b", channel = "WOW", isRequest = true },
+      { conversationKey = "c", channel = "WOW", isRequest = true },
+    }
+    local requestCallbacks = WindowCallbacks.Create({
+      runtime = { store = Store.New({}) },
+      characterState = {},
+      buildContacts = function()
+        return contacts
+      end,
+      selectConversation = function(key)
+        picked[#picked + 1] = key
+      end,
+    })
+    requestCallbacks.onDeleteRequest({ conversationKey = "b" })
+    assert(picked[1] == "c", "the request below opens, got " .. tostring(picked[1]))
+    requestCallbacks.onDeleteRequest({ conversationKey = "c" })
+    assert(picked[2] == "b", "the last one falls back to the request above, got " .. tostring(picked[2]))
+    contacts = { { conversationKey = "a", channel = "WOW", isRequest = true } }
+    requestCallbacks.onDeleteRequest({ conversationKey = "a" })
+    assert(picked[3] == nil, "no requests left: nothing opens, empty page shows")
+  end
+
   -- test_missing_contact_is_ignored
   callbacks.onAcceptRequest(nil)
   callbacks.onDeleteRequest(nil)

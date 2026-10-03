@@ -39,6 +39,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: with a large font size, the message request bar above the text box grows to fit its text instead of spilling over the chat, and a long name at the top of a chat is shortened so "(Invite to WM)" stays inside the window.
 - Fixed: with the Native WoW HUD on, buttons in Options and pop-ups (like Add rule) now light up when you point at them.
 - Each page in the Options menu now has a small icon next to its name, so you can find pages at a glance. With the Native WoW HUD on, the menu stays text only like the game's own.
+- Deleting a message request now opens the next one, so the empty Requests page only shows once none are left.
 
 ## [2.0.2] - 2026-10-02
 
