@@ -9,7 +9,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Busy group chats no longer slow the game down while the window is open.
 - Repeated messages from the same player now show once with a counter.
 - Trade, General, Local Defense, LFG and your custom channels can now appear as chats (turn them on in Options).
-- Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other unread chats.
+- Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other unread chats. Muting a channel chat also silences the alert for your name.
 - Right-click a player in your contacts, or someone's message in a group or channel chat, and choose Ignore… to stop seeing anything they send. You can add a note saying why.
 - Options are split into Behavior, Whispers, Chats and Filters pages; the new Filters page manages ignored players and keyword rules.
 - The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
