@@ -26,6 +26,8 @@ local BUILT_INS = {
 local CUSTOM_ZONE_ID = 0
 -- GetChannelList returns (id, name, disabled) per joined channel.
 local CHANNEL_LIST_STRIDE = 3
+-- Community streams are listed as raw "Community:<club>:<stream>" ids.
+local COMMUNITY_PREFIX = "Community:"
 
 local function text(key)
   return Localization.Text(key)
@@ -72,7 +74,7 @@ local function customChannels()
   local seen = {}
   for i = 1, list.n, CHANNEL_LIST_STRIDE do
     local name = list[i + 1]
-    if type(name) == "string" and name ~= "" and not skip[string.lower(name)] then
+    if type(name) == "string" and name ~= "" and not skip[string.lower(name)] and not string.find(name, COMMUNITY_PREFIX, 1, true) then
       local slug = ChannelKey.Slug(CUSTOM_ZONE_ID, name)
       if slug and not seen[slug] then
         seen[slug] = true

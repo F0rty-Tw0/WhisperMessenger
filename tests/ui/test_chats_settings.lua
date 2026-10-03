@@ -96,7 +96,7 @@ return function()
   -- test_custom_channels_are_listed_from_the_game
   withGlobals({
     GetChannelList = function()
-      return 1, "General", false, 5, "CraftScan", false
+      return 1, "General", false, 5, "CraftScan", false, 6, "Community:123:1", false
     end,
     EnumerateServerChannels = function()
       return "General", "Trade"
@@ -105,7 +105,8 @@ return function()
     local result, calls = create({})
     FindUI.click(FindUI.toggle(result.frame, "CraftScan"))
     assert(calls[#calls].value["c:craftscan"] == true, "custom channel keyed c:craftscan")
-    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS + 1, "server General is not listed twice")
+    assert(FindUI.countToggles(result.frame) == 2 + #BUILT_IN_LABELS + 1, "server General and community channels are not listed")
+    assert(FindUI.text(result.frame, "Community:123:1") == nil, "raw community channel ids are hidden")
   end)
 
   -- test_built_ins_only_without_the_channel_api
