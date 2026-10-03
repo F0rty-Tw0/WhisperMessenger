@@ -37,6 +37,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - The Classic look's scrollbars are slimmer: a smaller gold knob with no dark strip behind it, so lists and Options pages keep more room.
 - Fixed: with a large font size, the name, status and zone at the top of a chat no longer spill into the messages below, and the paused-in-Mythic+ notice no longer covers the last message.
 - Fixed: with a large font size, the message request bar above the text box grows to fit its text instead of spilling over the chat, and a long name at the top of a chat is shortened so "(Invite to WM)" stays inside the window.
+- Fixed: with the Native WoW HUD on, buttons in Options and pop-ups (like Add rule) now light up when you point at them.
 
 ## [2.0.2] - 2026-10-02
 
