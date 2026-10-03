@@ -2,4 +2,5 @@
 
 return {
   IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList"),
+  KeywordRules = require("WhisperMessenger.Model.Filters.KeywordRules"),
 }
