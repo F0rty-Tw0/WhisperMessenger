@@ -207,7 +207,16 @@ function WindowCoordinator.Create(options)
     IconSurfaces.Update(freshContacts, iconSurfaces)
     return nextState
   end
+  -- A hidden window keeps only the icon badges and preview current. Opening
+  -- it (setWindowVisible) runs the full refresh: availability, presence,
+  -- request follow and read receipts.
   function coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
+    if not coordinator.isWindowVisible() then
+      local contacts = buildContacts(dirtyKeys)
+      IconSurfaces.Update(contacts, iconSurfaces)
+      return { contacts = contacts }
+    end
+
     local nextState = coordinator.refreshContacts(dirtyKeys)
     local window = getWindow()
 

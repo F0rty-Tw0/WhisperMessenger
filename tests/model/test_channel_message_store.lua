@@ -28,6 +28,7 @@ return function()
     ChannelMessageStore.Record(state, "Arthas-Area52", "new message", "Trade", 2000)
 
     local entry = ChannelMessageStore.GetLatest(state, "arthas-area52")
+    assert(entry, "should find an entry for arthas-area52")
     assert(entry.text == "new message", "should have newer message, got: " .. tostring(entry.text))
     assert(entry.channelLabel == "Trade", "channel should be updated")
   end
@@ -39,6 +40,7 @@ return function()
     ChannelMessageStore.Record(state, "Arthas-Area52", "older message", "General", 1000)
 
     local entry = ChannelMessageStore.GetLatest(state, "arthas-area52")
+    assert(entry, "should find an entry for arthas-area52")
     assert(entry.text == "newer message", "should keep newer message, got: " .. tostring(entry.text))
   end
 
@@ -127,6 +129,7 @@ return function()
 
     local a = ChannelMessageStore.GetLatest(state, "arthas-area52")
     local j = ChannelMessageStore.GetLatest(state, "jaina-proudmoore")
+    assert(a and j, "should find entries for both senders")
     assert(a.text == "sell stuff", "Arthas message mismatch")
     assert(j.text == "LFG keys", "Jaina message mismatch")
   end
