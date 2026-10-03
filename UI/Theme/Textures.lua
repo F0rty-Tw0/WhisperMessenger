@@ -23,6 +23,15 @@ local Textures = {
   title_mark_read_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\mark_read.png",
   quick_reply_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\quick_reply.png",
   muted_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\muted.png",
+  -- Settings-nav page icons (white on transparent; tinted like the label).
+  nav_general_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_general.png",
+  nav_appearance_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_appearance.png",
+  nav_behavior_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_behavior.png",
+  nav_whispers_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_whispers.png",
+  nav_chats_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_chats.png",
+  nav_filters_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_filters.png",
+  nav_notifications_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_notifications.png",
+  nav_icons_icon = "Interface\\AddOns\\WhisperMessenger\\Media\\nav_icons.png",
 }
 
 -- Class tokens with a matching ClassIcon_* texture. Unknown tags must

@@ -135,6 +135,14 @@ return function()
     assertNativeArt(menu.appearanceTab.nav.selection, SELECTED_ART, "HUD tabs selection")
   end
 
+  -- test_hud_settings_tabs_stay_text_only
+  do
+    local menu = buildMenu(factory)
+    for index, tab in ipairs(menu.settingsTabs) do
+      assert(tab.nav.icon == nil, "HUD tab " .. index .. " has no icon")
+    end
+  end
+
   Hud.Configure("off")
   Theme.SetPreset(previousPreset)
   print("  All HUD options nav tests passed")

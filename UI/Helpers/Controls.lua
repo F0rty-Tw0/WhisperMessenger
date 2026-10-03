@@ -50,11 +50,14 @@ function Controls.createOptionButton(factory, parent, label, colors, layout)
   local ghost = layout.ghost and GhostButton.Attach(button, { danger = layout.danger }) or nil
   button.ghost = ghost
   -- `layout.nav` opts a button into the settings-nav list-item look.
-  local nav = layout.nav and NavItem.Attach(button) or nil
+  local nav = layout.nav and NavItem.Attach(button, layout.icon) or nil
   button.nav = nav
   button._wmNavActive = false
 
-  if nav then
+  if nav and nav.icon then
+    labelFs:ClearAllPoints()
+    labelFs:SetPoint("LEFT", nav.icon, "RIGHT", NavItem.ICON_GAP, 0)
+  elseif nav then
     labelFs:ClearAllPoints()
     labelFs:SetPoint("LEFT", button, "LEFT", NavItem.PADDING_X, 0)
   end

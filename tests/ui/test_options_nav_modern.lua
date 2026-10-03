@@ -100,6 +100,23 @@ return function()
     assert(menu.whispersTab == menu.settingsTabs[4] and menu.filtersTab == menu.settingsTabs[6], "tabs exposed by name")
   end
 
+  -- test_settings_tabs_show_a_page_icon_left_of_the_label
+  do
+    local menu = buildMenu(factory)
+    local seen = {}
+    for index, tab in ipairs(menu.settingsTabs) do
+      local icon = tab.nav.icon
+      assert(icon ~= nil and type(icon.texturePath) == "string", "tab " .. index .. " has an icon")
+      assert(not seen[icon.texturePath], "tab " .. index .. " icon is its own")
+      seen[icon.texturePath] = true
+      assert(tab.label.point[2] == icon, "tab " .. index .. " label sits right of its icon")
+    end
+    local general = menu.generalTab
+    assert(rgbMatch(general.nav.icon.vertexColor, Theme.COLORS.text_secondary), "icon at rest takes the label colour")
+    general.setNavActive(true)
+    assert(rgbMatch(general.nav.icon.vertexColor, Theme.COLORS.text_primary), "active icon brightens with the label")
+  end
+
   -- test_settings_tabs_drive_nav_selection_without_box_paint
   do
     local menu = buildMenu(factory)
