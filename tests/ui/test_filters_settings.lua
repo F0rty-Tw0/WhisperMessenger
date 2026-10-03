@@ -53,17 +53,6 @@ local function trashButtons(root)
   return buttons
 end
 
-local function typeSearch(root, value)
-  local input = assert(
-    FindUI.find(root, function(node)
-      return node.frameType == "EditBox"
-    end),
-    "Filters page has a search box"
-  )
-  input:SetText(value)
-  input:GetScript("OnTextChanged")(input)
-end
-
 -- Each StaticPopup_Show accepts at once with the next queued text.
 local function stubPopups(answers)
   local shown = {}
@@ -115,15 +104,6 @@ return function()
     assert(visibleText(result.frame, "Player001") == nil, "scrolled past the first entry")
     assert(visibleText(result.frame, "Player002") ~= nil, "next entry bound to a pooled row")
     assert(#trashButtons(result.frame) <= IgnoreListSection.VISIBLE_ROWS, "scrolling reuses rows")
-  end
-
-  -- test_search_shows_only_matching_rows
-  do
-    local result = create(filtersWith({ "Spammer", "GoldSpamKing", "Bob" }))
-    typeSearch(result.frame, "spam")
-    assert(visibleText(result.frame, "Spammer") ~= nil, "Spammer matches")
-    assert(visibleText(result.frame, "GoldSpamKing") ~= nil, "GoldSpamKing matches")
-    assert(visibleText(result.frame, "Bob") == nil, "Bob is filtered out")
   end
 
   -- test_remove_button_unignores_and_redraws

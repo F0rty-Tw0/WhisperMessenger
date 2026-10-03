@@ -420,7 +420,6 @@ local Korean = {
   ["Filters"] = "필터",
   ["Silently hide messages from players and lines you don't want to see."] = "보고 싶지 않은 플레이어의 메시지와 문구를 조용히 숨깁니다.",
   ["Ignored players"] = "무시한 플레이어",
-  ["Search"] = "검색",
   ["Add player…"] = "플레이어 추가…",
   ["Reason (optional)"] = "사유 (선택)",
   ["Ignore for"] = "무시 기간",

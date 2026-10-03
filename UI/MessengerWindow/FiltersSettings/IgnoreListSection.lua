@@ -7,16 +7,13 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local TextInputDialog = ns.TextInputDialog or require("WhisperMessenger.UI.Shared.TextInputDialog")
 local IgnorePrompt = ns.IgnorePrompt or require("WhisperMessenger.UI.Shared.IgnorePrompt")
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
-local ContactsSearchUI = ns.MessengerWindowLayoutContactsSearchUI or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.ContactsSearchUI")
 local IgnoreRow = ns.FiltersSettingsIgnoreRow or require("WhisperMessenger.UI.MessengerWindow.FiltersSettings.IgnoreRow")
 
--- "Ignored players" section of the Filters page: a search field, a scrolling
--- list that only ever builds VISIBLE_ROWS row frames (re-bound on scroll), the
+-- "Ignored players" section of the Filters page: a scrolling list that only ever builds VISIBLE_ROWS row frames (re-bound on scroll), the
 -- "Ignore for" choice and an "Add player…" button.
 local IgnoreListSection = {}
 
@@ -59,17 +56,14 @@ local function durationOptions()
   return list
 end
 
--- Entries whose name contains `query` (lowercased), sorted by name. Each
+-- Every entry, sorted by name. Each
 -- entry's stored key goes in `keys`: removal deletes by that key, since a key
 -- saved on another realm is not what Key(name) rebuilds here.
-local function matchingEntries(filters, query, keys)
+local function sortedEntries(filters, keys)
   local entries = {}
   for key, entry in pairs(filters.ignored) do
-    local name = string.lower(entry.name or "")
-    if query == "" or string.find(name, query, 1, true) then
-      entries[#entries + 1] = entry
-      keys[entry] = key
-    end
+    entries[#entries + 1] = entry
+    keys[entry] = key
   end
   table.sort(entries, function(a, b)
     return string.lower(a.name or "") < string.lower(b.name or "")
@@ -85,67 +79,20 @@ local function countEntries(filters)
   return count
 end
 
-local function createSearch(factory, frame, anchor, width, onQueryChanged)
-  local holder = factory.CreateFrame("Frame", nil, frame)
-  holder:SetSize(width, Theme.LAYOUT.CONTACT_SEARCH_HEIGHT)
-  holder:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -GAP)
-  local search = ContactsSearchUI.Build(factory, holder, {
-    contactsWidth = width,
-    searchMargin = 0,
-    searchHeight = Theme.LAYOUT.CONTACT_SEARCH_HEIGHT,
-    searchClearButtonSize = Theme.LAYOUT.CONTACT_SEARCH_CLEAR_BUTTON_SIZE,
-    nativeChrome = Hud.IsOn(),
-  })
-  search.frame:ClearAllPoints()
-  search.frame:SetPoint("TOPLEFT", holder, "TOPLEFT", 0, 0)
-  search.frame:SetSize(width, Theme.LAYOUT.CONTACT_SEARCH_HEIGHT)
-  search.placeholder:SetText(text("Search"))
-  search.applySkin(Theme)
-
-  local input = search.input
-  local function sync()
-    local query = string.lower(input:GetText() or "")
-    if not search.native then
-      search.placeholder:SetShown(query == "")
-      search.clearButton:SetShown(query ~= "")
-    end
-    onQueryChanged(query)
-  end
-  input:SetScript("OnTextChanged", sync)
-  input:SetScript("OnEscapePressed", function()
-    input:SetText("")
-    sync()
-    input:ClearFocus()
-  end)
-  if search.clearButton and not search.native then
-    search.clearButton:SetScript("OnClick", function()
-      input:SetText("")
-      sync()
-    end)
-  end
-  search.holder = holder
-  return search
-end
-
 -- options = { filters, panel, onLayoutChanged }. Returns the section with
 -- `bottom` (the frame the next control anchors below) and `redraw`.
 function IgnoreListSection.Create(factory, frame, anchor, options)
   local filters = options.filters
   local width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
   local section = { rows = {} }
-  local query, offset, entries, entryKeys = "", 0, {}, {}
+  local offset, entries, entryKeys = 0, {}, {}
   local selectedDuration = DEFAULT_DURATION
 
   local titleSection = SettingsControls.CreateSectionLabel(frame, text("Ignored players"))
   titleSection.region:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  local search = createSearch(factory, frame, titleSection.region, width, function(nextQuery)
-    query, offset = nextQuery, 0
-    section.redraw()
-  end)
-
   local list = factory.CreateFrame("Frame", nil, frame)
-  list:SetPoint("TOPLEFT", search.holder, "BOTTOMLEFT", 0, -GAP)
+  list:SetPoint("TOPLEFT", titleSection.region, "BOTTOMLEFT", 0, -GAP)
   list:EnableMouseWheel(true)
 
   local function remove(key)
@@ -227,7 +174,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   function section.redraw()
     IgnoreList.Sweep(filters, now())
     entryKeys = {}
-    entries = matchingEntries(filters, query, entryKeys)
+    entries = sortedEntries(filters, entryKeys)
     titleSection.label:SetText(string.format("%s (%d)", text("Ignored players"), countEntries(filters)))
     offset = math.min(offset, math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS))
     bindRows()
@@ -240,7 +187,6 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
 
   function section.refreshTheme()
     titleSection.refreshTheme(Theme)
-    search.applySkin(Theme)
     for _, row in ipairs(section.rows) do
       IgnoreRow.RefreshTheme(row)
     end
@@ -249,13 +195,10 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   function section.refreshLayout(nextWidth)
     width = nextWidth
     titleSection.refreshLayout(nextWidth)
-    search.holder:SetWidth(nextWidth)
-    search.frame:SetWidth(nextWidth)
     section.redraw()
   end
 
   function section.setLanguage()
-    search.placeholder:SetText(text("Search"))
     durationSelector.label:SetText(text("Ignore for"))
     durationSelector.setOptionsList(durationOptions())
     addButton.label:SetText(text("Add player…"))

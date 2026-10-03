@@ -420,7 +420,6 @@ local TraditionalChinese = {
   ["Filters"] = "過濾",
   ["Silently hide messages from players and lines you don't want to see."] = "靜默隱藏你不想看到的玩家訊息與內容。",
   ["Ignored players"] = "已屏蔽的玩家",
-  ["Search"] = "搜尋",
   ["Add player…"] = "新增玩家…",
   ["Reason (optional)"] = "原因（選填）",
   ["Ignore for"] = "屏蔽時長",

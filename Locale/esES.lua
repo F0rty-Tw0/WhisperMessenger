@@ -420,7 +420,6 @@ local Spanish = {
   ["Filters"] = "Filtros",
   ["Silently hide messages from players and lines you don't want to see."] = "Oculta en silencio los mensajes de jugadores y las líneas que no quieres ver.",
   ["Ignored players"] = "Jugadores ignorados",
-  ["Search"] = "Buscar",
   ["Add player…"] = "Añadir jugador…",
   ["Reason (optional)"] = "Motivo (opcional)",
   ["Ignore for"] = "Ignorar durante",

@@ -420,7 +420,6 @@ local Russian = {
   ["Filters"] = "Фильтры",
   ["Silently hide messages from players and lines you don't want to see."] = "Тихо скрывайте сообщения игроков и строки, которые не хотите видеть.",
   ["Ignored players"] = "Игнорируемые игроки",
-  ["Search"] = "Поиск",
   ["Add player…"] = "Добавить игрока…",
   ["Reason (optional)"] = "Причина (необязательно)",
   ["Ignore for"] = "Игнорировать",
