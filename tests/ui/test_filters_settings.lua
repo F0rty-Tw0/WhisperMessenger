@@ -135,6 +135,25 @@ return function()
     assert(visibleText(result.frame, "Bob") == nil, "row redrawn without Bob")
   end
 
+  -- test_remove_works_for_an_entry_added_on_another_realm
+  do
+    local savedRealm = rawget(_G, "GetNormalizedRealmName")
+    rawset(_G, "GetNormalizedRealmName", function()
+      return "Illidan"
+    end)
+    local filters = { ignored = { ["bob-area52"] = entry("Bob") }, rules = {} }
+    local result = create(filters)
+    FindUI.click(trashButtons(result.frame)[1])
+    rawset(_G, "GetNormalizedRealmName", savedRealm)
+    assert(filters.ignored["bob-area52"] == nil, "the stored entry is removed, not this realm's Bob")
+  end
+
+  -- test_title_counts_every_ignored_player
+  do
+    local result = create(filtersWith({ "A", "B", "C", "D", "E", "F", "G", "H" }))
+    assert(FindUI.text(result.frame, "Ignored players (8)") ~= nil, "title shows the full count while rows scroll")
+  end
+
   -- test_row_shows_reason_blocked_count_and_last_text
   do
     local filters = { ignored = {}, rules = {} }

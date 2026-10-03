@@ -78,7 +78,7 @@ function IgnoreRow.Create(factory, list, onRemove)
   row:SetHeight(IgnoreRow.HEIGHT)
 
   row.removeButton = RemoveButton.Create(factory, row, function()
-    onRemove(row.entryName)
+    onRemove(row.entryKey)
   end)
   row.removeButton:SetPoint("RIGHT", row, "RIGHT", 0, 0)
 
@@ -98,8 +98,9 @@ function IgnoreRow.Create(factory, list, onRemove)
   return row
 end
 
-function IgnoreRow.Bind(row, entry)
-  row.entryName = entry.name
+-- key: the entry's key in the ignore list, handed back to onRemove.
+function IgnoreRow.Bind(row, entry, key)
+  row.entryKey = key
   row.nameText:SetText(entry.name)
   row.blockedText:SetText(string.format(text("Blocked %d"), entry.blocked or 0))
   row.detailText:SetText(detailText(entry))

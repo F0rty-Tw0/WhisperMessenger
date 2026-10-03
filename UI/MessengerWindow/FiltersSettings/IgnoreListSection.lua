@@ -59,19 +59,30 @@ local function durationOptions()
   return list
 end
 
--- Entries whose name contains `query` (lowercased), sorted by name.
-local function matchingEntries(filters, query)
+-- Entries whose name contains `query` (lowercased), sorted by name. Each
+-- entry's stored key goes in `keys`: removal deletes by that key, since a key
+-- saved on another realm is not what Key(name) rebuilds here.
+local function matchingEntries(filters, query, keys)
   local entries = {}
-  for _, entry in pairs(filters.ignored) do
+  for key, entry in pairs(filters.ignored) do
     local name = string.lower(entry.name or "")
     if query == "" or string.find(name, query, 1, true) then
       entries[#entries + 1] = entry
+      keys[entry] = key
     end
   end
   table.sort(entries, function(a, b)
     return string.lower(a.name or "") < string.lower(b.name or "")
   end)
   return entries
+end
+
+local function countEntries(filters)
+  local count = 0
+  for _ in pairs(filters.ignored) do
+    count = count + 1
+  end
+  return count
 end
 
 local function createSearch(factory, frame, anchor, width, onQueryChanged)
@@ -122,7 +133,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   local filters = options.filters
   local width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH
   local section = { rows = {} }
-  local query, offset, entries = "", 0, {}
+  local query, offset, entries, entryKeys = "", 0, {}, {}
   local selectedDuration = DEFAULT_DURATION
 
   local titleSection = SettingsControls.CreateSectionLabel(frame, text("Ignored players"))
@@ -137,8 +148,8 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   list:SetPoint("TOPLEFT", search.holder, "BOTTOMLEFT", 0, -GAP)
   list:EnableMouseWheel(true)
 
-  local function remove(name)
-    IgnoreList.Remove(filters, name)
+  local function remove(key)
+    IgnoreList.RemoveKey(filters, key)
     section.redraw()
   end
 
@@ -153,7 +164,7 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
           section.rows[index] = row
         end
         row:SetWidth(width)
-        IgnoreRow.Bind(row, entry)
+        IgnoreRow.Bind(row, entry, entryKeys[entry])
         row:Show()
       elseif row ~= nil then
         row:Hide()
@@ -215,7 +226,9 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
 
   function section.redraw()
     IgnoreList.Sweep(filters, now())
-    entries = matchingEntries(filters, query)
+    entryKeys = {}
+    entries = matchingEntries(filters, query, entryKeys)
+    titleSection.label:SetText(string.format("%s (%d)", text("Ignored players"), countEntries(filters)))
     offset = math.min(offset, math.max(0, #entries - IgnoreListSection.VISIBLE_ROWS))
     bindRows()
     local shown = math.min(#entries, IgnoreListSection.VISIBLE_ROWS)
@@ -242,7 +255,6 @@ function IgnoreListSection.Create(factory, frame, anchor, options)
   end
 
   function section.setLanguage()
-    titleSection.label:SetText(text("Ignored players"))
     search.placeholder:SetText(text("Search"))
     durationSelector.label:SetText(text("Ignore for"))
     durationSelector.setOptionsList(durationOptions())
