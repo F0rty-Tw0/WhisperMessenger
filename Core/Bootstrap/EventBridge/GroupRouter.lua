@@ -7,6 +7,7 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local Constants = ns.Constants or require("WhisperMessenger.Core.Constants")
 local GroupChatIngest = ns.GroupChatIngest or require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
+local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 local GroupRouter = {}
@@ -147,6 +148,11 @@ function GroupRouter.RouteGroupEvent(runtime, eventName, ...)
     elseif type(channelName) == "string" and channelName ~= "" then
       streamName = channelName
     end
+  end
+
+  -- Ignored senders and keyword-blocked lines are handled by dropping them.
+  if IncomingFilter.Evaluate(runtime, "group", playerName, text, lineID, eventName) ~= "pass" then
+    return true
   end
 
   -- Resolve sender class/race/faction from guid so the chat bubble can
