@@ -1,6 +1,12 @@
 local TextLimits = require("WhisperMessenger.Util.TextLimits")
 
 return function()
+  -- test_long_message_limits
+  assert(TextLimits.LONG_MESSAGE_MAX_BYTES == 799, "long whisper cap is 799 bytes")
+  assert(TextLimits.LONG_INPUT_MAX_BYTES == 800, "long input cap leaves room for the null terminator")
+  assert(TextLimits.MAX_PARTS == 4, "a long whisper splits into at most 4 parts")
+  assert(TextLimits.BNET_PART_BYTES == 799, "a Battle.net part carries the whole long whisper")
+
   -- test_cap_bytes_keeps_short_text
   assert(TextLimits.CapBytes("hello", 10) == "hello", "short text is unchanged")
 

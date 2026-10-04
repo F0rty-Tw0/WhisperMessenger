@@ -29,5 +29,24 @@ function IncomingAlerts.Notify(settings)
   end
 end
 
+-- The parts of a long whisper arrive as separate whispers before anything
+-- marks them as parts, so a conversation alerts at most once per window.
+local ALERT_WINDOW_SECONDS = 2
+
+-- True when conversationKey alerted within the window; otherwise records
+-- now as its last alert.
+function IncomingAlerts.Throttled(runtime, conversationKey, now)
+  if conversationKey == nil or type(now) ~= "number" then
+    return false
+  end
+  runtime.lastAlertAtByConversation = runtime.lastAlertAtByConversation or {}
+  local lastAlertAt = runtime.lastAlertAtByConversation[conversationKey]
+  if lastAlertAt ~= nil and now >= lastAlertAt and now - lastAlertAt < ALERT_WINDOW_SECONDS then
+    return true
+  end
+  runtime.lastAlertAtByConversation[conversationKey] = now
+  return false
+end
+
 ns.BootstrapEventBridgeIncomingAlerts = IncomingAlerts
 return IncomingAlerts

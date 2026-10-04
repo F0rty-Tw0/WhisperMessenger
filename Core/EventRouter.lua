@@ -18,6 +18,8 @@ local FailedWhisper = ns.EventRouterFailedWhisper or require("WhisperMessenger.C
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
+local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
+local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
@@ -280,12 +282,11 @@ local function handleReactionMetadata(state, payload, isBattleNet)
   if metadata == nil then
     return handlePresence(state, conversationKey, presence, now)
   end
-  if metadata.type == "identity" then
-    local paired = MessageReactions.RecordIdentity(state, senderKey, identityConversationKey, metadata, now)
+  if metadata.type == "identity" or metadata.type == "manifest" then
+    local paired = PartMerge.RecordIdentity(state, senderKey, identityConversationKey, metadata, now)
     if paired == nil then
       return nil
     end
-    MessageReplies.ClaimStaged(state, identityConversationKey, paired, now)
     -- The whisper now carries a wire id, so the window can send its receipt.
     local conversation = conversationWithKey(state, conversationKey)
     if conversation == nil then
@@ -489,6 +490,7 @@ local function handleUnlockedEvent(state, eventName, payload)
 
       local isNewConversation = state.store.conversations[conversationKey] == nil
       Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
+      PartMerge.AfterStore(state, conversationKey, incomingMessage)
       if isNewConversation and eventName == "CHAT_MSG_WHISPER" then
         MessageRequests.ClassifyNew(state, state.store.conversations[conversationKey], payload.guid, payload.playerName)
       end
@@ -535,7 +537,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       local outgoingMessage = buildMessage(state, informPayload, contact, "out", "user", sentAt)
       outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
       outgoingMessage.replyTo = pendingEntry and pendingEntry.replyTo or nil
+      MessageParts.ApplyMetadata(outgoingMessage, pendingEntry)
       Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
+      PartMerge.AfterStore(state, conversationKey, outgoingMessage)
       Store.MarkRead(state.store, conversationKey)
     elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
       Store.SetActiveStatus(state.store, conversationKey, {

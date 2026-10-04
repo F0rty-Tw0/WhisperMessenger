@@ -50,6 +50,12 @@ function FailedWhisper.Handle(state, text)
   if entry == nil then
     return nil
   end
+  -- Every part of a long whisper fails the same way: one record with the
+  -- whole message, so Retry sends all of it again.
+  if entry.wireId ~= nil and (entry.partCount or 1) > 1 then
+    PendingOutgoing.DropWire(state, entry.wireId)
+    entry.text = entry.fullText or entry.text
+  end
   local sentAt = entry.createdAt or now or 0
   local record = OutgoingDelivery.BuildRecord(entry, sentAt, "failed", "Player not found")
   applyRosterIdentity(state, record)

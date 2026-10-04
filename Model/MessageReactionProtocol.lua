@@ -9,6 +9,9 @@ local Protocol = {}
 
 local MAX_PAYLOAD_BYTES = 255
 local VERSION = "1"
+-- How long a side message waits for its whisper, and how far apart the
+-- parts of one long whisper may arrive.
+local PAIRING_TTL_SECONDS = 15
 local ELLIPSIS = "…"
 local OPEN_QUOTE = "“"
 local CLOSE_QUOTE = "”"
@@ -299,6 +302,12 @@ function Protocol.Decode(payload)
     }
   end
 
+  if fields[2] == "P" then
+    -- MessageParts loads after this module; resolve it at call time.
+    local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
+    return MessageParts.DecodeManifest(payload)
+  end
+
   if fields[2] == "G" then
     if #fields ~= 9 then
       return nil
@@ -368,10 +377,13 @@ function Protocol.Decode(payload)
   }
 end
 
+Protocol.IsWireId = isWireId
+Protocol.IsFingerprint = isFingerprint
 Protocol.REACTION_KEYS = REACTION_KEYS
 Protocol.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
 Protocol.MAX_WHISPER_BYTES = TextLimits.MESSAGE_MAX_BYTES
 Protocol.VERSION = VERSION
+Protocol.PAIRING_TTL_SECONDS = PAIRING_TTL_SECONDS
 Protocol.ADDON_HINT_SUFFIX = ADDON_HINT_SUFFIX
 
 ns.MessageReactionProtocol = Protocol

@@ -13,6 +13,14 @@ TextLimits.MESSAGE_MAX_BYTES = 255
 -- players type a full message.
 TextLimits.INPUT_MAX_BYTES = TextLimits.MESSAGE_MAX_BYTES + 1
 
+-- A long whisper goes out in up to MAX_PARTS whispers of MESSAGE_MAX_BYTES each.
+TextLimits.LONG_MESSAGE_MAX_BYTES = 799
+TextLimits.LONG_INPUT_MAX_BYTES = TextLimits.LONG_MESSAGE_MAX_BYTES + 1
+TextLimits.MAX_PARTS = 4
+
+-- A Battle.net whisper carries a whole long message in one part.
+TextLimits.BNET_PART_BYTES = TextLimits.LONG_MESSAGE_MAX_BYTES
+
 local function isContinuationByte(byte)
   return byte ~= nil and byte >= 0x80 and byte < 0xC0
 end

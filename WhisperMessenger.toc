@@ -32,6 +32,7 @@ Core/BNetIdentity.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
+Util/MessageSplit.lua
 Util/ChatPrint.lua
 Util/PerfCounters.lua
 Util/DisplayName.lua
@@ -75,6 +76,7 @@ Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
 Model/MessageReactionProtocol.lua
+Model/MessageParts.lua
 Model/MessageReactions.lua
 Model/LivePresence.lua
 Model/MessageReplies.lua
@@ -111,6 +113,7 @@ Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
+Core/EventRouter/PartMerge.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
@@ -237,6 +240,7 @@ UI/Composer/ComposerLayout.lua
 UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
+UI/Composer/ComposerLimit.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
@@ -348,6 +352,7 @@ Core/Bootstrap/EventBridge/ChannelRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
+Core/Bootstrap/SendParts.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/QueuedSends.lua
 Core/Bootstrap/LivePresenceSender.lua

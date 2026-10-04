@@ -75,7 +75,9 @@ local function applyIncomingEffects(runtime, result)
   -- Muted conversations still store the whisper and count it unread; they
   -- just never make noise or open the window.
   local settings = runtime.accountState and runtime.accountState.settings
+  local now = type(runtime.now) == "function" and runtime.now() or nil
   local shouldAlert = AlertPolicy.ShouldAlert(result, settings)
+    and not IncomingAlerts.Throttled(runtime, type(result) == "table" and result.conversationKey or nil, now)
   if shouldAlert then
     IncomingAlerts.Notify(settings)
   end

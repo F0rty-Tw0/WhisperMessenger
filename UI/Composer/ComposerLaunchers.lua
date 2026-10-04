@@ -19,7 +19,7 @@ local function quickReplyIconColor()
   return Theme.COLORS.action_icon or Theme.COLORS.text_secondary
 end
 
--- options = { enabled, maxBytes, getQuickReplies }
+-- options = { enabled, getMaxBytes, getQuickReplies }
 function ComposerLaunchers.Create(factory, pane, input, options)
   local enabled = options.enabled == true
   local function isEnabled()
@@ -49,12 +49,12 @@ function ComposerLaunchers.Create(factory, pane, input, options)
   quickReplyButton.icon:SetTexture(Theme.TEXTURES.quick_reply_icon)
   UIHelpers.applyVertexColor(quickReplyButton.icon, quickReplyIconColor())
 
-  -- Insert only when the whole text still fits one whisper.
+  -- Insert only when the whole text still fits the current cap.
   local function insertAtCursor(text)
     if not enabled then
       return
     end
-    if #(input:GetText() or "") + #text <= options.maxBytes then
+    if #(input:GetText() or "") + #text <= options.getMaxBytes() then
       input:Insert(text)
     end
     if input.SetFocus then
