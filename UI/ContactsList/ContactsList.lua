@@ -145,9 +145,5 @@ function ContactsList.HasMore(parent)
   return (parent.visibleCount or 0) < (parent.totalCount or 0)
 end
 
-function ContactsList.Render(factory, parent, items, options)
-  return ContactsList.Refresh(factory, parent, {}, items, options)
-end
-
 ns.ContactsList = ContactsList
 return ContactsList

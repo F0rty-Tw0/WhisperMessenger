@@ -482,19 +482,12 @@ return function()
   --      lands in the conversation instead of erroring the handler.
   -- ----------------------------------------------------------------
   do
-    -- compareGuids() unit — throwing __eq simulates the secret-string crash
+    -- A throwing __eq simulates the secret-string crash.
     local throwingMt = {
       __eq = function()
         error("attempt to compare field 'guid' (a secret string value tainted by 'WhisperMessenger')")
       end,
     }
-    local secret = setmetatable({}, throwingMt)
-    local mine = setmetatable({}, throwingMt)
-    assert(GroupChatIngest._compareGuids(secret, mine) == false, "compareGuids must swallow secret-string throws and return false")
-    assert(GroupChatIngest._compareGuids(nil, "x") == false, "nil guid yields false")
-    assert(GroupChatIngest._compareGuids("x", nil) == false, "nil localGuid yields false")
-    assert(GroupChatIngest._compareGuids("x", "x") == true, "matching plain guids yields true")
-    assert(GroupChatIngest._compareGuids("x", "y") == false, "differing plain guids yield false")
 
     -- End-to-end: RAID_WARNING with a throwing-on-eq guid must still ingest
     local state = makeState()

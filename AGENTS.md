@@ -51,7 +51,7 @@ python scripts/run_test.py tests/path/to/test_file.lua
 Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua` and the `tests/helpers/fake_ui/` folder. Run all tests:
 
 ```bash
-for f in tests/**/*.lua; do python scripts/run_test.py "$f"; done
+find tests -type f -name 'test_*.lua' | sort | while read -r f; do python scripts/run_test.py "$f"; done
 
 # Release script tests (Python):
 python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog

@@ -222,9 +222,6 @@ function QuestLinkExchange.Splice(state, sender, text, now)
   return result
 end
 
-QuestLinkExchange.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
-QuestLinkExchange.INBOX_TTL_SECONDS = INBOX_TTL_SECONDS
-
 ns.QuestLinkExchange = QuestLinkExchange
 
 return QuestLinkExchange

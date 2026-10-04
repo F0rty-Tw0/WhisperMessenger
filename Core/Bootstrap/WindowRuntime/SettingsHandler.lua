@@ -79,19 +79,11 @@ function SettingsHandler.Create(options)
     if key == "themePreset" then
       local fallbackKey = theme.DEFAULT_PRESET or "wow_default"
       local presetKey = value or fallbackKey
+      persistedValue = presetKey
       if theme.ResolvePreset then
         local resolvedKey, applied = theme.ResolvePreset(presetKey)
         persistedValue = resolvedKey or presetKey
         themeApplied = applied == true
-      else
-        if theme.SetPreset then
-          themeApplied = theme.SetPreset(presetKey) == true
-        end
-        if theme.GetPreset then
-          persistedValue = theme.GetPreset() or presetKey
-        else
-          persistedValue = presetKey
-        end
       end
     end
 

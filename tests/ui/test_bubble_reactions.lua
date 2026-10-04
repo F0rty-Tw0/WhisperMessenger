@@ -2,7 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local assetsLoaded, ReactionAssets = pcall(require, "WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local pickerLoaded, ReactionPicker = pcall(require, "WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
-local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local Theme = require("WhisperMessenger.UI.Theme")
@@ -529,7 +529,7 @@ return function()
       },
     }
     Fonts.SetFontSize(9)
-    local height9 = Layout.LayoutMessages(factory, content, messages, 400)
+    local height9 = LayoutMessages(factory, content, messages, 400)
     local bubble9 = assert(findBubble(content), "font-size 9 layout should render bubble")
     local reactionFrame = bubble9._reactionFrame
     local reactionTexture = bubble9._reactionTexture
@@ -544,7 +544,7 @@ return function()
     )
 
     Fonts.SetFontSize(17)
-    local height17 = Layout.LayoutMessages(factory, content, messages, 400)
+    local height17 = LayoutMessages(factory, content, messages, 400)
     local bubble17 = assert(findBubble(content), "font-size 17 layout should render bubble")
     assert(bubble17 == bubble9 and bubble17._reactionFrame == reactionFrame, "font change should reuse pooled badge frame")
     assert(reactionFrame.width == 17 and reactionFrame.height == 17, "pooled badge frame should resize to font size 17")
@@ -558,7 +558,7 @@ return function()
     )
     assert(height17 == height9 + 8, "bubble layout height should grow by font-size delta")
     messages[1].direction = "out"
-    Layout.LayoutMessages(factory, content, messages, 400)
+    LayoutMessages(factory, content, messages, 400)
     local switched = assert(findBubble(content), "direction switch should rerender pooled bubble")
     assert(switched == bubble17 and switched._reactionFrame == reactionFrame, "direction switch should reuse pooled badge")
     assert(
@@ -572,7 +572,7 @@ return function()
   do
     local content = factory.CreateFrame("Frame", nil, uiParent)
     content:SetSize(400, 600)
-    Layout.LayoutMessages(
+    LayoutMessages(
       factory,
       content,
       {
@@ -596,7 +596,7 @@ return function()
     firstFrame.scripts.OnMouseUp(firstFrame, "RightButton")
     assert(ReactionPicker.GetFrame().shown == true, "pooled bubble should own open picker")
 
-    Layout.LayoutMessages(factory, content, {
+    LayoutMessages(factory, content, {
       { kind = "user", direction = "in", text = "no reaction", sentAt = 102 },
     }, 400)
     local reused = assert(findBubble(content), "second layout should reuse bubble")
@@ -630,8 +630,8 @@ return function()
     local content = strictFactory.CreateFrame("Frame", nil, uiParent)
     content:SetSize(400, 600)
     local messages = { { kind = "user", direction = "in", text = "strict", sentAt = 100 } }
-    Layout.LayoutMessages(strictFactory, content, messages, 400, { onReact = function() end })
-    local ok, err = pcall(Layout.LayoutMessages, strictFactory, content, messages, 400, { onReact = function() end })
+    LayoutMessages(strictFactory, content, messages, 400, { onReact = function() end })
+    local ok, err = pcall(LayoutMessages, strictFactory, content, messages, 400, { onReact = function() end })
     assert(ok, "pool cleanup should respect widget-specific script support: " .. tostring(err))
   end
 

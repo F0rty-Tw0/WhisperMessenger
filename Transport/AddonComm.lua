@@ -12,17 +12,15 @@ end
 -- thrown error to tear down the surrounding character whisper which has
 -- already succeeded on its own.
 
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
+
 local AddonComm = {}
 
-local MAX_PAYLOAD_BYTES = 255
+-- Wire prefixes; older addon versions speak these, so never rename them.
+AddonComm.PREFIX_REACTION = "WMRX"
+AddonComm.PREFIX_QUEST_LINK = "WMQL"
 
-local groupChannelSet = {
-  PARTY = true,
-  RAID = true,
-  INSTANCE_CHAT = true,
-  GUILD = true,
-  OFFICER = true,
-}
+local MAX_PAYLOAD_BYTES = 255
 
 local registeredPrefixes = {}
 
@@ -131,7 +129,7 @@ function AddonComm.SendGroup(api, prefix, payload, channel)
   if #payload > MAX_PAYLOAD_BYTES then
     return false
   end
-  if groupChannelSet[channel] ~= true then
+  if ChannelType.ADDON_GROUP_CHANNELS[channel] ~= true then
     return false
   end
 
@@ -165,8 +163,6 @@ function AddonComm.SendBNet(api, prefix, payload, gameAccountID)
   local ok = pcall(send, gameAccountID, prefix, payload)
   return ok
 end
-
-AddonComm.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
 
 ns.AddonComm = AddonComm
 

@@ -6,6 +6,7 @@ end
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 
 
@@ -106,7 +107,7 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
   if eventName == "CHAT_MSG_ADDON" or eventName == "BN_CHAT_MSG_ADDON" then
     local prefix = ...
-    if prefix ~= "WMRX" and prefix ~= "WMQL" then
+    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK then
       return nil
     end
   end

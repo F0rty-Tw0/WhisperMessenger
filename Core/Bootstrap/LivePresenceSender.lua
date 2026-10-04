@@ -13,7 +13,7 @@ local Store = ns.ConversationStore or require("WhisperMessenger.Model.Conversati
 -- already known to run WhisperMessenger, so strangers never receive a byte.
 local Sender = {}
 
-local PREFIX = "WMRX"
+local PREFIX = AddonComm.PREFIX_REACTION
 -- Half the peer-side TTL: a re-send while the user keeps typing lands well
 -- before the indicator on the other side expires.
 local TYPING_RESEND_INTERVAL = 3

@@ -5,6 +5,22 @@ end
 
 local Builder = {}
 
+function Builder.Rgb(r, g, b)
+  return { r, g, b }
+end
+
+function Builder.WithAlpha(baseRgb, alpha)
+  return { baseRgb[1], baseRgb[2], baseRgb[3], alpha }
+end
+
+function Builder.MakeDividerRoles(baseRgb, baseAlpha, strongAlpha, hoverRgb, hoverAlpha)
+  return {
+    divider = Builder.WithAlpha(baseRgb, baseAlpha),
+    divider_strong = Builder.WithAlpha(baseRgb, strongAlpha),
+    divider_hover = Builder.WithAlpha(hoverRgb, hoverAlpha),
+  }
+end
+
 function Builder.CloneColor(color)
   return { color[1], color[2], color[3], color[4] }
 end

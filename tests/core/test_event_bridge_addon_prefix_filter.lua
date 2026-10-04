@@ -35,4 +35,15 @@ return function()
 
   EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_ADDON", "OTHER", "ignored", "WHISPER", "Other-Realm")
   assert(routerCalls == routerCallsBefore, "foreign addon prefix must not reach EventRouter")
+
+  -- Wire prefixes are literals on purpose: older addon versions send exactly these.
+  for _, prefix in ipairs({ "WMRX", "WMQL" }) do
+    local before = routerCalls
+    EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_ADDON", prefix, "payload", "WHISPER", "Other-Realm")
+    assert(routerCalls == before + 1, prefix .. " addon message must reach EventRouter")
+
+    before = routerCalls
+    EventBridge.RouteLiveEvent(runtime, nil, "BN_CHAT_MSG_ADDON", prefix, "payload", "WHISPER", 42)
+    assert(routerCalls == before + 1, prefix .. " BN addon message must reach EventRouter")
+  end
 end

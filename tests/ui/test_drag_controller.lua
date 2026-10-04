@@ -29,17 +29,6 @@ end
 return function()
   local factory = FakeUI.NewFactory()
 
-  -- test_create_returns_handlers
-  do
-    local controller, contacts = makeEnv(factory)
-    local handlers = DragController.Create(factory, controller, function()
-      return contacts
-    end, { rowHeight = 44 })
-    assert(type(handlers) == "table", "expected Create to return a table")
-    assert(type(handlers.handleDragStart) == "function", "expected handleDragStart to be a function")
-    assert(type(handlers.handleDragStop) == "function", "expected handleDragStop to be a function")
-  end
-
   -- test_drag_start_shows_ghost
   do
     local controller, contacts = makeEnv(factory)

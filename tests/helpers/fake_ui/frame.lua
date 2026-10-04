@@ -442,10 +442,6 @@ local function makeCreateFrame()
       self.raisedCount = (self.raisedCount or 0) + 1
     end
 
-    function frame:Lower()
-      self.loweredCount = (self.loweredCount or 0) + 1
-    end
-
     function frame:GetParent()
       return self.parent
     end
@@ -545,14 +541,6 @@ local function makeCreateFrame()
       return insets[1], insets[2], insets[3], insets[4]
     end
 
-    function frame:SetNormalFontObject(value)
-      self.normalFontObject = value
-    end
-
-    function frame:SetHighlightFontObject(value)
-      self.highlightFontObject = value
-    end
-
     function frame:SetEnabled(value)
       self.enabled = value
     end
@@ -590,10 +578,6 @@ local function makeCreateFrame()
       self.backdrop = spec
     end
 
-    function frame:GetBackdrop()
-      return self.backdrop
-    end
-
     function frame:SetBackdropColor(...)
       self.backdropColor = { ... }
     end
@@ -611,11 +595,6 @@ local function makeCreateFrame()
       if self.events then
         self.events[eventName] = nil
       end
-    end
-
-    function frame:RegisterUnitEvent(eventName, unit)
-      self.events = self.events or {}
-      self.events[eventName] = unit or true
     end
 
     function frame:IsEventRegistered(eventName)

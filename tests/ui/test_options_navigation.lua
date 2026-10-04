@@ -2,7 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local WindowVisibility = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
-local WindowScripts = require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
+local Buttons = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
 
 local function colorsMatch(actual, expected)
   if not actual or not expected then
@@ -222,7 +222,7 @@ local function test_navigation_updates_built_chrome_after_panes_transition()
     end,
   })
 
-  WindowScripts.WireButtons({
+  Buttons.WireButtons({
     optionsButton = chrome.optionsButton,
     backButton = chrome.backButton,
     optionsPanel = optionsPanel,

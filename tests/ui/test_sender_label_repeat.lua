@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local SenderLabel = require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 
 -- A collapsed row shows how often the sender repeated the line.
 
@@ -62,7 +63,7 @@ return function()
     frame:SetSize(400, 600)
     local first = { direction = "in", kind = "user", text = "hello", sentAt = 1000, playerName = "Spammer" }
     local repeated = { direction = "in", kind = "user", text = "WTS boost", sentAt = 1010, repeatCount = 3, playerName = "Spammer" }
-    Layout.LayoutMessages(factory, frame, { first, repeated }, 400, {})
+    LayoutMessages(factory, frame, { first, repeated }, 400, {})
     local found = false
     for _, child in ipairs(frame.children or {}) do
       if string.find(labelTexts(child), "×3", 1, true) then

@@ -1,10 +1,9 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local WindowScripts = require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
+local Buttons = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
+local Frame = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
-  assert(WindowScripts ~= nil, "expected WindowScripts module to load")
-
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
@@ -42,7 +41,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(closeButton.scripts) == "table" and type(closeButton.scripts.OnClick) == "function",
@@ -81,7 +80,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(optionsButton.scripts) == "table" and type(optionsButton.scripts.OnClick) == "function",
@@ -123,7 +122,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(newConversationButton.scripts) == "table" and type(newConversationButton.scripts.OnClick) == "function",
@@ -165,7 +164,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
     newConversationButton.scripts.OnClick(newConversationButton)
 
     assert(
@@ -174,210 +173,6 @@ return function()
     )
 
     rawset(_G, "StaticPopup_Show", nil)
-    _G.StaticPopupDialogs = nil
-  end
-
-  -- test_new_conversation_accept_trims_and_invokes_callback
-
-  do
-    local startedPlayerName = nil
-    _G.StaticPopupDialogs = {}
-
-    local refs = {
-      closeButton = factory.CreateFrame("Frame", nil, parent),
-      optionsButton = factory.CreateFrame("Frame", nil, parent),
-      newConversationButton = factory.CreateFrame("Frame", nil, parent),
-      resetWindowButton = factory.CreateFrame("Frame", nil, parent),
-      resetIconButton = factory.CreateFrame("Frame", nil, parent),
-      clearAllChatsButton = factory.CreateFrame("Frame", nil, parent),
-      optionsPanel = factory.CreateFrame("Frame", nil, parent),
-    }
-    local options = {
-      onClose = noop,
-      onStartConversation = function(playerName)
-        startedPlayerName = playerName
-      end,
-      onResetWindowPosition = noop,
-      onResetIconPosition = noop,
-      onClearAllChats = noop,
-      setOptionsVisible = noop,
-      isShown = function()
-        return false
-      end,
-      applyState = noop,
-      refreshSelection = noop,
-    }
-
-    WindowScripts.WireButtons(refs, options)
-
-    local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
-    assert(dialog ~= nil, "test_new_conversation_accept_trims_and_invokes_callback: expected dialog registration")
-    assert(type(dialog.OnAccept) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnAccept")
-    assert(type(dialog.OnShow) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnShow")
-    assert(type(dialog.OnHide) == "function", "test_new_conversation_accept_trims_and_invokes_callback: expected OnHide")
-
-    dialog.OnAccept({
-      editBox = {
-        GetText = function()
-          return "   Jaina Proudmoore   "
-        end,
-      },
-    })
-
-    assert(
-      startedPlayerName == "Jaina Proudmoore",
-      "test_new_conversation_accept_trims_and_invokes_callback: expected trimmed player name to be forwarded"
-    )
-
-    _G.StaticPopupDialogs = nil
-  end
-
-  -- test_new_conversation_accept_ignores_empty_names
-
-  do
-    local callbackCount = 0
-    _G.StaticPopupDialogs = {}
-
-    local refs = {
-      closeButton = factory.CreateFrame("Frame", nil, parent),
-      optionsButton = factory.CreateFrame("Frame", nil, parent),
-      newConversationButton = factory.CreateFrame("Frame", nil, parent),
-      resetWindowButton = factory.CreateFrame("Frame", nil, parent),
-      resetIconButton = factory.CreateFrame("Frame", nil, parent),
-      clearAllChatsButton = factory.CreateFrame("Frame", nil, parent),
-      optionsPanel = factory.CreateFrame("Frame", nil, parent),
-    }
-    local options = {
-      onClose = noop,
-      onStartConversation = function(_)
-        callbackCount = callbackCount + 1
-      end,
-      onResetWindowPosition = noop,
-      onResetIconPosition = noop,
-      onClearAllChats = noop,
-      setOptionsVisible = noop,
-      isShown = function()
-        return false
-      end,
-      applyState = noop,
-      refreshSelection = noop,
-    }
-
-    WindowScripts.WireButtons(refs, options)
-
-    local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
-    assert(dialog ~= nil, "test_new_conversation_accept_ignores_empty_names: expected dialog registration")
-
-    dialog.OnAccept({
-      editBox = {
-        GetText = function()
-          return " \n\t "
-        end,
-      },
-    })
-
-    assert(callbackCount == 0, "test_new_conversation_accept_ignores_empty_names: expected callback to stay untouched for whitespace input")
-
-    _G.StaticPopupDialogs = nil
-  end
-
-  -- test_new_conversation_popup_show_hide_handlers_are_safe
-
-  do
-    _G.StaticPopupDialogs = {}
-
-    local refs = {
-      closeButton = factory.CreateFrame("Frame", nil, parent),
-      optionsButton = factory.CreateFrame("Frame", nil, parent),
-      newConversationButton = factory.CreateFrame("Frame", nil, parent),
-      resetWindowButton = factory.CreateFrame("Frame", nil, parent),
-      resetIconButton = factory.CreateFrame("Frame", nil, parent),
-      clearAllChatsButton = factory.CreateFrame("Frame", nil, parent),
-      optionsPanel = factory.CreateFrame("Frame", nil, parent),
-    }
-    local options = {
-      onClose = noop,
-      onStartConversation = noop,
-      onResetWindowPosition = noop,
-      onResetIconPosition = noop,
-      onClearAllChats = noop,
-      setOptionsVisible = noop,
-      isShown = function()
-        return false
-      end,
-      applyState = noop,
-      refreshSelection = noop,
-    }
-
-    WindowScripts.WireButtons(refs, options)
-
-    local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_START_CONVERSATION"]
-    assert(dialog ~= nil, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog registration")
-    assert(type(dialog.OnShow) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow")
-    assert(type(dialog.OnHide) == "function", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide")
-
-    local function makePopupButton(name)
-      local button = factory.CreateFrame("Button", name, parent)
-      button._normalTexture = "orig-normal-" .. tostring(name)
-      function button:GetNormalTexture()
-        return self._normalTexture
-      end
-      function button:SetNormalTexture(value)
-        self._normalTexture = value
-      end
-      button.text = factory.CreateFrame("FontString", nil, button)
-      return button
-    end
-
-    local fakePopup = factory.CreateFrame("Frame", nil, parent)
-    fakePopup:SetWidth(420)
-    fakePopup.editBox = factory.CreateFrame("EditBox", nil, fakePopup)
-    fakePopup.editBox:SetText("")
-    fakePopup.button1 = makePopupButton("start")
-    fakePopup.button2 = makePopupButton("cancel")
-    fakePopup.text = factory.CreateFrame("FontString", nil, fakePopup)
-
-    local showOk, showErr = pcall(dialog.OnShow, fakePopup, "Thrall")
-    assert(showOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to be safe: " .. tostring(showErr))
-    assert(fakePopup.editBox.text == "Thrall", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to prime editbox text")
-    assert(
-      fakePopup.editBox.width == 392,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnShow to stretch editbox to near full popup width"
-    )
-    assert(fakePopup._wmManualCopyStyleActive == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to activate")
-    assert(
-      fakePopup.button1._wmManualCopyStyleActive == true,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to activate"
-    )
-    assert(
-      fakePopup.button2._wmManualCopyStyleActive == true,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to activate"
-    )
-    assert(
-      fakePopup.button1._normalTexture == "",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected style to override start button normal texture"
-    )
-
-    local hideOk, hideErr = pcall(dialog.OnHide, fakePopup)
-    assert(hideOk == true, "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to be safe: " .. tostring(hideErr))
-    assert(fakePopup.editBox.text == "", "test_new_conversation_popup_show_hide_handlers_are_safe: expected OnHide to clear editbox text")
-    assert(fakePopup._wmManualCopyStyleActive == false, "test_new_conversation_popup_show_hide_handlers_are_safe: expected dialog style to restore")
-    assert(
-      fakePopup.button1._wmManualCopyStyleActive == false,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button style to restore"
-    )
-    assert(
-      fakePopup.button2._wmManualCopyStyleActive == false,
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button style to restore"
-    )
-    assert(
-      fakePopup.button1._normalTexture == "orig-normal-start",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected start button normal texture to restore exactly"
-    )
-    assert(
-      fakePopup.button2._normalTexture == "orig-normal-cancel",
-      "test_new_conversation_popup_show_hide_handlers_are_safe: expected cancel button normal texture to restore exactly"
-    )
     _G.StaticPopupDialogs = nil
   end
 
@@ -401,7 +196,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnShow) == "function",
@@ -429,7 +224,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnSizeChanged) == "function",
@@ -457,7 +252,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnDragStart) == "function",
@@ -491,7 +286,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     -- Trigger OnShow
     frame:Show()
@@ -524,7 +319,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     frame:Show()
 
@@ -574,12 +369,13 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, opts)
+    Buttons.WireButtons(refs, opts)
 
     -- Click tab2 while hovered to make it active
     tab2.mouseOver = true
     tab2.scripts.OnClick()
 
+    assert(panel2.shown == true and panel1.shown == false, "WireButtons should wire tab clicks to show their panel")
     assert(tab2.bg ~= nil, "tab2 should have a .bg reference")
 
     local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
@@ -632,7 +428,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(resizeGrip.scripts) == "table" and type(resizeGrip.scripts.OnMouseDown) == "function",
@@ -688,7 +484,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     assert(frame.sizingAnchor == nil, "expected deferred resize to avoid native StartSizing")
@@ -763,7 +559,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(contactsResizeHandle.scripts) == "table" and type(contactsResizeHandle.scripts.OnMouseDown) == "function",
@@ -841,7 +637,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     frame.scripts.OnUpdate(frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)

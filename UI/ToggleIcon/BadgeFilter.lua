@@ -11,19 +11,8 @@ local BadgeFilter = {}
 -- group channels for badge-exclusion purposes. Legacy channel strings such as
 -- "WOW" and "BN" (written by the pre-Stage-1 whisper pipeline) are treated as
 -- whispers so they continue to count toward the badge.
-local KNOWN_GROUP_CHANNELS = {
-  [ChannelType.BN_CONVERSATION] = true,
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-  [ChannelType.CHANNEL] = true,
-  [ChannelType.COMMUNITY] = true,
-}
-
 local function isGroupChannel(channel)
-  return KNOWN_GROUP_CHANNELS[channel] == true
+  return ChannelType.GROUP_CHANNELS[channel] == true
 end
 
 -- IsGroupChannel returns true only for explicitly-known group channels.

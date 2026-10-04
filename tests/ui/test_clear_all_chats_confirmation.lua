@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local WindowScripts = require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
+local Buttons = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -40,7 +40,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
     clearAllChatsButton.scripts.OnClick(clearAllChatsButton)
 
     assert(
@@ -86,7 +86,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     -- Simulate the user pressing "Accept" on the confirmation dialog
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_CLEAR_ALL_CHATS"]
@@ -130,7 +130,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     local dialog = _G.StaticPopupDialogs["WHISPER_MESSENGER_CLEAR_ALL_CHATS"]
     assert(type(dialog.text) == "string", "test_dialog_text: expected text string")

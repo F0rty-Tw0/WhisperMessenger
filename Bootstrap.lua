@@ -3,29 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then
-    return ns[key]
-  end
-
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, name)
-    if ok then
-      return loaded
-    end
-  end
-
-  error(key .. " module not available")
-end
-
-if ns.Loader then
-  loadModule = ns.Loader.LoadModule
-elseif type(require) == "function" then
-  local ok, Loader = pcall(require, "WhisperMessenger.Core.Loader")
-  if ok and Loader then
-    loadModule = Loader.LoadModule
-  end
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
@@ -115,11 +94,6 @@ function Bootstrap.Initialize(factory, options)
   if Theme.ResolvePreset then
     local resolvedKey = Theme.ResolvePreset(themePresetKey)
     themePresetKey = resolvedKey or themePresetKey
-  elseif Theme.SetPreset then
-    Theme.SetPreset(themePresetKey)
-    if Theme.GetPreset then
-      themePresetKey = Theme.GetPreset() or themePresetKey
-    end
   end
   accountState.settings.themePreset = themePresetKey
   if Theme.SetBubblePreset then
@@ -214,8 +188,8 @@ function Bootstrap.Initialize(factory, options)
 
   -- Register addon-message prefixes before live events begin routing.
   local AddonComm = loadModule("WhisperMessenger.Transport.AddonComm", "AddonComm")
-  AddonComm.RegisterPrefix(_G.C_ChatInfo, "WMQL")
-  AddonComm.RegisterPrefix(_G.C_ChatInfo, "WMRX")
+  AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_QUEST_LINK)
+  AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_REACTION)
   -- Suppress whisper messages from the default chat frame (and their sound).
   -- Our addon provides its own messenger UI for whispers.
   -- We must preserve /r reply targets since the default handler won't run.

@@ -20,8 +20,6 @@ end
 
 local BubbleStructure = {}
 
-BubbleStructure.CORNER_R = CORNER_R
-
 function BubbleStructure.measureTextHeight(fontString, text, maxWidth)
   fontString:SetWidth(maxWidth)
   fontString:SetText(text or "")

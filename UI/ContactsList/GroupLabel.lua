@@ -117,20 +117,9 @@ end
 
 -- Only explicitly-known Stage-4 group-ingest channel values get group-row
 -- styling. Legacy values ("WOW", "BN", nil) render as normal whisper rows.
-local KNOWN_GROUP_CHANNELS = {
-  [ChannelType.BN_CONVERSATION] = true,
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-  [ChannelType.CHANNEL] = true,
-  [ChannelType.COMMUNITY] = true,
-}
-
 -- IsGroupItem returns true when the item represents a known group conversation.
 function GroupLabel.IsGroupItem(item)
-  return item ~= nil and KNOWN_GROUP_CHANNELS[item.channel] == true
+  return item ~= nil and ChannelType.GROUP_CHANNELS[item.channel] == true
 end
 
 -- ForItem returns the contact-row label for a group item: "Party",

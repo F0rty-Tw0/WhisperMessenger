@@ -35,6 +35,7 @@ jobs:
 
       - name: Run tests
         run: |
-          for f in tests/**/*.lua; do
-            lua5.1 tests/run.lua "$f"
-          done
+          set -euo pipefail
+          while IFS= read -r -d '' test_file; do
+            lua5.1 tests/run.lua "${test_file}"
+          done < <(find tests -type f -name 'test_*.lua' -print0 | sort -z)

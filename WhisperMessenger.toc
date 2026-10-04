@@ -185,7 +185,6 @@ UI/ChatBubble/DeliveryStatus.lua
 UI/ChatBubble/SenderLabel.lua
 UI/ChatBubble/PlayerMenu.lua
 UI/ChatBubble/Layout.lua
-UI/ChatBubble/ChatBubble.lua
 UI/ContactsList/SnapshotCache.lua
 UI/ContactsList/DataBuilder.lua
 UI/ContactsList/DragReorder.lua
@@ -286,7 +285,6 @@ UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
-UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSkin.lua
@@ -326,14 +324,12 @@ UI/MessengerWindow/MessengerWindow/MessageActions.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
-UI/MessengerWindow/MessengerWindow/SettingsPanelsBootstrap.lua
 UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
 UI/MessengerWindow/MessengerWindow/ContactsRuntime.lua
 UI/MessengerWindow/MessengerWindow/SelectionController.lua
 UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
 UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
-UI/MessengerWindow/MessengerWindow/ScriptWiring.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua

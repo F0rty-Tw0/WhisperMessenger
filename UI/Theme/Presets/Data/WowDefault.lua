@@ -3,21 +3,10 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function rgb(r, g, b)
-  return { r, g, b }
-end
-
-local function withAlpha(baseRgb, alpha)
-  return { baseRgb[1], baseRgb[2], baseRgb[3], alpha }
-end
-
-local function makeDividerRoles(baseRgb, baseAlpha, strongAlpha, hoverRgb, hoverAlpha)
-  return {
-    divider = withAlpha(baseRgb, baseAlpha),
-    divider_strong = withAlpha(baseRgb, strongAlpha),
-    divider_hover = withAlpha(hoverRgb, hoverAlpha),
-  }
-end
+local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
+local rgb = Builder.Rgb
+local withAlpha = Builder.WithAlpha
+local makeDividerRoles = Builder.MakeDividerRoles
 
 local textSecondaryRgb = rgb(1.0, 1.0, 1.0)
 -- One accent hue drives selection, sent bubbles, badges and ghost buttons.

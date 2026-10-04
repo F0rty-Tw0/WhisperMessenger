@@ -52,13 +52,11 @@ function WindowRuntime.Create(options)
   local toggleIcon = options.toggleIcon or ToggleIcon
   local windowCoordinatorModule = options.windowCoordinator or WindowCoordinator
   local sendHandler = options.sendHandler or SendHandler
-  local livePresenceSender = options.livePresenceSender or LivePresenceSender
   local tableUtils = options.tableUtils or TableUtils
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
   local theme = options.theme or Theme
 
-  local iconRuntimeModule = options.iconRuntime or IconRuntime
   local minimapIconRuntimeModule = options.minimapIconRuntime or MinimapIconRuntime
   local markConversationRead = options.markConversationRead
     or function(store, conversationKey)
@@ -167,7 +165,7 @@ function WindowRuntime.Create(options)
     end,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
-    livePresenceSender = livePresenceSender,
+    livePresenceSender = LivePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
     selectConversation = function(conversationKey)
       return conversationSelector.selectConversation(conversationKey)
@@ -248,7 +246,7 @@ function WindowRuntime.Create(options)
     groupSendPolicy = groupSendPolicy,
     sendHandler = sendHandler,
     reactionHandler = options.reactionHandler,
-    livePresenceSender = livePresenceSender,
+    livePresenceSender = LivePresenceSender,
     refreshWindow = refreshWindow,
     buildContacts = buildContacts,
     selectConversation = selectConversation,
@@ -333,7 +331,7 @@ function WindowRuntime.Create(options)
     if icon then
       return icon
     end
-    icon = iconRuntimeModule.Create({
+    icon = IconRuntime.Create({
       accountState = accountState,
       characterState = characterState,
       uiFactory = uiFactory,

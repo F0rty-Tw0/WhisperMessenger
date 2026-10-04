@@ -56,6 +56,8 @@ return function()
     row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
     row.removeButton:Show()
     row.pinButton:Show()
+    -- A selected row hides its actions too; they show on hover only.
+    row.selected = true
     ActionButtons.hideActions(row)
     assert(row.removeButton:IsShown() == false, "hideActions should hide removeButton")
     assert(row.pinButton:IsShown() == false, "hideActions should hide pinButton")
@@ -113,21 +115,6 @@ return function()
     assert(called == "me::WOW::alice", "onPin should be called with item, got: " .. tostring(called))
   end
 
-  -- test_modern_hide_actions_hides_selected_row_too
-  do
-    Theme.SetPreset("wow_default")
-    local row = makeRow()
-    local options = makeOptions({})
-    row.removeButton = ActionButtons.createRemoveButton(factory, row, 260, options)
-    row.pinButton = ActionButtons.createPinButton(factory, row, item, 260, options)
-    row.removeButton:Show()
-    row.pinButton:Show()
-    row.selected = true
-    ActionButtons.hideActions(row)
-    assert(row.removeButton:IsShown() == false, "modern: selected rows hide removeButton when not hovered")
-    assert(row.pinButton:IsShown() == false, "modern: selected rows hide pinButton when not hovered")
-  end
-
   -- test_modern_actions_keep_timestamp
   do
     Theme.SetPreset("wow_default")
@@ -141,21 +128,6 @@ return function()
     assert(row.timeLabel:IsShown() == true, "modern: timestamp stays above the action column")
     ActionButtons.hideActions(row)
     assert(row.timeLabel:IsShown() == true, "modern: timestamp stays when action buttons hide")
-  end
-
-  -- test_hide_actions_hides_when_row_is_not_selected
-  do
-    local row = makeRow()
-    local options = makeOptions({})
-    local parentWidth = 260
-    row.removeButton = ActionButtons.createRemoveButton(factory, row, parentWidth, options)
-    row.pinButton = ActionButtons.createPinButton(factory, row, item, parentWidth, options)
-    row.removeButton:Show()
-    row.pinButton:Show()
-    row.selected = false
-    ActionButtons.hideActions(row)
-    assert(row.removeButton:IsShown() == false, "hideActions should hide removeButton when not selected")
-    assert(row.pinButton:IsShown() == false, "hideActions should hide pinButton when not selected")
   end
 
   -- test_russian_action_tooltips
