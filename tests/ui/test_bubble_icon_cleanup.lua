@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 
 return function()
   local factory = FakeUI.NewFactory()
@@ -18,7 +18,7 @@ return function()
   }
 
   -- First render — creates bubble + icon + name label
-  Layout.LayoutMessages(factory, contentFrame, messages, 400)
+  LayoutMessages(factory, contentFrame, messages, 400)
   local active = contentFrame._activeFrames
   local activeSize = #active
 
@@ -35,7 +35,7 @@ return function()
       playerName = "Me",
     },
   }
-  Layout.LayoutMessages(factory, contentFrame, messages2, 400)
+  LayoutMessages(factory, contentFrame, messages2, 400)
 
   -- Frames from first render that are now in the free pool should be hidden
   local freePool = contentFrame._freeFrames

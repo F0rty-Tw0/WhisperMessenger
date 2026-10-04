@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local SenderLabel = require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 
 local function findChildWithText(frame, text)
@@ -63,15 +64,15 @@ return function()
       outgoing("c", 20, "w2", 25),
       outgoing("d", 30, "w3", nil),
     }
-    Layout.LayoutMessages(factory, contentFrame, messages, 400, {})
+    LayoutMessages(factory, contentFrame, messages, 400, {})
     assert(countVisibleSeen(contentFrame) == 0, "group with an unseen tail shows no Seen")
 
     messages[4].seenAt = 35
-    Layout.LayoutMessages(factory, contentFrame, messages, 400, {})
+    LayoutMessages(factory, contentFrame, messages, 400, {})
     assert(countVisibleSeen(contentFrame) == 1, "exactly one Seen once the newest group is fully seen")
 
     table.insert(messages, outgoing("e", 500, "w4", nil))
-    Layout.LayoutMessages(factory, contentFrame, messages, 400, {})
+    LayoutMessages(factory, contentFrame, messages, 400, {})
     assert(countVisibleSeen(contentFrame) == 1, "Seen stays on the last seen group while a newer group waits")
   end
 
@@ -93,11 +94,11 @@ return function()
     contentFrame:SetSize(400, 600)
     local messages = { outgoing("a", 0, "w1", 5), outgoing("b", 1, "w2", 5), outgoing("c", 2, "w3", 5) }
     local off = countSeenScans(function()
-      Layout.LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = false })
+      LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = false })
     end)
     assert(off == 0, "seenReceipts=false must skip the Seen scan, got " .. off)
     local on = countSeenScans(function()
-      Layout.LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = true })
+      LayoutMessages(factory, contentFrame, messages, 400, { seenReceipts = true })
     end)
     assert(on == 1, "seenReceipts=true must scan once, got " .. on)
   end

@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 
 local function collectBubbleFrames(contentFrame)
   local bubbles = {}
@@ -157,7 +158,7 @@ return function()
       },
     }
 
-    Layout.LayoutMessages(factory, contentFrame, messages, 400)
+    LayoutMessages(factory, contentFrame, messages, 400)
 
     local bubbles = collectBubbleFrames(contentFrame)
     assert(#bubbles == 3, "expected three bubble frames after layout, got " .. tostring(#bubbles))
@@ -216,11 +217,11 @@ return function()
 
   -- TEST 2: Second render reuses frames (zero new CreateFrame calls)
   createCount = 0
-  Layout.LayoutMessages(factory, contentFrame, messages3, 400)
+  LayoutMessages(factory, contentFrame, messages3, 400)
   local countAfterFirst = createCount
 
   createCount = 0
-  Layout.LayoutMessages(factory, contentFrame, messages3, 400)
+  LayoutMessages(factory, contentFrame, messages3, 400)
   local countAfterSecond = createCount
 
   assert(
@@ -250,7 +251,7 @@ return function()
   }
 
   createCount = 0
-  Layout.LayoutMessages(factory, contentFrame, messages5, 400)
+  LayoutMessages(factory, contentFrame, messages5, 400)
   -- Should create only frames for the 2 additional messages, not all 5
   assert(
     countAfterFirst > 0 and createCount < countAfterFirst,
@@ -259,7 +260,7 @@ return function()
 
   -- TEST 4: Shrinking message count hides excess frames
   createCount = 0
-  Layout.LayoutMessages(factory, contentFrame, { messages3[1] }, 400)
+  LayoutMessages(factory, contentFrame, { messages3[1] }, 400)
   assert(createCount == 0, "expected zero new CreateFrame calls when shrinking, got " .. createCount)
 
   -- TEST 5: Re-render must not leak FontStrings or Textures on pool-recycled frames.
@@ -316,14 +317,14 @@ return function()
     }
 
     -- First render: populate the pool and the cached regions.
-    Layout.LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
+    LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
 
     frameCount, fontStringCount, textureCount = 0, 0, 0
 
     -- Second render with identical messages: every frame is pool-recycled,
     -- so no new CreateFrame, no new CreateFontString, no new CreateTexture
     -- should be issued. Anything > 0 leaks on the recycled frames.
-    Layout.LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
+    LayoutMessages(instrumentedFactory, pooledContent, messagesWithIcons, 400)
 
     assert(frameCount == 0, "expected zero new CreateFrame on re-render, got " .. frameCount)
     assert(fontStringCount == 0, "expected zero new CreateFontString on re-render (sender label leak), got " .. fontStringCount)
@@ -335,7 +336,7 @@ return function()
     local factory = FakeUI.NewFactory()
     local content = factory.CreateFrame("Frame", nil, nil)
     content:SetSize(400, 200)
-    Layout.LayoutMessages(factory, content, {
+    LayoutMessages(factory, content, {
       { direction = "in", kind = "user", text = "first", sentAt = 1000, playerName = "Arthas" },
     }, 400)
     local firstBubble = collectBubbleFrames(content)[1]
@@ -343,7 +344,7 @@ return function()
     local mouseEnter = firstBubble.scripts.OnEnter
     local copyClick = firstBubble._copyButton.scripts.OnClick
 
-    Layout.LayoutMessages(factory, content, {
+    LayoutMessages(factory, content, {
       { direction = "in", kind = "user", text = "second", sentAt = 1001, playerName = "Arthas" },
     }, 400)
     local reboundBubble = collectBubbleFrames(content)[1]

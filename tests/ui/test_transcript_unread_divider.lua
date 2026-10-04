@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local DateSeparator = require("WhisperMessenger.UI.ChatBubble.DateSeparator")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local Theme = require("WhisperMessenger.UI.Theme")
 local TranscriptRows = require("WhisperMessenger.UI.ConversationPane.TranscriptRows")
@@ -70,7 +71,7 @@ return function()
     local function totalHeight(dividerMessage)
       local factory = FakeUI.NewFactory()
       local content = factory.CreateFrame("Frame", nil, nil)
-      Layout.LayoutMessages(factory, content, messages, 400, { unreadDividerMessage = dividerMessage })
+      LayoutMessages(factory, content, messages, 400, { unreadDividerMessage = dividerMessage })
       local rows = content._wmLayoutRows
       return rows[2].offset + rows[2].height
     end

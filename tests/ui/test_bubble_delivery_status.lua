@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 local Grouping = require("WhisperMessenger.UI.ChatBubble.Grouping")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local DeliveryMenu = require("WhisperMessenger.UI.ChatBubble.DeliveryMenu")
@@ -65,7 +66,7 @@ local function layout(messages, options)
   local factory = FakeUI.NewFactory()
   local content = factory.CreateFrame("Frame", nil, nil)
   content:SetSize(400, 600)
-  Layout.LayoutMessages(factory, content, messages, 400, options or {})
+  LayoutMessages(factory, content, messages, 400, options or {})
   return content
 end
 
@@ -172,8 +173,8 @@ return function()
     local factory = FakeUI.NewFactory()
     local content = factory.CreateFrame("Frame", nil, nil)
     content:SetSize(400, 600)
-    Layout.LayoutMessages(factory, content, { outgoing("x", 0, "queued") }, 400, { onMessageAction = function() end })
-    Layout.LayoutMessages(factory, content, { outgoing("y", 0) }, 400, { onMessageAction = function() end })
+    LayoutMessages(factory, content, { outgoing("x", 0, "queued") }, 400, { onMessageAction = function() end })
+    LayoutMessages(factory, content, { outgoing("y", 0) }, 400, { onMessageAction = function() end })
     assert(findVisibleText(content, "(Queued)") == nil, "pooled label cleared")
   end
 

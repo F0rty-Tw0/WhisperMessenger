@@ -1,5 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local Layout = require("WhisperMessenger.UI.ChatBubble.Layout")
+local LayoutMessages = require("tests.helpers.layout_messages")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 local ReactionPicker = require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 
@@ -42,7 +42,7 @@ return function()
     reaction = { key = "heart" },
   }
 
-  Layout.LayoutMessages(factory, parent, { message }, 400, {
+  LayoutMessages(factory, parent, { message }, 400, {
     canReact = function(receivedMessage)
       return enabled and receivedMessage == message
     end,
