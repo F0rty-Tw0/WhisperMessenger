@@ -3,8 +3,6 @@ local WindowScripts = require("WhisperMessenger.UI.MessengerWindow.WindowScripts
 local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
-  assert(WindowScripts ~= nil, "expected WindowScripts module to load")
-
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 

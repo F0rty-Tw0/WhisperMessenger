@@ -33,7 +33,8 @@ return function()
     assert(result ~= nil, "createClassIcon should return a result table")
     assert(result.frame ~= nil, "result should have a frame")
     assert(result.texture ~= nil, "result should have a texture")
-    assert(result.texture.texturePath ~= nil, "texture should have a path set for known class")
+    local path = tostring(result.texture.texturePath)
+    assert(string.find(path, "ClassIcon_WARRIOR", 1, true) ~= nil, "known class should use its class icon, got: " .. path)
   end
 
   -- test_create_class_icon_without_class_uses_bnet
@@ -42,8 +43,10 @@ return function()
     local result = HeaderElements.createClassIcon(factory, headerFrame, nil)
     assert(result ~= nil, "createClassIcon should return a result table for nil contact")
     assert(result.texture ~= nil, "result should have a texture")
-    -- With no classTag, should fall back to bnet_icon
-    assert(result.texture.texturePath ~= nil, "texture should have a fallback bnet_icon path")
+    assert(
+      result.texture.texturePath == Theme.TEXTURES.bnet_icon,
+      "no class should fall back to the Battle.net icon, got: " .. tostring(result.texture.texturePath)
+    )
   end
 
   -- test_create_status_dot_returns_frame

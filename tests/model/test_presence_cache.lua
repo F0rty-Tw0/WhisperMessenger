@@ -174,13 +174,6 @@ return function()
     assert(PresenceCache.GetPresence("Player-Unknown") == nil, "Unknown (0) should not be cached")
   end
 
-  -- _setCache sets cache directly for tests
-  do
-    PresenceCache._reset()
-    PresenceCache._setCache({ ["test-guid"] = "online" })
-    assert(PresenceCache.GetPresence("test-guid") == "online", "_setCache should set cache directly")
-  end
-
   -- Rebuild handles nil clubApi gracefully
   do
     PresenceCache._reset()

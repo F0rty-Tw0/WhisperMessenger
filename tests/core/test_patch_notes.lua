@@ -1,5 +1,6 @@
 -- Baked patch notes must stay in sync with the shipped addon version.
-local FakeUI = require("tests.helpers.fake_ui")
+-- Installs the fake WoW globals the TOC files need.
+require("tests.helpers.fake_ui")
 
 local function loadAddonFromToc(addonName, ns)
   for line in io.lines("WhisperMessenger.toc") do
@@ -11,8 +12,6 @@ local function loadAddonFromToc(addonName, ns)
 end
 
 return function()
-  assert(FakeUI ~= nil, "expected fake UI harness to load")
-
   local ns = {}
   loadAddonFromToc("WhisperMessenger", ns)
 
