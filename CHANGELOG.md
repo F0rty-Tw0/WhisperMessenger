@@ -6,6 +6,9 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses WhisperMessenger. Group chats keep the old length.
+- A burst of whispers from one person now plays the alert sound once instead of once per line.
+
 ## [2.0.2] - 2026-10-02
 
 - Battle.net friends now show without the #1234 part of their BattleTag, handy for streaming and screenshots. Two friends with the same name keep their numbers so you can tell them apart. Turn it off under Options > General > Privacy ("Hide BattleTag numbers").
