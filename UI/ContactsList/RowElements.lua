@@ -293,7 +293,5 @@ function RowElements.createUnreadBadge(factory, row)
   return badge
 end
 
-RowElements.NAME_LABEL_LEFT_INSET = NAME_LABEL_LEFT_INSET
-
 ns.ContactsListRowElements = RowElements
 return RowElements

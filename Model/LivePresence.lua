@@ -171,7 +171,6 @@ function LivePresence.NextReceipt(conversation)
 end
 
 LivePresence.TYPING_TTL = TYPING_TTL
-LivePresence.VERSION = VERSION
 
 ns.LivePresence = LivePresence
 

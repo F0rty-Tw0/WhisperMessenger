@@ -166,8 +166,6 @@ function AddonComm.SendBNet(api, prefix, payload, gameAccountID)
   return ok
 end
 
-AddonComm.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
-
 ns.AddonComm = AddonComm
 
 return AddonComm

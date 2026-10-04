@@ -11,8 +11,6 @@ local WWW_URL_PATTERN = "www%." .. URL_CHARACTER_CLASS .. "+"
 local URL_TRAILING_PUNCTUATION = ".,!?:;)]}"
 local EXTERNAL_LINK_TYPE = "url"
 
-UrlFormatter.EXTERNAL_LINK_TYPE = EXTERNAL_LINK_TYPE
-
 local function hasWordCharacterBefore(text, index)
   if index <= 1 then
     return false

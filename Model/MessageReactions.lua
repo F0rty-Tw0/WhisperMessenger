@@ -703,7 +703,5 @@ function MessageReactions.ClearAll(state)
   end
 end
 
-MessageReactions.TTL_SECONDS = TTL_SECONDS
-
 ns.MessageReactions = MessageReactions
 return MessageReactions

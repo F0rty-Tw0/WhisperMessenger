@@ -17,7 +17,6 @@ local Metrics = {}
 -- Export constants for other submodules
 Metrics.SCROLLBAR_WIDTH = SCROLLBAR_WIDTH
 Metrics.SCROLLBAR_INSET = SCROLLBAR_INSET
-Metrics.MICRO_OVERFLOW_TOLERANCE = MICRO_OVERFLOW_TOLERANCE
 
 -- The Native WoW HUD builds wider bars; the view records its own width.
 local function barWidth(view)
