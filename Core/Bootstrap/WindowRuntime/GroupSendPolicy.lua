@@ -10,7 +10,7 @@ local Localization = ns.Localization or (type(require) == "function" and require
 
 local GroupSendPolicy = {}
 
-local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::" }
+local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::", "channel::" }
 
 local GROUP_REACTION_ADDON_PREFIX = "WMRX"
 local PENDING_MATCH_WINDOW_SECONDS = 15
@@ -205,7 +205,8 @@ function GroupSendPolicy.Create(options)
     end
 
     if not chatGateway.CanSend(runtime.chatApi, conversation) then
-      return Localization and Localization.Text("Not in group — can't send.") or "Not in group — can't send."
+      local key = channel == ChannelType.CHANNEL and "Not in this channel — can't send." or "Not in group — can't send."
+      return Localization and Localization.Text(key) or key
     end
 
     return nil
@@ -217,6 +218,11 @@ function GroupSendPolicy.Create(options)
   end
 
   local function sendNormal(payload, text)
+    -- The composer payload names only the chat; a channel send needs the
+    -- stored channel name to find its live number.
+    if payload.channel == ChannelType.CHANNEL and runtime.store and runtime.store.conversations[payload.conversationKey] then
+      payload = runtime.store.conversations[payload.conversationKey]
+    end
     if not chatGateway.CanSend(runtime.chatApi, payload) then
       return false
     end

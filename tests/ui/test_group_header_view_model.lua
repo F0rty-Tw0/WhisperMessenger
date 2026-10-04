@@ -168,4 +168,12 @@ return function()
 
     _G.GetGuildInfo = savedGetGuildInfo
   end
+
+  -- test_channel_header_shows_the_channel_name
+  do
+    local contact = { channel = ChannelType.CHANNEL, displayName = "Trade" }
+    local vm = assert(GroupHeaderViewModel.Build(contact, { channel = ChannelType.CHANNEL, displayName = "Trade" }))
+    assert(vm.title == "Trade", "channel chat header shows the channel's name, got: " .. tostring(vm.title))
+    assert(vm.channelChip == "Channel", "the Channel chip stays beside the name, got: " .. tostring(vm.channelChip))
+  end
 end

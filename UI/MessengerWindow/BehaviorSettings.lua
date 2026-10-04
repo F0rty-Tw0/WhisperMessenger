@@ -37,45 +37,12 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local toggleSpecs = ToggleSpecs.Build(config, onChange)
 
   local toggles = SettingsControls.BuildToggleList(factory, frame, hint, toggleSpecs)
-  local dimToggle = toggles[1]
-  local autoFocusToggle = toggles[2]
-  local hideFromDefaultChatToggle = toggles[3]
-  local profanityFilterToggle = toggles[4]
-  local autoOpenIncomingToggle = toggles[5]
-  local autoOpenOutgoingToggle = toggles[6]
-  local hideOnCombatToggle = toggles[7]
-  local doubleEscapeToggle = toggles[8]
-  local showGroupChatsToggle = toggles[9]
-  local requestsInboxToggle = toggles[10]
-  local shareTypingToggle = toggles[11]
-  local shareReadReceiptsToggle = toggles[12]
 
   local panel = SettingsControls.NewPanelRegistry()
-  panel:bind(dimToggle, { type = "toggle", key = "dimWhenMoving", default = DEFAULTS.dimWhenMoving })
-  panel:bind(autoFocusToggle, { type = "toggle", key = "autoFocusComposer", default = DEFAULTS.autoFocusComposer })
-  panel:bind(hideFromDefaultChatToggle, { type = "toggle", key = "hideFromDefaultChat", default = DEFAULTS.hideFromDefaultChat })
-  -- Profanity filter writes a CVar instead of routing through onChange.
-  panel:bind(profanityFilterToggle, {
-    type = "toggle",
-    reset = function(control)
-      -- Blizzard's game-wide mature-language CVar has no addon default;
-      -- "Reset to Defaults" must not silently flip it. Just re-sync the
-      -- toggle display to the live value.
-      local live = _G.GetCVar and _G.GetCVar("profanityFilter") == "1"
-      control.setValue(live == true)
-    end,
-  })
-  panel:bind(autoOpenIncomingToggle, { type = "toggle", key = "autoOpenIncoming", default = DEFAULTS.autoOpenIncoming })
-  panel:bind(autoOpenOutgoingToggle, { type = "toggle", key = "autoOpenOutgoing", default = DEFAULTS.autoOpenOutgoing })
-  panel:bind(hideOnCombatToggle, { type = "toggle", key = "hideOnCombat", default = DEFAULTS.hideOnCombat })
-  panel:bind(doubleEscapeToggle, { type = "toggle", key = "doubleEscapeToClose", default = DEFAULTS.doubleEscapeToClose })
-  panel:bind(showGroupChatsToggle, { type = "toggle", key = "showGroupChats", default = DEFAULTS.showGroupChats })
-  panel:bind(requestsInboxToggle, { type = "toggle", key = "requestsInbox", default = DEFAULTS.requestsInbox })
-  panel:bind(shareTypingToggle, { type = "toggle", key = "shareTypingStatus", default = DEFAULTS.shareTypingStatus })
-  panel:bind(shareReadReceiptsToggle, { type = "toggle", key = "shareReadReceipts", default = DEFAULTS.shareReadReceipts })
+  SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, DEFAULTS)
 
   -- Not bound to Reset to Defaults: it would wipe replies the player typed.
-  local quickReplies = QuickRepliesSettings.Create(factory, frame, shareReadReceiptsToggle.row, {
+  local quickReplies = QuickRepliesSettings.Create(factory, frame, toggles[#toggles].row, {
     config = config,
     panel = panel,
     onChange = onChange,
@@ -117,18 +84,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local function setLanguage()
     header.title:SetText(text("Behavior"))
     header.hint:SetText(text("Control how the messenger window behaves."))
-    dimToggle.label:SetText(text("Dim when moving"))
-    autoFocusToggle.label:SetText(text("Auto-focus chat input"))
-    hideFromDefaultChatToggle.label:SetText(text("Hide whispers from default chat"))
-    profanityFilterToggle.label:SetText(text("Enable profanity filter"))
-    autoOpenIncomingToggle.label:SetText(text("Auto-open on incoming whisper"))
-    autoOpenOutgoingToggle.label:SetText(text("Auto-open on outgoing whisper"))
-    doubleEscapeToggle.label:SetText(text("Double ESC to close"))
-    hideOnCombatToggle.label:SetText(text("Hide on entering combat"))
-    showGroupChatsToggle.label:SetText(text("Show group chats"))
-    requestsInboxToggle.label:SetText(text("Put whispers from strangers in Requests"))
-    shareTypingToggle.label:SetText(text("Share typing status"))
-    shareReadReceiptsToggle.label:SetText(text("Send read receipts"))
+    SettingsControls.RelabelToggles(toggles, toggleSpecs, text)
     resetButton.label:SetText(text("Reset to Defaults"))
     quickReplies.setLanguage()
     -- Tooltip lines were captured into closure-frozen arrays at construction

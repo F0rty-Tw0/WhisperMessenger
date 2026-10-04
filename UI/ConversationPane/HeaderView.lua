@@ -13,54 +13,10 @@ local GroupHeaderViewModel = ns.ConversationPaneGroupHeaderViewModel or require(
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local HeaderContactExtras = ns.ConversationPaneHeaderContactExtras or require("WhisperMessenger.UI.ConversationPane.HeaderContactExtras")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
-local fitTextWithEllipsis = UIHelpers.fitTextWithEllipsis
+local HeaderFit = ns.ConversationPaneHeaderFit or require("WhisperMessenger.UI.ConversationPane.HeaderFit")
 
-local HEADER_STATUS_RIGHT_INSET = 8
 -- Top inset of the name row; the two status rows hang below it.
 local HEADER_NAME_TOP_INSET = 7
-
-local function fitOneLine(fontString, fullText, width)
-  fontString:SetWidth(width)
-  fontString:SetText(fitTextWithEllipsis(fontString, fullText, width))
-end
-
-local function refitStatus(view)
-  if view == nil then
-    return
-  end
-
-  local statusWidth
-  if type(view._headerWidth) == "number" then
-    statusWidth = math.max(
-      0,
-      view._headerWidth
-        - Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER
-        - Theme.LAYOUT.HEADER_ICON_SIZE
-        - Theme.LAYOUT.HEADER_NAME_GAP
-        - HEADER_STATUS_RIGHT_INSET
-    )
-  end
-
-  local headerStatus = view.headerStatus
-  if headerStatus ~= nil and view._headerStatusVisible == true then
-    local statusText = view._headerStatusFullText or ""
-    if statusWidth == nil then
-      headerStatus:SetText(statusText)
-    else
-      fitOneLine(headerStatus, statusText, statusWidth)
-    end
-  end
-
-  local headerStatusDetail = view.headerStatusDetail
-  if headerStatusDetail ~= nil and view._headerStatusDetailVisible == true then
-    local detailText = view._headerStatusDetailFullText or ""
-    if statusWidth == nil then
-      headerStatusDetail:SetText(detailText)
-    else
-      fitOneLine(headerStatusDetail, detailText, statusWidth)
-    end
-  end
-end
 
 local HeaderView = {}
 
@@ -94,7 +50,7 @@ end
 
 function HeaderView.Create(factory, pane, selectedContact, options)
   options = options or {}
-  local HEADER_HEIGHT = options.HEADER_HEIGHT or 36
+  local HEADER_HEIGHT = options.HEADER_HEIGHT or Theme.HeaderHeight()
 
   local headerFrame = HeaderElements.createHeaderFrame(factory, pane, HEADER_HEIGHT)
 
@@ -103,6 +59,14 @@ function HeaderView.Create(factory, pane, selectedContact, options)
   local classIcon = classIconResult.texture
 
   local headerName = headerFrame:CreateFontString(nil, "OVERLAY", Theme.FONTS.header_name)
+  -- One line: HeaderFit narrows a long name and the client ends it in "...".
+  headerName:SetJustifyH("LEFT")
+  if type(headerName.SetWordWrap) == "function" then
+    headerName:SetWordWrap(false)
+  end
+  if type(headerName.SetMaxLines) == "function" then
+    headerName:SetMaxLines(1)
+  end
   -- Anchored to the header frame (not the class icon) so three text rows
   -- (name, status line, status detail) fit within HEADER_HEIGHT.
   headerName:SetPoint(
@@ -176,7 +140,11 @@ function HeaderView.Relayout(view, width)
   end
 
   view._headerWidth = width or 0
-  refitStatus(view)
+  -- Grows with the font size so the three text rows stay inside it.
+  if view.headerFrame then
+    view.headerFrame:SetHeight(Theme.HeaderHeight())
+  end
+  HeaderFit.All(view)
   HeaderContactExtras.RefitNote(view)
 end
 
@@ -188,7 +156,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerClassIcon then
       local iconPath
       if vm and vm.isGroup then
-        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact and selectedContact.channel) or nil
+        iconPath = Theme.ChannelIcon and Theme.ChannelIcon(selectedContact.channel, selectedContact.conversationKey) or nil
       else
         iconPath = Theme.ClassIcon(selectedContact and selectedContact.classTag)
       end
@@ -236,8 +204,14 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
       end
     end
 
-    local showStatusLine = hasContact and (vm == nil or vm.showStatusLine)
-    local line1, line2, dotColorKey = StatusLine.Build(selectedContact, status)
+    local statusText = vm and vm.statusText or nil
+    local showStatusLine = hasContact and (vm == nil or vm.showStatusLine or statusText ~= nil)
+    local line1, line2, dotColorKey
+    if statusText then
+      line1, line2 = statusText, ""
+    else
+      line1, line2, dotColorKey = StatusLine.Build(selectedContact, status)
+    end
     view._headerStatusFullText = line1 or ""
     view._headerStatusVisible = showStatusLine
     view._headerStatusDetailFullText = line2 or ""
@@ -260,7 +234,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
         view.headerStatusDetail:Hide()
       end
     end
-    refitStatus(view)
+    HeaderFit.Status(view)
 
     local showDot = hasContact and (vm == nil or vm.showPresenceDot)
     if view.headerStatusDot then
@@ -287,6 +261,7 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     end
 
     AddonBadge.Refresh(view, selectedContact, conversation)
+    HeaderFit.Name(view)
     HeaderContactExtras.Refresh(view, selectedContact, vm and vm.isGroup)
 
     if view.headerEmpty then

@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local Initials = ns.Initials or require("WhisperMessenger.Util.Initials")
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 -- Rail-only contact avatar: the row's own class icon (same art, shape and
 -- size as the full list), dimmed, with one or two letters of the shown name
@@ -71,6 +72,16 @@ function RailAvatar.hide(row)
   end
   if row.classIcon then
     row.classIcon:SetVertexColor(1, 1, 1, 1)
+  end
+end
+
+-- People and channel chats (named after their channel) get initials; other
+-- group chats keep their plain art.
+function RailAvatar.apply(row, item, isGroup)
+  if isGroup and item.channel ~= ChannelType.CHANNEL then
+    RailAvatar.hide(row)
+  else
+    RailAvatar.update(row, item)
   end
 end
 

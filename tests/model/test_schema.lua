@@ -8,6 +8,8 @@ return function()
   assert(type(db.contacts) == "table")
   assert(type(db.pendingHydration) == "table")
   assert(type(db.channelMessages) == "table")
+  assert(type(db.filters) == "table" and type(db.filters.ignored) == "table", "new accounts start with an ignore list")
+  assert(type(db.filters.rules) == "table" and next(db.filters.rules) == nil, "new accounts start with no keyword rules")
 
   local migrated = Migrations.Apply(nil, Schema)
   assert(migrated.schemaVersion == Migrations.CURRENT_VERSION)

@@ -1,3 +1,8 @@
+-- Direct refreshWindow calls (mark read, pin, mute, presence, status tick)
+-- stay synchronous and unthrottled: each visible call enriches contacts once,
+-- and a hidden call updates only the icon badge. Only incoming chat lines are
+-- coalesced (see tests/core/test_incoming_refresh.lua).
+
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local FakeUI = require("tests.helpers.fake_ui")
 local ContactEnricher = require("WhisperMessenger.Model.ContactEnricher")
@@ -50,14 +55,14 @@ return function()
     return originalBuildState(...)
   end)
 
-  -- TEST 1: refreshWindow ALWAYS calls enricher (even when window hidden)
-  -- This is the critical fix: statuses must stay fresh regardless of visibility
+  -- TEST 1: before the window exists, refreshWindow skips the enricher; the
+  -- first open enriches every contact.
   assert(runtime.window == nil, "window should be nil before toggle")
   enricherCallCount = 0
   runtime.refreshWindow()
   runtime.refreshWindow()
   runtime.refreshWindow()
-  assert(enricherCallCount == 3, "expected enricher called 3 times even when window hidden, got " .. enricherCallCount)
+  assert(enricherCallCount == 0, "expected no enricher calls before the window exists, got " .. enricherCallCount)
 
   -- Verify icon badge still updates
   local conv = (next(runtime.store.conversations) and runtime.store.conversations[next(runtime.store.conversations)])
@@ -84,14 +89,14 @@ return function()
   assert(enricherCallCount >= 1, "expected enricher called when window visible, got " .. enricherCallCount)
   assert(selectionRefreshCount == 1, "expected visible refreshWindow to push selection once, got " .. selectionRefreshCount)
 
-  -- TEST 3: hidden refreshWindow still enriches contacts without touching visible selection
+  -- TEST 3: hidden refreshWindow skips the enricher and the visible selection
   runtime.toggle() -- hide window
   assert(runtime.window.frame.shown == false, "expected window hidden after second toggle")
 
   enricherCallCount = 0
   selectionRefreshCount = 0
   runtime.refreshWindow()
-  assert(enricherCallCount == 1, "expected enricher called even after window hidden again, got " .. enricherCallCount)
+  assert(enricherCallCount == 0, "expected no enricher call while the window is hidden, got " .. enricherCallCount)
   assert(selectionRefreshCount == 0, "expected hidden refreshWindow to skip pushing selection, got " .. selectionRefreshCount)
   -- Icon badge should still update
   conv.unreadCount = 7

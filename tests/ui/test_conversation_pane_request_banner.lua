@@ -2,6 +2,7 @@ local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 -- Opening a message request shows a banner above the composer with Accept
 -- and Delete, in the same slot as the AFK/DND banner.
@@ -59,6 +60,38 @@ return function()
   ConversationPane.Refresh(pane, { conversationKey = "wow::friend", displayName = "Friend", channel = "WOW" }, conversation)
   assert(notice.parent.shown == false, "no banner for a normal whisper")
   assert(pane.transcript.scrollFrame.height == baseHeight, "transcript height restored")
+
+  -- test_wrapped_notice_grows_the_strip_and_transcript_room
+  -- At a big font the notice wraps beside the buttons; the strip grows to
+  -- the wrapped text (plus 4px) and the transcript gives up that much.
+  local bigPane = build(false)
+  ConversationPane.Refresh(bigPane, request, conversation)
+  local bigNotice = assert(FindUI.text(bigPane.frame, NOTICE), "request notice exists")
+  local strip = bigNotice.parent
+  local noticeHeight = 54
+  bigNotice.GetStringHeight = function()
+    return noticeHeight
+  end
+  ConversationPane.Relayout(bigPane, 600, 420)
+  assert(strip.height == 58, "strip fits the wrapped notice, got " .. tostring(strip.height))
+  assert(bigPane.transcript.scrollFrame.height == 420 - Theme.HeaderHeight() - 58, "transcript makes room for the tall strip")
+
+  -- test_relayout_remeasures_the_notice
+  noticeHeight = 36
+  ConversationPane.Relayout(bigPane, 600, 420)
+  assert(strip.height == 40, "strip follows the re-wrapped notice, got " .. tostring(strip.height))
+
+  -- test_buttons_stay_vertically_centred_on_the_strip
+  local deletePoint = assert(FindUI.byLabel(bigPane.frame, "Delete").point, "Delete is anchored")
+  assert(deletePoint[1] == "RIGHT" and deletePoint[2] == strip, "Delete sits centred on the strip's right edge")
+  local noticePoints = assert(bigNotice.points, "notice is anchored")
+  assert(noticePoints[1][1] == "LEFT" and noticePoints[1][2] == strip, "notice is centred on the strip's left edge")
+
+  -- test_short_notice_keeps_the_base_strip
+  noticeHeight = 12
+  ConversationPane.Relayout(bigPane, 600, 420)
+  assert(strip.height == 24, "one-line notice keeps the base strip, got " .. tostring(strip.height))
+  assert(bigPane.transcript.scrollFrame.height == 420 - Theme.HeaderHeight() - 24, "transcript reserves the base strip")
 
   -- test_native_hud_uses_blizzard_buttons
   local nativePane = build(true)

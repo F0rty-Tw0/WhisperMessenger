@@ -59,7 +59,7 @@ function PopupUI.ShowManualCopyDialog(text)
   if _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] == nil then
     _G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME] = {
       hasEditBox = true,
-      editBoxWidth = 340,
+      editBoxWidth = StyledTextInputPopup.EditBoxWidth(),
       timeout = 0,
       whileDead = 1,
       hideOnEscape = 1,

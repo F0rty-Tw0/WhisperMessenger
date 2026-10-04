@@ -21,6 +21,7 @@ local BubbleColors = ns.ThemeBubbleColors or require("WhisperMessenger.UI.Theme.
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local MentionHighlight = ns.ChatBubbleMentionHighlight or require("WhisperMessenger.UI.ChatBubble.MentionHighlight")
 
 -- Queued / not-sent bubbles fade so they read as "didn't go out".
 local UNSENT_BUBBLE_ALPHA = 0.55
@@ -105,6 +106,13 @@ local function openBubbleMenu(frame)
       onReply(message)
     end
   end
+  options.onIgnoreSender = nil
+  local onIgnoreSender, canIgnoreSender = frame._wmOnIgnoreSender, frame._wmCanIgnoreSender
+  if type(onIgnoreSender) == "function" and type(canIgnoreSender) == "function" and canIgnoreSender(message) then
+    options.onIgnoreSender = function()
+      onIgnoreSender(message)
+    end
+  end
   ContextMenu.Open(message.text or "", frame, options)
 end
 
@@ -145,6 +153,9 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local kind = message.kind or "user"
   local direction = message.direction or "in"
   local displayText = Hyperlinks.FormatTextForDisplay(message.text or "")
+  if message.mention then
+    displayText = MentionHighlight.Apply(displayText)
+  end
 
   local pH = Theme.LAYOUT.BUBBLE_PADDING_H
   local pV = Theme.LAYOUT.BUBBLE_PADDING_V
@@ -171,6 +182,8 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   frame._wmCanReact = options.canReact
   frame._wmOnReply = options.onReply
   frame._wmCanReply = options.canReply
+  frame._wmOnIgnoreSender = options.onIgnoreSender
+  frame._wmCanIgnoreSender = options.canIgnoreSender
   frame._wmPersistentFactory = options.persistentFactory or factory
   frame._wmOpenedOnMouseDown = false
 

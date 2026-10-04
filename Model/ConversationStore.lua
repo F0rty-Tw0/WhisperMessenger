@@ -297,6 +297,7 @@ end
 
 Store.ApplyRetention = StoreRetention.Apply
 Store.ExpireAll = StoreRetention.ExpireAll
+Store.CollapseRepeat = (ns.ConversationStoreRepeatCollapse or require("WhisperMessenger.Model.ConversationStore.RepeatCollapse")).CollapseRepeat
 
 ns.ConversationStore = Store
 

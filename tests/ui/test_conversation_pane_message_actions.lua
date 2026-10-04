@@ -44,7 +44,7 @@ return function()
   local conversation = { messages = { queued } }
 
   -- test_locked_pane_hides_send_now
-  ConversationPane.Refresh(pane, contact, conversation, nil, "Whispers are paused")
+  ConversationPane.Refresh(pane, contact, conversation, nil, "Messages are paused")
   local menu = openStatusMenu(pane.frame)
   assert(menuButton(menu, "Send now") == nil, "no Send now while the pause notice shows")
   assert(menuButton(menu, "Discard") ~= nil, "Discard while locked")

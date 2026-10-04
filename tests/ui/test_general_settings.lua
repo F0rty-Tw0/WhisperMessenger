@@ -4,7 +4,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local FindUI = require("tests.helpers.find_ui")
 
-local MAX_MESSAGES = "Max Messages Per Contact"
+local MAX_MESSAGES = "Max Messages Per Chat"
 local MAX_CONTACTS = "Max Contacts"
 local RETENTION = "Message Retention (hours)"
 

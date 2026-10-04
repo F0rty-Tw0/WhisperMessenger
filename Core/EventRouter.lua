@@ -20,6 +20,7 @@ local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.Presen
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
+local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 local REACTION_ADDON_PREFIX = "WMRX"
@@ -561,7 +562,13 @@ local function handleUnlockedEvent(state, eventName, payload)
   return nil
 end
 
+-- Only character whispers are filtered: the ignore key is a character name.
 function Router.HandleEvent(state, eventName, payload)
+  if eventName == "CHAT_MSG_WHISPER" and type(payload) == "table" then
+    if IncomingFilter.Evaluate(state, "whisper", payload.playerName, payload.text, payload.lineID, eventName) ~= "pass" then
+      return nil
+    end
+  end
   return handleUnlockedEvent(state, eventName, payload)
 end
 

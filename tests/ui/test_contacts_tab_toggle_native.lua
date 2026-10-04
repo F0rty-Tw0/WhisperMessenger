@@ -36,8 +36,8 @@ local function stubPanelTemplates()
   rawset(_G, "PanelTemplates_DeselectTab", function(tab)
     calls.deselected[#calls.deselected + 1] = tab
   end)
-  rawset(_G, "PanelTemplates_TabResize", function(tab, padding)
-    calls.resized[#calls.resized + 1] = { tab = tab, padding = padding }
+  rawset(_G, "PanelTemplates_TabResize", function(tab, padding, _absoluteSize, _minWidth, maxWidth)
+    calls.resized[#calls.resized + 1] = { tab = tab, padding = padding, maxWidth = maxWidth }
   end)
   return calls
 end
@@ -53,8 +53,9 @@ return function()
   do
     local toggle = createToggle(FakeUI.NewFactory(), true)
     local buttons = tabs(toggle)
-    assert(#buttons == 3, "HUD: three tabs, got " .. #buttons)
+    assert(#buttons == 4, "HUD: four tabs, got " .. #buttons)
     assert(buttons[3].shown == false, "HUD: the Requests tab stays hidden until the inbox is on")
+    assert(buttons[4].shown == false, "HUD: the Channels tab stays hidden until a channel is ticked")
     assert(buttons[1].template == "PanelTabButtonTemplate", "HUD: whispers tab should use PanelTabButtonTemplate")
     assert(buttons[2].template == "PanelTabButtonTemplate", "HUD: groups tab should use PanelTabButtonTemplate")
     assert(buttons[1].text == "Whispers" and buttons[2].text == "Groups", "HUD: tab labels via SetText")
@@ -99,20 +100,73 @@ return function()
     assert(buttons[3].points[1][2] == buttons[1], "HUD: a hidden tab leaves no gap")
   end
 
-  -- test_hud_tabs_size_to_their_text_with_badge_room
+  -- test_hud_tabs_size_themselves_on_every_flavor
   do
+    -- Classic clients' PanelTemplates_TabResize adds both edge pieces on top
+    -- of label + 24 and caps only the label, so tabs size themselves with
+    -- Retail's rule instead: label + 20.
     local calls = stubPanelTemplates()
     local toggle = createToggle(FakeUI.NewFactory(), true)
-    local padding = toggle.frame.tabPadding
-    assert(type(padding) == "number" and padding > 0, "HUD: strip carries tabPadding for the template's own OnShow resize")
-    assert(#calls.resized >= 3, "HUD: every tab sized by PanelTemplates_TabResize")
-    for _, call in ipairs(calls.resized) do
-      assert(call.padding == padding, "HUD: TabResize gets the badge-room padding")
-    end
-    calls.resized = {}
-    toggle.setLanguage()
-    assert(#calls.resized >= 3, "HUD: a language switch re-sizes the tabs")
+    local whispers = tabs(toggle)[1]
+    assert(#calls.resized == 0, "HUD: Blizzard's flavor-specific TabResize is never used")
+    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: tab is label + 20, got " .. tostring(whispers.width))
     clearPanelTemplates()
+  end
+
+  -- test_hud_tab_never_narrower_than_its_edge_art
+  do
+    local factory = FakeUI.NewFactory()
+    local toggle = createToggle(factory, true)
+    local groups = tabs(toggle)[2]
+    groups.Left = factory.CreateFrame("Frame", nil, nil)
+    groups.Left:SetWidth(35)
+    groups.Right = factory.CreateFrame("Frame", nil, nil)
+    groups.Right:SetWidth(37)
+    toggle.setLanguage()
+    assert(groups.width == 72, "HUD: short label still fits both edge pieces, got " .. tostring(groups.width))
+  end
+
+  -- test_hud_tabs_shrink_to_fit_the_window
+  do
+    -- Each visible tab is capped at an equal share of the strip, less the
+    -- last tab's 7px of art overhang and the 1px gaps.
+    local toggle = createToggle(FakeUI.NewFactory(), true)
+    local strip = toggle.frame
+    strip:SetWidth(260)
+    strip.scripts.OnSizeChanged(strip, 260, NativeTabToggle.HEIGHT)
+    toggle.setModes({ "whispers", "groups", "channels", "requests" })
+    assert(strip.maxTabWidth == 62, "HUD: four tabs share 260px, got " .. tostring(strip.maxTabWidth))
+    local whispers = tabs(toggle)[1]
+    assert(whispers.width == 62, "HUD: a long tab is capped, got " .. tostring(whispers.width))
+    assert(whispers.Text == nil or whispers.Text.width == 42, "HUD: its label shortens to fit")
+    toggle.setModes({ "whispers", "groups" })
+    assert(strip.maxTabWidth == 126, "HUD: two tabs get a wider cap, got " .. tostring(strip.maxTabWidth))
+    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: under the cap a tab keeps its natural width")
+    strip:SetWidth(160)
+    strip.scripts.OnSizeChanged(strip, 160, NativeTabToggle.HEIGHT)
+    assert(strip.maxTabWidth == 76 and whispers.width == 76, "HUD: a narrower window shrinks the cap, got " .. tostring(strip.maxTabWidth))
+  end
+
+  -- test_hud_tab_show_keeps_our_size
+  do
+    -- The template's own OnShow would re-run the flavor's TabResize.
+    local calls = stubPanelTemplates()
+    local toggle = createToggle(FakeUI.NewFactory(), true)
+    local whispers = tabs(toggle)[1]
+    whispers:SetWidth(999)
+    whispers.scripts.OnShow(whispers)
+    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: showing a tab re-applies our size, got " .. tostring(whispers.width))
+    assert(#calls.resized == 0, "HUD: no Blizzard resize on show")
+    clearPanelTemplates()
+  end
+
+  -- test_hud_unread_badge_sits_on_the_tab_corner
+  do
+    local toggle = createToggle(FakeUI.NewFactory(), true)
+    local tab = tabs(toggle)[1]
+    local point = FindUI.ofType(tab, "Frame")[1].points[1]
+    assert(point[1] == "CENTER" and point[2] == tab and point[3] == "TOPRIGHT", "HUD: badge centred on the tab's top-right corner")
+    assert(point[4] < 0, "HUD: badge pulled in from the corner so it stays over its own tab, got x " .. tostring(point[4]))
   end
 
   -- test_hud_tab_width_fallback_without_tab_resize

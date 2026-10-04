@@ -25,7 +25,6 @@ local applyColor = UIHelpers.applyColor
 local ConversationPane = {}
 
 local TRANSCRIPT_SCROLL_STEP = TranscriptView.TRANSCRIPT_SCROLL_STEP
-local ACTIVE_STATUS_BANNER_HEIGHT = BottomBanner.HEIGHT
 
 -- Viewport-size and theme changes must re-lay-out the bubbles even though
 -- no individual message changed.
@@ -59,6 +58,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   view.transcript.unreadDividerMessage = selectedContact and selectedContact.unreadDividerMessage or nil
+  view.transcript.seenReceipts = selectedContact ~= nil and (selectedContact.channel == "WOW" or selectedContact.channel == "BN")
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""
@@ -132,7 +132,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   -- Header
 
   local header = HeaderView.Create(factory, pane, selectedContact, {
-    HEADER_HEIGHT = Theme.LAYOUT.HEADER_HEIGHT,
+    HEADER_HEIGHT = Theme.HeaderHeight(),
     nativeChrome = options.nativeChrome == true,
   })
   local headerFrame = header.headerFrame
@@ -148,7 +148,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   -- Flush with the header divider and the composer line; the transcript
   -- pads its own content.
-  local transcriptHeight = parentHeight - Theme.LAYOUT.HEADER_HEIGHT
+  local transcriptHeight = parentHeight - Theme.HeaderHeight()
   local transcript = ScrollView.Create(factory, pane, {
     width = parentWidth - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET,
     height = transcriptHeight,
@@ -240,12 +240,14 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       if view.transcript and view.transcript.refreshSkin then
         view.transcript.refreshSkin()
       end
-      if view.transcript and view.transcript._allMessages then
-        TranscriptView.RenderTranscript(view.transcript, view.transcript._allMessages, FORCE_RENDER)
-      end
+      -- A font-size change resizes the header, so re-lay-out (which also
+      -- re-renders) instead of only re-rendering.
+      ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight)
     end,
   }
 
+  view._layoutWidth = parentWidth
+  view._layoutHeight = parentHeight
   HeaderView.Relayout(view, parentWidth)
 
   if type(options.onReact) == "function" then
@@ -280,17 +282,21 @@ function ConversationPane.Relayout(view, width, height)
     return
   end
 
+  view._layoutWidth = width
+  view._layoutHeight = height
   HeaderView.Relayout(view, width)
   if view.transcript == nil then
     return
   end
-  local bannerOffset = view._activeStatusVisible and ACTIVE_STATUS_BANNER_HEIGHT or 0
+  -- Re-measured here: a width or font change can re-wrap the notice.
+  local bannerOffset = BottomBanner.ReservedHeight(view)
+  view._bannerReserved = bannerOffset
   -- The pane is dual-anchored in the live client, so its real height can
   -- differ from the window-derived metric; size the transcript to what the
   -- pane actually is so bubbles reach the composer instead of stopping short.
   local paneHeight = sizeValue(view.frame, "GetHeight", "height", height)
   local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
-  local transcriptH = paneHeight - Theme.LAYOUT.HEADER_HEIGHT - bannerOffset
+  local transcriptH = paneHeight - Theme.HeaderHeight() - bannerOffset
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   ScrollView.Resize(t, transcriptW, transcriptH)

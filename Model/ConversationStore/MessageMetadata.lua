@@ -38,17 +38,21 @@ end
 
 function MessageMetadata.ApplyContact(state, key, conversation, message)
   local oldGuid = conversation.guid
-  conversation.displayName = message.playerName or conversation.displayName
+  -- A channel chat is titled after the channel and never takes on its last
+  -- sender's identity (name, guid, class, race, faction).
+  if conversation.channel ~= "CHANNEL" and message.channel ~= "CHANNEL" then
+    conversation.displayName = message.playerName or conversation.displayName
+    conversation.guid = message.guid or conversation.guid
+    conversation.className = message.className or conversation.className
+    conversation.classTag = message.classTag or conversation.classTag
+    conversation.raceName = message.raceName or conversation.raceName
+    conversation.raceTag = message.raceTag or conversation.raceTag
+    conversation.factionName = message.factionName or conversation.factionName
+  end
   conversation.channel = message.channel or conversation.channel or "WOW"
-  conversation.guid = message.guid or conversation.guid
   conversation.bnetAccountID = message.bnetAccountID or conversation.bnetAccountID
   conversation.battleTag = message.battleTag or conversation.battleTag
   conversation.gameAccountName = message.gameAccountName or conversation.gameAccountName
-  conversation.className = message.className or conversation.className
-  conversation.classTag = message.classTag or conversation.classTag
-  conversation.raceName = message.raceName or conversation.raceName
-  conversation.raceTag = message.raceTag or conversation.raceTag
-  conversation.factionName = message.factionName or conversation.factionName
 
   if oldGuid ~= nil and conversation.guid ~= oldGuid and type(state.onConversationGUIDChanged) == "function" then
     state.onConversationGUIDChanged(key, oldGuid, conversation.guid)

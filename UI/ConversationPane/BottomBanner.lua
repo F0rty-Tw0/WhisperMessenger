@@ -10,18 +10,36 @@ local sizeValue = TranscriptView._sizeValue
 
 -- The strip above the composer: the message-request banner wins, else the
 -- messaging notice, else the "Replying to" strip, else the contact's AFK/DND
--- text. The transcript shrinks by HEIGHT while any of them shows.
+-- text. The transcript shrinks by HEIGHT while any of them shows, or by the
+-- notice's wrapped text height when a long notice needs more lines.
 local BottomBanner = {}
 
 BottomBanner.HEIGHT = 24
+-- Gap below the notice text (its bottom anchor offset) and above it.
+local TEXT_INSET = 4
 
-local function resizeTranscript(view)
+-- Space the transcript gives up for the strip: 0 when nothing shows.
+function BottomBanner.ReservedHeight(view)
+  if not view._activeStatusVisible then
+    return 0
+  end
+  if view._isRequest == true then
+    return math.max(BottomBanner.HEIGHT, view.requestBanner.layout())
+  end
+  local banner = view.activeStatusBanner
+  if not banner:IsShown() then
+    return BottomBanner.HEIGHT
+  end
+  local textHeight = math.ceil(banner:GetStringHeight() or 0)
+  return math.max(BottomBanner.HEIGHT, textHeight + 2 * TEXT_INSET)
+end
+
+local function resizeTranscript(view, delta)
   local t = view.transcript
   if t == nil then
     return
   end
   local wasAtEnd = TranscriptView.IsAtEnd(t)
-  local delta = view._activeStatusVisible and -BottomBanner.HEIGHT or BottomBanner.HEIGHT
   local currentH = sizeValue(t.scrollFrame, "GetHeight", "height", 0)
   if currentH <= 0 then
     return
@@ -44,7 +62,6 @@ function BottomBanner.Refresh(view)
     return
   end
 
-  local wasVisible = view._activeStatusVisible or false
   local noticeText = view._noticeText or ""
   local showRequest = view._isRequest == true
   local showReply = view._replyTo ~= nil and not showRequest and noticeText == ""
@@ -68,8 +85,11 @@ function BottomBanner.Refresh(view)
     view._activeStatusVisible = false
   end
 
-  if view._activeStatusVisible ~= wasVisible then
-    resizeTranscript(view)
+  local previous = view._bannerReserved or 0
+  local reserved = BottomBanner.ReservedHeight(view)
+  view._bannerReserved = reserved
+  if reserved ~= previous then
+    resizeTranscript(view, previous - reserved)
   end
 end
 

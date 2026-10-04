@@ -1,6 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 
 local Router = require("WhisperMessenger.Core.EventRouter")
+local IgnoreList = require("WhisperMessenger.Model.Filters.IgnoreList")
 
 return function()
   local state = {
@@ -31,4 +32,19 @@ return function()
   -- No degenerate conversation should be stored
   local degenerateConv = state.store.conversations["wow::WOW::"]
   assert(degenerateConv == nil, "should not store conversation with degenerate key")
+
+  -- test_whisper_from_ignored_sender_creates_no_conversation
+  do
+    state.accountState = { filters = { ignored = {}, rules = {} } }
+    IgnoreList.Add(state.accountState.filters, "Spammer-Realm", { now = 1 })
+    local dropped = Router.HandleEvent(state, "CHAT_MSG_WHISPER", {
+      text = "cheap gold",
+      playerName = "Spammer-Realm",
+      lineID = 1000,
+      guid = "Player-1-0DEF",
+      playerInfo = {},
+    })
+    assert(dropped == nil, "a whisper from an ignored sender is dropped")
+    assert(next(state.store.conversations) == nil, "no conversation is created for an ignored sender")
+  end
 end

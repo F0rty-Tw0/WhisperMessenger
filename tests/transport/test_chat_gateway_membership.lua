@@ -281,15 +281,16 @@ return function()
   end
 
   -- ---------------------------------------------------------------------------
-  -- 16. CHANNEL: CanSend true when GetChannelName absent (skip check)
+  -- 16. CHANNEL: CanSend false when no channel API can resolve the number
   -- ---------------------------------------------------------------------------
   do
-    local saved = saveGlobals({ "GetChannelName" })
+    local saved = saveGlobals({ "GetChannelName", "GetChannelList" })
     rawset(_G, "GetChannelName", nil)
+    rawset(_G, "GetChannelList", nil)
 
     local api = { SendChatMessage = function() end }
     local conv = { channel = ChannelType.CHANNEL, channelBaseName = "General" }
-    assert(ChatGateway.CanSend(api, conv) == true, "CanSend CHANNEL should be true when GetChannelName is unavailable")
+    assert(ChatGateway.CanSend(api, conv) == false, "CanSend CHANNEL should be false when no channel API can find the channel")
 
     restoreGlobals(saved)
   end

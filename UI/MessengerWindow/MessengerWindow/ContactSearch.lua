@@ -55,10 +55,17 @@ local function itemMatchesSearch(item, terms)
     return true
   end
 
+  -- Terms only ever get crossed off, so re-checking the previous sender
+  -- can't match anything new; skip it to avoid lowering it again.
+  local lastPlayerName = nil
   for _, message in ipairs((item.conversation or {}).messages or {}) do
     if type(message) == "table" then
       match(message.text)
-      match(message.playerName)
+      local playerName = message.playerName
+      if playerName ~= lastPlayerName then
+        match(playerName)
+        lastPlayerName = playerName
+      end
       if remaining == 0 then
         return true
       end

@@ -248,6 +248,21 @@ function SettingsControls.BuildToggleList(factory, parent, anchorFrame, specs)
   return toggles
 end
 
+-- Binds each toggle BuildToggleList made from `specs` to Reset to Defaults by
+-- its setting key; spec.reset overrides it (e.g. for a CVar-backed toggle).
+function SettingsControls.BindToggleSpecs(panel, toggles, specs, defaults)
+  for i, spec in ipairs(specs) do
+    panel:bind(toggles[i], { type = "toggle", key = spec.key, default = defaults[spec.key], reset = spec.reset })
+  end
+end
+
+-- Relabels those toggles from each spec's English labelKey.
+function SettingsControls.RelabelToggles(toggles, specs, translate)
+  for i, spec in ipairs(specs) do
+    toggles[i].label:SetText(translate(spec.labelKey))
+  end
+end
+
 -- Build a label->option list by projecting a list of keys through a label map.
 -- labelMap : { [key] = { label, tooltip } }
 -- keys     : ordered list of keys (array)

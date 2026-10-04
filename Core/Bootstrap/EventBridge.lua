@@ -5,7 +5,6 @@ end
 
 local EventRouter = ns.EventRouter or require("WhisperMessenger.Core.EventRouter")
 local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
-local ChannelMessageStore = ns.ChannelMessageStore or require("WhisperMessenger.Model.ChannelMessageStore")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMessenger.Core.EventRouter.PendingOutgoing")
 
@@ -14,6 +13,7 @@ local PendingOutgoing = ns.EventRouterPendingOutgoing or require("WhisperMesseng
 local Registration = ns.BootstrapEventBridgeRegistration or require("WhisperMessenger.Core.Bootstrap.EventBridge.Registration")
 local LivePayload = ns.BootstrapEventBridgeLivePayload or require("WhisperMessenger.Core.Bootstrap.EventBridge.LivePayload")
 local GroupRouter = ns.BootstrapEventBridgeGroupRouter or require("WhisperMessenger.Core.Bootstrap.EventBridge.GroupRouter")
+local ChannelRouter = ns.BootstrapEventBridgeChannelRouter or require("WhisperMessenger.Core.Bootstrap.EventBridge.ChannelRouter")
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 -- stylua: ignore end
 
@@ -27,31 +27,7 @@ EventBridge.RegisterGroupEvents = Registration.RegisterGroupEvents
 EventBridge.RegisterSuspendableLifecycleEvents = Registration.RegisterSuspendableLifecycleEvents
 EventBridge.UnregisterSuspendableLifecycleEvents = Registration.UnregisterSuspendableLifecycleEvents
 
-local CHANNEL_EVENTS = {
-  CHAT_MSG_CHANNEL = true,
-}
-
-function EventBridge.RouteChannelEvent(runtime, eventName, ...)
-  if runtime == nil or not CHANNEL_EVENTS[eventName] then
-    return nil
-  end
-  local store = runtime.channelMessageStore
-  if store == nil then
-    return nil
-  end
-  local text, senderName, _, channelString = ...
-  -- Extract base channel name (e.g. "2. Trade - City" → "Trade", "1. CraftScan" → "CraftScan")
-  local channelLabel = string.match(channelString or "", "^%d+%.%s*(.-)%s*%-")
-    or string.match(channelString or "", "^%d+%.%s*(.+)$")
-    or channelString
-    or ""
-  if channelLabel == "" then
-    channelLabel = channelString or ""
-  end
-  local sentAt = runtime.now and runtime.now() or 0
-  ChannelMessageStore.Record(store, senderName, text, channelLabel, sentAt)
-  return store
-end
+EventBridge.RouteChannelEvent = ChannelRouter.RouteChannelEvent
 
 local INCOMING_WHISPER_EVENTS = {
   CHAT_MSG_WHISPER = true,
@@ -107,7 +83,9 @@ local function applyIncomingEffects(runtime, result)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey
-    local inGroupsTab = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode() == "groups"
+    -- Reading group or channel chat: a whisper must not take over the pane.
+    local tabMode = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode()
+    local inGroupsTab = tabMode == "groups" or tabMode == "channels"
     if
       shouldAlert
       and settings

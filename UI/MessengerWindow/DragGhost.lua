@@ -72,11 +72,7 @@ local function layoutFor(ghost, sourceRow, item)
   local _, _, _, offsetX = sourceRow.classIconFrame:GetPoint()
   iconFrame:SetPoint("CENTER", ghost.frame, "CENTER", offsetX or 0, 0)
   ghost.label:Hide()
-  if GroupLabel.IsGroupItem(item) then
-    RailAvatar.hide(ghost)
-  else
-    RailAvatar.update(ghost, item)
-  end
+  RailAvatar.apply(ghost, item, GroupLabel.IsGroupItem(item))
 end
 
 function DragGhost.Show(ghost, sourceRow, listFrame)

@@ -21,6 +21,7 @@ ignore:
   - entities.json
   - mempalace.yaml
   - Model/ContactEnricher/init.lua
+  - Model/Filters/init.lua
   - Model/Identity/init.lua
   - Persistence/SavedState/init.lua
   - UI/Composer/init.lua

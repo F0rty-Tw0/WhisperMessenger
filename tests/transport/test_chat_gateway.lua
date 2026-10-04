@@ -174,12 +174,20 @@ return function()
   -- ---------------------------------------------------------------------------
   do
     local api = makeSpyApi()
-    local conv = { channel = ChannelType.CHANNEL, channelIndex = 5 }
+    local savedList = rawget(_G, "GetChannelList")
+    -- Stored as channel 5, but after a renumber Trade is now channel 3.
+    rawset(_G, "GetChannelList", function()
+      return 1, "General", false, 3, "Trade", false
+    end)
+    local conv = { channel = ChannelType.CHANNEL, channelIndex = 5, channelBaseName = "Trade - Stormwind City" }
     ChatGateway.Send(api, conv, "channel via send")
+    local ok = pcall(ChatGateway.Send, api, { channel = ChannelType.CHANNEL, channelIndex = 5, channelBaseName = "CraftScan" }, "x")
+    rawset(_G, "GetChannelList", savedList)
     assert(api._calls[1] ~= nil, "expected a call")
     assert(api._calls[1].fn == "SendChatMessage", "expected SendChatMessage")
     assert(api._calls[1].chatType == "CHANNEL", "expected CHANNEL chat type")
-    assert(api._calls[1].target == 5, "expected channelIndex forwarded")
+    assert(api._calls[1].target == 3, "expected the live channel number, got " .. tostring(api._calls[1].target))
+    assert(ok == false and #api._calls == 1, "a channel the player is not in is never sent to")
   end
 
   -- ---------------------------------------------------------------------------
@@ -228,7 +236,6 @@ return function()
       { channel = ChannelType.INSTANCE_CHAT },
       { channel = ChannelType.GUILD },
       { channel = ChannelType.OFFICER },
-      { channel = ChannelType.CHANNEL, channelIndex = 1 },
     }
     for _, conv in ipairs(sendable) do
       assert(ChatGateway.CanSend(api, conv) == true, "expected CanSend true for channel: " .. tostring(conv.channel))

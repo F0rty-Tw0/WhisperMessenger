@@ -170,17 +170,14 @@ function Apply.Relayout(layout, relayout, theme)
       layout.optionsHint:SetJustifyH("LEFT")
     end
   end
-  for _, button in ipairs({
-    layout.generalTab,
-    layout.appearanceTab,
-    layout.behaviorTab,
-    layout.notificationsTab,
-    layout.iconsTab,
-    layout.whatsNewTab,
-    layout.resetWindowButton,
-    layout.resetIconButton,
-    layout.clearAllChatsButton,
-  }) do
+  local optionButtons = {}
+  for _, tab in ipairs(layout.settingsTabs or {}) do
+    optionButtons[#optionButtons + 1] = tab
+  end
+  for _, key in ipairs({ "resetWindowButton", "resetIconButton", "clearAllChatsButton" }) do
+    optionButtons[#optionButtons + 1] = layout[key]
+  end
+  for _, button in ipairs(optionButtons) do
     if button and button.SetSize then
       button:SetSize(optionsButtonWidth, optionsButtonHeight)
     end

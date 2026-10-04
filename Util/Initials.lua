@@ -29,6 +29,25 @@ local function secondChar(word)
   return string.match(word, "^" .. UTF8_CHAR, #first + 1)
 end
 
+-- The first two words, each without its leading ASCII punctuation:
+-- "Trade (Services)" -> "Trade", "Services". A word of only punctuation
+-- ("&") is skipped.
+local function firstTwoWords(text)
+  local first, second
+  for word in string.gmatch(text, "%S+") do
+    local letters = string.gsub(word, "^%p+", "")
+    if letters ~= "" then
+      if first == nil then
+        first = letters
+      else
+        second = letters
+        break
+      end
+    end
+  end
+  return first, second
+end
+
 -- "Jaina" -> "JA", "Big Bob" -> "BB", "李小龙" -> "李". A realm suffix
 -- ("-Realm") or BattleTag number ("#1234") is not part of the name.
 function Initials.FromName(name)
@@ -36,10 +55,7 @@ function Initials.FromName(name)
     return ""
   end
   local base = string.match(name, "^[^%-#]*")
-  local first, second = string.match(base, "^%s*(%S+)%s+(%S+)")
-  if first == nil then
-    first = string.match(base, "^%s*(%S+)")
-  end
+  local first, second = firstTwoWords(base)
   if first == nil then
     return ""
   end

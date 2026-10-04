@@ -125,6 +125,14 @@ return function()
     end)
   end
 
+  -- test_set_hud_style_shows_the_given_style_without_saving
+  do
+    local result, changes = create({ hudStyle = "classic" })
+    result.setHudStyle("off")
+    assert(hudButtons(result)[1]._selected == true and hudButtons(result)[2]._selected ~= true, "Off shown")
+    assert(changes.hudStyle == nil, "showing a style saves nothing")
+  end
+
   -- test_missing_hud_style_shows_off
   do
     local result = create({})

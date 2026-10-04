@@ -139,4 +139,12 @@ return function()
     emptyState.applyTheme()
     assert(title.textColor ~= nil, "applyTheme should repaint title color")
   end
+
+  -- test_empty_state_title_wraps_inside_the_pane
+  do
+    local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
+    local title = assert(FindUI.text(emptyState, "Welcome to WhisperMessenger"), "expected welcome title")
+    assert(type(title.width) == "number" and title.width > 0, "title gets a wrap width so big fonts stay inside the pane")
+    assert(title.wordWrap == true, "title wraps onto a second line")
+  end
 end

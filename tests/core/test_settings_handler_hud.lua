@@ -68,15 +68,29 @@ local function underHud(fn)
 end
 
 return function()
-  -- test_hud_style_persists_and_mirrors_native_chrome
+  -- test_hud_style_saves_and_mirrors_native_chrome_on_reload
   for _, case in ipairs({ { "classic", true }, { "retail", true }, { "off", false } }) do
     local style, expectedNative = case[1], case[2]
-    local accountSettings = { nativeChrome = not expectedNative }
-    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
-    onChange("hudStyle", style)
-    assert(accountSettings.hudStyle == style, style .. ": hudStyle persisted")
-    assert(accountSettings.nativeChrome == expectedNative, style .. ": nativeChrome mirrors the style for older versions")
+    withPopups(function(popups)
+      local accountSettings = { nativeChrome = not expectedNative }
+      local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+      onChange("hudStyle", style)
+      if popups.shown[1] then
+        _G.StaticPopupDialogs[popups.shown[1]].OnAccept()
+      end
+      assert(accountSettings.hudStyle == style, style .. ": hudStyle saved")
+      assert(accountSettings.nativeChrome == expectedNative, style .. ": nativeChrome mirrors the style for older versions")
+    end)
   end
+
+  -- test_hud_style_waits_for_the_reload_before_saving
+  withPopups(function()
+    local accountSettings = { hudStyle = "off", nativeChrome = false }
+    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+    onChange("hudStyle", "classic")
+    assert(accountSettings.hudStyle == "off", "not saved before Reload UI, got " .. tostring(accountSettings.hudStyle))
+    assert(accountSettings.nativeChrome == false, "nativeChrome not saved before Reload UI")
+  end)
 
   -- test_hud_style_change_offers_a_reload_popup
   withChatFrame(function(messages)
@@ -98,16 +112,59 @@ return function()
     assert(popups.reloads == 1, "Reload UI reloads the interface, got " .. popups.reloads)
   end)
 
-  -- test_cancelling_the_popup_keeps_the_choice_and_reminds_in_chat
+  -- test_picking_again_while_the_popup_is_up_keeps_the_new_pick
+  -- Blizzard's StaticPopup_Show cancels a visible dialog of the same name
+  -- with reason "override" before showing it again, unless the dialog sets
+  -- noCancelOnReuse.
+  withPopups(function(popups)
+    local visible = false
+    rawset(_G, "StaticPopup_Show", function(name)
+      local dialog = _G.StaticPopupDialogs[name]
+      if visible and not dialog.noCancelOnReuse then
+        dialog.OnCancel({}, nil, "override")
+      end
+      visible = true
+      popups.shown[#popups.shown + 1] = name
+    end)
+    local accountSettings = { hudStyle = "off" }
+    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+    onChange("hudStyle", "classic")
+    onChange("hudStyle", "classic")
+    _G.StaticPopupDialogs[popups.shown[2]].OnAccept()
+    assert(accountSettings.hudStyle == "classic", "second pick saved on Reload UI, got " .. tostring(accountSettings.hudStyle))
+  end)
+
+  -- test_override_cancel_keeps_the_pending_pick
+  withPopups(function(popups)
+    local accountSettings = { hudStyle = "off" }
+    local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+    onChange("hudStyle", "classic")
+    local dialog = _G.StaticPopupDialogs[popups.shown[1]]
+    dialog.OnCancel({}, nil, "override")
+    dialog.OnAccept()
+    assert(accountSettings.hudStyle == "classic", "a re-show cancel is not the player's Cancel, got " .. tostring(accountSettings.hudStyle))
+  end)
+
+  -- test_cancelling_the_popup_discards_the_choice
   withChatFrame(function(messages)
     withPopups(function(popups)
-      local accountSettings = {}
-      local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
+      local accountSettings = { hudStyle = "off" }
+      local shown = {}
+      local runtime = makeRuntime()
+      runtime.window = {
+        appearanceSettings = {
+          setHudStyle = function(style)
+            shown[#shown + 1] = style
+          end,
+        },
+      }
+      local onChange = SettingsHandler.Create({ runtime = runtime, accountSettings = accountSettings })
       onChange("hudStyle", "classic")
       _G.StaticPopupDialogs[popups.shown[1]].OnCancel()
       assert(popups.reloads == 0, "Cancel does not reload")
-      assert(accountSettings.hudStyle == "classic", "Cancel keeps the saved choice")
-      assert(#messages == 1 and string.find(messages[1], "/reload", 1, true), "Cancel prints the /reload reminder")
+      assert(accountSettings.hudStyle == "off", "Cancel keeps the saved style, got " .. tostring(accountSettings.hudStyle))
+      assert(shown[1] == "off", "the picker shows the saved style again, got " .. tostring(shown[1]))
+      assert(#messages == 0, "no /reload reminder: nothing is pending")
     end)
   end)
 
@@ -153,9 +210,13 @@ return function()
   withPopups(function(popups)
     Hud.Configure("classic")
     local onChange = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = {} })
+    local accountSettings = { hudStyle = "off" }
+    local onChange2 = SettingsHandler.Create({ runtime = makeRuntime(), accountSettings = accountSettings })
     onChange("hudStyle", "classic")
+    onChange2("hudStyle", "classic")
     Hud.Configure("off")
     assert(#popups.shown == 0, "same style as this session: no popup")
+    assert(accountSettings.hudStyle == "classic", "the running style saves at once")
   end)
 
   -- test_picking_the_running_style_again_closes_the_pending_popup

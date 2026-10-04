@@ -7,6 +7,10 @@ local ContactSearch = ns.MessengerWindowContactSearch or require("WhisperMesseng
 
 local ContactsSearchController = {}
 
+-- Typing waits this long before filtering, so a fast typist pays for one
+-- history scan instead of one per keystroke.
+local SEARCH_DEBOUNCE_SECONDS = 0.15
+
 function ContactsSearchController.Create(options)
   local contacts = options.contacts
   local contactsController = options.contactsController
@@ -20,6 +24,7 @@ function ContactsSearchController.Create(options)
 
   local currentContacts = options.initialContacts or {}
   local contactsSearchQuery = ""
+  local pendingRefreshTimer = nil
 
   local function syncSearchInputVisual()
     local hasSearch = contactsSearchQuery ~= ""
@@ -34,7 +39,18 @@ function ContactsSearchController.Create(options)
   local getTabFilter = options.getTabFilter
   local onAfterFilter = options.onAfterFilter
 
+  local function cancelPendingRefresh()
+    if pendingRefreshTimer ~= nil then
+      pendingRefreshTimer:Cancel()
+      pendingRefreshTimer = nil
+    end
+  end
+
   local function refresh(nextContacts, selectedConversationKey, resetPaging)
+    -- A pending search pass would have reset paging; whoever applies the new
+    -- query in its place must do the same.
+    resetPaging = resetPaging or pendingRefreshTimer ~= nil
+    cancelPendingRefresh()
     if nextContacts ~= nil then
       currentContacts = nextContacts
     end
@@ -63,12 +79,35 @@ function ContactsSearchController.Create(options)
     return contacts.rows
   end
 
+  local function scheduleSearchRefresh()
+    cancelPendingRefresh()
+    local timer = _G.C_Timer
+    if type(timer) ~= "table" or type(timer.NewTimer) ~= "function" then
+      refresh(nil, getSelectedConversationKey(), true)
+      return
+    end
+    local scheduled
+    scheduled = timer.NewTimer(SEARCH_DEBOUNCE_SECONDS, function()
+      if pendingRefreshTimer ~= scheduled then
+        return
+      end
+      pendingRefreshTimer = nil
+      refresh(nil, getSelectedConversationKey(), true)
+    end)
+    pendingRefreshTimer = scheduled
+  end
+
   local function bindInputScripts()
     if contactsSearchInput and contactsSearchInput.SetScript then
       contactsSearchInput:SetScript("OnTextChanged", function()
         local searchText = contactsSearchInput.GetText and contactsSearchInput:GetText() or contactsSearchInput.text or ""
         contactsSearchQuery = contactSearch.NormalizeSearchQuery(searchText)
-        refresh(nil, getSelectedConversationKey(), true)
+        if contactsSearchQuery == "" then
+          refresh(nil, getSelectedConversationKey(), true)
+          return
+        end
+        syncSearchInputVisual()
+        scheduleSearchRefresh()
       end)
       contactsSearchInput:SetScript("OnEscapePressed", function()
         if contactsSearchInput.SetText then

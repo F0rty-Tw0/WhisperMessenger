@@ -12,7 +12,9 @@ local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Mo
 local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
+local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
+local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 
 local WindowCallbacks = {}
 
@@ -51,6 +53,9 @@ function WindowCallbacks.Create(options)
   local inviteHandler = options.inviteHandler or InviteHandler
   local livePresenceSender = options.livePresenceSender
   local refreshWindow = options.refreshWindow or function() end
+  local buildContacts = options.buildContacts or function()
+    return {}
+  end
   local selectConversation = options.selectConversation or function(_conversationKey) end
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
@@ -72,6 +77,14 @@ function WindowCallbacks.Create(options)
     return groupSendPolicy.getNotice(selectedContact.conversation or selectedContact) == nil
   end
 
+  -- The block list changed: hide or show the player in the game's chat too.
+  local function filtersChanged()
+    if runtime.syncChatFilters then
+      runtime.syncChatFilters()
+    end
+    refreshWindow()
+  end
+
   local function removeConversation(item)
     local key = item and item.conversationKey
     if key == nil then
@@ -84,6 +97,19 @@ function WindowCallbacks.Create(options)
       characterState.activeConversationKey = nil
     end
     refreshWindow()
+  end
+
+  -- The request below `key` on the Requests tab, or the one above when it
+  -- is the last; nil when it is the only one.
+  local function neighbourRequestKey(key)
+    local requests = ContactsTabFilter.FilterRequests(buildContacts())
+    for index, item in ipairs(requests) do
+      if item.conversationKey == key then
+        local neighbour = requests[index + 1] or requests[index - 1]
+        return neighbour and neighbour.conversationKey or nil
+      end
+    end
+    return nil
   end
 
   return {
@@ -188,7 +214,19 @@ function WindowCallbacks.Create(options)
       end
       selectConversation(key)
     end,
-    onDeleteRequest = removeConversation,
+    -- Request banner: Delete opens the next request, so the empty page
+    -- shows only once none are left.
+    onDeleteRequest = function(item)
+      local key = item and item.conversationKey
+      if key == nil then
+        return
+      end
+      local nextKey = neighbourRequestKey(key)
+      removeConversation(item)
+      if nextKey then
+        selectConversation(nextKey)
+      end
+    end,
 
     onMarkUnread = function(item)
       local key = item and item.conversationKey
@@ -218,6 +256,24 @@ function WindowCallbacks.Create(options)
         OnlineWatch.Observe(runtime, key, OnlineWatch.ReadOnline(runtime, runtime.store.conversations[key]))
       end
       refreshWindow()
+    end,
+
+    -- "Block…" from a contact row or a message.
+    onIgnorePlayer = function(name, reason)
+      if IgnoreList.Add(IgnoreList.Ensure(accountState), name, { reason = reason }) ~= nil then
+        filtersChanged()
+      end
+    end,
+
+    -- "Unblock" from a blocked player's contact row.
+    onUnblockPlayer = function(name)
+      IgnoreList.Remove(IgnoreList.Ensure(accountState), name)
+      filtersChanged()
+    end,
+
+    isPlayerBlocked = function(name)
+      local now = type(runtime.now) == "function" and runtime.now() or nil
+      return IgnoreList.Lookup(IgnoreList.Ensure(accountState), name, now) ~= nil
     end,
 
     onReorder = function(orders)

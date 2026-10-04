@@ -17,6 +17,8 @@ local NOTICE_KEY = "Not a friend, guildmate or group member."
 local BUTTON_HEIGHT = 20
 local BUTTON_WIDTH = 72
 local BUTTON_GAP = 6
+-- Strip height above the taller of the notice text and the buttons.
+local STRIP_PAD = 4
 
 local function createButton(factory, parent, key, nativeChrome, danger)
   local native = nativeChrome and UIHelpers.createTemplatedFrame(factory, "Button", nil, parent, NativeControls.BUTTON_TEMPLATE)
@@ -47,7 +49,7 @@ end
 function RequestBanner.Create(factory, pane, options)
   options = options or {}
   local frame = factory.CreateFrame("Frame", nil, pane)
-  frame:SetHeight(BUTTON_HEIGHT + 4)
+  frame:SetHeight(BUTTON_HEIGHT + STRIP_PAD)
   frame:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 2)
   frame:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -Theme.LAYOUT.TRANSCRIPT_LEFT_GUTTER, 2)
 
@@ -79,6 +81,16 @@ function RequestBanner.Create(factory, pane, options)
 
   function banner.setShown(shown)
     frame:SetShown(shown == true)
+  end
+
+  -- A big font wraps the notice beside the buttons: grow the strip to fit it.
+  -- Everything is centre-anchored, so it stays vertically centred. Returns
+  -- the strip height.
+  function banner.layout()
+    local textHeight = math.ceil(notice:GetStringHeight() or 0)
+    local height = math.max(BUTTON_HEIGHT, textHeight) + STRIP_PAD
+    frame:SetHeight(height)
+    return height
   end
 
   function banner.setLanguage()
