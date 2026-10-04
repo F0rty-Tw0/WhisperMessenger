@@ -17,7 +17,7 @@ local ComposerSurface = ns.ComposerSurface or require("WhisperMessenger.UI.Compo
 local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Composer.ComposerLayout")
 local ComposerLaunchers = ns.ComposerLaunchers or require("WhisperMessenger.UI.Composer.ComposerLaunchers")
 local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
-local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.ComposerLimit")
 
 local Composer = {}
 
@@ -54,9 +54,10 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   -- Plain EditBox (no template)
   local input = factory.CreateFrame("EditBox", nil, pane)
   input:SetText("")
+  local limit = ComposerLimit.Create(input)
   local launchers = ComposerLaunchers.Create(factory, pane, input, {
     enabled = not sendDisabled,
-    maxBytes = TextLimits.MESSAGE_MAX_BYTES,
+    getMaxBytes = limit.messageMaxBytes,
     getQuickReplies = options.getQuickReplies,
   })
   local layoutParts = {
@@ -84,13 +85,6 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   end
   if input.SetHyperlinksEnabled then
     input:SetHyperlinksEnabled(true)
-  end
-  -- WoW's chat protocol caps a single whisper at 255 bytes server-side;
-  -- past that the message is silently truncated. Enforce the cap at the
-  -- keystroke so users see the limit instead of finding out from a
-  -- truncated send.
-  if input.SetMaxBytes then
-    input:SetMaxBytes(TextLimits.INPUT_MAX_BYTES)
   end
   local surface = nativeChrome and ComposerSurface.CreateNative(input, composerBorder, paneBg) or ComposerSurface.Create(pane, input, composerBorder)
   surface.apply()
@@ -161,6 +155,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     if accepted ~= false then
       replies.clear()
       input:SetText("")
+      limit.remember()
       if onDraftChanged then
         onDraftChanged(selectedContact.conversationKey, "")
       end
@@ -181,6 +176,9 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
   input:SetScript("OnTextChanged", function()
     local text = input.GetText and input:GetText() or input.text or ""
+    if not limit.accept(text, loadingDraft) then
+      return
+    end
     syncPlaceholder(text)
     if onDraftChanged and not loadingDraft and selectedContact.conversationKey ~= nil then
       onDraftChanged(selectedContact.conversationKey, text)
@@ -194,6 +192,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     loadingDraft = true
     input:SetText(text or "")
     loadingDraft = false
+    limit.remember()
     syncPlaceholder(text)
     replies.sync()
   end
@@ -237,6 +236,8 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     quickReplyPicker = launchers.quickReplyPicker,
     placeholder = placeholder,
     loadDraft = loadDraft,
+    -- Cap for the conversation's channel; set before its draft loads.
+    setMaxBytes = limit.setChannel,
     setReply = function(conversationKey, replyTo)
       replies.set(conversationKey, replyTo)
       if input.SetFocus then
