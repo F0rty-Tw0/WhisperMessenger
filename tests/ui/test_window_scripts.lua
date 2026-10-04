@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
-local WindowScripts = require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
+local Buttons = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Buttons")
+local Frame = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 return function()
@@ -40,7 +41,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(closeButton.scripts) == "table" and type(closeButton.scripts.OnClick) == "function",
@@ -79,7 +80,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(optionsButton.scripts) == "table" and type(optionsButton.scripts.OnClick) == "function",
@@ -121,7 +122,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
 
     assert(
       type(newConversationButton.scripts) == "table" and type(newConversationButton.scripts.OnClick) == "function",
@@ -163,7 +164,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, options)
+    Buttons.WireButtons(refs, options)
     newConversationButton.scripts.OnClick(newConversationButton)
 
     assert(
@@ -195,7 +196,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnShow) == "function",
@@ -223,7 +224,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnSizeChanged) == "function",
@@ -251,7 +252,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(frame.scripts) == "table" and type(frame.scripts.OnDragStart) == "function",
@@ -285,7 +286,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     -- Trigger OnShow
     frame:Show()
@@ -318,7 +319,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     frame:Show()
 
@@ -368,7 +369,7 @@ return function()
       refreshSelection = noop,
     }
 
-    WindowScripts.WireButtons(refs, opts)
+    Buttons.WireButtons(refs, opts)
 
     -- Click tab2 while hovered to make it active
     tab2.mouseOver = true
@@ -427,7 +428,7 @@ return function()
       Theme = Theme,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(resizeGrip.scripts) == "table" and type(resizeGrip.scripts.OnMouseDown) == "function",
@@ -483,7 +484,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     assert(frame.sizingAnchor == nil, "expected deferred resize to avoid native StartSizing")
@@ -558,7 +559,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     assert(
       type(contactsResizeHandle.scripts) == "table" and type(contactsResizeHandle.scripts.OnMouseDown) == "function",
@@ -636,7 +637,7 @@ return function()
       end,
     }
 
-    WindowScripts.WireFrame(refs, options)
+    Frame.WireFrame(refs, options)
 
     resizeGrip.scripts.OnMouseDown(resizeGrip, "LeftButton")
     frame.scripts.OnUpdate(frame, Theme.WINDOW_ALPHA_UPDATE_INTERVAL)

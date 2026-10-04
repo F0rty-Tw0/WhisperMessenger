@@ -285,7 +285,6 @@ UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
-UI/MessengerWindow/WindowScripts.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
 UI/MessengerWindow/AppearanceSettings/ButtonSelector.lua
 UI/MessengerWindow/AppearanceSettings/DropdownSkin.lua
@@ -331,7 +330,6 @@ UI/MessengerWindow/MessengerWindow/SelectionController.lua
 UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
 UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
-UI/MessengerWindow/MessengerWindow/ScriptWiring.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua

@@ -14,7 +14,6 @@ local ChromeBuilder = ns.MessengerWindowChromeBuilder or require("WhisperMesseng
 local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.MarkAllReadButton")
 local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
-local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsRuntime = ns.MessengerWindowContactsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
 local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
 local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
@@ -25,8 +24,6 @@ local SelectionController = ns.MessengerWindowSelectionController
 local WindowVisibility = ns.MessengerWindowWindowVisibility or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
 local WindowAlpha = ns.MessengerWindowWindowAlpha or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
 local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
-local ScriptWiring = ns.MessengerWindowScriptWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ScriptWiring")
-local RelayoutController = ns.MessengerWindowRelayoutController or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.RelayoutController")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
 local PatchNotesRuntime = ns.MessengerWindowPatchNotesRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PatchNotesRuntime")
 local LanguageRefresh = ns.MessengerWindowLanguageRefresh or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LanguageRefresh")
@@ -304,8 +301,6 @@ function MessengerWindow.Create(factory, options)
   handleContactSelected = selectionController.handleContactSelected
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
-    relayoutFactory = RelayoutController,
-    layoutBuilder = LayoutBuilder,
     layout = layout,
     setContactsWidth = function(nextContactsWidth)
       currentContactsWidth = nextContactsWidth or currentContactsWidth
@@ -314,7 +309,6 @@ function MessengerWindow.Create(factory, options)
     composer = composer,
     contactsController = contactsController,
     conversation = conversation,
-    conversationPane = ConversationPane,
     refreshContacts = refreshContacts,
     getSelectedConversationKey = function()
       return selectionController and selectionController.getSelectedConversationKey() or nil
@@ -325,8 +319,6 @@ function MessengerWindow.Create(factory, options)
     initialStatus = options.status,
     refreshSelection = refreshSelection,
     setOptionsVisible = setOptionsVisible,
-    scriptWiring = ScriptWiring,
-    windowScripts = WindowScripts,
     chrome = chrome,
     settingsPanels = settingsPanels,
     closeWindow = closeWindow,
