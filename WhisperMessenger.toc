@@ -32,6 +32,7 @@ Core/BNetIdentity.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
+Util/MessageSplit.lua
 Util/ChatPrint.lua
 Util/DisplayName.lua
 Util/Initials.lua
