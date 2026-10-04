@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
+local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 
 local MessageReactions = {}
 local TTL_SECONDS = 15
@@ -306,6 +307,7 @@ function MessageReactions.AttachIncomingIdentity(state, senderKey, conversationK
     for index, entry in ipairs(metadataQueue) do
       if (entry.conversationKey == nil or entry.conversationKey == conversationKey) and entry.metadata.sourceFingerprint == fingerprint then
         message.wireId = entry.metadata.wireId
+        MessageParts.ApplyMetadata(message, entry.metadata)
         table.remove(metadataQueue, index)
         if #metadataQueue == 0 then
           runtime.identityMetadata[senderKey] = nil
@@ -335,6 +337,7 @@ function MessageReactions.RecordIdentity(state, senderKey, conversationKey, meta
     for index, entry in ipairs(messageQueue) do
       if (conversationKey == nil or entry.conversationKey == conversationKey) and entry.sourceFingerprint == metadata.sourceFingerprint then
         entry.message.wireId = metadata.wireId
+        MessageParts.ApplyMetadata(entry.message, metadata)
         table.remove(messageQueue, index)
         if #messageQueue == 0 then
           runtime.identityMessages[senderKey] = nil
