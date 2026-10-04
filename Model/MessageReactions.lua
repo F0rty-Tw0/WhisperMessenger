@@ -7,7 +7,7 @@ local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.M
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 
 local MessageReactions = {}
-local TTL_SECONDS = 15
+local TTL_SECONDS = Protocol.PAIRING_TTL_SECONDS
 local MAX_PENDING_PER_SENDER = 32
 local PENDING_QUEUE_FIELDS = {
   "identityMetadata",

@@ -123,4 +123,65 @@ return function()
     assert(#c.messages == 2 and c.messages[2] == mine, "outgoing message untouched")
     assert(c.messages[1].text == "one two", "incoming parts merged: " .. c.messages[1].text)
   end
+
+  -- test_two_plain_messages_sharing_a_wire_id_stay_apart
+  do
+    local a = part("first message")
+    local b = part("second, different message")
+    local c = conversation({ a, b })
+    assert(MessageParts.Merge(c, "abc1", "in") == false, "nothing merged")
+    assert(#c.messages == 2 and c.messages[2].text == "second, different message", "both kept")
+    assert(c.unreadCount == 2, "unread kept, got " .. c.unreadCount)
+  end
+
+  -- test_part_for_a_filled_slot_stays_its_own_bubble
+  do
+    local duplicate = part("forged two", 2, " ")
+    local c = conversation({ first(), second(), duplicate })
+    MessageParts.Merge(c, "abc1", "in")
+    assert(#c.messages == 2 and c.messages[2] == duplicate, "duplicate slot kept apart")
+    assert(duplicate.text == "forged two" and c.messages[1].text == "one two", "texts intact: " .. c.messages[1].text)
+  end
+
+  -- test_part_beyond_the_part_count_stays_its_own_bubble
+  do
+    local stray = part("stray", 4, " ")
+    local c = conversation({ first(), second(), stray })
+    MessageParts.Merge(c, "abc1", "in")
+    assert(#c.messages == 2 and c.messages[2] == stray, "out-of-range part kept apart")
+  end
+
+  -- test_part_outside_the_pairing_window_stays_its_own_bubble
+  do
+    local late = part("two", 2, " ", { sentAt = 100 + 15 })
+    local c = conversation({ part("one", nil, nil, { sentAt = 100 }), late })
+    assert(MessageParts.Merge(c, "abc1", "in") == false, "nothing merged")
+    assert(#c.messages == 2 and c.messages[1].text == "one", "old bubble unchanged")
+  end
+
+  -- test_part_inside_the_pairing_window_merges
+  do
+    local c = conversation({ part("one", nil, nil, { sentAt = 100 }), part("two", 2, " ", { sentAt = 114 }) })
+    assert(MessageParts.Merge(c, "abc1", "in") == true, "merged")
+    assert(c.messages[1].text == "one two", "joined: " .. c.messages[1].text)
+  end
+
+  -- test_complete_message_absorbs_nothing_more
+  do
+    local c = conversation({ first(), second(), third() })
+    MessageParts.Merge(c, "abc1", "in")
+    local extra = part("extra", 2, " ")
+    table.insert(c.messages, extra)
+    assert(MessageParts.Merge(c, "abc1", "in") == false, "nothing merged")
+    assert(#c.messages == 2 and c.messages[1].text == "one twothree", "complete text unchanged")
+  end
+
+  -- test_late_merge_keeps_unread_of_a_newer_message
+  do
+    local later = { kind = "user", direction = "in", text = "unrelated new message" }
+    local c = conversation({ first(), part("two", 2, " ", { partCount = 2 }), later }, 1)
+    MessageParts.Merge(c, "abc1", "in")
+    assert(#c.messages == 2, "parts merged")
+    assert(c.unreadCount == 1, "newer message still unread, got " .. c.unreadCount)
+  end
 end

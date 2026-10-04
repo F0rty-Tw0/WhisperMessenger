@@ -141,6 +141,45 @@ local function isComplete(parts, partCount)
   return true
 end
 
+-- Whether message fills an empty slot of the long whisper host carries. A
+-- reused wire id or a forged manifest must not fold in, rewrite or delete
+-- an unrelated whisper, so only a part that arrived with the host counts.
+local function fitsSlot(host, parts, partCount, message)
+  local count = partCount or message.partCount
+  if count == nil or count < 2 then
+    return false
+  end
+  local partIndex = partIndexOf(message)
+  if parts[partIndex] ~= nil or partIndex > count then
+    return false
+  end
+  local gap = math.abs((tonumber(message.sentAt) or 0) - (tonumber(host.sentAt) or 0))
+  return gap < Protocol.PAIRING_TTL_SECONDS
+end
+
+-- A merged host drops its own part position once every part is in.
+local function isCompleteHost(host)
+  return host.partCount ~= nil and host.parts == nil and host.partIndex == nil
+end
+
+-- The incoming user messages still counted unread: the newest ones.
+local function unreadMessages(conversation)
+  local unread = {}
+  local remaining = (conversation.unreadCount or 0) - (conversation.unreadActivityCount or 0)
+  local messages = conversation.messages
+  for index = #messages, 1, -1 do
+    if remaining <= 0 then
+      break
+    end
+    local message = messages[index]
+    if message.kind == "user" and message.direction == "in" then
+      unread[message] = true
+      remaining = remaining - 1
+    end
+  end
+  return unread
+end
+
 local function removeAbsorbed(messages, absorbed)
   for index = #messages, 1, -1 do
     if absorbed[messages[index]] then
@@ -183,21 +222,31 @@ function MessageParts.Merge(conversation, wireId, direction)
   end
 
   local host = found[1]
+  if isCompleteHost(host) then
+    return false
+  end
   local parts = host.parts or { [partIndexOf(host)] = { text = host.text, join = host.join } }
   local partCount = host.partCount
+  local unread = unreadMessages(conversation)
   local absorbed = {}
-  local absorbedIncoming = 0
+  local absorbedAny = false
+  local absorbedUnread = 0
   for index = 2, #found do
     local message = found[index]
-    local partIndex = partIndexOf(message)
-    parts[partIndex] = parts[partIndex] or { text = message.text, join = message.join }
-    partCount = partCount or message.partCount
-    host.replyTo = host.replyTo or message.replyTo
-    host.reaction = host.reaction or message.reaction
-    absorbed[message] = true
-    if message.direction == "in" then
-      absorbedIncoming = absorbedIncoming + 1
+    if fitsSlot(host, parts, partCount, message) then
+      parts[partIndexOf(message)] = { text = message.text, join = message.join }
+      partCount = partCount or message.partCount
+      host.replyTo = host.replyTo or message.replyTo
+      host.reaction = host.reaction or message.reaction
+      absorbed[message] = true
+      absorbedAny = true
+      if unread[message] then
+        absorbedUnread = absorbedUnread + 1
+      end
     end
+  end
+  if not absorbedAny then
+    return false
   end
   removeAbsorbed(messages, absorbed)
 
@@ -205,10 +254,12 @@ function MessageParts.Merge(conversation, wireId, direction)
   host.text = joinParts(parts, highestIndex(parts, partCount))
   if isComplete(parts, partCount) then
     host.parts = nil
+    host.partIndex = nil
+    host.join = nil
   else
     host.parts = parts
   end
-  conversation.unreadCount = math.max(0, (conversation.unreadCount or 0) - absorbedIncoming)
+  conversation.unreadCount = math.max(0, (conversation.unreadCount or 0) - absorbedUnread)
   updatePreviews(conversation, host)
   return true
 end

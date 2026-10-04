@@ -13,14 +13,17 @@ local PARTS = {
   { text = "three", join = " " },
 }
 
+local clock = 100
+
 local function newState()
+  clock = 100
   return {
     localProfileId = "me",
     store = Store.New({ maxMessagesPerConversation = 20, maxConversations = 10 }),
     availabilityByGUID = {},
     pendingOutgoing = {},
     now = function()
-      return 100
+      return clock
     end,
   }
 end
@@ -78,5 +81,32 @@ return function()
     local message = messages(state)[1]
     assert(message.text == "one two three" and message.direction == "out", "full text: " .. message.text)
     assert(message.partCount == 3 and message.parts == nil, "complete")
+  end
+
+  -- test_wire_id_reused_minutes_later_keeps_both_whispers
+  do
+    local state = newState()
+    whisper(state, "first message", 1)
+    addon(state, Protocol.EncodeIdentity("abc1", "first message"))
+    clock = clock + 600
+    whisper(state, "second message", 2)
+    addon(state, Protocol.EncodeIdentity("abc1", "second message"))
+    assert(#messages(state) == 2, "two bubbles, got " .. #messages(state))
+    assert(messages(state)[1].text == "first message" and messages(state)[2].text == "second message", "texts intact")
+    assert(state.store.conversations[KEY].unreadCount == 2, "both unread")
+  end
+
+  -- test_late_manifest_for_an_old_wire_id_leaves_the_old_whisper_alone
+  do
+    local state = newState()
+    whisper(state, "I will pay 10000 gold", 1)
+    addon(state, Protocol.EncodeIdentity("abc1", "I will pay 10000 gold"))
+    clock = clock + 900
+    local tail = "after you send the item first"
+    whisper(state, tail, 2)
+    addon(state, "1|P|abc1|2|" .. Protocol.Fingerprint(tail) .. "|s")
+    assert(#messages(state) == 2, "two bubbles, got " .. #messages(state))
+    assert(messages(state)[1].text == "I will pay 10000 gold", "old bubble unchanged: " .. messages(state)[1].text)
+    assert(messages(state)[2].text == tail, "new whisper kept")
   end
 end
