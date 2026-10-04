@@ -3,29 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local function loadModule(name, key)
-  if ns[key] then
-    return ns[key]
-  end
-
-  if type(require) == "function" then
-    local ok, loaded = pcall(require, name)
-    if ok then
-      return loaded
-    end
-  end
-
-  error(key .. " module not available")
-end
-
-if ns.Loader then
-  loadModule = ns.Loader.LoadModule
-elseif type(require) == "function" then
-  local ok, Loader = pcall(require, "WhisperMessenger.Core.Loader")
-  if ok and Loader then
-    loadModule = Loader.LoadModule
-  end
-end
+local Loader = ns.Loader or require("WhisperMessenger.Core.Loader")
+local loadModule = Loader.LoadModule
 
 local Bootstrap = {}
 ns.Bootstrap = Bootstrap
