@@ -70,6 +70,7 @@ Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
 Model/MessageReactionProtocol.lua
+Model/MessageParts.lua
 Model/MessageReactions.lua
 Model/LivePresence.lua
 Model/MessageReplies.lua
