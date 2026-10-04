@@ -17,8 +17,7 @@ local LayoutBuilder = ns.MessengerWindowLayoutBuilder or require("WhisperMesseng
 local WindowScripts = ns.MessengerWindowWindowScripts or require("WhisperMessenger.UI.MessengerWindow.WindowScripts")
 local ContactsRuntime = ns.MessengerWindowContactsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ContactsRuntime")
 local TabSelectionMemory = ns.MessengerWindowTabSelectionMemory or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.TabSelectionMemory")
-local SettingsPanelsBootstrap = ns.MessengerWindowSettingsPanelsBootstrap
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanelsBootstrap")
+local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsRuntime")
 local SelectionSync = ns.MessengerWindowSelectionSync or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
 local MessageActions = ns.MessengerWindowMessageActions or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.MessageActions")
 local SelectionController = ns.MessengerWindowSelectionController
@@ -121,7 +120,7 @@ function MessengerWindow.Create(factory, options)
     "iconSettings",
     "patchNotesSettings",
   }
-  local settingsRuntime = SettingsPanelsBootstrap.Create(factory, {
+  local settingsRuntime = SettingsRuntime.Create(factory, {
     parent = optionsScrollContent,
     settingsConfig = settingsConfig,
     storeConfig = options.storeConfig or {},

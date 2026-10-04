@@ -325,7 +325,6 @@ UI/MessengerWindow/MessengerWindow/MessageActions.lua
 UI/MessengerWindow/MessengerWindow/ContactSearch.lua
 UI/MessengerWindow/MessengerWindow/SettingsPanels.lua
 UI/MessengerWindow/MessengerWindow/SettingsRuntime.lua
-UI/MessengerWindow/MessengerWindow/SettingsPanelsBootstrap.lua
 UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
 UI/MessengerWindow/MessengerWindow/ContactsRuntime.lua
 UI/MessengerWindow/MessengerWindow/SelectionController.lua
