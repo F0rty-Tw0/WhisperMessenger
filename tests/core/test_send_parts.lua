@@ -70,6 +70,32 @@ local function send(text, configure)
   return result, whispers, addonMessages, runtime, p
 end
 
+-- A runtime whose one Battle.net friend is Jaina; onWhisper sees each call.
+local function bnetRuntime(onWhisper)
+  local runtime = newRuntime({}, {})
+  runtime.bnetApi = {
+    GetNumFriends = function()
+      return 1
+    end,
+    GetFriendAccountInfo = function()
+      return { bnetAccountID = 77, battleTag = "Jaina#1234", isOnline = true, gameAccountInfo = { gameAccountID = 9 } }
+    end,
+    SendWhisper = onWhisper,
+  }
+  return runtime
+end
+
+local function bnetPayload(text)
+  return {
+    conversationKey = "me::BN::jaina",
+    displayName = "Jaina#1234",
+    battleTag = "Jaina#1234",
+    bnetAccountID = 77,
+    channel = "BN",
+    text = text,
+  }
+end
+
 return function()
   -- test_long_whisper_goes_out_as_four_whispers_in_order
   do
@@ -156,32 +182,50 @@ return function()
   -- test_bnet_failure_mid_loop_drops_every_part_entry
   do
     local calls = 0
-    local runtime = newRuntime({}, {})
-    runtime.bnetApi = {
-      GetNumFriends = function()
-        return 1
-      end,
-      GetFriendAccountInfo = function()
-        return { bnetAccountID = 77, battleTag = "Jaina#1234", isOnline = true, gameAccountInfo = { gameAccountID = 9 } }
-      end,
-      SendWhisper = function()
-        calls = calls + 1
-        if calls == 2 then
-          error("rejected")
-        end
-      end,
-    }
+    local runtime = bnetRuntime(function()
+      calls = calls + 1
+      if calls == 2 then
+        error("rejected")
+      end
+    end)
     -- 1999 bytes: three 799-byte Battle.net parts.
-    local result = SendHandler.HandleSend(runtime, {
-      conversationKey = "me::BN::jaina",
-      displayName = "Jaina#1234",
-      battleTag = "Jaina#1234",
-      bnetAccountID = 77,
-      channel = "BN",
-      text = words(200),
-    }, function() end)
+    local result = SendHandler.HandleSend(runtime, bnetPayload(words(200)), function() end)
     assert(result == false, "the send failed")
     assert(calls == 2, "loop stopped at the failing part, calls " .. calls)
     assert(next(runtime.pendingOutgoing) == nil, "every pending entry of that message dropped")
+  end
+
+  -- test_part_over_the_limit_sends_nothing_and_records_a_failure
+  do
+    -- A texture escape the splitter cannot cut: part 2 would be 404 bytes.
+    local text = "hi |T" .. string.rep("a", 400) .. "|t end"
+    local result, whispers, addonMessages, runtime = send(text)
+    assert(result == false, "the send failed")
+    assert(#whispers == 0 and #addonMessages == 0, "nothing went out, whispers " .. #whispers)
+    assert(next(runtime.pendingOutgoing) == nil, "no pending entry left")
+    local record = runtime.store.conversations[KEY].messages[1]
+    assert(record and record.delivery == "failed" and record.text == text, "whole text kept as failed")
+    assert(runtime.sendStatusByConversation[KEY].status == "Send failed", "send failed status")
+  end
+
+  -- test_lone_unit_over_the_limit_sends_nothing
+  do
+    local result, whispers = send("|Hitem:" .. string.rep("1:", 150) .. "|h[X]|h")
+    assert(result == false, "the send failed")
+    assert(#whispers == 0, "nothing went out, whispers " .. #whispers)
+  end
+
+  -- test_bnet_whisper_over_the_character_limit_goes_out_whole
+  do
+    local sent = {}
+    local runtime = bnetRuntime(function(bnetAccountID, text)
+      sent[#sent + 1] = { bnetAccountID = bnetAccountID, text = text }
+    end)
+    -- 499 bytes: past the 255-byte character whisper, within one Battle.net whisper.
+    local text = words(50)
+    local result = SendHandler.HandleSend(runtime, bnetPayload(text), function() end)
+    assert(result == true, "sent")
+    assert(#sent == 1, "one Battle.net whisper, got " .. #sent)
+    assert(sent[1].text == text and sent[1].bnetAccountID == 77, "whole text to Jaina")
   end
 end
