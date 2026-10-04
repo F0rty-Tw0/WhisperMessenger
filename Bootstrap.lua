@@ -94,11 +94,6 @@ function Bootstrap.Initialize(factory, options)
   if Theme.ResolvePreset then
     local resolvedKey = Theme.ResolvePreset(themePresetKey)
     themePresetKey = resolvedKey or themePresetKey
-  elseif Theme.SetPreset then
-    Theme.SetPreset(themePresetKey)
-    if Theme.GetPreset then
-      themePresetKey = Theme.GetPreset() or themePresetKey
-    end
   end
   accountState.settings.themePreset = themePresetKey
   if Theme.SetBubblePreset then
