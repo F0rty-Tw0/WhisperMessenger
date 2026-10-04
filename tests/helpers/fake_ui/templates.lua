@@ -18,10 +18,6 @@ function Templates.Apply(frame, template, createFrame)
         self.TitleContainer.TitleText:SetText(text)
       end
     end
-
-    function frame:GetTitle()
-      return self.title
-    end
   elseif template == "ButtonFrameTemplate" then
     -- Only the child keys probed on a live Retail client (2026-10-02). The
     -- live mixin methods (SetTitle, SetPortraitToAsset) were not probed, so
