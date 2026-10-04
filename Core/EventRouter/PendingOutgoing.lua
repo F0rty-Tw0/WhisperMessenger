@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 
 local PendingOutgoing = {}
 
@@ -176,7 +177,7 @@ function PendingOutgoing.Record(state, target, text, metadata)
 
   metadata = type(metadata) == "table" and metadata or {}
   state.pendingOutgoing[conversationKey] = state.pendingOutgoing[conversationKey] or {}
-  table.insert(state.pendingOutgoing[conversationKey], {
+  local entry = {
     text = text,
     createdAt = now,
     channel = target.channel or "WOW",
@@ -187,9 +188,29 @@ function PendingOutgoing.Record(state, target, text, metadata)
     wireId = metadata.wireId,
     reactionControl = metadata.reactionControl,
     replyTo = metadata.replyTo,
-  })
+    fullText = metadata.fullText,
+  }
+  MessageParts.ApplyMetadata(entry, metadata)
+  table.insert(state.pendingOutgoing[conversationKey], entry)
 
   return conversationKey
+end
+
+-- Drop every pending entry of one message (all parts of a long whisper).
+function PendingOutgoing.DropWire(state, wireId)
+  if wireId == nil or type(state.pendingOutgoing) ~= "table" then
+    return
+  end
+  for key, queue in pairs(state.pendingOutgoing) do
+    for index = #queue, 1, -1 do
+      if queue[index].wireId == wireId then
+        table.remove(queue, index)
+      end
+    end
+    if #queue == 0 then
+      state.pendingOutgoing[key] = nil
+    end
+  end
 end
 
 -- Resolve a CHAT_MSG_*_INFORM event against the pending queue.

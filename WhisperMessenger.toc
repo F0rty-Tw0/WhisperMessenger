@@ -102,6 +102,7 @@ Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
+Core/EventRouter/PartMerge.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
