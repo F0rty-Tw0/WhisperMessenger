@@ -580,6 +580,7 @@ return function()
     tab2.mouseOver = true
     tab2.scripts.OnClick()
 
+    assert(panel2.shown == true and panel1.shown == false, "WireButtons should wire tab clicks to show their panel")
     assert(tab2.bg ~= nil, "tab2 should have a .bg reference")
 
     local activeColor = Theme.COLORS.option_button_active or Theme.COLORS.bg_contact_selected or { 0.16, 0.18, 0.28, 0.80 }
