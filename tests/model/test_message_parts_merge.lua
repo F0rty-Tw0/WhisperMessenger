@@ -176,6 +176,18 @@ return function()
     assert(#c.messages == 2 and c.messages[1].text == "one twothree", "complete text unchanged")
   end
 
+  -- test_complete_sender_message_absorbs_nothing_more
+  do
+    local function echo(text, partIndex, join)
+      return part(text, partIndex, join, { direction = "out" })
+    end
+    local c = conversation({ echo("one", 1, nil), echo("two", 2, " "), echo("three", 3, "") }, 0)
+    MessageParts.Merge(c, "abc1", "out")
+    table.insert(c.messages, echo("extra", 2, " "))
+    assert(MessageParts.Merge(c, "abc1", "out") == false, "nothing merged")
+    assert(#c.messages == 2 and c.messages[1].text == "one twothree", "complete text unchanged: " .. c.messages[1].text)
+  end
+
   -- test_late_merge_keeps_unread_of_a_newer_message
   do
     local later = { kind = "user", direction = "in", text = "unrelated new message" }
