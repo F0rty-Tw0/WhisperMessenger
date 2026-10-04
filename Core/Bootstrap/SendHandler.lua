@@ -16,6 +16,7 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.MessageReplies")
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
+local SendParts = ns.BootstrapSendParts or require("WhisperMessenger.Core.Bootstrap.SendParts")
 
 local QUEST_LINK_ADDON_PREFIX = "WMQL"
 local REACTION_ADDON_PREFIX = "WMRX"
@@ -135,6 +136,81 @@ local function dispatchReactionMetadata(runtime, payload, addonPayload)
   return AddonComm.Send(runtime.chatApi, REACTION_ADDON_PREFIX, addonPayload, payload.target)
 end
 
+-- Sends one whisper with its Classic quest-link side message. A character
+-- whisper error is not caught (see below); returns false only when the
+-- Battle.net send fails.
+local function sendWhisper(runtime, payload, text)
+  if payload.channel == "BN" then
+    local callOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, text)
+
+    -- Classic Battle.net character whispers also strip the `(id)` from
+    -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
+    -- channel as the WoW whisper path, but via SendGameData to the resolved
+    -- game account. Receivers with our addon splice the link back in on
+    -- BN_CHAT_MSG_ADDON.
+    if callOk and FlavorCompat.isClassic and payload.gameAccountID ~= nil then
+      local encoded = QuestLinkExchange.Encode(text)
+      if encoded ~= nil then
+        AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
+        AddonComm.SendBNet(runtime.bnetApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.gameAccountID)
+      end
+    end
+    return callOk
+  end
+
+  -- SendChatMessage is hardware-event-protected; pcall breaks the
+  -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
+  -- and let WoW's error handler surface failures instead.
+  Gateway.SendCharacterWhisper(runtime.chatApi, payload.target, text)
+
+  -- Side channel: on Classic the chat protocol strips both the `|H`
+  -- envelope AND the `(id)` from `[Name (id)]` patterns, leaving the
+  -- recipient with just `[Name]`. We ship the id+name pairs over the
+  -- addon-message wire so a recipient running our addon can splice the
+  -- clickable link back in. Best-effort — failure here doesn't fail the
+  -- whisper itself.
+  if FlavorCompat.isClassic then
+    local encoded = QuestLinkExchange.Encode(text)
+    if encoded ~= nil and payload.target ~= nil and payload.target ~= "" then
+      AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
+      AddonComm.Send(runtime.chatApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.target)
+    end
+  end
+  return true
+end
+
+local function reportFailure(runtime, payload, refreshWindow)
+  appendUnsentOutgoing(runtime, payload, "failed", "Send failed")
+  runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send failed")
+  refreshWindow()
+  return false
+end
+
+local function finishSent(runtime, payload, wireId, refreshWindow)
+  -- Only known addon users get the reply link; the whisper stays plain text.
+  if LivePresence.HasPeer(runtime, payload.conversationKey) then
+    dispatchReactionMetadata(runtime, payload, MessageReplies.EncodeLink(wireId, payload.replyTo))
+  end
+  refreshWindow()
+  return true
+end
+
+local function sendLong(runtime, payload, parts, refreshWindow)
+  local sent = SendParts.Send(runtime, payload, parts, {
+    sendWhisper = function(text)
+      return sendWhisper(runtime, payload, text)
+    end,
+    dispatch = function(addonPayload)
+      dispatchReactionMetadata(runtime, payload, addonPayload)
+    end,
+    canonical = canonicalReactionText,
+  })
+  if not sent then
+    return reportFailure(runtime, payload, refreshWindow)
+  end
+  return finishSent(runtime, payload, payload.wireId, refreshWindow)
+end
+
 function SendHandler.HandleSend(runtime, payload, refreshWindow)
   local locked = lockReason(runtime)
   if locked then
@@ -166,6 +242,10 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     payload.text = MessageReactionProtocol.BuildFallback(operation.key, operation.operation, normalizedSource, reactionControl.hintSuffix)
   else
     payload.text = normalizeOutgoingText(payload, payload.text)
+    local parts = SendParts.Split(payload)
+    if parts then
+      return sendLong(runtime, payload, parts, refreshWindow)
+    end
   end
 
   local wireId
@@ -194,45 +274,7 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
     reactionControl = reactionControl,
     replyTo = payload.replyTo,
   })
-  local callOk
-  if payload.channel == "BN" then
-    callOk = pcall(Gateway.SendBattleNetWhisper, runtime.bnetApi, payload.bnetAccountID, payload.text)
-
-    -- Classic Battle.net character whispers also strip the `(id)` from
-    -- `[Name (id)]` and the `|H...|h` envelope. Ship the same paired side
-    -- channel as the WoW whisper path, but via SendGameData to the resolved
-    -- game account. Receivers with our addon splice the link back in on
-    -- BN_CHAT_MSG_ADDON.
-    if callOk and FlavorCompat.isClassic and payload.gameAccountID ~= nil then
-      local encoded = QuestLinkExchange.Encode(payload.text)
-      if encoded ~= nil then
-        AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
-        AddonComm.SendBNet(runtime.bnetApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.gameAccountID)
-      end
-    end
-  else
-    -- SendChatMessage is hardware-event-protected; pcall breaks the
-    -- propagation chain causing ADDON_ACTION_FORBIDDEN.  Call directly
-    -- and let WoW's error handler surface failures instead.
-    Gateway.SendCharacterWhisper(runtime.chatApi, payload.target, payload.text)
-    callOk = true
-
-    -- Side channel: on Classic the chat protocol strips both the `|H`
-    -- envelope AND the `(id)` from `[Name (id)]` patterns, leaving the
-    -- recipient with just `[Name]`. We ship the id+name pairs over the
-    -- addon-message wire so a recipient running our addon can splice the
-    -- clickable link back in. Best-effort — failure here doesn't fail the
-    -- whisper itself.
-    if FlavorCompat.isClassic then
-      local encoded = QuestLinkExchange.Encode(payload.text)
-      if encoded ~= nil and payload.target ~= nil and payload.target ~= "" then
-        AddonComm.RegisterPrefix(runtime.chatApi, QUEST_LINK_ADDON_PREFIX)
-        AddonComm.Send(runtime.chatApi, QUEST_LINK_ADDON_PREFIX, encoded, payload.target)
-      end
-    end
-  end
-
-  if not callOk then
+  if not sendWhisper(runtime, payload, payload.text) then
     local pending = runtime.pendingOutgoing[pendingConversationKey]
     if pending and #pending > 0 then
       table.remove(pending, #pending)
@@ -240,21 +282,11 @@ function SendHandler.HandleSend(runtime, payload, refreshWindow)
         runtime.pendingOutgoing[pendingConversationKey] = nil
       end
     end
-
-    appendUnsentOutgoing(runtime, payload, "failed", "Send failed")
-    runtime.sendStatusByConversation[payload.conversationKey] = Availability.FromStatus("Send failed")
-    refreshWindow()
-    return false
+    return reportFailure(runtime, payload, refreshWindow)
   end
 
   dispatchReactionMetadata(runtime, payload, reactionAddonPayload)
-  -- Only known addon users get the reply link; the whisper stays plain text.
-  if LivePresence.HasPeer(runtime, payload.conversationKey) then
-    dispatchReactionMetadata(runtime, payload, MessageReplies.EncodeLink(wireId, payload.replyTo))
-  end
-
-  refreshWindow()
-  return true
+  return finishSent(runtime, payload, wireId, refreshWindow)
 end
 
 ns.BootstrapSendHandler = SendHandler

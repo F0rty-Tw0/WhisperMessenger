@@ -321,6 +321,7 @@ Core/Bootstrap/EventBridge/GroupRouter.lua
 Core/Bootstrap/EventBridge.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
+Core/Bootstrap/SendParts.lua
 Core/Bootstrap/SendHandler.lua
 Core/Bootstrap/QueuedSends.lua
 Core/Bootstrap/LivePresenceSender.lua
