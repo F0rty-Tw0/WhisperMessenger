@@ -207,7 +207,7 @@ lua tests/run.lua tests/path/to/test_file.lua
 python scripts/run_test.py tests/path/to/test_file.lua
 
 # Run all tests
-for f in tests/**/*.lua; do lua tests/run.lua "$f"; done
+find tests -type f -name 'test_*.lua' | sort | while read -r f; do lua tests/run.lua "$f"; done
 ```
 
 Both lint and tests must pass before merging.
