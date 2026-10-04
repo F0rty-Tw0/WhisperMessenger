@@ -12,7 +12,6 @@ local GroupSendPolicy = {}
 
 local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::", "channel::" }
 
-local GROUP_REACTION_ADDON_PREFIX = "WMRX"
 local PENDING_MATCH_WINDOW_SECONDS = 15
 
 local function hasConversationKey(conversation)
@@ -56,16 +55,8 @@ local function prunePendingQueues(runtime, now)
   end
 end
 
-local supportedGroupChannels = {
-  PARTY = true,
-  RAID = true,
-  INSTANCE_CHAT = true,
-  GUILD = true,
-  OFFICER = true,
-}
-
 local function isSupportedGroupChannel(channel)
-  return supportedGroupChannels[channel] == true
+  return ChannelType.ADDON_GROUP_CHANNELS[channel] == true
 end
 
 local function createdAt(runtime)
@@ -236,9 +227,9 @@ function GroupSendPolicy.Create(options)
 
   local function sendAddon(payload, encoded)
     if type(addonComm.RegisterPrefix) == "function" then
-      addonComm.RegisterPrefix(runtime.chatApi, GROUP_REACTION_ADDON_PREFIX)
+      addonComm.RegisterPrefix(runtime.chatApi, AddonComm.PREFIX_REACTION)
     end
-    return addonComm.SendGroup(runtime.chatApi, GROUP_REACTION_ADDON_PREFIX, encoded, payload.channel)
+    return addonComm.SendGroup(runtime.chatApi, AddonComm.PREFIX_REACTION, encoded, payload.channel)
   end
 
   local function sendPayload(payload)

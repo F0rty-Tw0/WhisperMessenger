@@ -11,19 +11,8 @@ local GroupHeaderViewModel = {}
 
 -- Only explicitly-known Stage-4 group-ingest channel values trigger the
 -- group-header layout. Legacy values ("WOW", "BN", nil) render as whispers.
-local KNOWN_GROUP_CHANNELS = {
-  [ChannelType.BN_CONVERSATION] = true,
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-  [ChannelType.CHANNEL] = true,
-  [ChannelType.COMMUNITY] = true,
-}
-
 local function isGroupChannel(channel)
-  return KNOWN_GROUP_CHANNELS[channel] == true
+  return ChannelType.GROUP_CHANNELS[channel] == true
 end
 
 -- Build constructs a view-model table describing how the ConversationPane

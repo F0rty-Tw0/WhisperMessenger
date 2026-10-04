@@ -64,14 +64,6 @@ local REACTION_CHANNELS = {
   OFFICER = ChannelType.OFFICER,
 }
 
-local SUPPORTED_REACTION_CHANNELS = {
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-}
-
 local function requiresSessionGuid(channel)
   return GROUP_CONVERSATION_KEY_PREFIX[channel] ~= nil
 end
@@ -99,7 +91,7 @@ local function buildGroupSessionKey(state, channel)
 end
 
 local function resolveGroupConversation(state, channel)
-  if not SUPPORTED_REACTION_CHANNELS[channel] then
+  if not ChannelType.ADDON_GROUP_CHANNELS[channel] then
     return nil
   end
   local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
@@ -363,7 +355,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
   local isLeader = LEADER_EVENTS[eventName] == true and true or false
   local conv
   local resultMeta
-  if SUPPORTED_REACTION_CHANNELS[channel] then
+  if ChannelType.ADDON_GROUP_CHANNELS[channel] then
     conv, resultMeta = appendGroupMessage(state, conversationKey, channel, eventName, payload, isLeader, groupCategory, partyGUID)
   else
     conv, resultMeta = appendAndStamp(state, conversationKey, channel, eventName, payload, isLeader)

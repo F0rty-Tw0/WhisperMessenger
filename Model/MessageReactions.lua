@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 
 local MessageReactions = {}
@@ -279,13 +280,8 @@ function MessageReactions.IsEligible(message, channelOverride)
   if channel == nil then
     channel = channelOverride
   end
-  local eligibleChannel = channel == "WOW"
-    or channel == "BN"
-    or channel == "PARTY"
-    or channel == "RAID"
-    or channel == "INSTANCE_CHAT"
-    or channel == "GUILD"
-    or channel == "OFFICER"
+  -- Whispers (legacy "WOW"/"BN" keys) plus the addon-message group channels.
+  local eligibleChannel = channel == "WOW" or channel == "BN" or ChannelType.ADDON_GROUP_CHANNELS[channel] == true
   return type(message) == "table"
     and eligibleChannel
     and (channelOverride == nil or channelOverride == channel)

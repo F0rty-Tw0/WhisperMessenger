@@ -274,4 +274,8 @@ return function()
       assert(calls == (case.accepted and 1 or 2), case.label .. " cache behavior mismatch")
     end
   end
+
+  -- Addon-message prefixes are the wire names older versions already speak.
+  assert(AddonComm.PREFIX_REACTION == "WMRX", "reaction prefix must stay WMRX")
+  assert(AddonComm.PREFIX_QUEST_LINK == "WMQL", "quest-link prefix must stay WMQL")
 end

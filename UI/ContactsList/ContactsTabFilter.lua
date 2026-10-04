@@ -10,19 +10,8 @@ local ContactsTabFilter = {}
 -- Only explicitly-known Stage-4 group-ingest channel values are treated as
 -- group channels for filter purposes. Legacy values ("WOW", "BN", nil) are
 -- treated as whispers so the existing whisper pipeline is unaffected.
-local KNOWN_GROUP_CHANNELS = {
-  [ChannelType.BN_CONVERSATION] = true,
-  [ChannelType.PARTY] = true,
-  [ChannelType.RAID] = true,
-  [ChannelType.INSTANCE_CHAT] = true,
-  [ChannelType.GUILD] = true,
-  [ChannelType.OFFICER] = true,
-  [ChannelType.CHANNEL] = true,
-  [ChannelType.COMMUNITY] = true,
-}
-
 local function isGroupChannel(channel)
-  return KNOWN_GROUP_CHANNELS[channel] == true
+  return ChannelType.GROUP_CHANNELS[channel] == true
 end
 
 -- IsGroupChannel exposes the predicate for callers that need to classify a

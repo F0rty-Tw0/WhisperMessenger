@@ -22,16 +22,11 @@ local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageP
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 
-local QUEST_LINK_ADDON_PREFIX = "WMQL"
-local REACTION_ADDON_PREFIX = "WMRX"
+local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
+local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
-local GROUP_REACTION_CHANNELS = {
-  PARTY = true,
-  RAID = true,
-  INSTANCE_CHAT = true,
-  GUILD = true,
-  OFFICER = true,
-}
+local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
+local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
 
 -- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
 local function getQuestLinkClassic()
@@ -325,7 +320,7 @@ local function handleUnlockedEvent(state, eventName, payload)
     if payload.prefix == REACTION_ADDON_PREFIX and payload.channel == "WHISPER" then
       return handleReactionMetadata(state, payload, false)
     end
-    if payload.prefix == REACTION_ADDON_PREFIX and GROUP_REACTION_CHANNELS[payload.channel] then
+    if payload.prefix == REACTION_ADDON_PREFIX and ChannelType.ADDON_GROUP_CHANNELS[payload.channel] then
       return GroupChatIngest.HandleAddonEvent(state, payload)
     end
     if payload.prefix == QUEST_LINK_ADDON_PREFIX and payload.channel == "WHISPER" and type(payload.playerName) == "string" then

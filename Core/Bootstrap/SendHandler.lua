@@ -18,8 +18,8 @@ local MessageReplies = ns.MessageReplies or require("WhisperMessenger.Model.Mess
 local LivePresence = ns.LivePresence or require("WhisperMessenger.Model.LivePresence")
 local SendParts = ns.BootstrapSendParts or require("WhisperMessenger.Core.Bootstrap.SendParts")
 
-local QUEST_LINK_ADDON_PREFIX = "WMQL"
-local REACTION_ADDON_PREFIX = "WMRX"
+local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
+local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
 
 local SendHandler = {}
 
