@@ -22,6 +22,9 @@ function SelectionSync.SyncComposerSelectedContact(target, selectedContact, comp
   if nextKey == previousKey or composer == nil or composer.loadDraft == nil then
     return
   end
+  if composer.setMaxBytes ~= nil then
+    composer.setMaxBytes(target.channel)
+  end
   composer.loadDraft(nextKey ~= nil and getDraft ~= nil and getDraft(nextKey) or nil)
 end
 
