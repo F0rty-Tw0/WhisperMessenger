@@ -132,7 +132,7 @@ function ChannelChatIngest.HandleEvent(state, payload)
     return true, nil
   end
 
-  local key = Identity.BuildConversationKey(state.localProfileId, "CHANNEL::" .. slug)
+  local key = Identity.BuildConversationKey(state.localProfileId, ChannelKey.ContactKey(payload.zoneChannelID, payload.channelBaseName))
   local sentAt = (state.now and state.now()) or 0
   local conversation = state.store.conversations[key]
   PerfCounters.Increment("channelLines")

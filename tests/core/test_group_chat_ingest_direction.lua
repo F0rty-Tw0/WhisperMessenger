@@ -31,4 +31,20 @@ return function()
     assert(Direction.IsLocalSender("CHAT_MSG_BN_CONVERSATION", nil, 77, bnState) == true, "own BNet account is local")
     assert(Direction.IsLocalSender("CHAT_MSG_BN_CONVERSATION", nil, 78, bnState) == false, "another account is not")
   end
+
+  -- test_compare_guids_swallows_secret_string_throws
+  do
+    local throwingMt = {
+      __eq = function()
+        error("attempt to compare field 'guid' (a secret string value tainted by 'WhisperMessenger')")
+      end,
+    }
+    local secret = setmetatable({}, throwingMt)
+    local mine = setmetatable({}, throwingMt)
+    assert(Direction.CompareGuids(secret, mine) == false, "CompareGuids must swallow secret-string throws and return false")
+    assert(Direction.CompareGuids(nil, "x") == false, "nil guid yields false")
+    assert(Direction.CompareGuids("x", nil) == false, "nil localGuid yields false")
+    assert(Direction.CompareGuids("x", "x") == true, "matching plain guids yields true")
+    assert(Direction.CompareGuids("x", "y") == false, "differing plain guids yield false")
+  end
 end

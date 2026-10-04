@@ -387,8 +387,7 @@ function GroupChatIngest.HandleEvent(state, eventName, payload)
   return true, conv, resultMeta
 end
 
--- Exposed for unit tests that simulate 12.0 "secret string" taint throws.
-GroupChatIngest._compareGuids = Direction.CompareGuids
+-- Override seam for tests that simulate 12.0 "secret string" taint throws.
 GroupChatIngest._isSecretString = SecretString.IsSecretString
 
 ns.GroupChatIngest = GroupChatIngest

@@ -124,8 +124,8 @@ return function()
     ScrollView.RefreshMetrics(view, 500)
     ScrollView.SetVerticalScroll(view, 50)
     assert(view.scrollBar.value == 50, "HUD: slider follows the scroll offset, got " .. tostring(view.scrollBar.value))
-    ScrollView.ScrollBy(view, 10)
-    assert(view.scrollBar.value == 60, "HUD: scroll by moves the slider, got " .. tostring(view.scrollBar.value))
+    view.scrollFrame.scripts.OnMouseWheel(view.scrollFrame, -1)
+    assert(view.scrollBar.value == 50 + view.step, "HUD: the mouse wheel moves the slider, got " .. tostring(view.scrollBar.value))
     assert(view.scrollBar.shown ~= false, "HUD: slider shows on overflow")
   end
 

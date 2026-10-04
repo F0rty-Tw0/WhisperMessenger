@@ -1,4 +1,5 @@
 local loaded, Protocol = pcall(require, "WhisperMessenger.Model.MessageReactionProtocol")
+local TextLimits = require("WhisperMessenger.Util.TextLimits")
 
 local function isValidUtf8(text)
   local index = 1
@@ -115,7 +116,7 @@ return function()
   do
     local source = string.rep("é🙂", 100)
     local fallback = Protocol.BuildFallback("question", "set", source)
-    assert(#fallback <= Protocol.MAX_WHISPER_BYTES, "fallback should stay within normal whisper cap")
+    assert(#fallback <= TextLimits.MESSAGE_MAX_BYTES, "fallback should stay within normal whisper cap")
     assert(isValidUtf8(fallback), "fallback truncation should preserve valid UTF-8")
     assert(string.find(fallback, "…”", 1, true) ~= nil, "truncated fallback should end with ellipsis and closing quote")
   end
@@ -142,7 +143,7 @@ return function()
       local fallback = Protocol.BuildFallback(key, "set", source)
       local parsed = Protocol.ParseFallback(fallback)
       assert(parsed and parsed.key == key and parsed.sourceExcerpt == source, "added key fallback should remain readable: " .. key)
-      assert(#fallback <= Protocol.MAX_WHISPER_BYTES, "added key fallback should fit whisper cap: " .. key)
+      assert(#fallback <= TextLimits.MESSAGE_MAX_BYTES, "added key fallback should fit whisper cap: " .. key)
 
       local encoded = Protocol.EncodeReaction("set", key, "wire9", source, fallback)
       assert(type(encoded) == "string" and #encoded <= Protocol.MAX_PAYLOAD_BYTES, "added key payload should fit addon cap: " .. key)

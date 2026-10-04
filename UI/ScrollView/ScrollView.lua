@@ -14,7 +14,6 @@ ScrollView.RefreshMetrics = Metrics.RefreshMetrics
 ScrollView.Resize = Metrics.Resize
 ScrollView.Sync = Navigation.Sync
 ScrollView.SetVerticalScroll = Navigation.SetVerticalScroll
-ScrollView.ScrollBy = Navigation.ScrollBy
 ScrollView.Create = Factory.Create
 
 ns.ScrollView = ScrollView
