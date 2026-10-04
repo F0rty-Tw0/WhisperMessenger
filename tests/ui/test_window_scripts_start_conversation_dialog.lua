@@ -113,11 +113,19 @@ return function()
     assert(showOk == true, "expected OnShow to run safely")
     assert(fakePopup._wmManualCopyStyleActive == true, "expected style to activate on show")
     assert(fakePopup.editBox.text == "Thrall", "expected OnShow to prime editbox text")
+    assert(fakePopup.editBox.width == 392, "expected OnShow to stretch editbox to near full popup width")
+    assert(fakePopup.button1._wmManualCopyStyleActive == true, "expected start button style to activate")
+    assert(fakePopup.button2._wmManualCopyStyleActive == true, "expected cancel button style to activate")
+    assert(fakePopup.button1._normalTexture == "", "expected style to override start button normal texture")
 
     local hideOk = pcall(dialog.OnHide, fakePopup)
     assert(hideOk == true, "expected OnHide to run safely")
     assert(fakePopup._wmManualCopyStyleActive == false, "expected style to restore on hide")
     assert(fakePopup.editBox.text == "", "expected OnHide to clear editbox text")
+    assert(fakePopup.button1._wmManualCopyStyleActive == false, "expected start button style to restore")
+    assert(fakePopup.button2._wmManualCopyStyleActive == false, "expected cancel button style to restore")
+    assert(fakePopup.button1._normalTexture == "orig-normal-start", "expected start button normal texture to restore exactly")
+    assert(fakePopup.button2._normalTexture == "orig-normal-cancel", "expected cancel button normal texture to restore exactly")
     _G.StaticPopupDialogs = nil
   end
 end

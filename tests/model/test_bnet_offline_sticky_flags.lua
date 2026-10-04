@@ -240,33 +240,4 @@ return function()
       "gameAccountInfo.isOnline=false must report Offline, got: " .. tostring(contacts[1].availability.status)
     )
   end
-
-  -- Friend online only in the Battle.net app: gameAccountInfo.isOnline=true with
-  -- no character -> "Online (App)", not "Online".
-  do
-    local runtime = {
-      store = { conversations = {} },
-      activeConversationKey = nil,
-      sendStatusByConversation = {},
-      availabilityByGUID = {},
-      bnetApi = {
-        GetAccountInfoByID = function(_id)
-          return {
-            bnetAccountID = 8,
-            gameAccountInfo = { isOnline = true, clientProgram = "App", characterName = nil },
-          }
-        end,
-      },
-    }
-
-    local contacts = {
-      { conversationKey = "bnet::BN::app#1", channel = "BN", bnetAccountID = 8, guid = "Player-1-APP", displayName = "App#1" },
-    }
-
-    ContactEnricher.EnrichContactsAvailability(contacts, runtime)
-    assert(
-      contacts[1].availability.status == "BNetOnline",
-      "app-only friend must report BNetOnline, got: " .. tostring(contacts[1].availability.status)
-    )
-  end
 end

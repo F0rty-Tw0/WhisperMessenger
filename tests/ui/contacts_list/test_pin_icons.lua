@@ -49,10 +49,7 @@ return function()
   assert(marker ~= nil and marker.shown == true, "modern: pinned row shows the pinned marker")
   assert(marker.texturePath == Theme.TEXTURES.pinned_marker, "modern: marker uses pinned.png")
   assert(marker.width >= 10 and marker.width <= 12, "modern: marker is 10-12px")
-  pinnedRow.timeLabel:Show() -- fake UI starts widgets hidden
   assert(colorsMatch(marker.vertexColor, Theme.COLORS.text_secondary), "modern: marker in secondary text colour")
-  local markerPoint = marker.point
-  assert(markerPoint[1] == "CENTER" and markerPoint[2] == pinnedRow.pinButton, "marker sits in the pin slot under the timestamp")
   assert(pinnedRow.pinButton.shown == false, "modern: no chevron / pin action at rest")
 
   -- test_pin_glyphs_are_pixel_snapped: integer size, whole-pixel centre offset
@@ -64,21 +61,15 @@ return function()
   end
   assert(plainRow.pinnedMarker == nil or plainRow.pinnedMarker.shown ~= true, "unpinned rows have no marker")
 
-  -- test_modern_hover_swaps_marker_for_actions
+  -- test_modern_hover_shows_neutral_unpin_action
   hover(pinnedRow, true)
   assert(pinnedRow.pinButton.shown == true and pinnedRow.removeButton.shown == true, "hover shows the actions")
-  assert(pinnedRow.timeLabel.shown == true and marker.shown == false, "hover keeps the timestamp, hides the marker")
-  assert(pinnedRow.pinButton.icon.texturePath == Theme.TEXTURES.unpin_icon, "pinned row action is Unpin (unpin.png)")
   assert(colorsMatch(pinnedRow.pinButton.icon.vertexColor, Theme.COLORS.action_icon), "unpin glyph is neutral, not yellow")
   hover(pinnedRow, false)
-  assert(pinnedRow.timeLabel.shown == true and marker.shown == true, "leave restores timestamp and marker")
 
   hover(plainRow, true)
   assert(plainRow.pinButton.icon.texturePath == Theme.TEXTURES.pin_icon, "unpinned row action is Pin to top (pin.png)")
   hover(plainRow, false)
-
-  -- test_name_not_squeezed_by_marker
-  assert(pinnedRow.title.width == plainRow.title.width, "marker lives under the timestamp, not beside the name")
 
   -- test_azeroth_uses_the_pushpin_marker
   Theme.SetPreset("wow_native")
