@@ -9,7 +9,7 @@ local DisplayName = {}
 
 local hideBattleTagNumbers = true
 -- Incoming sender names take the sender's class colour (opt-in).
-local classColorSenderNames = false
+local classColorSenderNames = true
 -- Lowercased name parts that two different Battle.net friends share.
 local clashingNames = {}
 -- Bumped whenever Format's output could change, so cached renders repaint.
