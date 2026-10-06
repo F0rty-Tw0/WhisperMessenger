@@ -7,6 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
 local createRoundedBackground = UIHelpers.createRoundedBackground
 local setFontObject = UIHelpers.setFontObject
@@ -253,6 +255,14 @@ function IncomingPreview.Create(factory, frame, options)
     end)
   end
 
+  local function paintSenderLabel(classTag)
+    if DisplayName.ClassColorSenderNames() then
+      applyClassColor(previewSenderLabel, classTag, theme.COLORS.text_primary)
+    else
+      setTextColor(previewSenderLabel, theme.COLORS.text_primary)
+    end
+  end
+
   local function setIncomingPreview(senderName, messageText, classTag)
     local hasMessage = type(messageText) == "string" and messageText ~= ""
     if not hasMessage then
@@ -263,6 +273,7 @@ function IncomingPreview.Create(factory, frame, options)
     local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
 
     previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
+    paintSenderLabel(classTag)
     previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
 
     local classIconPath = theme.ClassIcon(classTag)
@@ -290,7 +301,7 @@ function IncomingPreview.Create(factory, frame, options)
     if previewBackground and previewBackground.setColor then
       previewBackground.setColor(theme.COLORS.bg_secondary or theme.COLORS.bg_primary)
     end
-    setTextColor(previewSenderLabel, theme.COLORS.text_primary)
+    paintSenderLabel(lastPreviewClassTag)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
     setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
   end
