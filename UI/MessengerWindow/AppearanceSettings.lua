@@ -32,7 +32,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   windowScale = 1.0,
-  classColorSenderNames = false,
+  classColorSenderNames = true,
 }
 
 local function pctFormat(v)
@@ -182,7 +182,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       factory,
       frame,
       text("Class-colored names"),
-      config.classColorSenderNames == true,
+      config.classColorSenderNames ~= false,
       SettingsControls.ToggleColors(Theme),
       { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 },
       function(v)

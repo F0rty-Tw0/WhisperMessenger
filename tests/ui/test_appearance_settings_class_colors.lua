@@ -29,18 +29,18 @@ return function()
   local parent = factory.CreateFrame("Frame", nil, nil)
   parent:SetSize(600, 500)
 
-  -- test_toggle_is_off_by_default
+  -- test_toggle_is_on_by_default
 
   do
     local settings = create(factory, parent, {}, {})
-    assert(not FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "class colours are off by default")
+    assert(FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "class colours are on by default")
   end
 
-  -- test_toggle_reflects_saved_on_choice
+  -- test_toggle_reflects_saved_off_choice
 
   do
-    local settings = create(factory, parent, { classColorSenderNames = true }, {})
-    assert(FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "a saved on choice shows the toggle on")
+    local settings = create(factory, parent, { classColorSenderNames = false }, {})
+    assert(not FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "a saved off choice shows the toggle off")
   end
 
   -- test_click_reports_the_new_value
@@ -50,18 +50,18 @@ return function()
     local settings = create(factory, parent, {}, changes)
     FindUI.click(FindUI.toggle(settings.frame, LABEL))
     local change = lastChange(changes, "classColorSenderNames")
-    assert(change ~= nil and change.value == true, "turning the toggle on reports true")
+    assert(change ~= nil and change.value == false, "turning the toggle off reports false")
   end
 
-  -- test_reset_turns_the_toggle_back_off
+  -- test_reset_turns_the_toggle_back_on
 
   do
     local changes = {}
-    local settings = create(factory, parent, { classColorSenderNames = true }, changes)
+    local settings = create(factory, parent, { classColorSenderNames = false }, changes)
     FindUI.click(FindUI.byLabel(settings.frame, "Reset to Defaults"))
     local change = lastChange(changes, "classColorSenderNames")
-    assert(change ~= nil and change.value == false, "reset restores the default (off)")
-    assert(not FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "reset flips the toggle back off")
+    assert(change ~= nil and change.value == true, "reset restores the default (on)")
+    assert(FindUI.isToggleOn(FindUI.toggle(settings.frame, LABEL)), "reset flips the toggle back on")
   end
 
   -- test_language_change_relabels_the_toggle
