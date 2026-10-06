@@ -13,6 +13,7 @@ return function()
   do
     assert(DisplayNameSetting.Apply(stub, "hideBattleTagNumbers", nil) == true, "the BattleTag key is handled")
     assert(last.hideBattleTagNumbers == true, "an unset BattleTag choice hides the numbers")
+    assert(last.classColorSenderNames == nil, "the BattleTag key leaves the class colour choice alone")
   end
 
   -- test_class_color_key_defaults_to_off
@@ -20,6 +21,7 @@ return function()
   do
     assert(DisplayNameSetting.Apply(stub, "classColorSenderNames", nil) == true, "the class colour key is handled")
     assert(last.classColorSenderNames == false, "an unset class colour choice stays off")
+    assert(last.hideBattleTagNumbers == nil, "the class colour key leaves the BattleTag choice alone")
   end
 
   -- test_other_keys_are_ignored
