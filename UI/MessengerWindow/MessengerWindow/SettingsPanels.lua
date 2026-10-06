@@ -101,6 +101,7 @@ function SettingsPanels.Create(factory, options)
         windowOpacityInactive = settingsConfig.windowOpacityInactive,
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
+        classColorSenderNames = settingsConfig.classColorSenderNames,
       },
     },
     {
