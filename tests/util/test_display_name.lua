@@ -109,4 +109,39 @@ return function()
     DisplayName.SetBattleTags({ "Mike#1234" })
     assert(DisplayName.Revision() > afterToggle, "a changed clash set bumps the revision")
   end
+
+  -- test_class_color_sender_names_defaults_off
+
+  do
+    assert(DisplayName.ClassColorSenderNames() == false, "class-coloured sender names are off by default")
+  end
+
+  -- test_configure_class_color_flips_flag_and_bumps_revision
+
+  do
+    local r = DisplayName.Revision()
+    DisplayName.Configure({ classColorSenderNames = true })
+    assert(DisplayName.ClassColorSenderNames() == true, "configuring the flag on turns it on")
+    assert(DisplayName.Revision() == r + 1, "flipping the class-colour flag bumps the revision once")
+    DisplayName.Configure({ classColorSenderNames = false })
+  end
+
+  -- test_configure_class_color_alone_keeps_battletag_rule
+
+  do
+    DisplayName.Configure({ hideBattleTagNumbers = true })
+    DisplayName.Configure({ classColorSenderNames = true })
+    assert(DisplayName.Format("Arthas#1234") == "Arthas", "configuring only the class-colour flag keeps BattleTag numbers hidden")
+    DisplayName.Configure({ classColorSenderNames = false })
+  end
+
+  -- test_configure_battletag_alone_keeps_class_color_flag
+
+  do
+    DisplayName.Configure({ classColorSenderNames = true })
+    DisplayName.Configure({ hideBattleTagNumbers = false })
+    assert(DisplayName.ClassColorSenderNames() == true, "configuring only the BattleTag option keeps the class-colour flag")
+    DisplayName.Configure({ hideBattleTagNumbers = true })
+    DisplayName.Configure({ classColorSenderNames = false })
+  end
 end
