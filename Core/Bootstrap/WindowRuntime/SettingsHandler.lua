@@ -9,6 +9,7 @@ local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
+local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -140,9 +141,7 @@ function SettingsHandler.Create(options)
     if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
       timeFormat.Configure({ [key] = persistedValue })
     end
-    if key == "hideBattleTagNumbers" and displayName.Configure then
-      displayName.Configure({ hideBattleTagNumbers = persistedValue ~= false })
-    end
+    DisplayNameSetting.Apply(displayName, key, persistedValue)
     if key == "interfaceLanguage" then
       if localization.Configure then
         localization.Configure({ language = persistedValue })
@@ -209,6 +208,7 @@ function SettingsHandler.Create(options)
       (
         key == "hideMessagePreview"
         or key == "hideBattleTagNumbers"
+        or key == "classColorSenderNames"
         or key == "showWidgetMessagePreview"
         or key == "fontFamily"
         or key == "fontSize"
