@@ -58,7 +58,10 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- when individual messages lack classTag (e.g., older BNet messages)
   view.transcript.fallbackClassTag = selectedContact and selectedContact.classTag or nil
   view.transcript.unreadDividerMessage = selectedContact and selectedContact.unreadDividerMessage or nil
-  view.transcript.seenReceipts = selectedContact ~= nil and (selectedContact.channel == "WOW" or selectedContact.channel == "BN")
+  local isWhisper = selectedContact ~= nil and (selectedContact.channel == "WOW" or selectedContact.channel == "BN")
+  view.transcript.seenReceipts = isWhisper
+  -- Group/channel contacts carry the last sender's class, so only whispers lend it to names.
+  view.transcript.senderFallbackClassTag = isWhisper and selectedContact.classTag or nil
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""

@@ -148,6 +148,9 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     DeliveryStatus.Hide(frame)
     local displayName = DisplayName.Format(message.playerName or message.senderDisplayName) or ""
     nameFS:SetText(displayName)
+    if DisplayName.ClassColorSenderNames() then
+      UIHelpers.applyClassColor(nameFS, message.classTag or options.senderFallbackClassTag, Theme.COLORS.text_secondary)
+    end
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
 
     -- Incoming labels never show the cross-char suffix; hide it if this

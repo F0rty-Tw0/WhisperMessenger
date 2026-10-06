@@ -229,17 +229,20 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   local state, anyChanged = TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
   state.options = options
   local fallbackClassTag = options and options.fallbackClassTag or nil
+  local senderFallbackClassTag = options and options.senderFallbackClassTag or nil
   local displayNameRevision = DisplayName.Revision()
-  -- Bubble geometry is keyed off the row diff, but the fallback class tag and
+  -- Bubble geometry is keyed off the row diff, but the fallback class tags and
   -- the display-name rules only change sender names, so they are tracked separately.
   local force = (renderOptions and renderOptions.force == true)
     or not hadRows
     or forceSnapToEnd
     or anyChanged
     or state.fallbackClassTag ~= fallbackClassTag
+    or state.senderFallbackClassTag ~= senderFallbackClassTag
     or state.displayNameRevision ~= displayNameRevision
     or state.chatLocked ~= (options and options.chatLocked)
   state.fallbackClassTag = fallbackClassTag
+  state.senderFallbackClassTag = senderFallbackClassTag
   state.displayNameRevision = displayNameRevision
   state.chatLocked = options and options.chatLocked
 

@@ -8,6 +8,8 @@ end
 local DisplayName = {}
 
 local hideBattleTagNumbers = true
+-- Incoming sender names take the sender's class colour (opt-in).
+local classColorSenderNames = false
 -- Lowercased name parts that two different Battle.net friends share.
 local clashingNames = {}
 -- Bumped whenever Format's output could change, so cached renders repaint.
@@ -18,13 +20,21 @@ local function battleTagName(name)
 end
 
 function DisplayName.Configure(opts)
-  if type(opts) ~= "table" or type(opts.hideBattleTagNumbers) ~= "boolean" then
+  if type(opts) ~= "table" then
     return
   end
-  if opts.hideBattleTagNumbers ~= hideBattleTagNumbers then
+  if type(opts.hideBattleTagNumbers) == "boolean" and opts.hideBattleTagNumbers ~= hideBattleTagNumbers then
     hideBattleTagNumbers = opts.hideBattleTagNumbers
     revision = revision + 1
   end
+  if type(opts.classColorSenderNames) == "boolean" and opts.classColorSenderNames ~= classColorSenderNames then
+    classColorSenderNames = opts.classColorSenderNames
+    revision = revision + 1
+  end
+end
+
+function DisplayName.ClassColorSenderNames()
+  return classColorSenderNames
 end
 
 -- battleTags: every stored Battle.net friend's BattleTag. A name part two

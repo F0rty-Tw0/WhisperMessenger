@@ -377,6 +377,7 @@ Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
+Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua

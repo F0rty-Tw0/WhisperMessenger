@@ -32,6 +32,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   windowScale = 1.0,
+  classColorSenderNames = false,
 }
 
 local function pctFormat(v)
@@ -176,13 +177,30 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, gap)
 
+  local classColorToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Class-colored names"),
+      config.classColorSenderNames == true,
+      SettingsControls.ToggleColors(Theme),
+      { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 },
+      function(v)
+        onChange("classColorSenderNames", v)
+      end,
+      { text("Class-colored names"), text("Shows player names above messages in their class color.") }
+    ),
+    { type = "toggle", key = "classColorSenderNames", default = DEFAULTS.classColorSenderNames }
+  )
+  classColorToggle.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
+
   local opacityInactiveRow = panel:bind(
     slider(text("Window Opacity (Inactive)"), 0.3, 1.0, 0.05, config.windowOpacityInactive or DEFAULTS.windowOpacityInactive, pctFormat, function(v)
       onChange("windowOpacityInactive", v)
     end),
     { type = "slider", key = "windowOpacityInactive", default = DEFAULTS.windowOpacityInactive }
   )
-  opacityInactiveRow.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
+  opacityInactiveRow.row:SetPoint("TOPLEFT", classColorToggle.row, "BOTTOMLEFT", 0, gap)
 
   local opacityActiveRow = panel:bind(
     slider(text("Window Opacity (Active)"), 0.5, 1.0, 0.05, config.windowOpacityActive or DEFAULTS.windowOpacityActive, pctFormat, function(v)
@@ -237,6 +255,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     fontColorSelector.setOptionsList(Options.BuildFontColorOptions())
     bubbleColorSelector.label:SetText(text("Bubble Colors"))
     bubbleColorSelector.setOptionsList(Options.BuildBubbleColorOptions())
+    classColorToggle.label:SetText(text("Class-colored names"))
     opacityInactiveRow.label:SetText(text("Window Opacity (Inactive)"))
     opacityActiveRow.label:SetText(text("Window Opacity (Active)"))
     resetButton.label:SetText(text("Reset to Defaults"))
