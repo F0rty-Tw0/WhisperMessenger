@@ -40,9 +40,9 @@ return function()
   assert(type(fresh.settings) == "table" and type(fresh.settings.enabledChannels) == "table", "old saved variables get an empty channel picker")
   assert(next(fresh.settings.enabledChannels) == nil, "no channel is a chat until the player turns it on")
 
-  -- test_hide_channels_from_default_chat_defaults_on
-  assert(fresh.settings.hideChannelsFromDefaultChat == true, "channel chats hide their lines from game chat by default")
-  local optedOut = { conversations = {}, settings = { hideChannelsFromDefaultChat = false } }
-  RuntimeFactory.CreateRuntimeState(optedOut, { activeConversationKey = nil }, "testplayer", {})
-  assert(optedOut.settings.hideChannelsFromDefaultChat == false, "a saved choice to keep channel lines stays")
+  -- test_hide_channels_from_default_chat_is_opt_in
+  assert(fresh.settings.hideChannelsFromDefaultChat ~= true, "channel lines stay in game chat until the player opts in")
+  local optedIn = { conversations = {}, settings = { hideChannelsFromDefaultChat = true } }
+  RuntimeFactory.CreateRuntimeState(optedIn, { activeConversationKey = nil }, "testplayer", {})
+  assert(optedIn.settings.hideChannelsFromDefaultChat == true, "a saved choice to hide channel lines stays")
 end

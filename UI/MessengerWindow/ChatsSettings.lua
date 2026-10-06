@@ -21,7 +21,7 @@ local TIP = "To hide a channel from the game's chat, right-click the chat tab, o
 ChatsSettings.DEFAULTS = {
   showGroupChats = true,
   collapseDuplicates = true,
-  hideChannelsFromDefaultChat = true,
+  hideChannelsFromDefaultChat = false,
 }
 
 local function text(key)
@@ -56,7 +56,7 @@ local function buildToggleSpecs(config, onChange, withHiding)
     }),
   }
   if withHiding then
-    specs[#specs + 1] = spec("hideChannelsFromDefaultChat", "Hide channels from default chat", config.hideChannelsFromDefaultChat ~= false, {
+    specs[#specs + 1] = spec("hideChannelsFromDefaultChat", "Hide channels from default chat", config.hideChannelsFromDefaultChat == true, {
       text("Hide channels from default chat"),
     })
   end

@@ -61,6 +61,14 @@ return function()
     assert(channelLine(filters, { text = "lfm", player = "Friend", lineID = 2 }) == false, "hiding off keeps the line")
   end
 
+  -- test_unset_hide_channels_keeps_channel_lines
+  do
+    local runtime = makeRuntime({ enabledChannels = { trade = true } })
+    local filters = ConditionalFilters.New(runtime)
+    assert(ConditionalFilters.Needs(runtime.accountState) == false, "no saved choice needs no channel filter")
+    assert(channelLine(filters, { text = "lfm", player = "Friend", lineID = 20 }) == false, "no saved choice keeps the line")
+  end
+
   -- test_clean_line_in_disabled_channel_shows
   do
     local runtime = makeRuntime({ hideChannelsFromDefaultChat = true, enabledChannels = { general = true } })

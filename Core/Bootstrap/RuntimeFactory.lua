@@ -96,10 +96,6 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
   -- Channels the player turned into chats; none until picked in Options.
   accountState.settings = accountState.settings or {}
   accountState.settings.enabledChannels = accountState.settings.enabledChannels or {}
-  -- Seeded so the saved value matches the Chats page toggle, which starts on.
-  if accountState.settings.hideChannelsFromDefaultChat == nil then
-    accountState.settings.hideChannelsFromDefaultChat = true
-  end
 
   -- Resolve local player identity for group-chat direction detection.
   -- UnitGUID("player") returns nil during very early load or in minimal test

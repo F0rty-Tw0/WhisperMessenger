@@ -89,9 +89,9 @@ return function()
     assert(ChatFilters.SELECTIVE_HIDING == true, "selective hiding is on")
     local result, calls = create({})
     local toggle = FindUI.toggle(result.frame, "Hide channels from default chat")
-    assert(FindUI.isToggleOn(toggle) == true, "hiding defaults on")
+    assert(FindUI.isToggleOn(toggle) == false, "hiding is opt-in")
     FindUI.click(toggle)
-    assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == false, "reports its key")
+    assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == true, "reports its key")
     assert(FindUI.text(result.frame, TIP) == nil, "no tip when hiding works")
   end
 
@@ -159,7 +159,12 @@ return function()
 
   -- test_reset_restores_chat_defaults_and_keeps_channels
   do
-    local result, calls = create({ showGroupChats = false, collapseDuplicates = false, enabledChannels = { trade = true } })
+    local result, calls = create({
+      showGroupChats = false,
+      collapseDuplicates = false,
+      hideChannelsFromDefaultChat = true,
+      enabledChannels = { trade = true },
+    })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     local reset = {}
     for _, call in ipairs(calls) do
@@ -167,6 +172,7 @@ return function()
     end
     assert(reset.showGroupChats == true, "reset shows group chats")
     assert(reset.collapseDuplicates == true, "reset collapses repeats")
+    assert(reset.hideChannelsFromDefaultChat == false, "reset turns channel hiding back off")
     assert(reset.enabledChannels == nil, "reset keeps the picked channels")
   end
 

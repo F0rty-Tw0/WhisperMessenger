@@ -110,18 +110,18 @@ return function()
     assert(DisplayName.Revision() > afterToggle, "a changed clash set bumps the revision")
   end
 
-  -- test_class_color_sender_names_defaults_off
+  -- test_class_color_sender_names_defaults_on
 
   do
-    assert(DisplayName.ClassColorSenderNames() == false, "class-coloured sender names are off by default")
+    assert(DisplayName.ClassColorSenderNames() == true, "class-coloured sender names are on by default")
   end
 
   -- test_configure_class_color_flips_flag_and_bumps_revision
 
   do
     local r = DisplayName.Revision()
-    DisplayName.Configure({ classColorSenderNames = true })
-    assert(DisplayName.ClassColorSenderNames() == true, "configuring the flag on turns it on")
+    DisplayName.Configure({ classColorSenderNames = false })
+    assert(DisplayName.ClassColorSenderNames() == false, "configuring the flag off turns it off")
     assert(DisplayName.Revision() == r + 1, "flipping the class-colour flag bumps the revision once")
     DisplayName.Configure({ classColorSenderNames = false })
   end

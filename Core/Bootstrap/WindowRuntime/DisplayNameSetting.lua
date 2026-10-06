@@ -16,7 +16,7 @@ function DisplayNameSetting.Apply(displayName, key, value)
     return true
   end
   if key == "classColorSenderNames" then
-    displayName.Configure({ classColorSenderNames = value == true })
+    displayName.Configure({ classColorSenderNames = value ~= false })
     return true
   end
   return false
