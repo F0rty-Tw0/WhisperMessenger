@@ -89,9 +89,9 @@ return function()
     assert(ChatFilters.SELECTIVE_HIDING == true, "selective hiding is on")
     local result, calls = create({})
     local toggle = FindUI.toggle(result.frame, "Hide channels from default chat")
-    assert(FindUI.isToggleOn(toggle) == true, "hiding defaults on")
+    assert(FindUI.isToggleOn(toggle) == false, "hiding is opt-in")
     FindUI.click(toggle)
-    assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == false, "reports its key")
+    assert(calls[#calls].key == "hideChannelsFromDefaultChat" and calls[#calls].value == true, "reports its key")
     assert(FindUI.text(result.frame, TIP) == nil, "no tip when hiding works")
   end
 
