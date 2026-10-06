@@ -106,6 +106,21 @@ return function()
     assert(liveEnabled == true, "menu entry should derive unanswered status from the transient conversation")
   end
 
+  -- test_open_modern_menu_passes_no_chat_frame
+  -- Blizzard's Whisper entry calls ChatFrameUtil.SendTell(name, contextData.chatFrame),
+  -- which reads chatFrame.editBox. Our anchor has none, so Whisper would error.
+  do
+    local openedContext = nil
+    rawset(_G, "UnitPopup_OpenMenu", function(_which, contextData)
+      openedContext = contextData
+    end)
+
+    ContextMenu.Open({ channel = "WOW", displayName = "Arthas-Area52" }, anchor)
+
+    assert(openedContext ~= nil, "modern menu should open")
+    assert(openedContext.chatFrame == nil, "modern menu must not pass a non-chat frame as chatFrame")
+  end
+
   _G.Menu = savedMenu
   _G.UnitPopup_OpenMenu = savedUnitPopupOpenMenu
 
@@ -142,7 +157,7 @@ return function()
     assert(called ~= nil, "FriendsFrame_ShowDropdown should be called for wow contact")
     assert(called.name == "Arthas-Area52")
     assert(called.connected == 1)
-    assert(called.chatFrame == anchor)
+    assert(called.chatFrame == nil, "dropdown must not get a non-chat frame as chatFrame")
     assert(called.guid == "Player-3678-0A1B2C3D")
   end
 
@@ -190,7 +205,7 @@ return function()
     assert(called ~= nil, "FriendsFrame_ShowBNDropdown should be called for bnet contact")
     assert(called.name == "Jaina#1234")
     assert(called.connected == 1)
-    assert(called.chatFrame == anchor)
+    assert(called.chatFrame == nil, "dropdown must not get a non-chat frame as chatFrame")
     assert(called.bnetIDAccount == 12345)
     assert(called.battleTag == "Jaina#1234")
   end
@@ -244,7 +259,7 @@ return function()
     assert(calledContext ~= nil, "fallback should pass contextData")
     assert(calledContext.name == "Thrall-Doomhammer")
     assert(calledContext.chatTarget == "Thrall-Doomhammer")
-    assert(calledContext.chatFrame == anchor)
+    assert(calledContext.chatFrame == nil, "fallback must not pass a non-chat frame as chatFrame")
   end
 
   -- test_open_returns_false_when_no_display_name

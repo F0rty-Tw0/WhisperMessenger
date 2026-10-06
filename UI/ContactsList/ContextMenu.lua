@@ -203,13 +203,15 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowAct
   local chatType = item.chatType
   local which = item.channel == "BN" and "BN_FRIEND" or "FRIEND"
 
+  -- Never pass anchorFrame as the menu's chatFrame: Blizzard's Whisper entry
+  -- sends to chatFrame.editBox, which our frames lack, so Whisper errors out.
+  -- Without one, Blizzard picks the player's own chat edit box.
   if ensureModernMenu() and type(_G.UnitPopup_OpenMenu) == "function" then
     _G.UnitPopup_OpenMenu(which, {
       name = name,
       lineID = lineID,
       chatType = chatType,
       chatTarget = name,
-      chatFrame = anchorFrame,
       bnetAccountID = item.bnetAccountID,
       bnetIDAccount = item.bnetAccountID,
       guid = item.guid,
@@ -233,7 +235,7 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowAct
         1,
         lineID,
         chatType,
-        anchorFrame,
+        nil,
         nil,
         item.bnetAccountID,
         item.communityClubID,
@@ -250,7 +252,7 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowAct
       1,
       lineID,
       chatType,
-      anchorFrame,
+      nil,
       nil,
       item.communityClubID,
       item.communityStreamID,
@@ -267,7 +269,6 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowAct
       lineID = lineID,
       chatType = chatType,
       chatTarget = name,
-      chatFrame = anchorFrame,
       bnetIDAccount = item.bnetAccountID,
       guid = item.guid,
       battleTag = item.battleTag,
