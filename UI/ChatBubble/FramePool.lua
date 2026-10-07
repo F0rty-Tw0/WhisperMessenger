@@ -176,25 +176,49 @@ local function clearBindingState(frame)
   end
 end
 
+local function releaseFrame(free, f)
+  FramePool.hideAllRegions(f)
+  clearInteractiveScripts(f)
+  clearReactionState(f)
+  clearBindingState(f)
+  if f.SetAlpha then
+    f:SetAlpha(1)
+  end
+  if f.Hide then
+    f:Hide()
+  end
+  if f.ClearAllPoints then
+    f:ClearAllPoints()
+  end
+  table.insert(free, f)
+end
+
+-- Bumped on every releaseAll, so callers holding on to active frames can tell
+-- they were taken back.
+function FramePool.generation(contentFrame)
+  return contentFrame._wmPoolGeneration or 0
+end
+
 function FramePool.releaseAll(contentFrame)
   local active = contentFrame._activeFrames
   local free = contentFrame._freeFrames
   for i = #active, 1, -1 do
+    releaseFrame(free, active[i])
+    active[i] = nil
+  end
+  contentFrame._wmPoolGeneration = FramePool.generation(contentFrame) + 1
+end
+
+-- Releases every active frame whose _wmKeepMark is not keepMark and empties
+-- the active list; the caller re-adds the kept frames in its own order.
+function FramePool.releaseUnmarked(contentFrame, keepMark)
+  local active = contentFrame._activeFrames
+  local free = contentFrame._freeFrames
+  for i = #active, 1, -1 do
     local f = active[i]
-    FramePool.hideAllRegions(f)
-    clearInteractiveScripts(f)
-    clearReactionState(f)
-    clearBindingState(f)
-    if f.SetAlpha then
-      f:SetAlpha(1)
+    if f._wmKeepMark ~= keepMark then
+      releaseFrame(free, f)
     end
-    if f.Hide then
-      f:Hide()
-    end
-    if f.ClearAllPoints then
-      f:ClearAllPoints()
-    end
-    table.insert(free, f)
     active[i] = nil
   end
 end

@@ -14,6 +14,7 @@ local DateSeparator = ns.ChatBubbleDateSeparator or require("WhisperMessenger.UI
 local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBubble.FramePool")
 local SenderLabel = ns.ChatBubbleSenderLabel or require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
+local RowReuse = ns.ChatBubbleRowReuse or require("WhisperMessenger.UI.ChatBubble.RowReuse")
 
 local Layout = {}
 Layout.MESSAGE_EDGE_INSET = Theme.LAYOUT.MESSAGE_EDGE_INSET
@@ -200,9 +201,14 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   return yOffset + bubble.height
 end
 
-function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, lastIndex, paneWidth, options)
+-- reuse: keep the frames of rows that stay in range (scrolling) instead of
+-- rebuilding every visible bubble. Callers pass false when anything the rows
+-- draw changed.
+function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, lastIndex, paneWidth, options, reuse)
   FramePool.initPool(contentFrame)
-  FramePool.releaseAll(contentFrame)
+  if not reuse or firstIndex == nil or lastIndex == nil or firstIndex > lastIndex then
+    FramePool.releaseAll(contentFrame)
+  end
   if firstIndex == nil or lastIndex == nil or firstIndex > lastIndex then
     return 0, nil
   end
@@ -215,14 +221,29 @@ function Layout.LayoutRange(factory, contentFrame, messages, rows, firstIndex, l
   if not (options and options.seenReceipts == false) then
     seenIndex = Layout.SeenLabelIndex(messages)
   end
+  local previousPass = contentFrame._wmLayoutPass
+  local pass = (previousPass or 0) + 1
+  contentFrame._wmLayoutPass = pass
+  if reuse then
+    RowReuse.KeepRows(contentFrame, messages, rows, firstIndex, lastIndex, paneWidth, options, seenIndex, previousPass, pass)
+  end
+
   local activeFrames = contentFrame._activeFrames
   for index = firstIndex, lastIndex do
     local row = rows[index]
     row.offset = yOffset
     -- The row's pooled frames, as a span of the active list (edge fade).
     row.frameFirst = #activeFrames + 1
-    local nextOffset = layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options, seenIndex)
+    local nextOffset
+    if row.keptPass == pass then
+      RowReuse.Restore(row, contentFrame, activeFrames, yOffset)
+      nextOffset = yOffset + row.height
+    else
+      nextOffset = layoutMessage(pooledFactory, factory, contentFrame, messages, index, paneWidth, yOffset, options, seenIndex)
+      RowReuse.Capture(row, activeFrames)
+    end
     row.frameLast = #activeFrames
+    RowReuse.Record(row, index, contentFrame, messages, pass, yOffset, paneWidth, options, seenIndex)
     local measuredHeight = nextOffset - yOffset
     if row.height ~= measuredHeight then
       firstChanged = firstChanged or index
