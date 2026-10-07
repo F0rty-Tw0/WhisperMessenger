@@ -5,6 +5,11 @@ end
 
 local ScriptBindings = {}
 
+-- After an outside click the window drops to MEDIUM strata, where Blizzard's
+-- action bars live (level 52 on Classic, ~70 on Retail). It is pinned above
+-- them; Raise() left it at level 1 in game.
+local DEMOTED_FRAME_LEVEL = 100
+
 function ScriptBindings.Bind(options)
   options = options or {}
 
@@ -113,11 +118,8 @@ function ScriptBindings.Bind(options)
       if frame and type(frame.SetFrameStrata) == "function" then
         frame:SetFrameStrata("MEDIUM")
       end
-      -- Blizzard's action/pet bars live in MEDIUM strata at frame level ~70.
-      -- Without Raise(), our window keeps whatever small level it had from
-      -- its last HIGH-strata Raise() and slips underneath those bars.
-      if frame and type(frame.Raise) == "function" then
-        frame:Raise()
+      if frame and type(frame.SetFrameLevel) == "function" then
+        frame:SetFrameLevel(DEMOTED_FRAME_LEVEL)
       end
     end)
   end

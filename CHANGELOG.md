@@ -12,6 +12,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Busy group chats no longer slow the game down while the window is open.
 - Uses less CPU while the window is closed: incoming whispers, friends changing status, busy Trade and General chat, and clicking around the game now do much less work behind the scenes for a window you can't see. Searching your contacts also stays smooth while you type.
 - Repeated messages from the same player now show once with a counter (like ×3) in your theme's accent color.
+- Fixed: after clicking somewhere else, your action bars and other addons' buttons drew on top of the window.
 - Fixed: with the Native WoW HUD look, the unread counter on the Whispers, Groups and Channels tabs was half hidden behind the window's bottom border.
 - Fixed: choosing "Whisper" after right-clicking a player's name in the window (in guild, group and channel chats, or on a contact) did nothing.
 - Trade, General, Local Defense, LFG and your custom channels can now appear as chats (turn them on in Options). Each one is named after its channel and lives in a new Channels tab, which shows up once you turn on at least one channel. Trade, General, Local Defense, World Defense, LFG and Trade (Services) each get their own icon, and in the narrow contact list channel chats show their initials like your contacts do.
