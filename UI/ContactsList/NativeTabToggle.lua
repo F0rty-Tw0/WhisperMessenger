@@ -96,8 +96,9 @@ end
 
 local function liftAboveBorder(badgeFrame, window)
   local border = window and window.NineSlice or window
-  if border and border.GetFrameLevel and badgeFrame.SetFrameLevel then
-    badgeFrame:SetFrameLevel(border:GetFrameLevel() + BADGE_LEVEL_LIFT)
+  if border and border.GetFrameLevel and badgeFrame.GetFrameLevel and badgeFrame.SetFrameLevel then
+    -- Only ever raise it: a low border must not sink the badge under its tab.
+    badgeFrame:SetFrameLevel(math.max(badgeFrame:GetFrameLevel(), border:GetFrameLevel() + BADGE_LEVEL_LIFT))
   end
 end
 
