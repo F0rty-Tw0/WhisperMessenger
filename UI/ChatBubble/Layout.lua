@@ -15,6 +15,8 @@ local FramePool = ns.ChatBubbleFramePool or require("WhisperMessenger.UI.ChatBub
 local SenderLabel = ns.ChatBubbleSenderLabel or require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatBubble.ReplyQuote")
 local RowReuse = ns.ChatBubbleRowReuse or require("WhisperMessenger.UI.ChatBubble.RowReuse")
+local BubbleColors = ns.ThemeBubbleColors or require("WhisperMessenger.UI.Theme.BubbleColors")
+local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 
 local Layout = {}
 Layout.MESSAGE_EDGE_INSET = Theme.LAYOUT.MESSAGE_EDGE_INSET
@@ -30,6 +32,10 @@ local geometryFontSize
 local geometryFontMode
 local geometryFontOutline
 local geometryLanguage
+local lookFontColor
+local lookBubblePreset
+local lookTimeFormat
+local lookTimeSource
 
 local function isDifferentDay(previousMessage, message)
   if previousMessage == nil then
@@ -72,6 +78,9 @@ local function rowPrefixHeight(previousMessage, message, isFirst, hasUnreadDivid
   return height
 end
 
+-- Bumped when anything a built bubble bakes in changes: font geometry, and the
+-- look settings (text color, bubble color, time format). Kept bubbles are
+-- only redrawn when this moves.
 function Layout.GetGeometryRevision()
   local fontSize = type(Fonts.GetFontSize) == "function" and Fonts.GetFontSize() or DEFAULT_FONT_SIZE
   local fontMode = type(Fonts.GetMode) == "function" and Fonts.GetMode() or nil
@@ -83,6 +92,16 @@ function Layout.GetGeometryRevision()
     geometryFontMode = fontMode
     geometryFontOutline = fontOutline
     geometryLanguage = language
+  end
+  local fontColor = Fonts.GetFontColorRGBA()
+  local bubblePreset = BubbleColors.GetPreset()
+  local timeFormat, timeSource = TimeFormat.GetConfig()
+  if lookFontColor ~= fontColor or lookBubblePreset ~= bubblePreset or lookTimeFormat ~= timeFormat or lookTimeSource ~= timeSource then
+    geometryRevision = geometryRevision + 1
+    lookFontColor = fontColor
+    lookBubblePreset = bubblePreset
+    lookTimeFormat = timeFormat
+    lookTimeSource = timeSource
   end
   return geometryRevision
 end
