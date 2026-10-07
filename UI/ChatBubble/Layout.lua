@@ -184,7 +184,7 @@ local function layoutMessage(pooledFactory, factory, contentFrame, messages, ind
   bubbleOptions.paneWidth = paneWidth
   bubbleOptions.showIcon = showIcon
   bubbleOptions.fallbackClassTag = options and options.fallbackClassTag or nil
-  bubbleOptions.iconFactory = pooledFactory
+  bubbleOptions.iconFactory = FramePool.getFactory(factory, contentFrame, "icon")
   bubbleOptions.persistentFactory = factory
   bubbleOptions.onRevealCensored = options and options.onRevealCensored or nil
   bubbleOptions.onReact = options and options.onReact or nil

@@ -25,12 +25,16 @@ function FramePool.initPool(contentFrame)
   end
 end
 
-function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent)
+-- poolKey (optional) keeps a role's frames to itself: an icon frame handed to
+-- a label would lose its masked texture and have to build a new one.
+function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent, poolKey)
+  local key = poolKey or frameType
   local free = contentFrame._freeFrames
   local frame
   for index = #free, 1, -1 do
     local candidate = free[index]
-    if candidate._wmPoolFrameType == frameType or (candidate._wmPoolFrameType == nil and frameType == "Frame") then
+    local candidateKey = candidate._wmPoolKey or candidate._wmPoolFrameType or "Frame"
+    if candidateKey == key then
       frame = table.remove(free, index)
       break
     end
@@ -45,28 +49,35 @@ function FramePool.acquireFrame(realFactory, contentFrame, frameType, parent)
   else
     frame = realFactory.CreateFrame(frameType, nil, parent)
     frame._wmPoolFrameType = frameType
+    frame._wmPoolKey = poolKey
   end
   table.insert(contentFrame._activeFrames, frame)
   return frame
 end
 
-function FramePool.getFactory(realFactory, contentFrame)
+function FramePool.getFactory(realFactory, contentFrame, poolKey)
   local state = contentFrame._wmPooledFactoryState
   if state == nil then
     state = {
       contentFrame = contentFrame,
       realFactory = realFactory,
+      factories = {},
     }
     contentFrame._wmPooledFactoryState = state
-    contentFrame._wmPooledFactory = {
-      CreateFrame = function(frameType, _name, parent)
-        return FramePool.acquireFrame(state.realFactory, state.contentFrame, frameType, parent)
-      end,
-    }
   else
     state.realFactory = realFactory
   end
-  return contentFrame._wmPooledFactory
+  local factoryKey = poolKey or ""
+  local factory = state.factories[factoryKey]
+  if factory == nil then
+    factory = {
+      CreateFrame = function(frameType, _name, parent)
+        return FramePool.acquireFrame(state.realFactory, state.contentFrame, frameType, parent, poolKey)
+      end,
+    }
+    state.factories[factoryKey] = factory
+  end
+  return factory
 end
 
 local function hideRegions(...)

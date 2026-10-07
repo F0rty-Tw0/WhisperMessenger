@@ -218,4 +218,29 @@ return function()
     local frame = bubbleByMessage(transcript.content)[edited]
     assert(frame and frame._textFS:GetText() == "edited body", "test_edited_message_on_screen_is_redrawn: new text not shown")
   end
+
+  -- test_scrolling_keeps_icon_frames_out_of_label_roles
+  -- An icon built on a recycled label frame pays for a new masked texture,
+  -- the most expensive part of a bubble.
+  do
+    local transcript = makeTranscript(400, 200)
+    local messages = makeMessages(200)
+    -- Hours apart, so date separators also take frames from the pool.
+    for index, message in ipairs(messages) do
+      message.sentAt = index * 5000
+    end
+    TranscriptView.RenderTranscript(transcript, messages)
+    local wheel = transcript.scrollFrame:GetScript("OnMouseWheel")
+    for _ = 1, 200 do
+      wheel(transcript.scrollFrame, 1)
+    end
+
+    local content = transcript.content
+    for _, list in ipairs({ content._activeFrames, content._freeFrames }) do
+      for _, frame in ipairs(list) do
+        local mixed = frame._wmCircularIconTexture and (frame._wmSenderNameFS or frame._labelFS)
+        assert(not mixed, "test_scrolling_keeps_icon_frames_out_of_label_roles: a pooled frame served as both icon and label")
+      end
+    end
+  end
 end
