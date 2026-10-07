@@ -21,11 +21,14 @@
   🏆 5th place in <a href="https://mod.curseforge.com/modding-contests/wow_midnight-addon_contest/">The Addon Trials</a>, CurseForge's 2026 WoW addon contest.
 </p>
 
-![WhisperMessenger window with replies, reactions and a Seen receipt](.github/assets/chat-reactions-seen.png)
+![WhisperMessenger in the Native WoW HUD Modern style, showing a whisper over 700 characters long as one message](.github/assets/hud-modern-long-whisper.png)
 
 ## Why players install it
 
 - **Whispers stop drowning in raid, trade and guild spam.** Each person gets their own conversation with an unread badge, so you always know who is waiting on you.
+- **Say it in one message.** Whispers can run to about 800 characters instead of the game's 255.
+- **Trade and General without the spam.** Follow world channels in their own tab, with ready-made filters for gold sellers, boosting ads and link spam.
+- **Looks like it shipped with the game.** The Native WoW HUD style uses Blizzard's own window frame and tabs.
 - **Yesterday's conversation is still there.** History survives logout and is shared across your characters.
 - **See who is online and where before you whisper.** Class, faction, zone and Battle.net status sit right in the contact list.
 - **Battle.net and character whispers, side by side.** No more guessing which tab a friend wrote in.
@@ -40,11 +43,16 @@ You can, and it helps. A tab still mixes everyone into one scrolling stream, for
 
 Chat bubbles with timestamps, date separators and sender labels. Right-click any message to reply, copy it or add a reaction. An emoji picker sits next to the message box.
 
+- **Long whispers** run to about 800 characters. They go out in up to four parts and show as one message when your friend also uses WhisperMessenger. Group chats keep the game's normal length.
 - **Reply** quotes the original line above your message.
 - **Quick replies** drop in a saved line like "On my way" (up to 10, edit them under Options > Behavior).
 - **Drafts** stay with each chat, even after a reload.
 - **Queued messages** wait safely when whispers are paused, and nothing is sent until you click.
 - **Filtered messages** that the game flags as inappropriate stay hidden until you click to reveal them.
+
+<p align="center">
+  <img src=".github/assets/chat-reactions-seen.png" width="80%" alt="WhisperMessenger window with replies, reactions and a Seen receipt">
+</p>
 
 <p align="center">
   <img src=".github/assets/chat-reply-quote.png" width="49%" alt="A reply quoting an earlier message">
@@ -69,15 +77,35 @@ Right-click a contact to **mute** them, set a **nickname**, add a private **note
   <img src=".github/assets/contact-menu.png" width="60%" alt="Contact right-click menu with Mute, Set nickname, Edit note and Notify when online">
 </p>
 
-### Whispers, Groups and Requests
+### Whispers, Groups, Channels and Requests
 
 - **Whispers** holds your private conversations.
 - **Groups** collects party, raid, instance and guild chat, with reactions and @mention highlights.
+- **Channels** (optional) turns Trade, General, Local Defense, LFG and your custom channels into chats of their own. Pick them under Options > Chats.
 - **Requests** (optional) holds whispers from strangers until you accept or delete them. Turn it on under Options > Behavior.
 
 <p align="center">
   <img src=".github/assets/group-raid-chat.png" width="49%" alt="Raid chat in the Groups tab with a New messages line">
   <img src=".github/assets/requests-tab.png" width="49%" alt="Requests tab with Accept and Delete buttons for a stranger's whisper">
+</p>
+
+### Global Channels
+
+Trade, General, Local Defense, World Defense, LFG and Trade (Services) each get their own chat and icon in the Channels tab. A busy channel only counts as unread when someone says your name, so Trade never buries a friend's whisper.
+
+<p align="center">
+  <img src=".github/assets/channels-trade.png" width="80%" alt="Trade channel open in the Channels tab, next to General and Trade (Services)">
+</p>
+
+### Spam Protection
+
+- **Block players** for a day, a week or forever, with an optional note. Their whispers, group and channel messages disappear, in the messenger and in the game's chat.
+- **Keyword rules** hide matching lines. Ready-made rules cover "Anal" link spam, Thunderfury links, Mythic+ and raid sellers, profession sellers, power-leveling sellers, guild and community recruitment, and WTS / WTB / LFW.
+- Ready-made rules only touch channels such as Trade, never your guild, party or raid, and never whispers.
+- Nothing is hidden from the game's chat in Mythic+, boss fights or PvP.
+
+<p align="center">
+  <img src=".github/assets/settings-filters.png" width="60%" alt="Filters settings: how filters work, blocked players and ready-made keyword rules">
 </p>
 
 ### Battle.net Integration
@@ -97,7 +125,13 @@ The chat header shows **(Uses WM)** for friends who have it, and an **(Invite to
 
 ### Themes
 
-A modern, clean look with five color themes: **Midnight**, **Shadowlands**, **Draenor**, **Pandaria** and **Azeroth**. Prefer the game's own style? Turn on **Native WoW HUD** for a classic Blizzard frame. Themes apply instantly, no reload.
+A modern, clean look with five color themes: **Midnight**, **Shadowlands**, **Draenor**, **Pandaria** and **Azeroth**. Themes apply instantly, no reload.
+
+Prefer the game's own style? Set **Native WoW HUD** under Options > Appearance to **Modern** for the current Blizzard window with its round portrait and bottom tabs, or **Classic** for the older frame.
+
+<p align="center">
+  <img src=".github/assets/hud-modern-guild-chat.png" width="70%" alt="Guild chat in the Native WoW HUD Modern style with the narrow contact list and Whispers, Groups and Channels tabs">
+</p>
 
 ### Fonts and Scale
 
@@ -123,7 +157,7 @@ Shift-click items, quests, achievements, spells and professions to link them str
 
 ### Settings
 
-Pages for **General**, **Appearance**, **Behavior**, **Notifications**, **Icons** and **What's New**. Includes history limits and retention, privacy options, 12 interface languages, a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
+Pages for **General**, **Appearance**, **Behavior**, **Whispers**, **Chats**, **Filters**, **Notifications**, **Icons** and **What's New**. Includes history limits and retention, privacy options, 12 interface languages, a profanity filter toggle, a hide-from-default-chat option and auto-focus control.
 
 <p align="center">
   <img src=".github/assets/settings-general.png" width="49%" alt="General settings: history limits, privacy, time format and interface language">
