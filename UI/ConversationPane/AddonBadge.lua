@@ -81,7 +81,7 @@ function AddonBadge.createAddonBadge(factory, headerFrame, headerFactionIcon)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(Localization.Text("Click to whisper this player an invite to WhisperMessenger."))
+        _G.GameTooltip:SetText(Localization.Text("Click to whisper this player an invite to Whisper Messenger."))
         _G.GameTooltip:Show()
       end
     end)

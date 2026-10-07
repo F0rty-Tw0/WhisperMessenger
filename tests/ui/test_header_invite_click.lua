@@ -135,7 +135,7 @@ return function()
     assert(type(onEnter) == "function", "addon badge button should have an OnEnter script")
     onEnter(view.headerAddonBadgeButton)
     assert(
-      tooltipText == "Click to whisper this player an invite to WhisperMessenger.",
+      tooltipText == "Click to whisper this player an invite to Whisper Messenger.",
       "hovering the invite hint should explain the click, got: " .. tostring(tooltipText)
     )
 

@@ -252,7 +252,7 @@ function ToggleIcon.Create(factory, options)
         if isLocked() then
           lockedText = "\n" .. Localization.Text("Locked")
         end
-        _G.GameTooltip:SetText("WhisperMessenger" .. unreadText .. competitiveText .. lockedText)
+        _G.GameTooltip:SetText("Whisper Messenger" .. unreadText .. competitiveText .. lockedText)
         KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
         KeybindHints.AddClickHint(_G.GameTooltip)
         _G.GameTooltip:Show()

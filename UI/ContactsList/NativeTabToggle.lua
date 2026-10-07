@@ -33,6 +33,9 @@ local HANG_HEIGHT = TAB_HEIGHT - BORDER_OVERLAP
 local BADGE_SIZE = 14
 -- Pulls the badge in from the corner so it sits over its own tab, not the gap.
 local BADGE_CORNER_INSET = 4
+-- The badge straddles the window's bottom edge, and the template's border art
+-- (NineSlice) sits on a high frame level; the badge draws this far above it.
+local BADGE_LEVEL_LIFT = 1
 -- Retail's tab sides: a tab is label + this. Tabs size themselves because
 -- Classic clients' PanelTemplates_TabResize adds both edge pieces on top of
 -- label + 24 and caps only the label, making tabs about twice as wide.
@@ -91,8 +94,16 @@ local function fitTabs(frame, visible)
   end
 end
 
+local function liftAboveBorder(badgeFrame, window)
+  local border = window and window.NineSlice or window
+  if border and border.GetFrameLevel and badgeFrame.GetFrameLevel and badgeFrame.SetFrameLevel then
+    -- Only ever raise it: a low border must not sink the badge under its tab.
+    badgeFrame:SetFrameLevel(math.max(badgeFrame:GetFrameLevel(), border:GetFrameLevel() + BADGE_LEVEL_LIFT))
+  end
+end
+
 -- The Requests badge is dim so a stranger's message never looks urgent.
-local function createTab(factory, frame, index, textKey, mode)
+local function createTab(factory, frame, window, index, textKey, mode)
   local btn = UIHelpers.createTemplatedFrame(factory, "Button", TAB_NAMES[index], frame, TAB_TEMPLATE)
   if btn == nil then
     return nil
@@ -100,6 +111,7 @@ local function createTab(factory, frame, index, textKey, mode)
   btn:SetText(Localization.Text(textKey))
   local badge = Badge.Create(factory, btn, { size = BADGE_SIZE, outline = true, dim = mode == "requests" })
   badge.frame:SetPoint("CENTER", btn, "TOPRIGHT", -BADGE_CORNER_INSET, -BORDER_OVERLAP)
+  liftAboveBorder(badge.frame, window)
   local tab = { btn = btn, badge = badge, textKey = textKey, mode = mode, unread = 0 }
   -- Replaces the template's OnShow / DISPLAY_SIZE_CHANGED handlers, which
   -- would re-run the flavor's own TabResize.
@@ -136,10 +148,10 @@ function NativeTabToggle.Create(factory, parent, options)
   frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
   frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
 
-  local whispers = createTab(factory, frame, 1, "Whispers", "whispers")
-  local groups = whispers and createTab(factory, frame, 2, "Groups", "groups")
-  local requests = groups and createTab(factory, frame, 3, "Requests", "requests")
-  local channels = requests and createTab(factory, frame, 4, "Channels", "channels")
+  local whispers = createTab(factory, frame, window, 1, "Whispers", "whispers")
+  local groups = whispers and createTab(factory, frame, window, 2, "Groups", "groups")
+  local requests = groups and createTab(factory, frame, window, 3, "Requests", "requests")
+  local channels = requests and createTab(factory, frame, window, 4, "Channels", "channels")
   if whispers == nil or groups == nil or requests == nil or channels == nil then
     frame:Hide()
     return nil

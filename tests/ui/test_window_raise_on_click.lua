@@ -166,12 +166,23 @@ return function()
     h.frame.mouseOver = false
     assert(type(h.scripts.OnEvent) == "function", "expected OnEvent handler on frame to listen for GLOBAL_MOUSE_DOWN")
     assert(h.frame:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "expected frame to register GLOBAL_MOUSE_DOWN for outside-click demotion")
-    local prevRaiseCalls = h.getRaiseCalls()
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(h.frame.frameStrata == "MEDIUM", "expected outside click to demote strata to MEDIUM; got " .. tostring(h.frame.frameStrata))
+  end
+
+  -- test_outside_click_keeps_window_above_action_bars
+  do
+    -- Action buttons sit in MEDIUM strata too (level 52 on Classic, ~70 on
+    -- Retail). Raise() left the window at level 1 in game, under the bars.
+    local ACTION_BAR_LEVEL = 70
+    local h = buildHarness({})
+    h.frame:Show()
+    h.scripts.OnMouseDown(h.frame, "LeftButton")
+    h.frame.mouseOver = false
+    h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(
-      h.getRaiseCalls() >= prevRaiseCalls + 1,
-      "expected outside-click demotion to call frame:Raise() so the window stays above MEDIUM-strata action/pet bars"
+      h.frame:GetFrameLevel() > ACTION_BAR_LEVEL,
+      "expected the demoted window above the action bars; got level " .. tostring(h.frame:GetFrameLevel())
     )
   end
 

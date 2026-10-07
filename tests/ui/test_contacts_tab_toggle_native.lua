@@ -169,6 +169,45 @@ return function()
     assert(point[4] < 0, "HUD: badge pulled in from the corner so it stays over its own tab, got x " .. tostring(point[4]))
   end
 
+  -- test_hud_unread_badge_draws_above_the_window_border
+  do
+    -- The badge straddles the window's bottom edge; the template's border
+    -- art sits on a high frame level and would hide its top half.
+    local factory = FakeUI.NewFactory()
+    local window = factory.CreateFrame("Frame", nil, nil, "ButtonFrameTemplate")
+    window.NineSlice:SetFrameLevel(500)
+    local pane = factory.CreateFrame("Frame", nil, window)
+    local toggle = TabToggle.Create(factory, pane, { initialMode = "whispers", nativeChrome = true, windowFrame = window })
+    local badge = FindUI.ofType(tabs(toggle)[1], "Frame")[1]
+    assert(badge:GetFrameLevel() > 500, "HUD: badge above the border art, got level " .. tostring(badge:GetFrameLevel()))
+  end
+
+  -- test_hud_unread_badge_never_sinks_below_its_own_tab
+  do
+    -- A flavor whose border art sits low must not pull the badge under its tab.
+    -- Like the game, a new frame starts one level above its parent.
+    local factory = FakeUI.NewFactory()
+    local createFrame = factory.CreateFrame
+    factory.CreateFrame = function(frameType, name, parent, template)
+      local frame = createFrame(frameType, name, parent, template)
+      if parent and parent.GetFrameLevel then
+        frame:SetFrameLevel(parent:GetFrameLevel() + 1)
+      end
+      return frame
+    end
+    local window = factory.CreateFrame("Frame", nil, nil, "ButtonFrameTemplate")
+    window:SetFrameLevel(10)
+    window.NineSlice:SetFrameLevel(10)
+    local pane = factory.CreateFrame("Frame", nil, window)
+    local toggle = TabToggle.Create(factory, pane, { initialMode = "whispers", nativeChrome = true, windowFrame = window })
+    local tab = tabs(toggle)[1]
+    local badge = FindUI.ofType(tab, "Frame")[1]
+    assert(
+      badge:GetFrameLevel() > tab:GetFrameLevel(),
+      "HUD: badge above its own tab, got badge " .. tostring(badge:GetFrameLevel()) .. " tab " .. tostring(tab:GetFrameLevel())
+    )
+  end
+
   -- test_hud_tab_width_fallback_without_tab_resize
   do
     local buttons = tabs(createToggle(FakeUI.NewFactory(), true))

@@ -29,11 +29,11 @@ return function()
   do
     local window = createWindow(factory, "whispers")
     local emptyState = window.conversation.headerEmpty
-    assert(FindUI.text(emptyState, "Welcome to WhisperMessenger") ~= nil, "whispers tab starts with welcome copy")
+    assert(FindUI.text(emptyState, "Welcome to Whisper Messenger") ~= nil, "whispers tab starts with welcome copy")
     window.setTabMode("groups")
     assert(FindUI.text(emptyState, "Group Chats") ~= nil, "groups tab should show group copy")
     window.setTabMode("whispers")
-    assert(FindUI.text(emptyState, "Welcome to WhisperMessenger") ~= nil, "whispers tab should restore welcome copy")
+    assert(FindUI.text(emptyState, "Welcome to Whisper Messenger") ~= nil, "whispers tab should restore welcome copy")
   end
 
   -- test_initial_groups_tab_shows_group_copy

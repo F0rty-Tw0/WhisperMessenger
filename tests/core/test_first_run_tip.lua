@@ -1,6 +1,6 @@
 local FirstRunTip = require("WhisperMessenger.Core.Bootstrap.FirstRunTip")
 
-local EXPECTED_MESSAGE = "|cffffd100WhisperMessenger:|r your whispers now open in the messenger window. Click the chat icon or type /wmsg."
+local EXPECTED_MESSAGE = "|cffffd100Whisper Messenger:|r your whispers now open in the messenger window. Click the chat icon or type /wmsg."
 
 local function makeFrame()
   local calls = {}

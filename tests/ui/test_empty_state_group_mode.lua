@@ -40,7 +40,7 @@ return function()
     local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
     emptyState.setMode("groups")
     emptyState.setMode("whispers")
-    assert(FindUI.text(emptyState, "Welcome to WhisperMessenger") ~= nil, "whispers mode should restore welcome title")
+    assert(FindUI.text(emptyState, "Welcome to Whisper Messenger") ~= nil, "whispers mode should restore welcome title")
     local btn = assert(findButton(emptyState), "expected start whisper button")
     assert(btn.shown == true, "start whisper button should be shown in whispers mode")
   end

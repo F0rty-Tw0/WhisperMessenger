@@ -114,7 +114,7 @@ return function()
   -- test_empty_state_shows_welcome_title
   do
     local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
-    assert(FindUI.text(emptyState, "Welcome to WhisperMessenger") ~= nil, "empty state should show welcome title")
+    assert(FindUI.text(emptyState, "Welcome to Whisper Messenger") ~= nil, "empty state should show welcome title")
   end
 
   -- test_empty_state_shows_pick_conversation_subtitle
@@ -137,7 +137,7 @@ return function()
   do
     local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
     assert(type(emptyState.applyTheme) == "function", "empty state should expose applyTheme")
-    local title = assert(FindUI.text(emptyState, "Welcome to WhisperMessenger"), "expected welcome title")
+    local title = assert(FindUI.text(emptyState, "Welcome to Whisper Messenger"), "expected welcome title")
     title.textColor = nil
     emptyState.applyTheme()
     assert(title.textColor ~= nil, "applyTheme should repaint title color")
@@ -146,7 +146,7 @@ return function()
   -- test_empty_state_title_wraps_inside_the_pane
   do
     local emptyState = HeaderElements.createEmptyState(pane, nil, factory)
-    local title = assert(FindUI.text(emptyState, "Welcome to WhisperMessenger"), "expected welcome title")
+    local title = assert(FindUI.text(emptyState, "Welcome to Whisper Messenger"), "expected welcome title")
     assert(type(title.width) == "number" and title.width > 0, "title gets a wrap width so big fonts stay inside the pane")
     assert(title.wordWrap == true, "title wraps onto a second line")
   end
