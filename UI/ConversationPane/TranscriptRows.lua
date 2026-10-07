@@ -116,6 +116,8 @@ function TranscriptRows.Prepare(transcript, messages, paneWidth, dividerMessage)
 
     if changed then
       row.height = estimatedHeight
+      -- Its bubble must be rebuilt, not kept (RowReuse).
+      row.stale = true
       anyChanged = true
     end
     if row.index ~= index then

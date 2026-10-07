@@ -130,6 +130,10 @@ function BubbleColors.SetPreset(presetKey)
   return true
 end
 
+function BubbleColors.GetPreset()
+  return activePresetKey
+end
+
 -- Re-apply the active bubble preset onto Theme.COLORS.
 -- Call this after a theme preset switch so custom bubble colors survive.
 function BubbleColors.ApplyPreset()

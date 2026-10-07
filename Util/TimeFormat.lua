@@ -117,6 +117,11 @@ function TimeFormat.Configure(opts)
   end
 end
 
+--- Returns the configured timeFormat and timeSource.
+function TimeFormat.GetConfig()
+  return config.timeFormat, config.timeSource
+end
+
 --- Returns current epoch seconds, respecting the configured time source.
 local function now()
   if config.timeSource == "server" and _G.GetServerTime then

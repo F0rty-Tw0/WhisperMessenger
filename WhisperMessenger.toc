@@ -180,6 +180,7 @@ UI/ChatBubble/MentionHighlight.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
 UI/ChatBubble/FramePool.lua
+UI/ChatBubble/RowReuse.lua
 UI/ChatBubble/DeliveryMenu.lua
 UI/ChatBubble/DeliveryStatus.lua
 UI/ChatBubble/SenderLabel.lua

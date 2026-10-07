@@ -107,7 +107,9 @@ end
 -- Returns totalHeight, relaidOut. relaidOut is false when the visible range is
 -- unchanged and `force` is not set, which is the allocation-free skip path the
 -- background status refresh takes when nothing about the conversation changed.
-local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
+-- `rebuild` drops every visible bubble; otherwise rows that did not change keep
+-- theirs.
+local function bindOffset(transcript, state, requestedOffset, snapToEnd, force, rebuild)
   if transcript._renderingViewport then
     return state.totalHeight, false
   end
@@ -139,6 +141,7 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
   transcript._renderingViewport = true
   local settled = false
   local passCap = #rows + 1
+  local reuse = not rebuild
   for _ = 1, passCap do
     local _, firstChanged = ChatBubbleLayout.LayoutRange(
       transcript.factory,
@@ -148,8 +151,10 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
       firstIndex,
       lastIndex,
       state.paneWidth,
-      state.options
+      state.options,
+      reuse
     )
+    reuse = true
     if firstChanged then
       state.totalHeight = recomputeOffsets(rows, firstChanged)
     else
@@ -184,7 +189,8 @@ local function bindOffset(transcript, state, requestedOffset, snapToEnd, force)
       firstIndex,
       lastIndex,
       state.paneWidth,
-      state.options
+      state.options,
+      true
     )
     if firstChanged then
       state.totalHeight = recomputeOffsets(rows, firstChanged)
@@ -233,14 +239,16 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
   local displayNameRevision = DisplayName.Revision()
   -- Bubble geometry is keyed off the row diff, but the fallback class tags and
   -- the display-name rules only change sender names, so they are tracked separately.
-  local force = (renderOptions and renderOptions.force == true)
+  -- Those reach every row, so they rebuild all bubbles; a row diff (new,
+  -- dropped or edited messages) rebuilds only the rows it marked stale.
+  local rebuild = (renderOptions and renderOptions.force == true)
     or not hadRows
     or forceSnapToEnd
-    or anyChanged
     or state.fallbackClassTag ~= fallbackClassTag
     or state.senderFallbackClassTag ~= senderFallbackClassTag
     or state.displayNameRevision ~= displayNameRevision
     or state.chatLocked ~= (options and options.chatLocked)
+  local force = rebuild or anyChanged
   state.fallbackClassTag = fallbackClassTag
   state.senderFallbackClassTag = senderFallbackClassTag
   state.displayNameRevision = displayNameRevision
@@ -257,7 +265,7 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     targetOffset = math.max(dividerOffset - CONTENT_PAD, 0)
     force = true
   end
-  local _, relaidOut = bindOffset(transcript, state, targetOffset, snapToEnd, force)
+  local _, relaidOut = bindOffset(transcript, state, targetOffset, snapToEnd, force, rebuild)
 
   local settledWidth = sizeValue(transcript.scrollFrame, "GetWidth", "width", paneWidth)
   if settledWidth ~= paneWidth then
@@ -265,7 +273,7 @@ function TranscriptVirtualization.Render(transcript, messages, paneWidth, option
     state, settledChanged = TranscriptRows.Prepare(transcript, messages, settledWidth, dividerMessage)
     state.options = options
     state.fallbackClassTag = fallbackClassTag
-    local _, settledRelaidOut = bindOffset(transcript, state, ScrollView.GetOffset(transcript), snapToEnd, force or settledChanged)
+    local _, settledRelaidOut = bindOffset(transcript, state, ScrollView.GetOffset(transcript), snapToEnd, force or settledChanged, rebuild)
     relaidOut = relaidOut or settledRelaidOut
   end
   return state.totalHeight, state.firstIndex, state.lastIndex, relaidOut
@@ -281,7 +289,7 @@ function TranscriptVirtualization.RefreshViewport(transcript)
   if firstIndex == state.firstIndex and lastIndex == state.lastIndex then
     return false
   end
-  bindOffset(transcript, state, offset, isAtEnd(transcript), false)
+  bindOffset(transcript, state, offset, isAtEnd(transcript), false, false)
   return true
 end
 
