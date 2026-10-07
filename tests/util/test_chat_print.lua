@@ -11,7 +11,7 @@ return function()
       end,
     })
     assert(ChatPrint.Print("hello") == true, "printed")
-    assert(lines[1] == "|cffffd100WhisperMessenger:|r hello", "prefixed: " .. tostring(lines[1]))
+    assert(lines[1] == "|cffffd100Whisper Messenger:|r hello", "prefixed: " .. tostring(lines[1]))
   end
 
   -- test_explicit_frame_wins
@@ -22,7 +22,7 @@ return function()
         lines[#lines + 1] = text
       end,
     })
-    assert(lines[1] == "|cffffd100WhisperMessenger:|r tip", "sent to the given frame")
+    assert(lines[1] == "|cffffd100Whisper Messenger:|r tip", "sent to the given frame")
   end
 
   -- test_no_chat_frame_is_safe

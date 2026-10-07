@@ -170,7 +170,7 @@ local EMPTY_BUTTON_HEIGHT = 24
 local NATIVE_BUTTON_HEIGHT = 22
 -- Empty-state copy per contacts tab; any other mode gets the whispers copy.
 local EMPTY_COPY = {
-  whispers = { title = "Welcome to WhisperMessenger", subtitle = "Pick a conversation on the left, or start a new one." },
+  whispers = { title = "Welcome to Whisper Messenger", subtitle = "Pick a conversation on the left, or start a new one." },
   groups = { title = "Group Chats", subtitle = "Party, raid, instance and guild chats show up here. Join a group or pick a chat on the left." },
   channels = { title = "Channels", subtitle = "The channels you tick in the Chats settings show up here. Pick a channel on the left." },
 }

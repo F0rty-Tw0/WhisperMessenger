@@ -45,7 +45,7 @@ local function applyPresetColors(preset)
 end
 
 -- Window title in both chromes (not localized: it is the addon name).
-Theme.MODERN_TITLE = "WhisperMessenger"
+Theme.MODERN_TITLE = "Whisper Messenger"
 -- Fixed gold accent shared by chat bubble sender tags and the header addon
 -- badge. Deliberately NOT a preset token — stays the same in every theme.
 Theme.TAG_GOLD = { 0.96, 0.78, 0.24, 1 }

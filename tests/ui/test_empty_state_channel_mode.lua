@@ -25,7 +25,7 @@ return function()
     emptyState.setMode("channels")
     assert(FindUI.text(emptyState, CHANNELS_TITLE) ~= nil, "channels mode should show the channel title")
     assert(FindUI.text(emptyState, CHANNELS_SUBTITLE) ~= nil, "channels mode should show the channel subtitle")
-    assert(FindUI.text(emptyState, "Welcome to WhisperMessenger") == nil, "channels mode should drop the whisper welcome")
+    assert(FindUI.text(emptyState, "Welcome to Whisper Messenger") == nil, "channels mode should drop the whisper welcome")
   end
 
   -- test_channels_mode_hides_start_whisper_button

@@ -15,10 +15,10 @@ local HelpSection = {}
 
 local TITLE = "How filters work"
 local LINES = {
-  "Blocked players: their whispers, group and channel messages are hidden in WhisperMessenger, and their say, yell, emote and channel messages in the game's chat too.",
-  "Keyword rules: hide matching group and channel messages in WhisperMessenger, and matching channel messages in the game's chat. Never whispers or your own messages.",
+  "Blocked players: their whispers, group and channel messages are hidden in Whisper Messenger, and their say, yell, emote and channel messages in the game's chat too.",
+  "Keyword rules: hide matching group and channel messages in Whisper Messenger, and matching channel messages in the game's chat. Never whispers or your own messages.",
   "Ready-made rules only filter channels such as Trade, never group chats.",
-  "WhisperMessenger never hides anything from the game's chat in Mythic+, boss fights or PvP.",
+  "Whisper Messenger never hides anything from the game's chat in Mythic+, boss fights or PvP.",
   "gold + cheap: both words must appear, in any order.",
   "wts/wtb: either word is enough.",
   '"lf": whole word only, so "half" doesn\'t match.',

@@ -11,7 +11,7 @@ local InviteHandler = {}
 -- One whisper, sent at most once per conversation. Kept short enough that the
 -- translated copy still fits WoW's 255-byte chat limit.
 InviteHandler.INVITE_TEXT =
-  "Hey! I use WhisperMessenger for whispers: messenger window, history, unread badges, reactions, typing/seen. Free on CurseForge and Wago, grab it and we get all of it between us."
+  "Hey! I use Whisper Messenger for whispers: messenger window, history, unread badges, reactions, typing/seen. Free on CurseForge and Wago, grab it and we get all of it between us."
 
 function InviteHandler.HandleInvite(runtime, selectedContact, refreshWindow)
   if type(runtime) ~= "table" or type(selectedContact) ~= "table" then

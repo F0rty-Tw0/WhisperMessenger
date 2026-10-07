@@ -3,7 +3,7 @@ local Localization = require("WhisperMessenger.Locale.Localization")
 local FakeUI = require("tests.helpers.fake_ui")
 
 -- Our entries in Blizzard's player menu sit under their own divider and a
--- gold "WhisperMessenger" section title.
+-- gold "Whisper Messenger" section title.
 
 -- Fake Menu root description recording every element in order.
 local function newRoot(withSectionApi)
@@ -53,7 +53,7 @@ return function()
   assert(root.elements[1].kind == "divider", "divider separates our section")
   local title = root.elements[2]
   assert(title.kind == "title", "section title follows the divider")
-  assert(string.find(title.text, "WhisperMessenger", 1, true) ~= nil, "title names the addon")
+  assert(string.find(title.text, "Whisper Messenger", 1, true) ~= nil, "title names the addon")
   assert(string.find(title.text, "^|cff") ~= nil and string.find(title.text, "|r$") ~= nil, "title is colour-escaped gold")
   assert(root.elements[3].kind == "button", "our entries follow the title")
   assert(string.find(root.elements[3].text, "|c", 1, true) == nil, "entry labels stay plain")

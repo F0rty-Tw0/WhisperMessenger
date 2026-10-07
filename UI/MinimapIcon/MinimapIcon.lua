@@ -240,7 +240,7 @@ function MinimapIcon.Create(factory, options)
     frame:SetScript("OnEnter", function()
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
-        _G.GameTooltip:SetText("WhisperMessenger")
+        _G.GameTooltip:SetText("Whisper Messenger")
         local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
         if showBadge and badge:IsShown() then
           _G.GameTooltip:AddLine((badgeLabel:GetText() or "") .. " " .. (Localization and Localization.Text("unread") or "unread"))

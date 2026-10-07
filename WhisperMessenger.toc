@@ -10,7 +10,7 @@
 ## Interface-Cata: 40402
 ## Interface-Mists: 50504
 ## Interface-MoP: 50504
-## Title: WhisperMessenger
+## Title: Whisper Messenger
 ## Notes: Never lose a whisper again. Every whisper in one messenger window with history, online status and unread badges.
 ## Author: F0rty_tw0
 ## Category: Chat

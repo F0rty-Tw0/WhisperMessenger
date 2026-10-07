@@ -55,7 +55,7 @@ return function()
     Theme.SetPreset("wow_default")
     local chrome = build()
     assert(chrome.title.text == Theme.MODERN_TITLE, "modern: title should be the full addon name, got " .. tostring(chrome.title.text))
-    assert(chrome.title.text == "WhisperMessenger", "modern: MODERN_TITLE should read WhisperMessenger")
+    assert(chrome.title.text == "Whisper Messenger", "modern: MODERN_TITLE should read WhisperMessenger")
   end
 
   -- test_modern_title_shadow_comes_from_font_object

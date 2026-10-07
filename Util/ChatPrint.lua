@@ -6,7 +6,7 @@ end
 -- Addon notices in the default chat frame, with the gold addon prefix.
 local ChatPrint = {}
 
-local PREFIX = "|cffffd100WhisperMessenger:|r "
+local PREFIX = "|cffffd100Whisper Messenger:|r "
 
 -- frame: optional chat frame; the default chat frame otherwise.
 function ChatPrint.Print(text, frame)

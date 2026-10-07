@@ -88,7 +88,7 @@ function ToggleSpecs.Build(config, onChange)
       end,
       tooltipLines = {
         text("Share typing status"),
-        text("Lets contacts who also use WhisperMessenger see when you are typing a whisper to them."),
+        text("Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."),
       },
     },
     {
@@ -100,7 +100,7 @@ function ToggleSpecs.Build(config, onChange)
       end,
       tooltipLines = {
         text("Send read receipts"),
-        text("Lets contacts who also use WhisperMessenger see when you have read their whispers."),
+        text("Lets contacts who also use Whisper Messenger see when you have read their whispers."),
       },
     },
   }

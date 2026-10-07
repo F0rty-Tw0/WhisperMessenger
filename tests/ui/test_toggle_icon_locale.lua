@@ -26,7 +26,7 @@ return function()
     local onEnter = icon.frame:GetScript("OnEnter")
     assert(onEnter ~= nil, "icon should have OnEnter script")
     onEnter(icon.frame)
-    assert(string.find(tooltipText, "WhisperMessenger", 1, true), "tooltip should still start with WhisperMessenger")
+    assert(string.find(tooltipText, "Whisper Messenger", 1, true), "tooltip should still start with Whisper Messenger")
 
     icon.setUnreadCount(3)
     onEnter(icon.frame)

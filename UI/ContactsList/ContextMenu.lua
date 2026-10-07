@@ -131,7 +131,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
     rootDescription:CreateDivider()
   end
   if type(rootDescription.CreateTitle) == "function" then
-    rootDescription:CreateTitle(UIHelpers.colorEscape(Theme.TAG_GOLD) .. "WhisperMessenger|r")
+    rootDescription:CreateTitle(UIHelpers.colorEscape(Theme.TAG_GOLD) .. "Whisper Messenger|r")
   end
   addMarkUnreadButton(rootDescription, item, onMarkUnread)
   addPrefsButtons(rootDescription, item, onUpdatePrefs, false)

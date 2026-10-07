@@ -6,7 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
-- Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses WhisperMessenger. Group chats keep the old length.
+- Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses Whisper Messenger. Group chats keep the old length.
+- The addon now goes by "Whisper Messenger" everywhere: the AddOns list, the window title, the icon tooltips, chat messages and the options.
 - A burst of whispers from one person now plays the alert sound once instead of once per line.
 - Busy group chats no longer slow the game down while the window is open.
 - Uses less CPU while the window is closed: incoming whispers, friends changing status, busy Trade and General chat, and clicking around the game now do much less work behind the scenes for a window you can't see. Searching your contacts also stays smooth while you type.

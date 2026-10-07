@@ -127,4 +127,27 @@ return function()
     assert(savedState ~= nil, "drag stop persists the position")
     assert(math.abs(savedState.degrees - 90) < 0.01, "cursor straight up persists 90 degrees; got: " .. tostring(savedState.degrees))
   end
+
+  -- test_tooltip_leads_with_spaced_addon_name
+  do
+    local factory = FakeUI.NewFactory()
+    local icon = MinimapIcon.Create(factory, { parent = makeParent(factory) })
+    local tooltipText = nil
+    local originalTooltip = _G.GameTooltip
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_self, text)
+        tooltipText = text
+      end,
+      AddLine = function() end,
+      AddDoubleLine = function() end,
+      Show = function() end,
+      Hide = function() end,
+    }
+
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    _G.GameTooltip = originalTooltip
+
+    assert(tooltipText == "Whisper Messenger", "tooltip title is the addon name; got: " .. tostring(tooltipText))
+  end
 end
