@@ -4,7 +4,7 @@
   </a>
 </p>
 
-<h1 align="center">WhisperMessenger</h1>
+<h1 align="center">Whisper Messenger</h1>
 
 <p align="center">
   <a href="https://github.com/F0rty-Tw0/WhisperMessenger/releases/latest"><img src="https://img.shields.io/github/v/release/F0rty-Tw0/WhisperMessenger" alt="Latest Release"></a>
@@ -21,7 +21,7 @@
   🏆 5th place in <a href="https://mod.curseforge.com/modding-contests/wow_midnight-addon_contest/">The Addon Trials</a>, CurseForge's 2026 WoW addon contest.
 </p>
 
-![WhisperMessenger in the Native WoW HUD Modern style, showing a whisper over 700 characters long as one message](.github/assets/hud-modern-long-whisper.png)
+![Whisper Messenger in the Native WoW HUD Modern style, showing a whisper over 700 characters long as one message](.github/assets/hud-modern-long-whisper.png)
 
 ## Why players install it
 
@@ -35,7 +35,7 @@
 
 ## "Can't I just make a Whispers chat tab?"
 
-You can, and it helps. A tab still mixes everyone into one scrolling stream, forgets everything on logout, has no unread count per person and no online status. WhisperMessenger gives every person their own thread with all of that.
+You can, and it helps. A tab still mixes everyone into one scrolling stream, forgets everything on logout, has no unread count per person and no online status. Whisper Messenger gives every person their own thread with all of that.
 
 ## Features
 
@@ -43,7 +43,7 @@ You can, and it helps. A tab still mixes everyone into one scrolling stream, for
 
 Chat bubbles with timestamps, date separators and sender labels. Right-click any message to reply, copy it or add a reaction. An emoji picker sits next to the message box.
 
-- **Long whispers** run to about 800 characters. They go out in up to four parts and show as one message when your friend also uses WhisperMessenger. Group chats keep the game's normal length.
+- **Long whispers** run to about 800 characters. They go out in up to four parts and show as one message when your friend also uses Whisper Messenger. Group chats keep the game's normal length.
 - **Reply** quotes the original line above your message.
 - **Quick replies** drop in a saved line like "On my way" (up to 10, edit them under Options > Behavior).
 - **Drafts** stay with each chat, even after a reload.
@@ -51,7 +51,7 @@ Chat bubbles with timestamps, date separators and sender labels. Right-click any
 - **Filtered messages** that the game flags as inappropriate stay hidden until you click to reveal them.
 
 <p align="center">
-  <img src=".github/assets/chat-reactions-seen.png" width="80%" alt="WhisperMessenger window with replies, reactions and a Seen receipt">
+  <img src=".github/assets/chat-reactions-seen.png" width="80%" alt="Whisper Messenger window with replies, reactions and a Seen receipt">
 </p>
 
 <p align="center">
@@ -114,7 +114,7 @@ Character whispers and Battle.net friend whispers live in one list. Contact deta
 
 ### Friends Who Also Use It
 
-When a friend also runs WhisperMessenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Both can be switched off in Behavior settings. Players without the addon still receive a readable plain-text fallback.
+When a friend also runs Whisper Messenger you get typing indicators, "Seen" receipts and reactions attached to the original message. Both can be switched off in Behavior settings. Players without the addon still receive a readable plain-text fallback.
 
 The chat header shows **(Uses WM)** for friends who have it, and an **(Invite to WM)** link for those who don't.
 
@@ -171,11 +171,11 @@ Pages for **General**, **Appearance**, **Behavior**, **Whispers**, **Chats**, **
 
 ## Good to know
 
-Blizzard blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds and raid boss encounters. This is a game-level restriction, not a limitation of WhisperMessenger. The addon detects these situations, steps aside so whispers fall through to the default chat, and resumes when you're done.
+Blizzard blocks all addon whisper communication during Mythic+ dungeons, rated Battlegrounds and raid boss encounters. This is a game-level restriction, not a limitation of Whisper Messenger. The addon detects these situations, steps aside so whispers fall through to the default chat, and resumes when you're done.
 
 ## Compatibility
 
-WhisperMessenger works on **all WoW flavors**:
+Whisper Messenger works on **all WoW flavors**:
 
 | Flavor                    | Status    |
 | ------------------------- | --------- |
