@@ -169,6 +169,19 @@ return function()
     assert(point[4] < 0, "HUD: badge pulled in from the corner so it stays over its own tab, got x " .. tostring(point[4]))
   end
 
+  -- test_hud_unread_badge_draws_above_the_window_border
+  do
+    -- The badge straddles the window's bottom edge; the template's border
+    -- art sits on a high frame level and would hide its top half.
+    local factory = FakeUI.NewFactory()
+    local window = factory.CreateFrame("Frame", nil, nil, "ButtonFrameTemplate")
+    window.NineSlice:SetFrameLevel(500)
+    local pane = factory.CreateFrame("Frame", nil, window)
+    local toggle = TabToggle.Create(factory, pane, { initialMode = "whispers", nativeChrome = true, windowFrame = window })
+    local badge = FindUI.ofType(tabs(toggle)[1], "Frame")[1]
+    assert(badge:GetFrameLevel() > 500, "HUD: badge above the border art, got level " .. tostring(badge:GetFrameLevel()))
+  end
+
   -- test_hud_tab_width_fallback_without_tab_resize
   do
     local buttons = tabs(createToggle(FakeUI.NewFactory(), true))
