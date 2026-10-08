@@ -1,6 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
+local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 local STUBBED = { "UnitName", "GetGuildInfo", "UnitTokenFromGUID", "UnitLevel" }
 
@@ -61,10 +62,32 @@ return function()
   end
 
   -- test_outgoing_line_has_no_sender_level
+  -- The player is in their own guild roster, so a level is known for them;
+  -- their own lines still get none.
   do
+    PresenceCache._reset()
+    PresenceCache._initForTest({
+      GetGuildClubId = function()
+        return 1
+      end,
+      GetSubscribedClubs = function()
+        return {}
+      end,
+      GetClubMembers = function()
+        return { 1 }
+      end,
+      GetMemberInfo = function()
+        return { guid = "Player-1-SELF", presence = 1, level = 80 }
+      end,
+    }, {
+      now = function()
+        return 100
+      end,
+    })
     local message = storedMessage(guildLine("on my way", "Player-1-SELF"))
+    PresenceCache._reset()
     assert(message.direction == "out", "own line is outgoing")
-    assert(message.senderLevel == nil, "outgoing line has no senderLevel")
+    assert(message.senderLevel == nil, "outgoing line has no senderLevel, got " .. tostring(message.senderLevel))
   end
 
   -- test_incoming_line_without_guid_has_no_sender_level
