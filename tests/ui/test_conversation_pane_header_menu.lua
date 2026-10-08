@@ -93,7 +93,7 @@ return function()
     assert(#calls == 0, "right-click with no conversation should not open a menu")
   end
 
-  -- test_drag_moves_and_saves_through_window
+  -- test_drag_moves_window_not_header
   do
     local window, _, header = buildChain(factory)
     window:SetScript("OnDragStart", function(self)
@@ -161,11 +161,20 @@ return function()
   do
     local parent = factory.CreateFrame("Frame", nil, nil)
     parent:SetSize(600, 420)
-    local view = ConversationPane.Create(factory, parent, { displayName = "Arthas", channel = "WOW" }, nil, {
-      onMarkUnread = function() end,
-      onUpdatePrefs = function() end,
-    })
-    assert(view.headerFrame.mouseEnabled == true, "the pane's header should accept mouse input")
-    assert(type(view.headerFrame:GetScript("OnMouseUp")) == "function", "the pane's header should open a menu on right-click")
+    local realBind = HeaderMenu.Bind
+    local bound = nil
+    rawset(HeaderMenu, "Bind", function(...)
+      bound = { ... }
+      return realBind(...)
+    end)
+    local options = { onMarkUnread = function() end, onUpdatePrefs = function() end }
+    local ok, view = pcall(ConversationPane.Create, factory, parent, { displayName = "Arthas", channel = "WOW" }, nil, options)
+    rawset(HeaderMenu, "Bind", realBind)
+    assert(ok, tostring(view))
+
+    assert(bound ~= nil, "building the pane should bind the header menu")
+    assert(bound[1] == view.headerFrame, "the menu should bind to the pane's header frame")
+    assert(bound[2] == view, "the menu should read the selected contact from the pane's view")
+    assert(bound[3] == options, "the menu should get the pane's callbacks")
   end
 end
