@@ -10,13 +10,15 @@ local WHISPER_CHANNELS = { WOW = true, BN = true }
 
 -- Group and channel lines carry their chat type ("GUILD", "CHANNEL") as
 -- message.channel; their sender is still a WoW player. The line ID and chat
--- type let Blizzard's player menu report that line.
+-- type let Blizzard's player menu report that line. Group lines carry
+-- Battle.net ID 0 for ordinary players; Blizzard's menu reads any ID as "is a
+-- Battle.net friend?" and hides Whisper when it isn't, so 0 is dropped.
 local function buildItem(message)
   return {
     channel = message.channel == "BN" and "BN" or "WOW",
     displayName = message.playerName,
     guid = message.guid,
-    bnetAccountID = message.bnetAccountID,
+    bnetAccountID = message.bnetAccountID ~= 0 and message.bnetAccountID or nil,
     battleTag = message.battleTag,
     gameAccountName = message.gameAccountName,
     lineID = message.lineID,

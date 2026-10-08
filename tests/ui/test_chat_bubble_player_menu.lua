@@ -259,6 +259,28 @@ return function()
     assert(opened.lineID == 7 and opened.chatType == "GUILD", "expected the guild line and chat type")
   end
 
+  -- test_guild_sender_with_zero_bnet_id_gets_no_bnet_id
+  -- Guild and group lines carry Battle.net ID 0 for ordinary players; passed
+  -- on, Blizzard's menu treats the sender as a non-friend and hides Whisper.
+  do
+    local opened
+    local stub = {
+      Open = function(item)
+        opened = item
+        return true
+      end,
+    }
+
+    PlayerMenu.Open(
+      { direction = "in", channel = "GUILD", playerName = "Thrall-Doomhammer", bnetAccountID = 0 },
+      anchor,
+      stub,
+      { contact = { channel = "GUILD" } }
+    )
+
+    assert(opened.bnetAccountID == nil, "expected no Battle.net ID, got " .. tostring(opened.bnetAccountID))
+  end
+
   -- test_protected_name_opens_no_player_menu
   -- A |K token is a protected Battle.net name; the WoW player menu can't use it.
   do
