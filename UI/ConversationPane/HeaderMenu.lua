@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ContactsContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
+
 -- Right-click on the conversation header opens that conversation's menu: the
 -- player menu for a whisper (same as right-clicking the sender's name), the
 -- group menu for a group chat.
@@ -37,7 +39,7 @@ local function forward(headerFrame, eventName)
 end
 
 -- options: { onMarkUnread, onUpdatePrefs } (the pane's menu callbacks).
--- contextMenu (optional): stands in for ns.ContactsListContextMenu in tests.
+-- contextMenu (optional): stands in for the contacts list menu in tests.
 function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
   if type(headerFrame) ~= "table" or type(headerFrame.SetScript) ~= "function" then
     return
@@ -59,7 +61,7 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     if contact == nil then
       return
     end
-    local cm = contextMenu or ns.ContactsListContextMenu
+    local cm = contextMenu or ContactsContextMenu
     if type(cm) ~= "table" or type(cm.Open) ~= "function" then
       return
     end
