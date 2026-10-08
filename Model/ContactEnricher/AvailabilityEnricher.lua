@@ -65,6 +65,7 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
     end
     if item.guid and item.channel ~= "BN" then
       WoWStatus.ApplyZone(item)
+      WoWStatus.ApplyLevel(item, runtime)
     end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then

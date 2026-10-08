@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 local WoWStatus = {}
 
@@ -89,6 +90,20 @@ function WoWStatus.ApplyZone(item)
     item.areaName = PresenceCache.GetZone(item.guid)
   else
     item.areaName = nil
+  end
+end
+
+-- Copy a known guild/community level onto the contact and its stored
+-- conversation. Unlike zone it is never cleared: offline shows the last level.
+function WoWStatus.ApplyLevel(item, runtime)
+  local level = PresenceCache.GetLevel(item.guid)
+  if level == nil then
+    return
+  end
+  item.characterLevel = level
+  local conversation = Store.Find(runtime.store, item.conversationKey)
+  if conversation then
+    conversation.characterLevel = level
   end
 end
 
