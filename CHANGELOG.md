@@ -12,6 +12,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Busy group chats no longer slow the game down while the window is open.
 - Uses less CPU while the window is closed: incoming whispers, friends changing status, busy Trade and General chat, and clicking around the game now do much less work behind the scenes for a window you can't see. Searching your contacts also stays smooth while you type.
 - Repeated messages from the same player now show once with a counter (like ×3) in your theme's accent color.
+- Right-click the top of a conversation (the name or status) to open its menu. For a player, that includes invite to group, ignore and report.
 - Fixed: scrolling up through a long chat, like a busy Trade channel, used a lot of CPU. The window now only draws the messages that scroll into view, and new messages no longer redraw the ones you're reading.
 - Fixed: after clicking somewhere else, your action bars and other addons' buttons drew on top of the window.
 - Fixed: with the Native WoW HUD look, the unread counter on the Whispers, Groups and Channels tabs was half hidden behind the window's bottom border.

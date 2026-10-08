@@ -227,6 +227,7 @@ UI/ConversationPane/AddonBadge.lua
 UI/ConversationPane/HeaderContactExtras.lua
 UI/ConversationPane/HeaderFit.lua
 UI/ConversationPane/HeaderView.lua
+UI/ConversationPane/HeaderMenu.lua
 UI/ConversationPane/TranscriptSetup.lua
 UI/ConversationPane/ChannelContextMerger.lua
 UI/ConversationPane/BottomBanner.lua
