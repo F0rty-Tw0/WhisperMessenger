@@ -121,6 +121,44 @@ return function()
     assert(lookupSafely(GUID) == 22, "scanned party member level should be 22")
   end
 
+  -- the party scan reaches the last party slot (party1..count-1)
+  do
+    reset()
+    rawset(_G, "IsInRaid", function()
+      return false
+    end)
+    rawset(_G, "GetNumGroupMembers", function()
+      return 3
+    end)
+    rawset(_G, "UnitGUID", function(unit)
+      if unit == "party2" then
+        return GUID
+      end
+      return nil
+    end)
+    withUnitLevels({ party2 = 23 })
+    assert(lookupSafely(GUID) == 23, "last party slot level should be 23")
+  end
+
+  -- in a raid the scan walks raid1..count, including the last slot
+  do
+    reset()
+    rawset(_G, "IsInRaid", function()
+      return true
+    end)
+    rawset(_G, "GetNumGroupMembers", function()
+      return 25
+    end)
+    rawset(_G, "UnitGUID", function(unit)
+      if unit == "raid25" then
+        return GUID
+      end
+      return nil
+    end)
+    withUnitLevels({ raid25 = 24 })
+    assert(lookupSafely(GUID) == 24, "last raid slot level should be 24")
+  end
+
   -- guild cache level when not grouped
   do
     reset()
