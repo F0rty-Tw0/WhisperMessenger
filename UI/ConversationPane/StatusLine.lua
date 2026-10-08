@@ -8,6 +8,7 @@ local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -69,7 +70,14 @@ function StatusLine.Build(selectedContact, status)
     end
   end
 
-  if selectedContact.className and selectedContact.className ~= "" then
+  -- "Level 80 Shaman": the level joins the class chunk, alone when no class.
+  -- Only the level takes the difficulty colour, and only with the option on.
+  local hasClass = selectedContact.className and selectedContact.className ~= ""
+  local level = DisplayName.ShowPlayerLevels() and tonumber(selectedContact.characterLevel)
+  if level then
+    local levelText = LevelColor.Escape(level) .. string.format(Localization.Text("Level %d"), level) .. "|r"
+    table.insert(line1, hasClass and (levelText .. " " .. Localization.Text(selectedContact.className)) or levelText)
+  elseif hasClass then
     table.insert(line1, Localization.Text(selectedContact.className))
   end
 

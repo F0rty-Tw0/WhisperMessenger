@@ -366,6 +366,7 @@ local SimplifiedChinese = {
   ["No message requests."] = "没有消息请求。",
   ["No channel messages yet."] = "还没有频道消息。",
   ["Last seen %s"] = "最后见到：%s",
+  ["Level %d"] = "%d级",
   ["Last online %s"] = "上次在线：%s",
   ["Notify when online"] = "上线时通知",
   ["%s is now online."] = "%s 已上线。",

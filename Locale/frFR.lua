@@ -366,6 +366,7 @@ local French = {
   ["No message requests."] = "Aucune demande de message.",
   ["No channel messages yet."] = "Aucun message de canal pour le moment.",
   ["Last seen %s"] = "Vu pour la dernière fois : %s",
+  ["Level %d"] = "Niveau %d",
   ["Last online %s"] = "Dernière connexion : %s",
   ["Notify when online"] = "Prévenir à la connexion",
   ["%s is now online."] = "%s est maintenant en ligne.",

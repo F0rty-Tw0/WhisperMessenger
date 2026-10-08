@@ -370,6 +370,7 @@ local Spanish = {
   ["No message requests."] = "No hay solicitudes de mensajes.",
   ["No channel messages yet."] = "Aún no hay mensajes de canal.",
   ["Last seen %s"] = "Visto por última vez: %s",
+  ["Level %d"] = "Nivel %d",
   ["Last online %s"] = "Última vez en línea: %s",
   ["Notify when online"] = "Avisarme cuando se conecte",
   ["%s is now online."] = "%s ya está en línea.",

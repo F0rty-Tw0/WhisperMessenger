@@ -366,6 +366,7 @@ local Korean = {
   ["No message requests."] = "메시지 요청이 없습니다.",
   ["No channel messages yet."] = "아직 채널 메시지가 없습니다.",
   ["Last seen %s"] = "마지막 확인: %s",
+  ["Level %d"] = "%d 레벨",
   ["Last online %s"] = "마지막 접속: %s",
   ["Notify when online"] = "접속 시 알림",
   ["%s is now online."] = "%s님이 접속했습니다.",
