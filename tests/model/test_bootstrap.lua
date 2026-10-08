@@ -42,23 +42,36 @@ return function()
 
   local factory = FakeUI.NewFactory()
   _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  local accountState = {
-    schemaVersion = 1,
-    conversations = {},
-    contacts = {},
-    pendingHydration = {},
-    settings = {
-      windowScale = "invalid",
-      hideFromDefaultChat = false,
-      hideBattleTagNumbers = false,
-      showPlayerLevels = true,
-    },
-  }
+  local function boot(settings)
+    local state = {
+      schemaVersion = 1,
+      conversations = {},
+      contacts = {},
+      pendingHydration = {},
+      settings = settings,
+    }
+    local bootOk, bootErr = pcall(Bootstrap.Initialize, factory, {
+      accountState = state,
+      characterState = { window = {}, icon = {} },
+    })
+    return state, bootOk, bootErr
+  end
 
-  local ok, err = pcall(Bootstrap.Initialize, factory, {
-    accountState = accountState,
-    characterState = { window = {}, icon = {} },
+  local accountState, ok, err = boot({
+    windowScale = "invalid",
+    hideFromDefaultChat = false,
+    hideBattleTagNumbers = false,
+    showPlayerLevels = true,
   })
+
+  local DisplayName = require("WhisperMessenger.Util.DisplayName")
+  local scaleAtCreate = windowCreateScale
+  local formatAfterSavedOff = DisplayName.Format("Arthas#1234")
+  local classColorsAfterUnsaved = DisplayName.ClassColorSenderNames()
+  local levelsAfterSavedOn = DisplayName.ShowPlayerLevels()
+  -- No saved choice: player levels stay off even if they were on before.
+  local _, unsavedOk, unsavedErr = boot({})
+  local levelsAfterUnsaved = DisplayName.ShowPlayerLevels()
 
   package.loaded["UI.Theme"] = savedTheme
   package.loaded["UI.Theme.Fonts"] = savedFonts
@@ -68,12 +81,15 @@ return function()
   if not ok then
     error(err, 0)
   end
+  if not unsavedOk then
+    error(unsavedErr, 0)
+  end
 
   assert(accountState.settings.windowScale == 1.00, "Bootstrap persists normalized window scale")
-  assert(windowCreateScale == 1.00, "window creation receives normalized window scale")
-  local DisplayName = require("WhisperMessenger.Util.DisplayName")
-  assert(DisplayName.Format("Arthas#1234") == "Arthas#1234", "a saved off choice shows full BattleTags after login")
-  assert(DisplayName.ClassColorSenderNames() == true, "no saved choice colours names after login")
-  assert(DisplayName.ShowPlayerLevels() == true, "a saved on choice shows player levels after login")
+  assert(scaleAtCreate == 1.00, "window creation receives normalized window scale")
+  assert(formatAfterSavedOff == "Arthas#1234", "a saved off choice shows full BattleTags after login")
+  assert(classColorsAfterUnsaved == true, "no saved choice colours names after login")
+  assert(levelsAfterSavedOn == true, "a saved on choice shows player levels after login")
+  assert(levelsAfterUnsaved == false, "no saved choice keeps player levels off after login")
   DisplayName.Configure({ classColorSenderNames = false, showPlayerLevels = false })
 end
