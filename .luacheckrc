@@ -114,6 +114,8 @@ read_globals = {
   "UnitName",
   "UnitFullName",
   "UnitGUID",
+  "UnitLevel",
+  "UnitTokenFromGUID",
   "UnitClass",
   "UnitFactionGroup",
   "GetPhysicalScreenSize",

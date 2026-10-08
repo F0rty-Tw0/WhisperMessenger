@@ -73,6 +73,7 @@ Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
 Model/PresenceCache.lua
+Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
