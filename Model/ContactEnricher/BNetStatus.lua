@@ -57,10 +57,9 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
     if playerInfo.raceTag then
       target.raceTag = playerInfo.raceTag
     end
+    -- An unknown level clears the old one: it may belong to another character.
     local level = gameInfo.characterLevel
-    if type(level) == "number" and level > 0 then
-      target.characterLevel = level
-    end
+    target.characterLevel = (type(level) == "number" and level > 0) and level or nil
   end
   -- else: classTag unresolvable — leave className, classTag and level untouched
   -- (stale but consistent beats a mismatched icon/text pair)

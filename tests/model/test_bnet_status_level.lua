@@ -35,13 +35,15 @@ return function()
     assert(target.characterLevel == 70, "level must not change while not in WoW")
   end
 
-  -- zero or missing level keeps the old value
+  -- class resolved but level unknown: the old level (maybe another
+  -- character's) is dropped so it never sits next to the new class
   do
-    local target = { characterLevel = 70 }
+    local target = { className = "Mage", classTag = "MAGE", characterLevel = 70 }
     BNetStatus.ApplyGameInfoMetadata(target, inWoW(0), resolvesShaman())
-    assert(target.characterLevel == 70, "level 0 should be ignored")
+    assert(target.characterLevel == nil, "level 0 should clear the old level, got " .. tostring(target.characterLevel))
+    target.characterLevel = 70
     BNetStatus.ApplyGameInfoMetadata(target, inWoW(nil), resolvesShaman())
-    assert(target.characterLevel == 70, "missing level should be ignored")
+    assert(target.characterLevel == nil, "missing level should clear the old level, got " .. tostring(target.characterLevel))
   end
 
   -- alt whose class can't be resolved yet: class and level both stay
