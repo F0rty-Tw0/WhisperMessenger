@@ -11,6 +11,8 @@ local DuplicateCollapse = ns.DuplicateCollapse or require("WhisperMessenger.Mode
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
+local SenderLevel = ns.SenderLevel or require("WhisperMessenger.Model.SenderLevel")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
@@ -54,8 +56,14 @@ local function buildMessage(payload, direction, sentAt, playerInfo)
     -- Same frozen sender fields as the player's own group lines.
     message.senderClassTag = playerInfo.classTag or LocalPlayer.ClassTag()
     message.senderName = LocalPlayer.Name()
-  elseif Mention.Matches(payload.text, Mention.PlayerName()) then
-    message.mention = true
+  else
+    if Mention.Matches(payload.text, Mention.PlayerName()) then
+      message.mention = true
+    end
+    -- Only while levels are shown: busy Trade chat pays nothing when off.
+    if payload.guid and DisplayName.ShowPlayerLevels() then
+      message.senderLevel = SenderLevel.Lookup(payload.guid)
+    end
   end
   return message
 end
