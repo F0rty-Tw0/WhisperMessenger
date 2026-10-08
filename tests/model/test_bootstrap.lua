@@ -51,6 +51,7 @@ return function()
       windowScale = "invalid",
       hideFromDefaultChat = false,
       hideBattleTagNumbers = false,
+      showPlayerLevels = true,
     },
   }
 
@@ -73,5 +74,6 @@ return function()
   local DisplayName = require("WhisperMessenger.Util.DisplayName")
   assert(DisplayName.Format("Arthas#1234") == "Arthas#1234", "a saved off choice shows full BattleTags after login")
   assert(DisplayName.ClassColorSenderNames() == true, "no saved choice colours names after login")
-  DisplayName.Configure({ classColorSenderNames = false })
+  assert(DisplayName.ShowPlayerLevels() == true, "a saved on choice shows player levels after login")
+  DisplayName.Configure({ classColorSenderNames = false, showPlayerLevels = false })
 end
