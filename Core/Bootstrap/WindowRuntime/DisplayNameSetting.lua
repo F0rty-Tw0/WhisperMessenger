@@ -19,6 +19,10 @@ function DisplayNameSetting.Apply(displayName, key, value)
     displayName.Configure({ classColorSenderNames = value ~= false })
     return true
   end
+  if key == "showPlayerLevels" then
+    displayName.Configure({ showPlayerLevels = value == true })
+    return true
+  end
   return false
 end
 

@@ -175,33 +175,50 @@ function Base.setTextColor(fontString, colorTable)
   end
 end
 
-local UTF8_CHAR_PATTERN = "[%z\1-\127\194-\244][\128-\191]*"
+local UTF8_CHAR_AT_PATTERN = "^[%z\1-\127\194-\244][\128-\191]*"
 local ELLIPSIS = "..."
 
-local function utf8CodepointCount(text)
-  local count = 0
-  for _ in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
-    count = count + 1
+local COLOR_START_PATTERN = "^|c%x%x%x%x%x%x%x%x"
+
+-- Splits text into units a cut may not split: a "|cAARRGGBB" or "|r" colour
+-- escape (zero width), a "||" literal pipe, or one UTF-8 codepoint.
+-- Returns the unit strings, their kinds ("open", "close", or false for a
+-- visible character), and the unit index of each visible character.
+local function textUnits(text)
+  local units, kinds, visibleAt = {}, {}, {}
+  local i, n = 1, 0
+  while i <= #text do
+    local unit
+    local kind = false
+    if string.find(text, COLOR_START_PATTERN, i) then
+      unit, kind = string.sub(text, i, i + 9), "open"
+    elseif string.sub(text, i, i + 1) == "|r" then
+      unit, kind = "|r", "close"
+    elseif string.sub(text, i, i + 1) == "||" then
+      unit = "||"
+    else
+      unit = string.match(text, UTF8_CHAR_AT_PATTERN, i) or string.sub(text, i, i)
+    end
+    n = n + 1
+    units[n], kinds[n] = unit, kind
+    if not kind then
+      visibleAt[#visibleAt + 1] = n
+    end
+    i = i + #unit
   end
-  return count
+  return units, kinds, visibleAt
 end
 
-local function utf8Prefix(text, maxChars)
-  if maxChars <= 0 then
-    return ""
-  end
-
-  local chars = {}
-  local index = 0
-  for char in string.gmatch(text or "", UTF8_CHAR_PATTERN) do
-    index = index + 1
-    if index > maxChars then
-      break
+-- Units 1..lastUnit joined, closing a colour the cut leaves open.
+local function unitPrefix(units, kinds, lastUnit)
+  local colorOpen = false
+  for j = 1, lastUnit do
+    if kinds[j] then
+      colorOpen = kinds[j] == "open"
     end
-    chars[#chars + 1] = char
   end
-
-  return table.concat(chars)
+  local prefix = table.concat(units, "", 1, lastUnit)
+  return colorOpen and (prefix .. "|r") or prefix
 end
 
 function Base.fitTextWithEllipsis(label, text, maxWidth)
@@ -221,16 +238,26 @@ function Base.fitTextWithEllipsis(label, text, maxWidth)
     return ELLIPSIS
   end
 
-  local totalChars = utf8CodepointCount(resolvedText)
-  for keepChars = totalChars - 1, 1, -1 do
-    local candidate = utf8Prefix(resolvedText, keepChars) .. ELLIPSIS
+  -- Binary search for the most visible characters that fit: each try is a
+  -- SetText + GetStringWidth round trip, so log2(n) tries instead of n.
+  -- A kept prefix runs up to, not including, the next visible character, so
+  -- escapes right after the last kept character stay.
+  local units, kinds, visibleAt = textUnits(resolvedText)
+  local best = ELLIPSIS
+  local low, high = 1, #visibleAt - 1
+  while low <= high do
+    local keepChars = math.floor((low + high) / 2)
+    local candidate = unitPrefix(units, kinds, visibleAt[keepChars + 1] - 1) .. ELLIPSIS
     label:SetText(candidate)
     if label:GetStringWidth() <= maxWidth then
-      return candidate
+      best, low = candidate, keepChars + 1
+    else
+      high = keepChars - 1
     end
   end
 
-  return ELLIPSIS
+  label:SetText(best)
+  return best
 end
 
 -- Creates a frame from a Blizzard template, or returns nil when this client

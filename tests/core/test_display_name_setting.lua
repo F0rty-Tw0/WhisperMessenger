@@ -24,6 +24,16 @@ return function()
     assert(last.hideBattleTagNumbers == nil, "the class colour key leaves the BattleTag choice alone")
   end
 
+  -- test_player_levels_key_is_opt_in
+
+  do
+    local DisplayName = require("WhisperMessenger.Util.DisplayName")
+    assert(DisplayNameSetting.Apply(DisplayName, "showPlayerLevels", true) == true, "the player levels key is handled")
+    assert(DisplayName.ShowPlayerLevels() == true, "a true choice shows levels")
+    assert(DisplayNameSetting.Apply(DisplayName, "showPlayerLevels", nil) == true, "an unset choice is handled")
+    assert(DisplayName.ShowPlayerLevels() == false, "an unset player levels choice is off")
+  end
+
   -- test_other_keys_are_ignored
 
   do

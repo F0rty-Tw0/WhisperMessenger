@@ -120,6 +120,7 @@ function Bootstrap.Initialize(factory, options)
   DisplayName.Configure({
     hideBattleTagNumbers = accountState.settings.hideBattleTagNumbers ~= false,
     classColorSenderNames = accountState.settings.classColorSenderNames ~= false,
+    showPlayerLevels = accountState.settings.showPlayerLevels == true,
   })
   -- Initialize guild/community presence cache
   local presenceTTL = (accountState.settings and accountState.settings.presenceRefreshInterval) or 30

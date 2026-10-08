@@ -50,6 +50,7 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     gameAccountName = conversation.gameAccountName,
     className = conversation.className,
     classTag = conversation.classTag,
+    characterLevel = conversation.characterLevel,
     raceName = conversation.raceName,
     raceTag = conversation.raceTag,
     factionName = conversation.factionName,

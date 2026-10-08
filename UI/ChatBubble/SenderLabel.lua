@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local DeliveryStatus = ns.ChatBubbleDeliveryStatus or require("WhisperMessenger.UI.ChatBubble.DeliveryStatus")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -147,7 +148,13 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     hideCached(frame, "_wmSenderSeenFS")
     DeliveryStatus.Hide(frame)
     local displayName = DisplayName.Format(message.playerName or message.senderDisplayName) or ""
-    nameFS:SetText(displayName)
+    -- "20:Name": only the level takes the difficulty colour.
+    local level = message.senderLevel
+    if DisplayName.ShowPlayerLevels() and type(level) == "number" then
+      nameFS:SetText(LevelColor.Escape(level) .. level .. "|r:" .. displayName)
+    else
+      nameFS:SetText(displayName)
+    end
     if DisplayName.ClassColorSenderNames() then
       UIHelpers.applyClassColor(nameFS, message.classTag or options.senderFallbackClassTag, Theme.COLORS.text_secondary)
     end

@@ -71,7 +71,9 @@ Model/AlertPolicy.lua
 Model/OnlineWatch.lua
 Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
+Model/PresenceCache/MemberRecord.lua
 Model/PresenceCache.lua
+Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
@@ -108,6 +110,7 @@ Core/Ingest/GroupChatIngest/SecretString.lua
 Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest/Mention.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
+Core/Ingest/GroupChatIngest/Message.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
@@ -142,6 +145,7 @@ UI/Helpers/DisabledState.lua
 UI/Helpers/NativeControls.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/LevelColor.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua
