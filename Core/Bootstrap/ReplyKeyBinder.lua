@@ -77,13 +77,15 @@ function ReplyKeyBinder.New(deps)
     if button and button.SetAttribute then
       button:SetAttribute("type", "macro")
       button:SetAttribute("macrotext", "/wr")
+      -- Without this the secure handler follows the ActionButtonUseKeyDown
+      -- CVar; with it off, only key-up acts, which AnyDown never delivers.
+      button:SetAttribute("useOnKeyDown", true)
     end
     -- Secure action buttons need RegisterForClicks to actually receive
-    -- click events from SetOverrideBindingClick. SetOverrideBindingClick
-    -- dispatches the virtual click on key-DOWN, so register AnyDown only.
-    -- Registering both AnyUp+AnyDown fires the binding twice per keypress;
-    -- the second fire races the newly-focused composer and leaks the
-    -- trigger character into it.
+    -- click events from SetOverrideBindingClick. Register AnyDown only
+    -- (paired with useOnKeyDown above). Registering both AnyUp+AnyDown
+    -- fires the binding twice per keypress; the second fire races the
+    -- newly-focused composer and leaks the trigger character into it.
     if button and button.RegisterForClicks then
       button:RegisterForClicks("AnyDown")
     end

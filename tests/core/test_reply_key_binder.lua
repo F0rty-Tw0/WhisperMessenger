@@ -102,6 +102,24 @@ return function()
     assert(binding.owner == stubs.frame, "owner of override binding must be our button")
   end
 
+  -- test_bind_forces_key_down_dispatch_regardless_of_cvar
+
+  -- Blizzard's SecureActionButton_OnClick falls back to the
+  -- ActionButtonUseKeyDown CVar when useOnKeyDown is unset. With that CVar
+  -- off it only acts on key-up, which an AnyDown-only button never gets, so
+  -- the reply key silently did nothing (issue #19).
+  do
+    local stubs = makeStubs()
+    local binder = newBinder(stubs)
+
+    binder.bind()
+
+    assert(
+      stubs.frame:GetAttribute("useOnKeyDown") == true,
+      "button must set useOnKeyDown=true so key-down acts even when ActionButtonUseKeyDown is 0"
+    )
+  end
+
   -- test_bind_uses_user_reply_binding_not_hardcoded_r
 
   -- The user may have rebound REPLY to something other than R (e.g. because
