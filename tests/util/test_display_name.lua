@@ -144,4 +144,22 @@ return function()
     DisplayName.Configure({ hideBattleTagNumbers = true })
     DisplayName.Configure({ classColorSenderNames = false })
   end
+
+  -- test_show_player_levels_defaults_off
+
+  do
+    assert(DisplayName.ShowPlayerLevels() == false, "player levels are hidden by default")
+  end
+
+  -- test_configure_show_player_levels_flips_flag_and_bumps_revision
+
+  do
+    local r = DisplayName.Revision()
+    DisplayName.Configure({ showPlayerLevels = true })
+    assert(DisplayName.ShowPlayerLevels() == true, "configuring the flag on turns it on")
+    assert(DisplayName.Revision() == r + 1, "flipping the player-levels flag bumps the revision once")
+    DisplayName.Configure({ showPlayerLevels = true })
+    assert(DisplayName.Revision() == r + 1, "the same value again does not bump")
+    DisplayName.Configure({ showPlayerLevels = false })
+  end
 end
