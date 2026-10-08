@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local MemberRecord = ns.PresenceCacheMemberRecord or require("WhisperMessenger.Model.PresenceCache.MemberRecord")
+
 local PresenceCache = {}
 
 -- A full guild/community enumeration allocates one info table per member, so
@@ -17,6 +19,8 @@ local indexClub = {}
 local indexMember = {}
 -- guid -> current zone name, kept alongside the presence cache.
 local zoneByGuid = {}
+-- guid -> last known character level. Never cleared when the member goes offline.
+local levelByGuid = {}
 -- guid -> timestamp of the last presence read for that GUID.
 local freshAt = {}
 local indexBuiltAt = nil
@@ -39,67 +43,6 @@ local function defaultNow()
 end
 
 local nowFn = defaultNow
-local function presenceToString(presence)
-  if presence == 1 or presence == 2 or presence == 4 then
-    return "online"
-  end
-  if presence == 3 then
-    return "offline"
-  end
-  return nil
-end
-
-local function safeIpairs(tbl)
-  local iterOk, iter, state, start = pcall(ipairs, tbl)
-  if not iterOk then
-    return ipairs({})
-  end
-  return iter, state, start
-end
-
--- info.zone can be a secret value under 12.0 restricted content: the ~=
--- comparison itself can throw, so the whole validation (not just the field
--- read) must run under pcall in the caller.
-local function readZone(info)
-  local zone = info.zone
-  if type(zone) == "string" and zone ~= "" then
-    return zone
-  end
-  return nil
-end
-
--- In 12.0 restricted content (e.g. Mythic+), info's fields can be "secret
--- values" — any ==/~= comparison or table-key use throws. Record one member
--- via pcall so a throw on this member (secret guid as table key, or secret
--- presence) skips it instead of aborting the whole club scan.
-local function recordMember(acc, clubId, memberId, info)
-  acc.club[info.guid] = clubId
-  acc.member[info.guid] = memberId
-  acc.freshAt[info.guid] = acc.now
-  local p = presenceToString(info.presence)
-  if p then
-    acc.cache[info.guid] = p
-  end
-  -- recordMember already runs under pcall (see cacheClub), so a throw from
-  -- readZone on a secret zone just aborts this member like any other field.
-  local zone = readZone(info)
-  if zone then
-    acc.zoneByGuid[info.guid] = zone
-  end
-end
-
-local function cacheClub(acc, api, clubId)
-  local ok, members = pcall(api.GetClubMembers, clubId)
-  if not ok or type(members) ~= "table" then
-    return
-  end
-  for _, memberId in safeIpairs(members) do
-    local infoOk, info = pcall(api.GetMemberInfo, clubId, memberId)
-    if infoOk and info then
-      pcall(recordMember, acc, clubId, memberId, info)
-    end
-  end
-end
 
 function PresenceCache.Initialize(api, options)
   options = options or {}
@@ -117,6 +60,7 @@ function PresenceCache.Initialize(api, options)
   indexClub = {}
   indexMember = {}
   zoneByGuid = {}
+  levelByGuid = {}
   freshAt = {}
   indexBuiltAt = nil
   -- Don't rebuild immediately — club data may not be loaded yet at ADDON_LOADED time.
@@ -126,7 +70,7 @@ end
 
 function PresenceCache.Rebuild()
   local now = nowFn()
-  local acc = { cache = {}, club = {}, member = {}, zoneByGuid = {}, freshAt = {}, now = now }
+  local acc = { cache = {}, club = {}, member = {}, zoneByGuid = {}, levelByGuid = {}, freshAt = {}, now = now }
 
   if type(clubApi) == "table" then
     local guildId = nil
@@ -136,7 +80,7 @@ function PresenceCache.Rebuild()
       local ok, id = pcall(clubApi.GetGuildClubId)
       if ok and id then
         guildId = id
-        cacheClub(acc, clubApi, id)
+        MemberRecord.CacheClub(acc, clubApi, id)
       end
     end
 
@@ -147,7 +91,7 @@ function PresenceCache.Rebuild()
       if ok and clubs then
         for _, club in ipairs(clubs) do
           if club.clubId ~= guildId then
-            cacheClub(acc, clubApi, club.clubId)
+            MemberRecord.CacheClub(acc, clubApi, club.clubId)
           end
         end
       end
@@ -158,6 +102,7 @@ function PresenceCache.Rebuild()
   indexClub = acc.club
   indexMember = acc.member
   zoneByGuid = acc.zoneByGuid
+  levelByGuid = acc.levelByGuid
   freshAt = acc.freshAt
   indexBuiltAt = now
   dirty = false
@@ -175,6 +120,13 @@ function PresenceCache.GetZone(guid)
     return nil
   end
   return zoneByGuid[guid]
+end
+
+function PresenceCache.GetLevel(guid)
+  if guid == nil then
+    return nil
+  end
+  return levelByGuid[guid]
 end
 
 -- Comparing a secret value (12.0 restricted content, e.g. Mythic+) throws, so
@@ -214,18 +166,34 @@ local function lookupIndexed(guid)
     return nil, false
   end
 
-  local zoneOk, zone = pcall(readZone, info)
+  local zoneOk, zone = pcall(MemberRecord.ReadZone, info)
   if zoneOk and zone then
     zoneByGuid[guid] = zone
   end
 
-  local presenceOk, presence = pcall(presenceToString, info.presence)
+  -- Before the presence read: a secret presence returns early below.
+  local levelOk, level = pcall(MemberRecord.ReadLevel, info)
+  if levelOk and level then
+    levelByGuid[guid] = level
+  end
+
+  local presenceOk, presence = pcall(MemberRecord.ReadPresence, info)
   if not presenceOk then
     -- Same secret-value case, this time on the presence field.
     return cache[guid], true
   end
 
   return presence, true
+end
+
+-- Live level for a GUID already in the club index: one member read, never a
+-- rescan, so a stranger costs a table lookup. Presence cache stays untouched.
+function PresenceCache.ReadLevel(guid)
+  if guid == nil then
+    return nil
+  end
+  lookupIndexed(guid)
+  return levelByGuid[guid]
 end
 
 -- Targeted single-GUID refresh: one member lookup against the index built by
@@ -275,6 +243,7 @@ function PresenceCache._reset()
   indexClub = {}
   indexMember = {}
   zoneByGuid = {}
+  levelByGuid = {}
   freshAt = {}
   indexBuiltAt = nil
   dirty = true
