@@ -31,8 +31,9 @@ function BNetStatus.IsOnline(accountInfo)
 end
 
 -- Copy live character metadata from gameInfo onto target (a contact item or a
--- stored conversation). className and classTag are written together so the
--- class icon and the class text never describe different characters.
+-- stored conversation). className, classTag and characterLevel are written
+-- together so the class icon, class text and level never describe different
+-- characters.
 -- Returns true when metadata was applied (i.e. the friend is in WoW).
 function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
   if not BNetStatus.IsInWoW(gameInfo) then
@@ -56,8 +57,12 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
     if playerInfo.raceTag then
       target.raceTag = playerInfo.raceTag
     end
+    local level = gameInfo.characterLevel
+    if type(level) == "number" and level > 0 then
+      target.characterLevel = level
+    end
   end
-  -- else: classTag unresolvable — leave BOTH className and classTag untouched
+  -- else: classTag unresolvable — leave className, classTag and level untouched
   -- (stale but consistent beats a mismatched icon/text pair)
   return true
 end
