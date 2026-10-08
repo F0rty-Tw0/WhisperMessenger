@@ -143,6 +143,7 @@ UI/Helpers/DisabledState.lua
 UI/Helpers/NativeControls.lua
 UI/Helpers/Controls.lua
 UI/Helpers.lua
+UI/LevelColor.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua

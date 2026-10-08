@@ -118,6 +118,7 @@ read_globals = {
   "UnitFactionGroup",
   "GetPhysicalScreenSize",
   "CreateColor",
+  "GetQuestDifficultyColor",
   "UnitIsConnected",
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",
