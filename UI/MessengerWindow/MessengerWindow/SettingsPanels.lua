@@ -102,6 +102,7 @@ function SettingsPanels.Create(factory, options)
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
         classColorSenderNames = settingsConfig.classColorSenderNames,
+        showPlayerLevels = settingsConfig.showPlayerLevels,
       },
     },
     {

@@ -33,6 +33,7 @@ local DEFAULTS = {
   bubbleColorPreset = "default",
   windowScale = 1.0,
   classColorSenderNames = true,
+  showPlayerLevels = false,
 }
 
 local function pctFormat(v)
@@ -194,13 +195,33 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   classColorToggle.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
 
+  local playerLevelsToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Show player levels"),
+      config.showPlayerLevels == true,
+      SettingsControls.ToggleColors(Theme),
+      { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 },
+      function(v)
+        onChange("showPlayerLevels", v)
+      end,
+      {
+        text("Show player levels"),
+        text("Shows a player's level, colored by how it compares to yours, in the chat header and before names in group and channel chats."),
+      }
+    ),
+    { type = "toggle", key = "showPlayerLevels", default = DEFAULTS.showPlayerLevels }
+  )
+  playerLevelsToggle.row:SetPoint("TOPLEFT", classColorToggle.row, "BOTTOMLEFT", 0, gap)
+
   local opacityInactiveRow = panel:bind(
     slider(text("Window Opacity (Inactive)"), 0.3, 1.0, 0.05, config.windowOpacityInactive or DEFAULTS.windowOpacityInactive, pctFormat, function(v)
       onChange("windowOpacityInactive", v)
     end),
     { type = "slider", key = "windowOpacityInactive", default = DEFAULTS.windowOpacityInactive }
   )
-  opacityInactiveRow.row:SetPoint("TOPLEFT", classColorToggle.row, "BOTTOMLEFT", 0, gap)
+  opacityInactiveRow.row:SetPoint("TOPLEFT", playerLevelsToggle.row, "BOTTOMLEFT", 0, gap)
 
   local opacityActiveRow = panel:bind(
     slider(text("Window Opacity (Active)"), 0.5, 1.0, 0.05, config.windowOpacityActive or DEFAULTS.windowOpacityActive, pctFormat, function(v)
@@ -256,6 +277,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     bubbleColorSelector.label:SetText(text("Bubble Colors"))
     bubbleColorSelector.setOptionsList(Options.BuildBubbleColorOptions())
     classColorToggle.label:SetText(text("Class-colored names"))
+    playerLevelsToggle.label:SetText(text("Show player levels"))
     opacityInactiveRow.label:SetText(text("Window Opacity (Inactive)"))
     opacityActiveRow.label:SetText(text("Window Opacity (Active)"))
     resetButton.label:SetText(text("Reset to Defaults"))
