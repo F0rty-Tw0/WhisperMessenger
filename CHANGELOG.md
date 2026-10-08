@@ -6,54 +6,46 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
-- Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses Whisper Messenger. Group chats keep the old length.
 - The addon now goes by "Whisper Messenger" everywhere: the AddOns list, the window title, the icon tooltips, chat messages and the options.
-- A burst of whispers from one person now plays the alert sound once instead of once per line.
-- Busy group chats no longer slow the game down while the window is open.
-- Uses less CPU while the window is closed: incoming whispers, friends changing status, busy Trade and General chat, and clicking around the game now do much less work behind the scenes for a window you can't see. Searching your contacts also stays smooth while you type.
-- Repeated messages from the same player now show once with a counter (like ×3) in your theme's accent color.
+- Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses Whisper Messenger. Group chats keep the old length.
+- Trade, General, Local Defense, LFG and your custom channels can now appear as chats. Turn them on under Options > Chats, and they show up in a new Channels tab. Each channel gets its own icon, and General and Local Defense show their zone (like Durotar) at the top of the chat.
+- Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other chats. Muting a channel chat also silences the alert for your name.
+- Channels you read in Whisper Messenger stay in the game's own chat too, unless you turn on "Hide channels from default chat" under Options > Chats.
+- Block players: right-click a player in your contacts and choose Block…, or right-click one of their messages in a group or channel chat and choose Block sender…. You stop seeing anything they send, both here and in the game's own chat (say, yell, emotes and channels). You can add a note saying why. A chat with a blocked player shows "Blocked" in red at the top; right-click them and choose Unblock to see their messages again.
+- Keyword rules hide group and channel messages that contain words you choose (whispers are never filtered). Channel messages they hide are hidden from the game's own chat too. They come with ready-made spam filters borrowed from the Global Ignore List addon: "Anal" link spam and Thunderfury links (on), plus Mythic+ and raid sellers, profession sellers, power-leveling sellers, guild recruitment, community recruitment and WTS / WTB / LFW (off until you turn them on). The ready-made filters only apply to channels such as Trade, never to your guild, party or raid.
+- Make your own keyword rules with Add rule: give the rule a name and its words, and click any rule later to change it. Separate words with / when any one of them should count, and put a word or phrase in "quotes" to match only that whole word or phrase (so "anal" doesn't catch canal or analysis). A ready-made filter you remove stays removed until you press Reset to Defaults, which brings them all back and clears your own rules.
+- Blocking players and keyword rules never hide anything in Mythic+, boss fights or PvP.
+- Options are split into Behavior, Whispers, Chats and Filters pages, and each page has a small icon next to its name. The new Filters page manages blocked players and keyword rules and starts with a short guide to what each one hides. Point at a blocked player there to see their last blocked message, your note, and how many of their messages were blocked since you logged in.
+- New option in Appearance: show player names above their messages in their class color, in whispers, group and channel chats, and in the new-message preview next to the messenger icon. On by default; turn it off there if you prefer plain names.
+- New option in Appearance: Show player levels (off by default). It shows a player's level, colored like the quest log by how it compares to yours, at the top of a chat next to their class ("Level 80 Shaman") for Battle.net friends and guild or community members, and before names in group and channel chats ("20:Nergrom"). Offline contacts keep the last level seen. Levels before names show on messages that arrive after you turn the option on.
+- When someone says your name in a group or channel chat, with or without an @ in front, your name in their message now shows in your class color.
 - Right-click the top of a conversation (the name or status) to open its menu. For a player, that includes invite to group, ignore and report.
-- Fixed: scrolling up through a long chat, like a busy Trade channel, used a lot of CPU. The window now only draws the messages that scroll into view, and new messages no longer redraw the ones you're reading.
-- Fixed: after clicking somewhere else, your action bars and other addons' buttons drew on top of the window.
-- Fixed: with the Native WoW HUD look, the unread counter on the Whispers, Groups and Channels tabs was half hidden behind the window's bottom border.
+- Repeated messages from the same player now show once with a counter (like ×3).
+- A burst of whispers from one person now plays the alert sound once instead of once per line.
+- Entering or leaving a Mythic+ dungeon no longer posts "Suspended" and "Resumed" lines in your chat; the window and its icon already show that messages are paused.
+- The notice shown during Mythic+ and PvP now says messages are paused, not just whispers, since group and channel chats pause too. In a whisper chat it also tells you how to reply right away from the game's own chat.
+- Uses less CPU, both with the window closed and in busy group chats with it open. Searching your contacts also stays smooth while you type.
+- Deleting a message request now opens the next one, so the empty Requests page only shows once none are left.
+- The search box, and the magnifier on the narrow contact list, are hidden on a tab that has no chats to search.
+- The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
+- With the Native WoW HUD's Classic style, scrollbars are slimmer: a smaller gold knob with no dark strip behind it, so lists and Options pages keep more room.
+- Changing the Native WoW HUD style now only sticks if you press Reload UI in the pop-up. Pressing Cancel keeps the style you have now, instead of switching on your next reload.
 - Fixed: with "Hide whispers from default chat" on, your reply key did nothing if the game's "Cast action keybinds on key down" option was turned off.
 - Fixed: choosing "Whisper" after right-clicking a player's name in the window (in guild, group and channel chats, or on a contact) did nothing.
 - Fixed: right-clicking the name of a guild or group member who isn't your Battle.net friend showed a menu without "Whisper".
-- Trade, General, Local Defense, LFG and your custom channels can now appear as chats (turn them on in Options). Each one is named after its channel and lives in a new Channels tab, which shows up once you turn on at least one channel. Trade, General, Local Defense, World Defense, LFG and Trade (Services) each get their own icon, and in the narrow contact list channel chats show their initials like your contacts do.
-- New option in Appearance: Show player levels (off by default). It shows a player's level, colored like the quest log by how it compares to yours, at the top of a chat next to their class ("Level 80 Shaman") for Battle.net friends and guild or community members, and before names in group and channel chats ("20:Nergrom"). Offline contacts keep the last level seen. Levels before names show on messages that arrive after you turn the option on.
-- Channel chats such as General and Local Defense show their zone (like Durotar) under the channel name at the top of the chat.
-- Channel chats only count as unread when someone says your name, so a busy Trade chat doesn't bury your other unread chats. Muting a channel chat also silences the alert for your name.
-- When someone says your name in a group or channel chat, with or without an @ in front, your name in their message now shows in your class color.
-- New option in Appearance: show player names above their messages in their class color, in whispers, group and channel chats, and in the new-message preview next to the messenger icon. On by default; turn it off there if you prefer plain names.
-- Right-click a player in your contacts and choose Block…, or right-click one of their messages in a group or channel chat and choose Block sender…, to stop seeing anything they send. You can add a note saying why. A chat with a player you blocked shows "Blocked" in red at the top. Right-click a blocked player in your contacts, or their name in a group or channel chat, and choose Unblock to see their messages again.
-- Options are split into Behavior, Whispers, Chats and Filters pages; the new Filters page manages blocked players and keyword rules, and starts with a short guide to what each one hides and how to write rules.
-- Keyword rules come with ready-made spam filters borrowed from Global Ignore List: "Anal" link spam and Thunderfury links (on), plus Mythic+ and raid sellers, profession sellers, power-leveling sellers, guild recruitment, community recruitment and WTS / WTB / LFW (off until you turn them on). The ready-made filters only apply to channels such as Trade, never to your guild, party or raid. Click any rule to change its words; separate words with / when any one of them should count, and put a word or phrase in "quotes" to match only that whole word or phrase (so "anal" no longer catches canal or analysis). A ready-made filter you remove stays removed until you press Reset to Defaults, which brings them all back and clears your own rules.
-- The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
-- The notice shown during Mythic+ and PvP now says messages are paused, not just whispers, since group and channel chats pause too. In a whisper chat it also tells you how to reply right away from the game's own chat.
+- Fixed: right-clicking a player's name in a group or channel chat now opens that player's menu instead of the chat's own menu.
+- Fixed: scrolling up through a long chat used a lot of CPU and could slow the game down.
+- Fixed: after clicking somewhere else, your action bars and other addons' buttons drew on top of the window.
+- Fixed: opening the window now jumps to the newest unread chat on the tab you're looking at, instead of skipping it when an unread chat on another tab is newer.
 - Fixed: the Mythic+ pause notice now shows in your game's language instead of always in English.
-- Blocked players are now also hidden from the game's own chat window (say, yell, emotes and channels), and so are channel lines your keyword rules block. Channels you read in WhisperMessenger stay in the game's chat too, unless you turn on "Hide channels from default chat" under Options > Chats. None of this hiding happens in Mythic+, boss fights or PvP.
-- Entering or leaving a Mythic+ dungeon no longer posts "Suspended" and "Resumed" lines in your chat; the window and its icon already show that messages are paused.
-- Fixed: right-clicking a player's name in a group or channel chat now opens that player's menu instead of the chat's own menu, with WhisperMessenger's Block… at the bottom.
-- Fixed: Opening the window now jumps to the newest unread chat on the tab you're looking at, instead of skipping it when an unread chat on another tab is newer.
-- Fixed: with the Native WoW HUD on, the Whispers, Groups and Channels tabs under the window are now the same size as the game's own window tabs instead of oversized. Unread counts sit on each tab's top corner.
-- Fixed: the tabs under the window now always fit its width, even with Requests turned on; a long tab name is shortened and shows in full when you point at it.
-- Fixed: on Classic game versions, text boxes in pop-ups (editing a filter rule, starting a whisper, copying a message) no longer stick out past the pop-up's edges, and the pop-up no longer gets wider each time it opens.
-- Fixed: on Classic game versions, the tabs under the window with the Native WoW HUD on were about twice as wide as they should be.
-- Fixed: on the Filters page, long rule and player names no longer run into the blocked count at large font sizes. Each row now shows the name on one line with "Blocked N this session" underneath.
-- Point at a player in the Filters page's block list to read their full last blocked message, the reason and this session's count.
-- You can name your own keyword rules: Add rule asks for a name and the words, and clicking one of your rules lets you change both.
-- Blocked counts on the Filters page now count only the current session and start again from zero every time you log in or reload.
-- Fixed: with a large font size, the welcome message no longer runs past the edges of the chat area, and the right edge of Options pages is no longer cut off.
-- The search box, and the magnifier on the narrow contact list, are hidden on a tab that has no chats to search.
-- Fixed: scrolling the Filters page with the mouse wheel no longer stops when the blocked players list passes under the pointer.
 - Fixed: after you accept a message request, the Requests tab no longer keeps showing that chat; it shows its empty page.
-- The Classic look's scrollbars are slimmer: a smaller gold knob with no dark strip behind it, so lists and Options pages keep more room.
+- Fixed: with the Native WoW HUD on, the tabs under the window are now the same size as the game's own tabs instead of oversized (about twice as wide on Classic game versions), and their unread counts sit on each tab's top corner instead of half hidden behind the window's border.
+- Fixed: the tabs under the window now always fit its width, even with Requests turned on; a long tab name is shortened and shows in full when you point at it.
+- Fixed: with the Native WoW HUD on, buttons in Options and pop-ups now light up when you point at them.
+- Fixed: on Classic game versions, text boxes in pop-ups (starting a whisper, copying a message, editing a filter rule) no longer stick out past the pop-up's edges, and the pop-up no longer gets wider each time it opens.
+- Fixed: with a large font size, the welcome message no longer runs past the edges of the chat area, and the right edge of Options pages is no longer cut off.
 - Fixed: with a large font size, the name, status and zone at the top of a chat no longer spill into the messages below, and the paused-in-Mythic+ notice no longer covers the last message.
 - Fixed: with a large font size, the message request bar above the text box grows to fit its text instead of spilling over the chat, and a long name at the top of a chat is shortened so "(Invite to WM)" stays inside the window.
-- Fixed: with the Native WoW HUD on, buttons in Options and pop-ups (like Add rule) now light up when you point at them.
-- Each page in the Options menu now has a small icon next to its name, so you can find pages at a glance. With the Native WoW HUD on, the menu stays text only like the game's own.
-- Deleting a message request now opens the next one, so the empty Requests page only shows once none are left.
-- Changing the Native WoW HUD style now only sticks if you press Reload UI in the pop-up. Pressing Cancel keeps the style you have now, instead of switching on your next reload.
 
 ## [2.0.2] - 2026-10-02
 
