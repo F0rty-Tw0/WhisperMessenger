@@ -10,6 +10,7 @@ local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMess
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
 local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
+local HeaderMenu = ns.ConversationPaneHeaderMenu or require("WhisperMessenger.UI.ConversationPane.HeaderMenu")
 local EdgeFade = ns.ConversationPaneEdgeFade or require("WhisperMessenger.UI.ConversationPane.EdgeFade")
 local ChannelContextMerger = ns.ConversationPaneChannelContextMerger or require("WhisperMessenger.UI.ConversationPane.ChannelContextMerger")
 local BottomBanner = ns.ConversationPaneBottomBanner or require("WhisperMessenger.UI.ConversationPane.BottomBanner")
@@ -261,6 +262,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
 
   TranscriptSetup.BindMessageActions(transcript, view, options.onMessageAction)
   TranscriptSetup.BindPlayerMenu(transcript, view, options)
+  HeaderMenu.Bind(view.headerFrame, view, options)
 
   if type(options.canReact) == "function" then
     transcript.canReact = function(message)

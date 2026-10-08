@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local HeaderMenu = require("WhisperMessenger.UI.ConversationPane.HeaderMenu")
+local ConversationPane = require("WhisperMessenger.UI.ConversationPane")
 
 -- window -> pane -> header, the way the conversation header hangs under the
 -- messenger window (with frames in between that have no window scripts).
@@ -154,5 +155,17 @@ return function()
     local _, _, header = buildChain(factory)
     HeaderMenu.Bind(header, {}, {}, spyMenu())
     assert(header.mouseEnabled == true, "header should accept mouse input")
+  end
+
+  -- test_conversation_pane_binds_header_menu
+  do
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    parent:SetSize(600, 420)
+    local view = ConversationPane.Create(factory, parent, { displayName = "Arthas", channel = "WOW" }, nil, {
+      onMarkUnread = function() end,
+      onUpdatePrefs = function() end,
+    })
+    assert(view.headerFrame.mouseEnabled == true, "the pane's header should accept mouse input")
+    assert(type(view.headerFrame:GetScript("OnMouseUp")) == "function", "the pane's header should open a menu on right-click")
   end
 end
