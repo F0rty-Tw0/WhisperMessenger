@@ -105,6 +105,7 @@ Transport/ChannelIndex.lua
 Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver.lua
+Transport/WhoLookup.lua
 
 Core/LocalPlayer.lua
 Core/Ingest/GroupChatIngest/SecretString.lua
