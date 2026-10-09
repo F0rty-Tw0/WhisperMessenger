@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+## [2.0.3] - 2026-10-09
+
 - The addon now goes by "Whisper Messenger" everywhere: the AddOns list, the window title, the icon tooltips, chat messages and the options.
 - Whispers can now be about three times longer. Long messages are sent in a few parts and show as one message when your friend also uses Whisper Messenger. Group chats keep the old length.
 - Trade, General, Local Defense, LFG and your custom channels can now appear as chats. Turn them on under Options > Chats, and they show up in a new Channels tab. Each channel gets its own icon, and General and Local Defense show their zone (like Durotar) at the top of the chat.
