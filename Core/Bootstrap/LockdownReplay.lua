@@ -106,6 +106,18 @@ end
 
 -- One alert, one reply-key move and one refresh for the whole batch. A live
 -- whisper newer than the latest held one keeps the reply key.
+-- Replayed whispers never pop the widget preview; a newer live one still does.
+local function acknowledgePreview(runtime, latest)
+  local accountState = runtime.accountState
+  if latest == nil or type(accountState) ~= "table" then
+    return
+  end
+  local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt) or 0
+  if latest.receivedAt > acknowledgedAt then
+    accountState.widgetPreviewAcknowledgedAt = latest.receivedAt
+  end
+end
+
 local function finishBatch(runtime, state)
   stopTicker(state)
   state.lastSummary = { filed = state.filed, lost = state.lost }
@@ -117,6 +129,7 @@ local function finishBatch(runtime, state)
   if latest and (liveAt == nil or liveAt <= latest.receivedAt) then
     runtime.lastIncomingWhisperKey = latest.conversationKey
   end
+  acknowledgePreview(runtime, latest)
   printCount(state.filed, ONE_FILED_KEY, MANY_FILED_KEY)
   printCount(state.lost, ONE_LOST_KEY, MANY_LOST_KEY)
   if type(runtime.refreshWindow) == "function" then

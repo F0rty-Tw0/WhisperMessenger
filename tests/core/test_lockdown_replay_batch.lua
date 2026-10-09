@@ -2,6 +2,7 @@ local FakeChatLines = require("tests.helpers.fake_chat_lines")
 local ReplayRuntime = require("tests.helpers.lockdown_replay_runtime")
 local LockdownReplay = require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local Store = require("WhisperMessenger.Model.ConversationStore")
+local WidgetPreview = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
 
 local SECRET = FakeChatLines.SECRET
 local KEY = "wow::WOW::arthas-area52"
@@ -22,6 +23,14 @@ end
 local function replay(probe)
   LockdownReplay.Kick(probe.runtime)
   ReplayRuntime.FireUntilDone(probe.runtime)
+end
+
+local function widgetPreview(probe)
+  return WidgetPreview.Create({ accountState = probe.runtime.accountState, runtimeStore = probe.runtime.store })
+end
+
+local function contacts()
+  return { { conversationKey = KEY, channel = "WOW", displayName = "Arthas-Area52" } }
 end
 
 local function printedText(probe)
@@ -104,6 +113,36 @@ return function()
     local probe = ReplayRuntime.Probe(whispers(3))
     replay(probe)
     assert(#probe.refreshes == 1, "a batch must refresh the window once, got " .. #probe.refreshes)
+    probe.restore()
+  end
+
+  -- test_batch_raises_no_widget_preview
+
+  do
+    local probe = ReplayRuntime.Probe(whispers(2))
+    replay(probe)
+    assert(probe.runtime.lockdownReplay.lastSummary.filed == 2, "setup: the whispers must file")
+    local preview = widgetPreview(probe).buildLatestIncomingPreview(contacts())
+    assert(preview == nil, "a replayed batch must not pop the widget preview, got " .. tostring(preview and preview.messageText))
+    probe.restore()
+  end
+
+  -- test_whisper_after_the_lift_still_previews
+
+  do
+    local probe = ReplayRuntime.Probe(whispers(1))
+    replay(probe)
+    Store.AppendIncoming(probe.runtime.store, KEY, {
+      id = "live",
+      direction = "in",
+      kind = "user",
+      text = "after the fight",
+      sentAt = 1000,
+      lineID = 99,
+      playerName = "Arthas-Area52",
+    }, false)
+    local preview = widgetPreview(probe).buildLatestIncomingPreview(contacts())
+    assert(preview and preview.messageText == "after the fight", "a newer live whisper must still preview")
     probe.restore()
   end
 
