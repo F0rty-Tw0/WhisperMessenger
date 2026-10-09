@@ -382,6 +382,10 @@ local Russian = {
   ["Replying to %s"] = "Ответ для %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "В очереди ждёт 1 сообщение — откройте мессенджер, чтобы отправить или удалить его.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "Сообщений в очереди: %d — откройте мессенджер, чтобы отправить или удалить их.",
+  ["1 whisper arrived during the fight."] = "Во время боя пришло сообщений шепотом: 1.",
+  ["%d whispers arrived during the fight."] = "Во время боя пришло сообщений шепотом: %d.",
+  ["1 whisper from the fight couldn't be recovered — check your chat."] = "Не удалось восстановить сообщений шепотом из боя: 1 — проверьте чат.",
+  ["%d whispers from the fight couldn't be recovered — check your chat."] = "Не удалось восстановить сообщений шепотом из боя: %d — проверьте чат.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Заметка:",
   ["Open/close: %s"] = "Открыть/закрыть: %s",

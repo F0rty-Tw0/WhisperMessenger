@@ -84,6 +84,7 @@ local function applyIncomingEffects(runtime, result)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey
+    runtime.lastIncomingWhisperAt = now
     -- Reading group or channel chat: a whisper must not take over the pane.
     local tabMode = runtime.window and type(runtime.window.getTabMode) == "function" and runtime.window.getTabMode()
     local inGroupsTab = tabMode == "groups" or tabMode == "channels"
@@ -165,6 +166,23 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     end
   end
   return result
+end
+
+-- A whisper held during a chat lock, re-read after the lock lifted. It is
+-- filed at the time it arrived and stays quiet: no sound, flash or auto-open,
+-- no reply-key change and no per-message refresh. The caller refreshes once.
+function EventBridge.RouteReplayedEvent(runtime, refreshWindow, eventName, receivedAt, ...)
+  if runtime == nil then
+    return nil
+  end
+  local payload = LivePayload.Build(runtime, eventName, ...)
+  payload.replayedAt = receivedAt
+  runtime.onReactionFallbackDegraded = function(degradedConversation)
+    if degradedConversation and degradedConversation.conversationKey and refreshWindow then
+      refreshWindow(degradedConversation.conversationKey)
+    end
+  end
+  return EventRouter.HandleEvent(runtime, eventName, payload)
 end
 
 function EventBridge.RouteGroupEvent(runtime, eventName, ...)

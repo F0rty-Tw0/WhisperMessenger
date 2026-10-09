@@ -382,6 +382,10 @@ local TraditionalChinese = {
   ["Replying to %s"] = "回覆 %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "有 1 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "有 %d 則排隊訊息等待處理 — 開啟訊息視窗即可送出或捨棄。",
+  ["1 whisper arrived during the fight."] = "戰鬥期間收到 1 則密語。",
+  ["%d whispers arrived during the fight."] = "戰鬥期間收到 %d 則密語。",
+  ["1 whisper from the fight couldn't be recovered — check your chat."] = "有 1 則戰鬥中的密語無法恢復 — 請查看聊天框。",
+  ["%d whispers from the fight couldn't be recovered — check your chat."] = "有 %d 則戰鬥中的密語無法恢復 — 請查看聊天框。",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "備註：",
   ["Open/close: %s"] = "開啟/關閉：%s",

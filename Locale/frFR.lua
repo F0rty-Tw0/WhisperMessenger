@@ -382,6 +382,10 @@ local French = {
   ["Replying to %s"] = "Réponse à %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "1 message en attente – ouvrez la messagerie pour l'envoyer ou le supprimer.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "%d messages en attente – ouvrez la messagerie pour les envoyer ou les supprimer.",
+  ["1 whisper arrived during the fight."] = "1 chuchotement est arrivé pendant le combat.",
+  ["%d whispers arrived during the fight."] = "%d chuchotements sont arrivés pendant le combat.",
+  ["1 whisper from the fight couldn't be recovered — check your chat."] = "1 chuchotement du combat n'a pas pu être récupéré – consultez votre chat.",
+  ["%d whispers from the fight couldn't be recovered — check your chat."] = "%d chuchotements du combat n'ont pas pu être récupérés – consultez votre chat.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Note :",
   ["Open/close: %s"] = "Ouvrir/fermer : %s",

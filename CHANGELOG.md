@@ -32,6 +32,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - The "Max Messages Per Contact" option is now called "Max Messages Per Chat", since it covers group and channel chats too.
 - With the Native WoW HUD's Classic style, scrollbars are slimmer: a smaller gold knob with no dark strip behind it, so lists and Options pages keep more room.
 - Changing the Native WoW HUD style now only sticks if you press Reload UI in the pop-up. Pressing Cancel keeps the style you have now, instead of switching on your next reload.
+- Whispers you get or send during Mythic+, boss fights and rated PvP now show up in the messenger once the fight is over.
 - Fixed: with "Hide whispers from default chat" on, your reply key did nothing if the game's "Cast action keybinds on key down" option was turned off.
 - Fixed: choosing "Whisper" after right-clicking a player's name in the window (in guild, group and channel chats, or on a contact) did nothing.
 - Fixed: right-clicking the name of a guild or group member who isn't your Battle.net friend showed a menu without "Whisper".
@@ -48,6 +49,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Fixed: with a large font size, the welcome message no longer runs past the edges of the chat area, and the right edge of Options pages is no longer cut off.
 - Fixed: with a large font size, the name, status and zone at the top of a chat no longer spill into the messages below, and the paused-in-Mythic+ notice no longer covers the last message.
 - Fixed: with a large font size, the message request bar above the text box grows to fit its text instead of spilling over the chat, and a long name at the top of a chat is shortened so "(Invite to WM)" stays inside the window.
+- Fixed: replying to a whisper while chat was locked for addons caused an error instead of waiting to be sent.
 
 ## [2.0.2] - 2026-10-02
 

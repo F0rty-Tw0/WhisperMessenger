@@ -382,6 +382,10 @@ local Spanish = {
   ["Replying to %s"] = "Respondiendo a %s",
   ["1 queued message is waiting — open the messenger to send or discard."] = "Hay 1 mensaje en cola: abre el mensajero para enviarlo o descartarlo.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "Hay %d mensajes en cola: abre el mensajero para enviarlos o descartarlos.",
+  ["1 whisper arrived during the fight."] = "Ha llegado 1 susurro durante el combate.",
+  ["%d whispers arrived during the fight."] = "Han llegado %d susurros durante el combate.",
+  ["1 whisper from the fight couldn't be recovered — check your chat."] = "No se ha podido recuperar 1 susurro del combate: revisa tu chat.",
+  ["%d whispers from the fight couldn't be recovered — check your chat."] = "No se han podido recuperar %d susurros del combate: revisa tu chat.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "Nota:",
   ["Open/close: %s"] = "Abrir/cerrar: %s",

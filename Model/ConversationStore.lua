@@ -6,6 +6,7 @@ end
 -- stylua: ignore start
 local StoreRetention = ns.ConversationStoreRetention or require("WhisperMessenger.Model.ConversationStore.StoreRetention")
 local MessageMetadata = ns.ConversationStoreMessageMetadata or require("WhisperMessenger.Model.ConversationStore.MessageMetadata")
+local ChronologicalInsert = ns.ConversationStoreChronologicalInsert or require("WhisperMessenger.Model.ConversationStore.ChronologicalInsert")
 -- stylua: ignore end
 
 local Store = {}
@@ -132,16 +133,7 @@ function Store.InsertIncomingChronological(state, key, message, isActive)
   local messages = conversation.messages
   local sentAt = tonumber(message.sentAt) or 0
   local lineID = tonumber(message.lineID)
-  local insertAt = #messages + 1
-  for index, existing in ipairs(messages) do
-    local existingSentAt = tonumber(existing.sentAt) or 0
-    local existingLineID = tonumber(existing.lineID)
-    if existingSentAt > sentAt or (existingSentAt == sentAt and lineID and existingLineID and existingLineID > lineID) then
-      insertAt = index
-      break
-    end
-  end
-  local isNewest = insertAt == #messages + 1
+  local insertAt, isNewest = ChronologicalInsert.FindIndex(messages, sentAt, lineID)
   table.insert(messages, insertAt, message)
 
   StoreRetention.AfterAppend(state, key, conversation, message)
@@ -297,6 +289,9 @@ end
 
 Store.ApplyRetention = StoreRetention.Apply
 Store.ExpireAll = StoreRetention.ExpireAll
+function Store.InsertOutgoingChronological(state, key, message)
+  return ChronologicalInsert.Outgoing(Store.EnsureConversation, state, key, message)
+end
 Store.CollapseRepeat = (ns.ConversationStoreRepeatCollapse or require("WhisperMessenger.Model.ConversationStore.RepeatCollapse")).CollapseRepeat
 
 ns.ConversationStore = Store
