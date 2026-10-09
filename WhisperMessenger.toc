@@ -105,6 +105,7 @@ Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Transport/ChannelIndex.lua
 Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
+Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/SeenLevelEvents.lua
