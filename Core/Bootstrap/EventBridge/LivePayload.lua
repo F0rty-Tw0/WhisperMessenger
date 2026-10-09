@@ -7,6 +7,14 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 
 local LivePayload = {}
 
+local function withoutSecret(value)
+  local issecretvalue = _G.issecretvalue
+  if type(issecretvalue) == "function" and issecretvalue(value) then
+    return nil
+  end
+  return value
+end
+
 function LivePayload.Build(runtime, eventName, ...)
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then
     local guid, status = ...
@@ -45,7 +53,10 @@ function LivePayload.Build(runtime, eventName, ...)
   end
 
   if eventName == "CHAT_MSG_BN_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE" then
-    local text, playerName, _, _, _, _, _, _, _, _, lineID, guid, rawBnetAccountID = ...
+    local text, playerName, _, _, _, _, _, _, _, _, lineID, rawGuid, rawBnetAccountID = ...
+    -- Filed by account, so a secret sender GUID must not block the whisper:
+    -- the lockdown catcher leaves those to this path.
+    local guid = withoutSecret(rawGuid)
     local bnetAccountID = BNetResolver.SanitizeAccountID(rawBnetAccountID)
     local accountInfo
     if bnetAccountID ~= nil then
