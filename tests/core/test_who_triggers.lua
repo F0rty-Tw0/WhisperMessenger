@@ -1,7 +1,29 @@
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local WhoTriggers = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
+local Env = require("tests.helpers.who_lookup_env")
 
 local KEY = "wow::WOW::jaina"
+
+-- Real WhoLookup: a click asks, the window closes, then a send to the same
+-- contact must not ask again.
+local function test_click_then_send_asks_once_per_contact()
+  Env.Case("click then send", nil, function(env)
+    Env.AddStranger(env, KEY, "Jaina")
+    local triggers = WhoTriggers.Create(env.runtime)
+    triggers.onContactClicked({ conversationKey = KEY })
+    assert(#env.sent == 1, "click should send one who")
+    WhoLookup.OnWhoListUpdate()
+    Env.RunAfters(env)
+    env.clock = env.clock + 60
+    Env.FireDueTimers(env)
+    assert(WhoLookup.IsWindowOpen() == false, "window should be closed")
+    local wrapped = triggers.wrapSend(function()
+      return true
+    end)
+    assert(wrapped({ channel = "WOW", conversationKey = KEY, text = "hi" }) == true, "send result")
+    assert(#env.sent == 1, "send to an asked contact should not ask again, sent " .. #env.sent)
+  end)
+end
 
 local function withSpy(fn, tryFor)
   local original = WhoLookup.TryFor
@@ -71,4 +93,6 @@ return function()
   end, function()
     error("boom")
   end)
+
+  test_click_then_send_asks_once_per_contact()
 end
