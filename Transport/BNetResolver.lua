@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Types = ns.TransportTypes or require("WhisperMessenger.Transport.Types")
+local AccountName = ns.BNetResolverAccountName or require("WhisperMessenger.Transport.BNetResolver.AccountName")
 local BNetResolver = {}
 
 -- Stage 1: Primary lookup by bnetAccountID.
@@ -385,6 +386,8 @@ function BNetResolver.NormalizeAvailabilityStatus(status)
 
   return Types.AVAILABILITY_STATUS_BY_CODE[status] or tostring(status)
 end
+
+BNetResolver.ResolveAccountIDByAccountName = AccountName.Resolve
 
 ns.BNetResolver = BNetResolver
 
