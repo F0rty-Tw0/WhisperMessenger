@@ -2,6 +2,8 @@ local WoWStatus = require("WhisperMessenger.Model.ContactEnricher.WoWStatus")
 local AvailabilityEnricher = require("WhisperMessenger.Model.ContactEnricher.AvailabilityEnricher")
 local ConversationSnapshot = require("WhisperMessenger.Model.ConversationSnapshot")
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
+local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
+local DisplayName = require("WhisperMessenger.Util.DisplayName")
 
 local function seedCache(members)
   PresenceCache._reset()
@@ -80,6 +82,93 @@ return function()
   do
     assert(ConversationSnapshot.Build("k", { characterLevel = 45 }).characterLevel == 45, "snapshot should copy characterLevel")
   end
+
+  DisplayName.Configure({ showPlayerLevels = true })
+
+  -- test_seen_level_fills_a_stranger_without_guild_level
+  do
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record("Player-S", nil, 75)
+    local conversation = {}
+    local item = { guid = "Player-S", conversationKey = "wow::s" }
+    WoWStatus.ApplySeenLevel(item, runtimeWith({ ["wow::s"] = conversation }))
+    assert(item.characterLevel == 75, "item should get seen level 75, got " .. tostring(item.characterLevel))
+    assert(conversation.characterLevel == 75, "conversation should store seen level 75")
+  end
+
+  -- test_guild_level_wins_over_seen_level
+  do
+    seedCache({ { guid = "Player-G", presence = 1, level = 70 } })
+    SeenLevel._reset()
+    SeenLevel.Record("Player-G", nil, 75)
+    local item = { guid = "Player-G", channel = "WOW", conversationKey = "wow::g" }
+    AvailabilityEnricher.EnrichContactsAvailability({ item }, runtimeWith({}))
+    assert(item.characterLevel == 70, "guild level should win, got " .. tostring(item.characterLevel))
+  end
+
+  -- test_nothing_seen_keeps_snapshot_level
+  do
+    seedCache({})
+    SeenLevel._reset()
+    local conversation = { characterLevel = 60 }
+    local item = ConversationSnapshot.Build("wow::s", conversation)
+    item.guid = "Player-S"
+    WoWStatus.ApplySeenLevel(item, runtimeWith({ ["wow::s"] = conversation }))
+    assert(item.characterLevel == 60, "item should keep snapshot level 60, got " .. tostring(item.characterLevel))
+  end
+
+  -- test_seen_level_never_touches_bnet_contacts
+  do
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record("Player-B", nil, 75)
+    local wowItem = { guid = "Player-W", channel = "WOW", conversationKey = "wow::w" }
+    SeenLevel.Record("Player-W", nil, 30)
+    local bnetItem = { guid = "Player-B", channel = "BN", conversationKey = "bnet::b", characterLevel = 80 }
+    AvailabilityEnricher.EnrichContactsAvailability({ wowItem, bnetItem }, runtimeWith({}))
+    assert(wowItem.characterLevel == 30, "WoW contact should get its seen level, got " .. tostring(wowItem.characterLevel))
+    assert(bnetItem.characterLevel == 80, "BNet contact must keep its BNet level")
+  end
+
+  -- test_seen_level_fills_a_chat_without_guid
+  do
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record(nil, "Firstmoon", 75)
+    local conversation = {}
+    local item = { channel = "WOW", displayName = "Firstmoon", conversationKey = "wow::f" }
+    AvailabilityEnricher.EnrichContactsAvailability({ item }, runtimeWith({ ["wow::f"] = conversation }))
+    assert(item.characterLevel == 75, "chat without guid should get seen level 75, got " .. tostring(item.characterLevel))
+    assert(conversation.characterLevel == 75, "conversation should store seen level 75")
+  end
+
+  -- test_seen_level_by_name_fills_a_chat_with_guid
+  do
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record(nil, "Firstmoon", 75)
+    local item = { guid = "Player-F", channel = "WOW", displayName = "Firstmoon", conversationKey = "wow::f" }
+    AvailabilityEnricher.EnrichContactsAvailability({ item }, runtimeWith({}))
+    assert(item.characterLevel == 75, "name entry should fill a guid chat, got " .. tostring(item.characterLevel))
+  end
+
+  -- test_option_off_keeps_snapshot_level
+  do
+    DisplayName.Configure({ showPlayerLevels = false })
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record("Player-S", "Firstmoon", 75)
+    local conversation = { characterLevel = 60 }
+    local item = ConversationSnapshot.Build("wow::s", conversation)
+    item.guid = "Player-S"
+    WoWStatus.ApplySeenLevel(item, runtimeWith({ ["wow::s"] = conversation }))
+    assert(item.characterLevel == 60, "option off should keep snapshot level 60, got " .. tostring(item.characterLevel))
+    assert(conversation.characterLevel == 60, "option off should keep stored level 60")
+  end
+
+  DisplayName.Configure({ showPlayerLevels = false })
+  SeenLevel._reset()
 
   print("  All contact level tests passed")
 end

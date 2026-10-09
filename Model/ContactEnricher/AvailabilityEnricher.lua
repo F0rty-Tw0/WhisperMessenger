@@ -67,6 +67,10 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       WoWStatus.ApplyZone(item)
       WoWStatus.ApplyLevel(item, runtime)
     end
+    -- A chat started by typing a name has no guid yet; the name still matches.
+    if item.channel ~= "BN" then
+      WoWStatus.ApplySeenLevel(item, runtime)
+    end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then
       item.availability = Availability.FromStatus("Offline")
