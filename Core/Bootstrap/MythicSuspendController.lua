@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local function L(key)
@@ -130,6 +131,7 @@ function MythicSuspendController.Attach(runtime, deps)
     end
     refreshWindow()
     Bootstrap._wasVisibleBeforeMythic = nil
+    LockdownReplay.Kick(runtime)
   end
 
   return runtime

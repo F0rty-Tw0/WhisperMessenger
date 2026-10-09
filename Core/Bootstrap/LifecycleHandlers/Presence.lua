@@ -7,7 +7,11 @@ local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
+local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local RestrictedActions = ns.BootstrapRestrictedActions
+  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.RestrictedActions"))
+  or nil
 
 local Presence = {}
 
@@ -181,7 +185,23 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache)
   end)
 end
 
+-- A type 5 Inactive can be missed across a loading screen. When the API says
+-- chat is open, drop the cached lock before filters and notice resync below.
+-- Activating is left alone: the API still reads unlocked during it.
+local function clearStaleChatLock(Bootstrap)
+  local restrictedActions = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
+  if RestrictedActions == nil or restrictedActions == nil then
+    return
+  end
+  local chatType = RestrictedActions.TYPES.Chat
+  if restrictedActions.cachedState(chatType) ~= RestrictedActions.STATES.Active or RestrictedActions.ChatApiLocked() then
+    return
+  end
+  restrictedActions.updateFromEvent(chatType, RestrictedActions.STATES.Inactive)
+end
+
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
+  clearStaleChatLock(Bootstrap)
   local ContentDetector = deps.getContentDetector()
   local wasMythic = Bootstrap._inMythicContent or false
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
@@ -211,6 +231,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   elseif isMythic then
     return true
   end
+  LockdownReplay.Kick(Bootstrap.runtime)
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then
