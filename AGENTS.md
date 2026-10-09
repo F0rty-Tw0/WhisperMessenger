@@ -57,6 +57,8 @@ find tests -type f -name 'test_*.lua' | sort | while read -r f; do python script
 python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog
 ```
 
+Fake the chat lock in game with `/console addonChatRestrictionsForced 1`; set it back to 0 afterwards — the CVar is saved.
+
 The release pipeline minifies the shipped Lua and runs every test again on the minified code, so neither code nor tests may depend on comments or exact source formatting.
 
 ## Development Workflow — TDD (Red-Green-Refactor)
