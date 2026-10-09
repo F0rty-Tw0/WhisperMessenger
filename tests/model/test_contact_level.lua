@@ -153,6 +153,23 @@ return function()
     assert(item.characterLevel == 75, "name entry should fill a guid chat, got " .. tostring(item.characterLevel))
   end
 
+  -- test_seen_level_skips_group_and_channel_chats
+  do
+    seedCache({})
+    SeenLevel._reset()
+    SeenLevel.Record(nil, "Trade", 60)
+    local channelConversation = {}
+    local channelItem = { channel = "CHANNEL", displayName = "Trade", conversationKey = "channel::trade" }
+    local partyItem = { channel = "PARTY", displayName = "Trade", conversationKey = "party::me" }
+    local wowItem = { channel = "WOW", displayName = "Trade", conversationKey = "wow::trade" }
+    local runtime = runtimeWith({ ["channel::trade"] = channelConversation })
+    AvailabilityEnricher.EnrichContactsAvailability({ channelItem, partyItem, wowItem }, runtime)
+    assert(channelItem.characterLevel == nil, "channel chat must not get a level, got " .. tostring(channelItem.characterLevel))
+    assert(channelConversation.characterLevel == nil, "channel conversation must not store a level")
+    assert(partyItem.characterLevel == nil, "party chat must not get a level, got " .. tostring(partyItem.characterLevel))
+    assert(wowItem.characterLevel == 60, "whisper chat should still get its seen level, got " .. tostring(wowItem.characterLevel))
+  end
+
   -- test_option_off_keeps_snapshot_level
   do
     DisplayName.Configure({ showPlayerLevels = false })

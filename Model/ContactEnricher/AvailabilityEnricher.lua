@@ -68,7 +68,8 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
       WoWStatus.ApplyLevel(item, runtime)
     end
     -- A chat started by typing a name has no guid yet; the name still matches.
-    if item.channel ~= "BN" then
+    -- Whispers only: a group or channel chat's name is not a player's.
+    if item.channel == "WOW" then
       WoWStatus.ApplySeenLevel(item, runtime)
     end
     -- WoW contacts with no availability after all checks: default to Offline
