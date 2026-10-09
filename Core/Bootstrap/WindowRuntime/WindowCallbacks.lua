@@ -15,24 +15,11 @@ local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatc
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
+local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
 
 local WindowCallbacks = {}
 
-function WindowCallbacks.ApplyIconPosition(icon, nextState, uiParent)
-  local frame = icon and icon.frame
-  if frame and type(frame.SetPoint) == "function" then
-    if type(frame.ClearAllPoints) == "function" then
-      frame:ClearAllPoints()
-    end
-    local iconParent
-    if type(frame.GetParent) == "function" then
-      iconParent = frame:GetParent()
-    end
-    iconParent = iconParent or frame.parent or uiParent
-    frame:SetPoint(nextState.anchorPoint, iconParent, nextState.relativePoint, nextState.x, nextState.y)
-  end
-  return nextState
-end
+WindowCallbacks.ApplyIconPosition = IconPosition.Apply
 
 function WindowCallbacks.Create(options)
   options = options or {}
