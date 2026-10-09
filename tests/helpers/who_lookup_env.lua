@@ -11,6 +11,7 @@ local WhoLookupEnv = {}
 local GLOBALS = {
   "C_FriendList",
   "FriendsFrame",
+  "WhoFrame",
   "C_Timer",
   "hooksecurefunc",
   "InCombatLockdown",

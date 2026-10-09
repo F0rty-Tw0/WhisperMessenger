@@ -52,9 +52,12 @@ local function cleanup()
   if frame and frame.RegisterEvent then
     frame:RegisterEvent(WHO_EVENT)
   end
+  -- Blizzard keeps the flag on while the Who panel is shown.
+  local whoFrame = _G.WhoFrame
+  local panelShown = whoFrame and whoFrame.IsShown and whoFrame:IsShown() == true
   local api = _G.C_FriendList
   if api and api.SetWhoToUi then
-    api.SetWhoToUi(previousWhoToUi)
+    api.SetWhoToUi(panelShown or previousWhoToUi)
   end
 end
 
@@ -112,14 +115,18 @@ function WhoLookup.OnWhoListUpdate()
 end
 
 -- Runs after every SendWho, ours included: the server throttles them all.
+-- Mythic+ runs no addon code, so a suspended hook does nothing.
 -- A foreign one ends ours at once so the player's query behaves normally.
 local function onSendWho()
+  if _G._wmSuspended then
+    return
+  end
   lastSentAt = now(runtime)
   if inFlight and not sendingOurs then
     inFlight = false
     cleanup()
   end
-  if _G._wmSuspended or not DisplayName.ShowPlayerLevels() then
+  if not DisplayName.ShowPlayerLevels() then
     return
   end
   WhoLookup.OpenWindow()

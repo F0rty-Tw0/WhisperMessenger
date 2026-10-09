@@ -24,14 +24,26 @@ local function test_typed_who_counts_toward_gap()
   end)
 end
 
-local function test_typed_who_while_suspended_counts_toward_gap()
-  Env.Case("suspended typed who gap", nil, function(env)
+-- Mythic+ runs no addon code, so a /who typed there leaves no gap behind.
+local function test_typed_who_while_suspended_changes_nothing()
+  Env.Case("suspended typed who", nil, function(env)
     Env.AddStranger(env, KEY, "Firstmoon")
     rawset(_G, "_wmSuspended", true)
     typedWho(env)
     rawset(_G, "_wmSuspended", nil)
     env.clock = env.clock + 2
-    assert(WhoLookup.TryFor(env.runtime, KEY) == false, "the server throttles it all the same")
+    assert(WhoLookup.TryFor(env.runtime, KEY) == true, "suspended /who must not count toward the gap")
+  end)
+end
+
+local function test_typed_who_while_suspended_keeps_ours_in_flight()
+  Env.Case("suspended foreign hook", { whoToUi = false }, function(env)
+    Env.AddStranger(env, KEY, "Firstmoon")
+    WhoLookup.TryFor(env.runtime, KEY)
+    rawset(_G, "_wmSuspended", true)
+    typedWho(env)
+    assert(env.friendsRegistered == false, "suspended hook must not clean up")
+    rawset(_G, "_wmSuspended", nil)
   end)
 end
 
@@ -80,7 +92,8 @@ end
 
 return function()
   test_typed_who_counts_toward_gap()
-  test_typed_who_while_suspended_counts_toward_gap()
+  test_typed_who_while_suspended_changes_nothing()
+  test_typed_who_while_suspended_keeps_ours_in_flight()
   test_own_send_who_stays_in_flight()
   test_foreign_who_while_ours_in_flight_cleans_up_at_once()
   test_try_for_skips_while_window_open()

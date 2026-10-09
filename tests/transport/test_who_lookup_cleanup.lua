@@ -30,6 +30,23 @@ local function test_cleanup_restores_false_without_get_who_to_ui()
   end)
 end
 
+-- Blizzard keeps the flag on while the Who panel is shown; restoring false
+-- would send the panel's own Refresh results to chat.
+local function test_cleanup_keeps_who_to_ui_on_while_who_panel_shown()
+  Env.Case("who panel shown", nil, function(env)
+    rawset(_G, "WhoFrame", {
+      IsShown = function()
+        return true
+      end,
+    })
+    Env.AddStranger(env, KEY, "Firstmoon")
+    WhoLookup.TryFor(env.runtime, KEY)
+    WhoLookup.OnWhoListUpdate()
+    Env.RunAfters(env)
+    assert(env.whoToUi[#env.whoToUi] == true, "Who panel open, flag must stay on")
+  end)
+end
+
 local function test_who_list_update_not_ours_does_nothing()
   Env.Case("not ours", nil, function(env)
     WhoLookup.OnWhoListUpdate()
@@ -145,6 +162,7 @@ end
 return function()
   test_query_hides_friends_frame_until_result()
   test_cleanup_restores_false_without_get_who_to_ui()
+  test_cleanup_keeps_who_to_ui_on_while_who_panel_shown()
   test_who_list_update_not_ours_does_nothing()
   test_no_result_cleans_up_on_window_timeout()
   test_open_window_twice_extends()
