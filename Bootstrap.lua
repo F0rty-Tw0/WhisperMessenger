@@ -164,6 +164,13 @@ function Bootstrap.Initialize(factory, options)
     return Bootstrap._inMythicContent == true
   end
 
+  local SeenLevelEvents = loadModule("WhisperMessenger.Core.SeenLevelEvents", "SeenLevelEvents")
+  SeenLevelEvents.Init(runtime)
+  runtime.seenLevelEvents = SeenLevelEvents
+  SeenLevelEvents.SetEnabled(accountState.settings.showPlayerLevels == true)
+  local WhoLookup = loadModule("WhisperMessenger.Transport.WhoLookup", "WhoLookup")
+  WhoLookup.Init(runtime)
+
   -- Channel chats pause wherever chat may carry secret values.
   runtime.isChannelIngestSuspended = function()
     if runtime.isMythicLockdown() or runtime.isCompetitiveContent() then

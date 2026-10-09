@@ -1,5 +1,22 @@
 local MythicSuspendController = require("WhisperMessenger.Core.Bootstrap.MythicSuspendController")
 local ChatReplyState = require("WhisperMessenger.Util.ChatReplyState")
+local DisplayName = require("WhisperMessenger.Util.DisplayName")
+
+local function noop() end
+
+-- Runs fn with reply-state cleanup stubbed out, restoring globals after.
+local function runWithoutReplyState(fn)
+  local savedCapture = ChatReplyState.CaptureStaleWhisperReplyTarget
+  local savedClear = ChatReplyState.ClearStaleWhisperReplyState
+  local savedSuspended = _G._wmSuspended
+  ChatReplyState.CaptureStaleWhisperReplyTarget = noop
+  ChatReplyState.ClearStaleWhisperReplyState = noop
+  local ok, err = pcall(fn)
+  ChatReplyState.CaptureStaleWhisperReplyTarget = savedCapture
+  ChatReplyState.ClearStaleWhisperReplyState = savedClear
+  _G._wmSuspended = savedSuspended
+  assert(ok, err)
+end
 
 return function()
   -- test_attach_installs_suspend_resume_and_preserves_mythic_flags
@@ -170,5 +187,65 @@ return function()
       "resume should clean stale reply state, restore event hooks and chat filters, sync the reply key, then refresh without showing the window"
     )
     assert(Bootstrap._wasVisibleBeforeMythic == nil, "resume should clear remembered visibility when hideOnCombat is enabled")
+  end
+
+  -- test_suspend_stops_and_resume_restarts_seen_level_events
+
+  do
+    local enabledCalls = {}
+    local suspendedAtCall = {}
+    local runtime = {
+      seenLevelEvents = {
+        SetEnabled = function(on)
+          enabledCalls[#enabledCalls + 1] = on
+          suspendedAtCall[#suspendedAtCall + 1] = _G._wmSuspended == nil
+        end,
+      },
+    }
+
+    DisplayName.Configure({ showPlayerLevels = true })
+    runWithoutReplyState(function()
+      MythicSuspendController.Attach(runtime, {})
+      runtime.suspend()
+      runtime.resume()
+    end)
+    DisplayName.Configure({ showPlayerLevels = false })
+
+    assert(#enabledCalls == 2, "suspend and resume each reach the level recorder")
+    assert(enabledCalls[1] == false, "suspend stops recording levels")
+    assert(enabledCalls[2] == true, "resume restarts recording when levels are shown")
+    assert(suspendedAtCall[2] == true, "resume clears the suspended flag before restarting recording")
+  end
+
+  -- test_resume_keeps_seen_level_events_off_when_levels_are_hidden
+
+  do
+    local enabledCalls = {}
+    local runtime = {
+      seenLevelEvents = {
+        SetEnabled = function(on)
+          enabledCalls[#enabledCalls + 1] = on
+        end,
+      },
+    }
+
+    DisplayName.Configure({ showPlayerLevels = false })
+    runWithoutReplyState(function()
+      MythicSuspendController.Attach(runtime, {})
+      runtime.resume()
+    end)
+
+    assert(enabledCalls[1] == false, "resume leaves recording off while levels are hidden")
+  end
+
+  -- test_suspend_and_resume_work_without_seen_level_events
+
+  do
+    runWithoutReplyState(function()
+      local runtime = {}
+      MythicSuspendController.Attach(runtime, {})
+      runtime.suspend()
+      runtime.resume()
+    end)
   end
 end

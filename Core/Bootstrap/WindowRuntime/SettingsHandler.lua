@@ -141,7 +141,7 @@ function SettingsHandler.Create(options)
     if (key == "timeFormat" or key == "timeSource") and timeFormat.Configure then
       timeFormat.Configure({ [key] = persistedValue })
     end
-    DisplayNameSetting.Apply(displayName, key, persistedValue)
+    DisplayNameSetting.Apply(displayName, key, persistedValue, runtime.seenLevelEvents)
     if key == "interfaceLanguage" then
       if localization.Configure then
         localization.Configure({ language = persistedValue })
