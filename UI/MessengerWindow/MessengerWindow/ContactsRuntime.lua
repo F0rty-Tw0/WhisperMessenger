@@ -103,6 +103,9 @@ function ContactsRuntime.Create(factory, options)
     end,
     getCompact = isCompact,
     onSelect = function(item)
+      if options.onContactClicked then
+        options.onContactClicked(item)
+      end
       if options.onSelect then
         options.onSelect(item)
       end

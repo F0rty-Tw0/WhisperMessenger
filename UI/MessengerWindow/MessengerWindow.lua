@@ -184,6 +184,7 @@ function MessengerWindow.Create(factory, options)
     end,
     onTabModeSwapSelection = tabSelectionMemory.onTabModeSwapSelection,
     onSelect = tabSelectionMemory.onSelect,
+    onContactClicked = options.onContactClicked,
     onPin = options.onPin,
     onRemove = options.onRemove,
     onMarkUnread = options.onMarkUnread,

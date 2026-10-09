@@ -16,6 +16,7 @@ local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.Igno
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
+local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 
 local WindowCallbacks = {}
 
@@ -47,6 +48,7 @@ function WindowCallbacks.Create(options)
   local startConversation = options.startConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
   local dismissWidgetPreview = options.dismissWidgetPreview or function() end
+  local whoTriggers = WhoTriggers.Create(runtime)
 
   local function canReact(selectedContact, message)
     if type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() then
@@ -104,6 +106,8 @@ function WindowCallbacks.Create(options)
       characterState.contactsTabMode = mode
     end,
 
+    onContactClicked = whoTriggers.onContactClicked,
+
     onSelectConversation = function(conversationKey)
       return selectConversation(conversationKey)
     end,
@@ -112,14 +116,14 @@ function WindowCallbacks.Create(options)
       return startConversation(playerName)
     end,
 
-    onSend = function(payload)
+    onSend = whoTriggers.wrapSend(function(payload)
       if groupSendPolicy and groupSendPolicy.shouldRoutePayload(payload) then
         return groupSendPolicy.sendPayload(payload)
       end
       local sent = sendHandler.HandleSend(runtime, payload, refreshWindow)
       -- Queued or failed: the text is safe in history, so the composer clears.
       return sent or payload.deliveryRecorded == true
-    end,
+    end),
     -- Delivery menu: "send_now" / "discard" / "retry" (sends again).
     onMessageAction = function(selectedContact, message, action)
       local key = type(selectedContact) == "table" and selectedContact.conversationKey or nil
