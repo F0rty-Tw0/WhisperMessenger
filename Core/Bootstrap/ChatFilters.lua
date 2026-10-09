@@ -70,7 +70,12 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
   end
 
   Bootstrap.syncChatFilters = function()
-    local allowed = not Bootstrap._inCompetitiveContent and not Bootstrap._inMythicContent and not Bootstrap._inEncounter and not _G._wmSuspended
+    local chatLocked = runtime ~= nil and type(runtime.isChatLocked) == "function" and runtime.isChatLocked()
+    local allowed = not Bootstrap._inCompetitiveContent
+      and not Bootstrap._inMythicContent
+      and not Bootstrap._inEncounter
+      and not _G._wmSuspended
+      and not chatLocked
     local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed
 
     if shouldFilter and not Bootstrap._filtersRegistered then
