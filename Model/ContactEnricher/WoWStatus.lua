@@ -4,7 +4,9 @@ if type(ns) ~= "table" then
 end
 
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 local WoWStatus = {}
 
@@ -93,6 +95,14 @@ function WoWStatus.ApplyZone(item)
   end
 end
 
+local function writeLevel(item, runtime, level)
+  item.characterLevel = level
+  local conversation = Store.Find(runtime.store, item.conversationKey)
+  if conversation then
+    conversation.characterLevel = level
+  end
+end
+
 -- Copy a known guild/community level onto the contact and its stored
 -- conversation. Unlike zone it is never cleared: offline shows the last level.
 function WoWStatus.ApplyLevel(item, runtime)
@@ -100,11 +110,24 @@ function WoWStatus.ApplyLevel(item, runtime)
   if level == nil then
     return
   end
-  item.characterLevel = level
-  local conversation = Store.Find(runtime.store, item.conversationKey)
-  if conversation then
-    conversation.characterLevel = level
+  writeLevel(item, runtime, level)
+end
+
+-- A level the game showed this session (target, mouseover, ...) fills in
+-- strangers. The guild/community level, when known, always wins.
+-- Name-only chats (no guid yet) match by name.
+function WoWStatus.ApplySeenLevel(item, runtime)
+  if not DisplayName.ShowPlayerLevels() then
+    return
   end
+  if PresenceCache.GetLevel(item.guid) ~= nil then
+    return
+  end
+  local level = SeenLevel.Get(item.guid, item.displayName)
+  if level == nil then
+    return
+  end
+  writeLevel(item, runtime, level)
 end
 
 ns.ContactEnricherWoWStatus = WoWStatus

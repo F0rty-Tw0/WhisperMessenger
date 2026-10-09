@@ -34,6 +34,36 @@ return function()
     assert(DisplayName.ShowPlayerLevels() == false, "an unset player levels choice is off")
   end
 
+  -- test_player_levels_key_toggles_seen_level_events
+
+  do
+    local DisplayName = require("WhisperMessenger.Util.DisplayName")
+    local enabledCalls = {}
+    local fakeEvents = {
+      SetEnabled = function(on)
+        enabledCalls[#enabledCalls + 1] = on
+      end,
+    }
+    DisplayNameSetting.Apply(DisplayName, "showPlayerLevels", true, fakeEvents)
+    DisplayNameSetting.Apply(DisplayName, "showPlayerLevels", nil, fakeEvents)
+    assert(#enabledCalls == 2, "each player levels change reaches the level recorder")
+    assert(enabledCalls[1] == true, "turning levels on starts recording")
+    assert(enabledCalls[2] == false, "an unset choice stops recording")
+  end
+
+  -- test_other_keys_leave_seen_level_events_alone
+
+  do
+    local touched = false
+    local fakeEvents = {
+      SetEnabled = function()
+        touched = true
+      end,
+    }
+    DisplayNameSetting.Apply(stub, "classColorSenderNames", true, fakeEvents)
+    assert(touched == false, "other keys do not touch the level recorder")
+  end
+
   -- test_other_keys_are_ignored
 
   do

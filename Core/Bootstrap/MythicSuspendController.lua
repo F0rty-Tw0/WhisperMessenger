@@ -5,6 +5,7 @@ end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local function L(key)
   return Localization and Localization.Text(key) or key
 end
@@ -45,6 +46,11 @@ function MythicSuspendController.Attach(runtime, deps)
       EventBridge.UnregisterSuspendableLifecycleEvents(Bootstrap._loadFrame)
     end
 
+    local seenLevelEvents = runtime.seenLevelEvents
+    if seenLevelEvents and seenLevelEvents.SetEnabled then
+      seenLevelEvents.SetEnabled(false)
+    end
+
     -- Signal hooksecurefunc hooks (LinkHooks) to bail with zero addon code.
     _G._wmSuspended = true
 
@@ -62,6 +68,11 @@ function MythicSuspendController.Attach(runtime, deps)
   runtime.resume = function()
     runtime.messagingNotice = nil
     _G._wmSuspended = nil
+
+    local seenLevelEvents = runtime.seenLevelEvents
+    if seenLevelEvents and seenLevelEvents.SetEnabled then
+      seenLevelEvents.SetEnabled(DisplayName.ShowPlayerLevels())
+    end
 
     -- Clear our own stale reply key. We did NOT receive whispers during M+
     -- (LIVE_EVENTS were unregistered), so any value here is pre-M+ and not

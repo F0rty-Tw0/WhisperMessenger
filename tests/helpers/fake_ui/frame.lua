@@ -597,6 +597,10 @@ local function makeCreateFrame()
       end
     end
 
+    function frame:UnregisterAllEvents()
+      self.events = nil
+    end
+
     function frame:IsEventRegistered(eventName)
       return self.events ~= nil and self.events[eventName] ~= nil
     end
