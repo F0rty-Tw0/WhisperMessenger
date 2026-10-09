@@ -92,16 +92,16 @@ function SeenLevel.Record(guid, name, level)
   return guidChanged or nameChanged
 end
 
+-- Levels only rise, so when both entries exist the higher one is the newer:
+-- a /who reply records by name only and must beat an older GUID sighting.
 function SeenLevel.Get(guid, name)
-  local level = guid ~= nil and byGuid[guid] or nil
-  if level ~= nil then
-    return level
-  end
+  local guidLevel = guid ~= nil and byGuid[guid] or nil
   local key = SeenLevel.NameKey(name)
-  if key == nil then
-    return nil
+  local nameLevel = key ~= nil and byName[key] or nil
+  if guidLevel == nil or (nameLevel ~= nil and nameLevel > guidLevel) then
+    return nameLevel
   end
-  return byName[key]
+  return guidLevel
 end
 
 function SeenLevel._reset()

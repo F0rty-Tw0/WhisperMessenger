@@ -94,6 +94,15 @@ return function()
     assert(SeenLevel.Get(nil, "n1") == nil, "older entries should be wiped")
   end
 
+  -- test_newer_name_level_beats_stale_guid_level
+  do
+    SeenLevel._reset()
+    recordSafely("G1", "Firstmoon", 70)
+    recordSafely(nil, "Firstmoon", 71)
+    local level = SeenLevel.Get("G1", "Firstmoon")
+    assert(level == 71, "higher name level should win over stale guid level, got " .. tostring(level))
+  end
+
   SeenLevel._reset()
   rawset(_G, "Ambiguate", savedAmbiguate)
 
