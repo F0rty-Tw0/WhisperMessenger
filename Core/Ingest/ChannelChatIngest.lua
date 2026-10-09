@@ -62,7 +62,7 @@ local function buildMessage(payload, direction, sentAt, playerInfo)
     end
     -- Only while levels are shown: busy Trade chat pays nothing when off.
     if payload.guid and DisplayName.ShowPlayerLevels() then
-      message.senderLevel = SenderLevel.Lookup(payload.guid)
+      message.senderLevel = SenderLevel.Lookup(payload.guid, payload.playerName)
     end
   end
   return message

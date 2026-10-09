@@ -1,6 +1,7 @@
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelChatIngest = require("WhisperMessenger.Core.Ingest.ChannelChatIngest")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
+local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 
 local STUBBED = { "UnitTokenFromGUID", "UnitLevel" }
 
@@ -67,6 +68,17 @@ return function()
     conversation = assert(conversation, "the line was stored")
     local message = conversation.messages[#conversation.messages]
     assert(message.senderLevel == 20, "expected senderLevel 20, got " .. tostring(message.senderLevel))
+  end
+
+  -- test_incoming_channel_line_uses_level_seen_by_name
+  do
+    SeenLevel._reset()
+    SeenLevel.Record(nil, "Diaperspin", 8)
+    local _, conversation = ChannelChatIngest.HandleEvent(makeState(), tradeLine("WTS boost", "Diaperspin", 9302))
+    conversation = assert(conversation, "the line was stored")
+    local message = conversation.messages[#conversation.messages]
+    assert(message.senderLevel == 8, "expected seen senderLevel 8, got " .. tostring(message.senderLevel))
+    SeenLevel._reset()
   end
 
   DisplayName.Configure({ showPlayerLevels = false })

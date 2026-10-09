@@ -94,12 +94,12 @@ return function()
     assert(lookupSafely(GUID) == 20, "party member level should be 20")
   end
 
-  -- a non-group token (nameplate) is not a level source
+  -- any live unit token (here a nameplate) is a level source: the game shows it
   do
     reset()
     withToken("nameplate3")
     withUnitLevels({ nameplate3 = 20 })
-    assert(lookupSafely(GUID) == nil, "nameplate token must not leak a level")
+    assert(lookupSafely(GUID) == 20, "nameplate token level should be 20")
   end
 
   -- without UnitTokenFromGUID the party roster is scanned by GUID

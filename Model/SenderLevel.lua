@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
+local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 
 local SenderLevel = {}
 
@@ -14,12 +15,6 @@ local function validLevel(value)
     return value
   end
   return nil
-end
-
--- UnitTokenFromGUID also returns target/nameplate/mouseover tokens, which
--- would leak a stranger's level, so only party and raid tokens count.
-local function isGroupToken(token)
-  return type(token) == "string" and (string.find(token, "^party%d") or string.find(token, "^raid%d")) ~= nil
 end
 
 -- Flavors without UnitTokenFromGUID: walk the roster comparing GUIDs.
@@ -38,13 +33,12 @@ local function scanGroup(guid)
   return nil
 end
 
-local function groupLevel(guid)
+-- Any live unit token counts (party, raid, target, mouseover, nameplate):
+-- the game already shows that unit's level to the player.
+local function unitLevel(guid)
   local unit
   if _G.UnitTokenFromGUID then
     unit = _G.UnitTokenFromGUID(guid)
-    if not isGroupToken(unit) then
-      return nil
-    end
   else
     unit = scanGroup(guid)
   end
@@ -69,14 +63,19 @@ local function bnetLevel(guid)
   return validLevel(game.characterLevel)
 end
 
-local STEPS = { groupLevel, clubLevel, bnetLevel }
+-- Last resort: a level the game showed earlier this session.
+local function seenLevel(guid, name)
+  return validLevel(SeenLevel.Get(guid, name))
+end
 
-function SenderLevel.Lookup(guid)
+local STEPS = { unitLevel, clubLevel, bnetLevel, seenLevel }
+
+function SenderLevel.Lookup(guid, name)
   if guid == nil then
     return nil
   end
   for _, step in ipairs(STEPS) do
-    local ok, level = pcall(step, guid)
+    local ok, level = pcall(step, guid, name)
     if ok and level then
       return level
     end

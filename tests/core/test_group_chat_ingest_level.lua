@@ -2,6 +2,7 @@ local Store = require("WhisperMessenger.Model.ConversationStore")
 local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
+local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 
 local STUBBED = { "UnitName", "GetGuildInfo", "UnitTokenFromGUID", "UnitLevel" }
 
@@ -95,6 +96,16 @@ return function()
     local message = storedMessage(guildLine("hello"))
     assert(message.direction == "in", "line without guid is incoming")
     assert(message.senderLevel == nil, "line without guid has no senderLevel")
+  end
+
+  -- test_incoming_line_uses_level_seen_by_sender_name
+  -- No unit, guild or Battle.net level for this guid: only the name matches.
+  do
+    SeenLevel._reset()
+    SeenLevel.Record(nil, "Jaina-Area52", 8)
+    local message = storedMessage(guildLine("lfg", "Player-1-NOBODY"))
+    SeenLevel._reset()
+    assert(message.senderLevel == 8, "expected senderLevel 8 from the seen name, got " .. tostring(message.senderLevel))
   end
 
   DisplayName.Configure({ showPlayerLevels = false })
