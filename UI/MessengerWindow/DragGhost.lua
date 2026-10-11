@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local RailAvatar = ns.ContactsListRailAvatar or require("WhisperMessenger.UI.ContactsList.RailAvatar")
 local GroupLabel = ns.ContactsListGroupLabel or require("WhisperMessenger.UI.ContactsList.GroupLabel")
+local RowView = ns.ContactsListRowView or require("WhisperMessenger.UI.ContactsList.RowView")
 
 local applyColorTexture = UIHelpers.applyColorTexture
 local applyBorderBoxColor = UIHelpers.applyBorderBoxColor
@@ -83,9 +84,7 @@ function DragGhost.Show(ghost, sourceRow, listFrame)
   applyBorderBoxColor(ghost.border, Theme.COLORS.window_border)
 
   local item = sourceRow.item or {}
-  -- Same texture the row shows (class or channel icon); item class as fallback.
-  local iconPath = sourceRow.classIcon and sourceRow.classIcon.GetTexture and sourceRow.classIcon:GetTexture() or nil
-  ghost.classIcon:SetTexture(iconPath or Theme.ClassIcon(item.classTag) or Theme.TEXTURES.bnet_icon)
+  ghost.classIcon:SetTexture(RowView.IconPath(item))
   ghost.label:SetText(DisplayName.Format(item.displayName) or "")
   applyClassColor(ghost.label, item.classTag, Theme.COLORS.text_primary)
   layoutFor(ghost, sourceRow, item)

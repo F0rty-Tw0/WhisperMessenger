@@ -1,5 +1,6 @@
 local DragController = require("WhisperMessenger.UI.MessengerWindow.DragController")
 local FakeUI = require("tests.helpers.fake_ui")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 local DIM_ALPHA = 0.4
 
@@ -163,7 +164,7 @@ return function()
         if child.frameType == "FontString" and child.text == "Alice" then
           foundName = true
         end
-        if child.frameType == "Texture" and child.texturePath == "Interface\\Icons\\ClassIcon_MAGE" then
+        if child.frameType == "Texture" and child.texturePath == Theme.ClassIcon("MAGE") then
           foundIcon = true
         end
         scan(child)
@@ -171,7 +172,7 @@ return function()
     end
     scan(ghost)
     assert(foundName, "ghost should show the dragged contact name")
-    assert(foundIcon, "ghost should reuse the source row class icon")
+    assert(foundIcon, "ghost should show the dragged contact's class icon")
   end
 
   -- test_ghost_spans_row_width

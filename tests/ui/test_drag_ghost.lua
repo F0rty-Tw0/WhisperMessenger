@@ -51,6 +51,19 @@ return function()
     assert(ghost.railAvatar.label.shown == true and ghost.railAvatar.label.text == "TR", "initials on a channel ghost")
   end
 
+  -- test_ghost_icon_ignores_masked_texture_name
+  -- WoW: Forever reports a masked texture as "mask172"; SetTexture on that crashes the client.
+  do
+    local trade = { conversationKey = "channel::me-realm::trade", displayName = "Trade", channel = "CHANNEL", pinned = true }
+    local row = bindRow(factory, list, trade, false)
+    local expected = row.classIcon.texturePath
+    row.classIcon.GetTexture = function()
+      return "mask172"
+    end
+    DragGhost.Show(ghost, row, list)
+    assert(ghost.classIcon.texturePath == expected, "ghost uses the row's icon art, got " .. tostring(ghost.classIcon.texturePath))
+  end
+
   -- test_full_list_ghost_is_unchanged_after_a_rail_drag
   do
     local row = bindRow(factory, list, jaina, false)

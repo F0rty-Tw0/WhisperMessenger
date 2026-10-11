@@ -51,6 +51,19 @@ local function playerClassTag()
   return nil
 end
 
+-- Icon art for a row: channel-type icon for group threads (no single
+-- "class" there), class icon for whispers. Read from the item, never back
+-- from the masked texture: WoW: Forever reports that as "mask172".
+function RowView.IconPath(item)
+  local iconPath
+  if GroupLabel.IsGroupItem(item) then
+    iconPath = Theme.ChannelIcon and Theme.ChannelIcon(item.channel, item.conversationKey) or nil
+  else
+    iconPath = Theme.ClassIcon(item.classTag)
+  end
+  return iconPath or Theme.TEXTURES.bnet_icon
+end
+
 local function bindRow(factory, parent, row, index, item, options)
   local parentWidth = sizeValue(parent, "GetWidth", "width", 260)
   local ROW_HEIGHT = Theme.ContactRowHeight()
@@ -97,19 +110,11 @@ local function bindRow(factory, parent, row, index, item, options)
   RowScripts.bindDrag(row, item, options)
 
   -- Class icon (create once, update texture every bind).
-  -- Group rows override with a channel-type icon (guild, party, raid, etc.)
-  -- since there's no single "class" for a group thread.
   if row.classIconFrame == nil then
     RowElements.createClassIcon(factory, row, item)
   end
   if row.classIcon and row.classIcon.SetTexture then
-    local iconPath
-    if isGroup then
-      iconPath = Theme.ChannelIcon and Theme.ChannelIcon(item.channel, item.conversationKey) or nil
-    else
-      iconPath = Theme.ClassIcon(item.classTag)
-    end
-    row.classIcon:SetTexture(iconPath or Theme.TEXTURES.bnet_icon)
+    row.classIcon:SetTexture(RowView.IconPath(item))
   end
 
   -- Status dot (create once, update color every bind)
