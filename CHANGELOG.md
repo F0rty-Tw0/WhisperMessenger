@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- Fixed: dragging a pinned chat to reorder it no longer crashes the game on WoW: Forever.
+
 ## [2.0.3] - 2026-10-09
 
 - The addon now goes by "Whisper Messenger" everywhere: the AddOns list, the window title, the icon tooltips, chat messages and the options.
