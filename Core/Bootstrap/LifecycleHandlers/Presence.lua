@@ -9,12 +9,8 @@ local Common = ns.BootstrapLifecycleHandlersCommon
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
-local RestrictedActions = ns.BootstrapRestrictedActions
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.RestrictedActions"))
-  or nil
-local RestrictionState = ns.BootstrapLifecycleHandlersRestrictionState
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.RestrictionState"))
-  or nil
+-- stylua: ignore
+local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
 local Presence = {}
 
@@ -188,42 +184,8 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache)
   end)
 end
 
--- A cached Activating with no Chat event since is given this long to turn
--- Active before it is treated as a missed Inactive.
-local ACTIVATING_GRACE_SECONDS = 30
-
--- The API still reads unlocked during Activating, so it can't be cleared on
--- the spot. Once the grace passes with no new Chat event and the API still
--- unlocked, the missed Inactive is replayed.
-local function expireStaleActivating(Bootstrap, restrictedActions)
-  local chatType = RestrictedActions.TYPES.Chat
-  local updatesAtEntry = restrictedActions.updateCount(chatType)
-  Common.scheduleAfter(ACTIVATING_GRACE_SECONDS, function()
-    if restrictedActions.updateCount(chatType) ~= updatesAtEntry or RestrictedActions.ChatApiLocked() then
-      return
-    end
-    RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, chatType, RestrictedActions.STATES.Inactive)
-  end)
-end
-
--- A type 5 Inactive can be missed across a loading screen. When the API says
--- chat is open, drop the cached lock before filters and notice resync below.
-local function clearStaleChatLock(Bootstrap)
-  local restrictedActions = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
-  if RestrictedActions == nil or restrictedActions == nil or RestrictedActions.ChatApiLocked() then
-    return
-  end
-  local chatType = RestrictedActions.TYPES.Chat
-  local cachedState = restrictedActions.cachedState(chatType)
-  if cachedState == RestrictedActions.STATES.Active then
-    restrictedActions.updateFromEvent(chatType, RestrictedActions.STATES.Inactive)
-  elseif cachedState == RestrictedActions.STATES.Activating and Common ~= nil and RestrictionState ~= nil then
-    expireStaleActivating(Bootstrap, restrictedActions)
-  end
-end
-
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
-  clearStaleChatLock(Bootstrap)
+  StaleRestrictions.Clear(Bootstrap)
   local ContentDetector = deps.getContentDetector()
   local wasMythic = Bootstrap._inMythicContent or false
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
