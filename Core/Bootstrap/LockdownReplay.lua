@@ -12,6 +12,8 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 
 local ipairs = ipairs
+local next = next
+local pairs = pairs
 local pcall = pcall
 local type = type
 
@@ -72,6 +74,7 @@ local function resetBatch(state)
   state.filed = 0
   state.lost = 0
   state.anyAlert = false
+  state.alertKeys = {}
   state.latestIncoming = nil
 end
 
@@ -118,14 +121,28 @@ local function acknowledgePreview(runtime, latest)
   end
 end
 
+-- A long whisper split across the lift arrives partly held, partly live.
+-- The live path's per-conversation throttle keeps it to one alert.
+local function alertThrottled(runtime, alertKeys)
+  local now = type(runtime.now) == "function" and runtime.now() or nil
+  local throttled = next(alertKeys) ~= nil
+  for conversationKey in pairs(alertKeys) do
+    if not IncomingAlerts.Throttled(runtime, conversationKey, now) then
+      throttled = false
+    end
+  end
+  return throttled
+end
+
 -- The batch is reset before any alert or print runs, so one that throws
 -- cannot carry this batch's counts into the next.
 local function finishBatch(runtime, state)
   stopTicker(state)
-  local filed, lost, anyAlert, latest = state.filed, state.lost, state.anyAlert, state.latestIncoming
+  local filed, lost, latest = state.filed, state.lost, state.latestIncoming
+  local anyAlert, alertKeys = state.anyAlert, state.alertKeys
   state.lastSummary = { filed = filed, lost = lost }
   resetBatch(state)
-  if anyAlert then
+  if anyAlert and not alertThrottled(runtime, alertKeys) then
     IncomingAlerts.Notify(accountSettings(runtime))
   end
   local liveAt = runtime.lastIncomingWhisperAt
@@ -149,6 +166,9 @@ end
 local function trackIncoming(runtime, state, line, result)
   if AlertPolicy.ShouldAlert(result, accountSettings(runtime)) then
     state.anyAlert = true
+    if result.conversationKey then
+      state.alertKeys[result.conversationKey] = true
+    end
   end
   local latest = state.latestIncoming
   if result.conversationKey and (latest == nil or line.receivedAt >= latest.receivedAt) then

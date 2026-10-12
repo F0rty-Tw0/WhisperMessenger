@@ -10,6 +10,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - Shift-click a name in the contacts list, the chat header, or a group or channel chat to look that player up with /who.
 - Fixed: dragging a pinned chat to reorder it no longer crashes the game on WoW: Forever.
 - Fixed: the "whispers arrived during the fight" count could include whispers from an earlier fight.
+- Fixed: a long whisper that arrived just as a fight ended could play the alert sound twice.
 
 ## [2.0.3] - 2026-10-09
 

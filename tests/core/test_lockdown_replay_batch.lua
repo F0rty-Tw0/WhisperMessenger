@@ -3,6 +3,7 @@ local ReplayRuntime = require("tests.helpers.lockdown_replay_runtime")
 local LockdownReplay = require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local WidgetPreview = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WidgetPreview")
+local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 local SECRET = FakeChatLines.SECRET
 local KEY = "wow::WOW::arthas-area52"
@@ -35,6 +36,14 @@ end
 
 local function printedText(probe)
   return probe.printed[1] and probe.printed[1][1]
+end
+
+local function liveWhisper(probe, lineID)
+  -- stylua: ignore
+  EventBridge.RouteLiveEvent(
+    probe.runtime, nil, "CHAT_MSG_WHISPER", "live part", "Arthas-Area52",
+    "", "", "", "", "", "", "", "", lineID, "Player-1-Arthas-Area52"
+  )
 end
 
 return function()
@@ -188,6 +197,27 @@ return function()
     LockdownReplay.Kick(probe.runtime)
     FakeChatLines.Fire()
     assert(printedText(probe) == "1 whisper arrived during the fight.", "got " .. tostring(printedText(probe)))
+    probe.restore()
+  end
+
+  -- test_live_tail_of_a_replayed_whisper_does_not_alert_again
+
+  do
+    local probe = ReplayRuntime.Probe(whispers(1))
+    replay(probe)
+    liveWhisper(probe, 50)
+    assert(#probe.notified == 1, "a whisper split across the lift must alert once, got " .. #probe.notified)
+    probe.restore()
+  end
+
+  -- test_replay_right_after_a_live_alert_does_not_alert_again
+
+  do
+    local probe = ReplayRuntime.Probe(whispers(1))
+    liveWhisper(probe, 50)
+    replay(probe)
+    assert(probe.runtime.lockdownReplay.lastSummary.filed == 1, "setup: the held whisper must file")
+    assert(#probe.notified == 1, "a whisper split across the lift must alert once, got " .. #probe.notified)
     probe.restore()
   end
 end
