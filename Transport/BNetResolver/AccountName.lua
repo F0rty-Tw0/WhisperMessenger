@@ -9,6 +9,8 @@ end
 -- match is the friend list's own accountName.
 local AccountName = {}
 
+-- The friend count function: bnetApi's own, else the global. BNetResolver
+-- shares it, so both walk the same friend list.
 local function resolveGetNumFriends(bnetApi)
   if type(bnetApi.GetNumFriends) == "function" then
     return bnetApi.GetNumFriends
@@ -17,6 +19,8 @@ local function resolveGetNumFriends(bnetApi)
     return _G.BNGetNumFriends
   end
 end
+
+AccountName.ResolveGetNumFriends = resolveGetNumFriends
 
 function AccountName.Resolve(bnetApi, accountName)
   if type(bnetApi) ~= "table" or type(accountName) ~= "string" or accountName == "" then

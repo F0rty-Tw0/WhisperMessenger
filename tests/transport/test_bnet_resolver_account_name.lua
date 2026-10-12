@@ -1,4 +1,5 @@
 local BNetResolver = require("WhisperMessenger.Transport.BNetResolver")
+local AccountName = require("WhisperMessenger.Transport.BNetResolver.AccountName")
 
 local FRIENDS = {
   { accountName = "|Ks1|k", bnetAccountID = 12 },
@@ -47,4 +48,33 @@ return function()
     local accountID = BNetResolver.ResolveAccountIDByAccountName(buildApi(), "|Ks1|k")
     assert(accountID == 12, "|Ks1|k must map to bnetAccountID 12, got " .. tostring(accountID))
   end
+
+  local savedGlobal = rawget(_G, "BNGetNumFriends")
+  local function globalCount()
+    return 0
+  end
+
+  -- test_get_num_friends_prefers_the_api_table
+
+  do
+    rawset(_G, "BNGetNumFriends", globalCount)
+    local api = buildApi()
+    assert(AccountName.ResolveGetNumFriends(api) == api.GetNumFriends, "the api table's GetNumFriends must win")
+  end
+
+  -- test_get_num_friends_falls_back_to_the_global
+
+  do
+    rawset(_G, "BNGetNumFriends", globalCount)
+    assert(AccountName.ResolveGetNumFriends({}) == globalCount, "BNGetNumFriends must be the fallback")
+  end
+
+  -- test_get_num_friends_nil_when_neither_exists
+
+  do
+    rawset(_G, "BNGetNumFriends", nil)
+    assert(AccountName.ResolveGetNumFriends({}) == nil, "no friend count function must read as nil")
+  end
+
+  rawset(_G, "BNGetNumFriends", savedGlobal)
 end

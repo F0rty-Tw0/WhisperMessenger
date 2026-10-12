@@ -42,14 +42,7 @@ local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTa
   return info, false
 end
 
-local function resolveGetNumFriends(bnetApi)
-  if type(bnetApi.GetNumFriends) == "function" then
-    return bnetApi.GetNumFriends
-  end
-  if type(_G.BNGetNumFriends) == "function" then
-    return _G.BNGetNumFriends
-  end
-end
+local resolveGetNumFriends = AccountName.ResolveGetNumFriends
 
 function BNetResolver.SanitizeAccountID(value)
   local issecretvalue = _G.issecretvalue
