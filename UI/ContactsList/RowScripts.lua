@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local HoverPointer = ns.ContactsListHoverPointer or require("WhisperMessenger.UI.ContactsList.HoverPointer")
 local RowHoverOverlay = ns.ContactsListRowHoverOverlay or require("WhisperMessenger.UI.ContactsList.RowHoverOverlay")
@@ -164,7 +165,8 @@ function RowScripts.bindHover(row)
 end
 
 --- Bind OnClick script to a row.
---- Left-click selects the conversation. Right-click opens the native player menu.
+--- Left-click selects the conversation. Shift + left-click on a WoW row sends a
+--- visible /who instead and does not select. Right-click opens the native player menu.
 --- The handler is created once per row and reads row._wmRowOptions, so a later
 --- refresh with fresh callbacks takes effect without rebinding.
 function RowScripts.bindClick(row, _item, options)
@@ -181,6 +183,14 @@ function RowScripts.bindClick(row, _item, options)
       end
 
       local rowOptions = row._wmRowOptions
+      local whoPlayer = rowOptions and rowOptions.whoPlayer
+      local isShiftWhoClick = button == "LeftButton" and row.item.channel == "WOW" and type(whoPlayer) == "function" and UIHelpers.isShiftDown()
+      if isShiftWhoClick then
+        whoPlayer(row.item.displayName)
+
+        return
+      end
+
       if button == "RightButton" then
         local onMarkUnread = rowOptions and rowOptions.onMarkUnread
         -- rowOptions carries onPin / onRemove, the hover buttons' handlers.
