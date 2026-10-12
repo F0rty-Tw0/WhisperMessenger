@@ -14,7 +14,10 @@ local setTextColor = UIHelpers.setTextColor
 
 local SenderLabel = {}
 
-local function defaultOpenPlayerMenu(message, anchor)
+local function defaultOpenPlayerMenu(message, anchor, button)
+  if button ~= nil and button ~= "RightButton" then
+    return false
+  end
   local PM = ns.ChatBubblePlayerMenu
   if type(PM) ~= "table" or type(PM.Open) ~= "function" then
     return false
@@ -22,13 +25,17 @@ local function defaultOpenPlayerMenu(message, anchor)
   return PM.Open(message, anchor)
 end
 
+local function isShiftLeftClick(button)
+  return button == "LeftButton" and UIHelpers.isShiftDown()
+end
+
 local function playerMenuOnMouseUp(self, button)
-  if button ~= "RightButton" then
+  if button ~= "RightButton" and not isShiftLeftClick(button) then
     return
   end
   local opener = self._wmPlayerMenuOpener
   if type(opener) == "function" then
-    opener(self._wmPlayerMenuMessage, self)
+    opener(self._wmPlayerMenuMessage, self, button)
   end
 end
 
