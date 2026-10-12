@@ -5,7 +5,7 @@ local ContactsRuntime = require("WhisperMessenger.UI.MessengerWindow.MessengerWi
 -- A contact row click reports the clicked item before selecting it, so the
 -- /who lookup runs inside the click.
 
-local function makeRuntime(calls)
+local function makeRuntime(calls, whoPlayer)
   local factory = FakeUI.NewFactory()
   local window = factory.CreateFrame("Frame", nil, nil)
   local pane = factory.CreateFrame("Frame", nil, window)
@@ -15,6 +15,7 @@ local function makeRuntime(calls)
     contactsPane = pane,
     contactsView = contactsView,
     settingsConfig = {},
+    whoPlayer = whoPlayer,
     onContactClicked = function(item)
       calls[#calls + 1] = { name = "clicked", item = item }
     end,
@@ -49,5 +50,25 @@ return function()
     assert(#calls == 2, "clicked and select both called, got " .. #calls)
     assert(calls[1].name == "clicked" and calls[1].item.conversationKey == "a", "clicked first with the item")
     assert(calls[2].name == "select" and calls[2].item.conversationKey == "a", "then select")
+  end
+
+  -- test_who_player_reaches_row_options
+  do
+    local calls = {}
+    local whoNames = {}
+    local runtime = makeRuntime(calls, function(name)
+      whoNames[#whoNames + 1] = name
+      return true
+    end)
+    runtime.refreshContacts(ITEMS)
+    local row = rowFor(runtime, "a")
+    local originalShift = _G.IsShiftKeyDown
+    _G.IsShiftKeyDown = function()
+      return true
+    end
+    row.scripts.OnClick(row, "LeftButton")
+    _G.IsShiftKeyDown = originalShift
+    assert(#whoNames == 1 and whoNames[1] == "Friend", "whoPlayer threaded to the row click")
+    assert(#calls == 0, "shift-click selects nothing and reports no contact click")
   end
 end
