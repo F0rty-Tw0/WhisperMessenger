@@ -164,4 +164,30 @@ return function()
     assert(#probe.notified == 1, "a relocked batch must still alert once, got " .. #probe.notified)
     probe.restore()
   end
+
+  -- test_failed_alert_does_not_leak_counts_into_next_batch
+
+  do
+    local lines, holds = whispers(2)
+    local probe = ReplayRuntime.Probe(lines, holds)
+    local IncomingAlerts = require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
+    local savedNotify = IncomingAlerts.Notify
+    IncomingAlerts.Notify = function()
+      error("sound failed")
+    end
+    LockdownReplay.Kick(probe.runtime)
+    local ok = pcall(FakeChatLines.Fire)
+    IncomingAlerts.Notify = savedNotify
+    assert(not ok, "setup: the first batch's alert must throw")
+
+    lines[3] = from("Arthas-Area52", "next fight")
+    ReplayRuntime.Hold(probe.runtime, "CHAT_MSG_WHISPER", 3)
+    for k in pairs(probe.printed) do
+      probe.printed[k] = nil
+    end
+    LockdownReplay.Kick(probe.runtime)
+    FakeChatLines.Fire()
+    assert(printedText(probe) == "1 whisper arrived during the fight.", "got " .. tostring(printedText(probe)))
+    probe.restore()
+  end
 end

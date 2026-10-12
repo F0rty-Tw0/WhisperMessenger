@@ -118,24 +118,26 @@ local function acknowledgePreview(runtime, latest)
   end
 end
 
+-- The batch is reset before any alert or print runs, so one that throws
+-- cannot carry this batch's counts into the next.
 local function finishBatch(runtime, state)
   stopTicker(state)
-  state.lastSummary = { filed = state.filed, lost = state.lost }
-  if state.anyAlert then
+  local filed, lost, anyAlert, latest = state.filed, state.lost, state.anyAlert, state.latestIncoming
+  state.lastSummary = { filed = filed, lost = lost }
+  resetBatch(state)
+  if anyAlert then
     IncomingAlerts.Notify(accountSettings(runtime))
   end
-  local latest = state.latestIncoming
   local liveAt = runtime.lastIncomingWhisperAt
   if latest and (liveAt == nil or liveAt <= latest.receivedAt) then
     runtime.lastIncomingWhisperKey = latest.conversationKey
   end
   acknowledgePreview(runtime, latest)
-  printCount(state.filed, ONE_FILED_KEY, MANY_FILED_KEY)
-  printCount(state.lost, ONE_LOST_KEY, MANY_LOST_KEY)
+  printCount(filed, ONE_FILED_KEY, MANY_FILED_KEY)
+  printCount(lost, ONE_LOST_KEY, MANY_LOST_KEY)
   if type(runtime.refreshWindow) == "function" then
     runtime.refreshWindow()
   end
-  resetBatch(state)
 end
 
 local function loseLine(state, line)
