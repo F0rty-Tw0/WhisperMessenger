@@ -45,6 +45,23 @@ local function lastSeenLabel(selectedContact)
   return string.format(Localization.Text("Last seen %s"), TimeFormat.ContactPreview(seenAt))
 end
 
+-- The live zone, else the last /who zone with its age (second return true).
+-- A guid-less chat never gets a real check, so its Offline is only a default:
+-- the zone shows, and the caller drops that Offline label.
+local function zoneText(selectedContact, statusKey)
+  if selectedContact.areaName and selectedContact.areaName ~= "" then
+    return selectedContact.areaName, false
+  end
+  if not selectedContact.whoArea or selectedContact.whoArea == "" then
+    return nil
+  end
+  if selectedContact.guid and statusKey == "Offline" then
+    return nil
+  end
+
+  return selectedContact.whoArea .. " (" .. TimeFormat.ContactPreview(selectedContact.whoAreaAt) .. ")", true
+end
+
 -- Returns line1 (name-realm + class + faction), line2 (availability/typing + zone),
 -- and the status dot color key. Both lines are "" when there is no contact.
 function StatusLine.Build(selectedContact, status)
@@ -96,21 +113,25 @@ function StatusLine.Build(selectedContact, status)
 
   -- A live typing indicator replaces the availability label while it lasts.
   local statusKey = status and status.status or nil
+  local zone, isWhoZone = zoneText(selectedContact, statusKey)
   local avail = statusKey and StatusLine.AVAILABILITY_DISPLAY[statusKey] or nil
   if selectedContact.isTyping then
     table.insert(line2, Localization.Text("typing…"))
     dotColor = "online"
   elseif avail then
-    table.insert(line2, Localization.Text(avail.label))
-    local seenLabel = statusKey == "Offline" and lastSeenLabel(selectedContact) or nil
-    if seenLabel then
-      table.insert(line2, seenLabel)
-    end
     dotColor = avail.color
+    -- The zone replaces a default Offline and its Last seen.
+    if not (isWhoZone and statusKey == "Offline") then
+      table.insert(line2, Localization.Text(avail.label))
+      local seenLabel = statusKey == "Offline" and lastSeenLabel(selectedContact) or nil
+      if seenLabel then
+        table.insert(line2, seenLabel)
+      end
+    end
   end
 
-  if selectedContact.areaName and selectedContact.areaName ~= "" then
-    table.insert(line2, selectedContact.areaName)
+  if zone then
+    table.insert(line2, zone)
   end
 
   local sep = "  -  "
