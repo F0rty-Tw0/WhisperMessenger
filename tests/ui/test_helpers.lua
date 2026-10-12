@@ -176,4 +176,20 @@ return function()
   assert(icon.frame.height == 40, "frame height should be the requested size")
   assert(icon.texture.width == 46, "texture should be ~15% larger (40 * 1.15 = 46)")
   assert(icon.texture.mask == "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask", "texture should have circular mask")
+
+  -- test_is_shift_down_is_strictly_true_only_when_shift_held
+  do
+    local saved = rawget(_G, "IsShiftKeyDown")
+    rawset(_G, "IsShiftKeyDown", nil)
+    assert(UIHelpers.isShiftDown() == false, "missing IsShiftKeyDown is not shift")
+    rawset(_G, "IsShiftKeyDown", function()
+      return 1
+    end)
+    assert(UIHelpers.isShiftDown() == false, "a non-true return is not shift")
+    rawset(_G, "IsShiftKeyDown", function()
+      return true
+    end)
+    assert(UIHelpers.isShiftDown() == true, "true return is shift")
+    rawset(_G, "IsShiftKeyDown", saved)
+  end
 end
