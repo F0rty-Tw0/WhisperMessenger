@@ -119,9 +119,9 @@ function StatusLine.Build(selectedContact, status)
     table.insert(line2, Localization.Text("typing…"))
     dotColor = "online"
   elseif avail then
-    dotColor = avail.color
-    -- The zone replaces a default Offline and its Last seen.
+    -- The zone replaces a default Offline, its Last seen and its grey dot.
     if not (isWhoZone and statusKey == "Offline") then
+      dotColor = avail.color
       table.insert(line2, Localization.Text(avail.label))
       local seenLabel = statusKey == "Offline" and lastSeenLabel(selectedContact) or nil
       if seenLabel then

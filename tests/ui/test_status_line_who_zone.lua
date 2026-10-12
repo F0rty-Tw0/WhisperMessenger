@@ -51,11 +51,19 @@ return function()
     assert(line2 == "Stormwind (now)", "got " .. tostring(line2))
   end
 
+  -- test_who_zone_replacing_default_offline_hides_status_dot
+  do
+    local contact = { channel = "WOW", whoArea = "Stormwind", whoAreaAt = now }
+    local _, _, dotColor = StatusLine.Build(contact, OFFLINE)
+    assert(dotColor == nil, "got " .. tostring(dotColor))
+  end
+
   -- test_offline_without_guid_without_who_zone_keeps_offline
   do
     local contact = { channel = "WOW", conversation = { lastSeenAt = now - 7200 } }
-    local _, line2 = StatusLine.Build(contact, OFFLINE)
+    local _, line2, dotColor = StatusLine.Build(contact, OFFLINE)
     assert(line2:find("Offline", 1, true), "got " .. tostring(line2))
     assert(line2:find("Last seen", 1, true), "got " .. tostring(line2))
+    assert(dotColor == StatusLine.AVAILABILITY_DISPLAY.Offline.color, "got " .. tostring(dotColor))
   end
 end
