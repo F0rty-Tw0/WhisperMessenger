@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ContactsContextMenu = ns.ContactsListContextMenu or require("WhisperMessenger.UI.ContactsList.ContextMenu")
 
 -- Right-click on the conversation header opens that conversation's menu: the
@@ -26,6 +27,7 @@ local function findScriptedAncestor(frame, eventName)
     end
     ancestor = type(ancestor.GetParent) == "function" and ancestor:GetParent() or nil
   end
+
   return nil, nil
 end
 
@@ -38,7 +40,44 @@ local function forward(headerFrame, eventName)
   end
 end
 
--- options: { onMarkUnread, onUpdatePrefs } (the pane's menu callbacks).
+local function isMouseOver(region)
+  if region == nil or type(region.IsMouseOver) ~= "function" then
+    return false
+  end
+  local ok, value = pcall(region.IsMouseOver, region)
+  return ok and value == true
+end
+
+-- Shift + left-click on the name text of a whisper chat sends a /who. A drag
+-- that moves the window also ends in OnMouseUp, so a drag cancels the click.
+local function shouldWho(view, contact, button, options)
+  if button ~= "LeftButton" or type(options.whoPlayer) ~= "function" then
+    return false
+  end
+  if contact == nil or contact.channel ~= "WOW" or view._wmHeaderDragged then
+    return false
+  end
+
+  return UIHelpers.isShiftDown() and isMouseOver(view.headerName)
+end
+
+-- Forward the window scripts the header swallows; a drag start/stop is also
+-- recorded on the view so a drag cancels the shift-click.
+local function bindForwarders(headerFrame, view)
+  local dragFlags = { OnMouseDown = false, OnDragStart = true }
+  for _, eventName in ipairs(FORWARDED_EVENTS) do
+    local forwarder = forward(headerFrame, eventName)
+    local dragged = dragFlags[eventName]
+    headerFrame:SetScript(eventName, function(self, ...)
+      if view and dragged ~= nil then
+        view._wmHeaderDragged = dragged
+      end
+      forwarder(self, ...)
+    end)
+  end
+end
+
+-- options: { onMarkUnread, onUpdatePrefs, whoPlayer } (the pane's callbacks).
 -- contextMenu (optional): stands in for the contacts list menu in tests.
 function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
   if type(headerFrame) ~= "table" or type(headerFrame.SetScript) ~= "function" then
@@ -54,10 +93,15 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
   end
 
   headerFrame:SetScript("OnMouseUp", function(_self, button)
+    local contact = view and view._selectedContact
+    if view and shouldWho(view, contact, button, options) then
+      options.whoPlayer(contact.displayName)
+
+      return
+    end
     if button ~= "RightButton" then
       return
     end
-    local contact = view and view._selectedContact
     if contact == nil then
       return
     end
@@ -68,9 +112,7 @@ function HeaderMenu.Bind(headerFrame, view, options, contextMenu)
     cm.Open(contact, headerFrame, options.onMarkUnread, options.onUpdatePrefs)
   end)
 
-  for _, eventName in ipairs(FORWARDED_EVENTS) do
-    headerFrame:SetScript(eventName, forward(headerFrame, eventName))
-  end
+  bindForwarders(headerFrame, view)
 end
 
 ns.ConversationPaneHeaderMenu = HeaderMenu
