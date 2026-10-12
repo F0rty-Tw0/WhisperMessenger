@@ -379,8 +379,8 @@ Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua
 Core/Bootstrap/LifecycleHandlers/OnlineNotify.lua
-Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
+Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua

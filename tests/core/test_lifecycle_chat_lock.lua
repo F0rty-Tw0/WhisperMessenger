@@ -165,6 +165,50 @@ return function()
     assert(Bootstrap.runtime.isChatLocked() == true, "an Activating chat lock must survive entering the world")
   end
 
+  local deferred = {}
+  local function deferTimers()
+    deferred = {}
+    _G.C_Timer = {
+      After = function(_delay, callback)
+        deferred[#deferred + 1] = callback
+      end,
+    }
+  end
+  local function flushTimers()
+    local queued = deferred
+    deferred = {}
+    for _, callback in ipairs(queued) do
+      callback()
+    end
+  end
+
+  -- test_stale_type5_activating_clears_after_grace
+  do
+    apiLocked = false
+    deferTimers()
+    local Bootstrap, spies = newBootstrap()
+    Bootstrap.runtime.restrictedActions.updateFromEvent(CHAT, ACTIVATING)
+    Presence.handlePlayerEnteringWorld(Bootstrap, enterWorldDeps)
+    local syncsBefore = spies.syncChatFilters
+    flushTimers()
+    _G.C_Timer = nil
+    assert(Bootstrap.runtime.isChatLocked() == false, "an Activating lock with no follow-up event must clear after the grace")
+    assert(spies.syncChatFilters > syncsBefore, "clearing it must resync the chat filters")
+  end
+
+  -- test_activating_grace_keeps_lock_after_a_new_chat_event
+  do
+    apiLocked = false
+    deferTimers()
+    local Bootstrap = newBootstrap()
+    Bootstrap.runtime.restrictedActions.updateFromEvent(CHAT, ACTIVATING)
+    Presence.handlePlayerEnteringWorld(Bootstrap, enterWorldDeps)
+    RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, CHAT, ACTIVATING)
+    flushTimers()
+    _G.C_Timer = nil
+    assert(Bootstrap.runtime.isChatLocked() == true, "a fresh Activating event must not be cleared by the grace")
+  end
+
   _G.C_ChatInfo = saved.chatInfo
   _G.C_RestrictedActions = saved.restricted
   _G.C_Timer = saved.timer

@@ -51,6 +51,7 @@ end
 
 function RestrictedActions.New()
   local cached = {}
+  local updates = {}
   local self = {}
 
   function self.updateFromEvent(restrictionType, newState)
@@ -58,6 +59,12 @@ function RestrictedActions.New()
       return
     end
     cached[restrictionType] = newState
+    updates[restrictionType] = (updates[restrictionType] or 0) + 1
+  end
+
+  -- How many updates a type has had, to tell whether a new one arrived since.
+  function self.updateCount(restrictionType)
+    return updates[restrictionType] or 0
   end
 
   -- The last state the event reported for a type, or nil if none arrived.
