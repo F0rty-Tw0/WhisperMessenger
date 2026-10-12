@@ -130,43 +130,11 @@ end
 
 function Store.InsertIncomingChronological(state, key, message, isActive)
   local conversation = Store.EnsureConversation(state, key)
-  local messages = conversation.messages
   local sentAt = tonumber(message.sentAt) or 0
   local lineID = tonumber(message.lineID)
-  local insertAt, isNewest = ChronologicalInsert.FindIndex(messages, sentAt, lineID)
-  table.insert(messages, insertAt, message)
-
-  StoreRetention.AfterAppend(state, key, conversation, message)
-  local storedConversation = state.conversations[key]
-  if storedConversation ~= conversation then
-    return storedConversation
-  end
-
-  local messageIndex
-  for index, retainedMessage in ipairs(conversation.messages) do
-    if retainedMessage == message then
-      messageIndex = index
-      break
-    end
-  end
-  if messageIndex == nil then
-    local now = type(state.now) == "function" and state.now() or message.sentAt
-    if StoreRetention.IsExpired(state, conversation, conversation.lastActivityAt, now) then
-      StoreRetention.Remove(state, key, StoreRetention.REASON_RETENTION)
-    end
-    return state.conversations[key]
-  end
-
-  local updatesLatestActivity = isNewest and MessageMetadata.IsLatest(message, conversation.lastActivityAt, conversation.lastActivityLineID)
-  local prospectiveLastActivityAt = conversation.lastActivityAt
-  if updatesLatestActivity then
-    prospectiveLastActivityAt = message.sentAt
-  end
-  local now = type(state.now) == "function" and state.now() or message.sentAt
-  if StoreRetention.IsExpired(state, conversation, prospectiveLastActivityAt, now) then
-    table.remove(messages, messageIndex)
-    StoreRetention.Remove(state, key, StoreRetention.REASON_RETENTION)
-    return nil
+  local result, isNewest, kept, updatesLatestActivity = ChronologicalInsert.Insert(state, key, conversation, message)
+  if not kept then
+    return result
   end
 
   if isNewest then
