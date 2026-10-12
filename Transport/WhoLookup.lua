@@ -230,6 +230,25 @@ function WhoLookup.TryFor(rt, conversationKey)
   return ok
 end
 
+-- A plain, visible /who for a shift-clicked name: the result shows like a
+-- typed one. Our hooks and FriendsFrame stay out of it; the SendWho hook
+-- stamps lastSentAt. Must run inside the click itself.
+function WhoLookup.SendVisible(name)
+  if runtime == nil or type(name) ~= "string" or name == "" then
+    return false
+  end
+  if string.find(name, "|K", 1, true) then
+    return false
+  end
+  if isBlocked(runtime) or isThrottled(runtime) then
+    return false
+  end
+  local shortName = string.match(name, "^[^-]+") or name
+  local ok = pcall(_G.C_FriendList.SendWho, 'n-"' .. shortName .. '"')
+
+  return ok
+end
+
 function WhoLookup._reset()
   runtime = nil
   hooked = false
