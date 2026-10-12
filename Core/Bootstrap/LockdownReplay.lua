@@ -8,6 +8,7 @@ local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNet
 local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 -- stylua: ignore
 local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
 
@@ -35,10 +36,7 @@ local BNET_EVENTS = {
   CHAT_MSG_BN_WHISPER_INFORM = true,
 }
 
-local function isSecret(value)
-  local issecretvalue = _G.issecretvalue
-  return type(issecretvalue) == "function" and issecretvalue(value) == true
-end
+local isSecret = SecretValue.Is
 
 local function isReadable(value)
   return not isSecret(value) and type(value) == "string" and value ~= ""

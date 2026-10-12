@@ -8,6 +8,7 @@ local ChannelChatIngest = ns.ChannelChatIngest or require("WhisperMessenger.Core
 local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.Core.Ingest.ChannelChatIngest.ChannelKey")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
 local FilterApi = ns.BootstrapChatFilterApi or require("WhisperMessenger.Core.Bootstrap.ChatFilters.FilterApi")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 -- Chat-frame filters that hide only some lines: channels the player reads as
 -- chats (when "Hide channels from default chat" is on), ignored players and
@@ -55,10 +56,7 @@ function ConditionalFilters.Needs(accountState)
   return hasIgnored or hidesChannels or anyEnabledRule(state.rules), hasIgnored
 end
 
-local function isSecret(value)
-  local check = _G.issecretvalue
-  return type(check) == "function" and check(value) == true
-end
+local isSecret = SecretValue.Is
 
 local function isUnsafe(text, playerName, guid)
   if isSecret(text) or isSecret(playerName) or isSecret(guid) then

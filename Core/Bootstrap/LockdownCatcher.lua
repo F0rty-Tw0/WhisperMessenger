@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+
 local select = select
 local type = type
 
@@ -41,10 +43,7 @@ local INCOMING_EVENTS = {
   CHAT_MSG_BN_WHISPER = true,
 }
 
-local function isSecret(value)
-  local issecretvalue = _G.issecretvalue
-  return type(issecretvalue) == "function" and issecretvalue(value) == true
-end
+local isSecret = SecretValue.Is
 
 function LockdownCatcher.New(deps)
   local isMythicContent = deps.isMythicContent

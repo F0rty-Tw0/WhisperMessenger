@@ -37,6 +37,7 @@ Util/ChatPrint.lua
 Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
+Util/SecretValue.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
