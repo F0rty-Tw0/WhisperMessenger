@@ -169,6 +169,7 @@ UI/ScrollView/Factory.lua
 UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
+UI/ChatBubble/PlayerMenuClick.lua
 UI/ChatBubble/BubbleIcon.lua
 UI/ChatBubble/ReactionPicker.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
