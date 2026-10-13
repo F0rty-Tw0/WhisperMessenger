@@ -2,12 +2,12 @@ local FakeUI = require("tests.helpers.fake_ui")
 local PlayerMenuClick = require("WhisperMessenger.UI.ChatBubble.PlayerMenuClick")
 
 local function withShift(isDown, fn)
-  local original = _G.IsShiftKeyDown
-  _G.IsShiftKeyDown = function()
+  local original = rawget(_G, "IsShiftKeyDown")
+  rawset(_G, "IsShiftKeyDown", function()
     return isDown
-  end
+  end)
   fn()
-  _G.IsShiftKeyDown = original
+  rawset(_G, "IsShiftKeyDown", original)
 end
 
 return function()
