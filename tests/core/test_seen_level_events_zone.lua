@@ -190,6 +190,28 @@ return function()
     assert(seenAt == 100, "a zone name inside the guild name must not re-stamp the zone")
   end
 
+  -- test_area_only_in_race_does_not_restamp_zone
+  do
+    reset()
+    start({ { fullName = "Bob", level = 70, area = "Highmountain" } })
+    SeenZone.Record("Bob", "Highmountain", 100)
+    clock = 500
+    fire("CHAT_MSG_SYSTEM", "|Hplayer:Bob|h[Bob]|h: Level 70 Highmountain Tauren Warrior - Orgrimmar")
+    local _, seenAt = SeenZone.Get("Bob")
+    assert(seenAt == 100, "a zone name inside the race must not re-stamp the zone")
+  end
+
+  -- test_area_prefix_of_line_zone_does_not_restamp_zone
+  do
+    reset()
+    start({ { fullName = "Bob", level = 70, area = "Tol Barad" } })
+    SeenZone.Record("Bob", "Tol Barad", 100)
+    clock = 500
+    fire("CHAT_MSG_SYSTEM", "|Hplayer:Bob|h[Bob]|h: Level 70 Human Mage - Tol Barad Peninsula")
+    local _, seenAt = SeenZone.Get("Bob")
+    assert(seenAt == 100, "a zone that only starts the line's zone must not re-stamp it")
+  end
+
   -- test_non_string_system_text_records_no_zone
   do
     reset()

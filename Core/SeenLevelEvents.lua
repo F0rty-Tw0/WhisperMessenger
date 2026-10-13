@@ -125,10 +125,11 @@ local function scheduleZoneRefresh(name)
   end
 end
 
--- The area follows the guild tag, so a guild named after a zone must not
--- count as that zone.
-local function areaStart(systemText)
-  return string.find(systemText, ">[^>]*$") or 1
+-- Every locale's /who line ends with " <area>", so only the tail counts: the
+-- same name inside a race, guild or longer zone must not.
+local function endsWithArea(systemText, area)
+  local from = #systemText - #area
+  return from >= 1 and string.sub(systemText, from) == " " .. area
 end
 
 -- A system line is one player's /who row: `[Name]` or `[Name-Realm]` plus the
@@ -147,7 +148,7 @@ local function isWhoRow(systemText, info)
     end
     local nextChar = string.sub(systemText, last + 1, last + 1)
     if nextChar == "]" or nextChar == "-" then
-      return string.find(systemText, info.area, areaStart(systemText), true) ~= nil
+      return endsWithArea(systemText, info.area)
     end
     from = last + 1
   end
