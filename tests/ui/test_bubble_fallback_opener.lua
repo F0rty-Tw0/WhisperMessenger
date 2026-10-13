@@ -19,6 +19,7 @@ local function loadWithMenu(path)
       end,
     },
   }
+  ns.ChatBubblePlayerMenuClick = assert(loadfile("UI/ChatBubble/PlayerMenuClick.lua"))("WhisperMessenger", ns)
   local module = assert(loadfile(path))("WhisperMessenger", ns)
   return module, opened
 end
