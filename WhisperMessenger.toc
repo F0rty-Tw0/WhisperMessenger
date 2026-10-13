@@ -352,6 +352,7 @@ UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
 UI/MessengerWindow/MessengerWindow/ContactsRail.lua
 UI/MessengerWindow/MessengerWindow/ContactsWiring.lua
 UI/MessengerWindow/MessengerWindow/ConversationWiring.lua
+UI/MessengerWindow/MessengerWindow/WindowSizing.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua
