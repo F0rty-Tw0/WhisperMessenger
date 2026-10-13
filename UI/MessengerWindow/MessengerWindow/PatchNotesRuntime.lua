@@ -3,6 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local PatchNotes = ns.PatchNotes or require("WhisperMessenger.Core.PatchNotes")
+local SettingsPanels = ns.MessengerWindowSettingsPanels or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SettingsPanels")
+
 local PatchNotesRuntime = {}
 
 -- Wires the title-bar "?" button to the What's New options page. The button
@@ -53,6 +56,33 @@ function PatchNotesRuntime.Wire(options)
   end
 
   return { isUnseen = isUnseen, markSeen = markSeen }
+end
+
+-- Wires the window's "?" button: clicking opens Options on the What's New
+-- page; the sidebar tab clears the glow too, so either route counts as
+-- seeing the notes. Hides the button when no patch notes shipped.
+-- options: chrome, layout, settingsConfig, setOptionsVisible, scriptResult
+function PatchNotesRuntime.Attach(options)
+  local chrome = options.chrome
+  local button = chrome.patchNotesButton
+  if PatchNotes ~= nil and button ~= nil then
+    local scriptResult = options.scriptResult
+    PatchNotesRuntime.Wire({
+      button = button,
+      tab = options.layout.whatsNewTab,
+      setGlowing = chrome.setPatchNotesGlow,
+      settingsConfig = options.settingsConfig,
+      patchNotes = PatchNotes,
+      openPage = function()
+        options.setOptionsVisible(true)
+        if scriptResult.selectSettingsTab then
+          scriptResult.selectSettingsTab(SettingsPanels.PATCH_NOTES_INDEX)
+        end
+      end,
+    })
+  elseif button ~= nil and button.Hide then
+    button:Hide()
+  end
 end
 
 ns.MessengerWindowPatchNotesRuntime = PatchNotesRuntime

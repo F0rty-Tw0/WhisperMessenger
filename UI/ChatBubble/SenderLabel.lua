@@ -9,45 +9,11 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local DeliveryStatus = ns.ChatBubbleDeliveryStatus or require("WhisperMessenger.UI.ChatBubble.DeliveryStatus")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
+local PlayerMenuClick = ns.ChatBubblePlayerMenuClick or require("WhisperMessenger.UI.ChatBubble.PlayerMenuClick")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local SenderLabel = {}
-
-local function defaultOpenPlayerMenu(message, anchor, button)
-  if button ~= nil and button ~= "RightButton" then
-    return false
-  end
-  local PM = ns.ChatBubblePlayerMenu
-  if type(PM) ~= "table" or type(PM.Open) ~= "function" then
-    return false
-  end
-  return PM.Open(message, anchor)
-end
-
-local function isShiftLeftClick(button)
-  return button == "LeftButton" and UIHelpers.isShiftDown()
-end
-
-local function playerMenuOnMouseUp(self, button)
-  if button ~= "RightButton" and not isShiftLeftClick(button) then
-    return
-  end
-  local opener = self._wmPlayerMenuOpener
-  if type(opener) == "function" then
-    opener(self._wmPlayerMenuMessage, self, button)
-  end
-end
-
-local function attachPlayerMenuHandler(frame, message, opener)
-  if type(frame.EnableMouse) ~= "function" or type(frame.SetScript) ~= "function" then
-    return
-  end
-  frame._wmPlayerMenuMessage = message
-  frame._wmPlayerMenuOpener = opener
-  frame:EnableMouse(true)
-  frame:SetScript("OnMouseUp", playerMenuOnMouseUp)
-end
 
 -- Pooled frames are reused across renders. Creating a fresh FontString every
 -- render parents it to the recycled frame; WoW can't GC frame regions, so
@@ -189,7 +155,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
   end
 
   if message.direction == "in" then
-    attachPlayerMenuHandler(frame, message, options.openPlayerMenu or defaultOpenPlayerMenu)
+    PlayerMenuClick.Attach(frame, message, options.openPlayerMenu)
   end
 
   return { frame = frame, height = 18 }

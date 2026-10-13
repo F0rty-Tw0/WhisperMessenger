@@ -169,6 +169,7 @@ UI/ScrollView/Factory.lua
 UI/ScrollView/ScrollView.lua
 UI/ChatBubble/Grouping.lua
 UI/ChatBubble/BubbleStructure.lua
+UI/ChatBubble/PlayerMenuClick.lua
 UI/ChatBubble/BubbleIcon.lua
 UI/ChatBubble/ReactionPicker.lua
 UI/ChatBubble/ContextMenu/ManualCopy/PopupUI/Resolvers.lua
@@ -349,6 +350,10 @@ UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
 UI/MessengerWindow/MessengerWindow/ContactsRail.lua
+UI/MessengerWindow/MessengerWindow/ContactsWiring.lua
+UI/MessengerWindow/MessengerWindow/ConversationWiring.lua
+UI/MessengerWindow/MessengerWindow/WindowSizing.lua
+UI/MessengerWindow/MessengerWindow/WindowSurface.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/SoundPlayer.lua

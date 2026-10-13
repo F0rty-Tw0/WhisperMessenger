@@ -5,43 +5,9 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local PlayerMenuClick = ns.ChatBubblePlayerMenuClick or require("WhisperMessenger.UI.ChatBubble.PlayerMenuClick")
 
 local BubbleIcon = {}
-
-local function defaultOpenPlayerMenu(message, anchor, button)
-  if button ~= nil and button ~= "RightButton" then
-    return false
-  end
-  local PM = ns.ChatBubblePlayerMenu
-  if type(PM) ~= "table" or type(PM.Open) ~= "function" then
-    return false
-  end
-  return PM.Open(message, anchor)
-end
-
-local function isShiftLeftClick(button)
-  return button == "LeftButton" and UIHelpers.isShiftDown()
-end
-
-local function playerMenuOnMouseUp(self, button)
-  if button ~= "RightButton" and not isShiftLeftClick(button) then
-    return
-  end
-  local opener = self._wmPlayerMenuOpener
-  if type(opener) == "function" then
-    opener(self._wmPlayerMenuMessage, self, button)
-  end
-end
-
-local function attachPlayerMenuHandler(iconFrame, message, opener)
-  if type(iconFrame.EnableMouse) ~= "function" or type(iconFrame.SetScript) ~= "function" then
-    return
-  end
-  iconFrame._wmPlayerMenuMessage = message
-  iconFrame._wmPlayerMenuOpener = opener
-  iconFrame:EnableMouse(true)
-  iconFrame:SetScript("OnMouseUp", playerMenuOnMouseUp)
-end
 
 function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction, options)
   options = options or {}
@@ -83,7 +49,7 @@ function BubbleIcon.CreateIcon(factory, parent, bubbleFrame, message, direction,
   end
 
   if direction == "in" then
-    attachPlayerMenuHandler(iconFrame, message, options.openPlayerMenu or defaultOpenPlayerMenu)
+    PlayerMenuClick.Attach(iconFrame, message, options.openPlayerMenu)
   end
 
   return { frame = iconFrame, texture = icon }

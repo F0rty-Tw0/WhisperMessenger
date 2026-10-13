@@ -125,6 +125,20 @@ local function scheduleZoneRefresh(name)
   end
 end
 
+-- Every locale's /who line ends with "- <area>" (ruRU without a guild: an en
+-- dash), so only that tail counts: the same name inside a race, guild or
+-- longer zone must not.
+local EN_DASH = "\226\128\147"
+
+local function endsWithArea(systemText, area)
+  local tail = " " .. area
+  if #systemText <= #tail or string.sub(systemText, -#tail) ~= tail then
+    return false
+  end
+  local head = string.sub(systemText, 1, #systemText - #tail)
+  return string.sub(head, -1) == "-" or string.sub(head, -#EN_DASH) == EN_DASH
+end
+
 -- A system line is one player's /who row: `[Name]` or `[Name-Realm]` plus the
 -- area. Plain finds only; names and areas are player data, not patterns.
 local function isWhoRow(systemText, info)
@@ -141,7 +155,7 @@ local function isWhoRow(systemText, info)
     end
     local nextChar = string.sub(systemText, last + 1, last + 1)
     if nextChar == "]" or nextChar == "-" then
-      return string.find(systemText, info.area, 1, true) ~= nil
+      return endsWithArea(systemText, info.area)
     end
     from = last + 1
   end
