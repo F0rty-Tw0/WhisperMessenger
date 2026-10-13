@@ -7,7 +7,10 @@ local Common = ns.BootstrapLifecycleHandlersCommon
   or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
   or nil
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
+local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+-- stylua: ignore
+local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
 local Presence = {}
 
@@ -182,6 +185,7 @@ local function schedulePresenceRefresh(Bootstrap, PresenceCache)
 end
 
 function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
+  StaleRestrictions.Clear(Bootstrap)
   local ContentDetector = deps.getContentDetector()
   local wasMythic = Bootstrap._inMythicContent or false
   local isMythic = ContentDetector and ContentDetector.IsMythicRestricted(_G.GetInstanceInfo) or false
@@ -211,6 +215,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   elseif isMythic then
     return true
   end
+  LockdownReplay.Kick(Bootstrap.runtime)
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then

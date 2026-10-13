@@ -382,6 +382,10 @@ local Korean = {
   ["Replying to %s"] = "%s님에게 답장",
   ["1 queued message is waiting — open the messenger to send or discard."] = "대기 중인 메시지가 1개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
   ["%d queued messages are waiting — open the messenger to send or discard."] = "대기 중인 메시지가 %d개 있습니다 — 메신저를 열어 보내거나 삭제하세요.",
+  ["1 whisper arrived during the fight."] = "전투 중에 귓속말 1개가 도착했습니다.",
+  ["%d whispers arrived during the fight."] = "전투 중에 귓속말 %d개가 도착했습니다.",
+  ["1 whisper from the fight couldn't be recovered — check your chat."] = "전투 중 귓속말 1개를 복구하지 못했습니다 — 채팅을 확인하세요.",
+  ["%d whispers from the fight couldn't be recovered — check your chat."] = "전투 중 귓속말 %d개를 복구하지 못했습니다 — 채팅을 확인하세요.",
   -- Header note label, icon keybinding hints, quick-replies hint
   ["Note:"] = "메모:",
   ["Open/close: %s"] = "열기/닫기: %s",

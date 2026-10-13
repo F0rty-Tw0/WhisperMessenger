@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
+local LockdownCatcher = ns.BootstrapLockdownCatcher or require("WhisperMessenger.Core.Bootstrap.LockdownCatcher")
 
 local AddonEventFrame = {}
 
@@ -34,6 +35,7 @@ function AddonEventFrame.Install(deps)
 
   local loadFrame = createFrame("Frame", "WhisperMessengerLoadFrame")
   Bootstrap._loadFrame = loadFrame
+  LockdownCatcher.Install({ createFrame = createFrame, Bootstrap = Bootstrap })
 
   local EventBridge = ns.BootstrapEventBridge
   local LifecycleHandlers = ns.BootstrapLifecycleHandlers

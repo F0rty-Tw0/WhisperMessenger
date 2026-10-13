@@ -149,9 +149,19 @@ function Bootstrap.Initialize(factory, options)
   -- instance exists but never receives events — isCompetitive falls back
   -- to the legacy flag model below.
   runtime.restrictedActions = RestrictedActions.New()
+  -- Seam for the lockdown catcher; nil until one is installed.
+  runtime.lockdownCatcher = Bootstrap._lockdownCatcher
 
+  runtime.isChatLocked = function()
+    return runtime.restrictedActions.isChatLocked()
+  end
+
+  -- A chat lock behaves exactly like restricted content.
   runtime.isCompetitiveContent = function()
     if runtime.restrictedActions and runtime.restrictedActions.isCompetitive() then
+      return true
+    end
+    if runtime.isChatLocked() then
       return true
     end
     return Bootstrap._inCompetitiveContent == true or Bootstrap._inEncounter == true
@@ -173,15 +183,7 @@ function Bootstrap.Initialize(factory, options)
 
   -- Channel chats pause wherever chat may carry secret values.
   runtime.isChannelIngestSuspended = function()
-    if runtime.isMythicLockdown() or runtime.isCompetitiveContent() then
-      return true
-    end
-    local chatInfo = _G.C_ChatInfo
-    if type(chatInfo) ~= "table" or type(chatInfo.InChatMessagingLockdown) ~= "function" then
-      return false
-    end
-    local ok, locked = pcall(chatInfo.InChatMessagingLockdown)
-    return ok and locked == true
+    return runtime.isMythicLockdown() or runtime.isCompetitiveContent()
   end
 
   Bootstrap.onCompetitiveStateChanged = function(isActive)

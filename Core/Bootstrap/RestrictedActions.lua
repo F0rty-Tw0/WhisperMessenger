@@ -22,6 +22,7 @@ RestrictedActions.TYPES = {
   ChallengeMode = 2,
   PvPMatch = 3,
   Map = 4,
+  Chat = 5,
 }
 
 -- Mirrors Enum.AddOnRestrictionState
@@ -31,8 +32,26 @@ RestrictedActions.STATES = {
   Active = 2,
 }
 
+-- Missing API, an error, or a secret / non-boolean result all read as unlocked.
+function RestrictedActions.ChatApiLocked()
+  local chatInfo = _G.C_ChatInfo
+  if type(chatInfo) ~= "table" or type(chatInfo.InChatMessagingLockdown) ~= "function" then
+    return false
+  end
+  local ok, locked = pcall(chatInfo.InChatMessagingLockdown)
+  if not ok then
+    return false
+  end
+  local isSecret = _G.issecretvalue
+  if type(isSecret) == "function" and isSecret(locked) then
+    return false
+  end
+  return locked == true
+end
+
 function RestrictedActions.New()
   local cached = {}
+  local updates = {}
   local self = {}
 
   function self.updateFromEvent(restrictionType, newState)
@@ -40,6 +59,17 @@ function RestrictedActions.New()
       return
     end
     cached[restrictionType] = newState
+    updates[restrictionType] = (updates[restrictionType] or 0) + 1
+  end
+
+  -- How many updates a type has had, to tell whether a new one arrived since.
+  function self.updateCount(restrictionType)
+    return updates[restrictionType] or 0
+  end
+
+  -- The last state the event reported for a type, or nil if none arrived.
+  function self.cachedState(restrictionType)
+    return cached[restrictionType]
   end
 
   function self.isActive(restrictionType)
@@ -65,6 +95,10 @@ function RestrictedActions.New()
 
   function self.isMythic()
     return self.isActive(RestrictedActions.TYPES.ChallengeMode)
+  end
+
+  function self.isChatLocked()
+    return self.isActive(RestrictedActions.TYPES.Chat) or RestrictedActions.ChatApiLocked()
   end
 
   return self

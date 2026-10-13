@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Types = ns.TransportTypes or require("WhisperMessenger.Transport.Types")
+local AccountName = ns.BNetResolverAccountName or require("WhisperMessenger.Transport.BNetResolver.AccountName")
 local BNetResolver = {}
 
 -- Stage 1: Primary lookup by bnetAccountID.
@@ -41,14 +42,7 @@ local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTa
   return info, false
 end
 
-local function resolveGetNumFriends(bnetApi)
-  if type(bnetApi.GetNumFriends) == "function" then
-    return bnetApi.GetNumFriends
-  end
-  if type(_G.BNGetNumFriends) == "function" then
-    return _G.BNGetNumFriends
-  end
-end
+local resolveGetNumFriends = AccountName.ResolveGetNumFriends
 
 function BNetResolver.SanitizeAccountID(value)
   local issecretvalue = _G.issecretvalue
@@ -385,6 +379,8 @@ function BNetResolver.NormalizeAvailabilityStatus(status)
 
   return Types.AVAILABILITY_STATUS_BY_CODE[status] or tostring(status)
 end
+
+BNetResolver.ResolveAccountIDByAccountName = AccountName.Resolve
 
 ns.BNetResolver = BNetResolver
 

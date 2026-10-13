@@ -37,6 +37,7 @@ Util/ChatPrint.lua
 Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
+Util/SecretValue.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
@@ -57,6 +58,7 @@ Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
 Model/ConversationStore/MessageMetadata.lua
 Model/ConversationStore/RepeatCollapse.lua
+Model/ConversationStore/ChronologicalInsert.lua
 Model/ConversationStore.lua
 Model/Filters/IgnoreList.lua
 Model/Filters/KeywordRules.lua
@@ -105,6 +107,7 @@ Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Transport/ChannelIndex.lua
 Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
+Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/SeenLevelEvents.lua
@@ -356,6 +359,8 @@ Core/Bootstrap/EventBridge/IncomingAlerts.lua
 Core/Bootstrap/EventBridge/GroupRouter.lua
 Core/Bootstrap/EventBridge/ChannelRouter.lua
 Core/Bootstrap/EventBridge.lua
+Core/Bootstrap/LockdownCatcher.lua
+Core/Bootstrap/LockdownReplay.lua
 Core/Bootstrap/RestrictedActions.lua
 Core/Bootstrap/ReplyKeyBinder.lua
 Core/Bootstrap/SendParts.lua
@@ -375,8 +380,9 @@ Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua
 Core/Bootstrap/LifecycleHandlers/OnlineNotify.lua
-Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
+Core/Bootstrap/LifecycleHandlers/StaleRestrictions.lua
+Core/Bootstrap/LifecycleHandlers/Presence.lua
 Core/Bootstrap/LifecycleHandlers/GroupMembership.lua
 Core/Bootstrap/LifecycleHandlers.lua
 Core/Bootstrap/AutoOpenHooks.lua

@@ -3,31 +3,15 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local Common = ns.BootstrapLifecycleHandlersCommon
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common"))
-  or nil
-
-local RestrictedActions = ns.BootstrapRestrictedActions
-  or (type(require) == "function" and require("WhisperMessenger.Core.Bootstrap.RestrictedActions"))
-  or nil
+local Common = ns.BootstrapLifecycleHandlersCommon or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Common")
+local RestrictedActions = ns.BootstrapRestrictedActions or require("WhisperMessenger.Core.Bootstrap.RestrictedActions")
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
+local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 
 local RestrictionState = {}
 
-function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
-  deps = deps or {}
-  if not RestrictedActions then
-    return true
-  end
-
-  local ra = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
-  if ra and ra.updateFromEvent then
-    ra.updateFromEvent(restrictionType, newState)
-  end
-
-  local isActive = newState == RestrictedActions.STATES.Active or newState == RestrictedActions.STATES.Activating
-
+local function applyRestriction(Bootstrap, restrictionType, isActive, deps)
   if restrictionType == RestrictedActions.TYPES.ChallengeMode then
     if isActive and not Bootstrap._inMythicContent then
       Bootstrap._inMythicContent = true
@@ -50,7 +34,7 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
       ChatReplyState.ScrubStaleWhisperReplyState(Bootstrap.runtime, deps.getNumChatWindows, deps.getEditBox)
     end
     Common.notifyCompetitiveState(Bootstrap)
-    return true
+    return
   end
 
   if restrictionType == RestrictedActions.TYPES.Encounter then
@@ -60,7 +44,7 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
     end
     Common.notifyCompetitiveState(Bootstrap)
     Common.refreshRuntimeWindow(Bootstrap)
-    return true
+    return
   end
 
   if restrictionType == RestrictedActions.TYPES.PvPMatch then
@@ -69,9 +53,34 @@ function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrict
       Bootstrap.syncChatFilters()
     end
     Common.notifyCompetitiveState(Bootstrap)
-    return true
+    return
   end
 
+  -- Chat lock state lives in the restriction cache; no Bootstrap flag.
+  if restrictionType == RestrictedActions.TYPES.Chat then
+    if Bootstrap.syncChatFilters then
+      Bootstrap.syncChatFilters()
+    end
+    Common.notifyCompetitiveState(Bootstrap)
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
+function RestrictionState.handleAddonRestrictionStateChanged(Bootstrap, restrictionType, newState, deps)
+  deps = deps or {}
+  local ra = Bootstrap.runtime and Bootstrap.runtime.restrictedActions
+  if ra and ra.updateFromEvent then
+    ra.updateFromEvent(restrictionType, newState)
+  end
+
+  local isActive = newState == RestrictedActions.STATES.Active or newState == RestrictedActions.STATES.Activating
+  applyRestriction(Bootstrap, restrictionType, isActive, deps)
+
+  -- Any restriction lifting may be the last one holding chat; the replay
+  -- checks readiness itself.
+  if newState == RestrictedActions.STATES.Inactive and Bootstrap.runtime then
+    LockdownReplay.Kick(Bootstrap.runtime)
+  end
   return true
 end
 

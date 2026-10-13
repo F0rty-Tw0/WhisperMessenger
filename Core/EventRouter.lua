@@ -390,7 +390,8 @@ local function handleUnlockedEvent(state, eventName, payload)
     if state.isConversationOpen then
       isActive = state.isConversationOpen(conversationKey) == true
     end
-    local sentAt = state.now()
+    local replayedAt = payload.replayedAt
+    local sentAt = replayedAt or state.now()
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
@@ -419,6 +420,7 @@ local function handleUnlockedEvent(state, eventName, payload)
       confirmWhisperAvailability(state, payload, contact)
       local routeComplete = false
       local degradedConversation
+      local onDegraded = state.onReactionFallbackDegraded
       local function appendDegraded(message)
         local active = state.activeConversationKey == conversationKey
         if state.isConversationOpen then
@@ -428,8 +430,8 @@ local function handleUnlockedEvent(state, eventName, payload)
         if degradedConversation then
           degradedConversation.conversationKey = conversationKey
         end
-        if routeComplete and type(state.onReactionFallbackDegraded) == "function" then
-          state.onReactionFallbackDegraded(degradedConversation)
+        if routeComplete and type(onDegraded) == "function" then
+          onDegraded(degradedConversation)
         end
       end
 
@@ -484,7 +486,11 @@ local function handleUnlockedEvent(state, eventName, payload)
       end
 
       local isNewConversation = state.store.conversations[conversationKey] == nil
-      Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
+      if replayedAt then
+        Store.InsertIncomingChronological(state.store, conversationKey, incomingMessage, isActive)
+      else
+        Store.AppendIncoming(state.store, conversationKey, incomingMessage, isActive)
+      end
       PartMerge.AfterStore(state, conversationKey, incomingMessage)
       if isNewConversation and eventName == "CHAT_MSG_WHISPER" then
         MessageRequests.ClassifyNew(state, state.store.conversations[conversationKey], payload.guid, payload.playerName)
@@ -533,9 +539,18 @@ local function handleUnlockedEvent(state, eventName, payload)
       outgoingMessage.wireId = pendingEntry and pendingEntry.wireId or nil
       outgoingMessage.replyTo = pendingEntry and pendingEntry.replyTo or nil
       MessageParts.ApplyMetadata(outgoingMessage, pendingEntry)
-      Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
+      -- A replayed reply older than the newest message leaves unread alone.
+      local isNewest = true
+      if replayedAt then
+        local _, insertedNewest = Store.InsertOutgoingChronological(state.store, conversationKey, outgoingMessage)
+        isNewest = insertedNewest
+      else
+        Store.AppendOutgoing(state.store, conversationKey, outgoingMessage)
+      end
       PartMerge.AfterStore(state, conversationKey, outgoingMessage)
-      Store.MarkRead(state.store, conversationKey)
+      if isNewest then
+        Store.MarkRead(state.store, conversationKey)
+      end
     elseif eventName == "CHAT_MSG_AFK" or eventName == "CHAT_MSG_DND" then
       Store.SetActiveStatus(state.store, conversationKey, {
         eventName = eventName,
