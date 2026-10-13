@@ -133,6 +133,7 @@ function ContactsRuntime.Create(factory, options)
     onIgnorePlayer = options.onIgnorePlayer,
     onUnblockPlayer = options.onUnblockPlayer,
     isPlayerBlocked = options.isPlayerBlocked,
+    whoPlayer = options.whoPlayer,
     onReorder = function(orders)
       if options.onReorder then
         options.onReorder(orders)

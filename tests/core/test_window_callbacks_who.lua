@@ -46,6 +46,21 @@ return function()
       assert(#calls == 1 and calls[1].key == KEY and calls[1].runtime == runtime, "send asks who")
       assert(result == "handled", "send handler still runs")
     end
+
+    -- test_callbacks_expose_who_player_that_sends_visible_who
+    do
+      local names = {}
+      local originalVisible = WhoLookup.SendVisible
+      WhoLookup.SendVisible = function(name)
+        names[#names + 1] = name
+        return true
+      end
+      local callbacks = build()
+      callbacks.whoPlayer("Bob")
+      WhoLookup.SendVisible = originalVisible
+      assert(type(callbacks.whoPlayer) == "function", "whoPlayer exposed")
+      assert(#names == 1 and names[1] == "Bob", "whoPlayer sends visible who")
+    end
   end)
 
   WhoLookup.TryFor = original

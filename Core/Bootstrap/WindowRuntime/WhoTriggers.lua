@@ -5,9 +5,10 @@ end
 
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 
--- The two hardware events that may send a quiet /who: a contact row click
--- and a composer send. SendWho is protected, so these must run inside the
--- click or key press itself, never from a selection that code triggered.
+-- Hardware events that send a /who. A contact row click and a composer send
+-- trigger the quiet lookup; whoPlayer sends the visible shift-click /who.
+-- SendWho is protected, so these must run inside the click or key press
+-- itself, never from a selection that code triggered.
 local WhoTriggers = {}
 
 local function tryFor(runtime, conversationKey)
@@ -20,6 +21,9 @@ function WhoTriggers.Create(runtime)
       if item and item.conversationKey then
         tryFor(runtime, item.conversationKey)
       end
+    end,
+    whoPlayer = function(name)
+      pcall(WhoLookup.SendVisible, name)
     end,
     wrapSend = function(onSend)
       return function(payload)

@@ -71,6 +71,7 @@ function AvailabilityEnricher.EnrichContactsAvailability(contacts, runtime)
     -- Whispers only: a group or channel chat's name is not a player's.
     if item.channel == "WOW" then
       WoWStatus.ApplySeenLevel(item, runtime)
+      WoWStatus.ApplySeenZone(item)
     end
     -- WoW contacts with no availability after all checks: default to Offline
     if item.availability == nil and item.channel ~= "BN" then

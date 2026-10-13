@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
+local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 
 -- Records the levels the game shows the player (target, mouseover,
@@ -33,21 +34,35 @@ local runtime = nil
 local enabled = false
 local capturing = false
 
-local function push(name, level)
+-- The saved WoW whisper chat for `name`, or nil (no runtime, key, or chat; BN chats excluded).
+local function findWhisperChat(name)
   local nameKey = SeenLevel.NameKey(name)
   if runtime == nil or nameKey == nil then
-    return
+    return nil
   end
   local key = Identity.BuildConversationKey(runtime.localProfileId, "WOW::" .. nameKey)
   local conversation = Store.Find(runtime.store, key)
-  if conversation == nil or conversation.channel == "BN" or conversation.characterLevel == level then
-    return
+  if conversation == nil or conversation.channel == "BN" then
+    return nil
   end
-  conversation.characterLevel = level
+
+  return key, conversation
+end
+
+local function scheduleRefresh(key)
   local schedule = runtime.scheduleIncomingRefresh
   if schedule then
     schedule(key)
   end
+end
+
+local function push(name, level)
+  local key, conversation = findWhisperChat(name)
+  if conversation == nil or conversation.characterLevel == level then
+    return
+  end
+  conversation.characterLevel = level
+  scheduleRefresh(key)
 end
 
 local function record(guid, name, level)
@@ -103,7 +118,45 @@ local function recordFriends(api)
   end
 end
 
-local function recordWho(api)
+local function scheduleZoneRefresh(name)
+  local key = findWhisperChat(name)
+  if key ~= nil then
+    scheduleRefresh(key)
+  end
+end
+
+-- A system line is one player's /who row: `[Name]` or `[Name-Realm]` plus the
+-- area. Plain finds only; names and areas are player data, not patterns.
+local function isWhoRow(systemText, info)
+  if type(systemText) ~= "string" then
+    return false
+  end
+  local shortName = string.match(info.fullName, "^[^-]+") or info.fullName
+  local open = "[" .. shortName
+  local from = 1
+  while true do
+    local _, last = string.find(systemText, open, from, true)
+    if last == nil then
+      return false
+    end
+    local nextChar = string.sub(systemText, last + 1, last + 1)
+    if nextChar == "]" or nextChar == "-" then
+      return string.find(systemText, info.area, 1, true) ~= nil
+    end
+    from = last + 1
+  end
+end
+
+local function recordZone(info, systemText)
+  if systemText ~= nil and not isWhoRow(systemText, info) then
+    return
+  end
+  if SeenZone.Record(info.fullName, info.area, _G.time()) then
+    scheduleZoneRefresh(info.fullName)
+  end
+end
+
+local function recordWho(api, systemText)
   if not (api and api.GetNumWhoResults and api.GetWhoInfo) then
     return
   end
@@ -111,6 +164,8 @@ local function recordWho(api)
     local info = api.GetWhoInfo(i)
     if info then
       record(nil, info.fullName, info.level)
+      -- Per row: one secret or bad zone must not drop the rows after it.
+      pcall(recordZone, info, systemText)
     end
   end
 end
@@ -130,8 +185,10 @@ local function dispatch(rt, event, unit)
     pcall(recordGroup)
   elseif event == "FRIENDLIST_UPDATE" then
     pcall(recordFriends, rt.friendListApi)
-  elseif event == "WHO_LIST_UPDATE" or event == "CHAT_MSG_SYSTEM" then
-    pcall(recordWho, rt.friendListApi)
+  elseif event == "WHO_LIST_UPDATE" then
+    pcall(recordWho, rt.friendListApi, nil)
+  elseif event == "CHAT_MSG_SYSTEM" then
+    pcall(recordWho, rt.friendListApi, unit)
   end
 end
 

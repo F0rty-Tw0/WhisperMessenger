@@ -8,6 +8,11 @@ local Shapes = ns.UIHelpersShapes or require("WhisperMessenger.UI.Helpers.Shapes
 local Controls = ns.UIHelpersControls or require("WhisperMessenger.UI.Helpers.Controls")
 local DisabledState = ns.UIHelpersDisabledState or require("WhisperMessenger.UI.Helpers.DisabledState")
 
+-- Strictly true: a stubbed or odd return value never counts as shift.
+local function isShiftDown()
+  return type(_G.IsShiftKeyDown) == "function" and _G.IsShiftKeyDown() == true
+end
+
 local UIHelpers = {
   TRANSPARENT = Base.TRANSPARENT,
   setBorderEdgesShown = Base.setBorderEdgesShown,
@@ -40,6 +45,7 @@ local UIHelpers = {
   createOptionButton = Controls.createOptionButton,
   createToggleRow = Controls.createToggleRow,
   attachDisabledState = DisabledState.Attach,
+  isShiftDown = isShiftDown,
 }
 
 ns.UIHelpers = UIHelpers

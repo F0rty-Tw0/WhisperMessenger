@@ -5,6 +5,7 @@ end
 
 local PresenceCache = ns.PresenceCache or require("WhisperMessenger.Model.PresenceCache")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
+local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
@@ -93,6 +94,18 @@ function WoWStatus.ApplyZone(item)
   else
     item.areaName = nil
   end
+end
+
+-- Copy the zone the last /who showed, only while no live zone is known and
+-- the "Show player levels" setting is on.
+-- Kept apart from areaName so contact rows and tooltips never show it.
+function WoWStatus.ApplySeenZone(item)
+  if not DisplayName.ShowPlayerLevels() or (item.areaName and item.areaName ~= "") then
+    item.whoArea, item.whoAreaAt = nil, nil
+
+    return
+  end
+  item.whoArea, item.whoAreaAt = SeenZone.Get(item.displayName)
 end
 
 local function writeLevel(item, runtime, level)

@@ -94,5 +94,29 @@ return function()
     error("boom")
   end)
 
+  -- test_who_player_sends_visible_who
+  do
+    local original = WhoLookup.SendVisible
+    local names = {}
+    WhoLookup.SendVisible = function(name)
+      names[#names + 1] = name
+      return true
+    end
+    WhoTriggers.Create(runtime).whoPlayer("Bob")
+    WhoLookup.SendVisible = original
+    assert(#names == 1 and names[1] == "Bob", "visible who sent for the name")
+  end
+
+  -- test_who_player_never_throws
+  do
+    local original = WhoLookup.SendVisible
+    WhoLookup.SendVisible = function()
+      error("boom")
+    end
+    local ok = pcall(WhoTriggers.Create(runtime).whoPlayer, "Bob")
+    WhoLookup.SendVisible = original
+    assert(ok, "throwing visible who never breaks the click")
+  end
+
   test_click_then_send_asks_once_per_contact()
 end

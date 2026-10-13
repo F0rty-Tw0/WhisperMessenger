@@ -6,6 +6,8 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 ## [Unreleased]
 
+- After you look a player up with /who, their whisper chat shows the zone they were in and how long ago (for players outside your guild and communities). For chats where the game cannot tell if the player is online, the zone replaces the guessed "Offline" label. Needs "Show player levels" turned on.
+- Shift-click a name in the contacts list, the chat header, or a group or channel chat to look that player up with /who.
 - Fixed: dragging a pinned chat to reorder it no longer crashes the game on WoW: Forever.
 
 ## [2.0.3] - 2026-10-09
