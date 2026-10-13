@@ -31,7 +31,8 @@ return function()
 
   -- test_chrome_without_a_button_is_left_alone
   do
-    local ok = pcall(PatchNotesRuntime.Attach, { chrome = {}, layout = {}, settingsConfig = {}, scriptResult = {} })
-    assert(ok, "a chrome without a patch-notes button must not error")
+    local settingsConfig = {}
+    PatchNotesRuntime.Attach({ chrome = {}, layout = {}, settingsConfig = settingsConfig, scriptResult = {} })
+    assert(next(settingsConfig) == nil, "a chrome without a patch-notes button must wire nothing")
   end
 end
