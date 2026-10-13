@@ -212,6 +212,27 @@ return function()
     assert(seenAt == 100, "a zone that only starts the line's zone must not re-stamp it")
   end
 
+  -- test_area_suffix_of_line_zone_does_not_restamp_zone
+  do
+    reset()
+    start({ { fullName = "Bob", level = 70, area = "Stratholme" } })
+    SeenZone.Record("Bob", "Stratholme", 100)
+    clock = 500
+    fire("CHAT_MSG_SYSTEM", "|Hplayer:Bob|h[Bob]|h: Level 70 Human Mage - The Culling of Stratholme")
+    local _, seenAt = SeenZone.Get("Bob")
+    assert(seenAt == 100, "a zone that only ends the line's zone must not re-stamp it")
+  end
+
+  -- test_ru_en_dash_row_records_zone
+  do
+    reset()
+    start({ { fullName = "Bob", level = 70, area = "Оргриммар" } })
+    clock = 500
+    fire("CHAT_MSG_SYSTEM", "|Hplayer:Bob|h[Bob]|h: Орк, Воин 70-го уровня \226\128\147 Оргриммар")
+    local _, seenAt = SeenZone.Get("Bob")
+    assert(seenAt == 500, "a ruRU row with an en dash should record the zone")
+  end
+
   -- test_non_string_system_text_records_no_zone
   do
     reset()
