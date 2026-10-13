@@ -179,6 +179,17 @@ return function()
     assert(seenAt == 100, "a row without the recorded area must not re-stamp the zone")
   end
 
+  -- test_area_only_in_guild_name_does_not_restamp_zone
+  do
+    reset()
+    start({ { fullName = "Bob", level = 70, area = "Stormwind" } })
+    SeenZone.Record("Bob", "Stormwind", 100)
+    clock = 500
+    fire("CHAT_MSG_SYSTEM", "|Hplayer:Bob|h[Bob]|h: Level 70 Human Mage <Stormwind Guard> - Orgrimmar")
+    local _, seenAt = SeenZone.Get("Bob")
+    assert(seenAt == 100, "a zone name inside the guild name must not re-stamp the zone")
+  end
+
   -- test_non_string_system_text_records_no_zone
   do
     reset()

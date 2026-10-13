@@ -125,6 +125,12 @@ local function scheduleZoneRefresh(name)
   end
 end
 
+-- The area follows the guild tag, so a guild named after a zone must not
+-- count as that zone.
+local function areaStart(systemText)
+  return string.find(systemText, ">[^>]*$") or 1
+end
+
 -- A system line is one player's /who row: `[Name]` or `[Name-Realm]` plus the
 -- area. Plain finds only; names and areas are player data, not patterns.
 local function isWhoRow(systemText, info)
@@ -141,7 +147,7 @@ local function isWhoRow(systemText, info)
     end
     local nextChar = string.sub(systemText, last + 1, last + 1)
     if nextChar == "]" or nextChar == "-" then
-      return string.find(systemText, info.area, 1, true) ~= nil
+      return string.find(systemText, info.area, areaStart(systemText), true) ~= nil
     end
     from = last + 1
   end
