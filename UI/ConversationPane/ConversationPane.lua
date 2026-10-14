@@ -274,6 +274,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
   if type(options.onInviteContact) == "function" then
     view.onInviteContact = options.onInviteContact
   end
+  view.canInviteContact = options.canInviteContact
 
   view.hideEmptyHeader = options.hideEmptyHeader == true
   ConversationPane.Refresh(view, selectedContact, conversation)

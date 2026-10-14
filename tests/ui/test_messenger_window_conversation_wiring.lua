@@ -49,4 +49,14 @@ return function()
     local wiring = makeWiring({}, true)
     assert(wiring.conversation.hideEmptyHeader == true, "HUD chrome hides the empty header")
   end
+
+  -- test_first_paint_hides_invite_link_when_disabled
+  do
+    local wiring = makeWiring({
+      canInviteContact = function()
+        return false
+      end,
+    })
+    assert(wiring.conversation.headerAddonBadge:IsShown() == false, "invite link is hidden from the first paint when invites are disabled")
+  end
 end

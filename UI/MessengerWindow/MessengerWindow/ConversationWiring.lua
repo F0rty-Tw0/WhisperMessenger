@@ -23,6 +23,7 @@ function ConversationWiring.Create(factory, options)
     onReact = windowOptions.onReact,
     canReact = windowOptions.canReact,
     onInviteContact = windowOptions.onInviteContact,
+    canInviteContact = windowOptions.canInviteContact,
     onAcceptRequest = windowOptions.onAcceptRequest,
     onDeleteRequest = windowOptions.onDeleteRequest,
     onMarkUnread = windowOptions.onMarkUnread,
