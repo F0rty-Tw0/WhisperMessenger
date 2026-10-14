@@ -91,9 +91,9 @@ function LifecycleHandlers.Handle(Bootstrap, event, deps, ...)
     return Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   end
 
-  if event == "UPDATE_BINDINGS" then
-    -- User opened the keybindings UI and (possibly) remapped REPLY.
-    -- Re-run syncReplyKey so our override tracks the new key without /reload.
+  if event == "UPDATE_BINDINGS" or event == "HOUSE_EDITOR_MODE_CHANGED" then
+    -- User remapped REPLY, or opened/closed the house editor (which needs R
+    -- for "remove decor"). Re-run syncReplyKey so our override follows.
     if Bootstrap.runtime and Bootstrap.runtime.syncReplyKey then
       Bootstrap.runtime.syncReplyKey()
     end

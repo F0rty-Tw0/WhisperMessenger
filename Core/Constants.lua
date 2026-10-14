@@ -64,6 +64,7 @@ local Constants = {
     "ZONE_CHANGED_NEW_AREA",
     "ADDON_RESTRICTION_STATE_CHANGED",
     "UPDATE_BINDINGS",
+    "HOUSE_EDITOR_MODE_CHANGED",
   },
 
   -- Lifecycle events that must stay registered during mythic lockdown
