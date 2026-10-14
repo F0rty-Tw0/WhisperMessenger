@@ -114,5 +114,30 @@ return function()
     assert(received == contact, "invite callback should preserve the selected contact")
   end
 
+  -- test_invite_refused_when_invite_link_setting_off
+  do
+    local whispers = {}
+    local runtime = newRuntime(whispers)
+    runtime.accountState = { settings = { showInviteLink = false } }
+
+    assert(InviteHandler.HandleInvite(runtime, newContact(), function() end) == false, "invite should be refused when the setting is off")
+    assert(#whispers == 0, "a refused invite must not send a whisper")
+    assert(runtime.store.conversations[CONVERSATION_KEY].inviteSent == nil, "a refused invite must not mark the conversation")
+  end
+
+  -- test_can_invite_contact_false_when_setting_off
+  do
+    local callbacks = WindowCallbacks.Create({ runtime = { accountState = { settings = { showInviteLink = false } } } })
+    assert(type(callbacks.canInviteContact) == "function", "window callbacks should expose canInviteContact")
+    assert(callbacks.canInviteContact() == false, "canInviteContact should be false when the setting is off")
+  end
+
+  -- test_can_invite_contact_true_when_setting_missing
+  do
+    local callbacks = WindowCallbacks.Create({ runtime = {} })
+    assert(type(callbacks.canInviteContact) == "function", "window callbacks should expose canInviteContact")
+    assert(callbacks.canInviteContact() == true, "canInviteContact should default to true")
+  end
+
   rawset(_G, "InCombatLockdown", savedInCombatLockdown)
 end

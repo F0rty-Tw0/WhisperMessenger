@@ -140,6 +140,9 @@ function WindowCallbacks.Create(options)
     onInviteContact = function(selectedContact)
       return inviteHandler.HandleInvite(runtime, selectedContact, refreshWindow)
     end,
+    canInviteContact = function()
+      return InviteHandler.IsEnabled(runtime)
+    end,
     onTyping = function(selectedContact, text)
       if livePresenceSender == nil then
         return false
