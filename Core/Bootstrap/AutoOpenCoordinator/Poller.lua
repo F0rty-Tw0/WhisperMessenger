@@ -21,6 +21,7 @@ local WHISPER_SLASH_COMMANDS = {
 
 local SLASH_WHISPER_ONE_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+)%s+(.-)%s*$"
 local SLASH_WHISPER_TWO_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+%s+[^%s]+)%s+(.-)%s*$"
+local SLASH_WHISPER_BATTLETAG_TARGET = "^%s*/[^%s]+%s+[^%s]*#"
 
 local function parseSlashCommandText(text)
   if type(text) ~= "string" or string.match(text, "^%s*/") == nil then
@@ -30,7 +31,11 @@ local function parseSlashCommandText(text)
   -- Require whitespace after the target name; otherwise the pattern matches
   -- mid-typing `/w S` and routes the half-typed name on the first keystroke.
   -- WoW: Forever names are two words ("John Doe"), so the target spans both.
-  local pattern = FlavorCompat.isForever and SLASH_WHISPER_TWO_PART_NAME or SLASH_WHISPER_ONE_PART_NAME
+  -- A BattleTag ("Name#1234") is still one word there.
+  local pattern = SLASH_WHISPER_ONE_PART_NAME
+  if FlavorCompat.isForever and string.match(text, SLASH_WHISPER_BATTLETAG_TARGET) == nil then
+    pattern = SLASH_WHISPER_TWO_PART_NAME
+  end
   local command, target, body = string.match(text, pattern)
   if command == nil then
     return true, nil, nil

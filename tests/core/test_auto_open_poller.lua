@@ -72,6 +72,15 @@ return function()
     assert(sendTellCalls[1] == "John Doe", "expected full Forever name routed, got " .. tostring(sendTellCalls[1]))
   end)
 
+  -- test_forever_slash_whisper_keeps_battletag_one_word
+  -- A BattleTag ("Name#1234") is a whole target on its own; the next word is
+  -- the message, not a last name.
+  Flavor.With(false, true, function()
+    local typeText, sendTellCalls = installPoller()
+    typeText("/w Artiom#1234 ")
+    assert(sendTellCalls[1] == "Artiom#1234", "expected BattleTag routed alone on Forever, got " .. tostring(sendTellCalls[1]))
+  end)
+
   -- test_retail_slash_whisper_routes_after_first_space
   Flavor.With(true, false, function()
     local typeText, sendTellCalls = installPoller()
