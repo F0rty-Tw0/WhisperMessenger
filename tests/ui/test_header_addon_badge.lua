@@ -68,6 +68,40 @@ return function()
     )
   end
 
+  local function invitesDisabled()
+    return false
+  end
+
+  -- test_invite_link_hidden_when_invites_disabled
+  do
+    local contact = { displayName = "Arthas", channel = "WOW", peerHasAddon = false }
+    local view = HeaderView.Create(factory, pane, contact)
+    view.canInviteContact = invitesDisabled
+    HeaderView.Refresh(view, contact, nil, nil)
+    assert(view.headerAddonBadge:IsShown() == false, "invite link should hide when invites are disabled")
+    assert(view.headerAddonBadgeButton:IsShown() == false, "invite button should hide when invites are disabled")
+    assert(view.headerAddonBadgeButton.mouseEnabled == false, "hidden invite button must not take clicks")
+  end
+
+  -- test_invite_sent_hidden_when_invites_disabled
+  do
+    local contact = { displayName = "Arthas", channel = "WOW", peerHasAddon = false }
+    local view = HeaderView.Create(factory, pane, contact)
+    view.canInviteContact = invitesDisabled
+    HeaderView.Refresh(view, contact, { inviteSent = true, messages = {} }, nil)
+    assert(view.headerAddonBadge:IsShown() == false, "(Invite sent) should hide when invites are disabled")
+  end
+
+  -- test_uses_wm_tag_kept_when_invites_disabled
+  do
+    local contact = { displayName = "Arthas", channel = "WOW", peerHasAddon = true }
+    local view = HeaderView.Create(factory, pane, contact)
+    view.canInviteContact = invitesDisabled
+    HeaderView.Refresh(view, contact, nil, nil)
+    assert(view.headerAddonBadge:IsShown() == true, "(Uses WM) should still show when invites are disabled")
+    assert(view.headerAddonBadge:GetText() == "(Uses WM)", "badge should read '(Uses WM)', got: " .. tostring(view.headerAddonBadge:GetText()))
+  end
+
   -- test_badge_hidden_for_group_conversation
   do
     local contact = { displayName = "Raid Group", channel = "RAID", peerHasAddon = true }

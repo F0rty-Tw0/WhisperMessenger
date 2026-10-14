@@ -127,7 +127,9 @@ function AddonBadge.Refresh(view, selectedContact, conversation)
   local badge = view.headerAddonBadge
   local badgeButton = view.headerAddonBadgeButton
   local isDirectContact = hasContact and not (vm and vm.isGroup) and (selectedContact.channel == "WOW" or selectedContact.channel == "BN")
-  if isDirectContact then
+  -- "Show invite link" off hides the invite/sent hint; "(Uses WM)" stays.
+  local invitesAllowed = type(view.canInviteContact) ~= "function" or view.canInviteContact() ~= false
+  if isDirectContact and (selectedContact.peerHasAddon or invitesAllowed) then
     local anchor = view.headerFactionIcon
     if type(anchor) ~= "table" or type(anchor.IsShown) ~= "function" or not anchor:IsShown() then
       anchor = view.headerName
