@@ -116,4 +116,11 @@ return function()
     typeText("/w Thrall ")
     assert(sendTellCalls[1] == "Thrall", "expected one-word name routed on Retail, got " .. tostring(sendTellCalls[1]))
   end)
+
+  -- test_classic_slash_whisper_routes_after_first_space
+  Flavor.With(false, false, function()
+    local typeText, sendTellCalls = installPoller()
+    typeText("/w Thrall ")
+    assert(sendTellCalls[1] == "Thrall", "expected one-word name routed on Classic, got " .. tostring(sendTellCalls[1]))
+  end)
 end
