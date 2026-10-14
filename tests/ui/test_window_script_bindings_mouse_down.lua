@@ -16,8 +16,8 @@ local function makeResizeStub()
   }
 end
 
-local function bindFrame(shownAtBind)
-  local factory = FakeUI.NewFactory()
+local function bindFrame(shownAtBind, factory)
+  factory = factory or FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame.shown = shownAtBind == true
@@ -80,5 +80,59 @@ return function()
     frame.mouseOver = false
     frame.scripts.OnEvent(frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(frame.frameStrata == "MEDIUM", "outside click must demote strata; got " .. tostring(frame.frameStrata))
+  end
+
+  -- The contacts tabs hang below the window's edge, so a click on one is
+  -- outside the window's rectangle. It still belongs to the window and must
+  -- bring it forward, not send it back.
+  local FOCUS_API_NAMES = { "GetMouseFoci", "GetMouseFocus" }
+
+  -- focusApiFor(tab) returns the focus globals to install, by name; a name
+  -- left out is removed for the click.
+  local function clickTabBelowWindow(focusApiFor)
+    local factory = FakeUI.NewFactory()
+    local frame = bindFrame(false, factory)
+    local tab = factory.CreateFrame("Button", nil, factory.CreateFrame("Frame", nil, frame))
+    frame:Show()
+    frame.mouseOver = false
+    frame.scripts.OnEvent(frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+    assert(frame.frameStrata == "MEDIUM", "precondition: an outside click sent the window back")
+
+    local api = focusApiFor(tab)
+    local saved = {}
+    for _, name in ipairs(FOCUS_API_NAMES) do
+      saved[name] = _G[name]
+      _G[name] = api[name]
+    end
+    local ok, err = pcall(frame.scripts.OnEvent, frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+    for _, name in ipairs(FOCUS_API_NAMES) do
+      _G[name] = saved[name]
+    end
+    assert(ok, err)
+    return frame
+  end
+
+  -- test_click_on_tab_below_window_brings_it_forward
+  do
+    local frame = clickTabBelowWindow(function(tab)
+      return {
+        GetMouseFoci = function()
+          return { tab }
+        end,
+      }
+    end)
+    assert(frame.frameStrata == "HIGH", "clicking a tab must bring the window forward; got " .. tostring(frame.frameStrata))
+  end
+
+  -- test_click_on_tab_brings_window_forward_on_classic_focus_api
+  do
+    local frame = clickTabBelowWindow(function(tab)
+      return {
+        GetMouseFocus = function()
+          return tab
+        end,
+      }
+    end)
+    assert(frame.frameStrata == "HIGH", "Classic GetMouseFocus path must also bring the window forward; got " .. tostring(frame.frameStrata))
   end
 end

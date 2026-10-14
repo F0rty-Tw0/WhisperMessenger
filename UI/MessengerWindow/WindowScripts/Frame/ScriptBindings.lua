@@ -3,12 +3,17 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
+  or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
+
 local ScriptBindings = {}
 
--- After an outside click the window drops to MEDIUM strata, where Blizzard's
--- action bars live (level 52 on Classic, ~70 on Retail). It is pinned above
--- them; Raise() left it at level 1 in game.
-local DEMOTED_FRAME_LEVEL = 100
+-- Frames in one strata draw by level, whatever their parent. Blizzard pins a
+-- panel's border at level 510 (AddOn List in HIGH) and Edit Mode boxes at
+-- 1000 (MEDIUM), so a window below that gets half covered: their background
+-- under it, their border on top. Raise() left it below 500 in game. The
+-- window keeps one level above both in HIGH and MEDIUM.
+local WINDOW_FRAME_LEVEL = 2000
 
 function ScriptBindings.Bind(options)
   options = options or {}
@@ -83,8 +88,17 @@ function ScriptBindings.Bind(options)
     return ok and over == true
   end
 
-  -- Strata/Raise transitions must never pull keyboard focus away from
-  -- the composer. WoW's click-on-non-EditBox flow and frame:Raise() can
+  -- Children can sit outside the window's rectangle (the contacts tabs hang
+  -- below it), so also count a click on any descendant as inside.
+  local function isPointerOnWindow()
+    if isMouseOverFrame() then
+      return true
+    end
+    return PointerFocus.IsFocusInside(frame)
+  end
+
+  -- Strata/level transitions must never pull keyboard focus away from
+  -- the composer. WoW's click-on-non-EditBox flow and strata changes can
   -- clear an EditBox's focus as a side effect — when the composer had
   -- focus before the change, restore it afterwards so mouse-over / click
   -- promotions don't interrupt the user's typing.
@@ -104,14 +118,14 @@ function ScriptBindings.Bind(options)
       if frame and type(frame.SetFrameStrata) == "function" then
         frame:SetFrameStrata("HIGH")
       end
-      if frame and type(frame.Raise) == "function" then
-        frame:Raise()
+      if frame and type(frame.SetFrameLevel) == "function" then
+        frame:SetFrameLevel(WINDOW_FRAME_LEVEL)
       end
     end)
   end
 
   local function demoteStrataIfIdle()
-    if composerHasFocus() or isMouseOverFrame() then
+    if composerHasFocus() or isPointerOnWindow() then
       return
     end
     preserveComposerFocusAround(function()
@@ -119,7 +133,7 @@ function ScriptBindings.Bind(options)
         frame:SetFrameStrata("MEDIUM")
       end
       if frame and type(frame.SetFrameLevel) == "function" then
-        frame:SetFrameLevel(DEMOTED_FRAME_LEVEL)
+        frame:SetFrameLevel(WINDOW_FRAME_LEVEL)
       end
     end)
   end
@@ -127,9 +141,8 @@ function ScriptBindings.Bind(options)
   -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
   -- to detect "user engaged with another window" — when they click
   -- somewhere the messenger isn't, drop our strata so their target
-  -- window comes forward. Clicks on our own frame hit OnMouseDown which
-  -- promotes instead, and the OnEvent handler skips demotion when the
-  -- cursor is still over us. Listen only while shown so a hidden window
+  -- window comes forward. Clicks on the window or any of its children
+  -- promote instead. Listen only while shown so a hidden window
   -- costs nothing per click.
   local function setOutsideClickListening(listening)
     if listening and type(frame.RegisterEvent) == "function" then
@@ -186,7 +199,14 @@ function ScriptBindings.Bind(options)
       setOutsideClickListening(true)
     end
     frame:SetScript("OnEvent", function(self, event)
-      if event == "GLOBAL_MOUSE_DOWN" and not isMouseOverFrame() then
+      if event ~= "GLOBAL_MOUSE_DOWN" then
+        return
+      end
+      -- Buttons inside the window swallow the click, so the frame's own
+      -- OnMouseDown never fires for them; promote from here instead.
+      if isPointerOnWindow() then
+        promoteStrata()
+      else
         demoteStrataIfIdle()
       end
     end)

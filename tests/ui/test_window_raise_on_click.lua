@@ -3,6 +3,13 @@ local ScriptBindings = require("WhisperMessenger.UI.MessengerWindow.WindowScript
 
 local function noop() end
 
+-- Blizzard pins a panel's border at level 510 (AddOn List, HIGH strata) and
+-- Edit Mode highlight boxes at 1000 (MEDIUM). Frames in one strata draw by
+-- level regardless of parent, so a window below those levels gets half
+-- covered: their background under it, their border on top.
+local BLIZZARD_PANEL_BORDER_LEVEL = 510
+local EDIT_MODE_SELECTION_LEVEL = 1000
+
 local function makeResizeStub()
   return {
     isResizing = function()
@@ -29,11 +36,6 @@ local function buildHarness(options)
   local contactsResizeHandle = factory.CreateFrame("Frame", nil, parent)
 
   frame:SetFrameStrata("MEDIUM")
-
-  local raiseCalls = 0
-  function frame:Raise()
-    raiseCalls = raiseCalls + 1
-  end
 
   local composerInput = options.composerInput
   local resizeStub = makeResizeStub()
@@ -63,9 +65,6 @@ local function buildHarness(options)
   return {
     frame = frame,
     scripts = frame.scripts or {},
-    getRaiseCalls = function()
-      return raiseCalls
-    end,
   }
 end
 
@@ -86,7 +85,10 @@ return function()
       h.frame.frameStrata == "HIGH",
       "expected OnShow to promote strata to HIGH so the window sits above AH/Map; got " .. tostring(h.frame.frameStrata)
     )
-    assert(h.getRaiseCalls() >= 1, "expected OnShow to call frame:Raise() within the promoted strata")
+    assert(
+      h.frame:GetFrameLevel() > BLIZZARD_PANEL_BORDER_LEVEL,
+      "expected OnShow to lift the window above Blizzard panel borders; got level " .. tostring(h.frame:GetFrameLevel())
+    )
   end
 
   -- OnMouseDown promotes strata to HIGH and raises within strata.
@@ -100,7 +102,10 @@ return function()
       h.frame.frameStrata == "HIGH",
       "expected OnMouseDown to promote strata to HIGH so the window sits above other windows; got " .. tostring(h.frame.frameStrata)
     )
-    assert(h.getRaiseCalls() == 1, "expected OnMouseDown to call frame:Raise() within the promoted strata")
+    assert(
+      h.frame:GetFrameLevel() > BLIZZARD_PANEL_BORDER_LEVEL,
+      "expected OnMouseDown to lift the window above Blizzard panel borders; got level " .. tostring(h.frame:GetFrameLevel())
+    )
   end
 
   -- OnLeave must never demote on its own — demotion is driven exclusively
@@ -170,19 +175,16 @@ return function()
     assert(h.frame.frameStrata == "MEDIUM", "expected outside click to demote strata to MEDIUM; got " .. tostring(h.frame.frameStrata))
   end
 
-  -- test_outside_click_keeps_window_above_action_bars
+  -- test_outside_click_keeps_window_above_edit_mode_boxes
   do
-    -- Action buttons sit in MEDIUM strata too (level 52 on Classic, ~70 on
-    -- Retail). Raise() left the window at level 1 in game, under the bars.
-    local ACTION_BAR_LEVEL = 70
     local h = buildHarness({})
     h.frame:Show()
     h.scripts.OnMouseDown(h.frame, "LeftButton")
     h.frame.mouseOver = false
     h.scripts.OnEvent(h.frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
     assert(
-      h.frame:GetFrameLevel() > ACTION_BAR_LEVEL,
-      "expected the demoted window above the action bars; got level " .. tostring(h.frame:GetFrameLevel())
+      h.frame:GetFrameLevel() > EDIT_MODE_SELECTION_LEVEL,
+      "expected the demoted window above Edit Mode boxes; got level " .. tostring(h.frame:GetFrameLevel())
     )
   end
 
@@ -226,18 +228,17 @@ return function()
       "expected ScriptBindings to hook OnEditFocusGained on composer input so clicks into the input promote the window"
     )
 
-    local prevRaiseCalls = h.getRaiseCalls()
     composerInput._focused = true
     for _, handler in ipairs(focusHandlers) do
       handler(composerInput)
     end
 
     assert(h.frame.frameStrata == "HIGH", "expected composer input focus to promote strata to HIGH; got " .. tostring(h.frame.frameStrata))
-    assert(h.getRaiseCalls() >= prevRaiseCalls + 1, "expected composer input focus to call frame:Raise() within the promoted strata")
+    assert(h.frame:GetFrameLevel() > BLIZZARD_PANEL_BORDER_LEVEL, "expected composer input focus to lift the window above Blizzard panel borders")
   end
 
   -- OnMouseDown must not steal keyboard focus from the composer, even when
-  -- frame:Raise() (or the click itself) would clear it as a side effect.
+  -- the strata change (or the click itself) would clear it as a side effect.
   -- Simulates WoW's real behavior where clicking elsewhere on the frame
   -- can drop EditBox focus — promoteStrata should restore it.
   do
@@ -253,17 +254,15 @@ return function()
       end,
     }
     local h = buildHarness({ composerInput = composerInput })
-    -- Make frame:Raise() clear composer focus the way a WoW click can.
-    local originalRaise = h.frame.Raise
-    function h.frame:Raise()
+    -- Make the strata change clear composer focus the way a WoW click can.
+    local originalSetFrameStrata = h.frame.SetFrameStrata
+    function h.frame:SetFrameStrata(strata)
       composerInput._focused = false
-      if originalRaise then
-        originalRaise(self)
-      end
+      originalSetFrameStrata(self, strata)
     end
 
     h.scripts.OnMouseDown(h.frame, "LeftButton")
-    assert(composerInput._focused == true, "expected composer focus to be restored after promoteStrata, even if Raise cleared it")
+    assert(composerInput._focused == true, "expected composer focus to be restored after promoteStrata, even if the strata change cleared it")
     assert(setFocusCalls == 1, "expected exactly one SetFocus call to restore composer focus; got " .. setFocusCalls)
   end
 end
