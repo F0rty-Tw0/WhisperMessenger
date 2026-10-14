@@ -11,6 +11,7 @@ local WHISPER_LABELS = {
   "Put whispers from strangers in Requests",
   "Share typing status",
   "Send read receipts",
+  "Show invite link",
 }
 
 local function create(config)
@@ -28,13 +29,13 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  -- test_shows_exactly_the_six_whisper_toggles
+  -- test_shows_exactly_the_seven_whisper_toggles
   do
     local result = create({})
     for _, label in ipairs(WHISPER_LABELS) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "missing whisper toggle: " .. label)
     end
-    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 6 toggles, got " .. FindUI.countToggles(result.frame))
+    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 7 toggles, got " .. FindUI.countToggles(result.frame))
   end
 
   -- test_behavior_no_longer_shows_whisper_toggles
@@ -56,6 +57,7 @@ return function()
       requestsInbox = true,
       shareTypingStatus = false,
       shareReadReceipts = false,
+      showInviteLink = false,
     })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     assert(changes.hideFromDefaultChat == true, "reset turns hide-from-chat on")
@@ -64,6 +66,7 @@ return function()
     assert(changes.requestsInbox == false, "reset turns the Requests inbox off")
     assert(changes.shareTypingStatus == true, "reset turns typing status on")
     assert(changes.shareReadReceipts == true, "reset turns read receipts on")
+    assert(changes.showInviteLink == true, "reset turns the invite link on")
   end
 
   -- test_empty_config_shows_saved_defaults
@@ -75,6 +78,7 @@ return function()
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Put whispers from strangers in Requests")) == false, "Requests defaults off")
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Share typing status")) == true, "typing defaults on")
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Send read receipts")) == true, "receipts default on")
+    assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Show invite link")) == true, "invite link defaults on")
   end
 
   -- test_saved_values_start_in_place
@@ -94,6 +98,7 @@ return function()
       ["Put whispers from strangers in Requests"] = "requestsInbox",
       ["Share typing status"] = "shareTypingStatus",
       ["Send read receipts"] = "shareReadReceipts",
+      ["Show invite link"] = "showInviteLink",
     }
     for label, key in pairs(keysByLabel) do
       FindUI.click(FindUI.toggle(result.frame, label))

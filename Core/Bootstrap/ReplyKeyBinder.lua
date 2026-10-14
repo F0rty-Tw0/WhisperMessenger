@@ -25,6 +25,16 @@ end
 
 -- Collect up to 8 slots (Blizzard UI exposes 2; API historically returns up
 -- to 4). Vararg iteration is simpler than pcall-with-unpack gymnastics.
+-- Housing's "remove decor" binding defaults to R too, and our priority
+-- override would beat it. Classic flavors have no house editor.
+local function defaultIsHouseEditorActive()
+  local houseEditor = _G["C_HouseEditor"]
+  if type(houseEditor) == "table" and type(houseEditor.IsHouseEditorActive) == "function" then
+    return houseEditor.IsHouseEditorActive() == true
+  end
+  return false
+end
+
 local function collectReplyKeys(getBindingKey)
   local keys = {}
   if type(getBindingKey) ~= "function" then
@@ -62,6 +72,7 @@ function ReplyKeyBinder.New(deps)
   local getSettings = deps.getSettings or function()
     return {}
   end
+  local isHouseEditorActive = deps.isHouseEditorActive or defaultIsHouseEditorActive
 
   local button
   local boundKeys = {}
@@ -145,7 +156,7 @@ function ReplyKeyBinder.New(deps)
     -- that was seeded with WhisperMessenger-attributed taint by the filter
     -- chain pre-M+. Our messenger opens even when the composer is disabled
     -- (mythic pause) — strictly better than a Lua error every reply-press.
-    if settings.hideFromDefaultChat == true then
+    if settings.hideFromDefaultChat == true and not isHouseEditorActive() then
       self.bind()
     else
       self.unbind()

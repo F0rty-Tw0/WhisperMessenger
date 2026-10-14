@@ -336,6 +336,8 @@ local TraditionalChinese = {
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "讓同樣使用 Whisper Messenger 的聯絡人看到你正在輸入密語給他們。",
   ["Send read receipts"] = "傳送已讀回條",
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "讓同樣使用 Whisper Messenger 的聯絡人看到你已讀他們的密語。",
+  ["Show invite link"] = "顯示邀請連結",
+  ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "在聊天標題列顯示 (邀請使用 WM) 連結。點擊後會向該玩家發送一則介紹此插件的簡短密語。",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",

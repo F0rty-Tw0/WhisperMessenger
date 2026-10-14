@@ -336,6 +336,8 @@ local German = {
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "Kontakte, die ebenfalls Whisper Messenger nutzen, sehen, wenn du ihnen gerade schreibst.",
   ["Send read receipts"] = "Lesebestätigungen senden",
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Kontakte, die ebenfalls Whisper Messenger nutzen, sehen, wenn du ihre Nachrichten gelesen hast.",
+  ["Show invite link"] = "Einladungslink anzeigen",
+  ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Zeigt im Chat-Kopf einen Link (Zu WM einladen). Ein Klick darauf flüstert dem Spieler eine kurze Nachricht über dieses Addon.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "Entwurf",
   ["Draft:"] = "Entwurf:",

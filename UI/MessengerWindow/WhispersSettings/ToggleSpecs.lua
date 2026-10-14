@@ -16,6 +16,7 @@ ToggleSpecs.DEFAULTS = {
   requestsInbox = false,
   shareTypingStatus = true,
   shareReadReceipts = true,
+  showInviteLink = true,
 }
 
 local function text(key)
@@ -101,6 +102,18 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Send read receipts"),
         text("Lets contacts who also use Whisper Messenger see when you have read their whispers."),
+      },
+    },
+    {
+      key = "showInviteLink",
+      labelKey = "Show invite link",
+      initial = config.showInviteLink ~= false,
+      onChange = function(value)
+        onChange("showInviteLink", value)
+      end,
+      tooltipLines = {
+        text("Show invite link"),
+        text("Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."),
       },
     },
   }

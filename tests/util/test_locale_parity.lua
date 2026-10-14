@@ -2,6 +2,7 @@
 -- source strings, so there is no enUS catalog) and keeps each key's format
 -- slots (%s, %d, ...) in the same count and order.
 local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU", "zhCN", "zhTW" }
+local INVITE_TOOLTIP_KEY = "Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -45,5 +46,9 @@ return function()
     local hint = catalog["Edit this list in Options > Behavior."]
     assert(string.find(hint, catalog["Options"], 1, true), code .. " edit hint should name the translated Options page")
     assert(string.find(hint, catalog["Behavior"], 1, true), code .. " edit hint should name the translated Behavior page")
+
+    -- test_invite_tooltip_names_the_translated_link
+    local inviteTooltip = catalog[INVITE_TOOLTIP_KEY]
+    assert(string.find(inviteTooltip, catalog["Invite to WM"], 1, true), code .. " invite tooltip should name the translated link")
   end
 end

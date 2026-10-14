@@ -13,8 +13,17 @@ local InviteHandler = {}
 InviteHandler.INVITE_TEXT =
   "Hey! I use Whisper Messenger for whispers: messenger window, history, unread badges, reactions, typing/seen. Free on CurseForge and Wago, grab it and we get all of it between us."
 
+-- "Show invite link" setting: on unless explicitly turned off.
+function InviteHandler.IsEnabled(runtime)
+  local settings = type(runtime) == "table" and runtime.accountState and runtime.accountState.settings
+  return not settings or settings.showInviteLink ~= false
+end
+
 function InviteHandler.HandleInvite(runtime, selectedContact, refreshWindow)
   if type(runtime) ~= "table" or type(selectedContact) ~= "table" then
+    return false
+  end
+  if not InviteHandler.IsEnabled(runtime) then
     return false
   end
   if selectedContact.channel ~= "WOW" and selectedContact.channel ~= "BN" then

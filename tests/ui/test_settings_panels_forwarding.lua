@@ -58,6 +58,7 @@ return function()
     quickReplies = { "brb" },
     shareTypingStatus = false,
     shareReadReceipts = false,
+    showInviteLink = false,
     -- chats
     enabledChannels = { trade = true },
     collapseDuplicates = false,
@@ -129,6 +130,7 @@ return function()
   assert(whispersCapture.config.requestsInbox == true, "whispers config should carry requestsInbox")
   assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
   assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
+  assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")

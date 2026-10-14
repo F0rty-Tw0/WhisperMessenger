@@ -336,6 +336,8 @@ local Russian = {
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "Контакты, у которых тоже есть Whisper Messenger, видят, когда вы им пишете.",
   ["Send read receipts"] = "Отправлять отметки о прочтении",
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Контакты, у которых тоже есть Whisper Messenger, видят, когда вы прочитали их сообщения.",
+  ["Show invite link"] = "Показывать ссылку-приглашение",
+  ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Показывает ссылку (Пригласить в WM) в заголовке чата. Нажатие отправляет этому игроку короткое личное сообщение об этом аддоне.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "Черновик",
   ["Draft:"] = "Черновик:",

@@ -351,4 +351,74 @@ return function()
     binder.unbind()
     assert(#stubs.clearedFor == clearedAfterSync, "no bindings should remain after sync unbinds")
   end
+
+  -- test_sync_releases_reply_key_while_house_editor_active
+
+  -- Housing's "remove decor" binding shares R. Our priority override beats
+  -- it, so R stopped removing decor while the house editor was open.
+  do
+    local stubs = makeStubs()
+    local editorActive = false
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return { hideFromDefaultChat = true }
+      end,
+      isHouseEditorActive = function()
+        return editorActive
+      end,
+    })
+
+    binder.sync()
+    assert(#stubs.overrideBindings == 1, "precondition: bound outside the house editor")
+
+    editorActive = true
+    binder.sync()
+
+    assert(#stubs.clearedFor == 1, "sync must release the reply key while the house editor is open, got " .. #stubs.clearedFor)
+  end
+
+  -- test_sync_rebinds_reply_key_after_house_editor_closes
+
+  do
+    local stubs = makeStubs()
+    local editorActive = true
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return { hideFromDefaultChat = true }
+      end,
+      isHouseEditorActive = function()
+        return editorActive
+      end,
+    })
+
+    binder.sync()
+    assert(#stubs.overrideBindings == 0, "must not bind while the house editor is open")
+
+    editorActive = false
+    binder.sync()
+
+    assert(#stubs.overrideBindings == 1, "sync must bind again once the house editor closes, got " .. #stubs.overrideBindings)
+  end
+
+  -- test_sync_reads_the_live_house_editor_api_by_default
+
+  do
+    local savedHouseEditor = rawget(_G, "C_HouseEditor")
+    rawset(_G, "C_HouseEditor", {
+      IsHouseEditorActive = function()
+        return true
+      end,
+    })
+    local stubs = makeStubs()
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return { hideFromDefaultChat = true }
+      end,
+    })
+
+    binder.sync()
+    rawset(_G, "C_HouseEditor", savedHouseEditor)
+
+    assert(#stubs.overrideBindings == 0, "an open house editor reported by C_HouseEditor must keep R unbound, got " .. #stubs.overrideBindings)
+  end
 end

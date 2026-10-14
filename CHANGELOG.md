@@ -8,11 +8,15 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 
 - After you look a player up with /who, their whisper chat shows the zone they were in and how long ago (for players outside your guild and communities). For chats where the game cannot tell if the player is online, the zone replaces the guessed "Offline" label. Needs "Show player levels" turned on.
 - Shift-click a name in the contacts list, the chat header, or a group or channel chat to look that player up with /who.
+- You can now hide the "(Invite to WM)" link in the chat header under Options > Whispers ("Show invite link"). With it off, the addon never sends the invite whisper.
 - Fixed: dragging a pinned chat to reorder it no longer crashes the game on WoW: Forever.
 - Fixed: on WoW: Forever, typing `/w John Doe` in the chat box no longer pops the messenger open after the first name. It now waits for the full first and last name.
 - Fixed: the "whispers arrived during the fight" count could include whispers from an earlier fight.
 - Fixed: a long whisper that arrived just as a fight ended could play the alert sound twice.
 - Fixed: after leaving Mythic+, a raid or a locked fight through a loading screen, your whispers could stay stuck as "Queued" in the open world because the addon still thought you were locked in.
+- Fixed: pressing R in housing edit mode removes the selected decor again. The addon now lets go of the reply key while you decorate.
+- Fixed: other windows (the AddOn List, Edit Mode outlines, raid frames) no longer half-cover the messenger with only their border or outline drawn on top of it.
+- Fixed: clicking the Whispers, Groups or Channels tabs, or a chat in the list, now brings the messenger to the front like clicking the window does.
 
 ## [2.0.3] - 2026-10-09
 

@@ -128,6 +128,7 @@ function SettingsPanels.Create(factory, options)
         requestsInbox = settingsConfig.requestsInbox,
         shareTypingStatus = settingsConfig.shareTypingStatus,
         shareReadReceipts = settingsConfig.shareReadReceipts,
+        showInviteLink = settingsConfig.showInviteLink,
       },
     },
     {
