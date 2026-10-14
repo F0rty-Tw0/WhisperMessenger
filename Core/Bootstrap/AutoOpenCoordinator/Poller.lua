@@ -46,6 +46,8 @@ local function parseSlashCommandText(text)
     return true, nil, nil
   end
 
+  -- "John  Doe" must key the same chat as "John Doe".
+  target = string.gsub(target, "%s+", " ")
   return true, target, body or ""
 end
 

@@ -23,10 +23,17 @@ local function makeEditBox()
 end
 
 -- Installs the poller on one chat edit box and returns a typer that sets the
--- box text as user input, plus the list of names routed to onSendTell.
+-- box text as user input, the list of names routed to onSendTell, and the
+-- texts carried over into the composer.
 local function installPoller()
   local editBox = makeEditBox()
   local sendTellCalls = {}
+  local composerTexts = {}
+  local runtime = {
+    setComposerText = function(text)
+      table.insert(composerTexts, text)
+    end,
+  }
   local hooks = {
     onSendTell = function(target)
       table.insert(sendTellCalls, target)
@@ -45,13 +52,13 @@ local function installPoller()
     end,
     deactivateChat = function() end,
   }
-  Poller.Install({}, hooks, deps)
+  Poller.Install(runtime, hooks, deps)
 
   local function typeText(text)
     editBox.text = text
     editBox.scripts.OnTextChanged(editBox, true)
   end
-  return typeText, sendTellCalls
+  return typeText, sendTellCalls, composerTexts
 end
 
 return function()
@@ -70,6 +77,28 @@ return function()
     local typeText, sendTellCalls = installPoller()
     typeText("/w John Doe ")
     assert(sendTellCalls[1] == "John Doe", "expected full Forever name routed, got " .. tostring(sendTellCalls[1]))
+  end)
+
+  -- test_forever_slash_whisper_carries_message_into_composer
+  Flavor.With(false, true, function()
+    local typeText, _sendTellCalls, composerTexts = installPoller()
+    typeText("/w John Doe hi there")
+    assert(composerTexts[1] == "hi there", "expected message carried into composer, got " .. tostring(composerTexts[1]))
+  end)
+
+  -- test_forever_slash_whisper_collapses_spaces_between_names
+  -- "John  Doe" must reach the same chat as "John Doe", not a duplicate.
+  Flavor.With(false, true, function()
+    local typeText, sendTellCalls = installPoller()
+    typeText("/w John  Doe ")
+    assert(sendTellCalls[1] == "John Doe", "expected spaces between names collapsed, got " .. tostring(sendTellCalls[1]))
+  end)
+
+  -- test_forever_slash_whisper_hash_in_message_keeps_two_part_name
+  Flavor.With(false, true, function()
+    local typeText, sendTellCalls = installPoller()
+    typeText("/w John Doe #1 ")
+    assert(sendTellCalls[1] == "John Doe", "expected '#' in the message not to shorten the name, got " .. tostring(sendTellCalls[1]))
   end)
 
   -- test_forever_slash_whisper_keeps_battletag_one_word
