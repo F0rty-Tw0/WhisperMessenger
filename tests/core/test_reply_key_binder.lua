@@ -399,4 +399,26 @@ return function()
 
     assert(#stubs.overrideBindings == 1, "sync must bind again once the house editor closes, got " .. #stubs.overrideBindings)
   end
+
+  -- test_sync_reads_the_live_house_editor_api_by_default
+
+  do
+    local savedHouseEditor = rawget(_G, "C_HouseEditor")
+    rawset(_G, "C_HouseEditor", {
+      IsHouseEditorActive = function()
+        return true
+      end,
+    })
+    local stubs = makeStubs()
+    local binder = newBinder(stubs, {
+      getSettings = function()
+        return { hideFromDefaultChat = true }
+      end,
+    })
+
+    binder.sync()
+    rawset(_G, "C_HouseEditor", savedHouseEditor)
+
+    assert(#stubs.overrideBindings == 0, "an open house editor reported by C_HouseEditor must keep R unbound, got " .. #stubs.overrideBindings)
+  end
 end
