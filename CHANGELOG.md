@@ -9,6 +9,7 @@ All releases: **2.0.x (current)** · [1.4.x](archive/changelog/1.4.md) · [1.3.x
 - After you look a player up with /who, their whisper chat shows the zone they were in and how long ago (for players outside your guild and communities). For chats where the game cannot tell if the player is online, the zone replaces the guessed "Offline" label. Needs "Show player levels" turned on.
 - Shift-click a name in the contacts list, the chat header, or a group or channel chat to look that player up with /who.
 - Fixed: dragging a pinned chat to reorder it no longer crashes the game on WoW: Forever.
+- Fixed: on WoW: Forever, typing `/w John Doe` in the chat box no longer pops the messenger open after the first name. It now waits for the full first and last name.
 - Fixed: the "whispers arrived during the fight" count could include whispers from an earlier fight.
 - Fixed: a long whisper that arrived just as a fight ended could play the alert sound twice.
 - Fixed: after leaving Mythic+, a raid or a locked fight through a loading screen, your whispers could stay stuck as "Queued" in the open world because the addon still thought you were locked in.
