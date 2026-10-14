@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 -- stylua: ignore start
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local DirectHooks = ns.BootstrapAutoOpenDirectHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.DirectHooks")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
@@ -18,6 +19,9 @@ local WHISPER_SLASH_COMMANDS = {
   tell = true,
 }
 
+local SLASH_WHISPER_ONE_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+)%s+(.-)%s*$"
+local SLASH_WHISPER_TWO_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+%s+[^%s]+)%s+(.-)%s*$"
+
 local function parseSlashCommandText(text)
   if type(text) ~= "string" or string.match(text, "^%s*/") == nil then
     return false, nil, nil
@@ -25,7 +29,9 @@ local function parseSlashCommandText(text)
 
   -- Require whitespace after the target name; otherwise the pattern matches
   -- mid-typing `/w S` and routes the half-typed name on the first keystroke.
-  local command, target, body = string.match(text, "^%s*/([^%s]+)%s+([^%s]+)%s+(.-)%s*$")
+  -- WoW: Forever names are two words ("John Doe"), so the target spans both.
+  local pattern = FlavorCompat.isForever and SLASH_WHISPER_TWO_PART_NAME or SLASH_WHISPER_ONE_PART_NAME
+  local command, target, body = string.match(text, pattern)
   if command == nil then
     return true, nil, nil
   end
