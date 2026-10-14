@@ -220,6 +220,7 @@ function SettingsHandler.Create(options)
         or key == "timeSource"
         or key == "interfaceLanguage"
         or key == "enabledChannels"
+        or key == "showInviteLink"
       ) and runtime.refreshWindow
     then
       runtime.refreshWindow()
