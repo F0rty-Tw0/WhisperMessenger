@@ -21,11 +21,16 @@ local function mouseFocus()
 end
 
 -- True when the frame under the cursor is `frame` or one of its descendants.
+-- Forbidden frames (nameplates in instances) throw on any method but
+-- IsForbidden, and are never ours, so the walk stops there.
 function PointerFocus.IsFocusInside(frame)
   local current = mouseFocus()
   while current ~= nil and type(current.GetParent) == "function" do
     if current == frame then
       return true
+    end
+    if type(current.IsForbidden) == "function" and current:IsForbidden() then
+      return false
     end
     current = current:GetParent()
   end

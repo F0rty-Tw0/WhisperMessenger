@@ -135,4 +135,25 @@ return function()
     end)
     assert(frame.frameStrata == "HIGH", "Classic GetMouseFocus path must also bring the window forward; got " .. tostring(frame.frameStrata))
   end
+
+  -- test_click_on_forbidden_frame_counts_as_outside
+  -- Nameplates in instances are forbidden: any method but IsForbidden throws.
+  do
+    local frame = clickTabBelowWindow(function()
+      local forbidden = {
+        IsForbidden = function()
+          return true
+        end,
+        GetParent = function()
+          error("Attempt to access forbidden object from code tainted by an AddOn")
+        end,
+      }
+      return {
+        GetMouseFoci = function()
+          return { forbidden }
+        end,
+      }
+    end)
+    assert(frame.frameStrata == "MEDIUM", "a click on a forbidden frame is outside the window; got " .. tostring(frame.frameStrata))
+  end
 end
