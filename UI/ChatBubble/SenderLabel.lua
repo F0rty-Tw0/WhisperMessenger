@@ -121,16 +121,14 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     hideCached(frame, "_wmSenderSeenFS")
     DeliveryStatus.Hide(frame)
     local displayName = DisplayName.Format(message.playerName or message.senderDisplayName) or ""
-    -- "20:Name": only the level takes the difficulty colour.
+    -- "Name (20)": only "(20)" takes the difficulty colour.
     local level = message.senderLevel
-    if DisplayName.ShowPlayerLevels() and type(level) == "number" then
-      nameFS:SetText(LevelColor.Escape(level) .. level .. "|r:" .. displayName)
+    if DisplayName.ShowPlayerLevels() and type(level) == "number" and displayName ~= "" then
+      nameFS:SetText(displayName .. " " .. LevelColor.Escape(level) .. "(" .. level .. ")|r")
     else
       nameFS:SetText(displayName)
     end
-    if DisplayName.ClassColorSenderNames() then
-      UIHelpers.applyClassColor(nameFS, message.classTag or options.senderFallbackClassTag, Theme.COLORS.text_secondary)
-    end
+    UIHelpers.applyClassColor(nameFS, message.classTag or options.senderFallbackClassTag, Theme.COLORS.text_secondary)
     nameFS:SetPoint("LEFT", frame, "LEFT", Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
 
     -- Incoming labels never show the cross-char suffix; hide it if this

@@ -7,7 +7,6 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
-local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
 local createRoundedBackground = UIHelpers.createRoundedBackground
@@ -256,11 +255,7 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function paintSenderLabel(classTag)
-    if DisplayName.ClassColorSenderNames() then
-      applyClassColor(previewSenderLabel, classTag, theme.COLORS.text_primary)
-    else
-      setTextColor(previewSenderLabel, theme.COLORS.text_primary)
-    end
+    applyClassColor(previewSenderLabel, classTag, theme.COLORS.text_primary)
   end
 
   local function setIncomingPreview(senderName, messageText, classTag)

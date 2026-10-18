@@ -32,7 +32,6 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   windowScale = 1.0,
-  classColorSenderNames = true,
   showPlayerLevels = false,
 }
 
@@ -178,23 +177,6 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   bubbleColorSelector.row:SetPoint("TOPLEFT", fontColorSelector.row, "BOTTOMLEFT", 0, gap)
 
-  local classColorToggle = panel:bind(
-    UIHelpers.createToggleRow(
-      factory,
-      frame,
-      text("Class-colored names"),
-      config.classColorSenderNames ~= false,
-      SettingsControls.ToggleColors(Theme),
-      { width = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH, height = 24 },
-      function(v)
-        onChange("classColorSenderNames", v)
-      end,
-      { text("Class-colored names"), text("Shows player names above messages in their class color.") }
-    ),
-    { type = "toggle", key = "classColorSenderNames", default = DEFAULTS.classColorSenderNames }
-  )
-  classColorToggle.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
-
   local playerLevelsToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -208,12 +190,12 @@ function AppearanceSettings.Create(factory, parent, config, options)
       end,
       {
         text("Show player levels"),
-        text("Shows a player's level, colored by how it compares to yours, in the chat header and before names in group and channel chats."),
+        text("Shows a player's level, colored by how it compares to yours, in the chat header and after names in group and channel chats."),
       }
     ),
     { type = "toggle", key = "showPlayerLevels", default = DEFAULTS.showPlayerLevels }
   )
-  playerLevelsToggle.row:SetPoint("TOPLEFT", classColorToggle.row, "BOTTOMLEFT", 0, gap)
+  playerLevelsToggle.row:SetPoint("TOPLEFT", bubbleColorSelector.row, "BOTTOMLEFT", 0, gap)
 
   local opacityInactiveRow = panel:bind(
     slider(text("Window Opacity (Inactive)"), 0.3, 1.0, 0.05, config.windowOpacityInactive or DEFAULTS.windowOpacityInactive, pctFormat, function(v)
@@ -276,7 +258,6 @@ function AppearanceSettings.Create(factory, parent, config, options)
     fontColorSelector.setOptionsList(Options.BuildFontColorOptions())
     bubbleColorSelector.label:SetText(text("Bubble Colors"))
     bubbleColorSelector.setOptionsList(Options.BuildBubbleColorOptions())
-    classColorToggle.label:SetText(text("Class-colored names"))
     playerLevelsToggle.label:SetText(text("Show player levels"))
     opacityInactiveRow.label:SetText(text("Window Opacity (Inactive)"))
     opacityActiveRow.label:SetText(text("Window Opacity (Active)"))

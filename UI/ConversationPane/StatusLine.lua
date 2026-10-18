@@ -9,6 +9,7 @@ local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 local StatusLine = {}
 
 StatusLine.AVAILABILITY_DISPLAY = {
@@ -62,6 +63,31 @@ local function zoneText(selectedContact, statusKey)
   return selectedContact.whoArea .. " (" .. TimeFormat.ContactPreview(selectedContact.whoAreaAt) .. ")", true
 end
 
+-- "Level 80 Orc Shaman": level, race and class in one chunk. Only the level
+-- takes the difficulty colour, and only with the option on. The race comes
+-- already translated by the game. Returns the chunk (nil when all three are
+-- unknown) and whether the race made it in.
+local function classChunk(selectedContact)
+  local parts = {}
+  local level = DisplayName.ShowPlayerLevels() and tonumber(selectedContact.characterLevel)
+  if level then
+    table.insert(parts, LevelColor.Escape(level) .. string.format(Localization.Text("Level %d"), level) .. "|r")
+  end
+  local race = selectedContact.raceName
+  local raceShown = not SecretValue.Is(race) and type(race) == "string" and race ~= ""
+  if raceShown then
+    table.insert(parts, race)
+  end
+  local className = selectedContact.className
+  if className and className ~= "" then
+    table.insert(parts, Localization.Text(className))
+  end
+  if #parts == 0 then
+    return nil, false
+  end
+  return table.concat(parts, " "), raceShown
+end
+
 -- Returns line1 (name-realm + class + faction), line2 (availability/typing + zone),
 -- and the status dot color key. Both lines are "" when there is no contact.
 function StatusLine.Build(selectedContact, status)
@@ -87,20 +113,16 @@ function StatusLine.Build(selectedContact, status)
     end
   end
 
-  -- "Level 80 Shaman": the level joins the class chunk, alone when no class.
-  -- Only the level takes the difficulty colour, and only with the option on.
-  local hasClass = selectedContact.className and selectedContact.className ~= ""
-  local level = DisplayName.ShowPlayerLevels() and tonumber(selectedContact.characterLevel)
-  if level then
-    local levelText = LevelColor.Escape(level) .. string.format(Localization.Text("Level %d"), level) .. "|r"
-    table.insert(line1, hasClass and (levelText .. " " .. Localization.Text(selectedContact.className)) or levelText)
-  elseif hasClass then
-    table.insert(line1, Localization.Text(selectedContact.className))
+  local chunk, raceShown = classChunk(selectedContact)
+  if chunk then
+    table.insert(line1, chunk)
   end
 
-  -- Show faction (inferred from race, or direct from BNet API)
+  -- Show faction (inferred from race, or direct from BNet API). With the race
+  -- shown, the faction icon next to the name already says it.
   local factionName = selectedContact.factionName
-  if factionName and factionName ~= "" then
+  local iconSaysFaction = raceShown and Theme.FactionIcon(factionName) ~= nil
+  if factionName and factionName ~= "" and not iconSaysFaction then
     table.insert(line1, Localization.Text(factionName))
   end
 
