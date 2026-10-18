@@ -119,7 +119,6 @@ function Bootstrap.Initialize(factory, options)
   local DisplayName = loadModule("WhisperMessenger.Util.DisplayName", "DisplayName")
   DisplayName.Configure({
     hideBattleTagNumbers = accountState.settings.hideBattleTagNumbers ~= false,
-    classColorSenderNames = accountState.settings.classColorSenderNames ~= false,
     showPlayerLevels = accountState.settings.showPlayerLevels == true,
   })
   -- Initialize guild/community presence cache

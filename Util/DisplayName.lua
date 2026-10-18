@@ -8,9 +8,7 @@ end
 local DisplayName = {}
 
 local hideBattleTagNumbers = true
--- Incoming sender names take the sender's class colour (opt-in).
-local classColorSenderNames = true
--- Player levels in the chat header and before group/channel names (opt-in).
+-- Player levels in the chat header and after group/channel names (opt-in).
 local showPlayerLevels = false
 -- Lowercased name parts that two different Battle.net friends share.
 local clashingNames = {}
@@ -29,18 +27,10 @@ function DisplayName.Configure(opts)
     hideBattleTagNumbers = opts.hideBattleTagNumbers
     revision = revision + 1
   end
-  if type(opts.classColorSenderNames) == "boolean" and opts.classColorSenderNames ~= classColorSenderNames then
-    classColorSenderNames = opts.classColorSenderNames
-    revision = revision + 1
-  end
   if type(opts.showPlayerLevels) == "boolean" and opts.showPlayerLevels ~= showPlayerLevels then
     showPlayerLevels = opts.showPlayerLevels
     revision = revision + 1
   end
-end
-
-function DisplayName.ClassColorSenderNames()
-  return classColorSenderNames
 end
 
 function DisplayName.ShowPlayerLevels()

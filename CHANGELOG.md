@@ -6,6 +6,9 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- The chat header now shows the player's race next to their level and class. When the race is known, Horde and Alliance show only as the icon next to the name.
+- Chat bubbles now show the sender's level after their name, like "Nergrom (20)".
+- Player names in chats and in the new-message preview are now always shown in their class color; the "Class-colored names" setting is gone.
 - Fixed: on WoW: Forever, clicking a chat no longer pops open the Group Finder's Who list.
 
 ## [2.1.0] - 2026-10-15
