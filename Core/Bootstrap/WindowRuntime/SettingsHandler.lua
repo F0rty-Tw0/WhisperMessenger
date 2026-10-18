@@ -208,7 +208,6 @@ function SettingsHandler.Create(options)
       (
         key == "hideMessagePreview"
         or key == "hideBattleTagNumbers"
-        or key == "classColorSenderNames"
         or key == "showPlayerLevels"
         or key == "showWidgetMessagePreview"
         or key == "fontFamily"

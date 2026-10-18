@@ -15,10 +15,6 @@ function DisplayNameSetting.Apply(displayName, key, value, seenLevelEvents)
     displayName.Configure({ hideBattleTagNumbers = value ~= false })
     return true
   end
-  if key == "classColorSenderNames" then
-    displayName.Configure({ classColorSenderNames = value ~= false })
-    return true
-  end
   if key == "showPlayerLevels" then
     displayName.Configure({ showPlayerLevels = value == true })
     if seenLevelEvents and seenLevelEvents.SetEnabled then
