@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Fixed: on WoW: Forever, clicking a chat no longer pops open the Group Finder's Who list.
+
 ## [2.1.0] - 2026-10-15
 
 - Whispers you get or send during Mythic+, boss fights and rated PvP now show up in the messenger once the fight is over.
