@@ -1,4 +1,4 @@
--- Flipping the class-colour option must repaint the sender names on the open
+-- The whisper fallback class must repaint the sender names on the open
 -- conversation's bubbles, even though no message changed.
 
 local FakeUI = require("tests.helpers.fake_ui")
@@ -6,7 +6,6 @@ local FindUI = require("tests.helpers.find_ui")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local TranscriptSetup = require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 local TranscriptView = require("WhisperMessenger.UI.ConversationPane.TranscriptView")
-local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 local MAGE = { 0.25, 0.78, 0.92 }
@@ -45,23 +44,6 @@ return function()
   transcript.factory = factory
   TranscriptSetup.ConfigureTranscript(factory, transcript, 400)
 
-  local messages = {
-    { direction = "in", kind = "user", playerName = "Jaina", classTag = "MAGE", sentAt = 1, text = "hi" },
-  }
-
-  -- test_bubble_sender_colour_follows_the_class_colour_option
-  DisplayName.Configure({ classColorSenderNames = true })
-  TranscriptView.RenderTranscript(transcript, messages)
-  assertNameColor(transcript.content, MAGE, "sender starts mage-coloured")
-
-  DisplayName.Configure({ classColorSenderNames = false })
-  TranscriptView.RenderTranscript(transcript, messages)
-  assertNameColor(transcript.content, Theme.COLORS.text_secondary, "sender drops the class colour after the toggle")
-
-  DisplayName.Configure({ classColorSenderNames = true })
-  TranscriptView.RenderTranscript(transcript, messages)
-  assertNameColor(transcript.content, MAGE, "sender is mage-coloured again after toggling back")
-
   -- test_whisper_fallback_colours_sender_without_class
   -- Only the fallback changes between renders, so the relayout must be forced by it.
   local classless = {
@@ -76,6 +58,5 @@ return function()
   TranscriptView.RenderTranscript(transcript, classless)
   assertNameColor(transcript.content, Theme.COLORS.text_secondary, "sender drops the fallback colour once it is cleared")
 
-  DisplayName.Configure({ classColorSenderNames = false })
   _G.RAID_CLASS_COLORS = previousClassColors
 end

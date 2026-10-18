@@ -4,7 +4,7 @@ local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.Appearan
 local Localization = require("WhisperMessenger.Locale.Localization")
 
 local LABEL = "Show player levels"
-local TOOLTIP = "Shows a player's level, colored by how it compares to yours, in the chat header and before names in group and channel chats."
+local TOOLTIP = "Shows a player's level, colored by how it compares to yours, in the chat header and after names in group and channel chats."
 
 local function create(factory, parent, config, changes)
   return AppearanceSettings.Create(factory, parent, config, {

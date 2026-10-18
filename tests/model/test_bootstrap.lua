@@ -67,11 +67,12 @@ return function()
   local DisplayName = require("WhisperMessenger.Util.DisplayName")
   local scaleAtCreate = windowCreateScale
   local formatAfterSavedOff = DisplayName.Format("Arthas#1234")
-  local classColorsAfterUnsaved = DisplayName.ClassColorSenderNames()
   local levelsAfterSavedOn = DisplayName.ShowPlayerLevels()
   -- No saved choice: player levels stay off even if they were on before.
   local _, unsavedOk, unsavedErr = boot({})
   local levelsAfterUnsaved = DisplayName.ShowPlayerLevels()
+  -- test_boot_drops_retired_class_color_setting
+  local retiredState, retiredOk, retiredErr = boot({ classColorSenderNames = false })
 
   package.loaded["UI.Theme"] = savedTheme
   package.loaded["UI.Theme.Fonts"] = savedFonts
@@ -84,12 +85,15 @@ return function()
   if not unsavedOk then
     error(unsavedErr, 0)
   end
+  if not retiredOk then
+    error(retiredErr, 0)
+  end
+  assert(retiredState.settings.classColorSenderNames == nil, "boot drops the retired class colour setting")
 
   assert(accountState.settings.windowScale == 1.00, "Bootstrap persists normalized window scale")
   assert(scaleAtCreate == 1.00, "window creation receives normalized window scale")
   assert(formatAfterSavedOff == "Arthas#1234", "a saved off choice shows full BattleTags after login")
-  assert(classColorsAfterUnsaved == true, "no saved choice colours names after login")
   assert(levelsAfterSavedOn == true, "a saved on choice shows player levels after login")
   assert(levelsAfterUnsaved == false, "no saved choice keeps player levels off after login")
-  DisplayName.Configure({ classColorSenderNames = false, showPlayerLevels = false })
+  DisplayName.Configure({ showPlayerLevels = false })
 end

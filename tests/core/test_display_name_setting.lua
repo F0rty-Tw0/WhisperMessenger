@@ -13,15 +13,6 @@ return function()
   do
     assert(DisplayNameSetting.Apply(stub, "hideBattleTagNumbers", nil) == true, "the BattleTag key is handled")
     assert(last.hideBattleTagNumbers == true, "an unset BattleTag choice hides the numbers")
-    assert(last.classColorSenderNames == nil, "the BattleTag key leaves the class colour choice alone")
-  end
-
-  -- test_class_color_key_defaults_to_on
-
-  do
-    assert(DisplayNameSetting.Apply(stub, "classColorSenderNames", nil) == true, "the class colour key is handled")
-    assert(last.classColorSenderNames == true, "an unset class colour choice is on")
-    assert(last.hideBattleTagNumbers == nil, "the class colour key leaves the BattleTag choice alone")
   end
 
   -- test_player_levels_key_is_opt_in
@@ -60,7 +51,7 @@ return function()
         touched = true
       end,
     }
-    DisplayNameSetting.Apply(stub, "classColorSenderNames", true, fakeEvents)
+    DisplayNameSetting.Apply(stub, "hideBattleTagNumbers", true, fakeEvents)
     assert(touched == false, "other keys do not touch the level recorder")
   end
 
@@ -75,6 +66,6 @@ return function()
   -- test_missing_configure_is_ignored
 
   do
-    assert(DisplayNameSetting.Apply({}, "classColorSenderNames", true) == false, "no Configure means nothing to apply")
+    assert(DisplayNameSetting.Apply({}, "hideBattleTagNumbers", true) == false, "no Configure means nothing to apply")
   end
 end

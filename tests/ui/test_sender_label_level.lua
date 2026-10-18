@@ -26,12 +26,12 @@ return function()
     return SenderLabel.CreateSenderLabel(renderFactory or factory, contentFrame, message, 400, 0)
   end
 
-  -- test_option_on_prefixes_coloured_level
+  -- test_option_on_appends_coloured_level
 
   do
     DisplayName.Configure({ showPlayerLevels = true })
     local result = render({ direction = "in", playerName = "Nergrom", senderLevel = 20 })
-    assert(nameText(result) == "|cffffff0020|r:Nergrom", "got: " .. tostring(nameText(result)))
+    assert(nameText(result) == "Nergrom |cffffff00(20)|r", "got: " .. tostring(nameText(result)))
   end
 
   -- test_option_off_shows_plain_name
@@ -50,7 +50,15 @@ return function()
     assert(nameText(result) == "Nergrom", "got: " .. tostring(nameText(result)))
   end
 
-  -- test_reused_frame_drops_the_level_prefix
+  -- test_empty_name_shows_no_level
+
+  do
+    DisplayName.Configure({ showPlayerLevels = true })
+    local result = render({ direction = "in", playerName = "", senderLevel = 20 })
+    assert(nameText(result) == "", "got: " .. tostring(nameText(result)))
+  end
+
+  -- test_reused_frame_drops_the_level_suffix
 
   do
     DisplayName.Configure({ showPlayerLevels = true })
@@ -61,10 +69,10 @@ return function()
       end,
     }
     local first = render({ direction = "in", playerName = "Nergrom", senderLevel = 20 }, sameFrameFactory)
-    assert(nameText(first) == "|cffffff0020|r:Nergrom", "first render shows the level")
+    assert(nameText(first) == "Nergrom |cffffff00(20)|r", "first render shows the level")
     local second = render({ direction = "in", playerName = "Nergrom" }, sameFrameFactory)
     assert(second.frame == first.frame, "expected the same frame on both renders")
-    assert(nameText(second) == "Nergrom", "a reused frame drops the level prefix, got: " .. tostring(nameText(second)))
+    assert(nameText(second) == "Nergrom", "a reused frame drops the level suffix, got: " .. tostring(nameText(second)))
   end
 
   -- test_outgoing_label_is_unchanged

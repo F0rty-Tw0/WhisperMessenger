@@ -44,7 +44,6 @@ return function()
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
     hudStyle = "classic",
-    classColorSenderNames = true,
     showPlayerLevels = true,
     -- behavior
     dimWhenMoving = false,
@@ -155,7 +154,6 @@ return function()
     appearanceCapture.config.windowScale == 1.25,
     "expected appearance config.windowScale=1.25, got: " .. tostring(appearanceCapture.config.windowScale)
   )
-  assert(appearanceCapture.config.classColorSenderNames == true, "appearance config should carry classColorSenderNames")
   assert(appearanceCapture.config.showPlayerLevels == true, "appearance config should carry showPlayerLevels")
 
   -- Notifications owns sound settings only.
