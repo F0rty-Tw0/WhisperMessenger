@@ -31,9 +31,9 @@ function BNetStatus.IsOnline(accountInfo)
 end
 
 -- Copy live character metadata from gameInfo onto target (a contact item or a
--- stored conversation). className, classTag and characterLevel are written
--- together so the class icon, class text and level never describe different
--- characters.
+-- stored conversation). className, classTag, raceName and characterLevel are
+-- written together so the class icon, class text, race and level never
+-- describe different characters.
 -- Returns true when metadata was applied (i.e. the friend is in WoW).
 function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
   if not BNetStatus.IsInWoW(gameInfo) then
@@ -41,9 +41,6 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
   end
   if gameInfo.factionName and gameInfo.factionName ~= "" then
     target.factionName = gameInfo.factionName
-  end
-  if gameInfo.raceName and gameInfo.raceName ~= "" then
-    target.raceName = gameInfo.raceName
   end
   if gameInfo.areaName and gameInfo.areaName ~= "" then
     target.areaName = gameInfo.areaName
@@ -54,6 +51,7 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
   if playerInfo and playerInfo.classTag then
     target.classTag = playerInfo.classTag
     target.className = (gameInfo.className ~= nil and gameInfo.className ~= "") and gameInfo.className or playerInfo.className or target.className
+    target.raceName = (gameInfo.raceName ~= nil and gameInfo.raceName ~= "") and gameInfo.raceName or playerInfo.raceName or target.raceName
     if playerInfo.raceTag then
       target.raceTag = playerInfo.raceTag
     end
@@ -61,7 +59,7 @@ function BNetStatus.ApplyGameInfoMetadata(target, gameInfo, runtime)
     local level = gameInfo.characterLevel
     target.characterLevel = (type(level) == "number" and level > 0) and level or nil
   end
-  -- else: classTag unresolvable — leave className, classTag and level untouched
+  -- else: classTag unresolvable — leave className, classTag, race and level untouched
   -- (stale but consistent beats a mismatched icon/text pair)
   return true
 end

@@ -63,6 +63,15 @@ local function flattenPerProfileChannelMessages(legacy)
   return flat
 end
 
+-- Settings that no longer exist; dropped on every load so old saves get cleaned.
+-- Sender names are always class-coloured now, so classColorSenderNames is gone.
+local function dropRetiredSettings(settings)
+  if type(settings) ~= "table" then
+    return
+  end
+  settings.classColorSenderNames = nil
+end
+
 function Migrations.Apply(accountState, schema)
   accountState = accountState or schema.NewAccountState()
 
@@ -119,6 +128,8 @@ function Migrations.Apply(accountState, schema)
       end
     end
   end
+
+  dropRetiredSettings(accountState.settings)
 
   accountState.schemaVersion = Migrations.CURRENT_VERSION
   return accountState
