@@ -10,14 +10,17 @@ local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
 -- A quiet /who for a whisper contact whose level is unknown, once per name
 -- per session. SendWho is protected: it works only synchronously inside a
 -- hardware event (a click or a key press), never from a timer.
--- FriendsFrame pops the Who window on WHO_LIST_UPDATE, so its event stays
--- unregistered while our query is in flight.
+-- FriendsFrame pops the Who window on WHO_LIST_UPDATE, and on WoW: Forever
+-- so does the Group Finder's Who tab, so their event stays unregistered
+-- while our query is in flight.
 local WhoLookup = {}
 
 WhoLookup.WINDOW_SECONDS = 5
 WhoLookup.MIN_GAP_SECONDS = 5
 
 local WHO_EVENT = "WHO_LIST_UPDATE"
+local WHO_LISTENERS = { "FriendsFrame", "LFGWhoListFrame" }
+local WHO_PANELS = { "WhoFrame", "LFGWhoListFrame" }
 
 ---@type table|nil
 local runtime = nil
@@ -47,17 +50,31 @@ local function whoWindowCall(method)
   end
 end
 
-local function cleanup()
-  local frame = _G.FriendsFrame
-  if frame and frame.RegisterEvent then
-    frame:RegisterEvent(WHO_EVENT)
+local function setWhoListeners(method)
+  for _, name in ipairs(WHO_LISTENERS) do
+    local frame = _G[name]
+    if frame and frame[method] then
+      frame[method](frame, WHO_EVENT)
+    end
   end
-  -- Blizzard keeps the flag on while the Who panel is shown.
-  local whoFrame = _G.WhoFrame
-  local panelShown = whoFrame and whoFrame.IsShown and whoFrame:IsShown() == true
+end
+
+local function whoPanelShown()
+  for _, name in ipairs(WHO_PANELS) do
+    local frame = _G[name]
+    if frame and frame.IsShown and frame:IsShown() == true then
+      return true
+    end
+  end
+  return false
+end
+
+local function cleanup()
+  setWhoListeners("RegisterEvent")
+  -- Blizzard keeps the flag on while a Who panel is shown.
   local api = _G.C_FriendList
   if api and api.SetWhoToUi then
-    api.SetWhoToUi(panelShown or previousWhoToUi)
+    api.SetWhoToUi(whoPanelShown() or previousWhoToUi)
   end
 end
 
@@ -188,10 +205,7 @@ local function lookupName(rt, conversationKey)
 end
 
 local function sendQuery(shortName)
-  local frame = _G.FriendsFrame
-  if frame and frame.UnregisterEvent then
-    frame:UnregisterEvent(WHO_EVENT)
-  end
+  setWhoListeners("UnregisterEvent")
   local api = _G.C_FriendList
   previousWhoToUi = false
   if api.GetWhoToUi then

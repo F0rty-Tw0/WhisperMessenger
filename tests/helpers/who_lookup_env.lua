@@ -12,6 +12,7 @@ local GLOBALS = {
   "C_FriendList",
   "FriendsFrame",
   "WhoFrame",
+  "LFGWhoListFrame",
   "C_Timer",
   "hooksecurefunc",
   "InCombatLockdown",
@@ -37,20 +38,23 @@ local function installFriendList(env, opts)
   rawset(_G, "C_FriendList", env.api)
 end
 
-local function installFriendsFrame(env)
-  env.friendsRegistered = true
-  rawset(_G, "FriendsFrame", {
+-- A frame listening for WHO_LIST_UPDATE; env[field] tracks whether it is.
+local function installWhoListener(env, globalName, field)
+  env[field] = true
+  local frame = {
     RegisterEvent = function(_self, event)
       if event == "WHO_LIST_UPDATE" then
-        env.friendsRegistered = true
+        env[field] = true
       end
     end,
     UnregisterEvent = function(_self, event)
       if event == "WHO_LIST_UPDATE" then
-        env.friendsRegistered = false
+        env[field] = false
       end
     end,
-  })
+  }
+  rawset(_G, globalName, frame)
+  return frame
 end
 
 local function installTimers(env)
@@ -92,7 +96,7 @@ function WhoLookupEnv.New(opts)
     env.saved[key] = rawget(_G, key)
   end
   installFriendList(env, opts)
-  installFriendsFrame(env)
+  installWhoListener(env, "FriendsFrame", "friendsRegistered")
   installTimers(env)
   rawset(_G, "hooksecurefunc", function(target, method, hook)
     table.insert(env.hooks, { target = target, method = method, hook = hook })
@@ -138,6 +142,14 @@ function WhoLookupEnv.AddStranger(env, key, displayName, fields)
   end
   env.conversations[key] = conversation
   return conversation
+end
+
+-- WoW: Forever's Group Finder Who tab, which also pops on WHO_LIST_UPDATE.
+function WhoLookupEnv.InstallLfgWhoList(env, shown)
+  local frame = installWhoListener(env, "LFGWhoListFrame", "lfgRegistered")
+  frame.IsShown = function()
+    return shown == true
+  end
 end
 
 -- Stands in for another addon (or the game) re-wrapping SendWho after Init.
