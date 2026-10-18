@@ -145,10 +145,14 @@ function WhoLookupEnv.AddStranger(env, key, displayName, fields)
 end
 
 -- WoW: Forever's Group Finder Who tab, which also pops on WHO_LIST_UPDATE.
-function WhoLookupEnv.InstallLfgWhoList(env, shown)
+-- Closing the Group Finder leaves the tab shown but not visible.
+function WhoLookupEnv.InstallLfgWhoList(env, shown, visible)
   local frame = installWhoListener(env, "LFGWhoListFrame", "lfgRegistered")
   frame.IsShown = function()
     return shown == true
+  end
+  frame.IsVisible = function()
+    return visible == true
   end
 end
 

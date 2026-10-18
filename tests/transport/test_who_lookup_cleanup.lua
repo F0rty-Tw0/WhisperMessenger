@@ -35,7 +35,7 @@ end
 local function test_cleanup_keeps_who_to_ui_on_while_who_panel_shown()
   Env.Case("who panel shown", nil, function(env)
     rawset(_G, "WhoFrame", {
-      IsShown = function()
+      IsVisible = function()
         return true
       end,
     })
@@ -62,12 +62,25 @@ end
 
 local function test_cleanup_keeps_who_to_ui_on_while_lfg_who_list_shown()
   Env.Case("lfg who list shown", nil, function(env)
-    Env.InstallLfgWhoList(env, true)
+    Env.InstallLfgWhoList(env, true, true)
     Env.AddStranger(env, KEY, "Firstmoon")
     WhoLookup.TryFor(env.runtime, KEY)
     WhoLookup.OnWhoListUpdate()
     Env.RunAfters(env)
     assert(env.whoToUi[#env.whoToUi] == true, "LFG Who tab open, flag must stay on")
+  end)
+end
+
+-- Blizzard turns the flag off when the Group Finder closes, but the tab
+-- itself stays shown; keeping the flag on would pop the next typed /who.
+local function test_cleanup_restores_false_after_group_finder_closed()
+  Env.Case("lfg who list hidden parent", nil, function(env)
+    Env.InstallLfgWhoList(env, true, false)
+    Env.AddStranger(env, KEY, "Firstmoon")
+    WhoLookup.TryFor(env.runtime, KEY)
+    WhoLookup.OnWhoListUpdate()
+    Env.RunAfters(env)
+    assert(env.whoToUi[#env.whoToUi] == false, "Group Finder closed, flag must go back off")
   end)
 end
 
@@ -189,6 +202,7 @@ return function()
   test_cleanup_keeps_who_to_ui_on_while_who_panel_shown()
   test_query_hides_forever_lfg_who_list_until_result()
   test_cleanup_keeps_who_to_ui_on_while_lfg_who_list_shown()
+  test_cleanup_restores_false_after_group_finder_closed()
   test_who_list_update_not_ours_does_nothing()
   test_no_result_cleans_up_on_window_timeout()
   test_open_window_twice_extends()

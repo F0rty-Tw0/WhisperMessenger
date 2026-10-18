@@ -59,10 +59,11 @@ local function setWhoListeners(method)
   end
 end
 
-local function whoPanelShown()
+-- IsVisible, not IsShown: a closed parent leaves its Who tab shown.
+local function whoPanelVisible()
   for _, name in ipairs(WHO_PANELS) do
     local frame = _G[name]
-    if frame and frame.IsShown and frame:IsShown() == true then
+    if frame and frame.IsVisible and frame:IsVisible() == true then
       return true
     end
   end
@@ -71,10 +72,10 @@ end
 
 local function cleanup()
   setWhoListeners("RegisterEvent")
-  -- Blizzard keeps the flag on while a Who panel is shown.
+  -- Keep the flag on while a Who panel is on screen.
   local api = _G.C_FriendList
   if api and api.SetWhoToUi then
-    api.SetWhoToUi(whoPanelShown() or previousWhoToUi)
+    api.SetWhoToUi(whoPanelVisible() or previousWhoToUi)
   end
 end
 
