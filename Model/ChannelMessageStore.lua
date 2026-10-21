@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+
 local ChannelMessageStore = {}
 
 local DEFAULT_MAX_ENTRIES = 200
@@ -23,17 +25,13 @@ function ChannelMessageStore.New(config)
   }
 end
 
-local function lowerName(name)
-  if name == nil or name == "" then
+-- A secret sender reads as empty, so it is never stored. Checked before any
+-- comparison: comparing a secret logs a blocked action in taint.log.
+local function normalizeKey(name)
+  if SecretValue.Is(name) or type(name) ~= "string" then
     return ""
   end
   return string.lower(name)
-end
-
-local function normalizeKey(name)
-  local ok, result = pcall(lowerName, name)
-  -- If name is a secret/tainted value, comparison throws; treat as empty.
-  return ok and result or ""
 end
 
 local function baseName(key)

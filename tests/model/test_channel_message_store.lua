@@ -229,4 +229,17 @@ return function()
     }, nil, 6000)
     assert(restored.entryCount == 1, "restore expiry should retain exact entry count")
   end
+
+  -- test_secret_sender_is_not_recorded
+  do
+    local saved = rawget(_G, "issecretvalue")
+    rawset(_G, "issecretvalue", function(value)
+      return value == "Secret-Realm"
+    end)
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Secret-Realm", "hello", "Trade", 100)
+    rawset(_G, "issecretvalue", saved)
+
+    assert(state.entryCount == 0, "a secret sender must not be recorded")
+  end
 end
