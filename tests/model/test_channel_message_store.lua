@@ -229,4 +229,37 @@ return function()
     }, nil, 6000)
     assert(restored.entryCount == 1, "restore expiry should retain exact entry count")
   end
+
+  -- test_secret_sender_is_not_recorded
+  do
+    local saved = rawget(_G, "issecretvalue")
+    rawset(_G, "issecretvalue", function(value)
+      return value == "Secret-Realm"
+    end)
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Secret-Realm", "hello", "Trade", 100)
+    rawset(_G, "issecretvalue", saved)
+
+    assert(state.entryCount == 0, "a secret sender must not be recorded")
+  end
+
+  -- test_secret_text_is_not_recorded
+  do
+    local saved = rawget(_G, "issecretvalue")
+    rawset(_G, "issecretvalue", function(value)
+      return value == "secret text"
+    end)
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, "Arthas-Area52", "secret text", "Trade", 100)
+    rawset(_G, "issecretvalue", saved)
+
+    assert(state.entryCount == 0, "a line with secret text must not be recorded")
+  end
+
+  -- test_nil_sender_is_ignored
+  do
+    local state = ChannelMessageStore.New()
+    ChannelMessageStore.Record(state, nil, "hello", "Trade", 100)
+    assert(state.entryCount == 0, "a line without a sender must not be recorded")
+  end
 end

@@ -10,6 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Chat bubbles now show the sender's level after their name, like "Nergrom (20)".
 - Player names in chats and in the new-message preview are now always shown in their class color; the "Class-colored names" setting is gone.
 - Fixed: on WoW: Forever, clicking a chat no longer pops open the Group Finder's Who list.
+- Fixed: while chat is locked for addons (Mythic+, boss fights, rated PvP), channel messages no longer fill the game's taint log with "blocked because of taint from WhisperMessenger" warnings.
 
 ## [2.1.0] - 2026-10-15
 
