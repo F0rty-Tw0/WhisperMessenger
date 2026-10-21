@@ -230,7 +230,8 @@ end
 
 function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentAt)
   local key = normalizeKey(senderName)
-  if key == "" then
+  -- Stored text is compared later, so a secret one would log in taint.log too.
+  if key == "" or SecretValue.Is(text) then
     return
   end
 
