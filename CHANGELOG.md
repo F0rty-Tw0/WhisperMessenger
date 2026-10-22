@@ -14,7 +14,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Settings pages now sit centered in a wide window; as the window narrows, the side space shrinks until the page lines up as before.
 - Azeroth theme: your sent messages and the selected or hovered buttons in settings now use white text instead of gold, so they're easier to read. Titles stay gold.
 - Player names in chats and in the new-message preview are now always shown in their class color; the "Class-colored names" setting is gone.
-- While you're using the messenger, Escape closes it before other windows, like an open profession window. Open menus, pop-up dialogs and spell targeting still close first, and in combat Escape works as usual, so it still stops your casts.
+- While you're using the messenger, Escape closes it before other windows, like an open profession window. The messenger's own menus, pop-up dialogs and spell targeting still close first, and in combat Escape works as usual, so it still stops your casts.
 - Fixed: with the Native WoW HUD on, the bottom of the settings page no longer spills over the window border.
 - Fixed: the chat list's scrollbar no longer slides under the top bar of the open chat.
 - Fixed: clicking a window that sits over the messenger, like the Auction House, no longer pulls the messenger in front of it.
