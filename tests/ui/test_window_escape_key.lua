@@ -6,7 +6,7 @@ local EscapeKey = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Fra
 -- makeParent(factory), optional, builds the window's parent.
 local function newEnv(makeParent)
   local factory = FakeUI.NewFactory()
-  local env = { combat = false, bound = {}, blocked = 0 }
+  local env = { combat = false, bound = {}, blocked = 0, keys = { "ESCAPE" }, binds = 0 }
   local parent = makeParent and makeParent(factory) or nil
   env.window = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
   env.window:Show()
@@ -14,7 +14,7 @@ local function newEnv(makeParent)
     createFrame = factory.CreateFrame,
     getBindingKey = function(action)
       assert(action == "TOGGLEGAMEMENU", "ESC is the game-menu binding")
-      return "ESCAPE"
+      return table.unpack(env.keys)
     end,
     inCombat = function()
       return env.combat
@@ -25,6 +25,7 @@ local function newEnv(makeParent)
       end
       assert(priority == true, "the override must beat the game-menu binding")
       env.owner, env.buttonName = owner, buttonName
+      env.binds = env.binds + 1
       table.insert(env.bound, key)
     end,
     clearOverrideBindings = function(owner)
@@ -106,4 +107,27 @@ return function()
   env.combat = false
   env.fire("PLAYER_REGEN_ENABLED")
   assert(#env.bound == 0, "a messenger that lost focus in combat must not take ESC after it")
+
+  -- test_rebound_game_menu_key_moves_the_override
+  env = newEnv()
+  env.key.setFocused(true)
+  env.keys = { "F12" }
+  env.fire("UPDATE_BINDINGS")
+  assert(#env.bound == 1 and env.bound[1] == "F12", "the messenger must follow the new game-menu key")
+
+  -- test_unchanged_bindings_keep_the_override
+  -- Changing overrides may itself fire UPDATE_BINDINGS: rebinding on every
+  -- one would loop.
+  env = newEnv()
+  env.key.setFocused(true)
+  env.fire("UPDATE_BINDINGS")
+  assert(env.binds == 1 and #env.bound == 1, "unchanged keys must not be bound again")
+
+  -- test_binding_change_in_combat_waits
+  env = newEnv()
+  env.key.setFocused(true)
+  env.combat = true
+  env.keys = { "F12" }
+  env.fire("UPDATE_BINDINGS")
+  assert(env.blocked == 0, "no binding change may happen in combat")
 end

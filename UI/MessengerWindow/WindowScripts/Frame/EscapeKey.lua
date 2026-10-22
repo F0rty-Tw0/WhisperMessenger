@@ -44,24 +44,32 @@ function EscapeKey.New(frame, deps)
   local inCombat = deps.inCombat or defaultInCombat
 
   local focused = false
-  local bound = false
+  -- The game-menu keys held now, joined; nil while ESC belongs to the game.
+  local boundKeys = nil
   local button = nil
   local key = {}
 
+  local function currentKeys()
+    return table.concat(gameMenuKeys(getBindingKey), " ")
+  end
+
   local function unbind()
-    if bound and type(clearOverrideBindings) == "function" then
+    if boundKeys ~= nil and type(clearOverrideBindings) == "function" then
       clearOverrideBindings(button)
     end
-    bound = false
+    boundKeys = nil
   end
 
   local function bind()
-    if bound or button == nil or type(setOverrideBindingClick) ~= "function" then
+    if boundKeys ~= nil or button == nil or type(setOverrideBindingClick) ~= "function" then
       return
     end
-    for _, gameMenuKey in ipairs(gameMenuKeys(getBindingKey)) do
+    local keys = gameMenuKeys(getBindingKey)
+    for _, gameMenuKey in ipairs(keys) do
       setOverrideBindingClick(button, true, gameMenuKey, BUTTON_NAME)
-      bound = true
+    end
+    if #keys > 0 then
+      boundKeys = table.concat(keys, " ")
     end
   end
 
@@ -85,6 +93,16 @@ function EscapeKey.New(frame, deps)
     end
   end
 
+  -- The player moved the game-menu key. Changing overrides may fire
+  -- UPDATE_BINDINGS too, so only a real key change rebinds.
+  local function followRebind()
+    if inCombat() or boundKeys == nil or boundKeys == currentKeys() then
+      return
+    end
+    unbind()
+    sync()
+  end
+
   if type(createFrame) == "function" then
     button = createFrame("Button", BUTTON_NAME, frame)
   end
@@ -100,10 +118,13 @@ function EscapeKey.New(frame, deps)
     if type(button.RegisterEvent) == "function" then
       button:RegisterEvent("PLAYER_REGEN_DISABLED")
       button:RegisterEvent("PLAYER_REGEN_ENABLED")
+      button:RegisterEvent("UPDATE_BINDINGS")
     end
     button:SetScript("OnEvent", function(_self, event)
       if event == "PLAYER_REGEN_DISABLED" then
         unbind()
+      elseif event == "UPDATE_BINDINGS" then
+        followRebind()
       else
         sync()
       end
