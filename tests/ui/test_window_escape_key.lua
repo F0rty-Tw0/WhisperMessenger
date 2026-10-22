@@ -3,10 +3,12 @@ local EscapeKey = require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Fra
 
 -- Builds an EscapeKey for a shown window with recorded binding calls.
 -- env.combat drives InCombatLockdown; env.bound lists the keys bound now.
-local function newEnv()
+-- makeParent(factory), optional, builds the window's parent.
+local function newEnv(makeParent)
   local factory = FakeUI.NewFactory()
   local env = { combat = false, bound = {}, blocked = 0 }
-  env.window = factory.CreateFrame("Frame", "WhisperMessengerWindow", nil)
+  local parent = makeParent and makeParent(factory) or nil
+  env.window = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
   env.window:Show()
   env.key = EscapeKey.New(env.window, {
     createFrame = factory.CreateFrame,
@@ -62,6 +64,16 @@ return function()
   env.window:Hide()
   env.key.setFocused(true)
   assert(#env.bound == 0, "a hidden messenger must not eat ESC")
+
+  -- test_window_under_hidden_ui_never_takes_the_escape_key
+  -- Alt+Z hides UIParent: the window is still "shown" but not on screen.
+  env = newEnv(function(factory)
+    local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
+    uiParent:Hide()
+    return uiParent
+  end)
+  env.key.setFocused(true)
+  assert(#env.bound == 0, "a messenger hidden with the whole UI must not eat ESC")
 
   -- test_focus_in_combat_leaves_bindings_alone
   -- Binding changes are blocked in combat.

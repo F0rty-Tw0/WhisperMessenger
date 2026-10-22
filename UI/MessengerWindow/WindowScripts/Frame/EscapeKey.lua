@@ -65,11 +65,20 @@ function EscapeKey.New(frame, deps)
     end
   end
 
+  -- IsVisible: a hidden UIParent (Alt+Z) leaves the window shown but off
+  -- screen.
+  local function onScreen()
+    if type(frame.IsVisible) == "function" then
+      return frame:IsVisible()
+    end
+    return frame:IsShown()
+  end
+
   local function sync()
     if inCombat() then
       return
     end
-    if focused and frame:IsShown() then
+    if focused and onScreen() then
       bind()
     else
       unbind()
