@@ -9,6 +9,7 @@ local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.U
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 -- Popup with two labelled one-line inputs (the game's StaticPopup has only
 -- one edit box): an optional first field and a required second one. The
@@ -211,9 +212,7 @@ local function build(factory)
 
   wireKeys(dialog)
   -- Escape closes it even when neither field has focus.
-  if type(_G.UISpecialFrames) == "table" then
-    table.insert(_G.UISpecialFrames, TwoFieldDialog.FRAME_NAME)
-  end
+  PickerPopup.RegisterEscape(TwoFieldDialog.FRAME_NAME)
   dialog:Hide()
   return dialog
 end

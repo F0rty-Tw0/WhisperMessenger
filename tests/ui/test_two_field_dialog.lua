@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local TwoFieldDialog = require("WhisperMessenger.UI.Shared.TwoFieldDialog")
 local StyledTextInputPopup = require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
+local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
 
 -- A popup with two labelled inputs: an optional first field and a required
 -- second one. Enter and Tab move between them, Enter on the second accepts,
@@ -43,6 +44,23 @@ end
 return function()
   local savedNative = StyledTextInputPopup.nativeChrome
   StyledTextInputPopup.nativeChrome = false
+
+  -- test_messenger_escape_closes_the_dialog
+  -- The messenger's own ESC handler runs before UISpecialFrames, so the
+  -- dialog must be one of the popups it closes.
+  do
+    local savedSpecial, savedDialog = _G.UISpecialFrames, _G[TwoFieldDialog.FRAME_NAME]
+    _G.UISpecialFrames = {}
+    local dialog = show(FakeUI.NewFactory()).dialog
+    rawset(_G, TwoFieldDialog.FRAME_NAME, dialog)
+    local ok, err = pcall(function()
+      assert(_G.UISpecialFrames[1] == TwoFieldDialog.FRAME_NAME, "dialog must still close on ESC without the messenger")
+      assert(PickerPopup.HideEscapeFrames() == true and not dialog:IsShown(), "messenger ESC must close the open dialog")
+    end)
+    _G.UISpecialFrames = savedSpecial
+    rawset(_G, TwoFieldDialog.FRAME_NAME, savedDialog)
+    assert(ok, err)
+  end
 
   -- test_show_fills_title_labels_hint_and_buttons
   do

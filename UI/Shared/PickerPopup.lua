@@ -36,8 +36,17 @@ local TOOLTIP_BACKDROP = {
 local TOOLTIP_BACKGROUND_COLOR = { 0.09, 0.09, 0.19, 0.9 }
 local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 
+local escapeFrameNames = {}
+
 -- Escape closes the named frame.
 function PickerPopup.RegisterEscape(frameName)
+  local known = false
+  for _, name in ipairs(escapeFrameNames) do
+    known = known or name == frameName
+  end
+  if not known then
+    table.insert(escapeFrameNames, frameName)
+  end
   _G.UISpecialFrames = _G.UISpecialFrames or {}
   for _, name in ipairs(_G.UISpecialFrames) do
     if name == frameName then
@@ -45,6 +54,20 @@ function PickerPopup.RegisterEscape(frameName)
     end
   end
   table.insert(_G.UISpecialFrames, frameName)
+end
+
+-- The messenger's ESC handler runs before UISpecialFrames close, so it
+-- closes the open popups itself. True when one was open.
+function PickerPopup.HideEscapeFrames()
+  local hidden = false
+  for _, name in ipairs(escapeFrameNames) do
+    local popup = _G[name]
+    if popup and popup:IsShown() then
+      popup:Hide()
+      hidden = true
+    end
+  end
+  return hidden
 end
 
 local function isMouseOver(frame)
