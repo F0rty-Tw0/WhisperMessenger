@@ -17,8 +17,10 @@ local function fill(messages, levelsByNameKey)
   for _, message in ipairs(messages) do
     if message.direction == "in" and message.kind == "user" and type(message.playerName) == "string" then
       local level = levelsByNameKey[SeenLevel.NameKey(message.playerName)]
-      -- Levels only rise: a stale reply never lowers a line.
-      if level ~= nil and (message.senderLevel == nil or message.senderLevel < level) then
+      -- Levels only rise: a stale reply never lowers a line. A saved value
+      -- that is not a number is corrupt and gets replaced.
+      local current = message.senderLevel
+      if level ~= nil and (type(current) ~= "number" or current < level) then
         message.senderLevel = level
         changed = true
       end

@@ -45,6 +45,15 @@ return function()
     assert(message.senderLevel == 90, "a lower level should rise to 90, got " .. tostring(message.senderLevel))
   end
 
+  -- test_non_number_saved_level_is_replaced
+  -- Saved data is a boundary: a corrupt level must not abort the walk.
+  do
+    local message = line({ senderLevel = "80" })
+    local ok, changed = pcall(SenderLevelBackfill.Apply, storeWith("CHANNEL", message), levels())
+    assert(ok, "a non-number saved level must not raise: " .. tostring(changed))
+    assert(message.senderLevel == 90, "a non-number saved level should be replaced, got " .. tostring(message.senderLevel))
+  end
+
   -- test_other_realm_namesake_stays_unset
   do
     local message = line({ playerName = "Ishtarra-Draenor" })
