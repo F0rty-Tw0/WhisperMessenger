@@ -11,7 +11,13 @@ local function newEnv(makeParent)
   env.window = factory.CreateFrame("Frame", "WhisperMessengerWindow", parent)
   env.window:Show()
   env.key = EscapeKey.New(env.window, {
-    createFrame = factory.CreateFrame,
+    createFrame = function(...)
+      env.button = factory.CreateFrame(...)
+      function env.button:RegisterForClicks(...)
+        self.clickTypes = { ... }
+      end
+      return env.button
+    end,
     getBindingKey = function(action)
       assert(action == "TOGGLEGAMEMENU", "ESC is the game-menu binding")
       return table.unpack(env.keys)
@@ -47,6 +53,20 @@ return function()
   local env = newEnv()
   env.key.setFocused(true)
   assert(#env.bound == 1 and env.bound[1] == "ESCAPE", "ESC must go to the messenger while it has focus")
+
+  -- test_escape_button_clicks_on_key_press
+  -- A binding click sends the press and the release; the window must close
+  -- on the press, like the game menu opens.
+  env = newEnv()
+  local clickTypes = env.button.clickTypes or {}
+  assert(#clickTypes == 1 and clickTypes[1] == "AnyDown", "the ESC button must click on key down")
+
+  -- test_escape_button_listens_for_combat_and_rebinds
+  -- The fixture calls OnEvent directly, so the registrations need checking.
+  env = newEnv()
+  for _, event in ipairs({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS" }) do
+    assert(env.button:IsEventRegistered(event), "the ESC button must listen for " .. event)
+  end
 
   -- test_escape_key_closes_the_window
   env = newEnv()
