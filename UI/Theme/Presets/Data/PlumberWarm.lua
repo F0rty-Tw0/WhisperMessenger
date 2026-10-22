@@ -56,6 +56,9 @@ for k, v in pairs(dividers) do
   roles[k] = v
 end
 
+-- Text on fills (sent bubbles, selected buttons) matches the emphasis colour.
+roles.text_bright = roles.text_emphasis
+
 local data = { key = "plumber_warm", roles = roles }
 
 ns.ThemePresetDataPlumberWarm = data
