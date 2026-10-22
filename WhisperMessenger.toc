@@ -76,6 +76,7 @@ Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
 Model/PresenceCache.lua
 Model/SeenLevel.lua
+Model/SenderLevelBackfill.lua
 Model/SeenZone.lua
 Model/SenderLevel.lua
 Model/RosterLookup.lua
@@ -110,6 +111,7 @@ Transport/ChatGateway.lua
 Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
+Core/WhoRow.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua

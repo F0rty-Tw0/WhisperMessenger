@@ -186,6 +186,40 @@ return function()
     assert(conversation.characterLevel == 75, "push should use the latest runtime")
   end
 
+  -- test_record_pushes_level_to_saved_chat
+  -- Group and channel lines hand over the levels they look up.
+  do
+    reset()
+    local runtime = makeRuntime()
+    local key, conversation = saveChat(runtime, "firstmoon")
+    SeenLevelEvents.Init(runtime)
+    SeenLevelEvents.Record("G1", "Firstmoon", 42)
+    assert(SeenLevel.Get("G1") == 42, "the level should be recorded")
+    assert(conversation.characterLevel == 42, "saved chat should get level 42")
+    assert(#runtime.refreshed == 1 and runtime.refreshed[1] == key, "refresh should be scheduled once for the chat")
+  end
+
+  -- test_record_is_skipped_while_capture_is_blocked
+  do
+    reset()
+    local runtime = makeRuntime()
+    runtime.isCompetitiveContent = function()
+      return true
+    end
+    local _, conversation = saveChat(runtime, "firstmoon")
+    SeenLevelEvents.Init(runtime)
+    SeenLevelEvents.Record("G1", "Firstmoon", 42)
+    assert(SeenLevel.Get("G1") == nil, "nothing should be recorded while blocked")
+    assert(conversation.characterLevel == nil, "saved chat should not change while blocked")
+  end
+
+  -- test_record_without_runtime_is_a_no_op
+  do
+    reset()
+    SeenLevelEvents.Record("G1", "Firstmoon", 42)
+    assert(SeenLevel.Get("G1") == nil, "nothing should be recorded before Init")
+  end
+
   for _, name in ipairs(STUBBED) do
     rawset(_G, name, saved[name])
   end

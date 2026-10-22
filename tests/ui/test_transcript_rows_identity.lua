@@ -30,6 +30,18 @@ return function()
     assert(changed == true, "repeatCount change must mark the transcript changed")
   end
 
+  -- test_sender_level_change_marks_row_stale
+  -- A level written later (a /who reply) must rebuild the kept bubble.
+  do
+    local m1 = msg("1", 1)
+    local transcript = {}
+    local state = TranscriptRows.Prepare(transcript, { m1 }, 400, nil)
+    state.rows[1].stale = nil
+    m1.senderLevel = 90
+    local updated = TranscriptRows.Prepare(transcript, { m1 }, 400, nil)
+    assert(updated.rows[1].stale == true, "a senderLevel change must mark the row stale")
+  end
+
   -- test_dropped_message_leaves_the_row_index
   do
     local m1, m2, m3 = msg("1", 1), msg("2", 2), msg("3", 3)

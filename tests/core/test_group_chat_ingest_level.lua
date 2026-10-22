@@ -1,8 +1,11 @@
+require("tests.helpers.fake_ui")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local GroupChatIngest = require("WhisperMessenger.Core.Ingest.GroupChatIngest")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
+local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local Identity = require("WhisperMessenger.Model.Identity")
 
 local STUBBED = { "UnitName", "GetGuildInfo", "UnitTokenFromGUID", "UnitLevel" }
 
@@ -106,6 +109,20 @@ return function()
     local message = storedMessage(guildLine("lfg", "Player-1-NOBODY"))
     SeenLevel._reset()
     assert(message.senderLevel == 8, "expected senderLevel 8 from the seen name, got " .. tostring(message.senderLevel))
+  end
+
+  -- test_incoming_line_pushes_sender_level_to_saved_whisper_chat
+  do
+    SeenLevel._reset()
+    local state = makeState()
+    local whisperKey = Identity.BuildConversationKey(state.localProfileId, "WOW::" .. SeenLevel.NameKey("Jaina-Area52"))
+    local whisper = { conversationKey = whisperKey, channel = "WOW" }
+    state.store.conversations[whisperKey] = whisper
+    SeenLevelEvents.Init(state)
+    GroupChatIngest.HandleEvent(state, "CHAT_MSG_GUILD", guildLine("anyone for Deadmines?", "Player-1-JAINA"))
+    SeenLevelEvents._reset()
+    SeenLevel._reset()
+    assert(whisper.characterLevel == 20, "expected whisper chat level 20, got " .. tostring(whisper.characterLevel))
   end
 
   DisplayName.Configure({ showPlayerLevels = false })

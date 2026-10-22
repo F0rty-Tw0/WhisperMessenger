@@ -6,8 +6,10 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
+local SenderLevelBackfill = ns.SenderLevelBackfill or require("WhisperMessenger.Model.SenderLevelBackfill")
 local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
+local WhoRow = ns.WhoRow or require("WhisperMessenger.Core.WhoRow")
 
 -- Records the levels the game shows the player (target, mouseover,
 -- nameplates, group, friends) and pushes them to saved whisper chats.
@@ -125,44 +127,8 @@ local function scheduleZoneRefresh(name)
   end
 end
 
--- Every locale's /who line ends with "- <area>" (ruRU without a guild: an en
--- dash), so only that tail counts: the same name inside a race, guild or
--- longer zone must not.
-local EN_DASH = "\226\128\147"
-
-local function endsWithArea(systemText, area)
-  local tail = " " .. area
-  if #systemText <= #tail or string.sub(systemText, -#tail) ~= tail then
-    return false
-  end
-  local head = string.sub(systemText, 1, #systemText - #tail)
-  return string.sub(head, -1) == "-" or string.sub(head, -#EN_DASH) == EN_DASH
-end
-
--- A system line is one player's /who row: `[Name]` or `[Name-Realm]` plus the
--- area. Plain finds only; names and areas are player data, not patterns.
-local function isWhoRow(systemText, info)
-  if type(systemText) ~= "string" then
-    return false
-  end
-  local shortName = string.match(info.fullName, "^[^-]+") or info.fullName
-  local open = "[" .. shortName
-  local from = 1
-  while true do
-    local _, last = string.find(systemText, open, from, true)
-    if last == nil then
-      return false
-    end
-    local nextChar = string.sub(systemText, last + 1, last + 1)
-    if nextChar == "]" or nextChar == "-" then
-      return endsWithArea(systemText, info.area)
-    end
-    from = last + 1
-  end
-end
-
 local function recordZone(info, systemText)
-  if systemText ~= nil and not isWhoRow(systemText, info) then
+  if systemText ~= nil and not WhoRow.Matches(systemText, info) then
     return
   end
   if SeenZone.Record(info.fullName, info.area, _G.time()) then
@@ -170,18 +136,49 @@ local function recordZone(info, systemText)
   end
 end
 
+-- Runs under pcall: comparing a 12.0 secret level throws. Any system line
+-- inside the who window lands here; only the reply's own row counts, so an
+-- unrelated line neither walks the store nor re-applies an older reply.
+local function collectLevel(levels, info, systemText)
+  if systemText ~= nil and not WhoRow.Matches(systemText, info) then
+    return
+  end
+  local level = info.level
+  if type(level) ~= "number" or level <= 0 then
+    return
+  end
+  local nameKey = SeenLevel.NameKey(info.fullName)
+  if nameKey ~= nil and (levels[nameKey] == nil or levels[nameKey] < level) then
+    levels[nameKey] = level
+  end
+end
+
+-- One walk per reply, not per row: a broad /who can list many players.
+local function backfill(levels)
+  local rt = runtime
+  if next(levels) == nil or rt == nil or rt.store == nil then
+    return
+  end
+  for key in pairs(SenderLevelBackfill.Apply(rt.store, levels)) do
+    scheduleRefresh(key)
+  end
+end
+
 local function recordWho(api, systemText)
   if not (api and api.GetNumWhoResults and api.GetWhoInfo) then
     return
   end
+  local levels = {}
   for i = 1, api.GetNumWhoResults() do
     local info = api.GetWhoInfo(i)
     if info then
       record(nil, info.fullName, info.level)
+      pcall(collectLevel, levels, info, systemText)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
     end
   end
+  backfill(levels)
 end
 
 local function captureBlocked(rt)
@@ -220,6 +217,16 @@ local function onEvent(_self, event, unit)
   if event == "WHO_LIST_UPDATE" then
     WhoLookup.OnWhoListUpdate()
   end
+end
+
+-- A level found outside these events (a group or channel line's sender).
+function SeenLevelEvents.Record(guid, name, level)
+  local rt = runtime
+  -- Most busy-channel senders have no known level: skip the lock checks.
+  if level == nil or rt == nil or captureBlocked(rt) then
+    return
+  end
+  record(guid, name, level)
 end
 
 function SeenLevelEvents.Init(rt)
