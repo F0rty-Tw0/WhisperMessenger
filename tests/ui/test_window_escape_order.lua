@@ -84,7 +84,8 @@ return function()
   -- test_escape_closes_only_the_window_in_front
   withWorld(false, function(env)
     EscapeOrder.New(env.window).claim()
-    assert(not contains(_G.UISpecialFrames, WINDOW_NAME), "the window must not close in the sweep that closes every other panel")
+    -- Death, loss of control and opening a center panel still close it.
+    assert(contains(_G.UISpecialFrames, WINDOW_NAME), "the front window must stay in the game's close-all sweeps")
     assert(env.pressEscape() == true, "ESC must stop at the window in front")
     assert(not env.window:IsShown(), "ESC must close the window in front")
   end)

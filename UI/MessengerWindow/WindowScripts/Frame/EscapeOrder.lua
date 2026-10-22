@@ -12,9 +12,10 @@ local EscapeOrder = {}
 -- ESC closes everything in UISpecialFrames together with the open UI panels
 -- (Auction House, Character...). Retail has an ESC handler registry that runs
 -- before that sweep, so there the window closes on its own while in front and
--- lets ESC pass while the player works in another window. Flavors without the
--- registry keep the window in UISpecialFrames while in front. Either way it
--- gets ESC back once the clicked window closes.
+-- lets ESC pass while the player works in another window. The window stays in
+-- UISpecialFrames while in front so the game's other close-all sweeps (death,
+-- loss of control, a center panel opening) still close it; it leaves the list
+-- while another window has ESC and comes back once that window closes.
 
 local PANEL_SLOTS = { "left", "center", "right", "doublewide", "fullscreen" }
 
@@ -95,7 +96,7 @@ function EscapeOrder.New(frame)
 
   function order.claim()
     yieldedTo = nil
-    setSpecialFrame(windowName(), register == nil)
+    setSpecialFrame(windowName(), true)
   end
 
   local function onBlockerHidden(blocker)
