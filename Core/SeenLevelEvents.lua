@@ -6,6 +6,7 @@ end
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local SeenLevel = ns.SeenLevel or require("WhisperMessenger.Model.SeenLevel")
+local SenderLevelBackfill = ns.SenderLevelBackfill or require("WhisperMessenger.Model.SenderLevelBackfill")
 local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local WhoRow = ns.WhoRow or require("WhisperMessenger.Core.WhoRow")
@@ -135,18 +136,44 @@ local function recordZone(info, systemText)
   end
 end
 
+-- Runs under pcall: comparing a 12.0 secret level throws.
+local function collectLevel(levels, info)
+  local level = info.level
+  if type(level) ~= "number" or level <= 0 then
+    return
+  end
+  local nameKey = SeenLevel.NameKey(info.fullName)
+  if nameKey ~= nil and (levels[nameKey] == nil or levels[nameKey] < level) then
+    levels[nameKey] = level
+  end
+end
+
+-- One walk per reply, not per row: a broad /who can list many players.
+local function backfill(levels)
+  local rt = runtime
+  if next(levels) == nil or rt == nil or rt.store == nil then
+    return
+  end
+  for key in pairs(SenderLevelBackfill.Apply(rt.store, levels)) do
+    scheduleRefresh(key)
+  end
+end
+
 local function recordWho(api, systemText)
   if not (api and api.GetNumWhoResults and api.GetWhoInfo) then
     return
   end
+  local levels = {}
   for i = 1, api.GetNumWhoResults() do
     local info = api.GetWhoInfo(i)
     if info then
       record(nil, info.fullName, info.level)
+      pcall(collectLevel, levels, info)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
     end
   end
+  backfill(levels)
 end
 
 local function captureBlocked(rt)
