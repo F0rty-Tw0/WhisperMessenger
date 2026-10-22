@@ -76,6 +76,7 @@ Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
 Model/PresenceCache.lua
 Model/SeenLevel.lua
+Model/SenderLevelBackfill.lua
 Model/SeenZone.lua
 Model/SenderLevel.lua
 Model/RosterLookup.lua
