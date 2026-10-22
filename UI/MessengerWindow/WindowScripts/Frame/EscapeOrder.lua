@@ -97,6 +97,7 @@ function EscapeOrder.New(frame)
     end
     yieldedTo = nil
     local timer = _G.C_Timer
+    -- Every client has C_Timer; only test stubs without it get here.
     if timer == nil or type(timer.After) ~= "function" then
       order.claim()
       return

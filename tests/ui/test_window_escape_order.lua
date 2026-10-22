@@ -160,6 +160,20 @@ return function()
     assert(contains(_G.UISpecialFrames, WINDOW_NAME), "the next ESC must close the messenger")
   end)
 
+  -- test_click_on_panel_right_after_popup_closes_keeps_escape_on_the_panel
+  -- An outside click hides the popup before the window hears the click.
+  withWorld(function(env)
+    local order = EscapeOrder.New(env.window)
+    order.claim()
+    local popup = ownPopup(env)
+    popup:Show()
+    popup:Hide()
+    clickAuctionHouse(env)
+    order.yieldToClickedWindow()
+    env.nextFrame()
+    assert(not contains(_G.UISpecialFrames, WINDOW_NAME), "ESC must close the Auction House without the messenger")
+  end)
+
   -- test_escape_after_clicking_panel_closes_only_the_panel
   -- The sweep hides the panel before it reads UISpecialFrames, so the
   -- panel's OnHide must not put the messenger back into that same sweep.
