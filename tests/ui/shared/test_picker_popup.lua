@@ -10,6 +10,7 @@ local function withPopup(fn)
   local popup = FakeUI.NewFactory().CreateFrame("Frame", NAME, nil)
   rawset(_G, NAME, popup)
   local ok, err = pcall(fn, popup)
+  PickerPopup.SetEscapeFrameShownHandler(nil)
   _G.UISpecialFrames = savedSpecial
   rawset(_G, NAME, savedPopup)
   assert(ok, err)
@@ -23,19 +24,17 @@ return function()
     assert(#_G.UISpecialFrames == 1 and _G.UISpecialFrames[1] == NAME, "popup must close on ESC, listed once")
   end)
 
-  -- test_hide_escape_frames_closes_an_open_popup
-  -- The messenger's own ESC handler runs before UISpecialFrames, so it
-  -- closes its popups itself.
+  -- test_shown_popup_is_reported_once
+  -- The messenger window leaves the ESC list while its popup is open, so
+  -- ESC closes only the popup.
   withPopup(function(popup)
-    PickerPopup.RegisterEscape(NAME)
+    local reported = {}
+    PickerPopup.SetEscapeFrameShownHandler(function(shown)
+      table.insert(reported, shown)
+    end)
+    PickerPopup.RegisterEscape(NAME, popup)
+    PickerPopup.RegisterEscape(NAME, popup)
     popup:Show()
-    assert(PickerPopup.HideEscapeFrames() == true, "closing an open popup must use up the ESC press")
-    assert(not popup:IsShown(), "open popup must close")
-  end)
-
-  -- test_hide_escape_frames_without_open_popup_passes
-  withPopup(function()
-    PickerPopup.RegisterEscape(NAME)
-    assert(PickerPopup.HideEscapeFrames() == false, "with no popup open the ESC press must go on")
+    assert(#reported == 1 and reported[1] == popup, "an opened popup must be reported once")
   end)
 end

@@ -10,12 +10,13 @@ local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.Picker
 local EscapeOrder = {}
 
 -- ESC closes everything in UISpecialFrames together with the open UI panels
--- (Auction House, Character...). Retail has an ESC handler registry that runs
--- before that sweep, so there the window closes on its own while in front and
--- lets ESC pass while the player works in another window. The window stays in
--- UISpecialFrames while in front so the game's other close-all sweeps (death,
--- loss of control, a center panel opening) still close it; it leaves the list
--- while another window has ESC and comes back once that window closes.
+-- (Auction House, Character...). The window stays in UISpecialFrames while
+-- in front, so ESC and the game's other close-all sweeps (death, loss of
+-- control, a center panel opening) close it. It leaves the list while
+-- another window or one of its own popups has ESC, and comes back once that
+-- window closes. Retail's RegisterGameMenuEscHandler is not used: calling it
+-- from addon code taints the game's ESC handler list, and ESC then fails to
+-- stop casting.
 
 local PANEL_SLOTS = { "left", "center", "right", "doublewide", "fullscreen" }
 
@@ -63,46 +64,33 @@ local function closesOnEscape(candidate)
   return name ~= nil and type(_G.UISpecialFrames) == "table" and indexOf(_G.UISpecialFrames, name) ~= nil
 end
 
-local function escHandlerRegistry()
-  local register, priority = _G.RegisterGameMenuEscHandler, _G.GameMenuEscPriority
-  if type(register) == "function" and type(priority) == "table" and priority.AddOn ~= nil then
-    return register, priority.AddOn
-  end
-  return nil
+local function isOpenOwnPopup(candidate)
+  return candidate ~= nil and PickerPopup.IsEscapeFrame(candidate) and candidate:IsShown()
 end
 
 function EscapeOrder.New(frame)
   local yieldedTo = nil
   local hooked = setmetatable({}, { __mode = "k" })
-  local register, addOnPriority = escHandlerRegistry()
 
   local function windowName()
     return type(frame.GetName) == "function" and frame:GetName() or nil
   end
 
-  if register then
-    register(addOnPriority, function()
-      if not frame:IsShown() or yieldedTo ~= nil then
-        return false
-      end
-      if not PickerPopup.HideEscapeFrames() then
-        frame:Hide()
-      end
-      return true
-    end)
-  end
-
   local order = {}
 
+  -- A click inside an open popup counts as a click on the window; ESC must
+  -- still close that popup first.
   function order.claim()
+    if isOpenOwnPopup(yieldedTo) then
+      return
+    end
     yieldedTo = nil
     setSpecialFrame(windowName(), true)
   end
 
   -- The game's close-all sweep hides the UI panels before it reads
   -- UISpecialFrames, so listing the window inside the panel's OnHide would
-  -- close it with the same ESC press. ESC comes back now; the list entry
-  -- comes back on the next frame.
+  -- close it with the same ESC press: it comes back on the next frame.
   local function onBlockerHidden(blocker)
     if blocker ~= yieldedTo then
       return
@@ -120,8 +108,7 @@ function EscapeOrder.New(frame)
     end)
   end
 
-  function order.yieldToClickedWindow()
-    local blocker = PointerFocus.FindFocusAncestor(closesOnEscape)
+  local function yieldTo(blocker)
     if blocker == nil or blocker == frame then
       return
     end
@@ -132,6 +119,12 @@ function EscapeOrder.New(frame)
       blocker:HookScript("OnHide", onBlockerHidden)
     end
   end
+
+  function order.yieldToClickedWindow()
+    yieldTo(PointerFocus.FindFocusAncestor(closesOnEscape))
+  end
+
+  PickerPopup.SetEscapeFrameShownHandler(yieldTo)
 
   return order
 end

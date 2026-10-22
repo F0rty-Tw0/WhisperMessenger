@@ -145,6 +145,11 @@ local function makeCreateFrame()
       if self.scripts and self.scripts.OnShow then
         self.scripts.OnShow(self)
       end
+      if self._hookScripts and self._hookScripts.OnShow then
+        for _, fn in ipairs(self._hookScripts.OnShow) do
+          fn(self)
+        end
+      end
     end
 
     function frame:Hide()

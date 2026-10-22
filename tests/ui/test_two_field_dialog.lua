@@ -45,20 +45,23 @@ return function()
   local savedNative = StyledTextInputPopup.nativeChrome
   StyledTextInputPopup.nativeChrome = false
 
-  -- test_messenger_escape_closes_the_dialog
-  -- The messenger's own ESC handler runs before UISpecialFrames, so the
-  -- dialog must be one of the popups it closes.
+  -- test_escape_closes_the_dialog_before_the_messenger
+  -- The dialog closes on ESC, and its opening hands ESC over from the
+  -- messenger window.
   do
-    local savedSpecial, savedDialog = _G.UISpecialFrames, _G[TwoFieldDialog.FRAME_NAME]
+    local savedSpecial = _G.UISpecialFrames
     _G.UISpecialFrames = {}
-    local dialog = show(FakeUI.NewFactory()).dialog
-    rawset(_G, TwoFieldDialog.FRAME_NAME, dialog)
-    local ok, err = pcall(function()
-      assert(_G.UISpecialFrames[1] == TwoFieldDialog.FRAME_NAME, "dialog must still close on ESC without the messenger")
-      assert(PickerPopup.HideEscapeFrames() == true and not dialog:IsShown(), "messenger ESC must close the open dialog")
+    local reported = nil
+    PickerPopup.SetEscapeFrameShownHandler(function(shown)
+      reported = shown
     end)
+    local ok, err = pcall(function()
+      local dialog = show(FakeUI.NewFactory()).dialog
+      assert(_G.UISpecialFrames[1] == TwoFieldDialog.FRAME_NAME, "dialog must close on ESC")
+      assert(reported == dialog, "opening the dialog must take ESC from the messenger")
+    end)
+    PickerPopup.SetEscapeFrameShownHandler(nil)
     _G.UISpecialFrames = savedSpecial
-    rawset(_G, TwoFieldDialog.FRAME_NAME, savedDialog)
     assert(ok, err)
   end
 

@@ -37,9 +37,27 @@ local TOOLTIP_BACKGROUND_COLOR = { 0.09, 0.09, 0.19, 0.9 }
 local TOOLTIP_BORDER_COLOR = { 1, 1, 1, 1 }
 
 local escapeFrameNames = {}
+local hookedEscapeFrames = setmetatable({}, { __mode = "k" })
+local escapeFrameShownHandler = nil
 
--- Escape closes the named frame.
-function PickerPopup.RegisterEscape(frameName)
+local function reportEscapeFrameShown(popup)
+  if escapeFrameShownHandler then
+    escapeFrameShownHandler(popup)
+  end
+end
+
+-- `handler(popup)` runs whenever a popup registered with its frame opens.
+function PickerPopup.SetEscapeFrameShownHandler(handler)
+  escapeFrameShownHandler = handler
+end
+
+-- Escape closes the named frame. Pass `frame` to report its opening to the
+-- handler set with SetEscapeFrameShownHandler.
+function PickerPopup.RegisterEscape(frameName, frame)
+  if frame and not hookedEscapeFrames[frame] and type(frame.HookScript) == "function" then
+    hookedEscapeFrames[frame] = true
+    frame:HookScript("OnShow", reportEscapeFrameShown)
+  end
   local known = false
   for _, name in ipairs(escapeFrameNames) do
     known = known or name == frameName
@@ -65,20 +83,6 @@ function PickerPopup.IsEscapeFrame(frame)
     end
   end
   return false
-end
-
--- The messenger's ESC handler runs before UISpecialFrames close, so it
--- closes the open popups itself. True when one was open.
-function PickerPopup.HideEscapeFrames()
-  local hidden = false
-  for _, name in ipairs(escapeFrameNames) do
-    local popup = _G[name]
-    if popup and popup:IsShown() then
-      popup:Hide()
-      hidden = true
-    end
-  end
-  return hidden
 end
 
 local function isMouseOver(frame)

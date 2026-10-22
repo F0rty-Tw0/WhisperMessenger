@@ -150,7 +150,7 @@ local function createPicker(factory)
 
   frame._wmReactionPicker = true
   rawset(_G, PICKER_FRAME_NAME, frame)
-  PickerPopup.RegisterEscape(PICKER_FRAME_NAME)
+  PickerPopup.RegisterEscape(PICKER_FRAME_NAME, frame)
   frame:Hide()
   return frame
 end

@@ -212,7 +212,7 @@ local function build(factory)
 
   wireKeys(dialog)
   -- Escape closes it even when neither field has focus.
-  PickerPopup.RegisterEscape(TwoFieldDialog.FRAME_NAME)
+  PickerPopup.RegisterEscape(TwoFieldDialog.FRAME_NAME, dialog)
   dialog:Hide()
   return dialog
 end
