@@ -22,6 +22,20 @@ local function paneInnerWidth(outerWidth)
   return outerWidth - padding
 end
 
+-- Centers the page's control column in a wide pane: the page frame is
+-- inset by an equal side gap that shrinks to 0 as the pane narrows to the
+-- column width. Returns the width the page lays out at.
+local function centerColumn(panel, settings, innerWidth)
+  local gap = math.max(0, math.floor((innerWidth - Theme.LAYOUT.SETTINGS_CONTROL_WIDTH) / 2))
+  local frame = settings.frame
+  if frame and frame.ClearAllPoints then
+    frame:ClearAllPoints()
+    frame:SetPoint("TOPLEFT", panel, "TOPLEFT", gap, 0)
+    frame:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -gap, 0)
+  end
+  return innerWidth - 2 * gap
+end
+
 local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
   local panel = factory.CreateFrame("Frame", nil, parent)
   panel:SetAllPoints(parent)
@@ -42,20 +56,20 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
     panel._wmBottomMarker = settings.frame._wmBottomMarker
   end
   if settings and settings.refreshLayout then
+    local function relayout(outerWidth)
+      local inner = paneInnerWidth(outerWidth)
+      if inner then
+        settings.refreshLayout(centerColumn(panel, settings, inner))
+      end
+    end
+    panel._wmRelayout = relayout
     if panel.SetScript then
       panel:SetScript("OnSizeChanged", function(_, w)
-        local inner = paneInnerWidth(w)
-        if inner then
-          settings.refreshLayout(inner)
-        end
+        relayout(w)
       end)
     end
     if parent.GetWidth then
-      local initialWidth = parent:GetWidth()
-      local inner = paneInnerWidth(initialWidth)
-      if inner then
-        settings.refreshLayout(inner)
-      end
+      relayout(parent:GetWidth())
     end
   end
   return panel, settings
@@ -211,11 +225,8 @@ function SettingsPanels.Create(factory, options)
     if currentTheme and settings and settings.refreshTheme then
       settings.refreshTheme(currentTheme)
     end
-    if currentOuterWidth and settings and settings.refreshLayout then
-      local inner = paneInnerWidth(currentOuterWidth)
-      if inner then
-        settings.refreshLayout(inner)
-      end
+    if currentOuterWidth and panel._wmRelayout then
+      panel._wmRelayout(currentOuterWidth)
     end
     if options.onPanelCreated then
       options.onPanelCreated(index, panel, settings)
@@ -261,9 +272,9 @@ function SettingsPanels.Create(factory, options)
     end
     currentOuterWidth = outerWidth
     for index = 1, #definitions do
-      local settingsView = getSettings(index)
-      if settingsView and settingsView.refreshLayout then
-        settingsView.refreshLayout(inner)
+      local panel = settingsPanels[index]
+      if panel and panel._wmRelayout then
+        panel._wmRelayout(outerWidth)
       end
     end
   end
