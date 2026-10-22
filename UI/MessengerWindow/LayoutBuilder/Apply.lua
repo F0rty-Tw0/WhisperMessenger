@@ -118,20 +118,24 @@ function Apply.Relayout(layout, relayout, theme)
   -- Resize contacts scroll view while preserving its content height and scroll position.
   local cv = layout.contactsView
   if cv then
-    cv.totalWidth = contactsWidth
+    local rightInset = layout.nativeChrome and resolvedTheme.LAYOUT.HUD_PANEL_PADDING or 0
+    local listWidth = contactsWidth - rightInset
+    cv.totalWidth = listWidth
     if cv.scrollFrame.ClearAllPoints then
       cv.scrollFrame:ClearAllPoints()
     end
     -- SetSize keeps the calculated height in sync with layout metrics (and
     -- with our fake_ui harness, which doesn't derive size from anchors).
-    -- The extra BOTTOMRIGHT anchor below is a WoW-only safety net: in the
-    -- live client, dual-anchor pins the viewport to the pane regardless of
+    -- The extra BOTTOMLEFT anchor below is a WoW-only safety net: in the
+    -- live client it pins the viewport's bottom to the pane regardless of
     -- any small mismatch between contactsListHeight and the pane's real
-    -- dual-anchored height, so rows can't paint past the pane border.
+    -- height, so rows can't paint past the pane border. No right-side
+    -- anchor: the width must stay free to narrow for the scrollbar.
     cv.scrollFrame:SetPoint("TOPLEFT", layout.contactsPane, "TOPLEFT", 0, -searchTotalHeight)
-    cv.scrollFrame:SetSize(contactsWidth, contactsListHeight)
-    local rightInset = layout.nativeChrome and resolvedTheme.LAYOUT.HUD_PANEL_PADDING or 0
-    cv.scrollFrame:SetPoint("BOTTOMRIGHT", layout.contactsPane, "BOTTOMRIGHT", -rightInset, relayout.contactsBottomInset or 0)
+    cv.scrollFrame:SetSize(listWidth, contactsListHeight)
+    -- The viewport is full width again; RefreshMetrics narrows it for the bar.
+    cv.hasOverflow = false
+    cv.scrollFrame:SetPoint("BOTTOMLEFT", layout.contactsPane, "BOTTOMLEFT", 0, relayout.contactsBottomInset or 0)
     cv.scrollBar:SetHeight(contactsListHeight)
     cv.viewportHeight = contactsListHeight
     local Metrics = ns.ScrollViewMetrics or require("WhisperMessenger.UI.ScrollView.Metrics")
@@ -145,7 +149,9 @@ function Apply.Relayout(layout, relayout, theme)
   -- parent) — DON'T call SetSize on it, that would override the anchor
   -- with the outer windowWidth (which is wider than Inset under the HUD)
   -- and overflow the gold border.
-  local optionsHeight = contactsHeight
+  -- The HUD options panel sits HUD_PANEL_PADDING inside the content area at
+  -- top and bottom; a taller viewport would hang over the window border.
+  local optionsHeight = layout.nativeChrome and (contactsHeight - 2 * resolvedTheme.LAYOUT.HUD_PANEL_PADDING) or contactsHeight
   -- Inner content width (Metrics): options panel width minus the menu
   -- column + divider.
   local optionsContentWidth = relayout.optionsContentWidth

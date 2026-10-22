@@ -11,6 +11,7 @@ local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatc
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ContextMenu = {}
 
@@ -183,10 +184,7 @@ local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, row
   return true
 end
 
--- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
--- text } / { note = text } / { notifyOnline = bool }.
--- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
-function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   if type(item) ~= "table" then
     return false
   end
@@ -281,6 +279,18 @@ function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowAct
   end
 
   return false
+end
+
+-- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
+-- text } / { note = text } / { notifyOnline = bool }.
+-- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
+-- An opened menu takes ESC before the window.
+function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
+  if opened then
+    PickerPopup.ReportMenuShown()
+  end
+  return opened
 end
 
 ns.ContactsListContextMenu = ContextMenu

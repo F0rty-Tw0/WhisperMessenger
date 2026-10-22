@@ -156,4 +156,83 @@ return function()
     end)
     assert(frame.frameStrata == "MEDIUM", "a click on a forbidden frame is outside the window; got " .. tostring(frame.frameStrata))
   end
+
+  -- test_click_on_window_covering_messenger_sends_it_back
+  -- The Auction House sits on top of the messenger: the cursor is inside the
+  -- messenger's rectangle, but the frame under it is the Auction House.
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = bindFrame(false, factory)
+    local auctionHouse = factory.CreateFrame("Frame", "AuctionHouseFrame", nil)
+    frame:Show()
+    frame.mouseOver = true
+    local savedFoci = _G.GetMouseFoci
+    rawset(_G, "GetMouseFoci", function()
+      return { auctionHouse }
+    end)
+    local ok, err = pcall(frame.scripts.OnEvent, frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+    _G.GetMouseFoci = savedFoci
+    assert(ok, err)
+    assert(frame.frameStrata == "MEDIUM", "a click on a window covering the messenger must not bring it forward; got " .. tostring(frame.frameStrata))
+  end
+
+  -- test_click_on_own_popup_keeps_the_window_in_front
+  -- The reaction picker and dialogs are parented to UIParent, outside the
+  -- window, but they belong to it: a click there is a click on the window.
+  do
+    local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+    local saved = { _G.UISpecialFrames, _G.GetMouseFoci, _G.WhisperMessengerTestOwnPopup }
+    local factory = FakeUI.NewFactory()
+    local frame = bindFrame(false, factory)
+    frame.name = "WhisperMessengerWindow"
+    local popup = factory.CreateFrame("Frame", "WhisperMessengerTestOwnPopup", nil)
+    popup:Show()
+    _G.UISpecialFrames = {}
+    rawset(_G, "WhisperMessengerTestOwnPopup", popup)
+    rawset(_G, "GetMouseFoci", function()
+      return { factory.CreateFrame("Button", nil, popup) }
+    end)
+    local ok, err = pcall(function()
+      PickerPopup.RegisterEscape("WhisperMessengerTestOwnPopup")
+      frame:Show()
+      frame.scripts.OnEvent(frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+      assert(frame.frameStrata == "HIGH", "a click on the window's own popup must keep it in front; got " .. tostring(frame.frameStrata))
+      local listed = false
+      for _, name in ipairs(_G.UISpecialFrames) do
+        listed = listed or name == "WhisperMessengerWindow"
+      end
+      assert(listed, "a click on the window's own popup must keep ESC on the window")
+    end)
+    _G.UISpecialFrames = saved[1]
+    rawset(_G, "GetMouseFoci", saved[2])
+    rawset(_G, "WhisperMessengerTestOwnPopup", saved[3])
+    assert(ok, err)
+  end
+
+  -- test_escape_follows_the_clicked_window
+  do
+    local saved = { _G.UISpecialFrames, _G.GetUIPanel, _G.GetMouseFoci }
+    local factory = FakeUI.NewFactory()
+    local frame = bindFrame(false, factory)
+    frame.name = "WhisperMessengerWindow"
+    local auctionHouse = factory.CreateFrame("Frame", "AuctionHouseFrame", nil)
+    auctionHouse:Show()
+    _G.UISpecialFrames = {}
+    rawset(_G, "GetUIPanel", function(slot)
+      return slot == "doublewide" and auctionHouse or nil
+    end)
+    rawset(_G, "GetMouseFoci", function()
+      return { auctionHouse }
+    end)
+    local ok, err = pcall(function()
+      frame:Show()
+      assert(_G.UISpecialFrames[1] == "WhisperMessengerWindow", "showing the window must give it ESC")
+      frame.scripts.OnEvent(frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+      assert(#_G.UISpecialFrames == 0, "clicking the Auction House must give ESC to it")
+    end)
+    _G.UISpecialFrames = saved[1]
+    rawset(_G, "GetUIPanel", saved[2])
+    rawset(_G, "GetMouseFoci", saved[3])
+    assert(ok, err)
+  end
 end

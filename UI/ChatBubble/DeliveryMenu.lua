@@ -52,7 +52,7 @@ local function createMenu(factory)
     self._onAction = nil
   end)
   rawset(_G, MENU_FRAME_NAME, frame)
-  PickerPopup.RegisterEscape(MENU_FRAME_NAME)
+  PickerPopup.RegisterEscape(MENU_FRAME_NAME, frame)
   return frame
 end
 

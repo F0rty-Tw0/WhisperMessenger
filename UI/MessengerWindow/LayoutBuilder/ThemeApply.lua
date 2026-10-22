@@ -10,6 +10,13 @@ local setTextColor = UIHelpers.setTextColor
 
 local ThemeApply = {}
 
+-- Repaints a pane background, leaving the Retail HUD's panel art alone.
+local function repaintPane(texture, color)
+  if texture and not texture._wmNativeArt then
+    applyColorTexture(texture, color)
+  end
+end
+
 function ThemeApply.Create(options)
   options = options or {}
 
@@ -57,8 +64,9 @@ function ThemeApply.Create(options)
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or fallbackTheme
 
-    -- Native WoW HUD keeps the pane clear so the template texture shows through.
-    applyColorTexture(contactsPaneBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
+    -- Native WoW HUD keeps the pane clear so the template texture shows
+    -- through, unless the Retail HUD painted its panel art there.
+    repaintPane(contactsPaneBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
     -- Native WoW HUD search box keeps Blizzard's own text colours.
     if not nativeSearch then
       if contactsSearchInput.SetTextColor then
@@ -81,9 +89,9 @@ function ThemeApply.Create(options)
 
     -- Native WoW HUD keeps the options panes clear, like the contacts pane;
     -- the menu/content divider stays the preset hairline.
-    applyColorTexture(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
+    repaintPane(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_secondary)
     applyColorTexture(optionsMenuDivider, activeTheme.COLORS.divider)
-    applyColorTexture(optionsContentBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_primary)
+    repaintPane(optionsContentBg, nativeChrome and UIHelpers.TRANSPARENT or activeTheme.COLORS.bg_primary)
     setTextColor(optionsHint, activeTheme.COLORS.text_secondary)
 
     local activeTabBg = activeTheme.COLORS.option_button_active or activeTheme.COLORS.bg_contact_selected

@@ -31,6 +31,8 @@ local roles = {
   text_soft = { 0.90, 0.90, 0.90, 1.0 },
   text_secondary = withAlpha(textSecondaryRgb, 0.55),
   text_emphasis = withAlpha(accentRgb, 1.0),
+  -- Sent bubbles and selected buttons: gold on those fills is hard to read.
+  text_bright = { 1.00, 1.00, 1.00, 1.0 },
   text_system = { 1.00, 1.00, 0.00, 1.0 },
   text_timestamp = { 1.0, 1.0, 1.0, 0.40 },
   accent = withAlpha(accentRgb, 1.0),

@@ -7,7 +7,7 @@ local PointerFocus = {}
 
 -- The frame under the cursor. Retail has GetMouseFoci (a list); Classic
 -- flavors still have GetMouseFocus.
-local function mouseFocus()
+function PointerFocus.Current()
   local getMouseFoci = _G.GetMouseFoci
   if type(getMouseFoci) == "function" then
     local foci = getMouseFoci()
@@ -20,21 +20,21 @@ local function mouseFocus()
   return nil
 end
 
--- True when the frame under the cursor is `frame` or one of its descendants.
+-- The frame under the cursor or its closest ancestor that `matches`.
 -- Forbidden frames (nameplates in instances) throw on any method but
 -- IsForbidden, and are never ours, so the walk stops there.
-function PointerFocus.IsFocusInside(frame)
-  local current = mouseFocus()
+function PointerFocus.FindFocusAncestor(matches)
+  local current = PointerFocus.Current()
   while current ~= nil and type(current.GetParent) == "function" do
-    if current == frame then
-      return true
-    end
     if type(current.IsForbidden) == "function" and current:IsForbidden() then
-      return false
+      return nil
+    end
+    if matches(current) then
+      return current
     end
     current = current:GetParent()
   end
-  return false
+  return nil
 end
 
 ns.MessengerWindowWindowScriptsFramePointerFocus = PointerFocus

@@ -3,6 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
+
 local ContentSection = {}
 
 function ContentSection.Build(factory, contentParent, contactsPane, sizing, options)
@@ -22,6 +25,15 @@ function ContentSection.Build(factory, contentParent, contactsPane, sizing, opti
   -- header overlap the window's border.
   contentPane:SetPoint("BOTTOMRIGHT", contentParent, "BOTTOMRIGHT", -theme.LAYOUT.CONTENT_PANE_RIGHT_INSET, theme.LAYOUT.CONTENT_PANE_BOTTOM_INSET)
 
+  -- The Retail HUD covers the window's rough backdrop with the smooth panel
+  -- art. Without the atlas the texture holds nothing and draws nothing.
+  local contentPaneBg
+  if Hud.IsRetail() then
+    contentPaneBg = contentPane:CreateTexture(nil, "BACKGROUND")
+    contentPaneBg:SetAllPoints(contentPane)
+    NativeArt.PaintPanel(contentPaneBg, NativeArt.WIDE_PANEL_BACKGROUND)
+  end
+
   local threadPane = factory.CreateFrame("Frame", nil, contentPane)
   threadPane:SetSize(contentWidth, threadHeight)
   threadPane:SetPoint("TOPLEFT", contentPane, "TOPLEFT", 0, 0)
@@ -40,6 +52,7 @@ function ContentSection.Build(factory, contentParent, contactsPane, sizing, opti
   return {
     contactsWidth = contactsWidth,
     contentPane = contentPane,
+    contentPaneBg = contentPaneBg,
     threadPane = threadPane,
     composerPane = composerPane,
   }

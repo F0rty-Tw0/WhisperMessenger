@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 -- Native WoW HUD dropdown row. Prefers the game's dropdown
 -- (WowStyle1DropdownTemplate set up with SetupMenu); without it, a panel
@@ -42,6 +43,19 @@ local function menuUtil()
     return util
   end
   return nil
+end
+
+-- The game's dropdown opens its menu itself; its OnMenuOpen callback
+-- reports the menu so ESC closes it before the window.
+local function reportOpenedMenus(dropdown, owner)
+  local mixin = _G["DropdownButtonMixin"]
+  local event = type(mixin) == "table" and type(mixin.Event) == "table" and mixin.Event.OnMenuOpen or nil
+  if event == nil or type(dropdown.RegisterCallback) ~= "function" then
+    return
+  end
+  dropdown:RegisterCallback(event, function()
+    PickerPopup.ReportMenuShown(dropdown.menu)
+  end, owner)
 end
 
 -- Panel button with its own value label: the button swaps its own text's
@@ -167,11 +181,12 @@ function NativeDropdown.Create(factory, parent, options)
   select(options.initial, false)
   if isDropdown then
     control:SetupMenu(generator)
+    reportOpenedMenus(control, row)
   else
     control:SetScript("OnClick", function()
       local util = menuUtil()
       if util then
-        util.CreateContextMenu(control, generator)
+        PickerPopup.ReportMenuShown(util.CreateContextMenu(control, generator))
       end
     end)
   end

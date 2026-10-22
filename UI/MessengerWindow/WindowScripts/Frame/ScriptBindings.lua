@@ -5,6 +5,9 @@ end
 
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
+local EscapeOrder = ns.MessengerWindowWindowScriptsFrameEscapeOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
+local EscapeKey = ns.MessengerWindowWindowScriptsFrameEscapeKey or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeKey")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ScriptBindings = {}
 
@@ -26,6 +29,7 @@ function ScriptBindings.Bind(options)
   local relayoutWindow = options.relayoutWindow
 
   local alphaTicker = nil
+  local escapeOrder = frame and EscapeOrder.New(frame, EscapeKey.New(frame)) or nil
 
   local function updateResizeFromCursor()
     contactsResize.updateFromCursor()
@@ -88,13 +92,17 @@ function ScriptBindings.Bind(options)
     return ok and over == true
   end
 
-  -- Children can sit outside the window's rectangle (the contacts tabs hang
-  -- below it), so also count a click on any descendant as inside.
+  -- Ask which frame is under the cursor, not whether the cursor is inside
+  -- the window's rectangle: another window (Auction House) can cover ours,
+  -- and children (contacts tabs) or our UIParent popups sit outside it. The
+  -- rectangle is the fallback when the game reports no focus.
   local function isPointerOnWindow()
-    if isMouseOverFrame() then
-      return true
+    if PointerFocus.Current() ~= nil then
+      return PointerFocus.FindFocusAncestor(function(candidate)
+        return candidate == frame or PickerPopup.IsEscapeFrame(candidate)
+      end) ~= nil
     end
-    return PointerFocus.IsFocusInside(frame)
+    return isMouseOverFrame()
   end
 
   -- Strata/level transitions must never pull keyboard focus away from
@@ -114,6 +122,9 @@ function ScriptBindings.Bind(options)
   end
 
   local function promoteStrata()
+    if escapeOrder then
+      escapeOrder.claim()
+    end
     preserveComposerFocusAround(function()
       if frame and type(frame.SetFrameStrata) == "function" then
         frame:SetFrameStrata("HIGH")
@@ -138,12 +149,9 @@ function ScriptBindings.Bind(options)
     end)
   end
 
-  -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
-  -- to detect "user engaged with another window" — when they click
-  -- somewhere the messenger isn't, drop our strata so their target
-  -- window comes forward. Clicks on the window or any of its children
-  -- promote instead. Listen only while shown so a hidden window
-  -- costs nothing per click.
+  -- GLOBAL_MOUSE_DOWN fires for every click in the UI: a click elsewhere
+  -- sends the window back (and hands ESC to the clicked window), a click on
+  -- it brings it forward. Listen only while shown: hidden costs nothing.
   local function setOutsideClickListening(listening)
     if listening and type(frame.RegisterEvent) == "function" then
       frame:RegisterEvent("GLOBAL_MOUSE_DOWN")
@@ -166,6 +174,7 @@ function ScriptBindings.Bind(options)
     end)
 
     frame:SetScript("OnHide", function()
+      escapeOrder.release()
       setOutsideClickListening(false)
       stopAlphaTicker()
       contactsResize.reset()
@@ -189,14 +198,13 @@ function ScriptBindings.Bind(options)
         return
       end
       options.refreshWindowAlpha()
-      -- Intentionally do NOT demote strata here. Mouse-over alone (e.g.
-      -- moving the cursor onto the Auction House or another addon) must
-      -- not send our window to the back — only an explicit click outside
-      -- our frame should, handled via GLOBAL_MOUSE_DOWN below.
+      -- No demote here: only a click elsewhere (GLOBAL_MOUSE_DOWN below)
+      -- sends the window back, never mouse-over alone.
     end)
 
     if type(frame.IsShown) == "function" and frame:IsShown() then
       setOutsideClickListening(true)
+      escapeOrder.claim()
     end
     frame:SetScript("OnEvent", function(self, event)
       if event ~= "GLOBAL_MOUSE_DOWN" then
@@ -207,6 +215,7 @@ function ScriptBindings.Bind(options)
       if isPointerOnWindow() then
         promoteStrata()
       else
+        escapeOrder.yieldToClickedWindow()
         demoteStrataIfIdle()
       end
     end)
