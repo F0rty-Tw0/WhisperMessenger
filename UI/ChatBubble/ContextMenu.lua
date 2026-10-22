@@ -11,6 +11,7 @@ local ManualCopy = ns.ChatBubbleContextMenuManualCopy or require("WhisperMesseng
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ReactionPicker = ns.ChatBubbleReactionPicker or require("WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 -- stylua: ignore end
 
 local MENU_FRAME_NAME = "WhisperMessengerBubbleContextMenu"
@@ -51,6 +52,12 @@ function ContextMenu.CopyText(text)
   return ManualCopy.CopyText(text)
 end
 
+-- An opened menu takes ESC before the window.
+local function menuOpened(menu)
+  PickerPopup.ReportMenuShown(menu)
+  return true
+end
+
 -- Retail's menu API: Reply, Copy text and Ignore sender (the first and last
 -- only with a handler). False when the API is missing.
 local function openModernMenu(normalized, anchorFrame, options)
@@ -58,7 +65,7 @@ local function openModernMenu(normalized, anchorFrame, options)
   if type(menuUtil) ~= "table" or type(menuUtil.CreateContextMenu) ~= "function" then
     return false
   end
-  menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
+  local menu = menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
     if type(options.onReply) == "function" then
       rootDescription:CreateButton(Localization.Text("Reply"), options.onReply)
     end
@@ -69,7 +76,7 @@ local function openModernMenu(normalized, anchorFrame, options)
       rootDescription:CreateButton(Localization.Text("Block sender…"), options.onIgnoreSender)
     end
   end)
-  return true
+  return menuOpened(menu)
 end
 
 -- options.onReply() / options.onIgnoreSender(): optional; add "Reply" /
@@ -135,7 +142,7 @@ function ContextMenu.Open(text, anchorFrame, options)
   if type(_G.EasyMenu) == "function" then
     local ok = pcall(_G.EasyMenu, menu, menuFrame, menuAnchor, 0, 0, "MENU")
     if ok then
-      return true
+      return menuOpened()
     end
     return ContextMenu.CopyText(normalized)
   end
@@ -172,7 +179,7 @@ function ContextMenu.Open(text, anchorFrame, options)
   if not toggled then
     return ContextMenu.CopyText(normalized)
   end
-  return true
+  return menuOpened()
 end
 
 ns.ChatBubbleContextMenu = ContextMenu
