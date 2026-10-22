@@ -2,6 +2,7 @@ require("tests.helpers.fake_ui")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
 local WhoLookup = require("WhisperMessenger.Transport.WhoLookup")
 local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local SenderLevelBackfill = require("WhisperMessenger.Model.SenderLevelBackfill")
 
 local TRADE_KEY = "me::CHANNEL::trade"
 
@@ -67,6 +68,29 @@ return function()
     local _, line = reset({ whoRow(90) })
     fire("CHAT_MSG_SYSTEM", "[Ishtarra]: Level 90 Dracthyr Mage - Silvermoon City")
     assert(line.senderLevel == 90, "expected level 90 from the system line, got " .. tostring(line.senderLevel))
+  end
+
+  -- test_unrelated_system_line_changes_nothing
+  -- Any system line inside the who window reaches recordWho; only /who rows count.
+  do
+    local runtime, line = reset({ whoRow(90) })
+    fire("CHAT_MSG_SYSTEM", "Ishtarra has come online.")
+    assert(line.senderLevel == nil, "an unrelated system line must not fill levels")
+    assert(#runtime.refreshed == 0, "an unrelated system line must not refresh chats")
+  end
+
+  -- test_many_rows_walk_store_once
+  do
+    local realApply = SenderLevelBackfill.Apply
+    local walks = 0
+    SenderLevelBackfill.Apply = function(...)
+      walks = walks + 1
+      return realApply(...)
+    end
+    reset({ whoRow(90), { fullName = "Nergrom", level = 20, area = "Orgrimmar" }, { fullName = "Jaina", level = 35, area = "Dalaran" } })
+    fire("WHO_LIST_UPDATE")
+    SenderLevelBackfill.Apply = realApply
+    assert(walks == 1, "a reply should walk the store once, walked " .. walks)
   end
 
   -- test_two_rows_same_name_keep_higher

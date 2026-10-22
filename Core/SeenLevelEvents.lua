@@ -136,8 +136,13 @@ local function recordZone(info, systemText)
   end
 end
 
--- Runs under pcall: comparing a 12.0 secret level throws.
-local function collectLevel(levels, info)
+-- Runs under pcall: comparing a 12.0 secret level throws. Any system line
+-- inside the who window lands here; only the reply's own row counts, so an
+-- unrelated line neither walks the store nor re-applies an older reply.
+local function collectLevel(levels, info, systemText)
+  if systemText ~= nil and not WhoRow.Matches(systemText, info) then
+    return
+  end
   local level = info.level
   if type(level) ~= "number" or level <= 0 then
     return
@@ -168,7 +173,7 @@ local function recordWho(api, systemText)
     local info = api.GetWhoInfo(i)
     if info then
       record(nil, info.fullName, info.level)
-      pcall(collectLevel, levels, info)
+      pcall(collectLevel, levels, info, systemText)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
     end
