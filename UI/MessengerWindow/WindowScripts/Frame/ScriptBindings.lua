@@ -5,6 +5,7 @@ end
 
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
+local EscapeOrder = ns.MessengerWindowWindowScriptsFrameEscapeOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
 
 local ScriptBindings = {}
 
@@ -26,6 +27,7 @@ function ScriptBindings.Bind(options)
   local relayoutWindow = options.relayoutWindow
 
   local alphaTicker = nil
+  local escapeOrder = frame and EscapeOrder.New(frame) or nil
 
   local function updateResizeFromCursor()
     contactsResize.updateFromCursor()
@@ -116,6 +118,9 @@ function ScriptBindings.Bind(options)
   end
 
   local function promoteStrata()
+    if escapeOrder then
+      escapeOrder.claim()
+    end
     preserveComposerFocusAround(function()
       if frame and type(frame.SetFrameStrata) == "function" then
         frame:SetFrameStrata("HIGH")
@@ -140,12 +145,9 @@ function ScriptBindings.Bind(options)
     end)
   end
 
-  -- GLOBAL_MOUSE_DOWN fires for every mouse click in the UI. We use it
-  -- to detect "user engaged with another window" — when they click
-  -- somewhere the messenger isn't, drop our strata so their target
-  -- window comes forward. Clicks on the window or any of its children
-  -- promote instead. Listen only while shown so a hidden window
-  -- costs nothing per click.
+  -- GLOBAL_MOUSE_DOWN fires for every click in the UI: a click elsewhere
+  -- sends the window back (and hands ESC to the clicked window), a click on
+  -- it brings it forward. Listen only while shown: hidden costs nothing.
   local function setOutsideClickListening(listening)
     if listening and type(frame.RegisterEvent) == "function" then
       frame:RegisterEvent("GLOBAL_MOUSE_DOWN")
@@ -199,6 +201,7 @@ function ScriptBindings.Bind(options)
 
     if type(frame.IsShown) == "function" and frame:IsShown() then
       setOutsideClickListening(true)
+      escapeOrder.claim()
     end
     frame:SetScript("OnEvent", function(self, event)
       if event ~= "GLOBAL_MOUSE_DOWN" then
@@ -209,6 +212,7 @@ function ScriptBindings.Bind(options)
       if isPointerOnWindow() then
         promoteStrata()
       else
+        escapeOrder.yieldToClickedWindow()
         demoteStrataIfIdle()
       end
     end)

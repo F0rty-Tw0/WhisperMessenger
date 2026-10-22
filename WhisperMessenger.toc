@@ -300,6 +300,7 @@ UI/MessengerWindow/WindowScripts/Frame/ResizeBounds.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowResize.lua
 UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
+UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
