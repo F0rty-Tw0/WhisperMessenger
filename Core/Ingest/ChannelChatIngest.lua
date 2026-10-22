@@ -13,6 +13,7 @@ local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCount
 local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")
 local SenderLevel = ns.SenderLevel or require("WhisperMessenger.Model.SenderLevel")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local SeenLevelEvents = ns.SeenLevelEvents or require("WhisperMessenger.Core.SeenLevelEvents")
 -- stylua: ignore start
 local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger.Core.Ingest.GroupChatIngest.SecretString")
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
@@ -63,6 +64,7 @@ local function buildMessage(payload, direction, sentAt, playerInfo)
     -- Only while levels are shown: busy Trade chat pays nothing when off.
     if payload.guid and DisplayName.ShowPlayerLevels() then
       message.senderLevel = SenderLevel.Lookup(payload.guid, payload.playerName)
+      SeenLevelEvents.Record(payload.guid, payload.playerName, message.senderLevel)
     end
   end
   return message

@@ -1,7 +1,10 @@
+require("tests.helpers.fake_ui")
 local Store = require("WhisperMessenger.Model.ConversationStore")
 local ChannelChatIngest = require("WhisperMessenger.Core.Ingest.ChannelChatIngest")
 local DisplayName = require("WhisperMessenger.Util.DisplayName")
 local SeenLevel = require("WhisperMessenger.Model.SeenLevel")
+local SeenLevelEvents = require("WhisperMessenger.Core.SeenLevelEvents")
+local Identity = require("WhisperMessenger.Model.Identity")
 
 local STUBBED = { "UnitTokenFromGUID", "UnitLevel" }
 
@@ -79,6 +82,20 @@ return function()
     local message = conversation.messages[#conversation.messages]
     assert(message.senderLevel == 8, "expected seen senderLevel 8, got " .. tostring(message.senderLevel))
     SeenLevel._reset()
+  end
+
+  -- test_incoming_channel_line_pushes_sender_level_to_saved_whisper_chat
+  do
+    SeenLevel._reset()
+    local state = makeState()
+    local whisperKey = Identity.BuildConversationKey(state.localProfileId, "WOW::" .. SeenLevel.NameKey("Nergrom"))
+    local whisper = { conversationKey = whisperKey, channel = "WOW" }
+    state.store.conversations[whisperKey] = whisper
+    SeenLevelEvents.Init(state)
+    ChannelChatIngest.HandleEvent(state, tradeLine("LF tank Deadmines", "Nergrom", 9303))
+    SeenLevelEvents._reset()
+    SeenLevel._reset()
+    assert(whisper.characterLevel == 20, "expected whisper chat level 20, got " .. tostring(whisper.characterLevel))
   end
 
   DisplayName.Configure({ showPlayerLevels = false })
