@@ -49,8 +49,8 @@ local function createSettingsPanel(factory, parent, createSettingsView, config, 
   })
   -- Propagate the inner panel's bottom marker up to the wrapper so the
   -- options scrollview's per-tab content sizing (in WindowScripts/Buttons)
-  -- can find it. The inner frame uses SetAllPoints(panel), so its TOPLEFT
-  -- aligns with the wrapper's TOPLEFT — the SetPoint-chain walk gives the
+  -- can find it. centerColumn insets the inner frame sideways only, so its
+  -- top lines up with the wrapper's top — the SetPoint-chain walk gives the
   -- same y-down offset whether we start from the wrapper or the inner.
   if settings and settings.frame and settings.frame._wmBottomMarker then
     panel._wmBottomMarker = settings.frame._wmBottomMarker
