@@ -145,7 +145,9 @@ function Apply.Relayout(layout, relayout, theme)
   -- parent) — DON'T call SetSize on it, that would override the anchor
   -- with the outer windowWidth (which is wider than Inset under the HUD)
   -- and overflow the gold border.
-  local optionsHeight = contactsHeight
+  -- The HUD options panel sits HUD_PANEL_PADDING inside the content area at
+  -- top and bottom; a taller viewport would hang over the window border.
+  local optionsHeight = layout.nativeChrome and (contactsHeight - 2 * resolvedTheme.LAYOUT.HUD_PANEL_PADDING) or contactsHeight
   -- Inner content width (Metrics): options panel width minus the menu
   -- column + divider.
   local optionsContentWidth = relayout.optionsContentWidth

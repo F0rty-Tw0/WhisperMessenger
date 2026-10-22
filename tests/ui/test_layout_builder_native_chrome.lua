@@ -142,13 +142,18 @@ return function()
   do
     local layout = buildLayout(true, true)
     local osv = layout.optionsScrollView
-    local buildExpected = 580 - Theme.TOP_BAR_HEIGHT - hudExtra
+    -- The options panel sits HUD_PANEL_PADDING inside the content area at top
+    -- and bottom; the viewport must fit inside it, not overhang the border.
+    local panelPad = 2 * Theme.LAYOUT.HUD_PANEL_PADDING
+    local buildExpected = 580 - Theme.TOP_BAR_HEIGHT - hudExtra - panelPad
     assert(
       osv.scrollFrame.height == buildExpected,
       "HUD build: options viewport should be " .. buildExpected .. ", got " .. tostring(osv.scrollFrame.height)
     )
+    assert(layout.optionsMenuScrollView.viewportHeight == buildExpected, "HUD build: settings menu viewport should fit the panel")
     LayoutBuilder.Relayout(layout, 800, 500)
-    local expected = 500 - Theme.TOP_BAR_HEIGHT - hudExtra
+    local expected = 500 - Theme.TOP_BAR_HEIGHT - hudExtra - panelPad
+    assert(layout.optionsContentPane.height == expected, "HUD relayout: options content pane should fit the panel")
     assert(
       osv.scrollFrame.height == expected,
       "HUD relayout: options viewport should be " .. expected .. ", got " .. tostring(osv.scrollFrame.height)

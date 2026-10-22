@@ -71,7 +71,9 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   local menuPadding = theme.CONTENT_PADDING
   -- Set once the nav buttons exist (OptionsMenuButtons contentHeight).
   local measureMenuContent = nil
-  local optionsMenuViewportHeight = nativeChrome and options.contactsHeight or (initialState.height - theme.TOP_BAR_HEIGHT)
+  -- The HUD panel sits hudPadding inside the content area at top and bottom.
+  local nativePanelHeight = nativeChrome and options.contactsHeight and (options.contactsHeight - 2 * hudPadding)
+  local optionsMenuViewportHeight = nativePanelHeight or (initialState.height - theme.TOP_BAR_HEIGHT)
   local optionsMenuScrollView = scrollView.Create(factory, optionsMenu, {
     width = contactsWidth,
     height = optionsMenuViewportHeight,
@@ -118,7 +120,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   -- anchors (fake_ui in tests). In production WoW, the dual-anchor wins.
   -- The scroll view's width also comes from here (single-anchored).
   local optionsContentWidth = nativeChrome and options.optionsContentWidth or (initialState.width - contactsWidth - theme.DIVIDER_THICKNESS - 4)
-  local optionsContentH = nativeChrome and options.contactsHeight or (initialState.height - theme.TOP_BAR_HEIGHT - 28 - 2)
+  local optionsContentH = nativePanelHeight or (initialState.height - theme.TOP_BAR_HEIGHT - 28 - 2)
   optionsContentPane:SetSize(optionsContentWidth, optionsContentH)
 
   local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")
