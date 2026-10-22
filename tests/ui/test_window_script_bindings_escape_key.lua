@@ -41,10 +41,10 @@ local function withBoundWindow(fn)
   rawset(_G, "GetBindingKey", function()
     return "ESCAPE"
   end)
-  rawset(_G, "SetOverrideBindingClick", function(_owner, _priority, key)
+  rawset(_G, "SetOverrideBindingClick", function(_owner, _priority, key, _buttonName)
     table.insert(bound, key)
   end)
-  rawset(_G, "ClearOverrideBindings", function()
+  rawset(_G, "ClearOverrideBindings", function(_owner)
     for index = #bound, 1, -1 do
       bound[index] = nil
     end

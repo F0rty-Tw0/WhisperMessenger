@@ -46,7 +46,7 @@ local function withWindow(fn)
   end
   function env.openMenu()
     local menu = factory.CreateFrame("Frame", nil, nil)
-    function menu:HookScript() end
+    rawset(menu, "HookScript", function() end)
     menu:Show()
     PickerPopup.ReportMenuShown(menu)
     return menu

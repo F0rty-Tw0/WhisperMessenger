@@ -94,7 +94,7 @@ function EscapeOrder.New(frame, escapeKey)
   -- A click inside an open popup or menu counts as a click on the window;
   -- ESC must still close that first.
   function order.claim()
-    if yieldedToOwn and yieldedTo:IsShown() then
+    if yieldedToOwn and yieldedTo ~= nil and yieldedTo:IsShown() then
       return
     end
     yieldedTo = nil
