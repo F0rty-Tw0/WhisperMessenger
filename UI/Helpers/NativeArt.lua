@@ -35,6 +35,10 @@ NativeArt.SCROLL_THUMB_OVER = {
   middle = "minimal-scrollbar-thumb-middle-over",
   bottom = "minimal-scrollbar-thumb-bottom-over",
 }
+-- Smooth dark backdrops for the Retail HUD panes: the professions summary
+-- list's for narrow lists, the auction house's for the wide conversation.
+NativeArt.PANEL_BACKGROUND = "Professions-background-summarylist"
+NativeArt.WIDE_PANEL_BACKGROUND = "auctionhouse-background-index"
 
 local hoverTint = { 1, 1, 1, NativeArt.LIST_HOVER_ALPHA }
 
@@ -82,6 +86,16 @@ function NativeArt.AtlasInfo(atlas)
     return info
   end
   return nil
+end
+
+-- Stretches `atlas` (default PANEL_BACKGROUND) over `texture`. Returns
+-- false, leaving the texture untouched, on clients that don't ship it.
+function NativeArt.PaintPanel(texture, atlas)
+  atlas = atlas or NativeArt.PANEL_BACKGROUND
+  if not NativeArt.AtlasInfo(atlas) then
+    return false
+  end
+  return NativeArt.SetAtlas(texture, atlas, false)
 end
 
 function NativeArt.AttachList(selection, hover)

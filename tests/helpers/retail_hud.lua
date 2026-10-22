@@ -20,6 +20,31 @@ function RetailHud.With(fn)
   end
 end
 
+local PANEL_ATLASES = {
+  ["Professions-background-summarylist"] = true,
+  ["auctionhouse-background-index"] = true,
+}
+
+-- Runs a test body with a stubbed C_Texture that knows only the panel
+-- background atlases (when `known`), so other atlas lookups (the retail
+-- scrollbar width) keep their fallback. Restores the stub afterwards.
+function RetailHud.WithAtlas(known, fn)
+  local saved = rawget(_G, "C_Texture")
+  rawset(_G, "C_Texture", {
+    GetAtlasInfo = function(atlas)
+      if known and PANEL_ATLASES[atlas] then
+        return { width = 300, height = 505 }
+      end
+      return nil
+    end,
+  })
+  local ok, err = pcall(fn)
+  rawset(_G, "C_Texture", saved)
+  if not ok then
+    error(err, 0)
+  end
+end
+
 -- A fake factory shaped like a particular client. options:
 --   missing  : set of template names whose CreateFrame throws, like the live
 --              client does for a template it does not ship
