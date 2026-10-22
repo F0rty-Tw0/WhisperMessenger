@@ -156,4 +156,23 @@ return function()
     end)
     assert(frame.frameStrata == "MEDIUM", "a click on a forbidden frame is outside the window; got " .. tostring(frame.frameStrata))
   end
+
+  -- test_click_on_window_covering_messenger_sends_it_back
+  -- The Auction House sits on top of the messenger: the cursor is inside the
+  -- messenger's rectangle, but the frame under it is the Auction House.
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = bindFrame(false, factory)
+    local auctionHouse = factory.CreateFrame("Frame", "AuctionHouseFrame", nil)
+    frame:Show()
+    frame.mouseOver = true
+    local savedFoci = _G.GetMouseFoci
+    rawset(_G, "GetMouseFoci", function()
+      return { auctionHouse }
+    end)
+    local ok, err = pcall(frame.scripts.OnEvent, frame, "GLOBAL_MOUSE_DOWN", "LeftButton")
+    _G.GetMouseFoci = savedFoci
+    assert(ok, err)
+    assert(frame.frameStrata == "MEDIUM", "a click on a window covering the messenger must not bring it forward; got " .. tostring(frame.frameStrata))
+  end
 end

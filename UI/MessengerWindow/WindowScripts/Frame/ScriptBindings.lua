@@ -88,13 +88,15 @@ function ScriptBindings.Bind(options)
     return ok and over == true
   end
 
-  -- Children can sit outside the window's rectangle (the contacts tabs hang
-  -- below it), so also count a click on any descendant as inside.
+  -- Ask which frame is under the cursor, not whether the cursor is inside
+  -- the window's rectangle: another window (Auction House) can cover ours,
+  -- and children can hang outside it (the contacts tabs). The rectangle is
+  -- the fallback when the game reports no focus.
   local function isPointerOnWindow()
-    if isMouseOverFrame() then
-      return true
+    if PointerFocus.Current() ~= nil then
+      return PointerFocus.IsFocusInside(frame)
     end
-    return PointerFocus.IsFocusInside(frame)
+    return isMouseOverFrame()
   end
 
   -- Strata/level transitions must never pull keyboard focus away from
