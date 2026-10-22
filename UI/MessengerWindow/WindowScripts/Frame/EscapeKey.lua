@@ -12,13 +12,56 @@ end
 -- Bindings can't change in combat. PLAYER_REGEN_DISABLED fires just before
 -- the lockdown starts, so ESC goes back to the game for the whole fight
 -- (it stops casts there) and returns once combat ends.
+--
+-- The game's ESC list closes a dialog and cancels spell targeting before
+-- any window, so ESC also goes back to the game while one is up. A cast in
+-- progress is not checked: out of combat, ESC closes the messenger first.
 local EscapeKey = {}
 
 local BUTTON_NAME = "WhisperMessengerEscapeButton"
 local GAME_MENU_ACTION = "TOGGLEGAMEMENU"
+-- Every dialog opens and closes through these (GameDialog's OnShow/OnHide
+-- call the first two), on Retail, Classic and WoW: Forever.
+local DIALOG_FUNCTIONS = { "StaticPopup_OnShow", "StaticPopup_OnHide", "StaticPopupSpecial_Show", "StaticPopupSpecial_Hide" }
 
 local function defaultInCombat()
   return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() == true
+end
+
+-- StaticPopup_EscapePressed closes only the hideOnEscape dialogs.
+local function escapeClosesDialog()
+  local forEachShownDialog = _G["StaticPopup_ForEachShownDialog"]
+  if type(forEachShownDialog) ~= "function" then
+    return false
+  end
+  local found = false
+  forEachShownDialog(function(dialog)
+    if dialog.hideOnEscape and dialog:IsShown() then
+      found = true
+    end
+  end)
+  return found
+end
+
+local function spellTargeting()
+  local spellIsTargeting = _G["SpellIsTargeting"]
+  return type(spellIsTargeting) == "function" and spellIsTargeting() == true
+end
+
+local function gameHasEscapeFirst()
+  return escapeClosesDialog() or spellTargeting()
+end
+
+-- Post-hooks only: the game's functions run untouched.
+local function watchDialogs(onChange)
+  if type(_G.hooksecurefunc) ~= "function" then
+    return
+  end
+  for _, name in ipairs(DIALOG_FUNCTIONS) do
+    if type(_G[name]) == "function" then
+      pcall(_G.hooksecurefunc, name, onChange)
+    end
+  end
 end
 
 local function gameMenuKeys(getBindingKey)
@@ -86,7 +129,7 @@ function EscapeKey.New(frame, deps)
     if inCombat() then
       return
     end
-    if focused and onScreen() then
+    if focused and onScreen() and not gameHasEscapeFirst() then
       bind()
     else
       unbind()
@@ -119,6 +162,8 @@ function EscapeKey.New(frame, deps)
       button:RegisterEvent("PLAYER_REGEN_DISABLED")
       button:RegisterEvent("PLAYER_REGEN_ENABLED")
       button:RegisterEvent("UPDATE_BINDINGS")
+      -- Fires when spell targeting starts and ends.
+      button:RegisterEvent("CURRENT_SPELL_CAST_CHANGED")
     end
     button:SetScript("OnEvent", function(_self, event)
       if event == "PLAYER_REGEN_DISABLED" then
@@ -130,6 +175,9 @@ function EscapeKey.New(frame, deps)
       end
     end)
   end
+  watchDialogs(function()
+    sync()
+  end)
 
   function key.setFocused(isFocused)
     focused = isFocused == true
