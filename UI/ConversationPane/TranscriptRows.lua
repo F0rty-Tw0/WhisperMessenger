@@ -31,6 +31,8 @@ local MESSAGE_FIELDS = {
   "reaction",
   "repeatCount",
   "lastSeenAt",
+  -- A /who reply can fill it in after the line arrived.
+  "senderLevel",
 }
 local MESSAGE_FIELD_COUNT = #MESSAGE_FIELDS
 
