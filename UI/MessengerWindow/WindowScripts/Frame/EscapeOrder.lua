@@ -14,7 +14,9 @@ local EscapeOrder = {}
 -- in front, so ESC and the game's other close-all sweeps (death, loss of
 -- control, a center panel opening) close it. It leaves the list while
 -- another window or one of its own popups has ESC, and comes back once that
--- window closes. Retail's RegisterGameMenuEscHandler is not used: calling it
+-- window closes. While in front it also holds the ESC key (EscapeKey), since
+-- other windows' ESC handlers run before that sweep. Retail's
+-- RegisterGameMenuEscHandler is not used: calling it
 -- from addon code taints the game's ESC handler list, and ESC then fails to
 -- stop casting.
 
@@ -68,12 +70,20 @@ local function isOpenOwnPopup(candidate)
   return candidate ~= nil and PickerPopup.IsEscapeFrame(candidate) and candidate:IsShown()
 end
 
-function EscapeOrder.New(frame)
+-- `escapeKey` (EscapeKey.New) hands the ESC key to the window while it is in
+-- front; optional.
+function EscapeOrder.New(frame, escapeKey)
   local yieldedTo = nil
   local hooked = setmetatable({}, { __mode = "k" })
 
   local function windowName()
     return type(frame.GetName) == "function" and frame:GetName() or nil
+  end
+
+  local function setKeyFocused(focused)
+    if escapeKey then
+      escapeKey.setFocused(focused)
+    end
   end
 
   local order = {}
@@ -86,6 +96,12 @@ function EscapeOrder.New(frame)
     end
     yieldedTo = nil
     setSpecialFrame(windowName(), true)
+    setKeyFocused(true)
+  end
+
+  -- The window closed: ESC belongs to the game again.
+  function order.release()
+    setKeyFocused(false)
   end
 
   -- The game's close-all sweep hides the UI panels before it reads
@@ -115,6 +131,7 @@ function EscapeOrder.New(frame)
     end
     yieldedTo = blocker
     setSpecialFrame(windowName(), false)
+    setKeyFocused(false)
     if not hooked[blocker] and type(blocker.HookScript) == "function" then
       hooked[blocker] = true
       blocker:HookScript("OnHide", onBlockerHidden)

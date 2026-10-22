@@ -1,0 +1,114 @@
+local addonName, ns = ...
+if type(ns) ~= "table" then
+  ns = {}
+end
+
+-- While the messenger has focus, the game-menu key (ESC) clicks a hidden
+-- button that closes it. Other windows' own ESC handlers (Professions) run
+-- before the game's close-all sweep, so UISpecialFrames alone can't close
+-- the messenger first. The override is a key binding, not a handler in the
+-- game's ESC list: registering there from addon code taints ESC.
+--
+-- Bindings can't change in combat. PLAYER_REGEN_DISABLED fires just before
+-- the lockdown starts, so ESC goes back to the game for the whole fight
+-- (it stops casts there) and returns once combat ends.
+local EscapeKey = {}
+
+local BUTTON_NAME = "WhisperMessengerEscapeButton"
+local GAME_MENU_ACTION = "TOGGLEGAMEMENU"
+
+local function defaultInCombat()
+  return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() == true
+end
+
+local function gameMenuKeys(getBindingKey)
+  local keys = {}
+  if type(getBindingKey) ~= "function" then
+    return keys
+  end
+  local raw = { getBindingKey(GAME_MENU_ACTION) }
+  for i = 1, #raw do
+    if type(raw[i]) == "string" and raw[i] ~= "" then
+      table.insert(keys, raw[i])
+    end
+  end
+  return keys
+end
+
+function EscapeKey.New(frame, deps)
+  deps = deps or {}
+  local createFrame = deps.createFrame or _G.CreateFrame
+  local getBindingKey = deps.getBindingKey or _G.GetBindingKey
+  local setOverrideBindingClick = deps.setOverrideBindingClick or _G["SetOverrideBindingClick"]
+  local clearOverrideBindings = deps.clearOverrideBindings or _G["ClearOverrideBindings"]
+  local inCombat = deps.inCombat or defaultInCombat
+
+  local focused = false
+  local bound = false
+  local button = nil
+  local key = {}
+
+  local function unbind()
+    if bound and type(clearOverrideBindings) == "function" then
+      clearOverrideBindings(button)
+    end
+    bound = false
+  end
+
+  local function bind()
+    if bound or button == nil or type(setOverrideBindingClick) ~= "function" then
+      return
+    end
+    for _, gameMenuKey in ipairs(gameMenuKeys(getBindingKey)) do
+      setOverrideBindingClick(button, true, gameMenuKey, BUTTON_NAME)
+      bound = true
+    end
+  end
+
+  local function sync()
+    if inCombat() then
+      return
+    end
+    if focused and frame:IsShown() then
+      bind()
+    else
+      unbind()
+    end
+  end
+
+  if type(createFrame) == "function" then
+    button = createFrame("Button", BUTTON_NAME, frame)
+  end
+  if button then
+    if type(button.RegisterForClicks) == "function" then
+      button:RegisterForClicks("AnyDown")
+    end
+    button:SetScript("OnClick", function()
+      if frame:IsShown() then
+        frame:Hide()
+      end
+    end)
+    if type(button.RegisterEvent) == "function" then
+      button:RegisterEvent("PLAYER_REGEN_DISABLED")
+      button:RegisterEvent("PLAYER_REGEN_ENABLED")
+    end
+    button:SetScript("OnEvent", function(_self, event)
+      if event == "PLAYER_REGEN_DISABLED" then
+        unbind()
+      else
+        sync()
+      end
+    end)
+  end
+
+  function key.setFocused(isFocused)
+    focused = isFocused == true
+    sync()
+  end
+
+  return key
+end
+
+ns.MessengerWindowWindowScriptsFrameEscapeKey = EscapeKey
+
+return EscapeKey

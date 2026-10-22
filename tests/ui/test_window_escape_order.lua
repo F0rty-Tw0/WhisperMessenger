@@ -121,6 +121,39 @@ return function()
     assert(not registered, "ESC handler registry taints ESC for the whole UI")
   end)
 
+  -- test_window_in_front_takes_the_escape_key
+  -- Other windows' own ESC handlers (Professions) run before the close-all
+  -- sweep, so the window in front needs the key itself.
+  withWorld(function(env)
+    local key = { focused = nil }
+    function key.setFocused(focused)
+      key.focused = focused
+    end
+    local order = EscapeOrder.New(env.window, key)
+    order.claim()
+    assert(key.focused == true, "the window in front must take ESC")
+    ownPopup(env):Show()
+    assert(key.focused == false, "an open popup must get ESC first")
+    order.claim()
+    assert(key.focused == false, "a click inside the popup must leave ESC with it")
+  end)
+
+  -- test_clicked_window_and_hidden_window_give_the_escape_key_back
+  withWorld(function(env)
+    local key = { focused = nil }
+    function key.setFocused(focused)
+      key.focused = focused
+    end
+    local order = EscapeOrder.New(env.window, key)
+    order.claim()
+    clickAuctionHouse(env)
+    order.yieldToClickedWindow()
+    assert(key.focused == false, "ESC must go to the clicked window")
+    order.claim()
+    order.release()
+    assert(key.focused == false, "a closed messenger must not hold ESC")
+  end)
+
   -- test_escape_closes_the_window_in_front
   withWorld(function(env)
     EscapeOrder.New(env.window).claim()

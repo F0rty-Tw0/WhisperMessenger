@@ -6,6 +6,7 @@ end
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
 local EscapeOrder = ns.MessengerWindowWindowScriptsFrameEscapeOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
+local EscapeKey = ns.MessengerWindowWindowScriptsFrameEscapeKey or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeKey")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ScriptBindings = {}
@@ -28,7 +29,7 @@ function ScriptBindings.Bind(options)
   local relayoutWindow = options.relayoutWindow
 
   local alphaTicker = nil
-  local escapeOrder = frame and EscapeOrder.New(frame) or nil
+  local escapeOrder = frame and EscapeOrder.New(frame, EscapeKey.New(frame)) or nil
 
   local function updateResizeFromCursor()
     contactsResize.updateFromCursor()
@@ -173,6 +174,7 @@ function ScriptBindings.Bind(options)
     end)
 
     frame:SetScript("OnHide", function()
+      escapeOrder.release()
       setOutsideClickListening(false)
       stopAlphaTicker()
       contactsResize.reset()
