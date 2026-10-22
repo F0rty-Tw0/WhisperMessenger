@@ -52,8 +52,9 @@ function Message.Build(payload, direction, channel, sentAt, isLeader)
   if direction == "in" and Mention.Matches(payload.text, Mention.PlayerName()) then
     msg.mention = true
   end
-  -- Frozen like classTag: the level as best known when they spoke. Looked up
-  -- only while levels are shown, so the off-by-default option costs nothing.
+  -- The level as best known when they spoke; a later /who reply can raise it
+  -- (SenderLevelBackfill). Looked up only while levels are shown, so the
+  -- off-by-default option costs nothing.
   if direction == "in" and payload.guid and DisplayName.ShowPlayerLevels() then
     msg.senderLevel = SenderLevel.Lookup(payload.guid, payload.playerName)
     SeenLevelEvents.Record(payload.guid, payload.playerName, msg.senderLevel)
