@@ -110,6 +110,7 @@ Transport/ChatGateway.lua
 Transport/BNetResolver/AccountName.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
+Core/WhoRow.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua
