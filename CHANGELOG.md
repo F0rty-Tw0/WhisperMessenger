@@ -17,7 +17,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: with the Native WoW HUD on, the bottom of the settings page no longer spills over the window border.
 - Fixed: the chat list's scrollbar no longer slides under the top bar of the open chat.
 - Fixed: clicking a window that sits over the messenger, like the Auction House, no longer pulls the messenger in front of it.
-- Fixed: after you click another window, like the Auction House, Escape closes that window and leaves the messenger open; the next press closes the messenger. On Retail, Escape with the messenger in front now closes only the messenger.
+- Fixed: after you click another window, like the Auction House, Escape closes that window and leaves the messenger open; the next press closes the messenger. With one of the messenger's menus or dialogs open, Escape closes just that first.
 - Fixed: on WoW: Forever, clicking a chat no longer pops open the Group Finder's Who list.
 - Fixed: while chat is locked for addons (Mythic+, boss fights, rated PvP), channel messages no longer fill the game's taint log with "blocked because of taint from WhisperMessenger" warnings.
 
