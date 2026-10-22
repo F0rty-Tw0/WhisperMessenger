@@ -225,7 +225,8 @@ end
 -- A level found outside these events (a group or channel line's sender).
 function SeenLevelEvents.Record(guid, name, level)
   local rt = runtime
-  if rt == nil or captureBlocked(rt) then
+  -- Most busy-channel senders have no known level: skip the lock checks.
+  if level == nil or rt == nil or captureBlocked(rt) then
     return
   end
   record(guid, name, level)
