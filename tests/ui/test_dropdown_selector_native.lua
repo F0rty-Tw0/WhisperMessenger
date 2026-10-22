@@ -8,6 +8,7 @@ local TemplateFactory = require("tests.helpers.template_factory")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
+local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local DROPDOWN_TEMPLATE = "WowStyle1DropdownTemplate"
 
@@ -31,6 +32,13 @@ local function dropdownFactory(withText)
         end
         function frame:GenerateMenu()
           self.generateCount = self.generateCount + 1
+        end
+        -- CallbackRegistryMixin: the callback gets the owner first.
+        function frame:RegisterCallback(event, callback, owner)
+          self.callbacks = self.callbacks or {}
+          self.callbacks[event] = function(...)
+            return callback(owner, ...)
+          end
         end
         if withText then
           frame.Text = frame:CreateFontString(nil, "OVERLAY")
@@ -89,6 +97,7 @@ local function withMenuUtil(fn)
   rawset(_G, "MenuUtil", {
     CreateContextMenu = function(owner, generator)
       calls[#calls + 1] = { owner = owner, generator = generator }
+      return calls.menu
     end,
   })
   local ok, err = pcall(fn, calls)
@@ -200,6 +209,44 @@ return function()
     assert(dropdown.button.template == nil, "no menu API: modern closed button")
     assert(FindUI.dropdownMenu(dropdown.row) ~= nil, "no menu API: custom menu")
   end
+
+  -- The game's menus close on ESC before the messenger: an opened one is
+  -- reported to the window. reportedMenus(fn) runs fn() and returns them.
+  local function reportedMenus(fn)
+    local reported = {}
+    local savedMixin = rawget(_G, "DropdownButtonMixin")
+    rawset(_G, "DropdownButtonMixin", { Event = { OnMenuOpen = "OnMenuOpen" } })
+    PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+      reported[#reported + 1] = { frame = shown, isGameMenu = isGameMenu }
+    end)
+    local ok, err = pcall(fn)
+    PickerPopup.SetEscapeFrameShownHandler(nil)
+    rawset(_G, "DropdownButtonMixin", savedMixin)
+    assert(ok, err)
+    return reported
+  end
+
+  -- test_hud_dropdown_reports_its_opened_menu
+  do
+    local menu = FakeUI.NewFactory().CreateFrame("Frame", nil, nil)
+    local reported = reportedMenus(function()
+      local dropdown = build(dropdownFactory())
+      dropdown.button.menu = menu
+      local onMenuOpen = (dropdown.button.callbacks or {}).OnMenuOpen
+      assert(onMenuOpen, "the dropdown must listen for its menu opening")
+      onMenuOpen(dropdown.button)
+    end)
+    assert(#reported == 1 and reported[1].frame == menu and reported[1].isGameMenu, "the open dropdown menu must take ESC first")
+  end
+
+  -- test_hud_menu_button_reports_its_context_menu
+  withMenuUtil(function(calls)
+    calls.menu = FakeUI.NewFactory().CreateFrame("Frame", nil, nil)
+    local reported = reportedMenus(function()
+      FindUI.click(build(FakeUI.NewFactory()).button)
+    end)
+    assert(#reported == 1 and reported[1].frame == calls.menu, "the open context menu must take ESC first")
+  end)
 
   -- test_modern_dropdown_ignores_the_blizzard_api
   do
