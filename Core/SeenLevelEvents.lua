@@ -222,6 +222,15 @@ local function onEvent(_self, event, unit)
   end
 end
 
+-- A level found outside these events (a group or channel line's sender).
+function SeenLevelEvents.Record(guid, name, level)
+  local rt = runtime
+  if rt == nil or captureBlocked(rt) then
+    return
+  end
+  record(guid, name, level)
+end
+
 function SeenLevelEvents.Init(rt)
   runtime = rt
   if SeenLevelEvents._frame == nil then
