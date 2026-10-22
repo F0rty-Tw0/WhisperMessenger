@@ -46,7 +46,8 @@ local function reportEscapeFrameShown(popup)
   end
 end
 
--- `handler(popup)` runs whenever a popup registered with its frame opens.
+-- `handler(popup)` runs whenever a popup registered with its frame opens,
+-- `handler(menu, true)` for a game menu reported with ReportMenuShown.
 function PickerPopup.SetEscapeFrameShownHandler(handler)
   escapeFrameShownHandler = handler
 end
@@ -72,6 +73,34 @@ function PickerPopup.RegisterEscape(frameName, frame)
     end
   end
   table.insert(_G.UISpecialFrames, frameName)
+end
+
+-- The game menu open now: the Menu system's (Retail, Classic, WoW:
+-- Forever) or the old dropdown list.
+local function openGameMenu()
+  local menuApi = _G["Menu"]
+  if type(menuApi) == "table" and type(menuApi.GetManager) == "function" then
+    local manager = menuApi.GetManager()
+    local open = manager and type(manager.GetOpenMenu) == "function" and manager:GetOpenMenu() or nil
+    if open ~= nil then
+      return open
+    end
+  end
+  local dropDownList = _G["DropDownList1"]
+  if dropDownList ~= nil and dropDownList:IsShown() then
+    return dropDownList
+  end
+  return nil
+end
+
+-- Call right after the window opens a game menu (MenuUtil, UnitPopup, a
+-- dropdown): ESC must close it first. Pass the menu frame when known.
+-- The handler gets (menu, true).
+function PickerPopup.ReportMenuShown(menu)
+  menu = menu or openGameMenu()
+  if menu ~= nil and escapeFrameShownHandler then
+    escapeFrameShownHandler(menu, true)
+  end
 end
 
 -- True when `frame` is one of the popups registered here.
