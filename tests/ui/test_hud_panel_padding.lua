@@ -51,9 +51,26 @@ return function()
   do
     local layout = buildLayout(true)
     LayoutBuilder.Relayout(layout, 920, 500)
-    local pt = anchor(layout.contactsView.scrollFrame, "BOTTOMRIGHT")
+    local pt = anchor(layout.contactsView.scrollFrame, "BOTTOMLEFT")
     assert(pt[5] == padding(), "HUD: contact list ends above the bottom border, got " .. tostring(pt[5]))
-    assert(pt[4] == -padding(), "HUD: contact scrollbar clears the divider, got " .. tostring(pt[4]))
+  end
+
+  -- test_contacts_scrollbar_stays_in_the_contacts_pane
+  -- The bar hangs right of the list. A long list narrows to make room for it;
+  -- an anchor on the list's right edge would override that width in game and
+  -- push the bar under the chat header next door.
+  for _, native in ipairs({ true, false }) do
+    local label = native and "HUD" or "modern"
+    local layout = buildLayout(native)
+    local cv = layout.contactsView
+    ScrollView.RefreshMetrics(cv, 2000)
+    LayoutBuilder.Relayout(layout, 900, 500)
+    for _, pt in ipairs(cv.scrollFrame.points or {}) do
+      assert(pt[1] ~= "BOTTOMRIGHT" and pt[1] ~= "TOPRIGHT", label .. ": no anchor may fix the contact list's width")
+    end
+    local barRight = cv.scrollFrame:GetWidth() + cv.scrollBar:GetWidth()
+    local paneRight = layout.contactsPane:GetWidth() - (native and padding() or 0)
+    assert(barRight <= paneRight, label .. ": bar ends inside the contacts pane, got " .. barRight .. " > " .. paneRight)
   end
 
   -- test_hud_options_page_scrollbar_clears_the_right_border
@@ -91,7 +108,7 @@ return function()
     assert(anchor(layout.optionsPanel, "TOPLEFT")[5] == -20, "modern: options keep their top offset")
     assert(anchor(layout.optionsMenuScrollView.scrollBar, "TOPRIGHT")[4] == 0, "modern: menu scrollbar stays flush")
     LayoutBuilder.Relayout(layout, 920, 500)
-    local listEdge = anchor(layout.contactsView.scrollFrame, "BOTTOMRIGHT")
+    local listEdge = anchor(layout.contactsView.scrollFrame, "BOTTOMLEFT")
     assert(listEdge[4] == 0 and listEdge[5] == 0, "modern: contact list stays flush")
   end
 end

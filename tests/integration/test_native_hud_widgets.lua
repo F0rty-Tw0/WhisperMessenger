@@ -14,7 +14,7 @@ local SIZE_GRABBER = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up"
 
 local function bottomAnchorY(scrollFrame)
   for i = #(scrollFrame.points or {}), 1, -1 do
-    if scrollFrame.points[i][1] == "BOTTOMRIGHT" then
+    if scrollFrame.points[i][1] == "BOTTOMLEFT" then
       return scrollFrame.points[i][5]
     end
   end

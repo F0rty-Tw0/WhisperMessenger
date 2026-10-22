@@ -9,7 +9,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local function bottomAnchorY(scrollFrame)
   for i = #(scrollFrame.points or {}), 1, -1 do
     local pt = scrollFrame.points[i]
-    if pt[1] == "BOTTOMRIGHT" then
+    if pt[1] == "BOTTOMLEFT" then
       return pt[5]
     end
   end

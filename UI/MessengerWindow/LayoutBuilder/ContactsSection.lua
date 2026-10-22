@@ -85,21 +85,22 @@ function ContactsSection.Build(factory, frame, sizing, options)
     railSearchButton.applySkin(activeTheme)
   end
 
+  -- Native WoW HUD: the list and its scrollbar clear the panel's right border.
+  local rightInset = nativeChrome and L.HUD_PANEL_PADDING or 0
   local contactsView = scrollView.Create(factory, contactsPane, {
-    width = contactsWidth,
+    width = contactsWidth - rightInset,
     height = contactsListHeight,
     point = { "TOPLEFT", contactsPane, "TOPLEFT", 0, -searchTotalHeight - 2 },
     step = theme.LAYOUT.CONTACT_ROW_HEIGHT,
   })
-  -- Dual-anchor the scrollFrame's BOTTOMRIGHT to the pane so the viewport
-  -- stops exactly at the pane border regardless of any mismatch between the
-  -- calculated contactsListHeight and the pane's live dual-anchor height.
-  -- Without this, the scrollFrame extends a few px past the pane bottom and
-  -- the last row paints over the pane border into the window chrome.
+  -- Anchor the scrollFrame's bottom to the pane so the viewport stops
+  -- exactly at the pane border regardless of any mismatch between the
+  -- calculated contactsListHeight and the pane's live height; otherwise the
+  -- last row paints over the border. Left corner only: a right-side anchor
+  -- would fix the width, so a long list couldn't narrow for its scrollbar
+  -- and the bar would hang under the chat header next door.
   if contactsView.scrollFrame and contactsView.scrollFrame.SetPoint then
-    -- Native WoW HUD: the scrollbar clears the panel's right border.
-    local rightInset = nativeChrome and L.HUD_PANEL_PADDING or 0
-    contactsView.scrollFrame:SetPoint("BOTTOMRIGHT", contactsPane, "BOTTOMRIGHT", -rightInset, sizing.contactsBottomInset or 0)
+    contactsView.scrollFrame:SetPoint("BOTTOMLEFT", contactsPane, "BOTTOMLEFT", 0, sizing.contactsBottomInset or 0)
   end
 
   local contentParent = contactsPaneParent
