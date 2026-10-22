@@ -99,10 +99,25 @@ function EscapeOrder.New(frame)
     setSpecialFrame(windowName(), true)
   end
 
+  -- The game's close-all sweep hides the UI panels before it reads
+  -- UISpecialFrames, so listing the window inside the panel's OnHide would
+  -- close it with the same ESC press. ESC comes back now; the list entry
+  -- comes back on the next frame.
   local function onBlockerHidden(blocker)
-    if blocker == yieldedTo then
-      order.claim()
+    if blocker ~= yieldedTo then
+      return
     end
+    yieldedTo = nil
+    local timer = _G.C_Timer
+    if timer == nil or type(timer.After) ~= "function" then
+      order.claim()
+      return
+    end
+    timer.After(0, function()
+      if yieldedTo == nil then
+        order.claim()
+      end
+    end)
   end
 
   function order.yieldToClickedWindow()
