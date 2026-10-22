@@ -37,13 +37,6 @@ function PointerFocus.FindFocusAncestor(matches)
   return nil
 end
 
--- True when the frame under the cursor is `frame` or one of its descendants.
-function PointerFocus.IsFocusInside(frame)
-  return PointerFocus.FindFocusAncestor(function(candidate)
-    return candidate == frame
-  end) ~= nil
-end
-
 ns.MessengerWindowWindowScriptsFramePointerFocus = PointerFocus
 
 return PointerFocus

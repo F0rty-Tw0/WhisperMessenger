@@ -56,6 +56,17 @@ function PickerPopup.RegisterEscape(frameName)
   table.insert(_G.UISpecialFrames, frameName)
 end
 
+-- True when `frame` is one of the popups registered here.
+function PickerPopup.IsEscapeFrame(frame)
+  local name = type(frame.GetName) == "function" and frame:GetName() or nil
+  for _, known in ipairs(escapeFrameNames) do
+    if name ~= nil and known == name then
+      return true
+    end
+  end
+  return false
+end
+
 -- The messenger's ESC handler runs before UISpecialFrames close, so it
 -- closes the open popups itself. True when one was open.
 function PickerPopup.HideEscapeFrames()

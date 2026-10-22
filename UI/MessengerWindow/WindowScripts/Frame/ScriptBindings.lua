@@ -6,6 +6,7 @@ end
 local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
   or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
 local EscapeOrder = ns.MessengerWindowWindowScriptsFrameEscapeOrder or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.EscapeOrder")
+local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ScriptBindings = {}
 
@@ -92,11 +93,13 @@ function ScriptBindings.Bind(options)
 
   -- Ask which frame is under the cursor, not whether the cursor is inside
   -- the window's rectangle: another window (Auction House) can cover ours,
-  -- and children can hang outside it (the contacts tabs). The rectangle is
-  -- the fallback when the game reports no focus.
+  -- and children (contacts tabs) or our UIParent popups sit outside it. The
+  -- rectangle is the fallback when the game reports no focus.
   local function isPointerOnWindow()
     if PointerFocus.Current() ~= nil then
-      return PointerFocus.IsFocusInside(frame)
+      return PointerFocus.FindFocusAncestor(function(candidate)
+        return candidate == frame or PickerPopup.IsEscapeFrame(candidate)
+      end) ~= nil
     end
     return isMouseOverFrame()
   end
@@ -193,10 +196,8 @@ function ScriptBindings.Bind(options)
         return
       end
       options.refreshWindowAlpha()
-      -- Intentionally do NOT demote strata here. Mouse-over alone (e.g.
-      -- moving the cursor onto the Auction House or another addon) must
-      -- not send our window to the back — only an explicit click outside
-      -- our frame should, handled via GLOBAL_MOUSE_DOWN below.
+      -- No demote here: only a click elsewhere (GLOBAL_MOUSE_DOWN below)
+      -- sends the window back, never mouse-over alone.
     end)
 
     if type(frame.IsShown) == "function" and frame:IsShown() then
