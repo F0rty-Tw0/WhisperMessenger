@@ -1,5 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local RetailHud = require("tests.helpers.retail_hud")
 local Theme = require("WhisperMessenger.UI.Theme")
+local NativeArt = require("WhisperMessenger.UI.Helpers.NativeArt")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
 local LayoutBuilder = require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder")
 
@@ -64,6 +66,48 @@ return function()
     layout.applyTheme(Theme)
     assert(isTransparent(layout.contactsPaneBg), "HUD: contacts pane bg should stay transparent after theme apply")
   end
+
+  -- test_retail_hud_contacts_atlas_survives_theme_apply
+  RetailHud.With(function()
+    RetailHud.WithAtlas(true, function()
+      local layout = buildLayout(true, true)
+      local colorBefore = layout.contactsPaneBg.color
+      layout.applyTheme(Theme)
+      assert(layout.contactsPaneBg.atlas == NativeArt.PANEL_BACKGROUND, "retail: contacts bg keeps the panel atlas after theme apply")
+      assert(layout.contactsPaneBg.color == colorBefore, "retail: theme apply should not repaint the contacts bg")
+    end)
+  end)
+
+  -- test_retail_hud_without_atlas_keeps_contacts_transparent_after_theme_apply
+  RetailHud.With(function()
+    RetailHud.WithAtlas(false, function()
+      local layout = buildLayout(true, true)
+      layout.applyTheme(Theme)
+      assert(isTransparent(layout.contactsPaneBg), "retail, no atlas: contacts bg stays transparent after theme apply")
+    end)
+  end)
+
+  -- test_retail_hud_settings_backgrounds_use_the_panel_atlas
+  RetailHud.With(function()
+    RetailHud.WithAtlas(true, function()
+      local layout = buildLayout(true, true)
+      layout.applyTheme(Theme)
+      assert(layout.optionsMenuBg.atlas == NativeArt.PANEL_BACKGROUND, "retail: settings menu bg should carry the panel atlas")
+      assert(layout.optionsContentBg.atlas == NativeArt.WIDE_PANEL_BACKGROUND, "retail: settings content bg should carry the wide panel atlas")
+      assert(not isTransparent(layout.optionsMenuBg), "retail: theme apply should not clear the settings menu bg")
+      assert(not isTransparent(layout.optionsContentBg), "retail: theme apply should not clear the settings content bg")
+    end)
+  end)
+
+  -- test_retail_hud_without_atlas_keeps_settings_backgrounds_transparent
+  RetailHud.With(function()
+    RetailHud.WithAtlas(false, function()
+      local layout = buildLayout(true, true)
+      layout.applyTheme(Theme)
+      assert(isTransparent(layout.optionsMenuBg), "retail, no atlas: settings menu bg stays transparent")
+      assert(isTransparent(layout.optionsContentBg), "retail, no atlas: settings content bg stays transparent")
+    end)
+  end)
 
   -- test_native_chrome_options_panel_clears_the_panel_borders
   do

@@ -6,10 +6,22 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 local applyColorTexture = UIHelpers.applyColorTexture
 local sizeValue = UIHelpers.sizeValue
 
 local OptionsPanelLayout = {}
+
+-- The Retail HUD covers the window's rough backdrop with the smooth panel
+-- art (`atlas`, default the list one); other HUD styles keep the pane
+-- clear, modern paints `color`.
+local function paintPane(texture, nativeChrome, color, applyTexture, atlas)
+  if nativeChrome and Hud.IsRetail() and NativeArt.PaintPanel(texture, atlas) then
+    return
+  end
+  applyTexture(texture, nativeChrome and UIHelpers.TRANSPARENT or color)
+end
 
 function OptionsPanelLayout.Build(factory, frame, initialState, options)
   options = options or {}
@@ -54,8 +66,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local optionsMenuBg = optionsMenu:CreateTexture(nil, "BACKGROUND")
   optionsMenuBg:SetAllPoints(optionsMenu)
-  -- Native WoW HUD keeps the options panes clear so the template art shows.
-  applyTexture(optionsMenuBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_secondary)
+  paintPane(optionsMenuBg, nativeChrome, theme.COLORS.bg_secondary, applyTexture)
 
   local menuPadding = theme.CONTENT_PADDING
   -- Set once the nav buttons exist (OptionsMenuButtons contentHeight).
@@ -112,7 +123,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
 
   local optionsContentBg = optionsContentPane:CreateTexture(nil, "BACKGROUND")
   optionsContentBg:SetAllPoints(optionsContentPane)
-  applyTexture(optionsContentBg, nativeChrome and UIHelpers.TRANSPARENT or theme.COLORS.bg_primary)
+  paintPane(optionsContentBg, nativeChrome, theme.COLORS.bg_primary, applyTexture, NativeArt.WIDE_PANEL_BACKGROUND)
 
   -- Initial content height before the per-tab measurement (in
   -- WindowScripts/Buttons selectTab) runs. RefreshMetrics floors the
