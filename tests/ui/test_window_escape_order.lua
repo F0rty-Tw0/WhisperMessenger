@@ -154,6 +154,21 @@ return function()
     assert(key.focused == false, "a closed messenger must not hold ESC")
   end)
 
+  -- test_click_back_on_window_retakes_escape_while_panel_stays_open
+  withWorld(function(env)
+    local key = { focused = nil }
+    function key.setFocused(focused)
+      key.focused = focused
+    end
+    local order = EscapeOrder.New(env.window, key)
+    order.claim()
+    clickAuctionHouse(env)
+    order.yieldToClickedWindow()
+    order.claim()
+    assert(key.focused == true, "a click back on the messenger must take ESC from the Auction House")
+    assert(contains(_G.UISpecialFrames, WINDOW_NAME), "the messenger must rejoin the ESC sweep")
+  end)
+
   -- test_escape_closes_the_window_in_front
   withWorld(function(env)
     EscapeOrder.New(env.window).claim()
