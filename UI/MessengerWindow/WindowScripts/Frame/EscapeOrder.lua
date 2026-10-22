@@ -13,8 +13,8 @@ local EscapeOrder = {}
 -- (Auction House, Character...). The window stays in UISpecialFrames while
 -- in front, so ESC and the game's other close-all sweeps (death, loss of
 -- control, a center panel opening) close it. It leaves the list while
--- another window or one of its own popups has ESC, and comes back once that
--- window closes. While in front it also holds the ESC key (EscapeKey), since
+-- another window or one of its own popups or game menus has ESC, and comes
+-- back once that closes. While in front it also holds the ESC key (EscapeKey), since
 -- other windows' ESC handlers run before that sweep. Retail's
 -- RegisterGameMenuEscHandler is not used: calling it
 -- from addon code taints the game's ESC handler list, and ESC then fails to
@@ -66,14 +66,17 @@ local function closesOnEscape(candidate)
   return name ~= nil and type(_G.UISpecialFrames) == "table" and indexOf(_G.UISpecialFrames, name) ~= nil
 end
 
-local function isOpenOwnPopup(candidate)
-  return candidate ~= nil and PickerPopup.IsEscapeFrame(candidate) and candidate:IsShown()
-end
+-- Game menus come from a frame pool that resets their scripts on reuse, so
+-- a hook on one can silently vanish: the window checks this often whether
+-- its menu is still open instead.
+local MENU_CHECK_SECONDS = 0.1
 
 -- `escapeKey` (EscapeKey.New) hands the ESC key to the window while it is in
 -- front; optional.
 function EscapeOrder.New(frame, escapeKey)
   local yieldedTo = nil
+  -- True when yieldedTo is one of the window's own popups or menus.
+  local yieldedToOwn = false
   local hooked = setmetatable({}, { __mode = "k" })
 
   local function windowName()
@@ -88,13 +91,14 @@ function EscapeOrder.New(frame, escapeKey)
 
   local order = {}
 
-  -- A click inside an open popup counts as a click on the window; ESC must
-  -- still close that popup first.
+  -- A click inside an open popup or menu counts as a click on the window;
+  -- ESC must still close that first.
   function order.claim()
-    if isOpenOwnPopup(yieldedTo) then
+    if yieldedToOwn and yieldedTo:IsShown() then
       return
     end
     yieldedTo = nil
+    yieldedToOwn = false
     setSpecialFrame(windowName(), true)
     setKeyFocused(true)
   end
@@ -112,6 +116,7 @@ function EscapeOrder.New(frame, escapeKey)
       return
     end
     yieldedTo = nil
+    yieldedToOwn = false
     local timer = _G.C_Timer
     -- Every client has C_Timer; only test stubs without it get here.
     if timer == nil or type(timer.After) ~= "function" then
@@ -125,24 +130,58 @@ function EscapeOrder.New(frame, escapeKey)
     end)
   end
 
-  local function yieldTo(blocker)
-    if blocker == nil or blocker == frame then
-      return
-    end
-    yieldedTo = blocker
-    setSpecialFrame(windowName(), false)
-    setKeyFocused(false)
+  local function hookHidden(blocker)
     if not hooked[blocker] and type(blocker.HookScript) == "function" then
       hooked[blocker] = true
       blocker:HookScript("OnHide", onBlockerHidden)
     end
   end
 
-  function order.yieldToClickedWindow()
-    yieldTo(PointerFocus.FindFocusAncestor(closesOnEscape))
+  local function watchMenu(menu)
+    if menu ~= yieldedTo then
+      return
+    end
+    if not menu:IsShown() then
+      onBlockerHidden(menu)
+      return
+    end
+    local timer = _G.C_Timer
+    if timer ~= nil and type(timer.After) == "function" then
+      timer.After(MENU_CHECK_SECONDS, function()
+        watchMenu(menu)
+      end)
+    end
   end
 
-  PickerPopup.SetEscapeFrameShownHandler(yieldTo)
+  -- Returns true when the window gave ESC up to `blocker`.
+  local function yieldTo(blocker, own)
+    if blocker == nil or blocker == frame then
+      return false
+    end
+    yieldedTo = blocker
+    yieldedToOwn = own
+    setSpecialFrame(windowName(), false)
+    setKeyFocused(false)
+    return true
+  end
+
+  function order.yieldToClickedWindow()
+    local clicked = PointerFocus.FindFocusAncestor(closesOnEscape)
+    if yieldTo(clicked, false) then
+      hookHidden(clicked)
+    end
+  end
+
+  PickerPopup.SetEscapeFrameShownHandler(function(shown, isGameMenu)
+    if not yieldTo(shown, true) then
+      return
+    end
+    if isGameMenu then
+      watchMenu(shown)
+    else
+      hookHidden(shown)
+    end
+  end)
 
   return order
 end
