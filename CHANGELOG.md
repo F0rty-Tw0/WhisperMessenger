@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+## [2.1.1] - 2026-10-23
+
 - The chat header now shows the player's race next to their level and class. When the race is known, Horde and Alliance show only as the icon next to the name.
 - Chat bubbles now show the sender's level after their name, like "Nergrom (20)".
 - When someone you have a whisper chat with talks in group or channel chat, their whisper chat now picks up the level learned from that message. Needs "Show player levels" turned on.
