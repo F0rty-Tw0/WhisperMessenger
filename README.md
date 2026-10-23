@@ -12,6 +12,8 @@
   <a href="https://github.com/F0rty-Tw0/WhisperMessenger/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/F0rty-Tw0/WhisperMessenger/ci.yml?label=CI" alt="CI"></a>
 </p>
 
+[![BuyMeACoffee](https://raw.githubusercontent.com/pachadotdev/buymeacoffee-badges/main/bmc-donate-yellow.svg)](buymeacoffee.com/f0rty_tw0)
+
 <p align="center">
   <b>Never lose a whisper again.</b><br>
   Every conversation lands in one messenger window with history, online status and unread badges, like the messenger you already use, inside World of Warcraft.
