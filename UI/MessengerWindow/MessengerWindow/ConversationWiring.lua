@@ -32,6 +32,7 @@ function ConversationWiring.Create(factory, options)
     isPlayerBlocked = windowOptions.isPlayerBlocked,
     onUnblockPlayer = windowOptions.onUnblockPlayer,
     whoPlayer = windowOptions.whoPlayer,
+    getContactInfoLines = windowOptions.getContactInfoLines,
     hideEmptyHeader = nativeChrome,
     nativeChrome = nativeChrome,
   })

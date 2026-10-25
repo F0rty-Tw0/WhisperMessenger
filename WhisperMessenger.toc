@@ -66,6 +66,7 @@ Model/Filters/RulePresets.lua
 Model/Filters/DuplicateCollapse.lua
 Util/ChatReplyState.lua
 Model/ConversationDrafts.lua
+Model/ContactInfo.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
@@ -244,6 +245,7 @@ UI/ConversationPane/BottomBanner.lua
 UI/ConversationPane/RequestBanner.lua
 UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
+UI/ConversationPane/InfoStrip.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
@@ -259,6 +261,8 @@ UI/Composer/ComposerLimit.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
+UI/ToggleIcon/PreviewMetrics.lua
+UI/ToggleIcon/PreviewAutoDismiss.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/Desaturation.lua
@@ -279,6 +283,7 @@ UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
 UI/MessengerWindow/ChromeBuilder/MarkAllReadButton.lua
 UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
+UI/MessengerWindow/ChromeBuilder/PanelButton.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
@@ -347,6 +352,7 @@ UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
 UI/MessengerWindow/MessengerWindow/ContactsRuntime.lua
 UI/MessengerWindow/MessengerWindow/SelectionController.lua
 UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
+UI/MessengerWindow/MessengerWindow/PanelHost.lua
 UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
@@ -415,8 +421,15 @@ Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua
 Core/Bootstrap/WindowRuntime/MinimapIconRuntime.lua
 Core/Bootstrap/WindowRuntime/ToggleFlow.lua
+Core/Bootstrap/WindowRuntime/PanelRegistry.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
+Core/Bootstrap/WindowRuntime/ExternalPreview.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
+Core/PublicApi/Guards.lua
+Core/PublicApi/ContactInfo.lua
+Core/PublicApi/Preview.lua
+Core/PublicApi/Panels.lua
+Core/PublicApi.lua
 Bootstrap.lua

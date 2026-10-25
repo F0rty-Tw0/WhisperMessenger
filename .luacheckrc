@@ -32,6 +32,7 @@ globals = {
   -- SavedVariables (declared in .toc)
   "WhisperMessengerDB",
   "WhisperMessengerCharacterDB",
+  "WhisperMessengerAPI",
 
   -- Slash command registration (Blizzard pattern)
   "SlashCmdList",
@@ -232,6 +233,7 @@ files["tests/**/*.lua"] = {
     "GetRealmName",
     "WhisperMessengerDB",
     "WhisperMessengerCharacterDB",
+    "WhisperMessengerAPI",
     "print",
     "date",
     "time",

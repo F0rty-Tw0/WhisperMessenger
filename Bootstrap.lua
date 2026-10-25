@@ -260,6 +260,7 @@ local function initializeRuntime()
   })
   _G.WhisperMessengerDB = Bootstrap.runtime.accountState
   _G.WhisperMessengerCharacterDB = Bootstrap.runtime.characterState
+  loadModule("WhisperMessenger.Core.PublicApi", "PublicApi").Publish(Bootstrap.runtime)
 
   return Bootstrap.runtime
 end

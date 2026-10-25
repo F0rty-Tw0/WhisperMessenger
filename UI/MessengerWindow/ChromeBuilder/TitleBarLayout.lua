@@ -17,6 +17,15 @@ local function place(region, point, relativeTo, relativePoint, x, y)
   region:SetPoint(point, relativeTo, relativePoint, x, y)
 end
 
+-- Addon panel buttons sit right of mark-all-read, each after the previous.
+local function placePanelButtons(parts, gap)
+  local previous = parts.markAllReadButton
+  for _, button in ipairs(parts.panelButtons or {}) do
+    place(button, "LEFT", previous, "RIGHT", gap, 0)
+    previous = button
+  end
+end
+
 local function applyModern(parts, L)
   local size, gap = L.TITLE_BUTTON_SIZE, L.TITLE_BUTTON_GAP
   -- Buttons are siblings of the title bar; at an equal frame level its
@@ -33,6 +42,7 @@ local function applyModern(parts, L)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", gap, 0)
   place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -gap, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -gap, 0)
+  placePanelButtons(parts, gap)
 end
 
 -- The template owns the close button and title; the gear sits left of the X.
@@ -54,6 +64,7 @@ local function applyHud(parts, L)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -HUD_GAP, 0)
+  placePanelButtons(parts, HUD_GAP)
 end
 
 -- Retail: same arrangement as the other looks, but the left cluster starts
@@ -82,21 +93,28 @@ local function applyRetailHud(parts, L)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -HUD_GAP, 0)
+  placePanelButtons(parts, HUD_GAP)
 end
 
 -- parts: frame, titleBar (custom chrome only), title, closeButton,
 -- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
--- blizzardChrome (bool), retailChrome (bool).
+-- blizzardChrome (bool), retailChrome (bool), panelButtons (optional list).
 function TitleBarLayout.Apply(parts, theme)
-  parts.buttons = parts.buttons
-    or {
+  if not parts.buttons then
+    parts.buttons = {
       parts.newConversationButton,
       parts.patchNotesButton,
       parts.markAllReadButton,
       parts.optionsButton,
       parts.backButton,
-      not parts.blizzardChrome and parts.closeButton or nil,
     }
+    if not parts.blizzardChrome then
+      table.insert(parts.buttons, parts.closeButton)
+    end
+    for _, button in ipairs(parts.panelButtons or {}) do
+      table.insert(parts.buttons, button)
+    end
+  end
   if parts.retailChrome then
     applyRetailHud(parts, theme.LAYOUT)
     return
@@ -106,6 +124,15 @@ function TitleBarLayout.Apply(parts, theme)
     return
   end
   applyModern(parts, theme.LAYOUT)
+end
+
+-- Adds an addon panel button; the next Apply sizes and places it.
+function TitleBarLayout.AddPanelButton(parts, button)
+  parts.panelButtons = parts.panelButtons or {}
+  table.insert(parts.panelButtons, button)
+  if parts.buttons then
+    table.insert(parts.buttons, button)
+  end
 end
 
 ns.MessengerWindowChromeBuilderTitleBarLayout = TitleBarLayout

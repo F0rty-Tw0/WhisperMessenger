@@ -49,6 +49,7 @@ function WindowCoordinator.Create(options)
   local requestAvailability = options.requestAvailability or WhisperGateway.RequestAvailability
   local cTimer = options.cTimer or _G.C_Timer
   local selectConversation = options.selectConversation
+  local externalPreview = options.externalPreview
 
   local statusTicker = nil
   local requestFollow = RequestFollow.Create(getWindow, selectConversation)
@@ -175,6 +176,20 @@ function WindowCoordinator.Create(options)
     getMinimapIcon = getMinimapIcon,
     getLdbObject = getLdbObject,
   }
+  if externalPreview then
+    iconSurfaces.getExternalPreview = externalPreview.get
+    iconSurfaces.previewsOff = function()
+      local settings = runtime.accountState and runtime.accountState.settings
+      return settings ~= nil and settings.showWidgetMessagePreview == false
+    end
+    iconSurfaces.dropExternalPreview = function()
+      externalPreview.clear()
+    end
+  end
+
+  function coordinator.updateIconSurfaces()
+    IconSurfaces.Update(buildContacts(), iconSurfaces)
+  end
 
   -- dirtyKeys nil rebuilds every contact; a set rebuilds only those keys.
   function coordinator.refreshContacts(dirtyKeys)

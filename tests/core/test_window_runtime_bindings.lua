@@ -53,6 +53,9 @@ return function()
     toggle = function()
       return "toggled"
     end,
+    startConversation = function(name)
+      return name == "Jaina"
+    end,
   })
 
   assert(bindings.setComposerText == controller.setComposerText, "setComposerText should be exposed on controller")
@@ -89,4 +92,29 @@ return function()
   assert(runtime.isWindowVisible == controller.isWindowVisible, "runtime.isWindowVisible should share controller visibility")
   assert(runtime.isWindowVisible() == false, "runtime.isWindowVisible should delegate visibility")
   assert(runtime.setComposerText == controller.setComposerText, "runtime.setComposerText should share controller composer setter")
+
+  assert(runtime.startConversation("Jaina") == true, "runtime.startConversation should be wired")
+
+  local bare = {}
+  RuntimeBindings.Apply({ runtime = bare, controller = {} })
+  assert(bare.startConversation("x") == false, "startConversation should default to a refusal")
+
+  -- test_external_preview_wiring_reaches_the_runtime
+  local holder, widget, updates = {}, {}, 0
+  local wired = {}
+  RuntimeBindings.Apply({
+    runtime = wired,
+    controller = {},
+    externalPreview = holder,
+    getWidgetIcon = function()
+      return widget
+    end,
+    updateIconSurfaces = function()
+      updates = updates + 1
+    end,
+  })
+  wired.updateIconSurfaces()
+  assert(wired.externalPreview == holder and wired.getWidgetIcon() == widget and updates == 1, "external preview wiring reaches the runtime")
+  assert(bare.getWidgetIcon() == nil, "getWidgetIcon should default to no widget")
+  bare.updateIconSurfaces()
 end

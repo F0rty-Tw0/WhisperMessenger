@@ -341,6 +341,8 @@ function ToggleIcon.Create(factory, options)
     setUnreadCount = setUnreadCount,
     setCompetitiveContent = setCompetitiveContent,
     setIncomingPreview = setIncomingPreview,
+    setExternalPreview = incomingPreview.setExternalPreview,
+    isExternalPreviewShown = incomingPreview.isExternalShown,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,

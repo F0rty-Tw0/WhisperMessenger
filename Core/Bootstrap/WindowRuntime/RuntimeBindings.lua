@@ -4,6 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
+local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
+local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 
 local RuntimeBindings = {}
 
@@ -42,6 +44,13 @@ function RuntimeBindings.Apply(options)
   local selectConversation = options.selectConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
   local toggle = options.toggle or function() end
+  local startConversation = options.startConversation or function()
+    return false
+  end
+  local getWidgetIcon = options.getWidgetIcon or function()
+    return nil
+  end
+  local updateIconSurfaces = options.updateIconSurfaces or function() end
 
   local setComposerText = buildComposerTextSetter(runtime, getWindow)
 
@@ -74,6 +83,12 @@ function RuntimeBindings.Apply(options)
   runtime.isWindowVisible = controller.isWindowVisible
   runtime.setWindowVisible = controller.setWindowVisible
   runtime.setComposerText = controller.setComposerText
+  runtime.startConversation = startConversation
+  runtime.externalPreview = options.externalPreview
+  runtime.getWidgetIcon = getWidgetIcon
+  runtime.updateIconSurfaces = updateIconSurfaces
+  runtime.panelRegistry = PanelRegistry.New()
+  runtime.contactInfo = ContactInfo.New()
 
   return {
     setComposerText = setComposerText,

@@ -23,6 +23,19 @@ local function paintPane(texture, nativeChrome, color, applyTexture, atlas)
   applyTexture(texture, nativeChrome and UIHelpers.TRANSPARENT or color)
 end
 
+-- Anchors a full-window pane (the options panel, an addon panel) inside
+-- `parent`: clear of the HUD panel borders, or of the custom title bar.
+function OptionsPanelLayout.AnchorPanel(panel, parent, nativeChrome, theme)
+  if nativeChrome then
+    local hudPadding = theme.LAYOUT.HUD_PANEL_PADDING
+    panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -hudPadding)
+    panel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, hudPadding)
+  else
+    panel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -20)
+    panel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 5)
+  end
+end
+
 function OptionsPanelLayout.Build(factory, frame, initialState, options)
   options = options or {}
 
@@ -48,13 +61,7 @@ function OptionsPanelLayout.Build(factory, frame, initialState, options)
   -- gold border.
   -- Native WoW HUD: clear of the panel borders the game draws inside.
   local hudPadding = nativeChrome and theme.LAYOUT.HUD_PANEL_PADDING or 0
-  if nativeChrome then
-    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -hudPadding)
-    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, hudPadding)
-  else
-    optionsPanel:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -20)
-    optionsPanel:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 5)
-  end
+  OptionsPanelLayout.AnchorPanel(optionsPanel, frame, nativeChrome, theme)
 
   -- Dual-anchor menu vertically to optionsPanel so it auto-fills the
   -- panel's height (no stale TOP_BAR_HEIGHT-based SetSize). Width stays

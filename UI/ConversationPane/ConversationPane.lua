@@ -16,6 +16,7 @@ local ChannelContextMerger = ns.ConversationPaneChannelContextMerger or require(
 local BottomBanner = ns.ConversationPaneBottomBanner or require("WhisperMessenger.UI.ConversationPane.BottomBanner")
 local RequestBanner = ns.ConversationPaneRequestBanner or require("WhisperMessenger.UI.ConversationPane.RequestBanner")
 local ReplyBanner = ns.ConversationPaneReplyBanner or require("WhisperMessenger.UI.ConversationPane.ReplyBanner")
+local InfoStrip = ns.ConversationPaneInfoStrip or require("WhisperMessenger.UI.ConversationPane.InfoStrip")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -72,6 +73,9 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)
   ConversationPane.RefreshActiveStatus(view, conversation and conversation.activeStatus or nil)
+  if InfoStrip.Apply(view, selectedContact) then
+    ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight)
+  end
   return view
 end
 
@@ -214,6 +218,8 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     requestBanner = requestBanner,
     replyBanner = ReplyBanner.Create(factory, pane, { nativeChrome = options.nativeChrome == true }),
     transcript = transcript,
+    infoStrip = InfoStrip.Create(factory, pane, headerFrame),
+    _getContactInfoLines = options.getContactInfoLines,
     -- Native WoW HUD sits on Blizzard art a flat-colour fade would not match.
     edgeFade = EdgeFade.Attach(factory, pane, transcript),
     refreshTheme = function()
@@ -238,6 +244,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
       end
       view.requestBanner.refreshTheme()
       view.replyBanner.refreshTheme()
+      view.infoStrip.refreshTheme()
       if view.edgeFade then
         view.edgeFade.refreshTheme()
       end
@@ -302,7 +309,7 @@ function ConversationPane.Relayout(view, width, height)
   -- pane actually is so bubbles reach the composer instead of stopping short.
   local paneHeight = sizeValue(view.frame, "GetHeight", "height", height)
   local transcriptW = width - Theme.LAYOUT.TRANSCRIPT_HORIZONTAL_INSET
-  local transcriptH = paneHeight - Theme.HeaderHeight() - bannerOffset
+  local transcriptH = paneHeight - Theme.HeaderHeight() - bannerOffset - InfoStrip.HeightOf(view)
   local t = view.transcript
   local wasAtEnd = transcriptIsAtEnd(t)
   ScrollView.Resize(t, transcriptW, transcriptH)

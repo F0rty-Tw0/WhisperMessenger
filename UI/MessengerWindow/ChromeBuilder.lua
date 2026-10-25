@@ -19,6 +19,7 @@ local PatchNotesButton = ns.MessengerWindowChromeBuilderPatchNotesButton
 local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.MarkAllReadButton")
 local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
+local PanelButton = ns.MessengerWindowChromeBuilderPanelButton or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.PanelButton")
 local ChromeBuilder = {}
 
 local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed)
@@ -74,8 +75,8 @@ end
 --
 -- Returns: { frame, background, title, newConversationButton, markAllReadButton,
 --   patchNotesButton, closeButton, optionsButton, backButton, resizeGrip,
---   applyTheme, refreshScale, setOptionsActive, setPatchNotesGlow,
---   setMarkAllReadShown } in both cases. Non-chrome
+--   applyTheme, refreshScale, setOptionsActive, setBackVisible,
+--   setPatchNotesGlow, setMarkAllReadShown, addPanelButton } in every case. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
@@ -156,8 +157,12 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     retailChrome = chromeBranch == RetailChrome,
   }
 
+  local currentTheme = Theme
+  local panelButtons = {}
+
   local function applyTheme(activeTheme)
     activeTheme = activeTheme or Theme
+    currentTheme = activeTheme
     TitleBarLayout.Apply(titleBarParts, activeTheme)
     applyChromePaint(activeTheme)
     options_.applyTheme(activeTheme)
@@ -166,6 +171,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     markAllRead.applyTheme(activeTheme)
     patchNotes.applyTheme(activeTheme)
     resize.applyTheme(activeTheme)
+    for _, panelButton in ipairs(panelButtons) do
+      panelButton.applyTheme(activeTheme)
+    end
   end
 
   local function refreshScale(nextScale)
@@ -192,6 +200,26 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     end
   end
 
+  -- Back for an addon panel; the gear keeps its resting paint.
+  local function setBackVisible(visible)
+    back.button:SetShown(visible == true)
+  end
+
+  -- An addon panel's title-bar button, after mark-all-read (or the
+  -- previous panel button). onClick(key) runs on click.
+  local function addPanelButton(key, spec, onClick)
+    local panelButton = PanelButton.Create(factory, frame, currentTheme, spec)
+    panelButtons[#panelButtons + 1] = panelButton
+    TitleBarLayout.AddPanelButton(titleBarParts, panelButton.button)
+    TitleBarLayout.Apply(titleBarParts, currentTheme)
+    panelButton.button:SetScript("OnClick", function()
+      if onClick then
+        onClick(key)
+      end
+    end)
+    return panelButton
+  end
+
   return {
     frame = frame,
     background = chrome.background,
@@ -207,6 +235,8 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     refreshScale = refreshScale,
     setContactsCollapsed = setContactsCollapsed,
     setOptionsActive = setOptionsActive,
+    setBackVisible = setBackVisible,
+    addPanelButton = addPanelButton,
     setPatchNotesGlow = patchNotes.setGlowing,
     setMarkAllReadShown = markAllRead.setShown,
     titleBar = chrome.titleBar,
