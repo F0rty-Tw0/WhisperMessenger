@@ -264,6 +264,8 @@ UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/PreviewMetrics.lua
 UI/ToggleIcon/PreviewAutoDismiss.lua
+UI/ToggleIcon/PreviewChrome.lua
+UI/ToggleIcon/PreviewLinks.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/Desaturation.lua

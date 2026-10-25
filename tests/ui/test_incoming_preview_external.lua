@@ -175,6 +175,47 @@ return function()
     assert(not has(log, "click") and not has(log, "dismiss"), "nil runs no callbacks, got " .. joined(log))
   end
 
+  local function test_on_external_changed_fires_once_per_entry_change()
+    local changes = 0
+    local p = build({
+      onExternalChanged = function()
+        changes = changes + 1
+      end,
+    })
+    local e1, e2, e3 = entry({}), entry({}), entry({})
+    p.setExternalPreview(e1)
+    assert(changes == 1, "a new entry fires")
+    p.setExternalPreview(e1)
+    assert(changes == 1, "the same entry does not fire")
+    mouseUp(p, "RightButton")
+    assert(changes == 2, "dismiss clears it")
+    p.setExternalPreview(e2)
+    p.setIncomingPreview("Own", "hi")
+    assert(changes == 4, "an own whisper drops it")
+    p.setExternalPreview(e3)
+    p.setExternalPreview(nil)
+    assert(changes == 6, "nil drops it")
+    p.setIncomingPreview("Own", "again")
+    assert(changes == 6, "own previews alone never fire")
+    p.setIncomingPreview("Own", "")
+    assert(changes == 6, "clearing an own preview never fires")
+  end
+
+  local function test_on_external_changed_runs_after_the_frame_changes()
+    local seen = {}
+    local p
+    p = build({
+      onExternalChanged = function()
+        seen[#seen + 1] = p.isExternalShown()
+      end,
+    })
+    p.setExternalPreview(entry({}))
+    p.setExternalPreview(nil)
+    assert(seen[1] == true and seen[2] == false, "the hook sees the frame already shown, then hidden")
+  end
+
+  test_on_external_changed_fires_once_per_entry_change()
+  test_on_external_changed_runs_after_the_frame_changes()
   test_external_shows_labels_and_runs_on_shown_once()
   test_same_entry_again_does_not_re_run_on_shown()
   test_new_entry_while_visible_runs_its_on_shown()

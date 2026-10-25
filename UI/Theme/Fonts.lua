@@ -52,6 +52,8 @@ local FONT_DEFS = {
   { "WM_HighlightLarge", "GameFontHighlightLarge", 4 },
   { "WM_ChatNormal", "GameFontHighlight", 0 },
   { "WM_Title", "GameFontHighlight", 0, true },
+  -- The "×" close glyph draws far smaller than letters of the same size.
+  { "WM_CloseGlyph", "GameFontHighlightLarge", 10 },
 }
 
 local SHADOW_OFFSET_X, SHADOW_OFFSET_Y = 1, -1
@@ -72,6 +74,7 @@ local FONT_MAP = {
   icon_label = "WM_Highlight",
   empty_state = "WM_Highlight",
   window_title = "WM_Title",
+  close_glyph = "WM_CloseGlyph",
 }
 
 local FONT_COLOR_PRESETS = {
