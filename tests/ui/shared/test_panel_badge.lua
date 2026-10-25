@@ -61,4 +61,35 @@ return function()
   do
     assert(PanelBadge.Read(nil) == 0)
   end
+
+  -- test_a_secret_count_is_nothing
+  do
+    local saved = _G.issecretvalue
+    _G.issecretvalue = function(value)
+      return value == 7
+    end
+    local ok, count = pcall(PanelBadge.Read, returning(7))
+    _G.issecretvalue = saved
+    assert(ok, count)
+    assert(count == 0, "a secret count is not read, got " .. tostring(count))
+  end
+
+  -- test_a_badge_that_reads_itself_again_is_nothing_the_second_time
+  do
+    local depth = 0
+    local badge
+    badge = function()
+      depth = depth + 1
+      local inner = PanelBadge.Read(badge)
+      assert(inner == 0, "the nested read is nothing, got " .. tostring(inner))
+      return 4
+    end
+    assert(PanelBadge.Read(badge) == 4, "the outer read still counts")
+    assert(depth == 1, "the callback ran once, got " .. depth)
+    assert(PanelBadge.Read(function()
+      return 2
+    end) == 2)
+    depth = 0
+    assert(PanelBadge.Read(badge) == 4 and depth == 1, "the guard clears after a read")
+  end
 end

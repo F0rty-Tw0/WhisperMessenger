@@ -11,18 +11,36 @@ local PanelBadge = {}
 -- Caps one panel's count so text built with %d can never overflow.
 PanelBadge.MAX_COUNT = 999
 
+-- Callbacks being read right now. A badge() that calls back into the API
+-- re-enters its own read through the icon and tab refreshes; that inner read
+-- is 0, so the nesting stops after one level.
+local reading = {}
+
 --- Runs a panel's badge callback under pcall and returns a whole count.
--- Anything but a finite number, an error or a count below 1 is 0;
--- fractions round down.
+-- Anything but a finite number, an error, a secret value or a count below 1
+-- is 0; fractions round down.
 -- @param badge function|nil
 -- @return number
 function PanelBadge.Read(badge)
   if type(badge) ~= "function" then
     return 0
   end
+  if reading[badge] then
+    return 0
+  end
+  reading[badge] = true
   local ok, value = pcall(badge)
+  reading[badge] = nil
+  if not ok or type(value) ~= "number" then
+    return 0
+  end
+  -- A secret value errors on compare, so it is ruled out first.
+  local issecretvalue = _G.issecretvalue
+  if issecretvalue and issecretvalue(value) then
+    return 0
+  end
   -- value ~= value is true only for NaN.
-  if not ok or type(value) ~= "number" or value ~= value then
+  if value ~= value then
     return 0
   end
   local count = math.floor(value)

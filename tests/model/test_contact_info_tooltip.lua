@@ -1,4 +1,5 @@
 local ContactInfo = require("WhisperMessenger.Model.ContactInfo")
+local TextLimits = require("WhisperMessenger.Util.TextLimits")
 
 local JAINA = { conversationKey = "wow::WOW::jaina-proudmoore" }
 
@@ -112,5 +113,15 @@ return function()
     assert(lines[1] == "A text" and tooltips[1] == nil, "A has none")
     assert(lines[2] == "B text" and tooltips[2][1] == "B tip", "B keeps its tooltip")
     assert(lines[3] == "C text" and tooltips[3][1] == "C tip", "C keeps its tooltip")
+  end
+
+  -- test_a_huge_tooltip_line_is_cut_to_the_chat_limit
+  do
+    local runtime = makeRuntime()
+    local huge = string.rep("x", 100000)
+    assert(set(runtime, "ca", "x", { "short", huge }) == true)
+    local _, tooltips = ContactInfo.LinesFor(runtime, JAINA)
+    assert(tooltips[1][1] == "short", "a short line is untouched")
+    assert(#tooltips[1][2] == TextLimits.MESSAGE_MAX_BYTES, "cut to the limit, got " .. #tooltips[1][2])
   end
 end

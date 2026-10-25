@@ -183,6 +183,18 @@ return function()
     assert(s.holder.get().pulse == true, "a new ShowPreview arms again")
   end
 
+  local function test_an_overwritten_is_panel_shown_does_not_change_show_preview()
+    local s = makeRuntime({ panelShown = "other" })
+    s.api.IsPanelShown = function()
+      return true
+    end
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == true, "ShowPreview reads the panel state itself")
+    s.api.IsPanelShown = nil
+    assert(s.api.ShowPreview("ca", preview({ pulse = true })) == true, "and survives the key being removed")
+  end
+
+  test_an_overwritten_is_panel_shown_does_not_change_show_preview()
   test_show_stores_stamps_and_updates_surfaces()
   test_a_new_show_preview_arms_again_after_the_panel_closes()
   test_non_boolean_pulse_is_refused()

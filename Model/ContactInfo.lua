@@ -53,14 +53,15 @@ local function isValidTooltip(lines)
   return true
 end
 
--- The state keeps this copy: a caller that changes its table later changes nothing.
+-- The state keeps this copy: a caller that changes its table later changes
+-- nothing. Each line is cut to the chat limit, like the note.
 local function copyTooltip(lines)
   if lines == nil then
     return nil
   end
   local copy = {}
   for index, line in ipairs(lines) do
-    copy[index] = line
+    copy[index] = TextLimits.CapBytes(line, TextLimits.MESSAGE_MAX_BYTES)
   end
   return copy
 end

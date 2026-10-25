@@ -80,4 +80,31 @@ return function()
     PublicApiEnv.Reset()
     assert(ok, err)
   end
+
+  -- test_a_badge_that_calls_back_into_the_api_does_not_nest_icon_refreshes
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local calls = 0
+      assert(api.RegisterPanel("ca", {
+        title = "Alerts",
+        onShow = function() end,
+        badge = function()
+          calls = calls + 1
+          if calls < 500 then
+            api.RefreshPanelBadge("ca")
+          end
+          return 1
+        end,
+      }) == true)
+      api.RefreshPanelBadge("ca")
+      assert(calls < 20, "badge re-entered " .. calls .. " times")
+      calls = 0
+      assert(api.ShowPanel("ca") == true, "the window is built, so tab refreshes run too")
+      api.RefreshPanelBadge("ca")
+      assert(runtime.window ~= nil and calls < 20, "badge re-entered " .. calls .. " times with the window")
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
 end
