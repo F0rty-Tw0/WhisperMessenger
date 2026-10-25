@@ -203,6 +203,29 @@ return function()
     assert(api.IsBlocked("Bob") == false)
   end
 
+  -- test_sync_error_still_refreshes_the_window
+  do
+    local runtime = makeRuntime(true)
+    runtime.syncChatFilters = function()
+      error("boom")
+    end
+    local api = PublicApi.Build(runtime)
+    assert(api.Block("Bob") == true)
+    assert(runtime.refreshes == 1, "a failed sync does not skip the refresh, got " .. runtime.refreshes)
+  end
+
+  -- test_refresh_sees_the_changed_list
+  do
+    local runtime = makeRuntime(true)
+    local api = PublicApi.Build(runtime)
+    local seen = nil
+    runtime.refreshWindow = function()
+      seen = api.IsBlocked("Bob")
+    end
+    api.Block("Bob")
+    assert(seen == true, "the refresh runs after the player is stored")
+  end
+
   -- test_names_no_player_can_have_are_refused
   do
     local runtime = makeRuntime(true)

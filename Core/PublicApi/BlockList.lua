@@ -35,19 +35,19 @@ local function readClock(runtime)
   return type(runtime.now) == "function" and runtime.now() or nil
 end
 
-local function syncAndRefresh(runtime)
-  if type(runtime.syncChatFilters) == "function" then
-    runtime.syncChatFilters()
-  end
+local function refreshVisibleWindow(runtime)
   if runtime.isWindowVisible() then
     runtime.refreshWindow()
   end
 end
 
 -- The list already changed, so a failed sync or refresh must not turn the
--- answer into false.
+-- answer into false; each runs on its own so one failing doesn't skip the other.
 local function filtersChanged(runtime)
-  pcall(syncAndRefresh, runtime)
+  if type(runtime.syncChatFilters) == "function" then
+    pcall(runtime.syncChatFilters)
+  end
+  pcall(refreshVisibleWindow, runtime)
 end
 
 function BlockList.Install(api, runtime)
