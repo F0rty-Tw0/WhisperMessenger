@@ -140,6 +140,9 @@ local Italian = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "Nasconde il messenger all'inizio del combattimento. Puoi riaprirlo manualmente durante il combattimento. Non si riapre automaticamente dopo il combattimento.",
   ["Double ESC to close"] = "Doppio ESC per chiudere",
   ["First Esc clears the chat input; second Esc closes the window."] = "Primo Esc cancella il testo, secondo Esc chiude la finestra.",
+  ["Allow addon integration"] = "Consenti integrazione con addon",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "Permette ad altri addon (come Craft Alert) di aggiungere pagine, anteprime e note a Whisper Messenger.",
+  ["Changing this asks to reload the interface."] = "Modificarla chiede di ricaricare l'interfaccia.",
   ["Show group chats"] = "Mostra chat di gruppo",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Mostra una scheda Gruppi con conversazioni di gruppo, istanza e Battle.net.",
   ["When off, only whispers appear."] = "Se disattivato, vengono mostrati solo i sussurri.",
@@ -243,6 +246,7 @@ local Italian = {
   ["Send unavailable"] = "Invio non disponibile",
   ["Send failed"] = "Invio fallito",
   ["unread"] = "non letti",
+  ["%d in addon pages"] = "%d nelle pagine degli addon",
   ["Paused in M+"] = "In pausa in M+",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "I messaggi sono in pausa nei contenuti mitici e riprenderanno all'uscita.",
@@ -254,6 +258,7 @@ local Italian = {
   ["Left group"] = "Hai lasciato il gruppo",
   ["Zone: %s"] = "Zona: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Ricaricare l'interfaccia ora per applicare il nuovo stile dell'interfaccia WoW nativa?",
+  ["Reload the interface now to apply the addon integration change?"] = "Ricaricare l'interfaccia ora per applicare la modifica all'integrazione con gli addon?",
   -- Classes
   ["Warrior"] = "Guerriero",
   ["Paladin"] = "Paladino",

@@ -140,6 +140,9 @@ local Korean = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "전투가 시작되면 메신저를 숨깁니다. 전투 중에 수동으로 다시 열 수 있습니다. 전투가 끝난 후 자동으로 다시 열리지 않습니다.",
   ["Double ESC to close"] = "더블 ESC로 닫기",
   ["First Esc clears the chat input; second Esc closes the window."] = "첫 번째 Esc는 입력을 지우고, 두 번째는 창을 닫습니다.",
+  ["Allow addon integration"] = "애드온 연동 허용",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "다른 애드온(예: Craft Alert)이 Whisper Messenger에 페이지, 미리보기, 메모를 추가할 수 있습니다.",
+  ["Changing this asks to reload the interface."] = "변경하면 인터페이스를 다시 불러올지 묻습니다.",
   ["Show group chats"] = "그룹 채팅 표시",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "연락처 목록에 파티, 인스턴스, Battle.net 그룹 대화의 그룹 탭을 표시합니다.",
   ["When off, only whispers appear."] = "꺼져 있으면 귓속말만 표시됩니다.",
@@ -243,6 +246,7 @@ local Korean = {
   ["Send unavailable"] = "전송 불가",
   ["Send failed"] = "전송 실패",
   ["unread"] = "안 읽음",
+  ["%d in addon pages"] = "애드온 페이지 %d건",
   ["Paused in M+"] = "신화+에서 일시 중지",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "신화 콘텐츠에서 메시지가 일시 중지되었습니다. 나가면 재개됩니다.",
@@ -254,6 +258,7 @@ local Korean = {
   ["Left group"] = "그룹 떠남",
   ["Zone: %s"] = "지역: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "새 기본 WoW 인터페이스 스타일을 적용하려면 지금 인터페이스를 다시 불러올까요?",
+  ["Reload the interface now to apply the addon integration change?"] = "애드온 연동 변경 사항을 적용하려면 지금 인터페이스를 다시 불러올까요?",
   -- Classes
   ["Warrior"] = "전사",
   ["Paladin"] = "성기사",

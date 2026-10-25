@@ -140,6 +140,9 @@ local German = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "Blendet den Messenger beim Kampfbeginn aus. Du kannst ihn während des Kampfes manuell wieder öffnen. Nach dem Kampf wird er nicht automatisch wieder geöffnet.",
   ["Double ESC to close"] = "Doppel-ESC zum Schließen",
   ["First Esc clears the chat input; second Esc closes the window."] = "Erstes Esc leert das Eingabefeld, zweites Esc schließt das Fenster.",
+  ["Allow addon integration"] = "Addon-Integration erlauben",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "Erlaubt anderen Addons (wie Craft Alert), Seiten, Vorschauen und Notizen zu Whisper Messenger hinzuzufügen.",
+  ["Changing this asks to reload the interface."] = "Eine Änderung fragt, ob die Oberfläche neu geladen werden soll.",
   ["Show group chats"] = "Gruppenchats anzeigen",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Zeigt einen Gruppen-Reiter mit Gruppen-, Instanz- und Battle.net-Gruppenchats.",
   ["When off, only whispers appear."] = "Wenn aus, werden nur Flüstern angezeigt.",
@@ -243,6 +246,7 @@ local German = {
   ["Send unavailable"] = "Senden nicht möglich",
   ["Send failed"] = "Senden fehlgeschlagen",
   ["unread"] = "ungelesen",
+  ["%d in addon pages"] = "%d auf Addon-Seiten",
   ["Paused in M+"] = "In M+ pausiert",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "Nachrichten sind in mythischen Inhalten pausiert und werden nach dem Verlassen fortgesetzt.",
@@ -254,6 +258,7 @@ local German = {
   ["Left group"] = "Gruppe verlassen",
   ["Zone: %s"] = "Zone: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Oberfläche jetzt neu laden, um den neuen nativen WoW-Oberflächenstil anzuwenden?",
+  ["Reload the interface now to apply the addon integration change?"] = "Oberfläche jetzt neu laden, um die Änderung der Addon-Integration anzuwenden?",
   -- Classes
   ["Warrior"] = "Krieger",
   ["Paladin"] = "Paladin",

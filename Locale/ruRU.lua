@@ -140,6 +140,9 @@ local Russian = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "Скрывает мессенджер в начале боя. Его можно вручную открыть снова во время боя. После боя он не открывается автоматически.",
   ["Double ESC to close"] = "Двойной ESC для закрытия",
   ["First Esc clears the chat input; second Esc closes the window."] = "Первый Esc очищает ввод, второй закрывает окно.",
+  ["Allow addon integration"] = "Разрешить интеграцию аддонов",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "Позволяет другим аддонам (например, Craft Alert) добавлять страницы, превью и заметки в Whisper Messenger.",
+  ["Changing this asks to reload the interface."] = "При изменении будет предложено перезагрузить интерфейс.",
   ["Show group chats"] = "Показывать групповые чаты",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Показывает вкладку «Группы» со связью группы, подземелья и групп Battle.net.",
   ["When off, only whispers appear."] = "Если выключено, отображается только шепот.",
@@ -243,6 +246,7 @@ local Russian = {
   ["Send unavailable"] = "Отправка недоступна",
   ["Send failed"] = "Отправка не удалась",
   ["unread"] = "непрочитанных",
+  ["%d in addon pages"] = "%d на страницах аддонов",
   ["Paused in M+"] = "Пауза в M+",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "Сообщения приостановлены в мифическом контенте и возобновятся после выхода.",
@@ -254,6 +258,7 @@ local Russian = {
   ["Left group"] = "Покинул группу",
   ["Zone: %s"] = "Зона: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Перезагрузить интерфейс сейчас, чтобы применить новый стиль стандартного интерфейса WoW?",
+  ["Reload the interface now to apply the addon integration change?"] = "Перезагрузить интерфейс сейчас, чтобы применить изменение интеграции аддонов?",
   -- Classes
   ["Warrior"] = "Воин",
   ["Paladin"] = "Паладин",
