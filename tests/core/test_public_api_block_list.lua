@@ -185,11 +185,35 @@ return function()
   -- test_internal_error_returns_false
   do
     local runtime = makeRuntime(true)
-    runtime.syncChatFilters = function()
+    runtime.accountState = nil
+    local api = PublicApi.Build(runtime)
+    assert(api.Block("Bob") == false, "an internal error is false and does not raise")
+  end
+
+  -- test_refresh_error_after_the_change_still_reports_it
+  do
+    local runtime = makeRuntime(true)
+    runtime.refreshWindow = function()
       error("boom")
     end
     local api = PublicApi.Build(runtime)
-    assert(api.Block("Bob") == false, "an internal error is false and does not raise")
+    assert(api.Block("Bob") == true, "Block is true once the player is stored, even if the refresh fails")
+    assert(api.IsBlocked("Bob") == true)
+    assert(api.Unblock("Bob") == true, "Unblock is true once the player is removed, even if the refresh fails")
+    assert(api.IsBlocked("Bob") == false)
+  end
+
+  -- test_names_no_player_can_have_are_refused
+  do
+    local runtime = makeRuntime(true)
+    local api = PublicApi.Build(runtime)
+    for _, name in ipairs({ "-", "Bob-", "-Area52", "Bob#1234", "|cffff0000Bob|r" }) do
+      assert(api.Block(name) == false, "Block refuses " .. name)
+      assert(api.IsBlocked(name) == false, "IsBlocked refuses " .. name)
+      assert(api.Unblock(name) == false, "Unblock refuses " .. name)
+    end
+    assert(next(ignored(runtime)) == nil, "no key stored for a junk name")
+    assert(runtime.syncs == 0, "junk names never sync")
   end
 
   rawset(_G, "GetNormalizedRealmName", savedRealm)

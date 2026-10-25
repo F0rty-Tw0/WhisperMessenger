@@ -11,28 +11,43 @@ local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue
 -- name is "Name" or "Name-Realm". IsBlocked is true for a live (unexpired)
 -- entry. Block is true once the player is blocked; an existing live entry is
 -- kept as is, a new one is permanent with no reason. Unblock is true once the
--- player is not blocked. A bad name (not a string, blank, secret) or an
--- internal error returns false and changes nothing.
+-- player is not blocked. A bad name (not a string, blank, secret, or one no
+-- player can have) or an internal error returns false and changes nothing.
+-- A refresh that fails after the list changed still returns true.
 local BlockList = {}
 
+local find = string.find
+
+-- "|" (escape codes) and "#" (BattleTags) never appear in a character name,
+-- and a key starting or ending with "-" has no name or no realm.
 local function isValidName(name)
   if SecretValue.Is(name) then
     return false
   end
-  return Guards.IsNonEmptyString(name) and IgnoreList.Key(name) ~= nil
+  if not Guards.IsNonEmptyString(name) or find(name, "[|#]") then
+    return false
+  end
+  local key = IgnoreList.Key(name)
+  return key ~= nil and not find(key, "^%-") and not find(key, "%-$")
 end
 
 local function readClock(runtime)
   return type(runtime.now) == "function" and runtime.now() or nil
 end
 
-local function filtersChanged(runtime)
+local function syncAndRefresh(runtime)
   if type(runtime.syncChatFilters) == "function" then
     runtime.syncChatFilters()
   end
   if runtime.isWindowVisible() then
     runtime.refreshWindow()
   end
+end
+
+-- The list already changed, so a failed sync or refresh must not turn the
+-- answer into false.
+local function filtersChanged(runtime)
+  pcall(syncAndRefresh, runtime)
 end
 
 function BlockList.Install(api, runtime)
