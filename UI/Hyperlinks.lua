@@ -182,5 +182,27 @@ function Hyperlinks.HandleLeave()
   end
 end
 
+-- Links in a frame's text: hover shows the tooltip, click (and shift-click
+-- into chat) works as in the transcript. onLinkClick, when given, runs after
+-- each link click.
+function Hyperlinks.EnableOn(frame, onLinkClick)
+  frame:EnableMouse(true)
+  if frame.SetHyperlinksEnabled then
+    frame:SetHyperlinksEnabled(true)
+  end
+  frame:SetScript("OnHyperlinkEnter", function(self, link)
+    Hyperlinks.HandleEnter(self, link)
+  end)
+  frame:SetScript("OnHyperlinkLeave", function()
+    Hyperlinks.HandleLeave()
+  end)
+  frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
+    Hyperlinks.HandleClick(link, text, button, self)
+    if onLinkClick then
+      onLinkClick()
+    end
+  end)
+end
+
 ns.UIHyperlinks = Hyperlinks
 return Hyperlinks

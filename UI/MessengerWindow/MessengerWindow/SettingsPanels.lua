@@ -127,6 +127,7 @@ function SettingsPanels.Create(factory, options)
         autoFocusComposer = settingsConfig.autoFocusComposer,
         hideOnCombat = settingsConfig.hideOnCombat,
         doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
+        allowAddonIntegration = settingsConfig.allowAddonIntegration,
         quickReplies = settingsConfig.quickReplies,
       },
     },

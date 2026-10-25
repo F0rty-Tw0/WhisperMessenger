@@ -38,6 +38,7 @@ function WidgetPreview.Create(options)
             if latest == nil or sentAt > latest.sentAt then
               latest = {
                 sentAt = sentAt,
+                conversationKey = item.conversationKey,
                 senderName = senderName,
                 messageText = messageText,
                 classTag = item.classTag or conversation.classTag,

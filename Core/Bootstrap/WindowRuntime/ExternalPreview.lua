@@ -26,7 +26,7 @@ function ExternalPreview.New(options)
     end
   end
 
-  function holder.set(sourceKey, preview)
+  function holder.set(sourceKey, preview, ownerPanelShown)
     local stamp = now()
     local entry = {
       sourceKey = sourceKey,
@@ -34,6 +34,7 @@ function ExternalPreview.New(options)
       sender = preview.sender,
       text = preview.text,
       classTag = preview.classTag,
+      pulse = preview.pulse == true and ownerPanelShown ~= true,
     }
     entry.onClick = function()
       clearIfCurrent(entry)

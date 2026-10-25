@@ -110,6 +110,14 @@ function BehaviorSettings.Create(factory, parent, config, options)
     refreshLayout = refreshLayout,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
+    -- Shows a value without saving it (a cancelled reload).
+    setAllowAddonIntegration = function(on)
+      for i, spec in ipairs(toggleSpecs) do
+        if spec.key == "allowAddonIntegration" then
+          toggles[i].setValue(on)
+        end
+      end
+    end,
   }
 end
 

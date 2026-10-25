@@ -457,11 +457,11 @@ return function()
 
     local width = icon.previewFrame.width or 0
     assert(width > 0, "preview width should be set after content populates")
-    assert(width <= 200, "preview width should not exceed max (200), got: " .. tostring(width))
+    assert(width <= 240, "preview width should not exceed max (240), got: " .. tostring(width))
 
     icon.setIncomingPreview("Arthas", string.rep("A very long incoming message text ", 10), "DEATHKNIGHT")
     local wideWidth = icon.previewFrame.width or 0
-    assert(wideWidth == 200, "very long content should cap at max width 200, got: " .. tostring(wideWidth))
+    assert(wideWidth == 240, "very long content should cap at max width 240, got: " .. tostring(wideWidth))
   end
 
   -- test_preview_auto_dismiss_schedules_timer_when_enabled

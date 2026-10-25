@@ -9,9 +9,10 @@ local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
+local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI.ToggleIcon.PreviewChrome")
+local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
-local createRoundedBackground = UIHelpers.createRoundedBackground
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -24,7 +25,7 @@ function IncomingPreview.Create(factory, frame, options)
   options = options or {}
 
   local theme = options.theme or Theme
-  local previewFrame = factory.CreateFrame("Frame", nil, frame)
+  local previewFrame, previewBackground = PreviewChrome.Create(factory, frame)
   previewFrame:SetSize(PreviewMetrics.MAX_WIDTH, PreviewMetrics.HEIGHT)
 
   local currentPreviewPosition = "right"
@@ -62,8 +63,6 @@ function IncomingPreview.Create(factory, frame, options)
     previewFrame:EnableMouse(true)
   end
 
-  local previewBackground = createRoundedBackground(previewFrame, 4)
-
   local previewClassIconResult = UIHelpers.createCircularIcon(factory, previewFrame, PreviewMetrics.CLASS_ICON_SIZE)
   local previewClassIconFrame = previewClassIconResult.frame
   local previewClassIcon = previewClassIconResult.texture
@@ -72,7 +71,7 @@ function IncomingPreview.Create(factory, frame, options)
 
   local previewDismissButton = factory.CreateFrame("Button", nil, previewFrame)
   previewDismissButton:SetSize(PreviewMetrics.DISMISS_SIZE, PreviewMetrics.DISMISS_SIZE)
-  previewDismissButton:SetPoint("TOPRIGHT", previewFrame, "TOPRIGHT", 0, 0)
+  previewDismissButton:SetPoint("TOPRIGHT", previewFrame, "TOPRIGHT", -PreviewMetrics.DISMISS_INSET, -PreviewMetrics.DISMISS_INSET)
   if previewDismissButton.EnableMouse then
     previewDismissButton:EnableMouse(true)
   end
@@ -80,7 +79,7 @@ function IncomingPreview.Create(factory, frame, options)
   previewDismissBg:SetAllPoints(previewDismissButton)
   applyVertexColor(previewDismissBg, { 0, 0, 0, 0 })
   local previewDismissLabel = previewDismissButton:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewDismissLabel, theme.FONTS.header_name or theme.FONTS.contact_name)
+  setFontObject(previewDismissLabel, theme.FONTS.close_glyph or theme.FONTS.header_name)
   previewDismissLabel:SetPoint("CENTER", previewDismissButton, "CENTER", 0, 0)
   previewDismissLabel:SetText("×")
   -- Neutral at rest; red only on hover so the toast does not shout.
@@ -90,22 +89,14 @@ function IncomingPreview.Create(factory, frame, options)
   local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
   -- Font objects only: a raw SetFont on a FontString overrides the engine's
   -- Unicode glyph-fallback chain and blanks Cyrillic/Greek characters.
-  setFontObject(previewSenderLabel, theme.FONTS.message_text)
+  setFontObject(previewSenderLabel, theme.FONTS.header_name or theme.FONTS.message_text)
   previewSenderLabel:SetPoint("TOPLEFT", previewFrame, "TOPLEFT", senderLeft, PreviewMetrics.SENDER_TOP_OFFSET)
-  previewSenderLabel:SetJustifyH("LEFT")
-  previewSenderLabel:SetWordWrap(false)
-  if previewSenderLabel.SetMaxLines then
-    previewSenderLabel:SetMaxLines(1)
-  end
+  PreviewChrome.SingleLine(previewSenderLabel)
 
   local previewMessageLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewMessageLabel, theme.FONTS.system_text)
+  setFontObject(previewMessageLabel, theme.FONTS.message_text)
   previewMessageLabel:SetPoint("TOPLEFT", previewSenderLabel, "BOTTOMLEFT", 0, PreviewMetrics.MESSAGE_GAP)
-  previewMessageLabel:SetJustifyH("LEFT")
-  previewMessageLabel:SetWordWrap(false)
-  if previewMessageLabel.SetMaxLines then
-    previewMessageLabel:SetMaxLines(1)
-  end
+  PreviewChrome.SingleLine(previewMessageLabel)
   previewFrame:Hide()
 
   local autoDismiss
@@ -115,17 +106,23 @@ function IncomingPreview.Create(factory, frame, options)
   -- A preview another addon put here; its callbacks come pre-wrapped.
   local externalEntry = nil
 
+  local function notifyExternalChanged(changed)
+    if changed and options.onExternalChanged then
+      options.onExternalChanged()
+    end
+  end
+
   local function clearIncomingPreview()
+    local hadExternal = externalEntry ~= nil
     autoDismiss.cancel()
-    lastPreviewSenderName = nil
-    lastPreviewMessageText = nil
-    lastPreviewClassTag = nil
+    lastPreviewSenderName, lastPreviewMessageText, lastPreviewClassTag = nil, nil, nil
     externalEntry = nil
     previewSenderLabel:SetText("")
     previewMessageLabel:SetText("")
     previewClassIcon:SetTexture(nil)
     previewClassIconFrame:Hide()
     previewFrame:Hide()
+    notifyExternalChanged(hadExternal)
   end
 
   local function triggerDismiss()
@@ -168,7 +165,7 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   if previewFrame.SetScript then
-    previewFrame:SetScript("OnMouseUp", function(_self, button)
+    PreviewLinks.SetMouseUp(previewFrame, function(_self, button)
       local current = externalEntry
       if button == "RightButton" then
         dismissCurrent()
@@ -178,6 +175,9 @@ function IncomingPreview.Create(factory, frame, options)
         if externalEntry == current then
           clearIncomingPreview()
         end
+      elseif button == "LeftButton" and options.onOpenPreview then
+        -- The owner acknowledges the whisper; the refresh then clears the preview.
+        options.onOpenPreview()
       end
     end)
     previewFrame:SetScript("OnShow", function()
@@ -212,12 +212,13 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function setIncomingPreview(senderName, messageText, classTag)
-    externalEntry = nil
+    local hadExternal = externalEntry ~= nil
     local hasMessage = type(messageText) == "string" and messageText ~= ""
     if not hasMessage then
       clearIncomingPreview()
       return
     end
+    externalEntry = nil
 
     local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
 
@@ -231,6 +232,7 @@ function IncomingPreview.Create(factory, frame, options)
       lastPreviewClassTag = classTag
       autoDismiss.schedule()
     end
+    notifyExternalChanged(hadExternal)
   end
 
   -- No auto-dismiss: the owner decides when its preview goes away.
@@ -254,6 +256,7 @@ function IncomingPreview.Create(factory, frame, options)
     else
       previewFrame:Show()
     end
+    notifyExternalChanged(true)
   end
 
   local function isExternalShown()

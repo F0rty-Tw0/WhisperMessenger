@@ -30,9 +30,12 @@ return function()
   local wide = frame()
   M.ResizeToContent(wide, label(500), label(500))
   assert(wide.w == M.MAX_WIDTH, "long text caps the width, got " .. tostring(wide.w))
+  assert(wide.w == 240, "long text clamps the frame to 240 wide, got " .. tostring(wide.w))
 
-  -- test_tiny_text_keeps_min_width
+  -- test_tiny_text_never_drops_below_min_width
+  -- The padding, icon and dismiss button already exceed MIN_WIDTH, so the floor is the chrome itself.
   local narrow = frame()
   M.ResizeToContent(narrow, label(1), label(1))
-  assert(narrow.w == M.MIN_WIDTH, "tiny text keeps the minimum width, got " .. tostring(narrow.w))
+  assert(narrow.w >= M.MIN_WIDTH, "tiny text keeps at least the minimum width, got " .. tostring(narrow.w))
+  assert(narrow.w < M.MAX_WIDTH, "tiny text stays narrower than the maximum, got " .. tostring(narrow.w))
 end

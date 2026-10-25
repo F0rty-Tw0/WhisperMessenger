@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local MinimapIcon = ns.MinimapIcon or require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
@@ -13,7 +13,8 @@ local MinimapIconRuntime = {}
 
 -- Wires the minimap icon and the LibDataBroker launcher into the runtime:
 -- settings getters, position persistence, preview dismissal, and the initial
--- unread seed (one contacts walk shared by both surfaces).
+-- count seed (one contacts walk shared by both surfaces; panel badges
+-- included, so a surface created after a registration shows them at once).
 function MinimapIconRuntime.Create(options)
   options = options or {}
 
@@ -23,7 +24,7 @@ function MinimapIconRuntime.Create(options)
   local minimapIconModule = options.minimapIcon or MinimapIcon
   local dataBroker = options.dataBroker or DataBroker
   local tableUtils = options.tableUtils or TableUtils
-  local badgeFilter = options.badgeFilter or BadgeFilter
+  local runtime = options.runtime or {}
   local buildContacts = options.buildContacts or function()
     return {}
   end
@@ -37,7 +38,7 @@ function MinimapIconRuntime.Create(options)
     return accountState.settings or {}
   end
 
-  local initialUnread = badgeFilter.SumWhisperUnread(buildContacts())
+  local total, unread = IconSurfaces.Counts(buildContacts(), runtime.panelRegistry)
 
   local minimapIcon = minimapIconModule.Create(uiFactory, {
     state = characterState.minimapIcon,
@@ -68,16 +69,16 @@ function MinimapIconRuntime.Create(options)
       acknowledgeLatestWidgetPreview(buildContacts())
       refreshWindow()
     end,
-    unreadCount = initialUnread,
+    onOpenPreview = options.onOpenPreview,
   })
+  IconSurfaces.ShowCounts(total, unread, minimapIcon)
 
   local ldbObject
   dataBroker.Register({
     onToggle = onToggle,
     onRegistered = function(obj)
       ldbObject = obj
-      obj.unread = initialUnread
-      obj.text = dataBroker.FormatText(initialUnread)
+      IconSurfaces.ShowCounts(total, unread, nil, nil, obj)
     end,
   })
 

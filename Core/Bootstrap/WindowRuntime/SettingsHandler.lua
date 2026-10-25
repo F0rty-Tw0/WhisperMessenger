@@ -5,10 +5,11 @@ end
 
 local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and require("WhisperMessenger.Util.ChatReplyState")) or nil
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
-local BadgeFilter = ns.ToggleIconBadgeFilter or (type(require) == "function" and require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")) or nil
+local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
+local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
@@ -40,7 +41,6 @@ function SettingsHandler.Create(options)
   local buildContacts = options.buildContacts or function()
     return {}
   end
-  local badgeFilter = options.badgeFilter or BadgeFilter
   local getNumChatWindows = options.getNumChatWindows or function()
     return _G.NUM_CHAT_WINDOWS or 10
   end
@@ -69,6 +69,10 @@ function SettingsHandler.Create(options)
           appearance.setHudStyle(savedStyle)
         end
       end)
+      return
+    end
+    if key == "allowAddonIntegration" then
+      IntegrationSetting.Apply(accountSettings, value, runtime)
       return
     end
     local persistedValue = value
@@ -244,21 +248,10 @@ function SettingsHandler.Create(options)
 
     local icon = getIcon()
     local minimap = options.getMinimapIcon and options.getMinimapIcon()
-    if key == "showUnreadBadge" or key == "badgePulse" then
-      -- Same whisper-only sum as every other badge path — group-channel
-      -- unread must not inflate the icon badges. Each icon resyncs
-      -- independently so a missing widget icon can't starve the minimap.
-      local iconWantsBadge = icon and icon.setUnreadCount
-      local minimapWantsBadge = minimap and minimap.setUnreadCount
-      if (iconWantsBadge or minimapWantsBadge) and badgeFilter then
-        local unread = badgeFilter.SumWhisperUnread(buildContacts())
-        if iconWantsBadge then
-          icon.setUnreadCount(unread)
-        end
-        if minimapWantsBadge then
-          minimap.setUnreadCount(unread)
-        end
-      end
+    -- The icon refresh's count; each icon resyncs alone (no starved minimap).
+    if (key == "showUnreadBadge" or key == "badgePulse") and (icon or minimap) then
+      local total, unread = IconSurfaces.Counts(buildContacts(), runtime.panelRegistry)
+      IconSurfaces.ShowCounts(total, unread, icon, minimap)
     end
 
     if key == "iconMode" and options.applyIconMode then

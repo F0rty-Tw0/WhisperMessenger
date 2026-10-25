@@ -115,12 +115,15 @@ local Layout = {
   TRANSCRIPT_HORIZONTAL_INSET = 32,
   TRANSCRIPT_LEFT_GUTTER = 16,
 
-  -- Window chrome buttons (close / new conversation / options / empty-state)
-  CHROME_BUTTON_SIZE = 20,
+  -- Title-bar button hit size under the Native WoW HUD; small chrome glyphs
+  -- elsewhere (the conversation header) keep CHROME_BUTTON_ICON_SIZE.
+  CHROME_BUTTON_SIZE = 22,
   CHROME_BUTTON_ICON_SIZE = 14,
+  -- Every title-bar glyph, in every chrome style.
+  TITLE_ICON_SIZE = 18,
   -- Custom title bar: one hit size and gap for every button; the edge inset
-  -- puts the outer glyphs' ink 8px from the window edge on both sides.
-  TITLE_BUTTON_SIZE = 22,
+  -- keeps the outer glyphs clear of the window edge on both sides.
+  TITLE_BUTTON_SIZE = 24,
   TITLE_BUTTON_GAP = 4,
   TITLE_BAR_INSET_X = 3,
 

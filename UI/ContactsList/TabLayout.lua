@@ -56,26 +56,53 @@ function TabLayout.ResolveMode(mode, visible)
   return "whispers"
 end
 
+-- While an addon panel is selected only its tab paints selected; otherwise
+-- the tab of the current mode does.
+function TabLayout.IsActive(tab, currentMode, selectedPanel)
+  if selectedPanel ~= nil then
+    return tab.panelKey == selectedPanel
+  end
+  return tab.mode == currentMode
+end
+
+local NO_PANEL_TAB = {
+  setBadge = function(_count) end,
+}
+
 -- Mode and unread controller shared by both tab skins. Sets setMode,
--- getMode, setModes, setShown, setUnreadCounts and setLanguage on toggle,
--- binds each tab's OnClick, and returns the paint function (for hover
--- handlers).
+-- getMode, setModes, setShown, setOptionsShown, setUnreadCounts,
+-- setLanguage, addPanelTab, setSelectedPanel, getSelectedPanel and
+-- setModeClickHandler on toggle, binds each tab's OnClick, and returns the
+-- paint function (for hover handlers). The strip shows while more than one
+-- tab is visible and the options page is closed; setModes, addPanelTab and
+-- setOptionsShown apply that through toggle.setShown.
 --
 -- tabsByMode: one tab per TabLayout.MODES entry; each tab has
 -- `.btn`, `.mode` and a writable `.unread`.
 -- opts:
 --   initialMode, onModeChanged(mode)
---   paint(mode, visible)
---   relabel(tab)       : re-reads the tab's label from the active locale
---   anchor(visible)    : places the visible tab buttons
+--   paint(mode, visible, selectedPanel, panelTabs)
+--   relabel(tab)       : re-reads a mode tab's label from the active locale
+--   anchor(visible)    : places the visible tab buttons (mode + panel tabs)
+--   createPanelTab(title, index) : an addon panel tab with `.btn`, `.badge`
+--                        and a writable `.unread`, or nil
 function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local onModeChanged = opts.onModeChanged or function(_mode) end
   local currentMode = opts.initialMode or "whispers"
   local visibleModes = nil
   local visible = {}
+  local panelTabs = {}
+  local selectedPanel = nil
+  local modeClickHandler = nil
+  local optionsShown = false
 
   local function paint()
-    opts.paint(currentMode, visible)
+    opts.paint(currentMode, visible, selectedPanel, panelTabs)
+  end
+
+  -- Through toggle.setShown looked up now, so the skin's clamp wrapper runs.
+  local function applyShown()
+    toggle.setShown(#visible > 1 and not optionsShown)
   end
 
   local function setMode(mode)
@@ -83,14 +110,22 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
     paint()
   end
 
+  -- Panel tabs always follow the visible mode tabs.
   local function relayout()
     visible = TabLayout.VisibleTabs(tabsByMode, visibleModes)
+    for _, tab in ipairs(panelTabs) do
+      visible[#visible + 1] = tab
+    end
     opts.anchor(visible)
   end
 
   relayout()
   for _, mode in ipairs(TabLayout.MODES) do
     tabsByMode[mode].btn:SetScript("OnClick", function()
+      -- Leaving a panel runs even for the current mode's tab.
+      if selectedPanel ~= nil and modeClickHandler then
+        modeClickHandler(mode)
+      end
       if currentMode ~= mode then
         setMode(mode)
         onModeChanged(mode)
@@ -108,9 +143,15 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
     visibleModes = modes
     relayout()
     setMode(currentMode)
+    applyShown()
   end
   toggle.setShown = function(shown)
     frame:SetShown(shown)
+  end
+  -- The options page covers the panes; the strip hides under it.
+  toggle.setOptionsShown = function(shown)
+    optionsShown = shown == true
+    applyShown()
   end
   toggle.setUnreadCounts = function(whispersCount, groupsCount, requestsCount, channelsCount)
     tabsByMode.whispers.unread = tonumber(whispersCount) or 0
@@ -126,6 +167,39 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
     -- Label widths changed: re-place the tabs.
     opts.anchor(visible)
     paint()
+  end
+  -- An addon panel's tab, after the mode tabs in registration order. The
+  -- title is shown as given, never translated.
+  toggle.addPanelTab = function(key, title, onClick)
+    local tab = opts.createPanelTab(title, #panelTabs + 1)
+    if tab == nil then
+      return NO_PANEL_TAB
+    end
+    tab.panelKey = key
+    tab.btn:SetScript("OnClick", function()
+      onClick()
+    end)
+    panelTabs[#panelTabs + 1] = tab
+    relayout()
+    paint()
+    applyShown()
+    return {
+      setBadge = function(count)
+        tab.unread = tonumber(count) or 0
+        paint()
+      end,
+    }
+  end
+  toggle.setSelectedPanel = function(key)
+    selectedPanel = key
+    paint()
+  end
+  toggle.getSelectedPanel = function()
+    return selectedPanel
+  end
+  -- fn(mode) runs on a mode-tab click while a panel is selected.
+  toggle.setModeClickHandler = function(fn)
+    modeClickHandler = fn
   end
   return paint
 end

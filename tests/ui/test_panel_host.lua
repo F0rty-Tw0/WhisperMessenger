@@ -2,7 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local PanelHost = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelHost")
 
-local function build(nativeChrome)
+local function build(nativeChrome, listWidth)
   local factory = FakeUI.NewFactory()
   -- Like the live client, new frames start shown.
   local create = factory.CreateFrame
@@ -13,23 +13,21 @@ local function build(nativeChrome)
   end
   local parent = factory.CreateFrame("Frame", "Window", nil)
   local env = { parent = parent, added = {}, badges = {}, clicked = {} }
-  local chrome = {
-    addPanelButton = function(key, spec, onClick)
-      env.added[#env.added + 1] = { key = key, spec = spec, onClick = onClick }
+  env.host = PanelHost.Create({
+    factory = factory,
+    parent = parent,
+    nativeChrome = nativeChrome == true,
+    theme = Theme,
+    listWidth = listWidth,
+    addTab = function(key, title, onClick)
+      env.added[#env.added + 1] = { key = key, title = title, onClick = onClick }
       return {
         setBadge = function(n)
           env.badges[#env.badges + 1] = n
         end,
       }
     end,
-  }
-  env.host = PanelHost.Create({
-    factory = factory,
-    parent = parent,
-    chrome = chrome,
-    nativeChrome = nativeChrome == true,
-    theme = Theme,
-    onButtonClick = function(key)
+    onTabClick = function(key)
       env.clicked[#env.clicked + 1] = key
     end,
   })
@@ -37,7 +35,7 @@ local function build(nativeChrome)
 end
 
 local function panel(overrides)
-  local p = { title = "Alerts", icon = "x", onShow = function() end }
+  local p = { title = "Alerts", onShow = function() end }
   for k, v in pairs(overrides or {}) do
     p[k] = v
   end
@@ -68,15 +66,22 @@ return function()
     assertPoint(hudFrame.points[2], "BOTTOMRIGHT", hud.parent, "BOTTOMRIGHT", 0, p, "hud bottom")
   end
 
-  -- test_register_creates_button_and_hidden_host
+  -- test_register_creates_tab_and_hidden_host
   do
     local env = build(false)
-    assert(env.host.register("ca", panel({ icon = 134400 })) == true)
+    assert(env.host.register("ca", panel()) == true)
     assert(env.host.has("ca") and not env.host.has("other"))
     assert(env.host.frameOf("ca"):IsShown() == false, "host starts hidden")
     local added = env.added[1]
-    assert(added.key == "ca" and added.spec.title == "Alerts" and added.spec.icon == 134400, "button got the caller's title and icon")
+    assert(added.key == "ca" and added.title == "Alerts", "tab got the caller's key and title")
     assert(env.badges[1] == 0, "badge refreshed at registration (no badge fn -> 0)")
+  end
+
+  -- test_icon_is_ignored
+  do
+    local env = build(false)
+    assert(env.host.register("a", panel({ icon = {} })) == true, "any icon value registers")
+    assert(env.host.register("b", { title = "B", onShow = function() end }) == true, "no icon registers")
   end
 
   -- test_duplicate_and_bad_panels_are_refused
@@ -87,10 +92,9 @@ return function()
     assert(env.host.register("x", "nope") == false, "non-table refused")
     assert(env.host.register("y", panel({ onShow = false })) == false, "missing onShow refused")
     assert(env.host.register("z", panel({ title = 5 })) == false, "non-string title refused")
-    assert(env.host.register("w", panel({ icon = {} })) == false, "table icon refused")
     assert(env.host.register("v", panel({ onHide = "x" })) == false, "non-function onHide refused")
     assert(env.host.register("u", panel({ badge = 5 })) == false, "non-function badge refused")
-    assert(#env.added == 1 and not env.host.has("x") and not env.host.has("y"), "refusals add no button")
+    assert(#env.added == 1 and not env.host.has("x") and not env.host.has("y"), "refusals add no tab")
   end
 
   -- test_show_runs_on_show_with_the_host_frame_and_refreshes_badge
@@ -162,11 +166,112 @@ return function()
     env.host.refreshBadge("unknown")
   end
 
-  -- test_button_click_reports_the_key
+  -- test_tab_click_reports_the_key
   do
     local env = build(false)
     env.host.register("ca", panel())
-    env.added[1].onClick("ca")
-    assert(env.clicked[1] == "ca", "button click reaches onButtonClick")
+    env.added[1].onClick()
+    assert(env.clicked[1] == "ca", "tab click reaches onTabClick with the key")
+  end
+
+  -- test_show_calls_on_split_after_on_show_with_the_seed_width
+  do
+    local env = build(false, 221)
+    local calls = {}
+    env.host.register(
+      "ca",
+      panel({
+        onShow = function()
+          calls[#calls + 1] = { "show" }
+        end,
+        onSplit = function(f, w)
+          calls[#calls + 1] = { "split", f, w }
+        end,
+      })
+    )
+    env.host.show("ca")
+    assert(calls[1][1] == "show" and calls[2][1] == "split", "onSplit follows onShow")
+    assert(calls[2][2] == env.host.frameOf("ca") and calls[2][3] == 221, "onSplit gets the host frame and the seed width")
+  end
+
+  -- test_set_split_reaches_only_the_shown_panel
+  do
+    local env = build(false, 221)
+    local splits = {}
+    env.host.register(
+      "ca",
+      panel({
+        onSplit = function(_, w)
+          splits[#splits + 1] = w
+        end,
+      })
+    )
+    env.host.setSplit(300)
+    assert(#splits == 0, "nothing shown yet")
+    env.host.show("ca")
+    env.host.setSplit(51)
+    assert(splits[#splits] == 51, "shown panel hears the new width")
+    env.host.hide("ca")
+    env.host.setSplit(260)
+    assert(splits[#splits] == 51, "hidden panel not called")
+    env.host.show("ca")
+    assert(splits[#splits] == 260, "reopen uses the last width")
+  end
+
+  -- test_on_show_error_still_calls_on_split_and_refreshes_badge
+  do
+    local env = build(false, 221)
+    local splits = {}
+    env.host.register(
+      "ca",
+      panel({
+        onShow = function()
+          error("boom")
+        end,
+        onSplit = function(_, w)
+          splits[#splits + 1] = w
+        end,
+        badge = function()
+          return 2
+        end,
+      })
+    )
+    env.host.show("ca")
+    assert(#splits == 1, "onSplit runs after a failing onShow")
+    assert(env.badges[#env.badges] == 2, "badge refreshed")
+  end
+
+  -- test_on_split_error_is_contained
+  do
+    local env = build(false, 221)
+    env.host.register(
+      "ca",
+      panel({
+        onSplit = function()
+          error("boom")
+        end,
+        badge = function()
+          return 3
+        end,
+      })
+    )
+    assert(env.host.show("ca") == true, "show survives a failing onSplit")
+    assert(env.badges[#env.badges] == 3, "badge refreshed after a failing onSplit")
+    env.host.setSplit(10)
+  end
+
+  -- test_panel_without_on_split_still_opens
+  do
+    local env = build(false, 221)
+    env.host.register("ca", panel())
+    assert(env.host.show("ca") == true)
+    env.host.setSplit(10)
+  end
+
+  -- test_register_refuses_non_function_on_split
+  do
+    local env = build(false, 221)
+    assert(env.host.register("ca", panel({ onSplit = 5 })) == false, "non-function onSplit refused")
+    assert(not env.host.has("ca"))
   end
 end

@@ -30,7 +30,7 @@ return function()
     local runtime = makeRuntime(true, JAINA)
     local api = PublicApi.Build(runtime)
     assert(api.SetContactInfo("ca", "Jaina-Proudmoore", "x") == true)
-    assert(runtime.contactInfo["jaina-proudmoore"] and runtime.contactInfo["jaina-proudmoore"].ca == "x", "stored under the canonical name")
+    assert(runtime.contactInfo["jaina-proudmoore"] and runtime.contactInfo["jaina-proudmoore"].ca.text == "x", "stored under the canonical name")
     assert(runtime.refreshes == 1, "shown window refreshed once, got " .. runtime.refreshes)
   end
 
@@ -81,6 +81,24 @@ return function()
     end
     assert(api.SetContactInfo("ca", "Jaina", 5) == false, "numeric text")
     assert(runtime.refreshes == 0, "no refresh on bad input")
+    assert(next(runtime.contactInfo) == nil, "nothing stored")
+  end
+
+  -- test_tooltip_lines_are_stored_with_the_line
+  do
+    local runtime = makeRuntime(true, JAINA)
+    local api = PublicApi.Build(runtime)
+    assert(api.SetContactInfo("ca", "Jaina-Proudmoore", "x", { "Matched: Belt" }) == true)
+    local _, tooltips = ContactInfo.LinesFor(runtime, { conversationKey = JAINA })
+    assert(tooltips[1] and tooltips[1][1] == "Matched: Belt", "tooltip lines reach the store")
+  end
+
+  -- test_bad_tooltip_lines_return_false_without_a_refresh
+  do
+    local runtime = makeRuntime(true, JAINA)
+    local api = PublicApi.Build(runtime)
+    assert(api.SetContactInfo("ca", "Jaina-Proudmoore", "x", { "ok", 5 }) == false)
+    assert(runtime.refreshes == 0, "no refresh on a refused call")
     assert(next(runtime.contactInfo) == nil, "nothing stored")
   end
 end

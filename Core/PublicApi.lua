@@ -26,11 +26,12 @@ local function putDraftInComposer(runtime, draft)
   end
 end
 
--- An addon panel covers the conversation; close it so the chat shows.
+-- An addon panel covers the conversation; close it so the chat shows. Quiet:
+-- the caller selects the chat it opens itself.
 local function hideOpenPanel(runtime)
   local window = runtime.window
   if window and window.hidePanel then
-    window.hidePanel()
+    window.hidePanel(true)
   end
 end
 
@@ -61,6 +62,16 @@ local function buildOpenConversation(runtime)
   end)
 end
 
+local function refuse()
+  return false
+end
+
+-- Allow addon integration, read once at load: changing it reloads.
+local function integrationAllowed(runtime)
+  local settings = runtime.accountState and runtime.accountState.settings
+  return settings == nil or settings.allowAddonIntegration ~= false
+end
+
 function PublicApi.Build(runtime)
   local api = {
     version = API_VERSION,
@@ -69,6 +80,14 @@ function PublicApi.Build(runtime)
   Preview.Install(api, runtime)
   Panels.Install(api, runtime)
   PublicContactInfo.Install(api, runtime)
+  if not integrationAllowed(runtime) then
+    -- Same keys, so callers never nil-error; every call is refused.
+    for key, value in pairs(api) do
+      if type(value) == "function" then
+        api[key] = refuse
+      end
+    end
+  end
   return api
 end
 

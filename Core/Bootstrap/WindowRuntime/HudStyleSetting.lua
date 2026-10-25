@@ -36,9 +36,13 @@ end
 -- picker can show the saved style again.
 function HudStyleSetting.Apply(accountSettings, style, onDiscard)
   if Hud.Resolve(style) == Hud.Style() then
+    -- Only close our own popup: another setting's may be up.
+    local hadPending = pendingStyle ~= nil
     pendingStyle = nil
     save(accountSettings, style)
-    ReloadPrompt.Hide()
+    if hadPending then
+      ReloadPrompt.Hide()
+    end
     return
   end
   pendingStyle = style

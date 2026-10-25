@@ -30,15 +30,20 @@ function WindowSurface.CollectSettings()
   end
 end
 
--- Addon panel entry points: registerPanel, showPanel, hidePanel,
--- getVisiblePanel, refreshPanelBadge.
+-- Addon panel entry points: registerPanel, showPanel, hidePanel(quiet),
+-- setOptionsVisible(visible, quiet), getVisiblePanel, refreshPanelBadge, and
+-- isConversationPaneShown (false while a panel or the options pane covers the
+-- chat). quiet closes without reporting the chat uncovered, for callers that
+-- select a chat themselves right after.
 local function addPanelFields(window, panelHost, windowVisibility)
   window.registerPanel = panelHost.register
   window.showPanel = windowVisibility.setPanelVisible
-  window.hidePanel = function()
-    windowVisibility.setPanelVisible(nil)
+  window.hidePanel = function(quiet)
+    windowVisibility.setPanelVisible(nil, quiet)
   end
+  window.setOptionsVisible = windowVisibility.setOptionsVisible
   window.getVisiblePanel = windowVisibility.getVisiblePanel
+  window.isConversationPaneShown = windowVisibility.isConversationPaneShown
   window.refreshPanelBadge = panelHost.refreshBadge
 end
 

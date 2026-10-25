@@ -46,6 +46,13 @@ return function()
     assert(DataBroker.FormatText(3) == "3 unread", "positive count formats as 'N unread'")
   end
 
+  -- test_format_text_splits_whispers_and_panel_items
+  do
+    assert(DataBroker.FormatText(2, 0) == "2 unread", "no panel items is today's text")
+    assert(DataBroker.FormatText(2, 1) == "2 unread, 1 in addon pages", "whispers and panel items are split")
+    assert(DataBroker.FormatText(0, 1) == "1 in addon pages", "panel items alone")
+  end
+
   -- test_register_fires_on_registered_with_data_object
   do
     local ldb = makeFakeLdb()
@@ -107,6 +114,33 @@ return function()
     registered.OnTooltipShow(tooltip)
     assert(tooltip.lines[1] == "Whisper Messenger", "tooltip leads with the addon name")
     assert(tooltip.lines[2] == "4 unread", "tooltip shows the cached unread count")
+  end
+
+  -- test_tooltip_splits_whispers_and_panel_items
+  do
+    local ldb = makeFakeLdb()
+    local originalLibStub = installLibStub(ldb)
+
+    local registered
+    DataBroker.Register({
+      onRegistered = function(obj)
+        registered = obj
+      end,
+    })
+
+    rawset(_G, "LibStub", originalLibStub)
+
+    registered.unread = 3
+    registered.whispers = 2
+    local tooltip = makeFakeTooltip()
+    registered.OnTooltipShow(tooltip)
+    assert(tooltip.lines[2] == "2 unread, 1 in addon pages", "tooltip splits the cached counts, got " .. tostring(tooltip.lines[2]))
+
+    registered.unread = 1
+    registered.whispers = 0
+    tooltip = makeFakeTooltip()
+    registered.OnTooltipShow(tooltip)
+    assert(tooltip.lines[2] == "1 in addon pages", "panel items alone, got " .. tostring(tooltip.lines[2]))
   end
 
   -- test_tooltip_omits_unread_line_when_none

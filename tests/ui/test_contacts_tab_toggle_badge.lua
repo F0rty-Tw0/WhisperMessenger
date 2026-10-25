@@ -101,4 +101,20 @@ return function()
     end)
     assert(groupsText ~= nil, "expected groups badge to cap at '99+' for counts > 99")
   end
+
+  -- test_panel_tab_badge_shows_positive_counts
+  do
+    local toggle = createToggle()
+    local handle = toggle.addPanelTab("ca", "Alerts", function() end)
+    handle.setBadge(3)
+    local badge = TabParts.panel(toggle, 1).badge
+    assert(badge.shown ~= false, "expected the panel badge shown at 3")
+    assert(findChildFontString(badge, function(c)
+      return c.text == "3"
+    end) ~= nil, "expected the panel badge to render '3'")
+    handle.setBadge(0)
+    assert(badge.shown == false, "expected the panel badge hidden at 0")
+    handle.setBadge(-1)
+    assert(badge.shown == false, "expected the panel badge hidden below 0")
+  end
 end

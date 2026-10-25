@@ -25,7 +25,7 @@ function PatchNotesButton.Create(factory, frame, theme)
 
   local icon = button:CreateTexture(nil, "ARTWORK")
   IconButtonStyle.SetGlyph(button, icon, theme.TEXTURES.title_whats_new_icon)
-  icon:SetSize(theme.LAYOUT.CHROME_BUTTON_ICON_SIZE, theme.LAYOUT.CHROME_BUTTON_ICON_SIZE)
+  icon:SetSize(theme.LAYOUT.TITLE_ICON_SIZE, theme.LAYOUT.TITLE_ICON_SIZE)
   icon:SetPoint("CENTER", button, "CENTER", 0, 0)
 
   local function applyVisuals(hovered)

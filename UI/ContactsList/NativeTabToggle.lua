@@ -10,10 +10,10 @@ local TabLayout = ns.ContactsListTabLayout or require("WhisperMessenger.UI.Conta
 
 -- Native WoW HUD Whispers/Groups/Channels/Requests tabs: Blizzard PanelTabButtonTemplate
 -- tabs hanging below the window's bottom-left edge, each sized to its label,
--- like the Character or Professions frame tabs. The strip is parented to the
--- contacts pane (so it hides with it) but anchored to the window frame. Same
--- interface as TabToggle.Create; returns nil when the template is unavailable
--- so the caller builds the modern bar instead.
+-- like the Character or Professions frame tabs. The strip is the window's
+-- child (so it stays up beside an addon panel) and anchored to the window
+-- frame. Same interface as TabToggle.Create; returns nil when the template is
+-- unavailable so the caller builds the modern bar instead.
 local NativeTabToggle = {}
 
 local TAB_TEMPLATE = "PanelTabButtonTemplate"
@@ -103,16 +103,17 @@ local function liftAboveBorder(badgeFrame, window)
 end
 
 -- The Requests badge is dim so a stranger's message never looks urgent.
-local function createTab(factory, frame, window, index, textKey, mode)
-  local btn = UIHelpers.createTemplatedFrame(factory, "Button", TAB_NAMES[index], frame, TAB_TEMPLATE)
+-- label is shown as given; an addon panel tab has no mode.
+local function createTab(factory, frame, window, name, label, mode)
+  local btn = UIHelpers.createTemplatedFrame(factory, "Button", name, frame, TAB_TEMPLATE)
   if btn == nil then
     return nil
   end
-  btn:SetText(Localization.Text(textKey))
+  btn:SetText(label)
   local badge = Badge.Create(factory, btn, { size = BADGE_SIZE, outline = true, dim = mode == "requests" })
   badge.frame:SetPoint("CENTER", btn, "TOPRIGHT", -BADGE_CORNER_INSET, -BORDER_OVERLAP)
   liftAboveBorder(badge.frame, window)
-  local tab = { btn = btn, badge = badge, textKey = textKey, mode = mode, unread = 0 }
+  local tab = { btn = btn, badge = badge, mode = mode, unread = 0 }
   -- Replaces the template's OnShow / DISPLAY_SIZE_CHANGED handlers, which
   -- would re-run the flavor's own TabResize.
   local function resize()
@@ -122,6 +123,21 @@ local function createTab(factory, frame, window, index, textKey, mode)
   btn:SetScript("OnEvent", resize)
   resize()
   return tab
+end
+
+local function createModeTab(factory, frame, window, index, textKey, mode)
+  local tab = createTab(factory, frame, window, TAB_NAMES[index], Localization.Text(textKey), mode)
+  if tab then
+    tab.textKey = textKey
+  end
+  return tab
+end
+
+local function paintBadges(tabs)
+  for _, tab in ipairs(tabs) do
+    tab.badge.setCount(tab.unread)
+    tab.badge.paint()
+  end
 end
 
 -- Visible tabs in a row from the strip's left edge, Blizzard spacing.
@@ -148,10 +164,10 @@ function NativeTabToggle.Create(factory, parent, options)
   frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
   frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
 
-  local whispers = createTab(factory, frame, window, 1, "Whispers", "whispers")
-  local groups = whispers and createTab(factory, frame, window, 2, "Groups", "groups")
-  local requests = groups and createTab(factory, frame, window, 3, "Requests", "requests")
-  local channels = requests and createTab(factory, frame, window, 4, "Channels", "channels")
+  local whispers = createModeTab(factory, frame, window, 1, "Whispers", "whispers")
+  local groups = whispers and createModeTab(factory, frame, window, 2, "Groups", "groups")
+  local requests = groups and createModeTab(factory, frame, window, 3, "Requests", "requests")
+  local channels = requests and createModeTab(factory, frame, window, 4, "Channels", "channels")
   if whispers == nil or groups == nil or requests == nil or channels == nil then
     frame:Hide()
     return nil
@@ -163,13 +179,12 @@ function NativeTabToggle.Create(factory, parent, options)
     fitTabs(frame, visibleTabs)
   end)
 
-  local function paintTabs(currentMode, visible)
-    for _, tab in ipairs(tabs) do
-      tab.badge.setCount(tab.unread)
-      tab.badge.paint()
-    end
+  local function paintTabs(currentMode, visible, selectedPanel, panelTabs)
+    paintBadges(tabs)
+    paintBadges(panelTabs)
     for _, tab in ipairs(visible) do
-      callPanelTemplates(tab.mode == currentMode and "PanelTemplates_SelectTab" or "PanelTemplates_DeselectTab", tab.btn)
+      local active = TabLayout.IsActive(tab, currentMode, selectedPanel)
+      callPanelTemplates(active and "PanelTemplates_SelectTab" or "PanelTemplates_DeselectTab", tab.btn)
     end
   end
 
@@ -186,9 +201,13 @@ function NativeTabToggle.Create(factory, parent, options)
       fitTabs(frame, visible)
       chainTabs(frame, visible)
     end,
+    createPanelTab = function(title, index)
+      return createTab(factory, frame, window, "WhisperMessengerPanelTab" .. index, title, nil)
+    end,
   })
 
-  -- ContactsRuntime always calls setShown after Create.
+  -- TabLayout applies the shown state through toggle.setShown, so the
+  -- clamp follows it.
   local applyClamp = TabLayout.BindClamp(window, HANG_HEIGHT)
   local setShown = toggle.setShown
   toggle.setShown = function(shown)

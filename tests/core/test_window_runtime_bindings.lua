@@ -84,6 +84,18 @@ return function()
   visible = false
   assert(runtime.isConversationOpen("wow::jaina") == false, "hidden window should not report open conversation")
 
+  -- test_covered_chat_is_not_open: a panel or the options pane hides the chat panes
+  visible = true
+  local panesShown = false
+  window.isConversationPaneShown = function()
+    return panesShown
+  end
+  assert(runtime.isConversationOpen("wow::jaina") == false, "a covered chat is not open")
+  panesShown = true
+  assert(runtime.isConversationOpen("wow::jaina") == true, "the uncovered chat is open again")
+  window.isConversationPaneShown = nil
+  visible = false
+
   assert(runtime.icon == icon, "runtime.icon should be wired")
   assert(runtime.toggle == controller.toggle, "runtime.toggle should share controller toggle")
   assert(runtime.refreshWindow == controller.refreshWindow, "runtime.refreshWindow should share controller refresh")

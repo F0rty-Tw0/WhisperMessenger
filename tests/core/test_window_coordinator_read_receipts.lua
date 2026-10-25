@@ -52,8 +52,20 @@ return function()
   coord.refreshWindow()
   assert(#synced == 1 and synced[1] == "k1", "receipts synced for the selected conversation")
 
+  -- test_covered_chat_does_not_sync: a panel or the options pane hides the chat
+  local panesShown = false
+  window.isConversationPaneShown = function()
+    return panesShown
+  end
+  coord.refreshWindow()
+  assert(#synced == 1, "covered chat sends no receipt")
+  panesShown = true
+  coord.refreshWindow()
+  assert(#synced == 2, "uncovered chat syncs again")
+  window.isConversationPaneShown = nil
+
   -- test_hidden_window_does_not_sync
   shown = false
   coord.refreshWindow()
-  assert(#synced == 1, "hidden window sends no receipts")
+  assert(#synced == 2, "hidden window sends no receipts")
 end

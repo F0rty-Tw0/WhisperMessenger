@@ -59,10 +59,11 @@ function ContactsRuntime.Create(factory, options)
   -- contactsSearchController is wired below.
   local triggerTabRefresh = nil
 
-  -- Build tab toggle UI (anchored to the contacts pane, not the scroll view)
+  -- Build tab toggle UI: a window child hanging below it, so it stays up
+  -- while an addon panel replaces the contacts pane.
   local tabToggle = nil
   if options.contactsPane then
-    tabToggle = TabToggle.Create(factory, options.contactsPane, {
+    tabToggle = TabToggle.Create(factory, options.windowFrame or options.contactsPane, {
       initialMode = currentTabMode,
       nativeChrome = options.nativeChrome == true,
       windowFrame = options.windowFrame,
@@ -85,15 +86,20 @@ function ContactsRuntime.Create(factory, options)
         end
       end,
     })
+    -- Keeps the level it had as a pane child so the HUD border never covers
+    -- the tab tops; the relayout re-lifts it when the window is raised.
+    local pane = options.contactsPane
+    if tabToggle.frame.SetFrameLevel and pane.GetFrameLevel then
+      tabToggle.frame:SetFrameLevel(pane:GetFrameLevel() + 1)
+    end
   end
 
+  -- The toggle shows itself while more than one tab is visible.
   local function applyTabModes()
     if tabToggle == nil then
       return
     end
-    local modes = visibleTabModes()
-    tabToggle.setModes(modes)
-    tabToggle.setShown(#modes > 1)
+    tabToggle.setModes(visibleTabModes())
   end
   applyTabModes()
 

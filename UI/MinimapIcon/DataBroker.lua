@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
+
 local DataBroker = {}
 
 --- Build the display text for the LDB launcher.
@@ -10,20 +12,19 @@ local DataBroker = {}
 -- they're passed directly to SetFormattedText which blows up.
 -- Always returns a plain string.
 -- @param unread number|nil — current unread whisper count
+-- @param panelCount number|nil — items waiting in addon pages
 -- @return string
-function DataBroker.FormatText(unread)
-  local count = unread or 0
-  if count > 0 then
-    return tostring(count) .. " unread"
-  end
-  return "Whisper Messenger"
+function DataBroker.FormatText(unread, panelCount)
+  local summary = UnreadSummary.Format(unread, panelCount)
+
+  return summary ~= "" and summary or "Whisper Messenger"
 end
 
 --- Register the launcher data object with LibDataBroker.
 -- Reports the object exclusively through options.onRegistered — the callback
 -- fires on both the immediate path and the deferred PLAYER_LOGIN retry, so
--- callers only wire one path. The refresh loop keeps `obj.text` and
--- `obj.unread` up to date; the tooltip reads the cached `unread` attribute
+-- callers only wire one path. The refresh loop keeps `obj.text`,
+-- `obj.unread` (the shown total) and `obj.whispers` (its whisper part) up to date; the tooltip reads the cached `unread` attribute
 -- instead of rebuilding the contacts list on every hover.
 function DataBroker.Register(options)
   options = options or {}
@@ -63,7 +64,7 @@ function DataBroker.Register(options)
       tt:AddLine("Whisper Messenger")
       local count = tonumber(dataobj.unread) or 0
       if count > 0 then
-        tt:AddLine(DataBroker.FormatText(count))
+        tt:AddLine(UnreadSummary.Format(UnreadSummary.Split(count, dataobj.whispers)))
       end
     end
 

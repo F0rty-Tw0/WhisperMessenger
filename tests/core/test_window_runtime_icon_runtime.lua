@@ -82,12 +82,6 @@ return function()
         return copy
       end,
     },
-    badgeFilter = {
-      SumWhisperUnread = function(nextContacts)
-        assert(nextContacts == contacts, "unread setup should use built contacts")
-        return 2
-      end,
-    },
     buildContacts = function()
       return contacts
     end,

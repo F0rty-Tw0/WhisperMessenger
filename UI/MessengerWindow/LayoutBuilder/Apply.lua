@@ -61,6 +61,11 @@ function Apply.Relayout(layout, relayout, theme)
       layout.contactsResizeHandle:SetFrameLevel(layout.contactsPane:GetFrameLevel() + layoutTheme.CONTACTS_RESIZE_HANDLE_LEVEL_LIFT)
     end
   end
+  -- The tab strip is a window child: re-lift it to where it sat as a pane
+  -- child so the HUD border never covers the tab tops.
+  if layout.contactsTabStrip and layout.contactsTabStrip.SetFrameLevel and layout.contactsPane.GetFrameLevel then
+    layout.contactsTabStrip:SetFrameLevel(layout.contactsPane:GetFrameLevel() + 1)
+  end
 
   if layout.contactsSearchFrame then
     local insetX = resolvedTheme.LAYOUT.CONTACT_SEARCH_INSET_X or searchMargin

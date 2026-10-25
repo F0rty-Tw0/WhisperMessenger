@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local FindUI = require("tests.helpers.find_ui")
 local RetailHud = require("tests.helpers.retail_hud")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 
@@ -30,17 +31,12 @@ local function build()
   return window
 end
 
--- Registers a panel and returns the title-bar button the chrome added for it
--- plus a record of what the panel's callbacks saw.
+-- Registers a panel and returns its tab (the strip's fifth button, after the
+-- four mode tabs) plus a record of what the panel's callbacks saw.
 local function register(window)
   local seen = { hides = 0 }
-  local before = {}
-  for _, child in ipairs(window.frame.children) do
-    before[child] = true
-  end
   local ok = window.registerPanel("ca", {
     title = "Alerts",
-    icon = "x",
     onShow = function(host)
       seen.host = host
     end,
@@ -49,13 +45,8 @@ local function register(window)
     end,
   })
   assert(ok == true, "registerPanel accepts a valid panel")
-  local button
-  for _, child in ipairs(window.frame.children) do
-    if not before[child] and child.frameType == "Button" then
-      button = child
-    end
-  end
-  assert(button ~= nil, "chrome added a title-bar button")
+  local button = FindUI.ofType(window.tabToggle.frame, "Button")[5]
+  assert(button ~= nil, "the strip got a panel tab")
   return button, seen
 end
 
@@ -64,12 +55,12 @@ local function click(button)
 end
 
 local function runStyle(label, expectHostParent)
-  -- test_registered_panel_button_opens_the_panel
+  -- test_registered_panel_tab_opens_the_panel
   do
     local window = build()
     local button, seen = register(window)
     click(button)
-    assert(window.getVisiblePanel() == "ca", label .. ": button opens the panel")
+    assert(window.getVisiblePanel() == "ca", label .. ": tab opens the panel")
     assert(not window.contactsPane:IsShown() and not window.contentPane:IsShown(), label .. ": panes hidden")
     assert(window.backButton:IsShown(), label .. ": Back shown")
     assert(not window.optionsPanel:IsShown(), label .. ": options hidden")
@@ -88,14 +79,14 @@ local function runStyle(label, expectHostParent)
     assert(not window.backButton:IsShown(), label .. ": Back hidden")
   end
 
-  -- test_clicking_the_button_again_closes_the_panel
+  -- test_clicking_the_open_panel_tab_again_is_ignored
   do
     local window = build()
     local button, seen = register(window)
     click(button)
     click(button)
-    assert(window.getVisiblePanel() == nil and seen.hides == 1, label .. ": second click closes the panel")
-    assert(window.contactsPane:IsShown(), label .. ": panes back after the second click")
+    assert(window.getVisiblePanel() == "ca" and seen.hides == 0, label .. ": second click keeps the panel open")
+    assert(not window.contactsPane:IsShown(), label .. ": panes stay hidden after the second click")
   end
 
   -- test_hiding_the_window_closes_the_panel_once
@@ -138,7 +129,7 @@ local function runStyle(label, expectHostParent)
     assert(window.optionsPanel:IsShown(), label .. ": gear opens options")
     assert(seen.hides == 1 and window.getVisiblePanel() == nil, label .. ": gear closes the panel once")
     click(button)
-    assert(not window.optionsPanel:IsShown() and window.getVisiblePanel() == "ca", label .. ": panel button closes options")
+    assert(not window.optionsPanel:IsShown() and window.getVisiblePanel() == "ca", label .. ": panel tab closes options")
   end
 
   -- test_refresh_panel_badge_reaches_the_host

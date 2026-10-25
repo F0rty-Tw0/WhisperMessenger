@@ -6,17 +6,21 @@ end
 -- Size and anchor rules for the icon-anchored message preview.
 local PreviewMetrics = {
   GAP = 8,
-  MAX_WIDTH = 200,
+  MAX_WIDTH = 240,
   MIN_WIDTH = 60,
-  HEIGHT = 42,
-  CLASS_ICON_SIZE = 18,
+  HEIGHT = 56,
+  CLASS_ICON_SIZE = 22,
   DISMISS_SIZE = 16,
-  LEFT_PAD = 6,
-  RIGHT_PAD = 6,
-  ICON_GAP = 6,
+  LEFT_PAD = 10,
+  RIGHT_PAD = 10,
+  ICON_GAP = 8,
   DISMISS_GAP = 4,
-  SENDER_TOP_OFFSET = -8,
-  MESSAGE_GAP = -1,
+  -- Close button's offset from the top-right corner: just inside the ~5px HUD tooltip border.
+  DISMISS_INSET = 6,
+  SENDER_TOP_OFFSET = -11,
+  MESSAGE_GAP = -3,
+  -- Clear space under the message line; keeps the link off the ~5px HUD tooltip border.
+  BOTTOM_ROOM = 14,
 }
 
 local M = PreviewMetrics
@@ -34,14 +38,32 @@ function PreviewMetrics.ResolveAnchor(position)
   return ANCHORS[position] or ANCHORS.right
 end
 
-local function stringWidthOf(fontString)
-  if fontString and fontString.GetStringWidth then
-    local ok, width = pcall(fontString.GetStringWidth, fontString)
-    if ok and type(width) == "number" then
-      return width
+local function measureOf(fontString, methodName)
+  local method = fontString and fontString[methodName]
+  if method then
+    local ok, value = pcall(method, fontString)
+    if ok and type(value) == "number" then
+      return value
     end
   end
   return 0
+end
+
+local function stringWidthOf(fontString)
+  return measureOf(fontString, "GetStringWidth")
+end
+
+-- Tall enough for both lines at the player's Font Size, never below HEIGHT.
+local function fitHeight(previewFrame, senderLabel, messageLabel)
+  if not previewFrame.SetHeight then
+    return
+  end
+  local needed = -M.SENDER_TOP_OFFSET
+    + measureOf(senderLabel, "GetStringHeight")
+    - M.MESSAGE_GAP
+    + measureOf(messageLabel, "GetStringHeight")
+    + M.BOTTOM_ROOM
+  previewFrame:SetHeight(needed > M.HEIGHT and needed or M.HEIGHT)
 end
 
 function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel)
@@ -74,6 +96,7 @@ function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel)
     total = M.MAX_WIDTH
   end
   previewFrame:SetWidth(total)
+  fitHeight(previewFrame, senderLabel, messageLabel)
 end
 
 ns.ToggleIconPreviewMetrics = PreviewMetrics

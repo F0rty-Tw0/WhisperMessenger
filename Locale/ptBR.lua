@@ -140,6 +140,9 @@ local Portuguese = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "Oculta o mensageiro quando o combate começa. Você pode reabri-lo manualmente durante o combate. Ele não reabre automaticamente após o combate.",
   ["Double ESC to close"] = "ESC duplo para fechar",
   ["First Esc clears the chat input; second Esc closes the window."] = "O primeiro Esc limpa a entrada; o segundo fecha a janela.",
+  ["Allow addon integration"] = "Permitir integração com addons",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "Permite que outros addons (como o Craft Alert) adicionem páginas, prévias e notas ao Whisper Messenger.",
+  ["Changing this asks to reload the interface."] = "Alterar isto pede para recarregar a interface.",
   ["Show group chats"] = "Mostrar chats de grupo",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "Mostra uma aba Grupos com conversas de grupo, instância e Battle.net.",
   ["When off, only whispers appear."] = "Se desativado, apenas sussurros aparecem.",
@@ -243,6 +246,7 @@ local Portuguese = {
   ["Send unavailable"] = "Envio indisponível",
   ["Send failed"] = "Falha no envio",
   ["unread"] = "não lidas",
+  ["%d in addon pages"] = "%d em páginas de addons",
   ["Paused in M+"] = "Pausado em M+",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "As mensagens estão pausadas em conteúdo mítico e voltarão ao sair.",
@@ -254,6 +258,7 @@ local Portuguese = {
   ["Left group"] = "Saiu do grupo",
   ["Zone: %s"] = "Zona: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Recarregar a interface agora para aplicar o novo estilo de interface nativa do WoW?",
+  ["Reload the interface now to apply the addon integration change?"] = "Recarregar a interface agora para aplicar a mudança na integração com addons?",
   -- Classes
   ["Warrior"] = "Guerreiro",
   ["Paladin"] = "Paladino",

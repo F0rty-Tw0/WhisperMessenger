@@ -140,6 +140,9 @@ local SimplifiedChinese = {
   ["Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."] = "战斗开始时隐藏信使。你可以在战斗中手动重新打开它。战斗结束后不会自动重新打开。",
   ["Double ESC to close"] = "双击 ESC 关闭",
   ["First Esc clears the chat input; second Esc closes the window."] = "第一次 Esc 清除输入,第二次 Esc 关闭窗口。",
+  ["Allow addon integration"] = "允许插件集成",
+  ["Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."] = "允许其他插件(如 Craft Alert)向 Whisper Messenger 添加页面、预览和备注。",
+  ["Changing this asks to reload the interface."] = "更改此项会提示重新加载界面。",
   ["Show group chats"] = "显示群组聊天",
   ["Shows a Groups tab in the contacts list with party, instance, and Battle.net group conversations."] = "在联系人列表中显示群组标签,包括小队、副本和战网群组对话。",
   ["When off, only whispers appear."] = "关闭时仅显示密语。",
@@ -243,6 +246,7 @@ local SimplifiedChinese = {
   ["Send unavailable"] = "无法发送",
   ["Send failed"] = "发送失败",
   ["unread"] = "未读",
+  ["%d in addon pages"] = "插件页面中有 %d 项",
   ["Paused in M+"] = "在M+中暂停",
   -- Dungeon/competitive chat log messages
   ["Messages are paused in Mythic content and will resume after you leave."] = "消息在史诗内容中已暂停，离开后将恢复。",
@@ -254,6 +258,7 @@ local SimplifiedChinese = {
   ["Left group"] = "离开队伍",
   ["Zone: %s"] = "区域：%s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "现在重新加载界面以应用新的原生WoW界面样式吗？",
+  ["Reload the interface now to apply the addon integration change?"] = "现在重新加载界面以应用插件集成的更改吗？",
   -- Classes
   ["Warrior"] = "战士",
   ["Paladin"] = "圣骑士",

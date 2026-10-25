@@ -57,6 +57,43 @@ return function()
     assert(registry.get("a") == nil, "refused key not kept")
   end
 
+  -- test_mark_all_read_calls_each_panel_in_registration_order
+  do
+    local registry = PanelRegistry.New()
+    local seen = {}
+    registry.register("a", {
+      onMarkAllRead = function()
+        seen[#seen + 1] = "a"
+      end,
+    })
+    registry.register("quiet", {})
+    registry.register("b", {
+      onMarkAllRead = function()
+        seen[#seen + 1] = "b"
+      end,
+    })
+    registry.markAllRead()
+    assert(table.concat(seen, ",") == "a,b", "got: " .. table.concat(seen, ","))
+  end
+
+  -- test_mark_all_read_survives_a_throwing_panel
+  do
+    local registry = PanelRegistry.New()
+    local reached = false
+    registry.register("bad", {
+      onMarkAllRead = function()
+        error("addon bug")
+      end,
+    })
+    registry.register("good", {
+      onMarkAllRead = function()
+        reached = true
+      end,
+    })
+    registry.markAllRead()
+    assert(reached, "the next panel still runs")
+  end
+
   -- test_get_unknown_is_nil
   assert(PanelRegistry.New().get("nope") == nil)
 end

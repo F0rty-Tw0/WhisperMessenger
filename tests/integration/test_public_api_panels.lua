@@ -9,7 +9,6 @@ return function()
     assert(runtime.window == nil, "the window is built on first open")
     assert(api.RegisterPanel("ca", {
       title = "Alerts",
-      icon = "x",
       onShow = function(frame)
         shows = shows + 1
         host = frame
@@ -38,7 +37,6 @@ return function()
       local frames = {}
       assert(api.RegisterPanel("a", {
         title = "A",
-        icon = "x",
         onShow = function(frame)
           frames.a = frame
           api.ShowPanel("b")
@@ -46,7 +44,6 @@ return function()
       }) == true)
       assert(api.RegisterPanel("b", {
         title = "B",
-        icon = "x",
         onShow = function(frame)
           frames.b = frame
         end,
@@ -56,6 +53,56 @@ return function()
       assert(api.IsPanelShown("b") == true and api.IsPanelShown("a") == false, "and it is the tracked one")
       runtime.window.hidePanel()
       assert(not frames.b:IsShown() and not frames.a:IsShown(), "closing hides every panel frame")
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
+
+  -- test_refresh_panel_badge_updates_icons_without_window
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local leads = 0
+      assert(api.RegisterPanel("ca", {
+        title = "Alerts",
+        onShow = function() end,
+        badge = function()
+          return leads
+        end,
+      }) == true)
+      local label = runtime.icon.badgeLabel
+      assert(not runtime.icon.badge:IsShown(), "no leads: no number")
+      leads = 2
+      assert(api.RefreshPanelBadge("ca") == true)
+      assert(runtime.window == nil, "the window is still not built")
+      assert(runtime.icon.badge:IsShown() and label:GetText() == "2", "icon shows 2, got " .. tostring(label:GetText()))
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
+
+  -- test_a_badge_that_calls_back_into_the_api_does_not_nest_icon_refreshes
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local calls = 0
+      assert(api.RegisterPanel("ca", {
+        title = "Alerts",
+        onShow = function() end,
+        badge = function()
+          calls = calls + 1
+          if calls < 500 then
+            api.RefreshPanelBadge("ca")
+          end
+          return 1
+        end,
+      }) == true)
+      api.RefreshPanelBadge("ca")
+      assert(calls < 20, "badge re-entered " .. calls .. " times")
+      calls = 0
+      assert(api.ShowPanel("ca") == true, "the window is built, so tab refreshes run too")
+      api.RefreshPanelBadge("ca")
+      assert(runtime.window ~= nil and calls < 20, "badge re-entered " .. calls .. " times with the window")
     end)
     PublicApiEnv.Reset()
     assert(ok, err)

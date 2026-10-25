@@ -35,6 +35,10 @@ local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or requir
 local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
 local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
+local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
+local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
+local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
+local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
 
 local WindowRuntime = {}
 
@@ -316,6 +320,14 @@ function WindowRuntime.Create(options)
     for name, callback in pairs(windowCallbacks) do
       windowOptions[name] = callback
     end
+    windowOptions.onPanelShown = PanelPulse.OnPanelShown(externalPreview, coordinator.updateIconSurfaces)
+    windowOptions.onConversationUncovered = ChatCover.OnUncovered({
+      runtime = runtime,
+      isWindowVisible = function()
+        return controller.isWindowVisible()
+      end,
+      selectConversation = selectConversation,
+    })
     window = messengerWindow.Create(uiFactory, windowOptions)
     runtime.panelRegistry.bind(window)
 
@@ -341,6 +353,13 @@ function WindowRuntime.Create(options)
     refreshWindow = refreshWindow,
   })
   local toggle = toggleFlow.toggle
+  local onIconToggle = IconToggle.Wrap(runtime, toggle, buildContacts)
+  local onOpenPreview = PreviewOpen.Create({
+    runtime = runtime,
+    buildContacts = buildContacts,
+    buildLatestIncomingPreview = buildLatestIncomingPreview,
+    selectConversation = selectConversation,
+  })
 
   ensureIcon = function()
     if icon then
@@ -352,12 +371,13 @@ function WindowRuntime.Create(options)
       uiFactory = uiFactory,
       toggleIcon = toggleIcon,
       tableUtils = tableUtils,
-      badgeFilter = BadgeFilter,
+      runtime = runtime,
       buildContacts = buildContacts,
       buildLatestIncomingPreview = buildLatestIncomingPreview,
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
-      onToggle = toggle,
+      onToggle = onIconToggle,
+      onOpenPreview = onOpenPreview,
       onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     runtime.icon = icon
@@ -373,11 +393,12 @@ function WindowRuntime.Create(options)
       characterState = characterState,
       uiFactory = uiFactory,
       tableUtils = tableUtils,
-      badgeFilter = BadgeFilter,
+      runtime = runtime,
       buildContacts = buildContacts,
       acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
       refreshWindow = refreshWindow,
-      onToggle = toggle,
+      onToggle = onIconToggle,
+      onOpenPreview = onOpenPreview,
       onMarkAllRead = windowCallbacks.onMarkAllRead,
     })
     minimapIcon = minimapRuntime.minimapIcon

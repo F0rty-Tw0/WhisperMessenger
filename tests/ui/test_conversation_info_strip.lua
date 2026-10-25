@@ -115,6 +115,16 @@ return function()
     assert(pane.transcript.viewportHeight == before - 22, "a later relayout keeps the strip height")
   end
 
+  -- test_fewer_lines_hide_the_spare_rows
+  do
+    lines = { "A", "B" }
+    local pane = newPane(factory, getter)
+    lines = { "A" }
+    ConversationPane.Refresh(pane, contact, conv)
+    local rowFrames = pane.infoStrip.rowFrames
+    assert(rowFrames[1]:IsShown() == true and rowFrames[2]:IsShown() == false, "only the first row shows")
+  end
+
   -- test_no_selected_contact_hides_the_strip
   do
     lines = { "Craft Alert: Belt" }
@@ -124,6 +134,36 @@ return function()
     ConversationPane.Refresh(pane, nil, nil)
     assert(pane.infoStrip.frame:IsShown() == false, "hidden without a contact")
     assert(calls == 0, "getter not called without a contact")
+  end
+
+  -- test_hovering_an_item_link_shows_its_tooltip
+  do
+    lines = { "Craft Alert: |cffa335ee|Hitem:12345::|h[Signet]|h|r" }
+    local pane = newPane(factory, getter)
+    local frame = pane.infoStrip.rowFrames[1]
+    local savedTooltip = rawget(_G, "GameTooltip")
+    local shown = {}
+    _G.GameTooltip = {
+      SetOwner = function(_self, owner)
+        shown.owner = owner
+      end,
+      SetHyperlink = function(_self, link)
+        shown.link = link
+      end,
+      Show = function()
+        shown.visible = true
+      end,
+      Hide = function()
+        shown.visible = false
+      end,
+    }
+    assert(frame.mouseEnabled == true, "the row takes the mouse")
+    assert(frame.hyperlinksEnabled == true, "the row enables hyperlinks")
+    frame.scripts.OnHyperlinkEnter(frame, "item:12345::", "[Signet]")
+    assert(shown.owner == frame and shown.link == "item:12345::" and shown.visible == true, "item tooltip shown")
+    frame.scripts.OnHyperlinkLeave(frame)
+    assert(shown.visible == false, "tooltip hidden on leave")
+    _G.GameTooltip = savedTooltip
   end
 
   -- test_option_is_optional

@@ -19,6 +19,13 @@ return function()
     assert(e.sourceKey == "ca" and e.sender == "S" and e.text == "T", "entry carries the preview fields")
   end
 
+  local function test_pulse_is_stored_only_as_true_and_only_when_the_owner_is_not_looking()
+    local h = newHolder()
+    assert(h.set("ca", { sender = "S", text = "T", pulse = true }, false).pulse == true, "armed")
+    assert(h.set("ca", { sender = "S", text = "T", pulse = true }, true).pulse == false, "owner's panel shows")
+    assert(h.set("ca", { sender = "S", text = "T" }, false).pulse == false, "no pulse field")
+  end
+
   local function test_click_clears_the_slot_then_runs_the_callback()
     local h = newHolder()
     local ran = {}
@@ -108,6 +115,7 @@ return function()
   end
 
   test_set_stamps_the_entry_and_fills_the_slot()
+  test_pulse_is_stored_only_as_true_and_only_when_the_owner_is_not_looking()
   test_click_clears_the_slot_then_runs_the_callback()
   test_dismiss_clears_the_slot_then_runs_the_callback()
   test_on_shown_keeps_the_entry()

@@ -109,11 +109,13 @@ return function()
     assert(api.RegisterPanel(5, validPanel()) == false, "number key")
     assert(api.RegisterPanel("a", "panel") == false, "panel not a table")
     assert(api.RegisterPanel("a", with({ title = "" })) == false, "empty title")
-    assert(api.RegisterPanel("a", with({ icon = {} })) == false, "table icon")
     assert(api.RegisterPanel("a", with({ onShow = false })) == false, "onShow missing")
     assert(api.RegisterPanel("a", with({ onHide = "x" })) == false, "onHide not a function")
     assert(api.RegisterPanel("a", with({ badge = 5 })) == false, "badge not a function")
-    assert(api.RegisterPanel("a", with({ icon = 134400 })) == true, "file id icon, minimal panel")
+    assert(api.RegisterPanel("a", with({ onSplit = 5 })) == false, "onSplit not a function")
+    assert(api.RegisterPanel("a", with({ onMarkAllRead = "x" })) == false, "onMarkAllRead not a function")
+    assert(api.RegisterPanel("a", with({ icon = {} })) == true, "icon is ignored, even a table")
+    assert(api.RegisterPanel("b", { title = "B", onShow = noop }) == true, "no icon at all")
     assert(api.RegisterPanel("a", validPanel()) == false, "duplicate key")
   end
 
@@ -127,16 +129,22 @@ return function()
       hides = hides + 1
     end
     panel.badge = noop
+    panel.onSplit = noop
+    panel.onMarkAllRead = noop
     assert(api.RegisterPanel("ca", panel) == true)
+    panel.onMarkAllRead = nil
     panel.title = {}
     panel.icon = {}
     panel.onShow = nil
     panel.onHide = nil
     panel.badge = nil
+    panel.onSplit = nil
     local stored = r.panelRegistry.get("ca")
     assert(stored ~= panel, "the registry keeps its own copy")
-    assert(stored.title == "Alerts" and stored.icon == validPanel().icon, "title and icon as registered")
+    assert(stored.title == "Alerts" and stored.icon == nil, "title kept, icon dropped")
     assert(type(stored.onShow) == "function" and stored.badge == noop, "callbacks as registered")
+    assert(stored.onSplit == noop, "onSplit as registered")
+    assert(stored.onMarkAllRead == noop, "onMarkAllRead as registered")
     stored.onHide()
     assert(hides == 1, "onHide as registered")
   end
@@ -225,6 +233,44 @@ return function()
     assert(joined(calls) == "badge:ca", "calls: " .. joined(calls))
     assert(api.RefreshPanelBadge("unknown") == false)
     assert(registered().RefreshPanelBadge("ca") == true, "no window yet: true, no error")
+  end
+
+  -- test_register_and_refresh_badge_update_the_icons_without_a_window
+  do
+    local r = makeRuntime()
+    local updates = 0
+    r.updateIconSurfaces = function()
+      updates = updates + 1
+    end
+    local api = PublicApi.Build(r)
+    assert(api.RegisterPanel("ca", validPanel()) == true)
+    assert(updates == 1, "a registration refreshes the icons, got " .. updates)
+    assert(api.RegisterPanel("ca", validPanel()) == false)
+    assert(updates == 1, "a refused registration does not")
+    assert(api.RefreshPanelBadge("ca") == true)
+    assert(updates == 2, "RefreshPanelBadge refreshes the icons with no window, got " .. updates)
+    assert(api.RefreshPanelBadge("unknown") == false and updates == 2, "an unknown key does not")
+  end
+
+  -- test_register_is_true_when_the_icon_refresh_errors
+  do
+    local r = makeRuntime()
+    r.updateIconSurfaces = function()
+      error("icon bug")
+    end
+    local api = PublicApi.Build(r)
+    assert(api.RegisterPanel("ca", validPanel()) == true, "the panel is stored, so the answer is true")
+  end
+
+  -- test_refresh_badge_is_true_when_the_icon_refresh_errors
+  do
+    local r = makeRuntime()
+    local api = PublicApi.Build(r)
+    api.RegisterPanel("ca", validPanel())
+    r.updateIconSurfaces = function()
+      error("icon bug")
+    end
+    assert(api.RefreshPanelBadge("ca") == true, "a known key is refreshed, so the answer is true")
   end
 
   -- test_open_conversation_closes_an_open_panel

@@ -47,5 +47,17 @@ return function()
   window.refreshTabToggleVisibility()
   assert(bottomAnchorY(scrollFrame) == 0 and scrollFrame:GetHeight() == fullHeight, "list height unchanged with tabs reshown")
 
+  -- test_relayout_relifts_the_strip
+  -- The strip is the window's child; the window is re-leveled when raised.
+  window.contactsPane:SetFrameLevel(40)
+  window.frame:GetScript("OnSizeChanged")(window.frame, 900, 560)
+  assert(window.tabToggle.frame:GetFrameLevel() == 41, "strip one level above the pane, got " .. tostring(window.tabToggle.frame:GetFrameLevel()))
+
+  -- test_options_page_hides_the_strip
+  window.optionsButton.scripts.OnClick(window.optionsButton)
+  assert(window.tabToggle.frame:IsShown() == false, "options page hides the strip")
+  window.backButton.scripts.OnClick(window.backButton)
+  assert(window.tabToggle.frame:IsShown() == true, "closing options shows the strip again")
+
   _G.UIParent = savedUIParent
 end

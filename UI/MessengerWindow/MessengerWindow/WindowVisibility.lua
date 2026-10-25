@@ -15,7 +15,27 @@ function WindowVisibility.Create(options)
   local panelHost = options.panelHost
   local onOptionsVisibilityChanged = options.onOptionsVisibilityChanged
   local onPanelVisibilityChanged = options.onPanelVisibilityChanged
+  local onConversationUncovered = options.onConversationUncovered
   local openPanel = nil
+  local closing = false
+
+  -- True while the selected chat's panes are on screen: no addon panel and no
+  -- options pane covers them.
+  local function isConversationPaneShown()
+    return openPanel == nil and not optionsPanel:IsShown()
+  end
+
+  -- The chat just came back on screen (a panel or the options pane closed).
+  -- Not while the window itself closes, and not when the covering pane only
+  -- changed from one kind to the other.
+  local function reportIfUncovered(wasCovered, quiet)
+    if not wasCovered or quiet or closing or not onConversationUncovered then
+      return
+    end
+    if isConversationPaneShown() then
+      onConversationUncovered()
+    end
+  end
 
   local function setInsetShown(inset, shown)
     if inset and inset.SetShown then
@@ -47,7 +67,7 @@ function WindowVisibility.Create(options)
     return true
   end
 
-  local function setOptionsVisible(nextVisible)
+  local function applyOptionsVisible(nextVisible)
     closeOpenPanel()
     if nextVisible then
       optionsPanel:Show()
@@ -67,10 +87,17 @@ function WindowVisibility.Create(options)
     end
   end
 
+  -- quiet: as for setPanelVisible.
+  local function setOptionsVisible(nextVisible, quiet)
+    local wasCovered = not isConversationPaneShown()
+    applyOptionsVisible(nextVisible)
+    reportIfUncovered(wasCovered, quiet)
+  end
+
   -- key opens that panel (closing options or another panel first); nil
   -- closes the open one. Nil with nothing open touches nothing, so a window
   -- hide leaves the options pane as it was.
-  local function setPanelVisible(key)
+  local function applyPanelVisible(key)
     if key == nil then
       return closeOpenPanel()
     end
@@ -104,28 +131,40 @@ function WindowVisibility.Create(options)
     end
     setPanesAndInsets(false)
     if onPanelVisibilityChanged then
-      onPanelVisibilityChanged(true)
+      onPanelVisibilityChanged(true, key)
     end
     return true
+  end
+
+  -- quiet: close without the uncover report (a mode-tab click that moves to
+  -- another tab selects that tab's chat itself).
+  local function setPanelVisible(key, quiet)
+    local wasCovered = not isConversationPaneShown()
+    local result = applyPanelVisible(key)
+    reportIfUncovered(wasCovered, quiet)
+    return result
   end
 
   local function getVisiblePanel()
     return openPanel
   end
 
-  local function togglePanel(key)
-    if openPanel == key then
-      return setPanelVisible(nil)
-    end
-    return setPanelVisible(key)
-  end
-
+  -- The options pane and any panel close first, but the chat does not come
+  -- back on screen: the window goes with them. A throwing onClose still
+  -- clears the guard, then the error carries on.
   local function closeWindow()
-    setOptionsVisible(false)
-    if options.onClose then
-      options.onClose()
-    elseif options.frame and options.frame.Hide then
-      options.frame:Hide()
+    closing = true
+    local ok, err = pcall(function()
+      setOptionsVisible(false)
+      if options.onClose then
+        options.onClose()
+      elseif options.frame and options.frame.Hide then
+        options.frame:Hide()
+      end
+    end)
+    closing = false
+    if not ok then
+      error(err, 0)
     end
   end
 
@@ -133,7 +172,7 @@ function WindowVisibility.Create(options)
     setOptionsVisible = setOptionsVisible,
     setPanelVisible = setPanelVisible,
     getVisiblePanel = getVisiblePanel,
-    togglePanel = togglePanel,
+    isConversationPaneShown = isConversationPaneShown,
     closeWindow = closeWindow,
   }
 end

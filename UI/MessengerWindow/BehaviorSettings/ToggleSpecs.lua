@@ -15,6 +15,7 @@ ToggleSpecs.DEFAULTS = {
   autoFocusComposer = false,
   doubleEscapeToClose = false,
   hideOnCombat = false,
+  allowAddonIntegration = true,
 }
 
 local function text(key)
@@ -93,6 +94,20 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Double ESC to close"),
         text("First Esc clears the chat input; second Esc closes the window."),
+      },
+    },
+    {
+      -- Saved only on reload; Reset to Defaults goes through the same popup.
+      key = "allowAddonIntegration",
+      labelKey = "Allow addon integration",
+      initial = config.allowAddonIntegration ~= false,
+      onChange = function(value)
+        onChange("allowAddonIntegration", value)
+      end,
+      tooltipLines = {
+        text("Allow addon integration"),
+        text("Lets other addons (like Craft Alert) add pages, previews and notes to Whisper Messenger."),
+        text("Changing this asks to reload the interface."),
       },
     },
   }

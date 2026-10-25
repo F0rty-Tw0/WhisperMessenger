@@ -1,67 +1,9 @@
 -- focused pulse-glow lifecycle regression
-local FakeUI = require("tests.helpers.fake_ui")
+local AnimatedFactory = require("tests.helpers.animated_factory")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 
-local function makeAnimationGroup()
-  local ag = {
-    looping = nil,
-    playing = false,
-    scripts = {},
-    animations = {},
-  }
-  function ag:SetLooping(mode)
-    self.looping = mode
-  end
-  function ag:SetScript(event, handler)
-    self.scripts[event] = handler
-  end
-  function ag:Play()
-    self.playing = true
-    if self.scripts.OnPlay then
-      self.scripts.OnPlay(self)
-    end
-  end
-  function ag:Stop()
-    self.playing = false
-    if self.scripts.OnStop then
-      self.scripts.OnStop(self)
-    end
-  end
-  function ag:CreateAnimation(kind)
-    local anim = { kind = kind, duration = 0, endDelay = 0, order = 1 }
-    function anim:SetFromAlpha(_) end
-    function anim:SetToAlpha(_) end
-    function anim:SetDuration(value)
-      self.duration = value
-    end
-    function anim:SetEndDelay(value)
-      self.endDelay = value
-    end
-    function anim:SetOrder(value)
-      self.order = value
-    end
-    table.insert(self.animations, anim)
-    return anim
-  end
-  return ag
-end
-
-local function newAnimatedFactory()
-  local raw = FakeUI.NewFactory()
-  local function CreateFrame(...)
-    local f = raw.CreateFrame(...)
-    if type(f) == "table" and f.frameType == "Frame" then
-      function f:CreateAnimationGroup()
-        return makeAnimationGroup()
-      end
-    end
-    return f
-  end
-  return { CreateFrame = CreateFrame }
-end
-
 return function()
-  local factory = newAnimatedFactory()
+  local factory = AnimatedFactory.newAnimatedFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
 
   local frame = factory.CreateFrame("Frame", "Icon", parent)

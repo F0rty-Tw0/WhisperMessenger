@@ -160,6 +160,8 @@ UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
+UI/Shared/UnreadSummary.lua
+UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
 UI/Hyperlinks/QuestLinkClassic.lua
@@ -263,8 +265,11 @@ UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/PreviewMetrics.lua
 UI/ToggleIcon/PreviewAutoDismiss.lua
+UI/ToggleIcon/PreviewChrome.lua
+UI/ToggleIcon/PreviewLinks.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
+UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/ToggleIcon.lua
@@ -283,7 +288,6 @@ UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
 UI/MessengerWindow/ChromeBuilder/MarkAllReadButton.lua
 UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
-UI/MessengerWindow/ChromeBuilder/PanelButton.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
@@ -354,6 +358,7 @@ UI/MessengerWindow/MessengerWindow/SelectionController.lua
 UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
 UI/MessengerWindow/MessengerWindow/PanelHost.lua
 UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
+UI/MessengerWindow/MessengerWindow/PanelWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
@@ -389,6 +394,7 @@ Core/Bootstrap/ChatFilters/FilterApi.lua
 Core/Bootstrap/ChatFilters/ConditionalFilters.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
+Core/Bootstrap/WindowCoordinator/ChatCover.lua
 Core/Bootstrap/WindowCoordinator/IconSurfaces.lua
 Core/Bootstrap/WindowCoordinator/RequestFollow.lua
 Core/Bootstrap/WindowCoordinator/IncomingRefresh.lua
@@ -409,6 +415,7 @@ Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
+Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
@@ -417,6 +424,7 @@ Core/Bootstrap/WindowRuntime/StartConversation.lua
 Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
 Core/Bootstrap/WindowRuntime/IconPosition.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
+Core/Bootstrap/WindowRuntime/AddonAlerts.lua
 Core/Bootstrap/WindowRuntime/WindowCallbacks.lua
 Core/Bootstrap/WindowRuntime/IconRuntime.lua
 Core/Bootstrap/WindowRuntime/MinimapIconRuntime.lua
@@ -424,12 +432,15 @@ Core/Bootstrap/WindowRuntime/ToggleFlow.lua
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime/ExternalPreview.lua
+Core/Bootstrap/WindowRuntime/PanelPulse.lua
+Core/PublicApi/Guards.lua
+Core/PublicApi/Panels.lua
+Core/Bootstrap/WindowRuntime/IconToggle.lua
+Core/Bootstrap/WindowRuntime/PreviewOpen.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
-Core/PublicApi/Guards.lua
 Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
-Core/PublicApi/Panels.lua
 Core/PublicApi.lua
 Bootstrap.lua

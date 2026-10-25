@@ -48,9 +48,19 @@ return function()
   RetailHud.With(function()
     local chrome = build()
     for _, button in ipairs({ chrome.newConversationButton, chrome.patchNotesButton, chrome.markAllReadButton, chrome.optionsButton }) do
-      assert(button.width == L.CHROME_BUTTON_SIZE, "retail: HUD button size, got " .. tostring(button.width))
+      assert(button.width == 22, "retail: HUD button size, got " .. tostring(button.width))
+      assert(button._wmGlyph.width == 18, "retail: 18px glyph, got " .. tostring(button._wmGlyph.width))
     end
   end)
+
+  -- test_classic_title_glyphs_are_18px
+  do
+    local chrome = build()
+    for _, key in ipairs({ "newConversationButton", "patchNotesButton", "markAllReadButton", "optionsButton", "backButton" }) do
+      assert(chrome[key].width == 22, "classic: " .. key .. " HUD button size, got " .. tostring(chrome[key].width))
+      assert(chrome[key]._wmGlyph.width == 18, "classic: " .. key .. " 18px glyph, got " .. tostring(chrome[key]._wmGlyph.width))
+    end
+  end
 
   -- test_retail_title_buttons_draw_above_the_template_title_art
   -- In game the ButtonFrameTemplate title-bar art sat over our buttons: only

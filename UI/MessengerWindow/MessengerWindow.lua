@@ -16,8 +16,7 @@ local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMes
 local SelectionSync = ns.MessengerWindowSelectionSync or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionSync")
 local SelectionController = ns.MessengerWindowSelectionController
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SelectionController")
-local WindowVisibility = ns.MessengerWindowWindowVisibility or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowVisibility")
-local PanelHost = ns.MessengerWindowPanelHost or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelHost")
+local PanelWiring = ns.MessengerWindowPanelWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PanelWiring")
 local WindowAlpha = ns.MessengerWindowWindowAlpha or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowAlpha")
 local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local LifecycleWiring = ns.MessengerWindowLifecycleWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.LifecycleWiring")
@@ -137,32 +136,22 @@ function MessengerWindow.Create(factory, options)
   local contactsRail -- forward declaration (settings, divider drags and resets drive it)
   local composerSelectedContact = {}
 
-  local windowVisibility -- forward declaration (the panel buttons toggle through it)
-  local panelHost = PanelHost.Create({
+  local panelWiring = PanelWiring.Create({
     factory = factory,
-    parent = frame.contentArea or frame,
-    chrome = chrome,
-    nativeChrome = layout.nativeChrome == true,
-    theme = Theme,
-    onButtonClick = function(key)
-      windowVisibility.togglePanel(key)
-    end,
-  })
-  windowVisibility = WindowVisibility.Create({
-    optionsPanel = layout.optionsPanel,
-    contactsPane = layout.contactsPane,
-    contentPane = layout.contentPane,
     frame = frame,
-    panelHost = panelHost,
-    onPanelVisibilityChanged = chrome.setBackVisible,
+    layout = layout,
+    chrome = chrome,
+    theme = Theme,
     onClose = options.onClose,
-    onOptionsVisibilityChanged = function(visible)
-      chrome.setOptionsActive(visible)
-      if contactsRail then
-        contactsRail.setOptionsVisible(visible)
-      end
+    onPanelShown = options.onPanelShown,
+    onConversationUncovered = options.onConversationUncovered,
+    getContactsRail = function()
+      return contactsRail
     end,
+    tabToggle = contactsRuntime.tabToggle,
   })
+  local panelHost = panelWiring.panelHost
+  local windowVisibility = panelWiring.windowVisibility
   local setOptionsVisible = windowVisibility.setOptionsVisible
   local closeWindow = windowVisibility.closeWindow
 
@@ -227,6 +216,7 @@ function MessengerWindow.Create(factory, options)
     conversation = conversation,
     refreshContacts = refreshContacts,
     getSelectedConversationKey = getSelectedConversationKey,
+    onContactsWidth = panelWiring.onContactsWidth,
     getCurrentContacts = getCurrentContacts,
     selectedContact = options.selectedContact,
     initialConversation = options.conversation,
@@ -258,15 +248,7 @@ function MessengerWindow.Create(factory, options)
       contactsRail.setCollapsed(appliedState.contactsCollapsed == true)
     end,
   })
-  -- After LifecycleWiring: its SetScript("OnHide") would drop an earlier hook.
-  if frame.HookScript then
-    -- Not when only the parent hid (Alt+Z): the panel is still there.
-    frame:HookScript("OnHide", function()
-      if not frame:IsShown() then
-        windowVisibility.setPanelVisible(nil)
-      end
-    end)
-  end
+  panelWiring.hookWindowHide()
   contactsRail = ContactsRail.Create({
     frame = frame,
     layout = layout,

@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
+local PanelTemplatesStub = require("tests.helpers.panel_templates_stub")
 local TemplateFactory = require("tests.helpers.template_factory")
 local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
@@ -27,26 +28,8 @@ local function tabs(toggle)
   return FindUI.ofType(toggle.frame, "Button")
 end
 
--- Records PanelTemplates_* calls the native tabs make on the live client.
-local function stubPanelTemplates()
-  local calls = { selected = {}, deselected = {}, resized = {} }
-  rawset(_G, "PanelTemplates_SelectTab", function(tab)
-    calls.selected[#calls.selected + 1] = tab
-  end)
-  rawset(_G, "PanelTemplates_DeselectTab", function(tab)
-    calls.deselected[#calls.deselected + 1] = tab
-  end)
-  rawset(_G, "PanelTemplates_TabResize", function(tab, padding, _absoluteSize, _minWidth, maxWidth)
-    calls.resized[#calls.resized + 1] = { tab = tab, padding = padding, maxWidth = maxWidth }
-  end)
-  return calls
-end
-
-local function clearPanelTemplates()
-  rawset(_G, "PanelTemplates_SelectTab", nil)
-  rawset(_G, "PanelTemplates_DeselectTab", nil)
-  rawset(_G, "PanelTemplates_TabResize", nil)
-end
+local stubPanelTemplates = PanelTemplatesStub.stub
+local clearPanelTemplates = PanelTemplatesStub.clear
 
 return function()
   -- test_hud_tabs_use_panel_tab_button_template
@@ -72,12 +55,11 @@ return function()
     assert(toggle.frame.height == NativeTabToggle.HEIGHT, "HUD: strip is one tab tall")
   end
 
-  -- test_hud_tabs_stay_in_the_contacts_pane_hierarchy
+  -- test_hud_strip_parented_to_the_given_parent
   do
-    -- Parented to the pane so they hide with it (options view), anchored
-    -- to the window so they sit outside it; nothing on the way clips.
+    -- Anchored to the window so the tabs sit outside it; nothing on the way clips.
     local toggle, _, pane = createToggle(FakeUI.NewFactory(), true)
-    assert(toggle.frame:GetParent() == pane, "HUD: strip parented to the contacts pane")
+    assert(toggle.frame:GetParent() == pane, "HUD: strip parented to the frame it is given")
   end
 
   -- test_hud_tabs_reserve_no_list_height
@@ -307,7 +289,7 @@ return function()
     local toggle, window, pane = createToggle(FakeUI.NewFactory(), false)
     local pt = toggle.frame.points[1]
     assert(pt[1] == "TOPLEFT" and pt[2] == window and pt[3] == "BOTTOMLEFT", "modern: tabs hang from the window bottom-left")
-    assert(toggle.frame:GetParent() == pane, "modern: tabs hide with the contacts pane")
+    assert(toggle.frame:GetParent() == pane, "modern: strip parented to the frame it is given")
     assert(toggle.frame.height == TabToggle.HEIGHT, "modern: one tab tall")
     assert(tabs(toggle)[1].template == nil, "modern: plain buttons")
     assert(#FindUI.ofType(toggle.frame, "Texture") == 0, "modern: no in-pane footer bar")
