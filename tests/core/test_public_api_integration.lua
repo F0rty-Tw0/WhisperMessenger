@@ -10,6 +10,8 @@ local CALLS = {
   { "OpenConversation", { "Jaina-Proudmoore" } },
   { "RegisterPanel", { "ca", { title = "Alerts", onShow = noop } } },
   { "SetContactInfo", { "ca", "Jaina-Proudmoore", "x" } },
+  { "Block", { "Jaina-Proudmoore" } },
+  { "Unblock", { "Jaina-Proudmoore" } },
 }
 
 local function boot(settings)
