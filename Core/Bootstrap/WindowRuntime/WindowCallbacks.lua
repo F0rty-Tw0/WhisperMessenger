@@ -17,6 +17,7 @@ local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bo
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
+local AddonAlerts = ns.BootstrapWindowRuntimeAddonAlerts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.AddonAlerts")
 
 local WindowCallbacks = {}
 
@@ -232,10 +233,11 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
-    -- Also acknowledges the icon popup so nothing still signals unread.
+    -- Also acknowledges the icon popup and other addons' alerts, so nothing still signals unread.
     onMarkAllRead = function()
       Store.MarkAllRead(runtime.store)
       dismissWidgetPreview()
+      AddonAlerts.Clear(runtime)
       refreshWindow()
     end,
 

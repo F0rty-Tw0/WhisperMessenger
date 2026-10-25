@@ -45,6 +45,7 @@ local function makeRuntimeOptions()
     minimapCreates = 0,
     windowCreates = 0,
     coordinatorVisible = false,
+    iconSurfaceUpdates = 0,
     capturedWindowOptions = nil,
     capturedIconOptions = nil,
     coordinator = nil,
@@ -83,6 +84,9 @@ local function makeRuntimeOptions()
       end
       function coord.scheduleAvailabilityRefresh() end
       function coord.scheduleIncomingRefresh() end
+      function coord.updateIconSurfaces()
+        trackers.iconSurfaceUpdates = trackers.iconSurfaceUpdates + 1
+      end
       trackers.coordinator = coord
       return coord
     end,
@@ -93,6 +97,13 @@ local function makeRuntimeOptions()
       trackers.windowCreates = trackers.windowCreates + 1
       trackers.capturedWindowOptions = options
       local window = { shown = false }
+      window.registerPanel = function()
+        return true
+      end
+      window.showPanel = function(key)
+        trackers.shownPanel = key
+        return true
+      end
       window.frame = {
         Show = function(self)
           self.shown = true
@@ -140,7 +151,9 @@ local function makeRuntimeOptions()
       trackers.iconFrame = iconFrame
       return {
         frame = iconFrame,
-        setUnreadCount = function() end,
+        setUnreadCount = function(count, whispers)
+          trackers.widgetCount = { count = count, whispers = whispers }
+        end,
         setIncomingPreview = function(senderName, messageText, classTag)
           trackers.widgetPreviewInputs[#trackers.widgetPreviewInputs + 1] = { senderName, messageText, classTag }
         end,
@@ -163,7 +176,8 @@ local function makeRuntimeOptions()
   end
 
   local fakeMinimapIconRuntime = {
-    Create = function(_options)
+    Create = function(minimapOptions)
+      trackers.capturedMinimapOptions = minimapOptions
       trackers.minimapCreates = trackers.minimapCreates + 1
       local minimapFrame = fakeFactory.CreateFrame("Button", "WhisperMessengerMinimapIcon", nil)
       local minimapIcon = {
@@ -335,9 +349,29 @@ return function()
     "onDraftChanged",
     "onUpdatePrefs",
     "onMarkAllRead",
+    "onPanelShown",
+    "onConversationUncovered",
   }) do
     assert(type(windowOptions[name]) == "function", "window options should include " .. name)
   end
+
+  -- Opening the owner's panel switches the preview's pulse off (and keeps the preview).
+  runtime.externalPreview.set("ca", { sender = "S", text = "T", pulse = true }, false)
+  windowOptions.onPanelShown("ca")
+  assert(
+    runtime.externalPreview.get().pulse == false and runtime.externalPreview.keyOf() == "ca",
+    "onPanelShown(owner) ends the pulse, keeps the preview"
+  )
+  assert(trackers.iconSurfaceUpdates == 1, "and refreshes the icon surfaces through the coordinator")
+  runtime.externalPreview.clear()
+
+  -- A panel or the options pane closing over a shown window selects the active chat: it counts as read.
+  runtime.activeConversationKey = conversationKey
+  runtime.store.conversations[conversationKey].unreadCount = 3
+  trackers.coordinatorVisible = true
+  windowOptions.onConversationUncovered()
+  assert(runtime.store.conversations[conversationKey].unreadCount == 0, "uncovering the chat marks it read")
+  trackers.coordinatorVisible = false
 
   -- Composition wire: setWindowVisible(true) must acknowledge the latest widget
   -- preview (covered as a leaf in widget_preview, the composition is the wire).
@@ -432,6 +466,23 @@ return function()
     noneController.ensureWindow()
     noneTrackers.capturedWindowOptions.onSettingChanged("iconMode", "widget")
     assert(noneRuntime.icon ~= nil, "switching from none to widget should expose the created icon on runtime")
+  end
+
+  -- test_icon_created_after_a_panel_registered_counts_its_badge
+  do
+    local lateOptions, lateRuntime, lateTrackers = makeRuntimeOptions()
+    lateOptions.accountState.settings.iconMode = "none"
+    local lateController = WindowRuntime.Create(lateOptions)
+    lateRuntime.panelRegistry.register("ca", {
+      badge = function()
+        return 2
+      end,
+    })
+    lateController.ensureWindow()
+    lateTrackers.capturedWindowOptions.onSettingChanged("iconMode", "both")
+    local seen = lateTrackers.widgetCount
+    assert(seen and seen.count - seen.whispers == 2, "the new widget counts the panel badge at once")
+    assert(lateTrackers.capturedMinimapOptions.runtime == lateRuntime, "the new minimap reads the same registry")
   end
 
   -- Startup sharing seeds account storage immediately even when the selected
@@ -538,4 +589,81 @@ return function()
     assert(sharingRuntime.icon == nil, mode .. " sharing transition should leave runtime.icon unset")
   end
   assert(trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs][1] == nil, "none mode should clear minimap preview")
+
+  -- Only the icons (widget and minimap) route a click to a waiting addon page;
+  -- the controller's toggle (keybinds, slash commands) stays the plain toggle.
+  do
+    local wiredOptions, wiredRuntime, wiredTrackers = makeRuntimeOptions()
+    wiredOptions.accountState.settings.iconMode = "both"
+    wiredRuntime.isCompetitiveContent = function()
+      return false
+    end
+    wiredRuntime.isMythicLockdown = function()
+      return false
+    end
+    local wiredController = WindowRuntime.Create(wiredOptions)
+    wiredRuntime.panelRegistry.register("ca", {
+      title = "CA",
+      onShow = function() end,
+      badge = function()
+        return 2
+      end,
+    })
+    local widgetClick = wiredTrackers.capturedIconOptions.onToggle
+    local minimapClick = wiredTrackers.capturedMinimapOptions.onToggle
+    assert(widgetClick ~= wiredController.toggle and minimapClick ~= wiredController.toggle, "icon clicks use the panel-aware toggle")
+    assert(wiredRuntime.toggle == wiredController.toggle, "runtime.toggle stays the plain toggle")
+
+    wiredRuntime.store.conversations["wow::WOW::arthas-area52"].unreadCount = 0
+    minimapClick()
+    assert(wiredTrackers.shownPanel == "ca", "minimap click opens the waiting addon page when no whisper is unread")
+    wiredTrackers.shownPanel = nil
+    wiredController.setWindowVisible(false)
+
+    wiredRuntime.store.conversations["wow::WOW::arthas-area52"].unreadCount = 1
+    widgetClick()
+    assert(wiredTrackers.shownPanel == nil, "widget click with an unread whisper does not open the addon page")
+    assert(wiredTrackers.coordinatorVisible == true, "widget click with an unread whisper opens the window")
+  end
+
+  -- test_preview_left_click_opens_the_previewed_whisper_from_widget_and_minimap
+  for _, surface in ipairs({ "capturedIconOptions", "capturedMinimapOptions" }) do
+    local clickOptions, clickRuntime, clickTrackers, key = makeRuntimeOptions()
+    clickRuntime.isCompetitiveContent = function()
+      return false
+    end
+    clickRuntime.isMythicLockdown = function()
+      return false
+    end
+    clickOptions.accountState.conversations = {
+      [key] = { displayName = "Arthas-Area52", channel = "WOW", lastIncomingPreview = "Need help?", lastIncomingAt = 500 },
+    }
+    WindowRuntime.Create(clickOptions)
+
+    clickTrackers[surface].onOpenPreview()
+    assert(clickTrackers.coordinatorVisible == true, surface .. ": preview click opens the window")
+    assert(clickRuntime.activeConversationKey == key, surface .. ": preview click selects that whisper")
+    assert(clickRuntime.store.conversations[key].unreadCount == 0, surface .. ": preview click marks it read")
+    assert(clickOptions.accountState.widgetPreviewAcknowledgedAt == 500, surface .. ": preview click acknowledges the preview")
+  end
+
+  -- test_preview_left_click_in_competitive_content_opens_nothing
+  do
+    local refusedOptions, refusedRuntime, refusedTrackers, key = makeRuntimeOptions()
+    refusedRuntime.isCompetitiveContent = function()
+      return true
+    end
+    refusedRuntime.isMythicLockdown = function()
+      return false
+    end
+    refusedOptions.accountState.conversations = {
+      [key] = { displayName = "Arthas-Area52", channel = "WOW", lastIncomingPreview = "Need help?", lastIncomingAt = 500 },
+    }
+    WindowRuntime.Create(refusedOptions)
+
+    refusedTrackers.capturedIconOptions.onOpenPreview()
+    assert(refusedTrackers.coordinatorVisible == false, "a refused preview click leaves the window closed")
+    assert(refusedRuntime.activeConversationKey == nil, "a refused preview click selects nothing")
+    assert(refusedOptions.accountState.widgetPreviewAcknowledgedAt == nil, "a refused preview click leaves the preview unacknowledged")
+  end
 end

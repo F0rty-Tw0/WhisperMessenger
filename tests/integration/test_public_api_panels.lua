@@ -57,4 +57,27 @@ return function()
     PublicApiEnv.Reset()
     assert(ok, err)
   end
+
+  -- test_refresh_panel_badge_updates_icons_without_window
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local leads = 0
+      assert(api.RegisterPanel("ca", {
+        title = "Alerts",
+        onShow = function() end,
+        badge = function()
+          return leads
+        end,
+      }) == true)
+      local label = runtime.icon.badgeLabel
+      assert(not runtime.icon.badge:IsShown(), "no leads: no number")
+      leads = 2
+      assert(api.RefreshPanelBadge("ca") == true)
+      assert(runtime.window == nil, "the window is still not built")
+      assert(runtime.icon.badge:IsShown() and label:GetText() == "2", "icon shows 2, got " .. tostring(label:GetText()))
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
 end

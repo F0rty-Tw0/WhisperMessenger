@@ -1,10 +1,11 @@
 local IconSurfaces = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 
 -- opts: own (built preview), external (holder entry), windowVisible,
--- tabMode, previewsOff, legacy (surfaces and icon without the external fields).
+-- tabMode, previewsOff, legacy (surfaces and icon without the external fields),
+-- withPulse (the icon has setExternalPulse; its arguments land in state.pulses).
 local function run(opts)
   local log = {}
-  local state = { log = log, dropped = false }
+  local state = { log = log, dropped = false, pulses = {} }
   local icon = {
     setIncomingPreview = function(sender)
       log[#log + 1] = "own:" .. tostring(sender)
@@ -13,6 +14,11 @@ local function run(opts)
   if not opts.legacy then
     icon.setExternalPreview = function(entry)
       log[#log + 1] = "ext:" .. tostring(entry and entry.sender)
+    end
+  end
+  if opts.withPulse then
+    icon.setExternalPulse = function(on)
+      state.pulses[#state.pulses + 1] = on
     end
   end
   local surfaces = {
@@ -63,8 +69,8 @@ local function own(sentAt)
   return { senderName = "Jaina", messageText = "hi", sentAt = sentAt }
 end
 
-local function external()
-  return { sender = "Crafter", text = "x", stamp = 100 }
+local function external(pulse)
+  return { sender = "Crafter", text = "x", stamp = 100, pulse = pulse }
 end
 
 return function()
@@ -110,6 +116,43 @@ return function()
     assert(s.dropped == true, "the external entry is dropped")
   end
 
+  local function pulses(s)
+    return s.pulses
+  end
+
+  local function test_external_pulse_reaches_the_icon()
+    assert(pulses(run({ withPulse = true, external = external(true) }))[1] == true, "an armed entry pulses the icon")
+  end
+
+  local function test_external_without_pulse_sends_false()
+    assert(pulses(run({ withPulse = true, external = external() }))[1] == false, "an entry without pulse sends false")
+  end
+
+  local function test_newer_own_whisper_turns_the_pulse_off()
+    local s = run({ withPulse = true, external = external(true), own = own(200) })
+    assert(pulses(s)[1] == false, "a newer own whisper drops the external pulse")
+  end
+
+  local function test_no_external_entry_turns_the_pulse_off()
+    assert(pulses(run({ withPulse = true, own = own(200) }))[1] == false, "no entry means no pulse")
+  end
+
+  local function test_previews_off_turns_the_pulse_off()
+    local s = run({ withPulse = true, external = external(true), previewsOff = true })
+    assert(pulses(s)[1] == false, "previews off drop the external pulse")
+  end
+
+  local function test_icon_without_set_external_pulse_still_works()
+    local s = run({ external = external(true) })
+    assert(s.joined == "ext:Crafter,map:nil", "an icon without setExternalPulse is left alone, got " .. s.joined)
+  end
+
+  test_external_pulse_reaches_the_icon()
+  test_external_without_pulse_sends_false()
+  test_newer_own_whisper_turns_the_pulse_off()
+  test_no_external_entry_turns_the_pulse_off()
+  test_previews_off_turns_the_pulse_off()
+  test_icon_without_set_external_pulse_still_works()
   test_external_alone_goes_to_the_widget_only()
   test_newer_own_whisper_wins_and_drops_the_external()
   test_own_not_newer_than_the_stamp_loses()

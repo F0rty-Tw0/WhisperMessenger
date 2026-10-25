@@ -7,6 +7,10 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 
 -- ShowPreview / HidePreview / IsPreviewShown: another addon's preview on the
 -- widget. One slot; a newer caller replaces the older one silently.
+-- preview.pulse (optional boolean): the widget glows while the preview shows,
+-- until the player opens the owner's panel (the panel registered under the
+-- same key as sourceKey). Every ShowPreview arms it again, unless that panel
+-- is showing at that moment.
 local Preview = {}
 
 local function isOptional(value, kind)
@@ -21,6 +25,7 @@ local function isValidPreview(preview)
     and isOptional(preview.onClick, "function")
     and isOptional(preview.onDismiss, "function")
     and isOptional(preview.onShown, "function")
+    and isOptional(preview.pulse, "boolean")
 end
 
 local function previewsTurnedOff(runtime)
@@ -36,7 +41,7 @@ function Preview.Install(api, runtime)
     if previewsTurnedOff(runtime) or runtime.getWidgetIcon() == nil then
       return false
     end
-    runtime.externalPreview.set(sourceKey, preview)
+    runtime.externalPreview.set(sourceKey, preview, api.IsPanelShown(sourceKey))
     runtime.updateIconSurfaces()
     return true
   end)

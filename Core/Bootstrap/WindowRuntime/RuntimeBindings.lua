@@ -5,6 +5,7 @@ end
 
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
+local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 
 local RuntimeBindings = {}
@@ -72,8 +73,9 @@ function RuntimeBindings.Apply(options)
     end
   end
 
+  -- A panel or the options pane over the window leaves the chat unseen.
   runtime.isConversationOpen = function(conversationKey)
-    return controller.isWindowVisible() and runtime.activeConversationKey == conversationKey
+    return controller.isWindowVisible() and runtime.activeConversationKey == conversationKey and not ChatCover.IsCovered(getWindow())
   end
 
   runtime.icon = icon

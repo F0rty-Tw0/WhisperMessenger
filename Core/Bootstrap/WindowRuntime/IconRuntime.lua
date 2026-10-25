@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
+local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local ToggleIcon = ns.ToggleIcon or require("WhisperMessenger.UI.ToggleIcon")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 
@@ -29,10 +29,11 @@ end
 IconRuntime.ResolveAutoDismissSeconds = resolveAutoDismissSeconds
 IconRuntime.ResolvePreviewPosition = resolvePreviewPosition
 
-local function initializeIconState(icon, contacts, badgeFilter, buildLatestIncomingPreview)
-  if icon and icon.setUnreadCount then
-    icon.setUnreadCount(badgeFilter.SumWhisperUnread(contacts))
-  end
+-- panelRegistry: a surface created after panels registered shows their
+-- badges at once, not on the next icon refresh.
+local function initializeIconState(icon, contacts, panelRegistry, buildLatestIncomingPreview)
+  local total, unread = IconSurfaces.Counts(contacts, panelRegistry)
+  IconSurfaces.ShowCounts(total, unread, icon)
 
   if icon and icon.setIncomingPreview then
     local preview = buildLatestIncomingPreview(contacts)
@@ -49,7 +50,7 @@ function IconRuntime.Create(options)
   local uiFactory = options.uiFactory or _G
   local toggleIcon = options.toggleIcon or ToggleIcon
   local tableUtils = options.tableUtils or TableUtils
-  local badgeFilter = options.badgeFilter or BadgeFilter
+  local runtime = options.runtime or {}
   local buildContacts = options.buildContacts or function()
     return {}
   end
@@ -118,9 +119,10 @@ function IconRuntime.Create(options)
       return resolvePreviewPosition(settings)
     end,
     onDismissPreview = dismissWidgetPreview,
+    onOpenPreview = options.onOpenPreview,
   })
 
-  initializeIconState(icon, buildContacts(), badgeFilter, buildLatestIncomingPreview)
+  initializeIconState(icon, buildContacts(), runtime.panelRegistry, buildLatestIncomingPreview)
 
   return icon
 end

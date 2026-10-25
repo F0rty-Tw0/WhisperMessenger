@@ -3,7 +3,9 @@ local PublicApi = require("WhisperMessenger.Core.PublicApi")
 
 local NOW = 500
 
--- opts: noWidget (getWidgetIcon returns nil), iconHidden, settings.
+-- opts: noWidget (getWidgetIcon returns nil), iconHidden, settings, panelShown
+-- (the visible panel's key; "ca" is the one registered panel). The returned
+-- state's panelShown can be flipped by a row.
 local function makeRuntime(opts)
   opts = opts or {}
   local holder = ExternalPreview.New({
@@ -11,7 +13,7 @@ local function makeRuntime(opts)
       return NOW
     end,
   })
-  local state = { holder = holder, updates = 0 }
+  local state = { holder = holder, updates = 0, panelShown = opts.panelShown }
   local icon = {
     isExternalPreviewShown = function()
       return not opts.iconHidden and holder.get() ~= nil
@@ -30,6 +32,21 @@ local function makeRuntime(opts)
       state.updates = state.updates + 1
     end,
   }
+  if opts.panelShown ~= nil then
+    runtime.panelRegistry = {
+      get = function(key)
+        return key == "ca" and {} or nil
+      end,
+    }
+    runtime.isWindowVisible = function()
+      return true
+    end
+    runtime.window = {
+      getVisiblePanel = function()
+        return state.panelShown
+      end,
+    }
+  end
   state.api = PublicApi.Build(runtime)
   return state
 end
@@ -124,7 +141,55 @@ return function()
     assert(s.holder.keyOf() == "b" and dismissed == 0, "the first is replaced without its onDismiss")
   end
 
+  local function test_non_boolean_pulse_is_refused()
+    local s = makeRuntime()
+    assert(
+      s.api.ShowPreview("ca", preview({ pulse = "yes" })) == false and s.api.ShowPreview("ca", preview({ pulse = 1 })) == false,
+      "a non-boolean pulse is refused"
+    )
+    assert(s.holder.get() == nil and s.updates == 0, "a refused pulse stores nothing")
+  end
+
+  local function test_pulse_true_arms_the_entry()
+    local s = makeRuntime()
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == true, "pulse = true arms the entry")
+  end
+
+  local function test_no_pulse_means_no_glow()
+    local s = makeRuntime()
+    s.api.ShowPreview("ca", preview())
+    assert(s.holder.get().pulse == false, "no pulse field stores false")
+  end
+
+  local function test_pulse_is_not_armed_while_the_owners_panel_shows()
+    local s = makeRuntime({ panelShown = "ca" })
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == false, "owner is looking at its panel")
+  end
+
+  local function test_another_panel_showing_does_not_block_the_pulse()
+    local s = makeRuntime({ panelShown = "other" })
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == true, "only the owner's own panel disarms")
+  end
+
+  local function test_a_new_show_preview_arms_again_after_the_panel_closes()
+    local s = makeRuntime({ panelShown = "ca" })
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == false, "owner is looking at its panel")
+    s.panelShown = nil
+    s.api.ShowPreview("ca", preview({ pulse = true }))
+    assert(s.holder.get().pulse == true, "a new ShowPreview arms again")
+  end
+
   test_show_stores_stamps_and_updates_surfaces()
+  test_a_new_show_preview_arms_again_after_the_panel_closes()
+  test_non_boolean_pulse_is_refused()
+  test_pulse_true_arms_the_entry()
+  test_no_pulse_means_no_glow()
+  test_pulse_is_not_armed_while_the_owners_panel_shows()
+  test_another_panel_showing_does_not_block_the_pulse()
   test_bad_arguments_return_false()
   test_false_when_widget_not_in_use()
   test_false_when_previews_are_turned_off()

@@ -8,6 +8,7 @@ local WhisperGateway = ns.WhisperGateway or require("WhisperMessenger.Transport.
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 -- stylua: ignore start
+local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local RequestFollow = ns.BootstrapWindowCoordinatorRequestFollow or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.RequestFollow")
 local IncomingRefresh = ns.BootstrapWindowCoordinatorIncomingRefresh or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IncomingRefresh")
@@ -175,6 +176,10 @@ function WindowCoordinator.Create(options)
     getIcon = getIcon,
     getMinimapIcon = getMinimapIcon,
     getLdbObject = getLdbObject,
+    -- The registry (set after Create), not the window: counts before it is built.
+    getPanelRegistry = function()
+      return runtime.panelRegistry
+    end,
   }
   if externalPreview then
     iconSurfaces.getExternalPreview = externalPreview.get
@@ -242,9 +247,9 @@ function WindowCoordinator.Create(options)
       elseif window.refreshSelection then
         window.refreshSelection(nextState)
       end
-      -- The selected conversation is on screen now, so its newest message
-      -- counts as seen by the user.
-      if livePresenceSender and type(livePresenceSender.SyncReadReceipts) == "function" then
+      -- The selected conversation is on screen now (not under a panel or the
+      -- options pane), so its newest message counts as seen by the user.
+      if livePresenceSender and type(livePresenceSender.SyncReadReceipts) == "function" and not ChatCover.IsCovered(window) then
         livePresenceSender.SyncReadReceipts(runtime, nextState.selectedContact)
       end
     end
