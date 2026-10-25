@@ -419,4 +419,6 @@ Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
+Core/PublicApi/Guards.lua
+Core/PublicApi.lua
 Bootstrap.lua

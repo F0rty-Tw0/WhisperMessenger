@@ -53,6 +53,9 @@ return function()
     toggle = function()
       return "toggled"
     end,
+    startConversation = function(name)
+      return name == "Jaina"
+    end,
   })
 
   assert(bindings.setComposerText == controller.setComposerText, "setComposerText should be exposed on controller")
@@ -89,4 +92,10 @@ return function()
   assert(runtime.isWindowVisible == controller.isWindowVisible, "runtime.isWindowVisible should share controller visibility")
   assert(runtime.isWindowVisible() == false, "runtime.isWindowVisible should delegate visibility")
   assert(runtime.setComposerText == controller.setComposerText, "runtime.setComposerText should share controller composer setter")
+
+  assert(runtime.startConversation("Jaina") == true, "runtime.startConversation should be wired")
+
+  local bare = {}
+  RuntimeBindings.Apply({ runtime = bare, controller = {} })
+  assert(bare.startConversation("x") == false, "startConversation should default to a refusal")
 end

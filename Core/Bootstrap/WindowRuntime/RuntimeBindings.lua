@@ -42,6 +42,9 @@ function RuntimeBindings.Apply(options)
   local selectConversation = options.selectConversation or function() end
   local setWindowVisible = options.setWindowVisible or function() end
   local toggle = options.toggle or function() end
+  local startConversation = options.startConversation or function()
+    return false
+  end
 
   local setComposerText = buildComposerTextSetter(runtime, getWindow)
 
@@ -74,6 +77,7 @@ function RuntimeBindings.Apply(options)
   runtime.isWindowVisible = controller.isWindowVisible
   runtime.setWindowVisible = controller.setWindowVisible
   runtime.setComposerText = controller.setComposerText
+  runtime.startConversation = startConversation
 
   return {
     setComposerText = setComposerText,

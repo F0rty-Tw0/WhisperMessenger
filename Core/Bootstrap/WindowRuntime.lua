@@ -394,6 +394,7 @@ function WindowRuntime.Create(options)
     selectConversation = selectConversation,
     setWindowVisible = setWindowVisible,
     toggle = toggle,
+    startConversation = startConversation,
   })
 
   return controller
