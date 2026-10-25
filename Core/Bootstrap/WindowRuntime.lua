@@ -313,6 +313,7 @@ function WindowRuntime.Create(options)
       windowOptions[name] = callback
     end
     window = messengerWindow.Create(uiFactory, windowOptions)
+    runtime.panelRegistry.bind(window)
 
     if window.frame.Hide then
       window.frame:Hide()

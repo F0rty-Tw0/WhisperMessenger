@@ -5,6 +5,7 @@ end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
 local Preview = ns.PublicApiPreview or require("WhisperMessenger.Core.PublicApi.Preview")
+local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -24,6 +25,14 @@ local function putDraftInComposer(runtime, draft)
   end
 end
 
+-- An addon panel covers the conversation; close it so the chat shows.
+local function hideOpenPanel(runtime)
+  local window = runtime.window
+  if window and window.hidePanel then
+    window.hidePanel()
+  end
+end
+
 local function buildOpenConversation(runtime)
   return Guards.Wrap(function(playerName, draftText)
     if not Guards.IsNonEmptyString(playerName) or not isValidDraft(draftText) then
@@ -36,6 +45,7 @@ local function buildOpenConversation(runtime)
     local wasVisible = runtime.isWindowVisible()
     runtime.ensureWindow()
     runtime.setWindowVisible(true)
+    hideOpenPanel(runtime)
     if not runtime.startConversation(playerName) then
       if not wasVisible then
         runtime.setWindowVisible(false)
@@ -56,6 +66,7 @@ function PublicApi.Build(runtime)
     OpenConversation = buildOpenConversation(runtime),
   }
   Preview.Install(api, runtime)
+  Panels.Install(api, runtime)
   return api
 end
 
