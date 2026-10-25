@@ -178,6 +178,10 @@ function WindowCoordinator.Create(options)
   }
   if externalPreview then
     iconSurfaces.getExternalPreview = externalPreview.get
+    iconSurfaces.previewsOff = function()
+      local settings = runtime.accountState and runtime.accountState.settings
+      return settings ~= nil and settings.showWidgetMessagePreview == false
+    end
     iconSurfaces.dropExternalPreview = function()
       externalPreview.clear()
     end

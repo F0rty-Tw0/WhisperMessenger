@@ -34,6 +34,22 @@ return function()
     assert(ok and result == false, "ShowPreview is refused while previews are off")
   end
 
+  local function test_turning_previews_off_drops_the_external_preview()
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      assert(api.ShowPreview("ca", { sender = "Crafter", text = "Needs Belt" }) == true)
+      assert(api.IsPreviewShown("ca") == true, "shown while previews are on")
+      runtime.accountState.settings.showWidgetMessagePreview = false
+      runtime.refreshWindow()
+      assert(runtime.icon.isExternalPreviewShown() == false, "the widget hides it once previews are off")
+      assert(api.IsPreviewShown("ca") == false, "the API reports it hidden")
+      assert(runtime.externalPreview.keyOf() == nil, "the slot is dropped")
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
+
   test_right_click_dismisses_external_without_acknowledging()
   test_previews_turned_off_refuse_show()
+  test_turning_previews_off_drops_the_external_preview()
 end

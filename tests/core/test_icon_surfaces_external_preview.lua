@@ -1,7 +1,7 @@
 local IconSurfaces = require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 
 -- opts: own (built preview), external (holder entry), windowVisible,
--- tabMode, legacy (surfaces and icon without the external fields).
+-- tabMode, previewsOff, legacy (surfaces and icon without the external fields).
 local function run(opts)
   local log = {}
   local state = { log = log, dropped = false }
@@ -49,6 +49,9 @@ local function run(opts)
     end
     surfaces.dropExternalPreview = function()
       state.dropped = true
+    end
+    surfaces.previewsOff = function()
+      return opts.previewsOff == true
     end
   end
   IconSurfaces.Update({}, surfaces)
@@ -101,10 +104,17 @@ return function()
     assert(s.joined == "own:Jaina,map:Jaina", "old surfaces keep working, got " .. s.joined)
   end
 
+  local function test_previews_off_drops_the_external()
+    local s = run({ external = external(), previewsOff = true })
+    assert(s.joined == "own:nil,map:nil", "previews off clear the widget, got " .. s.joined)
+    assert(s.dropped == true, "the external entry is dropped")
+  end
+
   test_external_alone_goes_to_the_widget_only()
   test_newer_own_whisper_wins_and_drops_the_external()
   test_own_not_newer_than_the_stamp_loses()
   test_whispers_tab_on_screen_does_not_suppress_external()
   test_no_external_keeps_todays_behaviour()
   test_surfaces_without_the_new_fields_still_work()
+  test_previews_off_drops_the_external()
 end
