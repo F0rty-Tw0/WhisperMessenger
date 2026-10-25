@@ -60,6 +60,7 @@ return function()
     "IsBlocked",
     "Block",
     "Unblock",
+    "GetUnreadCount",
   }) do
     if not (api and type(api[name]) == "function") then
       missing[#missing + 1] = name

@@ -53,9 +53,12 @@ return function()
     for _, call in ipairs(CALLS) do
       assert(api[call[1]](unpack(call[2])) == false, call[1] .. " is refused")
     end
+    runtime.store.conversations["wow::WOW::jaina-proudmoore"] = { channel = "WOW", displayName = "Jaina-Proudmoore", unreadCount = 2 }
+    assert(api.GetUnreadCount("Jaina-Proudmoore") == 0, "a refused GetUnreadCount still returns the integer 0")
     for key, value in pairs(api) do
       if type(value) == "function" then
-        assert(value() == false, key .. " returns false")
+        local expected = key == "GetUnreadCount" and 0 or false
+        assert(value() == expected, key .. " returns " .. tostring(expected))
       end
     end
     assert(runtime.isWindowVisible() ~= true, "a refused OpenConversation leaves the window closed")

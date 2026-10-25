@@ -8,6 +8,7 @@ local Preview = ns.PublicApiPreview or require("WhisperMessenger.Core.PublicApi.
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
 local PublicContactInfo = ns.PublicApiContactInfo or require("WhisperMessenger.Core.PublicApi.ContactInfo")
 local BlockList = ns.PublicApiBlockList or require("WhisperMessenger.Core.PublicApi.BlockList")
+local UnreadCount = ns.PublicApiUnreadCount or require("WhisperMessenger.Core.PublicApi.UnreadCount")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -67,6 +68,11 @@ local function refuse()
   return false
 end
 
+-- GetUnreadCount promises an integer, so its refusal is 0, not false.
+local function refuseCount(_name)
+  return 0
+end
+
 -- Allow addon integration, read once at load: changing it reloads.
 local function integrationAllowed(runtime)
   local settings = runtime.accountState and runtime.accountState.settings
@@ -82,6 +88,7 @@ function PublicApi.Build(runtime)
   Panels.Install(api, runtime)
   PublicContactInfo.Install(api, runtime)
   BlockList.Install(api, runtime)
+  UnreadCount.Install(api, runtime)
   if not integrationAllowed(runtime) then
     -- Same keys, so callers never nil-error; every call is refused.
     for key, value in pairs(api) do
@@ -89,6 +96,7 @@ function PublicApi.Build(runtime)
         api[key] = refuse
       end
     end
+    api.GetUnreadCount = refuseCount
   end
   return api
 end
