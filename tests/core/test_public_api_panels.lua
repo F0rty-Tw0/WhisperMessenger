@@ -117,6 +117,55 @@ return function()
     assert(api.RegisterPanel("a", validPanel()) == false, "duplicate key")
   end
 
+  -- test_the_caller_cannot_change_a_registered_panel
+  do
+    local r = makeRuntime()
+    local api = PublicApi.Build(r)
+    local hides = 0
+    local panel = validPanel()
+    panel.onHide = function()
+      hides = hides + 1
+    end
+    panel.badge = noop
+    assert(api.RegisterPanel("ca", panel) == true)
+    panel.title = {}
+    panel.icon = {}
+    panel.onShow = nil
+    panel.onHide = nil
+    panel.badge = nil
+    local stored = r.panelRegistry.get("ca")
+    assert(stored ~= panel, "the registry keeps its own copy")
+    assert(stored.title == "Alerts" and stored.icon == validPanel().icon, "title and icon as registered")
+    assert(type(stored.onShow) == "function" and stored.badge == noop, "callbacks as registered")
+    stored.onHide()
+    assert(hides == 1, "onHide as registered")
+  end
+
+  -- test_a_panel_read_twice_cannot_pass_validation_then_change
+  do
+    local r = makeRuntime()
+    local api = PublicApi.Build(r)
+    local reads = 0
+    local panel = setmetatable({}, {
+      __index = function(_, field)
+        reads = reads + 1
+        if field == "title" then
+          return reads <= 5 and "Alerts" or {}
+        end
+        if field == "icon" then
+          return "x"
+        end
+        if field == "onShow" then
+          return noop
+        end
+        return nil
+      end,
+    })
+    api.RegisterPanel("ca", panel)
+    local stored = r.panelRegistry.get("ca")
+    assert(stored == nil or type(stored.title) == "string", "what passes validation is what is stored")
+  end
+
   -- test_show_unknown_key_is_false_and_opens_nothing
   do
     local r, calls = makeRuntime()

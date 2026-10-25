@@ -23,6 +23,15 @@ local function isValidPanel(panel)
     and isOptionalFunction(panel.badge)
 end
 
+-- The registry keeps this copy, read once: a caller that changes its table
+-- later cannot break the button, tooltip or window build.
+local function copyPanel(panel)
+  if type(panel) ~= "table" then
+    return nil
+  end
+  return { title = panel.title, icon = panel.icon, onShow = panel.onShow, onHide = panel.onHide, badge = panel.badge }
+end
+
 local function isKnown(runtime, key)
   return Guards.IsNonEmptyString(key) and runtime.panelRegistry.get(key) ~= nil
 end
@@ -46,10 +55,11 @@ function Panels.Install(api, runtime)
   end
 
   api.RegisterPanel = Guards.Wrap(function(key, panel)
-    if not Guards.IsNonEmptyString(key) or not isValidPanel(panel) then
+    local spec = copyPanel(panel)
+    if not Guards.IsNonEmptyString(key) or not isValidPanel(spec) then
       return false
     end
-    return runtime.panelRegistry.register(key, panel)
+    return runtime.panelRegistry.register(key, spec)
   end)
 
   api.ShowPanel = Guards.Wrap(showPanel)
