@@ -260,6 +260,7 @@ UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
 UI/ToggleIcon/PreviewMetrics.lua
+UI/ToggleIcon/PreviewAutoDismiss.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/Desaturation.lua

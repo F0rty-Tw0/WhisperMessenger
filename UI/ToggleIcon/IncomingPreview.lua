@@ -8,6 +8,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
+local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
 local createRoundedBackground = UIHelpers.createRoundedBackground
@@ -107,27 +108,13 @@ function IncomingPreview.Create(factory, frame, options)
   end
   previewFrame:Hide()
 
-  local autoDismissGeneration = 0
-  local autoDismissTimer = nil
+  local autoDismiss
   local lastPreviewSenderName = nil
   local lastPreviewMessageText = nil
   local lastPreviewClassTag = nil
 
-  local function cancelAutoDismiss()
-    autoDismissGeneration = autoDismissGeneration + 1
-    -- Cancel the live timer instead of letting stale ones pile up under
-    -- whisper bursts; the generation counter stays as a safety net for
-    -- timers that cannot be cancelled (older stubs without Cancel).
-    if autoDismissTimer ~= nil then
-      if type(autoDismissTimer.Cancel) == "function" then
-        pcall(autoDismissTimer.Cancel, autoDismissTimer)
-      end
-      autoDismissTimer = nil
-    end
-  end
-
   local function clearIncomingPreview()
-    cancelAutoDismiss()
+    autoDismiss.cancel()
     lastPreviewSenderName = nil
     lastPreviewMessageText = nil
     lastPreviewClassTag = nil
@@ -145,28 +132,13 @@ function IncomingPreview.Create(factory, frame, options)
     end
   end
 
-  local function scheduleAutoDismiss()
-    cancelAutoDismiss()
-    local getter = options.getPreviewAutoDismissSeconds
-    local seconds = (type(getter) == "function") and tonumber(getter()) or 0
-    if not seconds or seconds <= 0 then
-      return
-    end
-    local cTimer = _G.C_Timer
-    if type(cTimer) ~= "table" or type(cTimer.NewTimer) ~= "function" then
-      return
-    end
-    local scheduledGeneration = autoDismissGeneration
-    autoDismissTimer = cTimer.NewTimer(seconds, function()
-      if scheduledGeneration ~= autoDismissGeneration then
-        return
-      end
-      if previewFrame.IsShown and not previewFrame:IsShown() then
-        return
-      end
-      triggerDismiss()
-    end)
-  end
+  autoDismiss = PreviewAutoDismiss.New({
+    getSeconds = options.getPreviewAutoDismissSeconds,
+    isShown = function()
+      return not previewFrame.IsShown or previewFrame:IsShown()
+    end,
+    onExpire = triggerDismiss,
+  })
 
   if previewDismissButton.SetScript then
     previewDismissButton:SetScript("OnClick", triggerDismiss)
@@ -221,7 +193,7 @@ function IncomingPreview.Create(factory, frame, options)
       lastPreviewSenderName = senderName
       lastPreviewMessageText = messageText
       lastPreviewClassTag = classTag
-      scheduleAutoDismiss()
+      autoDismiss.schedule()
     end
   end
 
