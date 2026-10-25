@@ -10,7 +10,7 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- the strip below the window, after the built-in tabs, labelled with `title`
 -- as given. `icon` is accepted and ignored. The first registration of a key wins.
 -- A panel is { title, onShow(host), onHide?(), onSplit?(host, listWidth), badge?(),
--- onMarkAllRead?() }.
+-- onMarkAllRead?(), onUnreadChanged?() }.
 -- onSplit runs after onShow and again whenever the contacts divider moves:
 -- listWidth is the divider's x from the panel's left edge (about 50 with the
 -- contacts collapsed to the rail), so a panel can line up with the list.
@@ -24,6 +24,9 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- widget, minimap or Broker icon, or Mark all as read in the window). Mark your
 -- own items seen so badge() drops; WM refreshes the icons right after. It may
 -- call the WhisperMessenger API.
+-- onUnreadChanged() runs on the next frame after any WoW whisper's unread count
+-- changes (one call per frame at most); it may call the WhisperMessenger API;
+-- re-read counts with GetUnreadCount.
 local Panels = {}
 
 -- The panel is already stored when this runs: an icon error must not turn
@@ -46,6 +49,7 @@ local function isValidPanel(panel)
     and isOptionalFunction(panel.onSplit)
     and isOptionalFunction(panel.badge)
     and isOptionalFunction(panel.onMarkAllRead)
+    and isOptionalFunction(panel.onUnreadChanged)
 end
 
 -- The registry keeps this copy, read once: a caller that changes its table
@@ -61,6 +65,7 @@ local function copyPanel(panel)
     onSplit = panel.onSplit,
     badge = panel.badge,
     onMarkAllRead = panel.onMarkAllRead,
+    onUnreadChanged = panel.onUnreadChanged,
   }
 end
 
