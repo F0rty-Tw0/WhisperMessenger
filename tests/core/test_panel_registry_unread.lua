@@ -86,6 +86,17 @@ return function()
     assert(state.calls == 1, "got " .. state.calls)
   end
 
+  -- test_set_returning_to_an_earlier_shape_fires
+  do
+    local registry, state = counted()
+    registry.observeUnread({ contact("a", 1) })
+    registry.observeUnread({ contact("b", 1) })
+    flush()
+    registry.observeUnread({ contact("a", 1) })
+    flush()
+    assert(state.calls == 2, "a -> b -> a fires twice, got " .. state.calls)
+  end
+
   -- test_bnet_and_group_changes_ignored
   do
     local registry, state = counted()
