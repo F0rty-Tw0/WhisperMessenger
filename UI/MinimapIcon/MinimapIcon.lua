@@ -6,8 +6,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
+local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
@@ -155,6 +155,7 @@ function MinimapIcon.Create(factory, options)
     getPreviewPosition = options.getPreviewPosition,
     getPreviewAutoDismissSeconds = options.getPreviewAutoDismissSeconds,
     onDismissPreview = options.onDismissPreview,
+    onOpenPreview = options.onOpenPreview,
   })
   -- Reparent to UIParent so the preview isn't clipped by the Minimap.
   incomingPreview.frame:SetParent(_G.UIParent)
@@ -189,18 +190,20 @@ function MinimapIcon.Create(factory, options)
     applyVertexColor = applyVertexColor,
   })
 
-  local function setUnreadCount(count)
+  -- count is the number shown; pulseCount (default count) starts the glow.
+  local unreadSummary = ""
+  local function setUnreadCount(count, pulseCount)
+    unreadSummary = UnreadSummary.Format(UnreadSummary.Split(count, pulseCount))
     local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
     local allowPulse = not getBadgePulse or getBadgePulse()
     local unreadCount = tonumber(count) or 0
-
     if showBadge then
       innerSetUnreadCount(count)
     else
       innerSetUnreadCount(0)
     end
 
-    if unreadCount > 0 and allowPulse and showBadge then
+    if (tonumber(pulseCount or count) or 0) > 0 and allowPulse and showBadge then
       pulseGlow.start()
     else
       pulseGlow.stop()
@@ -243,7 +246,7 @@ function MinimapIcon.Create(factory, options)
         _G.GameTooltip:SetText("Whisper Messenger")
         local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
         if showBadge and badge:IsShown() then
-          _G.GameTooltip:AddLine((badgeLabel:GetText() or "") .. " " .. (Localization and Localization.Text("unread") or "unread"))
+          _G.GameTooltip:AddLine(unreadSummary)
         end
         KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
         KeybindHints.AddClickHint(_G.GameTooltip)

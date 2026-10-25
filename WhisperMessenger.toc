@@ -160,6 +160,7 @@ UI/Badge.lua
 UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
+UI/Shared/UnreadSummary.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
@@ -268,6 +269,7 @@ UI/ToggleIcon/PreviewChrome.lua
 UI/ToggleIcon/PreviewLinks.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
+UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/ToggleIcon.lua

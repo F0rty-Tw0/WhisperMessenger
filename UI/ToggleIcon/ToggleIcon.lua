@@ -10,11 +10,13 @@ local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.ToggleIcon.PulseState")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
+local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
@@ -94,8 +96,6 @@ function ToggleIcon.Create(factory, options)
     theme = Theme,
     accent = Theme.COLORS.accent,
   })
-  local startPulse = pulseGlow.start
-  local stopPulse = pulseGlow.stop
 
   -- Unread badge, outlined so it reads where it overlaps the ring
   local badgeResult = Badge.Create(factory, frame, { outline = true })
@@ -117,11 +117,22 @@ function ToggleIcon.Create(factory, options)
     innerSetCompetitiveActive(isCompetitiveActive)
   end
 
+  local pulseState
   local incomingPreview = IncomingPreview.Create(factory, frame, {
     theme = Theme,
     getPreviewPosition = options.getPreviewPosition,
     getPreviewAutoDismissSeconds = options.getPreviewAutoDismissSeconds,
     onDismissPreview = options.onDismissPreview,
+    onOpenPreview = options.onOpenPreview,
+    onExternalChanged = function()
+      pulseState.refresh()
+    end,
+  })
+  pulseState = PulseState.New({
+    start = pulseGlow.start,
+    stop = pulseGlow.stop,
+    getBadgePulse = options.getBadgePulse,
+    isExternalShown = incomingPreview.isExternalShown,
   })
   local previewFrame = incomingPreview.frame
   local previewSenderLabel = incomingPreview.senderLabel
@@ -208,22 +219,20 @@ function ToggleIcon.Create(factory, options)
     applyVertexColor = applyVertexColor,
   })
 
-  local function setUnreadCount(count)
+  -- count is the number shown; pulseCount (default count) starts the glow.
+  local unreadSummary = ""
+  local function setUnreadCount(count, pulseCount)
+    unreadSummary = UnreadSummary.Format(UnreadSummary.Split(count, pulseCount))
     local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
     local allowPulse = not getBadgePulse or getBadgePulse()
     local unreadCount = tonumber(count) or 0
-
     if showBadge then
       innerSetUnreadCount(count)
     else
       innerSetUnreadCount(0)
     end
 
-    if unreadCount > 0 and allowPulse and showBadge then
-      startPulse()
-    else
-      stopPulse()
-    end
+    pulseState.setUnreadWants((tonumber(pulseCount or count) or 0) > 0 and allowPulse and showBadge)
 
     desaturation.update(unreadCount)
   end
@@ -240,10 +249,7 @@ function ToggleIcon.Create(factory, options)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
-        local unreadText = ""
-        if badge:IsShown() then
-          unreadText = " — " .. badgeLabel:GetText() .. " " .. Localization.Text("unread")
-        end
+        local unreadText = badge:IsShown() and " — " .. unreadSummary or ""
         local competitiveText = ""
         if isCompetitiveActive then
           competitiveText = "\n" .. Localization.Text("Paused in M+")
@@ -343,6 +349,7 @@ function ToggleIcon.Create(factory, options)
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = incomingPreview.setExternalPreview,
     isExternalPreviewShown = incomingPreview.isExternalShown,
+    setExternalPulse = pulseState.setExternal,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,
