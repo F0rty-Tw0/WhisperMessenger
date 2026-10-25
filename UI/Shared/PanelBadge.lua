@@ -11,10 +11,10 @@ local PanelBadge = {}
 -- Caps one panel's count so text built with %d can never overflow.
 PanelBadge.MAX_COUNT = 999
 
--- Callbacks being read right now. A badge() that calls back into the API
--- re-enters its own read through the icon and tab refreshes; that inner read
--- is 0, so the nesting stops after one level.
-local reading = {}
+-- True while any badge() runs. A badge() that calls back into the API
+-- re-enters a read (its own or another panel's) through the icon and tab
+-- refreshes; that inner read is 0, so the nesting stops after one level.
+local reading = false
 
 --- Runs a panel's badge callback under pcall and returns a whole count.
 -- Anything but a finite number, an error, a secret value or a count below 1
@@ -25,12 +25,12 @@ function PanelBadge.Read(badge)
   if type(badge) ~= "function" then
     return 0
   end
-  if reading[badge] then
+  if reading then
     return 0
   end
-  reading[badge] = true
+  reading = true
   local ok, value = pcall(badge)
-  reading[badge] = nil
+  reading = false
   if not ok or type(value) ~= "number" then
     return 0
   end

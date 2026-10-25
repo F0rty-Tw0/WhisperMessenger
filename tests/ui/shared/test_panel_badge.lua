@@ -92,4 +92,22 @@ return function()
     depth = 0
     assert(PanelBadge.Read(badge) == 4 and depth == 1, "the guard clears after a read")
   end
+
+  -- test_badges_that_read_each_other_do_not_nest
+  do
+    local calls = 0
+    local first, second
+    first = function()
+      calls = calls + 1
+      PanelBadge.Read(second)
+      return 1
+    end
+    second = function()
+      calls = calls + 1
+      PanelBadge.Read(first)
+      return 1
+    end
+    assert(PanelBadge.Read(first) == 1, "the outer read still counts")
+    assert(calls == 1, "a read inside another panel's badge is nothing, got " .. calls .. " calls")
+  end
 end
