@@ -45,7 +45,23 @@ return function()
 
   local api = _G.WhisperMessengerAPI
   local version = api and api.version
-  local openType = api and type(api.OpenConversation)
+  local missing = {}
+  for _, name in ipairs({
+    "OpenConversation",
+    "ShowPreview",
+    "HidePreview",
+    "IsPreviewShown",
+    "RegisterPanel",
+    "ShowPanel",
+    "TogglePanel",
+    "IsPanelShown",
+    "RefreshPanelBadge",
+    "SetContactInfo",
+  }) do
+    if not (api and type(api[name]) == "function") then
+      missing[#missing + 1] = name
+    end
+  end
 
   _G.require = savedRequire
   rawset(_G, "CreateFrame", savedCreateFrame)
@@ -54,5 +70,5 @@ return function()
   _G.WhisperMessengerAPI = savedApi
 
   assert(version == 1, "expected WhisperMessengerAPI.version == 1")
-  assert(openType == "function", "expected WhisperMessengerAPI.OpenConversation")
+  assert(#missing == 0, "expected WhisperMessengerAPI functions: " .. table.concat(missing, ", "))
 end

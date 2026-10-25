@@ -19,6 +19,7 @@ local MessengerWindow = ns.MessengerWindow or require("WhisperMessenger.UI.Messe
 local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
 local TimeFormat = ns.TimeFormat or require("WhisperMessenger.Util.TimeFormat")
 
 local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
@@ -307,6 +308,9 @@ function WindowRuntime.Create(options)
       settingsConfig = settingsState,
       filters = accountState.filters,
       onSettingChanged = onSettingChanged,
+      getContactInfoLines = function(contact)
+        return ContactInfo.LinesFor(runtime, contact)
+      end,
     }
     -- Every window callback passes straight through.
     for name, callback in pairs(windowCallbacks) do

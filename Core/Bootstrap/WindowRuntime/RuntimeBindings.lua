@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
+local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
 local PanelRegistry = ns.BootstrapWindowRuntimePanelRegistry or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelRegistry")
 
 local RuntimeBindings = {}
@@ -87,6 +88,7 @@ function RuntimeBindings.Apply(options)
   runtime.getWidgetIcon = getWidgetIcon
   runtime.updateIconSurfaces = updateIconSurfaces
   runtime.panelRegistry = PanelRegistry.New()
+  runtime.contactInfo = ContactInfo.New()
 
   return {
     setComposerText = setComposerText,

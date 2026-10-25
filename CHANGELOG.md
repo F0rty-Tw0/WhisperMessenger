@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Other addons can now show their alerts on the messenger's widget, add their own panel to the messenger window, and open a chat with a player.
+
 ## [2.1.1] - 2026-10-23
 
 - The chat header now shows the player's race next to their level and class. When the race is known, Horde and Alliance show only as the icon next to the name.

@@ -66,6 +66,7 @@ Model/Filters/RulePresets.lua
 Model/Filters/DuplicateCollapse.lua
 Util/ChatReplyState.lua
 Model/ConversationDrafts.lua
+Model/ContactInfo.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
@@ -244,6 +245,7 @@ UI/ConversationPane/BottomBanner.lua
 UI/ConversationPane/RequestBanner.lua
 UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
+UI/ConversationPane/InfoStrip.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
@@ -426,6 +428,7 @@ Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
 Core/PublicApi/Guards.lua
+Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
 Core/PublicApi/Panels.lua
 Core/PublicApi.lua

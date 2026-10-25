@@ -6,6 +6,7 @@ end
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
 local Preview = ns.PublicApiPreview or require("WhisperMessenger.Core.PublicApi.Preview")
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
+local PublicContactInfo = ns.PublicApiContactInfo or require("WhisperMessenger.Core.PublicApi.ContactInfo")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -67,6 +68,7 @@ function PublicApi.Build(runtime)
   }
   Preview.Install(api, runtime)
   Panels.Install(api, runtime)
+  PublicContactInfo.Install(api, runtime)
   return api
 end
 
