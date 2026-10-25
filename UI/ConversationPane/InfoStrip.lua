@@ -11,6 +11,8 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local InfoStrip = {}
 
 local ROW_HEIGHT = 22
+-- More notes would crowd the thread out of the window.
+local MAX_ROWS = 3
 local SIDE_PADDING = 16
 
 local function applyTheme(strip)
@@ -47,7 +49,9 @@ function InfoStrip.Create(factory, pane, headerFrame)
   applyTheme(strip)
 
   function strip.setLines(lines)
-    for index, text in ipairs(lines) do
+    local count = math.min(#lines, MAX_ROWS)
+    for index = 1, count do
+      local text = lines[index]
       local row = strip.rows[index]
       if row == nil then
         row = createRow(strip, index)
@@ -56,11 +60,11 @@ function InfoStrip.Create(factory, pane, headerFrame)
       row:SetText(text)
       row:Show()
     end
-    for index = #lines + 1, #strip.rows do
+    for index = count + 1, #strip.rows do
       strip.rows[index]:Hide()
     end
-    frame:SetHeight(ROW_HEIGHT * #lines)
-    if #lines > 0 then
+    frame:SetHeight(ROW_HEIGHT * count)
+    if count > 0 then
       frame:Show()
     else
       frame:Hide()

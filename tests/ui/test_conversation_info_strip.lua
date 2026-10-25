@@ -85,6 +85,19 @@ return function()
     assert(pane.infoStrip.rows[1].text == "A" and pane.infoStrip.rows[2].text == "B", "both rows set")
   end
 
+  -- test_rows_are_capped
+  do
+    lines = {}
+    for index = 1, 60 do
+      lines[index] = "Line " .. index
+    end
+    local pane = newPane(factory, getter)
+    local strip = pane.infoStrip
+    assert(strip.height() == 22 * 3, "three rows at most, got " .. strip.height())
+    assert(#strip.rows == 3, "no rows built past the cap, got " .. #strip.rows)
+    assert(strip.rows[3].text == "Line 3", "the first lines show")
+  end
+
   -- test_viewport_shrinks_by_the_strip_height
   do
     lines = {}
