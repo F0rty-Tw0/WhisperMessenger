@@ -30,11 +30,24 @@ function WindowSurface.CollectSettings()
   end
 end
 
+-- Addon panel entry points: registerPanel, showPanel, hidePanel,
+-- getVisiblePanel, refreshPanelBadge.
+local function addPanelFields(window, panelHost, windowVisibility)
+  window.registerPanel = panelHost.register
+  window.showPanel = windowVisibility.setPanelVisible
+  window.hidePanel = function()
+    windowVisibility.setPanelVisible(nil)
+  end
+  window.getVisiblePanel = windowVisibility.getVisiblePanel
+  window.refreshPanelBadge = panelHost.refreshBadge
+end
+
 -- Builds the table MessengerWindow.Create returns. Fields it does not list
 -- fall back to settingsResult (lazily built settings panels).
 -- parts: chrome, layout, settingsRuntime, settingsResult, contactsRuntime,
 -- conversation, composer, refreshSelection, handleContactSelected, setScale,
--- relayoutCurrentSize, refreshLanguage
+-- relayoutCurrentSize, refreshLanguage, and optionally panelHost +
+-- windowVisibility (addon panels).
 function WindowSurface.Build(parts)
   local chrome = parts.chrome
   local layout = parts.layout
@@ -123,6 +136,9 @@ function WindowSurface.Build(parts)
       return false
     end,
   }
+  if parts.panelHost and parts.windowVisibility then
+    addPanelFields(window, parts.panelHost, parts.windowVisibility)
+  end
   return setmetatable(window, { __index = parts.settingsResult })
 end
 

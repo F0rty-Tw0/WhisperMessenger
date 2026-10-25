@@ -281,6 +281,7 @@ UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua
 UI/MessengerWindow/ChromeBuilder/MarkAllReadButton.lua
 UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
+UI/MessengerWindow/ChromeBuilder/PanelButton.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
@@ -349,6 +350,7 @@ UI/MessengerWindow/MessengerWindow/ContactsSearchController.lua
 UI/MessengerWindow/MessengerWindow/ContactsRuntime.lua
 UI/MessengerWindow/MessengerWindow/SelectionController.lua
 UI/MessengerWindow/MessengerWindow/WindowGeometry.lua
+UI/MessengerWindow/MessengerWindow/PanelHost.lua
 UI/MessengerWindow/MessengerWindow/WindowVisibility.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
