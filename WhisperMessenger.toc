@@ -442,5 +442,6 @@ Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
 Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
+Core/PublicApi/BlockList.lua
 Core/PublicApi.lua
 Bootstrap.lua

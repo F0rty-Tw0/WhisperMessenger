@@ -7,6 +7,7 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 local Preview = ns.PublicApiPreview or require("WhisperMessenger.Core.PublicApi.Preview")
 local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Panels")
 local PublicContactInfo = ns.PublicApiContactInfo or require("WhisperMessenger.Core.PublicApi.ContactInfo")
+local BlockList = ns.PublicApiBlockList or require("WhisperMessenger.Core.PublicApi.BlockList")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -80,6 +81,7 @@ function PublicApi.Build(runtime)
   Preview.Install(api, runtime)
   Panels.Install(api, runtime)
   PublicContactInfo.Install(api, runtime)
+  BlockList.Install(api, runtime)
   if not integrationAllowed(runtime) then
     -- Same keys, so callers never nil-error; every call is refused.
     for key, value in pairs(api) do

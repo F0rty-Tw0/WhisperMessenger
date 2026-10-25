@@ -57,6 +57,9 @@ return function()
     "IsPanelShown",
     "RefreshPanelBadge",
     "SetContactInfo",
+    "IsBlocked",
+    "Block",
+    "Unblock",
   }) do
     if not (api and type(api[name]) == "function") then
       missing[#missing + 1] = name
