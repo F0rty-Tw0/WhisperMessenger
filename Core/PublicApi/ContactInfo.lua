@@ -7,15 +7,16 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 local ContactInfo = ns.ContactInfo or require("WhisperMessenger.Model.ContactInfo")
 
 -- SetContactInfo: a one-line note under a player's name in their chat.
--- Text nil removes the caller's note.
+-- Text nil or blank removes the caller's note.
 local PublicContactInfo = {}
 
 function PublicContactInfo.Install(api, runtime)
   api.SetContactInfo = Guards.Wrap(function(sourceKey, playerName, text)
-    if not ContactInfo.Set(runtime.contactInfo, sourceKey, playerName, text) then
+    if not ContactInfo.Set(runtime.contactInfo, sourceKey, playerName, text, runtime) then
       return false
     end
-    if runtime.isWindowVisible() then
+    -- Only the open chat's strip can change.
+    if runtime.isWindowVisible() and ContactInfo.ResolvesTo(runtime, playerName, runtime.activeConversationKey) then
       runtime.refreshWindow()
     end
     return true
