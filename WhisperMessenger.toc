@@ -424,12 +424,12 @@ Core/Bootstrap/WindowRuntime/ToggleFlow.lua
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime/ExternalPreview.lua
+Core/PublicApi/Guards.lua
+Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
-Core/PublicApi/Guards.lua
 Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
-Core/PublicApi/Panels.lua
 Core/PublicApi.lua
 Bootstrap.lua
