@@ -22,6 +22,9 @@ local function build()
     panelHost = panelHost,
     onClose = function()
       env.closed = env.closed + 1
+      if env.closeError then
+        error(env.closeError, 0)
+      end
     end,
     onConversationUncovered = function()
       env.uncovered = env.uncovered + 1
@@ -126,5 +129,17 @@ return function()
     env.v.setPanelVisible("ca")
     env.v.setPanelVisible(nil)
     assert(env.uncovered == 1, "the close guard reset, got " .. env.uncovered)
+  end
+
+  -- test_a_throwing_close_handler_does_not_leave_the_close_guard_set
+  do
+    local env = build()
+    env.closeError = "boom"
+    env.v.setOptionsVisible(true)
+    local ok, err = pcall(env.v.closeWindow)
+    assert(ok == false and err == "boom", "the error still surfaces, got " .. tostring(err))
+    env.v.setPanelVisible("ca")
+    env.v.setPanelVisible(nil)
+    assert(env.uncovered == 1, "the close guard reset after the error, got " .. env.uncovered)
   end
 end

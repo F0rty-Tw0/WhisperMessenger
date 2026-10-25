@@ -26,11 +26,12 @@ local function putDraftInComposer(runtime, draft)
   end
 end
 
--- An addon panel covers the conversation; close it so the chat shows.
+-- An addon panel covers the conversation; close it so the chat shows. Quiet:
+-- the caller selects the chat it opens itself.
 local function hideOpenPanel(runtime)
   local window = runtime.window
   if window and window.hidePanel then
-    window.hidePanel()
+    window.hidePanel(true)
   end
 end
 

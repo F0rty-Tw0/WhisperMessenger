@@ -87,10 +87,11 @@ function WindowVisibility.Create(options)
     end
   end
 
-  local function setOptionsVisible(nextVisible)
+  -- quiet: as for setPanelVisible.
+  local function setOptionsVisible(nextVisible, quiet)
     local wasCovered = not isConversationPaneShown()
     applyOptionsVisible(nextVisible)
-    reportIfUncovered(wasCovered)
+    reportIfUncovered(wasCovered, quiet)
   end
 
   -- key opens that panel (closing options or another panel first); nil
@@ -149,16 +150,22 @@ function WindowVisibility.Create(options)
   end
 
   -- The options pane and any panel close first, but the chat does not come
-  -- back on screen: the window goes with them.
+  -- back on screen: the window goes with them. A throwing onClose still
+  -- clears the guard, then the error carries on.
   local function closeWindow()
     closing = true
-    setOptionsVisible(false)
-    if options.onClose then
-      options.onClose()
-    elseif options.frame and options.frame.Hide then
-      options.frame:Hide()
-    end
+    local ok, err = pcall(function()
+      setOptionsVisible(false)
+      if options.onClose then
+        options.onClose()
+      elseif options.frame and options.frame.Hide then
+        options.frame:Hide()
+      end
+    end)
     closing = false
+    if not ok then
+      error(err, 0)
+    end
   end
 
   return {

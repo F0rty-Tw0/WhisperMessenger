@@ -10,7 +10,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The buttons along the top of the messenger window are larger and easier to hit.
 - With the Native WoW HUD on, the message preview next to the messenger button now uses the game's tooltip border.
 - The message preview next to the messenger button is now larger, with bigger text and more room, so item links no longer touch its border.
-- Left-clicking the message preview next to the messenger button now opens that player's chat.
+- Left-clicking the message preview next to the messenger button now opens that player's chat, even with the settings or another addon's page open.
 - The number on the messenger button and minimap icon now also counts items waiting in addon pages (for example Craft Alert leads you haven't answered yet).
 - Clicking the messenger button, minimap icon or Broker icon while only an addon page has something waiting (like a Craft Alert lead) now opens that page instead of your whispers. Unread whispers still open your whispers first.
 - Notes that other addons show under a player's name in a chat can now show more detail when you hover them (for example, Craft Alert can show how a request was matched).

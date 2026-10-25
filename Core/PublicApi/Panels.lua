@@ -79,13 +79,19 @@ function Panels.Open(runtime, key)
   return runtime.window.showPanel(key)
 end
 
+-- Whether the window is shown on that registered panel. Internal callers use
+-- this, not api.IsPanelShown, which another addon can overwrite.
+function Panels.IsShown(runtime, key)
+  if not isKnown(runtime, key) or not runtime.isWindowVisible() then
+    return false
+  end
+  local window = runtime.window
+  return window ~= nil and window.getVisiblePanel() == key
+end
+
 function Panels.Install(api, runtime)
   local function isPanelShown(key)
-    if not isKnown(runtime, key) or not runtime.isWindowVisible() then
-      return false
-    end
-    local window = runtime.window
-    return window ~= nil and window.getVisiblePanel() == key
+    return Panels.IsShown(runtime, key)
   end
 
   local function showPanel(key)
@@ -110,7 +116,7 @@ function Panels.Install(api, runtime)
     if not isPanelShown(key) then
       return showPanel(key)
     end
-    runtime.window.hidePanel()
+    runtime.window.hidePanel(true)
     runtime.setWindowVisible(false)
     return true
   end)

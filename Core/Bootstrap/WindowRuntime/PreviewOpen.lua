@@ -32,7 +32,12 @@ function PreviewOpen.Create(options)
     runtime.setWindowVisible(true)
     local window = runtime.window
     if window and window.hidePanel then
-      window.hidePanel()
+      window.hidePanel(true)
+    end
+    -- Settings cover the chat too; close them so the opened chat is on screen.
+    local coveredByOptions = window and window.isConversationPaneShown and not window.isConversationPaneShown()
+    if coveredByOptions and window.setOptionsVisible then
+      window.setOptionsVisible(false, true)
     end
     if window and window.setTabMode then
       window.setTabMode("whispers")
