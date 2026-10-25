@@ -260,8 +260,11 @@ function MessengerWindow.Create(factory, options)
   })
   -- After LifecycleWiring: its SetScript("OnHide") would drop an earlier hook.
   if frame.HookScript then
+    -- Not when only the parent hid (Alt+Z): the panel is still there.
     frame:HookScript("OnHide", function()
-      windowVisibility.setPanelVisible(nil)
+      if not frame:IsShown() then
+        windowVisibility.setPanelVisible(nil)
+      end
     end)
   end
   contactsRail = ContactsRail.Create({

@@ -108,6 +108,19 @@ local function runStyle(label, expectHostParent)
     assert(window.getVisiblePanel() == nil, label .. ": no panel after the window hides")
   end
 
+  -- test_a_parent_hide_keeps_the_panel_open (Alt+Z, cinematics: the window
+  -- frame itself is still shown, only its parent is hidden)
+  do
+    local window = build()
+    local button, seen = register(window)
+    click(button)
+    assert(window.frame:IsShown(), "the frame itself stays shown")
+    for _, hook in ipairs(window.frame._hookScripts.OnHide) do
+      hook(window.frame)
+    end
+    assert(window.getVisiblePanel() == "ca" and seen.hides == 0, label .. ": the panel stays open, onHide not called")
+  end
+
   -- test_hiding_the_window_keeps_options_open
   do
     local window = build()
