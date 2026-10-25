@@ -112,12 +112,15 @@ function IncomingPreview.Create(factory, frame, options)
   local lastPreviewSenderName = nil
   local lastPreviewMessageText = nil
   local lastPreviewClassTag = nil
+  -- A preview another addon put here; its callbacks come pre-wrapped.
+  local externalEntry = nil
 
   local function clearIncomingPreview()
     autoDismiss.cancel()
     lastPreviewSenderName = nil
     lastPreviewMessageText = nil
     lastPreviewClassTag = nil
+    externalEntry = nil
     previewSenderLabel:SetText("")
     previewMessageLabel:SetText("")
     previewClassIcon:SetTexture(nil)
@@ -132,6 +135,18 @@ function IncomingPreview.Create(factory, frame, options)
     end
   end
 
+  -- The x and right-click: an external preview only tells its owner, so
+  -- WM's own latest whisper is never acknowledged by it.
+  local function dismissCurrent()
+    local current = externalEntry
+    if current == nil then
+      triggerDismiss()
+      return
+    end
+    clearIncomingPreview()
+    current.onDismiss()
+  end
+
   autoDismiss = PreviewAutoDismiss.New({
     getSeconds = options.getPreviewAutoDismissSeconds,
     isShown = function()
@@ -141,7 +156,7 @@ function IncomingPreview.Create(factory, frame, options)
   })
 
   if previewDismissButton.SetScript then
-    previewDismissButton:SetScript("OnClick", triggerDismiss)
+    previewDismissButton:SetScript("OnClick", dismissCurrent)
     previewDismissButton:SetScript("OnEnter", function()
       setTextColor(previewDismissLabel, DISMISS_COLOR_HOVER)
       applyVertexColor(previewDismissBg, DISMISS_BG_HOVER)
@@ -154,8 +169,20 @@ function IncomingPreview.Create(factory, frame, options)
 
   if previewFrame.SetScript then
     previewFrame:SetScript("OnMouseUp", function(_self, button)
+      local current = externalEntry
       if button == "RightButton" then
-        triggerDismiss()
+        dismissCurrent()
+      elseif button == "LeftButton" and current ~= nil then
+        current.onClick()
+        -- onClick may have put up another preview; keep that one.
+        if externalEntry == current then
+          clearIncomingPreview()
+        end
+      end
+    end)
+    previewFrame:SetScript("OnShow", function()
+      if externalEntry ~= nil then
+        externalEntry.onShown()
       end
     end)
   end
@@ -164,15 +191,7 @@ function IncomingPreview.Create(factory, frame, options)
     applyClassColor(previewSenderLabel, classTag, theme.COLORS.text_primary)
   end
 
-  local function setIncomingPreview(senderName, messageText, classTag)
-    local hasMessage = type(messageText) == "string" and messageText ~= ""
-    if not hasMessage then
-      clearIncomingPreview()
-      return
-    end
-
-    local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
-
+  local function renderContent(senderName, messageText, classTag)
     previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
     paintSenderLabel(classTag)
     previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
@@ -186,8 +205,25 @@ function IncomingPreview.Create(factory, frame, options)
     previewClassIconFrame:Show()
 
     applyPreviewPosition(resolvePreviewPosition())
-    previewFrame:Show()
+  end
+
+  local function fitWidth()
     PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel)
+  end
+
+  local function setIncomingPreview(senderName, messageText, classTag)
+    externalEntry = nil
+    local hasMessage = type(messageText) == "string" and messageText ~= ""
+    if not hasMessage then
+      clearIncomingPreview()
+      return
+    end
+
+    local isSameContent = senderName == lastPreviewSenderName and messageText == lastPreviewMessageText and classTag == lastPreviewClassTag
+
+    renderContent(senderName, messageText, classTag)
+    previewFrame:Show()
+    fitWidth()
 
     if not isSameContent then
       lastPreviewSenderName = senderName
@@ -197,12 +233,39 @@ function IncomingPreview.Create(factory, frame, options)
     end
   end
 
+  -- No auto-dismiss: the owner decides when its preview goes away.
+  local function setExternalPreview(entry)
+    if entry == nil then
+      if externalEntry ~= nil then
+        clearIncomingPreview()
+      end
+      return
+    end
+    if entry == externalEntry then
+      return
+    end
+    autoDismiss.cancel()
+    lastPreviewSenderName, lastPreviewMessageText, lastPreviewClassTag = nil, nil, nil
+    externalEntry = entry
+    renderContent(entry.sender, entry.text, entry.classTag)
+    fitWidth()
+    if previewFrame:IsVisible() then
+      entry.onShown()
+    else
+      previewFrame:Show()
+    end
+  end
+
+  local function isExternalShown()
+    return externalEntry ~= nil and previewFrame:IsVisible()
+  end
+
   local function applyTheme(activeTheme)
     theme = activeTheme or theme
     if previewBackground and previewBackground.setColor then
       previewBackground.setColor(theme.COLORS.bg_secondary or theme.COLORS.bg_primary)
     end
-    paintSenderLabel(lastPreviewClassTag)
+    paintSenderLabel(externalEntry and externalEntry.classTag or lastPreviewClassTag)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
     setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
   end
@@ -216,6 +279,8 @@ function IncomingPreview.Create(factory, frame, options)
     classIcon = previewClassIcon,
     classIconFrame = previewClassIconFrame,
     setIncomingPreview = setIncomingPreview,
+    setExternalPreview = setExternalPreview,
+    isExternalShown = isExternalShown,
     applyPreviewPosition = applyPreviewPosition,
     applyTheme = applyTheme,
   }

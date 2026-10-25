@@ -10,8 +10,25 @@ local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.Mini
 -- the minimap icon and the LibDataBroker text.
 local IconSurfaces = {}
 
+-- An external preview (another addon's) holds the widget until an own
+-- whisper newer than it arrives; that whisper drops it. True when shown.
+local function showExternalPreview(icon, preview, surfaces)
+  local external = surfaces.getExternalPreview and surfaces.getExternalPreview() or nil
+  if external == nil then
+    return false
+  end
+  if icon.setExternalPreview and not (preview and (tonumber(preview.sentAt) or 0) > external.stamp) then
+    icon.setExternalPreview(external)
+    return true
+  end
+  if surfaces.dropExternalPreview then
+    surfaces.dropExternalPreview()
+  end
+  return false
+end
+
 -- surfaces: { getWindow, isWindowVisible, buildMessagePreview, getIcon,
--- getMinimapIcon, getLdbObject }.
+-- getMinimapIcon, getLdbObject, getExternalPreview?, dropExternalPreview? }.
 function IconSurfaces.Update(contacts, surfaces)
   -- Suppress the icon-anchored previews only when the Whispers tab is
   -- actually showing — the full conversation is already on screen and the
@@ -30,7 +47,7 @@ function IconSurfaces.Update(contacts, surfaces)
   if icon and icon.setUnreadCount then
     icon.setUnreadCount(unread)
   end
-  if icon and icon.setIncomingPreview then
+  if icon and icon.setIncomingPreview and not showExternalPreview(icon, preview, surfaces) then
     icon.setIncomingPreview(previewSender, previewText, previewClass)
   end
 

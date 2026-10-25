@@ -45,6 +45,10 @@ function RuntimeBindings.Apply(options)
   local startConversation = options.startConversation or function()
     return false
   end
+  local getWidgetIcon = options.getWidgetIcon or function()
+    return nil
+  end
+  local updateIconSurfaces = options.updateIconSurfaces or function() end
 
   local setComposerText = buildComposerTextSetter(runtime, getWindow)
 
@@ -78,6 +82,9 @@ function RuntimeBindings.Apply(options)
   runtime.setWindowVisible = controller.setWindowVisible
   runtime.setComposerText = controller.setComposerText
   runtime.startConversation = startConversation
+  runtime.externalPreview = options.externalPreview
+  runtime.getWidgetIcon = getWidgetIcon
+  runtime.updateIconSurfaces = updateIconSurfaces
 
   return {
     setComposerText = setComposerText,

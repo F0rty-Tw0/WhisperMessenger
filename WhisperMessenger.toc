@@ -418,9 +418,11 @@ Core/Bootstrap/WindowRuntime/IconRuntime.lua
 Core/Bootstrap/WindowRuntime/MinimapIconRuntime.lua
 Core/Bootstrap/WindowRuntime/ToggleFlow.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
+Core/Bootstrap/WindowRuntime/ExternalPreview.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
 Core/PublicApi/Guards.lua
+Core/PublicApi/Preview.lua
 Core/PublicApi.lua
 Bootstrap.lua

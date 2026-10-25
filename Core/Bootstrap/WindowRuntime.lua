@@ -33,6 +33,7 @@ local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMess
 local MinimapIconRuntime = ns.BootstrapWindowRuntimeMinimapIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.MinimapIconRuntime")
 local ToggleFlow = ns.BootstrapWindowRuntimeToggleFlow or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ToggleFlow")
 local RuntimeBindings = ns.BootstrapWindowRuntimeRuntimeBindings or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.RuntimeBindings")
+local ExternalPreview = ns.BootstrapWindowRuntimeExternalPreview or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ExternalPreview")
 
 local WindowRuntime = {}
 
@@ -138,18 +139,26 @@ function WindowRuntime.Create(options)
   -- Assigned below; the coordinator uses it to follow a replied-to request.
   local conversationSelector
 
+  local externalPreview = ExternalPreview.New({
+    now = function()
+      return runtime.now and runtime.now() or nil
+    end,
+  })
+
+  local function getWidgetIcon()
+    if resolveIconMode() == "minimap" or resolveIconMode() == "none" then
+      return nil
+    end
+    return icon
+  end
+
   local coordinator = windowCoordinatorModule.Create({
     runtime = runtime,
     buildContacts = buildContacts,
     getWindow = function()
       return window
     end,
-    getIcon = function()
-      if resolveIconMode() == "minimap" or resolveIconMode() == "none" then
-        return nil
-      end
-      return icon
-    end,
+    getIcon = getWidgetIcon,
     getMinimapIcon = function()
       local mode = resolveIconMode()
       if mode == "widget" or mode == "none" then
@@ -167,6 +176,7 @@ function WindowRuntime.Create(options)
     presenceCache = presenceCache,
     livePresenceSender = LivePresenceSender,
     buildMessagePreview = buildLatestIncomingPreview,
+    externalPreview = externalPreview,
     selectConversation = function(conversationKey)
       return conversationSelector.selectConversation(conversationKey)
     end,
@@ -395,6 +405,9 @@ function WindowRuntime.Create(options)
     setWindowVisible = setWindowVisible,
     toggle = toggle,
     startConversation = startConversation,
+    externalPreview = externalPreview,
+    getWidgetIcon = getWidgetIcon,
+    updateIconSurfaces = coordinator.updateIconSurfaces,
   })
 
   return controller

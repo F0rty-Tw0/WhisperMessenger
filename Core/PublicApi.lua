@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Guards")
+local Preview = ns.PublicApiPreview or require("WhisperMessenger.Core.PublicApi.Preview")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -50,10 +51,12 @@ local function buildOpenConversation(runtime)
 end
 
 function PublicApi.Build(runtime)
-  return {
+  local api = {
     version = API_VERSION,
     OpenConversation = buildOpenConversation(runtime),
   }
+  Preview.Install(api, runtime)
+  return api
 end
 
 function PublicApi.Publish(runtime)

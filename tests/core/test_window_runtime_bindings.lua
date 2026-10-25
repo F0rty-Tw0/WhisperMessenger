@@ -98,4 +98,23 @@ return function()
   local bare = {}
   RuntimeBindings.Apply({ runtime = bare, controller = {} })
   assert(bare.startConversation("x") == false, "startConversation should default to a refusal")
+
+  -- test_external_preview_wiring_reaches_the_runtime
+  local holder, widget, updates = {}, {}, 0
+  local wired = {}
+  RuntimeBindings.Apply({
+    runtime = wired,
+    controller = {},
+    externalPreview = holder,
+    getWidgetIcon = function()
+      return widget
+    end,
+    updateIconSurfaces = function()
+      updates = updates + 1
+    end,
+  })
+  wired.updateIconSurfaces()
+  assert(wired.externalPreview == holder and wired.getWidgetIcon() == widget and updates == 1, "external preview wiring reaches the runtime")
+  assert(bare.getWidgetIcon() == nil, "getWidgetIcon should default to no widget")
+  bare.updateIconSurfaces()
 end
