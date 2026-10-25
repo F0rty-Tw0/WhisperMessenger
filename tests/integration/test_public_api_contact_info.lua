@@ -56,6 +56,31 @@ return function()
     assert(ok, err)
   end
 
+  -- test_tooltip_lines_show_when_the_line_is_hovered
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local savedTooltip = rawget(_G, "GameTooltip")
+    local added = {}
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      AddLine = function(_self, text)
+        added[#added + 1] = text
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+    local ok, err = pcall(function()
+      assert(api.OpenConversation("Jaina") == true)
+      assert(api.SetContactInfo("ca", "Jaina", "Craft Alert: Belt", { "Matched: Belt" }) == true)
+      local row = runtime.window.conversation.infoStrip.rowFrames[1]
+      row.scripts.OnEnter(row)
+      assert(added[1] == "Matched: Belt", "the hovered line shows its tooltip")
+    end)
+    _G.GameTooltip = savedTooltip
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
+
   -- test_blank_text_shows_no_bar
   do
     local runtime, api = PublicApiEnv.Initialize({})

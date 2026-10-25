@@ -7,17 +7,62 @@ local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 -- One-line notes other addons attach to a player, shown in the conversation
--- pane's info strip. State is { [canonicalName] = { [sourceKey] = text } };
--- a note for a player with no conversation yet waits until one exists. A chat
+-- pane's info strip. State is { [canonicalName] = { [sourceKey] = note } },
+-- note = { text, tooltip? }; a note for a player with no conversation yet
+-- waits until one exists. A chat
 -- shows at most one line per source: the names that resolve to one chat
 -- ("Jaina", "Jaina-Proudmoore") share it.
 local ContactInfo = {}
 
 ContactInfo.MAX_PLAYERS = 200
 ContactInfo.MAX_SOURCES = 10
+ContactInfo.MAX_TOOLTIP_LINES = 10
 
 local function isNonEmptyString(value)
   return type(value) == "string" and value ~= ""
+end
+
+-- nil, or an array of 1..MAX_TOOLTIP_LINES non-empty strings with no holes.
+local function isValidTooltip(lines)
+  if lines == nil then
+    return true
+  end
+  if type(lines) ~= "table" then
+    return false
+  end
+  local count = 0
+  for _, line in pairs(lines) do
+    if not isNonEmptyString(line) then
+      return false
+    end
+    count = count + 1
+    -- Stop at the first line over the cap: a huge table is not walked in full.
+    if count > ContactInfo.MAX_TOOLTIP_LINES then
+      return false
+    end
+  end
+  if count < 1 then
+    return false
+  end
+  -- count keys that are exactly 1..count: any other key leaves a gap here.
+  for index = 1, count do
+    if lines[index] == nil then
+      return false
+    end
+  end
+  return true
+end
+
+-- The state keeps this copy: a caller that changes its table later changes nothing.
+local function copyTooltip(lines)
+  if lines == nil then
+    return nil
+  end
+  local copy = {}
+  for index, line in ipairs(lines) do
+    copy[index] = line
+  end
+  return copy
 end
 
 function ContactInfo.New()
@@ -72,14 +117,19 @@ function ContactInfo.ResolvesTo(runtime, playerName, conversationKey)
   return Identity.ResolveWhisperConversation(runtime, canonicalName, "WOW") == conversationKey
 end
 
--- text nil, or blank, removes the note; longer text is cut to the chat limit.
--- With runtime, the source's note replaces (or removes) its note under the
--- other names of the same chat. False on bad arguments or past a cap.
-function ContactInfo.Set(state, sourceKey, playerName, text, runtime)
+-- text nil, or blank, removes the note and its tooltip; longer text is cut to
+-- the chat limit. tooltipLines (optional) are the lines shown on hover; text
+-- without them clears the source's old tooltip. With runtime, the source's
+-- note replaces (or removes) its note under the other names of the same chat.
+-- False, with nothing changed, on bad arguments or past a cap.
+function ContactInfo.Set(state, sourceKey, playerName, text, runtime, tooltipLines)
   if not isNonEmptyString(sourceKey) or not isNonEmptyString(playerName) then
     return false
   end
   if text ~= nil and type(text) ~= "string" then
+    return false
+  end
+  if not isValidTooltip(tooltipLines) then
     return false
   end
 
@@ -107,24 +157,25 @@ function ContactInfo.Set(state, sourceKey, playerName, text, runtime)
   end
   notes = state[canonicalName] or {}
   state[canonicalName] = notes
-  notes[sourceKey] = TextLimits.CapBytes(note, TextLimits.MESSAGE_MAX_BYTES)
+  notes[sourceKey] = { text = TextLimits.CapBytes(note, TextLimits.MESSAGE_MAX_BYTES), tooltip = copyTooltip(tooltipLines) }
   return true
 end
 
--- The note texts for the selected contact, ordered by source key.
+-- The note texts for the selected contact, ordered by source key, and a
+-- second table with each line's tooltip lines at the same index (nil: none).
 function ContactInfo.LinesFor(runtime, selectedContact)
   local state = runtime and runtime.contactInfo
   local conversationKey = selectedContact and selectedContact.conversationKey
   if state == nil or conversationKey == nil then
-    return {}
+    return {}, {}
   end
 
   local bySource = {}
   local sourceKeys = {}
   for _, name in ipairs(namesForChat(runtime, conversationKey)) do
-    for sourceKey, text in pairs(state[name] or {}) do
+    for sourceKey, note in pairs(state[name] or {}) do
       if bySource[sourceKey] == nil then
-        bySource[sourceKey] = text
+        bySource[sourceKey] = note
         sourceKeys[#sourceKeys + 1] = sourceKey
       end
     end
@@ -132,10 +183,12 @@ function ContactInfo.LinesFor(runtime, selectedContact)
   table.sort(sourceKeys)
 
   local lines = {}
+  local tooltips = {}
   for index, sourceKey in ipairs(sourceKeys) do
-    lines[index] = bySource[sourceKey]
+    lines[index] = bySource[sourceKey].text
+    tooltips[index] = bySource[sourceKey].tooltip
   end
-  return lines
+  return lines, tooltips
 end
 
 ns.ContactInfo = ContactInfo
