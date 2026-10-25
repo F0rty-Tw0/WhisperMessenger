@@ -394,6 +394,7 @@ Core/Bootstrap/ChatFilters/FilterApi.lua
 Core/Bootstrap/ChatFilters/ConditionalFilters.lua
 Core/Bootstrap/ChatFilters.lua
 Core/Bootstrap/MythicSuspendController.lua
+Core/Bootstrap/WindowCoordinator/ChatCover.lua
 Core/Bootstrap/WindowCoordinator/IconSurfaces.lua
 Core/Bootstrap/WindowCoordinator/RequestFollow.lua
 Core/Bootstrap/WindowCoordinator/IncomingRefresh.lua
@@ -429,8 +430,11 @@ Core/Bootstrap/WindowRuntime/ToggleFlow.lua
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
 Core/Bootstrap/WindowRuntime/RuntimeBindings.lua
 Core/Bootstrap/WindowRuntime/ExternalPreview.lua
+Core/Bootstrap/WindowRuntime/PanelPulse.lua
 Core/PublicApi/Guards.lua
 Core/PublicApi/Panels.lua
+Core/Bootstrap/WindowRuntime/IconToggle.lua
+Core/Bootstrap/WindowRuntime/PreviewOpen.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua
