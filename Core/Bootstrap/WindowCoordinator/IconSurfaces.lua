@@ -77,7 +77,8 @@ function IconSurfaces.Update(contacts, surfaces)
   -- popup would be redundant. On the Groups tab, or under an addon panel or
   -- the options pane, the whisper isn't visible, so the popup is still the
   -- user's only surface.
-  local total, unread = IconSurfaces.Counts(contacts, surfaces.getPanelRegistry and surfaces.getPanelRegistry())
+  local registry = surfaces.getPanelRegistry and surfaces.getPanelRegistry()
+  local total, unread = IconSurfaces.Counts(contacts, registry)
   local window = surfaces.getWindow()
   local tabMode = window and type(window.getTabMode) == "function" and window.getTabMode() or "whispers"
   local whispersVisibleInPane = surfaces.isWindowVisible() and tabMode == "whispers" and not ChatCover.IsCovered(window)
@@ -101,6 +102,11 @@ function IconSurfaces.Update(contacts, surfaces)
     else
       minimap.setIncomingPreview(nil, nil, nil)
     end
+  end
+
+  -- Every unread change ends here, so this is where panels hear of one.
+  if registry and registry.observeUnread then
+    registry.observeUnread(contacts)
   end
 end
 

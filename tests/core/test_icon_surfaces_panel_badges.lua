@@ -88,4 +88,32 @@ return function()
     assert(out.widget.count == 2 and out.minimap.count == 2 and out.ldb.unread == 2, "whispers only")
     assert(out.ldb.text == "2 unread", "LDB text is today's, got " .. tostring(out.ldb.text))
   end
+
+  -- test_update_hands_the_contacts_to_the_unread_observer
+  do
+    local seen = {}
+    local surfaces = {
+      getWindow = function() end,
+      isWindowVisible = function()
+        return false
+      end,
+      buildMessagePreview = function() end,
+      getIcon = function() end,
+      getMinimapIcon = function() end,
+      getLdbObject = function() end,
+      getPanelRegistry = function()
+        return {
+          badgeSum = function()
+            return 0
+          end,
+          observeUnread = function(contacts)
+            seen[#seen + 1] = contacts
+          end,
+        }
+      end,
+    }
+    local contacts = { { channel = "WOW", unreadCount = 1 } }
+    IconSurfaces.Update(contacts, surfaces)
+    assert(#seen == 1 and seen[1] == contacts, "observer got the same contacts once, got " .. #seen)
+  end
 end
