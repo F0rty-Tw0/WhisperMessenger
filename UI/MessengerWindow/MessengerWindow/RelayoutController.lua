@@ -17,6 +17,7 @@ function RelayoutController.Create(options)
   local conversationPane = options.conversationPane
   local refreshContacts = options.refreshContacts
   local getSelectedConversationKey = options.getSelectedConversationKey
+  local onContactsWidth = options.onContactsWidth
 
   local controller = {}
 
@@ -24,6 +25,10 @@ function RelayoutController.Create(options)
     local metrics = layoutBuilder.Relayout(layout, w, h, requestedContactsWidth)
     -- Remember the expanded width: the rail's width is not the one to return to.
     setContactsWidth(metrics.expandedContactsWidth or metrics.contactsWidth)
+    -- The live width (the rail when collapsed), for panels that line up with the list.
+    if onContactsWidth then
+      onContactsWidth(metrics.contactsWidth)
+    end
 
     if composer and composer.relayout then
       composer.relayout(metrics.contentWidth)

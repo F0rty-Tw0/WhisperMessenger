@@ -34,6 +34,10 @@ return function()
   local T = Theme.TEXTURES
   local L = Theme.LAYOUT
 
+  -- test_no_addon_buttons_in_the_title_bar
+  local TitleBarLayout = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
+  assert(build().addPanelButton == nil and TitleBarLayout.AddPanelButton == nil, "addon panels use the tab strip")
+
   -- test_modern_title_buttons_use_bundled_line_icons
   Theme.SetPreset("wow_default")
   local chrome = build()
@@ -51,10 +55,11 @@ return function()
   end
 
   -- test_modern_title_buttons_share_one_size
+  assert(L.TITLE_ICON_SIZE == 18, "title glyph size constant")
   for name, button in pairs(titleButtons(chrome)) do
-    assert(button.width == L.TITLE_BUTTON_SIZE and button.height == L.TITLE_BUTTON_SIZE, name .. ": hit size " .. tostring(button.width))
+    assert(button.width == 24 and button.height == 24, name .. ": hit size " .. tostring(button.width))
     local glyph = button._wmGlyph
-    assert(glyph.width == L.CHROME_BUTTON_ICON_SIZE, name .. ": icon size " .. tostring(glyph.width))
+    assert(glyph.width == 18 and glyph.height == 18, name .. ": icon size " .. tostring(glyph.width))
   end
 
   -- test_modern_title_buttons_evenly_spaced_and_centered

@@ -90,6 +90,7 @@ function ContactsWiring.Create(factory, options)
     contactsSearchPlaceholder = layout.contactsSearchPlaceholder,
     getSelectedConversationKey = options.getSelectedConversationKey,
   })
+  layout.contactsTabStrip = contactsRuntime.tabToggle and contactsRuntime.tabToggle.frame or nil
   contactsRuntime.bindInputScripts()
   return contactsRuntime
 end

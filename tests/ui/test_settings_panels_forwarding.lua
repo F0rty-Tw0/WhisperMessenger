@@ -52,6 +52,7 @@ return function()
     autoOpenIncoming = true,
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
+    allowAddonIntegration = false,
     showGroupChats = false,
     requestsInbox = true,
     quickReplies = { "brb" },
@@ -119,6 +120,7 @@ return function()
   -- Behavior: the saved quick replies reach the page, which can ask the
   -- options scroll view to re-measure after the list grows or shrinks.
   assert(behaviorCapture.config.quickReplies == settingsConfig.quickReplies, "behavior config should carry quickReplies")
+  assert(behaviorCapture.config.allowAddonIntegration == false, "behavior config should carry allowAddonIntegration")
   assert(behaviorCapture.config.hideFromDefaultChat == nil, "whisper keys moved off the Behavior page")
   assert(behaviorCapture.config.showGroupChats == nil, "group chat key moved off the Behavior page")
 

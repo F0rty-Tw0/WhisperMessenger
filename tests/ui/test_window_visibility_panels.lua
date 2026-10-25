@@ -210,20 +210,20 @@ local function partA()
     assert(not env.contactsPane:IsShown() and not env.contentPane:IsShown(), "panes stay hidden")
   end
 
-  -- test_toggle_panel_opens_then_closes
+  -- test_panel_opens_then_closes
   do
     local env = build()
-    env.v.togglePanel("ca")
+    env.v.setPanelVisible("ca")
     assert(env.v.getVisiblePanel() == "ca")
-    env.v.togglePanel("ca")
+    env.v.setPanelVisible(nil)
     assert(env.v.getVisiblePanel() == nil and panesShown(env))
   end
 
-  -- test_toggle_other_panel_switches
+  -- test_other_panel_switches
   do
     local env = build()
-    env.v.togglePanel("a")
-    env.v.togglePanel("b")
+    env.v.setPanelVisible("a")
+    env.v.setPanelVisible("b")
     assert(env.v.getVisiblePanel() == "b")
   end
 end

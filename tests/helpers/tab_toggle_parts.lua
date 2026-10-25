@@ -31,6 +31,11 @@ function TabToggleParts.groups(toggle)
   return segment(toggle, 2)
 end
 
+-- Addon panel tabs come after the four mode tabs, in registration order.
+function TabToggleParts.panel(toggle, n)
+  return segment(toggle, 4 + n)
+end
+
 -- Unread badge circle and count of a badge frame.
 function TabToggleParts.badgeBg(badge)
   return FindUI.ofType(badge, "Texture")[1]

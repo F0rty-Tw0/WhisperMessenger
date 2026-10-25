@@ -36,8 +36,9 @@ local HANG_EDGES = { top = false, left = true, right = true, bottom = true }
 
 -- One tab: hover fill, centred label, accent underline, badge, then its own
 -- surface, tint and outline. The Requests badge is dim so a stranger's message never
--- looks urgent.
-local function createTab(factory, frame, textKey, mode)
+-- looks urgent. rawLabel: an addon panel's title, shown as given (mode and
+-- textKey are nil then).
+local function createTab(factory, frame, textKey, mode, rawLabel)
   local btn = factory.CreateFrame("Button", nil, frame)
 
   local hover = btn:CreateTexture(nil, "BORDER")
@@ -46,7 +47,7 @@ local function createTab(factory, frame, textKey, mode)
 
   local label = btn:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
   label:SetPoint("CENTER", btn, "CENTER", 0, 0)
-  label:SetText(Localization.Text(textKey))
+  label:SetText(rawLabel or Localization.Text(textKey))
 
   local underline = btn:CreateTexture(nil, "ARTWORK")
   underline:SetHeight(UNDERLINE_HEIGHT)
@@ -141,9 +142,11 @@ end
 --   nativeChrome  : Native WoW HUD -> Blizzard tab art
 --   windowFrame   : the window the tabs hang from (default: parent)
 --
--- The strip is parented to `parent` (the contacts pane) so it hides with it.
--- Returns:
---   { frame, setMode, getMode, setModes, setShown, setUnreadCounts, setLanguage }
+-- The strip is parented to `parent` (the window, so it stays up beside an
+-- addon panel). Returns the toggle TabLayout.BindController builds:
+--   { frame, setMode, getMode, setModes, setShown, setOptionsShown,
+--     setUnreadCounts, setLanguage, addPanelTab, setSelectedPanel,
+--     getSelectedPanel, setModeClickHandler }
 function TabToggle.Create(factory, parent, options)
   options = options or {}
   if options.nativeChrome then
@@ -165,25 +168,10 @@ function TabToggle.Create(factory, parent, options)
     channels = createTab(factory, frame, "Channels", "channels"),
   }
   local toggle = { frame = frame }
+  -- Replaced by the controller's painter below, before any hover can fire.
+  local paintTabs = function() end
 
-  local paintTabs = TabLayout.BindController(toggle, frame, byMode, {
-    initialMode = options.initialMode,
-    onModeChanged = options.onModeChanged,
-    paint = function(currentMode)
-      for _, mode in ipairs(TabLayout.MODES) do
-        paintTab(byMode[mode], mode == currentMode)
-      end
-    end,
-    relabel = function(tab)
-      tab.label:SetText(Localization.Text(tab.textKey))
-    end,
-    anchor = function(visible)
-      chainTabs(frame, visible)
-    end,
-  })
-
-  for _, mode in ipairs(TabLayout.MODES) do
-    local tab = byMode[mode]
+  local function bindHover(tab)
     tab.btn:SetScript("OnEnter", function()
       tab.hovered = true
       paintTabs()
@@ -194,7 +182,37 @@ function TabToggle.Create(factory, parent, options)
     end)
   end
 
-  -- ContactsRuntime always calls setShown after Create.
+  paintTabs = TabLayout.BindController(toggle, frame, byMode, {
+    initialMode = options.initialMode,
+    onModeChanged = options.onModeChanged,
+    paint = function(currentMode, _visible, selectedPanel, panelTabs)
+      for _, mode in ipairs(TabLayout.MODES) do
+        local tab = byMode[mode]
+        paintTab(tab, TabLayout.IsActive(tab, currentMode, selectedPanel))
+      end
+      for _, tab in ipairs(panelTabs) do
+        paintTab(tab, TabLayout.IsActive(tab, currentMode, selectedPanel))
+      end
+    end,
+    relabel = function(tab)
+      tab.label:SetText(Localization.Text(tab.textKey))
+    end,
+    anchor = function(visible)
+      chainTabs(frame, visible)
+    end,
+    createPanelTab = function(title)
+      local tab = createTab(factory, frame, nil, nil, title)
+      bindHover(tab)
+      return tab
+    end,
+  })
+
+  for _, mode in ipairs(TabLayout.MODES) do
+    bindHover(byMode[mode])
+  end
+
+  -- TabLayout applies the shown state through toggle.setShown, so the
+  -- clamp follows it.
   local applyClamp = TabLayout.BindClamp(window, TAB_HEIGHT)
   local setShown = toggle.setShown
   toggle.setShown = function(shown)

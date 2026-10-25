@@ -9,7 +9,6 @@ return function()
     assert(runtime.window == nil, "the window is built on first open")
     assert(api.RegisterPanel("ca", {
       title = "Alerts",
-      icon = "x",
       onShow = function(frame)
         shows = shows + 1
         host = frame
@@ -38,7 +37,6 @@ return function()
       local frames = {}
       assert(api.RegisterPanel("a", {
         title = "A",
-        icon = "x",
         onShow = function(frame)
           frames.a = frame
           api.ShowPanel("b")
@@ -46,7 +44,6 @@ return function()
       }) == true)
       assert(api.RegisterPanel("b", {
         title = "B",
-        icon = "x",
         onShow = function(frame)
           frames.b = frame
         end,
