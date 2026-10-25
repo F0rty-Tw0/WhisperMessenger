@@ -16,6 +16,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Notes that other addons show under a player's name in a chat can now show more detail when you hover them (for example, Craft Alert can show how a request was matched).
 - New setting under Behavior: Allow addon integration. Turn it off to stop other addons (like Craft Alert) from adding pages, previews or notes to Whisper Messenger. Changing it asks to reload the interface.
 - Shift-clicking the messenger button, minimap icon or Broker icon (or choosing Mark all as read) now also clears message previews from other addons, like Craft Alert, and tells them everything was marked read so they can clear their own counts.
+- Other addons (like Craft Alert) can now check, add and remove players on the messenger's block list. Turning off Allow addon integration stops this too.
 - Fixed: hovering an item link in the message preview now shows the item's tooltip.
 - Fixed: a whisper from the chat you had open no longer counts as read while another addon's page or the settings cover it, so its preview and unread number show. Going back to the chat marks it read.
 
