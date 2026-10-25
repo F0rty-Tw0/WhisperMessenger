@@ -23,13 +23,16 @@ local function indexOf(log, entry)
 end
 
 -- opts.showResult: what the stub host's show returns (default true);
--- opts.noHost: build without a panelHost.
+-- opts.noHost: build without a panelHost; opts.onShow(key, env): runs inside
+-- the stub host's show, like a panel's onShow does. env.shown holds the keys
+-- whose frames the stub host has shown and not hidden.
 local function build(opts)
   opts = opts or {}
   local factory = FakeUI.NewFactory()
   local frame = factory.CreateFrame("Frame", "Window", nil)
   local env = {
     log = {},
+    shown = {},
     frame = frame,
     optionsPanel = factory.CreateFrame("Frame", nil, frame),
     contactsPane = factory.CreateFrame("Frame", nil, frame),
@@ -47,10 +50,15 @@ local function build(opts)
     panelHost = {
       show = function(key)
         log[#log + 1] = "show:" .. key
+        env.shown[key] = true
+        if opts.onShow then
+          opts.onShow(key, env)
+        end
         return opts.showResult ~= false
       end,
       hide = function(key)
         log[#log + 1] = "hide:" .. key
+        env.shown[key] = nil
       end,
     }
   end
@@ -156,6 +164,24 @@ local function partA()
     env.v.closeWindow()
     assert(count(env.log, "hide:ca") == 1, "closing the window closes the panel once")
     assert(indexOf(env.log, "hide:ca") < indexOf(env.log, "close"), "panel closes before the window")
+  end
+
+  -- test_a_panel_showing_another_panel_from_its_show_leaves_one_tracked
+  do
+    local env = build({
+      onShow = function(key, e)
+        if key == "a" then
+          e.v.setPanelVisible("b")
+        end
+      end,
+    })
+    assert(env.v.setPanelVisible("a") == true)
+    assert(env.v.getVisiblePanel() == "b", "the panel it moved to is the open one, got " .. tostring(env.v.getVisiblePanel()))
+    assert(env.shown.b == true and env.shown.a == nil, "exactly one panel frame shown")
+    assert(panesHidden(env), "panes stay hidden")
+    assert(env.v.setPanelVisible(nil) == true)
+    assert(next(env.shown) == nil, "closing leaves no panel frame shown")
+    assert(panesShown(env), "panes back")
   end
 
   -- test_host_refusal_changes_nothing

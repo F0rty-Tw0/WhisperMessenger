@@ -30,4 +30,34 @@ return function()
   end)
   PublicApiEnv.Reset()
   assert(ok, err)
+
+  -- test_a_panel_opening_another_from_its_show_leaves_one_tracked_frame
+  do
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local frames = {}
+      assert(api.RegisterPanel("a", {
+        title = "A",
+        icon = "x",
+        onShow = function(frame)
+          frames.a = frame
+          api.ShowPanel("b")
+        end,
+      }) == true)
+      assert(api.RegisterPanel("b", {
+        title = "B",
+        icon = "x",
+        onShow = function(frame)
+          frames.b = frame
+        end,
+      }) == true)
+      assert(api.ShowPanel("a") == true)
+      assert(frames.b:IsShown() and not frames.a:IsShown(), "only the panel it moved to shows")
+      assert(api.IsPanelShown("b") == true and api.IsPanelShown("a") == false, "and it is the tracked one")
+      runtime.window.hidePanel()
+      assert(not frames.b:IsShown() and not frames.a:IsShown(), "closing hides every panel frame")
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
 end

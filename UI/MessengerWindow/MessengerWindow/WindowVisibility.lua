@@ -89,11 +89,19 @@ function WindowVisibility.Create(options)
     if openPanel == key then
       return true
     end
+    -- Tracked before the host runs the panel's onShow: a panel that opens
+    -- another one from there closes this one first, so one stays tracked.
+    openPanel = key
     if not panelHost.show(key) then
+      if openPanel == key then
+        openPanel = nil
+      end
       setPanesAndInsets(true)
       return false
     end
-    openPanel = key
+    if openPanel ~= key then
+      return true
+    end
     setPanesAndInsets(false)
     if onPanelVisibilityChanged then
       onPanelVisibilityChanged(true)
