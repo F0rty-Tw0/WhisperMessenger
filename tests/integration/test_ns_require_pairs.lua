@@ -22,8 +22,8 @@ end
 
 local function shippedFiles()
   local files = {}
-  for line in io.lines("WhisperMessenger.toc") do
-    line = string.gsub(line, "%s+$", "")
+  for rawLine in io.lines("WhisperMessenger.toc") do
+    local line = string.gsub(rawLine, "%s+$", "")
     if line ~= "" and string.sub(line, 1, 2) ~= "##" and string.match(line, "%.lua$") then
       files[#files + 1] = line
     end
