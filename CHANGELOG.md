@@ -20,6 +20,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Other addons (like Craft Alert) can now see which players have unread whispers, so they can highlight those players. Turning off Allow addon integration stops this too.
 - Fixed: hovering an item link in the message preview now shows the item's tooltip.
 - Fixed: a whisper from the chat you had open no longer counts as read while another addon's page or the settings cover it, so its preview and unread number show. Going back to the chat marks it read.
+- Fixed: starting or replying to a whisper (/w, /r, or sending one from chat) while another addon's page or the settings are open in the messenger now shows that chat instead of leaving it hidden behind them. Whispers you receive still leave the page open.
 
 ## [2.1.1] - 2026-10-23
 
