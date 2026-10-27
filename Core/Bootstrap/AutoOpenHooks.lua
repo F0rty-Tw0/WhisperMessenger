@@ -44,6 +44,12 @@ function AutoOpenHooks.Create(deps)
   local function openAndSelect(conversationKey, forceFocus)
     deps.ensureWindow()
     deps.setWindowVisible(true)
+    -- A whisper the user started (send-tell, reply, outgoing) must land on
+    -- screen, so close an addon panel or the options pane covering the chat.
+    -- An incoming whisper leaves them: it must not pull the user off a panel.
+    if forceFocus and deps.uncoverChat then
+      deps.uncoverChat()
+    end
     -- Every openAndSelect caller targets a whisper conversation (reply,
     -- send-tell, outgoing, incoming). When the messenger is currently on
     -- the Groups tab, a whisper would be invisible in the contact list,

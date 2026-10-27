@@ -79,6 +79,17 @@ function AutoOpenCoordinator.Attach(options)
     getActiveConversationKey = function()
       return runtime.activeConversationKey
     end,
+    -- Quiet: the hook selects the whisper's chat itself right after.
+    uncoverChat = function()
+      local window = runtime.window
+      if window and window.hidePanel then
+        window.hidePanel(true)
+      end
+      local coveredByOptions = window and window.isConversationPaneShown and not window.isConversationPaneShown()
+      if coveredByOptions and window.setOptionsVisible then
+        window.setOptionsVisible(false, true)
+      end
+    end,
     setTabMode = function(mode)
       local window = runtime.window
       if window and type(window.setTabMode) == "function" then
