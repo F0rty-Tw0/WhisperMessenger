@@ -8,6 +8,7 @@ local Fonts = ns.ThemeFonts or require("WhisperMessenger.UI.Theme.Fonts")
 local Layout = ns.ThemeLayout or require("WhisperMessenger.UI.Theme.Layout")
 local ThemeTextures = ns.ThemeTextures or require("WhisperMessenger.UI.Theme.Textures")
 local ThemePresets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
+local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
 local Theme = {}
 Theme.DEFAULT_PRESET = ThemePresets.WOW_DEFAULT or "wow_default"
@@ -96,6 +97,12 @@ function Theme.GetPreset()
   return activePresetKey
 end
 
+-- A live preset takes its colors from another addon and is applied again
+-- when they change.
+function Theme.IsLivePreset(presetKey)
+  return ThemePresets.IsLive ~= nil and ThemePresets.IsLive(presetKey) == true
+end
+
 -- Single source for every unread badge's colours (bg, text). Read at paint
 -- time so badges follow live preset switches.
 function Theme.BadgeColors()
@@ -110,6 +117,12 @@ function Theme.SetPreset(presetKey)
 
   applyPresetColors(preset)
   activePresetKey = presetKey
+
+  -- The EllesmereUI preset also brings EllesmereUI's font (under the
+  -- Default font family); every other preset clears it.
+  if Fonts.SetThemeFontPath then
+    Fonts.SetThemeFontPath(presetKey == ThemePresets.ELLESMERE_UI and EllesmereBridge.FontPath() or nil)
+  end
 
   -- Re-apply custom bubble colors if a non-default bubble preset is active
   if BubbleColors and BubbleColors.ApplyPreset then

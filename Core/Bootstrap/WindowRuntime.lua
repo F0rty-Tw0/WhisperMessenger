@@ -39,6 +39,8 @@ local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMess
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
 local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
+local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
+local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
 local WindowRuntime = {}
 
@@ -62,6 +64,11 @@ function WindowRuntime.Create(options)
   local presenceCache = options.presenceCache or PresenceCache
   local fonts = options.fonts or Fonts
   local theme = options.theme or Theme
+  -- Set once the window exists; live theme changes repaint through it.
+  local liveThemeSettingChanged = nil
+  LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
+    return liveThemeSettingChanged
+  end)
 
   local minimapIconRuntimeModule = options.minimapIconRuntime or MinimapIconRuntime
   local markConversationRead = options.markConversationRead
@@ -300,6 +307,7 @@ function WindowRuntime.Create(options)
       applyIconMode = applyIconMode,
       onShareWidgetPositionChanged = onShareWidgetPositionChanged,
     })
+    liveThemeSettingChanged = onSettingChanged
 
     local windowOptions = {
       contacts = contacts,

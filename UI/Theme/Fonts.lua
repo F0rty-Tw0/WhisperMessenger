@@ -94,6 +94,8 @@ local currentFontSize = DEFAULT_BASE_SIZE
 local currentOutline = "NONE"
 local currentFontColor = "default"
 local currentLanguage = "auto"
+-- Font the theme preset brings (EllesmereUI's); used under the Default family.
+local themeFontPath = nil
 
 local function sharedMedia()
   local libStub = _G and _G.LibStub
@@ -195,6 +197,7 @@ local function applyFonts()
   local flags = resolveOutlineFlags(currentOutline)
   local CreateFont = _G.CreateFont
   local inheritedSource = resolveInheritedSourceFontObject()
+  local fontPath = currentFontPath or themeFontPath
 
   for _, def in ipairs(FONT_DEFS) do
     local wmName, gameFont, sizeOffset, hasShadow = def[1], def[2], def[3], def[4]
@@ -211,8 +214,8 @@ local function applyFonts()
       -- and we'd be back to squares (CJK) or frozen-size fallback glyphs
       -- (Cyrillic on a non-Russian client).
       fontObj:SetFontObject(inheritedSource)
-    elseif currentFontPath then
-      fontObj:SetFont(currentFontPath, size, flags)
+    elseif fontPath then
+      fontObj:SetFont(fontPath, size, flags)
     else
       local source = _G[gameFont]
       if source then
@@ -256,6 +259,18 @@ end
 
 function Fonts.GetMode()
   return currentMode
+end
+
+-- A chosen font family still wins; nil drops the theme's font.
+function Fonts.SetThemeFontPath(path)
+  if type(path) ~= "string" or path == "" then
+    path = nil
+  end
+  if path == themeFontPath then
+    return
+  end
+  themeFontPath = path
+  applyFonts()
 end
 
 function Fonts.ListFontFamilies()

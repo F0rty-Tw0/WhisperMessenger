@@ -18,6 +18,7 @@
 ## Version: v2.1.1
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
+## OptionalDeps: EllesmereUI
 ## X-Curse-Project-ID: 1494311
 ## X-Wago-ID: jK8gze6y
 
@@ -136,6 +137,8 @@ UI/Theme/Presets/Data/ElvuiDark.lua
 UI/Theme/Presets/Data/PlumberWarm.lua
 UI/Theme/Presets/Data/JadeDark.lua
 UI/Theme/Presets/Data/WowNative.lua
+UI/Theme/EllesmereBridge.lua
+UI/Theme/Presets/Data/EllesmereUI.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
@@ -438,6 +441,7 @@ Core/PublicApi/Guards.lua
 Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
+Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
 Core/SlashCommands/ReplyToLast.lua

@@ -1,0 +1,94 @@
+local addonName, ns = ...
+if type(ns) ~= "table" then
+  ns = {}
+end
+
+local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
+local rgb = Builder.Rgb
+local withAlpha = Builder.WithAlpha
+local makeDividerRoles = Builder.MakeDividerRoles
+
+-- EllesmereUI's look, built live from its accent and panel colors (see
+-- EllesmereBridge). The defaults are EllesmereUI's own: jade on charcoal.
+local DEFAULT_ACCENT = rgb(0.047, 0.824, 0.616)
+local DEFAULT_PANEL = { 0.067, 0.067, 0.067, 0.94 }
+
+local textSecondaryRgb = rgb(1.0, 1.0, 1.0)
+
+local function clamp(v)
+  return math.max(0, math.min(1, v))
+end
+
+-- The panel color raised by `step` on every channel, at `alpha`.
+local function lift(panel, step, alpha)
+  return { clamp(panel[1] + step), clamp(panel[2] + step), clamp(panel[3] + step), alpha }
+end
+
+-- `amount` of the accent mixed into the panel color.
+local function tint(panel, accent, amount, alpha)
+  local function mix(i)
+    return clamp(panel[i] + (accent[i] - panel[i]) * amount)
+  end
+  return { mix(1), mix(2), mix(3), alpha }
+end
+
+local function buildRoles(accentColor, panelColor)
+  local accent = accentColor or DEFAULT_ACCENT
+  local panel = panelColor or DEFAULT_PANEL
+  local accentRgb = rgb(accent[1], accent[2], accent[3])
+
+  local roles = {
+    surface_primary = { panel[1], panel[2], panel[3], panel[4] or 1 },
+    surface_secondary = lift(panel, 0.023, 0.82),
+    surface_chrome = lift(panel, 0.008, 0.92),
+    contact_hover = { 1.0, 1.0, 1.0, 0.05 },
+    contact_selected = withAlpha(accentRgb, 0.14),
+    contact_selected_hover = withAlpha(accentRgb, 0.20),
+    -- Pinned reads through ordering and the hover pin, not a colour.
+    contact_pinned = withAlpha(accentRgb, 0.05),
+    bubble_in = lift(panel, 0.073, 0.95),
+    bubble_out = tint(lift(panel, 0.023, 1), accentRgb, 0.18, 0.90),
+    bubble_system = lift(panel, 0.033, 0.78),
+    input_bg = lift(panel, 0.033, 1.0),
+    text_primary = { 0.96, 0.96, 0.96, 1.0 },
+    text_soft = { 0.84, 0.86, 0.86, 1.0 },
+    text_secondary = withAlpha(textSecondaryRgb, 0.55),
+    text_emphasis = { 0.99, 1.0, 0.99, 1.0 },
+    text_system = { 0.78, 0.82, 0.80, 1.0 },
+    text_timestamp = { 1.0, 1.0, 1.0, 0.40 },
+    accent = withAlpha(accentRgb, 1.0),
+    toggle_on = withAlpha(accentRgb, 1.0),
+    button_fill_hover = withAlpha(accentRgb, 1.0),
+    status_online = { 0.30, 0.82, 0.40, 1.0 },
+    status_offline = { 0.45, 0.45, 0.45, 1.0 },
+    status_away = { 0.90, 0.72, 0.20, 1.0 },
+    status_dnd = { 0.85, 0.25, 0.25, 1.0 },
+    scrollbar = { 1.0, 1.0, 1.0, 0.14 },
+    scrollbar_hover = { 1.0, 1.0, 1.0, 0.32 },
+    option_bg = lift(panel, 0.023, 0.92),
+    toggle_off = lift(panel, 0.133, 0.96),
+    composer_pane_border = { 1.0, 1.0, 1.0, 0.08 },
+    window_border = { 1.0, 1.0, 1.0, 0.10 },
+    danger_bg = { 0.45, 0.12, 0.12, 0.80 },
+    danger_hover = { 0.55, 0.16, 0.16, 0.90 },
+    action_icon = withAlpha(textSecondaryRgb, 0.45),
+    toggle_icon_bg = lift(panel, 0.033, 1.0),
+    toggle_icon_ring = withAlpha(accentRgb, 0.55),
+    toggle_icon_glyph = { 0.96, 0.96, 0.96, 1.0 },
+  }
+
+  -- White-plus-alpha hairlines read as neutral on any surface tone.
+  local dividers = makeDividerRoles(rgb(1.0, 1.0, 1.0), 0.08, 0.10, rgb(1.0, 1.0, 1.0), 0.16)
+  for k, v in pairs(dividers) do
+    roles[k] = v
+  end
+
+  -- Text on fills (sent bubbles, selected buttons) matches the emphasis colour.
+  roles.text_bright = roles.text_emphasis
+  return roles
+end
+
+local data = { key = "ellesmere_ui", roles = buildRoles(), BuildRoles = buildRoles }
+
+ns.ThemePresetDataEllesmereUI = data
+return data
