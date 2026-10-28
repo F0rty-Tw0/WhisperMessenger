@@ -50,9 +50,11 @@ local function factoryIgnoringTemplate(created)
   return factory
 end
 
+-- The preset's colour, always opaque like the game's own tooltips: a see-through
+-- fill lets bright ground wash out class-coloured names and item links.
 local function expectedFill()
   local c = Theme.COLORS.bg_secondary or Theme.COLORS.bg_primary
-  return { c[1], c[2], c[3], c[4] or 1 }
+  return { c[1], c[2], c[3], 1 }
 end
 
 local function sameColor(a, b)
@@ -114,6 +116,7 @@ return function()
       local before = icon.previewFrame.backdropColor
       Theme.SetPreset("wow_native")
       icon.refreshTheme()
+      assert(Theme.COLORS.bg_secondary[4] < 1, "wow_native's preview colour is see-through, so the opaque fill is tested")
       assert(sameColor(icon.previewFrame.backdropColor, expectedFill()), "classic: fill repaints after a preset change")
       assert(not sameColor(icon.previewFrame.backdropColor, before), "classic: the two presets differ, so the fill really changed")
     end)

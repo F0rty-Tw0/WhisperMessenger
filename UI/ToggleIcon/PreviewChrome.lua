@@ -7,26 +7,31 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 -- The message preview's frame and border. Under the Native WoW HUD it wears
--- the game's tooltip border (art only: the colour presets still tint its fill);
--- otherwise (or when this client lacks the template) a plain frame with WM's
--- rounded background.
+-- the game's tooltip border (art only: the colour presets still tint its fill,
+-- opaque as the game's tooltips are); otherwise (or when this client lacks the
+-- template) a plain frame with WM's rounded background.
 local PreviewChrome = {}
 
 local TOOLTIP_TEMPLATE = "TooltipBackdropTemplate"
 local CORNER_RADIUS = 4
+-- The template's own fill alpha (Blizzard_SharedXML/SharedTooltipTemplates.lua:232,
+-- backdropColorAlpha or 1). A preset's see-through alpha let bright ground wash out
+-- class-coloured names and item links.
+local TOOLTIP_FILL_ALPHA = 1
 
 -- A client without the template may log and return a plain frame instead of throwing.
 local function hasTooltipParts(frame)
   return frame.NineSlice ~= nil or frame.SetBackdropColor ~= nil
 end
 
--- Same setColor shape as the rounded background, painting the tooltip's fill.
+-- Same setColor shape as the rounded background, painting the tooltip's fill
+-- in the colour's RGB at the tooltip's alpha.
 local function tooltipFill(frame)
   local function setColor(color)
     if not color then
       return
     end
-    local r, g, b, a = color[1], color[2], color[3], color[4] or 1
+    local r, g, b, a = color[1], color[2], color[3], TOOLTIP_FILL_ALPHA
     if frame.SetBackdropColor then
       frame:SetBackdropColor(r, g, b, a)
     elseif frame.NineSlice and frame.NineSlice.SetCenterColor then
