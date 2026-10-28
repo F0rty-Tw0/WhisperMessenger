@@ -6,7 +6,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New EllesmereUI theme preset, shown when EllesmereUI is installed: the messenger takes on your EllesmereUI accent color, panel color and font, and follows along when you change them. Picking it with the Native WoW HUD on offers to turn the HUD off, since the HUD's frame hides most of the theme. With it, the messenger button is a flat square with a sharp new icon whose back bubble takes your accent color, and the minimap button uses the same icon without its extra ring.
+- New EllesmereUI theme preset, shown when EllesmereUI is installed: the messenger takes on your EllesmereUI accent color, panel color and font, and follows along when you change them. Picking it with the Native WoW HUD on offers to turn the HUD off, since the HUD's frame hides most of the theme. With it, the messenger button is a flat square with a sharp new icon whose back bubble takes your accent color, and the minimap button uses the same icon without its extra ring. When idle, only the colored bubble turns gray. A new Icons setting, Square button background, hides the square to show just the two bubbles. Hovering brightens the colored bubble, with an accent glow around the icon when the square is hidden.
 - Other addons can now show their alerts on the messenger's widget and open a chat with a player. They can also add their own page to the messenger window, opened from a tab next to Whispers, Groups and Channels.
 - The buttons along the top of the messenger window are larger and easier to hit.
 - With the Native WoW HUD on, the message preview next to the messenger button now uses the game's tooltip border.

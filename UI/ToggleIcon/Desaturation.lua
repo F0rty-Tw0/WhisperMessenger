@@ -14,6 +14,9 @@ function Desaturation.Create(deps)
   local resolveColors = deps.resolveColors
   local getIconDesaturated = deps.getIconDesaturated
   local applyVertexColor = deps.applyVertexColor
+  -- keepColors(): true while the look grays out only its accent bubble
+  -- (square look), so these textures keep their colors.
+  local keepColors = deps.keepColors
 
   local lastUnreadCount = 0
   -- Snapshot original colors. Re-read on every theme refresh so preset
@@ -28,10 +31,14 @@ function Desaturation.Create(deps)
     return getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
   end
 
+  -- True while these textures are painted gray (idle and not keepColors).
+  local function paintsGrey()
+    return isActive() and not (keepColors and keepColors())
+  end
+
   local function update(unreadCount)
     lastUnreadCount = tonumber(unreadCount) or 0
-    local desaturateEnabled = getIconDesaturated and getIconDesaturated()
-    local shouldDesaturate = desaturateEnabled and lastUnreadCount == 0
+    local shouldDesaturate = paintsGrey()
 
     for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
       if tex.SetDesaturated then
@@ -64,6 +71,7 @@ function Desaturation.Create(deps)
     update = update,
     refresh = refresh,
     isActive = isActive,
+    paintsGrey = paintsGrey,
     refreshOriginalColors = refreshOriginalColors,
     DESAT_BG = DESAT_BG,
   }

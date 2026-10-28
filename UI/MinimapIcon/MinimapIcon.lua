@@ -191,6 +191,7 @@ function MinimapIcon.Create(factory, options)
     },
     getIconDesaturated = options.getIconDesaturated,
     applyVertexColor = applyVertexColor,
+    keepColors = Theme.UsesSquareWidget,
   })
 
   -- count is the number shown; pulseCount (default count) starts the glow.

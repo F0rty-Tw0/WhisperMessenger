@@ -7,6 +7,7 @@ local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local function sameColor(a, b)
   return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
@@ -68,6 +69,103 @@ return function()
     icon.setUnreadCount(2)
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent again with unread whispers")
   end)
+
+  -- test_desaturating_leaves_the_white_bubble_and_background_alone
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
+    icon.setUnreadCount(0)
+    assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "white bubble keeps its color")
+    assert(icon.label.desaturated ~= true, "white bubble not desaturated")
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "background keeps its color")
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "background keeps its color after a hover")
+  end)
+
+  -- test_round_look_still_desaturates_everything
+  do
+    Theme.SetPreset("wow_default")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
+    icon.setUnreadCount(0)
+    assert(icon.label.desaturated == true, "round glyph still grays out")
+  end
+
+  -- test_background_option_hides_the_square
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local showBackground = false
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return showBackground
+      end,
+    })
+    assert(icon.background.shown == false, "no fill")
+    assert(edgesShown(icon.squareEdges, false), "no edge")
+    assert(icon.accentGlyph.shown == true and icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "both bubbles still shown")
+    showBackground = true
+    icon.refreshTheme()
+    assert(icon.background.shown == true and edgesShown(icon.squareEdges, true), "square back when turned on")
+  end)
+
+  -- test_hover_only_brightens_the_accent_bubble
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "square keeps its color on hover")
+    assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "white bubble keeps its color on hover")
+    assert(not sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent bubble changes on hover")
+    assert(icon.hoverGlow.shown ~= true, "no glow while the square shows")
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent bubble back after hover")
+  end)
+
+  -- test_hover_glows_in_the_accent_without_the_square
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return false
+      end,
+    })
+    assert(icon.hoverGlow.shown ~= true, "no glow before hover")
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.hoverGlow.shown == true, "glow on hover")
+    local accent = Theme.COLORS.accent
+    local glow = icon.hoverGlow.vertexColor
+    assert(glow[1] == accent[1] and glow[2] == accent[2] and glow[3] == accent[3], "glow in the accent color")
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(icon.hoverGlow.shown == false, "glow gone after hover")
+  end)
+
+  -- test_background_option_change_repaints_the_widget
+  do
+    local refreshed = 0
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = { store = { config = {} } },
+      accountSettings = accountSettings,
+      getIcon = function()
+        return {
+          refreshTheme = function()
+            refreshed = refreshed + 1
+          end,
+        }
+      end,
+    })
+    onChange("iconBackground", false)
+    assert(accountSettings.iconBackground == false, "saved")
+    assert(refreshed == 1, "widget repainted, got " .. refreshed)
+  end
 
   -- test_other_presets_keep_the_round_widget
   do

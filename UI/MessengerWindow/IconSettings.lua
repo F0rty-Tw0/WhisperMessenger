@@ -18,6 +18,7 @@ local DEFAULTS = {
   showUnreadBadge = true,
   iconSize = 42,
   iconDesaturated = true,
+  iconBackground = true,
   lockToggleIcon = false,
   shareWidgetPosition = false,
   widgetTransparency = 0,
@@ -118,6 +119,27 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  -- Only the EllesmereUI theme's square widget has a background to hide.
+  local iconBackgroundToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Square button background"),
+      config.iconBackground ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("iconBackground", value)
+      end,
+      {
+        text("Square button background"),
+        text("With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."),
+      }
+    ),
+    { type = "toggle", key = "iconBackground", default = DEFAULTS.iconBackground }
+  )
+  iconBackgroundToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local initialWidgetTransparency = tonumber(config.widgetTransparency)
   if initialWidgetTransparency == nil then
     initialWidgetTransparency = DEFAULTS.widgetTransparency
@@ -140,7 +162,7 @@ function IconSettings.Create(factory, parent, config, options)
     }),
     { type = "slider", key = "widgetTransparency", default = DEFAULTS.widgetTransparency }
   )
-  widgetTransparencyRow.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  widgetTransparencyRow.row:SetPoint("TOPLEFT", iconBackgroundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local lockToggleIconToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Lock icon position"), config.lockToggleIcon == true, toggleColors, toggleLayout, function(value)
@@ -319,6 +341,7 @@ function IconSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure icon and widget settings."))
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    iconBackgroundToggle.label:SetText(text("Square button background"))
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
     shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))

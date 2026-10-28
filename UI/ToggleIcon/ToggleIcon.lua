@@ -98,6 +98,7 @@ function ToggleIcon.Create(factory, options)
     glyph = chatIcon,
     roundBackground = CIRCLE_TEX,
     roundGlyph = ADDON_ICON_TEXTURE,
+    getShowBackground = options.getIconBackground,
   })
 
   -- Glow pulse for unread messages (CraftScan-style looping animation)
@@ -226,6 +227,7 @@ function ToggleIcon.Create(factory, options)
     },
     getIconDesaturated = getIconDesaturated,
     applyVertexColor = applyVertexColor,
+    keepColors = Theme.UsesSquareWidget,
   })
 
   -- count is the number shown; pulseCount (default count) starts the glow.
@@ -253,7 +255,9 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = true
       syncLockGlyphVisibility()
       refreshTransparency()
-      if not desaturation.isActive() then
+      if squareLook.isSquare() then
+        squareLook.setHover(true)
+      elseif not desaturation.paintsGrey() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
         applyVertexColor(chatIcon, HOVER_ICON_COLOR)
       end
@@ -279,7 +283,8 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      local isDesat = desaturation.isActive()
+      squareLook.setHover(false)
+      local isDesat = desaturation.paintsGrey()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if not isDesat then
         applyVertexColor(chatIcon, resolveGlyphColor())
@@ -347,6 +352,7 @@ function ToggleIcon.Create(factory, options)
     border = border,
     squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
+    hoverGlow = squareLook.hoverGlow,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,

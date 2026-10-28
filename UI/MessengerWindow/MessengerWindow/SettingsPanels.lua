@@ -183,6 +183,7 @@ function SettingsPanels.Create(factory, options)
         showUnreadBadge = settingsConfig.showUnreadBadge,
         iconSize = settingsConfig.iconSize,
         iconDesaturated = settingsConfig.iconDesaturated,
+        iconBackground = settingsConfig.iconBackground,
         lockToggleIcon = settingsConfig.lockToggleIcon,
         shareWidgetPosition = settingsConfig.shareWidgetPosition,
         widgetTransparency = settingsConfig.widgetTransparency,
