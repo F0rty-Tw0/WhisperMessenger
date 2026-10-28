@@ -19,6 +19,10 @@ local PreviewMetrics = {
   DISMISS_INSET = 6,
   SENDER_TOP_OFFSET = -11,
   MESSAGE_GAP = -3,
+  -- Optional third line (an addon preview's detail) under the message line.
+  DETAIL_GAP = -3,
+  -- What the detail line adds to HEIGHT: its gap plus one 12px message-font line.
+  DETAIL_ROW_HEIGHT = 15,
   -- Clear space under the message line; keeps the link off the ~5px HUD tooltip border.
   BOTTOM_ROOM = 14,
 }
@@ -53,8 +57,9 @@ local function stringWidthOf(fontString)
   return measureOf(fontString, "GetStringWidth")
 end
 
--- Tall enough for both lines at the player's Font Size, never below HEIGHT.
-local function fitHeight(previewFrame, senderLabel, messageLabel)
+-- Tall enough for every line at the player's Font Size, never below HEIGHT
+-- (plus DETAIL_ROW_HEIGHT when the detail line shows).
+local function fitHeight(previewFrame, senderLabel, messageLabel, detailLabel)
   if not previewFrame.SetHeight then
     return
   end
@@ -63,32 +68,37 @@ local function fitHeight(previewFrame, senderLabel, messageLabel)
     - M.MESSAGE_GAP
     + measureOf(messageLabel, "GetStringHeight")
     + M.BOTTOM_ROOM
-  previewFrame:SetHeight(needed > M.HEIGHT and needed or M.HEIGHT)
+  local floor = M.HEIGHT
+  if detailLabel then
+    needed = needed - M.DETAIL_GAP + measureOf(detailLabel, "GetStringHeight")
+    floor = floor + M.DETAIL_ROW_HEIGHT
+  end
+  previewFrame:SetHeight(needed > floor and needed or floor)
 end
 
-function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel)
+-- Gives the label its width budget; returns its text width, capped at that budget.
+local function cappedWidthOf(label, budget)
+  if label.SetWidth then
+    label:SetWidth(budget)
+  end
+  local width = stringWidthOf(label)
+  return width > budget and budget or width
+end
+
+-- detailLabel: pass it only while the detail line shows.
+function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel, detailLabel)
   local textLeft = M.LEFT_PAD + M.CLASS_ICON_SIZE + M.ICON_GAP
   local maxMessageBudget = M.MAX_WIDTH - textLeft - M.RIGHT_PAD
   local maxSenderBudget = maxMessageBudget - M.DISMISS_GAP - M.DISMISS_SIZE
 
-  if senderLabel.SetWidth then
-    senderLabel:SetWidth(maxSenderBudget)
-  end
-  if messageLabel.SetWidth then
-    messageLabel:SetWidth(maxMessageBudget)
-  end
-
-  local senderWidth = stringWidthOf(senderLabel)
-  local messageWidth = stringWidthOf(messageLabel)
-  if senderWidth > maxSenderBudget then
-    senderWidth = maxSenderBudget
-  end
-  if messageWidth > maxMessageBudget then
-    messageWidth = maxMessageBudget
-  end
-
+  local senderWidth = cappedWidthOf(senderLabel, maxSenderBudget)
+  local messageWidth = cappedWidthOf(messageLabel, maxMessageBudget)
   local senderFootprint = senderWidth + M.DISMISS_GAP + M.DISMISS_SIZE
   local contentWidth = senderFootprint > messageWidth and senderFootprint or messageWidth
+  local detailWidth = detailLabel and cappedWidthOf(detailLabel, maxMessageBudget) or 0
+  if detailWidth > contentWidth then
+    contentWidth = detailWidth
+  end
   local total = textLeft + contentWidth + M.RIGHT_PAD
   if total < M.MIN_WIDTH then
     total = M.MIN_WIDTH
@@ -96,7 +106,7 @@ function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel)
     total = M.MAX_WIDTH
   end
   previewFrame:SetWidth(total)
-  fitHeight(previewFrame, senderLabel, messageLabel)
+  fitHeight(previewFrame, senderLabel, messageLabel, detailLabel)
 end
 
 ns.ToggleIconPreviewMetrics = PreviewMetrics

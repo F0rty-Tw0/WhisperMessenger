@@ -340,6 +340,7 @@ function ToggleIcon.Create(factory, options)
     previewFrame = previewFrame,
     previewSenderLabel = previewSenderLabel,
     previewMessageLabel = previewMessageLabel,
+    previewDetailLabel = incomingPreview.detailLabel,
     previewDismissButton = previewDismissButton,
     previewDismissLabel = previewDismissLabel,
     previewClassIcon = previewClassIcon,

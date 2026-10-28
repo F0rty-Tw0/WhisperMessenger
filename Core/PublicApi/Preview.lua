@@ -12,6 +12,8 @@ local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Pa
 -- until the player opens the owner's panel (the panel registered under the
 -- same key as sourceKey). Every ShowPreview arms it again, unless that panel
 -- is showing at that moment.
+-- preview.detail (optional string): a third line under the text; empty or
+-- missing keeps the two-line preview.
 local Preview = {}
 
 -- Same answer as api.IsPanelShown (false on any error), read off the module
@@ -27,6 +29,7 @@ local function isValidPreview(preview)
     and Guards.IsNonEmptyString(preview.sender)
     and Guards.IsNonEmptyString(preview.text)
     and isOptional(preview.classTag, "string")
+    and isOptional(preview.detail, "string")
     and isOptional(preview.onClick, "function")
     and isOptional(preview.onDismiss, "function")
     and isOptional(preview.onShown, "function")

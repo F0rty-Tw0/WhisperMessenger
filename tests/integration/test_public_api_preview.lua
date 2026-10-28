@@ -49,7 +49,20 @@ return function()
     assert(ok, err)
   end
 
+  local function test_detail_reaches_the_widget_third_row()
+    local runtime, api = PublicApiEnv.Initialize({})
+    local ok, err = pcall(function()
+      local detail = "Your alt Artio can craft it"
+      assert(api.ShowPreview("ca", { sender = "Crafter", text = "Needs Belt", detail = detail }) == true)
+      local label = runtime.icon.previewDetailLabel
+      assert(label ~= nil and label:IsShown() == true and label:GetText() == detail, "the widget shows the detail row")
+    end)
+    PublicApiEnv.Reset()
+    assert(ok, err)
+  end
+
   test_right_click_dismisses_external_without_acknowledging()
+  test_detail_reaches_the_widget_third_row()
   test_previews_turned_off_refuse_show()
   test_turning_previews_off_drops_the_external_preview()
 end
