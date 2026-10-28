@@ -83,6 +83,17 @@ return function()
     assert(p.frame:GetHeight() - textBottom >= PreviewMetrics.BOTTOM_ROOM, "room under the detail line")
   end
 
+  -- At the largest Font Size (sender 21pt, message and detail 17pt) the lines outgrow the
+  -- floor, so the frame grows to the measured detail line plus the room below it.
+  local function test_detail_row_fits_at_the_largest_font_size()
+    local p = build()
+    p.senderLabel.lineHeight, p.messageLabel.lineHeight, p.detailLabel.lineHeight = 21, 17, 17
+    p.setExternalPreview(entry(DETAIL))
+    local textBottom = -PreviewMetrics.SENDER_TOP_OFFSET + 21 - PreviewMetrics.MESSAGE_GAP + 17 - PreviewMetrics.DETAIL_GAP + 17
+    local height = p.frame:GetHeight()
+    assert(height == textBottom + PreviewMetrics.BOTTOM_ROOM, "fits the measured detail line, got " .. tostring(height))
+  end
+
   local function test_external_without_detail_keeps_the_two_row_height()
     local p = build()
     p.setExternalPreview(entry(nil))
@@ -139,6 +150,7 @@ return function()
   test_external_detail_shows_a_third_row()
   test_external_detail_grows_the_frame_by_one_row()
   test_detail_row_fits_with_room_below()
+  test_detail_row_fits_at_the_largest_font_size()
   test_external_without_detail_keeps_the_two_row_height()
   test_empty_detail_keeps_the_two_row_height()
   test_class_icon_stays_vertically_centred_with_detail()
