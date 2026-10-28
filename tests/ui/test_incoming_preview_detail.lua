@@ -83,15 +83,16 @@ return function()
     assert(p.frame:GetHeight() - textBottom >= PreviewMetrics.BOTTOM_ROOM, "room under the detail line")
   end
 
-  -- At the largest Font Size (sender 21pt, message and detail 17pt) the lines outgrow the
-  -- floor, so the frame grows to the measured detail line plus the room below it.
+  -- At the largest Font Size the lines outgrow the floor, so the frame grows to the measured
+  -- detail line plus the room below it: 11 top + 21 sender + 3 gap + 17 message + 3 gap +
+  -- 18 detail + 14 room = 87. The detail line is 1 px taller than the message line, so
+  -- measuring the wrong label shows.
   local function test_detail_row_fits_at_the_largest_font_size()
     local p = build()
-    p.senderLabel.lineHeight, p.messageLabel.lineHeight, p.detailLabel.lineHeight = 21, 17, 17
+    p.senderLabel.lineHeight, p.messageLabel.lineHeight, p.detailLabel.lineHeight = 21, 17, 18
     p.setExternalPreview(entry(DETAIL))
-    local textBottom = -PreviewMetrics.SENDER_TOP_OFFSET + 21 - PreviewMetrics.MESSAGE_GAP + 17 - PreviewMetrics.DETAIL_GAP + 17
     local height = p.frame:GetHeight()
-    assert(height == textBottom + PreviewMetrics.BOTTOM_ROOM, "fits the measured detail line, got " .. tostring(height))
+    assert(height == 87, "fits the measured detail line, got " .. tostring(height))
   end
 
   local function test_external_without_detail_keeps_the_two_row_height()
