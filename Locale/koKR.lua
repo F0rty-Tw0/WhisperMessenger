@@ -260,6 +260,7 @@ local Korean = {
   ["Left group"] = "그룹 떠남",
   ["Zone: %s"] = "지역: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "새 기본 WoW 인터페이스 스타일을 적용하려면 지금 인터페이스를 다시 불러올까요?",
+  ["The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"] = "EllesmereUI 테마는 기본 WoW HUD를 끈 상태에서 가장 잘 보입니다. 지금 끄고 인터페이스를 다시 불러올까요?",
   ["Reload the interface now to apply the addon integration change?"] = "애드온 연동 변경 사항을 적용하려면 지금 인터페이스를 다시 불러올까요?",
   -- Classes
   ["Warrior"] = "전사",

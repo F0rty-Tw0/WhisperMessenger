@@ -260,6 +260,7 @@ local Russian = {
   ["Left group"] = "Покинул группу",
   ["Zone: %s"] = "Зона: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Перезагрузить интерфейс сейчас, чтобы применить новый стиль стандартного интерфейса WoW?",
+  ["The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"] = "Тема EllesmereUI лучше всего смотрится с выключенным родным интерфейсом WoW. Выключить его и перезагрузить интерфейс сейчас?",
   ["Reload the interface now to apply the addon integration change?"] = "Перезагрузить интерфейс сейчас, чтобы применить изменение интеграции аддонов?",
   -- Classes
   ["Warrior"] = "Воин",

@@ -260,6 +260,7 @@ local Portuguese = {
   ["Left group"] = "Saiu do grupo",
   ["Zone: %s"] = "Zona: %s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Recarregar a interface agora para aplicar o novo estilo de interface nativa do WoW?",
+  ["The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"] = "O tema EllesmereUI fica melhor com o HUD nativo do WoW desligado. Desligar e recarregar a interface agora?",
   ["Reload the interface now to apply the addon integration change?"] = "Recarregar a interface agora para aplicar a mudança na integração com addons?",
   -- Classes
   ["Warrior"] = "Guerreiro",

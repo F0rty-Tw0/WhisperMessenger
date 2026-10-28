@@ -80,6 +80,7 @@ function SettingsHandler.Create(options)
       persistedValue = windowScale.Normalize(value)
     end
     local themeApplied = false
+    local previousPreset = accountSettings.themePreset
 
     if key == "themePreset" then
       local fallbackKey = theme.DEFAULT_PRESET or "wow_default"
@@ -244,6 +245,12 @@ function SettingsHandler.Create(options)
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end
+      HudStyleSetting.OfferOffFor(accountSettings, previousPreset, persistedValue, function(style)
+        local appearance = runtime.window and runtime.window.appearanceSettings
+        if appearance and appearance.setHudStyle then
+          appearance.setHudStyle(style)
+        end
+      end)
     end
 
     local icon = getIcon()

@@ -260,6 +260,7 @@ local SimplifiedChinese = {
   ["Left group"] = "离开队伍",
   ["Zone: %s"] = "区域：%s",
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "现在重新加载界面以应用新的原生WoW界面样式吗？",
+  ["The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"] = "EllesmereUI 主题在关闭原生 WoW HUD 时效果最佳。现在关闭并重新加载界面吗？",
   ["Reload the interface now to apply the addon integration change?"] = "现在重新加载界面以应用插件集成的更改吗？",
   -- Classes
   ["Warrior"] = "战士",
