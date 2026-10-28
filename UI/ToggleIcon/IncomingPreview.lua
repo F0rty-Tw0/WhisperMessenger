@@ -11,6 +11,7 @@ local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.
 local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
 local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI.ToggleIcon.PreviewChrome")
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
+local PreviewDetailRow = ns.ToggleIconPreviewDetailRow or require("WhisperMessenger.UI.ToggleIcon.PreviewDetailRow")
 local applyClassColor = UIHelpers.applyClassColor
 local applyVertexColor = UIHelpers.applyVertexColor
 local setFontObject = UIHelpers.setFontObject
@@ -97,6 +98,7 @@ function IncomingPreview.Create(factory, frame, options)
   setFontObject(previewMessageLabel, theme.FONTS.message_text)
   previewMessageLabel:SetPoint("TOPLEFT", previewSenderLabel, "BOTTOMLEFT", 0, PreviewMetrics.MESSAGE_GAP)
   PreviewChrome.SingleLine(previewMessageLabel)
+  local detailRow = PreviewDetailRow.Create(previewFrame, previewMessageLabel, theme.FONTS.message_text)
   previewFrame:Hide()
 
   local autoDismiss
@@ -119,6 +121,7 @@ function IncomingPreview.Create(factory, frame, options)
     externalEntry = nil
     previewSenderLabel:SetText("")
     previewMessageLabel:SetText("")
+    detailRow.render(nil)
     previewClassIcon:SetTexture(nil)
     previewClassIconFrame:Hide()
     previewFrame:Hide()
@@ -191,10 +194,11 @@ function IncomingPreview.Create(factory, frame, options)
     applyClassColor(previewSenderLabel, classTag, theme.COLORS.text_primary)
   end
 
-  local function renderContent(senderName, messageText, classTag)
+  local function renderContent(senderName, messageText, classTag, detail)
     previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
     paintSenderLabel(classTag)
     previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
+    detailRow.render(detail)
 
     local classIconPath = theme.ClassIcon(classTag)
     if classIconPath then
@@ -208,7 +212,7 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function fitWidth()
-    PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel)
+    PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel, detailRow.shownLabel())
   end
 
   local function setIncomingPreview(senderName, messageText, classTag)
@@ -249,7 +253,7 @@ function IncomingPreview.Create(factory, frame, options)
     autoDismiss.cancel()
     lastPreviewSenderName, lastPreviewMessageText, lastPreviewClassTag = nil, nil, nil
     externalEntry = entry
-    renderContent(entry.sender, entry.text, entry.classTag)
+    renderContent(entry.sender, entry.text, entry.classTag, entry.detail)
     fitWidth()
     if previewFrame:IsVisible() then
       entry.onShown()
@@ -270,6 +274,7 @@ function IncomingPreview.Create(factory, frame, options)
     end
     paintSenderLabel(externalEntry and externalEntry.classTag or lastPreviewClassTag)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
+    setTextColor(detailRow.label, theme.COLORS.text_secondary)
     setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
   end
 
@@ -277,6 +282,7 @@ function IncomingPreview.Create(factory, frame, options)
     frame = previewFrame,
     senderLabel = previewSenderLabel,
     messageLabel = previewMessageLabel,
+    detailLabel = detailRow.label,
     dismissButton = previewDismissButton,
     dismissLabel = previewDismissLabel,
     classIcon = previewClassIcon,

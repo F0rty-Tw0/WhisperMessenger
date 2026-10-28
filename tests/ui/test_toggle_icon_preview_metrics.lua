@@ -38,4 +38,28 @@ return function()
   M.ResizeToContent(narrow, label(1), label(1))
   assert(narrow.w >= M.MIN_WIDTH, "tiny text keeps at least the minimum width, got " .. tostring(narrow.w))
   assert(narrow.w < M.MAX_WIDTH, "tiny text stays narrower than the maximum, got " .. tostring(narrow.w))
+
+  -- test_a_long_detail_line_widens_the_frame
+  local withDetail = frame()
+  M.ResizeToContent(withDetail, label(1), label(1), label(500))
+  assert(withDetail.w == M.MAX_WIDTH, "a long detail line widens the frame, got " .. tostring(withDetail.w))
+
+  -- test_detail_label_gets_the_message_budget
+  local budget
+  local detail = label(1)
+  detail.SetWidth = function(_self, w)
+    budget = w
+  end
+  M.ResizeToContent(frame(), label(1), label(1), detail)
+  assert(budget == M.MAX_WIDTH - M.LEFT_PAD - M.CLASS_ICON_SIZE - M.ICON_GAP - M.RIGHT_PAD, "detail gets the message budget")
+
+  -- test_unmeasurable_detail_still_adds_one_row
+  local tall = frame()
+  tall.SetHeight = function(self, h)
+    self.h = h
+  end
+  M.ResizeToContent(tall, label(1), label(1))
+  assert(tall.h == M.HEIGHT, "two rows floor at HEIGHT, got " .. tostring(tall.h))
+  M.ResizeToContent(tall, label(1), label(1), label(1))
+  assert(tall.h == M.HEIGHT + M.DETAIL_ROW_HEIGHT, "the detail row adds one row, got " .. tostring(tall.h))
 end

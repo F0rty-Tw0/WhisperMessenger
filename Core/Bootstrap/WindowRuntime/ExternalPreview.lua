@@ -34,6 +34,7 @@ function ExternalPreview.New(options)
       sender = preview.sender,
       text = preview.text,
       classTag = preview.classTag,
+      detail = preview.detail,
       pulse = preview.pulse == true and ownerPanelShown ~= true,
     }
     entry.onClick = function()
