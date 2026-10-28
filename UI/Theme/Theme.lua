@@ -97,6 +97,11 @@ function Theme.GetPreset()
   return activePresetKey
 end
 
+-- The EllesmereUI preset draws the widget square, like EllesmereUI's buttons.
+function Theme.UsesSquareWidget()
+  return activePresetKey == ThemePresets.ELLESMERE_UI
+end
+
 -- A live preset takes its colors from another addon and is applied again
 -- when they change.
 function Theme.IsLivePreset(presetKey)

@@ -7,6 +7,7 @@ local Desaturation = {}
 
 local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
 local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
+Desaturation.DESAT_GREY = DESAT_GREY
 
 function Desaturation.Create(deps)
   local textures = deps.textures

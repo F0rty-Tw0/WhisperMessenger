@@ -13,6 +13,7 @@ local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleI
 local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.ToggleIcon.PulseState")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
+local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
@@ -90,6 +91,14 @@ function ToggleIcon.Create(factory, options)
   applyVertexColor(chatIcon, resolveGlyphColor())
 
   local label = chatIcon -- reference kept for return table
+
+  local squareLook = SquareLook.Create(frame, {
+    background = background,
+    border = border,
+    glyph = chatIcon,
+    roundBackground = CIRCLE_TEX,
+    roundGlyph = ADDON_ICON_TEXTURE,
+  })
 
   -- Glow pulse for unread messages (CraftScan-style looping animation)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -235,6 +244,7 @@ function ToggleIcon.Create(factory, options)
     pulseState.setUnreadWants((tonumber(pulseCount or count) or 0) > 0 and allowPulse and showBadge)
 
     desaturation.update(unreadCount)
+    squareLook.apply(desaturation.isActive())
   end
 
   -- Hover glow effect
@@ -300,7 +310,10 @@ function ToggleIcon.Create(factory, options)
     end)
   end
 
-  local refreshDesaturation = desaturation.refresh
+  local function refreshDesaturation()
+    desaturation.refresh()
+    squareLook.apply(desaturation.isActive())
+  end
 
   local function refreshTheme()
     badgeResult.paint()
@@ -332,6 +345,8 @@ function ToggleIcon.Create(factory, options)
     frame = frame,
     background = background,
     border = border,
+    squareEdges = squareLook.edges,
+    accentGlyph = squareLook.accentGlyph,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,
