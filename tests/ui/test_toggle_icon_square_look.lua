@@ -8,12 +8,14 @@ local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local ButtonLook = require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local function sameColor(a, b)
   return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
 end
 
+local SLOT_BG = ButtonLook.Read().bg -- EllesmereUI's defaults: the fake has no action bars module
 local ROUND_BG = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local ROUND_GLYPH = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
@@ -65,7 +67,8 @@ return function()
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "ring-free glyph, got " .. tostring(icon.label.texturePath))
     assert(icon.border.shown == false, "no ring")
     assert(edgesShown(icon.squareEdges, true), "1px edge shown")
-    assert(icon.squareEdges.top.color[1] == 0 and icon.squareEdges.top.color[4] == 1, "edge is solid black")
+    assert(sameColor(icon.squareEdges.top.vertexColor, { 0, 0, 0, 1 }), "edge is solid black, like EllesmereUI's buttons")
+    assert(sameColor(icon.background.vertexColor, SLOT_BG), "EllesmereUI's slot background")
     assert(icon.accentGlyph.shown == true, "accent back bubble shown")
     assert(icon.accentGlyph.texturePath == SquareLook.ACCENT_GLYPH_TEXTURE, "back bubble art")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble in the accent color")
@@ -96,10 +99,10 @@ return function()
     icon.setUnreadCount(0)
     assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "white bubble keeps its color")
     assert(icon.label.desaturated ~= true, "white bubble not desaturated")
-    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "background keeps its color")
+    assert(sameColor(icon.background.vertexColor, SLOT_BG), "background keeps its color")
     icon.frame:GetScript("OnEnter")(icon.frame)
     icon.frame:GetScript("OnLeave")(icon.frame)
-    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "background keeps its color after a hover")
+    assert(sameColor(icon.background.vertexColor, SLOT_BG), "background keeps its color after a hover")
   end)
 
   -- test_round_look_still_desaturates_everything
@@ -141,12 +144,39 @@ return function()
     })
     icon.setUnreadCount(0)
     icon.frame:GetScript("OnEnter")(icon.frame)
-    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "square keeps its color on hover")
+    assert(sameColor(icon.background.vertexColor, SLOT_BG), "square keeps its color on hover")
     assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "white bubble keeps its color on hover")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble is exactly the accent on hover")
     assert(icon.hoverGlow.shown ~= true, "no glow while the square shows")
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray again after hover")
+    assert(sameColor(icon.background.vertexColor, SLOT_BG), "slot background back after hover")
+  end)
+
+  -- test_square_shows_the_action_bar_hover_and_pushed_effects
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local showBackground = true
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return showBackground
+      end,
+    })
+    assert(icon.squareHover.shown ~= true and icon.squarePushed.shown ~= true, "no effects at rest")
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(icon.squareHover.shown == true, "hover effect on the square")
+    icon.frame:GetScript("OnMouseDown")(icon.frame)
+    assert(icon.squarePushed.shown == true, "pushed effect while held")
+    icon.frame:GetScript("OnMouseUp")(icon.frame)
+    assert(icon.squarePushed.shown == false, "pushed effect gone on release")
+    icon.frame:GetScript("OnMouseDown")(icon.frame)
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(icon.squareHover.shown == false and icon.squarePushed.shown == false, "both gone on leave")
+    showBackground = false
+    icon.refreshTheme()
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    icon.frame:GetScript("OnMouseDown")(icon.frame)
+    assert(icon.squareHover.shown ~= true and icon.squarePushed.shown ~= true, "no square effects without the square")
   end)
 
   -- test_hover_glows_in_the_accent_without_the_square

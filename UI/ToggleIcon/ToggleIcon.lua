@@ -284,18 +284,25 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      squareLook.setHover(false)
       local isDesat = desaturation.paintsGrey()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if not isDesat then
         applyVertexColor(chatIcon, resolveGlyphColor())
       end
+      squareLook.setHover(false) -- after the repaint: the square has its own fill
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
     end)
 
     frame:SetScript("OnClick", IconClick.Create(options))
+
+    frame:SetScript("OnMouseDown", function()
+      squareLook.setPushed(true)
+    end)
+    frame:SetScript("OnMouseUp", function()
+      squareLook.setPushed(false)
+    end)
 
     frame:SetScript("OnDragStart", function(self)
       if isLocked() then
@@ -356,6 +363,8 @@ function ToggleIcon.Create(factory, options)
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,
     glyphOutline = squareLook.outline,
+    squareHover = squareLook.hoverEffect,
+    squarePushed = squareLook.pushEffect,
     pulseTexture = pulseGlow.glowTexture,
     label = label,
     badge = badge,

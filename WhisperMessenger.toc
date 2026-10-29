@@ -138,6 +138,7 @@ UI/Theme/Presets/Data/PlumberWarm.lua
 UI/Theme/Presets/Data/JadeDark.lua
 UI/Theme/Presets/Data/WowNative.lua
 UI/Theme/EllesmereBridge.lua
+UI/Theme/EllesmereButtonLook.lua
 UI/Theme/Presets/Data/EllesmereUI.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
@@ -276,6 +277,7 @@ UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
+UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/MinimapIcon.lua
