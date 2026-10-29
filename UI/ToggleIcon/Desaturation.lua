@@ -33,7 +33,8 @@ function Desaturation.Create(deps)
     local shouldDesaturate = desaturateEnabled and lastUnreadCount == 0
 
     for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
-      if tex.SetDesaturated then
+      -- wmAlwaysDesaturated: art grayed for good so a tint can color it
+      if tex.SetDesaturated and not tex.wmAlwaysDesaturated then
         tex:SetDesaturated(shouldDesaturate)
       end
     end

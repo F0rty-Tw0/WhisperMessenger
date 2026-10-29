@@ -59,9 +59,9 @@ return function()
   if Hud.Style() == "retail" then
     local icon = widget(40)
     assert(icon.border.texturePath == IconRing.RING.modern and icon.border.shown == true, "modern ring")
-    assert(centred(icon.border, icon.frame) and px(icon.border.width, 40 * IconRing.RING_SCALE), "ring centred, scaled")
+    assert(centred(icon.border, icon.frame) and px(icon.border.width, 40 * IconRing.LOOKS.modern.ringScale), "ring centred, scaled")
     assert(icon.label.texturePath == IconRing.RIMLESS_LOGO, "rimless logo inside")
-    assert(centred(icon.label, icon.frame) and px(icon.label.width, 40 * IconRing.LOGO_SCALE), "logo centred under the ring")
+    assert(centred(icon.label, icon.frame) and px(icon.label.width, 40 * IconRing.LOOKS.modern.logoScale), "logo centred under the ring")
     assert(hidden(icon.background), "nothing behind the logo")
   end
 
@@ -82,7 +82,10 @@ return function()
   do
     local icon = widget(40)
     icon.applyIconSize(64)
-    assert(px(icon.border.width, 64 * IconRing.RING_SCALE) and px(icon.label.width, 64 * IconRing.LOGO_SCALE), "both rescaled")
+    assert(
+      px(icon.border.width, 64 * IconRing.LOOKS.classic.ringScale) and px(icon.label.width, 64 * IconRing.LOOKS.classic.logoScale),
+      "both rescaled"
+    )
     assert(centred(icon.border, icon.frame) and centred(icon.label, icon.frame), "both still centred")
   end
 
@@ -106,13 +109,101 @@ return function()
     assert(minimap.border.texturePath == IconRing.RING.classic and centred(minimap.border, frame), "same ring, centred")
     assert(sameRgb(minimap.border.vertexColor, Theme.COLORS.toggle_icon_ring), "same tint")
     assert(minimap.iconTex.texturePath == IconRing.RIMLESS_LOGO and centred(minimap.iconTex, frame), "same logo, centred")
-    assert(px(minimap.iconTex.width, frame.width * IconRing.LOGO_SCALE), "same proportions")
+    assert(px(minimap.iconTex.width, frame.width * IconRing.LOOKS.classic.logoScale), "same proportions")
     assert(hidden(minimap.background), "no disc behind it")
   end
   Hud.Configure("off")
   do
     local minimap = MinimapIcon.Create(FakeUI.NewFactory(), {})
     assert(minimap.iconTex.texturePath == IconRing.LOGO and hidden(minimap.border), "HUD off: the logo alone")
+  end
+
+  -- test_logo_reaches_under_each_ring
+  for kind, look in pairs(IconRing.LOOKS) do
+    assert(look.logoScale >= look.goldInner, kind .. ": the logo's disc must reach under the gold")
+  end
+
+  -- test_modern_uses_the_retail_target_frame_ring_when_the_game_has_it
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    local ring = frame:CreateTexture(nil, "OVERLAY")
+    local icon = frame:CreateTexture(nil, "ARTWORK")
+    local masks = {}
+    function frame:CreateMaskTexture()
+      local m = self:CreateTexture(nil, "ARTWORK")
+      masks[#masks + 1] = m
+      return m
+    end
+    function ring:AddMaskTexture(m)
+      self.mask = m
+    end
+    rawset(_G, "C_Texture", {
+      GetAtlasInfo = function(name)
+        if name == "ui-hud-unitframe-target-portraiton-2x" then
+          -- the 2x art: 384x134 at (1,451) in a 2048x1024 sheet
+          return { file = 4642466, leftTexCoord = 1 / 2048, rightTexCoord = 385 / 2048, topTexCoord = 451 / 1024, bottomTexCoord = 585 / 1024 }
+        end
+        return nil
+      end,
+    })
+    IconRing.Apply({ frame = frame, icon = icon, ring = ring }, "modern", 60)
+    rawset(_G, "C_Texture", nil)
+
+    assert(ring.texturePath == 4642466, "Blizzard's target frame sheet, got " .. tostring(ring.texturePath))
+    local c = ring.texCoords
+    -- the ring: centre (314,513) in the sheet, cut out 62px around it
+    assert(near(c[1], 252 / 2048) and near(c[2], 376 / 2048), "cut out across, got " .. tostring(c[1]) .. ".." .. tostring(c[2]))
+    assert(near(c[3], 451 / 1024) and near(c[4], 575 / 1024), "cut out down, got " .. tostring(c[3]) .. ".." .. tostring(c[4]))
+    assert(ring.desaturated == true and ring.wmAlwaysDesaturated == true, "grayed so the theme can tint it")
+    assert(#masks == 1 and ring.mask == masks[1] and centred(masks[1], frame), "clipped to a circle, which drops the bar ends")
+    assert(px(ring.width, 60 * IconRing.LOOKS.modernArt.ringScale), "gold's outer edge at the button's edge")
+    assert(px(icon.width, 60 * IconRing.LOOKS.modernArt.logoScale), "logo under the gold")
+  end
+
+  -- test_idle_gray_never_ungrays_the_games_ring
+  do
+    local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    local ring, icon, bg = frame:CreateTexture(), frame:CreateTexture(), frame:CreateTexture()
+    ring.wmAlwaysDesaturated = true
+    ring:SetDesaturated(true)
+    local idle = true
+    local d = Desaturation.Create({
+      textures = { chatIcon = icon, background = bg, border = ring },
+      resolveColors = {
+        chatIcon = function()
+          return { 1, 1, 1, 1 }
+        end,
+        background = function()
+          return { 1, 1, 1, 1 }
+        end,
+        border = function()
+          return { 0.2, 0.4, 0.9, 1 }
+        end,
+      },
+      getIconDesaturated = function()
+        return idle
+      end,
+      applyVertexColor = function(t, c)
+        t:SetVertexColor(c[1], c[2], c[3], c[4])
+      end,
+    })
+    d.update(3)
+    assert(ring.desaturated == true, "still grayed with unread whispers, so the tint colors it")
+    assert(icon.desaturated == false, "the logo gets its colors back")
+  end
+
+  -- test_modern_falls_back_to_the_redrawn_ring
+  do
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    local ring = frame:CreateTexture(nil, "OVERLAY")
+    local icon = frame:CreateTexture(nil, "ARTWORK")
+    IconRing.Apply({ frame = frame, icon = icon, ring = ring }, "modern", 60)
+    assert(ring.texturePath == IconRing.RING.modern, "redrawn modern ring without the retail art")
+    assert(ring.desaturated ~= true and ring.wmAlwaysDesaturated ~= true, "already grayscale")
   end
 
   Hud.Configure("off")
