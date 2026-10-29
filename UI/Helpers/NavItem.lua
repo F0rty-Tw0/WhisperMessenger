@@ -20,8 +20,7 @@ NavItem.PADDING_X = 12
 NavItem.ICON_SIZE = 16
 NavItem.ICON_GAP = 8
 
--- iconPath (optional): the page glyph left of the label, modern look only;
--- the Native WoW HUD list stays text-only like Blizzard's own.
+-- iconPath (optional): the page glyph left of the label.
 function NavItem.Attach(button, iconPath)
   local selection = button:CreateTexture(nil, "BACKGROUND", nil, 1)
   selection:SetAllPoints(button)
@@ -29,14 +28,6 @@ function NavItem.Attach(button, iconPath)
   local hover = button:CreateTexture(nil, "BACKGROUND", nil, 2)
   hover:SetAllPoints(button)
   hover:Hide()
-  if Hud.IsOn() then
-    NativeArt.AttachList(selection, hover)
-    return { selection = selection, hover = hover, hoverFade = HoverFade.Attach(hover), native = true }
-  end
-  local bar = button:CreateTexture(nil, "ARTWORK")
-  bar:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
-  bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
-  bar:Hide()
   local icon
   if iconPath then
     icon = button:CreateTexture(nil, "ARTWORK")
@@ -44,6 +35,14 @@ function NavItem.Attach(button, iconPath)
     icon:SetPoint("LEFT", button, "LEFT", NavItem.PADDING_X, 0)
     icon:SetTexture(iconPath)
   end
+  if Hud.IsOn() then
+    NativeArt.AttachList(selection, hover)
+    return { selection = selection, hover = hover, hoverFade = HoverFade.Attach(hover), icon = icon, native = true }
+  end
+  local bar = button:CreateTexture(nil, "ARTWORK")
+  bar:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+  bar:SetPoint("BOTTOMLEFT", button, "BOTTOMLEFT", 0, 0)
+  bar:Hide()
   return { selection = selection, hover = hover, hoverFade = HoverFade.Attach(hover), bar = bar, icon = icon }
 end
 

@@ -135,12 +135,16 @@ return function()
     assertNativeArt(menu.appearanceTab.nav.selection, SELECTED_ART, "HUD tabs selection")
   end
 
-  -- test_hud_settings_tabs_stay_text_only
+  -- test_hud_settings_tabs_show_a_page_icon_left_of_the_label
   do
     local menu = buildMenu(factory)
     for index, tab in ipairs(menu.settingsTabs) do
-      assert(tab.nav.icon == nil, "HUD tab " .. index .. " has no icon")
+      local icon = tab.nav.icon
+      assert(icon ~= nil and type(icon.texturePath) == "string", "HUD tab " .. index .. " has an icon")
+      assert(tab.label.point[2] == icon, "HUD tab " .. index .. " label sits right of its icon")
     end
+    menu.generalTab.setNavActive(true)
+    assert(rgbMatch(menu.generalTab.nav.icon.vertexColor, Theme.COLORS.text_primary), "HUD active icon brightens with the label")
   end
 
   Hud.Configure("off")
