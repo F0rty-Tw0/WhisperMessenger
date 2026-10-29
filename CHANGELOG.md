@@ -19,6 +19,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Shift-clicking the messenger button, minimap icon or Broker icon (or choosing Mark all as read) now also clears message previews from other addons, like Craft Alert, and tells them everything was marked read so they can clear their own counts.
 - Other addons (like Craft Alert) can now check, add and remove players on the messenger's block list. Turning off Allow addon integration stops this too.
 - Other addons (like Craft Alert) can now see which players have unread whispers, so they can highlight those players. Turning off Allow addon integration stops this too.
+- Addons that add a tab to WhisperMessenger can now match its look and colour theme.
 - Previews from other addons can show one extra line under the message (for example, Craft Alert can say which of your characters can craft the item). Your own whisper previews are unchanged.
 - Fixed: hovering an item link in the message preview now shows the item's tooltip.
 - Fixed: with the Native WoW HUD look, the message preview's background is now solid like the game's tooltips, so names and item links stay readable over bright ground.
