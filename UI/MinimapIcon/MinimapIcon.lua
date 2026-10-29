@@ -12,22 +12,18 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
+local MinimapButtonLook = ns.MinimapButtonLook or require("WhisperMessenger.UI.MinimapIcon.MinimapButtonLook")
 
 local MinimapIcon = {}
 
--- Standard minimap button size — larger than classic 20px so the unread
--- badge is legible, but small enough to not dominate the minimap ring.
-local ICON_SIZE = 30
 -- The widget's two chat bubbles (front white, back in the accent), inside
--- the button's own disc and border rather than the whole ringed logo.
+-- the button's own background and border rather than the whole ringed logo.
+-- MinimapButtonLook sets the button's size and layout.
 local FRONT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
 local BACK_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
-local GLYPH_RATIO = 0.8 -- bubbles vs button size, clear of the border
 local BADGE_SIZE = 14
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
-local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
-local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
 local ICON_COLOR = { 1, 1, 1, 1 }
 
 -- Default radial position: top-right quadrant, 45 degrees.
@@ -116,32 +112,35 @@ function MinimapIcon.Create(factory, options)
   local degrees = state.degrees or DEFAULT_DEGREES
 
   local frame = factory.CreateFrame("Button", "WhisperMessengerMinimapIcon", parent)
-  frame:SetSize(ICON_SIZE, ICON_SIZE)
   frame:SetFrameStrata("HIGH")
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- Background disc so the icon is visible against any minimap
+  -- Background, chat bubbles and border; MinimapButtonLook lays them out
+  -- (the standard minimap ring, or a plain dark disc).
   local bg = frame:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(frame)
-  bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-  applyVertexColor(bg, BG_COLOR)
-
-  -- Chat bubbles, centred inside the border
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
-  iconTex:SetSize(ICON_SIZE * GLYPH_RATIO, ICON_SIZE * GLYPH_RATIO)
-  iconTex:SetPoint("CENTER", frame, "CENTER", 0, 0)
   iconTex:SetTexture(FRONT_GLYPH_TEXTURE)
   local accentGlyph = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   accentGlyph:SetAllPoints(iconTex)
   accentGlyph:SetTexture(BACK_GLYPH_TEXTURE)
-  applyVertexColor(accentGlyph, Theme.COLORS.accent) -- the button's own disc is dark
-  -- Ring border (same texture as the widget icon)
-  local border = frame:CreateTexture(nil, "BORDER")
-  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
-  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture("Interface\\COMMON\\RingBorder")
-  applyVertexColor(border, BORDER_COLOR)
+  applyVertexColor(accentGlyph, Theme.COLORS.accent) -- both backgrounds are dark
+  local border = frame:CreateTexture(nil, "OVERLAY")
+  local highlight = frame:CreateTexture(nil, "HIGHLIGHT")
+  highlight:SetAllPoints(frame)
+  highlight:SetTexture(MinimapButtonLook.HIGHLIGHT_TEXTURE)
+  if highlight.SetBlendMode then
+    highlight:SetBlendMode("ADD")
+  end
+
+  local lookKind
+  local function applyLook()
+    local enabled = options.getMinimapBorder and options.getMinimapBorder()
+    local style = options.getMinimapBorderStyle and options.getMinimapBorderStyle()
+    lookKind = MinimapButtonLook.Resolve(enabled, style)
+    MinimapButtonLook.Apply({ frame = frame, background = bg, border = border, icon = iconTex, highlight = highlight }, lookKind)
+  end
+  applyLook()
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -192,10 +191,11 @@ function MinimapIcon.Create(factory, options)
         return ICON_COLOR
       end,
       background = function()
-        return BG_COLOR
+        return (MinimapButtonLook.Colors(lookKind))
       end,
       border = function()
-        return BORDER_COLOR
+        local _, borderColor = MinimapButtonLook.Colors(lookKind)
+        return borderColor
       end,
     },
     getIconDesaturated = options.getIconDesaturated,
@@ -292,6 +292,7 @@ function MinimapIcon.Create(factory, options)
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
+    applyLook()
     desaturation.refreshOriginalColors()
     desaturation.refresh()
   end
@@ -304,7 +305,9 @@ function MinimapIcon.Create(factory, options)
     frame = frame,
     iconTex = iconTex,
     accentGlyph = accentGlyph,
+    background = bg,
     border = border,
+    highlight = highlight,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,

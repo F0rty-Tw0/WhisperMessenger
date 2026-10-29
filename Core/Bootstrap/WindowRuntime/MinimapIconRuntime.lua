@@ -56,6 +56,12 @@ function MinimapIconRuntime.Create(options)
     getIconDesaturated = function()
       return settings().iconDesaturated ~= false
     end,
+    getMinimapBorder = function()
+      return settings().minimapBorder ~= false
+    end,
+    getMinimapBorderStyle = function()
+      return settings().minimapBorderStyle
+    end,
     getHideFromDefaultChat = function()
       return settings().hideFromDefaultChat == true
     end,

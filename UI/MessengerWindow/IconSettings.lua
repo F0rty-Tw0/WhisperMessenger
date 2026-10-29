@@ -25,6 +25,8 @@ local DEFAULTS = {
   widgetPreviewAutoDismissSeconds = 30,
   widgetPreviewPosition = "right",
   iconMode = "widget",
+  minimapBorder = true,
+  minimapBorderStyle = "auto",
 }
 
 local POSITION_OPTION_SPECS = {
@@ -203,6 +205,57 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconModeSelector.row:SetPoint("TOPLEFT", shareWidgetPositionToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local minimapBorderToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Minimap button border"),
+      config.minimapBorder ~= false,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("minimapBorder", value)
+      end,
+      {
+        text("Minimap button border"),
+        text("Puts the game's standard minimap button ring around the minimap icon, like other addons' minimap buttons."),
+      }
+    ),
+    { type = "toggle", key = "minimapBorder", default = DEFAULTS.minimapBorder }
+  )
+  minimapBorderToggle.row:SetPoint("TOPLEFT", iconModeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  -- Auto follows the game: Modern on clients with the addon compartment
+  -- (retail, WoW Forever), Classic without it.
+  local function buildBorderStyleOptions()
+    return {
+      { key = "auto", label = text("Auto") },
+      { key = "classic", label = text("Classic") },
+      { key = "modern", label = text("Modern") },
+    }
+  end
+
+  local borderStyleSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Minimap border style"),
+      optionsList = buildBorderStyleOptions(),
+      fallbackKey = DEFAULTS.minimapBorderStyle,
+      initial = config.minimapBorderStyle or DEFAULTS.minimapBorderStyle,
+      colors = selectorColors,
+      onChange = function(value)
+        onChange("minimapBorderStyle", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 80,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 3,
+    }),
+    { type = "selector", key = "minimapBorderStyle", default = DEFAULTS.minimapBorderStyle }
+  )
+  borderStyleSelector.row:SetPoint("TOPLEFT", minimapBorderToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
   local showBadgeToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Show unread badge"), config.showUnreadBadge ~= false, toggleColors, toggleLayout, function(value)
       onChange("showUnreadBadge", value)
@@ -212,7 +265,7 @@ function IconSettings.Create(factory, parent, config, options)
     }),
     { type = "toggle", key = "showUnreadBadge", default = DEFAULTS.showUnreadBadge }
   )
-  showBadgeToggle.row:SetPoint("TOPLEFT", iconModeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+  showBadgeToggle.row:SetPoint("TOPLEFT", borderStyleSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local badgePulseToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Badge pulse animation"), config.badgePulse ~= false, toggleColors, toggleLayout, function(value)
@@ -324,6 +377,9 @@ function IconSettings.Create(factory, parent, config, options)
     shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(buildIconModeOptions())
+    minimapBorderToggle.label:SetText(text("Minimap button border"))
+    borderStyleSelector.label:SetText(text("Minimap border style"))
+    borderStyleSelector.setOptionsList(buildBorderStyleOptions())
     showBadgeToggle.label:SetText(text("Show unread badge"))
     badgePulseToggle.label:SetText(text("Badge pulse animation"))
     widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))

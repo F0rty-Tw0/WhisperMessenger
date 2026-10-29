@@ -274,6 +274,7 @@ UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/ToggleIcon.lua
+UI/MinimapIcon/MinimapButtonLook.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
 UI/MessengerWindow/AlphaController.lua
