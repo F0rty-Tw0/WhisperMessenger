@@ -19,9 +19,9 @@ local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.Keyb
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
+local IconHover = ns.IconHover or require("WhisperMessenger.UI.Shared.IconHover")
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
-local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
@@ -86,6 +86,8 @@ function ToggleIcon.Create(factory, options)
     IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, ringKind, size, CHAT_ICON_RATIO)
   end
   applyRing(ICON_SIZE)
+  -- Hover: the logo lights up in the theme's color
+  local iconHover = IconHover.Create(frame, chatIcon)
 
   local label = chatIcon -- reference kept for return table
 
@@ -241,10 +243,8 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = true
       syncLockGlyphVisibility()
       refreshTransparency()
-      if not desaturation.isActive() then
-        applyVertexColor(background, Theme.COLORS.send_button_hover)
-        applyVertexColor(chatIcon, HOVER_ICON_COLOR)
-      end
+      desaturation.setHovered(true)
+      iconHover.set(true)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         local unreadText = badge:IsShown() and " — " .. unreadSummary or ""
@@ -267,11 +267,8 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      local isDesat = desaturation.isActive()
-      applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
-      if not isDesat then
-        applyVertexColor(chatIcon, resolveGlyphColor())
-      end
+      desaturation.setHovered(false)
+      iconHover.set(false)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -326,6 +323,7 @@ function ToggleIcon.Create(factory, options)
     background = background,
     border = border,
     label = label,
+    hoverGlow = iconHover.glow,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeOutline = badgeOutline,

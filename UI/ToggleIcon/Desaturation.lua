@@ -15,6 +15,7 @@ function Desaturation.Create(deps)
   local applyVertexColor = deps.applyVertexColor
 
   local lastUnreadCount = 0
+  local hovered = false -- the icon shows its colors while hovered
   -- Snapshot original colors. Re-read on every theme refresh so preset
   -- switches propagate through the desaturate path.
   local originalColors = {
@@ -30,7 +31,7 @@ function Desaturation.Create(deps)
   local function update(unreadCount)
     lastUnreadCount = tonumber(unreadCount) or 0
     local desaturateEnabled = getIconDesaturated and getIconDesaturated()
-    local shouldDesaturate = desaturateEnabled and lastUnreadCount == 0
+    local shouldDesaturate = desaturateEnabled and lastUnreadCount == 0 and not hovered
 
     for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
       -- wmAlwaysDesaturated: art grayed for good so a tint can color it
@@ -54,6 +55,12 @@ function Desaturation.Create(deps)
     update(lastUnreadCount)
   end
 
+  -- While hovered the icon shows its colors, gray again after.
+  local function setHovered(on)
+    hovered = on == true
+    update(lastUnreadCount)
+  end
+
   local function refreshOriginalColors()
     originalColors.chatIcon = resolveColors.chatIcon()
     originalColors.background = resolveColors.background()
@@ -63,6 +70,7 @@ function Desaturation.Create(deps)
   return {
     update = update,
     refresh = refresh,
+    setHovered = setHovered,
     isActive = isActive,
     refreshOriginalColors = refreshOriginalColors,
     DESAT_BG = DESAT_BG,

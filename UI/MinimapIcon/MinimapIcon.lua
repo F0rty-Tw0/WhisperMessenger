@@ -14,6 +14,7 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
+local IconHover = ns.IconHover or require("WhisperMessenger.UI.Shared.IconHover")
 
 local MinimapIcon = {}
 
@@ -133,6 +134,8 @@ function MinimapIcon.Create(factory, options)
   end
   applyVertexColor(border, resolveRingColor())
   IconRing.Apply({ frame = frame, icon = iconTex, ring = border }, IconRing.Kind(Hud.Style()), ICON_SIZE)
+  -- Hover: the logo lights up in the theme's color, as on the widget
+  local iconHover = IconHover.Create(frame, iconTex)
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -239,6 +242,8 @@ function MinimapIcon.Create(factory, options)
     frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnEnter", function()
+      desaturation.setHovered(true)
+      iconHover.set(true)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         _G.GameTooltip:SetText("Whisper Messenger")
@@ -253,6 +258,8 @@ function MinimapIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
+      desaturation.setHovered(false)
+      iconHover.set(false)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -289,6 +296,7 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
+    hoverGlow = iconHover.glow,
     background = bg,
     border = border,
     badge = badge,

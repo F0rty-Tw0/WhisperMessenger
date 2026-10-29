@@ -162,6 +162,7 @@ UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
 UI/Shared/IconRing.lua
+UI/Shared/IconHover.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
