@@ -259,7 +259,7 @@ return function()
     )
   end
 
-  -- test_icon_dims_on_hover_and_restores_glyph_color
+  -- test_icon_glows_on_hover_and_keeps_glyph_color
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -272,8 +272,8 @@ return function()
 
     icon.frame:GetScript("OnEnter")(icon.frame)
     local hoverColor = icon.label.vertexColor
-    assert(hoverColor[1] == 1 and hoverColor[2] == 1 and hoverColor[3] == 1, "hover should preserve white glyph RGB")
-    assert(hoverColor[4] < 1, "hover should dim the logo with reduced alpha")
+    assert(hoverColor[4] == normalColor[4], "hover should no longer fade the logo")
+    assert(icon.logoGlow.shown == true, "hover should light the logo up in the theme color")
 
     icon.frame:GetScript("OnLeave")(icon.frame)
     local restoredColor = icon.label.vertexColor

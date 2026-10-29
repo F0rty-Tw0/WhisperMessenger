@@ -20,9 +20,9 @@ local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.Keyb
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
+local IconHover = ns.IconHover or require("WhisperMessenger.UI.Shared.IconHover")
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
-local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
@@ -90,6 +90,8 @@ function ToggleIcon.Create(factory, options)
     IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, not noRing and ringKind or nil, currentSize, CHAT_ICON_RATIO)
   end
   applyRing(ICON_SIZE)
+  -- Hover: the logo lights up in the theme's color
+  local iconHover = IconHover.Create(frame, chatIcon)
 
   local label = chatIcon -- reference kept for return table
 
@@ -259,10 +261,10 @@ function ToggleIcon.Create(factory, options)
       syncLockGlyphVisibility()
       refreshTransparency()
       if squareLook.isSquare() then
-        squareLook.setHover(true)
-      elseif not desaturation.paintsGrey() then
-        applyVertexColor(background, Theme.COLORS.send_button_hover)
-        applyVertexColor(chatIcon, HOVER_ICON_COLOR)
+        squareLook.setHover(true) -- the square look has its own hover
+      else
+        desaturation.setHovered(true)
+        iconHover.set(true)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -286,11 +288,8 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      local isDesat = desaturation.paintsGrey()
-      applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
-      if not isDesat then
-        applyVertexColor(chatIcon, resolveGlyphColor())
-      end
+      desaturation.setHovered(false)
+      iconHover.set(false)
       squareLook.setHover(false) -- after the repaint: the square has its own fill
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
@@ -364,6 +363,7 @@ function ToggleIcon.Create(factory, options)
     squarePushed = squareLook.pushEffect,
     pulseTexture = pulseGlow.glowTexture,
     label = label,
+    logoGlow = iconHover.glow,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeOutline = badgeOutline,
