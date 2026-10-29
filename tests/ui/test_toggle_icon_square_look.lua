@@ -131,17 +131,22 @@ return function()
     assert(icon.background.shown == true and edgesShown(icon.squareEdges, true), "square back when turned on")
   end)
 
-  -- test_hover_only_brightens_the_accent_bubble
+  -- test_hover_fills_only_the_back_bubble_with_the_accent
   withEllesmere(function()
     Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
+    icon.setUnreadCount(0)
     icon.frame:GetScript("OnEnter")(icon.frame)
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "square keeps its color on hover")
     assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "white bubble keeps its color on hover")
-    assert(not sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent bubble changes on hover")
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble is exactly the accent on hover")
     assert(icon.hoverGlow.shown ~= true, "no glow while the square shows")
     icon.frame:GetScript("OnLeave")(icon.frame)
-    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent bubble back after hover")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray again after hover")
   end)
 
   -- test_hover_glows_in_the_accent_without_the_square

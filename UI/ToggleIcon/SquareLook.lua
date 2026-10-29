@@ -27,7 +27,6 @@ SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\ch
 SquareLook.BUBBLE_GLOW_SCALE = 1.5
 
 local EDGE_COLOR = { 0, 0, 0, 1 }
-local HOVER_BRIGHTEN = 0.35 -- how far the hovered accent bubble moves toward white
 
 local function setShown(region, shown)
   if shown and region.Show then
@@ -37,17 +36,9 @@ local function setShown(region, shown)
   end
 end
 
--- The accent color mixed `amount` of the way to white, for hover.
-local function brighten(color, amount)
-  local function mix(v)
-    return v + (1 - v) * amount
-  end
-  return { mix(color[1]), mix(color[2]), mix(color[3]), color[4] or 1 }
-end
-
 -- The accent back bubble, drawn just under `glyph` and sized with it.
--- apply(desaturated, hovered) shows it under a square theme: brighter while
--- hovered, else in the accent color, or gray while the button is desaturated.
+-- apply(desaturated, hovered) shows it under a square theme in the accent
+-- color, or gray while the button is desaturated and not hovered.
 function SquareLook.CreateAccentGlyph(frame, glyph)
   local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   texture:SetAllPoints(glyph)
@@ -59,12 +50,8 @@ function SquareLook.CreateAccentGlyph(frame, glyph)
     if not square then
       return
     end
-    local accent = Theme.COLORS.accent
-    if hovered then
-      applyVertexColor(texture, brighten(accent, HOVER_BRIGHTEN))
-    else
-      applyVertexColor(texture, desaturated and Desaturation.DESAT_GREY or accent)
-    end
+    local grey = desaturated and not hovered
+    applyVertexColor(texture, grey and Desaturation.DESAT_GREY or Theme.COLORS.accent)
   end
 
   return { texture = texture, apply = apply }
