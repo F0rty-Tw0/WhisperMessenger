@@ -168,6 +168,28 @@ return function()
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
   end)
 
+  -- test_outline_around_the_bubbles_only_without_the_square
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local showBackground = false
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return showBackground
+      end,
+    })
+    local outline = icon.glyphOutline
+    assert(outline.shown == true, "outline shown without the square")
+    assert(outline.texturePath == SquareLook.OUTLINE_TEXTURE and outline.allPoints == icon.label, "outline art over the glyph")
+    assert(outline.vertexColor[1] == 0 and outline.vertexColor[2] == 0 and outline.vertexColor[3] == 0, "black outline")
+    showBackground = true
+    icon.refreshTheme()
+    assert(outline.shown == false, "no outline with the square")
+    showBackground = false
+    Theme.SetPreset("wow_default")
+    icon.refreshTheme()
+    assert(outline.shown == false, "no outline on the round widget")
+  end)
+
   -- test_unread_pulse_glows_around_the_bubbles
   withEllesmere(function()
     Theme.SetPreset("ellesmere_ui")

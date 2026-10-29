@@ -26,7 +26,12 @@ SquareLook.ACCENT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\c
 SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_glow.png"
 SquareLook.BUBBLE_GLOW_SCALE = 1.5
 
+-- Thin outline around both bubbles (filling the gap between them), so the
+-- gray back bubble still reads over bright ground without the square.
+SquareLook.OUTLINE_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_outline.png"
+
 local EDGE_COLOR = { 0, 0, 0, 1 }
+local OUTLINE_COLOR = { 0, 0, 0, 0.85 }
 
 local function setShown(region, shown)
   if shown and region.Show then
@@ -85,6 +90,10 @@ function SquareLook.Create(frame, parts)
   local edges = UIHelpers.createBorderBox(frame, EDGE_COLOR, 1, "BORDER") or {}
   UIHelpers.applyBorderBoxColor(edges, EDGE_COLOR)
   local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph)
+  local outline = frame:CreateTexture(nil, "ARTWORK", nil, -2)
+  outline:SetAllPoints(parts.glyph)
+  outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
+  applyVertexColor(outline, OUTLINE_COLOR)
   local glow = createHoverGlow(frame)
   local hovered = false
   local lastDesaturated = false
@@ -133,6 +142,7 @@ function SquareLook.Create(frame, parts)
     for _, edge in pairs(edges) do
       setShown(edge, squareBackground)
     end
+    setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()
     shapePulse()
@@ -148,6 +158,7 @@ function SquareLook.Create(frame, parts)
   return {
     edges = edges,
     accentGlyph = accent.texture,
+    outline = outline,
     hoverGlow = glow,
     apply = apply,
     setHover = setHover,
