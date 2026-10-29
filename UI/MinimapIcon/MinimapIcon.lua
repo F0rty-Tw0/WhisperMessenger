@@ -12,9 +12,6 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
-local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
-local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
-local IconHover = ns.IconHover or require("WhisperMessenger.UI.Shared.IconHover")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local MinimapIcon = {}
@@ -22,10 +19,12 @@ local MinimapIcon = {}
 -- Standard minimap button size — larger than classic 20px so the unread
 -- badge is legible, but small enough to not dominate the minimap ring.
 local ICON_SIZE = 30
+local ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 local BADGE_SIZE = 14
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
+local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
 local ICON_COLOR = { 1, 1, 1, 1 }
 
 -- Default radial position: top-right quadrant, 45 degrees.
@@ -119,35 +118,24 @@ function MinimapIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- The logo carries its own disc, so the low-res disc behind it stays
-  -- hidden (kept for the desaturate paint).
+  -- Background disc so the icon is visible against any minimap
   local bg = frame:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints(frame)
   bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
   applyVertexColor(bg, BG_COLOR)
-  bg:Hide()
 
-  -- The addon logo and the HUD's ring, laid out like the widget's (IconRing)
+  -- Addon icon texture (fills the button)
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
-  local border = frame:CreateTexture(nil, "OVERLAY")
-  local function resolveRingColor()
-    return IconRing.RingColor(Theme.COLORS)
-  end
-  applyVertexColor(border, resolveRingColor())
+  iconTex:SetAllPoints(frame)
+  iconTex:SetTexture(ICON_TEXTURE)
   -- Accent back bubble under the ring-free glyph (square themes only)
   local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
-
-  -- The HUD's ring and logo; a square theme (EllesmereUI) swaps the logo
-  -- for its two-bubble glyph, as on the widget.
-  local function applyLook()
-    IconRing.Apply({ frame = frame, icon = iconTex, ring = border }, IconRing.Kind(Hud.Style()), ICON_SIZE)
-    if Theme.UsesSquareWidget() then
-      iconTex:SetTexture(SquareLook.GLYPH_TEXTURE)
-    end
-  end
-  applyLook()
-  -- Hover: the logo lights up in the theme's color, as on the widget
-  local iconHover = IconHover.Create(frame, iconTex)
+  -- Ring border (same texture as the widget icon)
+  local border = frame:CreateTexture(nil, "BORDER")
+  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+  border:SetTexture("Interface\\COMMON\\RingBorder")
+  applyVertexColor(border, BORDER_COLOR)
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -197,7 +185,9 @@ function MinimapIcon.Create(factory, options)
       background = function()
         return BG_COLOR
       end,
-      border = resolveRingColor,
+      border = function()
+        return BORDER_COLOR
+      end,
     },
     getIconDesaturated = options.getIconDesaturated,
     applyVertexColor = applyVertexColor,
@@ -256,8 +246,6 @@ function MinimapIcon.Create(factory, options)
     frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnEnter", function()
-      desaturation.setHovered(true)
-      iconHover.set(true)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
         _G.GameTooltip:SetText("Whisper Messenger")
@@ -272,8 +260,6 @@ function MinimapIcon.Create(factory, options)
     end)
 
     frame:SetScript("OnLeave", function()
-      desaturation.setHovered(false)
-      iconHover.set(false)
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
@@ -301,11 +287,10 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshTheme()
-    applyLook()
+    iconTex:SetTexture(SquareLook.MinimapGlyph(ICON_TEXTURE))
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
-    desaturation.refreshOriginalColors() -- the ring follows the theme
     refreshDesaturation()
   end
 
@@ -316,8 +301,6 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
-    logoGlow = iconHover.glow,
-    background = bg,
     border = border,
     badge = badge,
     badgeBackground = badgeBackground,

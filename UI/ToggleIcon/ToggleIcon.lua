@@ -18,11 +18,10 @@ local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.Toggl
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
-local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
-local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
-local IconHover = ns.IconHover or require("WhisperMessenger.UI.Shared.IconHover")
+local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
+local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
@@ -54,44 +53,42 @@ function ToggleIcon.Create(factory, options)
 
   -- Circular background: use the circle texture directly, tinted to desired color
   local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
+  local RING_TEX = "Interface\\COMMON\\RingBorder"
 
   local function resolveBgColor()
     return Theme.COLORS.toggle_icon_bg
   end
   local function resolveRingColor()
-    return IconRing.RingColor(Theme.COLORS)
+    local c = Theme.COLORS.toggle_icon_ring
+    if c then
+      return c
+    end
+    local a = Theme.COLORS.accent or { 1, 1, 1, 1 }
+    return { a[1], a[2], a[3], 0.3 }
   end
   local function resolveGlyphColor()
     return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
   end
 
-  -- The logo carries its own disc, so the low-res tinted circle behind it
-  -- stays hidden (kept for the hover and desaturate paint that tint it).
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   background:SetTexture(CIRCLE_TEX)
   applyVertexColor(background, resolveBgColor())
-  background:Hide()
 
-  -- The minimap-button ring for the Native WoW HUD style (IconRing), tinted
-  -- with the theme's ring color; no ring with the HUD off.
-  local border = frame:CreateTexture(nil, "OVERLAY")
+  -- Circular border ring: the generic `COMMON\RingBorder` hoop, which
+  -- paints cleanly with any vertex-color tint from the preset palette.
+  local border = frame:CreateTexture(nil, "BORDER")
+  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+  border:SetTexture(RING_TEX)
   applyVertexColor(border, resolveRingColor())
 
-  -- The addon logo (full, or without its rim inside the ring)
+  -- Chat icon (speech bubble) instead of text label
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
+  chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
+  chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
+  chatIcon:SetTexture(ADDON_ICON_TEXTURE)
   applyVertexColor(chatIcon, resolveGlyphColor())
-
-  local ringKind = IconRing.Kind(Hud.Style())
-  local currentSize = ICON_SIZE
-  -- noRing: the square look (EllesmereUI) draws its own frame.
-  local function applyRing(size, noRing)
-    currentSize = size or currentSize
-    IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, not noRing and ringKind or nil, currentSize, CHAT_ICON_RATIO)
-  end
-  applyRing(ICON_SIZE)
-  -- Hover: the logo lights up in the theme's color
-  local iconHover = IconHover.Create(frame, chatIcon)
 
   local label = chatIcon -- reference kept for return table
 
@@ -105,9 +102,8 @@ function ToggleIcon.Create(factory, options)
     background = background,
     border = border,
     glyph = chatIcon,
-    layout = function(square)
-      applyRing(nil, square)
-    end,
+    roundBackground = CIRCLE_TEX,
+    roundGlyph = ADDON_ICON_TEXTURE,
     getShowBackground = options.getIconBackground,
     pulse = pulseGlow,
   })
@@ -261,10 +257,10 @@ function ToggleIcon.Create(factory, options)
       syncLockGlyphVisibility()
       refreshTransparency()
       if squareLook.isSquare() then
-        squareLook.setHover(true) -- the square look has its own hover
-      else
-        desaturation.setHovered(true)
-        iconHover.set(true)
+        squareLook.setHover(true)
+      elseif not desaturation.paintsGrey() then
+        applyVertexColor(background, Theme.COLORS.send_button_hover)
+        applyVertexColor(chatIcon, HOVER_ICON_COLOR)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -288,8 +284,11 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      desaturation.setHovered(false)
-      iconHover.set(false)
+      local isDesat = desaturation.paintsGrey()
+      applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
+      if not isDesat then
+        applyVertexColor(chatIcon, resolveGlyphColor())
+      end
       squareLook.setHover(false) -- after the repaint: the square has its own fill
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
@@ -340,7 +339,12 @@ function ToggleIcon.Create(factory, options)
   local function applyIconSize(newSize)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
-    applyRing(newSize)
+    chatIcon:SetSize(math.floor(newSize * CHAT_ICON_RATIO), math.floor(newSize * CHAT_ICON_RATIO))
+    if border.SetPoint and border.ClearAllPoints then
+      border:ClearAllPoints()
+      border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
+      border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
+    end
     applyLockGlyphLayout(newSize)
     squareLook.apply(desaturation.isActive()) -- glows sized from the glyph
   end
@@ -363,7 +367,6 @@ function ToggleIcon.Create(factory, options)
     squarePushed = squareLook.pushEffect,
     pulseTexture = pulseGlow.glowTexture,
     label = label,
-    logoGlow = iconHover.glow,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeOutline = badgeOutline,

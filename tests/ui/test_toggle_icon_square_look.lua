@@ -6,8 +6,6 @@ local Bridge = require("WhisperMessenger.UI.Theme.EllesmereBridge")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
-local Hud = require("WhisperMessenger.UI.Theme.Hud")
-local IconRing = require("WhisperMessenger.UI.Shared.IconRing")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local ButtonLook = require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
@@ -18,6 +16,7 @@ local function sameColor(a, b)
 end
 
 local SLOT_BG = ButtonLook.Read().bg -- EllesmereUI's defaults: the fake has no action bars module
+local ROUND_BG = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 local ROUND_GLYPH = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
 local function withEllesmere(fn)
@@ -272,33 +271,29 @@ return function()
     assert(refreshed == 1, "widget repainted, got " .. refreshed)
   end
 
-  -- test_other_presets_keep_the_hud_look (the logo, the HUD's ring, no disc)
+  -- test_other_presets_keep_the_round_widget
   do
     Theme.SetPreset("wow_default")
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
-    assert(icon.background.shown ~= true, "no disc behind the logo")
-    assert(icon.label.texturePath == ROUND_GLYPH, "the addon logo")
-    assert(icon.border.shown ~= true, "no ring with the HUD off")
+    assert(icon.background.texturePath == ROUND_BG, "round fill")
+    assert(icon.label.texturePath == ROUND_GLYPH, "original icon")
+    assert(icon.border.shown == true, "ring shown")
     assert(edgesShown(icon.squareEdges, false), "no square edge")
     assert(icon.accentGlyph.shown == false, "no accent back bubble")
   end
 
   -- test_switching_presets_swaps_the_look_live
   withEllesmere(function()
-    Hud.Configure("classic")
     Theme.SetPreset("wow_default")
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
-    assert(icon.border.texturePath == IconRing.RING.classic and icon.border.shown == true, "classic ring")
     Theme.SetPreset("ellesmere_ui")
     icon.refreshTheme()
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square after switching to EllesmereUI")
-    assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "the bubble glyph")
-    assert(icon.border.shown == false and edgesShown(icon.squareEdges, true), "square edge replaces the ring")
+    assert(icon.border.shown == false and edgesShown(icon.squareEdges, true), "edge replaces ring")
     Theme.SetPreset("elvui_dark")
     icon.refreshTheme()
-    assert(icon.label.texturePath == IconRing.RIMLESS_LOGO and icon.background.shown ~= true, "logo back, no square")
+    assert(icon.background.texturePath == ROUND_BG and icon.label.texturePath == ROUND_GLYPH, "round again")
     assert(icon.border.shown == true and edgesShown(icon.squareEdges, false), "ring back, edge gone")
-    Hud.Configure("off")
   end)
 
   -- test_minimap_button_uses_the_glyph_under_ellesmere

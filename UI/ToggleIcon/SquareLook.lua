@@ -83,10 +83,9 @@ local function createHoverGlow(frame)
   return glow
 end
 
--- parts: { background, border, glyph, layout, getShowBackground, pulse }
--- where layout(square) lays the widget out its usual way (the HUD's ring
--- and logo; with square true, without a ring); getShowBackground() false
--- leaves just the two bubbles.
+-- parts: { background, border, glyph, roundBackground, roundGlyph,
+-- getShowBackground, pulse } where the round* fields are the texture paths
+-- of the round look; getShowBackground() false leaves just the two bubbles.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- slot background, border, and their hover and pushed effects.
 -- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
@@ -158,15 +157,10 @@ function SquareLook.Create(frame, parts)
     border.paint({ kind = "edge", color = look.border, px = look.borderPx })
     hoverEffect.paint(look.hover, look.borderPx)
     pushEffect.paint(look.push, look.borderPx)
-    -- Off the square look the widget's own layout (the HUD ring) takes over;
-    -- on it, that layout without a ring, then the square and the glyph.
-    parts.layout(square)
-    if square then
-      parts.background:SetTexture(SquareLook.SQUARE_TEXTURE)
-      parts.glyph:SetTexture(SquareLook.GLYPH_TEXTURE)
-      setShown(parts.border, false)
-    end
-    setShown(parts.background, square and squareBackgroundShown())
+    parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
+    setShown(parts.background, not square or squareBackgroundShown())
+    parts.glyph:SetTexture(square and SquareLook.GLYPH_TEXTURE or parts.roundGlyph)
+    setShown(parts.border, not square)
     setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()

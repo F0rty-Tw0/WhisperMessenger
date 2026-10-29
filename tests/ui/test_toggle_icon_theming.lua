@@ -1,7 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
-local Hud = require("WhisperMessenger.UI.Theme.Hud")
-local IconRing = require("WhisperMessenger.UI.Shared.IconRing")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 
 local function colorsMatch(a, b)
@@ -19,7 +17,7 @@ return function()
 
   -- -----------------------------------------------------------------------
   -- Icon exposes a refreshTheme() function so the preset-switch flow can
-  -- repaint the ring and logo without a /reload.
+  -- repaint the circle, ring, and glyph without a /reload.
   -- -----------------------------------------------------------------------
   do
     local factory = FakeUI.NewFactory()
@@ -28,36 +26,39 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- Presets paint the icon with their color roles: the ring takes
-  -- toggle_icon_ring (fully opaque, the art carries the shading), the logo
-  -- toggle_icon_glyph.
+  -- Modern presets paint the icon with the existing Modern textures and
+  -- themed color roles.
   -- -----------------------------------------------------------------------
-  Hud.Configure("classic")
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
 
     assert(
-      icon.border.texturePath == IconRing.RING.classic,
-      "modern_icon: ring should use the HUD's ring, got: " .. tostring(icon.border.texturePath)
+      icon.border.texturePath == "Interface\\COMMON\\RingBorder",
+      "modern_icon: ring should use RingBorder, got: " .. tostring(icon.border.texturePath)
     )
-    assert(colorsMatch(icon.border.vertexColor, IconRing.RingColor(Theme.COLORS)), "modern_icon: ring should be tinted with toggle_icon_ring role")
+    assert(colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring), "modern_icon: ring should be tinted with toggle_icon_ring role")
+    assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "modern_icon: bg should be tinted with toggle_icon_bg role")
     assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "modern_icon: glyph should be tinted with toggle_icon_glyph role")
   end
 
   -- -----------------------------------------------------------------------
-  -- Azeroth (wow_native) tints the same ring art gold. Only the color tint
-  -- carries the theme.
+  -- Azeroth (wow_native) uses the same generic ring texture as every
+  -- preset. Only the color tint carries the theme — theming on the toggle
+  -- widget is color-only.
   -- -----------------------------------------------------------------------
   do
     Theme.SetPreset("wow_native")
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
 
-    assert(icon.border.texturePath == IconRing.RING.classic, "azeroth_icon: same ring art, got: " .. tostring(icon.border.texturePath))
     assert(
-      colorsMatch(icon.border.vertexColor, IconRing.RingColor(Theme.COLORS)),
+      icon.border.texturePath == "Interface\\COMMON\\RingBorder",
+      "azeroth_icon: ring should stay on the generic RingBorder, got: " .. tostring(icon.border.texturePath)
+    )
+    assert(
+      colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
       "azeroth_icon: ring should be tinted with toggle_icon_ring role (gold)"
     )
   end
@@ -77,14 +78,13 @@ return function()
     Theme.SetPreset("wow_native")
     icon.refreshTheme()
 
-    assert(icon.border.texturePath == IconRing.RING.classic, "refresh_icon: ring texture stays the same across preset switch")
+    assert(icon.border.texturePath == "Interface\\COMMON\\RingBorder", "refresh_icon: ring texture stays on RingBorder across preset switch")
     assert(
-      colorsMatch(icon.border.vertexColor, IconRing.RingColor(Theme.COLORS)),
+      colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
       "refresh_icon: ring tint should match wow_native toggle_icon_ring after refresh"
     )
     assert(not colorsMatch(icon.border.vertexColor, modernRingColor), "refresh_icon: ring tint should differ between wow_default and wow_native")
   end
-  Hud.Configure("off")
 
   if previousPreset then
     Theme.SetPreset(previousPreset)
