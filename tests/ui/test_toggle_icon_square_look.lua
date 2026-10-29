@@ -7,6 +7,7 @@ local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
 local function sameColor(a, b)
@@ -39,6 +40,20 @@ local function edgesShown(edges, shown)
     end
   end
   return true
+end
+
+-- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
+local function onBubbles(texture, glyph)
+  local point = texture.point or {}
+  return texture.texturePath == SquareLook.BUBBLE_GLOW_TEXTURE
+    and point[1] == "CENTER"
+    and point[2] == glyph
+    and texture.width == glyph.width * SquareLook.BUBBLE_GLOW_SCALE
+end
+
+-- The round pulse art, stretched over the whole button.
+local function fillsButton(texture)
+  return texture.texturePath == PulseGlow.TEXTURE and texture.point == nil and texture.allPoints ~= nil
 end
 
 return function()
@@ -143,9 +158,38 @@ return function()
     local accent = Theme.COLORS.accent
     local glow = icon.hoverGlow.vertexColor
     assert(glow[1] == accent[1] and glow[2] == accent[2] and glow[3] == accent[3], "glow in the accent color")
+    assert(onBubbles(icon.hoverGlow, icon.label), "hover glow follows the bubbles")
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
   end)
+
+  -- test_unread_pulse_glows_around_the_bubbles_without_the_square
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local showBackground = false
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return showBackground
+      end,
+    })
+    assert(onBubbles(icon.pulseTexture, icon.label), "pulse follows the bubbles, got " .. tostring(icon.pulseTexture.texturePath))
+    icon.applyIconSize(60)
+    assert(onBubbles(icon.pulseTexture, icon.label), "pulse resized with the icon")
+    showBackground = true
+    icon.refreshTheme()
+    assert(fillsButton(icon.pulseTexture, icon.frame), "square shown: the usual pulse inside it")
+  end)
+
+  -- test_round_widget_keeps_its_pulse
+  do
+    Theme.SetPreset("wow_default")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+      getIconBackground = function()
+        return false
+      end,
+    })
+    assert(fillsButton(icon.pulseTexture, icon.frame), "round widget: the usual pulse")
+  end
 
   -- test_background_option_change_repaints_the_widget
   do

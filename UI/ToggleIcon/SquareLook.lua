@@ -6,6 +6,7 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local applyVertexColor = UIHelpers.applyVertexColor
 
 -- The widget's square look for themes that want one (EllesmereUI): a flat
@@ -19,11 +20,14 @@ SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 SquareLook.GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
 SquareLook.ACCENT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
 
-local GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\soft_glow.png"
+-- Halo around the two bubbles' outline (clear inside them), for the glyph
+-- drawn without the square. Its canvas is BUBBLE_GLOW_SCALE times the
+-- glyph's, glyph centred, so the halo has room past the glyph's edges.
+SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_glow.png"
+SquareLook.BUBBLE_GLOW_SCALE = 1.5
 
 local EDGE_COLOR = { 0, 0, 0, 1 }
 local HOVER_BRIGHTEN = 0.35 -- how far the hovered accent bubble moves toward white
-local GLOW_SCALE = 1.6 -- hover glow size vs the widget
 
 local function setShown(region, shown)
   if shown and region.Show then
@@ -66,12 +70,19 @@ function SquareLook.CreateAccentGlyph(frame, glyph)
   return { texture = texture, apply = apply }
 end
 
--- Soft accent glow around the icon, shown on hover when there is no square
+-- Puts the bubble halo on `texture`, centred on `glyph` and sized to it.
+local function fitBubbleGlow(texture, glyph)
+  local size = (glyph.GetWidth and glyph:GetWidth() or 0) * SquareLook.BUBBLE_GLOW_SCALE
+  texture:SetTexture(SquareLook.BUBBLE_GLOW_TEXTURE)
+  texture:ClearAllPoints()
+  texture:SetPoint("CENTER", glyph, "CENTER", 0, 0)
+  texture:SetSize(size, size)
+end
+
+-- Accent halo around the bubbles, shown on hover when there is no square
 -- to show the hover.
 local function createHoverGlow(frame)
   local glow = frame:CreateTexture(nil, "BACKGROUND", nil, -8)
-  glow:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  glow:SetTexture(GLOW_TEXTURE)
   if glow.SetBlendMode then
     glow:SetBlendMode("ADD")
   end
@@ -80,8 +91,9 @@ local function createHoverGlow(frame)
 end
 
 -- parts: { background, border, glyph, roundBackground, roundGlyph,
--- getShowBackground } where the round* fields are the texture paths of the
--- round look; getShowBackground() false leaves just the two bubbles.
+-- getShowBackground, pulse } where the round* fields are the texture paths
+-- of the round look; getShowBackground() false leaves just the two bubbles,
+-- and then the unread pulse (a PulseGlow) glows around them too.
 function SquareLook.Create(frame, parts)
   local edges = UIHelpers.createBorderBox(frame, EDGE_COLOR, 1, "BORDER") or {}
   UIHelpers.applyBorderBoxColor(edges, EDGE_COLOR)
@@ -94,14 +106,33 @@ function SquareLook.Create(frame, parts)
     return Theme.UsesSquareWidget() and (not parts.getShowBackground or parts.getShowBackground() ~= false)
   end
 
+  local function bubblesOnly()
+    return Theme.UsesSquareWidget() and not squareBackgroundShown()
+  end
+
   local function paintHover()
     accent.apply(lastDesaturated, hovered)
-    local glowing = hovered and Theme.UsesSquareWidget() and not squareBackgroundShown()
+    local glowing = hovered and bubblesOnly()
     setShown(glow, glowing)
     if glowing then
-      local size = (frame.GetWidth and frame:GetWidth() or 0) * GLOW_SCALE
-      glow:SetSize(size, size)
+      fitBubbleGlow(glow, parts.glyph)
       applyVertexColor(glow, Theme.COLORS.accent)
+    end
+  end
+
+  -- The pulse's round art lights the whole button; with only the bubbles
+  -- showing it would be a disc, so it follows their outline instead.
+  local function shapePulse()
+    local pulse = parts.pulse and parts.pulse.glowTexture
+    if not pulse then
+      return
+    end
+    if bubblesOnly() then
+      fitBubbleGlow(pulse, parts.glyph)
+    else
+      pulse:SetTexture(PulseGlow.TEXTURE)
+      pulse:ClearAllPoints()
+      pulse:SetAllPoints(parts.pulse.glowFrame)
     end
   end
 
@@ -117,6 +148,7 @@ function SquareLook.Create(frame, parts)
     end
     lastDesaturated = desaturated == true
     paintHover()
+    shapePulse()
   end
 
   -- On a square look only the accent bubble shows the hover (and the glow

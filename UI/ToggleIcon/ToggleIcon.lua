@@ -92,6 +92,12 @@ function ToggleIcon.Create(factory, options)
 
   local label = chatIcon -- reference kept for return table
 
+  -- Glow pulse for unread messages (CraftScan-style looping animation)
+  local pulseGlow = PulseGlow.Create(factory, frame, {
+    theme = Theme,
+    accent = Theme.COLORS.accent,
+  })
+
   local squareLook = SquareLook.Create(frame, {
     background = background,
     border = border,
@@ -99,12 +105,7 @@ function ToggleIcon.Create(factory, options)
     roundBackground = CIRCLE_TEX,
     roundGlyph = ADDON_ICON_TEXTURE,
     getShowBackground = options.getIconBackground,
-  })
-
-  -- Glow pulse for unread messages (CraftScan-style looping animation)
-  local pulseGlow = PulseGlow.Create(factory, frame, {
-    theme = Theme,
-    accent = Theme.COLORS.accent,
+    pulse = pulseGlow,
   })
 
   -- Unread badge, outlined so it reads where it overlaps the ring
@@ -338,6 +339,7 @@ function ToggleIcon.Create(factory, options)
       border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
     end
     applyLockGlyphLayout(newSize)
+    squareLook.apply(desaturation.isActive()) -- glows sized from the glyph
   end
 
   setUnreadCount(options.unreadCount)
@@ -353,6 +355,7 @@ function ToggleIcon.Create(factory, options)
     squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,
+    pulseTexture = pulseGlow.glowTexture,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,
