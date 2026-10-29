@@ -17,13 +17,22 @@ local function place(region, point, relativeTo, relativePoint, x, y)
   region:SetPoint(point, relativeTo, relativePoint, x, y)
 end
 
+local function sizeButtons(buttons, size, glyphSize)
+  for _, button in ipairs(buttons) do
+    button:SetSize(size, size)
+    if button._wmGlyph then
+      button._wmGlyph:SetSize(glyphSize, glyphSize)
+    end
+  end
+end
+
 local function applyModern(parts, L)
-  local size, gap = L.TITLE_BUTTON_SIZE, L.TITLE_BUTTON_GAP
+  local gap = L.TITLE_BUTTON_GAP
+  sizeButtons(parts.buttons, L.TITLE_BUTTON_SIZE, L.TITLE_ICON_SIZE)
   -- Buttons are siblings of the title bar; at an equal frame level its
   -- near-opaque background can paint over the glyphs, so lift them above it.
   local buttonLevel = parts.titleBar:GetFrameLevel() + 1
   for _, button in ipairs(parts.buttons) do
-    button:SetSize(size, size)
     button:SetFrameLevel(buttonLevel)
   end
   place(parts.title, "CENTER", parts.titleBar, "CENTER", 0, 0)
@@ -37,10 +46,8 @@ end
 
 -- The template owns the close button and title; the gear sits left of the X.
 local function placeHudGear(parts, L)
-  local size = L.CHROME_BUTTON_SIZE
-  for _, button in ipairs(parts.buttons) do
-    button:SetSize(size, size)
-  end
+  -- The HUD's title bar is thinner, so its glyphs are smaller.
+  sizeButtons(parts.buttons, L.CHROME_BUTTON_SIZE, L.HUD_TITLE_ICON_SIZE)
   if parts.closeButton then
     place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -HUD_GAP, 0)
   else
