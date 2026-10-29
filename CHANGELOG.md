@@ -22,6 +22,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: hovering an item link in the message preview now shows the item's tooltip.
 - Fixed: with the Native WoW HUD look, the message preview's background is now solid like the game's tooltips, so names and item links stay readable over bright ground.
 - Fixed: a whisper from the chat you had open no longer counts as read while another addon's page or the settings cover it, so its preview and unread number show. Going back to the chat marks it read.
+- Fixed: the addon no longer shows as out of date on Burning Crusade Classic Anniversary realms.
 - Fixed: starting or replying to a whisper (/w, /r, or sending one from chat) while another addon's page or the settings are open in the messenger now shows that chat instead of leaving it hidden behind them. Whispers you receive still leave the page open.
 
 ## [2.1.1] - 2026-10-23
