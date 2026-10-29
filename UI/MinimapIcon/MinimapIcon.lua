@@ -18,7 +18,11 @@ local MinimapIcon = {}
 -- Standard minimap button size — larger than classic 20px so the unread
 -- badge is legible, but small enough to not dominate the minimap ring.
 local ICON_SIZE = 30
-local ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
+-- The widget's two chat bubbles (front white, back in the accent), inside
+-- the button's own disc and border rather than the whole ringed logo.
+local FRONT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
+local BACK_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
+local GLYPH_RATIO = 0.8 -- bubbles vs button size, clear of the border
 local BADGE_SIZE = 14
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
@@ -123,10 +127,15 @@ function MinimapIcon.Create(factory, options)
   bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
   applyVertexColor(bg, BG_COLOR)
 
-  -- Addon icon texture (fills the button)
+  -- Chat bubbles, centred inside the border
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
-  iconTex:SetAllPoints(frame)
-  iconTex:SetTexture(ICON_TEXTURE)
+  iconTex:SetSize(ICON_SIZE * GLYPH_RATIO, ICON_SIZE * GLYPH_RATIO)
+  iconTex:SetPoint("CENTER", frame, "CENTER", 0, 0)
+  iconTex:SetTexture(FRONT_GLYPH_TEXTURE)
+  local accentGlyph = frame:CreateTexture(nil, "ARTWORK", nil, -1)
+  accentGlyph:SetAllPoints(iconTex)
+  accentGlyph:SetTexture(BACK_GLYPH_TEXTURE)
+  applyVertexColor(accentGlyph, Theme.COLORS.accent) -- the button's own disc is dark
   -- Ring border (same texture as the widget icon)
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
@@ -174,8 +183,11 @@ function MinimapIcon.Create(factory, options)
   -- Idle-desaturation shared with the widget icon: grey only when the
   -- setting is on AND there are no unread whispers.
   local desaturation = Desaturation.Create({
-    textures = { chatIcon = iconTex, background = bg, border = border },
+    textures = { chatIcon = iconTex, background = bg, border = border, accentGlyph = accentGlyph },
     resolveColors = {
+      accentGlyph = function()
+        return Theme.COLORS.accent
+      end,
       chatIcon = function()
         return ICON_COLOR
       end,
@@ -280,6 +292,7 @@ function MinimapIcon.Create(factory, options)
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
+    desaturation.refreshOriginalColors()
     desaturation.refresh()
   end
 
@@ -290,6 +303,7 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
+    accentGlyph = accentGlyph,
     border = border,
     badge = badge,
     badgeBackground = badgeBackground,

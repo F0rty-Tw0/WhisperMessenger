@@ -6,6 +6,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Sharper addon icon: the logo in the AddOn List, the window and the Broker menu is redrawn at high resolution. The messenger button drops its ring and shows two crisp chat bubbles, the back one in a color that suits your theme, and the minimap button shows the same bubbles inside its border.
 - Other addons can now show their alerts on the messenger's widget and open a chat with a player. They can also add their own page to the messenger window, opened from a tab next to Whispers, Groups and Channels.
 - The buttons along the top of the messenger window are larger and easier to hit.
 - With the Native WoW HUD on, the message preview next to the messenger button now uses the game's tooltip border.

@@ -8,6 +8,9 @@ local Desaturation = {}
 local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
 local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
 
+-- deps.textures and deps.resolveColors share keys (e.g. chatIcon,
+-- background, border, accentGlyph); `background` grays to DESAT_BG, every
+-- other texture to DESAT_GREY.
 function Desaturation.Create(deps)
   local textures = deps.textures
   local resolveColors = deps.resolveColors
@@ -17,11 +20,13 @@ function Desaturation.Create(deps)
   local lastUnreadCount = 0
   -- Snapshot original colors. Re-read on every theme refresh so preset
   -- switches propagate through the desaturate path.
-  local originalColors = {
-    chatIcon = resolveColors.chatIcon(),
-    background = resolveColors.background(),
-    border = resolveColors.border(),
-  }
+  local originalColors = {}
+  local function refreshOriginalColors()
+    for key in pairs(textures) do
+      originalColors[key] = resolveColors[key]()
+    end
+  end
+  refreshOriginalColors()
 
   local function isActive()
     return getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
@@ -32,31 +37,20 @@ function Desaturation.Create(deps)
     local desaturateEnabled = getIconDesaturated and getIconDesaturated()
     local shouldDesaturate = desaturateEnabled and lastUnreadCount == 0
 
-    for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
+    for key, tex in pairs(textures) do
       if tex.SetDesaturated then
         tex:SetDesaturated(shouldDesaturate)
       end
-    end
-
-    if shouldDesaturate then
-      applyVertexColor(textures.chatIcon, DESAT_GREY)
-      applyVertexColor(textures.background, DESAT_BG)
-      applyVertexColor(textures.border, DESAT_GREY)
-    else
-      applyVertexColor(textures.chatIcon, originalColors.chatIcon)
-      applyVertexColor(textures.background, originalColors.background)
-      applyVertexColor(textures.border, originalColors.border)
+      if shouldDesaturate then
+        applyVertexColor(tex, key == "background" and DESAT_BG or DESAT_GREY)
+      else
+        applyVertexColor(tex, originalColors[key])
+      end
     end
   end
 
   local function refresh()
     update(lastUnreadCount)
-  end
-
-  local function refreshOriginalColors()
-    originalColors.chatIcon = resolveColors.chatIcon()
-    originalColors.background = resolveColors.background()
-    originalColors.border = resolveColors.border()
   end
 
   return {

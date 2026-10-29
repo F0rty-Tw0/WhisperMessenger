@@ -2,6 +2,9 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 
+local FRONT_GLYPH = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
+local BACK_GLYPH = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
+
 local function colorsMatch(a, b)
   if type(a) ~= "table" or type(b) ~= "table" then
     return false
@@ -12,12 +15,22 @@ local function colorsMatch(a, b)
   return round(a[1]) == round(b[1]) and round(a[2]) == round(b[2]) and round(a[3]) == round(b[3]) and round(a[4] or 1) == round(b[4] or 1)
 end
 
+local function regionsWithTexture(frame, path)
+  local found = {}
+  for _, child in ipairs(frame.children or {}) do
+    if child.texturePath == path then
+      found[#found + 1] = child
+    end
+  end
+  return found
+end
+
 return function()
   local previousPreset = Theme.GetPreset()
 
   -- -----------------------------------------------------------------------
   -- Icon exposes a refreshTheme() function so the preset-switch flow can
-  -- repaint the circle, ring, and glyph without a /reload.
+  -- repaint the circle and bubbles without a /reload.
   -- -----------------------------------------------------------------------
   do
     local factory = FakeUI.NewFactory()
@@ -26,64 +39,73 @@ return function()
   end
 
   -- -----------------------------------------------------------------------
-  -- Modern presets paint the icon with the existing Modern textures and
-  -- themed color roles.
+  -- The widget is a themed disc with two chat bubbles: a white front bubble
+  -- and a back bubble in toggle_icon_glyph_back. No ring around it.
   -- -----------------------------------------------------------------------
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
 
-    assert(
-      icon.border.texturePath == "Interface\\COMMON\\RingBorder",
-      "modern_icon: ring should use RingBorder, got: " .. tostring(icon.border.texturePath)
-    )
-    assert(colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring), "modern_icon: ring should be tinted with toggle_icon_ring role")
-    assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "modern_icon: bg should be tinted with toggle_icon_bg role")
-    assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "modern_icon: glyph should be tinted with toggle_icon_glyph role")
+    assert(icon.label.texturePath == FRONT_GLYPH, "bubbles_icon: front bubble art, got: " .. tostring(icon.label.texturePath))
+    assert(icon.accentGlyph.texturePath == BACK_GLYPH, "bubbles_icon: back bubble art")
+    assert(icon.accentGlyph.allPoints == icon.label, "bubbles_icon: back bubble sits with the front bubble")
+    assert(colorsMatch(icon.accentGlyph.vertexColor, Theme.COLORS.toggle_icon_glyph_back), "bubbles_icon: back bubble in toggle_icon_glyph_back")
+    assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "bubbles_icon: bg should be tinted with toggle_icon_bg role")
+    assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "bubbles_icon: glyph should be tinted with toggle_icon_glyph role")
+    assert(icon.border == nil, "bubbles_icon: no ring")
+    assert(#regionsWithTexture(icon.frame, "Interface\\COMMON\\RingBorder") == 0, "bubbles_icon: no RingBorder texture")
   end
 
   -- -----------------------------------------------------------------------
-  -- Azeroth (wow_native) uses the same generic ring texture as every
-  -- preset. Only the color tint carries the theme — theming on the toggle
-  -- widget is color-only.
-  -- -----------------------------------------------------------------------
-  do
-    Theme.SetPreset("wow_native")
-    local factory = FakeUI.NewFactory()
-    local icon = ToggleIcon.Create(factory, {})
-
-    assert(
-      icon.border.texturePath == "Interface\\COMMON\\RingBorder",
-      "azeroth_icon: ring should stay on the generic RingBorder, got: " .. tostring(icon.border.texturePath)
-    )
-    assert(
-      colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
-      "azeroth_icon: ring should be tinted with toggle_icon_ring role (gold)"
-    )
-  end
-
-  -- -----------------------------------------------------------------------
-  -- refreshTheme repaints tints live when the preset changes. The ring
-  -- texture stays constant across presets; only the color shifts.
+  -- refreshTheme repaints the back bubble live when the preset changes.
   -- -----------------------------------------------------------------------
   do
     Theme.SetPreset("wow_default")
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
+    local before = icon.accentGlyph.vertexColor
 
-    local src = icon.border.vertexColor or {}
-    local modernRingColor = { src[1], src[2], src[3], src[4] }
-
-    Theme.SetPreset("wow_native")
+    Theme.SetPreset("elvui_dark")
     icon.refreshTheme()
 
-    assert(icon.border.texturePath == "Interface\\COMMON\\RingBorder", "refresh_icon: ring texture stays on RingBorder across preset switch")
-    assert(
-      colorsMatch(icon.border.vertexColor, Theme.COLORS.toggle_icon_ring),
-      "refresh_icon: ring tint should match wow_native toggle_icon_ring after refresh"
-    )
-    assert(not colorsMatch(icon.border.vertexColor, modernRingColor), "refresh_icon: ring tint should differ between wow_default and wow_native")
+    assert(colorsMatch(icon.accentGlyph.vertexColor, Theme.COLORS.toggle_icon_glyph_back), "refresh_icon: back bubble follows the new preset")
+    assert(not colorsMatch(icon.accentGlyph.vertexColor, before), "refresh_icon: back bubble differs between wow_default and elvui_dark")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- Idle desaturation grays both bubbles; an unread whisper brings the
+  -- colors back.
+  -- -----------------------------------------------------------------------
+  do
+    Theme.SetPreset("wow_default")
+    local factory = FakeUI.NewFactory()
+    local icon = ToggleIcon.Create(factory, {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
+    icon.setUnreadCount(0)
+    assert(icon.accentGlyph.desaturated == true, "desat_icon: back bubble desaturated")
+    assert(not colorsMatch(icon.accentGlyph.vertexColor, Theme.COLORS.toggle_icon_glyph_back), "desat_icon: back bubble gray")
+    assert(icon.label.desaturated == true, "desat_icon: front bubble desaturated")
+    icon.setUnreadCount(1)
+    assert(icon.accentGlyph.desaturated == false, "desat_icon: back bubble in color with unread")
+    assert(colorsMatch(icon.accentGlyph.vertexColor, Theme.COLORS.toggle_icon_glyph_back), "desat_icon: back bubble colored with unread")
+  end
+
+  -- -----------------------------------------------------------------------
+  -- Hover lights both bubbles soft white, so the back bubble still reads
+  -- when the hover fill matches its color (Jade Dark).
+  -- -----------------------------------------------------------------------
+  do
+    Theme.SetPreset("jade_dark")
+    local factory = FakeUI.NewFactory()
+    local icon = ToggleIcon.Create(factory, {})
+    icon.frame:GetScript("OnEnter")(icon.frame)
+    assert(colorsMatch(icon.accentGlyph.vertexColor, { 1, 1, 1, 0.45 }), "hover_icon: back bubble soft white on hover")
+    icon.frame:GetScript("OnLeave")(icon.frame)
+    assert(colorsMatch(icon.accentGlyph.vertexColor, Theme.COLORS.toggle_icon_glyph_back), "hover_icon: back bubble color back after hover")
   end
 
   if previousPreset then
