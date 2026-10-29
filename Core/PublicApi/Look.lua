@@ -12,6 +12,8 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 -- runs (a change applies after /reload). colors holds copies of the keys in
 -- LOOK_KEYS, read at call time so they follow theme switches; a key the
 -- theme lacks is left out. Any internal error returns nil; it never throws.
+-- With hud other than "off", WM's panes are see-through over the game's frame
+-- art, so a matching panel leaves bg_primary and bg_secondary unpainted.
 local Look = {}
 
 local LOOK_KEYS = {
