@@ -92,8 +92,8 @@ end
 
 -- parts: { background, border, glyph, roundBackground, roundGlyph,
 -- getShowBackground, pulse } where the round* fields are the texture paths
--- of the round look; getShowBackground() false leaves just the two bubbles,
--- and then the unread pulse (a PulseGlow) glows around them too.
+-- of the round look; getShowBackground() false leaves just the two bubbles.
+-- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
 function SquareLook.Create(frame, parts)
   local edges = UIHelpers.createBorderBox(frame, EDGE_COLOR, 1, "BORDER") or {}
   UIHelpers.applyBorderBoxColor(edges, EDGE_COLOR)
@@ -120,14 +120,14 @@ function SquareLook.Create(frame, parts)
     end
   end
 
-  -- The pulse's round art lights the whole button; with only the bubbles
-  -- showing it would be a disc, so it follows their outline instead.
+  -- The pulse's round art is made for the round button; on the square look
+  -- it glows around the bubbles' outline instead, square shown or not.
   local function shapePulse()
     local pulse = parts.pulse and parts.pulse.glowTexture
     if not pulse then
       return
     end
-    if bubblesOnly() then
+    if Theme.UsesSquareWidget() then
       fitBubbleGlow(pulse, parts.glyph)
     else
       pulse:SetTexture(PulseGlow.TEXTURE)

@@ -163,7 +163,7 @@ return function()
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
   end)
 
-  -- test_unread_pulse_glows_around_the_bubbles_without_the_square
+  -- test_unread_pulse_glows_around_the_bubbles
   withEllesmere(function()
     Theme.SetPreset("ellesmere_ui")
     local showBackground = false
@@ -177,7 +177,10 @@ return function()
     assert(onBubbles(icon.pulseTexture, icon.label), "pulse resized with the icon")
     showBackground = true
     icon.refreshTheme()
-    assert(fillsButton(icon.pulseTexture, icon.frame), "square shown: the usual pulse inside it")
+    assert(onBubbles(icon.pulseTexture, icon.label), "square shown: still around the bubbles")
+    Theme.SetPreset("wow_default")
+    icon.refreshTheme()
+    assert(fillsButton(icon.pulseTexture, icon.frame), "round again on other presets")
   end)
 
   -- test_round_widget_keeps_its_pulse
