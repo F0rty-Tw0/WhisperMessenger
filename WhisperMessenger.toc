@@ -445,5 +445,6 @@ Core/PublicApi/ContactInfo.lua
 Core/PublicApi/Preview.lua
 Core/PublicApi/BlockList.lua
 Core/PublicApi/UnreadCount.lua
+Core/PublicApi/Look.lua
 Core/PublicApi.lua
 Bootstrap.lua
