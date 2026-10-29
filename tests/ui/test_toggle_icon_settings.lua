@@ -273,7 +273,7 @@ return function()
     icon.frame:GetScript("OnEnter")(icon.frame)
     local hoverColor = icon.label.vertexColor
     assert(hoverColor[4] == normalColor[4], "hover should no longer fade the logo")
-    assert(icon.hoverGlow.shown == true, "hover should light the logo up in the theme color")
+    assert(icon.logoGlow.shown == true, "hover should light the logo up in the theme color")
 
     icon.frame:GetScript("OnLeave")(icon.frame)
     local restoredColor = icon.label.vertexColor

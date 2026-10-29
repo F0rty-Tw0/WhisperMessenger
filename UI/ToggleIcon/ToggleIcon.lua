@@ -323,7 +323,7 @@ function ToggleIcon.Create(factory, options)
     background = background,
     border = border,
     label = label,
-    hoverGlow = iconHover.glow,
+    logoGlow = iconHover.glow,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeOutline = badgeOutline,

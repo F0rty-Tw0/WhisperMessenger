@@ -296,7 +296,7 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
-    hoverGlow = iconHover.glow,
+    logoGlow = iconHover.glow,
     background = bg,
     border = border,
     badge = badge,

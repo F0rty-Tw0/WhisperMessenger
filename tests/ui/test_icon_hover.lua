@@ -31,7 +31,7 @@ local function hover(button, on)
 end
 
 local function checkButton(name, button, logo)
-  local glow = button.hoverGlow
+  local glow = button.logoGlow
   assert(glow.shown ~= true, name .. ": no glow at rest")
   hover(button, true)
   assert(glow.shown == true, name .. ": glow on hover")
@@ -74,7 +74,7 @@ return function()
     assert(icon.label.desaturated == true, "gray when idle")
     hover(icon, true)
     assert(icon.label.desaturated == false, "colors back on hover")
-    assert(icon.hoverGlow.shown == true, "and the glow")
+    assert(icon.logoGlow.shown == true, "and the glow")
     hover(icon, false)
     assert(icon.label.desaturated == true, "gray again after hover")
   end
@@ -82,7 +82,7 @@ return function()
     local minimap = minimapButton({ getIconDesaturated = idleGray })
     minimap.setUnreadCount(0)
     hover(minimap, true)
-    assert(minimap.iconTex.desaturated == false and minimap.hoverGlow.shown == true, "minimap: colors back and glow")
+    assert(minimap.iconTex.desaturated == false and minimap.logoGlow.shown == true, "minimap: colors back and glow")
     hover(minimap, false)
     assert(minimap.iconTex.desaturated == true, "minimap: gray again")
   end
@@ -92,8 +92,8 @@ return function()
   do
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
     hover(icon, true)
-    assert(icon.hoverGlow.texturePath == icon.label.texturePath, "glow uses whichever logo is showing")
-    assert(icon.hoverGlow.allPoints == icon.label, "and sits on it")
+    assert(icon.logoGlow.texturePath == icon.label.texturePath, "glow uses whichever logo is showing")
+    assert(icon.logoGlow.allPoints == icon.label, "and sits on it")
     hover(icon, false)
   end
   Hud.Configure("off")
