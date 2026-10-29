@@ -270,9 +270,6 @@ function SettingsHandler.Create(options)
         minimap.refreshDesaturation()
       end
     end
-    if (key == "minimapBorder" or key == "minimapBorderStyle") and minimap and minimap.refreshTheme then
-      minimap.refreshTheme()
-    end
     if key == "widgetTransparency" and icon and icon.refreshTransparency then
       icon.refreshTransparency()
     end

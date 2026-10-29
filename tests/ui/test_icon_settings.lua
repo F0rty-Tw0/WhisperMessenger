@@ -231,8 +231,6 @@ return function()
       widgetTransparency = 0,
       widgetPreviewAutoDismissSeconds = 30,
       widgetPreviewPosition = "right",
-      minimapBorder = true,
-      minimapBorderStyle = "auto",
     }
     local resetCount = 0
     for key, value in pairs(changes) do
@@ -242,22 +240,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 13, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit thirteen icon/widget keys")
-  end
-
-  -- test_minimap_border_controls_fire_their_keys
-
-  do
-    local changes = {}
-    local result = IconSettings.Create(factory, parent, {}, {
-      onChange = function(key, value)
-        changes[key] = value
-      end,
-    })
-    FindUI.click(FindUI.toggle(result.frame, "Minimap button border"))
-    assert(changes.minimapBorder == false, "test_minimap_border_controls_fire_their_keys: toggle turns the ring off")
-    FindUI.click(FindUI.byLabel(result.frame, "Classic"))
-    assert(changes.minimapBorderStyle == "classic", "test_minimap_border_controls_fire_their_keys: style selector")
+    assert(resetCount == 11, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit eleven icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language

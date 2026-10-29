@@ -47,7 +47,7 @@ local roles = {
   danger_hover = { 0.55, 0.16, 0.16, 0.90 },
   action_icon = withAlpha(textSecondaryRgb, 0.45),
   toggle_icon_bg = { 0.10, 0.10, 0.10, 1.0 },
-  toggle_icon_glyph_back = withAlpha(jadeRgb, 1.0),
+  toggle_icon_ring = withAlpha(jadeRgb, 0.55),
   toggle_icon_glyph = { 0.96, 0.96, 0.96, 1.0 },
 }
 

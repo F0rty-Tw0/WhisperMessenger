@@ -161,6 +161,7 @@ UI/Shared/PickerStyles.lua
 UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
+UI/Shared/IconRing.lua
 UI/Shared/PanelBadge.lua
 UI/Shared/CloseGlyphButton.lua
 UI/Hyperlinks/UrlFormatter.lua
@@ -274,7 +275,6 @@ UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/ToggleIcon.lua
-UI/MinimapIcon/MinimapButtonLook.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
 UI/MessengerWindow/AlphaController.lua

@@ -190,8 +190,6 @@ function SettingsPanels.Create(factory, options)
         widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
         widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
         iconMode = settingsConfig.iconMode,
-        minimapBorder = settingsConfig.minimapBorder,
-        minimapBorderStyle = settingsConfig.minimapBorderStyle,
       },
     },
     {

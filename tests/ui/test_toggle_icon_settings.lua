@@ -113,7 +113,7 @@ return function()
     assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
 
-  -- test_icon_uses_chat_bubble_glyph
+  -- test_icon_uses_addon_logo_texture
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -121,8 +121,8 @@ return function()
     })
 
     assert(
-      icon.label.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png",
-      "test_icon_uses_chat_bubble_glyph: foreground should use the chat bubble glyph, got " .. tostring(icon.label.texturePath)
+      icon.label.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
+      "test_icon_uses_addon_logo_texture: foreground should use addon icon texture, got " .. tostring(icon.label.texturePath)
     )
   end
 
@@ -185,8 +185,8 @@ return function()
       "test_icon_desaturated_when_no_unread: background should be desaturated, got " .. tostring(icon.background.desaturated)
     )
     assert(
-      icon.accentGlyph.desaturated == true,
-      "test_icon_desaturated_when_no_unread: back bubble should be desaturated, got " .. tostring(icon.accentGlyph.desaturated)
+      icon.border.desaturated == true,
+      "test_icon_desaturated_when_no_unread: border should be desaturated, got " .. tostring(icon.border.desaturated)
     )
   end
 

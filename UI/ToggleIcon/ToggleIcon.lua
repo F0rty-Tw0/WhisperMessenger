@@ -17,14 +17,11 @@ local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleI
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
--- Two chat bubbles, white art tinted in game: the front bubble takes the
--- preset's toggle_icon_glyph color, the back bubble toggle_icon_glyph_back.
-local FRONT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_front.png"
-local BACK_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
+local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
+local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
 
 local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
 local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
-local HOVER_BACK_GLYPH_COLOR = { 1, 1, 1, 0.45 } -- reads on any hover fill
 local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
 local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
@@ -60,30 +57,35 @@ function ToggleIcon.Create(factory, options)
   local function resolveBgColor()
     return Theme.COLORS.toggle_icon_bg
   end
+  local function resolveRingColor()
+    return IconRing.RingColor(Theme.COLORS)
+  end
   local function resolveGlyphColor()
     return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
   end
-  local function resolveBackGlyphColor()
-    return Theme.COLORS.toggle_icon_glyph_back or Theme.COLORS.accent
-  end
 
-  -- Circular background: no ring around it, the disc alone.
+  -- The logo carries its own disc, so the low-res tinted circle behind it
+  -- stays hidden (kept for the hover and desaturate paint that tint it).
   local background = frame:CreateTexture(nil, "BACKGROUND")
   background:SetAllPoints(frame)
   background:SetTexture(CIRCLE_TEX)
   applyVertexColor(background, resolveBgColor())
+  background:Hide()
 
-  -- Chat icon: the front bubble, with the back bubble just under it.
+  -- The minimap-button ring for the Native WoW HUD style (IconRing), tinted
+  -- with the theme's ring color; no ring with the HUD off.
+  local border = frame:CreateTexture(nil, "OVERLAY")
+  applyVertexColor(border, resolveRingColor())
+
+  -- The addon logo (full, or without its rim inside the ring)
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
-  chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
-  chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  chatIcon:SetTexture(FRONT_GLYPH_TEXTURE)
   applyVertexColor(chatIcon, resolveGlyphColor())
 
-  local accentGlyph = frame:CreateTexture(nil, "ARTWORK", nil, -1)
-  accentGlyph:SetAllPoints(chatIcon)
-  accentGlyph:SetTexture(BACK_GLYPH_TEXTURE)
-  applyVertexColor(accentGlyph, resolveBackGlyphColor())
+  local ringKind = IconRing.Kind(Hud.Style())
+  local function applyRing(size)
+    IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, ringKind, size, CHAT_ICON_RATIO)
+  end
+  applyRing(ICON_SIZE)
 
   local label = chatIcon -- reference kept for return table
 
@@ -205,11 +207,11 @@ function ToggleIcon.Create(factory, options)
   end
 
   local desaturation = Desaturation.Create({
-    textures = { chatIcon = chatIcon, background = background, accentGlyph = accentGlyph },
+    textures = { chatIcon = chatIcon, background = background, border = border },
     resolveColors = {
       chatIcon = resolveGlyphColor,
       background = resolveBgColor,
-      accentGlyph = resolveBackGlyphColor,
+      border = resolveRingColor,
     },
     getIconDesaturated = getIconDesaturated,
     applyVertexColor = applyVertexColor,
@@ -242,7 +244,6 @@ function ToggleIcon.Create(factory, options)
       if not desaturation.isActive() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
         applyVertexColor(chatIcon, HOVER_ICON_COLOR)
-        applyVertexColor(accentGlyph, HOVER_BACK_GLYPH_COLOR)
       end
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
         _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
@@ -270,7 +271,6 @@ function ToggleIcon.Create(factory, options)
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if not isDesat then
         applyVertexColor(chatIcon, resolveGlyphColor())
-        applyVertexColor(accentGlyph, resolveBackGlyphColor())
       end
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
@@ -311,7 +311,7 @@ function ToggleIcon.Create(factory, options)
   local function applyIconSize(newSize)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
-    chatIcon:SetSize(math.floor(newSize * CHAT_ICON_RATIO), math.floor(newSize * CHAT_ICON_RATIO))
+    applyRing(newSize)
     applyLockGlyphLayout(newSize)
   end
 
@@ -324,7 +324,7 @@ function ToggleIcon.Create(factory, options)
   return {
     frame = frame,
     background = background,
-    accentGlyph = accentGlyph,
+    border = border,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,
