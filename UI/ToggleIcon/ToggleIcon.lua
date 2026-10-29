@@ -13,6 +13,7 @@ local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleI
 local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.ToggleIcon.PulseState")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
+local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
@@ -82,8 +83,11 @@ function ToggleIcon.Create(factory, options)
   applyVertexColor(chatIcon, resolveGlyphColor())
 
   local ringKind = IconRing.Kind(Hud.Style())
-  local function applyRing(size)
-    IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, ringKind, size, CHAT_ICON_RATIO)
+  local currentSize = ICON_SIZE
+  -- noRing: the square look (EllesmereUI) draws its own frame.
+  local function applyRing(size, noRing)
+    currentSize = size or currentSize
+    IconRing.Apply({ frame = frame, icon = chatIcon, ring = border }, not noRing and ringKind or nil, currentSize, CHAT_ICON_RATIO)
   end
   applyRing(ICON_SIZE)
 
@@ -93,6 +97,17 @@ function ToggleIcon.Create(factory, options)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
     accent = Theme.COLORS.accent,
+  })
+
+  local squareLook = SquareLook.Create(frame, {
+    background = background,
+    border = border,
+    glyph = chatIcon,
+    layout = function(square)
+      applyRing(nil, square)
+    end,
+    getShowBackground = options.getIconBackground,
+    pulse = pulseGlow,
   })
 
   -- Unread badge, outlined so it reads where it overlaps the ring
@@ -215,6 +230,7 @@ function ToggleIcon.Create(factory, options)
     },
     getIconDesaturated = getIconDesaturated,
     applyVertexColor = applyVertexColor,
+    keepColors = Theme.UsesSquareWidget,
   })
 
   -- count is the number shown; pulseCount (default count) starts the glow.
@@ -233,6 +249,7 @@ function ToggleIcon.Create(factory, options)
     pulseState.setUnreadWants((tonumber(pulseCount or count) or 0) > 0 and allowPulse and showBadge)
 
     desaturation.update(unreadCount)
+    squareLook.apply(desaturation.isActive())
   end
 
   -- Hover glow effect
@@ -241,7 +258,9 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = true
       syncLockGlyphVisibility()
       refreshTransparency()
-      if not desaturation.isActive() then
+      if squareLook.isSquare() then
+        squareLook.setHover(true)
+      elseif not desaturation.paintsGrey() then
         applyVertexColor(background, Theme.COLORS.send_button_hover)
         applyVertexColor(chatIcon, HOVER_ICON_COLOR)
       end
@@ -267,17 +286,25 @@ function ToggleIcon.Create(factory, options)
       isHoveringIcon = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      local isDesat = desaturation.isActive()
+      local isDesat = desaturation.paintsGrey()
       applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
       if not isDesat then
         applyVertexColor(chatIcon, resolveGlyphColor())
       end
+      squareLook.setHover(false) -- after the repaint: the square has its own fill
       if _G.GameTooltip and _G.GameTooltip.Hide then
         _G.GameTooltip:Hide()
       end
     end)
 
     frame:SetScript("OnClick", IconClick.Create(options))
+
+    frame:SetScript("OnMouseDown", function()
+      squareLook.setPushed(true)
+    end)
+    frame:SetScript("OnMouseUp", function()
+      squareLook.setPushed(false)
+    end)
 
     frame:SetScript("OnDragStart", function(self)
       if isLocked() then
@@ -298,7 +325,10 @@ function ToggleIcon.Create(factory, options)
     end)
   end
 
-  local refreshDesaturation = desaturation.refresh
+  local function refreshDesaturation()
+    desaturation.refresh()
+    squareLook.apply(desaturation.isActive())
+  end
 
   local function refreshTheme()
     badgeResult.paint()
@@ -313,6 +343,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetSize(newSize, newSize)
     applyRing(newSize)
     applyLockGlyphLayout(newSize)
+    squareLook.apply(desaturation.isActive()) -- glows sized from the glyph
   end
 
   setUnreadCount(options.unreadCount)
@@ -325,6 +356,13 @@ function ToggleIcon.Create(factory, options)
     frame = frame,
     background = background,
     border = border,
+    squareEdges = squareLook.edges,
+    accentGlyph = squareLook.accentGlyph,
+    hoverGlow = squareLook.hoverGlow,
+    glyphOutline = squareLook.outline,
+    squareHover = squareLook.hoverEffect,
+    squarePushed = squareLook.pushEffect,
+    pulseTexture = pulseGlow.glowTexture,
     label = label,
     badge = badge,
     badgeBackground = badgeBackground,

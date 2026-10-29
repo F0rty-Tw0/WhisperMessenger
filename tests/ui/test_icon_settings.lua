@@ -223,6 +223,7 @@ return function()
       iconMode = "widget",
       iconSize = 42,
       iconDesaturated = true,
+      iconBackground = true,
       lockToggleIcon = false,
       shareWidgetPosition = false,
       showUnreadBadge = true,
@@ -240,7 +241,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 11, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit eleven icon/widget keys")
+    assert(resetCount == 12, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit twelve icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language

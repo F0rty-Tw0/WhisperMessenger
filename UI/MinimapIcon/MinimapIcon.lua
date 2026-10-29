@@ -14,6 +14,7 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local IconRing = ns.IconRing or require("WhisperMessenger.UI.Shared.IconRing")
+local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local MinimapIcon = {}
 
@@ -132,7 +133,18 @@ function MinimapIcon.Create(factory, options)
     return IconRing.RingColor(Theme.COLORS)
   end
   applyVertexColor(border, resolveRingColor())
-  IconRing.Apply({ frame = frame, icon = iconTex, ring = border }, IconRing.Kind(Hud.Style()), ICON_SIZE)
+  -- Accent back bubble under the ring-free glyph (square themes only)
+  local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
+
+  -- The HUD's ring and logo; a square theme (EllesmereUI) swaps the logo
+  -- for its two-bubble glyph, as on the widget.
+  local function applyLook()
+    IconRing.Apply({ frame = frame, icon = iconTex, ring = border }, IconRing.Kind(Hud.Style()), ICON_SIZE)
+    if Theme.UsesSquareWidget() then
+      iconTex:SetTexture(SquareLook.GLYPH_TEXTURE)
+    end
+  end
+  applyLook()
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -186,6 +198,7 @@ function MinimapIcon.Create(factory, options)
     },
     getIconDesaturated = options.getIconDesaturated,
     applyVertexColor = applyVertexColor,
+    keepColors = Theme.UsesSquareWidget,
   })
 
   -- count is the number shown; pulseCount (default count) starts the glow.
@@ -208,6 +221,7 @@ function MinimapIcon.Create(factory, options)
     end
 
     desaturation.update(unreadCount)
+    accentGlyph.apply(desaturation.isActive())
   end
 
   -- Drag: orbit around minimap center with live radial constraint.
@@ -274,12 +288,18 @@ function MinimapIcon.Create(factory, options)
     return frame.IsShown and frame:IsShown() == true
   end
 
+  local function refreshDesaturation()
+    desaturation.refresh()
+    accentGlyph.apply(desaturation.isActive())
+  end
+
   local function refreshTheme()
+    applyLook()
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
     desaturation.refreshOriginalColors() -- the ring follows the theme
-    desaturation.refresh()
+    refreshDesaturation()
   end
 
   setUnreadCount(options.unreadCount or 0)
@@ -299,7 +319,8 @@ function MinimapIcon.Create(factory, options)
     setUnreadCount = setUnreadCount,
     setIncomingPreview = setIncomingPreview,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
-    refreshDesaturation = desaturation.refresh,
+    refreshDesaturation = refreshDesaturation,
+    accentGlyph = accentGlyph.texture,
     refreshTheme = refreshTheme,
     applyRadialPosition = applyRadialPosition,
     setShown = setShown,

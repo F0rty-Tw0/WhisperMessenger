@@ -10,8 +10,13 @@ Presets.ELVUI_DARK = "elvui_dark"
 Presets.PLUMBER_WARM = "plumber_warm"
 Presets.JADE_DARK = "jade_dark"
 Presets.WOW_NATIVE = "wow_native"
+-- Live preset: built from EllesmereUI's look on every apply, offered only
+-- while EllesmereUI is loaded.
+Presets.ELLESMERE_UI = "ellesmere_ui"
 
 local Builder = ns.ThemePresetsBuilder or require("WhisperMessenger.UI.Theme.Presets.Builder")
+local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
+local dataEllesmereUI = ns.ThemePresetDataEllesmereUI or require("WhisperMessenger.UI.Theme.Presets.Data.EllesmereUI")
 
 local dataWowDefault = ns.ThemePresetDataWowDefault or require("WhisperMessenger.UI.Theme.Presets.Data.WowDefault")
 local dataElvuiDark = ns.ThemePresetDataElvuiDark or require("WhisperMessenger.UI.Theme.Presets.Data.ElvuiDark")
@@ -118,11 +123,25 @@ function Presets.ListKeys()
   for i, key in ipairs(presetOrder) do
     keys[i] = key
   end
+  if EllesmereBridge.IsAvailable() then
+    keys[#keys + 1] = Presets.ELLESMERE_UI
+  end
 
   return keys
 end
 
+function Presets.IsLive(key)
+  return key == Presets.ELLESMERE_UI
+end
+
 function Presets.Get(key)
+  if key == Presets.ELLESMERE_UI then
+    if not EllesmereBridge.IsAvailable() then
+      return nil
+    end
+    return Builder.BuildPreset(tokenRoles, dataEllesmereUI.BuildRoles(EllesmereBridge.Accent(), EllesmereBridge.Panel()))
+  end
+
   local preset = presetData[key]
   if type(preset) ~= "table" then
     return nil

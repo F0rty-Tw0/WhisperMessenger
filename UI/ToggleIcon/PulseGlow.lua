@@ -18,6 +18,8 @@ local PULSE_FADE_OUT = 1.0
 
 local PulseGlow = {}
 
+PulseGlow.TEXTURE = INNER_GLOW_TEXTURE
+
 function PulseGlow.Create(factory, frame, options)
   options = options or {}
   local theme = options.theme or Theme
