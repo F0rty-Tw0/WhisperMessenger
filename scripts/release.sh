@@ -47,9 +47,9 @@ echo "Releasing WhisperMessenger ${TAG_VERSION}..."
 
 # Fetch live TOC interface numbers from Blizzard's patch CDN, one per flavor
 # product. Refuses to release if any required product is unreachable so we
-# never ship a stale interface after a WoW patch. TBC and Cata Classic are
-# EOL — Blizzard no longer publishes a live `wow_tbc` or `wow_classic_cata`
-# product, so those lines are left at whatever the TOC currently has.
+# never ship a stale interface after a WoW patch. TBC is live again as the
+# Anniversary realms, under `wow_anniversary` (not the old `wow_tbc`). Wrath
+# and Cata Classic are EOL, so those lines are left at whatever the TOC has.
 fetch_toc() {
   local product="$1"
   python -c "
@@ -79,27 +79,29 @@ cdn_die() {
 echo "Fetching live TOC interface numbers from Blizzard CDN..."
 TOC_RETAIL=$(fetch_toc wow) || cdn_die wow
 TOC_VANILLA=$(fetch_toc wow_classic_era) || cdn_die wow_classic_era
+TOC_TBC=$(fetch_toc wow_anniversary) || cdn_die wow_anniversary
 TOC_MISTS=$(fetch_toc wow_classic) || cdn_die wow_classic
 # WoW: Forever is soft-fail: the beta lives under 'wow_classic_beta' and the
 # launch product key is unknown until 2026-11-04. If the fetch fails, warn and
 # keep whatever the TOC currently has.
 TOC_FOREVER=$(fetch_toc wow_classic_beta) || true
 
-if [[ -z "$TOC_RETAIL" || -z "$TOC_VANILLA" || -z "$TOC_MISTS" ]]; then
+if [[ -z "$TOC_RETAIL" || -z "$TOC_VANILLA" || -z "$TOC_TBC" || -z "$TOC_MISTS" ]]; then
   echo "Error: could not parse one or more TOC numbers from Blizzard response."
-  echo "       retail='${TOC_RETAIL}' vanilla='${TOC_VANILLA}' mists='${TOC_MISTS}'"
+  echo "       retail='${TOC_RETAIL}' vanilla='${TOC_VANILLA}' tbc='${TOC_TBC}' mists='${TOC_MISTS}'"
   exit 1
 fi
 
 echo "  retail (Mainline): ${TOC_RETAIL}"
 echo "  vanilla:           ${TOC_VANILLA}"
-echo "  mists:             ${TOC_MISTS}"
+echo "  tbc (anniversary): ${TOC_TBC}"
+echo "  mists:            ${TOC_MISTS}"
 if [[ -n "$TOC_FOREVER" ]]; then
   echo "  forever:           ${TOC_FOREVER}"
 else
   echo "  forever:           skipped (CDN fetch failed, keeping current TOC value)"
 fi
-echo "  TBC and Cata: skipped (Classic seasons EOL, no live CDN)"
+echo "  Wrath and Cata: skipped (Classic seasons EOL, no live CDN)"
 
 # Move [Unreleased] notes into this release's section. Runs before any other
 # file edit so a missing-notes error leaves the tree untouched.
@@ -113,6 +115,8 @@ sed -i "s/^## Interface: .*/## Interface: ${TOC_RETAIL}${FOREVER_FOR_BASE:+, ${F
 sed -i "s/^## Interface-Mainline: .*/## Interface-Mainline: ${TOC_RETAIL}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Vanilla: .*/## Interface-Vanilla: ${TOC_VANILLA}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Classic: .*/## Interface-Classic: ${TOC_VANILLA}/" WhisperMessenger.toc
+sed -i "s/^## Interface-TBC: .*/## Interface-TBC: ${TOC_TBC}/" WhisperMessenger.toc
+sed -i "s/^## Interface-BCC: .*/## Interface-BCC: ${TOC_TBC}/" WhisperMessenger.toc
 sed -i "s/^## Interface-Mists: .*/## Interface-Mists: ${TOC_MISTS}/" WhisperMessenger.toc
 sed -i "s/^## Interface-MoP: .*/## Interface-MoP: ${TOC_MISTS}/" WhisperMessenger.toc
 if [[ -n "$TOC_FOREVER" ]]; then

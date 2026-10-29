@@ -55,11 +55,11 @@ return function()
   end
 
   -- test_modern_title_buttons_share_one_size
-  assert(L.TITLE_ICON_SIZE == 18, "title glyph size constant")
+  assert(L.TITLE_ICON_SIZE == 16, "title glyph size constant")
   for name, button in pairs(titleButtons(chrome)) do
     assert(button.width == 24 and button.height == 24, name .. ": hit size " .. tostring(button.width))
     local glyph = button._wmGlyph
-    assert(glyph.width == 18 and glyph.height == 18, name .. ": icon size " .. tostring(glyph.width))
+    assert(glyph.width == 16 and glyph.height == 16, name .. ": icon size " .. tostring(glyph.width))
   end
 
   -- test_modern_title_buttons_evenly_spaced_and_centered

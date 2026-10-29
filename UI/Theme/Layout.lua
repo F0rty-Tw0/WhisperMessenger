@@ -119,8 +119,10 @@ local Layout = {
   -- elsewhere (the conversation header) keep CHROME_BUTTON_ICON_SIZE.
   CHROME_BUTTON_SIZE = 22,
   CHROME_BUTTON_ICON_SIZE = 14,
-  -- Every title-bar glyph, in every chrome style.
-  TITLE_ICON_SIZE = 18,
+  -- Every title-bar glyph; the Native WoW HUD's thinner title bar uses the
+  -- smaller HUD size.
+  TITLE_ICON_SIZE = 16,
+  HUD_TITLE_ICON_SIZE = 14,
   -- Custom title bar: one hit size and gap for every button; the edge inset
   -- keeps the outer glyphs clear of the window edge on both sides.
   TITLE_BUTTON_SIZE = 24,
