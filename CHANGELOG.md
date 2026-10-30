@@ -5,6 +5,9 @@ Player-friendly release notes for WhisperMessenger. This file covers the current
 All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x](archive/changelog/1.4.md) · [1.3.x](archive/changelog/1.3.md) · [1.2.x](archive/changelog/1.2.md) · [1.1.x](archive/changelog/1.1.md) · [1.0.x](archive/changelog/1.0.md) · [0.1.x](archive/changelog/0.1.md)
 
 ## [Unreleased]
+
+## [2.1.2] - 2026-10-30
+
 - Updated for the latest World of Warcraft patch (interface 20505 → 20506).
 
 ## [2.1.1] - 2026-10-23

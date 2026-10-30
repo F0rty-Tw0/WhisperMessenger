@@ -3,8 +3,8 @@
 ## Interface-Forever: 16001
 ## Interface-Vanilla: 11509
 ## Interface-Classic: 11509
-## Interface-TBC: 20505
-## Interface-BCC: 20505
+## Interface-TBC: 20506
+## Interface-BCC: 20506
 ## Interface-Wrath: 30403
 ## Interface-WOTLKC: 30403
 ## Interface-Cata: 40402
@@ -15,7 +15,7 @@
 ## Author: F0rty_tw0
 ## Category: Chat
 ## IconTexture: Interface\AddOns\WhisperMessenger\Media\icon.png
-## Version: v2.1.1
+## Version: v2.1.2
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## X-Curse-Project-ID: 1494311
