@@ -53,9 +53,14 @@ local function onBubbles(texture, glyph)
     and texture.width == glyph.width * SquareLook.BUBBLE_GLOW_SCALE
 end
 
--- The round pulse art, stretched over the whole button.
-local function fillsButton(texture)
-  return texture.texturePath == PulseGlow.TEXTURE and texture.point == nil and texture.allPoints ~= nil
+-- The round pulse art, stretched over its glow frame, which covers the whole button.
+local function fillsButton(texture, button)
+  local glowFrame = texture.allPoints
+  return texture.texturePath == PulseGlow.TEXTURE
+    and texture.point == nil
+    and glowFrame ~= nil
+    and glowFrame == texture.parent
+    and glowFrame.allPoints == button
 end
 
 return function()

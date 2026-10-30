@@ -139,6 +139,12 @@ function IconSettings.Create(factory, parent, config, options)
     { type = "toggle", key = "iconBackground", default = DEFAULTS.iconBackground }
   )
   iconBackgroundToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  -- Shown for every preset, but only usable with EllesmereUI's; keeps its value meanwhile.
+  local iconBackgroundAvailability = UIHelpers.attachDisabledState(factory, iconBackgroundToggle.row)
+  local function refreshIconBackgroundAvailability()
+    local usable = Theme.UsesSquareWidget ~= nil and Theme.UsesSquareWidget() == true
+    iconBackgroundAvailability.set(usable, not usable and text("Only with the EllesmereUI theme.") or nil)
+  end
 
   local initialWidgetTransparency = tonumber(config.widgetTransparency)
   if initialWidgetTransparency == nil then
@@ -332,6 +338,7 @@ function IconSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
+    refreshIconBackgroundAvailability()
   end
 
   refreshTheme(Theme)

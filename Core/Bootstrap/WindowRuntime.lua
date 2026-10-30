@@ -66,8 +66,19 @@ function WindowRuntime.Create(options)
   local theme = options.theme or Theme
   -- Set once the window exists; live theme changes repaint through it.
   local liveThemeSettingChanged = nil
+  -- Defined below; the bridge only fires after login, once both exist.
+  local getWidgetIcon
+  local minimapIcon
   LiveThemeSync.Install(options.ellesmereBridge or EllesmereBridge, theme, function()
     return liveThemeSettingChanged
+  end, function()
+    local widget = getWidgetIcon and getWidgetIcon()
+    if widget and widget.refreshTheme then
+      widget.refreshTheme()
+    end
+    if minimapIcon and minimapIcon.refreshTheme then
+      minimapIcon.refreshTheme()
+    end
   end)
 
   local minimapIconRuntimeModule = options.minimapIconRuntime or MinimapIconRuntime
@@ -81,7 +92,6 @@ function WindowRuntime.Create(options)
     end
   local window
   local icon
-  local minimapIcon
   local minimapRuntime
 
   -- dirtyKeys nil (every direct caller) rebuilds all contact snapshots.
@@ -157,7 +167,7 @@ function WindowRuntime.Create(options)
     end,
   })
 
-  local function getWidgetIcon()
+  function getWidgetIcon()
     if resolveIconMode() == "minimap" or resolveIconMode() == "none" then
       return nil
     end

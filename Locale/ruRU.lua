@@ -170,6 +170,7 @@ local Russian = {
   ["Greyscales the toggle icon when there are no unread messages."] = "Делает значок серым, когда нет непрочитанных сообщений.",
   ["Square button background"] = "Квадратный фон кнопки",
   ["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] = "В теме EllesmereUI показывает квадрат за значком виджета. Выключите, чтобы остались только два облачка.",
+  ["Only with the EllesmereUI theme."] = "Только с темой EllesmereUI.",
   ["Widget transparency"] = "Прозрачность виджета",
   ["Controls how transparent the widget is when not hovered."] = "Управляет прозрачностью виджета, когда на него не наведён курсор.",
   ["Alliance"] = "Альянс",

@@ -88,4 +88,15 @@ return function()
   withProfile("error", function()
     assert(ButtonLook.Read().borderPx == 1, "defaults after an error")
   end)
+
+  -- test_a_profile_that_errors_while_read_gives_defaults
+  local exploding = setmetatable({}, {
+    __index = function()
+      error("boom")
+    end,
+  })
+  withProfile(exploding, function()
+    local look = ButtonLook.Read()
+    assert(look.borderPx == 1 and look.hover.kind == "fill", "defaults when reading the profile errors")
+  end)
 end

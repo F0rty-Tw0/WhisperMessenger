@@ -40,15 +40,19 @@ return function()
     assert(bridge.installs == 1, "bridge installed once")
   end
 
-  -- test_change_reapplies_the_live_preset_before_the_window_exists
+  -- test_change_reapplies_the_live_preset_and_repaints_the_icons_before_the_window_exists
   do
     local bridge = fakeBridge()
     local theme = fakeTheme("ellesmere_ui")
+    local repaintedAfter
     LiveThemeSync.Install(bridge, theme, function()
       return nil
+    end, function()
+      repaintedAfter = #theme.applied
     end)
     bridge.fire()
     assert(theme.applied[1] == "ellesmere_ui", "preset colors re-read")
+    assert(repaintedAfter == 1, "widget and minimap button repainted after the colors, got " .. tostring(repaintedAfter))
   end
 
   -- test_change_goes_through_the_settings_handler_once_the_window_exists
@@ -56,14 +60,18 @@ return function()
     local bridge = fakeBridge()
     local theme = fakeTheme("ellesmere_ui")
     local changes = {}
+    local repainted = false
     LiveThemeSync.Install(bridge, theme, function()
       return function(key, value)
         changes[#changes + 1] = key .. "=" .. value
       end
+    end, function()
+      repainted = true
     end)
     bridge.fire()
     assert(changes[1] == "themePreset=ellesmere_ui", "window repainted through the settings handler")
     assert(#theme.applied == 0, "settings handler does the applying")
+    assert(repainted == false, "the settings handler repaints the icons itself")
   end
 
   -- test_change_ignored_for_fixed_presets

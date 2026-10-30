@@ -170,6 +170,7 @@ local SimplifiedChinese = {
   ["Greyscales the toggle icon when there are no unread messages."] = "无未读消息时将图标变为灰度。",
   ["Square button background"] = "方形按钮背景",
   ["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] = "使用 EllesmereUI 主题时，在小部件图标后显示方形背景。关闭后只显示两个聊天气泡。",
+  ["Only with the EllesmereUI theme."] = "仅适用于 EllesmereUI 主题。",
   ["Widget transparency"] = "小部件透明度",
   ["Controls how transparent the widget is when not hovered."] = "控制未将鼠标悬停在小部件上时的小部件透明度。",
   ["Alliance"] = "联盟",

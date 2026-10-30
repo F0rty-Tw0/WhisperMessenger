@@ -244,6 +244,52 @@ return function()
     assert(resetCount == 12, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit twelve icon/widget keys")
   end
 
+  -- test_square_background_is_disabled_unless_the_square_widget_is_in_use
+
+  do
+    local Theme = require("WhisperMessenger.UI.Theme")
+    local savedUses = Theme.UsesSquareWidget
+    local square = false
+    Theme.UsesSquareWidget = function()
+      return square
+    end
+
+    local result = IconSettings.Create(factory, parent, { iconBackground = false }, { onChange = function() end })
+    local row = FindUI.byLabel(result.frame, "Square button background")
+    local cover = FindUI.disabledCover(row)
+    assert(cover ~= nil, "test_square_background_disabled: the row is covered with another preset")
+    assert(row.alpha < 1, "test_square_background_disabled: the row is dimmed with another preset")
+    assert(
+      FindUI.isToggleOn(FindUI.toggle(result.frame, "Square button background")) == false,
+      "test_square_background_disabled: the saved value stays shown"
+    )
+
+    local savedTooltip = _G.GameTooltip
+    local shown
+    _G.GameTooltip = {
+      SetOwner = function() end,
+      SetText = function(_, value)
+        shown = value
+      end,
+      Show = function() end,
+      Hide = function() end,
+    }
+    cover:GetScript("OnEnter")(cover)
+    _G.GameTooltip = savedTooltip
+    assert(shown == "Only with the EllesmereUI theme.", "test_square_background_disabled: hovering says why, got " .. tostring(shown))
+
+    square = true
+    result.refreshTheme()
+    assert(FindUI.disabledCover(row) == nil, "test_square_background_disabled: usable once the preset changes to EllesmereUI")
+    assert(row.alpha == 1, "test_square_background_disabled: full alpha when usable")
+
+    square = false
+    result.refreshTheme()
+    assert(FindUI.disabledCover(row) ~= nil, "test_square_background_disabled: disabled again after switching away")
+
+    Theme.UsesSquareWidget = savedUses
+  end
+
   -- test_icons_refresh_layout_and_language
 
   do

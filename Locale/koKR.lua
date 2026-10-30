@@ -170,6 +170,7 @@ local Korean = {
   ["Greyscales the toggle icon when there are no unread messages."] = "읽지 않은 메시지가 없을 때 아이콘을 회색조로 표시합니다.",
   ["Square button background"] = "사각형 버튼 배경",
   ["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] = "EllesmereUI 테마에서 위젯 아이콘 뒤의 사각형을 표시합니다. 끄면 두 말풍선만 표시됩니다.",
+  ["Only with the EllesmereUI theme."] = "EllesmereUI 테마에서만 사용할 수 있습니다.",
   ["Widget transparency"] = "위젯 투명도",
   ["Controls how transparent the widget is when not hovered."] = "마우스를 올리지 않았을 때 위젯의 투명도를 조절합니다.",
   ["Alliance"] = "얼라이언스",

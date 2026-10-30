@@ -5,10 +5,11 @@ end
 
 -- Keeps a live theme preset (EllesmereUI) in step with its source: when the
 -- source's look arrives at login or changes, the preset is applied again,
--- through the settings handler once the window exists so it repaints.
+-- through the settings handler once the window exists so it repaints. Before
+-- that, repaintIcons repaints the widget and minimap button, which already exist.
 local LiveThemeSync = {}
 
-function LiveThemeSync.Install(bridge, theme, getOnSettingChanged)
+function LiveThemeSync.Install(bridge, theme, getOnSettingChanged, repaintIcons)
   if type(bridge) ~= "table" or type(bridge.OnChange) ~= "function" or type(bridge.Install) ~= "function" then
     return false
   end
@@ -22,6 +23,9 @@ function LiveThemeSync.Install(bridge, theme, getOnSettingChanged)
       onSettingChanged("themePreset", key)
     elseif theme.SetPreset then
       theme.SetPreset(key)
+      if repaintIcons then
+        repaintIcons()
+      end
     end
   end)
   return bridge.Install()

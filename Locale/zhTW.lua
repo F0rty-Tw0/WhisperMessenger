@@ -170,6 +170,7 @@ local TraditionalChinese = {
   ["Greyscales the toggle icon when there are no unread messages."] = "無未讀訊息時將圖示變為灰階。",
   ["Square button background"] = "方形按鈕背景",
   ["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] = "使用 EllesmereUI 主題時，在小工具圖示後顯示方形背景。關閉後只顯示兩個聊天泡泡。",
+  ["Only with the EllesmereUI theme."] = "僅適用於 EllesmereUI 主題。",
   ["Widget transparency"] = "小工具透明度",
   ["Controls how transparent the widget is when not hovered."] = "控制滑鼠未懸停在小工具上時的小工具透明度。",
   ["Alliance"] = "聯盟",

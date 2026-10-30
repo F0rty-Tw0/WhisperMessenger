@@ -85,6 +85,48 @@ return function()
     assert((_G.WM_Normal:GetFont()) ~= FONT_PATH, "other presets keep their font")
   end
 
+  -- test_chosen_font_family_wins_over_the_ellesmere_font
+  do
+    local FAMILY_PATH = "Interface\\AddOns\\SharedMedia\\Family.ttf"
+    local savedLibStub = rawget(_G, "LibStub")
+    local lsm = {
+      Fetch = function(_, _, name)
+        return name == "Family" and FAMILY_PATH or nil
+      end,
+    }
+    rawset(
+      _G,
+      "LibStub",
+      setmetatable({}, {
+        __call = function()
+          return lsm
+        end,
+      })
+    )
+    installEllesmere()
+    Fonts.SetMode("Family")
+    Theme.SetPreset("ellesmere_ui")
+    local path = _G.WM_Normal:GetFont()
+    Fonts.SetMode("default")
+    rawset(_G, "LibStub", savedLibStub)
+    Theme.SetPreset(Theme.DEFAULT_PRESET)
+    assert(path == FAMILY_PATH, "the chosen font family wins, got " .. tostring(path))
+  end
+
+  -- test_cjk_and_cyrillic_clients_keep_their_locale_font_under_the_ellesmere_preset
+  for _, locale in ipairs({ "koKR", "zhCN", "zhTW", "ruRU" }) do
+    local savedGetLocale = rawget(_G, "GetLocale")
+    rawset(_G, "GetLocale", function()
+      return locale
+    end)
+    installEllesmere()
+    Theme.SetPreset("ellesmere_ui")
+    local path = _G.WM_Normal:GetFont()
+    rawset(_G, "GetLocale", savedGetLocale)
+    Theme.SetPreset(Theme.DEFAULT_PRESET)
+    assert(path ~= FONT_PATH, locale .. " client keeps the game's font, got " .. tostring(path))
+  end
+
   -- test_only_the_ellesmere_preset_is_live
   do
     assert(Theme.IsLivePreset("ellesmere_ui") == true, "EllesmereUI preset follows live changes")

@@ -197,7 +197,11 @@ local function applyFonts()
   local flags = resolveOutlineFlags(currentOutline)
   local CreateFont = _G.CreateFont
   local inheritedSource = resolveInheritedSourceFontObject()
-  local fontPath = currentFontPath or themeFontPath
+  -- The theme's font may lack CJK or Cyrillic glyphs: those clients keep the game's locale font.
+  local fontPath = currentFontPath
+  if fontPath == nil and not MULTI_SCRIPT_LANGUAGES[clientLocale() or ""] then
+    fontPath = themeFontPath
+  end
 
   for _, def in ipairs(FONT_DEFS) do
     local wmName, gameFont, sizeOffset, hasShadow = def[1], def[2], def[3], def[4]

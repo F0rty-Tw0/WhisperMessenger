@@ -170,6 +170,7 @@ local Spanish = {
   ["Greyscales the toggle icon when there are no unread messages."] = "Pone el icono en gris cuando no hay mensajes sin leer.",
   ["Square button background"] = "Fondo cuadrado del botón",
   ["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] = "Con el tema EllesmereUI, muestra el cuadrado detrás del icono del widget. Desactívalo para mostrar solo los dos bocadillos.",
+  ["Only with the EllesmereUI theme."] = "Solo con el tema EllesmereUI.",
   ["Widget transparency"] = "Transparencia del widget",
   ["Controls how transparent the widget is when not hovered."] = "Controla cuán transparente es el widget cuando no se pasa el cursor sobre él.",
   ["Alliance"] = "Alianza",

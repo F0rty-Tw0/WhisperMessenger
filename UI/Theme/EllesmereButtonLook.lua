@@ -64,14 +64,18 @@ local function effect(p, prefix)
   return { kind = "none" }
 end
 
-function ButtonLook.Read()
-  local look = {
+local function defaults()
+  return {
     bg = { 0.15, 0.15, 0.15, 0.5 },
     border = { 0, 0, 0, 1 },
     borderPx = 1,
     hover = { kind = "fill", color = { 1, 1, 1, 0.15 } },
     push = { kind = "fill", color = { 1, 1, 1, 0.25 } },
   }
+end
+
+local function read()
+  local look = defaults()
   local p = profile()
   if not p then
     return look
@@ -91,6 +95,14 @@ function ButtonLook.Read()
   look.hover = effect(p, "highlight")
   look.push = effect(p, "pushed")
   return look
+end
+
+function ButtonLook.Read()
+  local ok, look = pcall(read)
+  if ok and type(look) == "table" then
+    return look
+  end
+  return defaults()
 end
 
 ns.ThemeEllesmereButtonLook = ButtonLook
