@@ -7,6 +7,10 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 ## [Unreleased]
 
 - New EllesmereUI theme preset, shown when EllesmereUI is installed: the messenger takes on your EllesmereUI accent color, panel color and font, and follows along when you change them. Picking it with the Native WoW HUD on offers to turn the HUD off, since the HUD's frame hides most of the theme. With it, the messenger button is a square drawn like your EllesmereUI action buttons (their slot background, border, and Bar Animations hover and pushed effects) with a sharp new icon whose back bubble takes your accent color, and the minimap button uses the same icon without its extra ring. When idle, only the colored bubble turns gray. A new Icons setting, Square button background, hides the square to show just the two bubbles, with a thin black outline so they stand out on any ground. Hovering fills the gray bubble with your accent color, and the new-whisper pulse glows around the outline of the bubbles. With the square hidden, hovering also glows around them.
+
+## [2.1.2] - 2026-10-30
+
+- Updated for the latest World of Warcraft patch (interface 20505 → 20506).
 - Other addons can now show their alerts on the messenger's widget and open a chat with a player. They can also add their own page to the messenger window, opened from a tab next to Whispers, Groups and Channels.
 - The buttons along the top of the messenger window are larger and easier to hit.
 - With the Native WoW HUD on, the message preview next to the messenger button now uses the game's tooltip border.
@@ -20,6 +24,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Shift-clicking the messenger button, minimap icon or Broker icon (or choosing Mark all as read) now also clears message previews from other addons, like Craft Alert, and tells them everything was marked read so they can clear their own counts.
 - Other addons (like Craft Alert) can now check, add and remove players on the messenger's block list. Turning off Allow addon integration stops this too.
 - Other addons (like Craft Alert) can now see which players have unread whispers, so they can highlight those players. Turning off Allow addon integration stops this too.
+- Addons that add a tab to WhisperMessenger can now match its look and colour theme.
 - Previews from other addons can show one extra line under the message (for example, Craft Alert can say which of your characters can craft the item). Your own whisper previews are unchanged.
 - Fixed: hovering an item link in the message preview now shows the item's tooltip.
 - Fixed: with the Native WoW HUD look, the message preview's background is now solid like the game's tooltips, so names and item links stay readable over bright ground.
