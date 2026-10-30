@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+## [2.1.2] - 2026-10-30
+
 - Updated for the latest World of Warcraft patch (interface 20505 → 20506).
 - Other addons can now show their alerts on the messenger's widget and open a chat with a player. They can also add their own page to the messenger window, opened from a tab next to Whispers, Groups and Channels.
 - The buttons along the top of the messenger window are larger and easier to hit.
