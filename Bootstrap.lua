@@ -90,12 +90,16 @@ function Bootstrap.Initialize(factory, options)
   if Fonts.SetFontColor then
     Fonts.SetFontColor(accountState.settings.fontColor or "default")
   end
-  local themePresetKey = accountState.settings.themePreset or (Theme.DEFAULT_PRESET or "wow_default")
+  local savedKey = accountState.settings.themePreset or (Theme.DEFAULT_PRESET or "wow_default")
+  local themePresetKey = savedKey
   if Theme.ResolvePreset then
-    local resolvedKey = Theme.ResolvePreset(themePresetKey)
-    themePresetKey = resolvedKey or themePresetKey
+    themePresetKey = Theme.ResolvePreset(savedKey) or savedKey
   end
-  accountState.settings.themePreset = themePresetKey
+  -- Settings are account-wide: a live preset missing on this character (EllesmereUI
+  -- off on an alt) falls back for this session only and keeps the saved choice.
+  if not (Theme.IsLivePreset and Theme.IsLivePreset(savedKey)) then
+    accountState.settings.themePreset = themePresetKey
+  end
   if Theme.SetBubblePreset then
     Theme.SetBubblePreset(accountState.settings.bubbleColorPreset or "default")
   end

@@ -6,6 +6,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- New EllesmereUI theme preset, shown when EllesmereUI is installed: the messenger takes on your EllesmereUI accent color, panel color and font, and follows along when you change them. Picking it with the Native WoW HUD on offers to turn the HUD off, since the HUD's frame hides most of the theme. With it, the messenger button is a square drawn like your EllesmereUI action buttons (their slot background, border, and Bar Animations hover and pushed effects) with a sharp new icon whose back bubble takes your accent color, and the minimap button uses the same icon without its extra ring. When idle, only the colored bubble turns gray. A character without EllesmereUI uses the default theme for that session and keeps the EllesmereUI theme chosen for the others. A new Icons setting, Square button background (grayed out with the other themes), hides the square to show just the two bubbles, with a thin black outline so they stand out on any ground. Hovering fills the gray bubble with your accent color, and the new-whisper pulse glows around the outline of the bubbles. With the square hidden, hovering also glows around them.
+
 ## [2.1.2] - 2026-10-30
 
 - Updated for the latest World of Warcraft patch (interface 20505 → 20506).

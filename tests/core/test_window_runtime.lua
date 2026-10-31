@@ -157,6 +157,9 @@ local function makeRuntimeOptions()
         setIncomingPreview = function(senderName, messageText, classTag)
           trackers.widgetPreviewInputs[#trackers.widgetPreviewInputs + 1] = { senderName, messageText, classTag }
         end,
+        refreshTheme = function()
+          trackers.widgetThemeRefreshes = (trackers.widgetThemeRefreshes or 0) + 1
+        end,
       }
     end,
   }
@@ -194,6 +197,9 @@ local function makeRuntimeOptions()
           trackers.minimapPreviewInputs[#trackers.minimapPreviewInputs + 1] = { senderName, messageText, classTag }
         end,
         setUnreadCount = function() end,
+        refreshTheme = function()
+          trackers.minimapThemeRefreshes = (trackers.minimapThemeRefreshes or 0) + 1
+        end,
       }
       return {
         minimapIcon = minimapIcon,
@@ -466,6 +472,40 @@ return function()
     noneController.ensureWindow()
     noneTrackers.capturedWindowOptions.onSettingChanged("iconMode", "widget")
     assert(noneRuntime.icon ~= nil, "switching from none to widget should expose the created icon on runtime")
+  end
+
+  -- test_live_theme_change_before_the_window_repaints_both_icons
+  do
+    local liveOptions, _, liveTrackers = makeRuntimeOptions()
+    liveOptions.accountState.settings.iconMode = "both"
+    local listeners = {}
+    liveOptions.ellesmereBridge = {
+      OnChange = function(fn)
+        listeners[#listeners + 1] = fn
+      end,
+      Install = function()
+        return true
+      end,
+    }
+    local applied = {}
+    liveOptions.theme.GetPreset = function()
+      return "ellesmere_ui"
+    end
+    liveOptions.theme.IsLivePreset = function(key)
+      return key == "ellesmere_ui"
+    end
+    liveOptions.theme.SetPreset = function(key)
+      applied[#applied + 1] = key
+      return true
+    end
+    WindowRuntime.Create(liveOptions)
+    assert(liveTrackers.capturedWindowOptions == nil, "the window is not created yet")
+    for _, fn in ipairs(listeners) do
+      fn()
+    end
+    assert(applied[1] == "ellesmere_ui", "the live preset is applied again")
+    assert(liveTrackers.widgetThemeRefreshes == 1, "the widget repaints, got " .. tostring(liveTrackers.widgetThemeRefreshes))
+    assert(liveTrackers.minimapThemeRefreshes == 1, "the minimap button repaints, got " .. tostring(liveTrackers.minimapThemeRefreshes))
   end
 
   -- test_icon_created_after_a_panel_registered_counts_its_badge

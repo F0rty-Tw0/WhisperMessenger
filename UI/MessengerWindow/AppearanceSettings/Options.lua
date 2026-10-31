@@ -26,6 +26,8 @@ local PRESET_LABELS = {
   plumber_warm = { label = "Draenor", tooltip = "Warm tones with softer contrast." },
   jade_dark = { label = "Pandaria", tooltip = "Dark charcoal with jade accents, inspired by EllesmereUI." },
   wow_native = { label = "Azeroth", tooltip = "Native WoW colors with gold accents." },
+  -- Offered only while EllesmereUI is loaded.
+  ellesmere_ui = { label = "EllesmereUI", tooltip = "Matches your EllesmereUI accent color, panel color and font." },
 }
 
 local HUD_STYLE_SPECS = {

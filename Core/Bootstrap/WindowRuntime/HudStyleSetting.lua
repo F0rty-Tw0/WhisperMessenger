@@ -16,6 +16,7 @@ local Presets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
 local HudStyleSetting = {}
 
 local QUESTION = "Reload the interface now to apply the new Native WoW HUD style?"
+local ELLESMERE_QUESTION = "The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"
 
 -- The style waiting on the reload popup; nil once it is answered or the
 -- player goes back to the running style.
@@ -33,8 +34,9 @@ local function save(accountSettings, style)
 end
 
 -- style: the picked hudStyle. onDiscard(savedStyle) runs on Cancel so the
--- picker can show the saved style again.
-function HudStyleSetting.Apply(accountSettings, style, onDiscard)
+-- picker can show the saved style again. question: the popup's text, when
+-- something other than the HUD picker asks.
+function HudStyleSetting.Apply(accountSettings, style, onDiscard, question)
   if Hud.Resolve(style) == Hud.Style() then
     -- Only close our own popup: another setting's may be up.
     local hadPending = pendingStyle ~= nil
@@ -46,7 +48,7 @@ function HudStyleSetting.Apply(accountSettings, style, onDiscard)
     return
   end
   pendingStyle = style
-  ReloadPrompt.Show(text(QUESTION), function()
+  ReloadPrompt.Show(text(question or QUESTION), function()
     pendingStyle = nil
     if onDiscard then
       onDiscard(accountSettings.hudStyle)
@@ -62,6 +64,19 @@ function HudStyleSetting.Apply(accountSettings, style, onDiscard)
     end
     save(accountSettings, chosen)
   end)
+end
+
+-- The HUD's Blizzard frame art hides most of the EllesmereUI theme, so
+-- newly picking it under a HUD offers to turn the HUD off. showStyle(style)
+-- puts a style on the HUD picker. Re-applying the preset (EllesmereUI look
+-- changes) never asks.
+function HudStyleSetting.OfferOffFor(accountSettings, previousPreset, presetKey, showStyle)
+  if presetKey ~= Presets.ELLESMERE_UI or previousPreset == presetKey or not Hud.IsOn() then
+    return false
+  end
+  showStyle("off")
+  HudStyleSetting.Apply(accountSettings, "off", showStyle, ELLESMERE_QUESTION)
+  return true
 end
 
 ns.BootstrapWindowRuntimeHudStyleSetting = HudStyleSetting

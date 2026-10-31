@@ -167,4 +167,22 @@ return function()
     assert(settings.themePreset == "elvui_dark", "saved theme kept")
     resetLooks()
   end
+
+  -- test_alt_without_ellesmere_ui_keeps_the_saved_preset
+  do
+    local savedEllesmere = _G.EllesmereUI
+    _G.EllesmereUI = nil
+    local settings = boot({ themePreset = "ellesmere_ui", firstRunTipShown = true })
+    _G.EllesmereUI = savedEllesmere
+    assert(settings.themePreset == "ellesmere_ui", "account-wide choice kept, got " .. tostring(settings.themePreset))
+    assert(Theme.GetPreset() == Theme.DEFAULT_PRESET, "this session falls back, got " .. tostring(Theme.GetPreset()))
+    resetLooks()
+  end
+
+  -- test_unknown_saved_preset_is_replaced
+  do
+    local settings = boot({ themePreset = "no_such_preset", firstRunTipShown = true })
+    assert(settings.themePreset == Theme.DEFAULT_PRESET, "an unknown preset is replaced, got " .. tostring(settings.themePreset))
+    resetLooks()
+  end
 end

@@ -12,6 +12,7 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
+local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local MinimapIcon = {}
 
@@ -127,6 +128,8 @@ function MinimapIcon.Create(factory, options)
   local iconTex = frame:CreateTexture(nil, "ARTWORK")
   iconTex:SetAllPoints(frame)
   iconTex:SetTexture(ICON_TEXTURE)
+  -- Accent back bubble under the ring-free glyph (square themes only)
+  local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
   -- Ring border (same texture as the widget icon)
   local border = frame:CreateTexture(nil, "BORDER")
   border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
@@ -188,6 +191,7 @@ function MinimapIcon.Create(factory, options)
     },
     getIconDesaturated = options.getIconDesaturated,
     applyVertexColor = applyVertexColor,
+    keepColors = Theme.UsesSquareWidget,
   })
 
   -- count is the number shown; pulseCount (default count) starts the glow.
@@ -210,6 +214,7 @@ function MinimapIcon.Create(factory, options)
     end
 
     desaturation.update(unreadCount)
+    accentGlyph.apply(desaturation.isActive())
   end
 
   -- Drag: orbit around minimap center with live radial constraint.
@@ -276,11 +281,17 @@ function MinimapIcon.Create(factory, options)
     return frame.IsShown and frame:IsShown() == true
   end
 
+  local function refreshDesaturation()
+    desaturation.refresh()
+    accentGlyph.apply(desaturation.isActive())
+  end
+
   local function refreshTheme()
+    iconTex:SetTexture(SquareLook.MinimapGlyph(ICON_TEXTURE))
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
-    desaturation.refresh()
+    refreshDesaturation()
   end
 
   setUnreadCount(options.unreadCount or 0)
@@ -299,7 +310,8 @@ function MinimapIcon.Create(factory, options)
     setUnreadCount = setUnreadCount,
     setIncomingPreview = setIncomingPreview,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
-    refreshDesaturation = desaturation.refresh,
+    refreshDesaturation = refreshDesaturation,
+    accentGlyph = accentGlyph.texture,
     refreshTheme = refreshTheme,
     applyRadialPosition = applyRadialPosition,
     setShown = setShown,
