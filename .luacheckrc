@@ -138,6 +138,8 @@ read_globals = {
   "hooksecurefunc",
   "ChatFrame_AddMessageEventFilter",
   "ChatFrame_RemoveMessageEventFilter",
+  "CHAT_FRAMES",
+  "FCF_Close",
   "ChatEdit_SetLastTellTarget",
   "BNGetNumFriends",
   "BNGetNumConversations",
