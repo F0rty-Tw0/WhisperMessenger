@@ -101,6 +101,31 @@ return function()
     assert(#refreshes == 1, "a scan that changed nothing leaves the closed window alone, got " .. #refreshes .. " refreshes")
   end
 
+  -- test_hidden_bnet_scan_that_only_restamps_last_seen_skips_the_refresh
+  -- "Last seen" shows only in the open window's header, so a watched online
+  -- friend's re-stamp must not rebuild a closed window's card on every scan.
+  do
+    local store = { conversations = conversations() }
+    local friend = store.conversations[FRIEND_KEY]
+    friend.notifyOnline = true
+    local Bootstrap, refreshes = makeBootstrap(store, false)
+    local clock = 100
+    Bootstrap.runtime.now = function()
+      clock = clock + 1
+      return clock
+    end
+    local friends = friendMap()
+    friends["Friend#1234"].accountInfo.isOnline = true
+    local deps = makeDeps(friends)
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+    local firstSeenAt = friend.lastSeenAt
+
+    Presence.handleBNetFriendEvent(Bootstrap, deps)
+
+    assert(firstSeenAt ~= nil and friend.lastSeenAt ~= firstSeenAt, "test precondition: the second scan re-stamped last seen")
+    assert(#refreshes == 1, "a scan that only re-stamps last seen leaves the closed window alone, got " .. #refreshes .. " refreshes")
+  end
+
   -- test_hidden_bnet_scan_marks_a_cleared_field_dirty
   do
     local Bootstrap, refreshes = makeBootstrap({ conversations = conversations() }, false)
