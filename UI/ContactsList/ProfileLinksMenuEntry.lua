@@ -23,8 +23,7 @@ local function currentRegion()
   return ok and regionId or nil
 end
 
--- Empty when no site applies (WoW: Forever, China, no known character).
-function ProfileLinksMenuEntry.Links(item)
+local function buildLinks(item)
   if FlavorCompat.isForever then
     return {}
   end
@@ -33,6 +32,14 @@ function ProfileLinksMenuEntry.Links(item)
     return {}
   end
   return ProfileLinks.Build(character, { regionId = currentRegion(), projectId = FlavorCompat.projectId })
+end
+
+-- Empty when no site applies (WoW: Forever, China, no known character).
+-- Runs before the rest of our menu section, so it must never raise: a
+-- missed secret value would otherwise take every entry with it.
+function ProfileLinksMenuEntry.Links(item)
+  local ok, links = pcall(buildLinks, item)
+  return ok and links or {}
 end
 
 function ProfileLinksMenuEntry.Add(rootDescription, links)

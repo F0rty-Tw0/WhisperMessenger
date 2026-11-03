@@ -1,4 +1,5 @@
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
+local ProfileLinksMenuEntry = require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
 local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
 local Localization = require("WhisperMessenger.Locale.Localization")
@@ -141,6 +142,19 @@ return function()
     local friend = { channel = "BN", displayName = "Friend#1234", battleTag = "Friend#1234", bnetAccountID = 7, gameAccountName = "Thrall-Kazzak" }
     local submenu = findButton(menuFor(friend, onUpdatePrefs), SUBMENU)
     assert(submenu ~= nil and labels(submenu) == "Raider.IO,Warcraft Logs", "friend's character sites")
+  end
+
+  -- test_links_never_throw
+  do
+    -- Stands in for a secret value: any read raises, as 12.0 secrets do.
+    local raising = setmetatable({ channel = "WOW" }, {
+      __index = function()
+        error("secret string value tainted by 'WhisperMessenger'")
+      end,
+    })
+    local ok, links = pcall(ProfileLinksMenuEntry.Links, raising)
+    assert(ok, "Links raised: " .. tostring(links))
+    assert(#links == 0, "no links when the contact can't be read")
   end
 
   _G.Menu = saved.Menu
