@@ -46,4 +46,23 @@ return function()
     local r, g, b = badge:GetTextColor()
     assert(r == Theme.TAG_GOLD[1] and g == Theme.TAG_GOLD[2] and b == Theme.TAG_GOLD[3], "badge uses the tag gold")
   end
+
+  -- test_reused_frame_drops_the_badge
+  -- Pooled label frames keep their FontStrings, so the next message on the
+  -- same frame must hide the badge, incoming or outgoing.
+  do
+    local shared = factory.CreateFrame("Frame", nil, contentFrame)
+    local sameFrameFactory = {
+      CreateFrame = function()
+        return shared
+      end,
+    }
+    local outgoing = { direction = "out", kind = "user", text = "Thanks", sentAt = 1001 }
+    for _, following in ipairs({ incoming(nil), outgoing }) do
+      SenderLabel.CreateSenderLabel(sameFrameFactory, contentFrame, incoming("CraftScan"), 400, 0)
+      local result = SenderLabel.CreateSenderLabel(sameFrameFactory, contentFrame, following, 400, 0)
+      local texts = shownTexts(result.frame)
+      assert(not string.find(texts, "Sent by", 1, true), following.direction .. " message on a reused frame shows no badge, got: " .. texts)
+    end
+  end
 end
