@@ -69,6 +69,7 @@ return function()
 
   -- test_hud_pick_writes_seconds_and_drops_the_custom_radio
   local forever = radioNamed(radios, "Forever")
+  assert(forever ~= nil, "Forever is listed")
   forever.setSelected(forever.data)
   assert(changes[1] == Retention.FOREVER_SECONDS, "Forever radio writes FOREVER_SECONDS, got " .. tostring(changes[1]))
   assert(radioNamed(openMenu(dropdown), "48 hours") == nil, "custom radio leaves once another choice is picked")
