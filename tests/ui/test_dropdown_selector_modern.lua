@@ -102,7 +102,9 @@ return function()
         { key = "b1", label = "B1" },
       },
       fallbackKey = "missing",
+      initial = "b1",
       onChange = function(key)
+        changes.count = (changes.count or 0) + 1
         changes[#changes + 1] = key
       end,
     })
@@ -115,8 +117,8 @@ return function()
     local rows = FindUI.dropdownOptions(dd.row)
     assert(#rows == 4 and rows[3].label.text == "Group B", "header rows are listed in order")
     FindUI.click(rows[3])
-    assert(#changes == 0, "clicking a header picks nothing")
-    assert(dd.button.label.text == "A1", "selection stays on a choice")
+    assert((changes.count or 0) == 0, "clicking a header picks nothing")
+    assert(dd.button.label.text == "B1", "selection stays on the chosen sound")
   end
 
   -- test_modern_dropdown_headers_use_secondary_text
