@@ -400,10 +400,12 @@ local Korean = {
   ["Level %d"] = "%d 레벨",
   ["Last online %s"] = "마지막 접속: %s",
   ["Notify when online"] = "접속 시 알림",
+  ["Notify when they change zone"] = "지역 이동 시 알림",
   ["%s is now online."] = "%s님이 접속했습니다.",
   ["Hit an error. Whisper from %s: %s"] = "오류가 발생했습니다. %s님의 귓속말: %s",
   ["Hit an error. Whisper to %s: %s"] = "오류가 발생했습니다. %s님에게 보낸 귓속말: %s",
   ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "오류가 반복되어 /reload 전까지 귓속말을 채팅창에서 숨기지 않습니다.",
+  ["%s changed zone from %s to %s."] = "%s님이 지역을 이동했습니다: %s에서 %s(으)로.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "대기 중",
   ["Not sent"] = "전송 안 됨",

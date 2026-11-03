@@ -404,10 +404,12 @@ local Spanish = {
   ["Level %d"] = "Nivel %d",
   ["Last online %s"] = "Última vez en línea: %s",
   ["Notify when online"] = "Avisarme cuando se conecte",
+  ["Notify when they change zone"] = "Avisarme cuando cambie de zona",
   ["%s is now online."] = "%s ya está en línea.",
   ["Hit an error. Whisper from %s: %s"] = "Ocurrió un error. Susurro de %s: %s",
   ["Hit an error. Whisper to %s: %s"] = "Ocurrió un error. Susurro a %s: %s",
   ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Errores repetidos: los susurros ya no se ocultan del chat hasta que uses /reload.",
+  ["%s changed zone from %s to %s."] = "%s cambió de zona: de %s a %s.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "En cola",
   ["Not sent"] = "No enviado",

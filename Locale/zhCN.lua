@@ -400,10 +400,12 @@ local SimplifiedChinese = {
   ["Level %d"] = "%d级",
   ["Last online %s"] = "上次在线：%s",
   ["Notify when online"] = "上线时通知",
+  ["Notify when they change zone"] = "切换区域时通知",
   ["%s is now online."] = "%s 已上线。",
   ["Hit an error. Whisper from %s: %s"] = "出错了。来自%s的密语：%s",
   ["Hit an error. Whisper to %s: %s"] = "出错了。发给%s的密语：%s",
   ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "多次出错，在你 /reload 之前将不再从聊天中隐藏密语。",
+  ["%s changed zone from %s to %s."] = "%s 已从%s前往%s。",
   -- Queued sends, delivery status, replies
   ["Queued"] = "排队中",
   ["Not sent"] = "未发送",

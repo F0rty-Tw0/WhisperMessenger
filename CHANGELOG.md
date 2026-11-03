@@ -20,6 +20,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Picking a shorter Message Retention now asks before deleting older chats, and so does Reset to Defaults when it would shorten it. Cancel keeps your current settings.
 - The Behavior settings now show which key opens and closes the messenger, with a Set keybind button that takes you straight to Whisper Messenger in the game's Key Bindings. The button is grayed out during combat.
 - Right-clicking a player in the contacts list now offers Add friend, unless they are already on your friends list.
+- Right-click a Battle.net friend who is in World of Warcraft, or a guild or community member, and pick "Notify when they change zone" to get one chat message (and the whisper sound, if it is on) the next time they move to another zone. It turns itself off after that one message; going offline in between keeps it waiting.
 
 ## [2.1.2] - 2026-10-30
 

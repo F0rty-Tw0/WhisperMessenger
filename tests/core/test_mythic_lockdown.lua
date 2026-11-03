@@ -286,12 +286,18 @@ return function()
       end,
     }
 
+    -- Only timer: outside mythic content, the short zone-watch check.
     for _, inMythic in ipairs({ true, false }) do
       local Bootstrap = { runtime = {}, _inMythicContent = inMythic }
       LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", deps)
       LifecycleHandlers.Handle(Bootstrap, "CLUB_MEMBER_UPDATED", deps)
 
-      assert(#timerCallbacks == 0, "roster events must not schedule any timer, got " .. #timerCallbacks)
+      local expectedTimers = inMythic and 0 or 1
+      assert(#timerCallbacks == expectedTimers, "roster events scheduled " .. #timerCallbacks .. " timers, want " .. expectedTimers)
+      for _, timer in ipairs(timerCallbacks) do
+        assert(timer.delay == 2, "only the short zone check, got delay " .. tostring(timer.delay))
+        timer.fn()
+      end
       assert(rebuildCount == 0, "roster events must not rebuild the presence cache, got " .. rebuildCount)
       assert(Bootstrap._presenceRebuildPending == nil, "roster events must not leave a pending-rebuild flag behind")
     end

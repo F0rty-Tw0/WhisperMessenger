@@ -9,6 +9,9 @@ local Common = ns.BootstrapLifecycleHandlersCommon
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
+-- stylua: ignore
+local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneRosterPoll")
 -- stylua: ignore
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
@@ -130,6 +133,10 @@ local function refreshBNetConversations(Bootstrap, deps)
           OnlineNotify.Observe(Bootstrap.runtime, key, conversation, BNetStatus.IsOnline(friend.accountInfo))
         end
         local gameInfo = friend.accountInfo and friend.accountInfo.gameAccountInfo
+        -- Outside WoW the areaName is stale, so it counts as no zone.
+        if conversation.notifyZone == true then
+          ZoneNotify.Observe(Bootstrap.runtime, conversation, BNetStatus.IsInWoW(gameInfo) and gameInfo.areaName or nil)
+        end
         BNetStatus.ApplyGameInfoMetadata(conversation, gameInfo, Bootstrap.runtime)
         if gameInfo and gameInfo.characterName and gameInfo.characterName ~= "" then
           local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
@@ -216,6 +223,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
     return true
   end
   LockdownReplay.Kick(Bootstrap.runtime)
+  ZoneRosterPoll.Start(Bootstrap.runtime)
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then
@@ -229,15 +237,43 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   return true
 end
 
--- Roster and club membership events fire in bursts. Only mark the data stale;
--- the next per-contact presence read decides whether a rescan is worth it.
-function Presence.handlePresenceInvalidation(_Bootstrap, deps)
+local function checkZones(Bootstrap, PresenceCache)
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
+-- One "Notify when they change zone" check per burst, same debounce as the
+-- Battle.net friend refresh; synchronous when timers are unavailable.
+local function scheduleZoneCheck(Bootstrap, PresenceCache)
+  if Bootstrap._zoneCheckPending then
+    return
+  end
+  Bootstrap._zoneCheckPending = true
+  local scheduled = Common.scheduleAfter(2, function()
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end)
+  if not scheduled then
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end
+end
+
+-- Roster and club membership events fire in bursts. Presence is marked stale
+-- at once, with no rescan: the next per-contact read decides whether one is
+-- worth it. Armed zone-watch contacts get that read once the burst settles,
+-- never in mythic content (same rule as the login rebuild).
+function Presence.handlePresenceInvalidation(Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
     return true
   end
 
   PresenceCache.Invalidate()
+  if not Bootstrap._inMythicContent then
+    scheduleZoneCheck(Bootstrap, PresenceCache)
+  end
 
   return true
 end

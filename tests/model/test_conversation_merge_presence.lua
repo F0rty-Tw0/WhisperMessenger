@@ -1,6 +1,6 @@
 local ConversationMerge = require("WhisperMessenger.Model.ConversationMerge")
 
--- Re-keying keeps "Notify when online", the newest last-seen time, and only
+-- Re-keying keeps "Notify when online", the zone-change watch, the newest last-seen time, and only
 -- keeps a message request when both records were requests (fail open).
 return function()
   -- test_notify_and_last_seen_carry_over
@@ -13,6 +13,17 @@ return function()
     local merged = conversations.new
     assert(merged.notifyOnline == true, "notify flag carried over")
     assert(merged.lastSeenAt == 300, "newest last-seen kept")
+  end
+
+  -- test_zone_watch_and_its_baseline_carry_over
+  do
+    local conversations = {
+      old = { messages = {}, notifyZone = true, notifyZoneFrom = "Stormwind City" },
+      new = { messages = {} },
+    }
+    ConversationMerge.Rekey(conversations, "old", "new", 50)
+    assert(conversations.new.notifyZone == true, "zone watch carried over")
+    assert(conversations.new.notifyZoneFrom == "Stormwind City", "baseline carried over")
   end
 
   -- test_request_needs_both_records

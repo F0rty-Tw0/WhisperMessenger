@@ -400,10 +400,12 @@ local German = {
   ["Level %d"] = "Stufe %d",
   ["Last online %s"] = "Zuletzt online: %s",
   ["Notify when online"] = "Benachrichtigen, wenn online",
+  ["Notify when they change zone"] = "Benachrichtigen bei Zonenwechsel",
   ["%s is now online."] = "%s ist jetzt online.",
   ["Hit an error. Whisper from %s: %s"] = "Fehler aufgetreten. Flüstern von %s: %s",
   ["Hit an error. Whisper to %s: %s"] = "Fehler aufgetreten. Flüstern an %s: %s",
   ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Wiederholte Fehler: Flüstern wird bis zum nächsten /reload nicht mehr im Chat ausgeblendet.",
+  ["%s changed zone from %s to %s."] = "%s hat die Zone gewechselt: von %s nach %s.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "In Warteschlange",
   ["Not sent"] = "Nicht gesendet",

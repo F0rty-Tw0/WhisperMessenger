@@ -7,7 +7,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local ContactPrefsDialog = ns.ContactsListContactPrefsDialog or require("WhisperMessenger.UI.ContactsList.ContactPrefsDialog")
-local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
+local NotifyMenuEntries = ns.ContactsListNotifyMenuEntries or require("WhisperMessenger.UI.ContactsList.NotifyMenuEntries")
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
@@ -39,30 +39,7 @@ local function addMarkUnreadButton(rootDescription, item, onMarkUnread)
   end
 end
 
--- Checkbox (plain button on clients without one) shown only for friends
--- whose online state WoW reports.
-local function addNotifyOnlineEntry(rootDescription, item, onUpdatePrefs)
-  if not OnlineWatch.CanWatch(item, _G.C_FriendList) then
-    return
-  end
-  local label = Localization.Text("Notify when online")
-  -- item is a snapshot that the save doesn't update, and the menu stays open
-  -- after a checkbox click, so track the ticked state here.
-  local enabled = item.notifyOnline == true
-  local function toggle()
-    enabled = not enabled
-    onUpdatePrefs(item, { notifyOnline = enabled })
-  end
-  if type(rootDescription.CreateCheckbox) == "function" then
-    rootDescription:CreateCheckbox(label, function()
-      return enabled
-    end, toggle)
-  else
-    rootDescription:CreateButton(label, toggle)
-  end
-end
-
--- Mute/Unmute for every row; nickname, note and notify-when-online for
+-- Mute/Unmute for every row; nickname, note and the notify entries for
 -- whispers only.
 local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
   if type(onUpdatePrefs) ~= "function" then
@@ -85,7 +62,7 @@ local function addPrefsButtons(rootDescription, item, onUpdatePrefs, isGroup)
       onUpdatePrefs(item, { note = text })
     end)
   end)
-  addNotifyOnlineEntry(rootDescription, item, onUpdatePrefs)
+  NotifyMenuEntries.Add(rootDescription, item, onUpdatePrefs)
 end
 
 -- Pin/Unpin and Remove: the row's hover-button actions, through the same
@@ -289,8 +266,9 @@ local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActio
   return false
 end
 
--- onUpdatePrefs(item, changes): changes is { muted } / { nickname } / { note }
--- / { notifyOnline }. rowActions: the row's hover actions { onPin, onRemove }.
+-- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
+-- text } / { note = text } / { notifyOnline = bool } / { notifyZone = bool }.
+-- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
 -- An opened menu takes ESC before the window.
 function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
