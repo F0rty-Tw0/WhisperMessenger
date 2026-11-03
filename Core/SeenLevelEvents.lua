@@ -10,6 +10,7 @@ local SenderLevelBackfill = ns.SenderLevelBackfill or require("WhisperMessenger.
 local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local WhoRow = ns.WhoRow or require("WhisperMessenger.Core.WhoRow")
+local WhoLevels = ns.SeenLevelEventsWhoLevels or require("WhisperMessenger.Core.SeenLevelEvents.WhoLevels")
 
 -- Records the levels the game shows the player (target, mouseover,
 -- nameplates, group, friends) and pushes them to saved whisper chats.
@@ -136,23 +137,6 @@ local function recordZone(info, systemText)
   end
 end
 
--- Runs under pcall: comparing a 12.0 secret level throws. Any system line
--- inside the who window lands here; only the reply's own row counts, so an
--- unrelated line neither walks the store nor re-applies an older reply.
-local function collectLevel(levels, info, systemText)
-  if systemText ~= nil and not WhoRow.Matches(systemText, info) then
-    return
-  end
-  local level = info.level
-  if type(level) ~= "number" or level <= 0 then
-    return
-  end
-  local nameKey = SeenLevel.NameKey(info.fullName)
-  if nameKey ~= nil and (levels[nameKey] == nil or levels[nameKey] < level) then
-    levels[nameKey] = level
-  end
-end
-
 -- One walk per reply, not per row: a broad /who can list many players.
 local function backfill(levels)
   local rt = runtime
@@ -173,7 +157,7 @@ local function recordWho(api, systemText)
     local info = api.GetWhoInfo(i)
     if info then
       record(nil, info.fullName, info.level)
-      pcall(collectLevel, levels, info, systemText)
+      pcall(WhoLevels.Collect, levels, info, systemText)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
     end

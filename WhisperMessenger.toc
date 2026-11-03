@@ -116,6 +116,7 @@ Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
+Core/SeenLevelEvents/WhoLevels.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua
