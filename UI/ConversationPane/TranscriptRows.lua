@@ -33,6 +33,8 @@ local MESSAGE_FIELDS = {
   "lastSeenAt",
   -- A /who reply can fill it in after the line arrived.
   "senderLevel",
+  -- CraftScan's own channel tags a whisper after it arrived.
+  "addonGreeting",
 }
 local MESSAGE_FIELD_COUNT = #MESSAGE_FIELDS
 
