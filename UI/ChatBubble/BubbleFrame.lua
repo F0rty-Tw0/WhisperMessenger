@@ -22,6 +22,7 @@ local ReplyQuote = ns.ChatBubbleReplyQuote or require("WhisperMessenger.UI.ChatB
 local OutgoingDelivery = ns.OutgoingDelivery or require("WhisperMessenger.Model.OutgoingDelivery")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local MentionHighlight = ns.ChatBubbleMentionHighlight or require("WhisperMessenger.UI.ChatBubble.MentionHighlight")
+local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 
 -- Queued / not-sent bubbles fade so they read as "didn't go out".
 local UNSENT_BUBBLE_ALPHA = 0.55
@@ -152,7 +153,7 @@ function BubbleFrame.CreateBubble(factory, parent, message, options)
   local showIcon = options.showIcon
   local kind = message.kind or "user"
   local direction = message.direction or "in"
-  local displayText = Hyperlinks.FormatTextForDisplay(message.text or "")
+  local displayText = Hyperlinks.FormatTextForDisplay(AddonGreetingText.ForDisplay(message))
   if message.mention then
     displayText = MentionHighlight.Apply(displayText)
   end
