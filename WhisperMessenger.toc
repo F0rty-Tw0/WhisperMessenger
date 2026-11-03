@@ -84,6 +84,9 @@ Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
+Model/MessageReactionProtocol/Wire.lua
+Model/MessageReactionProtocol/Fallback.lua
+Model/MessageReactionProtocol/Decode.lua
 Model/MessageReactionProtocol.lua
 Model/MessageParts.lua
 Model/MessageReactions.lua
