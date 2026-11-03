@@ -19,6 +19,12 @@ return function()
     assert(PlainText.Strip("need " .. link .. " now") == "need [Thunderfury] now", "named colors are dropped")
   end
 
+  -- test_typed_pipe_is_not_read_as_a_code
+  do
+    local text = "a ||cnice day: hi ||rest x||cFFFF0000y"
+    assert(PlainText.Strip(text) == text, "an escaped || pipe keeps the text after it")
+  end
+
   -- test_strips_textures_and_atlases
   do
     local text = "a|TInterface\\Icons\\INV_Misc_QuestionMark:16|tb|Araid-icon:16:16|ac"
