@@ -73,6 +73,18 @@ return function()
     assert(#toasted == 1, "a muted chat never pops a card, got " .. #toasted)
   end
 
+  -- test_message_request_pops_no_card
+  do
+    local runtime, toasted = setup()
+    runtime.accountState.settings.requestsInbox = true
+    whisper(runtime)
+    local _, conversation = next(runtime.store.conversations)
+    conversation.request = true
+    local before = #toasted
+    whisper(runtime)
+    assert(#toasted == before, "a message request never pops a card, got " .. (#toasted - before))
+  end
+
   -- test_outgoing_whisper_pops_no_card
   do
     local runtime, toasted = setup()
