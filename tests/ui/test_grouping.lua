@@ -88,4 +88,12 @@ return function()
     current.addonGreeting = "CraftScan"
     assert(Grouping.ShouldGroup(prev, current) == false, "an addon greeting never groups under the previous label")
   end
+
+  -- A human follow-up must not sit under the greeting's "Sent by" label.
+  do
+    local prev = inMsg("Bob", 100)
+    prev.addonGreeting = "CraftScan"
+    local current = inMsg("Bob", 150)
+    assert(Grouping.ShouldGroup(prev, current) == false, "a follow-up never groups under an addon greeting")
+  end
 end
