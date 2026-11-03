@@ -2,7 +2,7 @@ local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 -- Addon greetings end to end through the live route: the robots.txt
 -- announcement tags the next whisper, "Hide" keeps it silent, and nothing is
--- ever sent back on robots.txt.
+-- ever sent back on robots.txt or CRAFT_SCAN.
 
 local SENDER = "Crafter-Realm"
 
@@ -22,7 +22,7 @@ end
 return function()
   local alerts, sentOnGreetingPrefix
   local function spySend(prefix)
-    if prefix == "robots.txt" then
+    if prefix == "robots.txt" or prefix == "CRAFT_SCAN" then
       sentOnGreetingPrefix = sentOnGreetingPrefix + 1
     end
     return true
@@ -77,6 +77,20 @@ return function()
     assert(next(runtime.store.conversations) == nil, "hidden greeting not stored")
     assert(alerts == 0, "hidden greeting never alerts")
     assert(sentOnGreetingPrefix == 0, "nothing sent on robots.txt")
+  end
+
+  -- test_craft_scan_channel_tags_and_refreshes
+  do
+    local runtime = setup({})
+    local refreshed
+    whisper(runtime)
+    EventBridge.RouteLiveEvent(runtime, function(key)
+      refreshed = key
+    end, "CHAT_MSG_ADDON", "CRAFT_SCAN", "^1^encoded", "WHISPER", SENDER)
+    local conversation = onlyConversation(runtime)
+    assert(conversation.messages[1].addonGreeting == "CraftScan", "CRAFT_SCAN tags the customer whisper")
+    assert(refreshed == conversation.conversationKey, "the window refreshes the tagged conversation")
+    assert(sentOnGreetingPrefix == 0, "nothing sent on CRAFT_SCAN")
   end
 
   for _, name in ipairs({ "FlashClientIcon", "PlaySound", "InCombatLockdown" }) do

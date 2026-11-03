@@ -10,6 +10,7 @@ local DeliveryStatus = ns.ChatBubbleDeliveryStatus or require("WhisperMessenger.
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local LevelColor = ns.LevelColor or require("WhisperMessenger.UI.LevelColor")
 local PlayerMenuClick = ns.ChatBubblePlayerMenuClick or require("WhisperMessenger.UI.ChatBubble.PlayerMenuClick")
+local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
@@ -39,8 +40,9 @@ local function hideCached(frame, cacheKey)
   end
 end
 
--- "(Sent by <AddonName>)" right of the time when a crafting addon announced
--- this whisper as its automated greeting.
+-- "(Sent by Craft Alert)" right of the time when a crafting addon announced
+-- this whisper as its automated greeting. Every addon-sent whisper wears the
+-- same badge; the message keeps the real addon name in addonGreeting.
 local function applyGreetingBadge(frame, message, anchor)
   if type(message.addonGreeting) ~= "string" or message.addonGreeting == "" then
     hideCached(frame, "_wmSenderGreetingFS")
@@ -49,7 +51,7 @@ local function applyGreetingBadge(frame, message, anchor)
   local badgeFS = ensureFontString(frame, "_wmSenderGreetingFS")
   setFontObject(badgeFS, Theme.FONTS.message_time)
   setTextColor(badgeFS, Theme.TAG_GOLD)
-  badgeFS:SetText("(" .. string.format(Localization.Text("Sent by %s"), message.addonGreeting) .. ")")
+  badgeFS:SetText("(" .. string.format(Localization.Text("Sent by %s"), AddonGreetingText.NAME) .. ")")
   badgeFS:SetPoint("LEFT", anchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
 end
 

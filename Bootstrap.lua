@@ -208,6 +208,7 @@ function Bootstrap.Initialize(factory, options)
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_REACTION)
   -- Listen-only: crafting addons announce automated greetings here.
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_ADDON_GREETING)
+  AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_CRAFT_SCAN)
   -- Suppress whisper messages from the default chat frame (and their sound).
   -- Our addon provides its own messenger UI for whispers.
   -- We must preserve /r reply targets since the default handler won't run.

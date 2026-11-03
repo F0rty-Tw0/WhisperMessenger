@@ -6,6 +6,7 @@ end
 local BadgeFilter = ns.ToggleIconBadgeFilter or require("WhisperMessenger.UI.ToggleIcon.BadgeFilter")
 local AlertPolicy = ns.AlertPolicy or require("WhisperMessenger.Model.AlertPolicy")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
+local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 
 local WidgetPreview = {}
 
@@ -40,7 +41,7 @@ function WidgetPreview.Create(options)
                 sentAt = sentAt,
                 conversationKey = item.conversationKey,
                 senderName = senderName,
-                messageText = messageText,
+                messageText = AddonGreetingText.ForIncomingPreview(conversation, messageText),
                 classTag = item.classTag or conversation.classTag,
               }
             end
