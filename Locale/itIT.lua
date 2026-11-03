@@ -476,6 +476,10 @@ local Italian = {
   ["Unblock"] = "Sblocca",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "I canali che spunti nelle impostazioni Chat compaiono qui. Scegli un canale a sinistra.",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "Copia link del profilo",
+  ["Armory"] = "Armeria",
+  ["Press Ctrl+C to copy the link."] = "Premi Ctrl+C per copiare il link.",
 }
 
 ns.Locale_itIT = Italian

@@ -476,6 +476,10 @@ local TraditionalChinese = {
   ["Unblock"] = "解除封鎖",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天設定中勾選的頻道會顯示在這裡。請在左側選擇一個頻道。",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "複製角色資料連結",
+  ["Armory"] = "英雄榜",
+  ["Press Ctrl+C to copy the link."] = "按 Ctrl+C 複製連結。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

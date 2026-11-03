@@ -476,6 +476,10 @@ local Russian = {
   ["Unblock"] = "Разблокировать",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "Копировать ссылку на профиль",
+  ["Armory"] = "Оружейная",
+  ["Press Ctrl+C to copy the link."] = "Нажмите Ctrl+C, чтобы скопировать ссылку.",
 }
 
 ns.Locale_ruRU = Russian

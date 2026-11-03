@@ -8,6 +8,7 @@ local FlavorCompat = {}
 local projectId = _G["WOW_PROJECT_ID"]
 local MAINLINE = _G["WOW_PROJECT_MAINLINE"] or 1
 
+FlavorCompat.projectId = projectId
 FlavorCompat.isRetail = (projectId == MAINLINE)
 FlavorCompat.isClassic = not FlavorCompat.isRetail
 

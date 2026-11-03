@@ -110,6 +110,7 @@ read_globals = {
   "C_RestrictedActions",
   "C_XMLUtil",
   "C_Texture",
+  "C_Seasons",
 
   -- Unit and player info
   "UnitName",
@@ -127,6 +128,8 @@ read_globals = {
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",
   "GetRealmName",
+  "GetCurrentRegion",
+  "BNET_CLIENT_WOW",
   "GetUnitSpeed",
   "Ambiguate",
   "IsLoggedIn",

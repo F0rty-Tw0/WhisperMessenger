@@ -56,6 +56,8 @@ Locale/Localization.lua
 Model/Identity/Factions.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
+Model/ProfileCharacter.lua
+Model/ProfileLinks.lua
 Model/Retention.lua
 Model/ConversationMerge.lua
 Model/ConversationStore/StoreRetention.lua
@@ -224,6 +226,7 @@ UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/BlockMenuEntry.lua
 UI/ContactsList/ExportMenuEntry.lua
+UI/ContactsList/ProfileLinksMenuEntry.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua

@@ -13,6 +13,7 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
 local ExportMenuEntry = ns.ContactsListExportMenuEntry or require("WhisperMessenger.UI.ContactsList.ExportMenuEntry")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local ProfileLinksMenuEntry = ns.ContactsListProfileLinksMenuEntry or require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
 
 local ContextMenu = {}
 
@@ -124,8 +125,9 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   local onMarkUnread = contextData.whisperMessengerOnMarkUnread
   local onUpdatePrefs = contextData.whisperMessengerOnUpdatePrefs
   local rowActions = contextData.whisperMessengerRowActions
-  -- No callbacks means no entries; skip the section rather than show it empty.
-  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" and not hasRowActions(rowActions) then
+  local profileLinks = ProfileLinksMenuEntry.Links(item)
+  -- No entries: skip the section rather than show it empty.
+  if type(onMarkUnread) ~= "function" and type(onUpdatePrefs) ~= "function" and not hasRowActions(rowActions) and #profileLinks == 0 then
     return
   end
   -- Divider + gold title mark our entries apart from Blizzard's.
@@ -139,6 +141,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   ExportMenuEntry.Add(rootDescription, item)
   addPrefsButtons(rootDescription, item, onUpdatePrefs, false)
   BlockMenuEntry.Add(rootDescription, item, rowActions)
+  ProfileLinksMenuEntry.Add(rootDescription, profileLinks)
   addRowActionButtons(rootDescription, item, rowActions)
 end
 
