@@ -59,4 +59,13 @@ return function()
   before = routerCalls
   EventBridge.RouteLiveEvent(runtime, nil, "BN_CHAT_MSG_ADDON", "CRAFT_SCAN", "encoded", "WHISPER", 42)
   assert(routerCalls == before, "CRAFT_SCAN never comes over Battle.net")
+
+  -- Group and channel broadcasts on either greeting prefix never build a payload.
+  for _, prefix in ipairs({ "CRAFT_SCAN", "robots.txt" }) do
+    for _, channel in ipairs({ "CHANNEL", "PARTY", "RAID", "GUILD" }) do
+      before = routerCalls
+      EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_ADDON", prefix, "encoded", channel, "Crafter-Realm")
+      assert(routerCalls == before, prefix .. " on " .. channel .. " must not reach EventRouter")
+    end
+  end
 end
