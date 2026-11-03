@@ -11,6 +11,7 @@ local ToggleSpecs = {}
 
 ToggleSpecs.DEFAULTS = {
   hideFromDefaultChat = true,
+  closeGameWhisperTab = false,
   autoOpenIncoming = false,
   autoOpenOutgoing = false,
   requestsInbox = false,
@@ -39,6 +40,20 @@ function ToggleSpecs.Build(config, onChange)
         " ",
         text(
           "|cffff8080Note:|r In Mythic+ content, Blizzard's /r reply and R-keybind may fail while this is enabled (WoW 12.0 secret-value taint on chatEditLastTell). Use |cffffff00/wr|r (or bind /wr to R via macro) to reply safely."
+        ),
+      },
+    },
+    {
+      key = "closeGameWhisperTab",
+      labelKey = "Close the game's whisper tab too",
+      initial = config.closeGameWhisperTab == true,
+      onChange = function(value)
+        onChange("closeGameWhisperTab", value)
+      end,
+      tooltipLines = {
+        text("Close the game's whisper tab too"),
+        text(
+          "When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."
         ),
       },
     },

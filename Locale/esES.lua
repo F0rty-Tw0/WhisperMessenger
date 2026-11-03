@@ -347,6 +347,8 @@ local Spanish = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permite que los contactos que también usan Whisper Messenger vean cuándo has leído sus mensajes.",
   ["Show invite link"] = "Mostrar enlace de invitación",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Muestra un enlace (Invitar a WM) en la cabecera del chat. Al pulsarlo, le susurras a ese jugador un breve mensaje sobre este addon.",
+  ["Close the game's whisper tab too"] = "Cerrar también la pestaña de susurros del juego",
+  ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Al eliminar un chat aquí, también se cierra la pestaña de susurros del propio juego para ese jugador. Solo influye si el juego abre los susurros en pestañas propias.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "Borrador",
   ["Draft:"] = "Borrador:",

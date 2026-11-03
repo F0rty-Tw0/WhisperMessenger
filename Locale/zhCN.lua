@@ -347,6 +347,8 @@ local SimplifiedChinese = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "让同样使用 Whisper Messenger 的联系人看到你已读他们的密语。",
   ["Show invite link"] = "显示邀请链接",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "在聊天标题栏显示 (邀请使用 WM) 链接。点击后会向该玩家发送一条介绍此插件的简短密语。",
+  ["Close the game's whisper tab too"] = "同时关闭游戏的密语标签",
+  ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "在这里删除聊天时，游戏自带的该玩家密语标签页也会一并关闭。仅在游戏将密语显示在单独标签页时生效。",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "草稿",
   ["Draft:"] = "草稿：",
