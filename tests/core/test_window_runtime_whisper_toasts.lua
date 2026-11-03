@@ -128,6 +128,16 @@ return function()
     assert(card(uiParent) == nil, "the clicked card is gone")
   end
 
+  -- test_clicking_a_card_after_a_lock_starts_opens_nothing
+  do
+    local overrides = {}
+    local toasts, uiParent, log = build(overrides)
+    toasts.show(KEY)
+    overrides.competitive = true
+    FindUI.click(card(uiParent))
+    assert(#log == 0, "a lock that started after the card showed refuses the open, got " .. table.concat(log, ","))
+  end
+
   -- test_clear_removes_cards
   do
     local toasts, uiParent = build()
