@@ -238,7 +238,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
 end
 
 local function checkZones(Bootstrap, PresenceCache)
-  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) and Common ~= nil then
     Common.refreshRuntimeWindow(Bootstrap)
   end
 end
@@ -250,10 +250,11 @@ local function scheduleZoneCheck(Bootstrap, PresenceCache)
     return
   end
   Bootstrap._zoneCheckPending = true
-  local scheduled = Common.scheduleAfter(2, function()
-    Bootstrap._zoneCheckPending = false
-    checkZones(Bootstrap, PresenceCache)
-  end)
+  local scheduled = Common ~= nil
+    and Common.scheduleAfter(2, function()
+      Bootstrap._zoneCheckPending = false
+      checkZones(Bootstrap, PresenceCache)
+    end)
   if not scheduled then
     Bootstrap._zoneCheckPending = false
     checkZones(Bootstrap, PresenceCache)

@@ -48,9 +48,9 @@ return function()
 
   local savedIsInGuild, savedGuildInfo, savedGuildRoster = _G.IsInGuild, _G.C_GuildInfo, _G.GuildRoster
   local inGuild, retailCalls, classicCalls = true, 0, 0
-  _G.IsInGuild = function()
+  rawset(_G, "IsInGuild", function()
     return inGuild
-  end
+  end)
   _G.GuildRoster = function()
     classicCalls = classicCalls + 1
   end
