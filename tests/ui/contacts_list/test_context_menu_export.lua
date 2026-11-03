@@ -153,6 +153,20 @@ return function()
     assert(editBox.maxLetters == 255, "the shared popup box gets its letter cap back")
   end
 
+  -- test_export_survives_a_parent_hide_and_show
+  -- Alt+Z hides UIParent: the popup gets OnHide, then OnShow with its data.
+  do
+    findButton(whisperMenu(conversationItem("WOW")), "Export conversation").callback()
+    local full = editBox.text
+    assert(#full > 255, "export text is longer than the single-line cap")
+    shown.def.OnHide(shown.dialog)
+    shown.def.OnShow(shown.dialog, shown.dialog.data)
+    assert(editBox.multiLine == true, "export box is multi-line again after re-show")
+    assert(editBox.text == full, "export text is whole after re-show, got " .. #tostring(editBox.text) .. " letters")
+    shown.def.OnHide(shown.dialog)
+    assert(editBox.multiLine == false and editBox.maxLetters == 255, "hide still restores the shared box")
+  end
+
   -- test_message_copy_after_export_keeps_the_single_line_box
   do
     local PopupUI = require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")

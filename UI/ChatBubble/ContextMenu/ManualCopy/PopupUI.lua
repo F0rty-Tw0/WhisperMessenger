@@ -118,7 +118,14 @@ function PopupUI.ShowManualCopyDialog(text, options)
       hideOnEscape = 1,
       preferredIndex = 3,
       OnShow = function(self, data)
-        local value = tostring((self and self.data) or data or "")
+        local raw = (self and self.data) or data or ""
+        -- An export's data is a table, so a re-show (Alt+Z) widens again
+        -- after OnHide restored the shared box.
+        if type(raw) == "table" then
+          widenEditBox(Resolvers.resolvePopupEditBox(self, MANUAL_COPY_DIALOG_NAME))
+          raw = raw.text
+        end
+        local value = tostring(raw or "")
         StyledTextInputPopup.Apply(self, MANUAL_COPY_DIALOG_NAME, value, {
           fullWidthInput = true,
           inputHorizontalPadding = 14,
@@ -142,17 +149,21 @@ function PopupUI.ShowManualCopyDialog(text, options)
   end
   applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME], options.prompt)
 
-  local dialog = _G.StaticPopup_Show(MANUAL_COPY_DIALOG_NAME, nil, nil, text)
+  local data = text
+  if options.multiLine == true then
+    data = { text = text }
+  end
+  local dialog = _G.StaticPopup_Show(MANUAL_COPY_DIALOG_NAME, nil, nil, data)
   if dialog == nil then
     return false
   end
 
-  -- OnShow already primed the box under its old cap; the Apply below sets
-  -- the full text again once the cap is lifted.
+  -- A frame that skipped OnShow still gets the wide box before the Apply
+  -- below sets the full text.
   if options.multiLine == true then
     widenEditBox(Resolvers.resolvePopupEditBox(dialog, MANUAL_COPY_DIALOG_NAME))
   end
-  dialog.data = text
+  dialog.data = data
   StyledTextInputPopup.Apply(dialog, MANUAL_COPY_DIALOG_NAME, text, {
     fullWidthInput = true,
     inputHorizontalPadding = 14,
