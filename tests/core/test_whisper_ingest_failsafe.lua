@@ -81,8 +81,8 @@ local function setup(settings)
   }
 end
 
-local function run(fn)
-  local ctx = setup()
+local function run(fn, settings)
+  local ctx = setup(settings)
   local ok, err = pcall(fn, ctx)
   ctx.restore()
   assert(ok, err)
@@ -178,6 +178,42 @@ return function()
     assert(ctx.active.CHAT_MSG_WHISPER == nil, "expected sync to keep whisper filters off")
     ctx.Bootstrap.registerChatFilters()
     assert(ctx.active.CHAT_MSG_WHISPER == nil, "expected a direct register (M+ resume) to keep whisper filters off")
+  end)
+
+  -- test_errors_while_whispers_are_shown_do_not_count
+  run(function(ctx)
+    ctx.route("CHAT_MSG_WHISPER", "one", "Bob-Realm")
+    ctx.route("CHAT_MSG_WHISPER", "two", "Bob-Realm")
+    ctx.runtime.accountState.settings.hideFromDefaultChat = true
+    ctx.Bootstrap.syncChatFilters()
+    ctx.route("CHAT_MSG_WHISPER", "three", "Bob-Realm")
+    assert(ctx.active.CHAT_MSG_WHISPER ~= nil, "expected only errors that hid a whisper to count toward the stop")
+    assert(countOf(ctx.printed, STOPPED) == 0, "expected no stop notice")
+  end, { hideFromDefaultChat = false })
+
+  -- test_turning_hiding_on_after_errors_still_hides_whispers
+  run(function(ctx)
+    for _ = 1, 3 do
+      ctx.route("CHAT_MSG_WHISPER", "x", "Bob-Realm")
+    end
+    assert(#ctx.reported == 3 and #ctx.printed == 0, "expected errors reported but not echoed while whispers show in chat")
+    ctx.runtime.accountState.settings.hideFromDefaultChat = true
+    ctx.Bootstrap.syncChatFilters()
+    assert(ctx.active.CHAT_MSG_WHISPER ~= nil, "expected turning hiding on to register the whisper filters")
+  end, { hideFromDefaultChat = false })
+
+  -- test_whisper_payload_with_nils_reaches_the_bridge_intact
+  run(function(ctx)
+    local received
+    ctx.bridge.RouteLiveEvent = function(_runtime, _refreshWindow, _eventName, ...)
+      received = { n = select("#", ...), ... }
+    end
+    -- A trailing nil too: with the last slot non-nil, #args equals n and a
+    -- plain unpack(args) would pass this by luck.
+    Failsafe.RouteLiveEvent(ctx.Bootstrap, ctx.bridge, ctx.runtime, ctx.runtime.refreshWindow, "CHAT_MSG_WHISPER", "hi", "Bob-Realm", nil, nil, 42, nil)
+    assert(received.n == 6, "expected all six payload slots, got " .. tostring(received.n))
+    assert(received[1] == "hi" and received[2] == "Bob-Realm", "expected text and sender intact")
+    assert(received[3] == nil and received[4] == nil and received[5] == 42 and received[6] == nil, "expected nils and the later arg in place")
   end)
 
   -- test_non_whisper_event_errors_propagate

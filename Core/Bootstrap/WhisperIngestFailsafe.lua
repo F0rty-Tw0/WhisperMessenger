@@ -13,9 +13,9 @@ local unpack = _G.unpack or table.unpack
 local xpcall = xpcall
 
 -- The whisper chat filters always hide these lines from the default chat, so
--- an error in our ingest would lose the whisper. The failsafe reports the
--- error, shows the line in chat, and after MAX_ERRORS stops hiding whispers
--- for the rest of the session.
+-- an error while we handle one could lose the whisper. The failsafe reports
+-- the error, shows the line in chat, and after MAX_ERRORS stops hiding
+-- whispers for the rest of the session.
 local WhisperIngestFailsafe = {}
 
 WhisperIngestFailsafe.MAX_ERRORS = 3
@@ -54,29 +54,25 @@ local function echoWhisper(direction, text, name)
   ChatPrint.Print(string.format(Localization.Text(key), name, text))
 end
 
-local function hidesWhispers(runtime)
-  local settings = type(runtime) == "table" and runtime.accountState and runtime.accountState.settings
-  return type(settings) == "table" and settings.hideFromDefaultChat == true
-end
-
-local function stopHidingWhispers(Bootstrap, runtime)
+local function stopHidingWhispers(Bootstrap)
   Bootstrap._whisperFiltersDisabled = true
   if type(Bootstrap.syncChatFilters) == "function" then
     Bootstrap.syncChatFilters()
   end
-  if hidesWhispers(runtime) then
-    ChatPrint.Print(Localization.Text(STOPPED_KEY))
-  end
+  ChatPrint.Print(Localization.Text(STOPPED_KEY))
 end
 
-local function onIngestError(Bootstrap, runtime, direction, text, name)
-  if Bootstrap._filtersRegistered then
-    echoWhisper(direction, text, name)
+-- Only errors that hid a whisper count. Counting the others would leave
+-- hiding silently off once the player turns it on later.
+local function onIngestError(Bootstrap, direction, text, name)
+  if not Bootstrap._filtersRegistered then
+    return
   end
+  echoWhisper(direction, text, name)
   local errorCount = (Bootstrap._whisperIngestErrors or 0) + 1
   Bootstrap._whisperIngestErrors = errorCount
   if errorCount == WhisperIngestFailsafe.MAX_ERRORS then
-    stopHidingWhispers(Bootstrap, runtime)
+    stopHidingWhispers(Bootstrap)
   end
 end
 
@@ -94,7 +90,7 @@ function WhisperIngestFailsafe.RouteLiveEvent(Bootstrap, EventBridge, runtime, r
   if ok then
     return result
   end
-  onIngestError(Bootstrap, runtime, direction, ...)
+  onIngestError(Bootstrap, direction, ...)
   return nil
 end
 
