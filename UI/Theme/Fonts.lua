@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local FontFamilies = ns.ThemeFontFamilies or require("WhisperMessenger.UI.Theme.FontFamilies")
+local FontColors = ns.ThemeFontColors or require("WhisperMessenger.UI.Theme.FontColors")
 
 local Fonts = {}
 
@@ -78,17 +79,6 @@ local FONT_MAP = {
   window_title = "WM_Title",
   close_glyph = "WM_CloseGlyph",
 }
-
-local FONT_COLOR_PRESETS = {
-  default = { key = "default", label = "Default", rgba = nil },
-  gold = { key = "gold", label = "Gold", rgba = { 1, 0.82, 0, 1 } },
-  light_blue = { key = "light_blue", label = "Blue", rgba = { 0.67, 0.85, 1, 1 } },
-  soft_green = { key = "soft_green", label = "Green", rgba = { 0.67, 1, 0.67, 1 } },
-  purple = { key = "purple", label = "Purple", rgba = { 0.78, 0.61, 1, 1 } },
-  rose = { key = "rose", label = "Rose", rgba = { 1, 0.65, 0.75, 1 } },
-}
-
-local FONT_COLOR_ORDER = { "default", "gold", "light_blue", "soft_green", "purple", "rose" }
 
 local currentMode = "default"
 local currentFontPath = nil
@@ -272,7 +262,7 @@ function Fonts.GetOutline()
 end
 
 function Fonts.SetFontColor(key)
-  if type(key) == "string" and FONT_COLOR_PRESETS[key] then
+  if type(key) == "string" and FontColors.Get(key) then
     currentFontColor = key
   else
     currentFontColor = "default"
@@ -280,18 +270,11 @@ function Fonts.SetFontColor(key)
 end
 
 function Fonts.GetFontColorRGBA()
-  local preset = FONT_COLOR_PRESETS[currentFontColor]
+  local preset = FontColors.Get(currentFontColor)
   return preset and preset.rgba or nil
 end
 
-function Fonts.ListFontColorPresets()
-  local list = {}
-  for _, key in ipairs(FONT_COLOR_ORDER) do
-    local preset = FONT_COLOR_PRESETS[key]
-    list[#list + 1] = { key = preset.key, label = preset.label, rgba = preset.rgba }
-  end
-  return list
-end
+Fonts.ListFontColorPresets = FontColors.List
 
 for key, value in pairs(FONT_MAP) do
   Fonts[key] = value
