@@ -111,6 +111,11 @@ return function()
   assert(#lines == 1 and anduin.notifyZoneFrom == "Dornogal", "Battle.net baseline, no alert")
   LifecycleHandlers.Handle(Bootstrap, "BN_FRIEND_INFO_CHANGED", bnetDeps({ ["Anduin#1"] = { bnetAccountID = 7, accountInfo = {} } }))
   assert(#lines == 1 and anduin.notifyZone == true, "left WoW: no alert, still armed")
+  -- test_bnet_area_without_a_character_is_not_a_zone
+  -- Outside WoW the game account keeps its last areaName; no character means stale.
+  local stale = { gameAccountInfo = { isOnline = true, areaName = "Valdrakken" } }
+  LifecycleHandlers.Handle(Bootstrap, "BN_FRIEND_INFO_CHANGED", bnetDeps({ ["Anduin#1"] = { bnetAccountID = 7, accountInfo = stale } }))
+  assert(#lines == 1 and anduin.notifyZone == true, "areaName without a character: no alert, still armed")
   LifecycleHandlers.Handle(Bootstrap, "BN_FRIEND_INFO_CHANGED", bnetDeps({ ["Anduin#1"] = { bnetAccountID = 7, accountInfo = inWoW("Azj-Kahet") } }))
   -- The alert hides the BattleTag number, like every other on-screen name.
   assert(
@@ -121,6 +126,47 @@ return function()
 
   -- test_no_runtime_is_harmless
   LifecycleHandlers.Handle({}, "GUILD_ROSTER_UPDATE", guildDeps)
+
+  -- test_armed_bnet_friend_with_a_guid_is_not_read_from_the_roster
+  local bnetCache = fakePresenceCache({ ["Player-ANDUIN"] = { presence = "online", zone = "Dornogal" } })
+  runtime.store.conversations = { ["bnet::anduin"] = { channel = "BN", guid = "Player-ANDUIN", notifyZone = true } }
+  LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", {
+    getPresenceCache = function()
+      return bnetCache
+    end,
+  })
+  assert(#bnetCache.reads == 0, "Battle.net zones come from the friend list: 0 roster reads, got " .. #bnetCache.reads)
+
+  -- test_roster_burst_checks_zones_once_after_it
+  -- Roster events come in bursts: presence goes stale at once, the zone
+  -- check runs once, 2 s after the first event.
+  local scheduled = {}
+  _G.C_Timer = {
+    After = function(delay, fn)
+      scheduled[#scheduled + 1] = { delay = delay, fn = fn }
+    end,
+  }
+  local invalidations = 0
+  local burstCache = fakePresenceCache({ ["Player-JAINA"] = { presence = "online", zone = "Dalaran" } })
+  burstCache.Invalidate = function()
+    invalidations = invalidations + 1
+  end
+  runtime.store.conversations = { ["wow::jaina"] = { channel = "WOW", guid = "Player-JAINA", notifyZone = true } }
+  local burstDeps = {
+    getPresenceCache = function()
+      return burstCache
+    end,
+  }
+  for _ = 1, 3 do
+    LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
+  end
+  assert(invalidations == 3, "every event marks presence stale right away")
+  assert(#burstCache.reads == 0, "no member read during the burst, got " .. #burstCache.reads)
+  assert(#scheduled == 1 and scheduled[1].delay == 2, "one deferred zone check per burst")
+  scheduled[1].fn()
+  assert(#burstCache.reads == 1, "the deferred check reads the armed member once")
+  LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
+  assert(#scheduled == 2, "the next burst schedules its own check")
 
   rawset(_G, "DEFAULT_CHAT_FRAME", nil)
   rawset(_G, "PlaySound", nil)

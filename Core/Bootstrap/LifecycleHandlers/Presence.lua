@@ -237,9 +237,33 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   return true
 end
 
--- Roster and club membership events fire in bursts. Only mark the data stale;
--- the next per-contact presence read decides whether a rescan is worth it.
--- Armed "Notify when they change zone" contacts get that read now.
+local function checkZones(Bootstrap, PresenceCache)
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
+-- One "Notify when they change zone" check per burst, same debounce as the
+-- Battle.net friend refresh; synchronous when timers are unavailable.
+local function scheduleZoneCheck(Bootstrap, PresenceCache)
+  if Bootstrap._zoneCheckPending then
+    return
+  end
+  Bootstrap._zoneCheckPending = true
+  local scheduled = Common.scheduleAfter(2, function()
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end)
+  if not scheduled then
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end
+end
+
+-- Roster and club membership events fire in bursts. Presence is marked stale
+-- at once, with no rescan: the next per-contact read decides whether one is
+-- worth it. Armed zone-watch contacts get that read once the burst settles,
+-- never in mythic content (same rule as the login rebuild).
 function Presence.handlePresenceInvalidation(Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
@@ -247,8 +271,8 @@ function Presence.handlePresenceInvalidation(Bootstrap, deps)
   end
 
   PresenceCache.Invalidate()
-  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
-    Common.refreshRuntimeWindow(Bootstrap)
+  if not Bootstrap._inMythicContent then
+    scheduleZoneCheck(Bootstrap, PresenceCache)
   end
 
   return true
