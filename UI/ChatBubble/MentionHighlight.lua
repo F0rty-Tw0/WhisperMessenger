@@ -5,36 +5,15 @@ end
 
 local Mention = ns.GroupChatIngestMention or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Mention")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
+local PlainText = ns.ChatBubblePlainText or require("WhisperMessenger.UI.ChatBubble.PlainText")
 
 -- Paints the player's name in their class colour inside a bubble that
 -- mentions them. Works on display text, so every escape sequence (links,
 -- colour runs, textures, atlases, protected names) is copied byte-exact.
 local MentionHighlight = {}
 
--- Escape codes with a body, and the code that closes it.
-local ESCAPE_CLOSERS = { c = "|r", T = "|t", A = "|a", K = "|k" }
-
--- Last byte of the escape sequence that starts at pipeAt. An unclosed
--- sequence runs to the end of the text.
-local function escapeEnd(text, pipeAt)
-  local code = string.sub(text, pipeAt + 1, pipeAt + 1)
-  if code == "H" then
-    local _, dataEnd = string.find(text, "|h", pipeAt + 2, true)
-    if dataEnd == nil then
-      return #text
-    end
-    local _, linkEnd = string.find(text, "|h", dataEnd + 1, true)
-    return linkEnd or #text
-  end
-  local closer = ESCAPE_CLOSERS[code]
-  if closer then
-    local _, stop = string.find(text, closer, pipeAt + 2, true)
-    return stop or #text
-  end
-  return pipeAt + 1
-end
-
-local function colorizeSegment(segment, name, open, output)
+local function colorizeSegment(segment, name, open)
+  local output = {}
   local cursor = 1
   while true do
     local first, last = Mention.FindWord(segment, name, cursor)
@@ -46,6 +25,7 @@ local function colorizeSegment(segment, name, open, output)
     cursor = last + 1
   end
   output[#output + 1] = string.sub(segment, cursor)
+  return table.concat(output)
 end
 
 -- hex is the 8-digit AARRGGBB form a |c code takes.
@@ -54,22 +34,9 @@ function MentionHighlight.Colorize(text, name, hex)
     return text
   end
   local open = "|c" .. hex
-  local output = {}
-  local cursor = 1
-  local length = #text
-  while cursor <= length do
-    local pipeAt = string.find(text, "|", cursor, true) or (length + 1)
-    if pipeAt > cursor then
-      colorizeSegment(string.sub(text, cursor, pipeAt - 1), name, open, output)
-    end
-    if pipeAt > length then
-      break
-    end
-    local stop = escapeEnd(text, pipeAt)
-    output[#output + 1] = string.sub(text, pipeAt, stop)
-    cursor = stop + 1
-  end
-  return table.concat(output)
+  return PlainText.Map(text, function(segment)
+    return colorizeSegment(segment, name, open)
+  end)
 end
 
 local function toByte(value)
