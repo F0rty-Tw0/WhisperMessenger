@@ -14,15 +14,16 @@ local function stamp(ts)
   return os.date("%Y-%m-%d %H:%M", ts)
 end
 
-local function lines(text)
-  local result = {}
-  for line in string.gmatch(text .. "\n", "(.-)\n") do
-    result[#result + 1] = line
-  end
-  return result
-end
-
 local NAMES = { contactName = "Arthas", playerName = "Jaina" }
+
+-- The header followed by every message line.
+local function exported(messages)
+  local out = { ConversationExport.Header(NAMES) }
+  for _, line in ipairs(ConversationExport.Lines(messages, NAMES)) do
+    out[#out + 1] = line
+  end
+  return out
+end
 
 return function()
   Localization.Configure({ language = "enUS" })
@@ -30,13 +31,13 @@ return function()
 
   -- test_header_names_the_contact
   do
-    local out = lines(ConversationExport.Format({}, NAMES))
+    local out = exported({})
     assert(out[1] == "Conversation with Arthas", "header line, got " .. tostring(out[1]))
   end
 
   -- test_empty_conversation_is_just_the_header
   do
-    local out = lines(ConversationExport.Format({}, NAMES))
+    local out = exported({})
     assert(#out == 1, "empty conversation exports only the header, got " .. #out .. " lines")
   end
 
@@ -46,7 +47,7 @@ return function()
       { direction = "in", kind = "user", text = "hi", sentAt = T1, playerName = "Arthas" },
       { direction = "in", kind = "user", text = "there", sentAt = T2, playerName = "Arthas" },
     }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(out[2] == "[" .. stamp(T1) .. "] Arthas: hi", "first message line, got " .. tostring(out[2]))
     assert(out[3] == "[" .. stamp(T2) .. "] Arthas: there", "second message line, got " .. tostring(out[3]))
   end
@@ -55,7 +56,7 @@ return function()
   do
     -- An outgoing record's playerName is the whisper target, not the sender.
     local messages = { { direction = "out", kind = "user", text = "yo", sentAt = T1, playerName = "Arthas" } }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(out[2] == "[" .. stamp(T1) .. "] Jaina: yo", "outgoing line uses own name, got " .. tostring(out[2]))
   end
 
@@ -63,7 +64,7 @@ return function()
   do
     local text = "|cffff0000look|r |cffa335ee|Hitem:19019::|h[Thunderfury]|h|r|TInterface\\Icons\\X:16|t"
     local messages = { { direction = "in", kind = "user", text = text, sentAt = T1, playerName = "Arthas" } }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(out[2] == "[" .. stamp(T1) .. "] Arthas: look [Thunderfury]", "plain text only, got " .. tostring(out[2]))
   end
 
@@ -78,7 +79,7 @@ return function()
       { direction = "in", kind = "user", text = nil, sentAt = T1, playerName = "Arthas" },
       { direction = "in", kind = "user", text = "kept", sentAt = T2, playerName = "Arthas" },
     }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     rawset(_G, "issecretvalue", savedSecret)
     assert(#out == 2 and out[2] == "[" .. stamp(T2) .. "] Arthas: kept", "only the readable message is exported")
   end
@@ -86,22 +87,30 @@ return function()
   -- test_unsent_messages_are_skipped
   do
     local messages = { { direction = "out", kind = "user", text = "later", sentAt = T1, delivery = "queued" } }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(#out == 1, "a queued or failed message was never said, so it is not exported")
   end
 
   -- test_protected_sender_name_falls_back_to_the_contact
   do
     local messages = { { direction = "in", kind = "user", text = "hey", sentAt = T1, playerName = "|Kq12|k" } }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(out[2] == "[" .. stamp(T1) .. "] Arthas: hey", "protected name shows the contact, got " .. tostring(out[2]))
   end
 
   -- test_system_lines_have_no_sender
   do
     local messages = { { direction = "in", kind = "system", text = "Arthas joined.", sentAt = T1 } }
-    local out = lines(ConversationExport.Format(messages, NAMES))
+    local out = exported(messages)
     assert(out[2] == "[" .. stamp(T1) .. "] Arthas joined.", "system line without a name, got " .. tostring(out[2]))
+  end
+
+  -- test_a_message_with_line_breaks_is_one_entry
+  do
+    local messages = { { direction = "in", kind = "user", text = "one\ntwo", sentAt = T1, playerName = "Arthas" } }
+    local entries = ConversationExport.Lines(messages, NAMES)
+    assert(#entries == 1, "one entry per message, got " .. #entries)
+    assert(entries[1] == "[" .. stamp(T1) .. "] Arthas: one\ntwo", "text keeps its own break, got " .. tostring(entries[1]))
   end
 
   rawset(_G, "issecretvalue", savedSecret)

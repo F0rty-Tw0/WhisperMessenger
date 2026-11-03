@@ -98,8 +98,10 @@ local function makeCreateFrame()
       self.allPoints = target
     end
 
+    -- New text drops the selection, as in the game.
     function frame:SetText(text)
       self.text = text
+      self.highlight = nil
     end
 
     function frame:GetText()
@@ -361,6 +363,15 @@ local function makeCreateFrame()
 
     function frame:SetMaxBytes(value)
       self.maxBytes = math.max(0, tonumber(value) or 0)
+    end
+
+    function frame:SetMaxLetters(value)
+      self.maxLetters = math.max(0, tonumber(value) or 0)
+    end
+
+    -- Records the selection a player would see; no arguments selects all.
+    function frame:HighlightText(startIndex, endIndex)
+      self.highlight = { startIndex or 0, endIndex or -1 }
     end
 
     function frame:CreateFontString(childName, layer, inheritedTemplate)

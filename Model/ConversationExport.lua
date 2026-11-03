@@ -52,14 +52,20 @@ local function formatLine(message, names)
 end
 
 -- names: { contactName, playerName }.
-function ConversationExport.Format(messages, names)
-  local lines = { format(Localization.Text("Conversation with %s"), tostring(names.contactName or "")) }
+function ConversationExport.Header(names)
+  return format(Localization.Text("Conversation with %s"), tostring(names.contactName or ""))
+end
+
+-- One entry per exportable message, oldest first. A message's own line
+-- breaks stay inside its entry.
+function ConversationExport.Lines(messages, names)
+  local lines = {}
   for _, message in ipairs(messages or {}) do
     if type(message) == "table" and isExportable(message) then
       lines[#lines + 1] = formatLine(message, names)
     end
   end
-  return table.concat(lines, "\n")
+  return lines
 end
 
 ns.ConversationExport = ConversationExport
