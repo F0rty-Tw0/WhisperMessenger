@@ -22,6 +22,7 @@ RetentionRow.DEFAULT_SECONDS = DAY
 RetentionRow.CONFIRM_DIALOG = "WHISPER_MESSENGER_CONFIRM_SHORTER_RETENTION"
 
 local CONFIRM_PROMPT = "Keep chat history for %s only? Older messages are deleted now."
+local CONFIRM_RESET_PROMPT = "Reset this page to its defaults? Chat history is then kept for %s only, and older messages are deleted now."
 
 local PRESETS = {
   { seconds = HOUR, labelKey = "1 hour" },
@@ -91,13 +92,13 @@ local function closePendingPrompt()
 end
 
 -- Without the popup API nothing is confirmed, so nothing is deleted.
-local function confirmShorter(label, language, onAccept)
+local function confirmShorter(prompt, label, language, onAccept)
   if type(_G.StaticPopup_Show) ~= "function" then
     return
   end
   _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
   _G.StaticPopupDialogs[RetentionRow.CONFIRM_DIALOG] = {
-    text = string.format(Localization.Text(CONFIRM_PROMPT, language), label),
+    text = string.format(Localization.Text(prompt, language), label),
     -- The game's own localized labels.
     button1 = rawget(_G, "ACCEPT") or Localization.Text("Accept", language),
     button2 = rawget(_G, "CANCEL") or Localization.Text("Cancel", language),
@@ -111,8 +112,9 @@ local function confirmShorter(label, language, onAccept)
 end
 
 -- options: { language, initial (seconds), onChange(seconds), rowWidth, labelSpacing, colors }
--- Returns the DropdownSelector handle plus setLanguage(language) and
--- resetToDefault(onChange) for the panel's Reset to Defaults button.
+-- Returns the DropdownSelector handle plus setLanguage(language), and
+-- confirmReset(resetPage) and resetToDefault(onChange) for the panel's
+-- Reset to Defaults button.
 function RetentionRow.Create(factory, parent, options)
   local language = options.language
   local current = type(options.initial) == "number" and options.initial or RetentionRow.DEFAULT_SECONDS
@@ -133,7 +135,7 @@ function RetentionRow.Create(factory, parent, options)
       return
     end
     control.setSelected(current)
-    confirmShorter(labelFor(seconds, language, current), language, function()
+    confirmShorter(CONFIRM_PROMPT, labelFor(seconds, language, current), language, function()
       save(seconds)
     end)
   end
@@ -160,6 +162,19 @@ function RetentionRow.Create(factory, parent, options)
     language = nextLanguage
     control.label:SetText(Localization.Text("Message Retention", language))
     control.setOptionsList(RetentionRow.BuildOptions(language, current))
+  end
+
+  -- Reset to Defaults deletes older history too when the default is
+  -- shorter, so it asks first; resetPage runs on Accept, or at once when
+  -- nothing would be deleted. Cancel resets nothing on the page.
+  function control.confirmReset(resetPage)
+    closePendingPrompt()
+    local default = RetentionRow.DEFAULT_SECONDS
+    if default >= current then
+      resetPage()
+      return
+    end
+    confirmShorter(CONFIRM_RESET_PROMPT, labelFor(default, language, current), language, resetPage)
   end
 
   function control.resetToDefault(onChange)

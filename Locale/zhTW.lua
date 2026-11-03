@@ -450,6 +450,7 @@ local TraditionalChinese = {
   ["7 days"] = "7天",
   ["Forever"] = "永久",
   ["Keep chat history for %s only? Older messages are deleted now."] = "僅保留%s的聊天記錄？更早的訊息將立即刪除。",
+  ["Reset this page to its defaults? Chat history is then kept for %s only, and older messages are deleted now."] = "將此頁面重設為預設值？聊天記錄將僅保留%s，更早的訊息將立即刪除。",
   ["Blocked %s this session"] = "本次登入已攔截 %s",
   ["Last: %s"] = "最近：%s",
   ["Keyword rules"] = "關鍵字規則",

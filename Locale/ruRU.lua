@@ -450,6 +450,7 @@ local Russian = {
   ["7 days"] = "7 дней",
   ["Forever"] = "Навсегда",
   ["Keep chat history for %s only? Older messages are deleted now."] = "Срок хранения истории чата: %s? Более старые сообщения будут удалены сразу.",
+  ["Reset this page to its defaults? Chat history is then kept for %s only, and older messages are deleted now."] = "Сбросить настройки этой страницы? Срок хранения истории чата станет %s, более старые сообщения будут удалены сразу.",
   ["Blocked %s this session"] = "Заблокировано за сеанс: %s",
   ["Last: %s"] = "Последнее: %s",
   ["Keyword rules"] = "Правила по словам",

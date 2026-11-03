@@ -450,6 +450,7 @@ local Korean = {
   ["7 days"] = "7일",
   ["Forever"] = "영구",
   ["Keep chat history for %s only? Older messages are deleted now."] = "채팅 기록을 %s 동안만 보관할까요? 이전 메시지는 지금 삭제됩니다.",
+  ["Reset this page to its defaults? Chat history is then kept for %s only, and older messages are deleted now."] = "이 페이지를 기본값으로 초기화할까요? 채팅 기록은 %s 동안만 보관되며 이전 메시지는 지금 삭제됩니다.",
   ["Blocked %s this session"] = "이번 세션에서 %s개 차단됨",
   ["Last: %s"] = "최근: %s",
   ["Keyword rules"] = "키워드 규칙",

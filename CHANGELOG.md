@@ -11,13 +11,13 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - If something goes wrong while saving a whisper you're hiding from the game's chat, the whisper now still shows in the game's chat instead of being lost. After repeated errors, whispers stop being hidden from chat until you reload.
 - When "Hide on entering combat" hides the messenger, it now opens again once combat ends, without putting your typing cursor in the message box, so your movement keys keep working. If you close it yourself during combat, it stays closed.
 - Message Retention is now a menu with longer choices: keep your chats for up to 30 days, 90 days, or forever. A retention time you picked before stays as it was until you choose a new one.
-- Picking a shorter Message Retention now asks before deleting older chats. Cancel keeps your current setting.
 - You can now export a whole conversation as plain text: right-click a contact (or the conversation's title) and pick Export conversation. Every message shows up with its date, time and sender, without colors or icons, selected and ready to copy with Ctrl+C. Works for whispers, Battle.net, group and channel chats.
 - New setting under Whispers: Close the game's whisper tab too (off by default). If the game opens each whisper in its own chat tab, removing a chat in the messenger now closes that player's tab as well.
 - The notification sound is now picked from one dropdown instead of a grid of buttons. Besides the messenger's 16 sounds, it lists the sounds your other addons share through SharedMedia (for example from ElvUI or WeakAuras), each group under its own heading. Picking a sound plays it once so you can hear it. If you later remove the addon that provided your chosen sound, the default Whisper sound plays instead.
 - Right-clicking a contact now offers Copy profile link, with the player's Raider.IO, Warcraft Logs and Armory pages (only the sites that cover your version of the game). Picking one shows the link ready to copy with Ctrl+C. It also works for a Battle.net friend while they're online in the same game version and region as you.
 - New pop-up cards for whispers (off by default; turn on Show pop-up cards in the Notifications settings). While the messenger is closed, each new whisper shows a small card with the sender and their latest line, and a new line from the same player updates that card. Up to three cards show at once, in the screen corner you pick. Click a card to open that chat; cards fade out after a few seconds and go away when you open the messenger. They never show in combat, while chat is locked, for muted chats or for message requests.
 - Long dropdown lists, like the font and notification sound pickers, now open scrolled to your current choice instead of the top.
+- Picking a shorter Message Retention now asks before deleting older chats, and so does Reset to Defaults when it would shorten it. Cancel keeps your current settings.
 
 ## [2.1.2] - 2026-10-30
 
