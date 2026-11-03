@@ -495,6 +495,8 @@ local Korean = {
   ["Not bound"] = "지정 안 됨",
   ["Key bindings can't be changed in combat."] = "전투 중에는 단축키를 변경할 수 없습니다.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "이 게임 버전에서는 여기서 단축키 설정을 열 수 없습니다. 게임 메뉴를 이용하세요.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "친구 추가",
 }
 
 ns.Locale_koKR = Korean

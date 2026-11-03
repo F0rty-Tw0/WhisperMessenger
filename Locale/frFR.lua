@@ -495,6 +495,8 @@ local French = {
   ["Not bound"] = "Non assigné",
   ["Key bindings can't be changed in combat."] = "Les raccourcis ne peuvent pas être modifiés en combat.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Cette version du jeu ne peut pas ouvrir les raccourcis d'ici. Passez par le menu du jeu.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Ajouter en ami",
 }
 
 ns.Locale_frFR = French

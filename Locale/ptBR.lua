@@ -495,6 +495,8 @@ local Portuguese = {
   ["Not bound"] = "Sem atalho",
   ["Key bindings can't be changed in combat."] = "Não é possível alterar atalhos em combate.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versão do jogo não consegue abrir os atalhos daqui. Use o menu do jogo.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Adicionar amigo",
 }
 
 ns.Locale_ptBR = Portuguese

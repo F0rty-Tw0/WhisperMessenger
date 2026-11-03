@@ -495,6 +495,8 @@ local TraditionalChinese = {
   ["Not bound"] = "未綁定",
   ["Key bindings can't be changed in combat."] = "戰鬥中無法變更按鍵綁定。",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此遊戲版本無法從這裡開啟按鍵設定。請使用遊戲選單。",
+  -- Contact menu: Add friend
+  ["Add friend"] = "加為好友",
 }
 
 ns.Locale_zhTW = TraditionalChinese

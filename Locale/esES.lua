@@ -495,6 +495,8 @@ local Spanish = {
   ["Not bound"] = "Sin asignar",
   ["Key bindings can't be changed in combat."] = "No se pueden cambiar las asignaciones de teclas en combate.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versión del juego no puede abrir las asignaciones de teclas desde aquí. Usa el menú del juego.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Añadir amigo",
 }
 
 ns.Locale_esES = Spanish

@@ -495,6 +495,8 @@ local Italian = {
   ["Not bound"] = "Non assegnato",
   ["Key bindings can't be changed in combat."] = "Le assegnazioni dei tasti non si possono cambiare in combattimento.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Questa versione del gioco non può aprire le assegnazioni dei tasti da qui. Usa il menu di gioco.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Aggiungi amico",
 }
 
 ns.Locale_itIT = Italian

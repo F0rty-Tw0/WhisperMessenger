@@ -19,6 +19,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Long dropdown lists, like the font and notification sound pickers, now open scrolled to your current choice instead of the top.
 - Picking a shorter Message Retention now asks before deleting older chats, and so does Reset to Defaults when it would shorten it. Cancel keeps your current settings.
 - The Behavior settings now show which key opens and closes the messenger, with a Set keybind button that takes you straight to Whisper Messenger in the game's Key Bindings. The button is grayed out during combat.
+- Right-clicking a player in the contacts list now offers Add friend, unless they are already on your friends list.
 
 ## [2.1.2] - 2026-10-30
 

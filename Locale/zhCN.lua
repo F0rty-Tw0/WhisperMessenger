@@ -495,6 +495,8 @@ local SimplifiedChinese = {
   ["Not bound"] = "未绑定",
   ["Key bindings can't be changed in combat."] = "战斗中无法更改按键绑定。",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此游戏版本无法从这里打开按键设置。请使用游戏菜单。",
+  -- Contact menu: Add friend
+  ["Add friend"] = "添加好友",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

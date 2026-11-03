@@ -495,6 +495,8 @@ local Russian = {
   ["Not bound"] = "Не назначено",
   ["Key bindings can't be changed in combat."] = "Назначения клавиш нельзя менять в бою.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Эта версия игры не может открыть назначения клавиш отсюда. Воспользуйтесь игровым меню.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Добавить в друзья",
 }
 
 ns.Locale_ruRU = Russian

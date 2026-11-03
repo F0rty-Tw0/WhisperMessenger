@@ -495,6 +495,8 @@ local German = {
   ["Not bound"] = "Nicht belegt",
   ["Key bindings can't be changed in combat."] = "Tastenbelegungen können im Kampf nicht geändert werden.",
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Diese Spielversion kann die Tastenbelegung nicht von hier öffnen. Nutze stattdessen das Spielmenü.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Als Freund hinzufügen",
 }
 
 ns.Locale_deDE = German

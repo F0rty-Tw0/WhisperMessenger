@@ -227,6 +227,7 @@ UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/BlockMenuEntry.lua
 UI/ContactsList/ExportMenuEntry.lua
 UI/ContactsList/ProfileLinksMenuEntry.lua
+UI/ContactsList/AddFriendMenuEntry.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua
