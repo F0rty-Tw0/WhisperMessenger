@@ -23,6 +23,23 @@ FlavorCompat.isForever = type(tocVersion) == "number" and tocVersion >= FOREVER_
 -- Feature flags — true only on flavors that support the feature
 FlavorCompat.hasMythicPlus = FlavorCompat.isRetail and not FlavorCompat.isForever
 
+-- Asks the server for fresh guild member data; GUILD_ROSTER_UPDATE answers.
+-- Retail has C_GuildInfo.GuildRoster, the Classic flavors the global.
+-- Returns true when a request went out.
+function FlavorCompat.RequestGuildRoster()
+  local isInGuild = _G["IsInGuild"]
+  if type(isInGuild) ~= "function" or not isInGuild() then
+    return false
+  end
+  local guildInfo = _G["C_GuildInfo"]
+  local request = type(guildInfo) == "table" and guildInfo.GuildRoster or _G["GuildRoster"]
+  if type(request) ~= "function" then
+    return false
+  end
+  request()
+  return true
+end
+
 ns.FlavorCompat = FlavorCompat
 
 return FlavorCompat

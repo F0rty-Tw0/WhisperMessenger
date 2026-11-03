@@ -44,5 +44,39 @@ return function()
   assert(noBuild.hasMythicPlus == true, "missing GetBuildInfo keeps Retail Mythic+")
 
   -- Restore the module for any later test that requires it
-  require("WhisperMessenger.Core.FlavorCompat")
+  local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+
+  local savedIsInGuild, savedGuildInfo, savedGuildRoster = _G.IsInGuild, _G.C_GuildInfo, _G.GuildRoster
+  local inGuild, retailCalls, classicCalls = true, 0, 0
+  _G.IsInGuild = function()
+    return inGuild
+  end
+  _G.GuildRoster = function()
+    classicCalls = classicCalls + 1
+  end
+
+  -- test_request_guild_roster_uses_c_guild_info_on_retail
+  _G.C_GuildInfo = {
+    GuildRoster = function()
+      retailCalls = retailCalls + 1
+    end,
+  }
+  assert(FlavorCompat.RequestGuildRoster() == true and retailCalls == 1 and classicCalls == 0, "Retail asks through C_GuildInfo")
+
+  -- test_request_guild_roster_falls_back_to_the_classic_global
+  _G.C_GuildInfo = nil
+  assert(FlavorCompat.RequestGuildRoster() == true and classicCalls == 1, "Classic asks through the global GuildRoster")
+
+  -- test_request_guild_roster_not_in_a_guild_asks_nothing
+  inGuild = false
+  assert(FlavorCompat.RequestGuildRoster() == false and classicCalls == 1, "no guild, no request")
+
+  -- test_request_guild_roster_without_any_api_is_harmless
+  inGuild = true
+  _G.GuildRoster = nil
+  assert(FlavorCompat.RequestGuildRoster() == false, "neither API: nothing asked")
+  _G.IsInGuild = nil
+  assert(FlavorCompat.RequestGuildRoster() == false, "no IsInGuild: nothing asked")
+
+  _G.IsInGuild, _G.C_GuildInfo, _G.GuildRoster = savedIsInGuild, savedGuildInfo, savedGuildRoster
 end
