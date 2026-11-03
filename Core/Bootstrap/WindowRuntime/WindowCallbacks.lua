@@ -9,10 +9,9 @@ local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger
 local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
-local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
-local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
-local ZoneWatch = ns.ZoneWatch or require("WhisperMessenger.Model.ZoneWatch")
+-- stylua: ignore
+local ContactPrefsUpdate = ns.BootstrapWindowRuntimeContactPrefsUpdate or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ContactPrefsUpdate")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
@@ -244,20 +243,9 @@ function WindowCallbacks.Create(options)
 
     -- Mute / nickname / note / notify-when-online / zone watch from the contact row menu.
     onUpdatePrefs = function(item, changes)
-      local key = item and item.conversationKey
-      if key == nil then
-        return
+      if ContactPrefsUpdate.Apply(runtime, item, changes) then
+        refreshWindow()
       end
-      ContactPrefs.Apply(runtime.store, key, changes)
-      -- Record the friend's state now so their next login is a change.
-      if changes and changes.notifyOnline == true then
-        OnlineWatch.Observe(runtime, key, OnlineWatch.ReadOnline(runtime, runtime.store.conversations[key]))
-      end
-      -- The zone the row shows now is the one a change is measured from.
-      if changes and changes.notifyZone == true then
-        ZoneWatch.Observe(runtime.store.conversations[key], item.areaName)
-      end
-      refreshWindow()
     end,
 
     -- "Block…" from a contact row or a message.

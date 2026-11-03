@@ -11,6 +11,8 @@ local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.C
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore
+local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneRosterPoll")
+-- stylua: ignore
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
 local Presence = {}
@@ -221,6 +223,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
     return true
   end
   LockdownReplay.Kick(Bootstrap.runtime)
+  ZoneRosterPoll.Start(Bootstrap.runtime)
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then
