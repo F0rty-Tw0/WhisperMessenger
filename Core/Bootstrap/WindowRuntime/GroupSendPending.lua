@@ -9,13 +9,15 @@ local GroupSendPending = {}
 
 local PENDING_MATCH_WINDOW_SECONDS = 15
 
-local function isPendingExpired(entry, now)
-  return type(now) == "number"
-    and type(entry) == "table"
-    and type(entry.createdAt) == "number"
-    and now - entry.createdAt > PENDING_MATCH_WINDOW_SECONDS
+-- A non-table entry is garbage and goes too.
+local function isPendingDropped(entry, now)
+  if type(entry) ~= "table" then
+    return true
+  end
+  return type(now) == "number" and type(entry.createdAt) == "number" and now - entry.createdAt > PENDING_MATCH_WINDOW_SECONDS
 end
 
+-- Drops sends whose echo never came within PENDING_MATCH_WINDOW_SECONDS.
 function GroupSendPending.Prune(runtime, conversationKey, now)
   local queues = runtime.pendingGroupOutgoing
   local queue = type(queues) == "table" and queues[conversationKey] or nil
@@ -23,7 +25,7 @@ function GroupSendPending.Prune(runtime, conversationKey, now)
     return
   end
   for index = #queue, 1, -1 do
-    if isPendingExpired(queue[index], now) then
+    if isPendingDropped(queue[index], now) then
       table.remove(queue, index)
     end
   end

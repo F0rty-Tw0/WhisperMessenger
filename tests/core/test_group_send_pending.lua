@@ -37,6 +37,17 @@ return function()
     assert(runtime.pendingGroupOutgoing["party::me"][1] == fresh, "an entry exactly 15 seconds old still waits for its echo")
   end
 
+  -- test_prune_drops_entries_that_are_not_tables
+
+  do
+    local fresh = { createdAt = 100 }
+    local runtime = { pendingGroupOutgoing = { ["party::me"] = { 7, fresh, "junk" }, ["raid::me"] = { true } } }
+    GroupSendPending.PruneAll(runtime, 100)
+    local queue = runtime.pendingGroupOutgoing["party::me"]
+    assert(#queue == 1 and queue[1] == fresh, "only the real entry stays queued")
+    assert(runtime.pendingGroupOutgoing["raid::me"] == nil, "a queue of only junk is removed")
+  end
+
   -- test_discard_removes_only_the_given_entry
 
   do
