@@ -30,7 +30,7 @@ local OPTION_SPECS = {
   {
     key = AddonGreetings.MODE_HIDE,
     label = "Hide",
-    tooltip = "Automated greetings from crafting addons are left out of the messenger. The game's own chat is unchanged.",
+    tooltip = 'Automated greetings from crafting addons are dropped and not saved. While "Hide whispers from default chat" is on, they are not shown anywhere, not even in the game chat.',
   },
 }
 
