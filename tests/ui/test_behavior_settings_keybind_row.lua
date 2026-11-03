@@ -87,9 +87,22 @@ return function()
     inCombat = false
     fireEvent(button:GetParent(), "PLAYER_REGEN_ENABLED")
     assert(FindUI.disabledCover(button) == nil, "button should be enabled after combat")
+  end)
 
-    -- test_keybind_button_hides_messenger_before_opening_key_bindings
-    local events = {}
+  -- test_keybind_button_hides_messenger_before_opening_key_bindings
+  local events = {}
+  local hideEnv = {
+    Settings = {
+      KEYBINDINGS_CATEGORY_ID = 7,
+      OpenToCategory = function()
+        events[#events + 1] = "open"
+      end,
+    },
+    InCombatLockdown = function()
+      return false
+    end,
+  }
+  withGlobals(hideEnv, function()
     local ns = {
       Bootstrap = {
         runtime = {
@@ -108,9 +121,6 @@ return function()
       end,
     }
     local keybind = KeybindRow.Create(factory, frame, frame, { panel = panel })
-    env.Settings.OpenToCategory = function()
-      events[#events + 1] = "open"
-    end
     FindUI.click(keybind.bottom)
     assert(events[1] == "visible:false" and events[2] == "open", "click should hide the messenger, then open Key Bindings")
   end)
