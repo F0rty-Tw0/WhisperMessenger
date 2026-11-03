@@ -21,6 +21,26 @@ if type(_G["GetBuildInfo"]) == "function" then
 end
 FlavorCompat.isForever = type(tocVersion) == "number" and tocVersion >= FOREVER_TOC_MIN and tocVersion < FOREVER_TOC_MAX
 
+-- Region id of the current game client; nil without the API.
+function FlavorCompat.CurrentRegion()
+  local getCurrentRegion = _G["GetCurrentRegion"]
+  if type(getCurrentRegion) ~= "function" then
+    return nil
+  end
+  local ok, regionId = pcall(getCurrentRegion)
+  return ok and regionId or nil
+end
+
+-- Enum.SeasonID of a Classic Era realm; nil without a season or the API.
+function FlavorCompat.ActiveSeason()
+  local seasons = _G["C_Seasons"]
+  if type(seasons) ~= "table" or type(seasons.GetActiveSeason) ~= "function" then
+    return nil
+  end
+  local ok, seasonId = pcall(seasons.GetActiveSeason)
+  return ok and seasonId or nil
+end
+
 -- Feature flags — true only on flavors that support the feature
 FlavorCompat.hasMythicPlus = FlavorCompat.isRetail and not FlavorCompat.isForever
 
