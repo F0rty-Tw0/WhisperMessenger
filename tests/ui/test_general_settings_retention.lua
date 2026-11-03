@@ -213,6 +213,32 @@ return function()
     assert(retentionChanges(changes)[1] == 30 * DAY, "a longer choice saves at once")
   end)
 
+  -- test_same_choice_saves_without_asking
+  ReloadPopups.With(function(popups)
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 7 * DAY }, changes)
+    pick(settings, "7 days")
+    assert(#popups.shown == 0, "picking the saved choice should not ask, got " .. tostring(popups.shown[1]))
+  end)
+
+  -- test_saving_another_choice_closes_the_pending_prompt
+  ReloadPopups.With(function(popups)
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 90 * DAY }, changes)
+    pick(settings, "1 day")
+    pick(settings, "Forever")
+    assert(contains(popups.hidden, CONFIRM), "a later save closes the stale shorter-choice prompt")
+  end)
+
+  -- test_reset_closes_the_pending_prompt
+  ReloadPopups.With(function(popups)
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 90 * DAY }, changes)
+    pick(settings, "1 day")
+    FindUI.click(FindUI.byLabel(settings.frame, "Reset to Defaults"))
+    assert(contains(popups.hidden, CONFIRM), "reset closes the stale shorter-choice prompt")
+  end)
+
   -- test_set_language_translates_label_and_choices
   do
     local settings = create(factory, parent, { messageMaxAge = DAY }, {})

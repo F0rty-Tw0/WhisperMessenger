@@ -83,6 +83,13 @@ local function labelFor(seconds, language, current)
   return customOption(seconds, language).label
 end
 
+-- A prompt left open from an earlier shorter pick must not save later.
+local function closePendingPrompt()
+  if type(_G.StaticPopup_Hide) == "function" then
+    _G.StaticPopup_Hide(RetentionRow.CONFIRM_DIALOG)
+  end
+end
+
 -- Without the popup API nothing is confirmed, so nothing is deleted.
 local function confirmShorter(label, language, onAccept)
   if type(_G.StaticPopup_Show) ~= "function" then
@@ -121,6 +128,7 @@ function RetentionRow.Create(factory, parent, options)
   -- dropdown goes back to the saved value and only moves on Accept.
   local function choose(seconds)
     if seconds >= current then
+      closePendingPrompt()
       save(seconds)
       return
     end
@@ -155,6 +163,7 @@ function RetentionRow.Create(factory, parent, options)
   end
 
   function control.resetToDefault(onChange)
+    closePendingPrompt()
     current = RetentionRow.DEFAULT_SECONDS
     control.setOptionsList(RetentionRow.BuildOptions(language, current))
     control.setSelected(current)
