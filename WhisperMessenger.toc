@@ -410,6 +410,7 @@ Core/Bootstrap/WindowCoordinator.lua
 Core/Bootstrap/LifecycleHandlers/Common.lua
 Core/Bootstrap/LifecycleHandlers/Competitive.lua
 Core/Bootstrap/LifecycleHandlers/OnlineNotify.lua
+Core/Bootstrap/LifecycleHandlers/ZoneNotify.lua
 Core/Bootstrap/LifecycleHandlers/RestrictionState.lua
 Core/Bootstrap/LifecycleHandlers/StaleRestrictions.lua
 Core/Bootstrap/LifecycleHandlers/Presence.lua

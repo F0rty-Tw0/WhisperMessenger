@@ -383,6 +383,7 @@ local Russian = {
   ["Last online %s"] = "Последний вход: %s",
   ["Notify when online"] = "Сообщить о входе в сеть",
   ["%s is now online."] = "%s теперь в сети.",
+  ["%s changed zone from %s to %s."] = "%s сменил(а) зону: была %s, теперь %s.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "В очереди",
   ["Not sent"] = "Не отправлено",

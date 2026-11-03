@@ -9,6 +9,7 @@ local Common = ns.BootstrapLifecycleHandlersCommon
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
@@ -130,6 +131,10 @@ local function refreshBNetConversations(Bootstrap, deps)
           OnlineNotify.Observe(Bootstrap.runtime, key, conversation, BNetStatus.IsOnline(friend.accountInfo))
         end
         local gameInfo = friend.accountInfo and friend.accountInfo.gameAccountInfo
+        -- Outside WoW the areaName is stale, so it counts as no zone.
+        if conversation.notifyZone == true then
+          ZoneNotify.Observe(Bootstrap.runtime, conversation, BNetStatus.IsInWoW(gameInfo) and gameInfo.areaName or nil)
+        end
         BNetStatus.ApplyGameInfoMetadata(conversation, gameInfo, Bootstrap.runtime)
         if gameInfo and gameInfo.characterName and gameInfo.characterName ~= "" then
           local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
@@ -231,13 +236,17 @@ end
 
 -- Roster and club membership events fire in bursts. Only mark the data stale;
 -- the next per-contact presence read decides whether a rescan is worth it.
-function Presence.handlePresenceInvalidation(_Bootstrap, deps)
+-- Armed "Notify when they change zone" contacts get that read now.
+function Presence.handlePresenceInvalidation(Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
     return true
   end
 
   PresenceCache.Invalidate()
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
 
   return true
 end

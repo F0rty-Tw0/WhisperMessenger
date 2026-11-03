@@ -387,6 +387,7 @@ local Spanish = {
   ["Last online %s"] = "Última vez en línea: %s",
   ["Notify when online"] = "Avisarme cuando se conecte",
   ["%s is now online."] = "%s ya está en línea.",
+  ["%s changed zone from %s to %s."] = "%s cambió de zona: de %s a %s.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "En cola",
   ["Not sent"] = "No enviado",
