@@ -65,11 +65,10 @@ return function()
     )
   end
 
-  -- test_armory_kept_for_a_one_word_realm
+  -- test_armory_left_out_for_a_one_word_chat_realm
   do
-    local urls = urlsByLabel(ProfileLinks.Build({ name = "Thrall", realm = "Kazzak" }, { regionId = EU, projectId = RETAIL }))
-    local expected = "https://worldofwarcraft.blizzard.com/en-us/character/eu/kazzak/thrall"
-    assert(urls["Armory"] == expected, "one-word realm keeps armory, got " .. tostring(urls["Armory"]))
+    local urls = urlsByLabel(ProfileLinks.Build({ name = "Thrall", realm = "Templenoir" }, { regionId = EU, projectId = RETAIL }))
+    assert(urls["Armory"] == nil, "Templenoir is temple-noir on the Armory, got " .. tostring(urls["Armory"]))
   end
 
   -- test_classic_era_offers_vanilla_warcraftlogs_only

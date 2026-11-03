@@ -75,8 +75,9 @@ local function slugFromDisplay(displayRealm)
   return urlEncode(slug)
 end
 
--- Returns slug, exact. The Armory needs the exact slug; a chat realm only
--- gives one when it is a single word ("Kazzak").
+-- Returns slug, exact. The Armory needs the exact slug, which only the
+-- display name gives: chat drops spaces, so even one word ("Templenoir") may
+-- be two on the site (temple-noir).
 function ProfileLinks.RealmSlug(character)
   if type(character.displayRealm) == "string" and character.displayRealm ~= "" then
     local slug = slugFromDisplay(character.displayRealm)
@@ -90,8 +91,7 @@ function ProfileLinks.RealmSlug(character)
   if slug == nil then
     return nil, false
   end
-  local exact = string.find(realm, "^[A-Z][a-z]*$") ~= nil
-  return urlEncode(slug), exact
+  return urlEncode(slug), false
 end
 
 local function link(label, url)

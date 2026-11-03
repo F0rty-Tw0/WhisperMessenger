@@ -140,7 +140,7 @@ return function()
   do
     local friend = { channel = "BN", displayName = "Friend#1234", battleTag = "Friend#1234", bnetAccountID = 7, gameAccountName = "Thrall-Kazzak" }
     local submenu = findButton(menuFor(friend, onUpdatePrefs), SUBMENU)
-    assert(submenu ~= nil and labels(submenu) == "Raider.IO,Warcraft Logs,Armory", "friend's character sites")
+    assert(submenu ~= nil and labels(submenu) == "Raider.IO,Warcraft Logs", "friend's character sites")
   end
 
   _G.Menu = saved.Menu

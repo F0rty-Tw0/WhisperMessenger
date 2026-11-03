@@ -58,10 +58,11 @@ return function()
     assert(exact == false, "a multi-word chat realm is not an exact slug")
   end
 
-  -- test_one_word_chat_realm_is_exact
+  -- test_one_word_chat_realm_is_not_exact
   do
-    local slug, exact = slugOf({ realm = "Kazzak" })
-    assert(slug == "kazzak" and exact == true, "one-word realm is exact, got " .. tostring(slug))
+    local slug, exact = slugOf({ realm = "Templenoir" })
+    assert(slug == "templenoir", "bare slug, got " .. tostring(slug))
+    assert(exact == false, "one word in chat may still be two on the site (temple-noir)")
   end
 
   -- test_missing_realm_gives_nil
