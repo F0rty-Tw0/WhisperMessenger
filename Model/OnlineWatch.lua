@@ -47,6 +47,10 @@ local function readCharacterFriend(api, name)
   return nil
 end
 
+-- true / false (online state) for a character on the friends list, nil
+-- when not a friend or the API is missing.
+OnlineWatch.ReadCharacterFriend = readCharacterFriend
+
 -- BNetStatus loads after this module in the TOC, so resolve it lazily.
 local function readBNetFriend(api, conversation)
   local BNetResolver = ns.BNetResolver or require("WhisperMessenger.Transport.BNetResolver")

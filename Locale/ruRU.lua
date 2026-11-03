@@ -460,6 +460,8 @@ local Russian = {
   ["Unblock"] = "Разблокировать",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Добавить в друзья",
 }
 
 ns.Locale_ruRU = Russian

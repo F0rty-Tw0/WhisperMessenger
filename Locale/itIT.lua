@@ -460,6 +460,8 @@ local Italian = {
   ["Unblock"] = "Sblocca",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "I canali che spunti nelle impostazioni Chat compaiono qui. Scegli un canale a sinistra.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Aggiungi amico",
 }
 
 ns.Locale_itIT = Italian

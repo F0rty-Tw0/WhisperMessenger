@@ -460,6 +460,8 @@ local SimplifiedChinese = {
   ["Unblock"] = "取消屏蔽",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
+  -- Contact menu: Add friend
+  ["Add friend"] = "添加好友",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

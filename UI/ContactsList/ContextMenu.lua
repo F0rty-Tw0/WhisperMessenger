@@ -11,6 +11,7 @@ local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatc
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
+local AddFriendMenuEntry = ns.ContactsListAddFriendMenuEntry or require("WhisperMessenger.UI.ContactsList.AddFriendMenuEntry")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ContextMenu = {}
@@ -136,6 +137,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
   end
   addMarkUnreadButton(rootDescription, item, onMarkUnread)
   addPrefsButtons(rootDescription, item, onUpdatePrefs, false)
+  AddFriendMenuEntry.Add(rootDescription, item)
   BlockMenuEntry.Add(rootDescription, item, rowActions)
   addRowActionButtons(rootDescription, item, rowActions)
 end

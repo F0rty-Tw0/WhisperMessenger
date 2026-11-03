@@ -460,6 +460,8 @@ local French = {
   ["Unblock"] = "Débloquer",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Les canaux cochés dans les paramètres Discussions apparaissent ici. Choisissez un canal à gauche.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Ajouter en ami",
 }
 
 ns.Locale_frFR = French

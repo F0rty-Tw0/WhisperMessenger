@@ -460,6 +460,8 @@ local Korean = {
   ["Unblock"] = "차단 해제",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "채팅 설정에서 선택한 채널이 여기에 표시됩니다. 왼쪽에서 채널을 선택하세요.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "친구 추가",
 }
 
 ns.Locale_koKR = Korean

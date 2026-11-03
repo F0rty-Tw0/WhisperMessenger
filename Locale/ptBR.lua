@@ -460,6 +460,8 @@ local Portuguese = {
   ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Os canais que você marcar nas configurações de Bate-papos aparecem aqui. Escolha um canal à esquerda.",
+  -- Contact menu: Add friend
+  ["Add friend"] = "Adicionar amigo",
 }
 
 ns.Locale_ptBR = Portuguese

@@ -460,6 +460,8 @@ local TraditionalChinese = {
   ["Unblock"] = "解除封鎖",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天設定中勾選的頻道會顯示在這裡。請在左側選擇一個頻道。",
+  -- Contact menu: Add friend
+  ["Add friend"] = "加為好友",
 }
 
 ns.Locale_zhTW = TraditionalChinese
