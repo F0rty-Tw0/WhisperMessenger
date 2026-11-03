@@ -8,9 +8,13 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ToggleSpecs = ns.MessengerWindowWhispersToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.WhispersSettings.ToggleSpecs")
+local AddonGreetingsSelector = ns.MessengerWindowWhispersAddonGreetingsSelector
+  or require("WhisperMessenger.UI.MessengerWindow.WhispersSettings.AddonGreetingsSelector")
+local AddonGreetings = ns.AddonGreetings or require("WhisperMessenger.Model.AddonGreetings")
 
 -- Options page for whisper behavior: hiding whispers from the default chat,
--- auto-open, the Requests inbox, typing status and read receipts.
+-- auto-open, the Requests inbox, typing status, read receipts and addon
+-- greetings.
 local WhispersSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
@@ -22,8 +26,20 @@ local function text(key)
 end
 
 function WhispersSettings.Create(factory, parent, config, options)
-  local onChange = options.onChange or function(...)
+  local saveSetting = options.onChange or function(...)
     local _ = ...
+  end
+  local requestsInbox = config.requestsInbox == true
+  local greetingsSelector
+  -- "Send to Requests" follows the Requests toggle live.
+  local function onChange(key, value)
+    saveSetting(key, value)
+    if key == "requestsInbox" then
+      requestsInbox = value == true
+      if greetingsSelector then
+        greetingsSelector.setOptionsList(AddonGreetingsSelector.Options(requestsInbox))
+      end
+    end
   end
 
   local frame = factory.CreateFrame("Frame", nil, parent)
@@ -37,6 +53,18 @@ function WhispersSettings.Create(factory, parent, config, options)
   local panel = SettingsControls.NewPanelRegistry()
   SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, ToggleSpecs.DEFAULTS)
 
+  greetingsSelector = panel:bind(
+    AddonGreetingsSelector.Create(factory, frame, {
+      initial = config.addonGreetings,
+      requestsInbox = requestsInbox,
+      onChange = function(value)
+        onChange(AddonGreetings.SETTING_KEY, value)
+      end,
+    }),
+    { type = "selector", key = AddonGreetings.SETTING_KEY, default = AddonGreetings.DEFAULT_MODE }
+  )
+  greetingsSelector.row:SetPoint("TOPLEFT", toggles[#toggles].row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_TOGGLE_ROW_SPACING)
+
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
       factory,
@@ -47,7 +75,7 @@ function WhispersSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", toggles[#toggles].row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", greetingsSelector.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
     panel:reset(onChange)
   end)
@@ -70,6 +98,8 @@ function WhispersSettings.Create(factory, parent, config, options)
     header.title:SetText(text(TITLE))
     header.hint:SetText(text(HINT))
     SettingsControls.RelabelToggles(toggles, toggleSpecs, text)
+    greetingsSelector.label:SetText(text(AddonGreetingsSelector.LABEL))
+    greetingsSelector.setOptionsList(AddonGreetingsSelector.Options(requestsInbox))
     resetButton.label:SetText(text("Reset to Defaults"))
   end
 

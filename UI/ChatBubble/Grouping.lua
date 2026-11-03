@@ -19,8 +19,14 @@ function Grouping.ShouldGroup(prev, current)
     return false
   end
   -- Queued / failed messages carry their own status label, and a collapsed
-  -- repeat needs its label for the "×N" counter.
-  if prev.delivery ~= nil or current.delivery ~= nil or (tonumber(current.repeatCount) or 1) > 1 then
+  -- repeat needs its label for the "×N" counter, an addon greeting for its
+  -- "Sent by" badge.
+  if prev.delivery ~= nil or current.delivery ~= nil or (tonumber(current.repeatCount) or 1) > 1 or current.addonGreeting ~= nil then
+    return false
+  end
+  -- A message after a greeting gets its own label, or it would read as sent
+  -- by the addon too.
+  if prev.addonGreeting ~= nil then
     return false
   end
   if (prev.playerName or prev.senderDisplayName) ~= (current.playerName or current.senderDisplayName) then

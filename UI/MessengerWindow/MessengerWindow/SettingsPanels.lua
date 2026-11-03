@@ -144,6 +144,7 @@ function SettingsPanels.Create(factory, options)
         shareTypingStatus = settingsConfig.shareTypingStatus,
         shareReadReceipts = settingsConfig.shareReadReceipts,
         showInviteLink = settingsConfig.showInviteLink,
+        addonGreetings = settingsConfig.addonGreetings,
       },
     },
     {

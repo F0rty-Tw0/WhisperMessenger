@@ -89,6 +89,7 @@ Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
 Model/QuestLinkExchange.lua
+Model/AddonGreetings.lua
 Model/MessageReactionProtocol.lua
 Model/MessageParts.lua
 Model/MessageReactions.lua
@@ -134,6 +135,7 @@ Core/Ingest/ChannelChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter/PartMerge.lua
+Core/EventRouter/AddonGreetingIngest.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
@@ -357,6 +359,7 @@ UI/MessengerWindow/BehaviorSettings/KeybindOpener.lua
 UI/MessengerWindow/BehaviorSettings/KeybindRow.lua
 UI/MessengerWindow/BehaviorSettings.lua
 UI/MessengerWindow/WhispersSettings/ToggleSpecs.lua
+UI/MessengerWindow/WhispersSettings/AddonGreetingsSelector.lua
 UI/MessengerWindow/WhispersSettings.lua
 UI/MessengerWindow/ChatsSettings/ChannelPicker.lua
 UI/MessengerWindow/ChatsSettings.lua

@@ -112,7 +112,9 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   end
   if eventName == "CHAT_MSG_ADDON" or eventName == "BN_CHAT_MSG_ADDON" then
     local prefix = ...
-    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK then
+    -- Addon greeting announcements only come over character whispers.
+    local isGreeting = eventName == "CHAT_MSG_ADDON" and prefix == AddonComm.PREFIX_ADDON_GREETING
+    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK and not isGreeting then
       return nil
     end
   end

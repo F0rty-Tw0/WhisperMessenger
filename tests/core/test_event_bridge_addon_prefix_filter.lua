@@ -46,4 +46,9 @@ return function()
     EventBridge.RouteLiveEvent(runtime, nil, "BN_CHAT_MSG_ADDON", prefix, "payload", "WHISPER", 42)
     assert(routerCalls == before + 1, prefix .. " BN addon message must reach EventRouter")
   end
+
+  -- Addon greeting announcements (crafting addons) arrive as character whispers.
+  local before = routerCalls
+  EventBridge.RouteLiveEvent(runtime, nil, "CHAT_MSG_ADDON", "robots.txt", "Q:CraftScan", "WHISPER", "Crafter-Realm")
+  assert(routerCalls == before + 1, "robots.txt addon message must reach EventRouter")
 end
