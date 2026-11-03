@@ -12,6 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - When "Hide on entering combat" hides the messenger, it now opens again once combat ends, without putting your typing cursor in the message box, so your movement keys keep working. If you close it yourself during combat, it stays closed.
 - Message Retention is now a menu with longer choices: keep your chats for up to 30 days, 90 days, or forever. A retention time you picked before stays as it was until you choose a new one.
 - Picking a shorter Message Retention now asks before deleting older chats. Cancel keeps your current setting.
+- You can now export a whole conversation as plain text: right-click a contact (or the conversation's title) and pick Export conversation. Every message shows up with its date, time and sender, without colors or icons, selected and ready to copy with Ctrl+C. Works for whispers, Battle.net, group and channel chats.
 
 ## [2.1.2] - 2026-10-30
 

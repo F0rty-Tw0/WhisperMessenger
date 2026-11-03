@@ -39,6 +39,7 @@ Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
+Util/PlainText.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
@@ -89,6 +90,7 @@ Model/MessageParts.lua
 Model/MessageReactions.lua
 Model/LivePresence.lua
 Model/MessageReplies.lua
+Model/ConversationExport.lua
 Model/ContactEnricher/Disambiguation.lua
 Model/ContactEnricher/WoWStatus.lua
 Model/ContactEnricher/BNetStatus.lua
@@ -220,6 +222,7 @@ UI/ContactsList/RowCompact.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/BlockMenuEntry.lua
+UI/ContactsList/ExportMenuEntry.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua

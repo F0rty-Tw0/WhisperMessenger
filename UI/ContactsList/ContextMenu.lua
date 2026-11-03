@@ -11,6 +11,7 @@ local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatc
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local BlockMenuEntry = ns.ContactsListBlockMenuEntry or require("WhisperMessenger.UI.ContactsList.BlockMenuEntry")
+local ExportMenuEntry = ns.ContactsListExportMenuEntry or require("WhisperMessenger.UI.ContactsList.ExportMenuEntry")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 
 local ContextMenu = {}
@@ -135,6 +136,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
     rootDescription:CreateTitle(UIHelpers.colorEscape(Theme.TAG_GOLD) .. "Whisper Messenger|r")
   end
   addMarkUnreadButton(rootDescription, item, onMarkUnread)
+  ExportMenuEntry.Add(rootDescription, item)
   addPrefsButtons(rootDescription, item, onUpdatePrefs, false)
   BlockMenuEntry.Add(rootDescription, item, rowActions)
   addRowActionButtons(rootDescription, item, rowActions)
@@ -178,6 +180,7 @@ local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, row
   end
   menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
     addMarkUnreadButton(rootDescription, item, onMarkUnread)
+    ExportMenuEntry.Add(rootDescription, item)
     addPrefsButtons(rootDescription, item, onUpdatePrefs, true)
     addRowActionButtons(rootDescription, item, rowActions)
   end)
@@ -281,9 +284,8 @@ local function openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActio
   return false
 end
 
--- onUpdatePrefs(item, changes): changes is { muted = bool } / { nickname =
--- text } / { note = text } / { notifyOnline = bool }.
--- rowActions: { onPin(item), onRemove(item) } (the row's hover actions).
+-- onUpdatePrefs(item, changes): changes is { muted } / { nickname } / { note }
+-- / { notifyOnline }. rowActions: the row's hover actions { onPin, onRemove }.
 -- An opened menu takes ESC before the window.
 function ContextMenu.Open(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)
   local opened = openMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, rowActions)

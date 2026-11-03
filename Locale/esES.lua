@@ -466,6 +466,9 @@ local Spanish = {
   ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Bloquear…",
+  ["Export conversation"] = "Exportar conversación",
+  ["Conversation with %s"] = "Conversación con %s",
+  ["Press Ctrl+C to copy the conversation."] = "Pulsa Ctrl+C para copiar la conversación.",
   ["Block sender…"] = "Bloquear al remitente…",
   ["Blocked"] = "Bloqueado",
   ["Unblock"] = "Desbloquear",
