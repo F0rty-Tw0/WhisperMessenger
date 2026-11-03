@@ -1,8 +1,8 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local SenderLabel = require("WhisperMessenger.UI.ChatBubble.SenderLabel")
 
--- A whisper tagged by an addon greeting shows "(Sent by <AddonName>)" in its
--- sender label.
+-- A whisper tagged by an addon greeting shows "(Sent by Craft Alert)" in its
+-- sender label, whichever addon announced it.
 
 local function shownTexts(frame)
   local texts = {}
@@ -23,11 +23,13 @@ return function()
   local contentFrame = factory.CreateFrame("Frame", nil, nil)
   contentFrame:SetSize(400, 600)
 
-  -- test_tagged_whisper_shows_sent_by_badge
+  -- test_tagged_whisper_shows_sent_by_craft_alert
   do
-    local result = SenderLabel.CreateSenderLabel(factory, contentFrame, incoming("CraftScan"), 400, 0)
-    local texts = shownTexts(result.frame)
-    assert(string.find(texts, "(Sent by CraftScan)", 1, true), "badge shows the addon name, got: " .. texts)
+    for _, announcer in ipairs({ "CraftScan", "CraftAlert", "SomeOtherAddon" }) do
+      local result = SenderLabel.CreateSenderLabel(factory, contentFrame, incoming(announcer), 400, 0)
+      local texts = shownTexts(result.frame)
+      assert(string.find(texts, "(Sent by Craft Alert)", 1, true), announcer .. " greeting shows the fixed badge, got: " .. texts)
+    end
   end
 
   -- test_untagged_whisper_has_no_badge

@@ -39,7 +39,11 @@ local function hideCached(frame, cacheKey)
   end
 end
 
--- "(Sent by <AddonName>)" right of the time when a crafting addon announced
+-- Every addon-sent whisper wears the same badge; the message keeps the real
+-- addon name in addonGreeting.
+local GREETING_BADGE_NAME = "Craft Alert"
+
+-- "(Sent by Craft Alert)" right of the time when a crafting addon announced
 -- this whisper as its automated greeting.
 local function applyGreetingBadge(frame, message, anchor)
   if type(message.addonGreeting) ~= "string" or message.addonGreeting == "" then
@@ -49,7 +53,7 @@ local function applyGreetingBadge(frame, message, anchor)
   local badgeFS = ensureFontString(frame, "_wmSenderGreetingFS")
   setFontObject(badgeFS, Theme.FONTS.message_time)
   setTextColor(badgeFS, Theme.TAG_GOLD)
-  badgeFS:SetText("(" .. string.format(Localization.Text("Sent by %s"), message.addonGreeting) .. ")")
+  badgeFS:SetText("(" .. string.format(Localization.Text("Sent by %s"), GREETING_BADGE_NAME) .. ")")
   badgeFS:SetPoint("LEFT", anchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
 end
 
