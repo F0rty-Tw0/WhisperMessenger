@@ -94,7 +94,8 @@ function WindowRuntime.Create(options)
   local icon
   local minimapRuntime
 
-  -- dirtyKeys nil (every direct caller) rebuilds all contact snapshots.
+  -- dirtyKeys nil rebuilds all contact snapshots; a set rebuilds only those
+  -- keys (incoming lines, and a Battle.net scan while the window is hidden).
   local snapshotCache = SnapshotCache.New()
   local function buildContacts(dirtyKeys)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId, snapshotCache, dirtyKeys)
@@ -237,8 +238,8 @@ function WindowRuntime.Create(options)
     return coordinator.setWindowVisible(nextVisible)
   end
 
-  local function refreshWindow(affectedConversationKey)
-    return coordinator.refreshWindow(affectedConversationKey)
+  local function refreshWindow(affectedConversationKey, dirtyKeys)
+    return coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
   end
 
   conversationSelector = ConversationSelector.Create({
