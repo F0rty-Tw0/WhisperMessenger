@@ -10,6 +10,8 @@ local PresenceCache = {}
 -- A full guild/community enumeration allocates one info table per member, so
 -- a large guild costs megabytes of garbage per pass. Cap unattended rescans.
 local INDEX_MIN_INTERVAL = 300
+-- A GUID a rescan missed waits this long before it may trigger another one.
+local MISS_RETRY_INTERVAL = 1800
 
 -- Private module state
 local cache = {}
@@ -23,9 +25,9 @@ local zoneByGuid = {}
 local levelByGuid = {}
 -- guid -> timestamp of the last presence read for that GUID.
 local freshAt = {}
--- guid -> true once a fallback rescan missed it (left the guild, or never in
--- one), so it costs no further rescans. Kept across rebuilds; cleared when
--- a lookup finds the GUID again.
+-- guid -> time a fallback rescan missed it (left the guild, or never in one),
+-- so it costs at most one rescan per MISS_RETRY_INTERVAL. Kept across
+-- rebuilds; cleared when a lookup finds the GUID again.
 local rescanMissed = {}
 local indexBuiltAt = nil
 local ttl = 30
@@ -203,17 +205,20 @@ end
 
 -- A miss falls back to a full rescan only when the index has never been
 -- built, or when club membership changed and the rescan interval has elapsed.
--- A rescan that indexed members but not this GUID settles it: no more rescans
--- for it. One that indexed nobody (roster not loaded yet) settles nothing.
+-- A rescan that indexed members but not this GUID holds it off for
+-- MISS_RETRY_INTERVAL. One that indexed nobody (roster not loaded yet) holds
+-- off nothing.
 local function rescanFor(guid)
-  local staleIndex = dirty and indexBuiltAt ~= nil and (nowFn() - indexBuiltAt) >= INDEX_MIN_INTERVAL
-  if rescanMissed[guid] or (indexBuiltAt ~= nil and not staleIndex) then
+  local now = nowFn()
+  local staleIndex = dirty and indexBuiltAt ~= nil and (now - indexBuiltAt) >= INDEX_MIN_INTERVAL
+  local missedAt = rescanMissed[guid]
+  if (missedAt ~= nil and now - missedAt < MISS_RETRY_INTERVAL) or (indexBuiltAt ~= nil and not staleIndex) then
     return nil
   end
   PresenceCache.Rebuild()
   local presence, found = lookupIndexed(guid)
   if not found and next(indexClub) ~= nil then
-    rescanMissed[guid] = true
+    rescanMissed[guid] = now
   end
   return presence
 end

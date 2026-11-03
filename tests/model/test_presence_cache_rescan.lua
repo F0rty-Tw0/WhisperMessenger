@@ -78,5 +78,26 @@ return function()
     assert(staleRefresh(clock, "Player-SOON") == "online", "found once the roster loads")
   end
 
+  -- test_missed_guid_retries_after_the_retry_interval
+  -- Rejoined, or the roster was half loaded at the miss: nothing else
+  -- rebuilds the index, so the miss must not last for the whole session.
+  do
+    local clock = { now = 0 }
+    local members = { { guid = "Player-OTHER", presence = 1 } }
+    local api, counts = makeGuild(members)
+    PresenceCache._initForTest(api, {
+      now = function()
+        return clock.now
+      end,
+    })
+    staleRefresh(clock, "Player-BACK")
+    members[2] = { guid = "Player-BACK", presence = 1 }
+    local before = counts.rescans
+    staleRefresh(clock, "Player-BACK")
+    assert(counts.rescans == before, "inside the retry interval a miss costs no rescan")
+    clock.now = clock.now + 1800
+    assert(staleRefresh(clock, "Player-BACK") == "online", "a missed GUID is rescanned again after the retry interval")
+  end
+
   PresenceCache._reset()
 end
