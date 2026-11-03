@@ -237,6 +237,7 @@ UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/UnreadDividerPosition.lua
 UI/ConversationPane/TranscriptRows.lua
+UI/ConversationPane/TranscriptRowGeometry.lua
 UI/ConversationPane/TranscriptVirtualization.lua
 UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
