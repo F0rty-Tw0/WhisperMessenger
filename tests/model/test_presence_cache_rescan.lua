@@ -1,8 +1,8 @@
 local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
 
 -- RefreshPresence falls back to a full rescan for a GUID missing from the
--- index. A GUID the rescan still misses stops paying for one, until a later
--- rescan indexes it again.
+-- index. A GUID the rescan still misses stops paying for one for 30 minutes,
+-- or until a later rescan indexes it again.
 
 local function makeGuild(members)
   local counts = { rescans = 0 }
