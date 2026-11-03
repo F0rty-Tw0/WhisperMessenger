@@ -200,6 +200,7 @@ UI/ChatBubble/HoverCopy.lua
 UI/ChatBubble/ReplyQuote.lua
 UI/ChatBubble/ReactionBadge.lua
 UI/ChatBubble/PlainText.lua
+UI/ChatBubble/AddonGreetingText.lua
 UI/ChatBubble/MentionHighlight.lua
 UI/ChatBubble/BubbleFrame.lua
 UI/ChatBubble/DateSeparator.lua
