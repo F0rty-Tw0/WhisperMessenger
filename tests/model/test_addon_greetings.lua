@@ -36,11 +36,52 @@ local function test_claim_returns_name_within_window()
   assert(AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 105) == "CraftScan", "whisper within the window claims the tag")
 end
 
-local function test_claim_consumes_the_mark()
+local function test_claim_after_the_burst_is_untagged()
   local state = {}
   AddonGreetings.Record(state, "Crafter-Realm", "Q:CraftScan", 100)
   AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 101)
-  assert(AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 102) == nil, "second whisper is not tagged")
+  local later = 101 + AddonGreetings.BURST_SECONDS + 1
+  assert(AddonGreetings.Claim(state, keyFor("Crafter-Realm"), later) == nil, "a whisper after the burst is not tagged")
+end
+
+-- CraftScan sends several lines in a loop after one announcement.
+local function test_burst_lines_share_the_tag()
+  local state = {}
+  local key = keyFor("Crafter-Realm")
+  AddonGreetings.Record(state, "Crafter-Realm", "Q:CraftScan", 100)
+  assert(AddonGreetings.Claim(state, key, 100) == "CraftScan", "first line tagged")
+  assert(AddonGreetings.Claim(state, key, 101) == "CraftScan", "second line tagged")
+  assert(AddonGreetings.Claim(state, key, 103) == "CraftScan", "the window slides from the previous line")
+  assert(AddonGreetings.Claim(state, key, 106) == nil, "a reply after the burst is not tagged")
+end
+
+local function test_burst_needs_a_tagged_line()
+  local state = {}
+  local key = keyFor("Crafter-Realm")
+  AddonGreetings.Claim(state, key, 100)
+  assert(AddonGreetings.Claim(state, key, 101) == nil, "untagged whispers start no burst")
+end
+
+local function test_stored_whisper_claimed_within_window()
+  local state = {}
+  local stored = { conversationKey = "c" }
+  AddonGreetings.NoteWhisper(state, keyFor("Crafter-Realm"), 100, stored)
+  assert(AddonGreetings.ClaimStored(state, "Crafter-Realm", 100 + AddonGreetings.LATE_TAG_SECONDS) == stored, "the stored whisper is returned")
+  assert(AddonGreetings.ClaimStored(state, "Crafter-Realm", 103) == nil, "only one claim per whisper")
+end
+
+local function test_stored_whisper_expires()
+  local state = {}
+  AddonGreetings.NoteWhisper(state, keyFor("Crafter-Realm"), 100, {})
+  assert(AddonGreetings.ClaimStored(state, "Crafter-Realm", 100 + AddonGreetings.LATE_TAG_SECONDS + 1) == nil, "an older whisper is not claimed")
+end
+
+local function test_newer_whisper_replaces_the_stored_one()
+  local state = {}
+  local key = keyFor("Crafter-Realm")
+  AddonGreetings.NoteWhisper(state, key, 100, { conversationKey = "old" })
+  AddonGreetings.NoteWhisper(state, key, 101, nil)
+  assert(AddonGreetings.ClaimStored(state, "Crafter-Realm", 101) == nil, "a tagged newer whisper leaves nothing to claim")
 end
 
 local function test_claim_expires_after_window()
@@ -118,7 +159,12 @@ return function()
   test_decode_rejects_other_payloads()
   test_decode_rejects_untrusted_names()
   test_claim_returns_name_within_window()
-  test_claim_consumes_the_mark()
+  test_claim_after_the_burst_is_untagged()
+  test_burst_lines_share_the_tag()
+  test_burst_needs_a_tagged_line()
+  test_stored_whisper_claimed_within_window()
+  test_stored_whisper_expires()
+  test_newer_whisper_replaces_the_stored_one()
   test_claim_expires_after_window()
   test_claim_matches_only_the_announcing_sender()
   test_sender_names_normalise_like_whisper_ingest()

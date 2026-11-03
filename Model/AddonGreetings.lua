@@ -9,13 +9,20 @@ local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 -- RobotsDotTxt convention) send a hidden "Q:<AddonName>" addon message right
 -- before an automated whisper. The announcement marks its sender for a short
 -- window; the next whisper from them claims the mark and is tagged
--- "Sent by <AddonName>". Marks are keyed like whisper conversations
+-- with <AddonName>, and so are the lines that follow it within a short
+-- burst. CraftScan's own channel tags a whisper after it arrived instead
+-- (NoteWhisper / ClaimStored). Marks are keyed like whisper conversations
 -- (Identity contact key), so the realm-suffixed addon sender matches the
 -- whisper's name form.
 local AddonGreetings = {}
 
 AddonGreetings.WINDOW_SECONDS = 10
 AddonGreetings.EARLY_WHISPER_SECONDS = 1
+-- CraftScan sends several lines after one announcement. A whisper this soon
+-- after a tagged one belongs to the same burst; a typed reply comes later.
+AddonGreetings.BURST_SECONDS = 2
+-- CraftScan's own channel speaks right after the customer's whisper.
+AddonGreetings.LATE_TAG_SECONDS = 3
 AddonGreetings.MAX_NAME_BYTES = 32
 AddonGreetings.SETTING_KEY = "addonGreetings"
 AddonGreetings.MODE_SHOW = "show"
@@ -54,17 +61,27 @@ local function senderKey(sender)
   return Identity.FromWhisper(sender).contactKey
 end
 
--- Inbox entries: { name, at } marks an announcement, { at } (no name) marks
--- the sender's last whisper. Both expire after the window.
-local function openInbox(state, now)
-  local inbox = state.addonGreetingInbox or {}
-  state.addonGreetingInbox = inbox
-  for key, entry in pairs(inbox) do
-    if now - entry.at > AddonGreetings.WINDOW_SECONDS then
-      inbox[key] = nil
+local function openMap(state, field, maxAge, now)
+  local map = state[field] or {}
+  state[field] = map
+  for key, entry in pairs(map) do
+    if now - entry.at > maxAge then
+      map[key] = nil
     end
   end
-  return inbox
+  return map
+end
+
+-- Inbox entries: { name, at } marks an announcement, { at } (no name) marks
+-- the sender's last whisper, plus burst = <AddonName> when it was tagged.
+-- All expire after the window.
+local function openInbox(state, now)
+  return openMap(state, "addonGreetingInbox", AddonGreetings.WINDOW_SECONDS, now)
+end
+
+local function isWithin(entry, now, seconds)
+  local age = now - entry.at
+  return age >= 0 and age <= seconds
 end
 
 -- The whisper can beat its own announcement. An announcement that lands
@@ -92,24 +109,58 @@ function AddonGreetings.Record(state, sender, text, now)
   return true
 end
 
+local function claimedName(entry, now)
+  if entry == nil then
+    return nil
+  end
+  if entry.name ~= nil then
+    return isWithin(entry, now, AddonGreetings.WINDOW_SECONDS) and entry.name or nil
+  end
+  if entry.burst ~= nil and isWithin(entry, now, AddonGreetings.BURST_SECONDS) then
+    return entry.burst
+  end
+  return nil
+end
+
 -- Returns the announcing addon's name when contactKey announced a greeting
--- within the window, and consumes the mark either way. Every claim leaves a
--- whisper mark for followsWhisper.
+-- within the window or this whisper continues a tagged burst, and consumes
+-- the announcement either way. Every claim leaves a whisper mark for
+-- followsWhisper; a tagged one also opens the burst window.
 function AddonGreetings.Claim(state, contactKey, now)
   if type(state) ~= "table" or contactKey == nil or type(now) ~= "number" then
     return nil
   end
   local inbox = openInbox(state, now)
-  local entry = inbox[contactKey]
-  inbox[contactKey] = { at = now }
-  if entry == nil or entry.name == nil then
+  local name = claimedName(inbox[contactKey], now)
+  inbox[contactKey] = { at = now, burst = name }
+  return name
+end
+
+-- stored: what a later CraftScan channel message needs to tag the untagged
+-- live whisper from contactKey, or nil when that whisper was tagged already.
+-- Only the newest whisper per sender is kept.
+function AddonGreetings.NoteWhisper(state, contactKey, now, stored)
+  if type(state) ~= "table" or contactKey == nil or type(now) ~= "number" then
+    return
+  end
+  local late = openMap(state, "addonGreetingLate", AddonGreetings.LATE_TAG_SECONDS, now)
+  late[contactKey] = stored and { at = now, stored = stored } or nil
+end
+
+-- The untagged whisper sender sent at most LATE_TAG_SECONDS ago, consumed so
+-- one addon message tags one whisper at most.
+function AddonGreetings.ClaimStored(state, sender, now)
+  if type(state) ~= "table" or type(sender) ~= "string" or sender == "" or type(now) ~= "number" then
     return nil
   end
-  local age = now - entry.at
-  if age < 0 or age > AddonGreetings.WINDOW_SECONDS then
+  local late = openMap(state, "addonGreetingLate", AddonGreetings.LATE_TAG_SECONDS, now)
+  local key = senderKey(sender)
+  local entry = late[key]
+  late[key] = nil
+  if entry == nil or not isWithin(entry, now, AddonGreetings.LATE_TAG_SECONDS) then
     return nil
   end
-  return entry.name
+  return entry.stored
 end
 
 -- The mode in effect. "Send to Requests" only counts while the Requests

@@ -55,12 +55,31 @@ local function test_announced_whisper_is_tagged()
   assert(lastMessage(conversation).addonGreeting == "CraftScan", "whisper tagged with the announcing addon")
 end
 
-local function test_only_the_next_whisper_is_tagged()
+local function test_burst_lines_are_tagged()
   local state = makeState()
   announce(state)
   whisper(state)
+  state.advance(1)
+  local conversation = whisper(state, "Here is my second line.")
+  assert(lastMessage(conversation).addonGreeting == "CraftScan", "a line in the same burst is tagged")
+end
+
+local function test_reply_after_the_burst_is_untagged()
+  local state = makeState()
+  announce(state)
+  whisper(state)
+  state.advance(3)
   local conversation = whisper(state, "a human follow-up")
   assert(lastMessage(conversation).addonGreeting == nil, "follow-up whisper untagged")
+end
+
+local function test_hide_mode_hides_the_whole_burst()
+  local state = makeState({ addonGreetings = "hide" })
+  announce(state)
+  whisper(state)
+  state.advance(1)
+  assert(whisper(state, "Here is my second line.") == nil, "second burst line hidden")
+  assert(next(state.store.conversations) == nil, "no burst line is stored")
 end
 
 local function test_untagged_without_announcement()
@@ -90,6 +109,7 @@ local function test_hide_mode_keeps_greeting_out()
   local result = whisper(state)
   assert(result == nil, "hidden greeting returns nothing")
   assert(next(state.store.conversations) == nil, "hidden greeting is not stored")
+  state.advance(3)
   local conversation = whisper(state, "a human follow-up")
   assert(conversation and #conversation.messages == 1, "the next whisper is stored as usual")
 end
@@ -154,7 +174,9 @@ end
 
 return function()
   test_announced_whisper_is_tagged()
-  test_only_the_next_whisper_is_tagged()
+  test_burst_lines_are_tagged()
+  test_reply_after_the_burst_is_untagged()
+  test_hide_mode_hides_the_whole_burst()
   test_untagged_without_announcement()
   test_announcement_on_other_channel_ignored()
   test_stale_announcement_ignored()
