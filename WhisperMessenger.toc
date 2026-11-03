@@ -39,6 +39,7 @@ Util/PerfCounters.lua
 Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
+Util/PlainText.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
