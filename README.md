@@ -73,7 +73,7 @@ Chat bubbles with timestamps, date separators and sender labels. Right-click any
 
 Online status dots, unread badges, last-message previews, and the zone or dungeon a friend is in. Pin and drag contacts to reorder them. Search across names, nicknames, notes and message history.
 
-Right-click a contact to **mute** them, set a **nickname**, add a private **note**, or get told when they come **online**.
+Right-click a contact to **mute** them, set a **nickname**, add a private **note**, or get told when they come **online** or **change zone**.
 
 <p align="center">
   <img src=".github/assets/contact-menu.png" width="60%" alt="Contact right-click menu with Mute, Set nickname, Edit note and Notify when online">
