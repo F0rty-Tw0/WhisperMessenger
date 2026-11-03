@@ -51,7 +51,7 @@ python scripts/run_test.py tests/path/to/test_file.lua
 Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua` and the `tests/helpers/fake_ui/` folder. Run all tests:
 
 ```bash
-# Every tests/**/test_*.lua in one process (a fresh Lua state per file, 8 workers), Lua 5.1 like WoW and CI.
+# Every tests/**/test_*.lua in one process (a fresh Lua state per file, up to 8 workers), Lua 5.1 like WoW and CI.
 # Keeps going after a failure, prints "N files, F failed" plus the failed list, exits 1 if any failed.
 python scripts/run_tests.py
 
