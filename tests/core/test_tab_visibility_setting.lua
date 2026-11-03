@@ -26,7 +26,7 @@ return function()
 
   do
     local runtime, calls = fakeRuntime("groups")
-    assert(TabVisibilitySetting.Apply(runtime, {}, "showGroupChats", false) == true, "the key is handled")
+    TabVisibilitySetting.Apply(runtime, {}, "showGroupChats", false)
     assert(calls.setTabMode == "whispers", "the open groups tab falls back to whispers")
     assert(calls.toggles == 1 and calls.refreshes == 1, "toggles and window refresh")
   end
@@ -62,7 +62,7 @@ return function()
 
   do
     local runtime, calls = fakeRuntime("groups")
-    assert(TabVisibilitySetting.Apply(runtime, {}, "fontSize", 12) == false, "other keys are not handled")
-    assert(calls.toggles == 0 and calls.setTabMode == nil, "nothing is touched")
+    TabVisibilitySetting.Apply(runtime, {}, "fontSize", 12)
+    assert(calls.toggles == 0 and calls.refreshes == 0 and calls.setTabMode == nil, "nothing is touched")
   end
 end

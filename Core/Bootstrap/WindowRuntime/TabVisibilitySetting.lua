@@ -27,7 +27,7 @@ local function refreshWindow(runtime)
   end
 end
 
--- Returns true when key is a tab visibility setting and was applied.
+-- Applies key when it is a tab visibility setting; other keys are ignored.
 function TabVisibilitySetting.Apply(runtime, accountSettings, key, value)
   local window = runtime.window
   if key == "showGroupChats" then
@@ -36,24 +36,18 @@ function TabVisibilitySetting.Apply(runtime, accountSettings, key, value)
     end
     refreshToggles(window)
     refreshWindow(runtime)
-    return true
-  end
-  if key == "requestsInbox" then
+  elseif key == "requestsInbox" then
     if value ~= true then
       leaveTab(window, "requests")
     end
     refreshToggles(window)
     refreshWindow(runtime)
-    return true
-  end
-  if key == "enabledChannels" then
+  elseif key == "enabledChannels" then
     if not ConversationSnapshot.HasChannelsTab(accountSettings) then
       leaveTab(window, "channels")
     end
     refreshToggles(window)
-    return true
   end
-  return false
 end
 
 ns.BootstrapWindowRuntimeTabVisibilitySetting = TabVisibilitySetting
