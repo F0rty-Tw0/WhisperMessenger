@@ -3,8 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
--- The logged-in character's short name and class tag, read live. Both
--- return nil when the API is missing, throws, or reports nothing.
+-- The logged-in character's short name, class tag and normalized realm, read
+-- live. Each returns nil when the API is missing, throws, or reports nothing.
 local LocalPlayer = {}
 
 local function nonEmpty(value)
@@ -28,6 +28,14 @@ function LocalPlayer.ClassTag()
   end
   local ok, _, classTag = pcall(_G.UnitClass, "player")
   return ok and nonEmpty(classTag) or nil
+end
+
+function LocalPlayer.NormalizedRealm()
+  if type(_G.GetNormalizedRealmName) ~= "function" then
+    return nil
+  end
+  local ok, realm = pcall(_G.GetNormalizedRealmName)
+  return ok and nonEmpty(realm) or nil
 end
 
 ns.LocalPlayer = LocalPlayer

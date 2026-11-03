@@ -33,6 +33,20 @@ return function()
   rawset(_G, "UnitClass", nil)
   assert(LocalPlayer.Name() == nil and LocalPlayer.ClassTag() == nil, "missing API is nil")
 
+  -- test_normalized_realm_reads_live_and_tolerates_bad_api
+  local savedRealm = _G.GetNormalizedRealmName
+  rawset(_G, "GetNormalizedRealmName", function()
+    return "Area52"
+  end)
+  assert(LocalPlayer.NormalizedRealm() == "Area52", "realm")
+  rawset(_G, "GetNormalizedRealmName", function()
+    error("secret")
+  end)
+  assert(LocalPlayer.NormalizedRealm() == nil, "throwing realm API is nil")
+  rawset(_G, "GetNormalizedRealmName", nil)
+  assert(LocalPlayer.NormalizedRealm() == nil, "missing realm API is nil")
+
   rawset(_G, "UnitName", savedName)
   rawset(_G, "UnitClass", savedClass)
+  rawset(_G, "GetNormalizedRealmName", savedRealm)
 end
