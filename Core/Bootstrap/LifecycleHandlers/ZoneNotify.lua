@@ -10,9 +10,10 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
--- "Notify when they change zone", driven only by events presence already
--- handles (no polling): guild/community roster events for guild members, the
--- debounced Battle.net friend-list refresh for Battle.net friends.
+-- "Notify when they change zone": guild/community roster events (plus a
+-- guild roster request at most every 60 s while a member is watched, see
+-- ZoneRosterPoll) and contact-list refreshes for guild members; the debounced
+-- Battle.net friend-list refresh for Battle.net friends.
 local ZoneNotify = {}
 
 -- Same chat line + sound as "Notify when online".
