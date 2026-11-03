@@ -494,6 +494,11 @@ local Spanish = {
   ["Copy profile link"] = "Copiar enlace del perfil",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Presiona Ctrl+C para copiar el enlace.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Asignar tecla…",
+  ["Not bound"] = "Sin asignar",
+  ["Key bindings can't be changed in combat."] = "No se pueden cambiar las asignaciones de teclas en combate.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versión del juego no puede abrir las asignaciones de teclas desde aquí. Usa el menú del juego.",
 }
 
 ns.Locale_esMX = Spanish

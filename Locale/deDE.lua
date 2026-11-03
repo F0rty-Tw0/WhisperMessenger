@@ -490,6 +490,11 @@ local German = {
   ["Copy profile link"] = "Profillink kopieren",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Strg+C drücken, um den Link zu kopieren.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Tastenbelegung festlegen…",
+  ["Not bound"] = "Nicht belegt",
+  ["Key bindings can't be changed in combat."] = "Tastenbelegungen können im Kampf nicht geändert werden.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Diese Spielversion kann die Tastenbelegung nicht von hier öffnen. Nutze stattdessen das Spielmenü.",
 }
 
 ns.Locale_deDE = German

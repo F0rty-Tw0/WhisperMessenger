@@ -24,6 +24,8 @@ local function keyNames(...)
   return names
 end
 
+KeybindHints.KeyNames = keyNames
+
 local function addHint(tooltip, labelKey, action)
   local names = keyNames(_G.GetBindingKey(action))
   if #names == 0 then

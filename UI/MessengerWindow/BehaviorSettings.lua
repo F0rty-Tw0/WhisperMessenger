@@ -9,6 +9,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local QuickRepliesSettings = ns.MessengerWindowQuickRepliesSettings or require("WhisperMessenger.UI.MessengerWindow.QuickRepliesSettings")
 local ToggleSpecs = ns.MessengerWindowBehaviorToggleSpecs or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.ToggleSpecs")
+local KeybindRow = ns.MessengerWindowBehaviorKeybindRow or require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings.KeybindRow")
 
 local BehaviorSettings = {}
 
@@ -41,8 +42,10 @@ function BehaviorSettings.Create(factory, parent, config, options)
   local panel = SettingsControls.NewPanelRegistry()
   SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, DEFAULTS)
 
+  local keybind = KeybindRow.Create(factory, frame, toggles[#toggles].row, { panel = panel })
+
   -- Not bound to Reset to Defaults: it would wipe replies the player typed.
-  local quickReplies = QuickRepliesSettings.Create(factory, frame, toggles[#toggles].row, {
+  local quickReplies = QuickRepliesSettings.Create(factory, frame, keybind.bottom, {
     config = config,
     panel = panel,
     onChange = onChange,
@@ -76,6 +79,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
+    keybind.refreshTheme()
     quickReplies.refreshTheme()
   end
 
@@ -86,6 +90,7 @@ function BehaviorSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Control how the messenger window behaves."))
     SettingsControls.RelabelToggles(toggles, toggleSpecs, text)
     resetButton.label:SetText(text("Reset to Defaults"))
+    keybind.setLanguage()
     quickReplies.setLanguage()
     -- Tooltip lines were captured into closure-frozen arrays at construction
     -- and stay in the previous language until the toggle is re-hovered after

@@ -490,6 +490,11 @@ local French = {
   ["Copy profile link"] = "Copier le lien du profil",
   ["Armory"] = "Armurerie",
   ["Press Ctrl+C to copy the link."] = "Appuyez sur Ctrl+C pour copier le lien.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Définir un raccourci…",
+  ["Not bound"] = "Non assigné",
+  ["Key bindings can't be changed in combat."] = "Les raccourcis ne peuvent pas être modifiés en combat.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Cette version du jeu ne peut pas ouvrir les raccourcis d'ici. Passez par le menu du jeu.",
 }
 
 ns.Locale_frFR = French

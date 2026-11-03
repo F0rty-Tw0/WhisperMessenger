@@ -18,6 +18,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New pop-up cards for whispers (off by default; turn on Show pop-up cards in the Notifications settings). While the messenger is closed, each new whisper shows a small card with the sender and their latest line, and a new line from the same player updates that card. Up to three cards show at once, in the screen corner you pick. Click a card to open that chat; cards fade out after a few seconds and go away when you open the messenger. They never show in combat, while chat is locked, for muted chats or for message requests.
 - Long dropdown lists, like the font and notification sound pickers, now open scrolled to your current choice instead of the top.
 - Picking a shorter Message Retention now asks before deleting older chats, and so does Reset to Defaults when it would shorten it. Cancel keeps your current settings.
+- The Behavior settings now show which key opens and closes the messenger, with a Set keybind button that takes you straight to Whisper Messenger in the game's Key Bindings. The button is grayed out during combat.
 
 ## [2.1.2] - 2026-10-30
 

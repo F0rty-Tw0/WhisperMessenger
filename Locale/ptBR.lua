@@ -490,6 +490,11 @@ local Portuguese = {
   ["Copy profile link"] = "Copiar link do perfil",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Pressione Ctrl+C para copiar o link.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Definir atalho…",
+  ["Not bound"] = "Sem atalho",
+  ["Key bindings can't be changed in combat."] = "Não é possível alterar atalhos em combate.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versão do jogo não consegue abrir os atalhos daqui. Use o menu do jogo.",
 }
 
 ns.Locale_ptBR = Portuguese

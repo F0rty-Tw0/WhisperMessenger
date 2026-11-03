@@ -490,6 +490,11 @@ local SimplifiedChinese = {
   ["Copy profile link"] = "复制角色资料链接",
   ["Armory"] = "英雄榜",
   ["Press Ctrl+C to copy the link."] = "按 Ctrl+C 复制链接。",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "设置快捷键…",
+  ["Not bound"] = "未绑定",
+  ["Key bindings can't be changed in combat."] = "战斗中无法更改按键绑定。",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此游戏版本无法从这里打开按键设置。请使用游戏菜单。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

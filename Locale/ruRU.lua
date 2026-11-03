@@ -490,6 +490,11 @@ local Russian = {
   ["Copy profile link"] = "Копировать ссылку на профиль",
   ["Armory"] = "Оружейная",
   ["Press Ctrl+C to copy the link."] = "Нажмите Ctrl+C, чтобы скопировать ссылку.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Назначить клавишу…",
+  ["Not bound"] = "Не назначено",
+  ["Key bindings can't be changed in combat."] = "Назначения клавиш нельзя менять в бою.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Эта версия игры не может открыть назначения клавиш отсюда. Воспользуйтесь игровым меню.",
 }
 
 ns.Locale_ruRU = Russian

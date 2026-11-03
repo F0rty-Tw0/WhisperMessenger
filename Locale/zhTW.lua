@@ -490,6 +490,11 @@ local TraditionalChinese = {
   ["Copy profile link"] = "複製角色資料連結",
   ["Armory"] = "英雄榜",
   ["Press Ctrl+C to copy the link."] = "按 Ctrl+C 複製連結。",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "設定快捷鍵…",
+  ["Not bound"] = "未綁定",
+  ["Key bindings can't be changed in combat."] = "戰鬥中無法變更按鍵綁定。",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此遊戲版本無法從這裡開啟按鍵設定。請使用遊戲選單。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

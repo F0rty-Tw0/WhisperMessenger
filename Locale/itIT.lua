@@ -490,6 +490,11 @@ local Italian = {
   ["Copy profile link"] = "Copia link del profilo",
   ["Armory"] = "Armeria",
   ["Press Ctrl+C to copy the link."] = "Premi Ctrl+C per copiare il link.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Imposta tasto…",
+  ["Not bound"] = "Non assegnato",
+  ["Key bindings can't be changed in combat."] = "Le assegnazioni dei tasti non si possono cambiare in combattimento.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Questa versione del gioco non può aprire le assegnazioni dei tasti da qui. Usa il menu di gioco.",
 }
 
 ns.Locale_itIT = Italian

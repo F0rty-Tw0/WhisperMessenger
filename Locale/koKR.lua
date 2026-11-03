@@ -490,6 +490,11 @@ local Korean = {
   ["Copy profile link"] = "프로필 링크 복사",
   ["Armory"] = "전투정보실",
   ["Press Ctrl+C to copy the link."] = "Ctrl+C를 눌러 링크를 복사하세요.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "단축키 설정…",
+  ["Not bound"] = "지정 안 됨",
+  ["Key bindings can't be changed in combat."] = "전투 중에는 단축키를 변경할 수 없습니다.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "이 게임 버전에서는 여기서 단축키 설정을 열 수 없습니다. 게임 메뉴를 이용하세요.",
 }
 
 ns.Locale_koKR = Korean
