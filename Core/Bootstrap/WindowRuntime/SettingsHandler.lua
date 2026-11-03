@@ -7,10 +7,11 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
-local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
+local TabVisibilitySetting = ns.BootstrapWindowRuntimeTabVisibilitySetting
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
 local DisplayName = ns.DisplayName or (type(require) == "function" and require("WhisperMessenger.Util.DisplayName")) or nil
 local WindowScale = ns.MessengerWindowWindowScale
   or (type(require) == "function" and require("WhisperMessenger.UI.MessengerWindow.WindowScale"))
@@ -175,40 +176,7 @@ function SettingsHandler.Create(options)
     if key == "autoOpenOutgoing" and persistedValue == true and ChatReplyState then
       ChatReplyState.ClearStaleWhisperReplyState(getNumChatWindows, getEditBox)
     end
-    if key == "showGroupChats" then
-      local window = runtime.window
-      if persistedValue == false and window and window.getTabMode and window.getTabMode() == "groups" and window.setTabMode then
-        window.setTabMode("whispers")
-      end
-      if window and window.refreshTabToggleVisibility then
-        window.refreshTabToggleVisibility()
-      end
-      if runtime.refreshWindow then
-        runtime.refreshWindow()
-      end
-    end
-    if key == "requestsInbox" then
-      local window = runtime.window
-      if persistedValue ~= true and window and window.getTabMode and window.getTabMode() == "requests" and window.setTabMode then
-        window.setTabMode("whispers")
-      end
-      if window and window.refreshTabToggleVisibility then
-        window.refreshTabToggleVisibility()
-      end
-      if runtime.refreshWindow then
-        runtime.refreshWindow()
-      end
-    end
-    if key == "enabledChannels" then
-      local window = runtime.window
-      local hasTab = ConversationSnapshot.HasChannelsTab(accountSettings)
-      if not hasTab and window and window.getTabMode and window.getTabMode() == "channels" and window.setTabMode then
-        window.setTabMode("whispers")
-      end
-      if window and window.refreshTabToggleVisibility then
-        window.refreshTabToggleVisibility()
-      end
-    end
+    TabVisibilitySetting.Apply(runtime, accountSettings, key, persistedValue)
     if
       (
         key == "hideMessagePreview"
