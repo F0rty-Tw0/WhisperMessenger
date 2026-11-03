@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local DropdownSkin = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local FindUI = require("tests.helpers.find_ui")
@@ -127,6 +128,35 @@ return function()
     local header = FindUI.dropdownOptions(dd.row)[1]
     header.scripts.OnEnter(header)
     assert(colorsMatch(header.label.textColor, Theme.COLORS.text_secondary), "header text stays secondary, even hovered")
+  end
+
+  -- test_hud_without_any_menu_api_keeps_the_modern_dropdown
+  do
+    local saved = rawget(_G, "MenuUtil")
+    rawset(_G, "MenuUtil", nil)
+    Hud.Configure("classic")
+    local dd = newDropdown(FakeUI.NewFactory())
+    Hud.Configure("off")
+    rawset(_G, "MenuUtil", saved)
+    assert(dd.button.template == nil, "no menu API: modern closed button")
+    assert(FindUI.dropdownMenu(dd.row) ~= nil, "no menu API: custom menu")
+  end
+
+  -- test_modern_dropdown_ignores_the_blizzard_api
+  do
+    local base = FakeUI.NewFactory()
+    local blizzardFactory = {
+      CreateFrame = function(frameType, name, parent, template)
+        local frame = base.CreateFrame(frameType, name, parent, template)
+        if template == "WowStyle1DropdownTemplate" then
+          function frame:SetupMenu() end
+          function frame:GenerateMenu() end
+        end
+        return frame
+      end,
+    }
+    local dd = newDropdown(blizzardFactory)
+    assert(dd.button.template == nil, "modern: custom dropdown")
   end
 
   Theme.SetPreset(previousPreset)
