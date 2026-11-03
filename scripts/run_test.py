@@ -2,68 +2,79 @@
 """Run a single Lua test file using the lupa (LuaJIT FFI) runtime.
 
 Usage:  python scripts/run_test.py tests/ui/test_theme_presets.lua
+
+run_file() is shared with scripts/run_tests.py, which runs many files.
 """
 
 import sys
 import os
 
-try:
-    from lupa import LuaRuntime
-except ImportError:
-    print("ERROR: lupa is not installed. Run: pip install lupa", file=sys.stderr)
-    sys.exit(1)
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace("\\", "/")
+
+# Set up package.path to mirror tests/run.lua.
+#
+# Match tests/run.lua: do NOT pre-install _G.UIParent / _G.CreateFrame
+# stubs. Those thin stubs break tests that require("WhisperMessenger.Bootstrap")
+# before fake_ui, because Bootstrap.lua's `if type(_G.CreateFrame) ==
+# "function"` guard runs Install against an empty-table stub with no
+# RegisterEvent/SetScript methods. Tests that need these globals load
+# fake_ui themselves, which rawsets a full-fidelity _G.CreateFrame.
+SETUP_LUA = """
+    package.path = "{root}/?.lua;{root}/?/init.lua;" .. package.path
+
+    local rawRequire = require
+    require = function(name)
+        if type(name) == "string" and name:find("WhisperMessenger.", 1, true) == 1 then
+            name = name:sub(#"WhisperMessenger." + 1)
+        end
+        return rawRequire(name)
+    end
+    _G.require = require
+
+    _G.C_ChatInfo = _G.C_ChatInfo or {{}}
+    _G.GameTooltip = _G.GameTooltip or {{
+        SetOwner = function() end,
+        SetText = function() end,
+        AddLine = function() end,
+        Show = function() end,
+        Hide = function() end,
+    }}
+"""
+
+
+def run_file(runtime_cls, test_path):
+    """Run one test file in a fresh Lua runtime. Raises on an assert, error, or syntax error."""
+    lua = runtime_cls(unpack_returned_tuples=True)
+    lua.execute(SETUP_LUA.format(root=PROJECT_ROOT))
+    abs_test_path = os.path.join(PROJECT_ROOT, test_path).replace("\\", "/")
+    try:
+        test_fn = lua.execute(f'return dofile("{abs_test_path}")')
+        if callable(test_fn):
+            test_fn()
+    finally:
+        # Lua prints go through C stdio, not Python's sys.stdout; flush so they land before our own output.
+        lua.execute("io.stdout:flush()")
 
 
 def main():
+    try:
+        from lupa import LuaRuntime
+    except ImportError:
+        print("ERROR: lupa is not installed. Run: pip install lupa", file=sys.stderr)
+        sys.exit(1)
+
     if len(sys.argv) < 2:
         print("Usage: python scripts/run_test.py <test-file.lua>", file=sys.stderr)
         sys.exit(1)
 
     test_path = sys.argv[1].replace("\\", "/")
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__))).replace("\\", "/")
-
-    lua = LuaRuntime(unpack_returned_tuples=True)
-
-    # Set up package.path to mirror tests/run.lua
-    lua.execute(f"""
-        package.path = "{project_root}/?.lua;{project_root}/?/init.lua;" .. package.path
-
-        local rawRequire = require
-        require = function(name)
-            if type(name) == "string" and name:find("WhisperMessenger.", 1, true) == 1 then
-                name = name:sub(#"WhisperMessenger." + 1)
-            end
-            return rawRequire(name)
-        end
-        _G.require = require
-    """)
-
-    # Match tests/run.lua: do NOT pre-install _G.UIParent / _G.CreateFrame
-    # stubs. Those thin stubs break tests that require("WhisperMessenger.Bootstrap")
-    # before fake_ui, because Bootstrap.lua's `if type(_G.CreateFrame) ==
-    # "function"` guard runs Install against an empty-table stub with no
-    # RegisterEvent/SetScript methods. Tests that need these globals load
-    # fake_ui themselves, which rawsets a full-fidelity _G.CreateFrame.
-    lua.execute("""
-        _G.C_ChatInfo = _G.C_ChatInfo or {}
-        _G.GameTooltip = _G.GameTooltip or {
-            SetOwner = function() end,
-            SetText = function() end,
-            AddLine = function() end,
-            Show = function() end,
-            Hide = function() end,
-        }
-    """)
-
-    abs_test_path = os.path.join(project_root, test_path).replace("\\", "/")
+    abs_test_path = os.path.join(PROJECT_ROOT, test_path).replace("\\", "/")
     if not os.path.isfile(abs_test_path):
         print(f"ERROR: test file not found: {abs_test_path}", file=sys.stderr)
         sys.exit(1)
 
     try:
-        test_fn = lua.execute(f'return dofile("{abs_test_path}")')
-        if callable(test_fn):
-            test_fn()
+        run_file(LuaRuntime, test_path)
         print(f"PASS {test_path}")
     except Exception as e:
         print(f"FAIL {test_path}", file=sys.stderr)
