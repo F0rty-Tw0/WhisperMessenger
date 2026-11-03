@@ -44,4 +44,22 @@ return function()
     watchCallbacks.onUpdatePrefs({ conversationKey = "k" }, { notifyOnline = true })
     assert(OnlineWatch.Observe(watchRuntime, "k", true) == true, "offline recorded at toggle time, so coming online alerts")
   end
+
+  -- test_notify_zone_on_takes_the_shown_zone_as_baseline
+  do
+    local conversation = { channel = "BN", displayName = "Anduin#1" }
+    local zoneRuntime = { store = { conversations = { k = conversation } } }
+    local zoneCallbacks = WindowCallbacks.Create({ runtime = zoneRuntime, characterState = {} })
+    zoneCallbacks.onUpdatePrefs({ conversationKey = "k", areaName = "Dornogal" }, { notifyZone = true })
+    assert(conversation.notifyZone == true and conversation.notifyZoneFrom == "Dornogal", "zone at arm time is the baseline")
+  end
+
+  -- test_notify_zone_on_without_a_zone_waits_for_one
+  do
+    local conversation = { channel = "WOW", displayName = "Jaina-Realm" }
+    local zoneRuntime = { store = { conversations = { k = conversation } } }
+    local zoneCallbacks = WindowCallbacks.Create({ runtime = zoneRuntime, characterState = {} })
+    zoneCallbacks.onUpdatePrefs({ conversationKey = "k" }, { notifyZone = true })
+    assert(conversation.notifyZone == true and conversation.notifyZoneFrom == nil, "armed, baseline waits for a known zone")
+  end
 end
