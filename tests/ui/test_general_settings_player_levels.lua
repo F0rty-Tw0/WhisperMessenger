@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
+local GeneralSettings = require("WhisperMessenger.UI.MessengerWindow.GeneralSettings")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local Localization = require("WhisperMessenger.Locale.Localization")
 
@@ -7,7 +8,7 @@ local LABEL = "Show player levels"
 local TOOLTIP = "Shows a player's level, colored by how it compares to yours, in the chat header and after names in group and channel chats."
 
 local function create(factory, parent, config, changes)
-  return AppearanceSettings.Create(factory, parent, config, {
+  return GeneralSettings.Create(factory, parent, config, {
     onChange = function(key, value)
       changes[#changes + 1] = { key = key, value = value }
     end,
@@ -34,8 +35,15 @@ return function()
   do
     local settings = create(factory, parent, {}, {})
     local toggle = FindUI.toggle(settings.frame, LABEL)
-    assert(toggle ~= nil, "the Appearance page has a player levels toggle")
+    assert(toggle ~= nil, "the General page has a player levels toggle")
     assert(not FindUI.isToggleOn(toggle), "player levels are off by default")
+  end
+
+  -- test_appearance_page_no_longer_has_the_toggle
+
+  do
+    local appearance = AppearanceSettings.Create(factory, parent, { showPlayerLevels = true }, {})
+    assert(FindUI.text(appearance.frame, LABEL) == nil, "the Appearance page no longer has a player levels toggle")
   end
 
   -- test_toggle_reflects_saved_on_choice
@@ -70,10 +78,8 @@ return function()
 
   do
     local settings = create(factory, parent, {}, {})
-    Localization.Configure({ language = "deDE" })
-    settings.setLanguage()
-    local translated = Localization.Text(LABEL)
-    Localization.Configure({ language = "enUS" })
+    settings.setLanguage("deDE")
+    local translated = Localization.Text(LABEL, "deDE")
     assert(translated ~= LABEL, "the German catalog translates the label")
     assert(FindUI.text(settings.frame, translated) ~= nil, "toggle label follows the interface language")
   end
