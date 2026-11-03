@@ -23,9 +23,13 @@ AddonComm.PREFIX_QUEST_LINK = "WMQL"
 -- with "Q:<AddonName>" on this prefix. Listen-only: a "D:<delay>" reply asks
 -- the sender to fake a human answer, so every send on it is refused.
 AddonComm.PREFIX_ADDON_GREETING = "robots.txt"
+-- CraftScan's own channel. A customer's client speaks on it right after its
+-- "found you" whisper. Listen-only too: WM is not CraftScan.
+AddonComm.PREFIX_CRAFT_SCAN = "CRAFT_SCAN"
 
 local RECEIVE_ONLY_PREFIXES = {
   [AddonComm.PREFIX_ADDON_GREETING] = true,
+  [AddonComm.PREFIX_CRAFT_SCAN] = true,
 }
 
 local MAX_PAYLOAD_BYTES = 255

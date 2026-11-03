@@ -22,6 +22,13 @@ return function()
   assert(AddonComm.SendBNet(api, "robots.txt", "D:2", 42) == false, "BNet send on robots.txt must be refused")
   assert(calls == 0, "no addon message may leave on robots.txt, got " .. calls)
 
+  -- CraftScan's own prefix: WM only listens for it.
+  assert(AddonComm.PREFIX_CRAFT_SCAN == "CRAFT_SCAN", "CraftScan prefix must stay CRAFT_SCAN")
+  assert(AddonComm.Send(api, "CRAFT_SCAN", "x", "Crafter-Realm") == false, "whisper send on CRAFT_SCAN must be refused")
+  assert(AddonComm.SendGroup(api, "CRAFT_SCAN", "x", "PARTY") == false, "group send on CRAFT_SCAN must be refused")
+  assert(AddonComm.SendBNet(api, "CRAFT_SCAN", "x", 42) == false, "BNet send on CRAFT_SCAN must be refused")
+  assert(calls == 0, "no addon message may leave on CRAFT_SCAN, got " .. calls)
+
   -- Other prefixes still go out.
   assert(AddonComm.Send(api, "WMQL", "1:x", "Crafter-Realm") == true, "WMQL send still works")
 end
