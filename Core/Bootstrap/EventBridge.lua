@@ -77,10 +77,14 @@ local function applyIncomingEffects(runtime, result)
   -- just never make noise or open the window.
   local settings = runtime.accountState and runtime.accountState.settings
   local now = type(runtime.now) == "function" and runtime.now() or nil
-  local shouldAlert = AlertPolicy.ShouldAlert(result, settings)
-    and not IncomingAlerts.Throttled(runtime, type(result) == "table" and result.conversationKey or nil, now)
+  local mayAlert = AlertPolicy.ShouldAlert(result, settings)
+  local shouldAlert = mayAlert and not IncomingAlerts.Throttled(runtime, type(result) == "table" and result.conversationKey or nil, now)
   if shouldAlert then
     IncomingAlerts.Notify(settings)
+  end
+  -- Past the noise throttle: a quick second line still rewrites its card.
+  if mayAlert and result and result.conversationKey and type(runtime.showWhisperToast) == "function" then
+    runtime.showWhisperToast(result.conversationKey)
   end
   if result and result.conversationKey then
     runtime.lastIncomingWhisperKey = result.conversationKey

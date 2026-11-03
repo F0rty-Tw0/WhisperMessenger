@@ -288,6 +288,8 @@ UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
+UI/WhisperToasts/ToastCard.lua
+UI/WhisperToasts/ToastStack.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
 UI/MinimapIcon/AddonCompartment.lua
@@ -361,6 +363,7 @@ UI/MessengerWindow/FiltersSettings/RuleDialogs.lua
 UI/MessengerWindow/FiltersSettings/RulesSection.lua
 UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
+UI/MessengerWindow/NotificationSettings/ToastControls.lua
 UI/MessengerWindow/NotificationSettings.lua
 UI/MessengerWindow/IconSettings.lua
 UI/MessengerWindow/PatchNotesSettings.lua
@@ -454,6 +457,7 @@ Core/PublicApi/Guards.lua
 Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
+Core/Bootstrap/WindowRuntime/WhisperToasts.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/WhisperIngestFailsafe.lua

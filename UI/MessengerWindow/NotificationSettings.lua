@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local SoundSelector = ns.NotificationSettingsSoundSelector or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings.SoundSelector")
+local ToastControls = ns.NotificationSettingsToastControls or require("WhisperMessenger.UI.MessengerWindow.NotificationSettings.ToastControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local NotificationSettings = {}
@@ -95,6 +96,13 @@ function NotificationSettings.Create(factory, parent, config, options)
   )
   flashToggle.row:SetPoint("TOPLEFT", soundSelector.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  local toastControls = ToastControls.Create(factory, frame, config, {
+    panel = panel,
+    anchor = flashToggle.row,
+    rowSpacing = rowSpacing,
+    onChange = onChange,
+  })
+
   local resetButton = panel:bind(
     UIHelpers.createOptionButton(
       factory,
@@ -105,9 +113,12 @@ function NotificationSettings.Create(factory, parent, config, options)
     ),
     { type = "optionButton" }
   )
-  resetButton:SetPoint("TOPLEFT", flashToggle.row, "BOTTOMLEFT", 0, -24)
+  resetButton:SetPoint("TOPLEFT", toastControls.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    panel:reset(onChange)
+    panel:reset(function(key, value)
+      toastControls.onReset(key, value)
+      onChange(key, value)
+    end)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -130,6 +141,7 @@ function NotificationSettings.Create(factory, parent, config, options)
     soundSelector.label:SetText(text("Notification sound"))
     soundSelector.setOptionsList(SoundSelector.Options())
     flashToggle.label:SetText(text("Flash taskbar on new whisper"))
+    toastControls.setLanguage()
     resetButton.label:SetText(text("Reset to Defaults"))
   end
 
