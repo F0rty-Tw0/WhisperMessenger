@@ -62,6 +62,7 @@ function ConversationSnapshot.Build(conversationKey, conversation, settings)
     nickname = conversation.nickname,
     note = conversation.note,
     notifyOnline = conversation.notifyOnline,
+    notifyZone = conversation.notifyZone,
     hasUnreadMention = conversation.hasUnreadMention,
     isRequest = MessageRequests.IsRequest(conversation, settings) or nil,
     inChannelsTab = (conversation.channel == ChannelType.CHANNEL and ConversationSnapshot.HasChannelsTab(settings)) or nil,
