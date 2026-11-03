@@ -51,8 +51,8 @@ end
 -- fall back to settingsResult (lazily built settings panels).
 -- parts: chrome, layout, settingsRuntime, settingsResult, contactsRuntime,
 -- conversation, composer, refreshSelection, handleContactSelected, setScale,
--- relayoutCurrentSize, refreshLanguage, and optionally panelHost +
--- windowVisibility (addon panels).
+-- relayoutCurrentSize, refreshLanguage, showWithoutComposerFocus, and
+-- optionally panelHost + windowVisibility (addon panels).
 function WindowSurface.Build(parts)
   local chrome = parts.chrome
   local layout = parts.layout
@@ -127,6 +127,7 @@ function WindowSurface.Build(parts)
     end,
     setScale = parts.setScale,
     refreshLanguage = parts.refreshLanguage,
+    showWithoutComposerFocus = parts.showWithoutComposerFocus,
     refreshTabToggleVisibility = contactsRuntime.refreshTabToggleVisibility,
     setTabMode = contactsRuntime.setTabMode,
     getTabMode = contactsRuntime.getTabMode,
