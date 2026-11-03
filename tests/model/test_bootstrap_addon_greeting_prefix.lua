@@ -64,4 +64,5 @@ return function()
     error(err, 0)
   end
   assert(registered["robots.txt"] == true, "boot registers the robots.txt addon greeting prefix")
+  assert(registered["CRAFT_SCAN"] == true, "boot registers CraftScan's own prefix")
 end
