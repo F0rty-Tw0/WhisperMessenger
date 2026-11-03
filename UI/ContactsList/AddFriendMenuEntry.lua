@@ -5,6 +5,7 @@ end
 
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
@@ -32,12 +33,12 @@ local function isSelf(item, name)
       return true
     end
   end
-  local own = type(_G.UnitName) == "function" and _G.UnitName("player") or nil
-  if type(own) ~= "string" then
+  local own = LocalPlayer.Name()
+  if own == nil then
     return false
   end
-  local realm = type(_G.GetNormalizedRealmName) == "function" and _G.GetNormalizedRealmName() or nil
-  return name == own or (type(realm) == "string" and name == own .. "-" .. realm)
+  local realm = LocalPlayer.NormalizedRealm()
+  return name == own or (realm ~= nil and name == own .. "-" .. realm)
 end
 
 -- Without C_FriendList the friends list can't be read; the game itself
