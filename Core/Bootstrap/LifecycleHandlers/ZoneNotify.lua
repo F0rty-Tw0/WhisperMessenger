@@ -4,11 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local ZoneWatch = ns.ZoneWatch or require("WhisperMessenger.Model.ZoneWatch")
--- stylua: ignore
-local IncomingAlerts = ns.BootstrapEventBridgeIncomingAlerts or require("WhisperMessenger.Core.Bootstrap.EventBridge.IncomingAlerts")
+local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
-local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 
 -- "Notify when they change zone": guild/community roster events (plus a
 -- guild roster request at most every 60 s while a member is watched, see
@@ -16,20 +13,14 @@ local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName
 -- Battle.net friend-list refresh for Battle.net friends.
 local ZoneNotify = {}
 
--- Same chat line + sound as "Notify when online".
-local function announce(runtime, conversation, from, to)
-  local name = conversation.nickname or DisplayName.Format(conversation.displayName) or "?"
-  ChatPrint.Print(string.format(Localization.Text("%s changed zone from %s to %s."), name, from, to))
-  IncomingAlerts.PlaySound(runtime.accountState and runtime.accountState.settings)
-end
-
--- Returns true when it alerted (and so disarmed the watch).
+-- Returns true when it alerted (and so disarmed the watch). Same chat line +
+-- sound as "Notify when online".
 function ZoneNotify.Observe(runtime, conversation, zone)
   local from, to = ZoneWatch.Observe(conversation, zone)
   if from == nil then
     return false
   end
-  announce(runtime, conversation, from, to)
+  OnlineNotify.Announce(runtime, conversation, Localization.Text("%s changed zone from %s to %s."), from, to)
   return true
 end
 
