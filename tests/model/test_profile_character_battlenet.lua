@@ -82,5 +82,16 @@ return function()
     assert(character == nil, "a secret character name is never read")
   end
 
+  -- test_secret_online_flag_has_none
+  do
+    -- isOnline is the only `true` in the live info, so it alone is secret.
+    rawset(_G, "issecretvalue", function(value)
+      return value == true
+    end)
+    local character = characterWith(liveGame())
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(character == nil, "a secret online flag is never compared")
+  end
+
   rawset(_G, "C_BattleNet", savedBattleNet)
 end
