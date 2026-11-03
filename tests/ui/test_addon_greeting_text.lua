@@ -45,6 +45,11 @@ local function test_longer_words_stay_unchanged()
   assert(shown == text, "only whole words are renamed, got " .. shown)
 end
 
+local function test_quotes_and_symbols_end_a_word()
+  local shown = AddonGreetingText.ForDisplay(tagged("«CraftScan» ¡CraftScan!"))
+  assert(shown == "«Craft Alert» ¡Craft Alert!", "punctuation is not part of the word, got " .. shown)
+end
+
 local function test_localized_names_are_rewritten()
   for _, name in ipairs({ "КрафтСкан", "크래프트스캔", "制造扫描" }) do
     local shown = AddonGreetingText.ForDisplay(tagged("via " .. name .. ": [x]"))
@@ -95,6 +100,7 @@ return function()
   test_preview_not_from_the_newest_line_is_kept()
   test_incoming_preview_uses_the_newest_incoming_line()
   test_longer_words_stay_unchanged()
+  test_quotes_and_symbols_end_a_word()
   test_localized_names_are_rewritten()
   test_localized_name_next_to_its_script()
   test_untagged_localized_name_unchanged()

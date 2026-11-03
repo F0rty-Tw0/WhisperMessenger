@@ -28,13 +28,14 @@ local function leadByteBefore(text, index)
 end
 
 -- Letters and digits in ASCII and in two-byte scripts (accented Latin,
--- Cyrillic, Greek) continue a word. CJK and Hangul write particles straight
--- after a name, so their characters never do.
+-- Cyrillic, Greek) continue a word; lead byte 0xC2 (U+0080-U+00BF: « » ¡ ¿
+-- NBSP) is punctuation. CJK and Hangul write particles straight after a
+-- name, so their characters never do.
 local function isWordLead(byte)
   if byte == nil then
     return false
   end
-  if byte >= 0xC2 and byte <= 0xDF then
+  if byte >= 0xC3 and byte <= 0xDF then
     return true
   end
   return byte < 0x80 and string.find(string.char(byte), "%w") ~= nil
