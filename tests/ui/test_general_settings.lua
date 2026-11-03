@@ -6,7 +6,6 @@ local FindUI = require("tests.helpers.find_ui")
 
 local MAX_MESSAGES = "Max Messages Per Chat"
 local MAX_CONTACTS = "Max Contacts"
-local RETENTION = "Message Retention (hours)"
 
 local function slider(settings, label)
   return FindUI.slider(settings.frame, label)
@@ -61,7 +60,6 @@ return function()
     assert(settings.frame ~= nil, "should have a frame")
     assert(slider(settings, MAX_MESSAGES) ~= nil, "should render a max messages slider")
     assert(slider(settings, MAX_CONTACTS) ~= nil, "should render a max contacts slider")
-    assert(slider(settings, RETENTION) ~= nil, "should render a retention slider")
   end
 
   -- test_has_labels_for_each_setting
@@ -163,11 +161,8 @@ return function()
 
     local maxMessages = slider(settings, MAX_MESSAGES):GetValue()
     local maxContacts = slider(settings, MAX_CONTACTS):GetValue()
-    local retention = slider(settings, RETENTION):GetValue()
     assert(maxMessages == 150, "maxMessagesSlider should start at 150, got: " .. tostring(maxMessages))
     assert(maxContacts == 100, "maxConversationsSlider should start at 100, got: " .. tostring(maxContacts))
-    -- Retention slider uses hours: 43200 / 3600 = 12
-    assert(retention == 12, "retentionSlider should start at 12h, got: " .. tostring(retention))
   end
 
   -- test_on_change_fires_with_updated_values
@@ -189,13 +184,6 @@ return function()
     assert(lastChange ~= nil, "onChange should fire on slider change")
     assert(lastChange.key == "maxMessagesPerConversation", "key should be maxMessagesPerConversation")
     assert(lastChange.value == 300, "value should be 300, got: " .. tostring(lastChange.value))
-
-    lastChange = nil
-    slider(settings, RETENTION):SetValue(48)
-    assert(lastChange ~= nil, "onChange should fire on retention change")
-    assert(lastChange.key == "messageMaxAge", "key should be messageMaxAge")
-    -- 48 hours = 172800 seconds
-    assert(lastChange.value == 172800, "value should be 172800, got: " .. tostring(lastChange.value))
   end
 
   -- test_slider_rows_have_min_max_labels
@@ -217,10 +205,6 @@ return function()
     local contactsMin, contactsMax = rangeLabels(settings, MAX_CONTACTS)
     assert(contactsMin and contactsMin.text == "10", "min label should be '10', got: " .. tostring(contactsMin and contactsMin.text))
     assert(contactsMax and contactsMax.text == "100", "max label should be '100', got: " .. tostring(contactsMax and contactsMax.text))
-
-    local retentionMin, retentionMax = rangeLabels(settings, RETENTION)
-    assert(retentionMin and retentionMin.text == "1", "min label should be '1', got: " .. tostring(retentionMin and retentionMin.text))
-    assert(retentionMax and retentionMax.text == "168", "max label should be '168', got: " .. tostring(retentionMax and retentionMax.text))
   end
 
   -- test_reset_button_exists
@@ -255,10 +239,8 @@ return function()
     -- Verify sliders start at non-default values
     local maxMessages = slider(settings, MAX_MESSAGES)
     local maxContacts = slider(settings, MAX_CONTACTS)
-    local retention = slider(settings, RETENTION)
     assert(maxMessages:GetValue() == 300, "should start at 300")
     assert(maxContacts:GetValue() == 50, "should start at 50")
-    assert(retention:GetValue() == 2, "should start at 2h")
 
     -- Click reset
     FindUI.click(resetButton(settings))
@@ -266,7 +248,6 @@ return function()
     -- Sliders should be back to defaults
     assert(maxMessages:GetValue() == 200, "maxMessages should reset to 200, got: " .. tostring(maxMessages:GetValue()))
     assert(maxContacts:GetValue() == 100, "maxConversations should reset to 100, got: " .. tostring(maxContacts:GetValue()))
-    assert(retention:GetValue() == 24, "retention should reset to 24h, got: " .. tostring(retention:GetValue()))
 
     -- onChange should have fired for each
     assert(changes.maxMessagesPerConversation == 200, "should fire onChange for maxMessagesPerConversation=200")

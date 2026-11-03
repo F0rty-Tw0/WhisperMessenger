@@ -10,6 +10,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 local createOptionButton = UIHelpers.createOptionButton
 
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local RetentionRow = ns.MessengerWindowGeneralSettingsRetentionRow or require("WhisperMessenger.UI.MessengerWindow.GeneralSettings.RetentionRow")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 
 local GeneralSettings = {}
@@ -19,7 +20,6 @@ local PADDING = Theme.CONTENT_PADDING
 local DEFAULTS = {
   maxMessagesPerConversation = 200,
   maxConversations = 100,
-  messageMaxAge = 86400,
   clearOnLogout = false,
   hideMessagePreview = false,
   hideBattleTagNumbers = true,
@@ -100,24 +100,19 @@ function GeneralSettings.Create(factory, parent, config, options)
   )
   conversationsRow.row:SetPoint("TOPLEFT", messagesRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  local retentionHours = math.floor((config.messageMaxAge or 86400) / 3600 + 0.5)
-  -- Retention slider stores hours in the UI but the config is seconds; reset
-  -- has to convert the seconds-based default back to hours before SetValue.
   local retentionRow = panel:bind(
-    SettingsControls.CreateSliderRow(factory, frame, {
-      label = text("Message Retention (hours)"),
-      min = 1,
-      max = 168,
-      step = 1,
-      initial = retentionHours,
-      onChange = function(value)
-        onChange("messageMaxAge", value * 3600)
+    RetentionRow.Create(factory, frame, {
+      language = interfaceLanguage,
+      initial = config.messageMaxAge,
+      colors = selectorColors,
+      onChange = function(seconds)
+        onChange("messageMaxAge", seconds)
       end,
     }),
     {
-      type = "slider",
-      reset = function(control)
-        control.slider:SetValue(math.floor(DEFAULTS.messageMaxAge / 3600 + 0.5))
+      type = "selector",
+      reset = function(control, resetOnChange)
+        control.resetToDefault(resetOnChange)
       end,
     }
   )
@@ -238,7 +233,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure message storage, retention, and interface language."))
     messagesRow.label:SetText(text("Max Messages Per Chat"))
     conversationsRow.label:SetText(text("Max Contacts"))
-    retentionRow.label:SetText(text("Message Retention (hours)"))
+    retentionRow.setLanguage(interfaceLanguage)
     privacySection.label:SetText(text("Privacy"))
     clearOnLogoutToggle.label:SetText(text("Clear on logout"))
     hidePreviewToggle.label:SetText(text("Hide message preview"))
