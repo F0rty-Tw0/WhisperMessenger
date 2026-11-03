@@ -18,6 +18,7 @@ local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.C
 local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 local AddonAlerts = ns.BootstrapWindowRuntimeAddonAlerts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.AddonAlerts")
+local GameWhisperTab = ns.BootstrapWindowRuntimeGameWhisperTab or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GameWhisperTab")
 
 local WindowCallbacks = {}
 
@@ -80,8 +81,12 @@ function WindowCallbacks.Create(options)
     if key == nil then
       return
     end
+    local conversation = Store.Find(runtime.store, key)
     MessageReactions.ClearConversation(runtime, key)
     Store.Remove(runtime.store, key)
+    if type(accountState.settings) == "table" and accountState.settings.closeGameWhisperTab == true then
+      GameWhisperTab.CloseFor(key, conversation)
+    end
     if runtime.activeConversationKey == key then
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil
