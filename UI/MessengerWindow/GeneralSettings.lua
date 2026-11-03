@@ -23,6 +23,7 @@ local DEFAULTS = {
   clearOnLogout = false,
   hideMessagePreview = false,
   hideBattleTagNumbers = true,
+  showPlayerLevels = false,
   timeFormat = "12h",
   timeSource = "local",
   interfaceLanguage = "auto",
@@ -70,6 +71,26 @@ function GeneralSettings.Create(factory, parent, config, options)
   local selectorColors = SettingsControls.SelectorColors(Theme)
   local panel = SettingsControls.NewPanelRegistry()
 
+  local function toggleRow(key, label, tooltip, initial, anchor, gap)
+    local toggle = panel:bind(
+      UIHelpers.createToggleRow(factory, frame, text(label), initial, toggleColors, toggleLayout, function(value)
+        onChange(key, value)
+      end, { text(label), text(tooltip) }),
+      { type = "toggle", key = key, default = DEFAULTS[key] }
+    )
+    toggle.row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, gap or -12)
+    return toggle
+  end
+
+  local playerLevelsToggle = toggleRow(
+    "showPlayerLevels",
+    "Show player levels",
+    "Shows a player's level, colored by how it compares to yours, in the chat header and after names in group and channel chats.",
+    config.showPlayerLevels == true,
+    hint,
+    -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING
+  )
+
   local messagesRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
       label = text("Max Messages Per Chat"),
@@ -83,7 +104,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     }),
     { type = "slider", key = "maxMessagesPerConversation", default = DEFAULTS.maxMessagesPerConversation }
   )
-  messagesRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
+  messagesRow.row:SetPoint("TOPLEFT", playerLevelsToggle.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   local conversationsRow = panel:bind(
     SettingsControls.CreateSliderRow(factory, frame, {
@@ -126,32 +147,21 @@ function GeneralSettings.Create(factory, parent, config, options)
   local privacySection = SettingsControls.CreateSectionLabel(frame, text("Privacy"))
   privacySection.region:SetPoint("TOPLEFT", retentionRow.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
-  local function privacyToggle(key, label, tooltip, initial, anchor)
-    local toggle = panel:bind(
-      UIHelpers.createToggleRow(factory, frame, text(label), initial, toggleColors, toggleLayout, function(value)
-        onChange(key, value)
-      end, { text(label), text(tooltip) }),
-      { type = "toggle", key = key, default = DEFAULTS[key] }
-    )
-    toggle.row:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -12)
-    return toggle
-  end
-
-  local clearOnLogoutToggle = privacyToggle(
+  local clearOnLogoutToggle = toggleRow(
     "clearOnLogout",
     "Clear on logout",
     "Deletes all saved conversations and contacts when you log out.",
     config.clearOnLogout == true,
     privacySection.region
   )
-  local hidePreviewToggle = privacyToggle(
+  local hidePreviewToggle = toggleRow(
     "hideMessagePreview",
     "Hide message preview",
     "Hides the last message preview text in the contacts list for privacy.",
     config.hideMessagePreview == true,
     clearOnLogoutToggle.row
   )
-  local hideBattleTagToggle = privacyToggle(
+  local hideBattleTagToggle = toggleRow(
     "hideBattleTagNumbers",
     "Hide BattleTag numbers",
     "Shows Battle.net friends without the #1234 part of their BattleTag. Two friends with the same name keep their numbers.",
@@ -236,6 +246,7 @@ function GeneralSettings.Create(factory, parent, config, options)
     interfaceLanguage = nextLanguage or DEFAULTS.interfaceLanguage
     header.title:SetText(text("General Settings"))
     header.hint:SetText(text("Configure message storage, retention, and interface language."))
+    playerLevelsToggle.label:SetText(text("Show player levels"))
     messagesRow.label:SetText(text("Max Messages Per Chat"))
     conversationsRow.label:SetText(text("Max Contacts"))
     retentionRow.label:SetText(text("Message Retention (hours)"))
