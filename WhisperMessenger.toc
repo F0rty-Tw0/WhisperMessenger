@@ -280,6 +280,7 @@ UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/ToggleIcon.lua
+UI/MinimapIcon/IconTooltip.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
 UI/MessengerWindow/AlphaController.lua

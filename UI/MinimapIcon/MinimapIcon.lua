@@ -6,7 +6,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
-local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
+local IconTooltip = ns.MinimapIconTooltip or require("WhisperMessenger.UI.MinimapIcon.IconTooltip")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
@@ -246,24 +246,13 @@ function MinimapIcon.Create(factory, options)
     frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnEnter", function()
-      if _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
-        _G.GameTooltip:SetText("Whisper Messenger")
-        local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
-        if showBadge and badge:IsShown() then
-          _G.GameTooltip:AddLine(unreadSummary)
-        end
-        KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
-        KeybindHints.AddClickHint(_G.GameTooltip)
-        _G.GameTooltip:Show()
-      end
+      local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
+      local unreadLine = showBadge and badge:IsShown() and unreadSummary or nil
+      local includeReply = type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true
+      IconTooltip.Show(frame, "ANCHOR_BOTTOM", unreadLine, includeReply)
     end)
 
-    frame:SetScript("OnLeave", function()
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
-    end)
+    frame:SetScript("OnLeave", IconTooltip.Hide)
   end
 
   -- Icon-mode visibility. The preview frame floats on UIParent, so hiding
