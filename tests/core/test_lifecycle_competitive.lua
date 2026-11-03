@@ -1,6 +1,7 @@
 local Competitive = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local PublicApi = require("WhisperMessenger.Core.PublicApi")
 
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
@@ -131,6 +132,35 @@ return function()
     LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
 
     assert(state.visible == false, "a window the player closed during combat should stay closed")
+  end
+
+  -- test_failed_api_open_during_combat_keeps_the_reopen
+  do
+    local Bootstrap, deps, state = makeCombatHarness(true, true)
+    local runtime = Bootstrap.runtime
+    runtime.ensureWindow = function() end
+    runtime.isCompetitiveContent = function()
+      return false
+    end
+    runtime.isMythicLockdown = function()
+      return false
+    end
+    runtime.startConversation = function()
+      return false
+    end
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    -- Lockdown starts after PLAYER_REGEN_DISABLED, so an addon reacting to it
+    -- passes the combat guard.
+    local savedInCombat = _G.InCombatLockdown
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+    local opened = PublicApi.Build(runtime).OpenConversation("Jaina")
+    rawset(_G, "InCombatLockdown", savedInCombat)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(opened == false, "the failed open should report false")
+    assert(state.visible == true, "a failed API open must not cancel the combat-end reopen")
   end
 
   -- test_combat_end_without_setting_changes_nothing
