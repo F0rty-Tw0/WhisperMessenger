@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
+local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local DropdownSelector = {}
@@ -94,26 +95,8 @@ function DropdownSelector.Create(factory, parent, options)
     DropdownSkin.Paint(skin, buttonLabel, buttonHovered)
   end
 
-  local function paintOptionButton(optionButton)
-    if optionButton._header then
-      applyColorTexture(optionButton.bg, palette.bg)
-      UIHelpers.setTextColor(optionButton.label, Theme.COLORS.text_secondary)
-    elseif optionButton._key == selected then
-      applyColorTexture(optionButton.bg, palette.bgActive)
-      UIHelpers.setTextColor(optionButton.label, palette.textActive)
-    elseif optionButton._hovered then
-      applyColorTexture(optionButton.bg, palette.bgHover)
-      UIHelpers.setTextColor(optionButton.label, palette.textHover)
-    else
-      applyColorTexture(optionButton.bg, palette.bg)
-      UIHelpers.setTextColor(optionButton.label, palette.text)
-    end
-  end
-
   local function repaintOptions()
-    for _, optionButton in ipairs(optionButtons) do
-      paintOptionButton(optionButton)
-    end
+    DropdownOptionRow.RepaintAll(optionButtons, palette, selected)
   end
 
   local function updateSelection(key)
@@ -124,40 +107,20 @@ function DropdownSelector.Create(factory, parent, options)
     repaintOptions()
   end
 
+  local function getSelected()
+    return selected
+  end
+
+  local function pickOption(key)
+    updateSelection(key)
+    if onChange then
+      onChange(key)
+    end
+    menu:Hide()
+  end
+
   local function createOptionButton()
-    local optionButton = factory.CreateFrame("Button", nil, content)
-    local bg = optionButton:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(optionButton)
-
-    local optionLabel = optionButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-    optionLabel:SetPoint("LEFT", optionButton, "LEFT", 8, 0)
-    optionLabel:SetPoint("RIGHT", optionButton, "RIGHT", -8, 0)
-    optionLabel:SetJustifyH("LEFT")
-
-    optionButton.bg = bg
-    optionButton.label = optionLabel
-    optionButton._hovered = false
-
-    optionButton:SetScript("OnClick", function()
-      if optionButton._header then
-        return
-      end
-      local key = optionButton._key
-      updateSelection(key)
-      if onChange then
-        onChange(key)
-      end
-      menu:Hide()
-    end)
-    optionButton:SetScript("OnEnter", function()
-      optionButton._hovered = true
-      paintOptionButton(optionButton)
-    end)
-    optionButton:SetScript("OnLeave", function()
-      optionButton._hovered = false
-      paintOptionButton(optionButton)
-    end)
-
+    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption)
     buttonPool[#buttonPool + 1] = optionButton
     return optionButton
   end
