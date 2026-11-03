@@ -340,6 +340,7 @@ local Korean = {
   ["Uses WM"] = "WM 사용 중",
   ["Invite to WM"] = "WM 초대",
   ["Invite sent"] = "초대 보냄",
+  ["Sent by %s"] = "%s에서 보냄",
   ["Click to whisper this player an invite to Whisper Messenger."] = "클릭하면 이 플레이어에게 Whisper Messenger 초대 귓속말을 보냅니다.",
   ["Share typing status"] = "입력 상태 공유",
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "Whisper Messenger를 사용하는 상대에게 내가 귓속말을 입력 중임을 보여줍니다.",

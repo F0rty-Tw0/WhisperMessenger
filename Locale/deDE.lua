@@ -340,6 +340,7 @@ local German = {
   ["Uses WM"] = "Nutzt WM",
   ["Invite to WM"] = "Zu WM einladen",
   ["Invite sent"] = "Einladung gesendet",
+  ["Sent by %s"] = "Gesendet von %s",
   ["Click to whisper this player an invite to Whisper Messenger."] = "Klicke, um diesem Spieler eine Einladung zu Whisper Messenger zuzuflüstern.",
   ["Share typing status"] = "Tippstatus teilen",
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "Kontakte, die ebenfalls Whisper Messenger nutzen, sehen, wenn du ihnen gerade schreibst.",

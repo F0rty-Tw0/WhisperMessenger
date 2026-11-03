@@ -340,6 +340,7 @@ local Russian = {
   ["Uses WM"] = "Использует WM",
   ["Invite to WM"] = "Пригласить в WM",
   ["Invite sent"] = "Приглашение отправлено",
+  ["Sent by %s"] = "Отправлено через %s",
   ["Click to whisper this player an invite to Whisper Messenger."] = "Нажмите, чтобы шепнуть этому игроку приглашение в Whisper Messenger.",
   ["Share typing status"] = "Показывать, что вы печатаете",
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "Контакты, у которых тоже есть Whisper Messenger, видят, когда вы им пишете.",

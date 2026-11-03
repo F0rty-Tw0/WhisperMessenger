@@ -340,6 +340,7 @@ local SimplifiedChinese = {
   ["Uses WM"] = "使用 WM",
   ["Invite to WM"] = "邀请使用 WM",
   ["Invite sent"] = "邀请已发送",
+  ["Sent by %s"] = "由 %s 发送",
   ["Click to whisper this player an invite to Whisper Messenger."] = "点击向该玩家发送密语，邀请其使用 Whisper Messenger。",
   ["Share typing status"] = "共享输入状态",
   ["Lets contacts who also use Whisper Messenger see when you are typing a whisper to them."] = "让同样使用 Whisper Messenger 的联系人看到你正在给他们输入密语。",

@@ -39,6 +39,20 @@ local function hideCached(frame, cacheKey)
   end
 end
 
+-- "(Sent by <AddonName>)" right of the time when a crafting addon announced
+-- this whisper as its automated greeting.
+local function applyGreetingBadge(frame, message, anchor)
+  if type(message.addonGreeting) ~= "string" or message.addonGreeting == "" then
+    hideCached(frame, "_wmSenderGreetingFS")
+    return
+  end
+  local badgeFS = ensureFontString(frame, "_wmSenderGreetingFS")
+  setFontObject(badgeFS, Theme.FONTS.message_time)
+  setTextColor(badgeFS, Theme.TAG_GOLD)
+  badgeFS:SetText("(" .. string.format(Localization.Text("Sent by %s"), message.addonGreeting) .. ")")
+  badgeFS:SetPoint("LEFT", anchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
+end
+
 -- The label's time: a collapsed repeat shows when it was last seen.
 function SenderLabel.ShownTimestamp(message)
   if (tonumber(message.repeatCount) or 1) > 1 and message.lastSeenAt ~= nil then
@@ -100,9 +114,10 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
       hideCached(frame, "_wmSenderCharnameFS")
       nameFS:SetPoint("RIGHT", frame, "RIGHT", -Theme.LAYOUT.MESSAGE_EDGE_INSET, 0)
     end
-    -- Outgoing labels never show the channel tag; hide it if this pooled
-    -- frame previously rendered an incoming message with a channel.
+    -- Outgoing labels never show the channel tag or a greeting badge; hide
+    -- them if this pooled frame previously rendered an incoming message.
     hideCached(frame, "_wmSenderTagFS")
+    hideCached(frame, "_wmSenderGreetingFS")
     timeFS:SetPoint("RIGHT", nameFS, "LEFT", -Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
     -- "(Not sent)" / "(Queued)", or else the "Seen" receipt from a peer
     -- running the addon, left of the timestamp.
@@ -149,6 +164,7 @@ function SenderLabel.CreateSenderLabel(factory, contentFrame, message, paneWidth
     end
 
     timeFS:SetPoint("LEFT", channelAnchor, "RIGHT", Theme.LAYOUT.MESSAGE_TIMESTAMP_GAP, 0)
+    applyGreetingBadge(frame, message, timeFS)
     frame:SetPoint("TOPLEFT", contentFrame, "TOPLEFT", 0, -yOffset)
   end
 
