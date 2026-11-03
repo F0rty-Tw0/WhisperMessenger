@@ -12,6 +12,9 @@ local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue
 -- from Battle.net, which gives the display name.
 local ProfileCharacter = {}
 
+-- Blizzard's BNET_CLIENT_WOW: the clientProgram of a friend playing WoW.
+local WOW_CLIENT_PROGRAM = "WoW"
+
 local function isText(value)
   return not SecretValue.Is(value) and type(value) == "string" and value ~= ""
 end
@@ -52,7 +55,7 @@ local function liveFriendCharacter(item, game)
     return nil
   end
   local inThisGame = info.isOnline == true
-    and info.clientProgram == (_G.BNET_CLIENT_WOW or "WoW")
+    and info.clientProgram == WOW_CLIENT_PROGRAM
     and info.wowProjectID == game.projectId
     and info.regionID == game.regionId
   if not inThisGame then
