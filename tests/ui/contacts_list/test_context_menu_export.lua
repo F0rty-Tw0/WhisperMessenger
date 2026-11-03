@@ -166,6 +166,7 @@ return function()
   do
     ContextMenu.Open(conversationItem("GUILD"), anchor, noop, noop, nil)
     local root = newRoot()
+    assert(groupGenerator ~= nil, "group menu built")
     groupGenerator(anchor, root)
     assert(findButton(root, "Export conversation") ~= nil, "group menu offers Export conversation")
   end
