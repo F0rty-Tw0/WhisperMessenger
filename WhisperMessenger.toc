@@ -162,6 +162,7 @@ UI/Theme/Presets/Data/EllesmereUI.lua
 UI/Theme/Presets.lua
 UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
+UI/Theme/FontFamilies.lua
 UI/Theme/Fonts.lua
 UI/Theme/Layout.lua
 UI/Theme/Textures.lua
@@ -261,6 +262,7 @@ UI/ContactsList/RowView.lua
 UI/ContactsList/ContactsList.lua
 UI/ConversationPane/UnreadDividerPosition.lua
 UI/ConversationPane/TranscriptRows.lua
+UI/ConversationPane/TranscriptRowGeometry.lua
 UI/ConversationPane/TranscriptVirtualization.lua
 UI/ConversationPane/TranscriptView.lua
 UI/ConversationPane/HeaderElements.lua
@@ -277,6 +279,7 @@ UI/ConversationPane/RequestBanner.lua
 UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/InfoStrip.lua
+UI/ConversationPane/ThemeRefresh.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
@@ -351,6 +354,7 @@ UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
+UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
