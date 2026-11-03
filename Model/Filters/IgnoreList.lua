@@ -5,6 +5,7 @@ end
 
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 -- Account-wide silent ignore: a listed player's lines are dropped at ingest.
 -- Expiry is lazy (checked on lookup, plus a sweep at login); no timers.
@@ -65,13 +66,13 @@ end
 
 -- "Name-Realm" of the character behind guid when the client knows it, so a
 -- saved realm-less name can't be taken for a player on the current realm.
--- Falls back to name.
+-- Falls back to name, also when a chat lock hands back secret values.
 function IgnoreList.CharacterName(name, guid)
   if type(guid) ~= "string" or type(_G.GetPlayerInfoByGUID) ~= "function" then
     return name
   end
   local ok, _, _, _, _, _, guidName, realm = pcall(_G.GetPlayerInfoByGUID, guid)
-  if not ok or type(guidName) ~= "string" or guidName == "" then
+  if not ok or SecretValue.Is(guidName) or SecretValue.Is(realm) or type(guidName) ~= "string" or guidName == "" then
     return name
   end
   if type(realm) == "string" and realm ~= "" then
