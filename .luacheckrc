@@ -187,6 +187,7 @@ read_globals = {
   "UNKNOWNOBJECT",
   "DEFAULT_CHAT_FRAME",
   "PlaySound",
+  "PlaySoundFile",
   "print",
   "UpdateAddOnMemoryUsage",
   "GetAddOnMemoryUsage",
