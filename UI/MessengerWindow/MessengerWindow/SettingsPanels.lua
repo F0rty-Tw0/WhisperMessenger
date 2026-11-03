@@ -137,6 +137,7 @@ function SettingsPanels.Create(factory, options)
       create = options.whispersCreate,
       config = {
         hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
+        closeGameWhisperTab = settingsConfig.closeGameWhisperTab,
         autoOpenIncoming = settingsConfig.autoOpenIncoming,
         autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
         requestsInbox = settingsConfig.requestsInbox,
