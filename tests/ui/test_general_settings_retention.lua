@@ -4,8 +4,10 @@ local GeneralSettings = require("WhisperMessenger.UI.MessengerWindow.GeneralSett
 local RetentionRow = require("WhisperMessenger.UI.MessengerWindow.GeneralSettings.RetentionRow")
 local Retention = require("WhisperMessenger.Model.Retention")
 local Localization = require("WhisperMessenger.Locale.Localization")
+local ReloadPopups = require("tests.helpers.reload_popups")
 
 local LABEL = "Message Retention"
+local CONFIRM = "WHISPER_MESSENGER_CONFIRM_SHORTER_RETENTION"
 local HOUR = 3600
 local DAY = 86400
 
@@ -162,6 +164,54 @@ return function()
     assert(closedLabel(settings) == "1 day", "reset shows 1 day, got " .. tostring(closedLabel(settings)))
     assert(not contains(openLabels(settings), "48 hours"), "reset drops the custom entry")
   end
+
+  -- test_shorter_choice_asks_before_saving
+  ReloadPopups.With(function(popups)
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 90 * DAY }, changes)
+    pick(settings, "1 day")
+    assert(popups.shown[1] == CONFIRM, "a shorter choice should show the confirm popup, got " .. tostring(popups.shown[1]))
+    local dialog = _G.StaticPopupDialogs[CONFIRM]
+    assert(
+      dialog.text == "Keep chat history for 1 day only? Older messages are deleted now.",
+      "prompt names the choice, got " .. tostring(dialog.text)
+    )
+    assert(dialog.hideOnEscape and dialog.timeout == 0 and dialog.whileDead, "prompt closes on Esc, never times out, shows while dead")
+    assert(#retentionChanges(changes) == 0, "nothing is saved before the player accepts")
+  end)
+
+  -- test_accepting_the_shorter_choice_saves_it
+  ReloadPopups.With(function()
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 90 * DAY }, changes)
+    pick(settings, "1 day")
+    _G.StaticPopupDialogs[CONFIRM].OnAccept()
+    local written = retentionChanges(changes)
+    assert(#written == 1 and written[1] == DAY, "accept saves 1 day, got " .. tostring(written[1]))
+    assert(closedLabel(settings) == "1 day", "closed dropdown shows the accepted choice, got " .. tostring(closedLabel(settings)))
+  end)
+
+  -- test_cancelling_the_shorter_choice_keeps_the_old_value
+  ReloadPopups.With(function()
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 48 * HOUR }, changes)
+    pick(settings, "1 day")
+    local dialog = _G.StaticPopupDialogs[CONFIRM]
+    if dialog and dialog.OnCancel then
+      dialog.OnCancel(nil, nil, "clicked")
+    end
+    assert(#retentionChanges(changes) == 0, "cancel saves nothing")
+    assert(closedLabel(settings) == "48 hours", "closed dropdown keeps the old value, got " .. tostring(closedLabel(settings)))
+  end)
+
+  -- test_longer_choice_saves_without_asking
+  ReloadPopups.With(function(popups)
+    local changes = {}
+    local settings = create(factory, parent, { messageMaxAge = 7 * DAY }, changes)
+    pick(settings, "30 days")
+    assert(#popups.shown == 0, "a longer choice should not ask, got " .. tostring(popups.shown[1]))
+    assert(retentionChanges(changes)[1] == 30 * DAY, "a longer choice saves at once")
+  end)
 
   -- test_set_language_translates_label_and_choices
   do

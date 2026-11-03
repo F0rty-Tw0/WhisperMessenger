@@ -435,6 +435,7 @@ local French = {
   ["1 day"] = "1 jour",
   ["7 days"] = "7 jours",
   ["Forever"] = "Toujours",
+  ["Keep chat history for %s only? Older messages are deleted now."] = "Conserver l'historique des discussions pendant %s seulement ? Les messages plus anciens sont supprimés maintenant.",
   ["Blocked %s this session"] = "Bloqués cette session : %s",
   ["Last: %s"] = "Dernier : %s",
   ["Keyword rules"] = "Règles de mots-clés",

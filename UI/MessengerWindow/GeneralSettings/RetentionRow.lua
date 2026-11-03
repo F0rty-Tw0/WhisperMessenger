@@ -19,6 +19,9 @@ local DAY = 86400
 local BUTTON_HEIGHT = 26
 
 RetentionRow.DEFAULT_SECONDS = DAY
+RetentionRow.CONFIRM_DIALOG = "WHISPER_MESSENGER_CONFIRM_SHORTER_RETENTION"
+
+local CONFIRM_PROMPT = "Keep chat history for %s only? Older messages are deleted now."
 
 local PRESETS = {
   { seconds = HOUR, labelKey = "1 hour" },
@@ -71,14 +74,63 @@ function RetentionRow.BuildOptions(language, current)
   return options
 end
 
+local function labelFor(seconds, language, current)
+  for _, option in ipairs(RetentionRow.BuildOptions(language, current)) do
+    if option.key == seconds then
+      return option.label
+    end
+  end
+  return customOption(seconds, language).label
+end
+
+-- Without the popup API nothing is confirmed, so nothing is deleted.
+local function confirmShorter(label, language, onAccept)
+  if type(_G.StaticPopup_Show) ~= "function" then
+    return
+  end
+  _G.StaticPopupDialogs = _G.StaticPopupDialogs or {}
+  _G.StaticPopupDialogs[RetentionRow.CONFIRM_DIALOG] = {
+    text = string.format(Localization.Text(CONFIRM_PROMPT, language), label),
+    -- The game's own localized labels.
+    button1 = rawget(_G, "ACCEPT") or Localization.Text("Accept", language),
+    button2 = rawget(_G, "CANCEL") or Localization.Text("Cancel", language),
+    OnAccept = onAccept,
+    timeout = 0,
+    whileDead = true,
+    hideOnEscape = true,
+    preferredIndex = 3,
+  }
+  _G.StaticPopup_Show(RetentionRow.CONFIRM_DIALOG)
+end
+
 -- options: { language, initial (seconds), onChange(seconds), rowWidth, labelSpacing, colors }
 -- Returns the DropdownSelector handle plus setLanguage(language) and
 -- resetToDefault(onChange) for the panel's Reset to Defaults button.
 function RetentionRow.Create(factory, parent, options)
   local language = options.language
   local current = type(options.initial) == "number" and options.initial or RetentionRow.DEFAULT_SECONDS
+  local control
 
-  local control = DropdownSelector.Create(factory, parent, {
+  local function save(seconds)
+    current = seconds
+    control.setSelected(seconds)
+    options.onChange(seconds)
+  end
+
+  -- A shorter age deletes older history at once, so it asks first. The
+  -- dropdown goes back to the saved value and only moves on Accept.
+  local function choose(seconds)
+    if seconds >= current then
+      save(seconds)
+      return
+    end
+    control.setSelected(current)
+    confirmShorter(labelFor(seconds, language, current), language, function()
+      save(seconds)
+    end)
+  end
+
+  control = DropdownSelector.Create(factory, parent, {
     labelText = Localization.Text("Message Retention", language),
     optionsList = RetentionRow.BuildOptions(language, current),
     -- Rebuilt on every open, so a stale custom entry leaves once the player
@@ -89,10 +141,7 @@ function RetentionRow.Create(factory, parent, options)
     fallbackKey = RetentionRow.DEFAULT_SECONDS,
     initial = current,
     colors = options.colors,
-    onChange = function(seconds)
-      current = seconds
-      options.onChange(seconds)
-    end,
+    onChange = choose,
     rowWidth = options.rowWidth or Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
     labelSpacing = options.labelSpacing or Theme.LAYOUT.SETTINGS_LABEL_SPACING,
     buttonHeight = BUTTON_HEIGHT,
