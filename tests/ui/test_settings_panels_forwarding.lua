@@ -30,6 +30,7 @@ return function()
     clearOnLogout = true,
     hideMessagePreview = true,
     hideBattleTagNumbers = false,
+    showPlayerLevels = true,
     timeFormat = "24h",
     timeSource = "server",
     interfaceLanguage = "ruRU",
@@ -44,7 +45,6 @@ return function()
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
     hudStyle = "classic",
-    showPlayerLevels = true,
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
@@ -112,6 +112,7 @@ return function()
     "expected general config.timeSource=server, got: " .. tostring(generalCapture.config.timeSource)
   )
   assert(generalCapture.config.hideBattleTagNumbers == false, "general config should carry hideBattleTagNumbers")
+  assert(generalCapture.config.showPlayerLevels == true, "general config should carry showPlayerLevels")
   assert(
     generalCapture.config.interfaceLanguage == "ruRU",
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)
@@ -156,7 +157,7 @@ return function()
     appearanceCapture.config.windowScale == 1.25,
     "expected appearance config.windowScale=1.25, got: " .. tostring(appearanceCapture.config.windowScale)
   )
-  assert(appearanceCapture.config.showPlayerLevels == true, "appearance config should carry showPlayerLevels")
+  assert(appearanceCapture.config.showPlayerLevels == nil, "player levels key moved off the Appearance page")
 
   -- Notifications owns sound settings only.
   assert(
