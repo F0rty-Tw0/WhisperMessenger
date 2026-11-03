@@ -356,6 +356,8 @@ UI/MessengerWindow/FiltersSettings/RulesSection.lua
 UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
+UI/MessengerWindow/IconSettings/Options.lua
+UI/MessengerWindow/IconSettings/UnreadRows.lua
 UI/MessengerWindow/IconSettings.lua
 UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
