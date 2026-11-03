@@ -67,8 +67,9 @@ local function makeRuntimeOptions()
         end
         return nil
       end
-      function coord.setWindowVisible(nextVisible)
+      function coord.setWindowVisible(nextVisible, showOptions)
         trackers.coordinatorVisible = nextVisible
+        trackers.coordinatorShowOptions = showOptions
       end
       function coord.isWindowVisible()
         return trackers.coordinatorVisible
@@ -394,6 +395,9 @@ return function()
   controller.setWindowVisible(true)
   assert(options.accountState.widgetPreviewAcknowledgedAt == 9999, "setWindowVisible(true) should acknowledge the latest widget preview")
   assert(runtime.hiddenByCombat == nil, "opening the window drops the combat-hide mark so a later close is respected")
+  local noFocus = { focusComposer = false }
+  runtime.setWindowVisible(true, noFocus)
+  assert(trackers.coordinatorShowOptions == noFocus, "setWindowVisible should pass its show options to the coordinator")
 
   -- Whisper arrives while the window is open (already on screen in the pane),
   -- then the user closes the window: closing must acknowledge it too, or the
