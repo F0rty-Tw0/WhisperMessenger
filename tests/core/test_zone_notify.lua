@@ -206,6 +206,14 @@ return function()
   LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
   assert(#scheduled == 2, "the next burst schedules its own check")
 
+  -- test_roster_burst_without_an_armed_contact_schedules_nothing
+  scheduled[2].fn()
+  invalidations = 0
+  runtime.store.conversations = { ["wow::jaina"] = { channel = "WOW", guid = "Player-JAINA" } }
+  LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
+  assert(invalidations == 1, "presence still goes stale")
+  assert(#scheduled == 2, "nothing armed: no zone check scheduled, got " .. #scheduled)
+
   rawset(_G, "DEFAULT_CHAT_FRAME", nil)
   rawset(_G, "PlaySound", nil)
   _G.C_Timer = savedTimer

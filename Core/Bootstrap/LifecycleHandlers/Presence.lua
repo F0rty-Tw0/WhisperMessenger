@@ -245,8 +245,9 @@ end
 
 -- One "Notify when they change zone" check per burst, same debounce as the
 -- Battle.net friend refresh; synchronous when timers are unavailable.
+-- Nothing armed: no timer, no check.
 local function scheduleZoneCheck(Bootstrap, PresenceCache)
-  if Bootstrap._zoneCheckPending then
+  if Bootstrap._zoneCheckPending or not ZoneNotify.HasArmedGuildContact(Bootstrap.runtime) then
     return
   end
   Bootstrap._zoneCheckPending = true

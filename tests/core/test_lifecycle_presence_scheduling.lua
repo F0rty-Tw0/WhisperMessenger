@@ -15,7 +15,14 @@ return function()
         Rebuild = function()
           calls.rebuild = calls.rebuild + 1
         end,
+        RefreshPresence = function() end,
+        GetZone = function() end,
       }
+  end
+
+  -- The zone-watch check only runs while a guild contact is armed.
+  local function armedRuntime()
+    return { store = { conversations = { ["wow::a"] = { channel = "WOW", guid = "Player-A", notifyZone = true } } } }
   end
 
   local function captureTimers()
@@ -36,7 +43,7 @@ return function()
     for _, event in ipairs(events) do
       local scheduled = captureTimers()
       local calls, presenceCache = makeSpyCache()
-      local Bootstrap = { runtime = {} }
+      local Bootstrap = { runtime = armedRuntime() }
       local deps = {
         getContentDetector = function()
           return ContentDetector
@@ -61,7 +68,7 @@ return function()
   do
     local scheduled = captureTimers()
     local calls, presenceCache = makeSpyCache()
-    local Bootstrap = { runtime = {} }
+    local Bootstrap = { runtime = armedRuntime() }
     local deps = {
       getContentDetector = function()
         return ContentDetector

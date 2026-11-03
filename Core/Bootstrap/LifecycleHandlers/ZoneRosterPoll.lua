@@ -15,15 +15,6 @@ local ZoneRosterPoll = {}
 
 ZoneRosterPoll.INTERVAL_SECONDS = 60
 
-local function hasArmedGuildContact(runtime)
-  for _, conversation in pairs(runtime.store.conversations or {}) do
-    if ZoneNotify.IsArmedGuildContact(conversation) then
-      return true
-    end
-  end
-  return false
-end
-
 local function inMythicContent(runtime)
   return type(runtime.isMythicLockdown) == "function" and runtime.isMythicLockdown() == true
 end
@@ -34,7 +25,7 @@ function ZoneRosterPoll.Start(runtime)
   if runtime == nil or runtime.store == nil or runtime.zoneRosterPollPending then
     return
   end
-  if not hasArmedGuildContact(runtime) then
+  if not ZoneNotify.HasArmedGuildContact(runtime) then
     return
   end
   -- Same rule as the login presence rebuild: no guild reads in mythic content.

@@ -29,6 +29,16 @@ function ZoneNotify.IsArmedGuildContact(conversation)
   return type(conversation) == "table" and conversation.notifyZone == true and conversation.channel ~= "BN" and conversation.guid ~= nil
 end
 
+function ZoneNotify.HasArmedGuildContact(runtime)
+  local conversations = runtime and runtime.store and runtime.store.conversations
+  for _, conversation in pairs(conversations or {}) do
+    if ZoneNotify.IsArmedGuildContact(conversation) then
+      return true
+    end
+  end
+  return false
+end
+
 -- The stored zone of an offline member is stale, so it is not a zone.
 local function observePresence(runtime, conversation, PresenceCache, presence)
   local zone = presence == "online" and PresenceCache.GetZone(conversation.guid) or nil
