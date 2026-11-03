@@ -201,8 +201,8 @@ return function()
     assert(tooltipTitle == "Hide on entering combat", "hideOnCombat tooltip should use its label")
     assert(
       tooltipLines[1]
-        == "Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat.",
-      "hideOnCombat tooltip should explain its one-shot behavior"
+        == "Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed.",
+      "hideOnCombat tooltip should explain that combat end reopens the window"
     )
 
     local onClick = dot:GetScript("OnClick")

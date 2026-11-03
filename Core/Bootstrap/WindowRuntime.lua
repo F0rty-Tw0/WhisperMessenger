@@ -228,7 +228,8 @@ function WindowRuntime.Create(options)
     return WindowCallbacks.ApplyIconPosition(icon, characterState.icon, uiParent)
   end
 
-  local function setWindowVisible(nextVisible)
+  -- showOptions: see WindowCoordinator.setWindowVisible.
+  local function setWindowVisible(nextVisible, showOptions)
     -- Acknowledge on both open and close: a whisper that arrived while the
     -- window was open was already on screen, so closing must not let the
     -- next background refresh pop it on the widget as if it were new.
@@ -237,8 +238,12 @@ function WindowRuntime.Create(options)
     -- whispers arrived meanwhile.
     if not nextVisible then
       runtime.unreadDivider = nil
+    else
+      -- Any open during combat hands visibility back to the player: combat
+      -- end must not undo a close they make afterwards.
+      runtime.hiddenByCombat = nil
     end
-    return coordinator.setWindowVisible(nextVisible)
+    return coordinator.setWindowVisible(nextVisible, showOptions)
   end
 
   local function refreshWindow(affectedConversationKey)

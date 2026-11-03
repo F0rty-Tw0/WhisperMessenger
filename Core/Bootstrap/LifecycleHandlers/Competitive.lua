@@ -85,14 +85,33 @@ function Competitive.handleCombatStart(Bootstrap)
     and runtime.isWindowVisible()
   then
     runtime.setWindowVisible(false)
+    -- Set after hiding: any open (WindowRuntime.setWindowVisible) clears it.
+    runtime.hiddenByCombat = true
   end
   return true
+end
+
+-- Reopens only what combat hid; a Mythic+ suspend owns visibility until resume.
+local function reopenWindowHiddenByCombat(Bootstrap)
+  local runtime = Bootstrap.runtime
+  if not (runtime and runtime.hiddenByCombat) then
+    return
+  end
+  runtime.hiddenByCombat = nil
+  if Bootstrap._inMythicContent or not (runtime.isWindowVisible and runtime.setWindowVisible) then
+    return
+  end
+  -- No composer focus: the player's movement keys would land in it.
+  if not runtime.isWindowVisible() then
+    runtime.setWindowVisible(true, { focusComposer = false })
+  end
 end
 
 function Competitive.handleCombatEnd(Bootstrap, deps)
   if canClearStaleWhisperReplyState(Bootstrap.runtime, deps) and ChatReplyState and ChatReplyState.ClearStaleWhisperReplyState then
     ChatReplyState.ClearStaleWhisperReplyState(deps.getNumChatWindows, deps.getEditBox)
   end
+  reopenWindowHiddenByCombat(Bootstrap)
   return true
 end
 

@@ -142,7 +142,9 @@ function WindowCoordinator.Create(options)
     statusTicker = nil
   end
 
-  function coordinator.setWindowVisible(nextVisible)
+  -- showOptions.focusComposer = false: open without the composer taking
+  -- keyboard focus (an open the player did not ask for).
+  function coordinator.setWindowVisible(nextVisible, showOptions)
     local window = getWindow()
     if window == nil or window.frame == nil then
       return
@@ -152,7 +154,11 @@ function WindowCoordinator.Create(options)
       -- No full presence rebuild here: refreshWindow below runs
       -- refreshContacts, which freshens presence for the visible contacts
       -- only.
-      window.frame:Show()
+      if showOptions and showOptions.focusComposer == false and window.showWithoutComposerFocus then
+        window.showWithoutComposerFocus()
+      else
+        window.frame:Show()
+      end
       applyRetention()
       -- Re-render after Show so scroll frame dimensions are settled,
       -- allowing snapToEnd to scroll to the latest message.

@@ -1,6 +1,7 @@
 local Competitive = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.Competitive")
 local LifecycleHandlers = require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers")
 local FlavorCompat = require("WhisperMessenger.Core.FlavorCompat")
+local PublicApi = require("WhisperMessenger.Core.PublicApi")
 
 local function makeHarness()
   local calls = { suspend = 0, resume = 0 }
@@ -29,12 +30,17 @@ return function()
         isWindowVisible = function()
           return state.visible
         end,
-        setWindowVisible = function(nextVisible)
-          calls.setWindowVisible = calls.setWindowVisible + 1
-          state.visible = nextVisible
-        end,
       },
     }
+    -- Mirrors WindowRuntime: any open clears the combat-hide mark.
+    Bootstrap.runtime.setWindowVisible = function(nextVisible, showOptions)
+      calls.setWindowVisible = calls.setWindowVisible + 1
+      calls.lastShowOptions = showOptions
+      state.visible = nextVisible
+      if nextVisible then
+        Bootstrap.runtime.hiddenByCombat = nil
+      end
+    end
     local deps = {
       getNumChatWindows = function()
         return 0
@@ -84,6 +90,98 @@ return function()
     assert(handled == true, "combat end should remain handled")
     assert(calls.setWindowVisible == 2, "combat end should not change window visibility")
     assert(state.visible == true, "combat end should not automatically reopen or hide window")
+  end
+
+  -- test_combat_end_reopens_window_hidden_by_combat
+  do
+    local Bootstrap, deps, state, calls = makeCombatHarness(true, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == true, "combat end should reopen a window combat hid")
+    assert(calls.setWindowVisible == 2, "combat end should reopen once; got: " .. tostring(calls.setWindowVisible))
+    assert(Bootstrap.runtime.hiddenByCombat == nil, "combat end should clear the combat-hide mark")
+  end
+
+  -- test_combat_end_reopen_does_not_take_composer_focus
+  do
+    local Bootstrap, deps, _state, calls = makeCombatHarness(true, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    local showOptions = calls.lastShowOptions
+    assert(showOptions ~= nil and showOptions.focusComposer == false, "combat-end reopen must not focus the composer")
+  end
+
+  -- test_combat_end_keeps_window_closed_before_combat
+  do
+    local Bootstrap, deps, state, calls = makeCombatHarness(true, false)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == false, "a window closed before combat should stay closed")
+    assert(calls.setWindowVisible == 0, "combat should not touch a window closed before it")
+  end
+
+  -- test_combat_end_respects_close_during_combat
+  do
+    local Bootstrap, deps, state = makeCombatHarness(true, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    Bootstrap.runtime.setWindowVisible(true)
+    Bootstrap.runtime.setWindowVisible(false)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == false, "a window the player closed during combat should stay closed")
+  end
+
+  -- test_failed_api_open_during_combat_keeps_the_reopen
+  do
+    local Bootstrap, deps, state = makeCombatHarness(true, true)
+    local runtime = Bootstrap.runtime
+    runtime.ensureWindow = function() end
+    runtime.isCompetitiveContent = function()
+      return false
+    end
+    runtime.isMythicLockdown = function()
+      return false
+    end
+    runtime.startConversation = function()
+      return false
+    end
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    -- Lockdown starts after PLAYER_REGEN_DISABLED, so an addon reacting to it
+    -- passes the combat guard.
+    local savedInCombat = _G.InCombatLockdown
+    rawset(_G, "InCombatLockdown", function()
+      return false
+    end)
+    local opened = PublicApi.Build(runtime).OpenConversation("Jaina")
+    rawset(_G, "InCombatLockdown", savedInCombat)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(opened == false, "the failed open should report false")
+    assert(state.visible == true, "a failed API open must not cancel the combat-end reopen")
+  end
+
+  -- test_combat_end_without_setting_changes_nothing
+  do
+    local Bootstrap, deps, state, calls = makeCombatHarness(false, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == true, "setting off should leave the window open")
+    assert(calls.setWindowVisible == 0, "setting off should never touch the window")
+  end
+
+  -- test_combat_end_does_not_reopen_during_mythic_suspend
+  do
+    local Bootstrap, deps, state = makeCombatHarness(true, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    Bootstrap._inMythicContent = true
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    assert(state.visible == false, "combat end must not reopen the window while Mythic+ keeps it suspended")
+    assert(Bootstrap.runtime.hiddenByCombat == nil, "combat end should clear the mark even when it does not reopen")
   end
   FlavorCompat.hasMythicPlus = true
 

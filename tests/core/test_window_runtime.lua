@@ -67,8 +67,9 @@ local function makeRuntimeOptions()
         end
         return nil
       end
-      function coord.setWindowVisible(nextVisible)
+      function coord.setWindowVisible(nextVisible, showOptions)
         trackers.coordinatorVisible = nextVisible
+        trackers.coordinatorShowOptions = showOptions
       end
       function coord.isWindowVisible()
         return trackers.coordinatorVisible
@@ -390,8 +391,13 @@ return function()
     lastIncomingAt = 9999,
   }
   options.accountState.widgetPreviewAcknowledgedAt = nil
+  runtime.hiddenByCombat = true
   controller.setWindowVisible(true)
   assert(options.accountState.widgetPreviewAcknowledgedAt == 9999, "setWindowVisible(true) should acknowledge the latest widget preview")
+  assert(runtime.hiddenByCombat == nil, "opening the window drops the combat-hide mark so a later close is respected")
+  local noFocus = { focusComposer = false }
+  runtime.setWindowVisible(true, noFocus)
+  assert(trackers.coordinatorShowOptions == noFocus, "setWindowVisible should pass its show options to the coordinator")
 
   -- Whisper arrives while the window is open (already on screen in the pane),
   -- then the user closes the window: closing must acknowledge it too, or the
@@ -413,8 +419,10 @@ return function()
   runtime.window.getTabMode = function()
     return "whispers"
   end
+  runtime.hiddenByCombat = true
   controller.toggle()
   assert(trackers.coordinatorVisible == true, "toggle should open the window via coordinator")
+  assert(runtime.hiddenByCombat == nil, "toggle opening the window drops the combat-hide mark")
   assert(runtime.activeConversationKey == conversationKey, "toggle should select the latest unread on Whispers tab")
   assert(runtime.store.conversations[conversationKey].unreadCount == 0, "selecting a conversation should mark it read")
 
