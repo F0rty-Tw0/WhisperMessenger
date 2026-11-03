@@ -382,6 +382,7 @@ local French = {
   ["Level %d"] = "Niveau %d",
   ["Last online %s"] = "Dernière connexion : %s",
   ["Notify when online"] = "Prévenir à la connexion",
+  ["Notify when they change zone"] = "Prévenir au changement de zone",
   ["%s is now online."] = "%s est maintenant en ligne.",
   ["%s changed zone from %s to %s."] = "%s a changé de zone : de %s à %s.",
   -- Queued sends, delivery status, replies

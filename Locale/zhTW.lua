@@ -382,6 +382,7 @@ local TraditionalChinese = {
   ["Level %d"] = "%d級",
   ["Last online %s"] = "上次上線：%s",
   ["Notify when online"] = "上線時通知",
+  ["Notify when they change zone"] = "切換區域時通知",
   ["%s is now online."] = "%s 已上線。",
   ["%s changed zone from %s to %s."] = "%s 已從%s前往%s。",
   -- Queued sends, delivery status, replies
