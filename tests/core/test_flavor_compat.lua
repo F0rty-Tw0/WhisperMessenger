@@ -31,36 +31,40 @@ local function testRegionAndSeasonLookups()
   local savedGetCurrentRegion = rawget(_G, "GetCurrentRegion")
   local savedSeasons = rawget(_G, "C_Seasons")
 
-  rawset(_G, "GetCurrentRegion", function()
-    return 3
-  end)
-  assert(FlavorCompat.CurrentRegion() == 3, "CurrentRegion returns the region id")
-  rawset(_G, "GetCurrentRegion", nil)
-  assert(FlavorCompat.CurrentRegion() == nil, "CurrentRegion is nil without the API")
-  rawset(_G, "GetCurrentRegion", function()
-    error("region unavailable")
-  end)
-  assert(FlavorCompat.CurrentRegion() == nil, "CurrentRegion swallows an API error")
+  -- Restore the stubs even when an assert fails, so later tests see the real globals.
+  local ok, err = pcall(function()
+    rawset(_G, "GetCurrentRegion", function()
+      return 3
+    end)
+    assert(FlavorCompat.CurrentRegion() == 3, "CurrentRegion returns the region id")
+    rawset(_G, "GetCurrentRegion", nil)
+    assert(FlavorCompat.CurrentRegion() == nil, "CurrentRegion is nil without the API")
+    rawset(_G, "GetCurrentRegion", function()
+      error("region unavailable")
+    end)
+    assert(FlavorCompat.CurrentRegion() == nil, "CurrentRegion swallows an API error")
 
-  rawset(_G, "C_Seasons", {
-    GetActiveSeason = function()
-      return 2
-    end,
-  })
-  assert(FlavorCompat.ActiveSeason() == 2, "ActiveSeason returns the season id")
-  rawset(_G, "C_Seasons", nil)
-  assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason is nil without C_Seasons")
-  rawset(_G, "C_Seasons", {})
-  assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason is nil without GetActiveSeason")
-  rawset(_G, "C_Seasons", {
-    GetActiveSeason = function()
-      error("season unavailable")
-    end,
-  })
-  assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason swallows an API error")
+    rawset(_G, "C_Seasons", {
+      GetActiveSeason = function()
+        return 2
+      end,
+    })
+    assert(FlavorCompat.ActiveSeason() == 2, "ActiveSeason returns the season id")
+    rawset(_G, "C_Seasons", nil)
+    assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason is nil without C_Seasons")
+    rawset(_G, "C_Seasons", {})
+    assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason is nil without GetActiveSeason")
+    rawset(_G, "C_Seasons", {
+      GetActiveSeason = function()
+        error("season unavailable")
+      end,
+    })
+    assert(FlavorCompat.ActiveSeason() == nil, "ActiveSeason swallows an API error")
+  end)
 
   rawset(_G, "GetCurrentRegion", savedGetCurrentRegion)
   rawset(_G, "C_Seasons", savedSeasons)
+  assert(ok, err)
 end
 
 return function()
