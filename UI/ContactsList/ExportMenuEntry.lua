@@ -7,22 +7,23 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local ConversationExport = ns.ConversationExport or require("WhisperMessenger.Model.ConversationExport")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
-local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
 
--- "Export conversation": the whole conversation as plain text in the
--- manual-copy popup, selected for Ctrl+C (addons can't write the clipboard).
--- Any row whose item carries its conversation: whispers, Battle.net, groups
--- and channels.
+-- "Export conversation": the conversation as plain text in the export
+-- panel. Any row whose item carries its conversation: whispers, Battle.net,
+-- groups and channels.
 local ExportMenuEntry = {}
 
-local COPY_OPTIONS = { prompt = "Press Ctrl+C to copy the conversation.", multiLine = true }
-
 function ExportMenuEntry.Open(item)
-  local text = ConversationExport.Format(item.conversation.messages, {
-    contactName = DisplayName.Format(item.displayName),
-    playerName = LocalPlayer.Name(),
+  -- The panel loads after the contacts menu (it needs the settings
+  -- controls), so it is looked up on click.
+  local ExportPanel = ns.ContactsListExportPanel or require("WhisperMessenger.UI.ContactsList.ExportPanel")
+  local contactName = DisplayName.Format(item.displayName)
+  local names = { contactName = contactName, playerName = LocalPlayer.Name() }
+  return ExportPanel.Show({
+    title = contactName,
+    header = ConversationExport.Header(names),
+    lines = ConversationExport.Lines(item.conversation.messages, names),
   })
-  return PopupUI.ShowManualCopyDialog(text, COPY_OPTIONS)
 end
 
 function ExportMenuEntry.Add(rootDescription, item)

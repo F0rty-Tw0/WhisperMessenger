@@ -337,6 +337,7 @@ UI/Shared/SettingsControls/SliderSkin.lua
 UI/Shared/SettingsControls.lua
 UI/Shared/DialogChrome.lua
 UI/Shared/TwoFieldDialog.lua
+UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
 UI/MessengerWindow/AppearanceSettings.lua
