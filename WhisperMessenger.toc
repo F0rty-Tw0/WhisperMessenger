@@ -89,6 +89,10 @@ Model/MessageReactionProtocol/Fallback.lua
 Model/MessageReactionProtocol/Decode.lua
 Model/MessageReactionProtocol.lua
 Model/MessageParts.lua
+Model/MessageReactions/PendingQueue.lua
+Model/MessageReactions/SenderAlias.lua
+Model/MessageReactions/Targeting.lua
+Model/MessageReactions/PendingReaction.lua
 Model/MessageReactions.lua
 Model/LivePresence.lua
 Model/MessageReplies.lua
