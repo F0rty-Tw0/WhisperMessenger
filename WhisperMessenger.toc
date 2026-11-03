@@ -253,6 +253,7 @@ UI/ConversationPane/RequestBanner.lua
 UI/ConversationPane/ReplyBanner.lua
 UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/InfoStrip.lua
+UI/ConversationPane/ThemeRefresh.lua
 UI/ConversationPane/ConversationPane.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua

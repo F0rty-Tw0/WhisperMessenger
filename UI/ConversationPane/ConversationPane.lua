@@ -8,7 +8,6 @@ local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
 local TranscriptView = ns.ConversationPaneTranscriptView or require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local HeaderView = ns.ConversationPaneHeaderView or require("WhisperMessenger.UI.ConversationPane.HeaderView")
-local HeaderElements = ns.ConversationPaneHeaderElements or require("WhisperMessenger.UI.ConversationPane.HeaderElements")
 local TranscriptSetup = ns.ConversationPaneTranscriptSetup or require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
 local HeaderMenu = ns.ConversationPaneHeaderMenu or require("WhisperMessenger.UI.ConversationPane.HeaderMenu")
 local EdgeFade = ns.ConversationPaneEdgeFade or require("WhisperMessenger.UI.ConversationPane.EdgeFade")
@@ -17,6 +16,7 @@ local BottomBanner = ns.ConversationPaneBottomBanner or require("WhisperMessenge
 local RequestBanner = ns.ConversationPaneRequestBanner or require("WhisperMessenger.UI.ConversationPane.RequestBanner")
 local ReplyBanner = ns.ConversationPaneReplyBanner or require("WhisperMessenger.UI.ConversationPane.ReplyBanner")
 local InfoStrip = ns.ConversationPaneInfoStrip or require("WhisperMessenger.UI.ConversationPane.InfoStrip")
+local ThemeRefresh = ns.ConversationPaneThemeRefresh or require("WhisperMessenger.UI.ConversationPane.ThemeRefresh")
 
 local sizeValue = TranscriptView._sizeValue
 local pointValue = TranscriptView._pointValue
@@ -223,34 +223,7 @@ function ConversationPane.Create(factory, parent, selectedContact, conversation,
     -- Native WoW HUD sits on Blizzard art a flat-colour fade would not match.
     edgeFade = EdgeFade.Attach(factory, pane, transcript),
     refreshTheme = function()
-      if view.headerFrame and view.headerFrame.bg then
-        UIHelpers.applyColorTexture(view.headerFrame.bg, Theme.COLORS.bg_header)
-      end
-      if view.headerDivider then
-        HeaderElements.applyDividerTheme(view.headerDivider)
-      end
-      HeaderView.Refresh(view, view._selectedContact, view._conversation, view._status)
-      if view.headerStatus then
-        applyColor(view.headerStatus, Theme.COLORS.text_secondary)
-      end
-      if view.headerStatusDetail then
-        applyColor(view.headerStatusDetail, Theme.COLORS.text_secondary)
-      end
-      if view.headerEmpty and view.headerEmpty.applyTheme then
-        view.headerEmpty.applyTheme()
-      end
-      if view.activeStatusBanner then
-        applyColor(view.activeStatusBanner, Theme.COLORS.text_system)
-      end
-      view.requestBanner.refreshTheme()
-      view.replyBanner.refreshTheme()
-      view.infoStrip.refreshTheme()
-      if view.edgeFade then
-        view.edgeFade.refreshTheme()
-      end
-      if view.transcript and view.transcript.refreshSkin then
-        view.transcript.refreshSkin()
-      end
+      ThemeRefresh.Apply(view)
       -- A font-size change resizes the header, so re-lay-out (which also
       -- re-renders) instead of only re-rendering.
       ConversationPane.Relayout(view, view._layoutWidth, view._layoutHeight)
