@@ -122,13 +122,13 @@ return function()
   -- test_ingest_error_echoes_hidden_incoming_whisper
   run(function(ctx)
     ctx.route("CHAT_MSG_WHISPER", "hi", "Bob-Realm")
-    assert(ctx.printed[1] == PREFIX .. "Whisper Messenger hit an error. Whisper from Bob-Realm: hi", "unexpected echo: " .. tostring(ctx.printed[1]))
+    assert(ctx.printed[1] == PREFIX .. "Hit an error. Whisper from Bob-Realm: hi", "unexpected echo: " .. tostring(ctx.printed[1]))
   end)
 
   -- test_ingest_error_echoes_hidden_outgoing_whisper
   run(function(ctx)
     ctx.route("CHAT_MSG_BN_WHISPER_INFORM", "see you", "Alice")
-    assert(ctx.printed[1] == PREFIX .. "Whisper Messenger hit an error. Whisper to Alice: see you", "unexpected echo: " .. tostring(ctx.printed[1]))
+    assert(ctx.printed[1] == PREFIX .. "Hit an error. Whisper to Alice: see you", "unexpected echo: " .. tostring(ctx.printed[1]))
   end)
 
   -- test_no_echo_for_secret_text
@@ -162,7 +162,7 @@ return function()
     for _, event in ipairs({ "CHAT_MSG_WHISPER", "CHAT_MSG_WHISPER_INFORM", "CHAT_MSG_BN_WHISPER", "CHAT_MSG_BN_WHISPER_INFORM" }) do
       assert(ctx.active[event] == nil, "expected " .. event .. " filter removed after the third error")
     end
-    assert(ctx.printed[3] == PREFIX .. "Whisper Messenger hit an error. Whisper from Bob-Realm: three", "expected the third whisper echoed too")
+    assert(ctx.printed[3] == PREFIX .. "Hit an error. Whisper from Bob-Realm: three", "expected the third whisper echoed too")
     assert(countOf(ctx.printed, STOPPED) == 1, "expected the stop notice after the third error")
     ctx.route("CHAT_MSG_WHISPER", "four", "Bob-Realm")
     assert(countOf(ctx.printed, STOPPED) == 1, "expected the stop notice printed only once")

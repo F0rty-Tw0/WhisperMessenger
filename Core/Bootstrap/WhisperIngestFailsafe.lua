@@ -28,8 +28,8 @@ local DIRECTION_BY_EVENT = {
   CHAT_MSG_BN_WHISPER_INFORM = "out",
 }
 
-local INCOMING_KEY = "Whisper Messenger hit an error. Whisper from %s: %s"
-local OUTGOING_KEY = "Whisper Messenger hit an error. Whisper to %s: %s"
+local INCOMING_KEY = "Hit an error. Whisper from %s: %s"
+local OUTGOING_KEY = "Hit an error. Whisper to %s: %s"
 local STOPPED_KEY = "Hit repeated errors, so whispers are no longer hidden from chat until you /reload."
 
 -- Runs at the error point, so the error handler (BugSack, the Lua error

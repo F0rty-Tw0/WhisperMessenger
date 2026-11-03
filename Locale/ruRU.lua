@@ -383,8 +383,8 @@ local Russian = {
   ["Last online %s"] = "Последний вход: %s",
   ["Notify when online"] = "Сообщить о входе в сеть",
   ["%s is now online."] = "%s теперь в сети.",
-  ["Whisper Messenger hit an error. Whisper from %s: %s"] = "В Whisper Messenger произошла ошибка. Шепот от %s: %s",
-  ["Whisper Messenger hit an error. Whisper to %s: %s"] = "В Whisper Messenger произошла ошибка. Шепот для %s: %s",
+  ["Hit an error. Whisper from %s: %s"] = "Произошла ошибка. Шепот от %s: %s",
+  ["Hit an error. Whisper to %s: %s"] = "Произошла ошибка. Шепот для %s: %s",
   ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Повторяющиеся ошибки: шепот больше не скрывается в чате до /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "В очереди",
