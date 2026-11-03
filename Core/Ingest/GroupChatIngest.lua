@@ -11,6 +11,7 @@ local SecretString = ns.GroupChatIngestSecretString or require("WhisperMessenger
 local Direction = ns.GroupChatIngestDirection or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Direction")
 local PendingEcho = ns.GroupChatIngestPendingEcho or require("WhisperMessenger.Core.Ingest.GroupChatIngest.PendingEcho")
 local Message = ns.GroupChatIngestMessage or require("WhisperMessenger.Core.Ingest.GroupChatIngest.Message")
+local ConversationKey = ns.GroupChatIngestConversationKey or require("WhisperMessenger.Core.Ingest.GroupChatIngest.ConversationKey")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 -- stylua: ignore end
@@ -40,21 +41,6 @@ local LEADER_EVENTS = {
   CHAT_MSG_RAID_WARNING = true,
 }
 
--- Contact key prefix per channel type (for singleton group channels)
-local CHANNEL_CONTACT_KEY = {
-  [ChannelType.PARTY] = "PARTY::",
-  [ChannelType.INSTANCE_CHAT] = "INSTANCE::",
-  [ChannelType.RAID] = "RAID::",
-  [ChannelType.GUILD] = "GUILD::",
-  [ChannelType.OFFICER] = "OFFICER::",
-}
-
-local GROUP_CONVERSATION_KEY_PREFIX = {
-  [ChannelType.PARTY] = "party::",
-  [ChannelType.INSTANCE_CHAT] = "instance::",
-  [ChannelType.RAID] = "raid::",
-}
-
 local REACTION_CHANNELS = {
   PARTY = ChannelType.PARTY,
   RAID = ChannelType.RAID,
@@ -63,51 +49,8 @@ local REACTION_CHANNELS = {
   OFFICER = ChannelType.OFFICER,
 }
 
-local function requiresSessionGuid(channel)
-  return GROUP_CONVERSATION_KEY_PREFIX[channel] ~= nil
-end
-
-local function groupCategoryForChannel(channel)
-  if channel == ChannelType.PARTY or channel == ChannelType.RAID then
-    return type(_G.LE_PARTY_CATEGORY_HOME) == "number" and _G.LE_PARTY_CATEGORY_HOME or 1
-  end
-  if channel == ChannelType.INSTANCE_CHAT then
-    return type(_G.LE_PARTY_CATEGORY_INSTANCE) == "number" and _G.LE_PARTY_CATEGORY_INSTANCE or 2
-  end
-  return nil
-end
-
-local function buildGroupSessionKey(state, channel)
-  local prefix = GROUP_CONVERSATION_KEY_PREFIX[channel]
-  local category = groupCategoryForChannel(channel)
-  local partyGUIDs = state.groupPartyGUIDsByCategory
-  local partyGUID = partyGUIDs and partyGUIDs[category]
-  if prefix == nil or type(state.localProfileId) ~= "string" or state.localProfileId == "" or type(partyGUID) ~= "string" or partyGUID == "" then
-    return nil
-  end
-
-  return prefix .. state.localProfileId .. "::" .. category .. "::" .. partyGUID, category, partyGUID
-end
-
-local function resolveGroupConversation(state, channel)
-  if not ChannelType.ADDON_GROUP_CHANNELS[channel] then
-    return nil
-  end
-  local contactKeyPrefix = CHANNEL_CONTACT_KEY[channel]
-  local guildName
-  if channel == ChannelType.GUILD and type(_G.GetGuildInfo) == "function" then
-    local ok, name = pcall(_G.GetGuildInfo, "player")
-    if ok and type(name) == "string" and name ~= "" then
-      guildName = name
-      contactKeyPrefix = "GUILD::" .. name
-    end
-  end
-  local conversationKey, groupCategory, partyGUID = buildGroupSessionKey(state, channel)
-  if conversationKey == nil then
-    conversationKey = Identity.BuildConversationKey(state.localProfileId, contactKeyPrefix)
-  end
-  return conversationKey, groupCategory, partyGUID, guildName
-end
+local requiresSessionGuid = ConversationKey.RequiresSessionGuid
+local resolveGroupConversation = ConversationKey.Resolve
 
 -- Tells the router a mention arrived so it can alert (sound + flash).
 -- Read-only, shared to avoid a table per mention.

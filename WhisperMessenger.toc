@@ -125,6 +125,7 @@ Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest/Mention.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
+Core/Ingest/GroupChatIngest/ConversationKey.lua
 Core/Ingest/GroupChatIngest.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
