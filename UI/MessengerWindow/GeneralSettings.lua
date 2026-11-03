@@ -224,7 +224,9 @@ function GeneralSettings.Create(factory, parent, config, options)
   resetButton:SetPoint("TOPLEFT", languageSelector.row, "BOTTOMLEFT", 0, -Theme.LAYOUT.SETTINGS_SLIDER_ROW_SPACING)
 
   resetButton:SetScript("OnClick", function()
-    panel:reset(onChange)
+    retentionRow.confirmReset(function()
+      panel:reset(onChange)
+    end)
   end)
 
   local function applyLanguage(nextLanguage)

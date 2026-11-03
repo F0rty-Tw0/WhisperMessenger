@@ -155,15 +155,16 @@ return function()
   end
 
   -- test_reset_restores_one_day
-  do
+  ReloadPopups.With(function()
     local changes = {}
     local settings = create(factory, parent, { messageMaxAge = 48 * HOUR }, changes)
     FindUI.click(FindUI.byLabel(settings.frame, "Reset to Defaults"))
+    _G.StaticPopupDialogs[CONFIRM].OnAccept()
     local written = retentionChanges(changes)
     assert(written[#written] == DAY, "reset writes the 1 day default, got " .. tostring(written[#written]))
     assert(closedLabel(settings) == "1 day", "reset shows 1 day, got " .. tostring(closedLabel(settings)))
     assert(not contains(openLabels(settings), "48 hours"), "reset drops the custom entry")
-  end
+  end)
 
   -- test_shorter_choice_asks_before_saving
   ReloadPopups.With(function(popups)
