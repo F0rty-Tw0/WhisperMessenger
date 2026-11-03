@@ -202,6 +202,18 @@ return function()
     assert(#names == 0, "no SharedMedia addon lists no shared sounds")
   end
 
+  -- test_raid_warning_sound_shows_its_full_name
+  do
+    local raidWarning
+    for _, sound in ipairs(SoundPlayer.BUILTIN_SOUNDS) do
+      if sound.key == "raid_warning" then
+        raidWarning = sound
+      end
+    end
+    assert(raidWarning, "saved key raid_warning still exists")
+    assert(raidWarning.label == "Raid Warning", "full-width rows spell out Raid Warning, got " .. tostring(raidWarning.label))
+  end
+
   -- cleanup
   rawset(_G, "PlaySound", nil)
   rawset(_G, "GetCVar", nil)

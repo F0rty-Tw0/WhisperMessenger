@@ -201,6 +201,7 @@ local French = {
   ["Ping"] = "Ping",
   ["Chime"] = "Carillon",
   ["Bell"] = "Cloche",
+  ["Raid Warning"] = "Avertissement de raid",
   ["Ready"] = "Prêt",
   ["Queue"] = "File",
   ["Alert"] = "Alerte",

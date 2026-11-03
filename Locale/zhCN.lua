@@ -201,6 +201,7 @@ local SimplifiedChinese = {
   ["Ping"] = "Ping",
   ["Chime"] = "钟声",
   ["Bell"] = "铃声",
+  ["Raid Warning"] = "团队警告",
   ["Ready"] = "就绪",
   ["Queue"] = "队列",
   ["Alert"] = "警报",

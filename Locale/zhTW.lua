@@ -201,6 +201,7 @@ local TraditionalChinese = {
   ["Ping"] = "Ping",
   ["Chime"] = "鐘聲",
   ["Bell"] = "鈴聲",
+  ["Raid Warning"] = "團隊警告",
   ["Ready"] = "就緒",
   ["Queue"] = "佇列",
   ["Alert"] = "警報",
