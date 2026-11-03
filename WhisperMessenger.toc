@@ -279,6 +279,10 @@ UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/SquareLook.lua
+UI/ToggleIcon/IconArt.lua
+UI/ToggleIcon/LockGlyph.lua
+UI/ToggleIcon/IconTooltip.lua
+UI/ToggleIcon/IconDrag.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/MinimapIcon.lua
 UI/MinimapIcon/DataBroker.lua
