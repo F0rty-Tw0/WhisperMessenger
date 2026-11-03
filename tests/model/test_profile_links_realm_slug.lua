@@ -2,7 +2,8 @@ local ProfileLinks = require("WhisperMessenger.Model.ProfileLinks")
 
 -- Realm part of a profile URL. A display name ("Area 52") gives the exact
 -- site slug; a chat realm ("Area52", spaces dropped) gives a bare slug that
--- Raider.IO and Warcraft Logs accept but the Armory doesn't.
+-- Raider.IO and Warcraft Logs accept but the Armory doesn't. Site slugs are
+-- plain ASCII: accents fold away, other scripts give no slug.
 
 local function slugOf(character)
   local slug, exact = ProfileLinks.RealmSlug(character)
@@ -22,10 +23,32 @@ return function()
     assert(slugOf({ displayRealm = "Mal'Ganis" }) == "malganis", "Mal'Ganis -> malganis")
   end
 
-  -- test_display_realm_drops_brackets_and_encodes_accents
+  -- test_display_realm_drops_brackets_and_folds_accents
   do
     local slug = slugOf({ displayRealm = "Aggra (Português)" })
-    assert(slug == "aggra-portugu%C3%AAs", "Aggra (Português) slug, got " .. tostring(slug))
+    assert(slug == "aggra-portugues", "Aggra (Português) slug, got " .. tostring(slug))
+  end
+
+  -- test_display_realm_folds_lowercase_accents
+  do
+    local slug = slugOf({ displayRealm = "Chants éternels" })
+    assert(slug == "chants-eternels", "Chants éternels slug, got " .. tostring(slug))
+  end
+
+  -- test_display_realm_folds_uppercase_accents_and_sharp_s
+  do
+    local slug = slugOf({ displayRealm = "ÀÁÂÄÃÅ ÈÉÊË ÌÍÎÏ ÒÓÔÖÕ ÙÚÛÜ Ç Ñ ß" })
+    assert(slug == "aaaaaa-eeee-iiii-ooooo-uuuu-c-n-ss", "uppercase folds, got " .. tostring(slug))
+  end
+
+  -- test_non_latin_display_realm_has_no_slug
+  do
+    assert(slugOf({ realm = "Гордунни", displayRealm = "Гордунни" }) == nil, "Cyrillic realm has no slug")
+  end
+
+  -- test_non_latin_chat_realm_has_no_slug
+  do
+    assert(slugOf({ realm = "아즈샤라" }) == nil, "Korean chat realm has no slug")
   end
 
   -- test_chat_realm_gives_bare_lowercase_slug

@@ -108,6 +108,15 @@ return function()
     assert(count(ProfileLinks.Build(arthas, { regionId = US, projectId = RETAIL, isForever = true })) == 0, "no sites on WoW: Forever")
   end
 
+  -- test_non_latin_realm_has_no_links
+  do
+    local links = ProfileLinks.Build(
+      { name = "Thrall", realm = "Гордунни", displayRealm = "Гордунни" },
+      { regionId = EU, projectId = RETAIL }
+    )
+    assert(count(links) == 0, "no sites for a realm without an ASCII slug, got " .. count(links))
+  end
+
   -- test_accented_name_is_url_encoded
   do
     local urls = urlsByLabel(ProfileLinks.Build({ name = "Ellesmére", realm = "EmeraldDream", displayRealm = "Emerald Dream" }, {

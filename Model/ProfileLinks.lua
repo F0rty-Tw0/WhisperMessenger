@@ -35,8 +35,41 @@ local function asciiLower(text)
   return (string.gsub(text, "[A-Z]", string.lower))
 end
 
+-- Site slugs are ASCII: "Chants éternels" is chants-eternels. Each string
+-- lists the two-byte UTF-8 letters that fold to its key.
+local ACCENT_FOLDS = {
+  a = "àáâãäåÀÁÂÃÄÅ",
+  e = "èéêëÈÉÊË",
+  i = "ìíîïÌÍÎÏ",
+  o = "òóôõöÒÓÔÕÖ",
+  u = "ùúûüÙÚÛÜ",
+  c = "çÇ",
+  n = "ñÑ",
+  ss = "ß",
+}
+local UTF8_PAIR = "[\192-\223][\128-\191]"
+
+local FOLD_BY_LETTER = {}
+for ascii, letters in pairs(ACCENT_FOLDS) do
+  for letter in string.gmatch(letters, UTF8_PAIR) do
+    FOLD_BY_LETTER[letter] = ascii
+  end
+end
+
+-- nil when a letter has no ASCII form (Cyrillic, Korean, Chinese realms).
+local function asciiSlug(text)
+  local folded = asciiLower((string.gsub(text, UTF8_PAIR, FOLD_BY_LETTER)))
+  if string.find(folded, "[\128-\255]") then
+    return nil
+  end
+  return folded
+end
+
 local function slugFromDisplay(displayRealm)
-  local slug = asciiLower(displayRealm)
+  local slug = asciiSlug(displayRealm)
+  if slug == nil then
+    return nil
+  end
   slug = string.gsub(slug, "['%-%(%)]", "")
   slug = string.gsub(slug, "%s+", "-")
   return urlEncode(slug)
@@ -46,14 +79,19 @@ end
 -- gives one when it is a single word ("Kazzak").
 function ProfileLinks.RealmSlug(character)
   if type(character.displayRealm) == "string" and character.displayRealm ~= "" then
-    return slugFromDisplay(character.displayRealm), true
+    local slug = slugFromDisplay(character.displayRealm)
+    return slug, slug ~= nil
   end
   local realm = character.realm
   if type(realm) ~= "string" or realm == "" then
     return nil, false
   end
+  local slug = asciiSlug((string.gsub(realm, "'", "")))
+  if slug == nil then
+    return nil, false
+  end
   local exact = string.find(realm, "^[A-Z][a-z]*$") ~= nil
-  return urlEncode(asciiLower((string.gsub(realm, "'", "")))), exact
+  return urlEncode(slug), exact
 end
 
 local function link(label, url)
