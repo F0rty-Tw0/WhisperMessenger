@@ -455,6 +455,9 @@ local TraditionalChinese = {
   ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "封鎖…",
+  ["Export conversation"] = "匯出對話",
+  ["Conversation with %s"] = "與 %s 的對話",
+  ["Press Ctrl+C to copy the conversation."] = "按 Ctrl+C 複製對話。",
   ["Block sender…"] = "封鎖發送者…",
   ["Blocked"] = "已封鎖",
   ["Unblock"] = "解除封鎖",

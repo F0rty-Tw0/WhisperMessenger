@@ -222,6 +222,7 @@ UI/ContactsList/RowCompact.lua
 UI/ContactsList/ContactsTabFilter.lua
 UI/ContactsList/ContactPrefsDialog.lua
 UI/ContactsList/BlockMenuEntry.lua
+UI/ContactsList/ExportMenuEntry.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua

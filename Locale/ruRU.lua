@@ -455,6 +455,9 @@ local Russian = {
   ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "Заблокировать…",
+  ["Export conversation"] = "Экспортировать переписку",
+  ["Conversation with %s"] = "Переписка с %s",
+  ["Press Ctrl+C to copy the conversation."] = "Нажмите Ctrl+C, чтобы скопировать переписку.",
   ["Block sender…"] = "Заблокировать отправителя…",
   ["Blocked"] = "Заблокирован",
   ["Unblock"] = "Разблокировать",

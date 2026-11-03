@@ -455,6 +455,9 @@ local Korean = {
   ["WTS / WTB / LFW"] = "WTS / WTB / LFW",
   -- Blocking: right-click menus, chat header, block list
   ["Block…"] = "차단…",
+  ["Export conversation"] = "대화 내보내기",
+  ["Conversation with %s"] = "%s 님과의 대화",
+  ["Press Ctrl+C to copy the conversation."] = "Ctrl+C를 눌러 대화를 복사하세요.",
   ["Block sender…"] = "보낸 사람 차단…",
   ["Blocked"] = "차단됨",
   ["Unblock"] = "차단 해제",

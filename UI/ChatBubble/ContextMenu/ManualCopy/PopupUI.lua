@@ -21,12 +21,62 @@ end
 -- Refresh the dialog's localized strings every time it's about to show so a
 -- runtime language switch picks up immediately. The StaticPopupDialogs entry
 -- is read each Show, so writing to it before StaticPopup_Show is sufficient.
-local function applyDialogText(dialog)
+local function applyDialogText(dialog, prompt)
   if type(dialog) ~= "table" then
     return
   end
-  dialog.text = L("Press Ctrl+C to copy the message text.")
+  dialog.text = L(prompt or "Press Ctrl+C to copy the message text.")
   dialog.button1 = L("OK")
+end
+
+-- Every StaticPopup shares its edit box, so the multi-line, uncapped setup
+-- a long export needs is undone on hide. Weak keys: nothing stored on
+-- Blizzard's frame.
+local savedEditBoxes = setmetatable({}, { __mode = "k" })
+
+local function callGetter(editBox, methodName)
+  local method = editBox[methodName]
+  if type(method) == "function" then
+    return method(editBox)
+  end
+  return nil
+end
+
+local function widenEditBox(editBox)
+  if type(editBox) ~= "table" or savedEditBoxes[editBox] ~= nil then
+    return
+  end
+  savedEditBoxes[editBox] = {
+    multiLine = callGetter(editBox, "IsMultiLine"),
+    maxLetters = callGetter(editBox, "GetMaxLetters"),
+    maxBytes = callGetter(editBox, "GetMaxBytes"),
+  }
+  if editBox.SetMultiLine then
+    editBox:SetMultiLine(true)
+  end
+  if editBox.SetMaxLetters then
+    editBox:SetMaxLetters(0)
+  end
+  if editBox.SetMaxBytes then
+    editBox:SetMaxBytes(0)
+  end
+end
+
+local function restoreEditBox(editBox)
+  local saved = type(editBox) == "table" and savedEditBoxes[editBox] or nil
+  if saved == nil then
+    return
+  end
+  savedEditBoxes[editBox] = nil
+  if saved.multiLine ~= nil and editBox.SetMultiLine then
+    editBox:SetMultiLine(saved.multiLine)
+  end
+  if saved.maxLetters ~= nil and editBox.SetMaxLetters then
+    editBox:SetMaxLetters(saved.maxLetters)
+  end
+  if saved.maxBytes ~= nil and editBox.SetMaxBytes then
+    editBox:SetMaxBytes(saved.maxBytes)
+  end
 end
 
 local function isFrameShown(frame)
@@ -47,7 +97,10 @@ local function scheduleManualCopyRefocus(dialog, text, delaySeconds)
   end)
 end
 
-function PopupUI.ShowManualCopyDialog(text)
+-- options (optional): { prompt = locale key for the dialog text, multiLine =
+-- true for newline-separated text of any length (a whole conversation) }.
+function PopupUI.ShowManualCopyDialog(text, options)
+  options = options or {}
   if type(_G.StaticPopup_Show) ~= "function" then
     return false
   end
@@ -82,17 +135,23 @@ function PopupUI.ShowManualCopyDialog(text)
         end
       end,
       OnHide = function(self)
-        StyledTextInputPopup.Restore(self, MANUAL_COPY_DIALOG_NAME, { clearEditBox = true })
+        local editBox = StyledTextInputPopup.Restore(self, MANUAL_COPY_DIALOG_NAME, { clearEditBox = true })
+        restoreEditBox(editBox)
       end,
     }
   end
-  applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME])
+  applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME], options.prompt)
 
   local dialog = _G.StaticPopup_Show(MANUAL_COPY_DIALOG_NAME, nil, nil, text)
   if dialog == nil then
     return false
   end
 
+  -- OnShow already primed the box under its old cap; the Apply below sets
+  -- the full text again once the cap is lifted.
+  if options.multiLine == true then
+    widenEditBox(Resolvers.resolvePopupEditBox(dialog, MANUAL_COPY_DIALOG_NAME))
+  end
   dialog.data = text
   StyledTextInputPopup.Apply(dialog, MANUAL_COPY_DIALOG_NAME, text, {
     fullWidthInput = true,
