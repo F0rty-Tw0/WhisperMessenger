@@ -8,8 +8,8 @@ Usage:
 
 Uses Lua 5.1 (lupa.lua51) by default to match WoW and CI. Keeps going after a
 failure, prints a summary, and exits 1 if any file failed. A file that runs past
---timeout seconds fails; a worker process that dies fails the files it had not
-finished.
+--timeout seconds fails. A worker process that dies breaks the whole pool, so
+every file not yet finished (on any worker, or not yet started) fails too.
 """
 
 import argparse
@@ -27,7 +27,7 @@ import run_test
 LUA_MODULES = {"51": "lupa.lua51", "default": "lupa"}
 MAX_DEFAULT_JOBS = 8
 DEFAULT_TIMEOUT = 60
-WORKER_DIED = "worker process died before this file finished (BrokenProcessPool)"
+WORKER_DIED = "a worker process died and broke the pool before this file finished (BrokenProcessPool)"
 
 _runtime_cls = None
 
