@@ -35,9 +35,9 @@ local function resolveGlyphColor()
   return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
 end
 
-IconArt.resolveBgColor = resolveBgColor
-IconArt.resolveRingColor = resolveRingColor
-IconArt.resolveGlyphColor = resolveGlyphColor
+IconArt.ResolveBgColor = resolveBgColor
+IconArt.ResolveRingColor = resolveRingColor
+IconArt.ResolveGlyphColor = resolveGlyphColor
 
 function IconArt.Create(frame, iconSize)
   local background = frame:CreateTexture(nil, "BACKGROUND")

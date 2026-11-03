@@ -48,9 +48,9 @@ function ToggleIcon.Create(factory, options)
     frame:SetFrameStrata("HIGH")
   end
 
-  local resolveBgColor = IconArt.resolveBgColor
-  local resolveRingColor = IconArt.resolveRingColor
-  local resolveGlyphColor = IconArt.resolveGlyphColor
+  local resolveBgColor = IconArt.ResolveBgColor
+  local resolveRingColor = IconArt.ResolveRingColor
+  local resolveGlyphColor = IconArt.ResolveGlyphColor
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
   local border = art.border

@@ -40,7 +40,7 @@ return function()
     Theme.COLORS.toggle_icon_ring = nil
     Theme.COLORS.accent = { 0.2, 0.4, 0.6, 1 }
 
-    local c = IconArt.resolveRingColor()
+    local c = IconArt.ResolveRingColor()
 
     Theme.COLORS.toggle_icon_ring = savedRing
     Theme.COLORS.accent = savedAccent
