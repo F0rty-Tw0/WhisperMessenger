@@ -86,21 +86,15 @@ function DropdownSelector.Create(factory, parent, options)
     end
   end
 
-  local function findOption(key)
-    for _, option in ipairs(optionsList) do
-      if option.key == key then
-        return option
-      end
-    end
-    return nil
-  end
-
   local function paintClosedButton()
     DropdownSkin.Paint(skin, buttonLabel, buttonHovered)
   end
 
   local function paintOptionButton(optionButton)
-    if optionButton._key == selected then
+    if optionButton._header then
+      applyColorTexture(optionButton.bg, palette.bg)
+      UIHelpers.setTextColor(optionButton.label, Theme.COLORS.text_secondary)
+    elseif optionButton._key == selected then
       applyColorTexture(optionButton.bg, palette.bgActive)
       UIHelpers.setTextColor(optionButton.label, palette.textActive)
     elseif optionButton._hovered then
@@ -119,7 +113,7 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function updateSelection(key)
-    local option = findOption(key) or findOption(fallbackKey) or optionsList[1]
+    local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     buttonLabel:SetText(option and option.label or "")
     repaintOptions()
@@ -140,6 +134,9 @@ function DropdownSelector.Create(factory, parent, options)
     optionButton._hovered = false
 
     optionButton:SetScript("OnClick", function()
+      if optionButton._header then
+        return
+      end
       local key = optionButton._key
       updateSelection(key)
       if onChange then
@@ -192,6 +189,7 @@ function DropdownSelector.Create(factory, parent, options)
     for i, option in ipairs(optionsList) do
       local optionButton = buttonPool[i] or createOptionButton()
       optionButton._key = option.key
+      optionButton._header = option.header == true
       optionButton._hovered = false
       optionButton.label:SetText(option.label)
       optionButton:Show()
