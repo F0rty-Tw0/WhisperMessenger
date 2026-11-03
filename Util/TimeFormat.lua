@@ -213,6 +213,15 @@ function TimeFormat.IsDifferentDay(ts1, ts2)
   return date("%Y%m%d", displayTimestamp(ts1)) ~= date("%Y%m%d", displayTimestamp(ts2))
 end
 
+--- Format a timestamp for plain-text exports: "2026-11-03 14:30", always
+--- 24h, in the configured time source. "" for a missing timestamp.
+function TimeFormat.ExportStamp(timestamp)
+  if not timestamp or timestamp == 0 then
+    return ""
+  end
+  return date("%Y-%m-%d %H:%M", displayTimestamp(timestamp))
+end
+
 ns.TimeFormat = TimeFormat
 
 return TimeFormat
