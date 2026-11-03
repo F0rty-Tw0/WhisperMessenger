@@ -19,8 +19,20 @@ local AddonComm = {}
 -- Wire prefixes; older addon versions speak these, so never rename them.
 AddonComm.PREFIX_REACTION = "WMRX"
 AddonComm.PREFIX_QUEST_LINK = "WMQL"
+-- Crafting addons (RobotsDotTxt convention) announce an automated greeting
+-- with "Q:<AddonName>" on this prefix. Listen-only: a "D:<delay>" reply asks
+-- the sender to fake a human answer, so every send on it is refused.
+AddonComm.PREFIX_ADDON_GREETING = "robots.txt"
+
+local RECEIVE_ONLY_PREFIXES = {
+  [AddonComm.PREFIX_ADDON_GREETING] = true,
+}
 
 local MAX_PAYLOAD_BYTES = 255
+
+local function isSendablePrefix(prefix)
+  return type(prefix) == "string" and prefix ~= "" and RECEIVE_ONLY_PREFIXES[prefix] ~= true
+end
 
 local registeredPrefixes = {}
 
@@ -98,7 +110,7 @@ function AddonComm.RegisterPrefix(api, prefix)
 end
 
 function AddonComm.Send(api, prefix, payload, target)
-  if type(prefix) ~= "string" or prefix == "" then
+  if not isSendablePrefix(prefix) then
     return false
   end
   if type(payload) ~= "string" or payload == "" then
@@ -120,7 +132,7 @@ function AddonComm.Send(api, prefix, payload, target)
 end
 
 function AddonComm.SendGroup(api, prefix, payload, channel)
-  if type(prefix) ~= "string" or prefix == "" then
+  if not isSendablePrefix(prefix) then
     return false
   end
   if type(payload) ~= "string" or payload == "" then
@@ -142,7 +154,7 @@ function AddonComm.SendGroup(api, prefix, payload, channel)
 end
 
 function AddonComm.SendBNet(api, prefix, payload, gameAccountID)
-  if type(prefix) ~= "string" or prefix == "" then
+  if not isSendablePrefix(prefix) then
     return false
   end
   if type(payload) ~= "string" or payload == "" then
