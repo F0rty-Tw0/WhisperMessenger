@@ -129,6 +129,7 @@ Core/Ingest/ChannelChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
 Core/EventRouter/FailedWhisper.lua
 Core/EventRouter/PartMerge.lua
+Core/EventRouter/AddonGreetingIngest.lua
 Core/EventRouter.lua
 Core/SlashCommands.lua
 
