@@ -7,6 +7,7 @@ end
 -- saved, so a /reload starts fresh and its first observation only records).
 -- Only an observed offline -> online change is worth an alert.
 local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 local OnlineWatch = {}
 
@@ -42,6 +43,10 @@ local function readCharacterFriend(api, name)
     end
   end
   if ok and type(info) == "table" then
+    -- A secret flag would throw on compare; unknown keeps the last known state.
+    if SecretValue.Is(info.connected) then
+      return nil
+    end
     return info.connected == true
   end
   return nil
@@ -92,7 +97,7 @@ function OnlineWatch.CanWatch(item, friendListApi)
     return false
   end
   local ok, isFriend = pcall(friendListApi.IsFriend, item.guid)
-  return ok and isFriend == true
+  return ok and not SecretValue.Is(isFriend) and isFriend == true
 end
 
 ns.OnlineWatch = OnlineWatch
