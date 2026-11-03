@@ -464,6 +464,10 @@ local Spanish = {
   ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Los canales que marques en la configuración de Chats aparecen aquí. Elige un canal a la izquierda.",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "Copiar enlace del perfil",
+  ["Armory"] = "Arsenal",
+  ["Press Ctrl+C to copy the link."] = "Presiona Ctrl+C para copiar el enlace.",
 }
 
 ns.Locale_esMX = Spanish

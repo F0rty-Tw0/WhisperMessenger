@@ -460,6 +460,10 @@ local SimplifiedChinese = {
   ["Unblock"] = "取消屏蔽",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "复制角色资料链接",
+  ["Armory"] = "英雄榜",
+  ["Press Ctrl+C to copy the link."] = "按 Ctrl+C 复制链接。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

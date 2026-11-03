@@ -460,6 +460,10 @@ local French = {
   ["Unblock"] = "Débloquer",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Les canaux cochés dans les paramètres Discussions apparaissent ici. Choisissez un canal à gauche.",
+  -- Contact menu: copy a profile link
+  ["Copy profile link"] = "Copier le lien du profil",
+  ["Armory"] = "Armurerie",
+  ["Press Ctrl+C to copy the link."] = "Appuyez sur Ctrl+C pour copier le lien.",
 }
 
 ns.Locale_frFR = French
