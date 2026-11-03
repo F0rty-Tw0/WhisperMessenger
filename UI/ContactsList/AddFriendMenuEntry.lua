@@ -6,9 +6,11 @@ end
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
 
 -- A whisper row's "Add friend" entry. WoW whisper rows only, and hidden when
--- the player is already a friend, is you, or the client can't add friends.
+-- the player is already a friend, is you, the client can't add friends, or a
+-- chat lock made the name secret (comparing it would throw).
 local AddFriendMenuEntry = {}
 
 -- C_FriendList.AddFriend on every current flavor; the old global otherwise.
@@ -60,7 +62,7 @@ function AddFriendMenuEntry.Add(rootDescription, item)
     return
   end
   local name = IgnoreList.CharacterName(item.displayName, item.guid)
-  if isSelf(item, name) or isFriend(item, name) then
+  if SecretValue.Is(name) or isSelf(item, name) or isFriend(item, name) then
     return
   end
   rootDescription:CreateButton(Localization.Text("Add friend"), function()
