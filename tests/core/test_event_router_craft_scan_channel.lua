@@ -112,6 +112,50 @@ local function test_hide_removes_the_message_and_its_unread()
   assert(#conversation.messages == 1 and conversation.messages[1].text == "earlier chat", "only the customer whisper is removed")
   assert(conversation.unreadCount == 1, "unread drops with it")
   assert(conversation.lastPreview == "earlier chat", "the preview falls back to the earlier line")
+  local earlier = conversation.messages[1]
+  assert(conversation.lastIncomingPreview == "earlier chat", "the incoming preview falls back, got " .. tostring(conversation.lastIncomingPreview))
+  assert(conversation.lastIncomingAt == earlier.sentAt and conversation.lastIncomingLineID == earlier.lineID, "last incoming time and line fall back")
+  assert(conversation.lastActivityAt == earlier.sentAt, "last activity falls back to the earlier line")
+end
+
+local function test_hide_clears_incoming_fields_when_no_whisper_remains()
+  local state = makeState({ addonGreetings = "hide" })
+  local conversation = Router.HandleEvent(state, "CHAT_MSG_WHISPER_INFORM", { text = "my reply", playerName = SENDER, lineID = 400, guid = GUID })
+  state.advance(10)
+  whisper(state)
+  craftScan(state)
+  assert(state.store.conversations[conversation.conversationKey] == conversation, "the conversation with my line stays")
+  assert(conversation.lastIncomingPreview == nil and conversation.lastIncomingAt == nil, "no incoming line is left to describe")
+  assert(conversation.lastActivityAt == conversation.messages[1].sentAt, "last activity is my own line")
+end
+
+local function test_hide_while_open_leaves_unread_alone()
+  local state = makeState({ addonGreetings = "hide" })
+  local conversation = whisper(state, "earlier chat")
+  assert(conversation.unreadCount == 1, "the earlier line came in while closed")
+  state.activeConversationKey = conversation.conversationKey
+  state.advance(10)
+  whisper(state)
+  assert(conversation.unreadCount == 1, "a whisper into the open conversation is not counted unread")
+  craftScan(state)
+  assert(#conversation.messages == 1, "the customer whisper is removed")
+  assert(conversation.unreadCount == 1, "hiding it leaves unread alone, got " .. tostring(conversation.unreadCount))
+end
+
+local function test_hide_forgets_the_reply_target_it_removed()
+  local state = makeState({ addonGreetings = "hide" })
+  local conversation = whisper(state)
+  state.lastIncomingWhisperKey = conversation.conversationKey
+  craftScan(state)
+  assert(state.lastIncomingWhisperKey == nil, "reply-to-last no longer points at the removed conversation")
+end
+
+local function test_hide_keeps_another_reply_target()
+  local state = makeState({ addonGreetings = "hide" })
+  whisper(state)
+  state.lastIncomingWhisperKey = "wow::other"
+  craftScan(state)
+  assert(state.lastIncomingWhisperKey == "wow::other", "an unrelated reply target stays")
 end
 
 local function test_requests_mode_files_the_new_conversation()
@@ -150,6 +194,10 @@ return function()
   test_replayed_whisper_never_tagged()
   test_hide_removes_the_new_conversation()
   test_hide_removes_the_message_and_its_unread()
+  test_hide_clears_incoming_fields_when_no_whisper_remains()
+  test_hide_while_open_leaves_unread_alone()
+  test_hide_forgets_the_reply_target_it_removed()
+  test_hide_keeps_another_reply_target()
   test_requests_mode_files_the_new_conversation()
   test_requests_mode_leaves_an_existing_conversation()
 end

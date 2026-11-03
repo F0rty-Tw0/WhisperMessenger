@@ -5,6 +5,7 @@ end
 
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local Retention = ns.Retention or require("WhisperMessenger.Model.Retention")
+local MessageMetadata = ns.ConversationStoreMessageMetadata or require("WhisperMessenger.Model.ConversationStore.MessageMetadata")
 
 -- Outgoing messages that did not go out normally. `delivery` on the stored
 -- message is one of:
@@ -82,6 +83,27 @@ function OutgoingDelivery.CountQueued(store)
   return count
 end
 
+-- After a line is removed the record describes the newest lines left.
+local function refreshActivity(conversation, messages)
+  local last = messages[#messages]
+  if last then
+    MessageMetadata.ApplyActivity(conversation, last)
+  else
+    conversation.lastPreview, conversation.lastActivityAt, conversation.lastActivityLineID = nil, 0, nil
+  end
+end
+
+local function refreshIncoming(conversation, messages)
+  for index = #messages, 1, -1 do
+    if MessageMetadata.IsIncomingUser(messages[index]) then
+      MessageMetadata.ApplyIncoming(conversation, messages[index])
+      return
+    end
+  end
+  conversation.lastIncomingPreview, conversation.lastIncomingAt, conversation.lastIncomingLineID = nil, nil, nil
+  conversation.lastIncomingSender = nil
+end
+
 function OutgoingDelivery.Remove(store, conversationKey, message)
   local conversation = Store.Find(store, conversationKey)
   if conversation == nil or message == nil then
@@ -91,8 +113,10 @@ function OutgoingDelivery.Remove(store, conversationKey, message)
   for index = #messages, 1, -1 do
     if messages[index] == message then
       table.remove(messages, index)
-      local last = messages[#messages]
-      conversation.lastPreview = last and last.text or nil
+      refreshActivity(conversation, messages)
+      if MessageMetadata.IsIncomingUser(message) then
+        refreshIncoming(conversation, messages)
+      end
       return true
     end
   end

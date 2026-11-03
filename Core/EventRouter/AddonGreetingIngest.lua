@@ -25,6 +25,10 @@ end
 local function hideStored(state, conversation, stored)
   local messages = conversation.messages or {}
   if stored.isNew and #messages == 1 and messages[1] == stored.message then
+    -- Reply-to-last must not target a conversation that is gone.
+    if state.lastIncomingWhisperKey == stored.conversationKey then
+      state.lastIncomingWhisperKey = nil
+    end
     return Store.Remove(state.store, stored.conversationKey)
   end
   if OutgoingDelivery.Remove(state.store, stored.conversationKey, stored.message) and stored.countedUnread then
