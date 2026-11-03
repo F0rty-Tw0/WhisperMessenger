@@ -141,7 +141,7 @@ Pick the default font or any font from SharedMedia addons like ElvUI. Resize the
 
 ### Notifications
 
-Choose a sound (Whisper, Ping, Chime, Bell, Raid Warning) that plays even when in-game audio is muted.
+Choose a notification sound from one dropdown: 16 built-in game sounds (Whisper, Ping, Chime, Bell, Raid Warning and more), plus any sound shared by SharedMedia addons like ElvUI. It plays even when in-game sound effects are muted.
 
 The floating button shows an unread badge and a short preview of the newest message.
 

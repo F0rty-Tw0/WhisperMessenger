@@ -91,6 +91,44 @@ return function()
     assert(colorsMatch(chevron(dd).vertexColor, Theme.COLORS.text_secondary), "chevron restores on leave")
   end
 
+  local function newGrouped(changes)
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    return DropdownSelector.Create(factory, parent, {
+      labelText = "Notification sound",
+      optionsList = {
+        { header = true, label = "Group A" },
+        { key = "a1", label = "A1" },
+        { header = true, label = "Group B" },
+        { key = "b1", label = "B1" },
+      },
+      fallbackKey = "missing",
+      initial = "b1",
+      onChange = function(key)
+        changes.count = (changes.count or 0) + 1
+        changes[#changes + 1] = key
+      end,
+    })
+  end
+
+  -- test_modern_dropdown_header_rows_are_not_choices
+  do
+    local changes = {}
+    local dd = newGrouped(changes)
+    local rows = FindUI.dropdownOptions(dd.row)
+    assert(#rows == 4 and rows[3].label.text == "Group B", "header rows are listed in order")
+    FindUI.click(rows[3])
+    assert((changes.count or 0) == 0, "clicking a header picks nothing")
+    assert(dd.button.label.text == "B1", "selection stays on the chosen sound")
+  end
+
+  -- test_modern_dropdown_headers_use_secondary_text
+  do
+    local dd = newGrouped({})
+    local header = FindUI.dropdownOptions(dd.row)[1]
+    header.scripts.OnEnter(header)
+    assert(colorsMatch(header.label.textColor, Theme.COLORS.text_secondary), "header text stays secondary, even hovered")
+  end
+
   Theme.SetPreset(previousPreset)
   print("  All modern dropdown tests passed")
 end

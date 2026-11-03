@@ -14,6 +14,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Picking a shorter Message Retention now asks before deleting older chats. Cancel keeps your current setting.
 - You can now export a whole conversation as plain text: right-click a contact (or the conversation's title) and pick Export conversation. Every message shows up with its date, time and sender, without colors or icons, selected and ready to copy with Ctrl+C. Works for whispers, Battle.net, group and channel chats.
 - New setting under Whispers: Close the game's whisper tab too (off by default). If the game opens each whisper in its own chat tab, removing a chat in the messenger now closes that player's tab as well.
+- The notification sound is now picked from one dropdown instead of a grid of buttons. Besides the messenger's 16 sounds, it lists the sounds your other addons share through SharedMedia (for example from ElvUI or WeakAuras), each group under its own heading. Picking a sound plays it once so you can hear it. If you later remove the addon that provided your chosen sound, the default Whisper sound plays instead.
 
 ## [2.1.2] - 2026-10-30
 

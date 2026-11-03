@@ -30,6 +30,7 @@ Core/PatchNotes.lua
 Core/ContentDetector.lua
 Core/EventUtils.lua
 Core/BNetIdentity.lua
+Core/SoundPlayer.lua
 Util/TableUtils.lua
 Util/TimeFormat.lua
 Util/TextLimits.lua
@@ -385,7 +386,6 @@ UI/MessengerWindow/MessengerWindow/WindowSizing.lua
 UI/MessengerWindow/MessengerWindow/WindowSurface.lua
 UI/MessengerWindow/MessengerWindow.lua
 
-Core/SoundPlayer.lua
 Core/Bootstrap/RuntimeFactory.lua
 Core/Bootstrap/EventBridge/Registration.lua
 Core/Bootstrap/EventBridge/LivePayload.lua
