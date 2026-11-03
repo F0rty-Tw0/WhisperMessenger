@@ -63,6 +63,18 @@ return function()
     assert(ProfileCharacter.FromItem({ channel = "WOW", displayName = "|Kq1|k" }, OWN) == nil, "protected names have none")
   end
 
+  -- test_secret_name_has_none
+  do
+    local secret = "Arthas-Area52"
+    local savedIsSecret = _G.issecretvalue
+    rawset(_G, "issecretvalue", function(value)
+      return value == secret
+    end)
+    local character = ProfileCharacter.FromItem({ channel = "WOW", displayName = secret }, OWN)
+    rawset(_G, "issecretvalue", savedIsSecret)
+    assert(character == nil, "a chat-lockdown secret name is never read")
+  end
+
   -- test_same_realm_without_own_realm_has_none
   do
     assert(ProfileCharacter.FromItem({ channel = "WOW", displayName = "Jaina" }, {}) == nil, "own realm unknown")

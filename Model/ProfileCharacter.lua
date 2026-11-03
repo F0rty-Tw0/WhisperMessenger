@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+
 -- The WoW character a contact stands for, for profile links: { name, realm,
 -- displayRealm }. Chat names carry the realm without spaces ("Area52"), or
 -- none for the player's own realm. Only the own realm's display name
@@ -16,7 +18,10 @@ function ProfileCharacter.OwnRealm()
       return nil
     end
     local ok, value = pcall(fn)
-    return ok and type(value) == "string" and value ~= "" and value or nil
+    if not ok or SecretValue.Is(value) or type(value) ~= "string" or value == "" then
+      return nil
+    end
+    return value
   end
   return { display = call(_G.GetRealmName), normalized = call(_G.GetNormalizedRealmName) }
 end
@@ -36,14 +41,11 @@ local function fullName(item)
 end
 
 local function split(name)
-  -- pcall: a chat-lockdown secret string errors on string functions.
-  local ok, character, realm = pcall(function()
-    if string.find(name, "|", 1, true) then
-      return nil
-    end
-    return string.match(name, "^([^%-]+)%-?(.*)$")
-  end)
-  if not ok or character == nil then
+  if string.find(name, "|", 1, true) then
+    return nil, nil
+  end
+  local character, realm = string.match(name, "^([^%-]+)%-?(.*)$")
+  if character == nil then
     return nil, nil
   end
   return character, realm ~= "" and realm or nil
@@ -64,7 +66,8 @@ function ProfileCharacter.FromItem(item, ownRealm)
     return nil
   end
   local name, mayOmitRealm = fullName(item)
-  if type(name) ~= "string" or name == "" then
+  -- A chat-lockdown secret string raises on any comparison or string call.
+  if SecretValue.Is(name) or type(name) ~= "string" or name == "" then
     return nil
   end
   local character, realm = split(name)
