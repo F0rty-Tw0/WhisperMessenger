@@ -77,6 +77,7 @@ Model/QuickReplies.lua
 Model/ChannelMessageStore.lua
 Model/PresenceCache/MemberRecord.lua
 Model/PresenceCache.lua
+Model/ZoneWatch.lua
 Model/SeenLevel.lua
 Model/SenderLevelBackfill.lua
 Model/SeenZone.lua
