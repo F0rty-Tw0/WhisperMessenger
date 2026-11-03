@@ -67,8 +67,7 @@ ConversationPane.Refresh = function(view, selectedContact, conversation, status,
   -- The pause notice shows exactly while chat is locked: queued bubbles
   -- offer Send now only without it.
   view.transcript.chatLocked = (noticeText or "") ~= ""
-  local messages = conversation and conversation.messages or {}
-  messages = buildMessagesWithChannelContext(messages, selectedContact, conversation)
+  local messages = buildMessagesWithChannelContext(conversation and conversation.messages or {}, selectedContact, conversation)
   ConversationPane.RenderTranscript(view.transcript, messages)
   ConversationPane.SetStatus(view, status)
   ConversationPane.SetNotice(view, noticeText)
