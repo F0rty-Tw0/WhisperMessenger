@@ -28,8 +28,11 @@ end
 
 local function isSelf(item, name)
   if item.guid ~= nil and type(_G.UnitGUID) == "function" then
-    local ok, guid = pcall(_G.UnitGUID, "player")
-    if ok and guid == item.guid then
+    -- The compare itself throws on a secret GUID, so it runs inside the pcall.
+    local ok, same = pcall(function()
+      return _G.UnitGUID("player") == item.guid
+    end)
+    if ok and same then
       return true
     end
   end
@@ -50,7 +53,7 @@ local function isFriend(item, name)
   end
   if item.guid ~= nil and type(api.IsFriend) == "function" then
     local ok, friend = pcall(api.IsFriend, item.guid)
-    if ok and friend == true then
+    if ok and not SecretValue.Is(friend) and friend == true then
       return true
     end
   end

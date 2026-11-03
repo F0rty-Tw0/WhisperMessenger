@@ -152,6 +152,27 @@ return function()
       assert(entry ~= nil, "a throwing player-name API still offers Add friend")
     end
 
+    -- test_secret_player_guid_compare_still_offers_add_friend
+    -- Plain Lua only runs __eq between two tables, so both GUIDs are tables
+    -- here; in game comparing a secret GUID to a string throws the same way.
+    do
+      local secretMeta = {
+        __eq = function()
+          error("secret compare")
+        end,
+      }
+      rawset(_G, "C_FriendList", friendApi({}))
+      rawset(_G, "UnitGUID", function()
+        return setmetatable({}, secretMeta)
+      end)
+      local menuOk, root = pcall(menuFor, { channel = "WOW", displayName = "Arthas-Area52", guid = setmetatable({}, secretMeta) })
+      rawset(_G, "UnitGUID", function()
+        return "Player-1-SELF"
+      end)
+      assert(menuOk, "a secret player GUID compare must not throw: " .. tostring(root))
+      assert(findButton(root, "Add friend") ~= nil, "a secret player GUID still offers Add friend")
+    end
+
     -- test_legacy_add_friend_global_used_without_c_friend_list
     do
       local added = {}
