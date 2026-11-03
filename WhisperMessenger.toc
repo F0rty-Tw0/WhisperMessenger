@@ -304,6 +304,10 @@ UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
 UI/ToggleIcon/SquareLook.lua
+UI/ToggleIcon/IconArt.lua
+UI/ToggleIcon/LockGlyph.lua
+UI/ToggleIcon/IconTooltip.lua
+UI/ToggleIcon/IconDrag.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
 UI/WhisperToasts/ToastCard.lua
@@ -386,6 +390,8 @@ UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings/ToastControls.lua
 UI/MessengerWindow/NotificationSettings.lua
+UI/MessengerWindow/IconSettings/Options.lua
+UI/MessengerWindow/IconSettings/UnreadRows.lua
 UI/MessengerWindow/IconSettings.lua
 UI/MessengerWindow/PatchNotesSettings.lua
 UI/MessengerWindow/MessengerWindow/SelectionSync.lua
