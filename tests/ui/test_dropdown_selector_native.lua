@@ -165,6 +165,21 @@ return function()
     assert(#radios == 1 and radios[1].text == "Standard", "getOptions returning nil keeps the last list")
   end
 
+  -- test_hud_dropdown_selects_a_missing_saved_key_once_the_list_has_it
+  do
+    local source = { { key = "default", label = "Default" } }
+    local dropdown = build(dropdownFactory(), {
+      optionsList = source,
+      getOptions = function()
+        return source
+      end,
+      initial = "lsm:Zap",
+    })
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "default", "missing saved key checks the fallback")
+    source = { { key = "default", label = "Default" }, { key = "lsm:Zap", label = "Zap" } }
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "lsm:Zap", "saved key is checked once the list has it")
+  end
+
   local GROUPED = {
     { header = true, label = "Group A" },
     { key = "a1", label = "A1" },
