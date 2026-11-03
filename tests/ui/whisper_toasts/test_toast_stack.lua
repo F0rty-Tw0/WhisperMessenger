@@ -66,6 +66,18 @@ return function()
     assert(shownCard(parent, "from b") and shownCard(parent, "from c") and shownCard(parent, "from d"), "the newer three stay")
   end
 
+  -- test_replacing_card_moves_the_new_chat_to_the_last_slot
+  do
+    local stack, parent = build()
+    stack.show(entry("k1", "A", "from a"), "TOPRIGHT")
+    stack.show(entry("k2", "B", "from b"), "TOPRIGHT")
+    stack.show(entry("k3", "C", "from c"), "TOPRIGHT")
+    stack.show(entry("k4", "D", "from d"), "TOPRIGHT")
+    local b, c, d = shownCard(parent, "from b"), shownCard(parent, "from c"), shownCard(parent, "from d")
+    assert(b.point[5] > c.point[5], "the older cards keep their order")
+    assert(c.point[5] > d.point[5], "the newest chat takes the last slot, away from the corner")
+  end
+
   -- test_an_updated_card_is_not_the_oldest
   do
     local stack, parent = build()

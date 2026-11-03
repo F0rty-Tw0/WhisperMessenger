@@ -9,7 +9,8 @@ local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMe
 -- Up to MAX_CARDS pop-up cards in one screen corner, one per conversation.
 -- A new line in a chat that has a card rewrites that card and restarts its
 -- timer; a chat without one takes a free card, else the card updated least
--- recently. Cards stack away from the corner in the order they appeared.
+-- recently, which moves to the end. Cards stack away from the corner in the
+-- order their chats appeared.
 local ToastStack = {}
 
 local MAX_CARDS = 3
@@ -51,13 +52,17 @@ function ToastStack.Create(factory, parent, options)
     end
   end
 
-  local function remove(card)
+  local function detach(card)
     for index, shown in ipairs(active) do
       if shown == card then
         table.remove(active, index)
-        break
+        return
       end
     end
+  end
+
+  local function remove(card)
+    detach(card)
     card.timer.cancel()
     card.dismiss()
     layout()
@@ -108,7 +113,11 @@ function ToastStack.Create(factory, parent, options)
 
   local function takeCard()
     if #active >= MAX_CARDS then
-      return leastRecentlyUpdated()
+      -- The replaced card now shows the newest chat, so it moves to the end.
+      local oldest = leastRecentlyUpdated()
+      detach(oldest)
+      active[#active + 1] = oldest
+      return oldest
     end
     for _, card in ipairs(cards) do
       if card.conversationKey == nil then
