@@ -206,6 +206,22 @@ function DropdownSelector.Create(factory, parent, options)
     updateSelection(selected)
   end
 
+  -- Opens at the top unless the selected row sits below the first page;
+  -- then the selected row leads the view (clamped at the bottom).
+  local function scrollToSelected()
+    local offset = 0
+    for i, optionButton in ipairs(optionButtons) do
+      if optionButton._key == selected and not optionButton._header then
+        local rowTop = (i - 1) * buttonHeight
+        if rowTop + buttonHeight > menu:GetHeight() then
+          offset = math.min(rowTop, menu:GetVerticalScrollRange())
+        end
+        break
+      end
+    end
+    menu:SetVerticalScroll(offset)
+  end
+
   menu:SetScript("OnMouseWheel", function(_, delta)
     local nextOffset = menu:GetVerticalScroll() - delta * buttonHeight
     local scrollRange = menu:GetVerticalScrollRange()
@@ -224,7 +240,7 @@ function DropdownSelector.Create(factory, parent, options)
         setOptionsList(refreshed)
       end
     end
-    menu:SetVerticalScroll(0)
+    scrollToSelected()
     menu:Raise()
     menu:Show()
   end)
