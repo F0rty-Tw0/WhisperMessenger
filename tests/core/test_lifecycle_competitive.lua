@@ -32,8 +32,9 @@ return function()
       },
     }
     -- Mirrors WindowRuntime: any open clears the combat-hide mark.
-    Bootstrap.runtime.setWindowVisible = function(nextVisible)
+    Bootstrap.runtime.setWindowVisible = function(nextVisible, showOptions)
       calls.setWindowVisible = calls.setWindowVisible + 1
+      calls.lastShowOptions = showOptions
       state.visible = nextVisible
       if nextVisible then
         Bootstrap.runtime.hiddenByCombat = nil
@@ -99,6 +100,16 @@ return function()
     assert(state.visible == true, "combat end should reopen a window combat hid")
     assert(calls.setWindowVisible == 2, "combat end should reopen once; got: " .. tostring(calls.setWindowVisible))
     assert(Bootstrap.runtime.hiddenByCombat == nil, "combat end should clear the combat-hide mark")
+  end
+
+  -- test_combat_end_reopen_does_not_take_composer_focus
+  do
+    local Bootstrap, deps, _state, calls = makeCombatHarness(true, true)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_DISABLED", deps)
+    LifecycleHandlers.Handle(Bootstrap, "PLAYER_REGEN_ENABLED", deps)
+
+    local showOptions = calls.lastShowOptions
+    assert(showOptions ~= nil and showOptions.focusComposer == false, "combat-end reopen must not focus the composer")
   end
 
   -- test_combat_end_keeps_window_closed_before_combat

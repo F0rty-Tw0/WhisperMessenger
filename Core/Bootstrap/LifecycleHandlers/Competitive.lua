@@ -101,8 +101,9 @@ local function reopenWindowHiddenByCombat(Bootstrap)
   if Bootstrap._inMythicContent or not (runtime.isWindowVisible and runtime.setWindowVisible) then
     return
   end
+  -- No composer focus: the player's movement keys would land in it.
   if not runtime.isWindowVisible() then
-    runtime.setWindowVisible(true)
+    runtime.setWindowVisible(true, { focusComposer = false })
   end
 end
 
