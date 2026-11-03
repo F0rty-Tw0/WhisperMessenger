@@ -3,7 +3,7 @@ local GameWhisperTab = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.Ga
 -- The game's own temporary whisper tabs: CHAT_FRAMES lists frame names,
 -- each frame lives at _G[name], FCF_Close shuts one.
 local saved = {}
-local SAVED_GLOBALS = { "CHAT_FRAMES", "FCF_Close", "C_BattleNet", "Ambiguate" }
+local SAVED_GLOBALS = { "CHAT_FRAMES", "FCF_Close", "FCF_PopInWindow", "C_BattleNet", "Ambiguate" }
 
 local function chatFrame(name, fields)
   local frame = { name = name, inUse = true }
@@ -21,6 +21,7 @@ local function setUp()
   end
   local closed = {}
   _G.CHAT_FRAMES = {}
+  _G.FCF_PopInWindow = nil
   _G.FCF_Close = function(frame)
     closed[#closed + 1] = frame
   end
@@ -53,6 +54,17 @@ return function()
     local frame = chatFrame("ChatFrame11", { isTemporary = true, chatType = "WHISPER", chatTarget = "Arthas-Stormrage" })
     GameWhisperTab.CloseFor("wow::WOW::arthas", { channel = "WOW" })
     assert(#closed == 1 and closed[1] == frame, "FCF_Close gets the frame")
+  end)
+
+  check("test_prefers_pop_in_so_main_chat_shows_the_player_again", function(closed)
+    local poppedIn = {}
+    _G.FCF_PopInWindow = function(frame)
+      poppedIn[#poppedIn + 1] = frame
+    end
+    local frame = chatFrame("ChatFrame11", { isTemporary = true, chatType = "WHISPER", chatTarget = "Arthas-Stormrage" })
+    GameWhisperTab.CloseFor("wow::WOW::arthas", { channel = "WOW" })
+    assert(#poppedIn == 1 and poppedIn[1] == frame, "FCF_PopInWindow gets the frame, as the game's own Close does")
+    assert(#closed == 0, "FCF_Close is only the fallback")
   end)
 
   check("test_matches_cross_realm_name_case_insensitively", function(closed)

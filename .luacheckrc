@@ -140,6 +140,7 @@ read_globals = {
   "ChatFrame_RemoveMessageEventFilter",
   "CHAT_FRAMES",
   "FCF_Close",
+  "FCF_PopInWindow",
   "ChatEdit_SetLastTellTarget",
   "BNGetNumFriends",
   "BNGetNumConversations",

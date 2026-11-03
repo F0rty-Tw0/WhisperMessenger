@@ -65,7 +65,12 @@ end
 
 function GameWhisperTab.CloseFor(conversationKey, conversation)
   local frameNames = _G.CHAT_FRAMES
-  local close = _G.FCF_Close
+  -- The game's own Close for whisper tabs is PopIn: it also lets the main
+  -- chat show that player's whispers again. FCF_Close is the fallback.
+  local close = _G.FCF_PopInWindow
+  if type(close) ~= "function" then
+    close = _G.FCF_Close
+  end
   if type(conversation) ~= "table" or type(frameNames) ~= "table" or type(close) ~= "function" then
     return
   end
