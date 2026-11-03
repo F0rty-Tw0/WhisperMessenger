@@ -5,11 +5,9 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
-local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Shared.SettingsControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
+local DialogChrome = ns.DialogChrome or require("WhisperMessenger.UI.Shared.DialogChrome")
 
 -- Popup with two labelled one-line inputs (the game's StaticPopup has only
 -- one edit box): an optional first field and a required second one. The
@@ -31,16 +29,6 @@ local NATIVE_INPUT_INSET = 6
 local BUTTON_WIDTH = 130
 local BUTTON_GAP = 10
 local INPUT_RADIUS = 6
-local FRAME_RADIUS = 10
--- Blizzard's own text colours for the Native WoW HUD look.
-local NATIVE_TITLE_COLOR = { 1, 0.82, 0, 1 }
-local NATIVE_TEXT_COLOR = { 1, 1, 1, 1 }
-local NATIVE_HINT_COLOR = { 0.8, 0.8, 0.8, 1 }
-local NATIVE_BORDER_TEMPLATE = "DialogBorderTemplate"
--- Blizzard's dialog background is see-through; a dark fill under it keeps
--- the world from showing through. Inset to sit inside the border art.
-local NATIVE_FILL_COLOR = { 0, 0, 0, 0.9 }
-local NATIVE_FILL_INSET = 7
 local NATIVE_INPUT_TEMPLATE = "InputBoxTemplate"
 
 -- One dialog per frame factory, reused on every Show.
@@ -50,24 +38,6 @@ local function trimmed(box)
   return string.match(box:GetText() or "", "^%s*(.-)%s*$")
 end
 
--- A missing template is skipped where the client can tell; elsewhere the
--- pcall in createTemplatedFrame is the guard.
-local function hasTemplate(name)
-  local xmlUtil = _G.C_XMLUtil
-  if type(xmlUtil) ~= "table" or type(xmlUtil.GetTemplateInfo) ~= "function" then
-    return true
-  end
-  local ok, info = pcall(xmlUtil.GetTemplateInfo, name)
-  return ok and info ~= nil
-end
-
-local function nativeFrame(factory, frameType, parent, template)
-  if not StyledTextInputPopup.nativeChrome or not hasTemplate(template) then
-    return nil
-  end
-  return UIHelpers.createTemplatedFrame(factory, frameType, nil, parent, template)
-end
-
 local function createText(parent, font)
   local label = parent:CreateFontString(nil, "OVERLAY", font)
   label:SetJustifyH("LEFT")
@@ -75,7 +45,7 @@ local function createText(parent, font)
 end
 
 local function createInput(factory, body)
-  local box = nativeFrame(factory, "EditBox", body, NATIVE_INPUT_TEMPLATE)
+  local box = DialogChrome.NativeFrame(factory, "EditBox", body, NATIVE_INPUT_TEMPLATE)
   local inset = box and NATIVE_INPUT_INSET or 0
   if box == nil then
     box = factory.CreateFrame("EditBox", nil, body)
@@ -91,40 +61,6 @@ local function createInput(factory, body)
     box:SetAutoFocus(false)
   end
   return box
-end
-
-local function createButton(factory, body)
-  local height = Theme.LAYOUT.OPTION_BUTTON_HEIGHT
-  if StyledTextInputPopup.nativeChrome then
-    local native = NativeControls.CreateButton(factory, body, "", BUTTON_WIDTH, height)
-    if native then
-      return native
-    end
-  end
-  return UIHelpers.createOptionButton(factory, body, "", SettingsControls.OptionButtonColors(Theme), { height = height, width = BUTTON_WIDTH })
-end
-
--- Native art sits on its own child so the content frame draws above it.
-local function createBackground(factory, frame)
-  local border = nativeFrame(factory, "Frame", frame, NATIVE_BORDER_TEMPLATE)
-  if border then
-    border:SetAllPoints(frame)
-    local fill = frame:CreateTexture(nil, "BACKGROUND")
-    fill:SetPoint("TOPLEFT", frame, "TOPLEFT", NATIVE_FILL_INSET, -NATIVE_FILL_INSET)
-    fill:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -NATIVE_FILL_INSET, NATIVE_FILL_INSET)
-    local c = NATIVE_FILL_COLOR
-    fill:SetColorTexture(c[1], c[2], c[3], c[4])
-    frame.nativeFill = fill
-    return nil
-  end
-  local background = UIHelpers.createRoundedBackground(frame, FRAME_RADIUS)
-  local outline = UIHelpers.createBorderBox(frame, Theme.COLORS.divider, 1, "BORDER")
-  return function()
-    if background and background.setColor then
-      background.setColor(Theme.COLORS.bg_primary)
-    end
-    UIHelpers.applyBorderBoxColor(outline, Theme.COLORS.divider)
-  end
 end
 
 local function layout(dialog)
@@ -174,8 +110,7 @@ local function build(factory)
   end
   dialog:EnableMouse(true)
   dialog:SetPoint("CENTER", _G.UIParent, "CENTER", 0, 120)
-  dialog.native = StyledTextInputPopup.nativeChrome == true
-  dialog.paintBackground = createBackground(factory, dialog)
+  dialog.paintBackground = DialogChrome.CreateBackground(factory, dialog)
 
   local body = factory.CreateFrame("Frame", nil, dialog)
   body:SetAllPoints(dialog)
@@ -187,8 +122,8 @@ local function build(factory)
   dialog.secondLabel = createText(body, Theme.FONTS.system_text)
   dialog.secondInput = createInput(factory, body)
   dialog.hint = createText(body, Theme.FONTS.contact_preview)
-  dialog.acceptButton = createButton(factory, body)
-  dialog.cancelButton = createButton(factory, body)
+  dialog.acceptButton = DialogChrome.CreateButton(factory, body, BUTTON_WIDTH)
+  dialog.cancelButton = DialogChrome.CreateButton(factory, body, BUTTON_WIDTH)
   layout(dialog)
 
   function dialog.refreshAccept()
@@ -223,9 +158,7 @@ local function paint(dialog)
   if dialog.paintBackground then
     dialog.paintBackground()
   end
-  local titleColor = dialog.native and NATIVE_TITLE_COLOR or Theme.COLORS.text_primary
-  local textColor = dialog.native and NATIVE_TEXT_COLOR or Theme.COLORS.text_primary
-  local hintColor = dialog.native and NATIVE_HINT_COLOR or Theme.COLORS.text_secondary
+  local titleColor, textColor, hintColor = DialogChrome.TextColors()
   UIHelpers.setTextColor(dialog.title, titleColor)
   UIHelpers.setTextColor(dialog.firstLabel, textColor)
   UIHelpers.setTextColor(dialog.secondLabel, textColor)
