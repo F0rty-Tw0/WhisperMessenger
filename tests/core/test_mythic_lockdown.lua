@@ -275,6 +275,8 @@ return function()
       Invalidate = function()
         invalidateCount = invalidateCount + 1
       end,
+      RefreshPresence = function() end,
+      GetZone = function() end,
     }
 
     local deps = {
@@ -286,9 +288,11 @@ return function()
       end,
     }
 
-    -- Only timer: outside mythic content, the short zone-watch check.
+    -- Only timer: outside mythic content, the short zone-watch check for an
+    -- armed guild contact.
     for _, inMythic in ipairs({ true, false }) do
-      local Bootstrap = { runtime = {}, _inMythicContent = inMythic }
+      local armed = { ["wow::a"] = { channel = "WOW", guid = "Player-A", notifyZone = true } }
+      local Bootstrap = { runtime = { store = { conversations = armed } }, _inMythicContent = inMythic }
       LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", deps)
       LifecycleHandlers.Handle(Bootstrap, "CLUB_MEMBER_UPDATED", deps)
 

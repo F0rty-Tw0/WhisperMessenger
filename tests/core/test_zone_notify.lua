@@ -137,6 +137,44 @@ return function()
   })
   assert(#bnetCache.reads == 0, "Battle.net zones come from the friend list: 0 roster reads, got " .. #bnetCache.reads)
 
+  -- test_armed_contact_outside_every_roster_rescans_once
+  -- Left the guild: each roster poll marks presence stale, but only the
+  -- first miss pays for a full guild/community rescan.
+  local PresenceCache = require("WhisperMessenger.Model.PresenceCache")
+  local clock, rescans = 0, 0
+  PresenceCache._initForTest({
+    GetGuildClubId = function()
+      return 1
+    end,
+    GetSubscribedClubs = function()
+      return {}
+    end,
+    GetClubMembers = function()
+      rescans = rescans + 1
+      return { 1 }
+    end,
+    GetMemberInfo = function()
+      return { guid = "Player-OTHER", presence = 1, zone = "Dornogal" }
+    end,
+  }, {
+    now = function()
+      return clock
+    end,
+  })
+  rescans = 0
+  runtime.store.conversations = { ["wow::gone"] = { channel = "WOW", guid = "Player-GONE", notifyZone = true } }
+  local realDeps = {
+    getPresenceCache = function()
+      return PresenceCache
+    end,
+  }
+  for _ = 1, 4 do
+    clock = clock + 300
+    LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", realDeps)
+  end
+  assert(rescans == 1, "one rescan for a contact in no roster, got " .. rescans)
+  PresenceCache._reset()
+
   -- test_roster_burst_checks_zones_once_after_it
   -- Roster events come in bursts: presence goes stale at once, the zone
   -- check runs once, 2 s after the first event.
@@ -167,6 +205,14 @@ return function()
   assert(#burstCache.reads == 1, "the deferred check reads the armed member once")
   LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
   assert(#scheduled == 2, "the next burst schedules its own check")
+
+  -- test_roster_burst_without_an_armed_contact_schedules_nothing
+  scheduled[2].fn()
+  invalidations = 0
+  runtime.store.conversations = { ["wow::jaina"] = { channel = "WOW", guid = "Player-JAINA" } }
+  LifecycleHandlers.Handle(Bootstrap, "GUILD_ROSTER_UPDATE", burstDeps)
+  assert(invalidations == 1, "presence still goes stale")
+  assert(#scheduled == 2, "nothing armed: no zone check scheduled, got " .. #scheduled)
 
   rawset(_G, "DEFAULT_CHAT_FRAME", nil)
   rawset(_G, "PlaySound", nil)

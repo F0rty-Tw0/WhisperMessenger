@@ -16,9 +16,12 @@ local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName
 -- BN_FRIEND_ACCOUNT_ONLINE / _OFFLINE for Battle.net friends.
 local OnlineNotify = {}
 
-local function announce(runtime, conversation)
+-- One chat line plus the notification sound. line is a localized format
+-- whose first %s is the contact's name; "Notify when they change zone" uses
+-- it too.
+function OnlineNotify.Announce(runtime, conversation, line, ...)
   local name = conversation.nickname or DisplayName.Format(conversation.displayName) or "?"
-  ChatPrint.Print(string.format(Localization.Text("%s is now online."), name))
+  ChatPrint.Print(string.format(line, name, ...))
   IncomingAlerts.PlaySound(runtime.accountState and runtime.accountState.settings)
 end
 
@@ -32,7 +35,7 @@ end
 function OnlineNotify.Observe(runtime, conversationKey, conversation, isOnline)
   stampSeen(runtime, conversation, isOnline)
   if OnlineWatch.Observe(runtime, conversationKey, isOnline) then
-    announce(runtime, conversation)
+    OnlineNotify.Announce(runtime, conversation, Localization.Text("%s is now online."))
   end
 end
 
