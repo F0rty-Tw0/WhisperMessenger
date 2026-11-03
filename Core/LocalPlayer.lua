@@ -3,11 +3,17 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+
 -- The logged-in character's short name, class tag and normalized realm, read
--- live. Each returns nil when the API is missing, throws, or reports nothing.
+-- live. Each returns nil when the API is missing, throws, reports nothing, or
+-- hands back a secret value (a chat lock), which must never be compared.
 local LocalPlayer = {}
 
 local function nonEmpty(value)
+  if SecretValue.Is(value) then
+    return nil
+  end
   if type(value) == "string" and value ~= "" then
     return value
   end

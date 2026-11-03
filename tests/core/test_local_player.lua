@@ -46,6 +46,17 @@ return function()
   rawset(_G, "GetNormalizedRealmName", nil)
   assert(LocalPlayer.NormalizedRealm() == nil, "missing realm API is nil")
 
+  -- test_secret_values_read_as_nil
+  local savedSecret = _G.issecretvalue
+  rawset(_G, "UnitName", function()
+    return "Arthas"
+  end)
+  rawset(_G, "issecretvalue", function(value)
+    return value == "Arthas"
+  end)
+  assert(LocalPlayer.Name() == nil, "a secret name is nil, never compared")
+  rawset(_G, "issecretvalue", savedSecret)
+
   rawset(_G, "UnitName", savedName)
   rawset(_G, "UnitClass", savedClass)
   rawset(_G, "GetNormalizedRealmName", savedRealm)
