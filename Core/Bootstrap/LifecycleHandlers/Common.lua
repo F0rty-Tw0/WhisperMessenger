@@ -45,6 +45,12 @@ function Common.notifyCompetitiveState(Bootstrap)
     end
   end
 
+  -- Pop-up cards never show under a chat lock or restricted content, so none
+  -- stays up into one. Every lock start passes through here.
+  if isActive and runtime ~= nil and type(runtime.clearWhisperToasts) == "function" then
+    runtime.clearWhisperToasts()
+  end
+
   if type(Bootstrap.onCompetitiveStateChanged) == "function" then
     Bootstrap.onCompetitiveStateChanged(isActive)
   end
