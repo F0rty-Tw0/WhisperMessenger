@@ -446,6 +446,7 @@ Core/PublicApi/Guards.lua
 Core/PublicApi/Panels.lua
 Core/Bootstrap/WindowRuntime/IconToggle.lua
 Core/Bootstrap/WindowRuntime/PreviewOpen.lua
+Core/Bootstrap/WindowRuntime/WhisperToasts.lua
 Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime.lua
 Core/Bootstrap/AddonEventFrame.lua
