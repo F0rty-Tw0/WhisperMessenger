@@ -81,6 +81,14 @@ return function()
     assert(stub.plays == 1, "set(true) when already visible is a no-op")
   end
 
+  -- test_attach_takes_a_custom_duration
+  do
+    local region = frame:CreateTexture(nil, "ARTWORK")
+    local stub = installAnimationStub(region)
+    HoverFade.Attach(region, 0.4)
+    assert(stub.duration == 0.4, "custom fade duration, got " .. tostring(stub.duration))
+  end
+
   -- test_fade_out_hides_when_finished
   do
     local region = frame:CreateTexture(nil, "ARTWORK")

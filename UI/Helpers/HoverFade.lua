@@ -17,14 +17,15 @@ local HoverFade = {}
 HoverFade.DURATION = 0.1
 
 -- Returns a controller: set(shown), paintColor(color), paintVertex(color).
-function HoverFade.Attach(region)
+-- duration: seconds per fade, DURATION when omitted.
+function HoverFade.Attach(region, duration)
   local peak = 1
   local visible = region:IsShown()
   local group, anim
   if type(region.CreateAnimationGroup) == "function" then
     group = region:CreateAnimationGroup()
     anim = group:CreateAnimation("Alpha")
-    anim:SetDuration(HoverFade.DURATION)
+    anim:SetDuration(duration or HoverFade.DURATION)
     if group.SetToFinalAlpha then
       group:SetToFinalAlpha(true)
     end
