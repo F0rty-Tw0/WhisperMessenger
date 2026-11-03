@@ -93,6 +93,7 @@ function WindowRuntime.Create(options)
   local window
   local icon
   local minimapRuntime
+  local compartment
 
   -- dirtyKeys nil (every direct caller) rebuilds all contact snapshots.
   local snapshotCache = SnapshotCache.New()
@@ -193,6 +194,9 @@ function WindowRuntime.Create(options)
         return nil
       end
       return minimapRuntime and minimapRuntime.getLdbObject() or nil
+    end,
+    getCompartment = function()
+      return compartment
     end,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
@@ -428,6 +432,13 @@ function WindowRuntime.Create(options)
   end
 
   applyIconMode()
+  compartment = MinimapIconRuntime.CreateCompartment({
+    accountState = accountState,
+    runtime = runtime,
+    buildContacts = buildContacts,
+    onToggle = onIconToggle,
+    onMarkAllRead = windowCallbacks.onMarkAllRead,
+  })
 
   RuntimeBindings.Apply({
     runtime = runtime,

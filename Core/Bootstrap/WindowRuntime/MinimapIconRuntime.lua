@@ -6,6 +6,7 @@ end
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local MinimapIcon = ns.MinimapIcon or require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.MinimapIcon.DataBroker")
+local AddonCompartment = ns.MinimapIconAddonCompartment or require("WhisperMessenger.UI.MinimapIcon.AddonCompartment")
 local TableUtils = ns.TableUtils or require("WhisperMessenger.Util.TableUtils")
 local IconRuntime = ns.BootstrapWindowRuntimeIconRuntime or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
 
@@ -88,6 +89,27 @@ function MinimapIconRuntime.Create(options)
       return ldbObject
     end,
   }
+end
+
+-- The Retail addon compartment entry: the minimap icon's click and tooltip,
+-- seeded with the current count. It exists in every icon mode, so a player
+-- who hides both icons can still open the messenger from it. Nil where the
+-- game has no compartment (Classic flavors, WoW: Forever).
+function MinimapIconRuntime.CreateCompartment(options)
+  options = options or {}
+  local accountState = options.accountState or {}
+  local runtime = options.runtime or {}
+  local entry = (options.addonCompartment or AddonCompartment).Register({
+    onToggle = options.onToggle or function() end,
+    onMarkAllRead = options.onMarkAllRead,
+    getHideFromDefaultChat = function()
+      return accountState.settings ~= nil and accountState.settings.hideFromDefaultChat == true
+    end,
+  })
+  if entry then
+    entry.setUnreadCount(IconSurfaces.Counts(options.buildContacts(), runtime.panelRegistry))
+  end
+  return entry
 end
 
 ns.BootstrapWindowRuntimeMinimapIconRuntime = MinimapIconRuntime

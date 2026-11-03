@@ -8,8 +8,8 @@ local DataBroker = ns.MinimapIconDataBroker or require("WhisperMessenger.UI.Mini
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
 
 -- One count (unread whispers plus the panels' badges) and one preview feed
--- every icon surface: the widget icon, the minimap icon and the
--- LibDataBroker text.
+-- every icon surface: the widget icon, the minimap icon, the
+-- LibDataBroker text and the addon compartment entry.
 local IconSurfaces = {}
 
 --- The icon number (unread whispers plus the panels' badges) and the
@@ -69,8 +69,8 @@ local function showExternalPreview(icon, preview, surfaces)
 end
 
 -- surfaces: { getWindow, isWindowVisible, buildMessagePreview, getIcon,
--- getMinimapIcon, getLdbObject, getExternalPreview?, dropExternalPreview?,
--- previewsOff?, getPanelRegistry? }.
+-- getMinimapIcon, getLdbObject, getCompartment?, getExternalPreview?,
+-- dropExternalPreview?, previewsOff?, getPanelRegistry? }.
 function IconSurfaces.Update(contacts, surfaces)
   -- Suppress the icon-anchored previews only when the Whispers tab is
   -- actually showing — the full conversation is already on screen and the
@@ -90,6 +90,7 @@ function IconSurfaces.Update(contacts, surfaces)
   local icon = surfaces.getIcon()
   local minimap = surfaces.getMinimapIcon()
   IconSurfaces.ShowCounts(total, unread, icon, minimap, surfaces.getLdbObject())
+  setCount(surfaces.getCompartment and surfaces.getCompartment(), total, unread)
   if icon and icon.setIncomingPreview and not showExternalPreview(icon, preview, surfaces) then
     icon.setIncomingPreview(previewSender, previewText, previewClass)
   end

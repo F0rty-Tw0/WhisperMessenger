@@ -13,6 +13,7 @@ end
 local function run(unread, badgeSum)
   local widgetCalls, widget = recorder()
   local minimapCalls, minimap = recorder()
+  local compartmentCalls, compartment = recorder()
   local ldb = {}
   local surfaces = {
     getWindow = function()
@@ -33,6 +34,9 @@ local function run(unread, badgeSum)
     getLdbObject = function()
       return ldb
     end,
+    getCompartment = function()
+      return compartment
+    end,
   }
   if badgeSum ~= nil then
     surfaces.getPanelRegistry = function()
@@ -48,7 +52,12 @@ local function run(unread, badgeSum)
     contacts[1] = { channel = "WOW", unreadCount = unread }
   end
   IconSurfaces.Update(contacts, surfaces)
-  return { widget = widgetCalls[#widgetCalls], minimap = minimapCalls[#minimapCalls], ldb = ldb }
+  return {
+    widget = widgetCalls[#widgetCalls],
+    minimap = minimapCalls[#minimapCalls],
+    compartment = compartmentCalls[#compartmentCalls],
+    ldb = ldb,
+  }
 end
 
 return function()
@@ -59,6 +68,13 @@ return function()
     assert(out.minimap.count == 3, "minimap shows 3, got " .. tostring(out.minimap.count))
     assert(out.ldb.unread == 3, "LDB count is 3, got " .. tostring(out.ldb.unread))
     assert(out.ldb.text == "1 unread, 2 in addon pages", "LDB text splits, got " .. tostring(out.ldb.text))
+  end
+
+  -- test_addon_compartment_gets_the_icon_count_and_its_whispers
+  do
+    local out = run(1, 2)
+    assert(out.compartment ~= nil, "compartment entry updated")
+    assert(out.compartment.count == 3 and out.compartment.pulseCount == 1, "compartment 3 with 1 whisper")
   end
 
   -- test_icons_pulse_on_whispers_only

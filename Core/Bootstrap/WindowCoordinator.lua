@@ -176,6 +176,7 @@ function WindowCoordinator.Create(options)
     getIcon = getIcon,
     getMinimapIcon = getMinimapIcon,
     getLdbObject = getLdbObject,
+    getCompartment = options.getCompartment,
     -- The registry (set after Create), not the window: counts before it is built.
     getPanelRegistry = function()
       return runtime.panelRegistry
