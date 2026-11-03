@@ -460,6 +460,11 @@ local French = {
   ["Unblock"] = "Débloquer",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Les canaux cochés dans les paramètres Discussions apparaissent ici. Choisissez un canal à gauche.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Définir un raccourci…",
+  ["Not bound"] = "Non assigné",
+  ["Key bindings can't be changed in combat."] = "Les raccourcis ne peuvent pas être modifiés en combat.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Cette version du jeu ne peut pas ouvrir les raccourcis d'ici. Passez par le menu du jeu.",
 }
 
 ns.Locale_frFR = French

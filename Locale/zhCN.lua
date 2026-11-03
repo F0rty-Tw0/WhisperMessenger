@@ -460,6 +460,11 @@ local SimplifiedChinese = {
   ["Unblock"] = "取消屏蔽",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "你在聊天设置中勾选的频道会显示在这里。请在左侧选择一个频道。",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "设置快捷键…",
+  ["Not bound"] = "未绑定",
+  ["Key bindings can't be changed in combat."] = "战斗中无法更改按键绑定。",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此游戏版本无法从这里打开按键设置。请使用游戏菜单。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

@@ -460,6 +460,11 @@ local Korean = {
   ["Unblock"] = "차단 해제",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "채팅 설정에서 선택한 채널이 여기에 표시됩니다. 왼쪽에서 채널을 선택하세요.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "단축키 설정…",
+  ["Not bound"] = "지정 안 됨",
+  ["Key bindings can't be changed in combat."] = "전투 중에는 단축키를 변경할 수 없습니다.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "이 게임 버전에서는 여기서 단축키 설정을 열 수 없습니다. 게임 메뉴를 이용하세요.",
 }
 
 ns.Locale_koKR = Korean

@@ -460,6 +460,11 @@ local Spanish = {
   ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Los canales que marques en los ajustes de Chats aparecen aquí. Elige un canal a la izquierda.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Asignar tecla…",
+  ["Not bound"] = "Sin asignar",
+  ["Key bindings can't be changed in combat."] = "No se pueden cambiar las asignaciones de teclas en combate.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versión del juego no puede abrir las asignaciones de teclas desde aquí. Usa el menú del juego.",
 }
 
 ns.Locale_esES = Spanish

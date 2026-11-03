@@ -460,6 +460,11 @@ local Russian = {
   ["Unblock"] = "Разблокировать",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Здесь появляются каналы, отмеченные в настройках «Чаты». Выберите канал слева.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Назначить клавишу…",
+  ["Not bound"] = "Не назначено",
+  ["Key bindings can't be changed in combat."] = "Назначения клавиш нельзя менять в бою.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Эта версия игры не может открыть назначения клавиш отсюда. Воспользуйтесь игровым меню.",
 }
 
 ns.Locale_ruRU = Russian

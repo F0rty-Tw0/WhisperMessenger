@@ -460,6 +460,11 @@ local Portuguese = {
   ["Unblock"] = "Desbloquear",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Os canais que você marcar nas configurações de Bate-papos aparecem aqui. Escolha um canal à esquerda.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Definir atalho…",
+  ["Not bound"] = "Sem atalho",
+  ["Key bindings can't be changed in combat."] = "Não é possível alterar atalhos em combate.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versão do jogo não consegue abrir os atalhos daqui. Use o menu do jogo.",
 }
 
 ns.Locale_ptBR = Portuguese

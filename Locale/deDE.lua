@@ -460,6 +460,11 @@ local German = {
   ["Unblock"] = "Blockierung aufheben",
   -- The empty Channels tab
   ["The channels you tick in the Chats settings show up here. Pick a channel on the left."] = "Die Kanäle, die du in den Chats-Einstellungen ankreuzt, erscheinen hier. Wähle links einen Kanal.",
+  -- Behavior page: Set keybind button
+  ["Set keybind…"] = "Tastenbelegung festlegen…",
+  ["Not bound"] = "Nicht belegt",
+  ["Key bindings can't be changed in combat."] = "Tastenbelegungen können im Kampf nicht geändert werden.",
+  ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Diese Spielversion kann die Tastenbelegung nicht von hier öffnen. Nutze stattdessen das Spielmenü.",
 }
 
 ns.Locale_deDE = German
