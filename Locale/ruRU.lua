@@ -383,6 +383,9 @@ local Russian = {
   ["Last online %s"] = "Последний вход: %s",
   ["Notify when online"] = "Сообщить о входе в сеть",
   ["%s is now online."] = "%s теперь в сети.",
+  ["Couldn't store a whisper from %s: %s"] = "Не удалось сохранить шепот от %s: %s",
+  ["Couldn't store a whisper to %s: %s"] = "Не удалось сохранить шепот для %s: %s",
+  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger несколько раз столкнулся с ошибками и больше не скрывает шепот в чате до /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "В очереди",
   ["Not sent"] = "Не отправлено",

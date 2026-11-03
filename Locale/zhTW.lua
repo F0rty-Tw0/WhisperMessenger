@@ -383,6 +383,9 @@ local TraditionalChinese = {
   ["Last online %s"] = "上次上線：%s",
   ["Notify when online"] = "上線時通知",
   ["%s is now online."] = "%s 已上線。",
+  ["Couldn't store a whisper from %s: %s"] = "無法儲存來自%s的密語：%s",
+  ["Couldn't store a whisper to %s: %s"] = "無法儲存傳給%s的密語：%s",
+  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger 多次發生錯誤，在你 /reload 之前將不再從聊天中隱藏密語。",
   -- Queued sends, delivery status, replies
   ["Queued"] = "排隊中",
   ["Not sent"] = "未送出",

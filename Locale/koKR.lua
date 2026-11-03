@@ -383,6 +383,9 @@ local Korean = {
   ["Last online %s"] = "마지막 접속: %s",
   ["Notify when online"] = "접속 시 알림",
   ["%s is now online."] = "%s님이 접속했습니다.",
+  ["Couldn't store a whisper from %s: %s"] = "%s님의 귓속말을 저장하지 못했습니다: %s",
+  ["Couldn't store a whisper to %s: %s"] = "%s님에게 보낸 귓속말을 저장하지 못했습니다: %s",
+  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger에서 오류가 반복되어 /reload 전까지 귓속말을 채팅창에서 숨기지 않습니다.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "대기 중",
   ["Not sent"] = "전송 안 됨",

@@ -383,6 +383,9 @@ local Spanish = {
   ["Last online %s"] = "Última conexión: %s",
   ["Notify when online"] = "Avisar cuando se conecte",
   ["%s is now online."] = "%s se ha conectado.",
+  ["Couldn't store a whisper from %s: %s"] = "No se pudo guardar un susurro de %s: %s",
+  ["Couldn't store a whisper to %s: %s"] = "No se pudo guardar un susurro a %s: %s",
+  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger ha tenido errores repetidos y ha dejado de ocultar los susurros del chat hasta que uses /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "En cola",
   ["Not sent"] = "No enviado",
