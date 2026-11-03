@@ -165,6 +165,48 @@ return function()
     assert(#radios == 1 and radios[1].text == "Standard", "getOptions returning nil keeps the last list")
   end
 
+  local GROUPED = {
+    { header = true, label = "Group A" },
+    { key = "a1", label = "A1" },
+    { header = true, label = "Group B" },
+    { key = "b1", label = "B1" },
+  }
+
+  -- test_hud_dropdown_lists_group_headers_as_titles
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "a1", initial = "b1" })
+    local items = {}
+    local root = {
+      CreateTitle = function(_self, text)
+        items[#items + 1] = "title:" .. text
+      end,
+      CreateDivider = function()
+        items[#items + 1] = "divider"
+      end,
+      CreateRadio = function(_self, text)
+        items[#items + 1] = "radio:" .. text
+      end,
+    }
+    dropdown.button.generator(dropdown.button, root)
+    assert(
+      table.concat(items, ",") == "title:Group A,radio:A1,divider,title:Group B,radio:B1",
+      "headers become titles with a divider between groups, got " .. table.concat(items, ",")
+    )
+  end
+
+  -- test_hud_dropdown_without_titles_lists_only_the_choices
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "a1", initial = "b1" })
+    local radios = openMenu(dropdown.button.generator, dropdown.button)
+    assert(#radios == 2 and radios[1].text == "A1" and radios[2].text == "B1", "no title API: headers are left out")
+  end
+
+  -- test_hud_dropdown_never_selects_a_header
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "missing", initial = nil })
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "a1", "fallback skips headers to the first choice")
+  end
+
   -- test_hud_dropdown_width_and_text_colour
   do
     local dropdown = build(dropdownFactory(true))
