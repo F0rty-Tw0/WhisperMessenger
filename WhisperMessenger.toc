@@ -137,6 +137,7 @@ Core/LocalPlayer.lua
 Core/Ingest/GroupChatIngest/SecretString.lua
 Core/Ingest/GroupChatIngest/Direction.lua
 Core/Ingest/GroupChatIngest/Mention.lua
+Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
 Core/Ingest/GroupChatIngest/ConversationKey.lua
@@ -477,7 +478,6 @@ Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime/StartConversation.lua
-Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
 Core/Bootstrap/WindowRuntime/IconPosition.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
