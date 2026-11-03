@@ -12,6 +12,7 @@ local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMess
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local RequestFollow = ns.BootstrapWindowCoordinatorRequestFollow or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.RequestFollow")
 local IncomingRefresh = ns.BootstrapWindowCoordinatorIncomingRefresh or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IncomingRefresh")
+local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
 -- stylua: ignore end
 
 local STATUS_REFRESH_INTERVAL = 30
@@ -208,7 +209,7 @@ function WindowCoordinator.Create(options)
       local ensureFresh = presenceCache and type(presenceCache.EnsureFresh) == "function" and presenceCache.EnsureFresh or nil
       for _, item in ipairs(freshContacts) do
         if ensureFresh and item.guid then
-          ensureFresh(item.guid)
+          ZoneNotify.ObserveContact(runtime, item, presenceCache, ensureFresh(item.guid))
         end
         if item.channel == "WOW" and item.guid and ContactEnricher.ShouldRequestAvailability(runtime.availabilityByGUID[item.guid]) then
           local lastAt = runtime.availabilityRequestedAt[item.guid] or 0

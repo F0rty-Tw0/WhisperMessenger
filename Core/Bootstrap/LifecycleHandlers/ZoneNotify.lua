@@ -32,9 +32,19 @@ function ZoneNotify.Observe(runtime, conversation, zone)
   return true
 end
 
+-- Guild/community members only: Battle.net zones come from the friend list.
+function ZoneNotify.IsArmedGuildContact(conversation)
+  return type(conversation) == "table" and conversation.notifyZone == true and conversation.channel ~= "BN" and conversation.guid ~= nil
+end
+
+-- The stored zone of an offline member is stale, so it is not a zone.
+local function observePresence(runtime, conversation, PresenceCache, presence)
+  local zone = presence == "online" and PresenceCache.GetZone(conversation.guid) or nil
+  return ZoneNotify.Observe(runtime, conversation, zone)
+end
+
 -- One member read per armed guild/community contact, nothing for anyone
--- else. The stored zone of an offline member is stale, so it is not a zone.
--- Returns true when any contact alerted.
+-- else. Returns true when any contact alerted.
 function ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache)
   local runtime = Bootstrap.runtime
   if runtime == nil or runtime.store == nil or PresenceCache == nil then
@@ -42,13 +52,28 @@ function ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache)
   end
   local alerted = false
   for _, conversation in pairs(runtime.store.conversations or {}) do
-    if conversation.notifyZone == true and conversation.channel ~= "BN" and conversation.guid ~= nil then
-      local online = PresenceCache.RefreshPresence(conversation.guid) == "online"
-      local zone = online and PresenceCache.GetZone(conversation.guid) or nil
-      alerted = ZoneNotify.Observe(runtime, conversation, zone) or alerted
+    if ZoneNotify.IsArmedGuildContact(conversation) then
+      local presence = PresenceCache.RefreshPresence(conversation.guid)
+      alerted = observePresence(runtime, conversation, PresenceCache, presence) or alerted
     end
   end
   return alerted
+end
+
+-- A window refresh just freshened this contact's presence: a zone the cache
+-- picked up without a roster event still alerts. The row's menu tick clears
+-- with it. Returns true when it alerted.
+function ZoneNotify.ObserveContact(runtime, item, PresenceCache, presence)
+  local conversations = runtime.store and runtime.store.conversations
+  local conversation = conversations and conversations[item.conversationKey]
+  if not ZoneNotify.IsArmedGuildContact(conversation) then
+    return false
+  end
+  if not observePresence(runtime, conversation, PresenceCache, presence) then
+    return false
+  end
+  item.notifyZone = nil
+  return true
 end
 
 ns.BootstrapLifecycleHandlersZoneNotify = ZoneNotify
