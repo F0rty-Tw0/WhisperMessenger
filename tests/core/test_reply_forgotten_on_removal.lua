@@ -19,6 +19,18 @@ return function()
     assert(removed[1] == "wow::thrall", "runtime hook called with the removed key")
   end
 
+  -- test_store_removal_clears_reply_to_last_target
+  do
+    local runtime = RuntimeFactory.CreateRuntimeState({}, {}, "me", {})
+    Store.EnsureConversation(runtime.store, "wow::thrall")
+    Store.EnsureConversation(runtime.store, "wow::jaina")
+    runtime.lastIncomingWhisperKey = "wow::thrall"
+    Store.Remove(runtime.store, "wow::jaina")
+    assert(runtime.lastIncomingWhisperKey == "wow::thrall", "another chat's removal keeps the reply target")
+    Store.Remove(runtime.store, "wow::thrall")
+    assert(runtime.lastIncomingWhisperKey == nil, "removing the reply target's chat clears it")
+  end
+
   -- test_bindings_forward_removal_to_the_composer
   do
     local forgotten = {}

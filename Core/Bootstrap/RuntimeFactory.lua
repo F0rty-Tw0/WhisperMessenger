@@ -168,6 +168,10 @@ function RuntimeFactory.CreateRuntimeState(accountState, characterState, localPr
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil
     end
+    -- Reply-to-last must not target a conversation that is gone.
+    if runtime.lastIncomingWhisperKey == key then
+      runtime.lastIncomingWhisperKey = nil
+    end
     -- Session UI state for the key (a pending reply) goes with it.
     if type(runtime.onConversationRemoved) == "function" then
       runtime.onConversationRemoved(key)
