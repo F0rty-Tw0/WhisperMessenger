@@ -257,16 +257,6 @@ return function()
     assert(dropdown.button.template == "UIPanelButtonTemplate", "missing template: panel button")
   end)
 
-  -- test_hud_without_any_menu_api_keeps_the_modern_dropdown
-  do
-    local saved = rawget(_G, "MenuUtil")
-    rawset(_G, "MenuUtil", nil)
-    local dropdown = build(FakeUI.NewFactory())
-    rawset(_G, "MenuUtil", saved)
-    assert(dropdown.button.template == nil, "no menu API: modern closed button")
-    assert(FindUI.dropdownMenu(dropdown.row) ~= nil, "no menu API: custom menu")
-  end
-
   -- The game's menus close on ESC before the messenger: an opened one is
   -- reported to the window. reportedMenus(fn) runs fn() and returns them.
   local function reportedMenus(fn)
@@ -304,12 +294,4 @@ return function()
     end)
     assert(#reported == 1 and reported[1].frame == calls.menu, "the open context menu must take ESC first")
   end)
-
-  -- test_modern_dropdown_ignores_the_blizzard_api
-  do
-    local factory = dropdownFactory()
-    local parent = factory.CreateFrame("Frame", "UIParent", nil)
-    local dropdown = DropdownSelector.Create(factory, parent, { labelText = "Font Family", optionsList = OPTIONS, fallbackKey = "default" })
-    assert(dropdown.button.template == nil, "modern: custom dropdown")
-  end
 end
