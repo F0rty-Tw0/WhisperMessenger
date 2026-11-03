@@ -49,6 +49,7 @@ return function()
     dimWhenMoving = false,
     autoFocusComposer = true,
     hideFromDefaultChat = true,
+    closeGameWhisperTab = true,
     autoOpenIncoming = true,
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
@@ -132,6 +133,7 @@ return function()
   assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
   assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
+  assert(whispersCapture.config.closeGameWhisperTab == true, "whispers config should carry closeGameWhisperTab")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")

@@ -354,6 +354,8 @@ local French = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Permet aux contacts qui utilisent aussi Whisper Messenger de voir quand vous avez lu leurs messages.",
   ["Show invite link"] = "Afficher le lien d'invitation",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Affiche un lien (Inviter sur WM) dans l'en-tête du chat. Un clic chuchote à ce joueur un court message sur cet addon.",
+  ["Close the game's whisper tab too"] = "Fermer aussi l'onglet de chuchotement du jeu",
+  ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Quand vous supprimez une discussion ici, l'onglet de chuchotement du jeu pour ce joueur se ferme aussi. Utile seulement si le jeu ouvre les chuchotements dans leurs propres onglets.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "Brouillon",
   ["Draft:"] = "Brouillon :",

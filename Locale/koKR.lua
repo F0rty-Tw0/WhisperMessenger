@@ -354,6 +354,8 @@ local Korean = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Whisper Messenger를 사용하는 상대에게 내가 귓속말을 읽었음을 보여줍니다.",
   ["Show invite link"] = "초대 링크 표시",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "채팅 상단에 (WM 초대) 링크를 표시합니다. 클릭하면 해당 플레이어에게 이 애드온을 소개하는 짧은 귓속말을 보냅니다.",
+  ["Close the game's whisper tab too"] = "게임의 귓속말 탭도 닫기",
+  ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "여기서 대화를 삭제하면 해당 플레이어의 게임 귓속말 탭도 함께 닫힙니다. 게임이 귓속말을 별도 탭으로 열 때만 적용됩니다.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "임시 저장",
   ["Draft:"] = "임시 저장:",

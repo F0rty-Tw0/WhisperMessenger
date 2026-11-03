@@ -354,6 +354,8 @@ local Russian = {
   ["Lets contacts who also use Whisper Messenger see when you have read their whispers."] = "Контакты, у которых тоже есть Whisper Messenger, видят, когда вы прочитали их сообщения.",
   ["Show invite link"] = "Показывать ссылку-приглашение",
   ["Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."] = "Показывает ссылку (Пригласить в WM) в заголовке чата. Нажатие отправляет этому игроку короткое личное сообщение об этом аддоне.",
+  ["Close the game's whisper tab too"] = "Закрывать и вкладку шепота в игре",
+  ["When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs."] = "Когда вы удаляете здесь чат, вкладка шепота этого игрока в чате игры тоже закрывается. Действует, только если игра открывает шепот в отдельных вкладках.",
   -- Drafts, new-messages divider, quick replies
   ["Draft"] = "Черновик",
   ["Draft:"] = "Черновик:",
