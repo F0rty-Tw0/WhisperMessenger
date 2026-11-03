@@ -74,6 +74,10 @@ function DropdownSelector.Create(factory, parent, options)
 
   local optionButtons = {}
   local buttonPool = {}
+  -- `requested` is the saved key, kept even while the list lacks it (a
+  -- SharedMedia sound whose addon has not registered yet); `selected` is
+  -- the option it resolves to now.
+  local requested = initial
   local selected = initial
   local buttonHovered = false
 
@@ -113,6 +117,7 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function updateSelection(key)
+    requested = key
     local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     buttonLabel:SetText(option and option.label or "")
@@ -203,7 +208,7 @@ function DropdownSelector.Create(factory, parent, options)
     end
 
     layoutOptions()
-    updateSelection(selected)
+    updateSelection(requested)
   end
 
   -- Opens at the top unless the selected row sits below the first page;
