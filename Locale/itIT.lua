@@ -383,6 +383,9 @@ local Italian = {
   ["Last online %s"] = "Ultimo accesso: %s",
   ["Notify when online"] = "Avvisa quando è online",
   ["%s is now online."] = "%s è ora online.",
+  ["Hit an error. Whisper from %s: %s"] = "Si è verificato un errore. Sussurro da %s: %s",
+  ["Hit an error. Whisper to %s: %s"] = "Si è verificato un errore. Sussurro a %s: %s",
+  ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Errori ripetuti: i sussurri non vengono più nascosti dalla chat fino al prossimo /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "In coda",
   ["Not sent"] = "Non inviato",

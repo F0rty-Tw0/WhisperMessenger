@@ -35,8 +35,10 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
   -- Channel, say, yell and emote filters; never on whisper events.
   local conditional = runtime and ConditionalFilters.New(runtime) or nil
 
+  -- _whisperFiltersDisabled: set for the session by WhisperIngestFailsafe
+  -- after repeated ingest errors, so whispers stay visible in the game chat.
   Bootstrap.registerChatFilters = function()
-    if Bootstrap._filtersRegistered or not FilterApi.IsAvailable() then
+    if Bootstrap._filtersRegistered or Bootstrap._whisperFiltersDisabled or not FilterApi.IsAvailable() then
       return
     end
 
@@ -76,7 +78,7 @@ function ChatFilters.Configure(Bootstrap, accountState, runtime)
       and not Bootstrap._inEncounter
       and not _G._wmSuspended
       and not chatLocked
-    local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed
+    local shouldFilter = accountState.settings.hideFromDefaultChat == true and allowed and not Bootstrap._whisperFiltersDisabled
 
     if shouldFilter and not Bootstrap._filtersRegistered then
       Bootstrap.registerChatFilters()

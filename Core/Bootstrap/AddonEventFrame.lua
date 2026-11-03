@@ -5,6 +5,7 @@ end
 
 local EventUtils = ns.EventUtils or require("WhisperMessenger.Core.EventUtils")
 local LockdownCatcher = ns.BootstrapLockdownCatcher or require("WhisperMessenger.Core.Bootstrap.LockdownCatcher")
+local WhisperIngestFailsafe = ns.BootstrapWhisperIngestFailsafe or require("WhisperMessenger.Core.Bootstrap.WhisperIngestFailsafe")
 
 local AddonEventFrame = {}
 
@@ -122,7 +123,7 @@ function AddonEventFrame.Install(deps)
       resolveModule(EventBridge, "BootstrapEventBridge", loadModule, "WhisperMessenger.Core.Bootstrap.EventBridge", "BootstrapEventBridge")
     if EventBridge then
       local runtime = Bootstrap.runtime
-      EventBridge.RouteLiveEvent(runtime, runtime and runtime.refreshWindow or nil, event, ...)
+      WhisperIngestFailsafe.RouteLiveEvent(Bootstrap, EventBridge, runtime, runtime and runtime.refreshWindow or nil, event, ...)
     end
   end)
 

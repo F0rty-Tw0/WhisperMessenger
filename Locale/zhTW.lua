@@ -383,6 +383,9 @@ local TraditionalChinese = {
   ["Last online %s"] = "上次上線：%s",
   ["Notify when online"] = "上線時通知",
   ["%s is now online."] = "%s 已上線。",
+  ["Hit an error. Whisper from %s: %s"] = "發生錯誤。來自%s的密語：%s",
+  ["Hit an error. Whisper to %s: %s"] = "發生錯誤。傳給%s的密語：%s",
+  ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "多次發生錯誤，在你 /reload 之前將不再從聊天中隱藏密語。",
   -- Queued sends, delivery status, replies
   ["Queued"] = "排隊中",
   ["Not sent"] = "未送出",

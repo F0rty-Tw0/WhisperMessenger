@@ -383,6 +383,9 @@ local French = {
   ["Last online %s"] = "Dernière connexion : %s",
   ["Notify when online"] = "Prévenir à la connexion",
   ["%s is now online."] = "%s est maintenant en ligne.",
+  ["Hit an error. Whisper from %s: %s"] = "Une erreur est survenue. Chuchotement de %s : %s",
+  ["Hit an error. Whisper to %s: %s"] = "Une erreur est survenue. Chuchotement à %s : %s",
+  ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Erreurs répétées : les chuchotements ne sont plus masqués dans le chat jusqu'à votre prochain /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "En attente",
   ["Not sent"] = "Non envoyé",
