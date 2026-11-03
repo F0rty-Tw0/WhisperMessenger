@@ -22,7 +22,7 @@ local function inCombat()
 end
 
 local function settingsPanel()
-  local settings = _G.Settings
+  local settings = _G["Settings"]
   if type(settings) == "table" and type(settings.OpenToCategory) == "function" and settings.KEYBINDINGS_CATEGORY_ID ~= nil then
     return settings
   end
@@ -30,7 +30,7 @@ local function settingsPanel()
 end
 
 local function hasLegacyFrame()
-  return type(_G.KeyBindingFrame_LoadUI) == "function" and type(_G.ShowUIPanel) == "function"
+  return type(_G["KeyBindingFrame_LoadUI"]) == "function" and type(_G["ShowUIPanel"]) == "function"
 end
 
 -- Returns enabled, reasonKey (an English Localization key, nil when enabled).
@@ -58,11 +58,11 @@ function KeybindOpener.Open(closeWindow)
     settings.OpenToCategory(settings.KEYBINDINGS_CATEGORY_ID, KeybindOpener.CATEGORY)
     return true
   end
-  _G.KeyBindingFrame_LoadUI()
+  _G["KeyBindingFrame_LoadUI"]()
   if _G.KeyBindingFrame == nil then
     return false
   end
-  _G.ShowUIPanel(_G.KeyBindingFrame)
+  _G["ShowUIPanel"](_G.KeyBindingFrame)
   return true
 end
 

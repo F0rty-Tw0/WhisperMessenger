@@ -38,6 +38,7 @@ return function()
   Localization.Configure({ language = "enUS" })
   local opened = {}
   local inCombat = false
+  ---@type string|nil
   local boundKey = "CTRL-O"
   local env = {
     Settings = {
