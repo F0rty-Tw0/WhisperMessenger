@@ -39,7 +39,16 @@ SETUP_LUA = """
         Show = function() end,
         Hide = function() end,
     }}
+
+    -- A real os.exit would end the whole Python process, and os.exit(0) would look like a pass.
+    os.exit = function(code)
+        error("os.exit(" .. tostring(code) .. ") called; a test must fail with error() instead", 2)
+    end
+
+    -- Lua 5.1 shares one C rand() state per process, so seed every file the same way.
+    math.randomseed(1)
 """
+
 
 
 def run_file(runtime_cls, test_path):

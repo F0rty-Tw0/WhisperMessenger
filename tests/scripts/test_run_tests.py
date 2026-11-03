@@ -89,6 +89,30 @@ class RunTestsTests(unittest.TestCase):
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
+    def test_os_exit_fails_the_file_and_later_files_still_run(self):
+        exits = self.fixture("test_a_exit.lua", "os.exit(0)\n")
+        good = self.fixture("test_b_good.lua", "print('good file ran')\n")
+
+        result = self.run_runner(exits, good)
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("good file ran", result.stdout)
+        self.assertIn("2 files, 1 failed", result.stdout)
+        self.assertIn("os.exit", result.stderr)
+
+    def test_each_file_starts_from_random_seed_one(self):
+        a = self.fixture("test_a.lua", "math.random()\n")
+        b = self.fixture(
+            "test_b.lua",
+            "local first = math.random(1, 1000000000)\n"
+            "math.randomseed(1)\n"
+            "assert(first == math.random(1, 1000000000), 'file did not start from seed 1')\n",
+        )
+
+        result = self.run_runner(a, b)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
 
 if __name__ == "__main__":
     unittest.main()
