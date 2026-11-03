@@ -59,6 +59,7 @@ return function()
     shareTypingStatus = false,
     shareReadReceipts = false,
     showInviteLink = false,
+    addonGreetings = "hide",
     -- chats
     enabledChannels = { trade = true },
     collapseDuplicates = false,
@@ -132,6 +133,7 @@ return function()
   assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
   assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
+  assert(whispersCapture.config.addonGreetings == "hide", "whispers config should carry addonGreetings")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")
