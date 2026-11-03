@@ -111,6 +111,8 @@ Transport/ChannelIndex.lua
 Transport/JoinedChannels.lua
 Transport/ChatGateway.lua
 Transport/BNetResolver/AccountName.lua
+Transport/BNetResolver/GameAccountProbe.lua
+Transport/BNetResolver/GuidFallback.lua
 Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua

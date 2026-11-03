@@ -5,6 +5,10 @@ end
 
 local Types = ns.TransportTypes or require("WhisperMessenger.Transport.Types")
 local AccountName = ns.BNetResolverAccountName or require("WhisperMessenger.Transport.BNetResolver.AccountName")
+-- stylua: ignore start
+local GameAccountProbe = ns.BNetResolverGameAccountProbe or require("WhisperMessenger.Transport.BNetResolver.GameAccountProbe")
+local GuidFallback = ns.BNetResolverGuidFallback or require("WhisperMessenger.Transport.BNetResolver.GuidFallback")
+-- stylua: ignore end
 local BNetResolver = {}
 
 -- Stage 1: Primary lookup by bnetAccountID.
@@ -43,6 +47,8 @@ local function lookupByAccountId(bnetApi, bnetAccountID, _guid, expectedBattleTa
 end
 
 local resolveGetNumFriends = AccountName.ResolveGetNumFriends
+local probeGameAccounts = GameAccountProbe.Probe
+local resolveByGUID = GuidFallback.Resolve
 
 function BNetResolver.SanitizeAccountID(value)
   local issecretvalue = _G.issecretvalue
@@ -114,123 +120,6 @@ local function scanFriendListById(bnetApi, bnetAccountID)
     end
   end
   return nil, nil
-end
-
--- Picks the best game account from a friend's account list: prefers the
--- first entry with an actual WoW characterName (a Battle.net app or other
--- game account has none), falling back to the first isOnline entry only
--- when no account has a character.
-local function pickGameAccount(bnetApi, friendIndex, numAccounts)
-  local fallback
-  for j = 1, numAccounts do
-    local ok, gameInfo = pcall(bnetApi.GetFriendGameAccountInfo, friendIndex, j)
-    if ok and gameInfo then
-      if gameInfo.characterName and gameInfo.characterName ~= "" then
-        return gameInfo
-      end
-      if not fallback and gameInfo.isOnline then
-        fallback = gameInfo
-      end
-    end
-  end
-  return fallback
-end
-
--- Stage 4: Iterate game accounts to detect online status when isOnline is nil.
--- Mutates accountInfo.isOnline and accountInfo.gameAccountInfo on success.
--- Returns enriched accountInfo if an active game account is found, otherwise nil.
-local function probeGameAccounts(bnetApi, friendIndex, accountInfo)
-  if
-    not friendIndex
-    or not accountInfo
-    or accountInfo.isOnline ~= nil
-    or type(bnetApi.GetFriendNumGameAccounts) ~= "function"
-    or type(bnetApi.GetFriendGameAccountInfo) ~= "function"
-  then
-    return nil
-  end
-  local ok, numAccounts = pcall(bnetApi.GetFriendNumGameAccounts, friendIndex)
-  if not ok or not numAccounts or numAccounts <= 0 then
-    return nil
-  end
-  local picked = pickGameAccount(bnetApi, friendIndex, numAccounts)
-  if not picked then
-    return nil
-  end
-  accountInfo.isOnline = true
-  local existing = accountInfo.gameAccountInfo
-  local existingHasCharacter = existing and existing.characterName and existing.characterName ~= ""
-  local pickedHasCharacter = picked.characterName and picked.characterName ~= ""
-  if not (existingHasCharacter and not pickedHasCharacter) then
-    accountInfo.gameAccountInfo = picked
-  end
-  return accountInfo
-end
-
--- Stage 5: GUID fallback.
--- Handles two cases:
---   a) Different person (shifted ID): return ByGUID result if online.
---   b) Same person (matching or missing battleTag): merge useful fields into accountInfo.
---   c) Stale ID with no accountInfo: return ByGUID result unconditionally.
--- Returns resolved accountInfo or nil.
-local function resolveByGUID(bnetApi, guid, accountInfo, isStaleId)
-  if not guid or type(bnetApi.GetAccountInfoByGUID) ~= "function" then
-    return nil
-  end
-
-  -- Stale ID with no prior accountInfo: direct GUID lookup, return unconditionally
-  if isStaleId and accountInfo == nil then
-    local ok, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
-    if ok and info then
-      return info
-    end
-    return nil
-  end
-
-  -- Normal GUID fallback: only when accountInfo exists and isOnline is still nil
-  if not accountInfo or accountInfo.isOnline ~= nil then
-    return nil
-  end
-
-  local ok, info = pcall(bnetApi.GetAccountInfoByGUID, guid)
-  if not ok or not info then
-    return nil
-  end
-
-  local isDifferentPerson = info.battleTag and accountInfo.battleTag and info.battleTag ~= accountInfo.battleTag
-
-  if isDifferentPerson then
-    -- bnetAccountID has shifted to a different person between sessions;
-    -- the GUID-based lookup is authoritative for the stored contact.
-    -- isAFK/isDND are STICKY and persist after offline — do not use them as proof of presence.
-    local gameInfo = info.gameAccountInfo
-    if info.isOnline == true or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
-      return info
-    end
-    return nil
-  else
-    -- Same person: merge useful fields from ByGUID result into accountInfo
-    local gameInfo = info.gameAccountInfo
-    if info.isOnline or (gameInfo and (gameInfo.isOnline or gameInfo.characterName)) then
-      if gameInfo then
-        accountInfo.gameAccountInfo = gameInfo
-      end
-      accountInfo.isOnline = info.isOnline
-      -- If isOnline is still nil but game data proves online, set it
-      if accountInfo.isOnline == nil and gameInfo and (gameInfo.isOnline or gameInfo.characterName) then
-        accountInfo.isOnline = true
-      end
-      -- Preserve AFK/DND flags from whichever source has them
-      if info.isAFK then
-        accountInfo.isAFK = true
-      end
-      if info.isDND then
-        accountInfo.isDND = true
-      end
-      return accountInfo
-    end
-    return nil
-  end
 end
 
 function BNetResolver.ResolveFriendByBattleTag(bnetApi, battleTag, guid)
