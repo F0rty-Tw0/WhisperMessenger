@@ -129,7 +129,6 @@ read_globals = {
   "GetNormalizedRealmName",
   "GetRealmName",
   "GetCurrentRegion",
-  "BNET_CLIENT_WOW",
   "GetUnitSpeed",
   "Ambiguate",
   "IsLoggedIn",
