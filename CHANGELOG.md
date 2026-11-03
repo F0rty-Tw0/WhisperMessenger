@@ -10,6 +10,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Whisper Messenger now has an entry in the addon list button by the minimap (Retail), showing your unread count next to its name. Clicking it opens or closes the messenger, Shift-click marks everything as read, and it works even with both messenger buttons hidden.
 - If something goes wrong while saving a whisper you're hiding from the game's chat, the whisper now still shows in the game's chat instead of being lost. After repeated errors, whispers stop being hidden from chat until you reload.
 - When "Hide on entering combat" hides the messenger, it now opens again once combat ends, without putting your typing cursor in the message box, so your movement keys keep working. If you close it yourself during combat, it stays closed.
+- Message Retention is now a menu with longer choices: keep your chats for up to 30 days, 90 days, or forever. A retention time you picked before stays as it was until you choose a new one.
+- Picking a shorter Message Retention now asks before deleting older chats. Cancel keeps your current setting.
 
 ## [2.1.2] - 2026-10-30
 

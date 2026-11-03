@@ -5,6 +5,11 @@ end
 
 local Retention = {}
 
+-- "Forever" retention: a century, not 0 or nil, so the age checks need no
+-- special case and an older addon version still reads it as a max age
+-- instead of wiping history after a downgrade.
+Retention.FOREVER_SECONDS = 100 * 365 * 86400
+
 local function resolveNow(now)
   if now ~= nil then
     return now
