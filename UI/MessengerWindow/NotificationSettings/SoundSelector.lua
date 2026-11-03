@@ -4,36 +4,35 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
+local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local SoundPlayer = ns.SoundPlayer or require("WhisperMessenger.Core.SoundPlayer")
 
 local SoundSelector = {}
 
-SoundSelector.DEFAULT_SOUND = "whisper"
+SoundSelector.DEFAULT_SOUND = SoundPlayer.DEFAULT_SOUND_KEY
 
-local SOUND_OPTION_SPECS = {
-  { key = "whisper", label = "Whisper" },
-  { key = "ping", label = "Ping" },
-  { key = "chime", label = "Chime" },
-  { key = "bell", label = "Bell" },
-  { key = "raid_warning", label = "RW" },
-  { key = "ready", label = "Ready" },
-  { key = "queue", label = "Queue" },
-  { key = "alert", label = "Alert" },
-  { key = "sigil", label = "Sigil" },
-  { key = "map", label = "Map" },
-  { key = "ding", label = "Ding" },
-  { key = "glyph", label = "Glyph" },
-  { key = "orb", label = "Orb" },
-  { key = "spark", label = "Spark" },
-  { key = "echo", label = "Echo" },
-  { key = "pulse", label = "Pulse" },
-}
+-- Group names are proper names (this addon, the SharedMedia library), so
+-- they are not translated.
+local OWN_GROUP = "Whisper Messenger"
+local SHARED_GROUP = "SharedMedia"
 
+-- Our sounds, then sounds other addons share through LibSharedMedia. Group
+-- headers only appear when there are two groups to tell apart.
 function SoundSelector.Options()
+  local shared = SoundPlayer.ListSharedSounds()
   local options = {}
-  for _, spec in ipairs(SOUND_OPTION_SPECS) do
-    options[#options + 1] = { key = spec.key, label = Localization.Text(spec.label) }
+  if #shared > 0 then
+    options[1] = { header = true, label = OWN_GROUP }
+  end
+  for _, sound in ipairs(SoundPlayer.BUILTIN_SOUNDS) do
+    options[#options + 1] = { key = sound.key, label = Localization.Text(sound.label) }
+  end
+  if #shared > 0 then
+    options[#options + 1] = { header = true, label = SHARED_GROUP }
+  end
+  for _, name in ipairs(shared) do
+    options[#options + 1] = { key = SoundPlayer.SharedMediaKey(name), label = name }
   end
   return options
 end
@@ -41,9 +40,10 @@ end
 function SoundSelector.Create(factory, parent, opts)
   opts = opts or {}
   local onChange = opts.onChange
-  return ButtonSelector.Create(factory, parent, {
+  return DropdownSelector.Create(factory, parent, {
     labelText = Localization.Text("Notification sound"),
     optionsList = SoundSelector.Options(),
+    getOptions = SoundSelector.Options,
     fallbackKey = SoundSelector.DEFAULT_SOUND,
     initial = opts.initial,
     colors = opts.colors,
@@ -53,17 +53,11 @@ function SoundSelector.Create(factory, parent, opts)
       end
       -- Preview the chosen sound on selection so the user can audition it
       -- without saving and reloading.
-      local SoundPlayer = ns.SoundPlayer
-      if SoundPlayer and SoundPlayer.Preview then
-        SoundPlayer.Preview(value)
-      end
+      SoundPlayer.Preview(value)
     end,
     rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
     labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-    buttonWidth = 50,
     buttonHeight = 26,
-    buttonSpacing = 4,
-    maxPerRow = 6,
   })
 end
 
