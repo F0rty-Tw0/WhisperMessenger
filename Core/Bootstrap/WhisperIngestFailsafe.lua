@@ -15,7 +15,8 @@ local xpcall = xpcall
 -- The whisper chat filters always hide these lines from the default chat, so
 -- an error while we handle one could lose the whisper. The failsafe reports
 -- the error, shows the line in chat, and after MAX_ERRORS stops hiding
--- whispers for the rest of the session.
+-- whispers for the rest of the session. The error may come after the whisper
+-- was stored (alerts, refresh), so the echo doesn't claim it was lost.
 local WhisperIngestFailsafe = {}
 
 WhisperIngestFailsafe.MAX_ERRORS = 3
@@ -27,9 +28,9 @@ local DIRECTION_BY_EVENT = {
   CHAT_MSG_BN_WHISPER_INFORM = "out",
 }
 
-local INCOMING_KEY = "Couldn't store a whisper from %s: %s"
-local OUTGOING_KEY = "Couldn't store a whisper to %s: %s"
-local STOPPED_KEY = "WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."
+local INCOMING_KEY = "Whisper Messenger hit an error. Whisper from %s: %s"
+local OUTGOING_KEY = "Whisper Messenger hit an error. Whisper to %s: %s"
+local STOPPED_KEY = "Hit repeated errors, so whispers are no longer hidden from chat until you /reload."
 
 -- Runs at the error point, so the error handler (BugSack, the Lua error
 -- popup) still sees the stack that failed.

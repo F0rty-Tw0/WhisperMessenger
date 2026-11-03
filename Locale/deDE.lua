@@ -383,9 +383,9 @@ local German = {
   ["Last online %s"] = "Zuletzt online: %s",
   ["Notify when online"] = "Benachrichtigen, wenn online",
   ["%s is now online."] = "%s ist jetzt online.",
-  ["Couldn't store a whisper from %s: %s"] = "Flüstern von %s konnte nicht gespeichert werden: %s",
-  ["Couldn't store a whisper to %s: %s"] = "Flüstern an %s konnte nicht gespeichert werden: %s",
-  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger hatte wiederholt Fehler und blendet Flüstern bis zum nächsten /reload nicht mehr im Chat aus.",
+  ["Whisper Messenger hit an error. Whisper from %s: %s"] = "Whisper Messenger hatte einen Fehler. Flüstern von %s: %s",
+  ["Whisper Messenger hit an error. Whisper to %s: %s"] = "Whisper Messenger hatte einen Fehler. Flüstern an %s: %s",
+  ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Wiederholte Fehler: Flüstern wird bis zum nächsten /reload nicht mehr im Chat ausgeblendet.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "In Warteschlange",
   ["Not sent"] = "Nicht gesendet",

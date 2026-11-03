@@ -383,9 +383,9 @@ local Italian = {
   ["Last online %s"] = "Ultimo accesso: %s",
   ["Notify when online"] = "Avvisa quando è online",
   ["%s is now online."] = "%s è ora online.",
-  ["Couldn't store a whisper from %s: %s"] = "Impossibile salvare un sussurro da %s: %s",
-  ["Couldn't store a whisper to %s: %s"] = "Impossibile salvare un sussurro a %s: %s",
-  ["WhisperMessenger hit repeated errors and stopped hiding whispers from chat until you /reload."] = "WhisperMessenger ha riscontrato errori ripetuti e non nasconde più i sussurri dalla chat fino al prossimo /reload.",
+  ["Whisper Messenger hit an error. Whisper from %s: %s"] = "Whisper Messenger ha riscontrato un errore. Sussurro da %s: %s",
+  ["Whisper Messenger hit an error. Whisper to %s: %s"] = "Whisper Messenger ha riscontrato un errore. Sussurro a %s: %s",
+  ["Hit repeated errors, so whispers are no longer hidden from chat until you /reload."] = "Errori ripetuti: i sussurri non vengono più nascosti dalla chat fino al prossimo /reload.",
   -- Queued sends, delivery status, replies
   ["Queued"] = "In coda",
   ["Not sent"] = "Non inviato",
