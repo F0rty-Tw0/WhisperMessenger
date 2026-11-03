@@ -75,6 +75,10 @@ end
 
 function Competitive.handleCombatStart(Bootstrap)
   local runtime = Bootstrap.runtime
+  -- Pop-up cards never show in combat, so none stays up into it.
+  if runtime and type(runtime.clearWhisperToasts) == "function" then
+    runtime.clearWhisperToasts()
+  end
   local settings = runtime and runtime.accountState and runtime.accountState.settings
   if
     settings
