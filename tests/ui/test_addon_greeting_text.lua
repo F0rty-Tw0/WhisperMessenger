@@ -39,7 +39,65 @@ local function test_text_with_pattern_characters_is_safe()
   assert(shown == "50% off (%d) [Craft Alert]", "pattern characters copied as-is, got " .. shown)
 end
 
+local function test_longer_words_stay_unchanged()
+  local text = "CraftScanner, MyCraftScan, Craft Scanning, craftscan2"
+  local shown = AddonGreetingText.ForDisplay(tagged(text))
+  assert(shown == text, "only whole words are renamed, got " .. shown)
+end
+
+local function test_localized_names_are_rewritten()
+  for _, name in ipairs({ "КрафтСкан", "크래프트스캔", "制造扫描" }) do
+    local shown = AddonGreetingText.ForDisplay(tagged("via " .. name .. ": [x]"))
+    assert(shown == "via Craft Alert: [x]", name .. " shown as Craft Alert, got " .. shown)
+  end
+end
+
+local function test_localized_name_next_to_its_script()
+  -- Korean and Chinese write particles straight after the name.
+  local shown = AddonGreetingText.ForDisplay(tagged("크래프트스캔으로 / 通过制造扫描找到"))
+  assert(shown == "Craft Alert으로 / 通过Craft Alert找到", "CJK neighbours are no word boundary, got " .. shown)
+  local cyrillic = AddonGreetingText.ForDisplay(tagged("КрафтСканер"))
+  assert(cyrillic == "КрафтСканер", "a longer Cyrillic word stays, got " .. cyrillic)
+end
+
+local function test_untagged_localized_name_unchanged()
+  assert(AddonGreetingText.ForDisplay({ text = "КрафтСкан" }) == "КрафтСкан", "untagged never rewritten")
+end
+
+local function test_preview_of_a_tagged_newest_line_is_renamed()
+  local conversation = { messages = { { text = "hi" }, tagged("via CraftScan") } }
+  local shown = AddonGreetingText.ForPreview(conversation, "via CraftScan")
+  assert(shown == "via Craft Alert", "tagged preview renamed, got " .. tostring(shown))
+end
+
+local function test_preview_of_an_untagged_newest_line_is_kept()
+  local conversation = { messages = { tagged("via CraftScan"), { text = "I use CraftScan" } } }
+  assert(AddonGreetingText.ForPreview(conversation, "I use CraftScan") == "I use CraftScan", "untagged newest line kept")
+end
+
+local function test_preview_not_from_the_newest_line_is_kept()
+  local conversation = { messages = { tagged("via CraftScan") } }
+  assert(AddonGreetingText.ForPreview(conversation, "CraftScan joined") == "CraftScan joined", "other preview text kept")
+  assert(AddonGreetingText.ForPreview(nil, "x") == "x", "no conversation, preview kept")
+end
+
+local function test_incoming_preview_uses_the_newest_incoming_line()
+  local incoming = tagged("via CraftScan")
+  incoming.direction, incoming.kind = "in", "user"
+  local conversation = { messages = { incoming, { text = "my reply", direction = "out", kind = "user" } } }
+  local shown = AddonGreetingText.ForIncomingPreview(conversation, "via CraftScan")
+  assert(shown == "via Craft Alert", "incoming preview renamed past my reply, got " .. tostring(shown))
+end
+
 return function()
+  test_preview_of_a_tagged_newest_line_is_renamed()
+  test_preview_of_an_untagged_newest_line_is_kept()
+  test_preview_not_from_the_newest_line_is_kept()
+  test_incoming_preview_uses_the_newest_incoming_line()
+  test_longer_words_stay_unchanged()
+  test_localized_names_are_rewritten()
+  test_localized_name_next_to_its_script()
+  test_untagged_localized_name_unchanged()
   test_tagged_whisper_names_craft_alert()
   test_every_spelling_is_rewritten()
   test_untagged_whisper_keeps_craftscan()
