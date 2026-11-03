@@ -127,6 +127,7 @@ read_globals = {
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",
   "GetRealmName",
+  "GetCurrentRegion",
   "GetUnitSpeed",
   "Ambiguate",
   "IsLoggedIn",
