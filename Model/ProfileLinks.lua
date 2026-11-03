@@ -5,23 +5,43 @@ end
 
 -- Profile site URLs (Raider.IO, Warcraft Logs, Armory) for one character.
 -- character: { name, realm (chat form, no spaces), displayRealm (optional) }.
--- game: { regionId (GetCurrentRegion), projectId (WOW_PROJECT_ID), isForever }.
+-- game: { regionId (GetCurrentRegion), projectId (WOW_PROJECT_ID),
+-- seasonId (C_Seasons.GetActiveSeason), isForever }.
 local ProfileLinks = {}
 
 local REGION_CODES = { [1] = "us", [2] = "kr", [3] = "eu", [4] = "tw" }
 
 local PROJECT_RETAIL = 1
+local PROJECT_CLASSIC_ERA = 2
 
--- Warcraft Logs runs one site per game: Era on vanilla, TBC Anniversary on
--- fresh, the progression Classic flavors on classic.
+-- Warcraft Logs runs one site per game: TBC Anniversary on fresh, the
+-- progression Classic flavors on classic.
 local WARCRAFT_LOGS_HOSTS = {
   [1] = "www",
-  [2] = "vanilla",
   [5] = "fresh",
   [11] = "classic",
   [14] = "classic",
   [19] = "classic",
 }
+
+-- Classic Era by Enum.SeasonID (nil: no season). Hardcore realms, the
+-- Anniversary one too, log on vanilla. Season of Mastery has ended and has
+-- no site we can confirm, so it gets no Warcraft Logs link.
+local NO_SEASON = 0
+local ERA_LOGS_HOSTS_BY_SEASON = {
+  [NO_SEASON] = "vanilla",
+  [2] = "sod",
+  [3] = "vanilla",
+  [11] = "fresh",
+  [12] = "vanilla",
+}
+
+local function warcraftLogsHost(game)
+  if game.projectId == PROJECT_CLASSIC_ERA then
+    return ERA_LOGS_HOSTS_BY_SEASON[game.seasonId or NO_SEASON]
+  end
+  return WARCRAFT_LOGS_HOSTS[game.projectId]
+end
 
 local function urlEncode(text)
   return (string.gsub(text, "[^A-Za-z0-9%-%._~]", function(char)
@@ -115,7 +135,7 @@ function ProfileLinks.Build(character, game)
   if isRetail then
     links[#links + 1] = link("Raider.IO", "https://raider.io/characters/" .. path .. urlEncode(character.name))
   end
-  local logsHost = WARCRAFT_LOGS_HOSTS[game.projectId]
+  local logsHost = warcraftLogsHost(game)
   if logsHost ~= nil then
     links[#links + 1] = link("Warcraft Logs", "https://" .. logsHost .. ".warcraftlogs.com/character/" .. path .. lowerName)
   end
