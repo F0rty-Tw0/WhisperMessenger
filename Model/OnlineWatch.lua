@@ -30,8 +30,9 @@ function OnlineWatch.StampSeen(runtime, conversation)
   end
 end
 
--- Friend-list entries use the bare name for same-realm friends.
-local function readCharacterFriend(api, name)
+-- The friend-list entry for a character, or nil. Entries use the bare name
+-- for same-realm friends.
+local function friendInfo(api, name)
   if type(api) ~= "table" or type(api.GetFriendInfo) ~= "function" or type(name) ~= "string" then
     return nil
   end
@@ -42,19 +43,23 @@ local function readCharacterFriend(api, name)
       ok, info = pcall(api.GetFriendInfo, short)
     end
   end
-  if ok and type(info) == "table" then
-    -- A secret flag would throw on compare; unknown keeps the last known state.
-    if SecretValue.Is(info.connected) then
-      return nil
-    end
-    return info.connected == true
-  end
-  return nil
+  return (ok and type(info) == "table") and info or nil
 end
 
 -- true / false (online state) for a character on the friends list, nil
--- when not a friend or the API is missing.
-OnlineWatch.ReadCharacterFriend = readCharacterFriend
+-- when not a friend, the API is missing, or the flag is secret (comparing it
+-- would throw; unknown keeps the last known state).
+local function readCharacterFriend(api, name)
+  local info = friendInfo(api, name)
+  if info == nil or SecretValue.Is(info.connected) then
+    return nil
+  end
+  return info.connected == true
+end
+
+function OnlineWatch.IsCharacterFriend(api, name)
+  return friendInfo(api, name) ~= nil
+end
 
 -- BNetStatus loads after this module in the TOC, so resolve it lazily.
 local function readBNetFriend(api, conversation)

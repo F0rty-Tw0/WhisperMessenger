@@ -57,7 +57,7 @@ local function isFriend(item, name)
       return true
     end
   end
-  return OnlineWatch.ReadCharacterFriend(api, name) ~= nil
+  return OnlineWatch.IsCharacterFriend(api, name)
 end
 
 function AddFriendMenuEntry.Add(rootDescription, item)

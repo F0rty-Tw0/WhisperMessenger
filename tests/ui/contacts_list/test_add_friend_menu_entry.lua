@@ -107,6 +107,23 @@ return function()
     rawset(_G, "C_FriendList", friendApi({}, { Jaina = true }))
     assert(findButton(menuFor({ channel = "WOW", displayName = "Jaina-Area52" }), "Add friend") == nil, "friend listed by bare name hides Add friend")
 
+    -- test_friend_with_secret_online_flag_hides_add_friend
+    do
+      local secret = {}
+      rawset(_G, "C_FriendList", {
+        AddFriend = function() end,
+        GetFriendInfo = function(name)
+          return name == "Jaina" and { connected = secret } or nil
+        end,
+      })
+      rawset(_G, "issecretvalue", function(value)
+        return value == secret
+      end)
+      local entry = findButton(menuFor({ channel = "WOW", displayName = "Jaina-Area52" }), "Add friend")
+      rawset(_G, "issecretvalue", nil)
+      assert(entry == nil, "a friend whose online flag is secret is still a friend")
+    end
+
     -- test_battle_net_row_has_no_add_friend
     rawset(_G, "C_FriendList", friendApi({}))
     assert(
