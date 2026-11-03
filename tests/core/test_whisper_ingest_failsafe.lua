@@ -210,7 +210,19 @@ return function()
     end
     -- A trailing nil too: with the last slot non-nil, #args equals n and a
     -- plain unpack(args) would pass this by luck.
-    Failsafe.RouteLiveEvent(ctx.Bootstrap, ctx.bridge, ctx.runtime, ctx.runtime.refreshWindow, "CHAT_MSG_WHISPER", "hi", "Bob-Realm", nil, nil, 42, nil)
+    Failsafe.RouteLiveEvent(
+      ctx.Bootstrap,
+      ctx.bridge,
+      ctx.runtime,
+      ctx.runtime.refreshWindow,
+      "CHAT_MSG_WHISPER",
+      "hi",
+      "Bob-Realm",
+      nil,
+      nil,
+      42,
+      nil
+    )
     assert(received.n == 6, "expected all six payload slots, got " .. tostring(received.n))
     assert(received[1] == "hi" and received[2] == "Bob-Realm", "expected text and sender intact")
     assert(received[3] == nil and received[4] == nil and received[5] == 42 and received[6] == nil, "expected nils and the later arg in place")
