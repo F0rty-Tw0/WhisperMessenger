@@ -233,6 +233,10 @@ function WindowRuntime.Create(options)
     -- whispers arrived meanwhile.
     if not nextVisible then
       runtime.unreadDivider = nil
+    else
+      -- Any open during combat hands visibility back to the player: combat
+      -- end must not undo a close they make afterwards.
+      runtime.hiddenByCombat = nil
     end
     return coordinator.setWindowVisible(nextVisible)
   end
