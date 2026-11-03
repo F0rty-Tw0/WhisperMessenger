@@ -172,4 +172,20 @@ return function()
     accountState.filters = kept
     assert(IgnoreList.Ensure(accountState) == kept and type(kept.rules) == "table", "existing filters are kept and completed")
   end
+
+  -- test_character_name_keeps_stored_name_when_guid_lookup_is_secret
+  do
+    local savedInfo = rawget(_G, "GetPlayerInfoByGUID")
+    local savedSecret = rawget(_G, "issecretvalue")
+    rawset(_G, "GetPlayerInfoByGUID", function()
+      return nil, nil, nil, nil, nil, "SecretName", "SecretRealm"
+    end)
+    rawset(_G, "issecretvalue", function(value)
+      return value == "SecretName" or value == "SecretRealm"
+    end)
+    local name = IgnoreList.CharacterName("Arthas-Area52", "Player-1-A")
+    rawset(_G, "GetPlayerInfoByGUID", savedInfo)
+    rawset(_G, "issecretvalue", savedSecret)
+    assert(name == "Arthas-Area52", "a secret lookup falls back to the stored name, got " .. tostring(name))
+  end
 end
