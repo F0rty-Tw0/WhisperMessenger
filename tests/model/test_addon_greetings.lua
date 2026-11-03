@@ -80,6 +80,27 @@ local function test_record_drops_stale_marks()
   assert(state.addonGreetingInbox[keyFor("Old-Realm")] == nil, "expired mark purged on the next record")
 end
 
+local function test_announcement_right_after_its_whisper_ignored()
+  local state = {}
+  AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 100)
+  assert(AddonGreetings.Record(state, "Crafter-Realm", "Q:CraftScan", 101) == false, "late announcement for an arrived whisper ignored")
+  assert(AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 103) == nil, "the human follow-up is not tagged")
+end
+
+local function test_announcement_after_an_older_whisper_counts()
+  local state = {}
+  AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 100)
+  assert(AddonGreetings.Record(state, "Crafter-Realm", "Q:CraftScan", 102) == true, "announcement recorded")
+  assert(AddonGreetings.Claim(state, keyFor("Crafter-Realm"), 103) == "CraftScan", "next whisper tagged")
+end
+
+local function test_whisper_marks_are_pruned()
+  local state = {}
+  AddonGreetings.Claim(state, keyFor("Old-Realm"), 100)
+  AddonGreetings.Claim(state, keyFor("New-Realm"), 200)
+  assert(state.addonGreetingInbox[keyFor("Old-Realm")] == nil, "old whisper mark purged on the next whisper")
+end
+
 local function test_mode_defaults_to_show()
   assert(AddonGreetings.Mode(nil) == "show", "no settings shows")
   assert(AddonGreetings.Mode({}) == "show", "unset shows")
@@ -103,6 +124,9 @@ return function()
   test_sender_names_normalise_like_whisper_ingest()
   test_record_ignores_invalid_payload()
   test_record_drops_stale_marks()
+  test_announcement_right_after_its_whisper_ignored()
+  test_announcement_after_an_older_whisper_counts()
+  test_whisper_marks_are_pruned()
   test_mode_defaults_to_show()
   test_requests_mode_needs_requests_inbox()
 end

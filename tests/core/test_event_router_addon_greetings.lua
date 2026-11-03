@@ -121,8 +121,18 @@ end
 local function test_replayed_whisper_untagged()
   local state = makeState({ addonGreetings = "hide" })
   announce(state)
-  local conversation = whisper(state, nil, { replayedAt = 990 })
+  -- replayedAt lands inside the window, so only the replay guard keeps it untagged.
+  local conversation = whisper(state, nil, { replayedAt = 1003 })
   assert(conversation and lastMessage(conversation).addonGreeting == nil, "lockdown replay is never tagged or hidden")
+end
+
+local function test_whisper_before_its_announcement_leaves_follow_up_untagged()
+  local state = makeState()
+  whisper(state)
+  announce(state)
+  state.advance(3)
+  local conversation = whisper(state, "a human follow-up")
+  assert(lastMessage(conversation).addonGreeting == nil, "follow-up is not blamed on the late announcement")
 end
 
 local function test_secret_sender_skipped()
@@ -153,5 +163,6 @@ return function()
   test_requests_mode_leaves_existing_conversation()
   test_requests_mode_without_inbox_shows()
   test_replayed_whisper_untagged()
+  test_whisper_before_its_announcement_leaves_follow_up_untagged()
   test_secret_sender_skipped()
 end

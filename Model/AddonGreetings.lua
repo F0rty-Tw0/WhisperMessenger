@@ -15,6 +15,7 @@ local Identity = ns.Identity or require("WhisperMessenger.Model.Identity")
 local AddonGreetings = {}
 
 AddonGreetings.WINDOW_SECONDS = 10
+AddonGreetings.EARLY_WHISPER_SECONDS = 1
 AddonGreetings.MAX_NAME_BYTES = 32
 AddonGreetings.SETTING_KEY = "addonGreetings"
 AddonGreetings.MODE_SHOW = "show"
@@ -53,12 +54,25 @@ local function senderKey(sender)
   return Identity.FromWhisper(sender).contactKey
 end
 
-local function purgeExpired(inbox, now)
+-- Inbox entries: { name, at } marks an announcement, { at } (no name) marks
+-- the sender's last whisper. Both expire after the window.
+local function openInbox(state, now)
+  local inbox = state.addonGreetingInbox or {}
+  state.addonGreetingInbox = inbox
   for key, entry in pairs(inbox) do
     if now - entry.at > AddonGreetings.WINDOW_SECONDS then
       inbox[key] = nil
     end
   end
+  return inbox
+end
+
+-- The whisper can beat its own announcement. An announcement that lands
+-- right after a whisper from the same sender belongs to that whisper, so it
+-- must not tag the next one. The clock counts whole seconds, so "right
+-- after" is the same or the next second.
+local function followsWhisper(entry, now)
+  return entry ~= nil and entry.name == nil and now - entry.at <= AddonGreetings.EARLY_WHISPER_SECONDS
 end
 
 function AddonGreetings.Record(state, sender, text, now)
@@ -69,25 +83,28 @@ function AddonGreetings.Record(state, sender, text, now)
   if name == nil then
     return false
   end
-  local inbox = state.addonGreetingInbox or {}
-  state.addonGreetingInbox = inbox
-  purgeExpired(inbox, now)
-  inbox[senderKey(sender)] = { name = name, at = now }
+  local inbox = openInbox(state, now)
+  local key = senderKey(sender)
+  if followsWhisper(inbox[key], now) then
+    return false
+  end
+  inbox[key] = { name = name, at = now }
   return true
 end
 
 -- Returns the announcing addon's name when contactKey announced a greeting
--- within the window, and consumes the mark either way.
+-- within the window, and consumes the mark either way. Every claim leaves a
+-- whisper mark for followsWhisper.
 function AddonGreetings.Claim(state, contactKey, now)
-  local inbox = type(state) == "table" and state.addonGreetingInbox or nil
-  if inbox == nil or contactKey == nil or type(now) ~= "number" then
+  if type(state) ~= "table" or contactKey == nil or type(now) ~= "number" then
     return nil
   end
+  local inbox = openInbox(state, now)
   local entry = inbox[contactKey]
-  if entry == nil then
+  inbox[contactKey] = { at = now }
+  if entry == nil or entry.name == nil then
     return nil
   end
-  inbox[contactKey] = nil
   local age = now - entry.at
   if age < 0 or age > AddonGreetings.WINDOW_SECONDS then
     return nil
