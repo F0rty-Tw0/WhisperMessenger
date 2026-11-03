@@ -60,7 +60,8 @@ local function makeRuntimeOptions()
       function coord.buildSelectionState(contacts)
         return { selectedContact = contacts[1], conversation = nil, status = nil }
       end
-      function coord.refreshWindow()
+      function coord.refreshWindow(_focusKey, dirtyKeys)
+        trackers.refreshDirtyKeys = dirtyKeys
         local ldbObject = coordOptions.getLdbObject()
         if ldbObject then
           ldbObject.refreshes = (ldbObject.refreshes or 0) + 1
@@ -453,6 +454,9 @@ return function()
   controller.refreshWindow()
   runtime.refreshWindow()
   assert(trackers.ldbObject.refreshes == ldbRefreshes + 2, "widget-mode refresh paths should update the registered LDB launcher")
+  local refreshDirty = { [conversationKey] = true }
+  runtime.refreshWindow(nil, refreshDirty)
+  assert(trackers.refreshDirtyKeys == refreshDirty, "runtime.refreshWindow should forward the dirty keys to the coordinator")
 
   windowOptions.onSettingChanged("iconMode", "minimap")
   minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]

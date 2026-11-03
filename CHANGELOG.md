@@ -22,6 +22,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Right-clicking a player in the contacts list now offers Add friend, unless they are already on your friends list.
 - Right-click a Battle.net friend who is in World of Warcraft, or a guild or community member, and pick "Notify when they change zone" to get one chat message (and the whisper sound, if it is on) the next time they move to another zone. It turns itself off after that one message; going offline in between keeps it waiting.
 - Automated whispers from crafting addons such as Craft Alert are now marked "Sent by Craft Alert", so you can tell them apart from a real person typing. That covers every line of a crafter's automated greeting and the whisper a customer's crafting addon sends when it picks you as their crafter. A new Whispers setting, Addon greetings, lets you show them (the default), send the conversations they start to Requests, or hide them. Hidden whispers are thrown away, not saved, and while "Hide whispers from default chat" is on you won't see them in the game's chat either.
+- The messenger does less background work while closed when your Battle.net friends log in, log out, or change zones or characters.
 
 ## [2.1.2] - 2026-10-30
 

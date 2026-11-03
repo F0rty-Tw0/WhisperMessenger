@@ -108,6 +108,50 @@ local function applyRekeyMappings(runtime, mappings)
   end
 end
 
+-- Plain (non-table) fields of a conversation before the scan writes to it;
+-- one reused table, so the check allocates nothing per friend.
+local scanBefore = {}
+
+local function captureFields(conversation)
+  for field in pairs(scanBefore) do
+    scanBefore[field] = nil
+  end
+  for field, value in pairs(conversation) do
+    if type(value) ~= "table" then
+      scanBefore[field] = value
+    end
+  end
+end
+
+local function fieldsChanged(conversation)
+  for field, value in pairs(conversation) do
+    if type(value) ~= "table" and scanBefore[field] ~= value then
+      return true
+    end
+  end
+  for field in pairs(scanBefore) do
+    if conversation[field] == nil then
+      return true
+    end
+  end
+  return false
+end
+
+-- A closed window shows only the icon badges and preview, so rebuild just
+-- the cards this scan changed (the preview's class colour follows the
+-- friend's character), and nothing when none changed. An open window, and
+-- opening it later, rebuild every card.
+local function refreshAfterBNetScan(Bootstrap, changedKeys)
+  local runtime = Bootstrap.runtime
+  if runtime.refreshWindow and runtime.isWindowVisible and not runtime.isWindowVisible() then
+    if next(changedKeys) ~= nil then
+      runtime.refreshWindow(nil, changedKeys)
+    end
+    return
+  end
+  Common.refreshRuntimeWindow(Bootstrap)
+end
+
 local function refreshBNetConversations(Bootstrap, deps)
   if Bootstrap.runtime == nil then
     return
@@ -122,10 +166,16 @@ local function refreshBNetConversations(Bootstrap, deps)
   local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store, friendMap, Identity, maxMessages)
   applyRekeyMappings(Bootstrap.runtime, mappings)
 
+  -- A rekey moved or merged these threads before the field check below runs.
+  local changedKeys = {}
+  for _, newKey in pairs(mappings) do
+    changedKeys[newKey] = true
+  end
   for key, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
       local friend = friendMap[conversation.battleTag]
       if friend then
+        captureFields(conversation)
         conversation.bnetAccountID = friend.bnetAccountID
         -- Records a "Notify when online" friend's state from this existing
         -- scan, so their next online event is a real change.
@@ -142,11 +192,14 @@ local function refreshBNetConversations(Bootstrap, deps)
           local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
           conversation.gameAccountName = gameInfo.characterName .. realmSuffix
         end
+        if fieldsChanged(conversation) then
+          changedKeys[key] = true
+        end
       end
     end
   end
 
-  Common.refreshRuntimeWindow(Bootstrap)
+  refreshAfterBNetScan(Bootstrap, changedKeys)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)
