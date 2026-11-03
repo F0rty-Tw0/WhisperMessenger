@@ -16,9 +16,9 @@ return function()
       scheduled[#scheduled + 1] = { delay = delay, fn = fn }
     end,
   }
-  _G.IsInGuild = function()
+  rawset(_G, "IsInGuild", function()
     return true
-  end
+  end)
   _G.C_GuildInfo = {
     GuildRoster = function()
       requests = requests + 1
