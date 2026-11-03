@@ -46,8 +46,7 @@ function Common.notifyCompetitiveState(Bootstrap)
   end
 
   -- Pop-up cards never show under a chat lock or restricted content, so none
-  -- stays up into one. Restriction events and zone/world entry pass through
-  -- here; a card that slips past still fades and refuses its click.
+  -- stays up into one. Every lock start passes through here.
   if isActive and runtime ~= nil and type(runtime.clearWhisperToasts) == "function" then
     runtime.clearWhisperToasts()
   end
