@@ -208,6 +208,7 @@ local Spanish = {
   ["Ping"] = "Ping",
   ["Chime"] = "Campanada",
   ["Bell"] = "Campana",
+  ["Raid Warning"] = "Aviso de banda",
   ["Ready"] = "Listo",
   ["Queue"] = "Cola",
   ["Alert"] = "Alerta",

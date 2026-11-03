@@ -74,6 +74,10 @@ function DropdownSelector.Create(factory, parent, options)
 
   local optionButtons = {}
   local buttonPool = {}
+  -- `requested` is the saved key, kept even while the list lacks it (a
+  -- SharedMedia sound whose addon has not registered yet); `selected` is
+  -- the option it resolves to now.
+  local requested = initial
   local selected = initial
   local buttonHovered = false
 
@@ -113,6 +117,7 @@ function DropdownSelector.Create(factory, parent, options)
   end
 
   local function updateSelection(key)
+    requested = key
     local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     buttonLabel:SetText(option and option.label or "")
@@ -203,7 +208,23 @@ function DropdownSelector.Create(factory, parent, options)
     end
 
     layoutOptions()
-    updateSelection(selected)
+    updateSelection(requested)
+  end
+
+  -- Opens at the top unless the selected row sits below the first page;
+  -- then the selected row leads the view (clamped at the bottom).
+  local function scrollToSelected()
+    local offset = 0
+    for i, optionButton in ipairs(optionButtons) do
+      if optionButton._key == selected and not optionButton._header then
+        local rowTop = (i - 1) * buttonHeight
+        if rowTop + buttonHeight > menu:GetHeight() then
+          offset = math.min(rowTop, menu:GetVerticalScrollRange())
+        end
+        break
+      end
+    end
+    menu:SetVerticalScroll(offset)
   end
 
   menu:SetScript("OnMouseWheel", function(_, delta)
@@ -224,7 +245,7 @@ function DropdownSelector.Create(factory, parent, options)
         setOptionsList(refreshed)
       end
     end
-    menu:SetVerticalScroll(0)
+    scrollToSelected()
     menu:Raise()
     menu:Show()
   end)

@@ -208,6 +208,7 @@ local German = {
   ["Ping"] = "Ping",
   ["Chime"] = "Glockenspiel",
   ["Bell"] = "Glocke",
+  ["Raid Warning"] = "Schlachtzugswarnung",
   ["Ready"] = "Bereit",
   ["Queue"] = "Warteschlange",
   ["Alert"] = "Alarm",

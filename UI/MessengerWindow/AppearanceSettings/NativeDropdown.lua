@@ -121,6 +121,8 @@ function NativeDropdown.Create(factory, parent, options)
   if isDropdown then
     valueText = type(control.Text) == "table" and control.Text or nil
   end
+  -- Saved key, kept while the list lacks it; `selected` is what it resolves to.
+  local requested = nil
   local selected = nil
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
@@ -147,6 +149,7 @@ function NativeDropdown.Create(factory, parent, options)
   -- The game's dropdown redraws its value after a radio click on its own;
   -- refresh=true redraws it for programmatic changes.
   local function select(key, refresh)
+    requested = key
     local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     if not isDropdown then
@@ -175,6 +178,8 @@ function NativeDropdown.Create(factory, parent, options)
         optionsList = refreshed
       end
     end
+    -- No GenerateMenu here: the menu is being generated already.
+    select(requested, false)
     if type(rootDescription.SetScrollMode) == "function" then
       rootDescription:SetScrollMode(menuHeight)
     end
@@ -216,7 +221,7 @@ function NativeDropdown.Create(factory, parent, options)
         return
       end
       optionsList = nextOptions
-      select(selected, true)
+      select(requested, true)
     end,
     setWidth = function(nextWidth)
       if type(nextWidth) ~= "number" or nextWidth <= 0 then

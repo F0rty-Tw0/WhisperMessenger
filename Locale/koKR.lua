@@ -208,6 +208,7 @@ local Korean = {
   ["Ping"] = "핑",
   ["Chime"] = "차임",
   ["Bell"] = "종",
+  ["Raid Warning"] = "공격대 경보",
   ["Ready"] = "준비",
   ["Queue"] = "대기열",
   ["Alert"] = "경보",

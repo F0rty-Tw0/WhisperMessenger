@@ -208,6 +208,7 @@ local Portuguese = {
   ["Ping"] = "Ping",
   ["Chime"] = "Carrilhão",
   ["Bell"] = "Sino",
+  ["Raid Warning"] = "Aviso de Raide",
   ["Ready"] = "Pronto",
   ["Queue"] = "Fila",
   ["Alert"] = "Alerta",

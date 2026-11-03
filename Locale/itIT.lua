@@ -208,6 +208,7 @@ local Italian = {
   ["Ping"] = "Ping",
   ["Chime"] = "Carillon",
   ["Bell"] = "Campana",
+  ["Raid Warning"] = "Avviso incursione",
   ["Ready"] = "Pronto",
   ["Queue"] = "Coda",
   ["Alert"] = "Allerta",
