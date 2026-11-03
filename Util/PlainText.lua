@@ -12,6 +12,7 @@ local PlainText = {}
 function PlainText.Strip(text)
   local plain = gsub(text, "|H.-|h(.-)|h", "%1")
   plain = gsub(plain, "|c%x%x%x%x%x%x%x%x", "")
+  plain = gsub(plain, "|cn[^:|]*:", "")
   plain = gsub(plain, "|r", "")
   plain = gsub(plain, "|T.-|t", "")
   plain = gsub(plain, "|A.-|a", "")

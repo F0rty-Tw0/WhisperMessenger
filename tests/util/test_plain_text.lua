@@ -13,6 +13,12 @@ return function()
     assert(PlainText.Strip("look " .. link) == "look [Thunderfury]", "a link becomes its [Label]")
   end
 
+  -- test_named_color_link_keeps_only_its_label
+  do
+    local link = "|cnIQ4:|Hitem:19019::::::::60:::::|h[Thunderfury]|h|r"
+    assert(PlainText.Strip("need " .. link .. " now") == "need [Thunderfury] now", "named colors are dropped")
+  end
+
   -- test_strips_textures_and_atlases
   do
     local text = "a|TInterface\\Icons\\INV_Misc_QuestionMark:16|tb|Araid-icon:16:16|ac"
