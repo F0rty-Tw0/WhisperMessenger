@@ -7,7 +7,9 @@ Usage:
   python scripts/run_tests.py --jobs 1 --lua default
 
 Uses Lua 5.1 (lupa.lua51) by default to match WoW and CI. Keeps going after a
-failure, prints a summary, and exits 1 if any file failed.
+failure, prints a summary, and exits 1 if any file failed. A file that runs past
+--timeout seconds fails. A worker process that dies breaks the whole pool, so
+every file not yet finished (on any worker, or not yet started) fails too.
 """
 
 import argparse
@@ -17,12 +19,15 @@ import os
 import sys
 import time
 from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures.process import BrokenProcessPool
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import run_test
 
 LUA_MODULES = {"51": "lupa.lua51", "default": "lupa"}
 MAX_DEFAULT_JOBS = 8
+DEFAULT_TIMEOUT = 60
+WORKER_DIED = "a worker process died and broke the pool before this file finished (BrokenProcessPool)"
 
 _runtime_cls = None
 
@@ -51,9 +56,9 @@ def resolve_lua_module(flavor):
     return resolve_lua_module("default")
 
 
-def run_one(test_path):
+def run_one(test_path, timeout):
     try:
-        run_test.run_file(_runtime_cls, test_path)
+        run_test.run_file(_runtime_cls, test_path, timeout)
         return test_path, None
     except Exception as e:
         return test_path, str(e)
@@ -80,13 +85,19 @@ def find_test_files():
     )
 
 
-def run_all(files, module_name, jobs):
+def run_all(files, module_name, jobs, timeout):
     if jobs <= 1:
         load_runtime(module_name)
-        yield from map(run_one, files)
+        for test_path in files:
+            yield run_one(test_path, timeout)
         return
     with ProcessPoolExecutor(jobs, initializer=load_runtime, initargs=(module_name,)) as pool:
-        yield from pool.map(run_one, files, chunksize=4)
+        futures = [pool.submit(run_one, test_path, timeout) for test_path in files]
+        for test_path, future in zip(files, futures):
+            try:
+                yield future.result()
+            except BrokenProcessPool:
+                yield test_path, WORKER_DIED
 
 
 def parse_args():
@@ -94,6 +105,9 @@ def parse_args():
     parser.add_argument("files", nargs="*", help="test files (default: every tests/**/test_*.lua)")
     parser.add_argument("--jobs", type=int, default=min(MAX_DEFAULT_JOBS, os.cpu_count() or 1))
     parser.add_argument("--lua", choices=sorted(LUA_MODULES), default="51")
+    parser.add_argument(
+        "--timeout", type=float, default=DEFAULT_TIMEOUT, help="seconds before a test file fails (0 = no limit)"
+    )
     return parser.parse_args()
 
 
@@ -106,7 +120,7 @@ def main():
 
     started = time.perf_counter()
     failed = []
-    for test_path, error in run_all(files, module_name, args.jobs):
+    for test_path, error in run_all(files, module_name, args.jobs, args.timeout):
         if error is not None:
             failed.append(test_path)
             print(f"FAIL {test_path}\n{error}", file=sys.stderr)

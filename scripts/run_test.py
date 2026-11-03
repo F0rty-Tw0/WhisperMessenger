@@ -39,19 +39,46 @@ SETUP_LUA = """
         Show = function() end,
         Hide = function() end,
     }}
+
+    -- A real os.exit would end the whole Python process, and os.exit(0) would look like a pass.
+    os.exit = function(code)
+        error("os.exit(" .. tostring(code) .. ") called; a test must fail with error() instead", 2)
+    end
+
+    -- Lua 5.1 shares one C rand() state per process, so seed every file the same way.
+    math.randomseed(1)
 """
 
+# Every TIMEOUT_CHECK_INSTRUCTIONS Lua instructions, error out once the deadline has passed.
+# os.time is captured up front so a test that fakes it cannot stop the clock. A test that
+# installs its own debug hook replaces this one for the rest of its file.
+TIMEOUT_LUA = """
+    local timeout, every = ...
+    local now, sethook = os.time, debug.sethook
+    local deadline = now() + timeout
+    sethook(function()
+        if now() > deadline then
+            error("test file timed out after " .. timeout .. "s", 0)
+        end
+    end, "", every)
+    return sethook
+"""
+TIMEOUT_CHECK_INSTRUCTIONS = 1000000
 
-def run_file(runtime_cls, test_path):
-    """Run one test file in a fresh Lua runtime. Raises on an assert, error, or syntax error."""
+
+def run_file(runtime_cls, test_path, timeout=None):
+    """Run one test file in a fresh Lua runtime. Raises on an assert, error, syntax error, or timeout (seconds)."""
     lua = runtime_cls(unpack_returned_tuples=True)
     lua.execute(SETUP_LUA.format(root=PROJECT_ROOT))
     abs_test_path = os.path.join(PROJECT_ROOT, test_path).replace("\\", "/")
+    sethook = lua.execute(TIMEOUT_LUA, timeout, TIMEOUT_CHECK_INSTRUCTIONS) if timeout else None
     try:
         test_fn = lua.execute(f'return dofile("{abs_test_path}")')
         if callable(test_fn):
             test_fn()
     finally:
+        if sethook:
+            sethook()
         # Lua prints go through C stdio, not Python's sys.stdout; flush so they land before our own output.
         lua.execute("io.stdout:flush()")
 

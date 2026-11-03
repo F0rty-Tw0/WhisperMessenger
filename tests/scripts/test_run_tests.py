@@ -21,9 +21,9 @@ class RunTestsTests(unittest.TestCase):
             fh.write(source)
         return path
 
-    def run_runner(self, *files, jobs=1):
+    def run_runner(self, *files, jobs=1, extra_args=()):
         return subprocess.run(
-            [sys.executable, RUNNER, "--jobs", str(jobs), *files],
+            [sys.executable, RUNNER, "--jobs", str(jobs), *extra_args, *files],
             capture_output=True,
             text=True,
             timeout=120,
@@ -84,6 +84,52 @@ class RunTestsTests(unittest.TestCase):
     def test_package_loaded_entry_from_one_file_is_gone_in_the_next(self):
         a = self.fixture("test_a.lua", "package.loaded.leaked_module = {}\n")
         b = self.fixture("test_b.lua", "assert(package.loaded.leaked_module == nil, 'module leaked')\n")
+
+        result = self.run_runner(a, b)
+
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_os_exit_fails_the_file_and_later_files_still_run(self):
+        exits = self.fixture("test_a_exit.lua", "os.exit(0)\n")
+        good = self.fixture("test_b_good.lua", "print('good file ran')\n")
+
+        result = self.run_runner(exits, good)
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("good file ran", result.stdout)
+        self.assertIn("2 files, 1 failed", result.stdout)
+        self.assertIn("os.exit", result.stderr)
+
+    def test_crashed_worker_fails_its_file_and_exits_one(self):
+        crash = self.fixture("test_a_crash.lua", "python.eval(\"__import__('os')._exit(3)\")\n")
+        good = self.fixture("test_b_good.lua", "assert(true)\n")
+
+        result = self.run_runner(crash, good, jobs=2)
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("2 files, ", result.stdout)
+        self.assertIn("  FAIL " + crash.replace("\\", "/"), result.stdout)
+        self.assertIn("worker process died", result.stderr)
+
+    def test_infinite_loop_times_out_and_later_files_still_run(self):
+        hangs = self.fixture("test_a_hang.lua", "while true do end\n")
+        good = self.fixture("test_b_good.lua", "print('good file ran')\n")
+
+        result = self.run_runner(hangs, good, extra_args=("--timeout", "1"))
+
+        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+        self.assertIn("good file ran", result.stdout)
+        self.assertIn("2 files, 1 failed", result.stdout)
+        self.assertIn("timed out after 1", result.stderr)
+
+    def test_each_file_starts_from_random_seed_one(self):
+        a = self.fixture("test_a.lua", "math.random()\n")
+        b = self.fixture(
+            "test_b.lua",
+            "local first = math.random(1, 1000000000)\n"
+            "math.randomseed(1)\n"
+            "assert(first == math.random(1, 1000000000), 'file did not start from seed 1')\n",
+        )
 
         result = self.run_runner(a, b)
 
