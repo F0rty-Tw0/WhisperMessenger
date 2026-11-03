@@ -107,8 +107,13 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     return nil
   end
   if eventName == "CHAT_MSG_ADDON" or eventName == "BN_CHAT_MSG_ADDON" then
-    local prefix = ...
-    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK then
+    local prefix, _, channel = ...
+    -- Addon greeting announcements and CraftScan's own channel only come
+    -- over character whispers; broadcasts on those prefixes are dropped here.
+    local isGreeting = eventName == "CHAT_MSG_ADDON"
+      and channel == "WHISPER"
+      and (prefix == AddonComm.PREFIX_ADDON_GREETING or prefix == AddonComm.PREFIX_CRAFT_SCAN)
+    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK and not isGreeting then
       return nil
     end
   end

@@ -7,12 +7,11 @@ local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.C
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local Protocol = ns.MessageReactionProtocol or require("WhisperMessenger.Model.MessageReactionProtocol")
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local Pending = ns.BootstrapWindowRuntimeGroupSendPending or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GroupSendPending")
 
 local GroupSendPolicy = {}
 
 local FOREIGN_PROFILE_GROUP_PREFIXES = { "party::", "raid::", "instance::", "officer::", "channel::" }
-
-local PENDING_MATCH_WINDOW_SECONDS = 15
 
 local function hasConversationKey(conversation)
   return type(conversation) == "table" and type(conversation.conversationKey) == "string" and conversation.conversationKey ~= ""
@@ -22,83 +21,8 @@ local function isCompetitive(runtime)
   return type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent()
 end
 
-local function isPendingExpired(entry, now)
-  return type(now) == "number"
-    and type(entry) == "table"
-    and type(entry.createdAt) == "number"
-    and now - entry.createdAt > PENDING_MATCH_WINDOW_SECONDS
-end
-
-local function prunePending(runtime, conversationKey, now)
-  local queues = runtime.pendingGroupOutgoing
-  local queue = type(queues) == "table" and queues[conversationKey] or nil
-  if type(queue) ~= "table" then
-    return
-  end
-  for index = #queue, 1, -1 do
-    if isPendingExpired(queue[index], now) then
-      table.remove(queue, index)
-    end
-  end
-  if #queue == 0 then
-    queues[conversationKey] = nil
-  end
-end
-
-local function prunePendingQueues(runtime, now)
-  local queues = runtime.pendingGroupOutgoing
-  if type(queues) ~= "table" then
-    return
-  end
-  for conversationKey in pairs(queues) do
-    prunePending(runtime, conversationKey, now)
-  end
-end
-
 local function isSupportedGroupChannel(channel)
   return ChannelType.ADDON_GROUP_CHANNELS[channel] == true
-end
-
-local function createdAt(runtime)
-  if type(runtime.now) == "function" then
-    local ok, now = pcall(runtime.now)
-    if ok and type(now) == "number" then
-      return now
-    end
-  end
-  return 0
-end
-
-local function recordPending(runtime, conversationKey, entry, now)
-  if type(conversationKey) ~= "string" or conversationKey == "" then
-    return nil
-  end
-  prunePendingQueues(runtime, now)
-  runtime.pendingGroupOutgoing = runtime.pendingGroupOutgoing or {}
-  local queue = runtime.pendingGroupOutgoing[conversationKey]
-  if queue == nil then
-    queue = {}
-    runtime.pendingGroupOutgoing[conversationKey] = queue
-  end
-  table.insert(queue, entry)
-  return entry
-end
-
-local function discardPending(runtime, conversationKey, entry)
-  local queues = runtime.pendingGroupOutgoing
-  local queue = type(queues) == "table" and queues[conversationKey] or nil
-  if type(queue) ~= "table" then
-    return
-  end
-  for index, candidate in ipairs(queue) do
-    if candidate == entry then
-      table.remove(queue, index)
-      break
-    end
-  end
-  if #queue == 0 then
-    queues[conversationKey] = nil
-  end
 end
 
 local function defaultPlayerGuildName()
@@ -243,17 +167,17 @@ function GroupSendPolicy.Create(options)
       return false
     end
 
-    local now = createdAt(runtime)
+    local now = Pending.Now(runtime)
     local wireId = payload.wireId or Protocol.NewWireId(runtime, now)
     payload.wireId = wireId
-    local pending = recordPending(runtime, payload.conversationKey, {
+    local pending = Pending.Record(runtime, payload.conversationKey, {
       text = payload.text,
       channel = payload.channel,
       createdAt = now,
       wireId = wireId,
     }, now)
     if not sendNormal(payload, payload.text) then
-      discardPending(runtime, payload.conversationKey, pending)
+      Pending.Discard(runtime, payload.conversationKey, pending)
       return false
     end
 
@@ -294,19 +218,19 @@ function GroupSendPolicy.Create(options)
       targetMessage = message,
       targetConversation = conversation,
     }
-    local now = createdAt(runtime)
-    local pending = recordPending(runtime, conversation.conversationKey, {
+    local now = Pending.Now(runtime)
+    local pending = Pending.Record(runtime, conversation.conversationKey, {
       text = fallback,
       channel = conversation.channel,
       createdAt = now,
       reactionControl = reactionControl,
     }, now)
     if not sendNormal(conversation, fallback) then
-      discardPending(runtime, conversation.conversationKey, pending)
+      Pending.Discard(runtime, conversation.conversationKey, pending)
       return false
     end
     if not sendAddon(conversation, encoded) then
-      discardPending(runtime, conversation.conversationKey, pending)
+      Pending.Discard(runtime, conversation.conversationKey, pending)
       return false
     end
     if hintSuffix ~= nil then
@@ -321,7 +245,7 @@ function GroupSendPolicy.Create(options)
     sendPayload = sendPayload,
     sendReaction = sendReaction,
     prunePending = function(conversationKey, now)
-      prunePending(runtime, conversationKey, now or createdAt(runtime))
+      Pending.Prune(runtime, conversationKey, now or Pending.Now(runtime))
     end,
     isForeignCharacterGroup = function(conversation)
       return isForeignCharacterGroup(runtime, conversation, getPlayerGuildName)

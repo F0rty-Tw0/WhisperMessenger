@@ -95,6 +95,58 @@ return function()
     assert(menu:GetVerticalScroll() == 0, "test_dropdown_scroll: wheel up should clamp at menu top")
   end
 
+  -- test_open_scrolls_the_selected_option_into_view
+
+  do
+    local many = {}
+    for i = 1, 40 do
+      many[i] = { key = "sound" .. i, label = "Sound " .. i }
+    end
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Notification sound",
+      optionsList = many,
+      fallbackKey = "sound1",
+      initial = "sound35",
+      buttonHeight = 26,
+      menuHeight = 156,
+    })
+    local menu = FindUI.dropdownMenu(selector.row)
+    selector.button:GetScript("OnClick")(selector.button)
+    local rowTop = 34 * 26
+    local offset = menu:GetVerticalScroll()
+    assert(
+      rowTop >= offset and rowTop + 26 <= offset + menu:GetHeight(),
+      "test_dropdown_scroll_to_selected: selected row should be inside the viewport, offset " .. offset
+    )
+
+    selector.setSelected("sound2")
+    menu:Hide()
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(menu:GetVerticalScroll() == 0, "test_dropdown_scroll_to_selected: a selection on the first page keeps the menu at the top")
+  end
+
+  -- test_missing_saved_key_is_selected_once_the_list_has_it
+
+  do
+    local source = { { key = "default", label = "Default" } }
+    local selector = DropdownSelector.Create(factory, parent, {
+      labelText = "Notification sound",
+      optionsList = source,
+      getOptions = function()
+        return source
+      end,
+      fallbackKey = "default",
+      initial = "lsm:Zap",
+    })
+    assert(selector.button.label.text == "Default", "test_dropdown_late_key: missing saved key shows the fallback")
+    source = { { key = "default", label = "Default" }, { key = "lsm:Zap", label = "Zap" } }
+    selector.button:GetScript("OnClick")(selector.button)
+    assert(
+      selector.button.label.text == "Zap",
+      "test_dropdown_late_key: saved key is selected once the list has it, got " .. tostring(selector.button.label.text)
+    )
+  end
+
   -- test_parent_hide_closes_open_menu
 
   do

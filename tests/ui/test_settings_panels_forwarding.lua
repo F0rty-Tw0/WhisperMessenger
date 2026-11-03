@@ -30,6 +30,7 @@ return function()
     clearOnLogout = true,
     hideMessagePreview = true,
     hideBattleTagNumbers = false,
+    showPlayerLevels = true,
     timeFormat = "24h",
     timeSource = "server",
     interfaceLanguage = "ruRU",
@@ -44,11 +45,11 @@ return function()
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
     hudStyle = "classic",
-    showPlayerLevels = true,
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
     hideFromDefaultChat = true,
+    closeGameWhisperTab = true,
     autoOpenIncoming = true,
     autoOpenOutgoing = true,
     doubleEscapeToClose = true,
@@ -59,6 +60,7 @@ return function()
     shareTypingStatus = false,
     shareReadReceipts = false,
     showInviteLink = false,
+    addonGreetings = "hide",
     -- chats
     enabledChannels = { trade = true },
     collapseDuplicates = false,
@@ -112,6 +114,7 @@ return function()
     "expected general config.timeSource=server, got: " .. tostring(generalCapture.config.timeSource)
   )
   assert(generalCapture.config.hideBattleTagNumbers == false, "general config should carry hideBattleTagNumbers")
+  assert(generalCapture.config.showPlayerLevels == true, "general config should carry showPlayerLevels")
   assert(
     generalCapture.config.interfaceLanguage == "ruRU",
     "expected general config.interfaceLanguage=ruRU, got: " .. tostring(generalCapture.config.interfaceLanguage)
@@ -132,6 +135,8 @@ return function()
   assert(whispersCapture.config.shareTypingStatus == false, "whispers config should carry shareTypingStatus")
   assert(whispersCapture.config.shareReadReceipts == false, "whispers config should carry shareReadReceipts")
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
+  assert(whispersCapture.config.closeGameWhisperTab == true, "whispers config should carry closeGameWhisperTab")
+  assert(whispersCapture.config.addonGreetings == "hide", "whispers config should carry addonGreetings")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")
@@ -156,7 +161,7 @@ return function()
     appearanceCapture.config.windowScale == 1.25,
     "expected appearance config.windowScale=1.25, got: " .. tostring(appearanceCapture.config.windowScale)
   )
-  assert(appearanceCapture.config.showPlayerLevels == true, "appearance config should carry showPlayerLevels")
+  assert(appearanceCapture.config.showPlayerLevels == nil, "player levels key moved off the Appearance page")
 
   -- Notifications owns sound settings only.
   assert(

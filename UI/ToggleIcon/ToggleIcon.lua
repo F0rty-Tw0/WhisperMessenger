@@ -4,7 +4,6 @@ if type(ns) ~= "table" then
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local captureFramePosition = UIHelpers.captureFramePosition
 local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
@@ -14,16 +13,14 @@ local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.Toggl
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
+local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
+local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
+local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
 
-local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local KeybindHints = ns.KeybindHints or require("WhisperMessenger.UI.Shared.KeybindHints")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
-local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
-local CHAT_ICON_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
 local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
-local LOCK_GLYPH_RATIO = 0.45 -- lock indicator size vs ICON_SIZE
-local LOCK_GLYPH_TEXTURE = "Interface\\LFGFrame\\UI-LFG-ICON-LOCK"
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local ToggleIcon = {}
@@ -51,44 +48,13 @@ function ToggleIcon.Create(factory, options)
     frame:SetFrameStrata("HIGH")
   end
 
-  -- Circular background: use the circle texture directly, tinted to desired color
-  local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
-  local RING_TEX = "Interface\\COMMON\\RingBorder"
-
-  local function resolveBgColor()
-    return Theme.COLORS.toggle_icon_bg
-  end
-  local function resolveRingColor()
-    local c = Theme.COLORS.toggle_icon_ring
-    if c then
-      return c
-    end
-    local a = Theme.COLORS.accent or { 1, 1, 1, 1 }
-    return { a[1], a[2], a[3], 0.3 }
-  end
-  local function resolveGlyphColor()
-    return Theme.COLORS.toggle_icon_glyph or Theme.COLORS.text_primary
-  end
-
-  local background = frame:CreateTexture(nil, "BACKGROUND")
-  background:SetAllPoints(frame)
-  background:SetTexture(CIRCLE_TEX)
-  applyVertexColor(background, resolveBgColor())
-
-  -- Circular border ring: the generic `COMMON\RingBorder` hoop, which
-  -- paints cleanly with any vertex-color tint from the preset palette.
-  local border = frame:CreateTexture(nil, "BORDER")
-  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
-  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture(RING_TEX)
-  applyVertexColor(border, resolveRingColor())
-
-  -- Chat icon (speech bubble) instead of text label
-  local chatIcon = frame:CreateTexture(nil, "ARTWORK")
-  chatIcon:SetSize(ICON_SIZE * CHAT_ICON_RATIO, ICON_SIZE * CHAT_ICON_RATIO)
-  chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  chatIcon:SetTexture(ADDON_ICON_TEXTURE)
-  applyVertexColor(chatIcon, resolveGlyphColor())
+  local resolveBgColor = IconArt.ResolveBgColor
+  local resolveRingColor = IconArt.ResolveRingColor
+  local resolveGlyphColor = IconArt.ResolveGlyphColor
+  local art = IconArt.Create(frame, ICON_SIZE)
+  local background = art.background
+  local border = art.border
+  local chatIcon = art.chatIcon
 
   local label = chatIcon -- reference kept for return table
 
@@ -102,8 +68,8 @@ function ToggleIcon.Create(factory, options)
     background = background,
     border = border,
     glyph = chatIcon,
-    roundBackground = CIRCLE_TEX,
-    roundGlyph = ADDON_ICON_TEXTURE,
+    roundBackground = IconArt.CIRCLE_TEX,
+    roundGlyph = IconArt.ADDON_ICON_TEXTURE,
     getShowBackground = options.getIconBackground,
     pulse = pulseGlow,
   })
@@ -164,25 +130,12 @@ function ToggleIcon.Create(factory, options)
     return type(getIsLocked) == "function" and getIsLocked() == true
   end
 
-  -- Lock glyph overlay: small padlock texture pinned to the bottom-right of
-  -- the icon. Hidden by default; shown only while the icon is locked AND the
-  -- cursor is hovering it, so the indicator stays out of sight otherwise.
-  local lockGlyph = frame:CreateTexture(nil, "OVERLAY")
-  local function applyLockGlyphLayout(size)
-    local s = math.max(8, math.floor((tonumber(size) or ICON_SIZE) * LOCK_GLYPH_RATIO))
-    lockGlyph:SetSize(s, s)
-    if lockGlyph.ClearAllPoints then
-      lockGlyph:ClearAllPoints()
-    end
-    lockGlyph:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 2, -2)
-  end
-  applyLockGlyphLayout(ICON_SIZE)
-  lockGlyph:SetTexture(LOCK_GLYPH_TEXTURE)
-  if lockGlyph.Hide then
-    lockGlyph:Hide()
-  end
-
-  local isHoveringIcon = false
+  -- Hover state shared with the lock glyph, which shows only while hovered.
+  local hover = { active = false }
+  local lock = LockGlyph.Create(frame, ICON_SIZE, { isLocked = isLocked, hover = hover })
+  local lockGlyph = lock.texture
+  local syncLockGlyphVisibility = lock.syncVisibility
+  local refreshLockGlyph = lock.refresh
 
   local function resolveWidgetTransparency()
     local value = type(getWidgetTransparency) == "function" and tonumber(getWidgetTransparency()) or nil
@@ -194,29 +147,9 @@ function ToggleIcon.Create(factory, options)
 
   local function refreshTransparency()
     if frame.SetAlpha then
-      local alpha = not isHoveringIcon and (1 - resolveWidgetTransparency()) or 1
+      local alpha = not hover.active and (1 - resolveWidgetTransparency()) or 1
       frame:SetAlpha(alpha)
     end
-  end
-
-  local function syncLockGlyphVisibility()
-    local show = isHoveringIcon and isLocked()
-    if show then
-      if lockGlyph.Show then
-        lockGlyph:Show()
-      end
-    else
-      if lockGlyph.Hide then
-        lockGlyph:Hide()
-      end
-    end
-  end
-
-  local function refreshLockGlyph()
-    if frame.SetMovable then
-      frame:SetMovable(not isLocked())
-    end
-    syncLockGlyphVisibility()
   end
 
   local desaturation = Desaturation.Create({
@@ -250,10 +183,12 @@ function ToggleIcon.Create(factory, options)
     squareLook.apply(desaturation.isActive())
   end
 
+  local tooltip = IconTooltip.Create(frame, { badge = badge, isLocked = isLocked, options = options })
+
   -- Hover glow effect
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
-      isHoveringIcon = true
+      hover.active = true
       syncLockGlyphVisibility()
       refreshTransparency()
       if squareLook.isSquare() then
@@ -262,26 +197,11 @@ function ToggleIcon.Create(factory, options)
         applyVertexColor(background, Theme.COLORS.send_button_hover)
         applyVertexColor(chatIcon, HOVER_ICON_COLOR)
       end
-      if _G.GameTooltip and _G.GameTooltip.SetOwner then
-        _G.GameTooltip:SetOwner(frame, "ANCHOR_BOTTOM")
-        local unreadText = badge:IsShown() and " — " .. unreadSummary or ""
-        local competitiveText = ""
-        if isCompetitiveActive then
-          competitiveText = "\n" .. Localization.Text("Paused in M+")
-        end
-        local lockedText = ""
-        if isLocked() then
-          lockedText = "\n" .. Localization.Text("Locked")
-        end
-        _G.GameTooltip:SetText("Whisper Messenger" .. unreadText .. competitiveText .. lockedText)
-        KeybindHints.AddToTooltip(_G.GameTooltip, type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true)
-        KeybindHints.AddClickHint(_G.GameTooltip)
-        _G.GameTooltip:Show()
-      end
+      tooltip.show(unreadSummary, isCompetitiveActive)
     end)
 
     frame:SetScript("OnLeave", function()
-      isHoveringIcon = false
+      hover.active = false
       syncLockGlyphVisibility()
       refreshTransparency()
       local isDesat = desaturation.paintsGrey()
@@ -290,9 +210,7 @@ function ToggleIcon.Create(factory, options)
         applyVertexColor(chatIcon, resolveGlyphColor())
       end
       squareLook.setHover(false) -- after the repaint: the square has its own fill
-      if _G.GameTooltip and _G.GameTooltip.Hide then
-        _G.GameTooltip:Hide()
-      end
+      tooltip.hide()
     end)
 
     frame:SetScript("OnClick", IconClick.Create(options))
@@ -304,23 +222,7 @@ function ToggleIcon.Create(factory, options)
       squareLook.setPushed(false)
     end)
 
-    frame:SetScript("OnDragStart", function(self)
-      if isLocked() then
-        return
-      end
-      if self.IsMovable == nil or self:IsMovable() then
-        self:StartMoving()
-      end
-    end)
-
-    frame:SetScript("OnDragStop", function(self)
-      self:StopMovingOrSizing()
-      local nextState = captureFramePosition(self)
-
-      if options.onPositionChanged then
-        options.onPositionChanged(nextState)
-      end
-    end)
+    IconDrag.Attach(frame, isLocked, options)
   end
 
   local function refreshDesaturation()
@@ -339,13 +241,8 @@ function ToggleIcon.Create(factory, options)
   local function applyIconSize(newSize)
     newSize = tonumber(newSize) or ICON_SIZE
     frame:SetSize(newSize, newSize)
-    chatIcon:SetSize(math.floor(newSize * CHAT_ICON_RATIO), math.floor(newSize * CHAT_ICON_RATIO))
-    if border.SetPoint and border.ClearAllPoints then
-      border:ClearAllPoints()
-      border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
-      border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-    end
-    applyLockGlyphLayout(newSize)
+    art.applySize(newSize)
+    lock.applyLayout(newSize)
     squareLook.apply(desaturation.isActive()) -- glows sized from the glyph
   end
 

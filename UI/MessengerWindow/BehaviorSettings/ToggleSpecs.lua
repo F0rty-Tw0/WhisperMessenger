@@ -81,7 +81,7 @@ function ToggleSpecs.Build(config, onChange)
       end,
       tooltipLines = {
         text("Hide on entering combat"),
-        text("Hides the messenger when combat starts. You can reopen it manually during combat. It does not reopen automatically after combat."),
+        text("Hides the messenger when combat starts and opens it again when combat ends. If you close it yourself during combat, it stays closed."),
       },
     },
     {

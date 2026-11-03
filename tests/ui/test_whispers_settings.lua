@@ -6,6 +6,7 @@ local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSe
 
 local WHISPER_LABELS = {
   "Hide whispers from default chat",
+  "Close the game's whisper tab too",
   "Auto-open on incoming whisper",
   "Auto-open on outgoing whisper",
   "Put whispers from strangers in Requests",
@@ -29,13 +30,13 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  -- test_shows_exactly_the_seven_whisper_toggles
+  -- test_shows_exactly_the_eight_whisper_toggles
   do
     local result = create({})
     for _, label in ipairs(WHISPER_LABELS) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "missing whisper toggle: " .. label)
     end
-    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 7 toggles, got " .. FindUI.countToggles(result.frame))
+    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 8 toggles, got " .. FindUI.countToggles(result.frame))
   end
 
   -- test_behavior_no_longer_shows_whisper_toggles
@@ -52,6 +53,7 @@ return function()
   do
     local result, changes = create({
       hideFromDefaultChat = false,
+      closeGameWhisperTab = true,
       autoOpenIncoming = true,
       autoOpenOutgoing = true,
       requestsInbox = true,
@@ -61,6 +63,7 @@ return function()
     })
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
     assert(changes.hideFromDefaultChat == true, "reset turns hide-from-chat on")
+    assert(changes.closeGameWhisperTab == false, "reset turns closing the game tab off")
     assert(changes.autoOpenIncoming == false, "reset turns auto-open incoming off")
     assert(changes.autoOpenOutgoing == false, "reset turns auto-open outgoing off")
     assert(changes.requestsInbox == false, "reset turns the Requests inbox off")
@@ -73,6 +76,7 @@ return function()
   do
     local result = create({})
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Hide whispers from default chat")) == false, "never-saved hide-from-chat shows off")
+    assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Close the game's whisper tab too")) == false, "closing the game tab defaults off")
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Auto-open on incoming whisper")) == false, "incoming defaults off")
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Auto-open on outgoing whisper")) == false, "outgoing defaults off")
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Put whispers from strangers in Requests")) == false, "Requests defaults off")
@@ -93,6 +97,7 @@ return function()
     local result, changes = create({})
     local keysByLabel = {
       ["Hide whispers from default chat"] = "hideFromDefaultChat",
+      ["Close the game's whisper tab too"] = "closeGameWhisperTab",
       ["Auto-open on incoming whisper"] = "autoOpenIncoming",
       ["Auto-open on outgoing whisper"] = "autoOpenOutgoing",
       ["Put whispers from strangers in Requests"] = "requestsInbox",
@@ -126,6 +131,20 @@ return function()
     assert(tooltipTitle == "Auto-open on incoming whisper", "tooltip title uses the label")
     assert(#addedLines > 0, "tooltip has a description line")
     _G.GameTooltip = nil
+  end
+
+  -- test_close_game_tab_toggle_is_translated_everywhere
+  do
+    local keys = {
+      "Close the game's whisper tab too",
+      "When you remove a chat here, the game's own whisper tab for that player closes as well. Only matters when the game opens whispers in their own tabs.",
+    }
+    for _, code in ipairs({ "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU", "zhCN", "zhTW" }) do
+      local catalog = require("WhisperMessenger.Locale." .. code)
+      for _, key in ipairs(keys) do
+        assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " translates: " .. key)
+      end
+    end
   end
 
   -- test_russian_localizes_whispers_panel

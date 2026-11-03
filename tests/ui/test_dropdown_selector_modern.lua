@@ -1,5 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
+local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local DropdownSelector = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local DropdownSkin = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local FindUI = require("tests.helpers.find_ui")
@@ -89,6 +90,73 @@ return function()
     dd.button.scripts.OnLeave(dd.button)
     assert(hoverFill.shown ~= true, "hover wash hidden on leave")
     assert(colorsMatch(chevron(dd).vertexColor, Theme.COLORS.text_secondary), "chevron restores on leave")
+  end
+
+  local function newGrouped(changes)
+    local parent = factory.CreateFrame("Frame", nil, nil)
+    return DropdownSelector.Create(factory, parent, {
+      labelText = "Notification sound",
+      optionsList = {
+        { header = true, label = "Group A" },
+        { key = "a1", label = "A1" },
+        { header = true, label = "Group B" },
+        { key = "b1", label = "B1" },
+      },
+      fallbackKey = "missing",
+      initial = "b1",
+      onChange = function(key)
+        changes.count = (changes.count or 0) + 1
+        changes[#changes + 1] = key
+      end,
+    })
+  end
+
+  -- test_modern_dropdown_header_rows_are_not_choices
+  do
+    local changes = {}
+    local dd = newGrouped(changes)
+    local rows = FindUI.dropdownOptions(dd.row)
+    assert(#rows == 4 and rows[3].label.text == "Group B", "header rows are listed in order")
+    FindUI.click(rows[3])
+    assert((changes.count or 0) == 0, "clicking a header picks nothing")
+    assert(dd.button.label.text == "B1", "selection stays on the chosen sound")
+  end
+
+  -- test_modern_dropdown_headers_use_secondary_text
+  do
+    local dd = newGrouped({})
+    local header = FindUI.dropdownOptions(dd.row)[1]
+    header.scripts.OnEnter(header)
+    assert(colorsMatch(header.label.textColor, Theme.COLORS.text_secondary), "header text stays secondary, even hovered")
+  end
+
+  -- test_hud_without_any_menu_api_keeps_the_modern_dropdown
+  do
+    local saved = rawget(_G, "MenuUtil")
+    rawset(_G, "MenuUtil", nil)
+    Hud.Configure("classic")
+    local dd = newDropdown(FakeUI.NewFactory())
+    Hud.Configure("off")
+    rawset(_G, "MenuUtil", saved)
+    assert(dd.button.template == nil, "no menu API: modern closed button")
+    assert(FindUI.dropdownMenu(dd.row) ~= nil, "no menu API: custom menu")
+  end
+
+  -- test_modern_dropdown_ignores_the_blizzard_api
+  do
+    local base = FakeUI.NewFactory()
+    local blizzardFactory = {
+      CreateFrame = function(frameType, name, parent, template)
+        local frame = base.CreateFrame(frameType, name, parent, template)
+        if template == "WowStyle1DropdownTemplate" then
+          function frame:SetupMenu() end
+          function frame:GenerateMenu() end
+        end
+        return frame
+      end,
+    }
+    local dd = newDropdown(blizzardFactory)
+    assert(dd.button.template == nil, "modern: custom dropdown")
   end
 
   Theme.SetPreset(previousPreset)

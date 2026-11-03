@@ -48,12 +48,16 @@ local function buildOpenConversation(runtime)
     end
 
     local wasVisible = runtime.isWindowVisible()
+    local hiddenByCombat = runtime.hiddenByCombat
     runtime.ensureWindow()
     runtime.setWindowVisible(true)
     hideOpenPanel(runtime)
     if not runtime.startConversation(playerName) then
       if not wasVisible then
         runtime.setWindowVisible(false)
+        -- The open cleared the combat-hide mark; a failed open must not
+        -- cancel the combat-end reopen.
+        runtime.hiddenByCombat = hiddenByCombat
       end
       return false
     end

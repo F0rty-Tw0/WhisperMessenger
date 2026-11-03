@@ -60,15 +60,17 @@ local function makeRuntimeOptions()
       function coord.buildSelectionState(contacts)
         return { selectedContact = contacts[1], conversation = nil, status = nil }
       end
-      function coord.refreshWindow()
+      function coord.refreshWindow(_focusKey, dirtyKeys)
+        trackers.refreshDirtyKeys = dirtyKeys
         local ldbObject = coordOptions.getLdbObject()
         if ldbObject then
           ldbObject.refreshes = (ldbObject.refreshes or 0) + 1
         end
         return nil
       end
-      function coord.setWindowVisible(nextVisible)
+      function coord.setWindowVisible(nextVisible, showOptions)
         trackers.coordinatorVisible = nextVisible
+        trackers.coordinatorShowOptions = showOptions
       end
       function coord.isWindowVisible()
         return trackers.coordinatorVisible
@@ -390,8 +392,13 @@ return function()
     lastIncomingAt = 9999,
   }
   options.accountState.widgetPreviewAcknowledgedAt = nil
+  runtime.hiddenByCombat = true
   controller.setWindowVisible(true)
   assert(options.accountState.widgetPreviewAcknowledgedAt == 9999, "setWindowVisible(true) should acknowledge the latest widget preview")
+  assert(runtime.hiddenByCombat == nil, "opening the window drops the combat-hide mark so a later close is respected")
+  local noFocus = { focusComposer = false }
+  runtime.setWindowVisible(true, noFocus)
+  assert(trackers.coordinatorShowOptions == noFocus, "setWindowVisible should pass its show options to the coordinator")
 
   -- Whisper arrives while the window is open (already on screen in the pane),
   -- then the user closes the window: closing must acknowledge it too, or the
@@ -413,8 +420,10 @@ return function()
   runtime.window.getTabMode = function()
     return "whispers"
   end
+  runtime.hiddenByCombat = true
   controller.toggle()
   assert(trackers.coordinatorVisible == true, "toggle should open the window via coordinator")
+  assert(runtime.hiddenByCombat == nil, "toggle opening the window drops the combat-hide mark")
   assert(runtime.activeConversationKey == conversationKey, "toggle should select the latest unread on Whispers tab")
   assert(runtime.store.conversations[conversationKey].unreadCount == 0, "selecting a conversation should mark it read")
 
@@ -445,6 +454,9 @@ return function()
   controller.refreshWindow()
   runtime.refreshWindow()
   assert(trackers.ldbObject.refreshes == ldbRefreshes + 2, "widget-mode refresh paths should update the registered LDB launcher")
+  local refreshDirty = { [conversationKey] = true }
+  runtime.refreshWindow(nil, refreshDirty)
+  assert(trackers.refreshDirtyKeys == refreshDirty, "runtime.refreshWindow should forward the dirty keys to the coordinator")
 
   windowOptions.onSettingChanged("iconMode", "minimap")
   minimapFrame = trackers.framesByName and trackers.framesByName["WhisperMessengerMinimapIcon"]

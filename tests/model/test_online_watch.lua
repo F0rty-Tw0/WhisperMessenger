@@ -84,6 +84,24 @@ return function()
     assert(OnlineWatch.ReadOnline(runtime, { channel = "WOW", displayName = "Jaina-Realm" }) == nil, "error: unknown")
   end
 
+  -- test_secret_connected_flag_is_unknown
+  do
+    local secret = {}
+    local runtime = {
+      friendListApi = {
+        GetFriendInfo = function()
+          return { connected = secret }
+        end,
+      },
+    }
+    rawset(_G, "issecretvalue", function(value)
+      return value == secret
+    end)
+    local online = OnlineWatch.ReadOnline(runtime, { channel = "WOW", displayName = "Jaina-Realm" })
+    rawset(_G, "issecretvalue", nil)
+    assert(online == nil, "secret connected flag: unknown, got " .. tostring(online))
+  end
+
   -- test_can_watch_only_friends
   do
     local api = {

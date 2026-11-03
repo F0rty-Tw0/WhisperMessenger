@@ -110,6 +110,7 @@ read_globals = {
   "C_RestrictedActions",
   "C_XMLUtil",
   "C_Texture",
+  "C_Seasons",
 
   -- Unit and player info
   "UnitName",
@@ -127,6 +128,7 @@ read_globals = {
   "GetPlayerInfoByGUID",
   "GetNormalizedRealmName",
   "GetRealmName",
+  "GetCurrentRegion",
   "GetUnitSpeed",
   "Ambiguate",
   "IsLoggedIn",
@@ -138,6 +140,9 @@ read_globals = {
   "hooksecurefunc",
   "ChatFrame_AddMessageEventFilter",
   "ChatFrame_RemoveMessageEventFilter",
+  "CHAT_FRAMES",
+  "FCF_Close",
+  "FCF_PopInWindow",
   "ChatEdit_SetLastTellTarget",
   "BNGetNumFriends",
   "BNGetNumConversations",
@@ -187,6 +192,7 @@ read_globals = {
   "UNKNOWNOBJECT",
   "DEFAULT_CHAT_FRAME",
   "PlaySound",
+  "PlaySoundFile",
   "print",
   "UpdateAddOnMemoryUsage",
   "GetAddOnMemoryUsage",

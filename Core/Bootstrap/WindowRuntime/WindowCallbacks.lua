@@ -9,15 +9,16 @@ local ReactionHandler = ns.BootstrapReactionHandler or require("WhisperMessenger
 local InviteHandler = ns.BootstrapInviteHandler or require("WhisperMessenger.Core.Bootstrap.InviteHandler")
 local MessageReactions = ns.MessageReactions or require("WhisperMessenger.Model.MessageReactions")
 local ConversationDrafts = ns.ConversationDrafts or require("WhisperMessenger.Model.ConversationDrafts")
-local ContactPrefs = ns.ContactPrefs or require("WhisperMessenger.Model.ContactPrefs")
 local MessageRequests = ns.MessageRequests or require("WhisperMessenger.Model.MessageRequests")
-local OnlineWatch = ns.OnlineWatch or require("WhisperMessenger.Model.OnlineWatch")
+-- stylua: ignore
+local ContactPrefsUpdate = ns.BootstrapWindowRuntimeContactPrefsUpdate or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ContactPrefsUpdate")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local QueuedSends = ns.BootstrapQueuedSends or require("WhisperMessenger.Core.Bootstrap.QueuedSends")
 local ContactsTabFilter = ns.ContactsTabFilter or require("WhisperMessenger.UI.ContactsList.ContactsTabFilter")
 local IconPosition = ns.BootstrapWindowRuntimeIconPosition or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconPosition")
 local WhoTriggers = ns.BootstrapWindowRuntimeWhoTriggers or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhoTriggers")
 local AddonAlerts = ns.BootstrapWindowRuntimeAddonAlerts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.AddonAlerts")
+local GameWhisperTab = ns.BootstrapWindowRuntimeGameWhisperTab or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GameWhisperTab")
 
 local WindowCallbacks = {}
 
@@ -80,8 +81,12 @@ function WindowCallbacks.Create(options)
     if key == nil then
       return
     end
+    local conversation = Store.Find(runtime.store, key)
     MessageReactions.ClearConversation(runtime, key)
     Store.Remove(runtime.store, key)
+    if type(accountState.settings) == "table" and accountState.settings.closeGameWhisperTab == true then
+      GameWhisperTab.CloseFor(key, conversation)
+    end
     if runtime.activeConversationKey == key then
       runtime.activeConversationKey = nil
       characterState.activeConversationKey = nil
@@ -241,18 +246,11 @@ function WindowCallbacks.Create(options)
       refreshWindow()
     end,
 
-    -- Mute / nickname / note / notify-when-online from the contact row menu.
+    -- Mute / nickname / note / notify-when-online / zone watch from the contact row menu.
     onUpdatePrefs = function(item, changes)
-      local key = item and item.conversationKey
-      if key == nil then
-        return
+      if ContactPrefsUpdate.Apply(runtime, item, changes) then
+        refreshWindow()
       end
-      ContactPrefs.Apply(runtime.store, key, changes)
-      -- Record the friend's state now so their next login is a change.
-      if changes and changes.notifyOnline == true then
-        OnlineWatch.Observe(runtime, key, OnlineWatch.ReadOnline(runtime, runtime.store.conversations[key]))
-      end
-      refreshWindow()
     end,
 
     -- "Block…" from a contact row or a message.

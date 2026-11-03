@@ -74,6 +74,12 @@ local function tests()
   Assert.equal(TimeFormat.ContactPreview(nil), "")
   assert(TimeFormat.IsDifferentDay(nil, day1), "nil timestamp should return true")
 
+  -- ExportStamp: fixed 24h "YYYY-MM-DD HH:MM" for plain-text exports
+  local afternoon = os.time({ year = 2026, month = 3, day = 9, hour = 14, min = 5, sec = 0 })
+  Assert.equal(TimeFormat.ExportStamp(afternoon), "2026-03-09 14:05")
+  Assert.equal(TimeFormat.ExportStamp(nil), "")
+  Assert.equal(TimeFormat.ExportStamp(0), "")
+
   print("  All TimeFormat tests passed")
 end
 

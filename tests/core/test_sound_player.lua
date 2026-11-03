@@ -1,4 +1,5 @@
 local SoundPlayer = require("WhisperMessenger.Core.SoundPlayer")
+local FakeSharedSounds = require("tests.helpers.fake_shared_sounds")
 
 return function()
   -- test_play_uses_correct_sound_id_for_key
@@ -120,6 +121,97 @@ return function()
     assert(playedId == 5274, "test_preview: expected soundId 5274, got " .. tostring(playedId))
     assert(playedChannel == "Master", "test_preview: expected channel Master, got " .. tostring(playedChannel))
     assert(setCvarCalled == false, "test_preview: should not manipulate CVars")
+  end
+
+  -- Records PlaySound / PlaySoundFile calls made by fn().
+  local function recordPlays(fn)
+    local plays = {}
+    rawset(_G, "PlaySound", function(soundId, channel)
+      plays[#plays + 1] = { api = "PlaySound", sound = soundId, channel = channel }
+    end)
+    rawset(_G, "PlaySoundFile", function(path, channel)
+      plays[#plays + 1] = { api = "PlaySoundFile", sound = path, channel = channel }
+    end)
+    fn()
+    rawset(_G, "PlaySoundFile", nil)
+    return plays
+  end
+
+  local SHARED = { { "Boom", "Interface\\AddOns\\Media\\boom.ogg" } }
+
+  -- test_preview_shared_media_sound_plays_its_file_on_master
+  do
+    local plays
+    FakeSharedSounds.with(SHARED, function()
+      plays = recordPlays(function()
+        SoundPlayer.Preview(SoundPlayer.SharedMediaKey("Boom"))
+      end)
+    end)
+    assert(#plays == 1 and plays[1].api == "PlaySoundFile", "SharedMedia pick previews through PlaySoundFile")
+    assert(plays[1].sound == "Interface\\AddOns\\Media\\boom.ogg" and plays[1].channel == "Master", "plays the fetched file on Master")
+  end
+
+  -- test_play_saved_shared_media_sound_plays_its_file
+  do
+    local plays
+    FakeSharedSounds.with(SHARED, function()
+      plays = recordPlays(function()
+        SoundPlayer.Play({ notificationSound = SoundPlayer.SharedMediaKey("Boom") })
+      end)
+    end)
+    assert(#plays == 1 and plays[1].sound == "Interface\\AddOns\\Media\\boom.ogg", "saved SharedMedia name plays its file")
+  end
+
+  -- test_play_missing_shared_media_sound_plays_the_default
+  do
+    local plays
+    FakeSharedSounds.with(SHARED, function()
+      plays = recordPlays(function()
+        SoundPlayer.Play({ notificationSound = SoundPlayer.SharedMediaKey("Gone") })
+      end)
+    end)
+    assert(#plays == 1 and plays[1].api == "PlaySound" and plays[1].sound == 3081, "a vanished SharedMedia sound falls back to Whisper")
+  end
+
+  -- test_play_shared_media_sound_without_shared_media_plays_the_default
+  do
+    local plays
+    FakeSharedSounds.with(nil, function()
+      plays = recordPlays(function()
+        SoundPlayer.Play({ notificationSound = SoundPlayer.SharedMediaKey("Boom") })
+      end)
+    end)
+    assert(#plays == 1 and plays[1].api == "PlaySound" and plays[1].sound == 3081, "no SharedMedia addon falls back to Whisper")
+  end
+
+  -- test_list_shared_sounds_skips_lsm_none
+  do
+    local names
+    FakeSharedSounds.with({ { "None", "Interface\\Quiet.ogg" }, { "Boom", "boom.ogg" } }, function()
+      names = SoundPlayer.ListSharedSounds()
+    end)
+    assert(#names == 1 and names[1] == "Boom", "SharedMedia's silent None entry is not offered")
+  end
+
+  -- test_list_shared_sounds_without_shared_media_is_empty
+  do
+    local names
+    FakeSharedSounds.with(nil, function()
+      names = SoundPlayer.ListSharedSounds()
+    end)
+    assert(#names == 0, "no SharedMedia addon lists no shared sounds")
+  end
+
+  -- test_raid_warning_sound_shows_its_full_name
+  do
+    local raidWarning
+    for _, sound in ipairs(SoundPlayer.BUILTIN_SOUNDS) do
+      if sound.key == "raid_warning" then
+        raidWarning = sound
+      end
+    end
+    assert(raidWarning, "saved key raid_warning still exists")
+    assert(raidWarning.label == "Raid Warning", "full-width rows spell out Raid Warning, got " .. tostring(raidWarning.label))
   end
 
   -- cleanup

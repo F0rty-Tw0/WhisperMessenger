@@ -93,8 +93,10 @@ function WindowRuntime.Create(options)
   local window
   local icon
   local minimapRuntime
+  local compartment
 
-  -- dirtyKeys nil (every direct caller) rebuilds all contact snapshots.
+  -- dirtyKeys nil rebuilds all contact snapshots; a set rebuilds only those
+  -- keys (incoming lines, and a Battle.net scan while the window is hidden).
   local snapshotCache = SnapshotCache.New()
   local function buildContacts(dirtyKeys)
     return contactsList.BuildItemsForProfile(runtime.accountState, runtime.localProfileId, snapshotCache, dirtyKeys)
@@ -194,6 +196,9 @@ function WindowRuntime.Create(options)
       end
       return minimapRuntime and minimapRuntime.getLdbObject() or nil
     end,
+    getCompartment = function()
+      return compartment
+    end,
     isMythicRestricted = isMythicRestricted,
     presenceCache = presenceCache,
     livePresenceSender = LivePresenceSender,
@@ -224,7 +229,8 @@ function WindowRuntime.Create(options)
     return WindowCallbacks.ApplyIconPosition(icon, characterState.icon, uiParent)
   end
 
-  local function setWindowVisible(nextVisible)
+  -- showOptions: see WindowCoordinator.setWindowVisible.
+  local function setWindowVisible(nextVisible, showOptions)
     -- Acknowledge on both open and close: a whisper that arrived while the
     -- window was open was already on screen, so closing must not let the
     -- next background refresh pop it on the widget as if it were new.
@@ -233,12 +239,16 @@ function WindowRuntime.Create(options)
     -- whispers arrived meanwhile.
     if not nextVisible then
       runtime.unreadDivider = nil
+    else
+      -- Any open during combat hands visibility back to the player: combat
+      -- end must not undo a close they make afterwards.
+      runtime.hiddenByCombat = nil
     end
-    return coordinator.setWindowVisible(nextVisible)
+    return coordinator.setWindowVisible(nextVisible, showOptions)
   end
 
-  local function refreshWindow(affectedConversationKey)
-    return coordinator.refreshWindow(affectedConversationKey)
+  local function refreshWindow(affectedConversationKey, dirtyKeys)
+    return coordinator.refreshWindow(affectedConversationKey, dirtyKeys)
   end
 
   conversationSelector = ConversationSelector.Create({
@@ -428,6 +438,13 @@ function WindowRuntime.Create(options)
   end
 
   applyIconMode()
+  compartment = MinimapIconRuntime.CreateCompartment({
+    accountState = accountState,
+    runtime = runtime,
+    buildContacts = buildContacts,
+    onToggle = onIconToggle,
+    onMarkAllRead = windowCallbacks.onMarkAllRead,
+  })
 
   RuntimeBindings.Apply({
     runtime = runtime,

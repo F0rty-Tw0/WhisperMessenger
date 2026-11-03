@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DropdownSkin = ns.MessengerWindowDropdownSkin or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSkin")
 local NativeDropdown = ns.MessengerWindowNativeDropdown or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.NativeDropdown")
+local DropdownOptionRow = ns.MessengerWindowDropdownOptionRow or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownOptionRow")
 local applyColorTexture = UIHelpers.applyColorTexture
 
 local DropdownSelector = {}
@@ -74,6 +75,10 @@ function DropdownSelector.Create(factory, parent, options)
 
   local optionButtons = {}
   local buttonPool = {}
+  -- `requested` is the saved key, kept even while the list lacks it (a
+  -- SharedMedia sound whose addon has not registered yet); `selected` is
+  -- the option it resolves to now.
+  local requested = initial
   local selected = initial
   local buttonHovered = false
 
@@ -86,76 +91,36 @@ function DropdownSelector.Create(factory, parent, options)
     end
   end
 
-  local function findOption(key)
-    for _, option in ipairs(optionsList) do
-      if option.key == key then
-        return option
-      end
-    end
-    return nil
-  end
-
   local function paintClosedButton()
     DropdownSkin.Paint(skin, buttonLabel, buttonHovered)
   end
 
-  local function paintOptionButton(optionButton)
-    if optionButton._key == selected then
-      applyColorTexture(optionButton.bg, palette.bgActive)
-      UIHelpers.setTextColor(optionButton.label, palette.textActive)
-    elseif optionButton._hovered then
-      applyColorTexture(optionButton.bg, palette.bgHover)
-      UIHelpers.setTextColor(optionButton.label, palette.textHover)
-    else
-      applyColorTexture(optionButton.bg, palette.bg)
-      UIHelpers.setTextColor(optionButton.label, palette.text)
-    end
-  end
-
   local function repaintOptions()
-    for _, optionButton in ipairs(optionButtons) do
-      paintOptionButton(optionButton)
-    end
+    DropdownOptionRow.RepaintAll(optionButtons, palette, selected)
   end
 
   local function updateSelection(key)
-    local option = findOption(key) or findOption(fallbackKey) or optionsList[1]
+    requested = key
+    local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     buttonLabel:SetText(option and option.label or "")
     repaintOptions()
   end
 
+  local function getSelected()
+    return selected
+  end
+
+  local function pickOption(key)
+    updateSelection(key)
+    if onChange then
+      onChange(key)
+    end
+    menu:Hide()
+  end
+
   local function createOptionButton()
-    local optionButton = factory.CreateFrame("Button", nil, content)
-    local bg = optionButton:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(optionButton)
-
-    local optionLabel = optionButton:CreateFontString(nil, "OVERLAY", Theme.FONTS.system_text)
-    optionLabel:SetPoint("LEFT", optionButton, "LEFT", 8, 0)
-    optionLabel:SetPoint("RIGHT", optionButton, "RIGHT", -8, 0)
-    optionLabel:SetJustifyH("LEFT")
-
-    optionButton.bg = bg
-    optionButton.label = optionLabel
-    optionButton._hovered = false
-
-    optionButton:SetScript("OnClick", function()
-      local key = optionButton._key
-      updateSelection(key)
-      if onChange then
-        onChange(key)
-      end
-      menu:Hide()
-    end)
-    optionButton:SetScript("OnEnter", function()
-      optionButton._hovered = true
-      paintOptionButton(optionButton)
-    end)
-    optionButton:SetScript("OnLeave", function()
-      optionButton._hovered = false
-      paintOptionButton(optionButton)
-    end)
-
+    local optionButton = DropdownOptionRow.Create(factory, content, palette, getSelected, pickOption)
     buttonPool[#buttonPool + 1] = optionButton
     return optionButton
   end
@@ -192,6 +157,7 @@ function DropdownSelector.Create(factory, parent, options)
     for i, option in ipairs(optionsList) do
       local optionButton = buttonPool[i] or createOptionButton()
       optionButton._key = option.key
+      optionButton._header = option.header == true
       optionButton._hovered = false
       optionButton.label:SetText(option.label)
       optionButton:Show()
@@ -205,7 +171,23 @@ function DropdownSelector.Create(factory, parent, options)
     end
 
     layoutOptions()
-    updateSelection(selected)
+    updateSelection(requested)
+  end
+
+  -- Opens at the top unless the selected row sits below the first page;
+  -- then the selected row leads the view (clamped at the bottom).
+  local function scrollToSelected()
+    local offset = 0
+    for i, optionButton in ipairs(optionButtons) do
+      if optionButton._key == selected and not optionButton._header then
+        local rowTop = (i - 1) * buttonHeight
+        if rowTop + buttonHeight > menu:GetHeight() then
+          offset = math.min(rowTop, menu:GetVerticalScrollRange())
+        end
+        break
+      end
+    end
+    menu:SetVerticalScroll(offset)
   end
 
   menu:SetScript("OnMouseWheel", function(_, delta)
@@ -226,7 +208,7 @@ function DropdownSelector.Create(factory, parent, options)
         setOptionsList(refreshed)
       end
     end
-    menu:SetVerticalScroll(0)
+    scrollToSelected()
     menu:Raise()
     menu:Show()
   end)

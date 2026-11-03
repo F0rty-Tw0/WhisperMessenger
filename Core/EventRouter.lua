@@ -21,12 +21,15 @@ local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer
 local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
 local PartMerge = ns.EventRouterPartMerge or require("WhisperMessenger.Core.EventRouter.PartMerge")
 local IncomingFilter = ns.IncomingFilter or require("WhisperMessenger.Core.Ingest.IncomingFilter")
+local AddonGreetingIngest = ns.EventRouterAddonGreetingIngest or require("WhisperMessenger.Core.EventRouter.AddonGreetingIngest")
 
 local AddonComm = ns.AddonComm or require("WhisperMessenger.Transport.AddonComm")
 local ChannelType = ns.ChannelType or require("WhisperMessenger.Model.Identity.ChannelType")
 
 local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
 local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
+local ADDON_GREETING_PREFIX = AddonComm.PREFIX_ADDON_GREETING
+local CRAFT_SCAN_PREFIX = AddonComm.PREFIX_CRAFT_SCAN
 
 -- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
 local function getQuestLinkClassic()
@@ -327,6 +330,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       local now = state.now and state.now() or 0
       QuestLinkExchange.RecordIncoming(state, payload.playerName, payload.text, now)
     end
+    if payload.prefix == ADDON_GREETING_PREFIX or payload.prefix == CRAFT_SCAN_PREFIX then
+      return AddonGreetingIngest.HandleAddonMessage(state, payload)
+    end
     return nil
   end
 
@@ -395,7 +401,15 @@ local function handleUnlockedEvent(state, eventName, payload)
     local outgoingFromPendingSend = false
 
     if eventName == "CHAT_MSG_WHISPER" or eventName == "CHAT_MSG_BN_WHISPER" then
+      local addonGreeting, hideGreeting
+      if eventName == "CHAT_MSG_WHISPER" then
+        addonGreeting, hideGreeting = AddonGreetingIngest.ClaimForWhisper(state, contact, payload, sentAt)
+        if hideGreeting then
+          return nil
+        end
+      end
       local incomingMessage = buildMessage(state, payload, contact, "in", "user", sentAt)
+      incomingMessage.addonGreeting = addonGreeting
       local correlationText = canonicalReactionText(incomingMessage.text)
       local senderKey
       if eventName == "CHAT_MSG_BN_WHISPER" then
@@ -494,6 +508,9 @@ local function handleUnlockedEvent(state, eventName, payload)
       PartMerge.AfterStore(state, conversationKey, incomingMessage)
       if isNewConversation and eventName == "CHAT_MSG_WHISPER" then
         MessageRequests.ClassifyNew(state, state.store.conversations[conversationKey], payload.guid, payload.playerName)
+      end
+      if eventName == "CHAT_MSG_WHISPER" then
+        AddonGreetingIngest.AfterStore(state, contact, payload, conversationKey, incomingMessage, isNewConversation, isActive)
       end
     elseif eventName == "CHAT_MSG_WHISPER_INFORM" or eventName == "CHAT_MSG_BN_WHISPER_INFORM" then
       confirmWhisperAvailability(state, payload, contact)

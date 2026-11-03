@@ -6,8 +6,8 @@ end
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
--- Per-conversation player preferences: mute, nickname, note and "Notify
--- when online". Stored on the
+-- Per-conversation player preferences: mute, nickname, note, "Notify
+-- when online" and "Notify when they change zone". Stored on the
 -- conversation record itself (like drafts), so they are saved with it and
 -- removed with it. ponytail: mute has no duration; add one if asked.
 local ContactPrefs = {}
@@ -15,7 +15,7 @@ local ContactPrefs = {}
 ContactPrefs.MAX_NICKNAME_CHARS = 32
 
 -- changes: any of { muted = bool, nickname = text, note = text,
--- notifyOnline = bool }. Blank text clears a field; a missing conversation
+-- notifyOnline = bool, notifyZone = bool }. Blank text clears a field; a missing conversation
 -- is ignored (prefs never create one).
 function ContactPrefs.Apply(store, conversationKey, changes)
   local conversation = Store.Find(store, conversationKey)
@@ -35,6 +35,11 @@ function ContactPrefs.Apply(store, conversationKey, changes)
   end
   if changes.notifyOnline ~= nil then
     conversation.notifyOnline = changes.notifyOnline == true or nil
+  end
+  -- Arming or disarming always drops the old baseline zone.
+  if changes.notifyZone ~= nil then
+    conversation.notifyZone = changes.notifyZone == true or nil
+    conversation.notifyZoneFrom = nil
   end
 end
 

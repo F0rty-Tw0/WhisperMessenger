@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
+local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local RowMarkers = ns.ContactsListRowMarkers or require("WhisperMessenger.UI.ContactsList.RowMarkers")
 local DisplayName = ns.DisplayName or require("WhisperMessenger.Util.DisplayName")
@@ -227,7 +228,8 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview, s
     row.preview:SetText(draftPreviewText(item.draft, hideMessagePreview))
     return
   end
-  row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(item.lastPreview))
+  local preview = AddonGreetingText.ForPreview(item.conversation, item.lastPreview)
+  row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(preview))
 end
 
 function RowElements.createPreview(row, item, parentWidth)

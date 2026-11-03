@@ -9,6 +9,11 @@ local Common = ns.BootstrapLifecycleHandlersCommon
 local ConversationMerge = ns.ConversationMerge or require("WhisperMessenger.Model.ConversationMerge")
 local LockdownReplay = ns.BootstrapLockdownReplay or require("WhisperMessenger.Core.Bootstrap.LockdownReplay")
 local OnlineNotify = ns.BootstrapLifecycleHandlersOnlineNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.OnlineNotify")
+local ZoneNotify = ns.BootstrapLifecycleHandlersZoneNotify or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneNotify")
+-- stylua: ignore
+local ZoneRosterPoll = ns.BootstrapLifecycleHandlersZoneRosterPoll or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ZoneRosterPoll")
+-- stylua: ignore
+local ScanFieldDiff = ns.BootstrapLifecycleHandlersScanFieldDiff or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.ScanFieldDiff")
 -- stylua: ignore
 local StaleRestrictions = ns.BootstrapLifecycleHandlersStaleRestrictions or require("WhisperMessenger.Core.Bootstrap.LifecycleHandlers.StaleRestrictions")
 
@@ -105,6 +110,21 @@ local function applyRekeyMappings(runtime, mappings)
   end
 end
 
+-- A closed window shows only the icon badges and preview, so rebuild just
+-- the cards this scan changed (the preview's class colour follows the
+-- friend's character), and nothing when none changed. An open window, and
+-- opening it later, rebuild every card.
+local function refreshAfterBNetScan(Bootstrap, changedKeys)
+  local runtime = Bootstrap.runtime
+  if runtime.refreshWindow and runtime.isWindowVisible and not runtime.isWindowVisible() then
+    if next(changedKeys) ~= nil then
+      runtime.refreshWindow(nil, changedKeys)
+    end
+    return
+  end
+  Common.refreshRuntimeWindow(Bootstrap)
+end
+
 local function refreshBNetConversations(Bootstrap, deps)
   if Bootstrap.runtime == nil then
     return
@@ -119,10 +139,16 @@ local function refreshBNetConversations(Bootstrap, deps)
   local mappings = rekeyOrphanedBNetConversations(Bootstrap.runtime.store, friendMap, Identity, maxMessages)
   applyRekeyMappings(Bootstrap.runtime, mappings)
 
+  -- A rekey moved or merged these threads before the field check below runs.
+  local changedKeys = {}
+  for _, newKey in pairs(mappings) do
+    changedKeys[newKey] = true
+  end
   for key, conversation in pairs(Bootstrap.runtime.store.conversations) do
     if conversation.channel == "BN" and conversation.battleTag then
       local friend = friendMap[conversation.battleTag]
       if friend then
+        ScanFieldDiff.Capture(conversation)
         conversation.bnetAccountID = friend.bnetAccountID
         -- Records a "Notify when online" friend's state from this existing
         -- scan, so their next online event is a real change.
@@ -130,16 +156,23 @@ local function refreshBNetConversations(Bootstrap, deps)
           OnlineNotify.Observe(Bootstrap.runtime, key, conversation, BNetStatus.IsOnline(friend.accountInfo))
         end
         local gameInfo = friend.accountInfo and friend.accountInfo.gameAccountInfo
+        -- Outside WoW the areaName is stale, so it counts as no zone.
+        if conversation.notifyZone == true then
+          ZoneNotify.Observe(Bootstrap.runtime, conversation, BNetStatus.IsInWoW(gameInfo) and gameInfo.areaName or nil)
+        end
         BNetStatus.ApplyGameInfoMetadata(conversation, gameInfo, Bootstrap.runtime)
         if gameInfo and gameInfo.characterName and gameInfo.characterName ~= "" then
           local realmSuffix = (gameInfo.realmName and gameInfo.realmName ~= "") and ("-" .. gameInfo.realmName) or ""
           conversation.gameAccountName = gameInfo.characterName .. realmSuffix
         end
+        if ScanFieldDiff.Changed(conversation) then
+          changedKeys[key] = true
+        end
       end
     end
   end
 
-  Common.refreshRuntimeWindow(Bootstrap)
+  refreshAfterBNetScan(Bootstrap, changedKeys)
 end
 
 function Presence.handleBNetFriendEvent(Bootstrap, deps)
@@ -216,6 +249,7 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
     return true
   end
   LockdownReplay.Kick(Bootstrap.runtime)
+  ZoneRosterPoll.Start(Bootstrap.runtime)
 
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache then
@@ -229,15 +263,45 @@ function Presence.handlePlayerEnteringWorld(Bootstrap, deps)
   return true
 end
 
--- Roster and club membership events fire in bursts. Only mark the data stale;
--- the next per-contact presence read decides whether a rescan is worth it.
-function Presence.handlePresenceInvalidation(_Bootstrap, deps)
+local function checkZones(Bootstrap, PresenceCache)
+  if ZoneNotify.handleRosterUpdate(Bootstrap, PresenceCache) and Common ~= nil then
+    Common.refreshRuntimeWindow(Bootstrap)
+  end
+end
+
+-- One "Notify when they change zone" check per burst, same debounce as the
+-- Battle.net friend refresh; synchronous when timers are unavailable.
+-- Nothing armed: no timer, no check.
+local function scheduleZoneCheck(Bootstrap, PresenceCache)
+  if Bootstrap._zoneCheckPending or not ZoneNotify.HasArmedGuildContact(Bootstrap.runtime) then
+    return
+  end
+  Bootstrap._zoneCheckPending = true
+  local scheduled = Common ~= nil
+    and Common.scheduleAfter(2, function()
+      Bootstrap._zoneCheckPending = false
+      checkZones(Bootstrap, PresenceCache)
+    end)
+  if not scheduled then
+    Bootstrap._zoneCheckPending = false
+    checkZones(Bootstrap, PresenceCache)
+  end
+end
+
+-- Roster and club membership events fire in bursts. Presence is marked stale
+-- at once, with no rescan: the next per-contact read decides whether one is
+-- worth it. Armed zone-watch contacts get that read once the burst settles,
+-- never in mythic content (same rule as the login rebuild).
+function Presence.handlePresenceInvalidation(Bootstrap, deps)
   local PresenceCache = deps.getPresenceCache()
   if PresenceCache == nil then
     return true
   end
 
   PresenceCache.Invalidate()
+  if not Bootstrap._inMythicContent then
+    scheduleZoneCheck(Bootstrap, PresenceCache)
+  end
 
   return true
 end

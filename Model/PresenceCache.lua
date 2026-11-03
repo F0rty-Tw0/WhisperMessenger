@@ -10,6 +10,8 @@ local PresenceCache = {}
 -- A full guild/community enumeration allocates one info table per member, so
 -- a large guild costs megabytes of garbage per pass. Cap unattended rescans.
 local INDEX_MIN_INTERVAL = 300
+-- A GUID a rescan missed waits this long before it may trigger another one.
+local MISS_RETRY_INTERVAL = 1800
 
 -- Private module state
 local cache = {}
@@ -23,6 +25,10 @@ local zoneByGuid = {}
 local levelByGuid = {}
 -- guid -> timestamp of the last presence read for that GUID.
 local freshAt = {}
+-- guid -> time a fallback rescan missed it (left the guild, or never in one),
+-- so it costs at most one rescan per MISS_RETRY_INTERVAL. Kept across
+-- rebuilds; cleared when a lookup finds the GUID again.
+local rescanMissed = {}
 local indexBuiltAt = nil
 local ttl = 30
 local dirty = true
@@ -62,6 +68,7 @@ function PresenceCache.Initialize(api, options)
   zoneByGuid = {}
   levelByGuid = {}
   freshAt = {}
+  rescanMissed = {}
   indexBuiltAt = nil
   -- Don't rebuild immediately — club data may not be loaded yet at ADDON_LOADED time.
   -- Mark dirty so the first timer tick or event triggers the rebuild when data is ready.
@@ -196,21 +203,38 @@ function PresenceCache.ReadLevel(guid)
   return levelByGuid[guid]
 end
 
--- Targeted single-GUID refresh: one member lookup against the index built by
--- Rebuild. Falls back to a full rescan only when the index has never been
+-- A miss falls back to a full rescan only when the index has never been
 -- built, or when club membership changed and the rescan interval has elapsed.
+-- A rescan that indexed members but not this GUID holds it off for
+-- MISS_RETRY_INTERVAL. One that indexed nobody (roster not loaded yet) holds
+-- off nothing.
+local function rescanFor(guid)
+  local now = nowFn()
+  local staleIndex = dirty and indexBuiltAt ~= nil and (now - indexBuiltAt) >= INDEX_MIN_INTERVAL
+  local missedAt = rescanMissed[guid]
+  if (missedAt ~= nil and now - missedAt < MISS_RETRY_INTERVAL) or (indexBuiltAt ~= nil and not staleIndex) then
+    return nil
+  end
+  PresenceCache.Rebuild()
+  local presence, found = lookupIndexed(guid)
+  if not found and next(indexClub) ~= nil then
+    rescanMissed[guid] = now
+  end
+  return presence
+end
+
+-- Targeted single-GUID refresh: one member lookup against the index built by
+-- Rebuild, with the rescan fallback above.
 function PresenceCache.RefreshPresence(guid)
   if guid == nil or type(clubApi) ~= "table" then
     return nil
   end
 
   local presence, found = lookupIndexed(guid)
-  if not found then
-    local staleIndex = dirty and indexBuiltAt ~= nil and (nowFn() - indexBuiltAt) >= INDEX_MIN_INTERVAL
-    if indexBuiltAt == nil or staleIndex then
-      PresenceCache.Rebuild()
-      presence = lookupIndexed(guid)
-    end
+  if found then
+    rescanMissed[guid] = nil
+  else
+    presence = rescanFor(guid)
   end
 
   cache[guid] = presence
@@ -245,6 +269,7 @@ function PresenceCache._reset()
   zoneByGuid = {}
   levelByGuid = {}
   freshAt = {}
+  rescanMissed = {}
   indexBuiltAt = nil
   dirty = true
   clubApi = nil

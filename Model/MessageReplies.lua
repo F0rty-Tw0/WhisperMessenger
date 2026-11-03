@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local PlainText = ns.PlainText or require("WhisperMessenger.Util.PlainText")
 local Store = ns.ConversationStore or require("WhisperMessenger.Model.ConversationStore")
 
 -- Reply to a message in a character or Battle.net whisper.
@@ -35,11 +36,7 @@ local function buildSnippet(text)
   if type(text) ~= "string" then
     return ""
   end
-  local plain = string.gsub(text, "|H.-|h(.-)|h", "%1")
-  plain = string.gsub(plain, "|c%x%x%x%x%x%x%x%x", "")
-  plain = string.gsub(plain, "|r", "")
-  plain = string.gsub(plain, "|T.-|t", "")
-  plain = string.gsub(plain, "|A.-|a", "")
+  local plain = PlainText.Strip(text)
   local capped = TextLimits.CapChars(plain, SNIPPET_CHARS)
   if capped ~= plain then
     return capped .. ELLIPSIS

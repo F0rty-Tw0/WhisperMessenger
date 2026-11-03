@@ -3,6 +3,9 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local FontFamilies = ns.ThemeFontFamilies or require("WhisperMessenger.UI.Theme.FontFamilies")
+local FontColors = ns.ThemeFontColors or require("WhisperMessenger.UI.Theme.FontColors")
+
 local Fonts = {}
 
 -- WM_ font objects act as stable references that all FontStrings point at.
@@ -77,17 +80,6 @@ local FONT_MAP = {
   close_glyph = "WM_CloseGlyph",
 }
 
-local FONT_COLOR_PRESETS = {
-  default = { key = "default", label = "Default", rgba = nil },
-  gold = { key = "gold", label = "Gold", rgba = { 1, 0.82, 0, 1 } },
-  light_blue = { key = "light_blue", label = "Blue", rgba = { 0.67, 0.85, 1, 1 } },
-  soft_green = { key = "soft_green", label = "Green", rgba = { 0.67, 1, 0.67, 1 } },
-  purple = { key = "purple", label = "Purple", rgba = { 0.78, 0.61, 1, 1 } },
-  rose = { key = "rose", label = "Rose", rgba = { 1, 0.65, 0.75, 1 } },
-}
-
-local FONT_COLOR_ORDER = { "default", "gold", "light_blue", "soft_green", "purple", "rose" }
-
 local currentMode = "default"
 local currentFontPath = nil
 local currentFontSize = DEFAULT_BASE_SIZE
@@ -97,38 +89,8 @@ local currentLanguage = "auto"
 -- Font the theme preset brings (EllesmereUI's); used under the Default family.
 local themeFontPath = nil
 
-local function sharedMedia()
-  local libStub = _G and _G.LibStub
-  if type(libStub) ~= "table" then
-    return nil
-  end
-
-  local ok, lsm = pcall(libStub, "LibSharedMedia-3.0", true)
-  if ok and type(lsm) == "table" then
-    return lsm
-  end
-  return nil
-end
-
-local function fetchFontPath(name)
-  if type(name) ~= "string" or name == "" or name == "default" or name == "system" or name == "morpheus" then
-    return nil
-  end
-
-  local lsm = sharedMedia()
-  if not lsm or type(lsm.Fetch) ~= "function" then
-    return nil
-  end
-
-  local ok, path = pcall(lsm.Fetch, lsm, "font", name, true)
-  if ok and type(path) == "string" and path ~= "" then
-    return path
-  end
-  return nil
-end
-
 local function selectMode(mode)
-  local path = fetchFontPath(mode)
+  local path = FontFamilies.FetchPath(mode)
   if path then
     currentMode = mode
     currentFontPath = path
@@ -277,40 +239,7 @@ function Fonts.SetThemeFontPath(path)
   applyFonts()
 end
 
-function Fonts.ListFontFamilies()
-  local families = { { key = "default", label = "Default" } }
-  local lsm = sharedMedia()
-  if not lsm or type(lsm.List) ~= "function" then
-    return families
-  end
-
-  local ok, names = pcall(lsm.List, lsm, "font")
-  if not ok or type(names) ~= "table" then
-    return families
-  end
-
-  local unique = {}
-  local sortedNames = {}
-  for _, name in ipairs(names) do
-    if type(name) == "string" and name ~= "" and name ~= "default" and name ~= "system" and name ~= "morpheus" and not unique[name] then
-      unique[name] = true
-      sortedNames[#sortedNames + 1] = name
-    end
-  end
-
-  table.sort(sortedNames, function(a, b)
-    local lowerA, lowerB = string.lower(a), string.lower(b)
-    if lowerA == lowerB then
-      return a < b
-    end
-    return lowerA < lowerB
-  end)
-
-  for _, name in ipairs(sortedNames) do
-    families[#families + 1] = { key = name, label = name }
-  end
-  return families
-end
+Fonts.ListFontFamilies = FontFamilies.List
 
 function Fonts.SetFontSize(size)
   currentFontSize = size or DEFAULT_BASE_SIZE
@@ -333,7 +262,7 @@ function Fonts.GetOutline()
 end
 
 function Fonts.SetFontColor(key)
-  if type(key) == "string" and FONT_COLOR_PRESETS[key] then
+  if type(key) == "string" and FontColors.Get(key) then
     currentFontColor = key
   else
     currentFontColor = "default"
@@ -341,18 +270,11 @@ function Fonts.SetFontColor(key)
 end
 
 function Fonts.GetFontColorRGBA()
-  local preset = FONT_COLOR_PRESETS[currentFontColor]
+  local preset = FontColors.Get(currentFontColor)
   return preset and preset.rgba or nil
 end
 
-function Fonts.ListFontColorPresets()
-  local list = {}
-  for _, key in ipairs(FONT_COLOR_ORDER) do
-    local preset = FONT_COLOR_PRESETS[key]
-    list[#list + 1] = { key = preset.key, label = preset.label, rgba = preset.rgba }
-  end
-  return list
-end
+Fonts.ListFontColorPresets = FontColors.List
 
 for key, value in pairs(FONT_MAP) do
   Fonts[key] = value

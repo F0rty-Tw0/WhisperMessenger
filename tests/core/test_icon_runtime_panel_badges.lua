@@ -80,6 +80,40 @@ return function()
     assert(ldb.unread == 3 and ldb.whispers == 1, "ldb 3 with 1 whisper, got " .. tostring(ldb.unread) .. "/" .. tostring(ldb.whispers))
   end
 
+  -- test_new_compartment_entry_counts_whispers_and_panel_badges
+  do
+    local entry, compartment = recorder()
+    local registerOptions
+    local created = MinimapIconRuntime.CreateCompartment({
+      runtime = runtimeWithBadge(),
+      buildContacts = oneWhisper,
+      addonCompartment = {
+        Register = function(options)
+          registerOptions = options
+          return compartment
+        end,
+      },
+    })
+    assert(created == compartment, "returns the entry")
+    assert(entry.count == 3 and entry.whispers == 1, "compartment 3 with 1 whisper, got " .. tostring(entry.count) .. "/" .. tostring(entry.whispers))
+    assert(type(registerOptions.onToggle) == "function", "entry gets the toggle")
+  end
+
+  -- test_no_compartment_entry_without_the_compartment
+  do
+    local created = MinimapIconRuntime.CreateCompartment({
+      buildContacts = function()
+        error("no contacts walk without an entry")
+      end,
+      addonCompartment = {
+        Register = function()
+          return nil
+        end,
+      },
+    })
+    assert(created == nil, "nil without a compartment")
+  end
+
   -- test_new_ldb_text_splits_whispers_and_panel_items
   do
     local ldb = {}

@@ -15,7 +15,14 @@ return function()
         Rebuild = function()
           calls.rebuild = calls.rebuild + 1
         end,
+        RefreshPresence = function() end,
+        GetZone = function() end,
       }
+  end
+
+  -- The zone-watch check only runs while a guild contact is armed.
+  local function armedRuntime()
+    return { store = { conversations = { ["wow::a"] = { channel = "WOW", guid = "Player-A", notifyZone = true } } } }
   end
 
   local function captureTimers()
@@ -28,14 +35,15 @@ return function()
     return scheduled
   end
 
-  -- A roster or club membership change only marks presence data stale; it
-  -- never schedules a full guild/community rescan.
+  -- A roster or club membership change marks presence data stale; it never
+  -- schedules a full guild/community rescan. Its only timer is the short
+  -- zone-watch check, which rebuilds nothing either.
   do
     local events = { "GUILD_ROSTER_UPDATE", "CLUB_MEMBER_UPDATED", "CLUB_MEMBER_ADDED", "CLUB_MEMBER_REMOVED" }
     for _, event in ipairs(events) do
       local scheduled = captureTimers()
       local calls, presenceCache = makeSpyCache()
-      local Bootstrap = { runtime = {} }
+      local Bootstrap = { runtime = armedRuntime() }
       local deps = {
         getContentDetector = function()
           return ContentDetector
@@ -48,17 +56,19 @@ return function()
       LifecycleHandlers.Handle(Bootstrap, event, deps)
 
       assert(calls.invalidate == 1, event .. " should invalidate presence once, got " .. calls.invalidate)
+      assert(#scheduled == 1 and scheduled[1].delay == 2, event .. " should schedule only the short zone check, got " .. #scheduled)
+      scheduled[1].fn()
       assert(calls.rebuild == 0, event .. " must not rebuild presence, got " .. calls.rebuild)
-      assert(#scheduled == 0, event .. " must not schedule a presence timer, got " .. #scheduled)
+      assert(#scheduled == 1, event .. " zone check must not reschedule itself, got " .. #scheduled)
       assert(Bootstrap._presenceRebuildPending == nil, event .. " must not leave a pending-rebuild flag behind")
     end
   end
 
-  -- Bursts of roster events stay cheap: still no rebuild, still no timers.
+  -- Bursts of roster events stay cheap: still no rebuild, one timer per burst.
   do
     local scheduled = captureTimers()
     local calls, presenceCache = makeSpyCache()
-    local Bootstrap = { runtime = {} }
+    local Bootstrap = { runtime = armedRuntime() }
     local deps = {
       getContentDetector = function()
         return ContentDetector
@@ -74,7 +84,9 @@ return function()
 
     assert(calls.invalidate == 20, "each roster event should invalidate, got " .. calls.invalidate)
     assert(calls.rebuild == 0, "a burst of roster events must not rebuild presence, got " .. calls.rebuild)
-    assert(#scheduled == 0, "a burst of roster events must not schedule timers, got " .. #scheduled)
+    assert(#scheduled == 1, "a burst of roster events should schedule one zone check, got " .. #scheduled)
+    scheduled[1].fn()
+    assert(calls.rebuild == 0, "the burst's zone check must not rebuild presence, got " .. calls.rebuild)
   end
 
   -- Entering the world schedules exactly one presence rebuild and starts no

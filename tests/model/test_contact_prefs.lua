@@ -49,6 +49,21 @@ return function()
   ContactPrefs.Apply(store, KEY, { notifyOnline = false })
   assert(store.conversations[KEY].notifyOnline == nil, "flag cleared, nothing saved")
 
+  -- test_notify_zone_saved_and_cleared_with_its_baseline
+  ContactPrefs.Apply(store, KEY, { notifyZone = true })
+  assert(store.conversations[KEY].notifyZone == true, "zone flag saved")
+  assert(ConversationSnapshot.Build(KEY, store.conversations[KEY]).notifyZone == true, "row item carries the zone flag")
+  store.conversations[KEY].notifyZoneFrom = "Stormwind City"
+  ContactPrefs.Apply(store, KEY, { notifyZone = false })
+  assert(store.conversations[KEY].notifyZone == nil, "zone flag cleared")
+  assert(store.conversations[KEY].notifyZoneFrom == nil, "baseline cleared with it")
+
+  -- test_rearming_notify_zone_drops_the_old_baseline
+  store.conversations[KEY].notifyZoneFrom = "Stale Zone"
+  ContactPrefs.Apply(store, KEY, { notifyZone = true })
+  assert(store.conversations[KEY].notifyZoneFrom == nil, "arming starts from a fresh baseline")
+  ContactPrefs.Apply(store, KEY, { notifyZone = false })
+
   -- test_missing_conversation_is_ignored
   ContactPrefs.Apply(store, "nope", { muted = true, nickname = "x" })
   assert(store.conversations["nope"] == nil, "prefs never create a conversation")

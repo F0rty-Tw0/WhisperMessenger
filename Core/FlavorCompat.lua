@@ -8,6 +8,7 @@ local FlavorCompat = {}
 local projectId = _G["WOW_PROJECT_ID"]
 local MAINLINE = _G["WOW_PROJECT_MAINLINE"] or 1
 
+FlavorCompat.projectId = projectId
 FlavorCompat.isRetail = (projectId == MAINLINE)
 FlavorCompat.isClassic = not FlavorCompat.isRetail
 
@@ -20,8 +21,45 @@ if type(_G["GetBuildInfo"]) == "function" then
 end
 FlavorCompat.isForever = type(tocVersion) == "number" and tocVersion >= FOREVER_TOC_MIN and tocVersion < FOREVER_TOC_MAX
 
+-- Region id of the current game client; nil without the API.
+function FlavorCompat.CurrentRegion()
+  local getCurrentRegion = _G["GetCurrentRegion"]
+  if type(getCurrentRegion) ~= "function" then
+    return nil
+  end
+  local ok, regionId = pcall(getCurrentRegion)
+  return ok and regionId or nil
+end
+
+-- Enum.SeasonID of a Classic Era realm; nil without a season or the API.
+function FlavorCompat.ActiveSeason()
+  local seasons = _G["C_Seasons"]
+  if type(seasons) ~= "table" or type(seasons.GetActiveSeason) ~= "function" then
+    return nil
+  end
+  local ok, seasonId = pcall(seasons.GetActiveSeason)
+  return ok and seasonId or nil
+end
+
 -- Feature flags — true only on flavors that support the feature
 FlavorCompat.hasMythicPlus = FlavorCompat.isRetail and not FlavorCompat.isForever
+
+-- Asks the server for fresh guild member data; GUILD_ROSTER_UPDATE answers.
+-- Retail has C_GuildInfo.GuildRoster, the Classic flavors the global.
+-- Returns true when a request went out.
+function FlavorCompat.RequestGuildRoster()
+  local isInGuild = _G["IsInGuild"]
+  if type(isInGuild) ~= "function" or not isInGuild() then
+    return false
+  end
+  local guildInfo = _G["C_GuildInfo"]
+  local request = type(guildInfo) == "table" and guildInfo.GuildRoster or _G["GuildRoster"]
+  if type(request) ~= "function" then
+    return false
+  end
+  request()
+  return true
+end
 
 ns.FlavorCompat = FlavorCompat
 

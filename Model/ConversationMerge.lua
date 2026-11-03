@@ -121,6 +121,9 @@ local function mergeMetadata(canonical, legacy)
   canonical.note = canonical.note or legacy.note
   canonical.draft = canonical.draft or legacy.draft
   canonical.notifyOnline = (canonical.notifyOnline == true or legacy.notifyOnline == true) or nil
+  local zoneWatch = canonical.notifyZone == true and canonical or legacy
+  canonical.notifyZone = zoneWatch.notifyZone == true or nil
+  canonical.notifyZoneFrom = canonical.notifyZone and zoneWatch.notifyZoneFrom or nil
   local lastSeenAt = math.max(numericValue(canonical.lastSeenAt), numericValue(legacy.lastSeenAt))
   canonical.lastSeenAt = lastSeenAt > 0 and lastSeenAt or nil
   -- A message request stays one only if both records were (fail open).

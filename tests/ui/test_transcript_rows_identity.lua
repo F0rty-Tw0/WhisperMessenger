@@ -42,6 +42,19 @@ return function()
     assert(updated.rows[1].stale == true, "a senderLevel change must mark the row stale")
   end
 
+  -- test_addon_greeting_change_marks_row_stale
+  -- A whisper tagged after it arrived (CraftScan's own channel) must rebuild
+  -- the kept bubble so the badge shows.
+  do
+    local m1 = msg("1", 1)
+    local transcript = {}
+    local state = TranscriptRows.Prepare(transcript, { m1 }, 400, nil)
+    state.rows[1].stale = nil
+    m1.addonGreeting = "CraftScan"
+    local updated = TranscriptRows.Prepare(transcript, { m1 }, 400, nil)
+    assert(updated.rows[1].stale == true, "an addonGreeting change must mark the row stale")
+  end
+
   -- test_dropped_message_leaves_the_row_index
   do
     local m1, m2, m3 = msg("1", 1), msg("2", 2), msg("3", 3)

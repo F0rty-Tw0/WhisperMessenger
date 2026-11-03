@@ -165,6 +165,63 @@ return function()
     assert(#radios == 1 and radios[1].text == "Standard", "getOptions returning nil keeps the last list")
   end
 
+  -- test_hud_dropdown_selects_a_missing_saved_key_once_the_list_has_it
+  do
+    local source = { { key = "default", label = "Default" } }
+    local dropdown = build(dropdownFactory(), {
+      optionsList = source,
+      getOptions = function()
+        return source
+      end,
+      initial = "lsm:Zap",
+    })
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "default", "missing saved key checks the fallback")
+    source = { { key = "default", label = "Default" }, { key = "lsm:Zap", label = "Zap" } }
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "lsm:Zap", "saved key is checked once the list has it")
+  end
+
+  local GROUPED = {
+    { header = true, label = "Group A" },
+    { key = "a1", label = "A1" },
+    { header = true, label = "Group B" },
+    { key = "b1", label = "B1" },
+  }
+
+  -- test_hud_dropdown_lists_group_headers_as_titles
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "a1", initial = "b1" })
+    local items = {}
+    local root = {
+      CreateTitle = function(_self, text)
+        items[#items + 1] = "title:" .. text
+      end,
+      CreateDivider = function()
+        items[#items + 1] = "divider"
+      end,
+      CreateRadio = function(_self, text)
+        items[#items + 1] = "radio:" .. text
+      end,
+    }
+    dropdown.button.generator(dropdown.button, root)
+    assert(
+      table.concat(items, ",") == "title:Group A,radio:A1,divider,title:Group B,radio:B1",
+      "headers become titles with a divider between groups, got " .. table.concat(items, ",")
+    )
+  end
+
+  -- test_hud_dropdown_without_titles_lists_only_the_choices
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "a1", initial = "b1" })
+    local radios = openMenu(dropdown.button.generator, dropdown.button)
+    assert(#radios == 2 and radios[1].text == "A1" and radios[2].text == "B1", "no title API: headers are left out")
+  end
+
+  -- test_hud_dropdown_never_selects_a_header
+  do
+    local dropdown = build(dropdownFactory(), { optionsList = GROUPED, fallbackKey = "missing", initial = nil })
+    assert(selectedRadio(openMenu(dropdown.button.generator, dropdown.button)) == "a1", "fallback skips headers to the first choice")
+  end
+
   -- test_hud_dropdown_width_and_text_colour
   do
     local dropdown = build(dropdownFactory(true))
@@ -199,16 +256,6 @@ return function()
     local dropdown = build(TemplateFactory.missing(FakeUI.NewFactory(), DROPDOWN_TEMPLATE))
     assert(dropdown.button.template == "UIPanelButtonTemplate", "missing template: panel button")
   end)
-
-  -- test_hud_without_any_menu_api_keeps_the_modern_dropdown
-  do
-    local saved = rawget(_G, "MenuUtil")
-    rawset(_G, "MenuUtil", nil)
-    local dropdown = build(FakeUI.NewFactory())
-    rawset(_G, "MenuUtil", saved)
-    assert(dropdown.button.template == nil, "no menu API: modern closed button")
-    assert(FindUI.dropdownMenu(dropdown.row) ~= nil, "no menu API: custom menu")
-  end
 
   -- The game's menus close on ESC before the messenger: an opened one is
   -- reported to the window. reportedMenus(fn) runs fn() and returns them.
@@ -247,12 +294,4 @@ return function()
     end)
     assert(#reported == 1 and reported[1].frame == calls.menu, "the open context menu must take ESC first")
   end)
-
-  -- test_modern_dropdown_ignores_the_blizzard_api
-  do
-    local factory = dropdownFactory()
-    local parent = factory.CreateFrame("Frame", "UIParent", nil)
-    local dropdown = DropdownSelector.Create(factory, parent, { labelText = "Font Family", optionsList = OPTIONS, fallbackKey = "default" })
-    assert(dropdown.button.template == nil, "modern: custom dropdown")
-  end
 end

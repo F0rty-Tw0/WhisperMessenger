@@ -205,6 +205,18 @@ function MessengerWindow.Create(factory, options)
 
   local handleContactSelected = selectionController.handleContactSelected
 
+  -- OnShow focuses the composer when the setting is on; an open the player
+  -- did not ask for (combat end) shows the window with that focus held back.
+  local holdComposerFocus = false
+  local function showWithoutComposerFocus()
+    holdComposerFocus = true
+    local ok, err = pcall(frame.Show, frame)
+    holdComposerFocus = false
+    if not ok then
+      error(err, 0)
+    end
+  end
+
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,
     setContactsWidth = function(nextContactsWidth)
@@ -238,7 +250,7 @@ function MessengerWindow.Create(factory, options)
     theme = Theme,
     composerInput = composerInput,
     getAutoFocusChatInput = function()
-      return settingsConfig.autoFocusComposer == true
+      return not holdComposerFocus and settingsConfig.autoFocusComposer == true
     end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)
@@ -307,6 +319,7 @@ function MessengerWindow.Create(factory, options)
     refreshLanguage = refreshLanguage,
     panelHost = panelHost,
     windowVisibility = windowVisibility,
+    showWithoutComposerFocus = showWithoutComposerFocus,
   })
 end
 

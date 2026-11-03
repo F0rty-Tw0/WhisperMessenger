@@ -12,12 +12,31 @@ local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.Picker
 -- Native WoW HUD dropdown row. Prefers the game's dropdown
 -- (WowStyle1DropdownTemplate set up with SetupMenu); without it, a panel
 -- button showing the current value opens MenuUtil's context menu. Each
--- option is a radio either way. Create returns nil when the HUD is off or
--- the client has neither API; the caller then builds the modern dropdown.
--- Same handle contract as DropdownSelector.
+-- option is a radio either way; a { header = true, label } entry becomes a
+-- menu title (left out where the menu has no titles). Create returns nil
+-- when the HUD is off or the client has neither API; the caller then builds
+-- the modern dropdown. Same handle contract as DropdownSelector.
 local NativeDropdown = {}
 
 NativeDropdown.DROPDOWN_TEMPLATE = "WowStyle1DropdownTemplate"
+
+-- Option for `key`, else `fallbackKey`'s, else the first choice. Header
+-- entries only label a group, so they never resolve.
+function NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
+  local fallback, first = nil, nil
+  for _, option in ipairs(optionsList) do
+    if not option.header then
+      if option.key == key then
+        return option
+      end
+      if option.key == fallbackKey then
+        fallback = option
+      end
+      first = first or option
+    end
+  end
+  return fallback or first
+end
 
 local DEFAULT_ROW_WIDTH = 280
 local DEFAULT_LABEL_SPACING = 6
@@ -102,6 +121,8 @@ function NativeDropdown.Create(factory, parent, options)
   if isDropdown then
     valueText = type(control.Text) == "table" and control.Text or nil
   end
+  -- Saved key, kept while the list lacks it; `selected` is what it resolves to.
+  local requested = nil
   local selected = nil
 
   local labelFs = row:CreateFontString(nil, "OVERLAY", Theme.FONTS.icon_label)
@@ -125,23 +146,11 @@ function NativeDropdown.Create(factory, parent, options)
     end
   end
 
-  local function resolve(key)
-    local fallback = nil
-    for _, option in ipairs(optionsList) do
-      if option.key == key then
-        return option
-      end
-      if option.key == fallbackKey then
-        fallback = option
-      end
-    end
-    return fallback or optionsList[1]
-  end
-
   -- The game's dropdown redraws its value after a radio click on its own;
   -- refresh=true redraws it for programmatic changes.
   local function select(key, refresh)
-    local option = resolve(key)
+    requested = key
+    local option = NativeDropdown.ResolveOption(optionsList, key, fallbackKey)
     selected = option and option.key or fallbackKey
     if not isDropdown then
       control.label:SetText(option and option.label or "")
@@ -169,11 +178,20 @@ function NativeDropdown.Create(factory, parent, options)
         optionsList = refreshed
       end
     end
+    -- No GenerateMenu here: the menu is being generated already.
+    select(requested, false)
     if type(rootDescription.SetScrollMode) == "function" then
       rootDescription:SetScrollMode(menuHeight)
     end
-    for _, option in ipairs(optionsList) do
-      rootDescription:CreateRadio(option.label, isSelected, choose, option.key)
+    for index, option in ipairs(optionsList) do
+      if not option.header then
+        rootDescription:CreateRadio(option.label, isSelected, choose, option.key)
+      elseif type(rootDescription.CreateTitle) == "function" then
+        if index > 1 and type(rootDescription.CreateDivider) == "function" then
+          rootDescription:CreateDivider()
+        end
+        rootDescription:CreateTitle(option.label)
+      end
     end
   end
 
@@ -203,7 +221,7 @@ function NativeDropdown.Create(factory, parent, options)
         return
       end
       optionsList = nextOptions
-      select(selected, true)
+      select(requested, true)
     end,
     setWidth = function(nextWidth)
       if type(nextWidth) ~= "number" or nextWidth <= 0 then

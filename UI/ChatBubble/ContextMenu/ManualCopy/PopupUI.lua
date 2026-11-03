@@ -21,11 +21,11 @@ end
 -- Refresh the dialog's localized strings every time it's about to show so a
 -- runtime language switch picks up immediately. The StaticPopupDialogs entry
 -- is read each Show, so writing to it before StaticPopup_Show is sufficient.
-local function applyDialogText(dialog)
+local function applyDialogText(dialog, prompt)
   if type(dialog) ~= "table" then
     return
   end
-  dialog.text = L("Press Ctrl+C to copy the message text.")
+  dialog.text = L(prompt or "Press Ctrl+C to copy the message text.")
   dialog.button1 = L("OK")
 end
 
@@ -47,7 +47,9 @@ local function scheduleManualCopyRefocus(dialog, text, delaySeconds)
   end)
 end
 
-function PopupUI.ShowManualCopyDialog(text)
+-- options (optional): { prompt } — English key of the line above the text
+-- box; defaults to the message-copy line.
+function PopupUI.ShowManualCopyDialog(text, options)
   if type(_G.StaticPopup_Show) ~= "function" then
     return false
   end
@@ -86,7 +88,7 @@ function PopupUI.ShowManualCopyDialog(text)
       end,
     }
   end
-  applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME])
+  applyDialogText(_G.StaticPopupDialogs[MANUAL_COPY_DIALOG_NAME], type(options) == "table" and options.prompt or nil)
 
   local dialog = _G.StaticPopup_Show(MANUAL_COPY_DIALOG_NAME, nil, nil, text)
   if dialog == nil then

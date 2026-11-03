@@ -95,6 +95,7 @@ function SettingsPanels.Create(factory, options)
         clearOnLogout = settingsConfig.clearOnLogout,
         hideMessagePreview = settingsConfig.hideMessagePreview,
         hideBattleTagNumbers = settingsConfig.hideBattleTagNumbers,
+        showPlayerLevels = settingsConfig.showPlayerLevels,
         timeFormat = settingsConfig.timeFormat,
         timeSource = settingsConfig.timeSource,
         interfaceLanguage = settingsConfig.interfaceLanguage,
@@ -115,7 +116,6 @@ function SettingsPanels.Create(factory, options)
         windowOpacityInactive = settingsConfig.windowOpacityInactive,
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
-        showPlayerLevels = settingsConfig.showPlayerLevels,
       },
     },
     {
@@ -137,12 +137,14 @@ function SettingsPanels.Create(factory, options)
       create = options.whispersCreate,
       config = {
         hideFromDefaultChat = settingsConfig.hideFromDefaultChat,
+        closeGameWhisperTab = settingsConfig.closeGameWhisperTab,
         autoOpenIncoming = settingsConfig.autoOpenIncoming,
         autoOpenOutgoing = settingsConfig.autoOpenOutgoing,
         requestsInbox = settingsConfig.requestsInbox,
         shareTypingStatus = settingsConfig.shareTypingStatus,
         shareReadReceipts = settingsConfig.shareReadReceipts,
         showInviteLink = settingsConfig.showInviteLink,
+        addonGreetings = settingsConfig.addonGreetings,
       },
     },
     {

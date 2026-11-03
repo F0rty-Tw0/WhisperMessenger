@@ -51,11 +51,18 @@ python scripts/run_test.py tests/path/to/test_file.lua
 Tests run with plain Lua — no WoW runtime needed. WoW APIs are stubbed via `tests/helpers/fake_ui.lua` and the `tests/helpers/fake_ui/` folder. Run all tests:
 
 ```bash
-find tests -type f -name 'test_*.lua' | sort | while read -r f; do python scripts/run_test.py "$f"; done
+# Every tests/**/test_*.lua in one process (a fresh Lua state per file, up to 8 workers), Lua 5.1 like WoW and CI.
+# Keeps going after a failure, prints "N files, F failed" plus the failed list, exits 1 if any failed.
+python scripts/run_tests.py
+
+# Same runner, chosen files only (--jobs N, --lua default for lupa's own Lua version):
+python scripts/run_tests.py tests/ui/test_theme_presets.lua tests/model/test_conversation_store.lua
 
 # Release script tests (Python):
-python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog
+python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog tests.scripts.test_run_tests
 ```
+
+Lua 5.1 needs lupa 2.x (`pip install -U lupa`); with an older lupa the runner warns and falls back to lupa's default Lua (5.5 in lupa 2.x), which can fail tests that pass in WoW. `run_test.py` always uses lupa's default Lua.
 
 Fake the chat lock in game with `/console addonChatRestrictionsForced 1`; set it back to 0 afterwards — the CVar is saved.
 

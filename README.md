@@ -73,7 +73,7 @@ Chat bubbles with timestamps, date separators and sender labels. Right-click any
 
 Online status dots, unread badges, last-message previews, and the zone or dungeon a friend is in. Pin and drag contacts to reorder them. Search across names, nicknames, notes and message history.
 
-Right-click a contact to **mute** them, set a **nickname**, add a private **note**, or get told when they come **online**.
+Right-click a contact to **mute** them, set a **nickname**, add a private **note**, or get told when they come **online** or **change zone**.
 
 <p align="center">
   <img src=".github/assets/contact-menu.png" width="60%" alt="Contact right-click menu with Mute, Set nickname, Edit note and Notify when online">
@@ -141,7 +141,7 @@ Pick the default font or any font from SharedMedia addons like ElvUI. Resize the
 
 ### Notifications
 
-Choose a sound (Whisper, Ping, Chime, Bell, Raid Warning) that plays even when in-game audio is muted.
+Choose a notification sound from one dropdown: 16 built-in game sounds (Whisper, Ping, Chime, Bell, Raid Warning and more), plus any sound shared by SharedMedia addons like ElvUI. It plays even when in-game sound effects are muted.
 
 The floating button shows an unread badge and a short preview of the newest message.
 
