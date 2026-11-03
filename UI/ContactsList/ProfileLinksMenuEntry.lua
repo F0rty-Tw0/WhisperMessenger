@@ -23,11 +23,21 @@ local function currentRegion()
   return ok and regionId or nil
 end
 
+-- Enum.SeasonID of a Classic Era realm; nil without a season or the API.
+local function activeSeason()
+  local seasons = _G.C_Seasons
+  if type(seasons) ~= "table" or type(seasons.GetActiveSeason) ~= "function" then
+    return nil
+  end
+  local ok, seasonId = pcall(seasons.GetActiveSeason)
+  return ok and seasonId or nil
+end
+
 local function buildLinks(item)
   if FlavorCompat.isForever then
     return {}
   end
-  local game = { regionId = currentRegion(), projectId = FlavorCompat.projectId }
+  local game = { regionId = currentRegion(), projectId = FlavorCompat.projectId, seasonId = activeSeason() }
   local character = ProfileCharacter.FromItem(item, ProfileCharacter.OwnRealm(), game)
   if character == nil then
     return {}

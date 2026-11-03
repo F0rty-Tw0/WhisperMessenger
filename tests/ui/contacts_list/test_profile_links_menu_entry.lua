@@ -124,6 +124,24 @@ return function()
     FlavorCompat.isForever = false
   end
 
+  -- test_classic_era_season_picks_warcraftlogs_site
+  do
+    local savedSeasons = _G.C_Seasons
+    rawset(_G, "C_Seasons", {
+      GetActiveSeason = function()
+        return 2 -- Enum.SeasonID.SeasonOfDiscovery
+      end,
+    })
+    FlavorCompat.projectId = 2
+    local submenu = findButton(menuFor(arthas, onUpdatePrefs), SUBMENU)
+    FlavorCompat.projectId = 1
+    rawset(_G, "C_Seasons", savedSeasons)
+    copied = {}
+    findButton(submenu, "Warcraft Logs").callback()
+    local expected = "https://sod.warcraftlogs.com/character/eu/area52/arthas"
+    assert(copied[1].text == expected, "season of discovery site, got " .. tostring(copied[1].text))
+  end
+
   -- test_china_region_hides_submenu
   do
     region = 5

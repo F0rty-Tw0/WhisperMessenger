@@ -110,6 +110,7 @@ read_globals = {
   "C_RestrictedActions",
   "C_XMLUtil",
   "C_Texture",
+  "C_Seasons",
 
   -- Unit and player info
   "UnitName",
