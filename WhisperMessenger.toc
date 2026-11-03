@@ -428,6 +428,7 @@ Core/Bootstrap/WindowRuntime/SettingsHandler.lua
 Core/Bootstrap/WindowRuntime/ConversationSelector.lua
 Core/Bootstrap/WindowRuntime/WidgetPreview.lua
 Core/Bootstrap/WindowRuntime/StartConversation.lua
+Core/Bootstrap/WindowRuntime/GroupSendPending.lua
 Core/Bootstrap/WindowRuntime/GroupSendPolicy.lua
 Core/Bootstrap/WindowRuntime/IconPosition.lua
 Core/Bootstrap/WindowRuntime/WhoTriggers.lua
