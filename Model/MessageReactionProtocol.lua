@@ -3,72 +3,20 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
-local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
+local Wire = ns.MessageReactionProtocolWire or require("WhisperMessenger.Model.MessageReactionProtocol.Wire")
+local Fallback = ns.MessageReactionProtocolFallback or require("WhisperMessenger.Model.MessageReactionProtocol.Fallback")
+local Decode = ns.MessageReactionProtocolDecode or require("WhisperMessenger.Model.MessageReactionProtocol.Decode")
 
 local Protocol = {}
 
-local MAX_PAYLOAD_BYTES = 255
-local VERSION = "1"
+local MAX_PAYLOAD_BYTES = Wire.MAX_PAYLOAD_BYTES
+local VERSION = Wire.VERSION
 -- How long a side message waits for its whisper, and how far apart the
 -- parts of one long whisper may arrive.
 local PAIRING_TTL_SECONDS = 15
-local ELLIPSIS = "…"
-local OPEN_QUOTE = "“"
-local CLOSE_QUOTE = "”"
-local ADDON_HINT_SUFFIX = " (via WhisperMessenger)"
 
-local REACTION_KEYS = {
-  "heart",
-  "thumbsup",
-  "laugh",
-  "smile",
-  "wink",
-  "clap",
-  "party",
-  "fire",
-  "gg",
-  "wow",
-  "sad",
-  "cry",
-  "angry",
-  "thinking",
-  "eyes",
-  "question",
-  "pray",
-  "skull",
-}
-
-local reactionKeySet = {}
-for _, key in ipairs(REACTION_KEYS) do
-  reactionKeySet[key] = true
-end
-
-local function isWireId(value)
-  return type(value) == "string" and #value > 0 and #value <= 32 and string.match(value, "^[A-Za-z0-9]+$") ~= nil
-end
-
-local function isFingerprint(value)
-  return type(value) == "string" and string.match(value, "^[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]$") ~= nil
-end
-
-local function isSafeGroupTarget(value)
-  return type(value) == "string" and string.find(value, "|", 1, true) == nil
-end
-
-local function splitPayload(payload)
-  local fields = {}
-  local startIndex = 1
-  while true do
-    local separator = string.find(payload, "|", startIndex, true)
-    if separator == nil then
-      table.insert(fields, string.sub(payload, startIndex))
-      break
-    end
-    table.insert(fields, string.sub(payload, startIndex, separator - 1))
-    startIndex = separator + 1
-  end
-  return fields
-end
+local isWireId = Wire.IsWireId
+local isSafeGroupTarget = Wire.IsSafeGroupTarget
 
 local function base36(value)
   local digits = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -101,9 +49,7 @@ local function wireIdExists(state, candidate)
   return false
 end
 
-function Protocol.IsReactionKey(key)
-  return reactionKeySet[key] == true
-end
+Protocol.IsReactionKey = Wire.IsReactionKey
 
 Protocol._fingerprintComputeCount = 0
 
@@ -145,76 +91,15 @@ function Protocol.NewWireId(state, now)
   return candidate
 end
 
+Protocol.BuildGroupFallback = Fallback.BuildGroupFallback
+Protocol.ParseGroupFallback = Fallback.ParseGroupFallback
+
 function Protocol.BuildFallback(key, operation, sourceText, hintSuffix)
   return Protocol.BuildGroupFallback(key, operation, sourceText, hintSuffix)
 end
 
 function Protocol.ParseFallback(text)
   return Protocol.ParseGroupFallback(text)
-end
-
-function Protocol.BuildGroupFallback(key, operation, sourceText, hintSuffix)
-  if not Protocol.IsReactionKey(key) then
-    return nil
-  end
-  if operation ~= "set" and operation ~= "remove" then
-    return nil
-  end
-  if type(sourceText) ~= "string" then
-    sourceText = ""
-  end
-  if type(hintSuffix) ~= "string" then
-    hintSuffix = ""
-  end
-
-  local action
-  if operation == "set" then
-    action = "reacted :" .. key .. ": to: "
-  else
-    action = "removed :" .. key .. ": from: "
-  end
-  local prefix = action .. OPEN_QUOTE
-  local closeQuote = CLOSE_QUOTE
-  local available = MAX_PAYLOAD_BYTES - #prefix - #closeQuote - #hintSuffix
-  if available < 0 then
-    return nil
-  end
-
-  local excerpt = sourceText
-  if #excerpt > available then
-    local textBudget = available - #ELLIPSIS
-    if textBudget < 0 then
-      return nil
-    end
-    excerpt = TextLimits.CapBytes(excerpt, textBudget) .. ELLIPSIS
-  end
-  return prefix .. excerpt .. closeQuote .. hintSuffix
-end
-
-function Protocol.ParseGroupFallback(text)
-  if type(text) ~= "string" or #text > MAX_PAYLOAD_BYTES then
-    return nil
-  end
-
-  if #text > #ADDON_HINT_SUFFIX and string.sub(text, -#ADDON_HINT_SUFFIX) == ADDON_HINT_SUFFIX then
-    text = string.sub(text, 1, -#ADDON_HINT_SUFFIX - 1)
-  end
-
-  local key, sourceExcerpt = string.match(text, "^reacted :([a-z]+): to: “(.*)” *$")
-  local operation = "set"
-  if key == nil then
-    key, sourceExcerpt = string.match(text, "^removed :([a-z]+): from: “(.*)” *$")
-    operation = "remove"
-  end
-  if key == nil or not Protocol.IsReactionKey(key) then
-    return nil
-  end
-  return {
-    operation = operation,
-    key = key,
-    sourceExcerpt = sourceExcerpt,
-    truncated = string.sub(sourceExcerpt, -#ELLIPSIS) == ELLIPSIS,
-  }
 end
 
 local function encodeReactionPayload(kind, operation, key, wireId, sourceText, fallbackText, targetGuid, targetName)
@@ -282,108 +167,15 @@ function Protocol.EncodeGroupReaction(operation, key, wireId, sourceText, fallba
   return encodeReactionPayload("G", operation, key, wireId, sourceText, fallbackText, targetGuid, targetName)
 end
 
-function Protocol.Decode(payload)
-  if type(payload) ~= "string" or payload == "" or #payload > MAX_PAYLOAD_BYTES then
-    return nil
-  end
-  local fields = splitPayload(payload)
-  if fields[1] ~= VERSION then
-    return nil
-  end
-
-  if fields[2] == "I" then
-    if #fields ~= 4 or not isWireId(fields[3]) or not isFingerprint(fields[4]) then
-      return nil
-    end
-    return {
-      type = "identity",
-      wireId = fields[3],
-      sourceFingerprint = fields[4],
-    }
-  end
-
-  if fields[2] == "P" then
-    -- MessageParts loads after this module; resolve it at call time.
-    local MessageParts = ns.MessageParts or require("WhisperMessenger.Model.MessageParts")
-    return MessageParts.DecodeManifest(payload)
-  end
-
-  if fields[2] == "G" then
-    if #fields ~= 9 then
-      return nil
-    end
-    local operation
-    if fields[3] == "S" then
-      operation = "set"
-    elseif fields[3] == "D" then
-      operation = "remove"
-    else
-      return nil
-    end
-    if not Protocol.IsReactionKey(fields[4]) then
-      return nil
-    end
-    if fields[5] ~= "" and not isWireId(fields[5]) then
-      return nil
-    end
-    if not isFingerprint(fields[6]) or not isFingerprint(fields[7]) then
-      return nil
-    end
-    if not isSafeGroupTarget(fields[8]) or not isSafeGroupTarget(fields[9]) then
-      return nil
-    end
-    if fields[8] == "" and fields[9] == "" then
-      return nil
-    end
-    return {
-      type = "groupReaction",
-      operation = operation,
-      key = fields[4],
-      wireId = fields[5] ~= "" and fields[5] or nil,
-      sourceFingerprint = fields[6],
-      fallbackFingerprint = fields[7],
-      targetGuid = fields[8],
-      targetName = fields[9],
-    }
-  end
-
-  if fields[2] ~= "R" or #fields ~= 7 then
-    return nil
-  end
-  local operation
-  if fields[3] == "S" then
-    operation = "set"
-  elseif fields[3] == "D" then
-    operation = "remove"
-  else
-    return nil
-  end
-  if not Protocol.IsReactionKey(fields[4]) then
-    return nil
-  end
-  if fields[5] ~= "" and not isWireId(fields[5]) then
-    return nil
-  end
-  if not isFingerprint(fields[6]) or not isFingerprint(fields[7]) then
-    return nil
-  end
-  return {
-    type = "reaction",
-    operation = operation,
-    key = fields[4],
-    wireId = fields[5] ~= "" and fields[5] or nil,
-    sourceFingerprint = fields[6],
-    fallbackFingerprint = fields[7],
-  }
-end
+Protocol.Decode = Decode.Decode
 
 Protocol.IsWireId = isWireId
-Protocol.IsFingerprint = isFingerprint
-Protocol.REACTION_KEYS = REACTION_KEYS
+Protocol.IsFingerprint = Wire.IsFingerprint
+Protocol.REACTION_KEYS = Wire.REACTION_KEYS
 Protocol.MAX_PAYLOAD_BYTES = MAX_PAYLOAD_BYTES
 Protocol.VERSION = VERSION
 Protocol.PAIRING_TTL_SECONDS = PAIRING_TTL_SECONDS
-Protocol.ADDON_HINT_SUFFIX = ADDON_HINT_SUFFIX
+Protocol.ADDON_HINT_SUFFIX = Fallback.ADDON_HINT_SUFFIX
 
 ns.MessageReactionProtocol = Protocol
 return Protocol
