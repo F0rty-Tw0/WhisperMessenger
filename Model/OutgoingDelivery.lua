@@ -83,13 +83,16 @@ function OutgoingDelivery.CountQueued(store)
   return count
 end
 
--- After a line is removed the record describes the newest lines left.
+-- After a line is removed the record describes the newest lines left. An
+-- empty conversation keeps its age so retention can still expire it; a
+-- collapsed repeat keeps the time it was last seen.
 local function refreshActivity(conversation, messages)
   local last = messages[#messages]
   if last then
     MessageMetadata.ApplyActivity(conversation, last)
+    conversation.lastActivityAt = last.lastSeenAt or last.sentAt
   else
-    conversation.lastPreview, conversation.lastActivityAt, conversation.lastActivityLineID = nil, 0, nil
+    conversation.lastPreview, conversation.lastActivityLineID = nil, nil
   end
 end
 

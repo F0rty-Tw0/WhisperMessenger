@@ -69,6 +69,27 @@ return function()
     assert(OutgoingDelivery.Remove(store, "missing", queued) == false, "unknown conversation")
   end
 
+  -- test_remove_last_message_keeps_the_conversation_age
+  do
+    local store = newStore()
+    local conversation = store.conversations.b
+    conversation.messages = { conversation.messages[1] }
+    conversation.lastActivityAt = 1000
+    assert(OutgoingDelivery.Remove(store, "b", conversation.messages[1]) == true, "removed")
+    assert(conversation.lastPreview == nil, "no preview left")
+    assert(conversation.lastActivityAt == 1000, "an empty conversation keeps its age so it still expires")
+  end
+
+  -- test_remove_keeps_a_collapsed_repeat_time
+  do
+    local store = newStore()
+    local conversation = store.conversations.a
+    conversation.messages[1].sentAt = 100
+    conversation.messages[1].lastSeenAt = 400
+    assert(OutgoingDelivery.Remove(store, "a", conversation.messages[2]) == true, "removed")
+    assert(conversation.lastActivityAt == 400, "row time is the repeat's, got " .. tostring(conversation.lastActivityAt))
+  end
+
   -- test_build_record_keeps_the_send_target
   do
     local record = OutgoingDelivery.BuildRecord({
