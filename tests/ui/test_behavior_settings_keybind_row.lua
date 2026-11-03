@@ -87,6 +87,32 @@ return function()
     inCombat = false
     fireEvent(button:GetParent(), "PLAYER_REGEN_ENABLED")
     assert(FindUI.disabledCover(button) == nil, "button should be enabled after combat")
+
+    -- test_keybind_button_hides_messenger_before_opening_key_bindings
+    local events = {}
+    local ns = {
+      Bootstrap = {
+        runtime = {
+          setWindowVisible = function(visible)
+            events[#events + 1] = "visible:" .. tostring(visible)
+          end,
+        },
+      },
+    }
+    local KeybindRow = assert(loadfile("UI/MessengerWindow/BehaviorSettings/KeybindRow.lua"))("WhisperMessenger", ns)
+    local factory = FakeUI.NewFactory()
+    local frame = factory.CreateFrame("Frame", nil, nil)
+    local panel = {
+      bind = function(_self, control)
+        return control
+      end,
+    }
+    local keybind = KeybindRow.Create(factory, frame, frame, { panel = panel })
+    env.Settings.OpenToCategory = function()
+      events[#events + 1] = "open"
+    end
+    FindUI.click(keybind.bottom)
+    assert(events[1] == "visible:false" and events[2] == "open", "click should hide the messenger, then open Key Bindings")
   end)
 
   -- test_keybind_button_disabled_without_key_bindings_screen
