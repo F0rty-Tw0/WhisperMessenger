@@ -40,6 +40,7 @@ local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessen
 local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
 local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
+local WhisperToasts = ns.BootstrapWindowRuntimeWhisperToasts or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.WhisperToasts")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
 local WindowRuntime = {}
@@ -215,6 +216,8 @@ function WindowRuntime.Create(options)
   runtime.getGroupSendNotice = groupSendPolicy.getNotice
 
   local controller = {}
+  -- Built below, once selectConversation exists.
+  local whisperToasts
 
   local function onShareWidgetPositionChanged(enabled)
     if enabled == true then
@@ -233,6 +236,8 @@ function WindowRuntime.Create(options)
     -- whispers arrived meanwhile.
     if not nextVisible then
       runtime.unreadDivider = nil
+    else
+      whisperToasts.clear()
     end
     return coordinator.setWindowVisible(nextVisible)
   end
@@ -252,6 +257,16 @@ function WindowRuntime.Create(options)
   local function selectConversation(conversationKey)
     return conversationSelector.selectConversation(conversationKey)
   end
+
+  whisperToasts = WhisperToasts.Create({
+    runtime = runtime,
+    accountState = accountState,
+    uiFactory = uiFactory,
+    uiParent = uiParent,
+    selectConversation = selectConversation,
+  })
+  runtime.showWhisperToast = whisperToasts.show
+  runtime.clearWhisperToasts = whisperToasts.clear
 
   local startConversationFlow = StartConversation.Create({
     runtime = runtime,
