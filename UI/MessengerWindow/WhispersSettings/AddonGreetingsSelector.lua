@@ -19,7 +19,7 @@ local OPTION_SPECS = {
   {
     key = AddonGreetings.MODE_SHOW,
     label = "Show",
-    tooltip = 'Automated greetings from crafting addons show as usual, marked "Sent by" the addon.',
+    tooltip = 'Automated greetings from crafting addons such as Craft Alert show as usual, marked "Sent by Craft Alert".',
   },
   {
     key = AddonGreetings.MODE_REQUESTS,

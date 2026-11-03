@@ -74,8 +74,18 @@ local function test_reset_restores_show()
   assert(changes.addonGreetings == "show", "reset puts addon greetings back to Show")
 end
 
+local function test_show_tooltip_names_the_craft_alert_badge()
+  local AddonGreetingsSelector = require("WhisperMessenger.UI.MessengerWindow.WhispersSettings.AddonGreetingsSelector")
+  local options = AddonGreetingsSelector.Options(true)
+  assert(string.find(options[1].tooltip, '"Sent by Craft Alert"', 1, true), "Show tooltip names the badge: " .. options[1].tooltip)
+  for _, option in ipairs(options) do
+    assert(not string.find(option.tooltip, "CraftScan", 1, true), option.label .. " tooltip never names CraftScan")
+  end
+end
+
 return function()
   Localization.Configure({ language = "enUS" })
+  test_show_tooltip_names_the_craft_alert_badge()
   test_selector_offers_three_choices_defaulting_to_show()
   test_choosing_hide_reports_the_setting()
   test_requests_choice_disabled_while_inbox_off()
