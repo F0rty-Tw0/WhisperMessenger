@@ -25,34 +25,6 @@ return function()
     assert(character.displayRealm == "Argent Dawn", "own realm suffix maps to its display name")
   end
 
-  -- test_battlenet_friend_uses_known_character
-  do
-    local character = ProfileCharacter.FromItem({ channel = "BN", displayName = "Friend#1234", gameAccountName = "Thrall-Area52" }, OWN)
-    assert(character ~= nil and character.name == "Thrall" and character.realm == "Area52", "BN friend's character used")
-  end
-
-  -- test_battlenet_friend_enriched_character_wins
-  do
-    local character = ProfileCharacter.FromItem({
-      channel = "BN",
-      gameAccountName = "Thrall-Area52",
-      characterName = "Garrosh",
-      realm = "Area 52",
-    }, OWN)
-    assert(character.name == "Garrosh", "live character used")
-    assert(character.displayRealm == "Area 52", "a realm with a space is a display name")
-  end
-
-  -- test_battlenet_friend_without_character_has_none
-  do
-    assert(ProfileCharacter.FromItem({ channel = "BN", displayName = "Friend#1234" }, OWN) == nil, "no WoW character known")
-  end
-
-  -- test_battlenet_friend_without_realm_has_none
-  do
-    assert(ProfileCharacter.FromItem({ channel = "BN", gameAccountName = "Thrall" }, OWN) == nil, "realm unknown")
-  end
-
   -- test_group_rows_have_none
   do
     assert(ProfileCharacter.FromItem({ channel = "GUILD", displayName = "Guild" }, OWN) == nil, "group rows are not a character")

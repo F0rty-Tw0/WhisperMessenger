@@ -137,11 +137,33 @@ return function()
     assert(findButton(menuFor(friend, onUpdatePrefs), SUBMENU) == nil, "no character, no submenu")
   end
 
-  -- test_battlenet_friend_with_character_gets_submenu
+  -- test_battlenet_friend_playing_this_game_gets_submenu
   do
-    local friend = { channel = "BN", displayName = "Friend#1234", battleTag = "Friend#1234", bnetAccountID = 7, gameAccountName = "Thrall-Kazzak" }
+    local savedBattleNet = _G.C_BattleNet
+    local gameAccountInfo = {
+      isOnline = true,
+      clientProgram = "WoW",
+      wowProjectID = 1,
+      regionID = 3,
+      characterName = "Thrall",
+      realmName = "Area 52",
+    }
+    rawset(_G, "C_BattleNet", {
+      GetAccountInfoByID = function()
+        return { bnetAccountID = 7, battleTag = "Friend#1234", isOnline = true, gameAccountInfo = gameAccountInfo }
+      end,
+    })
+    local friend = { channel = "BN", displayName = "Friend#1234", battleTag = "Friend#1234", bnetAccountID = 7, gameAccountName = "Garrosh-Kazzak" }
     local submenu = findButton(menuFor(friend, onUpdatePrefs), SUBMENU)
-    assert(submenu ~= nil and labels(submenu) == "Raider.IO,Warcraft Logs", "friend's character sites")
+    rawset(_G, "C_BattleNet", savedBattleNet)
+    assert(
+      submenu ~= nil and labels(submenu) == "Raider.IO,Warcraft Logs,Armory",
+      "live character sites, got " .. labels(submenu or { buttons = {} })
+    )
+    copied = {}
+    findButton(submenu, "Armory").callback()
+    local expected = "https://worldofwarcraft.blizzard.com/en-us/character/eu/area-52/thrall"
+    assert(copied[1].text == expected, "live character's armory, got " .. tostring(copied[1].text))
   end
 
   -- test_links_never_throw

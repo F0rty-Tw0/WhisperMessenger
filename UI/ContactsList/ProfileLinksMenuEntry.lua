@@ -27,11 +27,12 @@ local function buildLinks(item)
   if FlavorCompat.isForever then
     return {}
   end
-  local character = ProfileCharacter.FromItem(item, ProfileCharacter.OwnRealm())
+  local game = { regionId = currentRegion(), projectId = FlavorCompat.projectId }
+  local character = ProfileCharacter.FromItem(item, ProfileCharacter.OwnRealm(), game)
   if character == nil then
     return {}
   end
-  return ProfileLinks.Build(character, { regionId = currentRegion(), projectId = FlavorCompat.projectId })
+  return ProfileLinks.Build(character, game)
 end
 
 -- Empty when no site applies (WoW: Forever, China, no known character).
