@@ -25,6 +25,11 @@ local PreviewMetrics = {
   DETAIL_ROW_HEIGHT = 15,
   -- Clear space under the message line; keeps the link off the ~5px HUD tooltip border.
   BOTTOM_ROOM = 14,
+  -- The optional reply row under the card's text: its height, the room it
+  -- adds above itself, and the card width it needs to be usable.
+  REPLY_ROW_HEIGHT = 22,
+  REPLY_ROW_GAP = 6,
+  REPLY_MIN_WIDTH = 220,
 }
 
 local M = PreviewMetrics
@@ -40,6 +45,36 @@ local ANCHORS = {
 
 function PreviewMetrics.ResolveAnchor(position)
   return ANCHORS[position] or ANCHORS.right
+end
+
+-- Places the card next to its icon. resolve() prefers the getter's answer,
+-- else the last applied position.
+function PreviewMetrics.NewPositioner(previewFrame, anchorFrame, getPreviewPosition)
+  local currentPosition = "right"
+
+  local function apply(position)
+    local nextPosition = (type(position) == "string" and position ~= "") and position or "right"
+    currentPosition = nextPosition
+    local anchor = PreviewMetrics.ResolveAnchor(nextPosition)
+    if previewFrame.ClearAllPoints then
+      previewFrame:ClearAllPoints()
+    end
+    if previewFrame.SetPoint then
+      previewFrame:SetPoint(anchor.selfPoint, anchorFrame, anchor.target, anchor.x, anchor.y)
+    end
+  end
+
+  local function resolve()
+    if type(getPreviewPosition) == "function" then
+      local ok, value = pcall(getPreviewPosition)
+      if ok and type(value) == "string" and value ~= "" then
+        return value
+      end
+    end
+    return currentPosition
+  end
+
+  return { apply = apply, resolve = resolve }
 end
 
 local function measureOf(fontString, methodName)

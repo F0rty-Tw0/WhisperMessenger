@@ -302,6 +302,8 @@ UI/ToggleIcon/PreviewAutoDismiss.lua
 UI/ToggleIcon/PreviewChrome.lua
 UI/ToggleIcon/PreviewLinks.lua
 UI/ToggleIcon/PreviewDetailRow.lua
+UI/ToggleIcon/PreviewDismissButton.lua
+UI/ToggleIcon/PreviewReplyRow.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/PulseState.lua

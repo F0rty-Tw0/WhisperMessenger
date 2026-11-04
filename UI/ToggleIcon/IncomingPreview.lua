@@ -6,19 +6,15 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
-local CloseGlyphButton = ns.CloseGlyphButton or require("WhisperMessenger.UI.Shared.CloseGlyphButton")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
 local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI.ToggleIcon.PreviewChrome")
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
 local PreviewDetailRow = ns.ToggleIconPreviewDetailRow or require("WhisperMessenger.UI.ToggleIcon.PreviewDetailRow")
+local PreviewDismissButton = ns.ToggleIconPreviewDismissButton or require("WhisperMessenger.UI.ToggleIcon.PreviewDismissButton")
 local applyClassColor = UIHelpers.applyClassColor
-local applyVertexColor = UIHelpers.applyVertexColor
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
-
-local DISMISS_COLOR_HOVER = CloseGlyphButton.DANGER_HOVER
-local DISMISS_BG_HOVER = { 0.85, 0.15, 0.15, 0.35 }
 
 local IncomingPreview = {}
 
@@ -29,30 +25,8 @@ function IncomingPreview.Create(factory, frame, options)
   local previewFrame, previewBackground = PreviewChrome.Create(factory, frame)
   previewFrame:SetSize(PreviewMetrics.MAX_WIDTH, PreviewMetrics.HEIGHT)
 
-  local currentPreviewPosition = "right"
-  local function applyPreviewPosition(position)
-    local nextPosition = (type(position) == "string" and position ~= "") and position or "right"
-    currentPreviewPosition = nextPosition
-    local anchor = PreviewMetrics.ResolveAnchor(nextPosition)
-    if previewFrame.ClearAllPoints then
-      previewFrame:ClearAllPoints()
-    end
-    if previewFrame.SetPoint then
-      previewFrame:SetPoint(anchor.selfPoint, frame, anchor.target, anchor.x, anchor.y)
-    end
-  end
-
-  local function resolvePreviewPosition()
-    if type(options.getPreviewPosition) == "function" then
-      local ok, value = pcall(options.getPreviewPosition)
-      if ok and type(value) == "string" and value ~= "" then
-        return value
-      end
-    end
-    return currentPreviewPosition
-  end
-
-  applyPreviewPosition(resolvePreviewPosition())
+  local positioner = PreviewMetrics.NewPositioner(previewFrame, frame, options.getPreviewPosition)
+  positioner.apply(positioner.resolve())
   if previewFrame.SetFrameLevel then
     previewFrame:SetFrameLevel(frame:GetFrameLevel() + 1)
   end
@@ -70,21 +44,7 @@ function IncomingPreview.Create(factory, frame, options)
   previewClassIconFrame:SetPoint("LEFT", previewFrame, "LEFT", PreviewMetrics.LEFT_PAD, 0)
   previewClassIconFrame:Hide()
 
-  local previewDismissButton = factory.CreateFrame("Button", nil, previewFrame)
-  previewDismissButton:SetSize(PreviewMetrics.DISMISS_SIZE, PreviewMetrics.DISMISS_SIZE)
-  previewDismissButton:SetPoint("TOPRIGHT", previewFrame, "TOPRIGHT", -PreviewMetrics.DISMISS_INSET, -PreviewMetrics.DISMISS_INSET)
-  if previewDismissButton.EnableMouse then
-    previewDismissButton:EnableMouse(true)
-  end
-  local previewDismissBg = previewDismissButton:CreateTexture(nil, "BACKGROUND")
-  previewDismissBg:SetAllPoints(previewDismissButton)
-  applyVertexColor(previewDismissBg, { 0, 0, 0, 0 })
-  local previewDismissLabel = previewDismissButton:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewDismissLabel, theme.FONTS.close_glyph or theme.FONTS.header_name)
-  previewDismissLabel:SetPoint("CENTER", previewDismissButton, "CENTER", 0, 0)
-  previewDismissLabel:SetText("×")
-  -- Neutral at rest; red only on hover so the toast does not shout.
-  setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
+  local dismiss = PreviewDismissButton.Create(factory, previewFrame, theme)
 
   local senderLeft = PreviewMetrics.LEFT_PAD + PreviewMetrics.CLASS_ICON_SIZE + PreviewMetrics.ICON_GAP
   local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
@@ -155,16 +115,8 @@ function IncomingPreview.Create(factory, frame, options)
     onExpire = triggerDismiss,
   })
 
-  if previewDismissButton.SetScript then
-    previewDismissButton:SetScript("OnClick", dismissCurrent)
-    previewDismissButton:SetScript("OnEnter", function()
-      setTextColor(previewDismissLabel, DISMISS_COLOR_HOVER)
-      applyVertexColor(previewDismissBg, DISMISS_BG_HOVER)
-    end)
-    previewDismissButton:SetScript("OnLeave", function()
-      setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
-      applyVertexColor(previewDismissBg, { 0, 0, 0, 0 })
-    end)
+  if dismiss.button.SetScript then
+    dismiss.button:SetScript("OnClick", dismissCurrent)
   end
 
   if previewFrame.SetScript then
@@ -208,7 +160,7 @@ function IncomingPreview.Create(factory, frame, options)
     end
     previewClassIconFrame:Show()
 
-    applyPreviewPosition(resolvePreviewPosition())
+    positioner.apply(positioner.resolve())
   end
 
   local function fitWidth()
@@ -275,7 +227,7 @@ function IncomingPreview.Create(factory, frame, options)
     paintSenderLabel(externalEntry and externalEntry.classTag or lastPreviewClassTag)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
     setTextColor(detailRow.label, theme.COLORS.text_secondary)
-    setTextColor(previewDismissLabel, theme.COLORS.text_secondary)
+    dismiss.applyTheme(theme)
   end
 
   return {
@@ -283,14 +235,14 @@ function IncomingPreview.Create(factory, frame, options)
     senderLabel = previewSenderLabel,
     messageLabel = previewMessageLabel,
     detailLabel = detailRow.label,
-    dismissButton = previewDismissButton,
-    dismissLabel = previewDismissLabel,
+    dismissButton = dismiss.button,
+    dismissLabel = dismiss.label,
     classIcon = previewClassIcon,
     classIconFrame = previewClassIconFrame,
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = setExternalPreview,
     isExternalShown = isExternalShown,
-    applyPreviewPosition = applyPreviewPosition,
+    applyPreviewPosition = positioner.apply,
     applyTheme = applyTheme,
   }
 end
