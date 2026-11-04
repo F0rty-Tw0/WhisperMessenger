@@ -43,6 +43,7 @@ function WidgetPreview.Create(options)
                 senderName = senderName,
                 messageText = AddonGreetingText.ForIncomingPreview(conversation, messageText),
                 classTag = item.classTag or conversation.classTag,
+                channel = item.channel,
               }
             end
           end
@@ -79,10 +80,24 @@ function WidgetPreview.Create(options)
     end
   end
 
+  -- Acknowledge one whisper (the one being answered) without touching newer ones.
+  local function acknowledgeWidgetPreviewThrough(sentAt)
+    local stamp = tonumber(sentAt)
+    if stamp == nil then
+      return
+    end
+
+    local acknowledgedAt = tonumber(accountState.widgetPreviewAcknowledgedAt) or 0
+    if stamp > acknowledgedAt then
+      accountState.widgetPreviewAcknowledgedAt = stamp
+    end
+  end
+
   return {
     findLatestIncomingPreview = findLatestIncomingPreview,
     buildLatestIncomingPreview = buildLatestIncomingPreview,
     acknowledgeLatestWidgetPreview = acknowledgeLatestWidgetPreview,
+    acknowledgeWidgetPreviewThrough = acknowledgeWidgetPreviewThrough,
   }
 end
 
