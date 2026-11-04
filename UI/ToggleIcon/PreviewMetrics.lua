@@ -150,8 +150,7 @@ function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel,
 end
 
 -- Centers the class icon on the text, above the reply row while it shows.
--- Returns the anchor it holds (false = plain card, a number = the row's y
--- offset); pass it back as lastAnchor to skip an unchanged re-anchor.
+-- Returns its anchor (false = plain, else y offset); pass it back as lastAnchor.
 function PreviewMetrics.AnchorClassIcon(iconFrame, previewFrame, replyHeight, lastAnchor)
   ---@type number|false
   local anchor = false
