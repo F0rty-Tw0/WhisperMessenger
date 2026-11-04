@@ -71,6 +71,7 @@ function MinimapIconRuntime.Create(options)
       refreshWindow()
     end,
     onOpenPreview = options.onOpenPreview,
+    quickReply = options.quickReply,
   })
   IconSurfaces.ShowCounts(total, unread, minimapIcon)
 

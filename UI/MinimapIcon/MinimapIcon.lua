@@ -159,6 +159,7 @@ function MinimapIcon.Create(factory, options)
     getPreviewAutoDismissSeconds = options.getPreviewAutoDismissSeconds,
     onDismissPreview = options.onDismissPreview,
     onOpenPreview = options.onOpenPreview,
+    quickReply = options.quickReply,
   })
   -- Reparent to UIParent so the preview isn't clipped by the Minimap.
   incomingPreview.frame:SetParent(_G.UIParent)

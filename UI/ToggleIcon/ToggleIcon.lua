@@ -101,6 +101,7 @@ function ToggleIcon.Create(factory, options)
     getPreviewAutoDismissSeconds = options.getPreviewAutoDismissSeconds,
     onDismissPreview = options.onDismissPreview,
     onOpenPreview = options.onOpenPreview,
+    quickReply = options.quickReply,
     onExternalChanged = function()
       pulseState.refresh()
     end,
