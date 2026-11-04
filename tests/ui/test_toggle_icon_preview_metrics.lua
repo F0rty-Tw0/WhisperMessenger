@@ -62,4 +62,46 @@ return function()
   assert(tall.h == M.HEIGHT, "two rows floor at HEIGHT, got " .. tostring(tall.h))
   M.ResizeToContent(tall, label(1), label(1), label(1))
   assert(tall.h == M.HEIGHT + M.DETAIL_ROW_HEIGHT, "the detail row adds one row, got " .. tostring(tall.h))
+
+  local function anchored()
+    return {
+      ClearAllPoints = function(self)
+        self.point = nil
+      end,
+      SetPoint = function(self, ...)
+        self.point = { ... }
+      end,
+    }
+  end
+
+  -- test_positioner_anchors_left_of_the_icon
+  local card, icon = anchored(), {}
+  M.NewPositioner(card, icon, nil).apply("left")
+  local p = card.point
+  assert(p[1] == "RIGHT" and p[2] == icon and p[3] == "LEFT" and p[4] == -M.GAP and p[5] == 0, "left anchors RIGHT to the icon's LEFT")
+
+  -- test_positioner_falls_back_to_right_for_empty_or_nil
+  M.NewPositioner(card, icon, nil).apply("")
+  assert(card.point[1] == "LEFT" and card.point[3] == "RIGHT", "empty position falls back to right")
+  local nilPositioner = M.NewPositioner(card, icon, nil)
+  nilPositioner.apply("left")
+  nilPositioner.apply(nil)
+  assert(card.point[1] == "LEFT" and nilPositioner.resolve() == "right", "nil position falls back to right")
+
+  -- test_positioner_resolves_the_getter_value
+  assert(M.NewPositioner(card, icon, function()
+    return "top"
+  end).resolve() == "top", "resolve returns the getter's value")
+
+  -- test_positioner_resolves_last_applied_when_the_getter_fails
+  local failing = M.NewPositioner(card, icon, function()
+    error("boom")
+  end)
+  failing.apply("below")
+  assert(failing.resolve() == "below", "an erroring getter resolves to the last applied position")
+  local blank = M.NewPositioner(card, icon, function()
+    return ""
+  end)
+  blank.apply("left")
+  assert(blank.resolve() == "left", "an empty getter resolves to the last applied position")
 end
