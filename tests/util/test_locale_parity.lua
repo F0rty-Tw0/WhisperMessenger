@@ -3,6 +3,14 @@
 -- slots (%s, %d, ...) in the same count and order.
 local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU", "zhCN", "zhTW" }
 local INVITE_TOOLTIP_KEY = "Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."
+local REPLY_PLACEHOLDER_KEY = "Reply…"
+local REPLY_REASON_KEY = 'Turn on "Show widget message preview" to use this.'
+local PREVIEW_REPLY_KEYS = {
+  "Reply from widget preview",
+  "Adds a small reply box under the widget message preview. Press Enter to send.",
+  REPLY_PLACEHOLDER_KEY,
+  REPLY_REASON_KEY,
+}
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -50,5 +58,18 @@ return function()
     -- test_invite_tooltip_names_the_translated_link
     local inviteTooltip = catalog[INVITE_TOOLTIP_KEY]
     assert(string.find(inviteTooltip, catalog["Invite to WM"], 1, true), code .. " invite tooltip should name the translated link")
+
+    -- test_preview_reply_strings_are_translated
+    for _, key in ipairs(PREVIEW_REPLY_KEYS) do
+      assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
+    end
+    assert(string.find(catalog[REPLY_PLACEHOLDER_KEY], "…", 1, true), code .. " reply placeholder should keep the ellipsis")
+
+    -- test_preview_reply_reason_names_the_translated_preview_toggle
+    local replyReason = catalog[REPLY_REASON_KEY]
+    assert(
+      string.find(replyReason, catalog["Show widget message preview"], 1, true),
+      code .. " reply reason should name the translated preview toggle"
+    )
   end
 end
