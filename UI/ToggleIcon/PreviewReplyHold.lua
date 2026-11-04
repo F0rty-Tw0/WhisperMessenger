@@ -60,6 +60,7 @@ function PreviewReplyHold.Create(factory, previewFrame, options)
   -- The hold ends inside a step that settles the card itself: no refresh.
   local settling = false
   local locked = false
+  local lockedReason = nil
 
   local function holding()
     local row = hold.row
@@ -95,11 +96,16 @@ function PreviewReplyHold.Create(factory, previewFrame, options)
   local function checkLock()
     local reason = quickReply.getLockReasonText()
     if reason ~= nil then
+      -- The first lock already stashed the text and dropped focus; a repeat is a no-op.
+      if locked and reason == lockedReason and not holding() then
+        return
+      end
       if holding() then
         stash(false)
       end
       hold.row.setEnabled(false, reason)
       locked = true
+      lockedReason = reason
     elseif locked then
       hold.row.setEnabled(true)
       locked = false
@@ -122,6 +128,7 @@ function PreviewReplyHold.Create(factory, previewFrame, options)
     local reason = quickReply.getLockReasonText()
     if reason ~= nil then
       hold.row.setEnabled(false, reason)
+      lockedReason = reason
       return
     end
     hold.row.setEnabled(true)
