@@ -6,15 +6,12 @@ return function()
     local s = Card.Build()
     s.card.setIncomingPreview("Jaina", "Need help?", "MAGE")
     assert(s.card.replyHold.isRowShown() == false, "no meta, no row")
-
     s.opts.enabled = false
     Card.ShowJaina(s)
     assert(s.card.replyHold.isRowShown() == false, "setting off, no row")
-
     s.opts.enabled = true
     Card.ShowJaina(s, Card.Jaina(501))
     assert(s.card.replyHold.isRowShown() == true, "setting, meta and own preview show the row")
-
     s.card.setExternalPreview(Card.External())
     assert(s.card.replyHold.isRowShown() == false, "an external entry hides the row")
   end

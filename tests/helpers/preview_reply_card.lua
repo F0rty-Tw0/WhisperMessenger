@@ -9,10 +9,6 @@ function PreviewReplyCard.Jaina(sentAt)
   return { conversationKey = "wow::jaina", sentAt = sentAt or 500, channel = "WOW" }
 end
 
-function PreviewReplyCard.Thrall()
-  return { conversationKey = "wow::thrall", sentAt = 510, channel = "WOW" }
-end
-
 -- A preview another addon put up.
 function PreviewReplyCard.External()
   local noop = function() end
@@ -82,20 +78,20 @@ function PreviewReplyCard.ShowJaina(state, meta)
 end
 
 function PreviewReplyCard.ShowThrall(state)
-  state.card.setIncomingPreview("Thrall", "Lok'tar", "SHAMAN", PreviewReplyCard.Thrall())
+  state.card.setIncomingPreview("Thrall", "Lok'tar", "SHAMAN", { conversationKey = "wow::thrall", sentAt = 510, channel = "WOW" })
 end
 
-local function input(state)
+function PreviewReplyCard.Input(state)
   return state.card.replyHold.row.input
 end
-PreviewReplyCard.Input = input
+local input = PreviewReplyCard.Input
 
-local function fire(frame, script, ...)
+function PreviewReplyCard.Fire(frame, script, ...)
   local handler = frame:GetScript(script)
   assert(type(handler) == "function", "frame has a " .. script .. " handler")
   return handler(frame, ...)
 end
-PreviewReplyCard.Fire = fire
+local fire = PreviewReplyCard.Fire
 
 function PreviewReplyCard.Focus(state)
   input(state):SetFocus()
