@@ -13,8 +13,8 @@ local AddonGreetingsSelector = ns.MessengerWindowWhispersAddonGreetingsSelector
 local AddonGreetings = ns.AddonGreetings or require("WhisperMessenger.Model.AddonGreetings")
 
 -- Options page for whisper behavior: hiding whispers from the default chat,
--- auto-open, the Requests inbox, typing status, read receipts and addon
--- greetings.
+-- auto-open, the Requests inbox, typing status, read receipts, the widget
+-- message preview and replying from it, and addon greetings.
 local WhispersSettings = {}
 
 local PADDING = Theme.CONTENT_PADDING
@@ -31,6 +31,8 @@ function WhispersSettings.Create(factory, parent, config, options)
   end
   local requestsInbox = config.requestsInbox == true
   local greetingsSelector
+  -- Set once the reply toggle exists; the preview toggle (and its reset) calls it.
+  local refreshReplyAvailability
   -- "Send to Requests" follows the Requests toggle live.
   local function onChange(key, value)
     saveSetting(key, value)
@@ -39,6 +41,8 @@ function WhispersSettings.Create(factory, parent, config, options)
       if greetingsSelector then
         greetingsSelector.setOptionsList(AddonGreetingsSelector.Options(requestsInbox))
       end
+    elseif key == "showWidgetMessagePreview" and refreshReplyAvailability then
+      refreshReplyAvailability(value ~= false)
     end
   end
 
@@ -52,6 +56,18 @@ function WhispersSettings.Create(factory, parent, config, options)
 
   local panel = SettingsControls.NewPanelRegistry()
   SettingsControls.BindToggleSpecs(panel, toggles, toggleSpecs, ToggleSpecs.DEFAULTS)
+
+  -- The reply toggle is moot while the preview is off; it keeps its value meanwhile.
+  local replyAvailability
+  for i, spec in ipairs(toggleSpecs) do
+    if spec.key == "widgetPreviewReply" then
+      replyAvailability = UIHelpers.attachDisabledState(factory, toggles[i].row)
+    end
+  end
+  refreshReplyAvailability = function(previewOn)
+    replyAvailability.set(previewOn, not previewOn and text('Turn on "Show widget message preview" to use this.') or nil)
+  end
+  refreshReplyAvailability(config.showWidgetMessagePreview ~= false)
 
   greetingsSelector = panel:bind(
     AddonGreetingsSelector.Create(factory, frame, {
@@ -117,6 +133,7 @@ function WhispersSettings.Create(factory, parent, config, options)
     refreshLayout = refreshLayout,
     refreshTheme = refreshTheme,
     setLanguage = setLanguage,
+    widgetPreviewReplyAvailability = replyAvailability,
   }
 end
 

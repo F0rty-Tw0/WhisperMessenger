@@ -18,6 +18,8 @@ ToggleSpecs.DEFAULTS = {
   shareTypingStatus = true,
   shareReadReceipts = true,
   showInviteLink = true,
+  showWidgetMessagePreview = true,
+  widgetPreviewReply = false,
 }
 
 local function text(key)
@@ -129,6 +131,30 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Show invite link"),
         text("Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."),
+      },
+    },
+    {
+      key = "showWidgetMessagePreview",
+      labelKey = "Show widget message preview",
+      initial = config.showWidgetMessagePreview ~= false,
+      onChange = function(value)
+        onChange("showWidgetMessagePreview", value)
+      end,
+      tooltipLines = {
+        text("Show widget message preview"),
+        text("Shows sender name and the latest incoming whisper preview on the draggable widget."),
+      },
+    },
+    {
+      key = "widgetPreviewReply",
+      labelKey = "Reply from widget preview",
+      initial = config.widgetPreviewReply == true,
+      onChange = function(value)
+        onChange("widgetPreviewReply", value)
+      end,
+      tooltipLines = {
+        text("Reply from widget preview"),
+        text("Adds a small reply box under the widget message preview. Press Enter to send."),
       },
     },
   }

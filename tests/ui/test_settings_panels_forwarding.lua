@@ -138,6 +138,8 @@ return function()
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
   assert(whispersCapture.config.closeGameWhisperTab == true, "whispers config should carry closeGameWhisperTab")
   assert(whispersCapture.config.addonGreetings == "hide", "whispers config should carry addonGreetings")
+  assert(whispersCapture.config.showWidgetMessagePreview == false, "whispers config should carry showWidgetMessagePreview")
+  assert(whispersCapture.config.widgetPreviewReply == true, "whispers config should carry widgetPreviewReply")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")
@@ -196,10 +198,7 @@ return function()
     "expected icons config.showUnreadBadge=false, got: " .. tostring(iconsCapture.config.showUnreadBadge)
   )
   assert(iconsCapture.config.badgePulse == false, "expected icons config.badgePulse=false, got: " .. tostring(iconsCapture.config.badgePulse))
-  assert(
-    iconsCapture.config.showWidgetMessagePreview == false,
-    "expected icons config.showWidgetMessagePreview=false, got: " .. tostring(iconsCapture.config.showWidgetMessagePreview)
-  )
+  assert(iconsCapture.config.showWidgetMessagePreview == nil, "preview key moved off the Icons page")
   assert(iconsCapture.config.transparentWidget == nil, "Icons config should not include transparentWidget")
   assert(
     iconsCapture.config.widgetTransparency == 0.4,
@@ -213,6 +212,5 @@ return function()
     iconsCapture.config.widgetPreviewPosition == "top",
     "expected icons config.widgetPreviewPosition=top, got: " .. tostring(iconsCapture.config.widgetPreviewPosition)
   )
-  -- test_icons_config_carries_saved_widget_preview_reply
-  assert(iconsCapture.config.widgetPreviewReply == true, "icons config should carry widgetPreviewReply")
+  assert(iconsCapture.config.widgetPreviewReply == nil, "reply key moved off the Icons page")
 end

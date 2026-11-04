@@ -42,7 +42,6 @@ return function()
       "Lock icon position",
       "Show unread badge",
       "Badge pulse animation",
-      "Show widget message preview",
     }) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "test_icons_owns_all_icon_and_widget_controls: missing toggle " .. label)
     end
@@ -156,7 +155,6 @@ return function()
     clickToggle(result, SHARE_POSITION)
     clickToggle(result, "Show unread badge")
     clickToggle(result, "Badge pulse animation")
-    clickToggle(result, "Show widget message preview")
     local transparencySlider = FindUI.slider(result.frame, TRANSPARENCY)
     transparencySlider:SetValue(0.4)
     assert(
@@ -173,7 +171,6 @@ return function()
     assert(changes.shareWidgetPosition == true, "test_icon_and_widget_controls_fire_existing_keys: shareWidgetPosition should be true")
     assert(changes.showUnreadBadge == false, "test_icon_and_widget_controls_fire_existing_keys: showUnreadBadge should be false")
     assert(changes.badgePulse == false, "test_icon_and_widget_controls_fire_existing_keys: badgePulse should be false")
-    assert(changes.showWidgetMessagePreview == false, "test_icon_and_widget_controls_fire_existing_keys: showWidgetMessagePreview should be false")
     assert(changes.transparentWidget == nil, "test_icon_and_widget_controls_fire_existing_keys: transparentWidget should not be emitted")
     assert(changes.widgetTransparency == 0.4, "test_icon_and_widget_controls_fire_existing_keys: widget transparency should be 0.4")
     assert(changes.widgetPreviewAutoDismissSeconds == 60, "test_icon_and_widget_controls_fire_existing_keys: auto-dismiss should be 60")
@@ -207,7 +204,6 @@ return function()
       lockToggleIcon = true,
       showUnreadBadge = false,
       badgePulse = false,
-      showWidgetMessagePreview = false,
       widgetTransparency = 0.25,
       widgetPreviewAutoDismissSeconds = 60,
       widgetPreviewPosition = "top",
@@ -228,11 +224,9 @@ return function()
       shareWidgetPosition = false,
       showUnreadBadge = true,
       badgePulse = true,
-      showWidgetMessagePreview = true,
       widgetTransparency = 0,
       widgetPreviewAutoDismissSeconds = 30,
       widgetPreviewPosition = "right",
-      widgetPreviewReply = false,
     }
     local resetCount = 0
     for key, value in pairs(changes) do
@@ -242,7 +236,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 13, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit thirteen icon/widget keys")
+    assert(resetCount == 11, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit eleven icon/widget keys")
   end
 
   -- test_square_background_is_disabled_unless_the_square_widget_is_in_use
