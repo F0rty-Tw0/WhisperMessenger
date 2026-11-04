@@ -25,6 +25,11 @@ local PreviewMetrics = {
   DETAIL_ROW_HEIGHT = 15,
   -- Clear space under the message line; keeps the link off the ~5px HUD tooltip border.
   BOTTOM_ROOM = 14,
+  -- The optional reply row under the card's text: its height, the room it
+  -- adds above itself, and the card width it needs to be usable.
+  REPLY_ROW_HEIGHT = 22,
+  REPLY_ROW_GAP = 6,
+  REPLY_MIN_WIDTH = 220,
 }
 
 local M = PreviewMetrics
