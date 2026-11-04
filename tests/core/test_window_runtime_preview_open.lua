@@ -75,8 +75,28 @@ return function()
     assert(#log == 0, "a vanished preview opens nothing, got " .. table.concat(log, ","))
   end
 
+  local function test_open_with_a_key_selects_that_chat_not_the_latest()
+    local open, log = build({ preview = { conversationKey = "wow::thrall" } })
+    assert(open("wow::jaina") == true, "a keyed open reports success")
+    assert(log[#log] == "select:wow::jaina", "the given key is selected, got " .. table.concat(log, ","))
+  end
+
+  local function test_refused_open_returns_false()
+    local open, log = build({ preview = PREVIEW, competitive = true })
+    assert(open("wow::jaina") == false, "a refused open reports failure")
+    assert(#log == 0, "nothing opens when refused, got " .. table.concat(log, ","))
+  end
+
+  local function test_open_without_a_key_or_preview_returns_false()
+    local open = build({ preview = nil })
+    assert(open() == false, "no key and no preview reports failure")
+  end
+
   test_opens_the_window_on_the_previewed_whisper()
   test_competitive_content_refuses_to_open()
   test_mythic_lockdown_refuses_to_open()
   test_no_preview_at_click_time_opens_nothing()
+  test_open_with_a_key_selects_that_chat_not_the_latest()
+  test_refused_open_returns_false()
+  test_open_without_a_key_or_preview_returns_false()
 end

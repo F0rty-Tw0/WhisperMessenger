@@ -11,21 +11,25 @@ local PreviewOpen = {}
 -- the whisper it shows. Same refusals as OpenConversation. Opening the window
 -- acknowledges the preview and the selection's refresh clears it. runtime
 -- members are read at click time: they are bound after this is built.
+-- An explicit conversationKey (the reply card's held chat) wins over the
+-- latest preview. Returns true when the chat was opened.
 function PreviewOpen.Create(options)
   local runtime = options.runtime
   local buildContacts = options.buildContacts
   local buildLatestIncomingPreview = options.buildLatestIncomingPreview
   local selectConversation = options.selectConversation
 
-  return function()
+  return function(conversationKey)
     if Guards.IsRefused(runtime) then
-      return
+      return false
     end
 
-    local preview = buildLatestIncomingPreview(buildContacts())
-    local conversationKey = preview and preview.conversationKey or nil
     if conversationKey == nil then
-      return
+      local preview = buildLatestIncomingPreview(buildContacts())
+      conversationKey = preview and preview.conversationKey or nil
+    end
+    if conversationKey == nil then
+      return false
     end
 
     runtime.ensureWindow()
@@ -43,6 +47,7 @@ function PreviewOpen.Create(options)
       window.setTabMode("whispers")
     end
     selectConversation(conversationKey)
+    return true
   end
 end
 
