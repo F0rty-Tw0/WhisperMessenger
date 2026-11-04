@@ -47,6 +47,7 @@ local function lockReason(runtime)
   end
   return nil
 end
+SendHandler.LockReason = lockReason
 
 local function isBattleTag(value)
   return type(value) == "string" and string.match(value, "^[^#]+#%d+$") ~= nil
