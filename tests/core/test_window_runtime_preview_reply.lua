@@ -174,6 +174,15 @@ return function()
     assert(trackers.windowCreates == 0, "submit never builds the window, got " .. trackers.windowCreates)
   end
 
+  local function test_submit_acknowledges_the_widget_preview()
+    local options, runtime, trackers = build()
+    WindowRuntime.Create(options)
+    local quickReply = trackers.capturedIconOptions.quickReply
+    quickReply.onSubmit({ conversationKey = CONVERSATION_KEY, sentAt = 7, channel = "WOW" }, "hi")
+    local acknowledgedAt = runtime.accountState.widgetPreviewAcknowledgedAt
+    assert(acknowledgedAt == 7, "submit acknowledges the preview through its sentAt, got " .. tostring(acknowledgedAt))
+  end
+
   local function test_is_enabled_follows_account_setting()
     local options, runtime, trackers = build()
     WindowRuntime.Create(options)
@@ -185,5 +194,6 @@ return function()
 
   test_both_icons_get_the_same_quick_reply_table()
   test_submit_sends_through_window_callbacks()
+  test_submit_acknowledges_the_widget_preview()
   test_is_enabled_follows_account_setting()
 end
