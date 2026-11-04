@@ -192,6 +192,7 @@ function SettingsPanels.Create(factory, options)
         showWidgetMessagePreview = settingsConfig.showWidgetMessagePreview,
         widgetPreviewAutoDismissSeconds = settingsConfig.widgetPreviewAutoDismissSeconds,
         widgetPreviewPosition = settingsConfig.widgetPreviewPosition,
+        widgetPreviewReply = settingsConfig.widgetPreviewReply,
         iconMode = settingsConfig.iconMode,
       },
     },

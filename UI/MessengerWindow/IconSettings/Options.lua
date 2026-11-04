@@ -18,6 +18,7 @@ Options.DEFAULTS = {
   shareWidgetPosition = false,
   widgetTransparency = 0,
   showWidgetMessagePreview = true,
+  widgetPreviewReply = false,
   widgetPreviewAutoDismissSeconds = 30,
   widgetPreviewPosition = "right",
   iconMode = "widget",

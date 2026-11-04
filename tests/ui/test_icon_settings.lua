@@ -232,6 +232,7 @@ return function()
       widgetTransparency = 0,
       widgetPreviewAutoDismissSeconds = 30,
       widgetPreviewPosition = "right",
+      widgetPreviewReply = false,
     }
     local resetCount = 0
     for key, value in pairs(changes) do
@@ -241,7 +242,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 12, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit twelve icon/widget keys")
+    assert(resetCount == 13, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit thirteen icon/widget keys")
   end
 
   -- test_square_background_is_disabled_unless_the_square_widget_is_in_use

@@ -11,7 +11,8 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local Options = ns.IconSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.IconSettings.Options")
 
 -- The Icons panel rows for how unread whispers show on the widget: badge,
--- badge pulse, message preview, its auto-dismiss delay and its position.
+-- badge pulse, message preview, the reply row under it, its auto-dismiss
+-- delay and its position.
 local UnreadRows = {}
 
 local DEFAULTS = Options.DEFAULTS
@@ -50,6 +51,8 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
   )
   badgePulseToggle.row:SetPoint("TOPLEFT", showBadgeToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
+  -- Set once the reply toggle exists; the preview toggle calls it on change.
+  local refreshReplyAvailability
   local widgetMessagePreviewToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -60,6 +63,7 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
       toggleLayout,
       function(value)
         onChange("showWidgetMessagePreview", value)
+        refreshReplyAvailability(value)
       end,
       {
         text("Show widget message preview"),
@@ -69,6 +73,45 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
     { type = "toggle", key = "showWidgetMessagePreview", default = DEFAULTS.showWidgetMessagePreview }
   )
   widgetMessagePreviewToggle.row:SetPoint("TOPLEFT", badgePulseToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local widgetPreviewReplyToggle = panel:bind(
+    UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text("Reply from widget preview"),
+      config.widgetPreviewReply == true,
+      toggleColors,
+      toggleLayout,
+      function(value)
+        onChange("widgetPreviewReply", value)
+      end,
+      {
+        text("Reply from widget preview"),
+        text("Adds a small reply box under the widget message preview. Press Enter to send."),
+      }
+    ),
+    {
+      type = "toggle",
+      key = "widgetPreviewReply",
+      default = DEFAULTS.widgetPreviewReply,
+      -- The preview toggle's reset never fires its row callback, so the
+      -- reply toggle's availability follows the preview default here.
+      reset = function(control, onReset)
+        control.setValue(DEFAULTS.widgetPreviewReply)
+        if onReset then
+          onReset("widgetPreviewReply", DEFAULTS.widgetPreviewReply)
+        end
+        refreshReplyAvailability(DEFAULTS.showWidgetMessagePreview ~= false)
+      end,
+    }
+  )
+  widgetPreviewReplyToggle.row:SetPoint("TOPLEFT", widgetMessagePreviewToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  -- Moot while the preview is off; keeps its value meanwhile.
+  local replyAvailability = UIHelpers.attachDisabledState(factory, widgetPreviewReplyToggle.row)
+  refreshReplyAvailability = function(previewOn)
+    replyAvailability.set(previewOn, not previewOn and text('Turn on "Show widget message preview" to use this.') or nil)
+  end
+  refreshReplyAvailability(config.showWidgetMessagePreview ~= false)
 
   local initialAutoDismiss = tonumber(config.widgetPreviewAutoDismissSeconds)
   if initialAutoDismiss == nil then
@@ -88,7 +131,7 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
     }),
     { type = "slider", key = "widgetPreviewAutoDismissSeconds", default = DEFAULTS.widgetPreviewAutoDismissSeconds }
   )
-  autoDismissRow.row:SetPoint("TOPLEFT", widgetMessagePreviewToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  autoDismissRow.row:SetPoint("TOPLEFT", widgetPreviewReplyToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local positionSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
@@ -115,6 +158,7 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
     showBadgeToggle.label:SetText(text("Show unread badge"))
     badgePulseToggle.label:SetText(text("Badge pulse animation"))
     widgetMessagePreviewToggle.label:SetText(text("Show widget message preview"))
+    widgetPreviewReplyToggle.label:SetText(text("Reply from widget preview"))
     autoDismissRow.label:SetText(text("Auto-dismiss widget preview"))
     positionSelector.label:SetText(text("Widget preview position"))
     positionSelector.setOptionsList(Options.BuildPositionOptions())
@@ -124,6 +168,8 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
     showBadgeToggle = showBadgeToggle,
     badgePulseToggle = badgePulseToggle,
     widgetMessagePreviewToggle = widgetMessagePreviewToggle,
+    widgetPreviewReplyToggle = widgetPreviewReplyToggle,
+    widgetPreviewReplyAvailability = replyAvailability,
     autoDismissRow = autoDismissRow,
     positionSelector = positionSelector,
     setLanguage = setLanguage,

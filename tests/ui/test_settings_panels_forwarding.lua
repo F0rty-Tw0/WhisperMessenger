@@ -81,6 +81,7 @@ return function()
     widgetPreviewAutoDismissSeconds = 15,
     iconMode = "both",
     widgetPreviewPosition = "top",
+    widgetPreviewReply = true,
   }
 
   local filters = { ignored = {}, rules = {} }
@@ -212,4 +213,6 @@ return function()
     iconsCapture.config.widgetPreviewPosition == "top",
     "expected icons config.widgetPreviewPosition=top, got: " .. tostring(iconsCapture.config.widgetPreviewPosition)
   )
+  -- test_icons_config_carries_saved_widget_preview_reply
+  assert(iconsCapture.config.widgetPreviewReply == true, "icons config should carry widgetPreviewReply")
 end

@@ -21,7 +21,7 @@ return function()
       rowSpacing = -8,
       anchor = anchor,
     })
-    return frame, rows, anchor
+    return frame, rows, anchor, panel
   end
 
   -- test_first_row_hangs_below_anchor
@@ -51,5 +51,65 @@ return function()
     local frame = build({ widgetPreviewPosition = "left" })
     local buttons = FindUI.selectorButtons(frame, "Widget preview position")
     assert(#buttons == 4, "test_position_selector_offers_four_sides: got " .. tostring(#buttons))
+  end
+
+  local REPLY_LABEL = "Reply from widget preview"
+  local PREVIEW_OFF = { showWidgetMessagePreview = false }
+
+  -- test_reply_toggle_defaults_off_and_writes_its_key
+
+  do
+    local changedKey, changedValue
+    local frame = build({}, function(key, value)
+      changedKey, changedValue = key, value
+    end)
+    FindUI.click(FindUI.toggle(frame, REPLY_LABEL))
+    assert(changedKey == "widgetPreviewReply", "test_reply_toggle_defaults_off_and_writes_its_key: got " .. tostring(changedKey))
+    assert(changedValue == true, "test_reply_toggle_defaults_off_and_writes_its_key: starts off, so a click turns it on")
+  end
+
+  -- test_reply_toggle_shows_saved_value
+
+  do
+    local frame = build({ widgetPreviewReply = true })
+    assert(FindUI.isToggleOn(FindUI.toggle(frame, REPLY_LABEL)), "test_reply_toggle_shows_saved_value: a saved true reads on")
+  end
+
+  -- test_reply_toggle_disabled_while_preview_off
+
+  do
+    local _, rows = build(PREVIEW_OFF)
+    assert(rows.widgetPreviewReplyAvailability.isEnabled() == false, "test_reply_toggle_disabled_while_preview_off")
+  end
+
+  -- test_turning_preview_on_enables_reply_toggle
+
+  do
+    local frame, rows = build(PREVIEW_OFF)
+    FindUI.click(FindUI.toggle(frame, "Show widget message preview"))
+    assert(rows.widgetPreviewReplyAvailability.isEnabled() == true, "test_turning_preview_on_enables_reply_toggle")
+  end
+
+  -- test_reset_reenables_reply_toggle
+
+  do
+    local _, rows, _, panel = build(PREVIEW_OFF)
+    local resetValues = {}
+    panel:reset(function(key, value)
+      resetValues[key] = value
+    end)
+    assert(
+      rows.widgetPreviewReplyAvailability.isEnabled() == true,
+      "test_reset_reenables_reply_toggle: the reset preview re-enables the reply toggle"
+    )
+    assert(resetValues.widgetPreviewReply == false, "test_reset_reenables_reply_toggle: reset writes the reply default")
+  end
+
+  -- test_auto_dismiss_row_sits_under_reply_toggle
+
+  do
+    local _, rows = build({})
+    local point = rows.autoDismissRow.row.points[1]
+    assert(point[2] == rows.widgetPreviewReplyToggle.row, "test_auto_dismiss_row_sits_under_reply_toggle")
   end
 end
