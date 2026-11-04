@@ -36,6 +36,29 @@ return function()
     assertPoint(state.card.classIconFrame, { "LEFT", frame, "LEFT", PreviewMetrics.LEFT_PAD, 0 }, "row hidden")
   end
 
+  local function countClearAllPoints(frame)
+    local counter = { calls = 0 }
+    local original = frame.ClearAllPoints
+    frame.ClearAllPoints = function(...)
+      counter.calls = counter.calls + 1
+      return original(...)
+    end
+    return counter
+  end
+
+  local function test_same_shape_update_keeps_the_icon_anchor()
+    local state = Card.Build()
+    showWithoutRow(state)
+    local plainCounter = countClearAllPoints(state.card.classIconFrame)
+    state.card.setIncomingPreview("Jaina", "Still there?", "MAGE", nil)
+    assert(plainCounter.calls == 0, "a plain card update keeps the icon anchor, got " .. plainCounter.calls)
+    Card.ShowJaina(state)
+    local rowCounter = countClearAllPoints(state.card.classIconFrame)
+    Card.ShowJaina(state, Card.Jaina(600))
+    assert(rowCounter.calls == 0, "a same-size row update keeps the icon anchor, got " .. rowCounter.calls)
+  end
+
   test_row_adds_its_height_and_centers_the_icon_on_the_text()
   test_update_without_meta_restores_the_plain_card()
+  test_same_shape_update_keeps_the_icon_anchor()
 end

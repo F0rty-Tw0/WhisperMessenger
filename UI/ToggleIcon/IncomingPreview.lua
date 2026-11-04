@@ -177,10 +177,12 @@ function IncomingPreview.Create(factory, frame, options)
     positioner.apply(positioner.resolve())
   end
 
+  -- The create-time anchor above is the plain card's.
+  local classIconAnchor = false
   local function fitWidth()
     local replyHeight = hold.rowHeight()
     PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel, detailRow.shownLabel(), replyHeight)
-    PreviewMetrics.AnchorClassIcon(previewClassIconFrame, previewFrame, replyHeight)
+    classIconAnchor = PreviewMetrics.AnchorClassIcon(previewClassIconFrame, previewFrame, replyHeight, classIconAnchor)
   end
 
   -- meta (optional) = { conversationKey, sentAt, channel } for the reply row.

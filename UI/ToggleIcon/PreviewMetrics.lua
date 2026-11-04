@@ -150,14 +150,24 @@ function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel,
 end
 
 -- Centers the class icon on the text, above the reply row while it shows.
-function PreviewMetrics.AnchorClassIcon(iconFrame, previewFrame, replyHeight)
-  iconFrame:ClearAllPoints()
-  if not replyHeight or replyHeight <= 0 then
-    iconFrame:SetPoint("LEFT", previewFrame, "LEFT", M.LEFT_PAD, 0)
-    return
+-- Returns the anchor it holds (false = plain card, a number = the row's y
+-- offset); pass it back as lastAnchor to skip an unchanged re-anchor.
+function PreviewMetrics.AnchorClassIcon(iconFrame, previewFrame, replyHeight, lastAnchor)
+  ---@type number|false
+  local anchor = false
+  if replyHeight and replyHeight > 0 then
+    anchor = -(previewFrame:GetHeight() - replyHeight) / 2
   end
-  local textHeight = previewFrame:GetHeight() - replyHeight
-  iconFrame:SetPoint("LEFT", previewFrame, "TOPLEFT", M.LEFT_PAD, -textHeight / 2)
+  if anchor == lastAnchor then
+    return anchor
+  end
+  iconFrame:ClearAllPoints()
+  if anchor == false then
+    iconFrame:SetPoint("LEFT", previewFrame, "LEFT", M.LEFT_PAD, 0)
+  else
+    iconFrame:SetPoint("LEFT", previewFrame, "TOPLEFT", M.LEFT_PAD, anchor)
+  end
+  return anchor
 end
 
 ns.ToggleIconPreviewMetrics = PreviewMetrics
