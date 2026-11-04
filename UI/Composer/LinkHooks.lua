@@ -203,7 +203,10 @@ local function attachFocusGuards(input)
     return
   end
   input:HookScript("OnEditFocusGained", function()
-    installOverrides()
+    -- An input whose own script refused the focus (ClearFocus) has none by now.
+    if isInputFocused(input) then
+      installOverrides()
+    end
   end)
   input:HookScript("OnEditFocusLost", function()
     if not anyLinkedInputFocused() then

@@ -139,6 +139,19 @@ return function()
     assert(input.lastInsert ~= nil, "SetItemRef hook should insert when focused")
   end
 
+  -- test_refused_focus_does_not_install_overrides
+  -- (an input whose own OnEditFocusGained script calls ClearFocus — a disabled
+  --  or locked preview reply row — has lost focus by the time this post-hook
+  --  runs; installing then would strand the overrides with nothing focused.)
+
+  do
+    reset()
+    input.focused = false
+    fire("OnEditFocusGained")
+    assert(_G.ChatEdit_GetActiveWindow == originalGetActiveWindow, "a refused focus must not override ChatEdit_GetActiveWindow")
+    assert(_G.ChatEdit_InsertLink == originalInsertLink, "a refused focus must not override ChatEdit_InsertLink")
+  end
+
   -- Cleanup global state
   _G.hooksecurefunc = savedHook
   _G.SetItemRef = savedSetItemRef
