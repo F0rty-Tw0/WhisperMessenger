@@ -198,10 +198,7 @@ return function()
     "expected icons config.showUnreadBadge=false, got: " .. tostring(iconsCapture.config.showUnreadBadge)
   )
   assert(iconsCapture.config.badgePulse == false, "expected icons config.badgePulse=false, got: " .. tostring(iconsCapture.config.badgePulse))
-  assert(
-    iconsCapture.config.showWidgetMessagePreview == false,
-    "expected icons config.showWidgetMessagePreview=false, got: " .. tostring(iconsCapture.config.showWidgetMessagePreview)
-  )
+  assert(iconsCapture.config.showWidgetMessagePreview == nil, "preview key moved off the Icons page")
   assert(iconsCapture.config.transparentWidget == nil, "Icons config should not include transparentWidget")
   assert(
     iconsCapture.config.widgetTransparency == 0.4,
@@ -215,6 +212,5 @@ return function()
     iconsCapture.config.widgetPreviewPosition == "top",
     "expected icons config.widgetPreviewPosition=top, got: " .. tostring(iconsCapture.config.widgetPreviewPosition)
   )
-  -- test_icons_config_carries_saved_widget_preview_reply
-  assert(iconsCapture.config.widgetPreviewReply == true, "icons config should carry widgetPreviewReply")
+  assert(iconsCapture.config.widgetPreviewReply == nil, "reply key moved off the Icons page")
 end
