@@ -183,6 +183,7 @@ function SettingsHandler.Create(options)
         or key == "hideBattleTagNumbers"
         or key == "showPlayerLevels"
         or key == "showWidgetMessagePreview"
+        or key == "widgetPreviewReply"
         or key == "fontFamily"
         or key == "fontSize"
         or key == "fontOutline"

@@ -50,6 +50,21 @@ return function()
     assert(Card.Input(s):HasFocus() == false, "the input drops focus")
   end
 
+  local function test_lock_found_at_focus_while_stale_refreshes_once()
+    local s = Card.Build()
+    Card.ShowJaina(s)
+    Card.Focus(s)
+    Card.TypeText(s, "brb")
+    Card.Blur(s)
+    Card.ShowThrall(s)
+    assert(Card.Sender(s) == "Jaina", "the typed text holds Jaina")
+    s.opts.lock = "Mythic Lockdown"
+    Card.Focus(s)
+    assert(#s.calls.saveDraft == 1 and s.calls.saveDraft[1].text == "brb", "the text becomes a draft")
+    assert(row(s).isEnabled() == false, "the row is disabled")
+    assert(s.calls.refresh == 1, "the stale card refreshes once, got " .. s.calls.refresh)
+  end
+
   local function test_disabled_click_with_lock_gone_enables_and_focuses()
     local s = lockedCard()
     s.opts.lock = nil
@@ -72,6 +87,33 @@ return function()
     s.opts.lock = nil
     Card.ShowJaina(s, Card.Jaina(600))
     assert(row(s).isEnabled() == true, "the next update lifts the lock")
+  end
+
+  local function countSetEnabled(s)
+    local counter = { calls = 0 }
+    local original = row(s).setEnabled
+    row(s).setEnabled = function(...)
+      counter.calls = counter.calls + 1
+      return original(...)
+    end
+    return counter
+  end
+
+  local function test_same_lock_on_next_update_skips_the_repaint()
+    local s = lockedCard()
+    local counter = countSetEnabled(s)
+    Card.ShowJaina(s, Card.Jaina(600))
+    assert(counter.calls == 0, "an unchanged lock does not repaint the row, got " .. counter.calls)
+    assert(row(s).isEnabled() == false, "the row stays disabled")
+  end
+
+  local function test_changed_lock_reason_repaints_the_row()
+    local s = lockedCard()
+    local counter = countSetEnabled(s)
+    s.opts.lock = "In combat"
+    Card.ShowJaina(s, Card.Jaina(600))
+    assert(counter.calls == 1, "a new reason repaints once, got " .. counter.calls)
+    assert(row(s).placeholder:GetText() == "In combat", "the placeholder shows the new reason")
   end
 
   local function test_timer_paused_while_holding_and_rescheduled_at_hold_end()
@@ -141,9 +183,12 @@ return function()
   test_lock_while_holding_stashes_and_disables()
   test_lock_stash_after_an_ignored_update_does_not_refresh()
   test_lock_found_at_focus_disables()
+  test_lock_found_at_focus_while_stale_refreshes_once()
   test_disabled_click_with_lock_gone_enables_and_focuses()
   test_disabled_click_while_locked_stays_disabled()
   test_lock_lifts_on_next_update()
+  test_same_lock_on_next_update_skips_the_repaint()
+  test_changed_lock_reason_repaints_the_row()
   test_timer_paused_while_holding_and_rescheduled_at_hold_end()
   test_setting_turned_off_while_holding()
   test_setting_off_while_holding_applies_another_chat()

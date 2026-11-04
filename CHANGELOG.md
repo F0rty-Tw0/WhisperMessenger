@@ -24,6 +24,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The messenger does less background work while closed when your Battle.net friends log in, log out, or change zones or characters.
 - Fixed: Replying to your last whisper no longer opens an empty chat when that chat was deleted, cleared with Clear all chats, or removed by message history cleanup.
 - Show player levels now sits at the top of the General settings page instead of Appearance. Your choice is kept.
+- New option on the Icons page: reply from the widget preview. Answer a whisper straight from the widget's message preview without opening the window.
 
 ## [2.1.2] - 2026-10-30
 

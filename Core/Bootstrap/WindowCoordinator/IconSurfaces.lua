@@ -92,14 +92,14 @@ function IconSurfaces.Update(contacts, surfaces)
   IconSurfaces.ShowCounts(total, unread, icon, minimap, surfaces.getLdbObject())
   setCount(surfaces.getCompartment and surfaces.getCompartment(), total, unread)
   if icon and icon.setIncomingPreview and not showExternalPreview(icon, preview, surfaces) then
-    icon.setIncomingPreview(previewSender, previewText, previewClass)
+    icon.setIncomingPreview(previewSender, previewText, previewClass, preview)
   end
 
   if minimap and minimap.setIncomingPreview then
     -- The minimap preview floats on UIParent, so it must not pop (or
     -- linger) while the minimap icon itself is hidden (icon mode "widget").
     if not minimap.isShown or minimap.isShown() then
-      minimap.setIncomingPreview(previewSender, previewText, previewClass)
+      minimap.setIncomingPreview(previewSender, previewText, previewClass, preview)
     else
       minimap.setIncomingPreview(nil, nil, nil)
     end

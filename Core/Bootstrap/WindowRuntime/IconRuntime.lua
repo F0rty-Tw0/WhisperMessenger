@@ -37,7 +37,12 @@ local function initializeIconState(icon, contacts, panelRegistry, buildLatestInc
 
   if icon and icon.setIncomingPreview then
     local preview = buildLatestIncomingPreview(contacts)
-    icon.setIncomingPreview(preview and preview.senderName or nil, preview and preview.messageText or nil, preview and preview.classTag or nil)
+    icon.setIncomingPreview(
+      preview and preview.senderName or nil,
+      preview and preview.messageText or nil,
+      preview and preview.classTag or nil,
+      preview
+    )
   end
 end
 
@@ -123,6 +128,7 @@ function IconRuntime.Create(options)
     end,
     onDismissPreview = dismissWidgetPreview,
     onOpenPreview = options.onOpenPreview,
+    quickReply = options.quickReply,
   })
 
   initializeIconState(icon, buildContacts(), runtime.panelRegistry, buildLatestIncomingPreview)

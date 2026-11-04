@@ -93,8 +93,8 @@ local function stringWidthOf(fontString)
 end
 
 -- Tall enough for every line at the player's Font Size, never below HEIGHT
--- (plus DETAIL_ROW_HEIGHT when the detail line shows).
-local function fitHeight(previewFrame, senderLabel, messageLabel, detailLabel)
+-- (plus DETAIL_ROW_HEIGHT when the detail line shows), then the reply row under it.
+local function fitHeight(previewFrame, senderLabel, messageLabel, detailLabel, replyHeight)
   if not previewFrame.SetHeight then
     return
   end
@@ -108,7 +108,7 @@ local function fitHeight(previewFrame, senderLabel, messageLabel, detailLabel)
     needed = needed - M.DETAIL_GAP + measureOf(detailLabel, "GetStringHeight")
     floor = floor + M.DETAIL_ROW_HEIGHT
   end
-  previewFrame:SetHeight(needed > floor and needed or floor)
+  previewFrame:SetHeight((needed > floor and needed or floor) + replyHeight)
 end
 
 -- Gives the label its width budget; returns its text width, capped at that budget.
@@ -120,8 +120,10 @@ local function cappedWidthOf(label, budget)
   return width > budget and budget or width
 end
 
--- detailLabel: pass it only while the detail line shows.
-function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel, detailLabel)
+-- detailLabel: pass it only while the detail line shows. replyHeight: the
+-- reply row's height while it shows; nil or 0 keeps the plain card.
+function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel, detailLabel, replyHeight)
+  replyHeight = replyHeight or 0
   local textLeft = M.LEFT_PAD + M.CLASS_ICON_SIZE + M.ICON_GAP
   local maxMessageBudget = M.MAX_WIDTH - textLeft - M.RIGHT_PAD
   local maxSenderBudget = maxMessageBudget - M.DISMISS_GAP - M.DISMISS_SIZE
@@ -140,8 +142,31 @@ function PreviewMetrics.ResizeToContent(previewFrame, senderLabel, messageLabel,
   elseif total > M.MAX_WIDTH then
     total = M.MAX_WIDTH
   end
+  if replyHeight > 0 and total < M.REPLY_MIN_WIDTH then
+    total = M.REPLY_MIN_WIDTH
+  end
   previewFrame:SetWidth(total)
-  fitHeight(previewFrame, senderLabel, messageLabel, detailLabel)
+  fitHeight(previewFrame, senderLabel, messageLabel, detailLabel, replyHeight)
+end
+
+-- Centers the class icon on the text, above the reply row while it shows.
+-- Returns its anchor (false = plain, else y offset); pass it back as lastAnchor.
+function PreviewMetrics.AnchorClassIcon(iconFrame, previewFrame, replyHeight, lastAnchor)
+  ---@type number|false
+  local anchor = false
+  if replyHeight and replyHeight > 0 then
+    anchor = -(previewFrame:GetHeight() - replyHeight) / 2
+  end
+  if anchor == lastAnchor then
+    return anchor
+  end
+  iconFrame:ClearAllPoints()
+  if anchor == false then
+    iconFrame:SetPoint("LEFT", previewFrame, "LEFT", M.LEFT_PAD, 0)
+  else
+    iconFrame:SetPoint("LEFT", previewFrame, "TOPLEFT", M.LEFT_PAD, anchor)
+  end
+  return anchor
 end
 
 ns.ToggleIconPreviewMetrics = PreviewMetrics

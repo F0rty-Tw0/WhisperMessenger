@@ -177,6 +177,38 @@ return function()
     assert(Card.Sender(s) == "Thrall", "the card is not frozen, got " .. tostring(Card.Sender(s)))
   end
 
+  local function test_open_error_resets_opening()
+    local s = Card.Build({
+      open = function()
+        error("open exploded", 0)
+      end,
+    })
+    Card.ShowJaina(s)
+    Card.Focus(s)
+    Card.TypeText(s, "brb")
+    local ok, err = pcall(Card.Fire, s.card.frame, "OnMouseUp", "LeftButton")
+    assert(ok == false and tostring(err):find("open exploded", 1, true), "the error surfaces, got " .. tostring(err))
+    Card.TypeText(s, "later")
+    s.card.setIncomingPreview(nil)
+    assert(#s.calls.saveDraft == 1, "one draft saved after the failed open, got " .. #s.calls.saveDraft)
+    assert(s.calls.saveDraft[1].text == "later", "the draft is the new text, got " .. tostring(s.calls.saveDraft[1].text))
+  end
+
+  local function test_switching_chat_retargets_the_row_limit()
+    local s = Card.Build()
+    Card.ShowJaina(s)
+    local row = s.card.replyHold.row
+    local setTarget = row.setTarget
+    local targets = {}
+    row.setTarget = function(channel)
+      targets[#targets + 1] = channel
+      return setTarget(channel)
+    end
+    s.card.setIncomingPreview("Thrall", "Lok'tar", "SHAMAN", { conversationKey = "bnet::thrall", sentAt = 510, channel = "BN" })
+    assert(Card.Sender(s) == "Thrall", "the other chat applies, got " .. tostring(Card.Sender(s)))
+    assert(targets[#targets] == "BN", "the row retargets to BN, got " .. tostring(targets[#targets]))
+  end
+
   test_row_shows_only_with_setting_meta_and_own_preview()
   test_setting_off_creates_no_input()
   test_other_conversation_ignored_while_holding_then_one_refresh_on_blur()
@@ -190,4 +222,6 @@ return function()
   test_refused_body_click_keeps_text()
   test_body_click_open_reentry_writes_no_second_draft()
   test_submit_error_resets_submitting()
+  test_open_error_resets_opening()
+  test_switching_chat_retargets_the_row_limit()
 end
