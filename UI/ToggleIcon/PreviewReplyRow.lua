@@ -182,7 +182,6 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
     if enabled then
       placeholder:SetText(Localization.Text("Reply…"))
     else
-      input:ClearFocus()
       placeholder:SetText(type(reasonText) == "string" and reasonText or "")
     end
     if input.EnableMouse then
@@ -190,6 +189,10 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
     end
     cover:SetShown(not enabled)
     paint()
+    -- Last: dropping focus can re-enter setEnabled through onHoldChanged.
+    if not enabled then
+      input:ClearFocus()
+    end
     syncHold()
   end
 
@@ -212,6 +215,9 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   end
 
   function row.setShown(shown)
+    if shown ~= true then
+      input:ClearFocus()
+    end
     rowFrame:SetShown(shown == true)
   end
 

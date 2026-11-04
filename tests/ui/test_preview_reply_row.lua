@@ -1,7 +1,6 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local LinkHooks = require("WhisperMessenger.UI.Composer.LinkHooks")
 local ComposerLimit = require("WhisperMessenger.UI.Composer.ComposerLimit")
-local PreviewMetrics = require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local PreviewReplyRow = require("WhisperMessenger.UI.ToggleIcon.PreviewReplyRow")
 
 local function build()
@@ -16,6 +15,9 @@ local function build()
     end,
     onHoldChanged = function(holding)
       log.holds[#log.holds + 1] = holding
+      if log.onHold then
+        log.onHold(holding)
+      end
     end,
     onFocusGained = function()
       log.focusGained = log.focusGained + 1
@@ -159,9 +161,36 @@ return function()
     assert(log.row.input.autoFocus == false, "the input never takes focus on show")
   end
 
-  local function test_height_is_row_plus_gap()
+  local function test_clear_ends_the_hold_without_a_focus_event()
     local log = build()
-    assert(log.row.height() == PreviewMetrics.REPLY_ROW_HEIGHT + PreviewMetrics.REPLY_ROW_GAP, "height is row plus gap")
+    typeText(log.row, "hi")
+    log.row.input.ClearFocus = function(self)
+      self._hasFocus = false
+    end
+    log.row.clear()
+    assert(#log.holds == 2 and log.holds[2] == false, "clear ends the hold itself, got " .. #log.holds .. " events")
+  end
+
+  local function test_hiding_the_row_drops_focus()
+    local log = build()
+    log.row.input:SetFocus()
+    log.row.setShown(false)
+    assert(log.row.input:HasFocus() == false, "a hidden row keeps no focus")
+  end
+
+  local function test_disable_reentry_leaves_a_consistent_row()
+    local log = build()
+    log.row.input:SetFocus()
+    log.onHold = function(holding)
+      if holding == false then
+        log.onHold = nil
+        log.row.setEnabled(true)
+      end
+    end
+    log.row.setEnabled(false, "Mythic Lockdown")
+    assert(log.row.isEnabled() == true, "the inner enable wins")
+    assert(not log.row.cover:IsShown(), "no cover on an enabled row")
+    assert(log.row.placeholder:GetText() == "Reply…", "an enabled row shows the placeholder, got " .. tostring(log.row.placeholder:GetText()))
   end
 
   test_enter_submits_raw_text_and_keeps_it()
@@ -175,5 +204,7 @@ return function()
   test_input_registers_with_link_hooks()
   test_secret_text_reads_as_empty()
   test_no_auto_focus()
-  test_height_is_row_plus_gap()
+  test_clear_ends_the_hold_without_a_focus_event()
+  test_hiding_the_row_drops_focus()
+  test_disable_reentry_leaves_a_consistent_row()
 end
