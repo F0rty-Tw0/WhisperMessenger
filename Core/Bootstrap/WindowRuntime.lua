@@ -39,6 +39,8 @@ local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMess
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local IconToggle = ns.BootstrapWindowRuntimeIconToggle or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconToggle")
 local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewOpen")
+local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
@@ -388,6 +390,16 @@ function WindowRuntime.Create(options)
     buildLatestIncomingPreview = buildLatestIncomingPreview,
     selectConversation = selectConversation,
   })
+  local previewReply = PreviewReplyRuntime.Create({
+    runtime = runtime,
+    accountState = accountState,
+    buildContacts = buildContacts,
+    onSend = windowCallbacks.onSend,
+    setDraft = windowCallbacks.onDraftChanged,
+    acknowledgeThrough = widgetPreview.acknowledgeWidgetPreviewThrough,
+    refreshWindow = refreshWindow,
+    openConversation = onOpenPreview,
+  })
 
   ensureIcon = function()
     if icon then
@@ -407,6 +419,7 @@ function WindowRuntime.Create(options)
       onToggle = onIconToggle,
       onOpenPreview = onOpenPreview,
       onMarkAllRead = windowCallbacks.onMarkAllRead,
+      quickReply = previewReply.quickReply,
     })
     runtime.icon = icon
     return icon
@@ -428,6 +441,7 @@ function WindowRuntime.Create(options)
       onToggle = onIconToggle,
       onOpenPreview = onOpenPreview,
       onMarkAllRead = windowCallbacks.onMarkAllRead,
+      quickReply = previewReply.quickReply,
     })
     minimapIcon = minimapRuntime.minimapIcon
     return minimapRuntime
