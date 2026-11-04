@@ -22,7 +22,7 @@ local TEXT_INSET = 8
 local SEND_GAP = 2
 local COVER_LEVEL_LIFT = 5
 
-local function noop() end
+local function noop(_) end
 
 local function createInput(factory, rowFrame, theme)
   local input = factory.CreateFrame("EditBox", nil, rowFrame)
