@@ -72,7 +72,7 @@ local function build(overrides)
     end,
     openConversation = function(key)
       log[#log + 1] = "open:" .. key
-      return true
+      return overrides.openResult ~= false
     end,
   })
   return reply, log, sent, accountState
@@ -186,6 +186,17 @@ return function()
     assert(table.concat(blankLog, ",") == "open:" .. key, "whitespace writes no draft, got " .. table.concat(blankLog, ","))
   end
 
+  local function test_open_reports_false_when_the_chat_does_not_open()
+    local reply = build({ openResult = false })
+    assert(reply.open(metaFor(WOW), "hi") == false, "a failed open reports false")
+  end
+
+  local function test_open_without_key_returns_false_without_draft()
+    local reply, log = build()
+    assert(reply.open({ sentAt = 500, channel = "WOW" }, "hi") == false, "no key reports false")
+    assert(#log == 0, "no draft and no open, got " .. table.concat(log, ","))
+  end
+
   local function test_save_draft_writes_meta_key()
     local reply, log = build()
     reply.saveDraft(metaFor(WOW), "later")
@@ -231,6 +242,8 @@ return function()
   test_dismiss_through_acks_then_refreshes()
   test_open_refused_returns_false_without_draft()
   test_open_saves_text_then_opens_meta_key()
+  test_open_reports_false_when_the_chat_does_not_open()
+  test_open_without_key_returns_false_without_draft()
   test_save_draft_writes_meta_key()
   test_is_enabled_reads_the_live_setting()
   test_lock_reason_text_is_localized()

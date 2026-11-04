@@ -75,14 +75,14 @@ function PreviewReplyRuntime.Create(options)
   end
 
   local function open(meta, text)
-    if Guards.IsRefused(runtime) then
+    local key = meta.conversationKey
+    if key == nil or Guards.IsRefused(runtime) then
       return false
     end
     if Guards.IsNonEmptyString(text) then
-      setDraft(meta.conversationKey, text)
+      setDraft(key, text)
     end
-    openConversation(meta.conversationKey)
-    return true
+    return openConversation(key) == true
   end
 
   local quickReply = {
