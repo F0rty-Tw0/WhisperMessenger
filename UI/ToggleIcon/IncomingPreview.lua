@@ -12,6 +12,7 @@ local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
 local PreviewDetailRow = ns.ToggleIconPreviewDetailRow or require("WhisperMessenger.UI.ToggleIcon.PreviewDetailRow")
 local PreviewDismissButton = ns.ToggleIconPreviewDismissButton or require("WhisperMessenger.UI.ToggleIcon.PreviewDismissButton")
+local PreviewReplyHold = ns.ToggleIconPreviewReplyHold or require("WhisperMessenger.UI.ToggleIcon.PreviewReplyHold")
 local applyClassColor = UIHelpers.applyClassColor
 local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
@@ -62,6 +63,7 @@ function IncomingPreview.Create(factory, frame, options)
   previewFrame:Hide()
 
   local autoDismiss
+  local hold
   local lastPreviewSenderName = nil
   local lastPreviewMessageText = nil
   local lastPreviewClassTag = nil
@@ -75,6 +77,7 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function clearIncomingPreview()
+    hold.onCleared()
     local hadExternal = externalEntry ~= nil
     autoDismiss.cancel()
     lastPreviewSenderName, lastPreviewMessageText, lastPreviewClassTag = nil, nil, nil
@@ -98,6 +101,9 @@ function IncomingPreview.Create(factory, frame, options)
   -- The x and right-click: an external preview only tells its owner, so
   -- WM's own latest whisper is never acknowledged by it.
   local function dismissCurrent()
+    if hold.onDismiss() then
+      return
+    end
     local current = externalEntry
     if current == nil then
       triggerDismiss()
@@ -113,6 +119,12 @@ function IncomingPreview.Create(factory, frame, options)
       return not previewFrame.IsShown or previewFrame:IsShown()
     end,
     onExpire = triggerDismiss,
+  })
+  hold = PreviewReplyHold.Create(factory, previewFrame, {
+    theme = theme,
+    quickReply = options.quickReply,
+    autoDismiss = autoDismiss,
+    hideCard = clearIncomingPreview,
   })
 
   if dismiss.button.SetScript then
@@ -130,6 +142,8 @@ function IncomingPreview.Create(factory, frame, options)
         if externalEntry == current then
           clearIncomingPreview()
         end
+      elseif button == "LeftButton" and hold.onOpen() then
+        return
       elseif button == "LeftButton" and options.onOpenPreview then
         -- The owner acknowledges the whisper; the refresh then clears the preview.
         options.onOpenPreview()
@@ -167,9 +181,13 @@ function IncomingPreview.Create(factory, frame, options)
     PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel, detailRow.shownLabel())
   end
 
-  local function setIncomingPreview(senderName, messageText, classTag)
+  -- meta (optional) = { conversationKey, sentAt, channel } for the reply row.
+  local function setIncomingPreview(senderName, messageText, classTag, meta)
     local hadExternal = externalEntry ~= nil
     local hasMessage = type(messageText) == "string" and messageText ~= ""
+    if hold.route(hasMessage and meta or nil, false) == "ignore" then
+      return
+    end
     if not hasMessage then
       clearIncomingPreview()
       return
@@ -180,7 +198,6 @@ function IncomingPreview.Create(factory, frame, options)
 
     renderContent(senderName, messageText, classTag)
     previewFrame:Show()
-    fitWidth()
 
     if not isSameContent then
       lastPreviewSenderName = senderName
@@ -188,6 +205,8 @@ function IncomingPreview.Create(factory, frame, options)
       lastPreviewClassTag = classTag
       autoDismiss.schedule()
     end
+    hold.onApplied(meta)
+    fitWidth()
     notifyExternalChanged(hadExternal)
   end
 
@@ -202,6 +221,10 @@ function IncomingPreview.Create(factory, frame, options)
     if entry == externalEntry then
       return
     end
+    if hold.route(nil, true) == "ignore" then
+      return
+    end
+    hold.onCleared()
     autoDismiss.cancel()
     lastPreviewSenderName, lastPreviewMessageText, lastPreviewClassTag = nil, nil, nil
     externalEntry = entry
@@ -228,6 +251,7 @@ function IncomingPreview.Create(factory, frame, options)
     setTextColor(previewMessageLabel, theme.COLORS.text_secondary)
     setTextColor(detailRow.label, theme.COLORS.text_secondary)
     dismiss.applyTheme(theme)
+    hold.applyTheme(theme)
   end
 
   return {
@@ -244,6 +268,7 @@ function IncomingPreview.Create(factory, frame, options)
     isExternalShown = isExternalShown,
     applyPreviewPosition = positioner.apply,
     applyTheme = applyTheme,
+    replyHold = hold,
   }
 end
 
