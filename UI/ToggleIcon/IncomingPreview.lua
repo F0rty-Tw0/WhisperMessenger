@@ -178,7 +178,9 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function fitWidth()
-    PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel, detailRow.shownLabel())
+    local replyHeight = hold.rowHeight()
+    PreviewMetrics.ResizeToContent(previewFrame, previewSenderLabel, previewMessageLabel, detailRow.shownLabel(), replyHeight)
+    PreviewMetrics.AnchorClassIcon(previewClassIconFrame, previewFrame, replyHeight)
   end
 
   -- meta (optional) = { conversationKey, sentAt, channel } for the reply row.

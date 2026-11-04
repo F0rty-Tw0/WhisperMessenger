@@ -63,6 +63,13 @@ return function()
   M.ResizeToContent(tall, label(1), label(1), label(1))
   assert(tall.h == M.HEIGHT + M.DETAIL_ROW_HEIGHT, "the detail row adds one row, got " .. tostring(tall.h))
 
+  -- test_reply_row_adds_its_height
+  M.ResizeToContent(tall, label(1), label(1), nil, 28)
+  assert(tall.h == M.HEIGHT + 28, "the reply row adds its height, got " .. tostring(tall.h))
+
+  -- test_reply_row_widens_a_short_card
+  assert(tall.w >= M.REPLY_MIN_WIDTH and tall.w <= M.MAX_WIDTH, "a short card widens for the reply row, got " .. tostring(tall.w))
+
   local function anchored()
     return {
       ClearAllPoints = function(self)
