@@ -13,6 +13,8 @@ local WHISPER_LABELS = {
   "Share typing status",
   "Send read receipts",
   "Show invite link",
+  "Show widget message preview",
+  "Reply from widget preview",
 }
 
 local function create(config)
@@ -30,13 +32,13 @@ end
 return function()
   Localization.Configure({ language = "enUS" })
 
-  -- test_shows_exactly_the_eight_whisper_toggles
+  -- test_shows_exactly_the_ten_whisper_toggles
   do
     local result = create({})
     for _, label in ipairs(WHISPER_LABELS) do
       assert(FindUI.toggle(result.frame, label) ~= nil, "missing whisper toggle: " .. label)
     end
-    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 8 toggles, got " .. FindUI.countToggles(result.frame))
+    assert(FindUI.countToggles(result.frame) == #WHISPER_LABELS, "expected 10 toggles, got " .. FindUI.countToggles(result.frame))
   end
 
   -- test_behavior_no_longer_shows_whisper_toggles

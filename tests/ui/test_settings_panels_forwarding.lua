@@ -138,6 +138,8 @@ return function()
   assert(whispersCapture.config.showInviteLink == false, "whispers config should carry showInviteLink")
   assert(whispersCapture.config.closeGameWhisperTab == true, "whispers config should carry closeGameWhisperTab")
   assert(whispersCapture.config.addonGreetings == "hide", "whispers config should carry addonGreetings")
+  assert(whispersCapture.config.showWidgetMessagePreview == false, "whispers config should carry showWidgetMessagePreview")
+  assert(whispersCapture.config.widgetPreviewReply == true, "whispers config should carry widgetPreviewReply")
 
   -- Chats owns group chats and channels.
   assert(chatsCapture.config.showGroupChats == false, "chats config should carry showGroupChats")
