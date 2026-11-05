@@ -12,6 +12,7 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
+local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 
 local MinimapIcon = {}
 
@@ -112,10 +113,12 @@ function MinimapIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- The widget's face: dark circle with the front bubble. The minimap is always
-  -- round, so the back bubble takes no square check; paintBack shows and colors it.
+  -- The widget's face: dark circle with the front bubble, under the full gold ring.
+  -- The minimap is always round, so the back bubble takes no square check;
+  -- paintBack shows and colors it.
   local art = IconArt.Create(frame, ICON_SIZE)
   local iconTex = art.chatIcon
+  local border = IconBorder.Create(frame, { glyph = iconTex, glyphRatio = IconArt.GLYPH_RATIO, face = art.background })
   local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
@@ -257,6 +260,7 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshTheme()
+    border.paint(IconBorder.IsOn(options.getIconBorder) and "ring" or "none", IconBorder.IsOn(options.getIconBorderThemed))
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
@@ -271,6 +275,7 @@ function MinimapIcon.Create(factory, options)
     frame = frame,
     iconTex = iconTex,
     background = art.background,
+    ring = border.ring,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,
