@@ -11,11 +11,10 @@ local SquareEffects = ns.ToggleIconSquareEffects or require("WhisperMessenger.UI
 local ButtonLook = ns.ThemeEllesmereButtonLook or require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 local applyVertexColor = UIHelpers.applyVertexColor
 
--- The widget's square look for themes that want one (EllesmereUI): a square
--- drawn like EllesmereUI's action buttons, and the ring-free glyph (white
--- front bubble over an accent-colored back bubble) instead of the round
--- art. Swaps the widget's own textures, so its desaturate and pulse paint
--- keep working unchanged.
+-- The widget's two bubbles (white front glyph over an accent-colored back
+-- bubble), shown on every shape, and its square look for themes that want one
+-- (EllesmereUI): a square drawn like EllesmereUI's action buttons in place of
+-- the circle.
 local SquareLook = {}
 
 SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -43,21 +42,17 @@ local function setShown(region, shown)
 end
 
 -- The accent back bubble, drawn just under `glyph` and sized with it.
--- apply(desaturated, hovered) shows it under a square theme in the accent
--- color, or gray while the button is desaturated and not hovered.
+-- apply(desaturated, hovered) shows it in the accent color, or gray while the
+-- button is desaturated and not hovered.
 function SquareLook.CreateAccentGlyph(frame, glyph)
   local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   texture:SetAllPoints(glyph)
   texture:SetTexture(SquareLook.ACCENT_GLYPH_TEXTURE)
 
   local function apply(desaturated, hovered)
-    local square = Theme.UsesSquareWidget()
-    setShown(texture, square)
-    if not square then
-      return
-    end
-    local grey = desaturated and not hovered
-    applyVertexColor(texture, grey and Desaturation.DESAT_GREY or Theme.COLORS.accent)
+    setShown(texture, true)
+    local grey = Theme.UsesSquareWidget() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
+    applyVertexColor(texture, desaturated and not hovered and grey or Theme.COLORS.accent)
   end
 
   return { texture = texture, apply = apply }
@@ -83,9 +78,9 @@ local function createHoverGlow(frame)
   return glow
 end
 
--- parts: { background, border, glyph, roundBackground, roundGlyph,
--- getShowBackground, pulse } where the round* fields are the texture paths
--- of the round look; getShowBackground() false leaves just the two bubbles.
+-- parts: { background, glyph, roundBackground, getShowBackground, pulse } where
+-- roundBackground is the texture path of the round look's circle;
+-- getShowBackground() false leaves just the two bubbles.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- slot background, border, and their hover and pushed effects.
 -- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
@@ -159,17 +154,15 @@ function SquareLook.Create(frame, parts)
     pushEffect.paint(look.push, look.borderPx)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
     setShown(parts.background, not square or squareBackgroundShown())
-    parts.glyph:SetTexture(square and SquareLook.GLYPH_TEXTURE or parts.roundGlyph)
-    setShown(parts.border, not square)
     setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()
     shapePulse()
   end
 
-  -- On a square look the accent bubble fills on hover, plus EllesmereUI's
-  -- hover effect on the square, or the glow when the square is off; the
-  -- widget's own hover paint is skipped.
+  -- The back bubble returns to the accent on hover. On a square look that
+  -- comes with EllesmereUI's hover effect on the square, or the glow when the
+  -- square is off; the square repaints its own fill over the widget's.
   local function setHover(on)
     hovered = on == true
     if not hovered then
@@ -194,14 +187,7 @@ function SquareLook.Create(frame, parts)
     apply = apply,
     setHover = setHover,
     setPushed = setPushed,
-    isSquare = Theme.UsesSquareWidget,
   }
-end
-
--- Glyph for the round minimap button: the ring-free one under a square
--- theme, so it doesn't stack a second ring inside the button's own.
-function SquareLook.MinimapGlyph(roundGlyph)
-  return Theme.UsesSquareWidget() and SquareLook.GLYPH_TEXTURE or roundGlyph
 end
 
 ns.ToggleIconSquareLook = SquareLook

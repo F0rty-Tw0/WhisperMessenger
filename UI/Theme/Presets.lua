@@ -69,7 +69,6 @@ local tokenRoles = {
   ghost_button_border = "divider_strong",
   ghost_button_text = "text_soft",
   toggle_icon_bg = "toggle_icon_bg",
-  toggle_icon_ring = "toggle_icon_ring",
   toggle_icon_glyph = "toggle_icon_glyph",
   option_button_bg = "option_bg",
   option_button_hover = "contact_hover",

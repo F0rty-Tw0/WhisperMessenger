@@ -70,7 +70,7 @@ function IconSettings.Create(factory, parent, config, options)
       end,
       {
         text("Desaturate icon when idle"),
-        text("Greyscales the toggle icon when there are no unread messages."),
+        text("Grays the back chat bubble when there are no unread messages."),
       }
     ),
     { type = "toggle", key = "iconDesaturated", default = DEFAULTS.iconDesaturated }

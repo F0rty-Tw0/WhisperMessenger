@@ -13,19 +13,15 @@ local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleI
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
 
 local MinimapIcon = {}
 
 -- Standard minimap button size — larger than classic 20px so the unread
 -- badge is legible, but small enough to not dominate the minimap ring.
 local ICON_SIZE = 30
-local ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 local BADGE_SIZE = 14
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
-
-local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
-local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
-local ICON_COLOR = { 1, 1, 1, 1 }
 
 -- Default radial position: top-right quadrant, 45 degrees.
 local DEFAULT_DEGREES = 45
@@ -118,24 +114,12 @@ function MinimapIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- Background disc so the icon is visible against any minimap
-  local bg = frame:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints(frame)
-  bg:SetTexture("Interface\\CHARACTERFRAME\\TempPortraitAlphaMask")
-  applyVertexColor(bg, BG_COLOR)
-
-  -- Addon icon texture (fills the button)
-  local iconTex = frame:CreateTexture(nil, "ARTWORK")
-  iconTex:SetAllPoints(frame)
-  iconTex:SetTexture(ICON_TEXTURE)
-  -- Accent back bubble under the ring-free glyph (square themes only)
+  -- The widget's face: dark circle with the front bubble. The minimap is
+  -- always round, so the back bubble is painted here, not by accentGlyph.apply.
+  local art = IconArt.Create(frame, ICON_SIZE)
+  local iconTex = art.chatIcon
   local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
-  -- Ring border (same texture as the widget icon)
-  local border = frame:CreateTexture(nil, "BORDER")
-  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
-  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture("Interface\\COMMON\\RingBorder")
-  applyVertexColor(border, BORDER_COLOR)
+  accentGlyph.texture:Show()
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -175,25 +159,20 @@ function MinimapIcon.Create(factory, options)
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getBadgePulse = options.getBadgePulse
 
-  -- Idle-desaturation shared with the widget icon: grey only when the
-  -- setting is on AND there are no unread whispers.
-  local desaturation = Desaturation.Create({
-    textures = { chatIcon = iconTex, background = bg, border = border },
-    resolveColors = {
-      chatIcon = function()
-        return ICON_COLOR
-      end,
-      background = function()
-        return BG_COLOR
-      end,
-      border = function()
-        return BORDER_COLOR
-      end,
-    },
-    getIconDesaturated = options.getIconDesaturated,
-    applyVertexColor = applyVertexColor,
-    keepColors = Theme.UsesSquareWidget,
-  })
+  -- Idle state shared with the widget icon: the back bubble grays only when
+  -- the setting is on AND there are no unread whispers.
+  local desaturation = Desaturation.Create({ getIconDesaturated = options.getIconDesaturated })
+
+  -- Hover lifts the circle and returns the back bubble to the accent.
+  local hovered = false
+  local function paintBack()
+    local grey = desaturation.isActive() and not hovered
+    applyVertexColor(accentGlyph.texture, grey and Desaturation.DESAT_BACK or Theme.COLORS.accent)
+  end
+  local function paintFace()
+    IconArt.PaintFace(art, hovered)
+    paintBack()
+  end
 
   -- count is the number shown; pulseCount (default count) starts the glow.
   local unreadSummary = ""
@@ -215,7 +194,7 @@ function MinimapIcon.Create(factory, options)
     end
 
     desaturation.update(unreadCount)
-    accentGlyph.apply(desaturation.isActive())
+    paintBack()
   end
 
   -- Drag: orbit around minimap center with live radial constraint.
@@ -247,13 +226,19 @@ function MinimapIcon.Create(factory, options)
     frame:SetScript("OnClick", IconClick.Create(options))
 
     frame:SetScript("OnEnter", function()
+      hovered = true
+      paintFace()
       local showBadge = not getShowUnreadBadge or getShowUnreadBadge()
       local unreadLine = showBadge and badge:IsShown() and unreadSummary or nil
       local includeReply = type(options.getHideFromDefaultChat) == "function" and options.getHideFromDefaultChat() == true
       IconTooltip.Show(frame, "ANCHOR_BOTTOM", unreadLine, includeReply)
     end)
 
-    frame:SetScript("OnLeave", IconTooltip.Hide)
+    frame:SetScript("OnLeave", function()
+      hovered = false
+      paintFace()
+      IconTooltip.Hide()
+    end)
   end
 
   -- Icon-mode visibility. The preview frame floats on UIParent, so hiding
@@ -273,11 +258,10 @@ function MinimapIcon.Create(factory, options)
 
   local function refreshDesaturation()
     desaturation.refresh()
-    accentGlyph.apply(desaturation.isActive())
+    paintFace()
   end
 
   local function refreshTheme()
-    iconTex:SetTexture(SquareLook.MinimapGlyph(ICON_TEXTURE))
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)
@@ -291,7 +275,7 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
-    border = border,
+    background = art.background,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,

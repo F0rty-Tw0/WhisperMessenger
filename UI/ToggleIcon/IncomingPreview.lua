@@ -51,7 +51,7 @@ function IncomingPreview.Create(factory, frame, options)
   local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
   -- Font objects only: a raw SetFont on a FontString overrides the engine's
   -- Unicode glyph-fallback chain and blanks Cyrillic/Greek characters.
-  setFontObject(previewSenderLabel, theme.FONTS.header_name or theme.FONTS.message_text)
+  setFontObject(previewSenderLabel, theme.FONTS.message_text)
   previewSenderLabel:SetPoint("TOPLEFT", previewFrame, "TOPLEFT", senderLeft, PreviewMetrics.SENDER_TOP_OFFSET)
   PreviewChrome.SingleLine(previewSenderLabel)
 

@@ -7,7 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 
--- White radial texture, transparent centre fading up to the ring's inner
+-- White radial texture, transparent centre fading up to the host's inner
 -- edge and back to zero at the rim. Pinned to the host's edges and never
 -- scaled, so the glow stays inside the host (no outer halo). Shared by the widget,
 -- minimap icon and What's New button.

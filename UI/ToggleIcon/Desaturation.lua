@@ -5,75 +5,34 @@ end
 
 local Desaturation = {}
 
-local DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
-local DESAT_BG = { 0.25, 0.25, 0.25, 0.7 }
-Desaturation.DESAT_GREY = DESAT_GREY
+Desaturation.DESAT_GREY = { 0.45, 0.45, 0.45, 0.6 }
+-- The back bubble's idle gray on the circle: opaque, so it reads over the dark circle.
+Desaturation.DESAT_BACK = { 0.55, 0.55, 0.55, 1 }
 
+-- Tracks the unread count: the look is idle (isActive) while the setting is on
+-- and nothing is unread. The caller paints; this paints nothing.
+-- deps.getIconDesaturated: () -> boolean, the "gray when idle" setting.
 function Desaturation.Create(deps)
-  local textures = deps.textures
-  local resolveColors = deps.resolveColors
   local getIconDesaturated = deps.getIconDesaturated
-  local applyVertexColor = deps.applyVertexColor
-  -- keepColors(): true while the look grays out only its accent bubble
-  -- (square look), so these textures keep their colors.
-  local keepColors = deps.keepColors
 
   local lastUnreadCount = 0
-  -- Snapshot original colors. Re-read on every theme refresh so preset
-  -- switches propagate through the desaturate path.
-  local originalColors = {
-    chatIcon = resolveColors.chatIcon(),
-    background = resolveColors.background(),
-    border = resolveColors.border(),
-  }
 
   local function isActive()
     return getIconDesaturated and getIconDesaturated() and lastUnreadCount == 0
   end
 
-  -- True while these textures are painted gray (idle and not keepColors).
-  local function paintsGrey()
-    return isActive() and not (keepColors and keepColors())
-  end
-
   local function update(unreadCount)
     lastUnreadCount = tonumber(unreadCount) or 0
-    local shouldDesaturate = paintsGrey()
-
-    for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
-      if tex.SetDesaturated then
-        tex:SetDesaturated(shouldDesaturate)
-      end
-    end
-
-    if shouldDesaturate then
-      applyVertexColor(textures.chatIcon, DESAT_GREY)
-      applyVertexColor(textures.background, DESAT_BG)
-      applyVertexColor(textures.border, DESAT_GREY)
-    else
-      applyVertexColor(textures.chatIcon, originalColors.chatIcon)
-      applyVertexColor(textures.background, originalColors.background)
-      applyVertexColor(textures.border, originalColors.border)
-    end
   end
 
   local function refresh()
     update(lastUnreadCount)
   end
 
-  local function refreshOriginalColors()
-    originalColors.chatIcon = resolveColors.chatIcon()
-    originalColors.background = resolveColors.background()
-    originalColors.border = resolveColors.border()
-  end
-
   return {
     update = update,
     refresh = refresh,
     isActive = isActive,
-    paintsGrey = paintsGrey,
-    refreshOriginalColors = refreshOriginalColors,
-    DESAT_BG = DESAT_BG,
   }
 end
 

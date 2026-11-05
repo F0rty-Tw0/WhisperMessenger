@@ -1,7 +1,14 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
+local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local FindUI = require("tests.helpers.find_ui")
+
+local function sameColor(a, b)
+  return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
+end
 
 -- The competitive indicator is the child frame carrying the lock glyph
 -- (the icon's own lock glyph is a texture directly on the icon frame).
@@ -113,7 +120,7 @@ return function()
     assert(icon.badge.shown == true, "test_defaults_when_no_getters_provided: badge should show by default")
   end
 
-  -- test_icon_uses_addon_logo_texture
+  -- test_icon_uses_the_front_bubble_texture
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -121,8 +128,8 @@ return function()
     })
 
     assert(
-      icon.label.texturePath == "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png",
-      "test_icon_uses_addon_logo_texture: foreground should use addon icon texture, got " .. tostring(icon.label.texturePath)
+      icon.label.texturePath == SquareLook.GLYPH_TEXTURE,
+      "test_icon_uses_the_front_bubble_texture: foreground should be the front bubble, got " .. tostring(icon.label.texturePath)
     )
   end
 
@@ -162,7 +169,7 @@ return function()
     )
   end
 
-  -- test_icon_desaturated_when_no_unread
+  -- test_idle_grays_the_back_bubble_and_leaves_the_face_alone
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -176,21 +183,15 @@ return function()
       end,
     })
 
+    assert(icon.label.desaturated ~= true, "test_idle_grays_the_back_bubble_and_leaves_the_face_alone: chatIcon should not be desaturated")
+    assert(icon.background.desaturated ~= true, "test_idle_grays_the_back_bubble_and_leaves_the_face_alone: background should not be desaturated")
     assert(
-      icon.label.desaturated == true,
-      "test_icon_desaturated_when_no_unread: chatIcon should be desaturated, got " .. tostring(icon.label.desaturated)
-    )
-    assert(
-      icon.background.desaturated == true,
-      "test_icon_desaturated_when_no_unread: background should be desaturated, got " .. tostring(icon.background.desaturated)
-    )
-    assert(
-      icon.border.desaturated == true,
-      "test_icon_desaturated_when_no_unread: border should be desaturated, got " .. tostring(icon.border.desaturated)
+      sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK),
+      "test_idle_grays_the_back_bubble_and_leaves_the_face_alone: back bubble should be gray"
     )
   end
 
-  -- test_icon_colorized_on_unread
+  -- test_back_bubble_accent_on_unread
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -204,17 +205,12 @@ return function()
       end,
     })
 
-    assert(
-      icon.label.desaturated == false,
-      "test_icon_colorized_on_unread: chatIcon should be colorized when unread > 0, got " .. tostring(icon.label.desaturated)
-    )
-    assert(
-      icon.background.desaturated == false,
-      "test_icon_colorized_on_unread: background should be colorized when unread > 0, got " .. tostring(icon.background.desaturated)
-    )
+    assert(icon.label.desaturated ~= true, "test_back_bubble_accent_on_unread: chatIcon should not be desaturated")
+    assert(icon.background.desaturated ~= true, "test_back_bubble_accent_on_unread: background should not be desaturated")
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "test_back_bubble_accent_on_unread: back bubble should be the accent")
   end
 
-  -- test_icon_desaturated_when_unread_cleared
+  -- test_back_bubble_grays_when_unread_cleared
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -228,17 +224,19 @@ return function()
       end,
     })
 
-    assert(icon.label.desaturated == false, "should be colorized initially with unread")
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble should be the accent initially with unread")
 
     icon.setUnreadCount(0)
 
+    assert(icon.label.desaturated ~= true, "test_back_bubble_grays_when_unread_cleared: chatIcon should not be desaturated")
+    assert(icon.background.desaturated ~= true, "test_back_bubble_grays_when_unread_cleared: background should not be desaturated")
     assert(
-      icon.label.desaturated == true,
-      "test_icon_desaturated_when_unread_cleared: icon should desaturate after unread cleared, got " .. tostring(icon.label.desaturated)
+      sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK),
+      "test_back_bubble_grays_when_unread_cleared: back bubble should gray after unread cleared"
     )
   end
 
-  -- test_icon_always_colorized_when_desaturation_disabled
+  -- test_back_bubble_always_accent_when_desaturation_disabled
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -252,14 +250,14 @@ return function()
       end,
     })
 
+    assert(icon.label.desaturated ~= true, "test_back_bubble_always_accent_when_desaturation_disabled: chatIcon should not be desaturated")
     assert(
-      icon.label.desaturated == false,
-      "test_icon_always_colorized_when_desaturation_disabled: icon should never desaturate when setting is off, got "
-        .. tostring(icon.label.desaturated)
+      sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent),
+      "test_back_bubble_always_accent_when_desaturation_disabled: back bubble should stay the accent"
     )
   end
 
-  -- test_icon_dims_on_hover_and_restores_glyph_color
+  -- test_hover_lifts_the_circle_and_keeps_the_glyph_color
 
   do
     local icon = ToggleIcon.Create(factory, {
@@ -271,19 +269,12 @@ return function()
     local normalColor = icon.label.vertexColor
 
     icon.frame:GetScript("OnEnter")(icon.frame)
-    local hoverColor = icon.label.vertexColor
-    assert(hoverColor[1] == 1 and hoverColor[2] == 1 and hoverColor[3] == 1, "hover should preserve white glyph RGB")
-    assert(hoverColor[4] < 1, "hover should dim the logo with reduced alpha")
+    assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "hover should lift the circle")
+    assert(sameColor(icon.label.vertexColor, normalColor), "hover should keep the glyph color")
 
     icon.frame:GetScript("OnLeave")(icon.frame)
-    local restoredColor = icon.label.vertexColor
-    assert(
-      restoredColor[1] == normalColor[1]
-        and restoredColor[2] == normalColor[2]
-        and restoredColor[3] == normalColor[3]
-        and restoredColor[4] == normalColor[4],
-      "leaving hover should restore the normal glyph color"
-    )
+    assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "leaving hover should restore the circle color")
+    assert(sameColor(icon.label.vertexColor, normalColor), "leaving hover should keep the glyph color")
   end
 
   -- test_widget_transparency_maps_to_idle_alpha

@@ -3,8 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local CompetitiveIndicator = ns.CompetitiveIndicator or require("WhisperMessenger.UI.ToggleIcon.CompetitiveIndicator")
 local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenger.UI.ToggleIcon.IncomingPreview")
@@ -20,7 +18,6 @@ local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIco
 
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 
-local HOVER_ICON_COLOR = { 1, 1, 1, 0.65 }
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local ToggleIcon = {}
@@ -48,12 +45,8 @@ function ToggleIcon.Create(factory, options)
     frame:SetFrameStrata("HIGH")
   end
 
-  local resolveBgColor = IconArt.ResolveBgColor
-  local resolveRingColor = IconArt.ResolveRingColor
-  local resolveGlyphColor = IconArt.ResolveGlyphColor
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
-  local border = art.border
   local chatIcon = art.chatIcon
 
   local label = chatIcon -- reference kept for return table
@@ -66,15 +59,13 @@ function ToggleIcon.Create(factory, options)
 
   local squareLook = SquareLook.Create(frame, {
     background = background,
-    border = border,
     glyph = chatIcon,
     roundBackground = IconArt.CIRCLE_TEX,
-    roundGlyph = IconArt.ADDON_ICON_TEXTURE,
     getShowBackground = options.getIconBackground,
     pulse = pulseGlow,
   })
 
-  -- Unread badge, outlined so it reads where it overlaps the ring
+  -- Unread badge, outlined so it reads where it overlaps the circle's edge
   local badgeResult = Badge.Create(factory, frame, { outline = true })
   local badge = badgeResult.frame
   local badgeBackground = badgeResult.background
@@ -153,17 +144,7 @@ function ToggleIcon.Create(factory, options)
     end
   end
 
-  local desaturation = Desaturation.Create({
-    textures = { chatIcon = chatIcon, background = background, border = border },
-    resolveColors = {
-      chatIcon = resolveGlyphColor,
-      background = resolveBgColor,
-      border = resolveRingColor,
-    },
-    getIconDesaturated = getIconDesaturated,
-    applyVertexColor = applyVertexColor,
-    keepColors = Theme.UsesSquareWidget,
-  })
+  local desaturation = Desaturation.Create({ getIconDesaturated = getIconDesaturated })
 
   -- count is the number shown; pulseCount (default count) starts the glow.
   local unreadSummary = ""
@@ -186,18 +167,14 @@ function ToggleIcon.Create(factory, options)
 
   local tooltip = IconTooltip.Create(frame, { badge = badge, isLocked = isLocked, options = options })
 
-  -- Hover glow effect
+  -- Hover lifts the circle and returns the back bubble to the accent
   if frame.SetScript then
     frame:SetScript("OnEnter", function()
       hover.active = true
       syncLockGlyphVisibility()
       refreshTransparency()
-      if squareLook.isSquare() then
-        squareLook.setHover(true)
-      elseif not desaturation.paintsGrey() then
-        applyVertexColor(background, Theme.COLORS.send_button_hover)
-        applyVertexColor(chatIcon, HOVER_ICON_COLOR)
-      end
+      IconArt.PaintFace(art, true)
+      squareLook.setHover(true) -- after the repaint: the square has its own fill
       tooltip.show(unreadSummary, isCompetitiveActive)
     end)
 
@@ -205,11 +182,7 @@ function ToggleIcon.Create(factory, options)
       hover.active = false
       syncLockGlyphVisibility()
       refreshTransparency()
-      local isDesat = desaturation.paintsGrey()
-      applyVertexColor(background, isDesat and desaturation.DESAT_BG or resolveBgColor())
-      if not isDesat then
-        applyVertexColor(chatIcon, resolveGlyphColor())
-      end
+      IconArt.PaintFace(art, false)
       squareLook.setHover(false) -- after the repaint: the square has its own fill
       tooltip.hide()
     end)
@@ -228,12 +201,12 @@ function ToggleIcon.Create(factory, options)
 
   local function refreshDesaturation()
     desaturation.refresh()
+    IconArt.PaintFace(art, hover.active)
     squareLook.apply(desaturation.isActive())
   end
 
   local function refreshTheme()
     badgeResult.paint()
-    desaturation.refreshOriginalColors()
     pulseGlow.applyTheme(Theme)
     incomingPreview.applyTheme(Theme)
     refreshDesaturation()
@@ -256,7 +229,6 @@ function ToggleIcon.Create(factory, options)
   return {
     frame = frame,
     background = background,
-    border = border,
     squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,
