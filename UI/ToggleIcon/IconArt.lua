@@ -43,9 +43,7 @@ local function resolveHoverBgColor()
   }
 end
 
-IconArt.ResolveBgColor = resolveBgColor
 IconArt.ResolveHoverBgColor = resolveHoverBgColor
-IconArt.ResolveGlyphColor = resolveGlyphColor
 
 function IconArt.Create(frame, iconSize)
   local background = frame:CreateTexture(nil, "BACKGROUND")
