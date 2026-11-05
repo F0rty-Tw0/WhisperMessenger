@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys")
+
 -- Opt-B override: when `hideFromDefaultChat` is on, take over the user's
 -- REPLY key (default "R", but respects their keybinding) so it fires /wr
 -- through a SecureActionButton instead of Blizzard's ChatFrame_ReplyTell
@@ -36,18 +38,7 @@ local function defaultIsHouseEditorActive()
 end
 
 local function collectReplyKeys(getBindingKey)
-  local keys = {}
-  if type(getBindingKey) ~= "function" then
-    return keys
-  end
-  local raw = { getBindingKey("REPLY") }
-  for i = 1, #raw do
-    local key = raw[i]
-    if type(key) == "string" and key ~= "" then
-      table.insert(keys, key)
-    end
-  end
-  return keys
+  return BindingKeys.ForAction(getBindingKey, "REPLY")
 end
 
 local function keysEqual(a, b)

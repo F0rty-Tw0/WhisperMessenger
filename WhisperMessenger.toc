@@ -41,6 +41,7 @@ Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
 Util/PlainText.lua
+Util/BindingKeys.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
