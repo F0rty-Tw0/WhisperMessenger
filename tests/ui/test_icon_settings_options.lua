@@ -27,4 +27,9 @@ return function()
   local modes = Options.BuildIconModeOptions()
   assert(#modes == 4 and modes[4].key == "none", "test_icon_mode_options_and_default: four modes ending in none")
   assert(Options.DEFAULTS.iconMode == "widget", "test_icon_mode_options_and_default: widget is the default mode")
+
+  -- test_border_defaults_are_on
+
+  assert(Options.DEFAULTS.iconBorder == true, "test_border_defaults_are_on: border is on")
+  assert(Options.DEFAULTS.iconBorderThemed == true, "test_border_defaults_are_on: themed border is on")
 end

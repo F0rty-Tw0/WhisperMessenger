@@ -9,8 +9,8 @@ local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMesse
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Options = ns.IconSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.IconSettings.Options")
 
--- The Icons panel rows for how the widget looks: its shape and the square
--- button background.
+-- The Icons panel rows for how the icons look: the widget shape, the button
+-- background and the two border toggles.
 local LookRows = {}
 
 local DEFAULTS = Options.DEFAULTS
@@ -27,7 +27,7 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
   local selectorColors = controls.selectorColors
   local rowSpacing = controls.rowSpacing
 
-  local shape = config.widgetShape
+  local borderOn = config.iconBorder ~= false
   local changed
 
   local shapeSelector = panel:bind(
@@ -51,37 +51,56 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
   )
   shapeSelector.row:SetPoint("TOPLEFT", controls.anchor, "BOTTOMLEFT", 0, rowSpacing)
 
-  -- Only the square widget shape has a background to hide.
-  local backgroundToggle = panel:bind(
-    UIHelpers.createToggleRow(
-      factory,
-      frame,
-      text("Square button background"),
-      config.iconBackground ~= false,
-      toggleColors,
-      toggleLayout,
-      function(value)
-        onChange("iconBackground", value)
-      end,
-      {
-        text("Square button background"),
-        text("Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles."),
-      }
-    ),
-    { type = "toggle", key = "iconBackground", default = DEFAULTS.iconBackground }
+  local function toggleRow(label, tooltip, key, initial, onClick)
+    return panel:bind(
+      UIHelpers.createToggleRow(factory, frame, text(label), initial, toggleColors, toggleLayout, onClick, { text(label), text(tooltip) }),
+      { type = "toggle", key = key, default = DEFAULTS[key] }
+    )
+  end
+
+  local backgroundToggle = toggleRow(
+    "Button background",
+    "Shows the circle or square behind the widget icon. Turn it off to show only the two chat bubbles.",
+    "iconBackground",
+    config.iconBackground ~= false,
+    function(value)
+      onChange("iconBackground", value)
+    end
   )
   backgroundToggle.row:SetPoint("TOPLEFT", shapeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
-  -- Always shown, but only usable with the square shape; keeps its value meanwhile.
-  local backgroundAvailability = UIHelpers.attachDisabledState(factory, backgroundToggle.row)
+
+  local borderToggle = toggleRow(
+    "Show border",
+    "Draws a ring around the widget and the minimap button, or a frame around the square widget.",
+    "iconBorder",
+    borderOn,
+    function(value)
+      changed("iconBorder", value)
+    end
+  )
+  borderToggle.row:SetPoint("TOPLEFT", backgroundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  local borderThemedToggle = toggleRow(
+    "Color border with theme",
+    "Tints the border to the theme's accent color. Turn it off for the gold border.",
+    "iconBorderThemed",
+    config.iconBorderThemed ~= false,
+    function(value)
+      onChange("iconBorderThemed", value)
+    end
+  )
+  borderThemedToggle.row:SetPoint("TOPLEFT", borderToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  -- Always shown, but only usable while the border is on; keeps its value meanwhile.
+  local themedAvailability = UIHelpers.attachDisabledState(factory, borderThemedToggle.row)
   local function refreshAvailability()
-    local usable = shape == "square"
-    local reason = not usable and text("Only with the square widget shape.") or nil
-    backgroundAvailability.set(usable, reason)
+    local reason = not borderOn and text("Only with Show border on.") or nil
+    themedAvailability.set(borderOn, reason)
   end
-  -- Selector clicks and Reset to Defaults both land here, so the toggle follows the shape at once.
+  -- Toggle clicks and Reset to Defaults both land here, so the themed toggle follows the border at once.
   changed = function(key, value)
-    if key == "widgetShape" then
-      shape = value
+    if key == "iconBorder" then
+      borderOn = value
       refreshAvailability()
     end
     onChange(key, value)
@@ -92,14 +111,18 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
   local function setLanguage()
     shapeSelector.label:SetText(text("Widget shape"))
     shapeSelector.setOptionsList(Options.BuildWidgetShapeOptions())
-    backgroundToggle.label:SetText(text("Square button background"))
+    backgroundToggle.label:SetText(text("Button background"))
+    borderToggle.label:SetText(text("Show border"))
+    borderThemedToggle.label:SetText(text("Color border with theme"))
     refreshAvailability()
   end
 
   return {
     shapeSelector = shapeSelector,
     backgroundToggle = backgroundToggle,
-    lastRow = backgroundToggle.row,
+    borderToggle = borderToggle,
+    borderThemedToggle = borderThemedToggle,
+    lastRow = borderThemedToggle.row,
     changed = changed,
     refreshAvailability = refreshAvailability,
     setLanguage = setLanguage,
