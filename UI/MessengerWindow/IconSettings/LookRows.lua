@@ -19,24 +19,15 @@ local function text(key)
   return Localization.Text(key)
 end
 
--- controls: toggleColors, toggleLayout, selectorColors, rowSpacing, and
--- anchor (the row the shape selector hangs below).
-function LookRows.Create(factory, frame, panel, config, onChange, controls)
-  local toggleColors = controls.toggleColors
-  local toggleLayout = controls.toggleLayout
-  local selectorColors = controls.selectorColors
-  local rowSpacing = controls.rowSpacing
-
-  local borderOn = config.iconBorder ~= false
-  local changed
-
+-- The widget shape selector, hung below controls.anchor; picks go to changed.
+local function createShapeSelector(factory, frame, panel, config, controls, changed)
   local shapeSelector = panel:bind(
     ButtonSelector.Create(factory, frame, {
       labelText = text("Widget shape"),
       optionsList = Options.BuildWidgetShapeOptions(),
       fallbackKey = DEFAULTS.widgetShape,
       initial = config.widgetShape or DEFAULTS.widgetShape,
-      colors = selectorColors,
+      colors = controls.selectorColors,
       onChange = function(value)
         changed("widgetShape", value)
       end,
@@ -49,34 +40,49 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
     }),
     { type = "selector", key = "widgetShape", default = DEFAULTS.widgetShape }
   )
-  shapeSelector.row:SetPoint("TOPLEFT", controls.anchor, "BOTTOMLEFT", 0, rowSpacing)
+  shapeSelector.row:SetPoint("TOPLEFT", controls.anchor, "BOTTOMLEFT", 0, controls.rowSpacing)
 
-  local function toggleRow(label, tooltip, key, initial, onClick)
-    return panel:bind(
-      UIHelpers.createToggleRow(factory, frame, text(label), initial, toggleColors, toggleLayout, onClick, { text(label), text(tooltip) }),
-      { type = "toggle", key = key, default = DEFAULTS[key] }
+  return shapeSelector
+end
+
+-- Returns toggleRow(label, tooltip, key, initial), which binds one on/off row
+-- whose clicks go to changed(key, value).
+local function toggleRowMaker(factory, frame, panel, controls, changed)
+  return function(label, tooltip, key, initial)
+    local function onClick(value)
+      changed(key, value)
+    end
+    local toggle = UIHelpers.createToggleRow(
+      factory,
+      frame,
+      text(label),
+      initial,
+      controls.toggleColors,
+      controls.toggleLayout,
+      onClick,
+      { text(label), text(tooltip) }
     )
-  end
 
+    return panel:bind(toggle, { type = "toggle", key = key, default = DEFAULTS[key] })
+  end
+end
+
+-- The Button background, Show border and Color border with theme rows, in
+-- that order below aboveRow.
+local function createToggleRows(toggleRow, aboveRow, config, rowSpacing)
   local backgroundToggle = toggleRow(
     "Button background",
     "Shows the circle or square behind the widget icon. Turn it off to show only the two chat bubbles.",
     "iconBackground",
-    config.iconBackground ~= false,
-    function(value)
-      onChange("iconBackground", value)
-    end
+    config.iconBackground ~= false
   )
-  backgroundToggle.row:SetPoint("TOPLEFT", shapeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+  backgroundToggle.row:SetPoint("TOPLEFT", aboveRow, "BOTTOMLEFT", 0, rowSpacing)
 
   local borderToggle = toggleRow(
     "Show border",
     "Draws a ring around the widget and the minimap button, or a frame around the square widget.",
     "iconBorder",
-    borderOn,
-    function(value)
-      changed("iconBorder", value)
-    end
+    config.iconBorder ~= false
   )
   borderToggle.row:SetPoint("TOPLEFT", backgroundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
@@ -84,21 +90,21 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
     "Color border with theme",
     "Tints the border to the theme's accent color. Turn it off for the gold border.",
     "iconBorderThemed",
-    config.iconBorderThemed ~= false,
-    function(value)
-      onChange("iconBorderThemed", value)
-    end
+    config.iconBorderThemed ~= false
   )
   borderThemedToggle.row:SetPoint("TOPLEFT", borderToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  -- Always shown, but only usable while the border is on; keeps its value meanwhile.
-  local themedAvailability = UIHelpers.attachDisabledState(factory, borderThemedToggle.row)
-  local function refreshAvailability()
-    local reason = not borderOn and text("Only with Show border on.") or nil
-    themedAvailability.set(borderOn, reason)
-  end
+  return backgroundToggle, borderToggle, borderThemedToggle
+end
+
+-- controls: toggleColors, toggleLayout, selectorColors, rowSpacing, and
+-- anchor (the row the shape selector hangs below).
+function LookRows.Create(factory, frame, panel, config, onChange, controls)
+  local borderOn = config.iconBorder ~= false
+  local refreshAvailability
+
   -- Toggle clicks and Reset to Defaults both land here, so the themed toggle follows the border at once.
-  changed = function(key, value)
+  local function changed(key, value)
     if key == "iconBorder" then
       borderOn = value
       refreshAvailability()
@@ -106,6 +112,16 @@ function LookRows.Create(factory, frame, panel, config, onChange, controls)
     onChange(key, value)
   end
 
+  local toggleRow = toggleRowMaker(factory, frame, panel, controls, changed)
+  local shapeSelector = createShapeSelector(factory, frame, panel, config, controls, changed)
+  local backgroundToggle, borderToggle, borderThemedToggle = createToggleRows(toggleRow, shapeSelector.row, config, controls.rowSpacing)
+
+  -- Always shown, but only usable while the border is on; keeps its value meanwhile.
+  local themedAvailability = UIHelpers.attachDisabledState(factory, borderThemedToggle.row)
+  refreshAvailability = function()
+    local disabledReason = text("Only with Show border on.")
+    themedAvailability.set(borderOn, not borderOn and disabledReason or nil)
+  end
   refreshAvailability()
 
   local function setLanguage()

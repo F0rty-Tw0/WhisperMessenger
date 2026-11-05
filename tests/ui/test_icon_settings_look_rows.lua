@@ -21,6 +21,7 @@ return function()
       rowSpacing = -8,
       anchor = anchor,
     })
+
     return frame, rows, anchor, panel
   end
 
@@ -140,6 +141,7 @@ return function()
     }
     target:GetScript("OnEnter")(target)
     _G.GameTooltip = saved
+
     return title, lines
   end
 
