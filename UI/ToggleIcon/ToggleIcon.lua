@@ -49,12 +49,13 @@ function ToggleIcon.Create(factory, options)
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
   local chatIcon = art.chatIcon
-  -- ringScale: the full ring keeps the rim's outer size when the background goes.
+  -- The full ring keeps the rim's outer size and bubbles when the background goes.
   local border = IconBorder.Create(frame, {
     glyph = chatIcon,
     glyphRatio = IconArt.GLYPH_RATIO,
     withSquareFrame = true,
     ringScale = IconBorder.RIM_SCALE,
+    ringGlyphRatio = IconArt.GLYPH_RATIO,
   })
 
   local label = chatIcon -- reference kept for return table

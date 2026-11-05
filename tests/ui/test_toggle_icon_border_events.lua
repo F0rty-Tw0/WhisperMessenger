@@ -49,7 +49,7 @@ return function()
     local layer = icon.ring:GetDrawLayer()
     assert(layer == "OVERLAY", "full ring over the button, got " .. tostring(layer))
     assert(near(icon.ring.width, 48.3), "full ring keeps the rim's outer size, got " .. tostring(icon.ring.width))
-    assert(icon.label.width == 33, "bubbles at 0.7 of the ring, got " .. tostring(icon.label.width))
+    assert(icon.label.width == 37, "bubbles keep the rim's 0.9, got " .. tostring(icon.label.width))
     assert(icon.hoverGlow.shown == true, "glow while hovered without the circle")
   end
 
@@ -124,7 +124,7 @@ return function()
     local icon = widget({ background = false })
     icon.applyIconSize(60)
     assert(near(icon.ring.width, 69), "full ring at 60 * 1.15, got " .. tostring(icon.ring.width))
-    assert(icon.label.width == 48, "bubbles at 0.7 of the ring, got " .. tostring(icon.label.width))
+    assert(icon.label.width == 54, "bubbles keep the rim's 0.9, got " .. tostring(icon.label.width))
   end
 
   -- test_hover_glow_follows_the_full_ring_glyph_after_resize
@@ -132,10 +132,10 @@ return function()
     local icon = widget({ background = false })
     fire(icon, "OnEnter")
     icon.applyIconSize(60)
-    local expected = 48 * SquareLook.BUBBLE_GLOW_SCALE
+    local expected = 54 * SquareLook.BUBBLE_GLOW_SCALE
     assert(
       near(icon.hoverGlow.width, expected),
-      "test_hover_glow_follows_the_full_ring_glyph_after_resize: glow from the 0.7 glyph, got " .. tostring(icon.hoverGlow.width)
+      "test_hover_glow_follows_the_full_ring_glyph_after_resize: glow from the resized glyph, got " .. tostring(icon.hoverGlow.width)
     )
   end
 
@@ -146,10 +146,10 @@ return function()
     fire(icon, "OnEnter")
     state.shape = nil
     icon.refreshTheme()
-    local expected = 33 * SquareLook.BUBBLE_GLOW_SCALE
+    local expected = 37 * SquareLook.BUBBLE_GLOW_SCALE
     assert(
       near(icon.hoverGlow.width, expected),
-      "test_hover_glow_follows_the_full_ring_glyph_after_square: glow from the 0.7 glyph, got " .. tostring(icon.hoverGlow.width)
+      "test_hover_glow_follows_the_full_ring_glyph_after_square: glow from the 0.9 glyph, got " .. tostring(icon.hoverGlow.width)
     )
   end
 

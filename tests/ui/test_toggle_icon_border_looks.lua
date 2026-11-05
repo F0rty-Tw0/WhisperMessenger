@@ -48,7 +48,7 @@ return function()
     assert(ring.shown == true, "ring shown")
     assert(layer == "OVERLAY" and sublevel == -1, "full ring over the button, got " .. tostring(layer) .. " " .. tostring(sublevel))
     assert(near(ring.width, 48.3), "ring at the rim's outer size, got " .. tostring(ring.width))
-    assert(icon.label.width == 33, "bubbles at 0.7 of the ring, got " .. tostring(icon.label.width))
+    assert(icon.label.width == 37, "bubbles keep the rim's 0.9, got " .. tostring(icon.label.width))
     assert(icon.background.shown == false, "circle hidden")
   end
 
