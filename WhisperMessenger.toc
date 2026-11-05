@@ -15,7 +15,7 @@
 ## Author: F0rty_tw0
 ## Category: Chat
 ## IconTexture: Interface\AddOns\WhisperMessenger\Media\icon.png
-## Version: v2.1.3
+## Version: v2.1.4
 ## SavedVariables: WhisperMessengerDB
 ## SavedVariablesPerCharacter: WhisperMessengerCharacterDB
 ## OptionalDeps: EllesmereUI
