@@ -76,6 +76,7 @@ return function()
     assert(#buttons == 2, "test_set_language: selector label is localized")
     assert(FindUI.text(buttons[2], "Quadrat") ~= nil, "test_set_language: option labels are localized")
     local cover = FindUI.disabledCover(row)
+    assert(cover, "test_set_language: disabled cover exists")
     local savedTooltip = _G.GameTooltip
     local shown
     _G.GameTooltip = {
