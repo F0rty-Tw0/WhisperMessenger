@@ -5,7 +5,7 @@ local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 
 local WHITE = { 1, 1, 1, 1 }
 
-local function build(withSquareFrame, withFace, ringScale)
+local function build(withSquareFrame, withFace, ringScale, ringGlyphRatio)
   local factory = FakeUI.NewFactory()
   local frame = factory.CreateFrame("Button", nil, nil)
   frame:SetSize(42, 42)
@@ -21,6 +21,7 @@ local function build(withSquareFrame, withFace, ringScale)
     withSquareFrame = withSquareFrame,
     face = face,
     ringScale = ringScale,
+    ringGlyphRatio = ringGlyphRatio,
   })
 
   return border, frame, glyph, face
@@ -106,16 +107,25 @@ return function()
     assert(glyph.width == 29, name .. ": glyph at 0.7, got " .. tostring(glyph.width))
   end
 
-  -- test_ring_scale_grows_the_full_ring_and_its_bubbles
+  -- test_ring_scale_grows_only_the_full_ring
   do
-    local name = "test_ring_scale_grows_the_full_ring_and_its_bubbles"
+    local name = "test_ring_scale_grows_only_the_full_ring"
     local border, frame, glyph = build(false, false, IconBorder.RIM_SCALE)
     border.paint("ring", false)
     local ring = border.ring
     assert(ring:GetDrawLayer() == "OVERLAY", name .. ": over the button")
     assert(near(ring.width, 48.3) and near(ring.height, 48.3), name .. ": size, got " .. tostring(ring.width))
     assert(centeredOn(ring, frame), name .. ": centered")
-    assert(glyph.width == 33, name .. ": glyph at 0.7 of the ring, got " .. tostring(glyph.width))
+    assert(glyph.width == 29, name .. ": glyph stays at 0.7 of the button, got " .. tostring(glyph.width))
+  end
+
+  -- test_ring_glyph_ratio_sets_the_full_ring_bubbles
+  do
+    local name = "test_ring_glyph_ratio_sets_the_full_ring_bubbles"
+    local border, _frame, glyph = build(false, false, IconBorder.RIM_SCALE, 0.9)
+    border.paint("ring", false)
+    assert(near(border.ring.width, 48.3), name .. ": ring keeps its scale, got " .. tostring(border.ring.width))
+    assert(glyph.width == 37, name .. ": glyph at 0.9, got " .. tostring(glyph.width))
   end
 
   -- test_ring_scale_leaves_the_rim_alone

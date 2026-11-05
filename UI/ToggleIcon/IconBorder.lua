@@ -76,9 +76,11 @@ end
 -- parts: { glyph, glyphRatio, withSquareFrame (true to make one), face (optional),
 -- ringScale (optional, default 1): the "ring" look's size and bubbles relative to
 -- the button. The widget passes RIM_SCALE so its outer edge matches the "rim";
--- the minimap keeps 1 for its fixed footprint. }
+-- the minimap keeps 1 for its fixed footprint. ringGlyphRatio (optional, default
+-- FULL_RING_GLYPH_RATIO): the bubbles' size on the "ring" look. }
 function IconBorder.Create(frame, parts)
   local ringScale = parts.ringScale or 1
+  local ringGlyphRatio = parts.ringGlyphRatio or IconBorder.FULL_RING_GLYPH_RATIO
   local ring = frame:CreateTexture(nil, "BACKGROUND", nil, BORDER_SUBLEVEL)
   ring:SetTexture(IconBorder.RING_TEXTURE)
   ring:Hide()
@@ -93,7 +95,7 @@ function IconBorder.Create(frame, parts)
 
   local function paint(look, themed)
     local side = frame:GetWidth()
-    local glyphRatio = look == "ring" and IconBorder.FULL_RING_GLYPH_RATIO * ringScale or parts.glyphRatio
+    local glyphRatio = look == "ring" and ringGlyphRatio or parts.glyphRatio
     local glyphSide = math.floor(side * glyphRatio)
 
     paintRing(ring, frame, look, side, ringScale)
