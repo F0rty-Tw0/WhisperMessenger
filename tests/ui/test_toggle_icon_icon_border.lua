@@ -5,7 +5,7 @@ local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 
 local WHITE = { 1, 1, 1, 1 }
 
-local function build(withSquareFrame, withFace)
+local function build(withSquareFrame, withFace, ringScale)
   local factory = FakeUI.NewFactory()
   local frame = factory.CreateFrame("Button", nil, nil)
   frame:SetSize(42, 42)
@@ -15,7 +15,13 @@ local function build(withSquareFrame, withFace)
     face = frame:CreateTexture(nil, "BACKGROUND")
     face:SetAllPoints(frame)
   end
-  local border = IconBorder.Create(frame, { glyph = glyph, glyphRatio = 0.9, withSquareFrame = withSquareFrame, face = face })
+  local border = IconBorder.Create(frame, {
+    glyph = glyph,
+    glyphRatio = 0.9,
+    withSquareFrame = withSquareFrame,
+    face = face,
+    ringScale = ringScale,
+  })
 
   return border, frame, glyph, face
 end
@@ -98,6 +104,27 @@ return function()
     assert(near(ring.width, 42), name .. ": size, got " .. tostring(ring.width))
     assert(centeredOn(ring, frame), name .. ": centered")
     assert(glyph.width == 29, name .. ": glyph at 0.7, got " .. tostring(glyph.width))
+  end
+
+  -- test_ring_scale_grows_the_full_ring_and_its_bubbles
+  do
+    local name = "test_ring_scale_grows_the_full_ring_and_its_bubbles"
+    local border, frame, glyph = build(false, false, IconBorder.RIM_SCALE)
+    border.paint("ring", false)
+    local ring = border.ring
+    assert(ring:GetDrawLayer() == "OVERLAY", name .. ": over the button")
+    assert(near(ring.width, 48.3) and near(ring.height, 48.3), name .. ": size, got " .. tostring(ring.width))
+    assert(centeredOn(ring, frame), name .. ": centered")
+    assert(glyph.width == 33, name .. ": glyph at 0.7 of the ring, got " .. tostring(glyph.width))
+  end
+
+  -- test_ring_scale_leaves_the_rim_alone
+  do
+    local name = "test_ring_scale_leaves_the_rim_alone"
+    local border, _frame, glyph = build(false, false, IconBorder.RIM_SCALE)
+    border.paint("rim", false)
+    assert(near(border.ring.width, 48.3), name .. ": size, got " .. tostring(border.ring.width))
+    assert(glyph.width == 37, name .. ": glyph at 0.9, got " .. tostring(glyph.width))
   end
 
   -- test_square_frame_covers_the_button
