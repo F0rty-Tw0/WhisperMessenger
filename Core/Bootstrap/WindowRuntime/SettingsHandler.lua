@@ -250,9 +250,13 @@ function SettingsHandler.Create(options)
         minimap.refreshDesaturation()
       end
     end
-    local repaintsIcon = key == "iconBackground" or key == "widgetShape"
+    local repaintsBorder = key == "iconBorder" or key == "iconBorderThemed"
+    local repaintsIcon = repaintsBorder or key == "iconBackground" or key == "widgetShape"
     if repaintsIcon and icon and icon.refreshTheme then
       icon.refreshTheme()
+    end
+    if repaintsBorder and minimap and minimap.refreshTheme then
+      minimap.refreshTheme()
     end
     if key == "widgetTransparency" and icon and icon.refreshTransparency then
       icon.refreshTransparency()
