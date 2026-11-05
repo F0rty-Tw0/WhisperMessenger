@@ -1,5 +1,5 @@
 -- The minimap button wears the same face as the widget: the dark circle, the
--- two bubbles, under the ring (theme accent, or gold). Only the back bubble grays while idle,
+-- two bubbles, under the gold ring. Only the back bubble grays while idle,
 -- hover lifts the circle.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")

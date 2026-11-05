@@ -1,6 +1,5 @@
--- The minimap button wears the full ring over its dark circle, tinted to the
--- theme accent unless the themed setting keeps it gold, and takes it off with
--- the border setting.
+-- The minimap button always wears the gold full ring over its dark circle.
+-- The border settings belong to the widget and leave the minimap alone.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
@@ -43,6 +42,16 @@ local function constant(value)
   end
 end
 
+-- Asserts the full gold ring at button size, 0.7 bubbles and the face inside the band.
+local function assertGoldRing(name, icon)
+  assert(icon.ring.shown == true, name .. ": ring shown")
+  assert(near(icon.ring.width, 30), name .. ": ring at button size, got " .. tostring(icon.ring.width))
+  assert(icon.ring.desaturated == false, name .. ": ring not desaturated")
+  assert(sameColor(icon.ring.vertexColor, WHITE), name .. ": ring untinted")
+  assert(icon.iconTex.width == 21, name .. ": bubbles at 0.7, got " .. tostring(icon.iconTex.width))
+  assert(near(icon.background.width, 30 * IconBorder.FULL_RING_FACE_RATIO), name .. ": circle at mid-band, got " .. tostring(icon.background.width))
+end
+
 return function()
   Theme.SetPreset("wow_default")
 
@@ -73,79 +82,53 @@ return function()
     assert(centeredOn(icon.background, icon.frame), name .. ": circle centered")
   end
 
-  -- test_minimap_circle_fills_the_button_with_border_off
+  -- test_minimap_ring_is_gold_by_default
   do
-    local icon = createIcon({ getIconBorder = constant(false) })
-    assert(icon.background.allPoints == icon.frame, "test_minimap_circle_fills_the_button_with_border_off: circle fills the button")
-  end
-
-  -- test_minimap_ring_takes_the_accent_by_default
-  do
-    local name = "test_minimap_ring_takes_the_accent_by_default"
+    local name = "test_minimap_ring_is_gold_by_default"
     local icon = createIcon()
-    assert(icon.ring.desaturated == true, name .. ": ring desaturated")
-    assert(sameColor(icon.ring.vertexColor, Theme.COLORS.accent), name .. ": ring takes the accent")
-  end
-
-  -- test_minimap_gold_ring_when_not_themed
-  do
-    local name = "test_minimap_gold_ring_when_not_themed"
-    local icon = createIcon({ getIconBorderThemed = constant(false) })
     assert(icon.ring.desaturated == false, name .. ": ring keeps its gold")
     assert(sameColor(icon.ring.vertexColor, WHITE), name .. ": ring untinted")
   end
 
-  -- test_minimap_border_off_shows_no_ring
+  -- test_minimap_ignores_the_border_settings
   do
-    local name = "test_minimap_border_off_shows_no_ring"
-    local icon = createIcon({ getIconBorder = constant(false) })
-    assert(icon.ring.shown == false, name .. ": ring hidden")
-    assert(icon.iconTex.width == 27, name .. ": bubbles back at 0.9, got " .. tostring(icon.iconTex.width))
+    local icon = createIcon({ getIconBorder = constant(false), getIconBorderThemed = constant(false) })
+    assertGoldRing("test_minimap_ignores_the_border_settings", icon)
   end
 
-  -- test_minimap_border_setting_applies_on_refresh
+  -- test_minimap_ignores_the_themed_setting
   do
-    local name = "test_minimap_border_setting_applies_on_refresh"
+    local icon = createIcon({ getIconBorderThemed = constant(true) })
+    assertGoldRing("test_minimap_ignores_the_themed_setting", icon)
+  end
+
+  -- test_minimap_keeps_the_ring_on_refresh_with_the_border_settings_off
+  do
     local on = true
     local icon = createIcon({
       getIconBorder = function()
+        return on
+      end,
+      getIconBorderThemed = function()
         return on
       end,
     })
 
     on = false
     icon.refreshTheme()
-    assert(icon.ring.shown == false, name .. ": ring hidden after off")
-    assert(icon.iconTex.width == 27, name .. ": bubbles at 0.9 after off")
-    assert(icon.background.allPoints == icon.frame, name .. ": circle fills the button after off")
-
-    on = true
-    icon.refreshTheme()
-    assert(icon.ring.shown == true, name .. ": ring shown after on")
-    assert(icon.iconTex.width == 21, name .. ": bubbles at 0.7 after on")
-    assert(near(icon.background.width, 30 * IconBorder.FULL_RING_FACE_RATIO), name .. ": circle inside the ring after on")
+    assertGoldRing("test_minimap_keeps_the_ring_on_refresh_with_the_border_settings_off", icon)
   end
 
-  -- test_minimap_ring_follows_the_theme
+  -- test_minimap_ring_stays_gold_across_a_theme_change
   do
-    local name = "test_minimap_ring_follows_the_theme"
+    local name = "test_minimap_ring_stays_gold_across_a_theme_change"
     Theme.SetPreset("elvui_dark")
     local icon = createIcon()
 
     Theme.SetPreset("plumber_warm")
     icon.refreshTheme()
-    assert(sameColor(icon.ring.vertexColor, Theme.COLORS.accent), name .. ": ring takes the new accent")
-    assert(not sameColor(icon.ring.vertexColor, { 0.34, 0.51, 0.90 }), name .. ": not ElvUI's accent")
-    Theme.SetPreset("wow_default")
-  end
-
-  -- test_minimap_theme_change_keeps_a_hidden_ring_hidden
-  do
-    local icon = createIcon({ getIconBorder = constant(false) })
-
-    Theme.SetPreset("plumber_warm")
-    icon.refreshTheme()
-    assert(icon.ring.shown == false, "test_minimap_theme_change_keeps_a_hidden_ring_hidden: ring still hidden")
+    assert(icon.ring.desaturated == false, name .. ": ring keeps its gold")
+    assert(sameColor(icon.ring.vertexColor, WHITE), name .. ": ring untinted")
     Theme.SetPreset("wow_default")
   end
 

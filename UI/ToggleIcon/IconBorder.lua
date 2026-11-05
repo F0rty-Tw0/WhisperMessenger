@@ -8,7 +8,8 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 
 -- The ring around the widget and minimap buttons, and the square frame for
--- the square shape, in the theme accent or their gold art. Paints one of four
+-- the square shape, in the theme accent or their gold art (the minimap always
+-- paints gold). Paints one of four
 -- looks: "rim" (ring under the opaque circle, only a rim shows), "ring" (full
 -- ring over the button), "square" (square frame) and "none".
 local IconBorder = {}
