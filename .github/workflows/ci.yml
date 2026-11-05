@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Run release script tests
-        run: python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog
+        run: python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog tests.scripts.test_compose_gold_ring
 
       - name: Install Lua
         run: |
