@@ -14,8 +14,8 @@ local applyVertexColor = UIHelpers.applyVertexColor
 
 -- The widget's two bubbles (white front glyph over an accent-colored back
 -- bubble), shown on every shape, and its square look, chosen by the widget
--- shape setting on any theme: a square drawn like EllesmereUI's action buttons
--- in place of the circle.
+-- shape setting on any theme: a square slot drawn like EllesmereUI's action
+-- buttons in place of the circle, under IconBorder's gold square frame.
 local SquareLook = {}
 
 SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -91,14 +91,14 @@ end
 -- getShowBorder() false takes it off, getBorderThemed() false keeps it gold.
 -- A missing getter means on.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
--- slot background, border, and their hover and pushed effects.
+-- the slot background and its hover and pushed effects; the gold square frame
+-- from IconBorder replaces EllesmereUI's border.
 -- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
 function SquareLook.Create(frame, parts)
   local function isSquare()
     return parts.getWidgetShape ~= nil and parts.getWidgetShape() == "square"
   end
 
-  local border = SquareEffects.Create(frame, "BORDER", 0)
   local hoverEffect = SquareEffects.Create(frame, "OVERLAY", 1)
   local pushEffect = SquareEffects.Create(frame, "OVERLAY", 2)
   local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph, isSquare)
@@ -124,14 +124,13 @@ function SquareLook.Create(frame, parts)
     return not backgroundShown()
   end
 
-  -- The square's slot fill, border and effects; repainted after a hover too,
+  -- The square's slot fill and effects; repainted after a hover too,
   -- since the widget's own hover code repaints the background.
   local function paintSquare()
     local squareBackground = squareBackgroundShown()
     if squareBackground then
       applyVertexColor(parts.background, look.bg)
     end
-    border.show(squareBackground)
     hoverEffect.show(squareBackground and hovered)
     pushEffect.show(squareBackground and pushed)
   end
@@ -168,7 +167,6 @@ function SquareLook.Create(frame, parts)
     -- First: the glows below are sized from the glyph the border sizes.
     parts.border.paint(IconBorder.LookFor(square, backgroundShown(), IconBorder.IsOn(parts.getShowBorder)), IconBorder.IsOn(parts.getBorderThemed))
     look = ButtonLook.Read()
-    border.paint({ kind = "edge", color = look.border, px = look.borderPx })
     hoverEffect.paint(look.hover, look.borderPx)
     pushEffect.paint(look.push, look.borderPx)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
@@ -198,7 +196,6 @@ function SquareLook.Create(frame, parts)
   end
 
   return {
-    edges = border.edges,
     hoverEffect = hoverEffect.fill,
     pushEffect = pushEffect.fill,
     accentGlyph = accent.texture,

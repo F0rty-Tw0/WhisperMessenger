@@ -236,7 +236,6 @@ function ToggleIcon.Create(factory, options)
     background = background,
     ring = border.ring,
     squareFrame = border.squareFrame,
-    squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,
     glyphOutline = squareLook.outline,
