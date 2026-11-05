@@ -1,5 +1,5 @@
 -- The EllesmereUI preset draws the widget as a flat square with a 1px black
--- edge and the ring-free glyph; every other preset keeps the round look.
+-- edge; every other preset keeps the round look. Both show the two bubbles.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Bridge = require("WhisperMessenger.UI.Theme.EllesmereBridge")
@@ -110,7 +110,7 @@ return function()
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "background keeps its color after a hover")
   end)
 
-  -- test_round_look_still_desaturates_everything
+  -- test_round_look_grays_only_the_back_bubble
   do
     Theme.SetPreset("wow_default")
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
@@ -119,7 +119,9 @@ return function()
       end,
     })
     icon.setUnreadCount(0)
-    assert(icon.label.desaturated == true, "round glyph still grays out")
+    assert(icon.label.desaturated ~= true, "front bubble keeps its color")
+    assert(icon.background.desaturated ~= true, "circle keeps its color")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble grays out")
   end
 
   -- test_background_option_hides_the_square
@@ -281,10 +283,10 @@ return function()
     Theme.SetPreset("wow_default")
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
     assert(icon.background.texturePath == ROUND_BG, "round fill")
-    assert(icon.label.texturePath == ROUND_GLYPH, "original icon")
+    assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "front bubble")
     assert(icon.border == nil, "no ring on the circle")
     assert(edgesShown(icon.squareEdges, false), "no square edge")
-    assert(icon.accentGlyph.shown == false, "no accent back bubble")
+    assert(icon.accentGlyph.shown == true, "accent back bubble")
   end
 
   -- test_switching_presets_swaps_the_look_live
@@ -297,7 +299,8 @@ return function()
     assert(icon.border == nil and edgesShown(icon.squareEdges, true), "square edge shown")
     Theme.SetPreset("elvui_dark")
     icon.refreshTheme()
-    assert(icon.background.texturePath == ROUND_BG and icon.label.texturePath == ROUND_GLYPH, "round again")
+    assert(icon.background.texturePath == ROUND_BG and icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "round again")
+    assert(icon.accentGlyph.shown == true, "round again, back bubble still shown")
     assert(icon.border == nil and edgesShown(icon.squareEdges, false), "round again, edge gone")
   end)
 
@@ -310,7 +313,6 @@ return function()
     Theme.SetPreset("wow_default")
     minimap.refreshTheme()
     assert(minimap.iconTex.texturePath == ROUND_GLYPH, "original minimap icon on other presets")
-    assert(minimap.accentGlyph.shown == false, "no accent bubble on other presets")
   end)
 
   Theme.SetPreset(Theme.DEFAULT_PRESET)

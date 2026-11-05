@@ -4,20 +4,19 @@ if type(ns) ~= "table" then
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local applyVertexColor = UIHelpers.applyVertexColor
 
 -- The toggle icon's round face: circle and chat glyph, plus the theme
 -- colours each one is painted with.
 local IconArt = {}
 
-local ADDON_ICON_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 local GLYPH_RATIO = 0.9 -- chat icon scale factor vs ICON_SIZE
 local HOVER_ACCENT_MIX = 0.15 -- share of the accent blended into the circle on hover
 
 -- Circular background: use the circle texture directly, tinted to desired color
 local CIRCLE_TEX = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
 
-IconArt.ADDON_ICON_TEXTURE = ADDON_ICON_TEXTURE
 IconArt.CIRCLE_TEX = CIRCLE_TEX
 IconArt.GLYPH_RATIO = GLYPH_RATIO
 
@@ -58,7 +57,7 @@ function IconArt.Create(frame, iconSize)
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
   chatIcon:SetSize(iconSize * GLYPH_RATIO, iconSize * GLYPH_RATIO)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
-  chatIcon:SetTexture(ADDON_ICON_TEXTURE)
+  chatIcon:SetTexture(SquareLook.GLYPH_TEXTURE)
   applyVertexColor(chatIcon, resolveGlyphColor())
 
   -- Resizes the glyph after the frame took newSize.
@@ -71,6 +70,12 @@ function IconArt.Create(frame, iconSize)
     chatIcon = chatIcon,
     applySize = applySize,
   }
+end
+
+-- Paints the face from IconArt.Create in the theme's colors; hovered lifts the circle.
+function IconArt.PaintFace(art, hovered)
+  applyVertexColor(art.background, hovered and resolveHoverBgColor() or resolveBgColor())
+  applyVertexColor(art.chatIcon, resolveGlyphColor())
 end
 
 ns.ToggleIconIconArt = IconArt

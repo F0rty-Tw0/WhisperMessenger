@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
+local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local function near(a, b)
   return math.abs(a - b) < 1e-9
@@ -17,7 +18,7 @@ return function()
     local art = IconArt.Create(frame, 40)
 
     assert(art.background.texturePath == IconArt.CIRCLE_TEX, "test_create_paints_round_face_and_glyph: background should use the circle texture")
-    assert(art.chatIcon.texturePath == IconArt.ADDON_ICON_TEXTURE, "test_create_paints_round_face_and_glyph: glyph should use the addon icon")
+    assert(art.chatIcon.texturePath == SquareLook.GLYPH_TEXTURE, "test_create_paints_round_face_and_glyph: glyph should be the front bubble")
     assert(
       art.chatIcon.width == 36,
       "test_create_paints_round_face_and_glyph: glyph should be 90% of the icon size, got " .. tostring(art.chatIcon.width)
