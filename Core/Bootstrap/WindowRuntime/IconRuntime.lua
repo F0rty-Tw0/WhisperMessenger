@@ -111,6 +111,9 @@ function IconRuntime.Create(options)
     getIconBackground = function()
       return settings.iconBackground ~= false
     end,
+    getWidgetShape = function()
+      return settings.widgetShape == "square" and "square" or "circle"
+    end,
     getWidgetTransparency = function()
       return settings.widgetTransparency or 0
     end,

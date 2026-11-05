@@ -14,6 +14,7 @@ Options.DEFAULTS = {
   iconSize = 42,
   iconDesaturated = true,
   iconBackground = true,
+  widgetShape = "circle",
   lockToggleIcon = false,
   shareWidgetPosition = false,
   widgetTransparency = 0,

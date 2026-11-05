@@ -197,4 +197,17 @@ return function()
     assert(persistedPosition ~= localPosition, "sharing drag should not replace the character position")
     assert(localPosition.x == 1 and localPosition.y == 2, "sharing drag should leave the character position untouched")
   end
+
+  -- test_widget_shape_reads_circle_unless_saved_square
+  do
+    local settings = {}
+    local options = capturePositionOptions({ settings = settings }, { icon = {} })
+    assert(options.getWidgetShape() == "circle", "unset widgetShape reads circle")
+    settings.widgetShape = "square"
+    assert(options.getWidgetShape() == "square", "saved square reads square")
+    for _, junk in ipairs({ "hexagon", "", 5, true }) do
+      settings.widgetShape = junk
+      assert(options.getWidgetShape() == "circle", "junk widgetShape " .. tostring(junk) .. " reads circle")
+    end
+  end
 end

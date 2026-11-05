@@ -81,6 +81,7 @@ return function()
     widgetTransparency = 0.4,
     widgetPreviewAutoDismissSeconds = 15,
     iconMode = "both",
+    widgetShape = "square",
     widgetPreviewPosition = "top",
     widgetPreviewReply = true,
   }
@@ -182,6 +183,7 @@ return function()
   assert(notificationCapture.config.iconSize == nil, "Notifications config should not include iconSize")
 
   assert(iconsCapture.config.iconMode == "both", "expected icons config.iconMode=both, got: " .. tostring(iconsCapture.config.iconMode))
+  assert(iconsCapture.config.widgetShape == "square", "Icons config should forward widgetShape, got: " .. tostring(iconsCapture.config.widgetShape))
   assert(iconsCapture.config.iconSize == 56, "expected icons config.iconSize=56, got: " .. tostring(iconsCapture.config.iconSize))
   assert(
     iconsCapture.config.iconDesaturated == false,
