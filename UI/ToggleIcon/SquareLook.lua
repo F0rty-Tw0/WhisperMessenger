@@ -190,11 +190,5 @@ function SquareLook.Create(frame, parts)
   }
 end
 
--- Glyph for the round minimap button: the ring-free one under a square
--- theme, so it doesn't stack a second ring inside the button's own.
-function SquareLook.MinimapGlyph(roundGlyph)
-  return Theme.UsesSquareWidget() and SquareLook.GLYPH_TEXTURE or roundGlyph
-end
-
 ns.ToggleIconSquareLook = SquareLook
 return SquareLook

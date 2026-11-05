@@ -65,7 +65,7 @@ function ToggleIcon.Create(factory, options)
     pulse = pulseGlow,
   })
 
-  -- Unread badge, outlined so it reads where it overlaps the ring
+  -- Unread badge, outlined so it reads where it overlaps the circle's edge
   local badgeResult = Badge.Create(factory, frame, { outline = true })
   local badge = badgeResult.frame
   local badgeBackground = badgeResult.background

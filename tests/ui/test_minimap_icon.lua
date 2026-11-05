@@ -1,5 +1,11 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
+local Theme = require("WhisperMessenger.UI.Theme")
+local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
+
+local function sameColor(a, b)
+  return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
+end
 
 local function makeParent(factory)
   local parent = factory.CreateFrame("Frame", "Minimap", nil)
@@ -44,11 +50,12 @@ return function()
       end,
     })
 
-    assert(icon.iconTex.desaturated == true, "icon starts desaturated while idle")
+    assert(icon.iconTex.desaturated ~= true, "front bubble is never desaturated")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble gray while idle")
     icon.setUnreadCount(3)
-    assert(icon.iconTex.desaturated == false, "unread messages re-saturate the icon")
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "unread messages return the back bubble to the accent")
     icon.setUnreadCount(0)
-    assert(icon.iconTex.desaturated == true, "icon desaturates again when idle")
+    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble gray again when idle")
   end
 
   -- test_desaturation_setting_off_keeps_icon_saturated
@@ -61,7 +68,8 @@ return function()
       end,
     })
 
-    assert(icon.iconTex.desaturated ~= true, "icon stays saturated when the setting is off")
+    assert(icon.iconTex.desaturated ~= true, "front bubble stays saturated when the setting is off")
+    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble stays accent when the setting is off")
   end
 
   -- test_badge_hidden_when_show_badge_disabled

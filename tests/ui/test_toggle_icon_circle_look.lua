@@ -132,7 +132,6 @@ return function()
         return enabled
       end,
     })
-    desaturation.refreshOriginalColors()
     desaturation.refresh()
     assert(desaturation.isActive() == true, "idle with the setting on")
     desaturation.update(2)

@@ -8,6 +8,7 @@ local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local ButtonLook = require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 
@@ -17,7 +18,6 @@ end
 
 local SLOT_BG = ButtonLook.Read().bg -- EllesmereUI's defaults: the fake has no action bars module
 local ROUND_BG = "Interface\\CHARACTERFRAME\\TempPortraitAlphaMask"
-local ROUND_GLYPH = "Interface\\AddOns\\WhisperMessenger\\Media\\icon.png"
 
 local function withEllesmere(fn)
   rawset(_G, "EllesmereUI", {
@@ -304,15 +304,20 @@ return function()
     assert(icon.border == nil and edgesShown(icon.squareEdges, false), "round again, edge gone")
   end)
 
-  -- test_minimap_button_uses_the_glyph_under_ellesmere
+  -- test_minimap_stays_round_under_ellesmere
   withEllesmere(function()
     Theme.SetPreset("ellesmere_ui")
-    local minimap = MinimapIcon.Create(FakeUI.NewFactory(), {})
+    local minimap = MinimapIcon.Create(FakeUI.NewFactory(), {
+      getIconDesaturated = function()
+        return true
+      end,
+    })
     assert(minimap.iconTex.texturePath == SquareLook.GLYPH_TEXTURE, "minimap glyph, got " .. tostring(minimap.iconTex.texturePath))
-    assert(minimap.accentGlyph.shown == true and sameColor(minimap.accentGlyph.vertexColor, Theme.COLORS.accent), "minimap accent bubble")
-    Theme.SetPreset("wow_default")
-    minimap.refreshTheme()
-    assert(minimap.iconTex.texturePath == ROUND_GLYPH, "original minimap icon on other presets")
+    assert(minimap.background.texturePath == IconArt.CIRCLE_TEX, "minimap stays a circle, got " .. tostring(minimap.background.texturePath))
+    minimap.setUnreadCount(0)
+    assert(minimap.accentGlyph.shown == true, "minimap back bubble shown")
+    assert(sameColor(minimap.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "idle back bubble is the circle's gray")
+    assert(not sameColor(minimap.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "not the square look's gray")
   end)
 
   Theme.SetPreset(Theme.DEFAULT_PRESET)
