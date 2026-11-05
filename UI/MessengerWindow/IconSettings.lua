@@ -125,7 +125,8 @@ function IconSettings.Create(factory, parent, config, options)
   local iconBackgroundAvailability = UIHelpers.attachDisabledState(factory, iconBackgroundToggle.row)
   local function refreshIconBackgroundAvailability()
     local usable = shape == "square"
-    iconBackgroundAvailability.set(usable, not usable and text("Only with the square widget shape.") or nil)
+    local reason = not usable and text("Only with the square widget shape.") or nil
+    iconBackgroundAvailability.set(usable, reason)
   end
   -- Selector clicks and Reset to Defaults both land here, so the toggle follows the shape at once.
   changed = function(key, value)

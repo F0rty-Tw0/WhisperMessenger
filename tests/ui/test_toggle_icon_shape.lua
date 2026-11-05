@@ -38,6 +38,7 @@ local function edgesShown(edges, shown)
       return false, side
     end
   end
+
   return true
 end
 
@@ -66,6 +67,7 @@ local function iconWithShape(shape, options, factory)
   options.getWidgetShape = type(shape) == "function" and shape or function()
     return shape
   end
+
   return ToggleIcon.Create(factory or FakeUI.NewFactory(), options)
 end
 
@@ -132,6 +134,7 @@ return function()
           return true
         end
       end
+
       return false
     end
     assert(pulsing(), "pulse running before the change")

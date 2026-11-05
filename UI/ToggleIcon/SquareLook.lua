@@ -53,7 +53,8 @@ function SquareLook.CreateAccentGlyph(frame, glyph, isSquare)
   local function apply(desaturated, hovered)
     setShown(texture, true)
     local grey = isSquare and isSquare() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
-    applyVertexColor(texture, desaturated and not hovered and grey or Theme.COLORS.accent)
+    local color = desaturated and not hovered and grey or Theme.COLORS.accent
+    applyVertexColor(texture, color)
   end
 
   return { texture = texture, apply = apply }

@@ -57,10 +57,12 @@ function Options.BuildIconModeOptions()
 end
 
 function Options.BuildWidgetShapeOptions()
-  return {
+  local options = {
     { key = "circle", label = text("Circle") },
     { key = "square", label = text("Square") },
   }
+
+  return options
 end
 
 function Options.PxFormat(v)

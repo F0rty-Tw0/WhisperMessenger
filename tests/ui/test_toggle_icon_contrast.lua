@@ -18,6 +18,7 @@ end
 local function contrast(a, b)
   local la, lb = luminance(a), luminance(b)
   local hi, lo = math.max(la, lb), math.min(la, lb)
+
   return (hi + 0.05) / (lo + 0.05)
 end
 
@@ -26,6 +27,7 @@ local function mix(bg, accent)
   for i = 1, 3 do
     out[i] = bg[i] * (1 - HOVER_ACCENT_MIX) + accent[i] * HOVER_ACCENT_MIX
   end
+
   return out
 end
 
