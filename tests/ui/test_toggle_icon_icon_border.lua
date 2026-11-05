@@ -37,6 +37,14 @@ end
 local WHITE = { 1, 1, 1, 1 }
 
 do
+  local function test_textures_point_at_the_shipped_art()
+    assert(IconBorder.RING_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\ring_gold.png")
+    assert(IconBorder.SQUARE_FRAME_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\frame_gold_square.png")
+  end
+  test_textures_point_at_the_shipped_art()
+end
+
+do
   local function test_look_for_maps_each_state_to_one_look()
     assert(IconBorder.LookFor(false, true, true) == "rim")
     assert(IconBorder.LookFor(false, false, true) == "ring")
