@@ -92,6 +92,7 @@ return function()
 
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "new theme's lift")
     assert(not sameColor(icon.background.vertexColor, defaultLift), "not the old theme's lift")
+    assert(sameColor(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "front bubble takes the new theme")
     Theme.SetPreset("wow_default")
   end
 

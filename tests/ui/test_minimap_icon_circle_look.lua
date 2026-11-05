@@ -98,6 +98,7 @@ return function()
     icon.refreshTheme()
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "idle circle takes the new theme")
     assert(not sameColor(icon.background.vertexColor, oldBg), "not the old theme's circle")
+    assert(sameColor(icon.iconTex.vertexColor, Theme.COLORS.toggle_icon_glyph), "front bubble takes the new theme")
 
     fire(icon, "OnEnter")
     Theme.SetPreset("wow_default")
