@@ -9,10 +9,12 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option in Behavior settings, off by default: Deselect chat input after sending. After you send a message, the cursor leaves the text box so your keys control the game again, and Enter puts it back while the messenger is open.
 - Smaller download, and the addon now uses less memory by keeping only your language loaded.
 - Changing to a language that isn't loaded now asks you to reload the interface.
-- The messenger button and the minimap button now share one look: a dark circle with the two chat bubbles on it, and no more ring inside a ring. Hovering lifts the circle a little so the bubbles stay easy to see, and the minimap button now reacts to the mouse as well.
-- When there are no unread messages, only the back chat bubble turns gray, and it is brighter than before so it stands out on the dark circle.
+- The messenger button and the minimap button now share one look on every theme: a dark circle with the two chat bubbles on it, and no more ring inside a ring. Hovering lifts the circle a little so the bubbles stay easy to see on any theme, and the minimap button now reacts to the mouse as well.
+- When there are no unread messages, only the back chat bubble turns gray, and it is brighter than before so it stands out on the dark circle. The front bubble and the circle keep their colors.
 - The sender's name on the message preview next to the button is smaller, so it fits the small card better.
-- New "Widget shape" setting on the Icons page: choose a round or a square widget on any theme. Players on the EllesmereUI theme now get the round widget by default and can pick square there.
+- New Icons setting, Widget shape: pick a round or a square messenger button on any theme, and it changes right away without a reload. The square button background now works on every theme once the shape is Square.
+- EllesmereUI theme: the messenger button is now round like on the other themes. To get the square back, open Settings, go to Icons, and set Widget shape to Square.
+- The addon's own icon, shown in the addon list, the minimap addon menu, the empty chat picture and the window portrait, now matches the new button look.
 
 ## [2.1.3] - 2026-11-04
 
