@@ -36,7 +36,7 @@ return function()
   -- test_minimap_draws_the_circle_and_bubbles_inside_the_ring
   do
     local icon = createIcon(false)
-    assert(icon.border == nil, "the button has no border field; the ring is `ring`")
+    assert(icon.ring.shown == true and icon.ring.texturePath == IconBorder.RING_TEXTURE, "the ring around the circle")
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "dark circle color")
     assert(icon.background.texturePath == IconArt.CIRCLE_TEX, "circle texture")
     assert(icon.iconTex.texturePath == SquareLook.GLYPH_TEXTURE, "front bubble texture")

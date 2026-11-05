@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 
 local function colorsMatch(a, b)
   if type(a) ~= "table" or type(b) ~= "table" then
@@ -34,7 +35,7 @@ return function()
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
 
-    assert(icon.border == nil, "no border field; the ring is icon.ring")
+    assert(icon.ring.shown == true and icon.ring.texturePath == IconBorder.RING_TEXTURE, "modern_icon: the ring around the circle")
     assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "modern_icon: bg should be tinted with toggle_icon_bg role")
     assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "modern_icon: glyph should be tinted with toggle_icon_glyph role")
   end
@@ -47,7 +48,7 @@ return function()
     local factory = FakeUI.NewFactory()
     local icon = ToggleIcon.Create(factory, {})
 
-    assert(icon.border == nil, "azeroth_icon: no border field; the ring is icon.ring")
+    assert(icon.ring.shown == true and icon.ring.texturePath == IconBorder.RING_TEXTURE, "azeroth_icon: the ring around the circle")
     assert(colorsMatch(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "azeroth_icon: bg should be tinted with toggle_icon_bg role")
     assert(colorsMatch(icon.label.vertexColor, Theme.COLORS.toggle_icon_glyph), "azeroth_icon: glyph should be tinted with toggle_icon_glyph role")
   end
