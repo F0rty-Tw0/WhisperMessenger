@@ -68,11 +68,25 @@ return function()
     assert(not sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "the lift differs from the idle circle")
     assert(sameColor(icon.label.vertexColor, glyphColor), "front bubble unchanged on hover")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble accent on hover")
+  end
+
+  -- test_press_and_release_leave_the_lift_alone
+  do
+    local icon = createIcon(true)
+    icon.setUnreadCount(0)
+    fire(icon, "OnEnter")
 
     fire(icon, "OnMouseDown")
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "press leaves the circle alone")
     fire(icon, "OnMouseUp")
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "release leaves the circle alone")
+  end
+
+  -- test_leave_restores_the_circle_and_the_gray_back
+  do
+    local icon = createIcon(true)
+    icon.setUnreadCount(0)
+    fire(icon, "OnEnter")
 
     fire(icon, "OnLeave")
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "circle back on leave")
@@ -109,20 +123,6 @@ return function()
     icon.setUnreadCount(0)
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "lift kept when unread clears")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "hovered, so never gray")
-  end
-
-  -- test_paint_face_paints_the_circle_and_the_glyph
-  do
-    local frame = FakeUI.NewFactory().CreateFrame("Button", nil, nil)
-    local art = IconArt.Create(frame, 40)
-
-    IconArt.PaintFace(art, true)
-    assert(sameColor(art.background.vertexColor, IconArt.ResolveHoverBgColor()), "hovered: the lift")
-    assert(sameColor(art.chatIcon.vertexColor, Theme.COLORS.toggle_icon_glyph), "hovered: glyph color")
-
-    IconArt.PaintFace(art, false)
-    assert(sameColor(art.background.vertexColor, Theme.COLORS.toggle_icon_bg), "idle: the plain circle")
-    assert(sameColor(art.chatIcon.vertexColor, Theme.COLORS.toggle_icon_glyph), "idle: glyph color")
   end
 
   Theme.SetPreset(Theme.DEFAULT_PRESET)

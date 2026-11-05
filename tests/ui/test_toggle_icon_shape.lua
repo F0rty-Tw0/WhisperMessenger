@@ -91,7 +91,13 @@ return function()
     local icon = iconWithShape("circle")
     assert(icon.background.texturePath == ROUND_BG, "circle on EllesmereUI, got " .. tostring(icon.background.texturePath))
     assert(edgesShown(icon.squareEdges, false), "no square edge")
-    assert(ToggleIcon.Create(FakeUI.NewFactory(), {}).background.texturePath == ROUND_BG, "no getter reads circle")
+  end)
+
+  -- test_missing_shape_getter_draws_a_circle
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
+    assert(icon.background.texturePath == ROUND_BG, "no getter reads circle")
   end)
 
   -- test_junk_shape_draws_a_circle

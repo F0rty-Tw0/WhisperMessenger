@@ -51,6 +51,7 @@ return function()
     })
 
     assert(icon.iconTex.desaturated ~= true, "front bubble is never desaturated")
+    assert(icon.background.desaturated ~= true, "circle is never desaturated")
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble gray while idle")
     icon.setUnreadCount(3)
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "unread messages return the back bubble to the accent")
