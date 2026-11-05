@@ -15,6 +15,7 @@ local DESELECT_ON_SEND_KEYS = {
   "Deselect chat input after sending",
   "After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back.",
 }
+local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -73,6 +74,9 @@ return function()
     for _, key in ipairs(DESELECT_ON_SEND_KEYS) do
       assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
     end
+
+    -- test_language_reload_prompt_is_translated
+    assert(catalog[LANGUAGE_RELOAD_KEY] ~= nil, code .. " is missing a translation for '" .. LANGUAGE_RELOAD_KEY .. "'")
 
     -- test_preview_reply_reason_names_the_translated_preview_toggle
     local replyReason = catalog[REPLY_REASON_KEY]
