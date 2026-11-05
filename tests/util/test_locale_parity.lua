@@ -11,6 +11,10 @@ local PREVIEW_REPLY_KEYS = {
   REPLY_PLACEHOLDER_KEY,
   REPLY_REASON_KEY,
 }
+local DESELECT_ON_SEND_KEYS = {
+  "Deselect chat input after sending",
+  "After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back.",
+}
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
 local function formatSlots(text)
@@ -64,6 +68,11 @@ return function()
       assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
     end
     assert(string.find(catalog[REPLY_PLACEHOLDER_KEY], "…", 1, true), code .. " reply placeholder should keep the ellipsis")
+
+    -- test_deselect_on_send_strings_are_translated
+    for _, key in ipairs(DESELECT_ON_SEND_KEYS) do
+      assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
+    end
 
     -- test_preview_reply_reason_names_the_translated_preview_toggle
     local replyReason = catalog[REPLY_REASON_KEY]
