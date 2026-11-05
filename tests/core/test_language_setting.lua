@@ -125,6 +125,16 @@ local function testApply()
     assert(settings.interfaceLanguage == "deDE", "accepting the closed prompt saves nothing")
   end)
 
+  -- test_loaded_pick_after_cancel_does_not_hide
+  withPopups(function(popups)
+    local settings = { interfaceLanguage = "deDE" }
+    local localization = stubLocalization({ enUS = true })
+    LanguageSetting.Apply(settings, "ruRU", makeRuntime(), localization)
+    cancel()
+    LanguageSetting.Apply(settings, "enUS", makeRuntime(), localization)
+    assert(#popups.hidden == 0, "after cancel no prompt is ours, so leave any other setting's alone")
+  end)
+
   -- test_loaded_pick_with_no_prompt_does_not_hide
   withPopups(function(popups)
     LanguageSetting.Apply({}, "deDE", makeRuntime(), stubLocalization({ deDE = true }))
@@ -174,9 +184,18 @@ local function testHandler()
 
   -- test_handler_switch_back_stays_live
   withPopups(function(popups)
-    local onChange, settings = makeHandler(stubLocalization({ deDE = true, enUS = true }))
+    local localization = assert(loadfile("Locale/Localization.lua"))("WhisperMessenger", {
+      Locale_deDE = { Hello = "Hallo" },
+      Locale_ruRU = { Hello = "Privet" },
+    })
+    localization.Configure({ language = "deDE" })
+    localization.ReleaseUnusedCatalogs()
+
+    local onChange, settings = makeHandler(localization)
     onChange("interfaceLanguage", "enUS")
+    assert(localization.Text("Hello") == "Hello", "English applies live")
     onChange("interfaceLanguage", "deDE")
+    assert(localization.Text("Hello") == "Hallo", "the kept catalog is still there after switching away")
     assert(settings.interfaceLanguage == "deDE", "switching back saves")
     assert(#popups.shown == 0, "switching back shows no prompt")
   end)
