@@ -84,6 +84,15 @@ return function()
     assert(env.input._hasFocus == true, "a send must keep focus when the setting is off")
   end
 
+  -- test_after_send_clears_focus_in_combat
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.input:SetFocus()
+    env.focus.afterSend()
+    assert(env.input._hasFocus == false, "combat blocks bindings, not focus: a send still clears it")
+  end
+
   -- test_binds_every_open_chat_key_while_eligible
   do
     local env = newEnv({ keys = { "ENTER", "NUMPADENTER" } })
@@ -119,6 +128,17 @@ return function()
     assert(#env.bound == 0, "a hidden composer must give the key back")
     env.pane:Show()
     assert(#env.bound == 1, "a shown composer takes the key again")
+  end
+
+  -- test_composer_hidden_by_parent_gives_key_back
+  do
+    local env = newEnv()
+    local parent = FakeUI.NewFactory().CreateFrame("Frame", nil, nil)
+    parent:Show()
+    env.pane.parent = parent
+    parent:Hide()
+    env.focus.sync()
+    assert(#env.bound == 0, "closing the window hides the pane's parent: the key must go back")
   end
 
   -- test_toggle_off_leaves_key_unbound_on_show
