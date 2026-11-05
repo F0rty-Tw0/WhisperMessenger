@@ -184,10 +184,6 @@ return function()
       icon.background.desaturated == true,
       "test_icon_desaturated_when_no_unread: background should be desaturated, got " .. tostring(icon.background.desaturated)
     )
-    assert(
-      icon.border.desaturated == true,
-      "test_icon_desaturated_when_no_unread: border should be desaturated, got " .. tostring(icon.border.desaturated)
-    )
   end
 
   -- test_icon_colorized_on_unread

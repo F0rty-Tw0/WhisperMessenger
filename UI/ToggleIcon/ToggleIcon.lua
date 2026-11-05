@@ -49,11 +49,9 @@ function ToggleIcon.Create(factory, options)
   end
 
   local resolveBgColor = IconArt.ResolveBgColor
-  local resolveRingColor = IconArt.ResolveRingColor
   local resolveGlyphColor = IconArt.ResolveGlyphColor
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
-  local border = art.border
   local chatIcon = art.chatIcon
 
   local label = chatIcon -- reference kept for return table
@@ -66,7 +64,6 @@ function ToggleIcon.Create(factory, options)
 
   local squareLook = SquareLook.Create(frame, {
     background = background,
-    border = border,
     glyph = chatIcon,
     roundBackground = IconArt.CIRCLE_TEX,
     roundGlyph = IconArt.ADDON_ICON_TEXTURE,
@@ -154,11 +151,10 @@ function ToggleIcon.Create(factory, options)
   end
 
   local desaturation = Desaturation.Create({
-    textures = { chatIcon = chatIcon, background = background, border = border },
+    textures = { chatIcon = chatIcon, background = background },
     resolveColors = {
       chatIcon = resolveGlyphColor,
       background = resolveBgColor,
-      border = resolveRingColor,
     },
     getIconDesaturated = getIconDesaturated,
     applyVertexColor = applyVertexColor,
@@ -256,7 +252,6 @@ function ToggleIcon.Create(factory, options)
   return {
     frame = frame,
     background = background,
-    border = border,
     squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,

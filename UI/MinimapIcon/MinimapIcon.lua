@@ -24,7 +24,6 @@ local BADGE_SIZE = 14
 local BADGE_LEVEL_OFFSET = 10 -- above the pulse glow (parent + 5)
 
 local BG_COLOR = { 0.08, 0.08, 0.08, 0.85 }
-local BORDER_COLOR = { 0.3, 0.3, 0.3, 0.4 }
 local ICON_COLOR = { 1, 1, 1, 1 }
 
 -- Default radial position: top-right quadrant, 45 degrees.
@@ -130,12 +129,6 @@ function MinimapIcon.Create(factory, options)
   iconTex:SetTexture(ICON_TEXTURE)
   -- Accent back bubble under the ring-free glyph (square themes only)
   local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
-  -- Ring border (same texture as the widget icon)
-  local border = frame:CreateTexture(nil, "BORDER")
-  border:SetPoint("TOPLEFT", frame, "TOPLEFT", -1, 1)
-  border:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 1, -1)
-  border:SetTexture("Interface\\COMMON\\RingBorder")
-  applyVertexColor(border, BORDER_COLOR)
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -178,16 +171,13 @@ function MinimapIcon.Create(factory, options)
   -- Idle-desaturation shared with the widget icon: grey only when the
   -- setting is on AND there are no unread whispers.
   local desaturation = Desaturation.Create({
-    textures = { chatIcon = iconTex, background = bg, border = border },
+    textures = { chatIcon = iconTex, background = bg },
     resolveColors = {
       chatIcon = function()
         return ICON_COLOR
       end,
       background = function()
         return BG_COLOR
-      end,
-      border = function()
-        return BORDER_COLOR
       end,
     },
     getIconDesaturated = options.getIconDesaturated,
@@ -291,7 +281,6 @@ function MinimapIcon.Create(factory, options)
   return {
     frame = frame,
     iconTex = iconTex,
-    border = border,
     badge = badge,
     badgeBackground = badgeBackground,
     badgeLabel = badgeLabel,

@@ -24,7 +24,6 @@ function Desaturation.Create(deps)
   local originalColors = {
     chatIcon = resolveColors.chatIcon(),
     background = resolveColors.background(),
-    border = resolveColors.border(),
   }
 
   local function isActive()
@@ -40,7 +39,7 @@ function Desaturation.Create(deps)
     lastUnreadCount = tonumber(unreadCount) or 0
     local shouldDesaturate = paintsGrey()
 
-    for _, tex in ipairs({ textures.chatIcon, textures.background, textures.border }) do
+    for _, tex in ipairs({ textures.chatIcon, textures.background }) do
       if tex.SetDesaturated then
         tex:SetDesaturated(shouldDesaturate)
       end
@@ -49,11 +48,9 @@ function Desaturation.Create(deps)
     if shouldDesaturate then
       applyVertexColor(textures.chatIcon, DESAT_GREY)
       applyVertexColor(textures.background, DESAT_BG)
-      applyVertexColor(textures.border, DESAT_GREY)
     else
       applyVertexColor(textures.chatIcon, originalColors.chatIcon)
       applyVertexColor(textures.background, originalColors.background)
-      applyVertexColor(textures.border, originalColors.border)
     end
   end
 
@@ -64,7 +61,6 @@ function Desaturation.Create(deps)
   local function refreshOriginalColors()
     originalColors.chatIcon = resolveColors.chatIcon()
     originalColors.background = resolveColors.background()
-    originalColors.border = resolveColors.border()
   end
 
   return {

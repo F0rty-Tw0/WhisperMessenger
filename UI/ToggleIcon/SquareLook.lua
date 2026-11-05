@@ -83,7 +83,7 @@ local function createHoverGlow(frame)
   return glow
 end
 
--- parts: { background, border, glyph, roundBackground, roundGlyph,
+-- parts: { background, glyph, roundBackground, roundGlyph,
 -- getShowBackground, pulse } where the round* fields are the texture paths
 -- of the round look; getShowBackground() false leaves just the two bubbles.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
@@ -160,7 +160,6 @@ function SquareLook.Create(frame, parts)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
     setShown(parts.background, not square or squareBackgroundShown())
     parts.glyph:SetTexture(square and SquareLook.GLYPH_TEXTURE or parts.roundGlyph)
-    setShown(parts.border, not square)
     setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()
