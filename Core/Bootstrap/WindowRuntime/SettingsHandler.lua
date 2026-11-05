@@ -9,6 +9,7 @@ local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("Whisp
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
+local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
 local TabVisibilitySetting = ns.BootstrapWindowRuntimeTabVisibilitySetting
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.TabVisibilitySetting")
@@ -74,6 +75,9 @@ function SettingsHandler.Create(options)
     end
     if key == "allowAddonIntegration" then
       IntegrationSetting.Apply(accountSettings, value, runtime)
+      return
+    end
+    if key == "interfaceLanguage" and LanguageSetting.Apply(accountSettings, value, runtime, localization) then
       return
     end
     local persistedValue = value

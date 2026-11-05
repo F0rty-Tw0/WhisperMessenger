@@ -279,6 +279,7 @@ local German = {
   ["Reload the interface now to apply the new Native WoW HUD style?"] = "Oberfläche jetzt neu laden, um den neuen nativen WoW-Oberflächenstil anzuwenden?",
   ["The EllesmereUI theme shows best with the Native WoW HUD off. Turn it off and reload the interface now?"] = "Das EllesmereUI-Design wirkt am besten mit ausgeschaltetem nativen WoW-HUD. Jetzt ausschalten und das Interface neu laden?",
   ["Reload the interface now to apply the addon integration change?"] = "Oberfläche jetzt neu laden, um die Änderung der Addon-Integration anzuwenden?",
+  ["Reload the interface now to apply the language change?"] = "Oberfläche jetzt neu laden, um die Sprachänderung anzuwenden?",
   -- Classes
   ["Warrior"] = "Krieger",
   ["Paladin"] = "Paladin",

@@ -476,6 +476,7 @@ Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
 Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
+Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua
 Core/Bootstrap/WindowRuntime/TabVisibilitySetting.lua
 Core/Bootstrap/WindowRuntime/SettingsHandler.lua

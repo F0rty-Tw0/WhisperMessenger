@@ -66,7 +66,7 @@ Lua 5.1 needs lupa 2.x (`pip install -U lupa`); with an older lupa the runner wa
 
 Fake the chat lock in game with `/console addonChatRestrictionsForced 1`; set it back to 0 afterwards — the CVar is saved.
 
-The release pipeline minifies the shipped Lua and runs every test again on the minified code, so neither code nor tests may depend on comments or exact source formatting.
+The release pipeline minifies the shipped Lua, renames local variables and runs every test again on the minified code, so neither code nor tests may depend on comments, exact source formatting or local names.
 
 ## Development Workflow — TDD (Red-Green-Refactor)
 

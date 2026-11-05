@@ -107,6 +107,28 @@ function Localization.Text(key, languageOverride)
   return key
 end
 
+-- True when text in this language can show without a reload. nil, "", "auto"
+-- and unsupported values mean the client's locale, as in Configure.
+function Localization.IsLanguageLoaded(language)
+  local resolved = normalizeLanguage(language)
+  if resolved == AUTO_LANGUAGE then
+    resolved = detectLocale()
+  end
+  return resolved == DEFAULT_LANGUAGE or catalogs[resolved] ~= nil
+end
+
+-- Frees every catalog but the active one. Catalog files only run at load, so
+-- a released language comes back only after a reload.
+function Localization.ReleaseUnusedCatalogs()
+  local active = Localization.GetEffectiveLanguage()
+  for code in pairs(catalogs) do
+    if code ~= active then
+      catalogs[code] = nil
+      ns["Locale_" .. code] = nil
+    end
+  end
+end
+
 -- Each language is displayed using its own native name (autonym) so the
 -- picker is readable to anyone who can use that locale. The tooltip is the
 -- only string here that gets translated into the user's current language.
