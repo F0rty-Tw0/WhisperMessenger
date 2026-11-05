@@ -208,6 +208,7 @@ end
 do
   local function test_full_ring_shrinks_the_face_inside_the_band()
     local border, frame, _glyph, face = build(false, true)
+    assert(face, "face made")
     border.paint("ring", false)
     assert(near(face.width, 42 * 0.89))
     assert(centeredOn(face, frame))
@@ -218,6 +219,7 @@ end
 do
   local function test_other_looks_give_the_face_the_whole_button()
     local border, frame, _glyph, face = build(false, true)
+    assert(face, "face made")
     border.paint("ring", false)
     border.paint("none", false)
     assert(face.allPoints == frame)
