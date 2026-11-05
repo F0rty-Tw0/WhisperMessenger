@@ -57,7 +57,7 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconSizeRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
-  local shape = config.widgetShape == "square" and "square" or "circle"
+  local shape = config.widgetShape
   local changed
 
   local iconDesaturatedToggle = panel:bind(
@@ -92,9 +92,9 @@ function IconSettings.Create(factory, parent, config, options)
       end,
       rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
       labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-      buttonWidth = 60,
-      buttonHeight = 26,
-      buttonSpacing = 4,
+      buttonWidth = Options.SELECTOR_BUTTON_WIDTH,
+      buttonHeight = Options.SELECTOR_BUTTON_HEIGHT,
+      buttonSpacing = Options.SELECTOR_BUTTON_SPACING,
       maxPerRow = 2,
     }),
     { type = "selector", key = "widgetShape", default = DEFAULTS.widgetShape }
@@ -130,12 +130,10 @@ function IconSettings.Create(factory, parent, config, options)
   -- Selector clicks and Reset to Defaults both land here, so the toggle follows the shape at once.
   changed = function(key, value)
     if key == "widgetShape" then
-      shape = value == "square" and "square" or "circle"
-    end
-    onChange(key, value)
-    if key == "widgetShape" then
+      shape = value
       refreshIconBackgroundAvailability()
     end
+    onChange(key, value)
   end
 
   local initialWidgetTransparency = tonumber(config.widgetTransparency)
@@ -205,9 +203,9 @@ function IconSettings.Create(factory, parent, config, options)
       end,
       rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
       labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-      buttonWidth = 60,
-      buttonHeight = 26,
-      buttonSpacing = 4,
+      buttonWidth = Options.SELECTOR_BUTTON_WIDTH,
+      buttonHeight = Options.SELECTOR_BUTTON_HEIGHT,
+      buttonSpacing = Options.SELECTOR_BUTTON_SPACING,
       maxPerRow = 4,
     }),
     { type = "selector", key = "iconMode", default = DEFAULTS.iconMode }

@@ -23,6 +23,11 @@ Options.DEFAULTS = {
   iconMode = "widget",
 }
 
+-- Button size and gap of the panel's selector rows.
+Options.SELECTOR_BUTTON_WIDTH = 60
+Options.SELECTOR_BUTTON_HEIGHT = 26
+Options.SELECTOR_BUTTON_SPACING = 4
+
 local POSITION_OPTION_SPECS = {
   { key = "right", label = "Right" },
   { key = "left", label = "Left" },
