@@ -125,6 +125,7 @@ function SettingsPanels.Create(factory, options)
       config = {
         dimWhenMoving = settingsConfig.dimWhenMoving,
         autoFocusComposer = settingsConfig.autoFocusComposer,
+        deselectComposerOnSend = settingsConfig.deselectComposerOnSend,
         hideOnCombat = settingsConfig.hideOnCombat,
         doubleEscapeToClose = settingsConfig.doubleEscapeToClose,
         allowAddonIntegration = settingsConfig.allowAddonIntegration,

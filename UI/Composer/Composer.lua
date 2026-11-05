@@ -18,6 +18,7 @@ local ComposerLayout = ns.ComposerLayout or require("WhisperMessenger.UI.Compose
 local ComposerLaunchers = ns.ComposerLaunchers or require("WhisperMessenger.UI.Composer.ComposerLaunchers")
 local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
 local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.ComposerLimit")
+local ComposerSendFocus = ns.ComposerSendFocus or require("WhisperMessenger.UI.Composer.ComposerSendFocus")
 
 local Composer = {}
 
@@ -25,6 +26,7 @@ local Composer = {}
 -- options.onDraftChanged(conversationKey, text): typed text to keep as draft.
 -- options.getQuickReplies(): saved quick-reply list (nil = defaults).
 -- options.onReplyChanged(replyTo | nil): the open conversation's reply target.
+-- options.getDeselectOnSend(): the "deselect after sending" setting.
 function Composer.Create(factory, parent, selectedContact, onSend, onEscape, getDoubleEscapeToClose, onTyping, options)
   options = type(options) == "table" and options or {}
   local nativeChrome = options.nativeChrome == true
@@ -55,6 +57,14 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
   local input = factory.CreateFrame("EditBox", nil, pane)
   input:SetText("")
   local limit = ComposerLimit.Create(input)
+  local sendFocus = ComposerSendFocus.Create(pane, input, {
+    isOn = function()
+      return options.getDeselectOnSend ~= nil and options.getDeselectOnSend() == true
+    end,
+    isEnabled = function()
+      return not sendDisabled
+    end,
+  }, { createFrame = factory.CreateFrame })
   local launchers = ComposerLaunchers.Create(factory, pane, input, {
     enabled = not sendDisabled,
     getMaxBytes = limit.messageMaxBytes,
@@ -159,6 +169,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       if onDraftChanged then
         onDraftChanged(selectedContact.conversationKey, "")
       end
+      sendFocus.afterSend()
     end
   end
 
@@ -257,6 +268,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
       launchers.setEnabled(enabled)
       PickerStyles.HideTooltip()
       paintSendButton(sendDisabled, false)
+      sendFocus.sync()
     end,
     refreshTheme = function()
       if surface.native then

@@ -48,6 +48,7 @@ return function()
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
+    deselectComposerOnSend = true,
     hideFromDefaultChat = true,
     closeGameWhisperTab = true,
     autoOpenIncoming = true,
@@ -125,6 +126,7 @@ return function()
   -- options scroll view to re-measure after the list grows or shrinks.
   assert(behaviorCapture.config.quickReplies == settingsConfig.quickReplies, "behavior config should carry quickReplies")
   assert(behaviorCapture.config.allowAddonIntegration == false, "behavior config should carry allowAddonIntegration")
+  assert(behaviorCapture.config.deselectComposerOnSend == true, "behavior config should carry deselectComposerOnSend")
   assert(behaviorCapture.config.hideFromDefaultChat == nil, "whisper keys moved off the Behavior page")
   assert(behaviorCapture.config.showGroupChats == nil, "group chat key moved off the Behavior page")
 

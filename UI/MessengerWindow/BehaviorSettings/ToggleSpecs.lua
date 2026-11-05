@@ -13,6 +13,7 @@ local ToggleSpecs = {}
 ToggleSpecs.DEFAULTS = {
   dimWhenMoving = true,
   autoFocusComposer = false,
+  deselectComposerOnSend = false,
   doubleEscapeToClose = false,
   hideOnCombat = false,
   allowAddonIntegration = true,
@@ -49,6 +50,20 @@ function ToggleSpecs.Build(config, onChange)
       tooltipLines = {
         text("Auto-focus chat input"),
         text("Places the cursor in the text box when you open the messenger."),
+      },
+    },
+    {
+      key = "deselectComposerOnSend",
+      labelKey = "Deselect chat input after sending",
+      initial = config.deselectComposerOnSend == true,
+      onChange = function(value)
+        onChange("deselectComposerOnSend", value)
+      end,
+      tooltipLines = {
+        text("Deselect chat input after sending"),
+        text(
+          "After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."
+        ),
       },
     },
     {

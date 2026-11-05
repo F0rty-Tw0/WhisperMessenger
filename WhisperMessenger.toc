@@ -41,6 +41,7 @@ Util/DisplayName.lua
 Util/Initials.lua
 Util/SecretValue.lua
 Util/PlainText.lua
+Util/BindingKeys.lua
 Locale/ruRU.lua
 Locale/deDE.lua
 Locale/frFR.lua
@@ -294,6 +295,7 @@ UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
 UI/Composer/ComposerLimit.lua
+UI/Composer/ComposerSendFocus.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua

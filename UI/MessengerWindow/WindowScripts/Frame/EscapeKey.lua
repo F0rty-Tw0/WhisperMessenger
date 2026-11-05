@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys")
+
 -- While the messenger has focus, the game-menu key (ESC) clicks a hidden
 -- button that closes it. Other windows' own ESC handlers (Professions) run
 -- before the game's close-all sweep, so UISpecialFrames alone can't close
@@ -65,17 +67,7 @@ local function watchDialogs(onChange)
 end
 
 local function gameMenuKeys(getBindingKey)
-  local keys = {}
-  if type(getBindingKey) ~= "function" then
-    return keys
-  end
-  local raw = { getBindingKey(GAME_MENU_ACTION) }
-  for i = 1, #raw do
-    if type(raw[i]) == "string" and raw[i] ~= "" then
-      table.insert(keys, raw[i])
-    end
-  end
-  return keys
+  return BindingKeys.ForAction(getBindingKey, GAME_MENU_ACTION)
 end
 
 function EscapeKey.New(frame, deps)
