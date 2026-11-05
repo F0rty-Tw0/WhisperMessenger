@@ -78,12 +78,8 @@ local function createToggleRows(toggleRow, aboveRow, config, rowSpacing)
   )
   backgroundToggle.row:SetPoint("TOPLEFT", aboveRow, "BOTTOMLEFT", 0, rowSpacing)
 
-  local borderToggle = toggleRow(
-    "Show border",
-    "Draws a ring around the widget and the minimap button, or a frame around the square widget.",
-    "iconBorder",
-    config.iconBorder ~= false
-  )
+  local borderToggle =
+    toggleRow("Show border", "Draws a ring around the widget, or a frame around the square widget.", "iconBorder", config.iconBorder ~= false)
   borderToggle.row:SetPoint("TOPLEFT", backgroundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
 
   local borderThemedToggle = toggleRow(

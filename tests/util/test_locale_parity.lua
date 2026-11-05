@@ -23,7 +23,7 @@ local WIDGET_SHAPE_KEYS = {
 local BORDER_REASON_KEY = "Only with Show border on."
 local BORDER_KEYS = {
   "Show border",
-  "Draws a ring around the widget and the minimap button, or a frame around the square widget.",
+  "Draws a ring around the widget, or a frame around the square widget.",
   "Color border with theme",
   "Tints the border to the theme's accent color. Turn it off for the gold border.",
   BORDER_REASON_KEY,
