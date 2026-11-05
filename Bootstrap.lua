@@ -117,6 +117,9 @@ function Bootstrap.Initialize(factory, options)
       language = accountState.settings.interfaceLanguage or "auto",
     })
   end
+  if Localization.ReleaseUnusedCatalogs then
+    Localization.ReleaseUnusedCatalogs()
+  end
   if Fonts.SetLanguage then
     Fonts.SetLanguage(accountState.settings.interfaceLanguage or "auto")
   end
