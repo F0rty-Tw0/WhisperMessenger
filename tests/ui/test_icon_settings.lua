@@ -163,6 +163,13 @@ return function()
     )
     FindUI.slider(result.frame, "Auto-dismiss widget preview"):SetValue(60)
     FindUI.click(FindUI.selectorButtons(result.frame, "Widget preview position")[2])
+    local shapeButtons = FindUI.selectorButtons(result.frame, "Widget shape")
+    assert(
+      #shapeButtons == 2 and shapeButtons[1]._key == "circle" and shapeButtons[2]._key == "square",
+      "test_icon_and_widget_controls_fire_existing_keys: shape selector offers circle and square"
+    )
+    FindUI.click(shapeButtons[2])
+    assert(changes.widgetShape == "square", "test_icon_and_widget_controls_fire_existing_keys: widgetShape should be square")
 
     assert(changes.iconMode == "both", "test_icon_and_widget_controls_fire_existing_keys: iconMode should be both")
     assert(changes.iconSize == 32, "test_icon_and_widget_controls_fire_existing_keys: iconSize should be 32")
@@ -220,6 +227,7 @@ return function()
       iconSize = 42,
       iconDesaturated = true,
       iconBackground = true,
+      widgetShape = "circle",
       lockToggleIcon = false,
       shareWidgetPosition = false,
       showUnreadBadge = true,
@@ -236,19 +244,12 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 11, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit eleven icon/widget keys")
+    assert(resetCount == 12, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit twelve icon/widget keys")
   end
 
-  -- test_square_background_is_disabled_unless_the_square_widget_is_in_use
+  -- test_square_background_is_disabled_unless_the_widget_shape_is_square
 
   do
-    local Theme = require("WhisperMessenger.UI.Theme")
-    local savedUses = Theme.UsesSquareWidget
-    local square = false
-    Theme.UsesSquareWidget = function()
-      return square
-    end
-
     local result = IconSettings.Create(factory, parent, { iconBackground = false }, { onChange = function() end })
     local row = FindUI.byLabel(result.frame, "Square button background")
     local cover = FindUI.disabledCover(row)
@@ -271,18 +272,14 @@ return function()
     }
     cover:GetScript("OnEnter")(cover)
     _G.GameTooltip = savedTooltip
-    assert(shown == "Only with the EllesmereUI theme.", "test_square_background_disabled: hovering says why, got " .. tostring(shown))
+    assert(shown == "Only with the square widget shape.", "test_square_background_disabled: hovering says why, got " .. tostring(shown))
 
-    square = true
-    result.refreshTheme()
-    assert(FindUI.disabledCover(row) == nil, "test_square_background_disabled: usable once the preset changes to EllesmereUI")
+    FindUI.click(FindUI.selectorButtons(result.frame, "Widget shape")[2])
+    assert(FindUI.disabledCover(row) == nil, "test_square_background_disabled: usable at once after picking square")
     assert(row.alpha == 1, "test_square_background_disabled: full alpha when usable")
 
-    square = false
-    result.refreshTheme()
-    assert(FindUI.disabledCover(row) ~= nil, "test_square_background_disabled: disabled again after switching away")
-
-    Theme.UsesSquareWidget = savedUses
+    FindUI.click(FindUI.selectorButtons(result.frame, "Widget shape")[1])
+    assert(FindUI.disabledCover(row) ~= nil, "test_square_background_disabled: disabled again after picking circle")
   end
 
   -- test_icons_refresh_layout_and_language

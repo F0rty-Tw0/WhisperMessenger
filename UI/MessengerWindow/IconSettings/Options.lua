@@ -51,6 +51,13 @@ function Options.BuildIconModeOptions()
   }
 end
 
+function Options.BuildWidgetShapeOptions()
+  return {
+    { key = "circle", label = text("Circle") },
+    { key = "square", label = text("Square") },
+  }
+end
+
 function Options.PxFormat(v)
   return tostring(math.floor(v + 0.5)) .. "px"
 end
