@@ -313,6 +313,7 @@ UI/ToggleIcon/PulseState.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
 UI/ToggleIcon/SquareEffects.lua
+UI/ToggleIcon/IconBorder.lua
 UI/ToggleIcon/SquareLook.lua
 UI/ToggleIcon/IconArt.lua
 UI/ToggleIcon/LockGlyph.lua

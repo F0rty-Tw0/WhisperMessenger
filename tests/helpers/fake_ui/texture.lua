@@ -23,6 +23,15 @@ function Texture.Augment(frame)
     self.alpha = select(4, ...) or 1
   end
 
+  function frame:SetDrawLayer(layer, sublevel)
+    self.drawLayer = layer
+    self.drawSublevel = sublevel
+  end
+
+  function frame:GetDrawLayer()
+    return self.drawLayer, self.drawSublevel
+  end
+
   function frame:SetDesaturated(value)
     self.desaturated = value
   end
