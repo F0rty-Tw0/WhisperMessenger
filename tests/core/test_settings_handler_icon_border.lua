@@ -29,23 +29,24 @@ local function newCase(withMinimap)
   return case
 end
 
+-- The border settings belong to the widget: the minimap ring is always gold.
 return function()
-  -- test_show_border_change_saves_and_repaints_both_buttons
+  -- test_show_border_change_saves_and_repaints_only_the_widget
   do
     local case = newCase(true)
     case.onChange("iconBorder", false)
     assert(case.accountSettings.iconBorder == false, "saved")
     assert(case.widgetRepaints == 1, "widget repainted, got " .. case.widgetRepaints)
-    assert(case.minimapRepaints == 1, "minimap repainted, got " .. case.minimapRepaints)
+    assert(case.minimapRepaints == 0, "minimap untouched, got " .. case.minimapRepaints)
   end
 
-  -- test_themed_border_change_repaints_both_buttons
+  -- test_themed_border_change_repaints_only_the_widget
   do
     local case = newCase(true)
     case.onChange("iconBorderThemed", false)
     assert(case.accountSettings.iconBorderThemed == false, "saved")
     assert(case.widgetRepaints == 1, "widget repainted, got " .. case.widgetRepaints)
-    assert(case.minimapRepaints == 1, "minimap repainted, got " .. case.minimapRepaints)
+    assert(case.minimapRepaints == 0, "minimap untouched, got " .. case.minimapRepaints)
   end
 
   -- test_background_change_repaints_only_the_widget
