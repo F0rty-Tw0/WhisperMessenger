@@ -192,4 +192,17 @@ return function()
     assert(UIHelpers.isShiftDown() == true, "true return is shift")
     rawset(_G, "IsShiftKeyDown", saved)
   end
+
+  -- test_is_on_reads_a_missing_getter_as_on
+  do
+    local name = "test_is_on_reads_a_missing_getter_as_on"
+    assert(UIHelpers.isOn(nil) == true, name .. ": missing getter")
+    assert(UIHelpers.isOn(function() end) == true, name .. ": nil value")
+    assert(UIHelpers.isOn(function()
+      return true
+    end) == true, name .. ": true")
+    assert(UIHelpers.isOn(function()
+      return false
+    end) == false, name .. ": false")
+  end
 end

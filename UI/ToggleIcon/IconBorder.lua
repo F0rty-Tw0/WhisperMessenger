@@ -7,10 +7,10 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local applyVertexColor = UIHelpers.applyVertexColor
 
--- The gold ring around the widget and minimap buttons, and the square frame
--- for the square shape. Paints one of four looks: "rim" (ring under the
--- opaque circle, only a rim shows), "ring" (full ring over the button),
--- "square" (square frame) and "none".
+-- The ring around the widget and minimap buttons, and the square frame for
+-- the square shape, in the theme accent or their gold art. Paints one of four
+-- looks: "rim" (ring under the opaque circle, only a rim shows), "ring" (full
+-- ring over the button), "square" (square frame) and "none".
 local IconBorder = {}
 
 IconBorder.RING_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\ring_gold.png"
@@ -21,14 +21,8 @@ IconBorder.FULL_RING_GLYPH_RATIO = 0.7
 IconBorder.FULL_RING_FACE_RATIO = 0.89
 
 local WHITE = { 1, 1, 1, 1 }
-
-function IconBorder.IsOn(getter)
-  if getter == nil then
-    return true
-  end
-
-  return getter() ~= false
-end
+-- Draw sublevel of the ring and the square frame, under anything else on their layer.
+local BORDER_SUBLEVEL = -1
 
 function IconBorder.LookFor(square, background, border)
   if not border then
@@ -52,12 +46,13 @@ end
 local function paintRing(ring, frame, look, side)
   if look ~= "rim" and look ~= "ring" then
     ring:Hide()
+
     return
   end
 
   local isRim = look == "rim"
   local ringSide = isRim and side * IconBorder.RIM_SCALE or side
-  ring:SetDrawLayer(isRim and "BACKGROUND" or "OVERLAY", -1)
+  ring:SetDrawLayer(isRim and "BACKGROUND" or "OVERLAY", BORDER_SUBLEVEL)
   ring:SetSize(ringSide, ringSide)
   ring:ClearAllPoints()
   ring:SetPoint("CENTER", frame, "CENTER", 0, 0)
@@ -68,6 +63,7 @@ local function paintFace(face, frame, look, side)
   face:ClearAllPoints()
   if look ~= "ring" then
     face:SetAllPoints(frame)
+
     return
   end
 
@@ -76,15 +72,15 @@ local function paintFace(face, frame, look, side)
   face:SetPoint("CENTER", frame, "CENTER", 0, 0)
 end
 
--- parts: { glyph, glyphRatio, squareFrame (true to make one), face (optional) }
+-- parts: { glyph, glyphRatio, withSquareFrame (true to make one), face (optional) }
 function IconBorder.Create(frame, parts)
-  local ring = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
+  local ring = frame:CreateTexture(nil, "BACKGROUND", nil, BORDER_SUBLEVEL)
   ring:SetTexture(IconBorder.RING_TEXTURE)
   ring:Hide()
 
   local squareFrame = nil
-  if parts.squareFrame == true then
-    squareFrame = frame:CreateTexture(nil, "OVERLAY", nil, -1)
+  if parts.withSquareFrame == true then
+    squareFrame = frame:CreateTexture(nil, "OVERLAY", nil, BORDER_SUBLEVEL)
     squareFrame:SetTexture(IconBorder.SQUARE_FRAME_TEXTURE)
     squareFrame:SetAllPoints(frame)
     squareFrame:Hide()

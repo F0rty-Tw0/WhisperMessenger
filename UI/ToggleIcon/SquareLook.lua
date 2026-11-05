@@ -11,11 +11,12 @@ local SquareEffects = ns.ToggleIconSquareEffects or require("WhisperMessenger.UI
 local ButtonLook = ns.ThemeEllesmereButtonLook or require("WhisperMessenger.UI.Theme.EllesmereButtonLook")
 local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local applyVertexColor = UIHelpers.applyVertexColor
+local isOn = UIHelpers.isOn
 
 -- The widget's two bubbles (white front glyph over an accent-colored back
 -- bubble), shown on every shape, and its square look, chosen by the widget
 -- shape setting on any theme: a square slot drawn like EllesmereUI's action
--- buttons in place of the circle, under IconBorder's gold square frame.
+-- buttons in place of the circle, under IconBorder's square frame.
 local SquareLook = {}
 
 SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -91,8 +92,8 @@ end
 -- getShowBorder() false takes it off, getBorderThemed() false keeps it gold.
 -- A missing getter means on.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
--- the slot background and its hover and pushed effects; the gold square frame
--- from IconBorder replaces EllesmereUI's border.
+-- the slot background and its hover and pushed effects; the square frame from
+-- IconBorder (theme accent, or gold) replaces EllesmereUI's border.
 -- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
 function SquareLook.Create(frame, parts)
   local function isSquare()
@@ -113,7 +114,7 @@ function SquareLook.Create(frame, parts)
   local look = ButtonLook.Read()
 
   local function backgroundShown()
-    return IconBorder.IsOn(parts.getShowBackground)
+    return isOn(parts.getShowBackground)
   end
 
   local function squareBackgroundShown()
@@ -165,7 +166,9 @@ function SquareLook.Create(frame, parts)
   local function apply(desaturated)
     local square = isSquare()
     -- First: the glows below are sized from the glyph the border sizes.
-    parts.border.paint(IconBorder.LookFor(square, backgroundShown(), IconBorder.IsOn(parts.getShowBorder)), IconBorder.IsOn(parts.getBorderThemed))
+    local borderLook = IconBorder.LookFor(square, backgroundShown(), isOn(parts.getShowBorder))
+    local themed = isOn(parts.getBorderThemed)
+    parts.border.paint(borderLook, themed)
     look = ButtonLook.Read()
     hoverEffect.paint(look.hover, look.borderPx)
     pushEffect.paint(look.push, look.borderPx)

@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local IconTooltip = ns.MinimapIconTooltip or require("WhisperMessenger.UI.MinimapIcon.IconTooltip")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
@@ -113,7 +114,7 @@ function MinimapIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- The widget's face: dark circle with the front bubble, under the full gold ring.
+  -- The widget's face: dark circle with the front bubble, under the full ring.
   -- The minimap is always round, so the back bubble takes no square check;
   -- paintBack shows and colors it.
   local art = IconArt.Create(frame, ICON_SIZE)
@@ -260,7 +261,8 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshTheme()
-    border.paint(IconBorder.IsOn(options.getIconBorder) and "ring" or "none", IconBorder.IsOn(options.getIconBorderThemed))
+    local borderLook = UIHelpers.isOn(options.getIconBorder) and "ring" or "none"
+    border.paint(borderLook, UIHelpers.isOn(options.getIconBorderThemed))
     badgeResult.paint()
     incomingPreview.applyTheme(Theme)
     pulseGlow.applyTheme(Theme)

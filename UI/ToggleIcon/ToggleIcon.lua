@@ -49,7 +49,7 @@ function ToggleIcon.Create(factory, options)
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
   local chatIcon = art.chatIcon
-  local border = IconBorder.Create(frame, { glyph = chatIcon, glyphRatio = IconArt.GLYPH_RATIO, squareFrame = true })
+  local border = IconBorder.Create(frame, { glyph = chatIcon, glyphRatio = IconArt.GLYPH_RATIO, withSquareFrame = true })
 
   local label = chatIcon -- reference kept for return table
 

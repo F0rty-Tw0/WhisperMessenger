@@ -55,7 +55,8 @@ function IconArt.Create(frame, iconSize)
 
   -- Chat icon (speech bubble) instead of text label
   local chatIcon = frame:CreateTexture(nil, "ARTWORK")
-  chatIcon:SetSize(math.floor(iconSize * GLYPH_RATIO), math.floor(iconSize * GLYPH_RATIO))
+  local glyphSide = math.floor(iconSize * GLYPH_RATIO)
+  chatIcon:SetSize(glyphSide, glyphSide)
   chatIcon:SetPoint("CENTER", frame, "CENTER", 0, 0)
   chatIcon:SetTexture(SquareLook.GLYPH_TEXTURE)
   applyVertexColor(chatIcon, resolveGlyphColor())

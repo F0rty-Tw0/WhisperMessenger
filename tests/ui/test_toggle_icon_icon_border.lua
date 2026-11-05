@@ -15,7 +15,7 @@ local function build(withSquareFrame, withFace)
     face = frame:CreateTexture(nil, "BACKGROUND")
     face:SetAllPoints(frame)
   end
-  local border = IconBorder.Create(frame, { glyph = glyph, glyphRatio = 0.9, squareFrame = withSquareFrame, face = face })
+  local border = IconBorder.Create(frame, { glyph = glyph, glyphRatio = 0.9, withSquareFrame = withSquareFrame, face = face })
 
   return border, frame, glyph, face
 end
@@ -57,19 +57,6 @@ return function()
     assert(IconBorder.LookFor(false, false, false) == "none", name .. ": border off, circle without background")
     assert(IconBorder.LookFor(true, true, false) == "none", name .. ": border off, square with background")
     assert(IconBorder.LookFor(true, false, false) == "none", name .. ": border off, square without background")
-  end
-
-  -- test_is_on_reads_a_missing_getter_as_on
-  do
-    local name = "test_is_on_reads_a_missing_getter_as_on"
-    assert(IconBorder.IsOn(nil) == true, name .. ": missing getter")
-    assert(IconBorder.IsOn(function() end) == true, name .. ": nil value")
-    assert(IconBorder.IsOn(function()
-      return true
-    end) == true, name .. ": true")
-    assert(IconBorder.IsOn(function()
-      return false
-    end) == false, name .. ": false")
   end
 
   -- test_ring_and_frame_start_hidden
