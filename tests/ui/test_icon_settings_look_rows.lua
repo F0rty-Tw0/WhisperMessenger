@@ -199,4 +199,28 @@ return function()
     assert(FindUI.disabledCover(rows.borderThemedToggle.row) == nil, "test_reset_with_the_border_off: themed toggle usable")
     assert(FindUI.isToggleOn(FindUI.toggle(frame, "Show border")) == true, "test_reset_with_the_border_off: border toggle on")
   end
+
+  -- test_set_language_relocalizes_the_border_rows
+
+  do
+    local German = require("WhisperMessenger.Locale.deDE")
+    local name = "test_set_language_relocalizes_the_border_rows"
+    assert(German["Show border"], name .. ": deDE has no 'Show border'")
+    assert(German["Color border with theme"], name .. ": deDE has no 'Color border with theme'")
+    assert(German["Button background"], name .. ": deDE has no 'Button background'")
+    assert(German["Only with Show border on."], name .. ": deDE has no border reason")
+
+    local frame, rows = build({ iconBorder = false })
+    Localization.Configure({ language = "deDE" })
+    rows.setLanguage()
+    local found = {
+      FindUI.text(frame, German["Show border"]),
+      FindUI.text(frame, German["Color border with theme"]),
+      FindUI.text(frame, German["Button background"]),
+    }
+    local reason = hover(FindUI.disabledCover(rows.borderThemedToggle.row))
+    Localization.Configure({ language = "enUS" })
+    assert(found[1] and found[2] and found[3], name .. ": translated labels found")
+    assert(reason == German["Only with Show border on."], name .. ": reason, got " .. tostring(reason))
+  end
 end
