@@ -82,6 +82,8 @@ return function()
     widgetPreviewAutoDismissSeconds = 15,
     iconMode = "both",
     widgetShape = "square",
+    iconBorder = false,
+    iconBorderThemed = false,
     widgetPreviewPosition = "top",
     widgetPreviewReply = true,
   }
@@ -184,6 +186,11 @@ return function()
 
   assert(iconsCapture.config.iconMode == "both", "expected icons config.iconMode=both, got: " .. tostring(iconsCapture.config.iconMode))
   assert(iconsCapture.config.widgetShape == "square", "Icons config should forward widgetShape, got: " .. tostring(iconsCapture.config.widgetShape))
+  assert(iconsCapture.config.iconBorder == false, "Icons config should forward iconBorder, got: " .. tostring(iconsCapture.config.iconBorder))
+  assert(
+    iconsCapture.config.iconBorderThemed == false,
+    "Icons config should forward iconBorderThemed, got: " .. tostring(iconsCapture.config.iconBorderThemed)
+  )
   assert(iconsCapture.config.iconSize == 56, "expected icons config.iconSize=56, got: " .. tostring(iconsCapture.config.iconSize))
   assert(
     iconsCapture.config.iconDesaturated == false,

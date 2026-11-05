@@ -92,6 +92,7 @@ local function makeCreateFrame()
     function frame:ClearAllPoints()
       self.point = nil
       self.points = nil
+      self.allPoints = nil
     end
 
     function frame:SetAllPoints(target)
@@ -416,10 +417,11 @@ local function makeCreateFrame()
       return self.height or 0
     end
 
-    function frame:CreateTexture(childName, layer, inheritedTemplate)
+    function frame:CreateTexture(childName, layer, inheritedTemplate, sublevel)
       local texture = createFrame("Texture", childName or (self.name or "frame") .. "Texture", self, inheritedTemplate)
       Texture.Augment(texture)
       texture.drawLayer = layer
+      texture.drawSublevel = sublevel
       return texture
     end
 

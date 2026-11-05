@@ -1,5 +1,5 @@
--- The square shape draws the widget as a flat square with a 1px black edge;
--- the circle keeps the round look. Both show the two bubbles.
+-- The square shape draws the widget as a flat square under the square frame
+-- (theme accent, or gold); the circle keeps the round look. Both show the two bubbles.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Bridge = require("WhisperMessenger.UI.Theme.EllesmereBridge")
@@ -33,15 +33,6 @@ local function withEllesmere(fn)
   if not ok then
     error(err, 0)
   end
-end
-
-local function edgesShown(edges, shown)
-  for side, edge in pairs(edges) do
-    if (edge.shown == true) ~= shown then
-      return false, side
-    end
-  end
-  return true
 end
 
 -- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
@@ -78,9 +69,7 @@ return function()
     local icon = iconWithShape("square", {})
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square fill, got " .. tostring(icon.background.texturePath))
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "ring-free glyph, got " .. tostring(icon.label.texturePath))
-    assert(icon.border == nil, "no ring")
-    assert(edgesShown(icon.squareEdges, true), "1px edge shown")
-    assert(sameColor(icon.squareEdges.top.vertexColor, { 0, 0, 0, 1 }), "edge is solid black, like EllesmereUI's buttons")
+    assert(icon.ring.shown == false, "no ring on the square; the square frame takes its place")
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "EllesmereUI's slot background")
     assert(icon.accentGlyph.shown == true, "accent back bubble shown")
     assert(icon.accentGlyph.texturePath == SquareLook.ACCENT_GLYPH_TEXTURE, "back bubble art")
@@ -139,11 +128,11 @@ return function()
       end,
     })
     assert(icon.background.shown == false, "no fill")
-    assert(edgesShown(icon.squareEdges, false), "no edge")
+    assert(icon.squareFrame.shown == true, "frame stays without the square")
     assert(icon.accentGlyph.shown == true and icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "both bubbles still shown")
     showBackground = true
     icon.refreshTheme()
-    assert(icon.background.shown == true and edgesShown(icon.squareEdges, true), "square back when turned on")
+    assert(icon.background.shown == true, "square back when turned on")
   end
 
   -- test_hover_fills_only_the_back_bubble_with_the_accent
@@ -228,7 +217,7 @@ return function()
     showBackground = false
     shape = "circle"
     icon.refreshTheme()
-    assert(outline.shown == false, "no outline on the round widget")
+    assert(outline.shown == true, "outline around the bubbles on the round widget without its circle")
   end
 
   -- test_unread_pulse_glows_around_the_bubbles
@@ -290,8 +279,8 @@ return function()
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
     assert(icon.background.texturePath == ROUND_BG, "round fill")
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "front bubble")
-    assert(icon.border == nil, "no ring on the circle")
-    assert(edgesShown(icon.squareEdges, false), "no square edge")
+    assert(icon.ring.shown == true, "the ring around the circle")
+    assert(icon.squareFrame.shown == false, "no square frame on the circle")
     assert(icon.accentGlyph.shown == true, "accent back bubble")
   end
 

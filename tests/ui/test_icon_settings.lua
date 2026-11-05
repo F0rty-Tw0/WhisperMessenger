@@ -227,6 +227,8 @@ return function()
       iconSize = 42,
       iconDesaturated = true,
       iconBackground = true,
+      iconBorder = true,
+      iconBorderThemed = true,
       widgetShape = "circle",
       lockToggleIcon = false,
       shareWidgetPosition = false,
@@ -244,42 +246,7 @@ return function()
     for key, value in pairs(expected) do
       assert(changes[key] == value, "test_icons_reset_emits_only_icon_and_widget_defaults: wrong default for " .. key)
     end
-    assert(resetCount == 12, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit twelve icon/widget keys")
-  end
-
-  -- test_square_background_is_disabled_unless_the_widget_shape_is_square
-
-  do
-    local result = IconSettings.Create(factory, parent, { iconBackground = false }, { onChange = function() end })
-    local row = FindUI.byLabel(result.frame, "Square button background")
-    local cover = FindUI.disabledCover(row)
-    assert(cover ~= nil, "test_square_background_disabled: the row is covered with another preset")
-    assert(row.alpha < 1, "test_square_background_disabled: the row is dimmed with another preset")
-    assert(
-      FindUI.isToggleOn(FindUI.toggle(result.frame, "Square button background")) == false,
-      "test_square_background_disabled: the saved value stays shown"
-    )
-
-    local savedTooltip = _G.GameTooltip
-    local shown
-    _G.GameTooltip = {
-      SetOwner = function() end,
-      SetText = function(_, value)
-        shown = value
-      end,
-      Show = function() end,
-      Hide = function() end,
-    }
-    cover:GetScript("OnEnter")(cover)
-    _G.GameTooltip = savedTooltip
-    assert(shown == "Only with the square widget shape.", "test_square_background_disabled: hovering says why, got " .. tostring(shown))
-
-    FindUI.click(FindUI.selectorButtons(result.frame, "Widget shape")[2])
-    assert(FindUI.disabledCover(row) == nil, "test_square_background_disabled: usable at once after picking square")
-    assert(row.alpha == 1, "test_square_background_disabled: full alpha when usable")
-
-    FindUI.click(FindUI.selectorButtons(result.frame, "Widget shape")[1])
-    assert(FindUI.disabledCover(row) ~= nil, "test_square_background_disabled: disabled again after picking circle")
+    assert(resetCount == 14, "test_icons_reset_emits_only_icon_and_widget_defaults: reset should emit fourteen icon/widget keys")
   end
 
   -- test_icons_refresh_layout_and_language

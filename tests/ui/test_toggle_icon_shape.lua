@@ -32,16 +32,6 @@ local function withEllesmere(fn)
   end
 end
 
-local function edgesShown(edges, shown)
-  for side, edge in pairs(edges) do
-    if (edge.shown == true) ~= shown then
-      return false, side
-    end
-  end
-
-  return true
-end
-
 -- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
 local function onBubbles(texture, glyph)
   local point = texture.point or {}
@@ -79,7 +69,7 @@ return function()
     Theme.SetPreset("wow_default")
     local icon = iconWithShape("square")
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square fill on wow_default")
-    assert(edgesShown(icon.squareEdges, true), "1px edge shown")
+    assert(icon.squareFrame.shown == true, "square frame shown")
     Theme.SetPreset("elvui_dark")
     icon.refreshTheme()
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "preset change keeps the square")
@@ -90,7 +80,7 @@ return function()
     Theme.SetPreset("ellesmere_ui")
     local icon = iconWithShape("circle")
     assert(icon.background.texturePath == ROUND_BG, "circle on EllesmereUI, got " .. tostring(icon.background.texturePath))
-    assert(edgesShown(icon.squareEdges, false), "no square edge")
+    assert(icon.squareFrame.shown == false, "no square frame")
   end)
 
   -- test_missing_shape_getter_draws_a_circle
@@ -106,7 +96,7 @@ return function()
     for _, junk in ipairs({ "hexagon", 5, true }) do
       local icon = iconWithShape(junk)
       assert(icon.background.texturePath == ROUND_BG, "junk shape " .. tostring(junk) .. " draws a circle")
-      assert(edgesShown(icon.squareEdges, false), "no edge for junk shape")
+      assert(icon.squareFrame.shown == false, "no square frame for junk shape")
     end
   end
 
@@ -119,10 +109,10 @@ return function()
     end)
     shape = "square"
     icon.refreshTheme()
-    assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE and edgesShown(icon.squareEdges, true), "square after the change")
+    assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE and icon.squareFrame.shown == true, "square after the change")
     shape = "circle"
     icon.refreshTheme()
-    assert(icon.background.texturePath == ROUND_BG and edgesShown(icon.squareEdges, false), "circle again")
+    assert(icon.background.texturePath == ROUND_BG and icon.squareFrame.shown == false, "circle again")
   end
 
   -- test_shape_change_keeps_the_unread_pulse_running

@@ -10,6 +10,7 @@ local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMesse
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Options = ns.IconSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.IconSettings.Options")
 local UnreadRows = ns.IconSettingsUnreadRows or require("WhisperMessenger.UI.MessengerWindow.IconSettings.UnreadRows")
+local LookRows = ns.IconSettingsLookRows or require("WhisperMessenger.UI.MessengerWindow.IconSettings.LookRows")
 
 local IconSettings = {}
 
@@ -57,9 +58,6 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconSizeRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
-  local shape = config.widgetShape
-  local changed
-
   local iconDesaturatedToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -80,62 +78,13 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  local shapeSelector = panel:bind(
-    ButtonSelector.Create(factory, frame, {
-      labelText = text("Widget shape"),
-      optionsList = Options.BuildWidgetShapeOptions(),
-      fallbackKey = DEFAULTS.widgetShape,
-      initial = config.widgetShape or DEFAULTS.widgetShape,
-      colors = selectorColors,
-      onChange = function(value)
-        changed("widgetShape", value)
-      end,
-      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
-      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-      buttonWidth = Options.SELECTOR_BUTTON_WIDTH,
-      buttonHeight = Options.SELECTOR_BUTTON_HEIGHT,
-      buttonSpacing = Options.SELECTOR_BUTTON_SPACING,
-      maxPerRow = 2,
-    }),
-    { type = "selector", key = "widgetShape", default = DEFAULTS.widgetShape }
-  )
-  shapeSelector.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
-
-  -- Only the square widget shape has a background to hide.
-  local iconBackgroundToggle = panel:bind(
-    UIHelpers.createToggleRow(
-      factory,
-      frame,
-      text("Square button background"),
-      config.iconBackground ~= false,
-      toggleColors,
-      toggleLayout,
-      function(value)
-        onChange("iconBackground", value)
-      end,
-      {
-        text("Square button background"),
-        text("Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles."),
-      }
-    ),
-    { type = "toggle", key = "iconBackground", default = DEFAULTS.iconBackground }
-  )
-  iconBackgroundToggle.row:SetPoint("TOPLEFT", shapeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
-  -- Always shown, but only usable with the square shape; keeps its value meanwhile.
-  local iconBackgroundAvailability = UIHelpers.attachDisabledState(factory, iconBackgroundToggle.row)
-  local function refreshIconBackgroundAvailability()
-    local usable = shape == "square"
-    local reason = not usable and text("Only with the square widget shape.") or nil
-    iconBackgroundAvailability.set(usable, reason)
-  end
-  -- Selector clicks and Reset to Defaults both land here, so the toggle follows the shape at once.
-  changed = function(key, value)
-    if key == "widgetShape" then
-      shape = value
-      refreshIconBackgroundAvailability()
-    end
-    onChange(key, value)
-  end
+  local lookRows = LookRows.Create(factory, frame, panel, config, onChange, {
+    toggleColors = toggleColors,
+    toggleLayout = toggleLayout,
+    selectorColors = selectorColors,
+    rowSpacing = rowSpacing,
+    anchor = iconDesaturatedToggle.row,
+  })
 
   local initialWidgetTransparency = tonumber(config.widgetTransparency)
   if initialWidgetTransparency == nil then
@@ -159,7 +108,7 @@ function IconSettings.Create(factory, parent, config, options)
     }),
     { type = "slider", key = "widgetTransparency", default = DEFAULTS.widgetTransparency }
   )
-  widgetTransparencyRow.row:SetPoint("TOPLEFT", iconBackgroundToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+  widgetTransparencyRow.row:SetPoint("TOPLEFT", lookRows.lastRow, "BOTTOMLEFT", 0, rowSpacing)
 
   local lockToggleIconToggle = panel:bind(
     UIHelpers.createToggleRow(factory, frame, text("Lock icon position"), config.lockToggleIcon == true, toggleColors, toggleLayout, function(value)
@@ -233,7 +182,7 @@ function IconSettings.Create(factory, parent, config, options)
   )
   resetButton:SetPoint("TOPLEFT", unreadRows.positionSelector.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    panel:reset(changed)
+    panel:reset(lookRows.changed)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -245,7 +194,7 @@ function IconSettings.Create(factory, parent, config, options)
     activeTheme = activeTheme or Theme
     header.refreshTheme(activeTheme)
     panel:refreshTheme(activeTheme)
-    refreshIconBackgroundAvailability()
+    lookRows.refreshAvailability()
   end
 
   refreshTheme(Theme)
@@ -255,16 +204,13 @@ function IconSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure icon and widget settings."))
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
-    shapeSelector.label:SetText(text("Widget shape"))
-    shapeSelector.setOptionsList(Options.BuildWidgetShapeOptions())
-    iconBackgroundToggle.label:SetText(text("Square button background"))
+    lookRows.setLanguage()
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
     shareWidgetPositionToggle.label:SetText(text("Share widget position across characters"))
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(Options.BuildIconModeOptions())
     unreadRows.setLanguage()
-    refreshIconBackgroundAvailability()
     resetButton.label:SetText(text("Reset to Defaults"))
   end
 

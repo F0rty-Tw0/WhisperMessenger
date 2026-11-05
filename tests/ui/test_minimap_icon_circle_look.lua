@@ -1,8 +1,9 @@
 -- The minimap button wears the same face as the widget: the dark circle, the
--- two bubbles, no ring. Only the back bubble grays while idle, hover lifts
--- the circle.
+-- two bubbles, under the gold ring. Only the back bubble grays while idle,
+-- hover lifts the circle.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
+local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local MinimapIcon = require("WhisperMessenger.UI.MinimapIcon.MinimapIcon")
 local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
@@ -32,14 +33,17 @@ end
 return function()
   Theme.SetPreset("wow_default")
 
-  -- test_minimap_draws_the_circle_and_bubbles_without_a_ring
+  -- test_minimap_draws_the_circle_and_bubbles_inside_the_ring
   do
     local icon = createIcon(false)
-    assert(icon.border == nil, "no ring")
+    assert(icon.ring.shown == true and icon.ring.texturePath == IconBorder.RING_TEXTURE, "the ring around the circle")
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "dark circle color")
     assert(icon.background.texturePath == IconArt.CIRCLE_TEX, "circle texture")
     assert(icon.iconTex.texturePath == SquareLook.GLYPH_TEXTURE, "front bubble texture")
-    assert(icon.iconTex.width == 30 * IconArt.GLYPH_RATIO, "front bubble at the glyph ratio, got " .. tostring(icon.iconTex.width))
+    assert(
+      icon.iconTex.width == math.floor(30 * IconBorder.FULL_RING_GLYPH_RATIO),
+      "front bubble at the full-ring ratio, got " .. tostring(icon.iconTex.width)
+    )
     assert(sameColor(icon.iconTex.vertexColor, Theme.COLORS.toggle_icon_glyph), "front bubble color")
     assert(icon.accentGlyph.shown == true, "back bubble shown")
   end

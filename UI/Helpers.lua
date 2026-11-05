@@ -13,6 +13,16 @@ local function isShiftDown()
   return type(_G.IsShiftKeyDown) == "function" and _G.IsShiftKeyDown() == true
 end
 
+-- An on/off option read through an optional getter: a missing getter or any
+-- value but false means on.
+local function isOn(getter)
+  if getter == nil then
+    return true
+  end
+
+  return getter() ~= false
+end
+
 local UIHelpers = {
   TRANSPARENT = Base.TRANSPARENT,
   setBorderEdgesShown = Base.setBorderEdgesShown,
@@ -46,6 +56,7 @@ local UIHelpers = {
   createToggleRow = Controls.createToggleRow,
   attachDisabledState = DisabledState.Attach,
   isShiftDown = isShiftDown,
+  isOn = isOn,
 }
 
 ns.UIHelpers = UIHelpers

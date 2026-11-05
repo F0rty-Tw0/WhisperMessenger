@@ -19,8 +19,21 @@ local WIDGET_SHAPE_KEYS = {
   "Widget shape",
   "Circle",
   "Square",
-  "Only with the square widget shape.",
+}
+local BORDER_REASON_KEY = "Only with Show border on."
+local BORDER_KEYS = {
+  "Show border",
+  "Draws a ring around the widget, or a frame around the square widget.",
+  "Color border with theme",
+  "Tints the border to the theme's accent color. Turn it off for the gold border.",
+  BORDER_REASON_KEY,
+  "Button background",
+  "Shows the circle or square behind the widget icon. Turn it off to show only the two chat bubbles.",
+}
+local REMOVED_KEYS = {
+  "Square button background",
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
+  "Only with the square widget shape.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
@@ -91,6 +104,16 @@ return function()
       code .. " still has the old EllesmereUI tooltip"
     )
 
+    -- test_border_strings_are_translated
+    for _, key in ipairs(BORDER_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_removed_icon_strings_are_gone
+    for _, key in ipairs(REMOVED_KEYS) do
+      assert(catalog[key] == nil, code .. " still has the removed string '" .. key .. "'")
+    end
+
     -- test_language_reload_prompt_is_translated
     assert(catalog[LANGUAGE_RELOAD_KEY] ~= nil, code .. " is missing a translation for '" .. LANGUAGE_RELOAD_KEY .. "'")
 
@@ -99,6 +122,12 @@ return function()
     assert(
       string.find(replyReason, catalog["Show widget message preview"], 1, true),
       code .. " reply reason should name the translated preview toggle"
+    )
+
+    -- test_border_reason_names_the_translated_show_border_toggle
+    assert(
+      string.find(catalog[BORDER_REASON_KEY], catalog["Show border"], 1, true),
+      code .. " border reason should name the translated Show border toggle"
     )
   end
 end

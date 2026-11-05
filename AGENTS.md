@@ -59,7 +59,7 @@ python scripts/run_tests.py
 python scripts/run_tests.py tests/ui/test_theme_presets.lua tests/model/test_conversation_store.lua
 
 # Release script tests (Python):
-python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog tests.scripts.test_run_tests
+python -m unittest tests.scripts.test_gen_patch_notes tests.scripts.test_promote_changelog tests.scripts.test_run_tests tests.scripts.test_compose_gold_ring
 ```
 
 Lua 5.1 needs lupa 2.x (`pip install -U lupa`); with an older lupa the runner warns and falls back to lupa's default Lua (5.5 in lupa 2.x), which can fail tests that pass in WoW. `run_test.py` always uses lupa's default Lua.
