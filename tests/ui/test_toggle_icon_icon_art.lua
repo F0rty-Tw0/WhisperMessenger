@@ -27,7 +27,7 @@ return function()
       art.chatIcon.width == 36,
       "test_create_paints_round_face_and_glyph: glyph should be 90% of the icon size, got " .. tostring(art.chatIcon.width)
     )
-    assert(art.border == nil, "test_create_paints_round_face_and_glyph: no ring texture")
+    assert(art.border == nil, "test_create_paints_round_face_and_glyph: no border field; the ring is ToggleIcon's ring")
     assert(IconArt.GLYPH_RATIO == 0.9, "test_create_paints_round_face_and_glyph: glyph ratio should be 0.9")
   end
 

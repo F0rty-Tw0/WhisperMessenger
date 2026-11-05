@@ -78,7 +78,7 @@ return function()
     local icon = iconWithShape("square", {})
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square fill, got " .. tostring(icon.background.texturePath))
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "ring-free glyph, got " .. tostring(icon.label.texturePath))
-    assert(icon.border == nil, "no ring")
+    assert(icon.border == nil, "no border field; the ring is icon.ring")
     assert(edgesShown(icon.squareEdges, true), "1px edge shown")
     assert(sameColor(icon.squareEdges.top.vertexColor, { 0, 0, 0, 1 }), "edge is solid black, like EllesmereUI's buttons")
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "EllesmereUI's slot background")
@@ -228,7 +228,7 @@ return function()
     showBackground = false
     shape = "circle"
     icon.refreshTheme()
-    assert(outline.shown == false, "no outline on the round widget")
+    assert(outline.shown == true, "outline around the bubbles on the round widget without its circle")
   end
 
   -- test_unread_pulse_glows_around_the_bubbles
@@ -290,7 +290,7 @@ return function()
     local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
     assert(icon.background.texturePath == ROUND_BG, "round fill")
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "front bubble")
-    assert(icon.border == nil, "no ring on the circle")
+    assert(icon.border == nil, "no border field on the circle; the ring is icon.ring")
     assert(edgesShown(icon.squareEdges, false), "no square edge")
     assert(icon.accentGlyph.shown == true, "accent back bubble")
   end

@@ -12,6 +12,7 @@ local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.T
 local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
+local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
 local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
 local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
@@ -48,6 +49,7 @@ function ToggleIcon.Create(factory, options)
   local art = IconArt.Create(frame, ICON_SIZE)
   local background = art.background
   local chatIcon = art.chatIcon
+  local border = IconBorder.Create(frame, { glyph = chatIcon, glyphRatio = IconArt.GLYPH_RATIO, squareFrame = true })
 
   local label = chatIcon -- reference kept for return table
 
@@ -63,6 +65,9 @@ function ToggleIcon.Create(factory, options)
     roundBackground = IconArt.CIRCLE_TEX,
     getShowBackground = options.getIconBackground,
     getWidgetShape = options.getWidgetShape,
+    getShowBorder = options.getIconBorder,
+    getBorderThemed = options.getIconBorderThemed,
+    border = border,
     pulse = pulseGlow,
   })
 
@@ -229,6 +234,8 @@ function ToggleIcon.Create(factory, options)
   return {
     frame = frame,
     background = background,
+    ring = border.ring,
+    squareFrame = border.squareFrame,
     squareEdges = squareLook.edges,
     accentGlyph = squareLook.accentGlyph,
     hoverGlow = squareLook.hoverGlow,
