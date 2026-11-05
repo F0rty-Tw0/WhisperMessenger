@@ -33,9 +33,9 @@ local function withHud(style, run)
 end
 
 return function()
-  local function test_sender_label_uses_the_header_name_font()
+  local function test_sender_label_uses_the_message_font()
     local preview = build()
-    assert(preview.senderLabel.fontObject == fontObjectFor("header_name"), "sender uses the large header font")
+    assert(preview.senderLabel.fontObject == fontObjectFor("message_text"), "sender uses the message font")
   end
 
   local function test_message_label_uses_the_message_text_font()
@@ -124,7 +124,7 @@ return function()
 
   test_close_button_sits_in_the_corner_just_inside_the_border()
   test_close_button_uses_a_large_multiplication_sign()
-  test_sender_label_uses_the_header_name_font()
+  test_sender_label_uses_the_message_font()
   test_message_label_uses_the_message_text_font()
   test_frame_height_is_the_preview_height_on_both_skins()
   test_frame_starts_at_the_widest_width()
