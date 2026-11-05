@@ -66,6 +66,7 @@ local function makeIcon()
     unreadCount = nil,
     appliedSize = nil,
     refreshDesaturationCalls = 0,
+    refreshThemeCalls = 0,
     refreshLockGlyphCalls = 0,
     refreshTransparencyCalls = 0,
     appliedPreviewPosition = nil,
@@ -79,6 +80,9 @@ local function makeIcon()
     end,
     refreshDesaturation = function()
       state.refreshDesaturationCalls = state.refreshDesaturationCalls + 1
+    end,
+    refreshTheme = function()
+      state.refreshThemeCalls = state.refreshThemeCalls + 1
     end,
     refreshLockGlyph = function()
       state.refreshLockGlyphCalls = state.refreshLockGlyphCalls + 1
@@ -328,6 +332,22 @@ return function()
 
     assert(accountSettings.iconDesaturated == true, "iconDesaturated persists")
     assert(iconState.refreshDesaturationCalls == 1, "icon.refreshDesaturation called once")
+  end
+
+  -- widgetShape persists and repaints the widget live, no reload.
+  do
+    local icon, iconState = makeIcon()
+    local accountSettings = {}
+    local onChange = SettingsHandler.Create({
+      runtime = makeRuntime(),
+      accountSettings = accountSettings,
+      getIcon = function()
+        return icon
+      end,
+    })
+    onChange("widgetShape", "square")
+    assert(accountSettings.widgetShape == "square", "widgetShape persists")
+    assert(iconState.refreshThemeCalls == 1, "icon.refreshTheme called once, got " .. iconState.refreshThemeCalls)
   end
 
   -- widget transparency persists and refreshes the widget idle alpha.

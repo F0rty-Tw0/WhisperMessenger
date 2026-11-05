@@ -62,6 +62,7 @@ function ToggleIcon.Create(factory, options)
     glyph = chatIcon,
     roundBackground = IconArt.CIRCLE_TEX,
     getShowBackground = options.getIconBackground,
+    getWidgetShape = options.getWidgetShape,
     pulse = pulseGlow,
   })
 

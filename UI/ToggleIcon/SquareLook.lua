@@ -12,9 +12,9 @@ local ButtonLook = ns.ThemeEllesmereButtonLook or require("WhisperMessenger.UI.T
 local applyVertexColor = UIHelpers.applyVertexColor
 
 -- The widget's two bubbles (white front glyph over an accent-colored back
--- bubble), shown on every shape, and its square look for themes that want one
--- (EllesmereUI): a square drawn like EllesmereUI's action buttons in place of
--- the circle.
+-- bubble), shown on every shape, and its square look, chosen by the widget
+-- shape setting on any theme: a square drawn like EllesmereUI's action buttons
+-- in place of the circle.
 local SquareLook = {}
 
 SquareLook.SQUARE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -43,15 +43,16 @@ end
 
 -- The accent back bubble, drawn just under `glyph` and sized with it.
 -- apply(desaturated, hovered) shows it in the accent color, or gray while the
--- button is desaturated and not hovered.
-function SquareLook.CreateAccentGlyph(frame, glyph)
+-- button is desaturated and not hovered: DESAT_GREY when isSquare() is true,
+-- else DESAT_BACK. isSquare is optional.
+function SquareLook.CreateAccentGlyph(frame, glyph, isSquare)
   local texture = frame:CreateTexture(nil, "ARTWORK", nil, -1)
   texture:SetAllPoints(glyph)
   texture:SetTexture(SquareLook.ACCENT_GLYPH_TEXTURE)
 
   local function apply(desaturated, hovered)
     setShown(texture, true)
-    local grey = Theme.UsesSquareWidget() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
+    local grey = isSquare and isSquare() and Desaturation.DESAT_GREY or Desaturation.DESAT_BACK
     applyVertexColor(texture, desaturated and not hovered and grey or Theme.COLORS.accent)
   end
 
@@ -78,17 +79,23 @@ local function createHoverGlow(frame)
   return glow
 end
 
--- parts: { background, glyph, roundBackground, getShowBackground, pulse } where
--- roundBackground is the texture path of the round look's circle;
--- getShowBackground() false leaves just the two bubbles.
+-- parts: { background, glyph, roundBackground, getShowBackground, getWidgetShape,
+-- pulse } where roundBackground is the texture path of the round look's circle;
+-- getShowBackground() false leaves just the two bubbles; getWidgetShape()
+-- returns "square" for the square look, and a missing getter or any other
+-- value means the circle.
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- slot background, border, and their hover and pushed effects.
 -- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
 function SquareLook.Create(frame, parts)
+  local function isSquare()
+    return parts.getWidgetShape ~= nil and parts.getWidgetShape() == "square"
+  end
+
   local border = SquareEffects.Create(frame, "BORDER", 0)
   local hoverEffect = SquareEffects.Create(frame, "OVERLAY", 1)
   local pushEffect = SquareEffects.Create(frame, "OVERLAY", 2)
-  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph)
+  local accent = SquareLook.CreateAccentGlyph(frame, parts.glyph, isSquare)
   local outline = frame:CreateTexture(nil, "ARTWORK", nil, -2)
   outline:SetAllPoints(parts.glyph)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
@@ -100,11 +107,11 @@ function SquareLook.Create(frame, parts)
   local look = ButtonLook.Read()
 
   local function squareBackgroundShown()
-    return Theme.UsesSquareWidget() and (not parts.getShowBackground or parts.getShowBackground() ~= false)
+    return isSquare() and (not parts.getShowBackground or parts.getShowBackground() ~= false)
   end
 
   local function bubblesOnly()
-    return Theme.UsesSquareWidget() and not squareBackgroundShown()
+    return isSquare() and not squareBackgroundShown()
   end
 
   -- The square's slot fill, border and effects; repainted after a hover too,
@@ -137,7 +144,7 @@ function SquareLook.Create(frame, parts)
     if not pulse then
       return
     end
-    if Theme.UsesSquareWidget() then
+    if isSquare() then
       fitBubbleGlow(pulse, parts.glyph)
     else
       pulse:SetTexture(PulseGlow.TEXTURE)
@@ -147,7 +154,7 @@ function SquareLook.Create(frame, parts)
   end
 
   local function apply(desaturated)
-    local square = Theme.UsesSquareWidget()
+    local square = isSquare()
     look = ButtonLook.Read()
     border.paint({ kind = "edge", color = look.border, px = look.borderPx })
     hoverEffect.paint(look.hover, look.borderPx)

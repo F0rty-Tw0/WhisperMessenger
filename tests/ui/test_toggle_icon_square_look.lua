@@ -1,5 +1,5 @@
--- The EllesmereUI preset draws the widget as a flat square with a 1px black
--- edge; every other preset keeps the round look. Both show the two bubbles.
+-- The square shape draws the widget as a flat square with a 1px black edge;
+-- the circle keeps the round look. Both show the two bubbles.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Bridge = require("WhisperMessenger.UI.Theme.EllesmereBridge")
@@ -63,11 +63,19 @@ local function fillsButton(texture, button)
     and glowFrame.allPoints == button
 end
 
+-- shape: "circle" | "square" | any value | a function returning one
+local function iconWithShape(shape, options, factory)
+  options = options or {}
+  options.getWidgetShape = type(shape) == "function" and shape or function()
+    return shape
+  end
+  return ToggleIcon.Create(factory or FakeUI.NewFactory(), options)
+end
+
 return function()
   -- test_ellesmere_preset_draws_a_square_widget
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
+  do
+    local icon = iconWithShape("square", {})
     assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square fill, got " .. tostring(icon.background.texturePath))
     assert(icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "ring-free glyph, got " .. tostring(icon.label.texturePath))
     assert(icon.border == nil, "no ring")
@@ -77,12 +85,11 @@ return function()
     assert(icon.accentGlyph.shown == true, "accent back bubble shown")
     assert(icon.accentGlyph.texturePath == SquareLook.ACCENT_GLYPH_TEXTURE, "back bubble art")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble in the accent color")
-  end)
+  end
 
   -- test_accent_bubble_grays_out_with_the_icon
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+  do
+    local icon = iconWithShape("square", {
       getIconDesaturated = function()
         return true
       end,
@@ -91,12 +98,11 @@ return function()
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray while desaturated")
     icon.setUnreadCount(2)
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent again with unread whispers")
-  end)
+  end
 
   -- test_desaturating_leaves_the_white_bubble_and_background_alone
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+  do
+    local icon = iconWithShape("square", {
       getIconDesaturated = function()
         return true
       end,
@@ -108,7 +114,7 @@ return function()
     icon.frame:GetScript("OnEnter")(icon.frame)
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "background keeps its color after a hover")
-  end)
+  end
 
   -- test_round_look_grays_only_the_back_bubble
   do
@@ -125,10 +131,9 @@ return function()
   end
 
   -- test_background_option_hides_the_square
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
+  do
     local showBackground = false
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+    local icon = iconWithShape("square", {
       getIconBackground = function()
         return showBackground
       end,
@@ -139,12 +144,11 @@ return function()
     showBackground = true
     icon.refreshTheme()
     assert(icon.background.shown == true and edgesShown(icon.squareEdges, true), "square back when turned on")
-  end)
+  end
 
   -- test_hover_fills_only_the_back_bubble_with_the_accent
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+  do
+    local icon = iconWithShape("square", {
       getIconDesaturated = function()
         return true
       end,
@@ -158,13 +162,12 @@ return function()
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_GREY), "gray again after hover")
     assert(sameColor(icon.background.vertexColor, SLOT_BG), "slot background back after hover")
-  end)
+  end
 
   -- test_square_shows_the_action_bar_hover_and_pushed_effects
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
+  do
     local showBackground = true
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+    local icon = iconWithShape("square", {
       getIconBackground = function()
         return showBackground
       end,
@@ -184,12 +187,11 @@ return function()
     icon.frame:GetScript("OnEnter")(icon.frame)
     icon.frame:GetScript("OnMouseDown")(icon.frame)
     assert(icon.squareHover.shown ~= true and icon.squarePushed.shown ~= true, "no square effects without the square")
-  end)
+  end
 
   -- test_hover_glows_in_the_accent_without_the_square
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+  do
+    local icon = iconWithShape("square", {
       getIconBackground = function()
         return false
       end,
@@ -203,13 +205,15 @@ return function()
     assert(onBubbles(icon.hoverGlow, icon.label), "hover glow follows the bubbles")
     icon.frame:GetScript("OnLeave")(icon.frame)
     assert(icon.hoverGlow.shown == false, "glow gone after hover")
-  end)
+  end
 
   -- test_outline_around_the_bubbles_only_without_the_square
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
+  do
+    local shape = "square"
     local showBackground = false
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+    local icon = iconWithShape(function()
+      return shape
+    end, {
       getIconBackground = function()
         return showBackground
       end,
@@ -222,16 +226,18 @@ return function()
     icon.refreshTheme()
     assert(outline.shown == false, "no outline with the square")
     showBackground = false
-    Theme.SetPreset("wow_default")
+    shape = "circle"
     icon.refreshTheme()
     assert(outline.shown == false, "no outline on the round widget")
-  end)
+  end
 
   -- test_unread_pulse_glows_around_the_bubbles
-  withEllesmere(function()
-    Theme.SetPreset("ellesmere_ui")
+  do
+    local shape = "square"
     local showBackground = false
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {
+    local icon = iconWithShape(function()
+      return shape
+    end, {
       getIconBackground = function()
         return showBackground
       end,
@@ -242,10 +248,10 @@ return function()
     showBackground = true
     icon.refreshTheme()
     assert(onBubbles(icon.pulseTexture, icon.label), "square shown: still around the bubbles")
-    Theme.SetPreset("wow_default")
+    shape = "circle"
     icon.refreshTheme()
     assert(fillsButton(icon.pulseTexture, icon.frame), "round again on other presets")
-  end)
+  end
 
   -- test_round_widget_keeps_its_pulse
   do
@@ -288,21 +294,6 @@ return function()
     assert(edgesShown(icon.squareEdges, false), "no square edge")
     assert(icon.accentGlyph.shown == true, "accent back bubble")
   end
-
-  -- test_switching_presets_swaps_the_look_live
-  withEllesmere(function()
-    Theme.SetPreset("wow_default")
-    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
-    Theme.SetPreset("ellesmere_ui")
-    icon.refreshTheme()
-    assert(icon.background.texturePath == SquareLook.SQUARE_TEXTURE, "square after switching to EllesmereUI")
-    assert(icon.border == nil and edgesShown(icon.squareEdges, true), "square edge shown")
-    Theme.SetPreset("elvui_dark")
-    icon.refreshTheme()
-    assert(icon.background.texturePath == ROUND_BG and icon.label.texturePath == SquareLook.GLYPH_TEXTURE, "round again")
-    assert(icon.accentGlyph.shown == true, "round again, back bubble still shown")
-    assert(icon.border == nil and edgesShown(icon.squareEdges, false), "round again, edge gone")
-  end)
 
   -- test_minimap_stays_round_under_ellesmere
   withEllesmere(function()

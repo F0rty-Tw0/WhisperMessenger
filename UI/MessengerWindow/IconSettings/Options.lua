@@ -14,6 +14,7 @@ Options.DEFAULTS = {
   iconSize = 42,
   iconDesaturated = true,
   iconBackground = true,
+  widgetShape = "circle",
   lockToggleIcon = false,
   shareWidgetPosition = false,
   widgetTransparency = 0,
@@ -47,6 +48,13 @@ function Options.BuildIconModeOptions()
     { key = "minimap", label = text("Minimap") },
     { key = "both", label = text("Both") },
     { key = "none", label = text("None") },
+  }
+end
+
+function Options.BuildWidgetShapeOptions()
+  return {
+    { key = "circle", label = text("Circle") },
+    { key = "square", label = text("Square") },
   }
 end
 

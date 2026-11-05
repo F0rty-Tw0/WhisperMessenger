@@ -12,6 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The messenger button and the minimap button now share one look: a dark circle with the two chat bubbles on it, and no more ring inside a ring. Hovering lifts the circle a little so the bubbles stay easy to see, and the minimap button now reacts to the mouse as well.
 - When there are no unread messages, only the back chat bubble turns gray, and it is brighter than before so it stands out on the dark circle.
 - The sender's name on the message preview next to the button is smaller, so it fits the small card better.
+- New "Widget shape" setting on the Icons page: choose a round or a square widget on any theme. Players on the EllesmereUI theme now get the round widget by default and can pick square there.
 
 ## [2.1.3] - 2026-11-04
 

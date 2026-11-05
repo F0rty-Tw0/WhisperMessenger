@@ -15,6 +15,13 @@ local DESELECT_ON_SEND_KEYS = {
   "Deselect chat input after sending",
   "After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back.",
 }
+local WIDGET_SHAPE_KEYS = {
+  "Widget shape",
+  "Circle",
+  "Square",
+  "Only with the square widget shape.",
+  "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
+}
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
@@ -74,6 +81,15 @@ return function()
     for _, key in ipairs(DESELECT_ON_SEND_KEYS) do
       assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
     end
+
+    -- test_widget_shape_strings_are_translated
+    for _, key in ipairs(WIDGET_SHAPE_KEYS) do
+      assert(catalog[key] ~= nil, code .. " is missing a translation for '" .. key .. "'")
+    end
+    assert(
+      catalog["With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."] == nil,
+      code .. " still has the old EllesmereUI tooltip"
+    )
 
     -- test_language_reload_prompt_is_translated
     assert(catalog[LANGUAGE_RELOAD_KEY] ~= nil, code .. " is missing a translation for '" .. LANGUAGE_RELOAD_KEY .. "'")

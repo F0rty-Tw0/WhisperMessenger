@@ -57,6 +57,9 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconSizeRow.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, -24)
 
+  local shape = config.widgetShape == "square" and "square" or "circle"
+  local changed
+
   local iconDesaturatedToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -77,7 +80,28 @@ function IconSettings.Create(factory, parent, config, options)
   )
   iconDesaturatedToggle.row:SetPoint("TOPLEFT", iconSizeRow.row, "BOTTOMLEFT", 0, rowSpacing)
 
-  -- Only the EllesmereUI theme's square widget has a background to hide.
+  local shapeSelector = panel:bind(
+    ButtonSelector.Create(factory, frame, {
+      labelText = text("Widget shape"),
+      optionsList = Options.BuildWidgetShapeOptions(),
+      fallbackKey = DEFAULTS.widgetShape,
+      initial = config.widgetShape or DEFAULTS.widgetShape,
+      colors = selectorColors,
+      onChange = function(value)
+        changed("widgetShape", value)
+      end,
+      rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
+      labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
+      buttonWidth = 60,
+      buttonHeight = 26,
+      buttonSpacing = 4,
+      maxPerRow = 2,
+    }),
+    { type = "selector", key = "widgetShape", default = DEFAULTS.widgetShape }
+  )
+  shapeSelector.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
+
+  -- Only the square widget shape has a background to hide.
   local iconBackgroundToggle = panel:bind(
     UIHelpers.createToggleRow(
       factory,
@@ -91,17 +115,27 @@ function IconSettings.Create(factory, parent, config, options)
       end,
       {
         text("Square button background"),
-        text("With the EllesmereUI theme, shows the square behind the widget icon. Turn it off to show only the two chat bubbles."),
+        text("Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles."),
       }
     ),
     { type = "toggle", key = "iconBackground", default = DEFAULTS.iconBackground }
   )
-  iconBackgroundToggle.row:SetPoint("TOPLEFT", iconDesaturatedToggle.row, "BOTTOMLEFT", 0, rowSpacing)
-  -- Shown for every preset, but only usable with EllesmereUI's; keeps its value meanwhile.
+  iconBackgroundToggle.row:SetPoint("TOPLEFT", shapeSelector.row, "BOTTOMLEFT", 0, rowSpacing)
+  -- Always shown, but only usable with the square shape; keeps its value meanwhile.
   local iconBackgroundAvailability = UIHelpers.attachDisabledState(factory, iconBackgroundToggle.row)
   local function refreshIconBackgroundAvailability()
-    local usable = Theme.UsesSquareWidget ~= nil and Theme.UsesSquareWidget() == true
-    iconBackgroundAvailability.set(usable, not usable and text("Only with the EllesmereUI theme.") or nil)
+    local usable = shape == "square"
+    iconBackgroundAvailability.set(usable, not usable and text("Only with the square widget shape.") or nil)
+  end
+  -- Selector clicks and Reset to Defaults both land here, so the toggle follows the shape at once.
+  changed = function(key, value)
+    if key == "widgetShape" then
+      shape = value == "square" and "square" or "circle"
+    end
+    onChange(key, value)
+    if key == "widgetShape" then
+      refreshIconBackgroundAvailability()
+    end
   end
 
   local initialWidgetTransparency = tonumber(config.widgetTransparency)
@@ -200,7 +234,7 @@ function IconSettings.Create(factory, parent, config, options)
   )
   resetButton:SetPoint("TOPLEFT", unreadRows.positionSelector.row, "BOTTOMLEFT", 0, -24)
   resetButton:SetScript("OnClick", function()
-    panel:reset(onChange)
+    panel:reset(changed)
   end)
 
   local bottomSpacer = factory.CreateFrame("Frame", nil, frame)
@@ -222,6 +256,8 @@ function IconSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Configure icon and widget settings."))
     iconSizeRow.label:SetText(text("Icon Size"))
     iconDesaturatedToggle.label:SetText(text("Desaturate icon when idle"))
+    shapeSelector.label:SetText(text("Widget shape"))
+    shapeSelector.setOptionsList(Options.BuildWidgetShapeOptions())
     iconBackgroundToggle.label:SetText(text("Square button background"))
     widgetTransparencyRow.label:SetText(text("Widget transparency"))
     lockToggleIconToggle.label:SetText(text("Lock icon position"))
@@ -229,6 +265,7 @@ function IconSettings.Create(factory, parent, config, options)
     iconModeSelector.label:SetText(text("Icon Mode"))
     iconModeSelector.setOptionsList(Options.BuildIconModeOptions())
     unreadRows.setLanguage()
+    refreshIconBackgroundAvailability()
     resetButton.label:SetText(text("Reset to Defaults"))
   end
 
