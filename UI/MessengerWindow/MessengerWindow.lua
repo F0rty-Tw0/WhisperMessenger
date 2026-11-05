@@ -162,6 +162,9 @@ function MessengerWindow.Create(factory, options)
     getQuickReplies = function()
       return settingsConfig.quickReplies
     end,
+    getDeselectOnSend = function()
+      return settingsConfig.deselectComposerOnSend == true
+    end,
   }
   local composer = Composer.Create(factory, layout.composerPane, composerSelectedContact, options.onSend or function(...)
     local _ = ...
