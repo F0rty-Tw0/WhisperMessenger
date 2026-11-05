@@ -295,6 +295,7 @@ UI/Composer/ComposerSurface.lua
 UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
 UI/Composer/ComposerLimit.lua
+UI/Composer/ComposerSendFocus.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/CompetitiveIndicator.lua
