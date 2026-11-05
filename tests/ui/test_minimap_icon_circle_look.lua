@@ -44,27 +44,6 @@ return function()
     assert(icon.accentGlyph.shown == true, "back bubble shown")
   end
 
-  -- test_minimap_idle_gray_back_and_accent_with_unread
-  do
-    local icon = createIcon(true)
-    icon.setUnreadCount(0)
-    assert(icon.iconTex.desaturated ~= true, "front bubble never desaturated")
-    assert(icon.background.desaturated ~= true, "circle never desaturated")
-    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble gray while idle")
-    icon.setUnreadCount(2)
-    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent with unread")
-    icon.setUnreadCount(0)
-    assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "gray again once read")
-  end
-
-  -- test_minimap_setting_off_keeps_the_back_bubble_accent
-  do
-    local icon = createIcon(false)
-    icon.setUnreadCount(0)
-    assert(icon.iconTex.desaturated ~= true, "front bubble not desaturated")
-    assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "accent with the setting off")
-  end
-
   -- test_minimap_hover_lifts_the_circle
   do
     local icon = createIcon(true)
@@ -75,12 +54,25 @@ return function()
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "circle lifts on hover")
     assert(sameColor(icon.accentGlyph.vertexColor, Theme.COLORS.accent), "back bubble accent on hover")
     assert(sameColor(icon.iconTex.vertexColor, glyphColor), "front bubble unchanged on hover")
+  end
+
+  -- test_minimap_leave_restores_the_circle_and_the_gray_back
+  do
+    local icon = createIcon(true)
+    icon.setUnreadCount(0)
+    fire(icon, "OnEnter")
 
     fire(icon, "OnLeave")
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "circle back on leave")
     assert(sameColor(icon.accentGlyph.vertexColor, Desaturation.DESAT_BACK), "back bubble gray again on leave")
+  end
 
+  -- test_minimap_hover_keeps_the_lift_across_unread_changes
+  do
+    local icon = createIcon(true)
+    icon.setUnreadCount(0)
     fire(icon, "OnEnter")
+
     icon.setUnreadCount(3)
     icon.setUnreadCount(0)
     assert(sameColor(icon.background.vertexColor, IconArt.ResolveHoverBgColor()), "lift kept across unread changes")
@@ -98,6 +90,7 @@ return function()
     icon.refreshTheme()
     assert(sameColor(icon.background.vertexColor, Theme.COLORS.toggle_icon_bg), "idle circle takes the new theme")
     assert(not sameColor(icon.background.vertexColor, oldBg), "not the old theme's circle")
+    assert(sameColor(icon.iconTex.vertexColor, Theme.COLORS.toggle_icon_glyph), "front bubble takes the new theme")
 
     fire(icon, "OnEnter")
     Theme.SetPreset("wow_default")

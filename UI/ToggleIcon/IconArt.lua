@@ -35,17 +35,17 @@ local function resolveHoverBgColor()
     return bg
   end
   local keep = 1 - HOVER_ACCENT_MIX
-  return {
+  local lifted = {
     bg[1] * keep + accent[1] * HOVER_ACCENT_MIX,
     bg[2] * keep + accent[2] * HOVER_ACCENT_MIX,
     bg[3] * keep + accent[3] * HOVER_ACCENT_MIX,
     bg[4],
   }
+
+  return lifted
 end
 
-IconArt.ResolveBgColor = resolveBgColor
 IconArt.ResolveHoverBgColor = resolveHoverBgColor
-IconArt.ResolveGlyphColor = resolveGlyphColor
 
 function IconArt.Create(frame, iconSize)
   local background = frame:CreateTexture(nil, "BACKGROUND")
@@ -74,7 +74,8 @@ end
 
 -- Paints the face from IconArt.Create in the theme's colors; hovered lifts the circle.
 function IconArt.PaintFace(art, hovered)
-  applyVertexColor(art.background, hovered and resolveHoverBgColor() or resolveBgColor())
+  local circleColor = hovered and resolveHoverBgColor() or resolveBgColor()
+  applyVertexColor(art.background, circleColor)
   applyVertexColor(art.chatIcon, resolveGlyphColor())
 end
 

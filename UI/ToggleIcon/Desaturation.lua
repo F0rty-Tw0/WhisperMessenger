@@ -25,13 +25,8 @@ function Desaturation.Create(deps)
     lastUnreadCount = tonumber(unreadCount) or 0
   end
 
-  local function refresh()
-    update(lastUnreadCount)
-  end
-
   return {
     update = update,
-    refresh = refresh,
     isActive = isActive,
   }
 end

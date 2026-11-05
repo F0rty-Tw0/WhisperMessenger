@@ -3,8 +3,6 @@ if type(ns) ~= "table" then
   ns = {}
 end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local applyVertexColor = UIHelpers.applyVertexColor
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local IconTooltip = ns.MinimapIconTooltip or require("WhisperMessenger.UI.MinimapIcon.IconTooltip")
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
@@ -114,12 +112,11 @@ function MinimapIcon.Create(factory, options)
   frame:EnableMouse(true)
   frame:RegisterForDrag("LeftButton")
 
-  -- The widget's face: dark circle with the front bubble. The minimap is
-  -- always round, so the back bubble is painted here, not by accentGlyph.apply.
+  -- The widget's face: dark circle with the front bubble. The minimap is always
+  -- round, so the back bubble takes no square check; paintBack shows and colors it.
   local art = IconArt.Create(frame, ICON_SIZE)
   local iconTex = art.chatIcon
   local accentGlyph = SquareLook.CreateAccentGlyph(frame, iconTex)
-  accentGlyph.texture:Show()
 
   -- Glow pulse for unread messages (same inner glow as the widget icon)
   local pulseGlow = PulseGlow.Create(factory, frame, {
@@ -166,8 +163,7 @@ function MinimapIcon.Create(factory, options)
   -- Hover lifts the circle and returns the back bubble to the accent.
   local hovered = false
   local function paintBack()
-    local grey = desaturation.isActive() and not hovered
-    applyVertexColor(accentGlyph.texture, grey and Desaturation.DESAT_BACK or Theme.COLORS.accent)
+    accentGlyph.apply(desaturation.isActive(), hovered)
   end
   local function paintFace()
     IconArt.PaintFace(art, hovered)
@@ -257,7 +253,6 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshDesaturation()
-    desaturation.refresh()
     paintFace()
   end
 

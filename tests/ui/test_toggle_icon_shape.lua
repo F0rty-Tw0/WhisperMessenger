@@ -38,6 +38,7 @@ local function edgesShown(edges, shown)
       return false, side
     end
   end
+
   return true
 end
 
@@ -66,6 +67,7 @@ local function iconWithShape(shape, options, factory)
   options.getWidgetShape = type(shape) == "function" and shape or function()
     return shape
   end
+
   return ToggleIcon.Create(factory or FakeUI.NewFactory(), options)
 end
 
@@ -89,7 +91,13 @@ return function()
     local icon = iconWithShape("circle")
     assert(icon.background.texturePath == ROUND_BG, "circle on EllesmereUI, got " .. tostring(icon.background.texturePath))
     assert(edgesShown(icon.squareEdges, false), "no square edge")
-    assert(ToggleIcon.Create(FakeUI.NewFactory(), {}).background.texturePath == ROUND_BG, "no getter reads circle")
+  end)
+
+  -- test_missing_shape_getter_draws_a_circle
+  withEllesmere(function()
+    Theme.SetPreset("ellesmere_ui")
+    local icon = ToggleIcon.Create(FakeUI.NewFactory(), {})
+    assert(icon.background.texturePath == ROUND_BG, "no getter reads circle")
   end)
 
   -- test_junk_shape_draws_a_circle
@@ -132,6 +140,7 @@ return function()
           return true
         end
       end
+
       return false
     end
     assert(pulsing(), "pulse running before the change")

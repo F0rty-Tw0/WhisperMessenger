@@ -83,9 +83,9 @@ function UnreadRows.Create(factory, frame, panel, config, onChange, controls)
       end,
       rowWidth = Theme.LAYOUT.SETTINGS_CONTROL_WIDTH,
       labelSpacing = Theme.LAYOUT.SETTINGS_LABEL_SPACING,
-      buttonWidth = 60,
-      buttonHeight = 26,
-      buttonSpacing = 4,
+      buttonWidth = Options.SELECTOR_BUTTON_WIDTH,
+      buttonHeight = Options.SELECTOR_BUTTON_HEIGHT,
+      buttonSpacing = Options.SELECTOR_BUTTON_SPACING,
       maxPerRow = 4,
     }),
     { type = "selector", key = "widgetPreviewPosition", default = DEFAULTS.widgetPreviewPosition }

@@ -7,6 +7,10 @@ local function near(a, b)
   return math.abs(a - b) < 1e-9
 end
 
+local function sameColor(a, b)
+  return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
+end
+
 return function()
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -82,5 +86,20 @@ return function()
     Theme.COLORS.toggle_icon_bg = savedBg
     Theme.COLORS.accent = savedAccent
     assert(c[1] == 0.06 and c[2] == 0.18 and c[3] == 0.30 and c[4] == 1, "test_hover_bg_without_accent_is_plain_bg: should fall back to bg")
+  end
+
+  -- test_paint_face_paints_the_circle_and_the_glyph
+
+  do
+    local frame = factory.CreateFrame("Button", nil, parent)
+    local art = IconArt.Create(frame, 40)
+
+    IconArt.PaintFace(art, true)
+    assert(sameColor(art.background.vertexColor, IconArt.ResolveHoverBgColor()), "test_paint_face: hovered: the lift")
+    assert(sameColor(art.chatIcon.vertexColor, Theme.COLORS.toggle_icon_glyph), "test_paint_face: hovered: glyph color")
+
+    IconArt.PaintFace(art, false)
+    assert(sameColor(art.background.vertexColor, Theme.COLORS.toggle_icon_bg), "test_paint_face: idle: the plain circle")
+    assert(sameColor(art.chatIcon.vertexColor, Theme.COLORS.toggle_icon_glyph), "test_paint_face: idle: glyph color")
   end
 end

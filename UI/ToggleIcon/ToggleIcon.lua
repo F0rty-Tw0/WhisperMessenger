@@ -201,7 +201,6 @@ function ToggleIcon.Create(factory, options)
   end
 
   local function refreshDesaturation()
-    desaturation.refresh()
     IconArt.PaintFace(art, hover.active)
     squareLook.apply(desaturation.isActive())
   end
