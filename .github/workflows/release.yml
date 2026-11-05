@@ -91,7 +91,7 @@ jobs:
             lua5.1 "${MINIFIER_DIR}/bin/luasrcdiet" \
               --basic \
               --noopt-emptylines \
-              --noopt-locals \
+              --opt-locals \
               --quiet \
               "${file}" \
               -o "${file}.min"

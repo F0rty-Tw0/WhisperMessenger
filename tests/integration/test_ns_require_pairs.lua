@@ -4,10 +4,11 @@
 -- the fallback require throws.
 local PREFIX = "WhisperMessenger."
 
+-- The release build renames locals, so `ns` can be any identifier.
 local PAIR_PATTERNS = {
-  'ns%.([%w_]+)%s*or%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
-  'ns%.([%w_]+)%s*or%s*%(%s*type%(require%)%s*==%s*"function"%s*and%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
-  'ns%.([%w_]+)%s*or%s*%(%s*rawget%(%s*_G%s*,%s*"require"%s*%)%s*and%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
+  '[%a_][%w_]*%.([%w_]+)%s*or%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
+  '[%a_][%w_]*%.([%w_]+)%s*or%s*%(%s*type%(require%)%s*==%s*"function"%s*and%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
+  '[%a_][%w_]*%.([%w_]+)%s*or%s*%(%s*rawget%(%s*_G%s*,%s*"require"%s*%)%s*and%s*require%(%s*"WhisperMessenger%.([%w_%.]+)"%s*%)',
 }
 
 local function readFile(path)
@@ -52,7 +53,7 @@ local function resolveModulePath(moduleName)
 end
 
 local function assignsKey(source, key)
-  return string.find("\n" .. source, "\nns%." .. key .. "%s*=") ~= nil
+  return string.find("\n" .. source, "\n[%a_][%w_]*%." .. key .. "%s*=") ~= nil
 end
 
 return function()
