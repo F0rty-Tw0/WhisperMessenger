@@ -30,21 +30,39 @@ return function()
   })
 
   local getters = { getIconBorder = "iconBorder", getIconBorderThemed = "iconBorderThemed" }
-  for name, options in pairs({ toggle = toggleOptions, minimap = minimapOptions }) do
-    for getter, key in pairs(getters) do
-      local label = name .. " " .. getter
-      -- test_runtime_passes_the_border_getters
-      assert(type(options[getter]) == "function", label .. " is passed")
+  local runtimes = { toggle = toggleOptions, minimap = minimapOptions }
 
-      -- test_unset_border_setting_reads_on
-      settings[key] = nil
-      assert(options[getter]() == true, label .. " reads on when unset")
-
-      -- test_border_getter_follows_the_live_setting
-      settings[key] = false
-      assert(options[getter]() == false, label .. " off")
-      settings[key] = true
-      assert(options[getter]() == true, label .. " on")
+  -- Calls check(label, getterFn, key) for both getters of both runtimes.
+  local function eachGetter(check)
+    for name, options in pairs(runtimes) do
+      for getter, key in pairs(getters) do
+        check(name .. " " .. getter, options[getter], key)
+      end
     end
+  end
+
+  -- test_runtime_passes_the_border_getters
+  do
+    eachGetter(function(label, getterFn)
+      assert(type(getterFn) == "function", "test_runtime_passes_the_border_getters: " .. label .. " is passed")
+    end)
+  end
+
+  -- test_unset_border_setting_reads_on
+  do
+    eachGetter(function(label, getterFn, key)
+      settings[key] = nil
+      assert(getterFn() == true, "test_unset_border_setting_reads_on: " .. label .. " reads on when unset")
+    end)
+  end
+
+  -- test_border_getter_follows_the_live_setting
+  do
+    eachGetter(function(label, getterFn, key)
+      settings[key] = false
+      assert(getterFn() == false, "test_border_getter_follows_the_live_setting: " .. label .. " off")
+      settings[key] = true
+      assert(getterFn() == true, "test_border_getter_follows_the_live_setting: " .. label .. " on")
+    end)
   end
 end

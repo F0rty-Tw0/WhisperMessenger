@@ -1,9 +1,10 @@
--- The round widget wears the gold ring: a thin rim under its circle, or the
--- full ring over the button when the circle is off. Tinted to the theme accent
--- unless the themed setting is off; the border setting takes it off.
+-- The round widget wears the ring: a thin rim under its circle, or the full
+-- ring over the button when the circle is off. Tinted to the theme accent, or
+-- gold when the themed setting is off; the border setting takes it off.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local widget = require("tests.helpers.border_widget")
 
 local WHITE = { 1, 1, 1, 1 }
 
@@ -17,28 +18,8 @@ end
 
 local function centeredOn(texture, frame)
   local p = texture.point or {}
-  return p[1] == "CENTER" and p[2] == frame and p[3] == "CENTER" and p[4] == 0 and p[5] == 0
-end
 
--- state is read live; nil fields mean the defaults (circle, background on, border on, themed).
-local function widget(state)
-  return ToggleIcon.Create(FakeUI.NewFactory(), {
-    getWidgetShape = function()
-      return state.shape or "circle"
-    end,
-    getIconBackground = function()
-      return state.background
-    end,
-    getIconBorder = function()
-      return state.border
-    end,
-    getIconBorderThemed = function()
-      return state.themed
-    end,
-    getIconDesaturated = function()
-      return state.desaturated == true
-    end,
-  })
+  return p[1] == "CENTER" and p[2] == frame and p[3] == "CENTER" and p[4] == 0 and p[5] == 0
 end
 
 return function()

@@ -1,5 +1,5 @@
--- The square shape draws the widget as a flat square under the gold square
--- frame; the circle keeps the round look. Both show the two bubbles.
+-- The square shape draws the widget as a flat square under the square frame
+-- (theme accent, or gold); the circle keeps the round look. Both show the two bubbles.
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Bridge = require("WhisperMessenger.UI.Theme.EllesmereBridge")

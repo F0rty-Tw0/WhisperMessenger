@@ -1,9 +1,8 @@
--- The square widget wears the gold square frame, on top of the slot
--- background or without it; the frame replaces the thin black edge, and the
--- border setting takes it off. Tinted to the theme accent unless not themed.
-local FakeUI = require("tests.helpers.fake_ui")
+-- The square widget wears the square frame, on top of the slot background or
+-- without it, and the border setting takes it off. Tinted to the theme accent,
+-- or gold when not themed.
 local Theme = require("WhisperMessenger.UI.Theme")
-local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local borderWidget = require("tests.helpers.border_widget")
 local IconBorder = require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
@@ -17,25 +16,8 @@ local function sameColor(a, b)
   return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
 end
 
--- state is read live; nil fields mean the defaults (square, background on, border on, themed).
 local function widget(state)
-  return ToggleIcon.Create(FakeUI.NewFactory(), {
-    getWidgetShape = function()
-      return state.shape or "square"
-    end,
-    getIconBackground = function()
-      return state.background
-    end,
-    getIconBorder = function()
-      return state.border
-    end,
-    getIconBorderThemed = function()
-      return state.themed
-    end,
-    getIconDesaturated = function()
-      return state.desaturated == true
-    end,
-  })
+  return borderWidget(state, "square")
 end
 
 local function borderTextures(frame)

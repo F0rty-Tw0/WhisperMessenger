@@ -1,8 +1,7 @@
 -- The round widget's ring follows setting toggles, theme changes and icon size
 -- changes, and stays put through hover, press, pulse and idle gray.
-local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
-local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
+local widget = require("tests.helpers.border_widget")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
@@ -17,33 +16,13 @@ local function sameColor(a, b)
   return type(a) == "table" and type(b) == "table" and a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and (a[4] or 1) == (b[4] or 1)
 end
 
--- state is read live; nil fields mean the defaults (circle, background on, border on, themed).
-local function widget(state)
-  return ToggleIcon.Create(FakeUI.NewFactory(), {
-    getWidgetShape = function()
-      return state.shape or "circle"
-    end,
-    getIconBackground = function()
-      return state.background
-    end,
-    getIconBorder = function()
-      return state.border
-    end,
-    getIconBorderThemed = function()
-      return state.themed
-    end,
-    getIconDesaturated = function()
-      return state.desaturated == true
-    end,
-  })
-end
-
 local function fire(icon, script)
   icon.frame:GetScript(script)(icon.frame)
 end
 
 local function ringSnapshot(ring)
   local color = ring.vertexColor or {}
+
   return { ring.shown, ring.drawLayer, ring.drawSublevel, ring.width, ring.desaturated, color[1], color[2], color[3], color[4] }
 end
 
@@ -53,13 +32,14 @@ local function sameSnapshot(a, b)
       return false, i
     end
   end
+
   return true
 end
 
 return function()
   Theme.SetPreset("wow_default")
 
-  -- test_background_toggle_moves_the_ring_while_hovered
+  -- test_background_off_while_hovered_gives_the_full_ring
   do
     local state = {}
     local icon = widget(state)
@@ -71,9 +51,16 @@ return function()
     assert(near(icon.ring.width, 42), "full ring at button size, got " .. tostring(icon.ring.width))
     assert(icon.label.width == 29, "bubbles at 0.7, got " .. tostring(icon.label.width))
     assert(icon.hoverGlow.shown == true, "glow while hovered without the circle")
+  end
+
+  -- test_background_back_on_while_hovered_gives_the_rim_again
+  do
+    local state = { background = false }
+    local icon = widget(state)
+    fire(icon, "OnEnter")
     state.background = nil
     icon.refreshTheme()
-    layer = icon.ring:GetDrawLayer()
+    local layer = icon.ring:GetDrawLayer()
     assert(layer == "BACKGROUND", "rim under the circle again, got " .. tostring(layer))
     assert(near(icon.ring.width, 48.3), "rim size again, got " .. tostring(icon.ring.width))
     assert(icon.label.width == 37, "bubbles at 0.9 again, got " .. tostring(icon.label.width))
