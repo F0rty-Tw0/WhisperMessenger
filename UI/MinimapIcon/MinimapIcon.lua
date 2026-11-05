@@ -257,7 +257,6 @@ function MinimapIcon.Create(factory, options)
   end
 
   local function refreshDesaturation()
-    desaturation.refresh()
     paintFace()
   end
 

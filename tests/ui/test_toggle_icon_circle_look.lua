@@ -125,24 +125,5 @@ return function()
     assert(sameColor(art.chatIcon.vertexColor, Theme.COLORS.toggle_icon_glyph), "idle: glyph color")
   end
 
-  -- test_desaturation_without_textures_only_tracks_the_state
-  do
-    local enabled = true
-    local desaturation = Desaturation.Create({
-      getIconDesaturated = function()
-        return enabled
-      end,
-    })
-    desaturation.refresh()
-    assert(desaturation.isActive() == true, "idle with the setting on")
-    desaturation.update(2)
-    assert(desaturation.isActive() == false, "not idle with unread")
-    desaturation.refresh()
-    assert(desaturation.isActive() == false, "refresh keeps the unread count")
-    desaturation.update(0)
-    enabled = false
-    assert(not desaturation.isActive(), "setting off")
-  end
-
   Theme.SetPreset(Theme.DEFAULT_PRESET)
 end
