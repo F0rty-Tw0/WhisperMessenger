@@ -5,6 +5,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
+local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 
 local WHITE = { 1, 1, 1, 1 }
 
@@ -137,6 +138,45 @@ return function()
     icon.applyIconSize(60)
     assert(near(icon.ring.width, 60), "full ring at 60, got " .. tostring(icon.ring.width))
     assert(icon.label.width == 42, "bubbles at 0.7, got " .. tostring(icon.label.width))
+  end
+
+  -- test_hover_glow_follows_the_full_ring_glyph_after_resize
+  do
+    local icon = widget({ background = false })
+    fire(icon, "OnEnter")
+    icon.applyIconSize(60)
+    local expected = 42 * SquareLook.BUBBLE_GLOW_SCALE
+    assert(
+      near(icon.hoverGlow.width, expected),
+      "test_hover_glow_follows_the_full_ring_glyph_after_resize: glow from the 0.7 glyph, got " .. tostring(icon.hoverGlow.width)
+    )
+  end
+
+  -- test_hover_glow_follows_the_full_ring_glyph_after_square
+  do
+    local state = { shape = "square", background = false }
+    local icon = widget(state)
+    fire(icon, "OnEnter")
+    state.shape = nil
+    icon.refreshTheme()
+    local expected = 29 * SquareLook.BUBBLE_GLOW_SCALE
+    assert(
+      near(icon.hoverGlow.width, expected),
+      "test_hover_glow_follows_the_full_ring_glyph_after_square: glow from the 0.7 glyph, got " .. tostring(icon.hoverGlow.width)
+    )
+  end
+
+  -- test_square_pulse_follows_the_square_glyph_after_full_ring
+  do
+    local state = { background = false }
+    local icon = widget(state)
+    state.shape = "square"
+    icon.refreshTheme()
+    local expected = 37 * SquareLook.BUBBLE_GLOW_SCALE
+    assert(
+      near(icon.pulseTexture.width, expected),
+      "test_square_pulse_follows_the_square_glyph_after_full_ring: pulse from the 0.9 glyph, got " .. tostring(icon.pulseTexture.width)
+    )
   end
 
   -- test_hover_press_pulse_and_idle_gray_leave_the_ring_alone
