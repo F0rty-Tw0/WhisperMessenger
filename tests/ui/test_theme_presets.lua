@@ -114,8 +114,8 @@ return function()
       "test_set_wow_native: text_title did not update to NORMAL_FONT_COLOR gold"
     )
     assert(colorsMatch(Theme.COLORS.option_toggle_on, { 1.00, 0.82, 0.00, 1.0 }), "test_set_wow_native: option_toggle_on tracks gold accent")
-    -- Toggle widget keeps its gold identity (ring + fill)
-    assert(colorsMatch(Theme.COLORS.toggle_icon_bg, { 1.00, 0.82, 0.00, 1.0 }), "test_set_wow_native: toggle_icon_bg stays gold")
+    -- Toggle widget: dark circle, gold ring
+    assert(colorsMatch(Theme.COLORS.toggle_icon_bg, { 0.16, 0.14, 0.10, 1.0 }), "test_set_wow_native: toggle_icon_bg is dark brown")
     assert(colorsMatch(Theme.COLORS.toggle_icon_ring, { 1.00, 0.82, 0.00, 0.75 }), "test_set_wow_native: toggle_icon_ring stays gold")
 
     -- System text keeps SYSTEM yellow; outgoing bubble is dark bronze
