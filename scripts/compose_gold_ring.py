@@ -1,6 +1,7 @@
 """Draws our gold ring as a transparent PNG, plus an in-context preview. Stdlib only.
 
 Usage: python scripts/compose_gold_ring.py <ring.png> <preview.png>
+       python scripts/compose_gold_ring.py --square <frame.png>
 """
 import math
 import struct
@@ -10,6 +11,7 @@ import zlib
 SIZE = 256
 INNER = 0.78  # hole edge as a share of the radius
 LIGHT_STRENGTH = 0.22
+SQUARE_BAND = 0.10  # frame band as a share of the side
 # Band profile, outer edge (0) to hole edge (1): (position, red, green, blue).
 PROFILE = [
     (0.00, 0.26, 0.17, 0.05),
@@ -45,11 +47,28 @@ def ring_pixel(x, y, size):
     r = dist / radius
     pixel = 1 / radius  # one pixel, in radius units, for edge smoothing
     alpha = clamp01((1 - r) / pixel + 0.5) * clamp01((r - INNER) / pixel + 0.5)
-    color = profile_color((1 - r) / (1 - INNER))
-    if dist > 0:
-        # Light from the top left: dy grows downward in image rows.
-        light = 1 + LIGHT_STRENGTH * ((-dx - dy) / (dist * math.sqrt(2)))
-        color = [clamp01(c * light) for c in color]
+    color = apply_light(profile_color((1 - r) / (1 - INNER)), dx, dy)
+    return color[0], color[1], color[2], alpha
+
+
+def apply_light(color, dx, dy):
+    """Light from the top left: dy grows downward in image rows."""
+    dist = math.hypot(dx, dy)
+    if dist == 0:
+        return color
+    light = 1 + LIGHT_STRENGTH * ((-dx - dy) / (dist * math.sqrt(2)))
+    return [clamp01(c * light) for c in color]
+
+
+def square_pixel(x, y, size):
+    """RGBA floats for pixel center (x, y) in a size x size square frame image."""
+    half = size / 2 - 1
+    band = SQUARE_BAND * size
+    dx = x + 0.5 - size / 2
+    dy = y + 0.5 - size / 2
+    d = max(abs(dx), abs(dy))
+    alpha = clamp01(half - d + 0.5) * clamp01(d - (half - band) + 0.5)
+    color = apply_light(profile_color((half - d) / band), dx, dy)
     return color[0], color[1], color[2], alpha
 
 
@@ -70,15 +89,23 @@ def to_byte(value):
     return int(round(clamp01(value) * 255))
 
 
-def write_ring(path):
+def write_art(path, pixel):
     rows = []
     for y in range(SIZE):
         row = []
         for x in range(SIZE):
-            r, g, b, a = ring_pixel(x, y, SIZE)
+            r, g, b, a = pixel(x, y, SIZE)
             row += [to_byte(r), to_byte(g), to_byte(b), to_byte(a)]
         rows.append(row)
     write_png(path, SIZE, SIZE, rows)
+
+
+def write_ring(path):
+    write_art(path, ring_pixel)
+
+
+def write_square(path):
+    write_art(path, square_pixel)
 
 
 def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 0.10)):
@@ -117,6 +144,9 @@ def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 
 
 
 def main(argv):
+    if argv[:1] == ["--square"]:
+        write_square(argv[1])
+        return 0
     write_ring(argv[0])
     write_preview(argv[1])
     return 0
