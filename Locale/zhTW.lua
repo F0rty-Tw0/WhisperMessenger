@@ -518,6 +518,8 @@ local TraditionalChinese = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此遊戲版本無法從這裡開啟按鍵設定。請使用遊戲選單。",
   -- Contact menu: Add friend
   ["Add friend"] = "加為好友",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "邀請加入公會",
 }
 
 ns.Locale_zhTW = TraditionalChinese

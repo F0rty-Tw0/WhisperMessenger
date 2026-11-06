@@ -518,6 +518,8 @@ local SimplifiedChinese = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "此游戏版本无法从这里打开按键设置。请使用游戏菜单。",
   -- Contact menu: Add friend
   ["Add friend"] = "添加好友",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "邀请加入公会",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

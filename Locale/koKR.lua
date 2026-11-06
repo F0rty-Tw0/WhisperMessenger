@@ -518,6 +518,8 @@ local Korean = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "이 게임 버전에서는 여기서 단축키 설정을 열 수 없습니다. 게임 메뉴를 이용하세요.",
   -- Contact menu: Add friend
   ["Add friend"] = "친구 추가",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "길드 초대",
 }
 
 ns.Locale_koKR = Korean
