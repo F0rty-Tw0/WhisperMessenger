@@ -1,6 +1,7 @@
 local ContextMenu = require("WhisperMessenger.UI.ContactsList.ContextMenu")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local SeenGuild = require("WhisperMessenger.Model.SeenGuild")
+local ChatPrefill = require("WhisperMessenger.Util.ChatPrefill")
 local FakeUI = require("tests.helpers.fake_ui")
 
 -- A WoW whisper row's menu offers "Guild invite" when you are in a guild with
@@ -87,9 +88,11 @@ return function()
   end
 
   local opened
+  local openedWhilePrefilling
   local invited
   local function resetFixture()
     opened = {}
+    openedWhilePrefilling = nil
     invited = {}
     SeenGuild._reset()
     rawset(_G, "IsInGuild", yes)
@@ -100,6 +103,7 @@ return function()
     rawset(_G, "ChatFrameUtil", {
       OpenChat = function(text)
         opened[#opened + 1] = text
+        openedWhilePrefilling = ChatPrefill.IsOpening()
       end,
     })
     rawset(_G, "C_GuildInfo", {
@@ -132,6 +136,10 @@ return function()
     entry.callback()
     assert(opened[1] == "/ginvite Arthas-Area52", "prefills the command, got " .. tostring(opened[1]))
     assert(#opened == 1, "opens chat once")
+
+    -- test_click_opens_chat_under_the_prefill_guard
+    -- Our chat-box hook skips the box only while ChatPrefill flags it.
+    assert(openedWhilePrefilling == true, "opens chat through ChatPrefill so the hook leaves the box alone")
 
     -- test_click_prefills_guid_resolved_character_name
     resetFixture()
@@ -249,8 +257,11 @@ return function()
 
     -- test_hidden_for_guildmate
     resetFixture()
-    _G.C_GuildInfo.MemberExistsByName = yes
+    _G.C_GuildInfo.MemberExistsByName = function(name)
+      return name == "Arthas-Area52"
+    end
     assert(not hasEntry(), "a guildmate hides Guild invite")
+    assert(hasEntry({ displayName = "Jaina-Area52", guid = "Player-1-J" }), "another player's membership is asked by their own name")
 
     -- test_shown_when_member_check_missing_or_throws
     resetFixture()

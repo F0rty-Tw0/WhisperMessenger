@@ -5,6 +5,7 @@ end
 
 -- stylua: ignore start
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local ChatPrefill = ns.ChatPrefill or require("WhisperMessenger.Util.ChatPrefill")
 local DirectHooks = ns.BootstrapAutoOpenDirectHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.DirectHooks")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
@@ -18,6 +19,15 @@ local WHISPER_SLASH_COMMANDS = {
   t = true,
   tell = true,
 }
+
+local REPLY_SLASH_COMMANDS = {
+  r = true,
+  reply = true,
+}
+
+-- Command, then whitespace, then the (maybe empty) message. "/r" alone may
+-- still be the start of "/raid", so the space is required.
+local SLASH_REPLY = "^%s*/([^%s]+)%s+(.-)%s*$"
 
 local SLASH_WHISPER_ONE_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+)%s+(.-)%s*$"
 local SLASH_WHISPER_TWO_PART_NAME = "^%s*/([^%s]+)%s+([^%s]+%s+[^%s]+)%s+(.-)%s*$"
@@ -51,6 +61,35 @@ local function parseSlashCommandText(text)
   return true, target, body or ""
 end
 
+-- Blizzard's localized /r spellings live in SLASH_REPLY1..N.
+local function isReplyCommand(command)
+  if REPLY_SLASH_COMMANDS[command] then
+    return true
+  end
+  local index = 1
+  local slash = _G["SLASH_REPLY" .. index]
+  while type(slash) == "string" do
+    if string.lower(slash) == "/" .. command then
+      return true
+    end
+    index = index + 1
+    slash = _G["SLASH_REPLY" .. index]
+  end
+  return false
+end
+
+-- Returns the message typed after /r, or nil when the text is not a reply.
+local function parseSlashReplyText(text)
+  if type(text) ~= "string" then
+    return nil
+  end
+  local command, body = string.match(text, SLASH_REPLY)
+  if command == nil or not isReplyCommand(string.lower(command)) then
+    return nil
+  end
+  return body
+end
+
 local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
   -- HARD BAIL before any Blizzard state read. During M+/encounters/PvP,
   -- any read of a chat edit box attribute can propagate secret-string
@@ -59,6 +98,10 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
     return
   end
   if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+    return
+  end
+  -- Our own prefill (Guild invite) is opening this box: not a whisper intent.
+  if ChatPrefill.IsOpening() then
     return
   end
 
@@ -79,11 +122,21 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
   local slashCommandSeen = false
   local slashWhisperTarget = nil
   local slashWhisperBody = nil
+  local slashReplyBody = nil
   local textReadable = pcall(function()
     local text = editBox.GetText and editBox:GetText() or ""
     slashCommandSeen, slashWhisperTarget, slashWhisperBody = parseSlashCommandText(text)
+    slashReplyBody = parseSlashReplyText(text)
   end)
   if not textReadable then
+    return
+  end
+  -- Reply goes to our tracked last whisper, never Blizzard's last-tell
+  -- state, which can hold a secret name after restricted content.
+  if slashReplyBody ~= nil then
+    if type(hooks.onReplyTell) == "function" and hooks.onReplyTell() == true then
+      EditBoxInterop.closeEditBox(runtime, editBox, deps.deactivateChat, slashReplyBody)
+    end
     return
   end
   if slashWhisperTarget ~= nil and slashWhisperTarget ~= "" then
