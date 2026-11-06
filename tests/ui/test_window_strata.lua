@@ -43,6 +43,50 @@ end
 
 return function()
   withoutPointerFocus(function()
+    -- test_a_part_of_the_window_outside_it_counts_as_the_window
+    do
+      local part = { GetParent = function() end }
+      local saved = rawget(_G, "GetMouseFocus")
+      rawset(_G, "GetMouseFocus", function()
+        return part
+      end)
+      local frame = makeFrame(false)
+      local strata = WindowStrata.New(frame, {
+        isWindowPart = function(candidate)
+          return candidate == part
+        end,
+      })
+      local onWindow = strata.isPointerOnWindow()
+      rawset(_G, "GetMouseFocus", saved)
+      assert(onWindow == true, "the docked button is the window's")
+    end
+
+    -- test_strata_changes_are_reported
+    do
+      local reported = {}
+      local frame = makeFrame(false)
+      local strata = WindowStrata.New(frame, {
+        onStrataChanged = function(value)
+          reported[#reported + 1] = value
+        end,
+      })
+      strata.promote()
+      strata.demoteIfIdle()
+      assert(reported[1] == "HIGH" and reported[2] == "MEDIUM", "both ways")
+    end
+
+    -- test_staying_up_reports_nothing
+    do
+      local reported = 0
+      local strata = WindowStrata.New(makeFrame(true), {
+        onStrataChanged = function()
+          reported = reported + 1
+        end,
+      })
+      strata.demoteIfIdle()
+      assert(reported == 0, "the pointer is on the window, so nothing moved")
+    end
+
     -- test_promote_raises_to_high_and_claims_escape
     do
       local frame = makeFrame(false)

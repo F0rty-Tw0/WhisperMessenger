@@ -50,6 +50,17 @@ return function()
     assert(change ~= nil and change.value == true, "the default is the phone window")
   end
 
+  -- test_set_phone_layout_shows_the_style_without_saving_it
+  do
+    local result, changes = create({ phoneLayout = true })
+    local toggle = FindUI.toggle(result.frame, LABEL)
+    toggle.scripts.OnClick(toggle)
+    assert(#changes == 1 and changes[1].value == false, "the click asks for the classic window")
+    result.setPhoneLayout(true)
+    toggle.scripts.OnClick(toggle)
+    assert(#changes == 2 and changes[2].value == false, "the toggle went back, so the next click asks again")
+  end
+
   -- test_the_toggle_sits_between_the_hud_picker_and_the_theme_preset
   do
     local result = create()

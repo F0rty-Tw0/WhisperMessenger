@@ -88,6 +88,8 @@ function LifecycleWiring.Setup(options)
     Theme = options.theme,
     composerInput = options.composerInput,
     getAutoFocusChatInput = options.getAutoFocusChatInput,
+    onStrataChanged = options.onStrataChanged,
+    isWindowPart = options.isWindowPart,
     isContactsCollapsed = options.isContactsCollapsed,
     setContactsCollapsed = options.setContactsCollapsed,
   })

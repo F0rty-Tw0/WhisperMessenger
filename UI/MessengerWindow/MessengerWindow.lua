@@ -274,6 +274,12 @@ function MessengerWindow.Create(factory, options)
     getAutoFocusChatInput = function()
       return not holdComposerFocus and settingsConfig.autoFocusComposer == true and not phone.isListView()
     end,
+    onStrataChanged = function(strata)
+      phone.onStrataChanged(strata)
+    end,
+    isWindowPart = function(candidate)
+      return phone.isWindowPart(candidate)
+    end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)
       contactsRail.snap(collapsed, pointerWidth)

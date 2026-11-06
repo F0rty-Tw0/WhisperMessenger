@@ -28,6 +28,10 @@ function PhoneWiring.Hooks()
     end,
     dock = function() end,
     onWindowMoved = function() end,
+    onStrataChanged = function(_strata) end,
+    isWindowPart = function(_candidate)
+      return false
+    end,
     resetSize = function() end,
     showList = function() end,
     isWide = function()
@@ -77,6 +81,9 @@ function PhoneWiring.Attach(hooks, options)
     return nil
   end
   local restoreWidth, restoreHeight = nil, nil
+  -- The button on the window now. getDockIcon stops returning it once the
+  -- icon mode leaves the floating button, but it still has to go home.
+  local dockedIcon = nil
 
   local function isCovered()
     return not options.windowVisibility.isConversationPaneShown()
@@ -133,12 +140,25 @@ function PhoneWiring.Attach(hooks, options)
   -- Already riding (the scale changed, or Alt+Z brought the UI back): the
   -- button only needs its new spot, with no opening to replay.
   local function dock()
-    local icon = getDockIcon()
-    if not (icon and icon.rideTo and icon.isRiding()) then
+    local icon = dockedIcon
+    if not (icon and icon.isRiding()) then
       return
     end
     openAnimation.finish()
     icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
+  end
+
+  -- A window opening for the first time may have no position until next frame.
+  local function clampToSpot()
+    if PhoneDock.ClampToSpot(frame, chrome.iconSlot) then
+      return
+    end
+    local timer = _G.C_Timer
+    if type(timer) == "table" and type(timer.After) == "function" then
+      timer.After(0, function()
+        PhoneDock.ClampToSpot(frame, chrome.iconSlot)
+      end)
+    end
   end
 
   -- The button travels onto the window as the window comes out of it.
@@ -152,8 +172,11 @@ function PhoneWiring.Attach(hooks, options)
       return
     end
     PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
+    dockedIcon = icon
     icon.setRideHandlers(rideHandlers)
     icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), openAnimation.beginOpen(icon.frame))
+    -- Reopened mid-glide, it may still be down with the window that closed.
+    icon.setRideStrata(frame:GetFrameStrata())
   end
 
   -- Not when only the parent hid (Alt+Z): the window is still open.
@@ -161,8 +184,9 @@ function PhoneWiring.Attach(hooks, options)
     if frame:IsShown() then
       return
     end
-    local icon = getDockIcon()
-    if icon and icon.rideHome and icon.isRiding() then
+    local icon = dockedIcon
+    dockedIcon = nil
+    if icon and icon.isRiding() then
       icon.setRideHandlers(nil)
       icon.rideHome(openAnimation.beginClose(icon.frame))
     end
@@ -178,6 +202,15 @@ function PhoneWiring.Attach(hooks, options)
     if icon and icon.isRiding and icon.isRiding() then
       icon.adoptRidePosition()
     end
+  end
+  hooks.onStrataChanged = function(strata)
+    if dockedIcon then
+      dockedIcon.setRideStrata(strata)
+    end
+  end
+  -- A press on the docked button closes or drags the window: not a click elsewhere.
+  hooks.isWindowPart = function(candidate)
+    return dockedIcon ~= nil and candidate == dockedIcon.frame
   end
   hooks.isWide = function()
     return layout.phoneWide == true
@@ -212,6 +245,7 @@ function PhoneWiring.Attach(hooks, options)
     options.applyWindowSize(L.PHONE_WINDOW_WIDTH, L.PHONE_WINDOW_HEIGHT)
   end
 
+  frame:HookScript("OnShow", clampToSpot)
   frame:HookScript("OnShow", openFromIcon)
   frame:HookScript("OnHide", function()
     -- A hidden viewport stops ticking, which would leave a slide hanging.

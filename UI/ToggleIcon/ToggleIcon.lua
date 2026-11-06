@@ -293,6 +293,7 @@ function ToggleIcon.Create(factory, options)
     isRiding = ride.isRiding,
     adoptRidePosition = ride.adoptRidePosition,
     setRideHome = ride.setHome,
+    setRideStrata = ride.setStrata,
     setRideHandlers = drag.setRideHandlers,
   }
 end

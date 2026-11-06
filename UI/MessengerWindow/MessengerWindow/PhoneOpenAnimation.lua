@@ -76,7 +76,10 @@ function PhoneOpenAnimation.Attach(frame, options)
   local opening = false
   local targetAlpha = 1
 
+  -- In the window's strata: a window behind the map closes behind the map.
   local function paint()
+    panel:SetFrameStrata(frame:GetFrameStrata())
+    panel:SetFrameLevel(PANEL_LEVEL)
     UIHelpers.applyColorTexture(fill, theme.COLORS.bg_primary)
     for _, edge in pairs(border or {}) do
       UIHelpers.applyColorTexture(edge, theme.COLORS.divider)

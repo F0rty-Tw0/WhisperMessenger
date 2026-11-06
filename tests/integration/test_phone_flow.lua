@@ -1,84 +1,16 @@
-local FakeUI = require("tests.helpers.fake_ui")
-local Bootstrap = require("WhisperMessenger.Bootstrap")
-local Theme = require("WhisperMessenger.UI.Theme")
+local PhoneRuntime = require("tests.helpers.phone_runtime")
 
 -- The phone layout through the real runtime: button, list, chat, back, and
 -- what each does to unread counts, drafts and the Mythic pause notice.
 
-local KEY = "wow::WOW::arthas-area52"
-local OTHER = "wow::WOW::jaina-area52"
-local SLIDE = Theme.LAYOUT.PHONE_SLIDE_SECONDS + 0.01
-
-local function conversation(name, unread)
-  return {
-    displayName = name,
-    channel = "WOW",
-    lastActivityAt = os.time(),
-    unreadCount = unread,
-    messages = { { direction = "in", kind = "user", playerName = name, text = "Need help?", sentAt = os.time() } },
-  }
-end
-
-local function boot(settings)
-  local factory = FakeUI.NewFactory()
-  local saved = { uiParent = _G.UIParent, slash = _G.SlashCmdList }
-  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  _G.UIParent:SetSize(1920, 1080)
-  _G.UIParent:Show()
-  _G.SlashCmdList = {}
-  local runtime = Bootstrap.Initialize(factory, {
-    localProfileId = "me",
-    accountState = {
-      schemaVersion = 1,
-      conversations = { [KEY] = conversation("Arthas-Area52", 2), [OTHER] = conversation("Jaina-Area52", 0) },
-      contacts = {},
-      pendingHydration = {},
-      settings = settings or {},
-    },
-    characterState = { window = { x = 0, y = 0, width = 900, height = 560 }, icon = {} },
-  })
-  return runtime, function()
-    _G.UIParent = saved.uiParent
-    _G.SlashCmdList = saved.slash
-  end
-end
-
-local function finishSlide(runtime)
-  local viewport = runtime.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, SLIDE)
-  end
-end
-
-local function clickRow(runtime, key)
-  for _, row in ipairs(runtime.window.contacts.rows) do
-    if row.item and row.item.conversationKey == key then
-      row.scripts.OnClick(row, "LeftButton")
-      finishSlide(runtime)
-      return
-    end
-  end
-  error("no row for " .. key)
-end
-
-local function clickBack(runtime)
-  local back = runtime.window.backButton
-  back.scripts.OnClick(back)
-  finishSlide(runtime)
-end
-
-local function run(settings, body)
-  local runtime, restore = boot(settings)
-  local ok, err = pcall(body, runtime)
-  restore()
-  assert(ok, err)
-end
+local KEY, OTHER = PhoneRuntime.KEY, PhoneRuntime.OTHER
+local run, clickRow, clickBack = PhoneRuntime.Run, PhoneRuntime.ClickRow, PhoneRuntime.ClickBack
 
 return function()
   -- test_button_opens_the_list_and_leaves_unread_chats_unread
   run(nil, function(runtime)
     runtime.toggle()
-    assert(runtime.window.isPhoneLayout, "phone layout is the default")
+    assert(runtime.window.isPhoneLayout, "phone layout")
     assert(runtime.window.frame.shown == true, "opens")
     assert(runtime.window.contactsPane:IsShown(), "on the list")
     assert(runtime.activeConversationKey == nil, "no chat opens by itself")
@@ -141,6 +73,29 @@ return function()
     assert(banner.shown == true and banner.text ~= "", "the pause notice shows in the chat")
     assert(runtime.window.composer.sendButton.disabled == true, "sending stays blocked")
     runtime.resume()
+  end)
+
+  -- test_mythic_notice_covers_the_chat_open_when_suspend_starts_and_clears_on_resume
+  run(nil, function(runtime)
+    runtime.toggle()
+    clickRow(runtime, KEY)
+    assert(runtime.window.composer.sendButton.disabled == false, "can send before suspend")
+    runtime.suspend()
+    assert(runtime.window.frame.shown == false, "suspend closes the window")
+    runtime.toggle()
+    assert(runtime.window.frame.shown == true, "reopens during suspend")
+    assert(runtime.window.contactsPane:IsShown(), "on the list, like any open from the button")
+    clickRow(runtime, KEY)
+    local banner = runtime.window.conversation.activeStatusBanner
+    assert(
+      banner.text == "Messages are paused in Mythic content and will resume after you leave. To reply now, type /w and their name in the game's chat.",
+      "got " .. tostring(banner.text)
+    )
+    assert(banner.shown == true, "the notice shows on the chat")
+    assert(runtime.window.composer.sendButton.disabled == true, "sending stays blocked")
+    runtime.resume()
+    assert(banner.text == "" and banner.shown == false, "the notice clears after resume")
+    assert(runtime.window.composer.sendButton.disabled == false, "sending works again")
   end)
 
   -- test_classic_setting_keeps_the_classic_window

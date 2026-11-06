@@ -7,8 +7,8 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
-local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
+local PhoneLayoutSetting = ns.BootstrapWindowRuntimePhoneLayoutSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PhoneLayoutSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
@@ -52,26 +52,6 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
-  -- The window is built for one style, so only a choice that differs from the
-  -- running one needs a reload. Only our own offer is ever withdrawn: another
-  -- setting's may be up.
-  local phoneReloadOffered = false
-  local function applyPhoneLayout(enabled)
-    accountSettings.phoneLayout = enabled
-    if enabled == (runtime.phoneLayoutActive ~= false) then
-      if phoneReloadOffered then
-        phoneReloadOffered = false
-        ReloadPrompt.Hide()
-      end
-      return
-    end
-    phoneReloadOffered = true
-    local question = "Reload the interface now to switch the window style?"
-    ReloadPrompt.Show(Localization and Localization.Text(question) or question, function()
-      phoneReloadOffered = false
-    end)
-  end
-
   return function(key, value)
     -- Not a setting: the Filters page changed the ignore list or rules.
     if key == "filters" then
@@ -94,8 +74,14 @@ function SettingsHandler.Create(options)
       end)
       return
     end
+    -- Saved by PhoneLayoutSetting only when the player reloads.
     if key == "phoneLayout" then
-      applyPhoneLayout(value == true)
+      PhoneLayoutSetting.Apply(accountSettings, value == true, runtime.phoneLayoutActive ~= false, function(saved)
+        local appearance = runtime.window and runtime.window.appearanceSettings
+        if appearance and appearance.setPhoneLayout then
+          appearance.setPhoneLayout(saved)
+        end
+      end)
       return
     end
     if key == "allowAddonIntegration" then
@@ -265,6 +251,11 @@ function SettingsHandler.Create(options)
 
     if key == "iconSize" and icon and icon.applyIconSize then
       icon.applyIconSize(persistedValue)
+      -- A button riding the phone window takes its spot at the new size.
+      local window = runtime.window
+      if window and window.dockPhoneIcon then
+        window.dockPhoneIcon()
+      end
     end
 
     if key == "iconDesaturated" then

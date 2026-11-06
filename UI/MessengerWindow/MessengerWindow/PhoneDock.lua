@@ -42,13 +42,32 @@ function PhoneDock.Place(frame, slot, iconFrame)
   frame:SetPoint("TOPLEFT", frame:GetParent() or _G.UIParent, "BOTTOMLEFT", iconX * ratio - offsetX, iconY * ratio - offsetY)
 end
 
+-- The spot sticks out past the window's corner; the screen clamp only knows
+-- the window's own edges, so it is told to reach over the spot. False while
+-- the client has no position for them yet.
+function PhoneDock.ClampToSpot(frame, slot)
+  local frameLeft = frame.GetLeft and frame:GetLeft()
+  local frameTop = frame.GetTop and frame:GetTop()
+  local slotLeft = slot.GetLeft and slot:GetLeft()
+  local slotTop = slot.GetTop and slot:GetTop()
+  if not (frameLeft and frameTop and slotLeft and slotTop) then
+    return false
+  end
+  local _, right, _, bottom = frame:GetClampRectInsets()
+  frame:SetClampRectInsets(-math.max(0, frameLeft - slotLeft), right, math.max(0, slotTop - frameTop), bottom)
+  return true
+end
+
 -- What IconRide needs to carry the button onto the spot.
 function PhoneDock.RideTarget(slot, iconFrame)
   local iconWidth = iconFrame:GetWidth() or 0
   local slotWidth = slot:GetWidth() or 0
   local scale = 1
   if slotWidth > 0 and iconWidth > 0 then
-    scale = slotWidth * slot:GetEffectiveScale() / (iconWidth * iconFrame:GetEffectiveScale())
+    -- The result is the button's own scale, so what it inherits is all that
+    -- counts: a button already riding carries its ride scale.
+    local inherited = iconFrame:GetEffectiveScale() / iconFrame:GetScale()
+    scale = slotWidth * slot:GetEffectiveScale() / (iconWidth * inherited)
   end
   return { region = slot, relativePoint = "CENTER", x = 0, y = 0, scale = scale, level = Theme.LAYOUT.PHONE_RIDE_FRAME_LEVEL }
 end

@@ -125,6 +125,25 @@ return function()
     end
   end
 
+  -- test_closing_panel_stays_in_the_windows_strata
+  do
+    local case = build()
+    case.frame:SetFrameStrata("MEDIUM")
+    case.animation.beginClose(case.icon)
+    assert(case.ghost:GetFrameStrata() == "MEDIUM", "a window behind the map closes behind the map")
+    assert(case.ghost:GetFrameLevel() == 1990, "under the button")
+  end
+
+  -- test_opening_panel_follows_the_raised_window
+  do
+    local case = build()
+    case.frame:SetFrameStrata("MEDIUM")
+    case.animation.beginClose(case.icon)
+    case.frame:SetFrameStrata("HIGH")
+    case.animation.beginOpen(case.icon)
+    assert(case.ghost:GetFrameStrata() == "HIGH", "with the window")
+  end
+
   -- test_closing_mid_open_releases_the_window
   do
     local case = build()

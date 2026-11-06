@@ -39,6 +39,7 @@ function IconRide.Create(frame, options)
   local parent = options.parent
   local onLevel = options.onLevel or function(_level) end
 
+  ---@type table?
   local home = nil
   local riding = false
 
@@ -58,9 +59,17 @@ function IconRide.Create(frame, options)
       y = y,
       scale = frame:GetScale(),
       level = frame:GetFrameLevel(),
+      strata = frame:GetFrameStrata(),
       centerX = centerX,
       centerY = centerY,
     }
+  end
+
+  -- A strata change can reset the level, so it is set again after.
+  local function setStrataKeepingLevel(strata)
+    local level = frame:GetFrameLevel()
+    frame:SetFrameStrata(strata)
+    setLevel(level)
   end
 
   local function placeAt(screenX, screenY, scale)
@@ -78,7 +87,8 @@ function IconRide.Create(frame, options)
     local fromX, fromY = screenCenter(frame)
     local fromScale = frame:GetScale()
     local endX = getEnd()
-    if fromX == nil or endX == nil then
+    -- A hidden frame never ticks, so a glide would wait until it shows again.
+    if fromX == nil or endX == nil or not frame:IsVisible() then
       frame:SetScript("OnUpdate", nil)
       onArrive()
       onStep(1, 1)
@@ -121,20 +131,25 @@ function IconRide.Create(frame, options)
 
   local function restoreHome()
     local saved = home
+    if saved == nil then
+      return
+    end
     home = nil
     frame:SetScale(saved.scale)
     frame:ClearAllPoints()
     frame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
+    frame:SetFrameStrata(saved.strata)
     setLevel(saved.level)
   end
 
   local function rideHome(onStep)
-    if not riding then
+    local saved = home
+    if not riding or saved == nil then
       return
     end
     riding = false
-    glide(home.scale, function()
-      return home.centerX, home.centerY
+    glide(saved.scale, function()
+      return saved.centerX, saved.centerY
     end, restoreHome, onStep)
   end
 
@@ -178,9 +193,17 @@ function IconRide.Create(frame, options)
     home.centerX, home.centerY = nil, nil
   end
 
+  -- The window changed strata: on it, the button goes where it goes.
+  local function setStrata(strata)
+    if riding then
+      setStrataKeepingLevel(strata)
+    end
+  end
+
   return {
     rideTo = rideTo,
     rideHome = rideHome,
+    setStrata = setStrata,
     adoptHere = adoptHere,
     adoptRidePosition = adoptRidePosition,
     setHome = setHome,

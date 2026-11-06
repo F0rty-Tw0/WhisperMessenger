@@ -40,7 +40,7 @@ function ToggleFlow.Create(options)
   local findLatestUnreadKey = options.findLatestUnreadKey or function(_accept)
     return nil
   end
-  local selectConversation = options.selectConversation or function() end
+  local selectConversation = options.selectConversation or function(_conversationKey) end
   local refreshWindow = options.refreshWindow or function() end
 
   local function matchesTab(conversationKey, tabMode)

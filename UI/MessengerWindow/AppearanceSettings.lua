@@ -282,6 +282,10 @@ function AppearanceSettings.Create(factory, parent, config, options)
     setHudStyle = function(style)
       hudStyleSelector.setSelected(style or hudDefault)
     end,
+    -- Same, for the window style's toggle.
+    setPhoneLayout = function(enabled)
+      windowStyleToggles[1].setValue(enabled)
+    end,
   }
 end
 

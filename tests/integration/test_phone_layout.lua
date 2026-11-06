@@ -1,93 +1,11 @@
-local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
-local ContactsList = require("WhisperMessenger.UI.ContactsList")
-local Hud = require("WhisperMessenger.UI.Theme.Hud")
+local PhoneWindow = require("tests.helpers.phone_window")
 local Theme = require("WhisperMessenger.UI.Theme")
-local FakeUI = require("tests.helpers.fake_ui")
 
 local L = Theme.LAYOUT
+local build, select, finishSlide = PhoneWindow.Build, PhoneWindow.Select, PhoneWindow.FinishSlide
 
 -- The phone layout end to end: list and chat in one narrow window, the slide
 -- between them, the back button, settings widening, and the tie to the button.
-
-local function contacts()
-  return ContactsList.BuildItems({
-    ["me::WOW::jaina"] = { displayName = "Jaina", channel = "WOW", lastActivityAt = 2, unreadCount = 1 },
-    ["guild::me"] = { displayName = "Guild", channel = "GUILD", lastActivityAt = 1, unreadCount = 0 },
-  })
-end
-
-local function build(extra)
-  Hud.Configure("off")
-  local factory = FakeUI.NewFactory()
-  local savedUIParent = _G.UIParent
-  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
-  _G.UIParent:SetSize(1920, 1080)
-  local case = { saved = {}, selections = {} }
-  local fab = factory.CreateFrame("Button", "Fab", _G.UIParent)
-  rawset(fab, "GetCenter", function()
-    return 800, 500
-  end)
-  case.fab = fab
-  case.rides, case.homes, case.adopted = 0, 0, 0
-  case.icon = {
-    frame = fab,
-    isRiding = function()
-      return case.rides > case.homes
-    end,
-    rideTo = function(target, onStep)
-      case.rides = case.rides + 1
-      case.rodeTo = target
-      case.step = onStep
-    end,
-    rideHome = function(onStep)
-      case.homes = case.homes + 1
-      case.step = onStep
-    end,
-    adoptRidePosition = function()
-      case.adopted = case.adopted + 1
-    end,
-    setRideHandlers = function(handlers)
-      case.rideHandlers = handlers
-    end,
-  }
-  local options = {
-    contacts = contacts(),
-    state = {},
-    phoneLayout = true,
-    settingsConfig = { showGroupChats = true },
-    getDockIcon = function()
-      return case.icon
-    end,
-    onPositionChanged = function(state)
-      case.saved.state = state
-    end,
-    onSelectConversation = function(key)
-      case.selections[#case.selections + 1] = key == nil and "none" or key
-      return nil
-    end,
-  }
-  for key, value in pairs(extra or {}) do
-    options[key] = value
-  end
-  case.window = MessengerWindow.Create(factory, options)
-  rawset(case.window.frame, "GetEffectiveScale", function()
-    return 1
-  end)
-  _G.UIParent = savedUIParent
-  return case
-end
-
-local function select(case, key)
-  local item = { conversationKey = key, displayName = key, channel = "WOW" }
-  case.window.refreshSelection({ selectedContact = item })
-end
-
-local function finishSlide(case)
-  local viewport = case.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, L.PHONE_SLIDE_SECONDS + 0.01)
-  end
-end
 
 return function()
   -- test_window_opens_phone_sized
@@ -216,6 +134,30 @@ return function()
     assert(moved == 1, "the window moves")
     case.rideHandlers.endDrag()
     assert(case.adopted == 1, "and the button's home with it")
+  end
+
+  -- test_closing_sends_home_the_button_it_docked_after_the_icon_mode_changed
+  do
+    local dockable = true
+    local case
+    case = build({
+      getDockIcon = function()
+        return dockable and case.icon or nil
+      end,
+    })
+    case.window.frame:Show()
+    assert(case.rides == 1, "docked")
+    dockable = false
+    case.window.frame:Hide()
+    assert(case.homes == 1, "still goes home with the icon on the minimap")
+  end
+
+  -- test_a_resized_button_docks_again
+  do
+    local case = build()
+    case.window.frame:Show()
+    case.window.dockPhoneIcon()
+    assert(case.rides == 2, "takes its spot again")
   end
 
   -- test_with_no_button_the_window_just_opens

@@ -263,6 +263,8 @@ function Frame.WireFrame(refs, options)
     refreshWindowAlpha = options.refreshWindowAlpha,
     composerInput = options.composerInput,
     getAutoFocusChatInput = options.getAutoFocusChatInput,
+    onStrataChanged = options.onStrataChanged,
+    isWindowPart = options.isWindowPart,
     buildState = options.buildState,
     onPositionChanged = options.onPositionChanged,
   })

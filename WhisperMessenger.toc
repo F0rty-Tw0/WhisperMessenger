@@ -490,6 +490,7 @@ Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
+Core/Bootstrap/WindowRuntime/PhoneLayoutSetting.lua
 Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua

@@ -67,11 +67,59 @@ return function()
     assert(target.level == Theme.LAYOUT.PHONE_RIDE_FRAME_LEVEL, "above the raised window")
   end
 
+  -- test_docking_again_keeps_the_spots_size
+  do
+    local frame, slot, icon = build()
+    frame:SetScale(1.25)
+    local first = PhoneDock.RideTarget(slot, icon)
+    assert(first.scale == 2.5, "grows to the scaled spot, got " .. tostring(first.scale))
+    icon:SetScale(first.scale)
+    local second = PhoneDock.RideTarget(slot, icon)
+    assert(second.scale == 2.5, "the button's own ride scale does not count twice, got " .. tostring(second.scale))
+  end
+
   -- test_unsized_spot_keeps_the_button_size
   do
     local _, slot, icon = build()
     slot:SetSize(0, 0)
     assert(PhoneDock.RideTarget(slot, icon).scale == 1, "no size to grow to")
+  end
+
+  -- test_the_clamp_reaches_over_a_spot_past_the_corner
+  do
+    local frame, slot = build()
+    frame:SetClampRectInsets(0, 3, 0, -30)
+    rawset(slot, "GetLeft", function()
+      return 93
+    end)
+    rawset(slot, "GetTop", function()
+      return 917
+    end)
+    assert(PhoneDock.ClampToSpot(frame, slot) == true, "measured")
+    local left, right, top, bottom = frame:GetClampRectInsets()
+    assert(left == -7 and top == 17, "got " .. tostring(left) .. "," .. tostring(top))
+    assert(right == 3 and bottom == -30, "the other edges are left alone")
+  end
+
+  -- test_a_spot_inside_the_window_needs_no_clamp
+  do
+    local frame, slot = build()
+    rawset(slot, "GetLeft", function()
+      return 110
+    end)
+    rawset(slot, "GetTop", function()
+      return 880
+    end)
+    PhoneDock.ClampToSpot(frame, slot)
+    local left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, "nothing sticks out")
+  end
+
+  -- test_a_spot_with_no_position_yet_reports_it
+  do
+    local frame, slot = build()
+    assert(PhoneDock.ClampToSpot(frame, slot) == false, "worth another try")
+    assert(frame.clampRectInsets == nil, "untouched")
   end
 
   -- test_capture_position_is_absolute

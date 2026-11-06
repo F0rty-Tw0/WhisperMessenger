@@ -11,6 +11,8 @@ local function build()
   frame:SetSize(42, 42)
   frame:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 40)
   frame:SetFrameLevel(5)
+  parent:Show()
+  frame:Show()
   local case = { frame = frame, parent = parent, levels = {} }
   rawset(frame, "GetCenter", function()
     local _, _, _, x, y = frame:GetPoint()
@@ -73,6 +75,57 @@ return function()
     assert(x == -20 and y == 40, "saved offsets back")
     assert(case.frame:GetScale() == 1, "normal size")
     assert(case.frame:GetFrameLevel() == 5, "normal level")
+  end
+
+  -- test_a_hidden_button_goes_home_at_once
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    case.frame:Hide()
+    local finished = 0
+    case.ride.rideHome(function(t)
+      finished = t == 1 and finished + 1 or finished
+    end)
+    assert(case.frame.scripts.OnUpdate == nil, "a hidden frame never ticks, so nothing waits on it")
+    assert(select(4, case.frame:GetPoint()) == -20, "already home")
+    assert(case.frame:GetScale() == 1, "normal size")
+    assert(finished == 1, "the shared clock still ends")
+  end
+
+  -- test_riding_follows_the_windows_strata_at_the_same_level
+  do
+    local case = build()
+    case.frame:SetFrameStrata("HIGH")
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    case.levels = {}
+    case.ride.setStrata("MEDIUM")
+    assert(case.frame:GetFrameStrata() == "MEDIUM", "goes back with the window")
+    assert(case.frame:GetFrameLevel() == 3000, "still above the window")
+    assert(case.levels[1] == 3000, "the badge's level is set again")
+  end
+
+  -- test_going_home_returns_to_the_buttons_own_strata
+  do
+    local case = build()
+    case.frame:SetFrameStrata("HIGH")
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    case.ride.setStrata("MEDIUM")
+    case.ride.rideHome()
+    assert(case.frame:GetFrameStrata() == "MEDIUM", "the glide stays where the window was: no pop over what covers it")
+    tick(case, SECONDS + 0.01)
+    assert(case.frame:GetFrameStrata() == "HIGH", "home again")
+    assert(case.frame:GetFrameLevel() == 5, "and its own level")
+  end
+
+  -- test_a_button_at_home_ignores_the_windows_strata
+  do
+    local case = build()
+    case.frame:SetFrameStrata("HIGH")
+    case.ride.setStrata("MEDIUM")
+    assert(case.frame:GetFrameStrata() == "HIGH", "not on the window")
   end
 
   -- test_reopening_mid_glide_keeps_the_true_home
