@@ -296,7 +296,7 @@ function MessengerWindow.Create(factory, options)
     chrome = chrome,
     relayoutWindow = relayoutWindow,
     applyWindowSize = scriptResult.applyWindowSize,
-    onPositionChanged = options.onPositionChanged,
+    onPositionChanged = onPositionChanged,
   })
 
   -- Patch-notes "?" button: glows until the shipped release notes are read.
@@ -333,6 +333,8 @@ function MessengerWindow.Create(factory, options)
       getSelectedKey = getSelectedConversationKey,
       refreshSelection = refreshSelection,
       applyWindowSize = scriptResult.applyWindowSize,
+      onPositionChanged = onPositionChanged,
+      buildState = windowGeometry.buildState,
     })
   end
 

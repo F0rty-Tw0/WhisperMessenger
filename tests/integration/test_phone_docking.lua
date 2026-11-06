@@ -1,7 +1,11 @@
 local PhoneWindow = require("tests.helpers.phone_window")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 -- What the window owes the button docked on it: its place in the draw order,
--- and room on screen for the spot that sticks out past its corner.
+-- room on screen for the spot that sticks out past its corner, and saving
+-- where it goes.
+
+local L = Theme.LAYOUT
 
 local build = PhoneWindow.Build
 
@@ -53,6 +57,56 @@ return function()
     local case = build()
     case.window.frame:Show()
     assert(case.rideStrata == "HIGH", "a reopen mid-glide may find it still down with the old window")
+  end
+
+  -- test_dragging_by_the_button_saves_the_window
+  do
+    local case = build()
+    case.window.frame:Show()
+    case.rideHandlers.beginDrag()
+    case.rideHandlers.endDrag()
+    assert(case.saved.state ~= nil, "players who later lose the button reopen it there")
+    assert(case.saved.state.width == L.PHONE_WINDOW_WIDTH, "got " .. tostring(case.saved.state.width))
+    assert(case.adopted == 1, "the button's home moves once")
+  end
+
+  -- test_reset_brings_the_window_to_the_screen_centre
+  do
+    local case = build()
+    local frame = case.window.frame
+    frame:Show()
+    frame:SetSize(500, 700)
+    local reset = case.window.resetWindowButton
+    reset.scripts.OnClick(reset)
+    local point, relativeTo, relativePoint, x, y = frame:GetPoint()
+    assert(point == "TOPLEFT" and relativePoint == "CENTER", "got " .. tostring(point) .. "," .. tostring(relativePoint))
+    assert(relativeTo == frame:GetParent(), "on the screen")
+    assert(x == -L.PHONE_WINDOW_WIDTH / 2 and y == L.PHONE_WINDOW_HEIGHT / 2, "got " .. tostring(x) .. "," .. tostring(y))
+    assert(frame.width == L.PHONE_WINDOW_WIDTH, "phone size, got " .. tostring(frame.width))
+    assert(case.adopted == 0, "the button's own home stays: it has its own reset")
+  end
+
+  -- test_reset_under_settings_centres_the_phone_sized_window
+  do
+    local case = build()
+    local frame = case.window.frame
+    frame:Show()
+    case.window.setOptionsVisible(true)
+    local reset = case.window.resetWindowButton
+    reset.scripts.OnClick(reset)
+    local _, _, _, x = frame:GetPoint()
+    assert(x == -L.PHONE_WINDOW_WIDTH / 2, "settings close to a centred phone window, got " .. tostring(x))
+    assert(frame.width > L.PHONE_WINDOW_WIDTH, "still wide for settings")
+  end
+
+  -- test_the_rail_saves_through_the_phone_window
+  do
+    local case = build({ state = { contactsCollapsed = true } })
+    case.window.frame:Show()
+    case.window.setOptionsVisible(true)
+    local search = case.window.contactsRailSearchButton
+    search.scripts.OnClick(search)
+    assert(case.saved.state == nil, "a wide window is never the saved size")
   end
 
   -- test_a_button_not_on_the_window_keeps_its_strata

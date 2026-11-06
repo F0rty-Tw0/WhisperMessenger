@@ -42,6 +42,14 @@ function PhoneDock.Place(frame, slot, iconFrame)
   frame:SetPoint("TOPLEFT", frame:GetParent() or _G.UIParent, "BOTTOMLEFT", iconX * ratio - offsetX, iconY * ratio - offsetY)
 end
 
+-- Where a window with no saved position starts. Placed by its corner, so a
+-- window wide for settings is centred once it returns to phone size.
+function PhoneDock.Center(frame)
+  local L = Theme.LAYOUT
+  frame:ClearAllPoints()
+  frame:SetPoint("TOPLEFT", frame:GetParent() or _G.UIParent, "CENTER", -L.PHONE_WINDOW_WIDTH / 2, L.PHONE_WINDOW_HEIGHT / 2)
+end
+
 -- The spot sticks out past the window's corner; the screen clamp only knows
 -- the window's own edges, so it is told to reach over the spot. False while
 -- the client has no position for them yet.

@@ -32,7 +32,7 @@ function PhoneWiring.Hooks()
     isWindowPart = function(_candidate)
       return false
     end,
-    resetSize = function() end,
+    resetWindow = function() end,
     showList = function() end,
     isWide = function()
       return false
@@ -51,7 +51,7 @@ function PhoneWiring.WrapPosition(hooks, options)
   end
   local function onResetWindowPosition()
     local nextState = options.onResetWindowPosition and options.onResetWindowPosition()
-    hooks.resetSize()
+    hooks.resetWindow()
     return nextState
   end
   return onPositionChanged, onResetWindowPosition
@@ -70,7 +70,8 @@ end
 -- options: factory, frame, layout, chrome, tabToggle, composerInput,
 -- windowAlpha, windowVisibility,
 -- windowOptions (MessengerWindow.Create options), settingsConfig,
--- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h).
+-- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h),
+-- onPositionChanged(state) (from WrapPosition), buildState(frame).
 function PhoneWiring.Attach(hooks, options)
   local frame = options.frame
   local layout = options.layout
@@ -133,7 +134,7 @@ function PhoneWiring.Attach(hooks, options)
     end,
     endDrag = function()
       frame:StopMovingOrSizing()
-      hooks.onWindowMoved()
+      options.onPositionChanged(options.buildState(frame))
     end,
   }
 
@@ -236,13 +237,14 @@ function PhoneWiring.Attach(hooks, options)
     options.applyWindowSize(restoreWidth, restoreHeight)
   end
 
-  hooks.resetSize = function()
+  hooks.resetWindow = function()
     local L = Theme.LAYOUT
     if layout.phoneWide then
       restoreWidth, restoreHeight = L.PHONE_WINDOW_WIDTH, L.PHONE_WINDOW_HEIGHT
-      return
+    else
+      options.applyWindowSize(L.PHONE_WINDOW_WIDTH, L.PHONE_WINDOW_HEIGHT)
     end
-    options.applyWindowSize(L.PHONE_WINDOW_WIDTH, L.PHONE_WINDOW_HEIGHT)
+    PhoneDock.Center(frame)
   end
 
   frame:HookScript("OnShow", clampToSpot)
