@@ -510,6 +510,7 @@ local SimplifiedChinese = {
   ["Copy profile link"] = "复制角色资料链接",
   ["Armory"] = "英雄榜",
   ["Press Ctrl+C to copy the link."] = "按 Ctrl+C 复制链接。",
+  ["Press Ctrl+C to copy the name."] = "按 Ctrl+C 复制名字。",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "设置快捷键…",
   ["Not bound"] = "未绑定",

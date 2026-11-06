@@ -1,8 +1,8 @@
--- Manual copy tests: Clipboard fan-out and PopupUI styling/teardown.
+-- Manual copy tests: Clipboard popup routing and PopupUI styling/teardown.
 --
 -- The orchestrator (ContextMenu.Open) lives in test_bubble_context_menu.lua.
 -- This file owns:
---   * Clipboard.lua             - NormalizeText + CopyText variant fan-out
+--   * Clipboard.lua             - NormalizeText + CopyText popup routing
 --   * PopupUI.lua / Resolvers   - manual-popup show + editbox discovery shapes
 --   * PopupUI/Styling           - apply / restore on shared StaticPopup frames
 
@@ -63,82 +63,58 @@ return function()
 
   -- NormalizeText rejects nil and empty strings, returns the value otherwise.
   do
-    -- Indirect via CopyText: nil/empty short-circuit before any clipboard call.
-    rawset(_G, "CopyToClipboard", function()
-      error("must not be called for nil text")
-    end)
-    _G.C_Clipboard = nil
-    assert(ContextMenu.CopyText(nil) == false, "CopyText(nil) should return false without touching clipboard")
-    assert(ContextMenu.CopyText("") == false, "CopyText('') should return false without touching clipboard")
+    -- Indirect via CopyText: nil/empty short-circuit before the popup opens.
+    local shown = installFakePopupShow()
+    _G.StaticPopupDialogs = {}
+    assert(ContextMenu.CopyText(nil) == false, "CopyText(nil) should return false")
+    assert(ContextMenu.CopyText("") == false, "CopyText('') should return false")
+    assert(shown.count == 0, "nil/empty text must not open the manual copy popup")
   end
 
-  -- C_Clipboard.SetClipboard is the preferred method.
-  do
-    local copied = nil
-    rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copied = text
-      end,
-    }
-    assert(ContextMenu.CopyText("primary") == true, "SetClipboard should satisfy CopyText")
-    assert(copied == "primary", "SetClipboard should receive the text")
-  end
-
-  -- Alternate method names are tried in order: SetClipboardText, SetText, etc.
-  do
-    local copied = nil
-    rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = {
-      SetClipboardText = function(text)
-        copied = text
-      end,
-    }
-    assert(ContextMenu.CopyText("alternate") == true, "SetClipboardText should satisfy CopyText")
-    assert(copied == "alternate", "alternate setter should receive the text")
-  end
-
-  -- A method that errors falls through to the next candidate, then to the popup.
+  -- CopyText always opens the manual copy popup with the text.
   do
     local shown = installFakePopupShow()
-    rawset(_G, "CopyToClipboard", nil)
+    _G.StaticPopupDialogs = {}
+    assert(ContextMenu.CopyText("manual") == true, "CopyText should open the manual copy popup")
+    assert(shown.count == 1 and shown.data == "manual", "popup should be shown with the text")
+  end
+
+  -- A C_Clipboard namespace, if one ever appears, is never called: a protected
+  -- clipboard call would raise ADDON_ACTION_FORBIDDEN, which pcall cannot stop.
+  do
+    local shown = installFakePopupShow()
+    local clipboardCalled = false
+    local function markCalled()
+      clipboardCalled = true
+    end
     _G.C_Clipboard = {
-      SetClipboard = function()
-        error("blocked")
-      end,
+      SetClipboard = markCalled,
+      SetClipboardText = markCalled,
+      SetText = markCalled,
+      CopyText = markCalled,
+      CopyToClipboard = markCalled,
     }
     _G.StaticPopupDialogs = {}
-    assert(ContextMenu.CopyText("recover") == true, "errored clipboard methods should fall through to popup")
-    assert(shown.count == 1 and shown.data == "recover", "popup should receive the original text on fall-through")
+    assert(ContextMenu.CopyText("popup only") == true, "CopyText should open the popup even with C_Clipboard present")
+    assert(shown.count == 1 and shown.data == "popup only", "popup should be shown with the text")
+    assert(clipboardCalled == false, "CopyText must not call C_Clipboard methods")
+    _G.C_Clipboard = saved.C_Clipboard
   end
 
   -- The legacy CopyToClipboard global is intentionally never called from addon
   -- code (it's protected and triggers a forbidden-action toast).
   do
-    local copied = nil
+    local shown = installFakePopupShow()
     local protectedAttempted = false
     rawset(_G, "CopyToClipboard", function()
       protectedAttempted = true
       error("forbidden")
     end)
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copied = text
-      end,
-    }
-    assert(ContextMenu.CopyText("safe") == true, "CopyText should succeed without protected fallback")
-    assert(copied == "safe", "C_Clipboard path should still receive the text")
-    assert(protectedAttempted == false, "CopyText must never call protected CopyToClipboard from addon code")
-  end
-
-  -- No clipboard methods at all => manual popup fallback.
-  do
-    local shown = installFakePopupShow()
-    rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
-    assert(ContextMenu.CopyText("manual") == true, "no-clipboard fall-through should still satisfy CopyText")
-    assert(shown.count == 1 and shown.data == "manual", "popup should be shown with the text")
+    assert(ContextMenu.CopyText("safe") == true, "CopyText should succeed without protected fallback")
+    assert(shown.data == "safe", "manual copy popup should still receive the text")
+    assert(protectedAttempted == false, "CopyText must never call protected CopyToClipboard from addon code")
+    rawset(_G, "CopyToClipboard", nil)
   end
 
   -- ===== PopupUI Resolvers: editbox discovery shapes =====
@@ -148,7 +124,6 @@ return function()
   do
     local popupText = nil
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
     installFakePopupShow(function(data)
       return {
@@ -170,7 +145,6 @@ return function()
   do
     local popupText = nil
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
     installFakePopupShow(function(data)
       return {
@@ -193,7 +167,6 @@ return function()
   do
     local popupText = nil
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
     installFakePopupShow(function(data)
       local child = {
@@ -219,7 +192,6 @@ return function()
   do
     local popupText = nil
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {}
     installFakePopupShow(function(data)
       local buttonLike = { SetText = function() end }
@@ -307,7 +279,6 @@ return function()
     rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = nil
     _G.StaticPopupDialogs = {
       WM_TEST_GENERIC_DIALOG = { text = "Generic dialog", button1 = "Logout" },
     }

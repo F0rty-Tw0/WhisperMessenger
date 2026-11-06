@@ -1,10 +1,11 @@
 -- Tests for ContextMenu.lua orchestrator: open guards, EasyMenu / dropdown
 -- fallback, and the bubble-frame right-click integration.
 --
--- Clipboard fan-out and PopupUI styling live in test_bubble_manual_copy.lua;
+-- Clipboard popup routing and PopupUI styling live in test_bubble_manual_copy.lua;
 -- the assertions here only check what ContextMenu itself does.
 
 local FakeUI = require("tests.helpers.fake_ui")
+local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local ContextMenu = require("WhisperMessenger.UI.ChatBubble.ContextMenu")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
 
@@ -16,7 +17,6 @@ local function snapshotGlobals()
     CreateFrame = _G.CreateFrame,
     UIParent = _G.UIParent,
     CopyToClipboard = _G.CopyToClipboard,
-    C_Clipboard = _G.C_Clipboard,
     menuFrame = _G[MENU_FRAME_NAME],
     UIDropDownMenu_Initialize = _G.UIDropDownMenu_Initialize,
     UIDropDownMenu_CreateInfo = _G.UIDropDownMenu_CreateInfo,
@@ -31,7 +31,6 @@ local function restoreGlobals(saved)
   rawset(_G, "CreateFrame", saved.CreateFrame)
   _G.UIParent = saved.UIParent
   rawset(_G, "CopyToClipboard", saved.CopyToClipboard)
-  _G.C_Clipboard = saved.C_Clipboard
   _G[MENU_FRAME_NAME] = saved.menuFrame
   _G.UIDropDownMenu_Initialize = saved.UIDropDownMenu_Initialize
   _G.UIDropDownMenu_CreateInfo = saved.UIDropDownMenu_CreateInfo
@@ -61,41 +60,29 @@ return function()
   end
 
   -- Missing dropdown APIs must copy rather than leave Copy Text unavailable.
-  do
+  ManualCopyCapture.With(function(copied)
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
-    local copiedText = nil
     rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
     _G[MENU_FRAME_NAME] = nil
     clearMenuApis()
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedText = text
-      end,
-    }
     assert(ContextMenu.Open("hello") == true, "Open should copy when no menu API exists")
-    assert(copiedText == "hello", "missing menu APIs must fall back to Copy Text")
-  end
+    assert(copied.text == "hello", "missing menu APIs must fall back to Copy Text")
+  end)
 
   -- When the menu frame can't be created, Open must copy the text.
-  do
-    local copiedText = nil
+  ManualCopyCapture.With(function(copied)
     rawset(_G, "EasyMenu", function() end)
     rawset(_G, "CreateFrame", nil)
     _G.UIParent = nil
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedText = text
-      end,
-    }
     assert(ContextMenu.Open("hello") == true, "Open should copy when no menu frame can be created")
-    assert(copiedText == "hello", "missing menu frame must fall back to Copy Text")
-  end
+    assert(copied.text == "hello", "missing menu frame must fall back to Copy Text")
+  end)
 
   -- When the UIDropDownMenuTemplate is missing (Retail 10.0+), Open should
   -- gracefully fall through to CopyText - the user still gets the text.
-  do
+  ManualCopyCapture.With(function(copied)
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
     _G.UIParent = uiParent
@@ -109,17 +96,17 @@ return function()
     end)
     clearMenuApis()
     rawset(_G, "CopyToClipboard", nil)
-    _G.C_Clipboard = { SetClipboard = function() end }
 
     local ok, opened = pcall(ContextMenu.Open, "fallback", nil)
     assert(ok, "Open must not throw when UIDropDownMenuTemplate is missing")
     assert(opened == true, "Open should fall back to CopyText when template missing")
-  end
+    assert(copied.text == "fallback", "missing template must fall back to Copy Text")
+  end)
 
   -- EasyMenu happy path: Open invokes EasyMenu with a Copy Text entry whose
   -- callback routes through ContextMenu.CopyText (without touching the
   -- protected CopyToClipboard global).
-  do
+  ManualCopyCapture.With(function(copied)
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
     local anchor = factory.CreateFrame("Frame", nil, uiParent)
@@ -132,12 +119,6 @@ return function()
       protectedAttempted = true
       error("forbidden")
     end)
-    local copiedText = nil
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedText = text
-      end,
-    }
 
     local easyMenuCall
     rawset(_G, "EasyMenu", function(menuList, menuFrame, menuAnchor, x, y, displayMode)
@@ -160,36 +141,29 @@ return function()
     assert(type(entry.func) == "function", "Copy Text entry should be callable")
 
     entry.func()
-    assert(copiedText == "bubble text", "Copy Text callback should copy via C_Clipboard")
+    assert(copied.text == "bubble text", "Copy Text callback should open the manual copy popup with the text")
     assert(protectedAttempted == false, "Copy Text must not call protected CopyToClipboard")
-  end
+  end)
   -- EasyMenu failures must fall back to copying the text.
-  do
+  ManualCopyCapture.With(function(copied)
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
-    local copiedText = nil
     rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
     _G[MENU_FRAME_NAME] = nil
     rawset(_G, "EasyMenu", function()
       error("broken EasyMenu")
     end)
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedText = text
-      end,
-    }
 
     local ok, opened = pcall(ContextMenu.Open, "easy failure")
     assert(ok and opened == true, "Open must not throw when EasyMenu fails")
-    assert(copiedText == "easy failure", "EasyMenu failure must fall back to Copy Text")
-  end
+    assert(copied.text == "easy failure", "EasyMenu failure must fall back to Copy Text")
+  end)
 
   -- Legacy initialization and toggling failures must fall back to copying.
-  do
+  ManualCopyCapture.With(function(copied)
     local factory = FakeUI.NewFactory()
     local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
-    local copiedText = nil
     rawset(_G, "CreateFrame", factory.CreateFrame)
     _G.UIParent = uiParent
     _G[MENU_FRAME_NAME] = nil
@@ -202,25 +176,20 @@ return function()
     end
     _G.UIDropDownMenu_AddButton = function() end
     _G.ToggleDropDownMenu = function() end
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedText = text
-      end,
-    }
 
     local ok, opened = pcall(ContextMenu.Open, "initialization failure")
     assert(ok and opened == true, "Open must not throw when legacy initialization fails")
-    assert(copiedText == "initialization failure", "legacy initialization failure must fall back to Copy Text")
+    assert(copied.text == "initialization failure", "legacy initialization failure must fall back to Copy Text")
 
-    copiedText = nil
+    copied.text = nil
     _G.UIDropDownMenu_Initialize = function() end
     _G.ToggleDropDownMenu = function()
       error("broken toggle")
     end
     ok, opened = pcall(ContextMenu.Open, "toggle failure")
     assert(ok and opened == true, "Open must not throw when dropdown toggle fails")
-    assert(copiedText == "toggle failure", "dropdown toggle failure must fall back to Copy Text")
-  end
+    assert(copied.text == "toggle failure", "dropdown toggle failure must fall back to Copy Text")
+  end)
 
   -- When EasyMenu is absent, Open uses the legacy dropdown API instead.
   do
