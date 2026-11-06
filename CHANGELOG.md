@@ -9,6 +9,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: Copy Character Name in the right-click menu of a chat or a message no longer shows an error. It opens a small box with the name selected, ready to copy with Ctrl+C. In WoW: Forever it copies the name without the realm, like the game's own menu does.
 - Fixed: In WoW: Forever, a Battle.net friend's character name at the top of the chat no longer ends in a long server code.
 - Fixed: Typing /r and a space in the game's chat box now opens the messenger on the last whisper you received, like the reply key does. Anything you typed after /r carries over into the messenger's text box.
+- Fixed: Closing the messenger with Escape no longer pops up a widget preview for a whisper that came in while the window was open.
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 
 ## [2.1.4] - 2026-11-05
