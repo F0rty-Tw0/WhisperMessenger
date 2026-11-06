@@ -132,6 +132,9 @@ local Korean = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "메신저 창의 동작을 설정합니다.",
+  ["Phone-style window"] = "휴대폰 스타일 창",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "떠 있는 버튼을 누르면 버튼에 붙은 휴대폰 크기의 대화 목록이 열립니다. 대화를 클릭하면 해당 대화로 넘어갑니다.",
+  ["Reload the interface now to switch the window style?"] = "창 스타일을 바꾸려면 지금 인터페이스를 다시 불러올까요?",
   ["Dim when moving"] = "이동 시 어둡게",
   ["Reduces window opacity while your character is moving."] = "캐릭터가 이동할 때 창 투명도를 낮춥니다.",
   ["Auto-focus chat input"] = "채팅 입력 자동 포커스",

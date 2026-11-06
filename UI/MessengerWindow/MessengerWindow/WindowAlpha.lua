@@ -14,6 +14,9 @@ function WindowAlpha.Create(options)
   local settingsConfig = options.settingsConfig or {}
 
   local windowState = { isDimmed = false }
+  -- The opening animation owns the alpha while held: the 10-a-second ticker
+  -- and focus changes would otherwise pop the window through it.
+  local held = false
 
   -- Reused across calls to avoid allocating a table 10x/sec on the alpha
   -- ticker; caller only reads the fields synchronously, never retains it.
@@ -26,20 +29,26 @@ function WindowAlpha.Create(options)
     return alphaSettings
   end
 
-  alphaController.hookScript(composerInput, "OnEditFocusGained", function()
-    alphaController.refreshWindowAlpha(frame, composerInput, windowState, true, getAlphaSettings())
-  end)
-
-  alphaController.hookScript(composerInput, "OnEditFocusLost", function()
-    alphaController.refreshWindowAlpha(frame, composerInput, windowState, false, getAlphaSettings())
-  end)
-
   local function refreshWindowAlpha(forceOpaque)
+    if held then
+      return
+    end
     alphaController.refreshWindowAlpha(frame, composerInput, windowState, forceOpaque, getAlphaSettings())
   end
 
+  alphaController.hookScript(composerInput, "OnEditFocusGained", function()
+    refreshWindowAlpha(true)
+  end)
+
+  alphaController.hookScript(composerInput, "OnEditFocusLost", function()
+    refreshWindowAlpha(false)
+  end)
+
   return {
     refreshWindowAlpha = refreshWindowAlpha,
+    setHeld = function(nextHeld)
+      held = nextHeld == true
+    end,
   }
 end
 

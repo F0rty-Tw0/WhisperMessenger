@@ -132,6 +132,9 @@ local Portuguese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configure o comportamento da janela.",
+  ["Phone-style window"] = "Janela estilo celular",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "O botão flutuante abre uma lista de conversas do tamanho de um celular presa a ele. Clique em uma conversa para deslizar até ela.",
+  ["Reload the interface now to switch the window style?"] = "Recarregar a interface agora para mudar o estilo da janela?",
   ["Dim when moving"] = "Esmaecer em movimento",
   ["Reduces window opacity while your character is moving."] = "Reduz a opacidade da janela enquanto seu personagem se move.",
   ["Auto-focus chat input"] = "Foco automático no chat",

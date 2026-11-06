@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local PhoneViewport = ns.MessengerWindowLayoutPhoneViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.PhoneViewport")
 local sizeValue = UIHelpers.sizeValue
 
 local Apply = {}
@@ -29,7 +30,7 @@ function Apply.Relayout(layout, relayout, theme)
   layout.contactsPane:SetSize(contactsWidth, contactsHeight)
   -- Re-anchor so the pane keeps its edge insets after every relayout.
   local contactsPaneParent = layout.contactsPane.GetParent and layout.contactsPane:GetParent() or layout.contactsPane.parent
-  if contactsPaneParent and layout.contactsPane.ClearAllPoints then
+  if contactsPaneParent and layout.contactsPane.ClearAllPoints and not layout.phoneViewport then
     layout.contactsPane:ClearAllPoints()
     layout.contactsPane:SetPoint(
       "TOPLEFT",
@@ -80,7 +81,11 @@ function Apply.Relayout(layout, relayout, theme)
   if layout.contentPane.ClearAllPoints then
     layout.contentPane:ClearAllPoints()
   end
-  layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", resolvedTheme.DIVIDER_THICKNESS, 0)
+  if layout.phoneViewport then
+    PhoneViewport.Place(layout)
+  else
+    layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", resolvedTheme.DIVIDER_THICKNESS, 0)
+  end
   -- Re-establish the dual-anchor so contentPane stays auto-sized to its
   -- parent after a resize. Without this the BOTTOMRIGHT anchor is lost on
   -- every relayout, height/width/margin collapse. Use :GetParent() in
@@ -94,7 +99,7 @@ function Apply.Relayout(layout, relayout, theme)
       contentParentForAnchor = layout.contactsPane.parent
     end
   end
-  if contentParentForAnchor then
+  if contentParentForAnchor and not layout.phoneViewport then
     layout.contentPane:SetPoint(
       "BOTTOMRIGHT",
       contentParentForAnchor,

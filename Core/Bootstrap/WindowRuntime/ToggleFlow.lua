@@ -40,7 +40,7 @@ function ToggleFlow.Create(options)
   local findLatestUnreadKey = options.findLatestUnreadKey or function(_accept)
     return nil
   end
-  local selectConversation = options.selectConversation or function() end
+  local selectConversation = options.selectConversation or function(_conversationKey) end
   local refreshWindow = options.refreshWindow or function() end
 
   local function matchesTab(conversationKey, tabMode)
@@ -50,6 +50,16 @@ function ToggleFlow.Create(options)
   local function toggle()
     ensureWindow()
     local nextVisible = not isWindowVisible()
+
+    -- Phone layout: the button opens the list; a chat opens from a click there.
+    local phoneWindow = getWindow()
+    if nextVisible and phoneWindow and phoneWindow.isPhoneLayout then
+      selectConversation(nil)
+      phoneWindow.showPhoneList()
+      setWindowVisible(true)
+      return
+    end
+
     setWindowVisible(nextVisible)
 
     if nextVisible then

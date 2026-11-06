@@ -331,12 +331,18 @@ function WindowRuntime.Create(options)
     })
     liveThemeSettingChanged = onSettingChanged
 
+    -- Read once: changing the window style takes a reload.
+    local phoneLayout = settingsState.phoneLayout ~= false
+    runtime.phoneLayoutActive = phoneLayout
+
     local windowOptions = {
       contacts = contacts,
       selectedContact = selectedState.selectedContact,
       conversation = selectedState.conversation,
       status = selectedState.status,
-      state = characterState.window,
+      state = phoneLayout and (characterState.phoneWindow or {}) or characterState.window,
+      phoneLayout = phoneLayout,
+      getDockIcon = getWidgetIcon,
       initialTabMode = characterState.contactsTabMode or "whispers",
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,

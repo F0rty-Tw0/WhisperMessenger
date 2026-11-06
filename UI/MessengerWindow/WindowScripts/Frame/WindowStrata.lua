@@ -19,6 +19,9 @@ local WindowStrata = {}
 local WINDOW_FRAME_LEVEL = 2000
 
 -- options.composerInput is read on every call, not captured.
+-- options.onStrataChanged(strata), when given, runs after each change.
+-- options.isWindowPart(frame), when given, claims frames outside the window
+-- that count as clicks on it.
 function WindowStrata.New(frame, options, escapeOrder)
   local function composerHasFocus()
     local input = options.composerInput
@@ -48,7 +51,10 @@ function WindowStrata.New(frame, options, escapeOrder)
   local function isPointerOnWindow()
     if PointerFocus.Current() ~= nil then
       return PointerFocus.FindFocusAncestor(function(candidate)
-        return candidate == frame or PickerPopup.IsEscapeFrame(candidate)
+        if candidate == frame or PickerPopup.IsEscapeFrame(candidate) then
+          return true
+        end
+        return options.isWindowPart ~= nil and options.isWindowPart(candidate)
       end) ~= nil
     end
     return isMouseOverFrame()
@@ -82,6 +88,9 @@ function WindowStrata.New(frame, options, escapeOrder)
         frame:SetFrameLevel(WINDOW_FRAME_LEVEL)
       end
     end)
+    if options.onStrataChanged then
+      options.onStrataChanged("HIGH")
+    end
   end
 
   local function demoteIfIdle()
@@ -96,6 +105,9 @@ function WindowStrata.New(frame, options, escapeOrder)
         frame:SetFrameLevel(WINDOW_FRAME_LEVEL)
       end
     end)
+    if options.onStrataChanged then
+      options.onStrataChanged("MEDIUM")
+    end
   end
 
   return {

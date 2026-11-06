@@ -132,6 +132,9 @@ local Italian = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Imposta il comportamento della finestra.",
+  ["Phone-style window"] = "Finestra stile telefono",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Il pulsante mobile apre un elenco di chat in formato telefono collegato a esso. Fai clic su una chat per scorrere fino a essa.",
+  ["Reload the interface now to switch the window style?"] = "Ricaricare ora l'interfaccia per cambiare lo stile della finestra?",
   ["Dim when moving"] = "Attenua durante il movimento",
   ["Reduces window opacity while your character is moving."] = "Riduce l'opacità della finestra mentre il personaggio si muove.",
   ["Auto-focus chat input"] = "Focus automatico sulla chat",

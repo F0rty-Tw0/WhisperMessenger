@@ -27,6 +27,9 @@ function SelectionController.Create(options)
     refreshConversationPane(currentSelectedContact, currentConversation, currentStatus, currentNotice)
     syncComposerSelectedContact(currentSelectedContact)
     setComposerEnabled(currentSelectedContact, currentNotice)
+    if options.onSelectionChanged then
+      options.onSelectionChanged(currentSelectedContact and currentSelectedContact.conversationKey or nil)
+    end
   end
 
   local function buildSelectedState(item)

@@ -132,6 +132,9 @@ local TraditionalChinese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "控制信使視窗的行為。",
+  ["Phone-style window"] = "手機樣式視窗",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "浮動按鈕會開啟一個附著於其上的手機大小聊天清單。點擊聊天即可滑入。",
+  ["Reload the interface now to switch the window style?"] = "現在重新載入介面以切換視窗樣式嗎?",
   ["Dim when moving"] = "移動時變暗",
   ["Reduces window opacity while your character is moving."] = "在角色移動時降低視窗透明度。",
   ["Auto-focus chat input"] = "自動聚焦輸入框",

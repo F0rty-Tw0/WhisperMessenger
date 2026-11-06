@@ -35,6 +35,10 @@ function IncomingPreview.Create(factory, frame, options)
   if previewFrame.SetFrameStrata then
     previewFrame:SetFrameStrata("HIGH")
   end
+  -- A button riding the phone window changes strata; its preview stays up.
+  if previewFrame.SetFixedFrameStrata then
+    previewFrame:SetFixedFrameStrata(true)
+  end
   if previewFrame.EnableMouse then
     previewFrame:EnableMouse(true)
   end

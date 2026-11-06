@@ -453,6 +453,14 @@ local function makeCreateFrame()
       self.frameStrata = strata
     end
 
+    function frame:GetFrameStrata()
+      return self.frameStrata or "MEDIUM"
+    end
+
+    function frame:SetFixedFrameStrata(fixed)
+      self.fixedFrameStrata = fixed
+    end
+
     function frame:GetFrameLevel()
       return self.frameLevel or 1
     end

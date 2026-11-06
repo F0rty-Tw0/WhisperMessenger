@@ -17,9 +17,13 @@ end
 
 -- collapsed: the contacts pane is the rail, so the window only needs room
 -- for the rail, the divider and the minimum chat width.
-local function resolveMinBounds(theme, collapsed)
+-- phone: the portrait phone window has its own smaller minimum.
+local function resolveMinBounds(theme, collapsed, phone)
   local resolvedTheme = resolveTheme(theme)
   local layout = resolvedTheme.LAYOUT or {}
+  if phone then
+    return layout.PHONE_WINDOW_MIN_WIDTH, layout.PHONE_WINDOW_MIN_HEIGHT
+  end
   local minWidth = layout.WINDOW_MIN_WIDTH or resolvedTheme.WINDOW_MIN_WIDTH or 640
   if collapsed and layout.CONTACTS_RAIL_WIDTH and layout.CONTENT_MIN_WIDTH then
     minWidth = layout.CONTACTS_RAIL_WIDTH + (resolvedTheme.DIVIDER_THICKNESS or 1) + layout.CONTENT_MIN_WIDTH
@@ -37,10 +41,10 @@ local function resolveMaxBound(parent, getterName, fieldName, scale)
   return bound / scale
 end
 
-function WindowBounds.GetResizeBounds(parent, theme, windowScale, collapsed)
+function WindowBounds.GetResizeBounds(parent, theme, windowScale, collapsed, phone)
   local resolvedTheme = resolveTheme(theme)
   local normalizedScale = WindowScale.Normalize(windowScale)
-  local configuredMinWidth, configuredMinHeight = resolveMinBounds(resolvedTheme, collapsed)
+  local configuredMinWidth, configuredMinHeight = resolveMinBounds(resolvedTheme, collapsed, phone)
   local maxWidth = resolveMaxBound(parent, "GetWidth", "width", normalizedScale) or resolvedTheme.WINDOW_WIDTH or configuredMinWidth
   local maxHeight = resolveMaxBound(parent, "GetHeight", "height", normalizedScale) or resolvedTheme.WINDOW_HEIGHT or configuredMinHeight
   local minWidth = math.min(configuredMinWidth, maxWidth)
@@ -52,7 +56,8 @@ end
 function WindowBounds.ClampState(parent, state, theme, windowScale)
   local resolvedTheme = resolveTheme(theme)
   local collapsed = type(state) == "table" and state.contactsCollapsed == true
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme, windowScale, collapsed)
+  local phone = type(state) == "table" and state.phoneLayout == true
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, resolvedTheme, windowScale, collapsed, phone)
   local nextState = {}
 
   for key, value in pairs(state or {}) do
@@ -61,7 +66,7 @@ function WindowBounds.ClampState(parent, state, theme, windowScale)
 
   local width = nextState.width
   if type(width) ~= "number" then
-    width = resolvedTheme.WINDOW_WIDTH
+    width = phone and resolvedTheme.LAYOUT.PHONE_WINDOW_WIDTH or resolvedTheme.WINDOW_WIDTH
   end
   width = math.max(minWidth, width)
   if maxWidth then
@@ -70,7 +75,7 @@ function WindowBounds.ClampState(parent, state, theme, windowScale)
 
   local height = nextState.height
   if type(height) ~= "number" then
-    height = resolvedTheme.WINDOW_HEIGHT
+    height = phone and resolvedTheme.LAYOUT.PHONE_WINDOW_HEIGHT or resolvedTheme.WINDOW_HEIGHT
   end
   height = math.max(minHeight, height)
   if maxHeight then

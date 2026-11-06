@@ -21,6 +21,7 @@ function PanelWiring.Create(options)
   local tabToggle = options.tabToggle
   local getContactsRail = options.getContactsRail
   local onPanelShown = options.onPanelShown
+  local onCoverChanged = options.onCoverChanged or function(_covered) end
 
   local leftInset = options.theme.LAYOUT.CONTACTS_PANE_LEFT_INSET
   local windowVisibility -- forward declaration (the panel tabs open through it)
@@ -47,8 +48,10 @@ function PanelWiring.Create(options)
     contentPane = layout.contentPane,
     frame = frame,
     panelHost = panelHost,
+    onPanesShown = options.onPanesShown,
     onPanelVisibilityChanged = function(visible, key)
       chrome.setBackVisible(visible)
+      onCoverChanged(visible)
       if tabToggle then
         tabToggle.setSelectedPanel(visible and key or nil)
       end
@@ -60,6 +63,7 @@ function PanelWiring.Create(options)
     onConversationUncovered = options.onConversationUncovered,
     onOptionsVisibilityChanged = function(visible)
       chrome.setOptionsActive(visible)
+      onCoverChanged(visible)
       local contactsRail = getContactsRail()
       if contactsRail then
         contactsRail.setOptionsVisible(visible)

@@ -325,6 +325,7 @@ UI/ToggleIcon/IconArt.lua
 UI/ToggleIcon/LockGlyph.lua
 UI/ToggleIcon/IconTooltip.lua
 UI/ToggleIcon/IconDrag.lua
+UI/ToggleIcon/IconRide.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
 UI/MinimapIcon/MinimapIcon.lua
@@ -345,6 +346,7 @@ UI/MessengerWindow/ChromeBuilder/MarkAllReadButton.lua
 UI/MessengerWindow/ChromeBuilder/TitleBarLayout.lua
 UI/MessengerWindow/ChromeBuilder.lua
 UI/MessengerWindow/LayoutBuilder/Metrics.lua
+UI/MessengerWindow/LayoutBuilder/PhoneViewport.lua
 UI/MessengerWindow/LayoutBuilder/Apply.lua
 UI/MessengerWindow/LayoutBuilder/ThemeApply.lua
 UI/MessengerWindow/LayoutBuilder/ContactsSearchUI.lua
@@ -436,6 +438,11 @@ UI/MessengerWindow/MessengerWindow/ContactsWiring.lua
 UI/MessengerWindow/MessengerWindow/ConversationWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowSizing.lua
 UI/MessengerWindow/MessengerWindow/WindowSurface.lua
+UI/MessengerWindow/MessengerWindow/PhoneSlide.lua
+UI/MessengerWindow/MessengerWindow/PhoneNavigator.lua
+UI/MessengerWindow/MessengerWindow/PhoneDock.lua
+UI/MessengerWindow/MessengerWindow/PhoneOpenAnimation.lua
+UI/MessengerWindow/MessengerWindow/PhoneWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/RuntimeFactory.lua
@@ -483,6 +490,7 @@ Core/Bootstrap/AutoOpenCoordinator/Poller.lua
 Core/Bootstrap/AutoOpenCoordinator.lua
 Core/Bootstrap/FirstRunTip.lua
 Core/Bootstrap/WindowRuntime/HudStyleSetting.lua
+Core/Bootstrap/WindowRuntime/PhoneLayoutSetting.lua
 Core/Bootstrap/WindowRuntime/IntegrationSetting.lua
 Core/Bootstrap/WindowRuntime/LanguageSetting.lua
 Core/Bootstrap/WindowRuntime/DisplayNameSetting.lua

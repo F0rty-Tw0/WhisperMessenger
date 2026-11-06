@@ -8,6 +8,7 @@ local Localization = ns.Localization or (type(require) == "function" and require
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
+local PhoneLayoutSetting = ns.BootstrapWindowRuntimePhoneLayoutSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PhoneLayoutSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
@@ -51,6 +52,14 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
+  -- A change to the floating button reaches the phone window it may ride.
+  local function dockPhoneIcon()
+    local window = runtime.window
+    if window and window.dockPhoneIcon then
+      window.dockPhoneIcon()
+    end
+  end
+
   return function(key, value)
     -- Not a setting: the Filters page changed the ignore list or rules.
     if key == "filters" then
@@ -69,6 +78,16 @@ function SettingsHandler.Create(options)
         local appearance = runtime.window and runtime.window.appearanceSettings
         if appearance and appearance.setHudStyle then
           appearance.setHudStyle(savedStyle)
+        end
+      end)
+      return
+    end
+    -- Saved by PhoneLayoutSetting only when the player reloads.
+    if key == "phoneLayout" then
+      PhoneLayoutSetting.Apply(accountSettings, value == true, runtime.phoneLayoutActive ~= false, function(saved)
+        local appearance = runtime.window and runtime.window.appearanceSettings
+        if appearance and appearance.setPhoneLayout then
+          appearance.setPhoneLayout(saved)
         end
       end)
       return
@@ -236,10 +255,12 @@ function SettingsHandler.Create(options)
 
     if key == "iconMode" and options.applyIconMode then
       options.applyIconMode()
+      dockPhoneIcon()
     end
 
     if key == "iconSize" and icon and icon.applyIconSize then
       icon.applyIconSize(persistedValue)
+      dockPhoneIcon()
     end
 
     if key == "iconDesaturated" then

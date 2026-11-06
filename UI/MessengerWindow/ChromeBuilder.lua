@@ -21,8 +21,17 @@ local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
 local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
 local ChromeBuilder = {}
 
-local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed)
+-- The phone layout's icon spot for a look with no portrait of its own.
+local function createCornerIconSlot(factory, frame)
+  local L = Theme.LAYOUT
+  local slot = factory.CreateFrame("Frame", nil, frame)
+  slot:SetSize(L.PHONE_ICON_SLOT_SIZE, L.PHONE_ICON_SLOT_SIZE)
+  slot:SetPoint("CENTER", frame, "TOPLEFT", L.PHONE_ICON_SLOT_X, L.PHONE_ICON_SLOT_Y)
+  return slot
+end
+
+local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed, phoneLayout)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed, phoneLayout)
   if frame.SetResizeBounds then
     frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
   else
@@ -108,7 +117,8 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- The rail lets the window shrink further (see WindowBounds).
   local contactsCollapsed = initialState.contactsCollapsed == true
   local currentScale = normalizedWindowScale
-  applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed)
+  local phoneLayout = options.phoneLayout == true
+  applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, phoneLayout)
   frame:SetClampedToScreen(true)
 
   local frameName = frame.GetName and frame:GetName() or frame.name
@@ -142,7 +152,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local options_ = Buttons.CreateOptions(factory, frame, Theme)
   local back = Buttons.CreateBack(factory, frame, Theme)
   local resize = ResizeGrip.Create(factory, frame)
+  local iconSlot = phoneLayout and chrome.iconSlot or nil
+  local iconSlotClearance = 0
+  if phoneLayout and iconSlot == nil then
+    iconSlot = createCornerIconSlot(factory, frame)
+    iconSlotClearance = Theme.LAYOUT.PHONE_ICON_SLOT_CLEARANCE
+  end
   local titleBarParts = {
+    leftClearance = iconSlotClearance,
     frame = frame,
     titleBar = chrome.titleBar,
     title = title,
@@ -173,28 +190,57 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame:SetScale(normalizedScale)
     Shapes.refreshHairlines()
     currentScale = normalizedScale
-    applyResizeBounds(frame, parent, Theme, normalizedScale, contactsCollapsed)
+    applyResizeBounds(frame, parent, Theme, normalizedScale, contactsCollapsed, phoneLayout)
     return normalizedScale
   end
 
   local function setContactsCollapsed(collapsed)
     contactsCollapsed = collapsed == true
-    applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed)
+    applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, phoneLayout)
   end
 
   applyTheme(Theme)
+  -- Back shows for settings, an addon panel, or the phone layout's open chat.
+  local backForCover = false
+  local inPhoneChat = false
+  local markAllReadWanted = false
+
+  local function refreshBack()
+    back.button:SetShown(backForCover or inPhoneChat)
+  end
+
   local function setOptionsActive(active)
     options_.setActive(active)
-    if active then
-      back.button:Show()
-    else
-      back.button:Hide()
-    end
+    backForCover = active == true
+    refreshBack()
   end
 
   -- Back for an addon panel; the gear keeps its resting paint.
   local function setBackVisible(visible)
-    back.button:SetShown(visible == true)
+    backForCover = visible == true
+    refreshBack()
+  end
+
+  local function setMarkAllReadShown(shown)
+    markAllReadWanted = shown == true
+    markAllRead.setShown(markAllReadWanted and not inPhoneChat)
+  end
+
+  -- The list's title-bar buttons give way to back while a chat fills the window.
+  local function setPhoneChatView(inChat)
+    inPhoneChat = inChat == true
+    titleBarParts.phoneChatView = inPhoneChat
+    newConv.button:SetShown(not inPhoneChat)
+    patchNotes.button:SetShown(not inPhoneChat)
+    setMarkAllReadShown(markAllReadWanted)
+    TitleBarLayout.Apply(titleBarParts, Theme)
+    refreshBack()
+  end
+
+  -- A corner spot keeps the title buttons clear only while a button is on it.
+  local function setIconSlotOccupied(occupied)
+    titleBarParts.leftClearance = occupied and iconSlotClearance or 0
+    TitleBarLayout.Apply(titleBarParts, Theme)
   end
 
   return {
@@ -214,7 +260,10 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setOptionsActive = setOptionsActive,
     setBackVisible = setBackVisible,
     setPatchNotesGlow = patchNotes.setGlowing,
-    setMarkAllReadShown = markAllRead.setShown,
+    setMarkAllReadShown = setMarkAllReadShown,
+    setPhoneChatView = setPhoneChatView,
+    setIconSlotOccupied = setIconSlotOccupied,
+    iconSlot = iconSlot,
     titleBar = chrome.titleBar,
   }
 end

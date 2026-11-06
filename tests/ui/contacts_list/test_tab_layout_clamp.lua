@@ -20,6 +20,17 @@ return function()
     assert(select(4, window:GetClampRectInsets()) == 3, "hidden tabs restore the window's own clamp")
   end
 
+  -- test_insets_set_after_binding_survive
+  do
+    local window = factory.CreateFrame("Frame", nil, nil)
+    local applyClamp = TabLayout.BindClamp(window, 30)
+    window:SetClampRectInsets(-7, 0, 17, 0)
+    applyClamp(true)
+    local l, _, t, b = window:GetClampRectInsets()
+    assert(l == -7 and t == 17, "the window's icon spot keeps its clamp")
+    assert(b == -30, "got " .. tostring(b))
+  end
+
   -- test_window_without_clamp_api_is_a_no_op
   do
     local applyClamp = TabLayout.BindClamp({}, 30)

@@ -16,6 +16,7 @@ function WindowVisibility.Create(options)
   local onOptionsVisibilityChanged = options.onOptionsVisibilityChanged
   local onPanelVisibilityChanged = options.onPanelVisibilityChanged
   local onConversationUncovered = options.onConversationUncovered
+  local onPanesShown = options.onPanesShown
   local openPanel = nil
   local closing = false
 
@@ -51,6 +52,9 @@ function WindowVisibility.Create(options)
       setInsetShown(frame.contactsInset, shown)
       setInsetShown(frame.conversationInset, shown)
     end
+    if shown and onPanesShown then
+      onPanesShown()
+    end
   end
 
   local function closeOpenPanel()
@@ -82,6 +86,9 @@ function WindowVisibility.Create(options)
     optionsPanel:Hide()
     contactsPane:Show()
     contentPane:Show()
+    if onPanesShown then
+      onPanesShown()
+    end
     if onOptionsVisibilityChanged then
       onOptionsVisibilityChanged(false)
     end

@@ -20,6 +20,9 @@ function TabSelectionMemory.Create(options)
   local handleContactSelected = options.handleContactSelected or function() end
   local refreshSelection = options.refreshSelection or function() end
 
+  -- Phone layout: a tab shows its list, never a chat it last had open.
+  local rememberSelections = options.rememberSelections ~= false
+
   local tabSelections = { whispers = nil, groups = nil, channels = nil, requests = nil }
 
   local function saveLiveSelection(oldMode)
@@ -40,7 +43,7 @@ function TabSelectionMemory.Create(options)
 
   local function restoreSelection(newMode)
     local nextKey = tabSelections[newMode]
-    if not nextKey then
+    if not nextKey or not rememberSelections then
       refreshSelection({})
       return
     end

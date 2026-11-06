@@ -61,6 +61,7 @@ function LifecycleWiring.Setup(options)
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     setOptionsVisible = options.setOptionsVisible,
+    onBack = options.onBack,
     isShown = options.isShown,
     applyState = function(nextState)
       local appliedState = options.windowGeometry.applyState(options.frame, nextState)
@@ -87,6 +88,8 @@ function LifecycleWiring.Setup(options)
     Theme = options.theme,
     composerInput = options.composerInput,
     getAutoFocusChatInput = options.getAutoFocusChatInput,
+    onStrataChanged = options.onStrataChanged,
+    isWindowPart = options.isWindowPart,
     isContactsCollapsed = options.isContactsCollapsed,
     setContactsCollapsed = options.setContactsCollapsed,
   })

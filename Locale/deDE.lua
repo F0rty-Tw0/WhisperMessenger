@@ -132,6 +132,9 @@ local German = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Verhalten des Messenger-Fensters steuern.",
+  ["Phone-style window"] = "Fenster im Handy-Stil",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Die schwebende Schaltfläche öffnet eine handygroße, daran befestigte Chatliste. Klicke auf einen Chat, um zu ihm zu gleiten.",
+  ["Reload the interface now to switch the window style?"] = "Benutzeroberfläche jetzt neu laden, um den Fensterstil zu wechseln?",
   ["Dim when moving"] = "Beim Bewegen abdunkeln",
   ["Reduces window opacity while your character is moving."] = "Reduziert die Fensterdeckkraft, während sich der Charakter bewegt.",
   ["Auto-focus chat input"] = "Eingabefeld automatisch fokussieren",

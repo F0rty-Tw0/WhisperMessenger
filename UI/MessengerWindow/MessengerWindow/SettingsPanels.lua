@@ -116,6 +116,7 @@ function SettingsPanels.Create(factory, options)
         windowOpacityInactive = settingsConfig.windowOpacityInactive,
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
+        phoneLayout = settingsConfig.phoneLayout,
       },
     },
     {

@@ -126,6 +126,9 @@ return function()
   eventFrame.scripts.OnEvent(eventFrame, "ADDON_LOADED", "WhisperMessenger")
 
   local runtime = ns.Bootstrap.runtime
+  -- This flow relies on the classic window reopening the selected chat.
+  runtime.accountState.settings = runtime.accountState.settings or {}
+  runtime.accountState.settings.phoneLayout = false
   assert(eventFrame.events.CHAT_MSG_BN_WHISPER == true)
   assert(eventFrame.events.CHAT_MSG_BN_WHISPER_INFORM == true)
   assert(eventFrame.events.CHAT_MSG_BN_WHISPER_PLAYER_OFFLINE == true)

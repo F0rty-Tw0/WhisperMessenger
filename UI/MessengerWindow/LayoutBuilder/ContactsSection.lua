@@ -42,7 +42,8 @@ function ContactsSection.Build(factory, frame, sizing, options)
   -- parent's height. Without dual-anchor the
   -- pane uses a stale `initialState.height - TOP_BAR_HEIGHT` height that's
   -- shorter than its parent, leaving a visible gap at the bottom of the window.
-  local contactsPaneParent = frame.contentArea or frame
+  -- options.paneParent: the phone layout's viewport.
+  local contactsPaneParent = options.paneParent or frame.contentArea or frame
   local contactsPane = factory.CreateFrame("Frame", nil, contactsPaneParent)
   contactsPane:SetSize(contactsWidth, contactsHeight)
   -- Edge insets from the window edge (Theme.LAYOUT).

@@ -35,13 +35,15 @@ end
 
 -- Tabs hanging below the window: returns applyClamp(shown), which extends
 -- the window's screen clamp down by hangHeight while they show. The window's
--- own insets are kept and restored when they hide.
+-- own bottom inset is restored when they hide; the other edges are not ours,
+-- so they are read at each call.
 function TabLayout.BindClamp(window, hangHeight)
   if not (window.SetClampRectInsets and window.GetClampRectInsets) then
     return function(_shown) end
   end
-  local left, right, top, bottom = window:GetClampRectInsets()
+  local _, _, _, bottom = window:GetClampRectInsets()
   return function(shown)
+    local left, right, top = window:GetClampRectInsets()
     window:SetClampRectInsets(left, right, top, shown and bottom - hangHeight or bottom)
   end
 end
@@ -95,6 +97,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local selectedPanel = nil
   local modeClickHandler = nil
   local optionsShown = false
+  local chatView = false
 
   local function paint()
     opts.paint(currentMode, visible, selectedPanel, panelTabs)
@@ -102,7 +105,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
 
   -- Through toggle.setShown looked up now, so the skin's clamp wrapper runs.
   local function applyShown()
-    toggle.setShown(#visible > 1 and not optionsShown)
+    toggle.setShown(#visible > 1 and not optionsShown and not chatView)
   end
 
   local function setMode(mode)
@@ -151,6 +154,11 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   -- The options page covers the panes; the strip hides under it.
   toggle.setOptionsShown = function(shown)
     optionsShown = shown == true
+    applyShown()
+  end
+  -- Phone layout: an open chat fills the window; the tabs belong to the list.
+  toggle.setChatView = function(shown)
+    chatView = shown == true
     applyShown()
   end
   toggle.setUnreadCounts = function(whispersCount, groupsCount, requestsCount, channelsCount)
