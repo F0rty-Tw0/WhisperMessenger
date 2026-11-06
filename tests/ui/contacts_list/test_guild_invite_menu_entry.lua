@@ -249,8 +249,11 @@ return function()
 
     -- test_hidden_for_guildmate
     resetFixture()
-    _G.C_GuildInfo.MemberExistsByName = yes
+    _G.C_GuildInfo.MemberExistsByName = function(name)
+      return name == "Arthas-Area52"
+    end
     assert(not hasEntry(), "a guildmate hides Guild invite")
+    assert(hasEntry({ displayName = "Jaina-Area52", guid = "Player-1-J" }), "another player's membership is asked by their own name")
 
     -- test_shown_when_member_check_missing_or_throws
     resetFixture()

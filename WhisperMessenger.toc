@@ -71,6 +71,7 @@ Model/Filters/KeywordRules.lua
 Model/Filters/RulePresets.lua
 Model/Filters/DuplicateCollapse.lua
 Util/ChatReplyState.lua
+Util/ChatPrefill.lua
 Model/ConversationDrafts.lua
 Model/ContactInfo.lua
 Model/OutgoingDelivery.lua
