@@ -170,6 +170,7 @@ UI/Theme/Colors.lua
 UI/Theme/BubbleColors.lua
 UI/Theme/FontFamilies.lua
 UI/Theme/FontColors.lua
+UI/Theme/GlyphCoverage.lua
 UI/Theme/Fonts.lua
 UI/Theme/Layout.lua
 UI/Theme/Textures.lua

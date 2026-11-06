@@ -134,6 +134,10 @@ local function makeCreateFrame()
       self.fontObject = value
     end
 
+    function frame:GetFontObject()
+      return self.fontObject
+    end
+
     function frame:GetStringHeight()
       local text = tostring(self.text or "")
       local _, lineCount = string.gsub(text, "\n", "\n")
