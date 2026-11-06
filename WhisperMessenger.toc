@@ -134,6 +134,7 @@ Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
+Core/SeenLevelEvents/Guild.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua
