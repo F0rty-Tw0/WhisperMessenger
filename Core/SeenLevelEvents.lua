@@ -11,6 +11,7 @@ local SeenZone = ns.SeenZone or require("WhisperMessenger.Model.SeenZone")
 local WhoLookup = ns.WhoLookup or require("WhisperMessenger.Transport.WhoLookup")
 local WhoRow = ns.WhoRow or require("WhisperMessenger.Core.WhoRow")
 local WhoLevels = ns.SeenLevelEventsWhoLevels or require("WhisperMessenger.Core.SeenLevelEvents.WhoLevels")
+local Guild = ns.SeenLevelEventsGuild or require("WhisperMessenger.Core.SeenLevelEvents.Guild")
 
 -- Records the levels the game shows the player (target, mouseover,
 -- nameplates, group, friends) and pushes them to saved whisper chats.
@@ -95,6 +96,7 @@ local function recordUnit(unit)
   if realm ~= nil and realm ~= "" then
     name = name .. "-" .. realm
   end
+  pcall(Guild.RecordUnit, name, unit)
   record(guid, name, level)
 end
 
@@ -160,6 +162,7 @@ local function recordWho(api, systemText)
       pcall(WhoLevels.Collect, levels, info, systemText)
       -- Per row: one secret or bad zone must not drop the rows after it.
       pcall(recordZone, info, systemText)
+      pcall(Guild.RecordWhoRow, info, systemText)
     end
   end
   backfill(levels)

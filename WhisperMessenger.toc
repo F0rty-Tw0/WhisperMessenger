@@ -87,6 +87,7 @@ Model/SeenLevel.lua
 Model/SenderLevelBackfill.lua
 Model/SeenByName.lua
 Model/SeenZone.lua
+Model/SeenGuild.lua
 Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
@@ -133,6 +134,7 @@ Transport/BNetResolver.lua
 Transport/WhoLookup.lua
 Core/WhoRow.lua
 Core/SeenLevelEvents/WhoLevels.lua
+Core/SeenLevelEvents/Guild.lua
 Core/SeenLevelEvents.lua
 
 Core/LocalPlayer.lua
