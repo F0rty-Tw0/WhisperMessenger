@@ -10,7 +10,7 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- the strip below the window, after the built-in tabs, labelled with `title`
 -- as given. `icon` is accepted and ignored. The first registration of a key wins.
 -- A panel is { title, onShow(host), onHide?(), onSplit?(host, listWidth), badge?(),
--- onMarkAllRead?(), onUnreadChanged?() }.
+-- onMarkAllRead?(), onUnreadChanged?(), compact? }.
 -- onSplit runs after onShow and again whenever the contacts divider moves:
 -- listWidth is the divider's x from the panel's left edge (about 50 with the
 -- contacts collapsed to the rail), so a panel can line up with the list.
@@ -27,6 +27,11 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- onUnreadChanged() runs on the next frame after any WoW whisper's unread count
 -- changes (one call per frame at most); it may call the WhisperMessenger API;
 -- re-read counts with GetUnreadCount.
+-- compact (optional boolean): the panel lays itself out at any host width down
+-- to the phone window's narrowest (PHONE_WINDOW_MIN_WIDTH, 352, less the window
+-- chrome). In the phone layout WM then leaves the window narrow while the panel
+-- shows. Without it the phone window widens while the panel shows, as for
+-- settings. The classic layout ignores it.
 local Panels = {}
 
 -- The panel is already stored when this runs: an icon error must not turn
@@ -41,6 +46,10 @@ local function isOptionalFunction(value)
   return value == nil or type(value) == "function"
 end
 
+local function isOptionalBoolean(value)
+  return value == nil or type(value) == "boolean"
+end
+
 local function isValidPanel(panel)
   return type(panel) == "table"
     and Guards.IsNonEmptyString(panel.title)
@@ -50,6 +59,7 @@ local function isValidPanel(panel)
     and isOptionalFunction(panel.badge)
     and isOptionalFunction(panel.onMarkAllRead)
     and isOptionalFunction(panel.onUnreadChanged)
+    and isOptionalBoolean(panel.compact)
 end
 
 -- The registry keeps this copy, read once: a caller that changes its table
@@ -66,6 +76,7 @@ local function copyPanel(panel)
     badge = panel.badge,
     onMarkAllRead = panel.onMarkAllRead,
     onUnreadChanged = panel.onUnreadChanged,
+    compact = panel.compact,
   }
 end
 
