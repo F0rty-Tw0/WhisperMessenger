@@ -1,6 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local Theme = require("WhisperMessenger.UI.Theme")
+local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 -- Boots the real runtime on the phone layout for the integration tests.
 local PhoneRuntime = {}
@@ -80,6 +81,33 @@ end
 function PhoneRuntime.ClickBack(runtime)
   local back = runtime.window.backButton
   back.scripts.OnClick(back)
+  PhoneRuntime.FinishSlide(runtime)
+end
+
+-- One live whisper from Arthas-Area52, then the slide it may start.
+function PhoneRuntime.ReceiveWhisper(runtime)
+  local saved = rawget(_G, "InCombatLockdown")
+  rawset(_G, "InCombatLockdown", function()
+    return false
+  end)
+  EventBridge.RouteLiveEvent(
+    runtime,
+    runtime.refreshWindow,
+    "CHAT_MSG_WHISPER",
+    "hello",
+    "Arthas-Area52",
+    "",
+    "",
+    "",
+    0,
+    0,
+    "",
+    0,
+    999,
+    1001,
+    "Player-1-0ABC"
+  )
+  rawset(_G, "InCombatLockdown", saved)
   PhoneRuntime.FinishSlide(runtime)
 end
 
