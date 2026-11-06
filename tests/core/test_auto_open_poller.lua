@@ -25,10 +25,11 @@ end
 -- Installs the poller on one chat edit box and returns a typer that sets the
 -- box text as user input, the list of names routed to onSendTell, and the
 -- texts carried over into the composer.
-local function installPoller()
+local function installPoller(replyOpens)
   local editBox = makeEditBox()
   local sendTellCalls = {}
   local composerTexts = {}
+  local replyCalls = {}
   local runtime = {
     setComposerText = function(text)
       table.insert(composerTexts, text)
@@ -38,6 +39,10 @@ local function installPoller()
     onSendTell = function(target)
       table.insert(sendTellCalls, target)
       return true
+    end,
+    onReplyTell = function()
+      table.insert(replyCalls, true)
+      return replyOpens ~= false
     end,
   }
   local deps = {
@@ -58,7 +63,7 @@ local function installPoller()
     editBox.text = text
     editBox.scripts.OnTextChanged(editBox, true)
   end
-  return typeText, sendTellCalls, composerTexts
+  return typeText, sendTellCalls, composerTexts, replyCalls, editBox
 end
 
 return function()
@@ -123,4 +128,35 @@ return function()
     typeText("/w Thrall ")
     assert(sendTellCalls[1] == "Thrall", "expected one-word name routed on Classic, got " .. tostring(sendTellCalls[1]))
   end)
+
+  -- test_slash_reply_opens_messenger_after_space
+  do
+    local typeText, _sendTellCalls, _composerTexts, replyCalls, editBox = installPoller()
+    typeText("/r ")
+    assert(#replyCalls == 1, "expected '/r ' to open the reply chat, got " .. #replyCalls .. " calls")
+    assert(editBox.text == "", "expected the chat box cleared after routing, got " .. tostring(editBox.text))
+  end
+
+  -- test_slash_reply_carries_message_into_composer
+  do
+    local typeText, _sendTellCalls, composerTexts = installPoller()
+    typeText("/reply hi there")
+    assert(composerTexts[1] == "hi there", "expected message carried into composer, got " .. tostring(composerTexts[1]))
+  end
+
+  -- test_slash_reply_waits_for_space
+  -- "/r" may still become "/raid"; only the space makes it a reply.
+  do
+    local typeText, _sendTellCalls, _composerTexts, replyCalls = installPoller()
+    typeText("/r")
+    typeText("/ra ")
+    assert(#replyCalls == 0, "expected no reply before '/r ' is complete, got " .. #replyCalls .. " calls")
+  end
+
+  -- test_slash_reply_without_target_stays_in_chat
+  do
+    local typeText, _sendTellCalls, _composerTexts, _replyCalls, editBox = installPoller(false)
+    typeText("/r ")
+    assert(editBox.text == "/r ", "expected chat box untouched when nobody to reply to, got " .. tostring(editBox.text))
+  end
 end
