@@ -149,6 +149,37 @@ return function()
     assert(titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, "and it is back on the spot")
   end
 
+  -- test_a_button_appearing_on_an_open_window_docks_at_once
+  do
+    local dockable = false
+    local case
+    case = build({
+      getDockIcon = function()
+        return dockable and case.icon or nil
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local point, _, _, x, y = frame:GetPoint()
+    dockable = true
+    case.window.dockPhoneIcon()
+    assert(case.rides == 1, "rides to the spot")
+    assert(case.rideHandlers ~= nil, "a drag moves the window, like any docked button")
+    assert(case.rideStrata == "HIGH", "with the window")
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, "the title buttons move clear")
+    local nextPoint, _, _, nextX, nextY = frame:GetPoint()
+    assert(nextPoint == point and nextX == x and nextY == y, "the open window stays where it is")
+    frame:Hide()
+    assert(case.homes == 1, "and it goes home on close")
+  end
+
+  -- test_a_closed_window_docks_nothing
+  do
+    local case = build()
+    case.window.dockPhoneIcon()
+    assert(case.rides == 0, "it docks when the window opens")
+  end
+
   -- test_a_button_not_on_the_window_keeps_its_strata
   do
     local case = build({

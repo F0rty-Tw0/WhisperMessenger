@@ -143,16 +143,30 @@ function PhoneWiring.Attach(hooks, options)
     chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon)
   end
 
+  -- onStep: the opening animation's, when the window is coming out of the button.
+  local function attachIcon(icon, onStep)
+    dockedIcon = icon
+    icon.setRideHandlers(rideHandlers)
+    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), onStep)
+    -- Reopened mid-glide, it may still be down with the window that closed.
+    icon.setRideStrata(frame:GetFrameStrata())
+  end
+
   -- Already riding (the scale changed, or Alt+Z brought the UI back): the
-  -- button only needs its new spot, with no opening to replay.
+  -- button only needs its new spot, with no opening to replay. A button that
+  -- appears on an open window (the icon mode changed) docks where it stands.
   local function dock()
-    syncIconSlot()
     local icon = dockedIcon
-    if not (icon and icon.isRiding()) then
-      return
+    if icon == nil then
+      icon = getDockIcon()
+      if icon and icon.rideTo and frame:IsShown() then
+        attachIcon(icon)
+      end
+    elseif icon.isRiding() then
+      openAnimation.finish()
+      icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
     end
-    openAnimation.finish()
-    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
+    syncIconSlot()
   end
 
   -- A window opening for the first time may have no position until next frame.
@@ -179,11 +193,7 @@ function PhoneWiring.Attach(hooks, options)
       return
     end
     PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
-    dockedIcon = icon
-    icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), openAnimation.beginOpen(icon.frame))
-    -- Reopened mid-glide, it may still be down with the window that closed.
-    icon.setRideStrata(frame:GetFrameStrata())
+    attachIcon(icon, openAnimation.beginOpen(icon.frame))
   end
 
   -- Not when only the parent hid (Alt+Z): the window is still open.
