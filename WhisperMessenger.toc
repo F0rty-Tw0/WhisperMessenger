@@ -87,6 +87,7 @@ Model/SeenLevel.lua
 Model/SenderLevelBackfill.lua
 Model/SeenByName.lua
 Model/SeenZone.lua
+Model/SeenGuild.lua
 Model/SenderLevel.lua
 Model/RosterLookup.lua
 Model/ConversationSnapshot.lua
