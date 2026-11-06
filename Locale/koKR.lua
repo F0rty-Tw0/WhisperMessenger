@@ -510,6 +510,7 @@ local Korean = {
   ["Copy profile link"] = "프로필 링크 복사",
   ["Armory"] = "전투정보실",
   ["Press Ctrl+C to copy the link."] = "Ctrl+C를 눌러 링크를 복사하세요.",
+  ["Press Ctrl+C to copy the name."] = "Ctrl+C를 눌러 이름을 복사하세요.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "단축키 설정…",
   ["Not bound"] = "지정 안 됨",

@@ -514,6 +514,7 @@ local Spanish = {
   ["Copy profile link"] = "Copiar enlace del perfil",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Presiona Ctrl+C para copiar el enlace.",
+  ["Press Ctrl+C to copy the name."] = "Presiona Ctrl+C para copiar el nombre.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "Asignar tecla…",
   ["Not bound"] = "Sin asignar",

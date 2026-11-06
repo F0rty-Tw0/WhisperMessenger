@@ -15,6 +15,7 @@ local ExportMenuEntry = ns.ContactsListExportMenuEntry or require("WhisperMessen
 local AddFriendMenuEntry = ns.ContactsListAddFriendMenuEntry or require("WhisperMessenger.UI.ContactsList.AddFriendMenuEntry")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local ProfileLinksMenuEntry = ns.ContactsListProfileLinksMenuEntry or require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
+local ProtectedMenuEntries = ns.ContactsListProtectedMenuEntries or require("WhisperMessenger.UI.ContactsList.ProtectedMenuEntries")
 
 local ContextMenu = {}
 
@@ -100,6 +101,7 @@ local function addWhisperMessengerEntries(_owner, rootDescription, contextData)
     return
   end
   local item = contextData.whisperMessengerItem
+  ProtectedMenuEntries.Fix(rootDescription, item)
   local onMarkUnread = contextData.whisperMessengerOnMarkUnread
   local onUpdatePrefs = contextData.whisperMessengerOnUpdatePrefs
   local rowActions = contextData.whisperMessengerRowActions

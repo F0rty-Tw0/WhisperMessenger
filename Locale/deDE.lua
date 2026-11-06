@@ -510,6 +510,7 @@ local German = {
   ["Copy profile link"] = "Profillink kopieren",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Strg+C drücken, um den Link zu kopieren.",
+  ["Press Ctrl+C to copy the name."] = "Strg+C drücken, um den Namen zu kopieren.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "Tastenbelegung festlegen…",
   ["Not bound"] = "Nicht belegt",

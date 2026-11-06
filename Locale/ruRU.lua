@@ -510,6 +510,7 @@ local Russian = {
   ["Copy profile link"] = "Копировать ссылку на профиль",
   ["Armory"] = "Оружейная",
   ["Press Ctrl+C to copy the link."] = "Нажмите Ctrl+C, чтобы скопировать ссылку.",
+  ["Press Ctrl+C to copy the name."] = "Нажмите Ctrl+C, чтобы скопировать имя.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "Назначить клавишу…",
   ["Not bound"] = "Не назначено",

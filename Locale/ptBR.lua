@@ -510,6 +510,7 @@ local Portuguese = {
   ["Copy profile link"] = "Copiar link do perfil",
   ["Armory"] = "Arsenal",
   ["Press Ctrl+C to copy the link."] = "Pressione Ctrl+C para copiar o link.",
+  ["Press Ctrl+C to copy the name."] = "Pressione Ctrl+C para copiar o nome.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "Definir atalho…",
   ["Not bound"] = "Sem atalho",

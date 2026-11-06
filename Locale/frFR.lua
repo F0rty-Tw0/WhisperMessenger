@@ -510,6 +510,7 @@ local French = {
   ["Copy profile link"] = "Copier le lien du profil",
   ["Armory"] = "Armurerie",
   ["Press Ctrl+C to copy the link."] = "Appuyez sur Ctrl+C pour copier le lien.",
+  ["Press Ctrl+C to copy the name."] = "Appuyez sur Ctrl+C pour copier le nom.",
   -- Behavior page: Set keybind button
   ["Set keybind…"] = "Définir un raccourci…",
   ["Not bound"] = "Non assigné",
