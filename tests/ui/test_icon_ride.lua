@@ -13,7 +13,7 @@ local function build()
   frame:SetFrameLevel(5)
   parent:Show()
   frame:Show()
-  local case = { frame = frame, parent = parent, levels = {} }
+  local case = { frame = frame, parent = parent, levels = {}, ridingChanges = {} }
   rawset(frame, "GetCenter", function()
     local _, _, _, x, y = frame:GetPoint()
     return x, y
@@ -28,6 +28,9 @@ local function build()
     parent = parent,
     onLevel = function(level)
       case.levels[#case.levels + 1] = level
+    end,
+    onRidingChanged = function(riding)
+      case.ridingChanges[#case.ridingChanges + 1] = tostring(riding)
     end,
   })
   return case
@@ -60,6 +63,17 @@ return function()
     assert(case.frame:GetScale() == 2, "full portrait size")
     local _, relativeTo, relativePoint = case.frame:GetPoint()
     assert(relativeTo == case.region and relativePoint == "CENTER", "pinned, so it follows the window")
+  end
+
+  -- test_riding_is_reported_on_leaving_and_on_landing_home
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    case.ride.rideHome()
+    assert(table.concat(case.ridingChanges, ",") == "true", "still away while gliding home")
+    tick(case, SECONDS + 0.01)
+    assert(table.concat(case.ridingChanges, ",") == "true,false", "home once landed: " .. table.concat(case.ridingChanges, ","))
   end
 
   -- test_ride_home_restores_the_exact_anchor_scale_and_level

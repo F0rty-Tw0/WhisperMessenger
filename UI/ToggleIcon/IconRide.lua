@@ -38,6 +38,8 @@ function IconRide.Create(frame, options)
   local duration = options.theme.LAYOUT.PHONE_RIDE_SECONDS
   local parent = options.parent
   local onLevel = options.onLevel or function(_level) end
+  -- true as the button leaves for the window, false once it has landed home.
+  local onRidingChanged = options.onRidingChanged or function(_riding) end
 
   ---@type table?
   local home = nil
@@ -119,6 +121,7 @@ function IconRide.Create(frame, options)
       captureHome()
     end
     riding = true
+    onRidingChanged(true)
     setLevel(target.level)
     glide(target.scale, function()
       return screenCenter(target.region)
@@ -140,6 +143,7 @@ function IconRide.Create(frame, options)
     frame:SetPoint(saved.point, saved.relativeTo, saved.relativePoint, saved.x, saved.y)
     frame:SetFrameStrata(saved.strata)
     setLevel(saved.level)
+    onRidingChanged(false)
   end
 
   local function rideHome(onStep)
