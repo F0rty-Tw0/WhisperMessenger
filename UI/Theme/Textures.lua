@@ -86,6 +86,7 @@ local CHANNEL_ICONS = {
   BN_CONVERSATION = "Interface\\ICONS\\Achievement_FeatsOfStrength_Gladiator_09",
   COMMUNITY = "Interface\\ICONS\\Achievement_Reputation_ArgentChampion",
   CHANNEL = "Interface\\ICONS\\Achievement_Profession_Fishing_OldManBarlowned",
+  WM_GROUP = "Interface\\ICONS\\Achievement_GuildPerk_EverybodysFriend",
 }
 
 -- Built-in chat channels by the slug that ends their conversation key

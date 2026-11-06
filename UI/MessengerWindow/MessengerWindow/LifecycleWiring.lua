@@ -57,6 +57,7 @@ function LifecycleWiring.Setup(options)
   }, {
     onClose = options.closeWindow,
     onStartConversation = options.onStartConversation,
+    getTabMode = options.getTabMode,
     onResetWindowPosition = options.onResetWindowPosition,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,

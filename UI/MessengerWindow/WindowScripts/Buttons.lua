@@ -20,7 +20,7 @@ local Buttons = {}
 --   settingsPanels, settingsTabs
 --
 -- options:
---   onClose, onStartConversation, onResetWindowPosition,
+--   onClose, onStartConversation, getTabMode, onResetWindowPosition,
 --   onResetIconPosition, onClearAllChats, setOptionsVisible, isShown,
 --   applyState, refreshSelection
 function Buttons.WireButtons(refs, options)
@@ -76,6 +76,7 @@ function Buttons.WireButtons(refs, options)
 
   local startConversationResult = StartConversationDialog.Wire(newConversationButton, {
     onStartConversation = options.onStartConversation,
+    getTabMode = options.getTabMode,
   }) or {}
 
   local clearAllPopupSetLanguage = function() end

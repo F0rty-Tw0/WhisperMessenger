@@ -25,6 +25,7 @@ return function()
   assert(ChannelType.OFFICER == "OFFICER", "expected OFFICER")
   assert(ChannelType.CHANNEL == "CHANNEL", "expected CHANNEL")
   assert(ChannelType.COMMUNITY == "COMMUNITY", "expected COMMUNITY")
+  assert(ChannelType.WM_GROUP == "WM_GROUP", "expected WM_GROUP")
 
   -- Group chats: every channel except one-to-one whispers
   assertSetEquals(ChannelType.GROUP_CHANNELS, {
@@ -36,6 +37,7 @@ return function()
     "OFFICER",
     "CHANNEL",
     "COMMUNITY",
+    "WM_GROUP",
   }, "GROUP_CHANNELS")
 
   -- Addon-message group channels: the group chats SendAddonMessage can reach

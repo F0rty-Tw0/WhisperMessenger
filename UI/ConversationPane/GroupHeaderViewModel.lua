@@ -15,6 +15,21 @@ local function isGroupChannel(channel)
   return ChannelType.GROUP_CHANNELS[channel] == true
 end
 
+-- The line under a group's title: a channel chat's zone ("Durotar"), or a
+-- party-free group chat's members ("Anna, Bela-Kazzak").
+local function groupStatusText(channel, conversation)
+  if conversation == nil then
+    return nil
+  end
+  if channel == ChannelType.CHANNEL then
+    return conversation.lastZoneLabel
+  end
+  if channel == ChannelType.WM_GROUP and type(conversation.memberSummary) == "string" and conversation.memberSummary ~= "" then
+    return conversation.memberSummary
+  end
+  return nil
+end
+
 -- Build constructs a view-model table describing how the ConversationPane
 -- header should render for the given contact and conversation.
 --
@@ -91,7 +106,7 @@ function GroupHeaderViewModel.Build(contact, conversation)
     showFactionIcon = false,
     showStatusLine = false,
     channelChip = chip,
-    statusText = channel == ChannelType.CHANNEL and conversation and conversation.lastZoneLabel or nil,
+    statusText = groupStatusText(channel, conversation),
   }
 end
 

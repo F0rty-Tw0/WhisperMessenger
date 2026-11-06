@@ -30,6 +30,7 @@ local QUEST_LINK_ADDON_PREFIX = AddonComm.PREFIX_QUEST_LINK
 local REACTION_ADDON_PREFIX = AddonComm.PREFIX_REACTION
 local ADDON_GREETING_PREFIX = AddonComm.PREFIX_ADDON_GREETING
 local CRAFT_SCAN_PREFIX = AddonComm.PREFIX_CRAFT_SCAN
+local GROUP_CHAT_PREFIX = AddonComm.PREFIX_GROUP_CHAT
 
 -- QuestLinkClassic loads after this module in the TOC, so resolve it lazily.
 local function getQuestLinkClassic()
@@ -333,6 +334,13 @@ local function handleUnlockedEvent(state, eventName, payload)
     if payload.prefix == ADDON_GREETING_PREFIX or payload.prefix == CRAFT_SCAN_PREFIX then
       return AddonGreetingIngest.HandleAddonMessage(state, payload)
     end
+    -- Party-free group chats (runtime.groupChats, see Core/GroupChat).
+    if payload.prefix == GROUP_CHAT_PREFIX and payload.channel == "WHISPER" then
+      local groupChats = state.groupChats
+      if type(groupChats) == "table" and type(groupChats.HandleAddonMessage) == "function" then
+        return groupChats.HandleAddonMessage(payload)
+      end
+    end
     return nil
   end
 
@@ -348,7 +356,14 @@ local function handleUnlockedEvent(state, eventName, payload)
   end
 
   if eventName == "CHAT_MSG_SYSTEM" then
-    return FailedWhisper.Handle(state, payload.text)
+    local failed = FailedWhisper.Handle(state, payload.text)
+    -- The same "No player named ..." line answers a group chat send to an
+    -- offline member; the group chat then skips them for a while.
+    local groupChats = state.groupChats
+    if type(groupChats) == "table" and type(groupChats.HandleSystemMessage) == "function" then
+      groupChats.HandleSystemMessage(payload.text)
+    end
+    return failed
   end
 
   if eventName == "CAN_LOCAL_WHISPER_TARGET_RESPONSE" then

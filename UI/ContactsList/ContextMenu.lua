@@ -17,6 +17,7 @@ local GuildInviteMenuEntry = ns.ContactsListGuildInviteMenuEntry or require("Whi
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local ProfileLinksMenuEntry = ns.ContactsListProfileLinksMenuEntry or require("WhisperMessenger.UI.ContactsList.ProfileLinksMenuEntry")
 local ProtectedMenuEntries = ns.ContactsListProtectedMenuEntries or require("WhisperMessenger.UI.ContactsList.ProtectedMenuEntries")
+local GroupChatDialogs = ns.ContactsListGroupChatDialogs or require("WhisperMessenger.UI.ContactsList.GroupChatDialogs")
 
 local ContextMenu = {}
 
@@ -166,6 +167,7 @@ local function openGroupMenu(item, anchorFrame, onMarkUnread, onUpdatePrefs, row
   end
   menuUtil.CreateContextMenu(anchorFrame, function(_owner, rootDescription)
     addMarkUnreadButton(rootDescription, item, onMarkUnread)
+    GroupChatDialogs.AddMenuEntries(rootDescription, item)
     ExportMenuEntry.Add(rootDescription, item)
     addPrefsButtons(rootDescription, item, onUpdatePrefs, true)
     addRowActionButtons(rootDescription, item, rowActions)

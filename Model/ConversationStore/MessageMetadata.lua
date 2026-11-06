@@ -39,8 +39,13 @@ end
 function MessageMetadata.ApplyContact(state, key, conversation, message)
   local oldGuid = conversation.guid
   -- A channel chat is titled after the channel and never takes on its last
-  -- sender's identity (name, guid, class, race, faction).
-  if conversation.channel ~= "CHANNEL" and message.channel ~= "CHANNEL" then
+  -- sender's identity (name, guid, class, race, faction); neither does a
+  -- party-free group chat, titled after the group.
+  local keepsOwnIdentity = conversation.channel == "CHANNEL"
+    or message.channel == "CHANNEL"
+    or conversation.channel == "WM_GROUP"
+    or message.channel == "WM_GROUP"
+  if not keepsOwnIdentity then
     conversation.displayName = message.playerName or conversation.displayName
     conversation.guid = message.guid or conversation.guid
     conversation.className = message.className or conversation.className

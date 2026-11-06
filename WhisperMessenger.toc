@@ -57,6 +57,9 @@ Locale/Localization.lua
 Model/Identity/Factions.lua
 Model/Identity/ChannelType.lua
 Model/Identity/Identity.lua
+Model/GroupChats.lua
+Model/GroupChatProtocol.lua
+Model/GroupChatProtocol/SafeText.lua
 Model/ProfileCharacter.lua
 Model/ProfileLinks.lua
 Model/Retention.lua
@@ -147,6 +150,11 @@ Core/Ingest/GroupChatIngest/PendingEcho.lua
 Core/Ingest/GroupChatIngest/Message.lua
 Core/Ingest/GroupChatIngest/ConversationKey.lua
 Core/Ingest/GroupChatIngest.lua
+Core/GroupChat/Outbox.lua
+Core/GroupChat/ConversationWriter.lua
+Core/GroupChat/Inbox.lua
+Core/GroupChat/GroupChatService.lua
+Core/GroupChat/GroupChatActions.lua
 Core/Ingest/IncomingFilter.lua
 Core/Ingest/ChannelChatIngest.lua
 Core/EventRouter/PendingOutgoing.lua
@@ -255,6 +263,7 @@ UI/ContactsList/AddFriendMenuEntry.lua
 UI/ContactsList/GuildInviteMenuEntry.lua
 UI/ContactsList/NotifyMenuEntries.lua
 UI/ContactsList/ProtectedMenuEntries.lua
+UI/ContactsList/GroupChatDialogs.lua
 UI/ContactsList/ContextMenu.lua
 UI/ContactsList/HoverPointer.lua
 UI/ContactsList/RowHoverOverlay.lua

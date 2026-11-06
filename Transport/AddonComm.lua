@@ -19,6 +19,8 @@ local AddonComm = {}
 -- Wire prefixes; older addon versions speak these, so never rename them.
 AddonComm.PREFIX_REACTION = "WMRX"
 AddonComm.PREFIX_QUEST_LINK = "WMQL"
+-- Party-free group chats: every line goes to each member as an addon whisper.
+AddonComm.PREFIX_GROUP_CHAT = "WMGC"
 -- Crafting addons (RobotsDotTxt convention) announce an automated greeting
 -- with "Q:<AddonName>" on this prefix. Listen-only: a "D:<delay>" reply asks
 -- the sender to fake a human answer, so every send on it is refused.

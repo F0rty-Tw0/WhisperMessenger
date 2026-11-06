@@ -102,6 +102,17 @@ local function applyIncomingEffects(runtime, result)
   end
 end
 
+-- A line in a party-free group chat alerts like a whisper (sound and
+-- flash, muted chats stay quiet) but never opens the window or becomes the
+-- reply target.
+local function applyGroupChatAlert(runtime, conversation)
+  local settings = runtime.accountState and runtime.accountState.settings
+  local now = type(runtime.now) == "function" and runtime.now() or nil
+  if AlertPolicy.ShouldAlert(conversation, settings) and not IncomingAlerts.Throttled(runtime, conversation.conversationKey, now) then
+    IncomingAlerts.Notify(settings)
+  end
+end
+
 function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
   if runtime == nil then
     return nil
@@ -113,14 +124,18 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     local isGreeting = eventName == "CHAT_MSG_ADDON"
       and channel == "WHISPER"
       and (prefix == AddonComm.PREFIX_ADDON_GREETING or prefix == AddonComm.PREFIX_CRAFT_SCAN)
-    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK and not isGreeting then
+    local isGroupChat = eventName == "CHAT_MSG_ADDON" and channel == "WHISPER" and prefix == AddonComm.PREFIX_GROUP_CHAT
+    if prefix ~= AddonComm.PREFIX_REACTION and prefix ~= AddonComm.PREFIX_QUEST_LINK and not isGreeting and not isGroupChat then
       return nil
     end
   end
-  -- System lines only matter while a whisper awaits its echo.
+  -- System lines only matter while a whisper awaits its echo, or right
+  -- after a group chat send (an offline member's "No player named ...").
   if eventName == "CHAT_MSG_SYSTEM" then
     PendingOutgoing.PruneExpired(runtime, type(runtime.now) == "function" and runtime.now() or nil)
-    if next(runtime.pendingOutgoing or {}) == nil then
+    local groupChats = runtime.groupChats
+    local groupChatWaiting = type(groupChats) == "table" and type(groupChats.ExpectsSystemMessage) == "function" and groupChats.ExpectsSystemMessage()
+    if next(runtime.pendingOutgoing or {}) == nil and not groupChatWaiting then
       return nil
     end
   end
@@ -142,6 +157,9 @@ function EventBridge.RouteLiveEvent(runtime, refreshWindow, eventName, ...)
     and ((INCOMING_WHISPER_EVENTS[eventName] and not convertedReactionControl) or (convertedReactionControl and changedSetReaction))
   if shouldApplyIncomingEffects then
     applyIncomingEffects(runtime, result)
+  end
+  if result and type(resultMeta) == "table" and resultMeta.groupChatMessage == true then
+    applyGroupChatAlert(runtime, result)
   end
   if OUTGOING_WHISPER_EVENTS[eventName] and result and result.conversationKey then
     -- Unlike incoming whispers (which stay quiet to avoid yanking the user off

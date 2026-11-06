@@ -6,6 +6,7 @@ end
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
+local GroupChatDialogs = ns.ContactsListGroupChatDialogs or require("WhisperMessenger.UI.ContactsList.GroupChatDialogs")
 
 local StartConversationDialog = {}
 
@@ -95,7 +96,17 @@ function StartConversationDialog.Wire(newConversationButton, options)
     restoreStartConversationDialog(popup, DIALOG_NAME)
   end
 
+  -- On the Groups tab the same button starts a group chat.
+  local getTabMode = options.getTabMode
+  newConversationButton._wmIsGroupMode = function()
+    return type(getTabMode) == "function" and getTabMode() == "groups" and GroupChatDialogs.HasActions()
+  end
+
   newConversationButton:SetScript("OnClick", function()
+    if newConversationButton._wmIsGroupMode() then
+      GroupChatDialogs.ShowCreate()
+      return
+    end
     if type(_G.StaticPopup_Show) ~= "function" then
       return
     end

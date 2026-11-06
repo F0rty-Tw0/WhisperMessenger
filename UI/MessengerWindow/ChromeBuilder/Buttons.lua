@@ -51,10 +51,13 @@ function Buttons.CreateNewConversation(factory, frame, theme)
     newConversationButton:SetScript("OnEnter", function()
       applyVisuals(true)
       if _G.GameTooltip and _G.GameTooltip.SetOwner then
+        -- On the Groups tab the button starts a group chat (set when wired).
+        local groupMode = type(newConversationButton._wmIsGroupMode) == "function" and newConversationButton._wmIsGroupMode()
         _G.GameTooltip:SetOwner(newConversationButton, "ANCHOR_TOP")
-        _G.GameTooltip:SetText(Localization.Text("Start New Whisper"))
+        _G.GameTooltip:SetText(Localization.Text(groupMode and "New Group Chat" or "Start New Whisper"))
         if _G.GameTooltip.AddLine then
-          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, Localization.Text("Open an empty conversation thread."), 1, 1, 1)
+          local line = groupMode and "Chat with several players, no party needed." or "Open an empty conversation thread."
+          pcall(_G.GameTooltip.AddLine, _G.GameTooltip, Localization.Text(line), 1, 1, 1)
         end
         _G.GameTooltip:Show()
       end
