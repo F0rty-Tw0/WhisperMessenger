@@ -57,6 +57,44 @@ return function()
   assert(LocalPlayer.Name() == nil, "a secret name is nil, never compared")
   rawset(_G, "issecretvalue", savedSecret)
 
+  local savedGuid = _G.UnitGUID
+  rawset(_G, "UnitName", function()
+    return "Me"
+  end)
+  rawset(_G, "GetNormalizedRealmName", function()
+    return "Area52"
+  end)
+  rawset(_G, "UnitGUID", function()
+    return "Player-1-SELF"
+  end)
+
+  -- test_is_self_by_guid
+  assert(LocalPlayer.IsSelf("Someone", "Player-1-SELF") == true, "own guid is self")
+
+  -- test_is_self_by_short_name
+  assert(LocalPlayer.IsSelf("Me", nil) == true, "own short name is self")
+
+  -- test_is_self_by_name_realm
+  assert(LocalPlayer.IsSelf("Me-Area52", nil) == true, "own name-realm is self")
+
+  -- test_is_self_false_for_other_player
+  assert(LocalPlayer.IsSelf("Arthas-Area52", "Player-1-OTHER") == false, "other player is not self")
+
+  -- test_is_self_secret_guid_compare_throws
+  do
+    local secretMeta = {
+      __eq = function()
+        error("secret compare")
+      end,
+    }
+    rawset(_G, "UnitGUID", function()
+      return setmetatable({}, secretMeta)
+    end)
+    local ok, result = pcall(LocalPlayer.IsSelf, "Arthas", setmetatable({}, secretMeta))
+    assert(ok and result == false, "a throwing guid compare is not self and does not throw")
+  end
+
+  rawset(_G, "UnitGUID", savedGuid)
   rawset(_G, "UnitName", savedName)
   rawset(_G, "UnitClass", savedClass)
   rawset(_G, "GetNormalizedRealmName", savedRealm)
