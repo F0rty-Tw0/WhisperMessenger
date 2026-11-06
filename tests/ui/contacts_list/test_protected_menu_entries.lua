@@ -81,23 +81,21 @@ return function()
   copy.responder()
   assert(copied == "Jaina-Proudmoore", "copies the nested whisper name, got " .. tostring(copied))
 
-  -- test_copy_entry_copies_bnet_character_name
-  copied = nil
+  -- test_copy_entry_disabled_for_a_name_hidden_by_the_chat_lock
+  local secretName = "Secret-Area52"
+  local savedIsSecret = _G.issecretvalue
+  rawset(_G, "issecretvalue", function(value)
+    return value == secretName
+  end)
   root, copy = newRoot(false)
-  ProtectedMenuEntries.Fix(root, { channel = "BN", displayName = "Friend#1234", gameAccountName = "Thrall-Silvermoon" })
-  copy.responder()
-  assert(copied == "Thrall-Silvermoon", "copies the BNet character, got " .. tostring(copied))
-
-  -- test_copy_entry_drops_forever_server_id_from_bnet_character
-  FlavorCompat.isForever = true
-  copied = nil
-  root, copy = newRoot(false)
-  ProtectedMenuEntries.Fix(root, { channel = "BN", displayName = "Friend#1234", gameAccountName = "Thrall-CAMWOWEU5Realm8PvP" })
-  copy.responder()
-  assert(copied == "Thrall", "Forever copies the bare character, got " .. tostring(copied))
+  ProtectedMenuEntries.Fix(root, { channel = "WOW", displayName = secretName })
+  rawset(_G, "issecretvalue", savedIsSecret)
+  assert(copy.responder == nil, "no responder for a hidden name")
+  assert(copy.enabled == false, "entry with a hidden name is disabled")
 
   -- test_copy_entry_drops_realm_from_whisper_name_on_forever
   -- (Forever's own Copy Character Name copies the name without the realm.)
+  FlavorCompat.isForever = true
   copied = nil
   root, copy = newRoot(false)
   ProtectedMenuEntries.Fix(root, { channel = "WOW", displayName = "Arthas-Area52" })
@@ -107,7 +105,7 @@ return function()
 
   -- test_copy_entry_disabled_without_a_character_name
   root, copy = newRoot(false)
-  ProtectedMenuEntries.Fix(root, { channel = "BN", displayName = "Friend#1234" })
+  ProtectedMenuEntries.Fix(root, { channel = "WOW" })
   assert(copy.responder == nil, "no responder without a character name")
   assert(copy.enabled == false, "blocked entry is disabled instead")
 

@@ -17,16 +17,14 @@ local ProtectedMenuEntries = {}
 
 local NAME_PROMPT = "Press Ctrl+C to copy the name."
 
+-- Only the FRIEND menu has Copy Character Name (BN_FRIEND has none on Retail
+-- or Forever), so the name is always the whisper row's display name.
 local function characterName(item)
   local name = item.displayName
-  if item.channel == "BN" then
-    name = item.gameAccountName
-  end
   if type(name) ~= "string" or SecretValue.Is(name) or name == "" then
     return nil
   end
-  -- WoW: Forever's own Copy Character Name leaves the realm out (a Battle.net
-  -- friend's "realm" there is an internal server id).
+  -- WoW: Forever's own Copy Character Name leaves the realm out.
   if FlavorCompat.isForever then
     name = string.match(name, "^[^%-]+") or name
   end
