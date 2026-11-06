@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local ScrollView = require("WhisperMessenger.UI.ScrollView")
 local TranscriptView = require("WhisperMessenger.UI.ConversationPane.TranscriptView")
 local TranscriptSetup = require("WhisperMessenger.UI.ConversationPane.TranscriptSetup")
@@ -61,13 +62,11 @@ return function()
 
   -- test_url_hyperlink_click_avoids_protected_launch_and_copies_link
 
-  do
+  ManualCopyCapture.With(function(copied)
     local savedExternalEventURL = _G.C_ExternalEventURL
     local savedLaunchURL = _G.LaunchURL
-    local savedClipboardNamespace = _G.C_Clipboard
 
     local launchAttempted = false
-    local copiedUrl = nil
 
     _G.C_ExternalEventURL = {
       LaunchURL = function()
@@ -77,11 +76,6 @@ return function()
     _G.LaunchURL = function()
       launchAttempted = true
     end
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedUrl = text
-      end,
-    }
 
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
@@ -89,12 +83,11 @@ return function()
     transcript.text.scripts.OnHyperlinkClick(transcript.text, "url:https://example.com/help", "https://example.com/help", "LeftButton")
 
     assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
-    assert(copiedUrl == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")
+    assert(copied.text == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")
 
     _G.C_ExternalEventURL = savedExternalEventURL
     _G.LaunchURL = savedLaunchURL
-    _G.C_Clipboard = savedClipboardNamespace
-  end
+  end)
 
   -- test_initial_layout_called
 

@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local assetsLoaded, ReactionAssets = pcall(require, "WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local pickerLoaded, ReactionPicker = pcall(require, "WhisperMessenger.UI.ChatBubble.ReactionPicker")
 local BubbleFrame = require("WhisperMessenger.UI.ChatBubble.BubbleFrame")
@@ -26,7 +27,6 @@ return function()
   local savedUIParent = _G.UIParent
   local savedTooltip = _G.GameTooltip
   local savedChatInfo = _G.C_ChatInfo
-  local savedClipboard = _G.C_Clipboard
 
   local factory = FakeUI.NewFactory()
   local uiParent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -373,14 +373,8 @@ return function()
   end
 
   -- Custom picker preserves a labeled Copy Text action.
-  do
-    local copied
+  ManualCopyCapture.With(function(copied)
     Localization.Configure({ language = "deDE" })
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copied = text
-      end,
-    }
     local parent = factory.CreateFrame("Frame", nil, uiParent)
     parent:SetSize(400, 600)
     local bubble = BubbleFrame.CreateBubble(factory, parent, {
@@ -400,10 +394,10 @@ return function()
     local picker = ReactionPicker.GetFrame()
     assert(picker._copyLabel:GetText() == "Text kopieren", "picker should localize Copy text through current catalog")
     picker._copyButton.scripts.OnClick(picker._copyButton)
-    assert(copied == "copy this reaction target", "Copy Text should preserve existing clipboard path")
+    assert(copied.text == "copy this reaction target", "Copy Text should open the manual copy popup with the text")
     assert(picker.shown == false, "Copy Text should dismiss picker")
     Localization.Configure({ language = "auto" })
-  end
+  end)
 
   -- Censored incoming messages become eligible only after reveal.
   do
@@ -658,5 +652,4 @@ return function()
   _G.UIParent = savedUIParent
   _G.GameTooltip = savedTooltip
   _G.C_ChatInfo = savedChatInfo
-  _G.C_Clipboard = savedClipboard
 end

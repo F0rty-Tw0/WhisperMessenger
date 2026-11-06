@@ -25,24 +25,6 @@ function Clipboard.CopyText(text)
     return false
   end
 
-  if type(_G.C_Clipboard) == "table" then
-    local candidates = { "SetClipboard", "SetClipboardText", "SetText", "CopyText", "CopyToClipboard" }
-    for _, methodName in ipairs(candidates) do
-      local method = _G.C_Clipboard[methodName]
-      if type(method) == "function" then
-        local ok = pcall(method, normalized)
-        if ok then
-          return true
-        end
-
-        ok = pcall(method, _G.C_Clipboard, normalized)
-        if ok then
-          return true
-        end
-      end
-    end
-  end
-
   return PopupUI.ShowManualCopyDialog(normalized)
 end
 

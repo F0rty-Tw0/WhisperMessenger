@@ -105,7 +105,6 @@ read_globals = {
   "C_Timer",
   "C_FriendList",
   "C_Club",
-  "C_Clipboard",
   "C_DateAndTime",
   "C_RestrictedActions",
   "C_XMLUtil",

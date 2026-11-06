@@ -1,4 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
+local ManualCopyCapture = require("tests.helpers.manual_copy_capture")
 local BubbleStructure = require("WhisperMessenger.UI.ChatBubble.BubbleStructure")
 
 return function()
@@ -42,13 +43,11 @@ return function()
   end
 
   -- test_create_structure_avoids_protected_url_launch_and_copies_link
-  do
+  ManualCopyCapture.With(function(copied)
     local savedExternalEventURL = _G.C_ExternalEventURL
     local savedLaunchURL = _G.LaunchURL
-    local savedClipboardNamespace = _G.C_Clipboard
 
     local launchAttempted = false
-    local copiedUrl = nil
 
     _G.C_ExternalEventURL = {
       LaunchURL = function()
@@ -58,21 +57,15 @@ return function()
     _G.LaunchURL = function()
       launchAttempted = true
     end
-    _G.C_Clipboard = {
-      SetClipboard = function(text)
-        copiedUrl = text
-      end,
-    }
 
     local frame = factory.CreateFrame("Frame", nil, nil)
     BubbleStructure.createStructure(frame)
     frame.scripts.OnHyperlinkClick(frame, "url:https://example.com/path?q=1", "https://example.com/path?q=1", "LeftButton")
 
     assert(launchAttempted == false, "expected URL click to avoid protected LaunchURL APIs")
-    assert(copiedUrl == "https://example.com/path?q=1", "expected URL click to copy URL as safe fallback")
+    assert(copied.text == "https://example.com/path?q=1", "expected URL click to copy URL as safe fallback")
 
     _G.C_ExternalEventURL = savedExternalEventURL
     _G.LaunchURL = savedLaunchURL
-    _G.C_Clipboard = savedClipboardNamespace
-  end
+  end)
 end
