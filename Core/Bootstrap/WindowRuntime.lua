@@ -364,6 +364,14 @@ function WindowRuntime.Create(options)
     if window.frame.Hide then
       window.frame:Hide()
     end
+    -- ESC and the game's close-all hide the frame without setWindowVisible:
+    -- acknowledge on every hide so a whisper read in the pane never pops on
+    -- the widget after the window closes.
+    if window.frame.HookScript then
+      window.frame:HookScript("OnHide", function()
+        acknowledgeLatestWidgetPreview(buildContacts())
+      end)
+    end
 
     runtime.window = window
   end

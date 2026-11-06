@@ -112,6 +112,15 @@ local function makeRuntimeOptions()
         end,
         Hide = function(self)
           self.shown = false
+          for _, hook in ipairs(self.onHideHooks or {}) do
+            hook(self)
+          end
+        end,
+        HookScript = function(self, eventName, handler)
+          if eventName == "OnHide" then
+            self.onHideHooks = self.onHideHooks or {}
+            table.insert(self.onHideHooks, handler)
+          end
         end,
       }
       window.composer = {
@@ -410,6 +419,16 @@ return function()
   assert(
     options.accountState.widgetPreviewAcknowledgedAt == 10500,
     "setWindowVisible(false) should acknowledge whispers seen while the window was open"
+  )
+
+  -- ESC (and the game's close-all) hides the frame directly, never through
+  -- setWindowVisible: that close must acknowledge the whisper too.
+  options.accountState.conversations[conversationKey].lastIncomingAt = 11000
+  runtime.window.frame:Show()
+  runtime.window.frame:Hide()
+  assert(
+    options.accountState.widgetPreviewAcknowledgedAt == 11000,
+    "hiding the window frame directly (ESC) should acknowledge whispers seen while open"
   )
 
   -- Composition wire: toggle() routes through ToggleFlow + real ConversationSelector.
