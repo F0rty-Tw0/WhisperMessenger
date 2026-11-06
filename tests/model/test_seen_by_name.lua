@@ -23,6 +23,17 @@ return function()
     assert(store.Get("Bob") == "two", "the new name is stored after the wipe")
   end
 
+  -- test_wipe_frees_cap_room_for_later_names
+  do
+    local store = SeenByName.New({ MAX_ENTRIES = 2 })
+    store.Put("Alice", "one")
+    store.Put("Bob", "two")
+    store.Put("Carol", "three")
+    store.Put("Dave", "four")
+    assert(store.Get("Carol") == "three", "a name stored after the wipe survives the next new name")
+    assert(store.Get("Dave") == "four", "the next new name fits in the room the wipe freed")
+  end
+
   -- test_put_rejects_unkeyable_name
   do
     local store = SeenByName.New({ MAX_ENTRIES = 5 })
