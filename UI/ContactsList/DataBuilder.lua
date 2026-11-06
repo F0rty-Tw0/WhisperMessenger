@@ -68,6 +68,7 @@ local PER_CHARACTER_GROUP_PREFIXES = {
 local ACCOUNT_GROUP_PREFIXES = {
   "bnconv::",
   "community::",
+  "wmgroup::",
 }
 
 local function resolvePlayerGuildName()
