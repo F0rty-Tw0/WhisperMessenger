@@ -73,8 +73,8 @@ local NO_PANEL_TAB = {
 
 -- Mode and unread controller shared by both tab skins. Sets setMode,
 -- getMode, setModes, setShown, setOptionsShown, setUnreadCounts,
--- setLanguage, addPanelTab, setSelectedPanel, getSelectedPanel and
--- setModeClickHandler on toggle, binds each tab's OnClick, and returns the
+-- setLanguage, addPanelTab, setSelectedPanel, getSelectedPanel,
+-- setModeClickHandler and setCurrentModeClickHandler on toggle, binds each tab's OnClick, and returns the
 -- paint function (for hover handlers). The strip shows while more than one
 -- tab is visible and the options page is closed; setModes, addPanelTab and
 -- setOptionsShown apply that through toggle.setShown.
@@ -96,8 +96,8 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local panelTabs = {}
   local selectedPanel = nil
   local modeClickHandler = nil
+  local currentModeClickHandler = nil
   local optionsShown = false
-  local chatView = false
 
   local function paint()
     opts.paint(currentMode, visible, selectedPanel, panelTabs)
@@ -105,7 +105,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
 
   -- Through toggle.setShown looked up now, so the skin's clamp wrapper runs.
   local function applyShown()
-    toggle.setShown(#visible > 1 and not optionsShown and not chatView)
+    toggle.setShown(#visible > 1 and not optionsShown)
   end
 
   local function setMode(mode)
@@ -125,13 +125,17 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   relayout()
   for _, mode in ipairs(TabLayout.MODES) do
     tabsByMode[mode].btn:SetScript("OnClick", function()
-      -- Leaving a panel runs even for the current mode's tab.
-      if selectedPanel ~= nil and modeClickHandler then
+      -- Leaving a panel runs even for the current mode's tab. Read before
+      -- the handler: it clears selectedPanel.
+      local hadPanel = selectedPanel ~= nil
+      if hadPanel and modeClickHandler then
         modeClickHandler(mode)
       end
       if currentMode ~= mode then
         setMode(mode)
         onModeChanged(mode)
+      elseif not hadPanel and currentModeClickHandler then
+        currentModeClickHandler()
       end
     end)
   end
@@ -154,11 +158,6 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   -- The options page covers the panes; the strip hides under it.
   toggle.setOptionsShown = function(shown)
     optionsShown = shown == true
-    applyShown()
-  end
-  -- Phone layout: an open chat fills the window; the tabs belong to the list.
-  toggle.setChatView = function(shown)
-    chatView = shown == true
     applyShown()
   end
   toggle.setUnreadCounts = function(whispersCount, groupsCount, requestsCount, channelsCount)
@@ -208,6 +207,10 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   -- fn(mode) runs on a mode-tab click while a panel is selected.
   toggle.setModeClickHandler = function(fn)
     modeClickHandler = fn
+  end
+  -- fn() runs on a click of the current mode's tab when no panel was selected.
+  toggle.setCurrentModeClickHandler = function(fn)
+    currentModeClickHandler = fn
   end
   return paint
 end
