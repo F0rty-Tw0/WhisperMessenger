@@ -274,4 +274,23 @@ return function()
     assert(env.host.register("ca", panel({ onSplit = 5 })) == false, "non-function onSplit refused")
     assert(not env.host.has("ca"))
   end
+
+  -- test_is_compact_is_true_only_for_a_registered_compact_panel
+  do
+    local env = build(false)
+    env.host.register("slim", panel({ compact = true }))
+    env.host.register("plain", panel())
+    env.host.register("off", panel({ compact = false }))
+    assert(env.host.isCompact("slim") == true, "compact = true")
+    assert(env.host.isCompact("plain") == false, "no flag")
+    assert(env.host.isCompact("off") == false, "compact = false")
+    assert(env.host.isCompact("unknown") == false, "unknown key")
+  end
+
+  -- test_register_refuses_a_non_boolean_compact
+  do
+    local env = build(false)
+    assert(env.host.register("a", panel({ compact = "yes" })) == false, "non-boolean compact refused")
+    assert(not env.host.has("a") and #env.added == 0, "no tab, no entry")
+  end
 end
