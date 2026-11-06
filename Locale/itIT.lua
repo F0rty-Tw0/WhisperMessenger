@@ -518,6 +518,8 @@ local Italian = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Questa versione del gioco non può aprire le assegnazioni dei tasti da qui. Usa il menu di gioco.",
   -- Contact menu: Add friend
   ["Add friend"] = "Aggiungi amico",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "Invita nella gilda",
 }
 
 ns.Locale_itIT = Italian

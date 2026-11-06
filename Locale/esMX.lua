@@ -522,6 +522,8 @@ local Spanish = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versión del juego no puede abrir las asignaciones de teclas desde aquí. Usa el menú del juego.",
   -- Contact menu: Add friend
   ["Add friend"] = "Agregar amigo",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "Invitar a la hermandad",
 }
 
 ns.Locale_esMX = Spanish

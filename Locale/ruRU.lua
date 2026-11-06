@@ -518,6 +518,8 @@ local Russian = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Эта версия игры не может открыть назначения клавиш отсюда. Воспользуйтесь игровым меню.",
   -- Contact menu: Add friend
   ["Add friend"] = "Добавить в друзья",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "Пригласить в гильдию",
 }
 
 ns.Locale_ruRU = Russian

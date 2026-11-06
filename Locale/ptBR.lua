@@ -518,6 +518,8 @@ local Portuguese = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Esta versão do jogo não consegue abrir os atalhos daqui. Use o menu do jogo.",
   -- Contact menu: Add friend
   ["Add friend"] = "Adicionar amigo",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "Convidar para a guilda",
 }
 
 ns.Locale_ptBR = Portuguese

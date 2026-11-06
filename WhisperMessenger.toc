@@ -251,6 +251,7 @@ UI/ContactsList/BlockMenuEntry.lua
 UI/ContactsList/ExportMenuEntry.lua
 UI/ContactsList/ProfileLinksMenuEntry.lua
 UI/ContactsList/AddFriendMenuEntry.lua
+UI/ContactsList/GuildInviteMenuEntry.lua
 UI/ContactsList/NotifyMenuEntries.lua
 UI/ContactsList/ProtectedMenuEntries.lua
 UI/ContactsList/ContextMenu.lua

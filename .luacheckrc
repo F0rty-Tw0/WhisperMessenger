@@ -111,6 +111,7 @@ read_globals = {
   "C_XMLUtil",
   "C_Texture",
   "C_Seasons",
+  "C_GuildInfo",
 
   -- Unit and player info
   "UnitName",
@@ -184,6 +185,7 @@ read_globals = {
   "IsInGroup",
   "IsInRaid",
   "IsInGuild",
+  "CanGuildInvite",
   "IsGuildMember",
   "UnitInParty",
   "UnitInRaid",

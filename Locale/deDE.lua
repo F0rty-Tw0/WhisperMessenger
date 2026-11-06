@@ -518,6 +518,8 @@ local German = {
   ["This game version can't open Key Bindings from here. Use the game menu instead."] = "Diese Spielversion kann die Tastenbelegung nicht von hier öffnen. Nutze stattdessen das Spielmenü.",
   -- Contact menu: Add friend
   ["Add friend"] = "Als Freund hinzufügen",
+  -- Contact menu: Guild invite
+  ["Guild invite"] = "In Gilde einladen",
 }
 
 ns.Locale_deDE = German
