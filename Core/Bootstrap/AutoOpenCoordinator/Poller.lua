@@ -5,6 +5,7 @@ end
 
 -- stylua: ignore start
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
+local ChatPrefill = ns.ChatPrefill or require("WhisperMessenger.Util.ChatPrefill")
 local DirectHooks = ns.BootstrapAutoOpenDirectHooks or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.DirectHooks")
 local ConversationOps = ns.BootstrapAutoOpenConversationOps or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.ConversationOps")
 local EditBoxInterop = ns.BootstrapAutoOpenEditBoxInterop or require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.EditBoxInterop")
@@ -97,6 +98,10 @@ local function processEditBox(runtime, hooks, deps, interceptDeps, editBox)
     return
   end
   if runtime.isCompetitiveContent and runtime.isCompetitiveContent() then
+    return
+  end
+  -- Our own prefill (Guild invite) is opening this box: not a whisper intent.
+  if ChatPrefill.IsOpening() then
     return
   end
 

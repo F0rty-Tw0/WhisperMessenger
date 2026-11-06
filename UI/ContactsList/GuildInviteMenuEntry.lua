@@ -3,6 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local ChatPrefill = ns.ChatPrefill or require("WhisperMessenger.Util.ChatPrefill")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
@@ -15,20 +16,6 @@ local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue
 -- chat box prefilled with "/ginvite <name>" for the player to send: addon code
 -- may not call the protected invite API.
 local GuildInviteMenuEntry = {}
-
--- Current Retail has ChatFrameUtil.OpenChat; older clients and the Classic
--- flavors have the ChatFrame_OpenChat global. Neither → nil.
-local function resolveOpenChat()
-  local util = _G.ChatFrameUtil
-  if type(util) == "table" and type(util.OpenChat) == "function" then
-    return util.OpenChat
-  end
-  if type(_G.ChatFrame_OpenChat) == "function" then
-    return _G.ChatFrame_OpenChat
-  end
-
-  return nil
-end
 
 -- A missing, throwing or secret check answers "no".
 local function callAllows(fn)
@@ -51,7 +38,7 @@ local function isGuildMember(api, name)
 end
 
 function GuildInviteMenuEntry.Add(rootDescription, item)
-  if resolveOpenChat() == nil then
+  if ChatPrefill.Resolve() == nil then
     return
   end
   if item.channel ~= "WOW" or item.displayName == nil then
@@ -69,10 +56,7 @@ function GuildInviteMenuEntry.Add(rootDescription, item)
     return
   end
   rootDescription:CreateButton(Localization.Text("Guild invite"), function()
-    local openChat = resolveOpenChat()
-    if openChat ~= nil then
-      openChat("/ginvite " .. name)
-    end
+    ChatPrefill.Open("/ginvite " .. name)
   end)
 end
 
