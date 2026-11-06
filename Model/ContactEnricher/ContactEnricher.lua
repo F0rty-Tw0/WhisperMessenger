@@ -9,6 +9,7 @@ local Disambiguation = ns.ContactEnricherDisambiguation or require("WhisperMesse
 local ConversationSnapshot = ns.ConversationSnapshot or require("WhisperMessenger.Model.ConversationSnapshot")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.IgnoreList")
+local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 -- stylua: ignore end
 
 local ContactEnricher = {}
@@ -136,7 +137,11 @@ function ContactEnricher.BuildWindowSelectionState(runtime, contacts, buildConta
       local gameInfo = accountInfo.gameAccountInfo
       if BNetStatus.ApplyGameInfoMetadata(selectedContact, gameInfo, runtime) then
         selectedContact.characterName = gameInfo.characterName
-        selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
+        -- WoW: Forever reports an internal server id (e.g. CAMWOWEU5Realm8PvP)
+        -- instead of a realm name, so the header shows the bare name there.
+        if not FlavorCompat.isForever then
+          selectedContact.realm = gameInfo.realmName or gameInfo.realmDisplayName
+        end
       end
     end
   end
