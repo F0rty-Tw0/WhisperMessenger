@@ -26,24 +26,6 @@ local function addFriendFunction()
   return nil
 end
 
-local function isSelf(item, name)
-  if item.guid ~= nil and type(_G.UnitGUID) == "function" then
-    -- The compare itself throws on a secret GUID, so it runs inside the pcall.
-    local ok, same = pcall(function()
-      return _G.UnitGUID("player") == item.guid
-    end)
-    if ok and same then
-      return true
-    end
-  end
-  local own = LocalPlayer.Name()
-  if own == nil then
-    return false
-  end
-  local realm = LocalPlayer.NormalizedRealm()
-  return name == own or (realm ~= nil and name == own .. "-" .. realm)
-end
-
 -- Without C_FriendList the friends list can't be read; the game itself
 -- answers "already your friend" then.
 local function isFriend(item, name)
@@ -66,7 +48,7 @@ function AddFriendMenuEntry.Add(rootDescription, item)
     return
   end
   local name = IgnoreList.CharacterName(item.displayName, item.guid)
-  if SecretValue.Is(name) or isSelf(item, name) or isFriend(item, name) then
+  if SecretValue.Is(name) or LocalPlayer.IsSelf(name, item.guid) or isFriend(item, name) then
     return
   end
   rootDescription:CreateButton(Localization.Text("Add friend"), function()

@@ -85,6 +85,7 @@ Model/PresenceCache.lua
 Model/ZoneWatch.lua
 Model/SeenLevel.lua
 Model/SenderLevelBackfill.lua
+Model/SeenByName.lua
 Model/SeenZone.lua
 Model/SenderLevel.lua
 Model/RosterLookup.lua
