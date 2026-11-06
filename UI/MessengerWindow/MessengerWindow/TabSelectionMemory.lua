@@ -19,8 +19,12 @@ function TabSelectionMemory.Create(options)
   end
   local handleContactSelected = options.handleContactSelected or function() end
   local refreshSelection = options.refreshSelection or function() end
+  local clearSelection = options.clearSelection or function()
+    refreshSelection({})
+  end
 
-  -- Phone layout: a tab shows its list, never a chat it last had open.
+  -- Phone layout: a tab shows its list, never a chat it last had open;
+  -- clearSelection drops the runtime's selection too (default: empty pane).
   local rememberSelections = options.rememberSelections ~= false
 
   local tabSelections = { whispers = nil, groups = nil, channels = nil, requests = nil }
@@ -44,7 +48,11 @@ function TabSelectionMemory.Create(options)
   local function restoreSelection(newMode)
     local nextKey = tabSelections[newMode]
     if not nextKey or not rememberSelections then
-      refreshSelection({})
+      if rememberSelections then
+        refreshSelection({})
+      else
+        clearSelection()
+      end
       return
     end
 

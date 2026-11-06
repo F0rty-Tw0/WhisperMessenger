@@ -23,4 +23,39 @@ return function()
     assert(selected == 0, "the list stays the list")
     assert(cleared == 1, "the tab still refreshes")
   end
+
+  -- test_phone_tab_switch_clears_through_clear_selection
+  do
+    local cleared, refreshed, selected = 0, 0, 0
+    local memory = TabSelectionMemory.Create({
+      rememberSelections = false,
+      clearSelection = function()
+        cleared = cleared + 1
+      end,
+      refreshSelection = function()
+        refreshed = refreshed + 1
+      end,
+      handleContactSelected = function()
+        selected = selected + 1
+      end,
+    })
+    memory.onTabModeSwapSelection("groups", "whispers")
+    assert(cleared == 1 and refreshed == 0 and selected == 0, "cleared " .. cleared .. " refreshed " .. refreshed)
+  end
+
+  -- test_classic_tab_switch_with_nothing_remembered_ignores_clear_selection
+  do
+    local cleared, refreshed = 0, 0
+    local memory = TabSelectionMemory.Create({
+      rememberSelections = true,
+      clearSelection = function()
+        cleared = cleared + 1
+      end,
+      refreshSelection = function()
+        refreshed = refreshed + 1
+      end,
+    })
+    memory.onTabModeSwapSelection("groups", "whispers")
+    assert(cleared == 0 and refreshed == 1, "cleared " .. cleared .. " refreshed " .. refreshed)
+  end
 end
