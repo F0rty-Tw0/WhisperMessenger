@@ -36,6 +36,17 @@ return function()
     env.restore()
   end
 
+  -- test_roster_names_are_kept_without_the_local_realm
+  do
+    local env = GroupChatEnv.New()
+    local service = newService(env)
+    deliver(env, service, "Lone Gazer-Kazzak", "R~" .. GROUP_ID .. "~G~Lone Gazer-Kazzak,Me-Kazzak,Bela-Ragnaros")
+    local members = service.registry[GROUP_ID].members
+    assert(#members == 2 and members[1] == "Lone Gazer" and members[2] == "Bela-Ragnaros", table.concat(members, "|"))
+    assert(lastMessage(env).text == "Lone Gazer added you to the group chat.")
+    env.restore()
+  end
+
   -- test_message_is_stored_as_an_incoming_line_and_may_alert
   do
     local env = GroupChatEnv.New()
@@ -44,7 +55,7 @@ return function()
     local conversation, meta = deliver(env, service, "Anna-Kazzak", "M~" .. GROUP_ID .. "~hi |TInterface\\X:99|t" .. string.rep("!", 260))
     assert(meta and meta.groupChatMessage == true, "a chat line may alert")
     local message = lastMessage(env)
-    assert(message.direction == "in" and message.playerName == "Anna-Kazzak", "sender kept")
+    assert(message.direction == "in" and message.playerName == "Anna", "sender kept")
     assert(message.text == "hi " .. string.rep("!", 260), "text cleaned and reassembled")
     assert(conversation.unreadCount == 1, "counts unread")
     env.restore()
@@ -65,8 +76,8 @@ return function()
     local service = newService(env)
     deliver(env, service, "Anna-Kazzak", "M~" .. GROUP_ID .. "~hello")
     local group = service.registry[GROUP_ID]
-    assert(group and #group.members == 1 and group.members[1] == "Anna-Kazzak", "placeholder group with the sender")
-    assert(env.bodiesTo("Anna-Kazzak")[1] == "Q~" .. GROUP_ID, "asks for the member list")
+    assert(group and #group.members == 1 and group.members[1] == "Anna", "placeholder group with the sender")
+    assert(env.bodiesTo("Anna")[1] == "Q~" .. GROUP_ID, "asks for the member list")
     env.restore()
   end
 
@@ -77,7 +88,7 @@ return function()
     deliver(env, service, "Anna-Kazzak", "R~" .. GROUP_ID .. "~G~Anna-Kazzak,Me-Kazzak")
     env.sent = {}
     deliver(env, service, "Anna-Kazzak", "Q~" .. GROUP_ID)
-    assert(env.bodiesTo("Anna-Kazzak")[1] == "R~" .. GROUP_ID .. "~G~Me-Kazzak,Anna-Kazzak")
+    assert(env.bodiesTo("Anna")[1] == "R~" .. GROUP_ID .. "~G~Me-Kazzak,Anna-Kazzak")
     env.sent = {}
     deliver(env, service, "Stranger-Kazzak", "Q~" .. GROUP_ID)
     assert(#env.sent == 0, "strangers get no member list")
@@ -119,7 +130,7 @@ return function()
     env.sent = {}
     local conversation = deliver(env, service, "Anna-Kazzak", "M~" .. GROUP_ID .. "~still there?")
     assert(conversation == nil, "a left group stores nothing")
-    assert(env.bodiesTo("Anna-Kazzak")[1] == "L~" .. GROUP_ID, "the sender is told again")
+    assert(env.bodiesTo("Anna")[1] == "L~" .. GROUP_ID, "the sender is told again")
     deliver(env, service, "Anna-Kazzak", "R~" .. GROUP_ID .. "~G~Anna-Kazzak,Me-Kazzak")
     assert(service.registry[GROUP_ID].left == nil, "a new invite rejoins")
     env.restore()
@@ -144,10 +155,10 @@ return function()
     local service = newService(env)
     local key = service.Create("Anna")
     service.HandleSystemMessage("No player named 'Anna' is currently playing.")
-    assert(service.outbox.IsSkipped("Anna-Kazzak"))
+    assert(service.outbox.IsSkipped("Anna"))
     local group = service.FindByConversationKey(key)
     deliver(env, service, "Anna-Kazzak", "Q~" .. group.id)
-    assert(not service.outbox.IsSkipped("Anna-Kazzak"), "hearing from them means they are online")
+    assert(not service.outbox.IsSkipped("Anna"), "hearing from them means they are online")
     env.restore()
   end
 end

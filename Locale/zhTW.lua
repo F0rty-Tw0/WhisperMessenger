@@ -548,6 +548,12 @@ local TraditionalChinese = {
   ["%s added %s."] = "%s加入了%s。",
   ["%s left the group chat."] = "%s離開了群聊。",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "建立群聊：/wmsg group 名稱, 名稱-伺服器",
+  ["Pick friends"] = "選擇好友",
+  ["Create group chat"] = "建立群聊",
+  ["Add to group chat"] = "加入群聊",
+  ["No friends to show"] = "沒有可顯示的好友",
+  ["offline"] = "離線",
+  ["Type names…"] = "輸入名稱…",
 }
 
 ns.Locale_zhTW = TraditionalChinese

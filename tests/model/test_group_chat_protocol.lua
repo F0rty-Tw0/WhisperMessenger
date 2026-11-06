@@ -21,8 +21,9 @@ return function()
 
   -- test_roster_drops_malformed_member_names
   do
-    local decoded = Protocol.Decode("R~abcd1234~G~Anna-Kazzak,bad|name,x y")
-    assert(#decoded.members == 1 and decoded.members[1] == "Anna-Kazzak", "only clean names survive")
+    local decoded = Protocol.Decode("R~abcd1234~G~Anna-Kazzak,bad|name,Lone Gazer-Realm, ")
+    assert(#decoded.members == 2, "only clean names survive")
+    assert(decoded.members[1] == "Anna-Kazzak" and decoded.members[2] == "Lone Gazer-Realm", "two-word names are names")
   end
 
   -- test_leave_and_query_bodies

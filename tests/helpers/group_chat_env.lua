@@ -23,7 +23,9 @@ function GroupChatEnv.New(options)
   end
   _G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 
-  local env = { sent = {}, clock = options.now or 1000, refuse = 0 }
+  -- refuse: how many sends the game throttles next; reject: how many it
+  -- refuses for good (an unknown target, say).
+  local env = { sent = {}, clock = options.now or 1000, refuse = 0, reject = 0 }
   env.chatApi = {
     RegisterAddonMessagePrefix = function()
       return true
@@ -31,7 +33,11 @@ function GroupChatEnv.New(options)
     SendAddonMessage = function(prefix, payload, channel, target)
       if env.refuse > 0 then
         env.refuse = env.refuse - 1
-        return false
+        return 3
+      end
+      if env.reject > 0 then
+        env.reject = env.reject - 1
+        return 9
       end
       env.sent[#env.sent + 1] = { prefix = prefix, payload = payload, channel = channel, target = target }
       return true

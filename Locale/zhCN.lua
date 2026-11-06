@@ -548,6 +548,12 @@ local SimplifiedChinese = {
   ["%s added %s."] = "%s添加了%s。",
   ["%s left the group chat."] = "%s退出了群聊。",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "创建群聊：/wmsg group 名字, 名字-服务器",
+  ["Pick friends"] = "选择好友",
+  ["Create group chat"] = "创建群聊",
+  ["Add to group chat"] = "添加到群聊",
+  ["No friends to show"] = "没有可显示的好友",
+  ["offline"] = "离线",
+  ["Type names…"] = "输入名字…",
 }
 
 ns.Locale_zhCN = SimplifiedChinese

@@ -27,21 +27,37 @@ return function()
     assert(GroupChats.IdFromConversationKey("wmgroup::bad") == nil, "malformed ids are rejected")
   end
 
-  -- test_full_name_adds_the_local_realm_to_bare_names
+  -- test_full_name_drops_the_local_realm
   do
-    assert(GroupChats.FullName("Anna", "Kazzak") == "Anna-Kazzak")
-    assert(GroupChats.FullName(" Bela-Argent Dawn ", "Kazzak") == "Bela-ArgentDawn")
-    assert(GroupChats.FullName("Anna", nil) == "Anna", "without a realm the bare name stays")
+    assert(GroupChats.FullName("Anna", "Kazzak") == "Anna", "a bare name stays bare")
+    assert(GroupChats.FullName("Anna-Kazzak", "Kazzak") == "Anna", "the local realm goes")
+    assert(GroupChats.FullName("anna-KAZZAK", "Kazzak") == "anna", "realms compare without case")
+    assert(GroupChats.FullName(" Bela-Argent Dawn ", "Kazzak") == "Bela-ArgentDawn", "other realms stay, without spaces")
     assert(GroupChats.FullName("", "Kazzak") == nil)
     assert(GroupChats.FullName("bad|name", "Kazzak") == nil, "escape codes are not names")
     assert(GroupChats.FullName("-Kazzak", "Kazzak") == nil, "a realm alone is not a name")
+    assert(GroupChats.FullName("Anna-", "Kazzak") == nil, "a dangling hyphen is not a name")
+  end
+
+  -- test_full_name_keeps_two_word_names
+  do
+    assert(GroupChats.FullName("Lone  Gazer", "CAMWOWEU5Realm2PvP") == "Lone Gazer", "WoW: Forever names keep their space")
+    assert(GroupChats.FullName("Lone Gazer-CAMWOWEU5Realm2PvP", "CAMWOWEU5Realm2PvP") == "Lone Gazer")
+    assert(GroupChats.FullName("Lone Gazer-Other Realm", "CAMWOWEU5Realm2PvP") == "Lone Gazer-OtherRealm")
+  end
+
+  -- test_qualify_adds_the_local_realm_for_the_wire
+  do
+    assert(GroupChats.Qualify("Lone Gazer", "Kazzak") == "Lone Gazer-Kazzak")
+    assert(GroupChats.Qualify("Bela-Ragnaros", "Kazzak") == "Bela-Ragnaros", "a realm already there stays")
+    assert(GroupChats.Qualify("Anna", nil) == "Anna", "no realm known, nothing added")
   end
 
   -- test_parse_names_dedupes_and_drops_self
   do
-    local names = GroupChats.ParseNames("Anna, bela; ANNA-Kazzak, Me, Csilla-Ragnaros,,", "Kazzak", "Me-Kazzak")
-    assert(#names == 3, "expected 3 names, got " .. #names)
-    assert(names[1] == "Anna-Kazzak" and names[2] == "bela-Kazzak" and names[3] == "Csilla-Ragnaros", table.concat(names, " "))
+    local names = GroupChats.ParseNames("Anna, bela; ANNA-Kazzak, Me, Csilla-Ragnaros, Lone Gazer,,", "Kazzak", "Me")
+    assert(#names == 4, "expected 4 names, got " .. #names)
+    assert(names[1] == "Anna" and names[2] == "bela" and names[3] == "Csilla-Ragnaros" and names[4] == "Lone Gazer", table.concat(names, "|"))
   end
 
   -- test_clean_name_strips_separators_and_caps_length
@@ -63,7 +79,7 @@ return function()
   -- test_create_names_the_group_after_its_members_when_unnamed
   do
     local registry = {}
-    local group = GroupChats.Create(registry, { id = "abcd1234", members = { "Anna-Kazzak", "Me-Kazzak" }, createdAt = 5, selfName = "Me-Kazzak" })
+    local group = GroupChats.Create(registry, { id = "abcd1234", members = { "Anna-Kazzak", "Me" }, createdAt = 5, selfName = "Me" })
     assert(registry.abcd1234 == group, "group is stored by id")
     assert(group.name == "Anna", "unnamed group takes its members' names, got " .. group.name)
     assert(#group.members == 1, "the local character is never a member of its own list")
@@ -103,10 +119,10 @@ return function()
     assert(#joined == 2 and joined[1].id == "aaaaaaaa" and joined[2].id == "bbbbbbbb", "joined groups, oldest first")
   end
 
-  -- test_member_summary_drops_the_local_realm
+  -- test_member_summary_lists_members
   do
-    local group = { members = { "Anna-Kazzak", "Bela-Ragnaros" } }
-    assert(GroupChats.MemberSummary(group, "Kazzak") == "Anna, Bela-Ragnaros", GroupChats.MemberSummary(group, "Kazzak"))
+    local group = { members = { "Anna", "Bela-Ragnaros" } }
+    assert(GroupChats.MemberSummary(group) == "Anna, Bela-Ragnaros", GroupChats.MemberSummary(group))
   end
 
   -- test_ensure_creates_the_registry_once

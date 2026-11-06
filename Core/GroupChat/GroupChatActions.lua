@@ -6,6 +6,8 @@ end
 local GroupChats = ns.GroupChats or require("WhisperMessenger.Model.GroupChats")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local ChatPrint = ns.ChatPrint or require("WhisperMessenger.Util.ChatPrint")
+local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
+local FriendCandidates = ns.FriendCandidates or require("WhisperMessenger.Transport.FriendCandidates")
 
 -- What the player does with group chats from the window, the contact menu
 -- and "/wmsg group": each action runs on the service, reports a refusal in
@@ -17,7 +19,8 @@ local function groupIdOf(item)
 end
 
 -- deps: runtime, service (GroupChatService), windowRuntime
--- (selectConversation), print (defaults to ChatPrint.Print).
+-- (selectConversation), print (defaults to ChatPrint.Print), friendEnv
+-- (overrides the game's friend lists, for FriendCandidates).
 function GroupChatActions.Create(deps)
   local runtime = deps.runtime or {}
   local service = deps.service
@@ -91,6 +94,20 @@ function GroupChatActions.Create(deps)
     end
     refresh(item.conversationKey)
     return true
+  end
+
+  -- Friends the picker offers, minus the given names.
+  function actions.Candidates(exclude)
+    local env = deps.friendEnv or FriendCandidates.GameEnv()
+    env.localRealm = LocalPlayer.NormalizedRealm()
+    env.selfName = service.SelfName()
+    env.exclude = exclude
+    return FriendCandidates.Collect(env)
+  end
+
+  function actions.Members(item)
+    local group = GroupChats.Find(service.registry, groupIdOf(item))
+    return group and group.members or {}
   end
 
   function actions.CanManage(item)

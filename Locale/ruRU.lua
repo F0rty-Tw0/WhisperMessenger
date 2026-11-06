@@ -548,6 +548,12 @@ local Russian = {
   ["%s added %s."] = "%s добавил %s.",
   ["%s left the group chat."] = "%s покинул групповой чат.",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "Создать групповой чат: /wmsg group Имя, Имя-Сервер",
+  ["Pick friends"] = "Выбрать друзей",
+  ["Create group chat"] = "Создать групповой чат",
+  ["Add to group chat"] = "Добавить в групповой чат",
+  ["No friends to show"] = "Нет друзей для показа",
+  ["offline"] = "не в сети",
+  ["Type names…"] = "Ввести имена…",
 }
 
 ns.Locale_ruRU = Russian

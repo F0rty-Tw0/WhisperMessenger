@@ -44,13 +44,17 @@ function Inbox.New(runtime, service)
     return IgnoreList.Lookup(filters, sender, current) ~= nil
   end
 
+  -- Roster names carry their realm; keep them the local way.
   local function addFromRoster(group, sender, members)
-    local selfName = service.SelfName()
+    local realm = LocalPlayer.NormalizedRealm()
     local incoming = { sender }
     for _, member in ipairs(members or {}) do
-      incoming[#incoming + 1] = member
+      local name = GroupChats.FullName(member, realm)
+      if name then
+        incoming[#incoming + 1] = name
+      end
     end
-    return GroupChats.AddMembers(group, incoming, selfName)
+    return GroupChats.AddMembers(group, incoming, service.SelfName())
   end
 
   local function namesList(names)

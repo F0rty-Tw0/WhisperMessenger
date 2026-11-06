@@ -258,7 +258,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
   if button.SetScript then
     button:SetScript("OnClick", function()
       if groupChatMode() then
-        GroupChatDialogs.ShowCreate()
+        GroupChatDialogs.ShowCreate(button)
         return
       end
       if type(_G.StaticPopup_Show) == "function" then

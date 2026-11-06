@@ -548,6 +548,12 @@ local Portuguese = {
   ["%s added %s."] = "%s adicionou %s.",
   ["%s left the group chat."] = "%s saiu do chat de grupo.",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "Para criar um chat de grupo: /wmsg group Nome, Nome-Reino",
+  ["Pick friends"] = "Escolher amigos",
+  ["Create group chat"] = "Criar chat de grupo",
+  ["Add to group chat"] = "Adicionar ao chat de grupo",
+  ["No friends to show"] = "Nenhum amigo para mostrar",
+  ["offline"] = "offline",
+  ["Type names…"] = "Digitar nomes…",
 }
 
 ns.Locale_ptBR = Portuguese

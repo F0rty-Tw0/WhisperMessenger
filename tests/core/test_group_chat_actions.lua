@@ -54,6 +54,28 @@ return function()
     env.restore()
   end
 
+  -- test_candidates_come_from_the_friend_lists_minus_self
+  do
+    local env, service = setup()
+    local actions = GroupChatActions.Create({
+      runtime = env.runtime,
+      service = service,
+      friendEnv = {
+        friendList = {
+          GetNumFriends = function()
+            return 3
+          end,
+          GetFriendInfoByIndex = function(index)
+            return ({ { name = "Anna", connected = true }, { name = "Me", connected = true }, { name = "Bela-Kazzak", connected = true } })[index]
+          end,
+        },
+      },
+    })
+    local candidates = actions.Candidates({ "Anna" })
+    assert(#candidates == 1 and candidates[1].name == "Bela", "self and excluded left out, local realm dropped")
+    env.restore()
+  end
+
   -- test_menu_actions_change_the_group_and_redraw
   do
     local env, service, actions, log = setup()
@@ -65,6 +87,7 @@ return function()
     assert(service.FindByConversationKey(item.conversationKey).name == "Crew")
     assert(actions.Leave(item) == true)
     assert(not actions.CanManage(item), "a left chat has nothing to manage")
+    assert(actions.Members(item)[1] == "Anna" and actions.Members(item)[2] == "Bela", "members for the picker")
     assert(#log.refreshed == 3, "each change redraws")
     assert(actions.AddMembers(item, "Csilla") == false, "a left chat takes nobody")
     assert(actions.CanManage({ conversationKey = "wow::WOW::anna" }) == false, "whisper rows are not group chats")

@@ -4,9 +4,12 @@ if type(ns) ~= "table" then
 end
 
 -- Group chats that need no party: a named list of characters, kept
--- account-wide in accountState.groupChats by id. Members are full
--- "Name-Realm" names and never include the local character; every client
--- keeps its own copy, synced over the group chat addon messages.
+-- account-wide in accountState.groupChats by id. Members never include the
+-- local character. A member on the player's own realm is kept as the bare
+-- name ("Anna", or "Lone Gazer" in WoW: Forever, where names have two
+-- words); one on another realm as "Name-Realm". Every client keeps its own
+-- copy, synced over the group chat addon messages, which always carry the
+-- realm (see Qualify).
 local GroupChats = {}
 
 GroupChats.MAX_MEMBERS = 10
@@ -67,25 +70,55 @@ function GroupChats.IdFromConversationKey(conversationKey)
   return id
 end
 
--- "Name-Realm" for a typed name: spaces go (realms are written without
--- them) and a bare name gets the local realm. nil for anything that cannot
--- be a character name.
+local function realmKey(realm)
+  if type(realm) ~= "string" then
+    return nil
+  end
+  local key = string.gsub(realm, "%s+", "")
+  if key == "" then
+    return nil
+  end
+  return key
+end
+
+-- A typed or received name as this client keeps it: spaces inside the name
+-- kept (two-word names), the realm written without spaces and dropped when
+-- it is the local one. nil for anything that cannot be a character name.
 function GroupChats.FullName(name, localRealm)
   name = trim(name)
-  if name == nil then
+  if name == nil or string.find(name, "[,~|%c]") or string.find(name, "^%-") then
     return nil
   end
-  name = string.gsub(name, "%s+", "")
-  if string.find(name, "[,~|]") or string.match(name, "^%-") or string.match(name, "%-$") then
+  local base, realm = string.match(name, "^([^%-]+)%-(.*)$")
+  if base == nil then
+    base = name
+  end
+  base = trim(string.gsub(base, "%s+", " "))
+  if base == nil then
     return nil
   end
-  if string.find(name, "-", 1, true) == nil then
-    if type(localRealm) ~= "string" or localRealm == "" then
-      return name
-    end
-    return name .. "-" .. string.gsub(localRealm, "%s+", "")
+  if realm == nil then
+    return base
   end
-  return name
+  realm = realmKey(realm)
+  if realm == nil or string.find(realm, "-", 1, true) then
+    return nil
+  end
+  local localKey = realmKey(localRealm)
+  if localKey and lower(realm) == lower(localKey) then
+    return base
+  end
+  return base .. "-" .. realm
+end
+
+-- The name with its realm, for the wire: a bare (same-realm) name gets the
+-- local realm so a client on another realm reads it right.
+function GroupChats.Qualify(name, localRealm)
+  local localKey = realmKey(localRealm)
+  if type(name) ~= "string" or localKey == nil or string.find(name, "-", 1, true) then
+    return name
+  end
+  return name .. "-" .. localKey
 end
 
 function GroupChats.SameName(a, b)
@@ -193,7 +226,7 @@ function GroupChats.AddMembers(group, names, selfName)
     if #group.members >= GroupChats.MAX_MEMBERS then
       break
     end
-    if not GroupChats.SameName(name, selfName) and not containsName(group.members, name) then
+    if type(name) == "string" and not GroupChats.SameName(name, selfName) and not containsName(group.members, name) then
       group.members[#group.members + 1] = name
       added[#added + 1] = name
     end
@@ -244,19 +277,10 @@ function GroupChats.Joined(registry)
   return joined
 end
 
--- "Anna, Bela-Kazzak": the members for a header line, realm kept only when
--- it differs from localRealm.
-function GroupChats.MemberSummary(group, localRealm)
-  local names = {}
-  for _, member in ipairs(group and group.members or {}) do
-    local short, realm = string.match(member, "^([^%-]+)%-(.+)$")
-    if short and localRealm and realm == string.gsub(localRealm, "%s+", "") then
-      names[#names + 1] = short
-    else
-      names[#names + 1] = member
-    end
-  end
-  return table.concat(names, ", ")
+-- "Anna, Bela-Kazzak": the members for a header line. Same-realm members
+-- are already kept without their realm.
+function GroupChats.MemberSummary(group)
+  return table.concat(group and group.members or {}, ", ")
 end
 
 ns.GroupChats = GroupChats

@@ -69,7 +69,7 @@ end
 local function decodeMembers(list)
   local members = {}
   for name in string.gmatch(list or "", "[^,]+") do
-    if not string.find(name, "[%s|~]") then
+    if not string.find(name, "[|~%c]") and string.match(name, "%S") then
       members[#members + 1] = name
     end
   end

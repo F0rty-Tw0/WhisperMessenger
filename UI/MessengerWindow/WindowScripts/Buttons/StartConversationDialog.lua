@@ -104,7 +104,7 @@ function StartConversationDialog.Wire(newConversationButton, options)
 
   newConversationButton:SetScript("OnClick", function()
     if newConversationButton._wmIsGroupMode() then
-      GroupChatDialogs.ShowCreate()
+      GroupChatDialogs.ShowCreate(newConversationButton)
       return
     end
     if type(_G.StaticPopup_Show) ~= "function" then

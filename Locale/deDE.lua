@@ -548,6 +548,12 @@ local German = {
   ["%s added %s."] = "%s hat %s hinzugefügt.",
   ["%s left the group chat."] = "%s hat den Gruppenchat verlassen.",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "Gruppenchat starten: /wmsg group Name, Name-Realm",
+  ["Pick friends"] = "Freunde auswählen",
+  ["Create group chat"] = "Gruppenchat erstellen",
+  ["Add to group chat"] = "Zum Gruppenchat hinzufügen",
+  ["No friends to show"] = "Keine Freunde vorhanden",
+  ["offline"] = "offline",
+  ["Type names…"] = "Namen eingeben…",
 }
 
 ns.Locale_deDE = German

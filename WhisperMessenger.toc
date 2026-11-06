@@ -126,6 +126,7 @@ Persistence/SavedState/SavedState.lua
 Transport/Types.lua
 Transport/Availability.lua
 Transport/AddonComm.lua
+Transport/FriendCandidates.lua
 Transport/WhisperGateway.lua
 Core/Ingest/ChannelChatIngest/ChannelKey.lua
 Transport/ChannelIndex.lua

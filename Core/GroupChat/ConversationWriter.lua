@@ -40,7 +40,7 @@ function ConversationWriter.Ensure(runtime, group, now)
   conversation.conversationKey = conversationKey
   conversation.groupChatId = group.id
   conversation.title = group.name
-  conversation.memberSummary = GroupChats.MemberSummary(group, LocalPlayer.NormalizedRealm())
+  conversation.memberSummary = GroupChats.MemberSummary(group)
   conversation.leftGroup = group.left == true or nil
   return conversation, conversationKey
 end
@@ -67,14 +67,13 @@ end
 function ConversationWriter.AppendOutgoing(runtime, group, text, now)
   local _, conversationKey = ConversationWriter.Ensure(runtime, group, now)
   local playerName = LocalPlayer.Name()
-  local realm = LocalPlayer.NormalizedRealm()
   local message = {
     id = nextMessageId("wmg-out-", now),
     direction = "out",
     kind = "user",
     text = text,
     sentAt = now,
-    playerName = playerName and realm and (playerName .. "-" .. realm) or playerName,
+    playerName = playerName,
     senderName = playerName,
     senderClassTag = LocalPlayer.ClassTag(),
     channel = ChannelType.WM_GROUP,

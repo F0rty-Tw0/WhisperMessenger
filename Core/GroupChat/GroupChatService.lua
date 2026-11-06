@@ -42,27 +42,25 @@ function GroupChatService.Create(options)
 
   local service = { registry = registry, outbox = outbox }
 
+  -- The local character as members are kept: the bare name.
   function service.SelfName()
-    local name = LocalPlayer.Name()
-    local realm = LocalPlayer.NormalizedRealm()
-    if name and realm then
-      return name .. "-" .. realm
-    end
-    return name
+    return GroupChats.FullName(LocalPlayer.Name(), LocalPlayer.NormalizedRealm())
   end
 
-  function service.DisplayName(fullName)
-    return GroupChats.MemberSummary({ members = { fullName } }, LocalPlayer.NormalizedRealm())
+  function service.DisplayName(name)
+    return name
   end
 
   local function isPaused()
     return type(runtime.isCompetitiveContent) == "function" and runtime.isCompetitiveContent() == true
   end
 
+  -- Everyone with their realm, the sender first.
   local function fullMemberList(group)
-    local members = { service.SelfName() }
+    local realm = LocalPlayer.NormalizedRealm()
+    local members = { GroupChats.Qualify(service.SelfName(), realm) }
     for _, member in ipairs(group.members) do
-      members[#members + 1] = member
+      members[#members + 1] = GroupChats.Qualify(member, realm)
     end
     return members
   end

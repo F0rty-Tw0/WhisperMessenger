@@ -548,6 +548,12 @@ local Korean = {
   ["%s added %s."] = "%s 님이 %s 님을 추가했습니다.",
   ["%s left the group chat."] = "%s 님이 그룹 채팅에서 나갔습니다.",
   ["To start a group chat: /wmsg group Name, Name-Realm"] = "그룹 채팅 시작: /wmsg group 이름, 이름-서버",
+  ["Pick friends"] = "친구 선택",
+  ["Create group chat"] = "그룹 채팅 만들기",
+  ["Add to group chat"] = "그룹 채팅에 추가",
+  ["No friends to show"] = "표시할 친구가 없습니다",
+  ["offline"] = "오프라인",
+  ["Type names…"] = "이름 입력…",
 }
 
 ns.Locale_koKR = Korean

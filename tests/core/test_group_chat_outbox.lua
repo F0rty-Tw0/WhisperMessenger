@@ -59,6 +59,29 @@ return function()
     env.restore()
   end
 
+  -- test_a_refused_frame_is_dropped_without_retry
+  do
+    local env = GroupChatEnv.New()
+    local outbox = newOutbox(env)
+    env.reject = 1
+    outbox.Send({ "Anna-Kazzak", "Bela-Kazzak" }, "M~abcd1234~hi")
+    assert(outbox.PendingCount() == 0, "nothing waits")
+    assert(#env.timer.pending == 0, "no retry is scheduled")
+    assert(#env.sent == 1 and env.sent[1].target == "Bela-Kazzak", "the next member still gets it")
+    env.restore()
+  end
+
+  -- test_not_found_matches_names_printed_with_a_space
+  do
+    local env = GroupChatEnv.New()
+    local outbox = newOutbox(env)
+    outbox.Send({ "LoneGazer-CAMWOWEU5Realm2PvP", "Lone Gazer" }, "M~abcd1234~hi")
+    assert(outbox.ClaimNotFound("No player named 'LoneGazer CAMWOWEU5Realm2PvP' is currently playing.") == "LoneGazer-CAMWOWEU5Realm2PvP")
+    assert(outbox.ClaimNotFound("No player named 'Lone Gazer' is currently playing.") == "Lone Gazer", "two-word names match")
+    assert(Outbox.NotFoundName("You are now AFK.", "No player named '%s' is currently playing.") == nil, "other lines are not this message")
+    env.restore()
+  end
+
   -- test_not_found_marks_the_recipient_offline_for_a_while
   do
     local env = GroupChatEnv.New()

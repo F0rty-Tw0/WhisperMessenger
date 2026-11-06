@@ -68,7 +68,7 @@ return function()
     env.runtime.pendingOutgoing = {}
     service.Create("Anna")
     EventBridge.RouteLiveEvent(env.runtime, nil, "CHAT_MSG_SYSTEM", "No player named 'Anna' is currently playing.")
-    assert(service.outbox.IsSkipped("Anna-Kazzak"), "the offline member is skipped")
+    assert(service.outbox.IsSkipped("Anna"), "the offline member is skipped")
     env.restore()
   end
 
