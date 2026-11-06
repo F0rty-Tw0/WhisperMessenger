@@ -83,6 +83,7 @@ Right-click a contact to **mute** them, set a **nickname**, add a private **note
 
 - **Whispers** holds your private conversations.
 - **Groups** collects party, raid, instance and guild chat, with reactions and @mention highlights.
+- **Group chats without a party**: start a chat with several friends from the Groups tab (or `/wmsg group Name, Name-Realm`). Everyone needs Whisper Messenger. Right-click the chat to add people, rename it or leave.
 - **Channels** (optional) turns Trade, General, Local Defense, LFG and your custom channels into chats of their own. Pick them under Options > Chats.
 - **Requests** (optional) holds whispers from strangers until you accept or delete them. Turn it on under Options > Behavior.
 

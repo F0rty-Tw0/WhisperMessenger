@@ -9,11 +9,17 @@ ns.SlashCommands = SlashCommands
 function SlashCommands.Register(handlers)
   handlers = handlers or {}
 
-  -- "/wmsg perf" prints the debug counters; anything else toggles.
+  -- "/wmsg perf" prints the debug counters, "/wmsg group <names>" starts a
+  -- group chat; anything else toggles.
   local function handleCommand(msg)
     local word = type(msg) == "string" and string.lower(string.match(msg, "^%s*(.-)%s*$")) or ""
     if word == "perf" and handlers.perf then
       handlers.perf()
+      return
+    end
+    local command, rest = string.match(type(msg) == "string" and msg or "", "^%s*(%S+)%s*(.-)%s*$")
+    if command and string.lower(command) == "group" and handlers.groupChat then
+      handlers.groupChat(rest)
       return
     end
     if handlers.toggle then

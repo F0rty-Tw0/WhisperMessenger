@@ -43,6 +43,36 @@ local function isWhisperChannel(channel)
   return channel == "WOW" or channel == "BN"
 end
 
+local function groupChatService(runtime)
+  local service = runtime.groupChats
+  if type(service) == "table" and type(service.Send) == "function" and type(service.Notice) == "function" then
+    return service
+  end
+  return nil
+end
+
+-- A party-free group chat sends through runtime.groupChats, not the game's
+-- chat channels.
+local function groupChatNotice(runtime, conversation)
+  local service = groupChatService(runtime)
+  if service == nil then
+    return Localization and Localization.Text("Group chat not found.") or "Group chat not found."
+  end
+  return service.Notice(conversation.conversationKey)
+end
+
+local function sendGroupChat(runtime, payload)
+  local service = groupChatService(runtime)
+  if service == nil or not service.Send(payload.conversationKey, payload.text) then
+    return false
+  end
+  -- No chat echo comes back for these lines, so redraw here.
+  if type(runtime.refreshWindow) == "function" then
+    runtime.refreshWindow(payload.conversationKey)
+  end
+  return true
+end
+
 local function isForeignCharacterGroup(runtime, conversation, getPlayerGuildName)
   local conversationKey = conversation and conversation.conversationKey
   if type(conversationKey) ~= "string" then
@@ -108,6 +138,10 @@ function GroupSendPolicy.Create(options)
       return nil
     end
 
+    if channel == ChannelType.WM_GROUP then
+      return groupChatNotice(runtime, conversation)
+    end
+
     -- Foreign-character group history is read-only from this character.
     if isForeignCharacterGroup(runtime, conversation, getPlayerGuildName) then
       return Localization and Localization.Text("Another character's history — read-only.") or "Another character's history — read-only."
@@ -159,6 +193,9 @@ function GroupSendPolicy.Create(options)
   local function sendPayload(payload)
     if type(payload) ~= "table" then
       return false
+    end
+    if payload.channel == ChannelType.WM_GROUP then
+      return sendGroupChat(runtime, payload)
     end
     if not isSupportedGroupChannel(payload.channel) then
       return sendNormal(payload, payload.text)

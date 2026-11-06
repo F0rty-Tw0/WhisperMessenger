@@ -261,6 +261,7 @@ function MessengerWindow.Create(factory, options)
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     onStartConversation = options.onStartConversation,
+    getTabMode = contactsRuntime.getTabMode,
     isShown = isShown,
     windowGeometry = windowGeometry,
     frame = frame,

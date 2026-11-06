@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeControls = ns.UIHelpersNativeControls or require("WhisperMessenger.UI.Helpers.NativeControls")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
+local GroupChatDialogs = ns.ContactsListGroupChatDialogs or require("WhisperMessenger.UI.ContactsList.GroupChatDialogs")
 local applyColor = UIHelpers.applyColor
 local applyColorTexture = UIHelpers.applyColorTexture
 local createCircularIcon = UIHelpers.createCircularIcon
@@ -247,8 +248,19 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
     end
   end
 
+  -- "groups" and "channels" swap to their own copy. The button starts a
+  -- whisper, or a group chat on the Groups tab; Channels has none.
+  local mode = "whispers"
+  local function groupChatMode()
+    return mode == "groups" and GroupChatDialogs.HasActions()
+  end
+
   if button.SetScript then
     button:SetScript("OnClick", function()
+      if groupChatMode() then
+        GroupChatDialogs.ShowCreate(button)
+        return
+      end
       if type(_G.StaticPopup_Show) == "function" then
         _G.StaticPopup_Show("WHISPER_MESSENGER_START_CONVERSATION")
       end
@@ -256,16 +268,14 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
   end
 
   button:Show()
-  -- "groups" and "channels" swap to their own copy; the Start New Whisper
-  -- button is whisper-only, so it hides there.
-  local mode = "whispers"
   container.setLanguage = function()
     title:SetText(Localization.Text(EMPTY_COPY[mode].title))
     subtitle:SetText(Localization.Text(EMPTY_COPY[mode].subtitle))
+    local label = Localization.Text(groupChatMode() and "New Group Chat" or "Start New Whisper")
     if buttonText then
-      buttonText:SetText(Localization.Text("Start New Whisper"))
+      buttonText:SetText(label)
     else
-      button:SetText(Localization.Text("Start New Whisper"))
+      button:SetText(label)
     end
   end
   container.applyTheme = function()
@@ -280,7 +290,7 @@ function HeaderElements.createEmptyState(pane, selectedContact, factory, nativeC
   end
   container.setMode = function(nextMode)
     mode = EMPTY_COPY[nextMode] and nextMode or "whispers"
-    button:SetShown(mode == "whispers")
+    button:SetShown(mode == "whispers" or groupChatMode())
     container.setLanguage()
   end
   container.setLanguage()

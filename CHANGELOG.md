@@ -6,6 +6,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
+- Group chats without a party. On the Groups tab, click the new-conversation button (or type /wmsg group followed by player names, separated by commas) to start a chat with several friends at once, like a messenger group: tick friends from your friend list and Battle.net friends in the same game, or type any other names. Two-word names in WoW: Forever work too. Everyone in it needs Whisper Messenger. Right-click the chat to add people, rename it or leave. You can add up to 10 people. Offline members don't get the messages sent while they're away, and friends on other servers can join only if their server is connected to yours.
 - Fixed: Copy Character Name in the right-click menu of a chat or a message no longer shows an error. It opens a small box with the name selected, ready to copy with Ctrl+C. In WoW: Forever it copies the name without the realm, like the game's own menu does.
 - Fixed: In WoW: Forever, a Battle.net friend's character name at the top of the chat no longer ends in a long server code.
 - Fixed: Typing /r and a space in the game's chat box now opens the messenger on the last whisper you received, like the reply key does. Anything you typed after /r carries over into the messenger's text box.

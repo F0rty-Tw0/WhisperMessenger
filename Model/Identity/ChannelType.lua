@@ -16,6 +16,8 @@ ChannelType.GUILD = "GUILD"
 ChannelType.OFFICER = "OFFICER"
 ChannelType.CHANNEL = "CHANNEL"
 ChannelType.COMMUNITY = "COMMUNITY"
+-- A Whisper Messenger group chat: a list of characters, no party needed.
+ChannelType.WM_GROUP = "WM_GROUP"
 
 -- Group chats: every channel except one-to-one whispers.
 ChannelType.GROUP_CHANNELS = {
@@ -27,6 +29,7 @@ ChannelType.GROUP_CHANNELS = {
   [ChannelType.OFFICER] = true,
   [ChannelType.CHANNEL] = true,
   [ChannelType.COMMUNITY] = true,
+  [ChannelType.WM_GROUP] = true,
 }
 
 -- Subset of GROUP_CHANNELS that SendAddonMessage can broadcast to; group

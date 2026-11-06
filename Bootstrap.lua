@@ -45,6 +45,12 @@ function Bootstrap.Initialize(factory, options)
   ns._channelMessageState = runtime.channelMessageStore
   runtime.messagingNotice = nil
 
+  -- Group chats that need no party. Each joined group keeps a row even
+  -- after retention or "Clear all chats" removed its history.
+  local GroupChatService = loadModule("WhisperMessenger.Core.GroupChat.GroupChatService", "GroupChatService")
+  runtime.groupChats = GroupChatService.Create({ runtime = runtime, timer = _G.C_Timer })
+  runtime.groupChats.EnsureConversations()
+
   -- Record the current character's class tag under their profileId so
   -- group-chat rows originating from any character on this account can
   -- be tinted with the owner's class color (even after switching alts).
@@ -210,10 +216,20 @@ function Bootstrap.Initialize(factory, options)
     windowRuntime = windowRuntime,
   })
 
+  local GroupChatActions = loadModule("WhisperMessenger.Core.GroupChat.GroupChatActions", "GroupChatActions")
+  local GroupChatDialogs = loadModule("WhisperMessenger.UI.ContactsList.GroupChatDialogs", "ContactsListGroupChatDialogs")
+  local groupChatActions = GroupChatActions.Create({
+    runtime = runtime,
+    service = runtime.groupChats,
+    windowRuntime = windowRuntime,
+  })
+  GroupChatDialogs.SetActions(groupChatActions)
+
   -- Register addon-message prefixes before live events begin routing.
   local AddonComm = loadModule("WhisperMessenger.Transport.AddonComm", "AddonComm")
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_QUEST_LINK)
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_REACTION)
+  AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_GROUP_CHAT)
   -- Listen-only: crafting addons announce automated greetings here.
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_ADDON_GREETING)
   AddonComm.RegisterPrefix(_G.C_ChatInfo, AddonComm.PREFIX_CRAFT_SCAN)
@@ -247,6 +263,7 @@ function Bootstrap.Initialize(factory, options)
   SlashCommands.Register({
     toggle = runtime.toggle,
     replyToLast = ReplyToLast.Create({ runtime = runtime, windowRuntime = windowRuntime }),
+    groupChat = groupChatActions.SlashCommand,
     perf = function()
       for _, line in ipairs(PerfCounters.Lines(addonName)) do
         ChatPrint.Print(line)

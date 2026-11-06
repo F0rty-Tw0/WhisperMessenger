@@ -19,6 +19,8 @@ local AddonComm = {}
 -- Wire prefixes; older addon versions speak these, so never rename them.
 AddonComm.PREFIX_REACTION = "WMRX"
 AddonComm.PREFIX_QUEST_LINK = "WMQL"
+-- Party-free group chats: every line goes to each member as an addon whisper.
+AddonComm.PREFIX_GROUP_CHAT = "WMGC"
 -- Crafting addons (RobotsDotTxt convention) announce an automated greeting
 -- with "Q:<AddonName>" on this prefix. Listen-only: a "D:<delay>" reply asks
 -- the sender to fake a human answer, so every send on it is refused.
@@ -133,6 +135,45 @@ function AddonComm.Send(api, prefix, payload, target)
   end
 
   return didSendSucceed(pcall(send, prefix, payload, "WHISPER", target))
+end
+
+-- The send result codes that mean "too many messages, try again later".
+local function isThrottleResult(result)
+  local codes = _G.Enum and _G.Enum.SendAddonMessageResult
+  local addonThrottle = codes and codes.AddonMessageThrottle or 3
+  local channelThrottle = codes and codes.ChannelThrottle or 8
+  return result == addonThrottle or result == channelThrottle
+end
+
+local function sendOutcome(callSucceeded, ...)
+  if not callSucceeded then
+    return false, false
+  end
+  local count = select("#", ...)
+  local result
+  if count > 0 then
+    result = select(count, ...)
+  end
+  if result == nil or result == true or result == 0 then
+    return true, false
+  end
+  return false, isThrottleResult(result)
+end
+
+-- Like Send, but also tells a throttled send (worth trying again) from one
+-- the game refused for good. Returns sent, throttled.
+function AddonComm.SendWhisperDetailed(api, prefix, payload, target)
+  if not isSendablePrefix(prefix) or type(payload) ~= "string" or payload == "" or #payload > MAX_PAYLOAD_BYTES then
+    return false, false
+  end
+  if type(target) ~= "string" or target == "" then
+    return false, false
+  end
+  local send = resolveSend(api)
+  if send == nil then
+    return false, false
+  end
+  return sendOutcome(pcall(send, prefix, payload, "WHISPER", target))
 end
 
 function AddonComm.SendGroup(api, prefix, payload, channel)

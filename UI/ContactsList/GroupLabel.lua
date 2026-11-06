@@ -19,6 +19,7 @@ local CHANNEL_LABELS = {
   [ChannelType.OFFICER] = "Officer",
   [ChannelType.CHANNEL] = "Channel",
   [ChannelType.COMMUNITY] = "Community",
+  [ChannelType.WM_GROUP] = "Group chat",
 }
 
 local SESSION_CHANNELS = {
@@ -111,6 +112,10 @@ function GroupLabel.LabelForChannelAndTitle(channel, title, displayName)
       return title
     end
     return "Community"
+  end
+  -- A party-free group chat goes by the name its members gave it.
+  if channel == ChannelType.WM_GROUP and type(title) == "string" and title ~= "" then
+    return title
   end
   return GroupLabel.LabelForChannel(channel)
 end
