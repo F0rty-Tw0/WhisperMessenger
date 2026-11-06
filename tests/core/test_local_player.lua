@@ -94,6 +94,22 @@ return function()
     assert(ok and result == false, "a throwing guid compare is not self and does not throw")
   end
 
+  -- test_is_self_without_guid_is_not_self_when_own_guid_is_nil
+  rawset(_G, "UnitGUID", function()
+    return nil
+  end)
+  assert(LocalPlayer.IsSelf("Arthas-Area52", nil) == false, "two missing guids do not make a match")
+
+  -- test_is_self_without_realm_matches_short_name_only
+  rawset(_G, "GetNormalizedRealmName", function()
+    return nil
+  end)
+  do
+    local ok, result = pcall(LocalPlayer.IsSelf, "Me-Area52", nil)
+    assert(ok and result == false, "no realm: a name-realm is not self and does not throw")
+  end
+  assert(LocalPlayer.IsSelf("Me", nil) == true, "no realm: own short name is still self")
+
   rawset(_G, "UnitGUID", savedGuid)
   rawset(_G, "UnitName", savedName)
   rawset(_G, "UnitClass", savedClass)
