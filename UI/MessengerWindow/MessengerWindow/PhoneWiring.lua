@@ -108,9 +108,6 @@ function PhoneWiring.Attach(hooks, options)
     end,
     onChatView = function(inChat)
       chrome.setPhoneChatView(inChat)
-      if tabToggle and tabToggle.setChatView then
-        tabToggle.setChatView(inChat)
-      end
     end,
     getSelectedKey = options.getSelectedKey,
     clearSelection = function()
@@ -127,6 +124,9 @@ function PhoneWiring.Attach(hooks, options)
       end
     end,
   })
+  if tabToggle and tabToggle.setCurrentModeClickHandler then
+    tabToggle.setCurrentModeClickHandler(navigator.back)
+  end
 
   local rideHandlers = {
     beginDrag = function()
