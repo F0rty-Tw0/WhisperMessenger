@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local sizeValue = UIHelpers.sizeValue
 local applyColorTexture = UIHelpers.applyColorTexture
@@ -157,7 +158,9 @@ local function bindRow(factory, parent, row, index, item, options)
   -- For group rows, override the display name with the channel label.
   if isGroup and row.title then
     if row.title.SetText then
-      row.title:SetText(GroupLabel.ForItem(item))
+      local label = GroupLabel.ForItem(item)
+      GlyphCoverage.Apply(row.title, label)
+      row.title:SetText(label)
     end
     -- Tint the group row's title by the OWNER character's class color.
     -- `ownerClassTag` is populated from the saved player→class map when

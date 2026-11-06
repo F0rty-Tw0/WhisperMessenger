@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local AddonGreetingText = ns.ChatBubbleAddonGreetingText or require("WhisperMessenger.UI.ChatBubble.AddonGreetingText")
@@ -80,7 +81,9 @@ function RowElements.updateNameLabel(row, item, parentWidth)
 
   local width = nameLabelWidth(row, parentWidth)
   row.title:SetWidth(width)
-  row.title:SetText(fitTextWithEllipsis(row.title, rowName(item), width))
+  local name = rowName(item)
+  GlyphCoverage.Apply(row.title, name)
+  row.title:SetText(fitTextWithEllipsis(row.title, name, width))
   applyClassColor(row.title, item and item.classTag or nil, Theme.COLORS.text_primary)
 end
 
@@ -144,7 +147,9 @@ function RowElements.updateFactionIcon(row, item, ns_ref)
     textBudget = math.max(0, titleMaxWidth - Theme.LAYOUT.CONTACT_FACTION_SIZE - NAME_TO_ICON_GAP - FACTION_ICON_RIGHT_PADDING)
   end
   if row.title then
-    row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, rowName(item), textBudget))
+    local name = rowName(item)
+    GlyphCoverage.Apply(row.title, name)
+    row.title:SetText(UIHelpers.fitTextWithEllipsis(row.title, name, textBudget))
     applyClassColor(row.title, item.classTag, Theme.COLORS.text_primary)
   end
 
@@ -220,16 +225,22 @@ function RowElements.updatePreview(row, item, parentWidth, hideMessagePreview, s
   -- nothing about message content).
   if item.isTyping then
     setTextColor(row.preview, Theme.COLORS.online or Theme.COLORS.text_secondary)
-    row.preview:SetText(Localization.Text("typing…"))
+    local typing = Localization.Text("typing…")
+    GlyphCoverage.Apply(row.preview, typing)
+    row.preview:SetText(typing)
     return
   end
   setTextColor(row.preview, Theme.COLORS.text_secondary)
   if item.draft ~= nil and item.conversationKey ~= selectedConversationKey then
-    row.preview:SetText(draftPreviewText(item.draft, hideMessagePreview))
+    local draftText = draftPreviewText(item.draft, hideMessagePreview)
+    GlyphCoverage.Apply(row.preview, draftText)
+    row.preview:SetText(draftText)
     return
   end
   local preview = AddonGreetingText.ForPreview(item.conversation, item.lastPreview)
-  row.preview:SetText(hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(preview))
+  local previewText = hideMessagePreview and "" or ReactionAssets.FormatTextForDisplay(preview)
+  GlyphCoverage.Apply(row.preview, previewText)
+  row.preview:SetText(previewText)
 end
 
 function RowElements.createPreview(row, item, parentWidth)

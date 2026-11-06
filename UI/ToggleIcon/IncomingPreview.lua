@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
@@ -161,9 +162,13 @@ function IncomingPreview.Create(factory, frame, options)
   end
 
   local function renderContent(senderName, messageText, classTag, detail)
-    previewSenderLabel:SetText(type(senderName) == "string" and senderName or "")
+    local senderText = type(senderName) == "string" and senderName or ""
+    GlyphCoverage.Apply(previewSenderLabel, senderText)
+    previewSenderLabel:SetText(senderText)
     paintSenderLabel(classTag)
-    previewMessageLabel:SetText(ReactionAssets.FormatTextForDisplay(messageText))
+    local bodyText = ReactionAssets.FormatTextForDisplay(messageText)
+    GlyphCoverage.Apply(previewMessageLabel, bodyText)
+    previewMessageLabel:SetText(bodyText)
     detailRow.render(detail)
 
     local classIconPath = theme.ClassIcon(classTag)

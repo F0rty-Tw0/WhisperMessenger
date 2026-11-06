@@ -5,6 +5,7 @@ end
 
 local FontFamilies = ns.ThemeFontFamilies or require("WhisperMessenger.UI.Theme.FontFamilies")
 local FontColors = ns.ThemeFontColors or require("WhisperMessenger.UI.Theme.FontColors")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 
 local Fonts = {}
 
@@ -196,6 +197,14 @@ local function applyFonts()
     if hasShadow and fontObj.SetShadowOffset then
       fontObj:SetShadowOffset(SHADOW_OFFSET_X, SHADOW_OFFSET_Y)
       fontObj:SetShadowColor(0, 0, 0, SHADOW_ALPHA)
+    end
+
+    -- The multi-script chain already falls back per glyph.
+    if inheritedSource then
+      GlyphCoverage.Register(fontObj, nil)
+    else
+      local shadow = hasShadow and { SHADOW_OFFSET_X, SHADOW_OFFSET_Y, SHADOW_ALPHA } or nil
+      GlyphCoverage.UpdateTwin(wmName, fontObj, size, flags, shadow)
     end
   end
 end

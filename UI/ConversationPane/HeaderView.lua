@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local GlyphCoverage = ns.ThemeGlyphCoverage or require("WhisperMessenger.UI.Theme.GlyphCoverage")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
 local StatusLine = ns.ConversationPaneStatusLine or require("WhisperMessenger.UI.ConversationPane.StatusLine")
@@ -175,7 +176,9 @@ function HeaderView.Refresh(view, selectedContact, conversation, status)
     if view.headerName then
       if hasContact then
         local title = (vm and vm.title) or (DisplayName.Format(selectedContact.displayName) or "")
-        view.headerName:SetText(HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup))
+        local headerTitle = HeaderContactExtras.Title(selectedContact, title, vm and vm.isGroup)
+        GlyphCoverage.Apply(view.headerName, headerTitle)
+        view.headerName:SetText(headerTitle)
         if vm and vm.isGroup then
           local groupClassTag = selectedContact.ownerClassTag
           if groupClassTag == nil and not selectedContact.ownerProfileId then
