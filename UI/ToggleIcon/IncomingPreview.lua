@@ -73,6 +73,7 @@ function IncomingPreview.Create(factory, frame, options)
   local lastPreviewClassTag = nil
   -- A preview another addon put here; its callbacks come pre-wrapped.
   local externalEntry = nil
+  local suppressed = false
 
   local function notifyExternalChanged(changed)
     if changed and options.onExternalChanged then
@@ -196,7 +197,9 @@ function IncomingPreview.Create(factory, frame, options)
     if hold.route(hasMessage and meta or nil, false) == "ignore" then
       return
     end
-    if not hasMessage then
+    -- Docked: the whisper is in the open window's list, and closing it
+    -- acknowledges the whisper, so the card never needs to show.
+    if not hasMessage or suppressed then
       clearIncomingPreview()
       return
     end
@@ -238,12 +241,26 @@ function IncomingPreview.Create(factory, frame, options)
     externalEntry = entry
     renderContent(entry.sender, entry.text, entry.classTag, entry.detail)
     fitWidth()
-    if previewFrame:IsVisible() then
+    if suppressed then
+      return
+    elseif previewFrame:IsVisible() then
       entry.onShown()
     else
       previewFrame:Show()
     end
     notifyExternalChanged(true)
+  end
+
+  -- The button sits on the open window, where the card would cover the title
+  -- bar. Another addon's card waits and comes back once the button is home.
+  local function setSuppressed(on)
+    suppressed = on == true
+    if suppressed and externalEntry == nil then
+      clearIncomingPreview()
+    elseif externalEntry ~= nil then
+      previewFrame:SetShown(not suppressed)
+      notifyExternalChanged(true)
+    end
   end
 
   local function isExternalShown()
@@ -274,6 +291,7 @@ function IncomingPreview.Create(factory, frame, options)
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = setExternalPreview,
     isExternalShown = isExternalShown,
+    setSuppressed = setSuppressed,
     applyPreviewPosition = positioner.apply,
     applyTheme = applyTheme,
     replyHold = hold,

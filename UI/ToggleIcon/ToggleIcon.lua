@@ -220,6 +220,7 @@ function ToggleIcon.Create(factory, options)
     parent = parent,
     isLocked = isLocked,
     onPositionChanged = options.onPositionChanged,
+    onRidingChanged = incomingPreview.setSuppressed,
     onLevel = function(level)
       badge:SetFrameLevel(level + BADGE_LEVEL_OFFSET)
     end,
