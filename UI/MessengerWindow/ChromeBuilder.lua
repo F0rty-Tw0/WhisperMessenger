@@ -21,6 +21,15 @@ local MarkAllReadButton = ns.MessengerWindowChromeBuilderMarkAllReadButton
 local TitleBarLayout = ns.MessengerWindowChromeBuilderTitleBarLayout or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.TitleBarLayout")
 local ChromeBuilder = {}
 
+-- The phone layout's icon spot for a look with no portrait of its own.
+local function createCornerIconSlot(factory, frame)
+  local L = Theme.LAYOUT
+  local slot = factory.CreateFrame("Frame", nil, frame)
+  slot:SetSize(L.PHONE_ICON_SLOT_SIZE, L.PHONE_ICON_SLOT_SIZE)
+  slot:SetPoint("CENTER", frame, "TOPLEFT", L.PHONE_ICON_SLOT_X, L.PHONE_ICON_SLOT_Y)
+  return slot
+end
+
 local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed, phoneLayout)
   local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed, phoneLayout)
   if frame.SetResizeBounds then
@@ -143,7 +152,14 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local options_ = Buttons.CreateOptions(factory, frame, Theme)
   local back = Buttons.CreateBack(factory, frame, Theme)
   local resize = ResizeGrip.Create(factory, frame)
+  local iconSlot = phoneLayout and chrome.iconSlot or nil
+  local iconSlotClearance = 0
+  if phoneLayout and iconSlot == nil then
+    iconSlot = createCornerIconSlot(factory, frame)
+    iconSlotClearance = Theme.LAYOUT.PHONE_ICON_SLOT_CLEARANCE
+  end
   local titleBarParts = {
+    leftClearance = iconSlotClearance,
     frame = frame,
     titleBar = chrome.titleBar,
     title = title,
@@ -240,6 +256,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setPatchNotesGlow = patchNotes.setGlowing,
     setMarkAllReadShown = setMarkAllReadShown,
     setPhoneChatView = setPhoneChatView,
+    iconSlot = iconSlot,
     titleBar = chrome.titleBar,
   }
 end

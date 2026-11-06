@@ -50,7 +50,9 @@ return function()
     assert(case.frame:GetAlpha() == 0, "the real window waits, full size and unseen")
     step(0, 0)
     assert(case.ghost:IsShown(), "the panel shows")
-    assert(case.ghost.width == 42 and case.ghost.height == 42, "starts as the icon, got " .. tostring(case.ghost.width))
+    assert(case.ghost.width <= 1 and case.ghost.height <= 1, "starts as a point, got " .. tostring(case.ghost.width))
+    local _, _, _, x, y = case.ghost:GetPoint()
+    assert(x == 101 and y == 741, "at the icon's centre, got " .. tostring(x) .. "," .. tostring(y))
   end
 
   -- test_panel_grows_with_the_shared_clock_and_the_window_never_scales
@@ -58,8 +60,8 @@ return function()
     local case = build()
     local step = case.animation.beginOpen(case.icon)
     step(0.25, 0.5)
-    assert(case.ghost.width == 42 + (360 - 42) * 0.5, "half way across, got " .. tostring(case.ghost.width))
-    assert(case.ghost.height == 42 + (640 - 42) * 0.5, "half way up, got " .. tostring(case.ghost.height))
+    assert(case.ghost.width == 180, "half way across, got " .. tostring(case.ghost.width))
+    assert(case.ghost.height == 320, "half way up, got " .. tostring(case.ghost.height))
     assert(case.frame:GetScale() == 1, "the real window is never scaled")
   end
 
@@ -100,9 +102,27 @@ return function()
     step(0, 0)
     assert(case.ghost:IsShown() and case.ghost.width == 360, "starts as the window")
     step(0.5, 0.5)
-    assert(case.ghost.width == 360 + (42 - 360) * 0.5, "shrinking, got " .. tostring(case.ghost.width))
+    assert(case.ghost.width == 180, "shrinking, got " .. tostring(case.ghost.width))
+    step(0.99, 0.99)
+    assert(case.ghost.width < 4 and case.ghost.height < 7, "ends as a point under the icon, got " .. tostring(case.ghost.width))
     step(1, 1)
     assert(not case.ghost:IsShown(), "gone at the icon")
+  end
+
+  -- test_the_panels_corner_never_leaves_the_round_icon
+  do
+    local radius = 21
+    for _, begin in ipairs({ "beginOpen", "beginClose" }) do
+      local case = build()
+      local step = case.animation[begin](case.icon)
+      for i = 0, 9 do
+        local p = i / 10
+        step(p, p)
+        local _, _, _, x, y = case.ghost:GetPoint()
+        local dx, dy = x - 101, y - 741
+        assert(dx * dx + dy * dy <= radius * radius, begin .. ": corner outside the icon at p=" .. p)
+      end
+    end
   end
 
   -- test_closing_mid_open_releases_the_window

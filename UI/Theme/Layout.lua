@@ -33,8 +33,13 @@ local Layout = {
   PHONE_WINDOW_MIN_HEIGHT = 420,
   PHONE_RIDE_FRAME_LEVEL = 3000,
   PHONE_RIDE_SECONDS = 0.24,
-  -- Without a portrait the button hangs off the window's corner, this far in.
-  PHONE_CORNER_OVERLAP = 6,
+  -- The icon's spot on a window with no portrait of its own: centred this far
+  -- from the top-left corner, like the Retail portrait. The title buttons
+  -- start CLEARANCE further right to make room.
+  PHONE_ICON_SLOT_SIZE = 46,
+  PHONE_ICON_SLOT_X = 16,
+  PHONE_ICON_SLOT_Y = -6,
+  PHONE_ICON_SLOT_CLEARANCE = 40,
   PHONE_SLIDE_SECONDS = 0.2,
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,

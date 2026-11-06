@@ -18,6 +18,7 @@ local PANEL_FADE_START = 0.85
 -- Under the raised window (level 2000, see WindowStrata), so the window fades
 -- in over a solid panel; under the button (PHONE_RIDE_FRAME_LEVEL) too.
 local PANEL_LEVEL = 1990
+local MIN_PANEL_SIZE = 1
 
 -- 0 before start, rising to 1 at t = 1.
 local function ramp(t, start)
@@ -38,6 +39,19 @@ local function rectOf(region)
   end
   local scale = region:GetEffectiveScale()
   return { left = left * scale, right = right * scale, top = top * scale, bottom = bottom * scale }
+end
+
+-- The panel grows from a point at the icon's centre, not the icon's square:
+-- the icon is round, so the square's corners would show around it. From a
+-- point, the panel's corner stays behind the icon all the way to the window's.
+local function centerPointOf(region)
+  local rect = rectOf(region)
+  if rect == nil then
+    return nil
+  end
+  local x = (rect.left + rect.right) / 2
+  local y = (rect.top + rect.bottom) / 2
+  return { left = x, right = x, top = y, bottom = y }
 end
 
 local function buildPanel(factory, parent, theme)
@@ -81,7 +95,7 @@ function PhoneOpenAnimation.Attach(frame, options)
     local bottom = from.bottom + (to.bottom - from.bottom) * p
     panel:ClearAllPoints()
     panel:SetPoint("TOPLEFT", parent, "BOTTOMLEFT", left / scale, top / scale)
-    panel:SetSize((right - left) / scale, (top - bottom) / scale)
+    panel:SetSize(math.max(MIN_PANEL_SIZE, (right - left) / scale), math.max(MIN_PANEL_SIZE, (top - bottom) / scale))
     if not panel:IsShown() then
       panel:Show()
     end
@@ -109,7 +123,7 @@ function PhoneOpenAnimation.Attach(frame, options)
   local function beginOpen(iconFrame)
     finish()
     local id = run
-    local from = rectOf(iconFrame)
+    local from = centerPointOf(iconFrame)
     targetAlpha = frame:GetAlpha()
     opening = true
     options.setAlphaHeld(true)
@@ -144,7 +158,7 @@ function PhoneOpenAnimation.Attach(frame, options)
         panel:Hide()
         return
       end
-      placePanel(from, rectOf(iconFrame), p)
+      placePanel(from, centerPointOf(iconFrame), p)
       panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
     end
   end

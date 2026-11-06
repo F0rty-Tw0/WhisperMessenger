@@ -37,7 +37,7 @@ local function applyModern(parts, L)
   end
   place(parts.title, "CENTER", parts.titleBar, "CENTER", 0, 0)
   place(parts.closeButton, "RIGHT", parts.titleBar, "RIGHT", -L.TITLE_BAR_INSET_X, 0)
-  place(parts.newConversationButton, "LEFT", parts.titleBar, "LEFT", L.TITLE_BAR_INSET_X, 0)
+  place(parts.newConversationButton, "LEFT", parts.titleBar, "LEFT", L.TITLE_BAR_INSET_X + (parts.leftClearance or 0), 0)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", gap, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", gap, 0)
   place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -gap, 0)
@@ -57,7 +57,7 @@ end
 
 local function applyHud(parts, L)
   placeHudGear(parts, L)
-  place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", 6, -3)
+  place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", 6 + (parts.leftClearance or 0), -3)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -HUD_GAP, 0)
@@ -93,7 +93,8 @@ end
 
 -- parts: frame, titleBar (custom chrome only), title, closeButton,
 -- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
--- blizzardChrome (bool), retailChrome (bool).
+-- blizzardChrome (bool), retailChrome (bool), leftClearance (px kept free at
+-- the left of the title bar, for the phone layout's icon spot).
 function TitleBarLayout.Apply(parts, theme)
   TitleBarLayout.ApplyLook(parts, theme)
   -- Phone chat view: back takes the first left slot, like on a phone. The

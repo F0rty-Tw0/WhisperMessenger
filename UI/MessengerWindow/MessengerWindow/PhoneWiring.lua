@@ -138,7 +138,7 @@ function PhoneWiring.Attach(hooks, options)
       return
     end
     openAnimation.finish()
-    icon.rideTo(PhoneDock.RideTarget(frame, icon.frame))
+    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
   end
 
   -- The button travels onto the window as the window comes out of it.
@@ -151,9 +151,9 @@ function PhoneWiring.Attach(hooks, options)
       dock()
       return
     end
-    PhoneDock.Place(frame, icon.frame)
+    PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
     icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(frame, icon.frame), openAnimation.beginOpen(icon.frame))
+    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), openAnimation.beginOpen(icon.frame))
   end
 
   -- Not when only the parent hid (Alt+Z): the window is still open.

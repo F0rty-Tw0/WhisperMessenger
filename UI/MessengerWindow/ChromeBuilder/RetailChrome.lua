@@ -77,6 +77,7 @@ function RetailChrome.Build(factory, frame, options, theme)
     title = frame.TitleContainer and frame.TitleContainer.TitleText,
     closeButton = frame.CloseButton,
     applyChromePaint = applyChromePaint,
+    iconSlot = frame.PortraitContainer and (frame.PortraitContainer.portrait or frame.PortraitContainer),
   }
 end
 
