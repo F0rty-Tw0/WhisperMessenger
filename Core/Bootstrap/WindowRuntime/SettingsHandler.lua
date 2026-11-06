@@ -52,6 +52,26 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
+  -- The window is built for one style, so only a choice that differs from the
+  -- running one needs a reload. Only our own offer is ever withdrawn: another
+  -- setting's may be up.
+  local phoneReloadOffered = false
+  local function applyPhoneLayout(enabled)
+    accountSettings.phoneLayout = enabled
+    if enabled == (runtime.phoneLayoutActive ~= false) then
+      if phoneReloadOffered then
+        phoneReloadOffered = false
+        ReloadPrompt.Hide()
+      end
+      return
+    end
+    phoneReloadOffered = true
+    local question = "Reload the interface now to switch the window style?"
+    ReloadPrompt.Show(Localization and Localization.Text(question) or question, function()
+      phoneReloadOffered = false
+    end)
+  end
+
   return function(key, value)
     -- Not a setting: the Filters page changed the ignore list or rules.
     if key == "filters" then
@@ -74,11 +94,8 @@ function SettingsHandler.Create(options)
       end)
       return
     end
-    -- The window is built for one style; the other needs a fresh build.
     if key == "phoneLayout" then
-      accountSettings.phoneLayout = value == true
-      local question = "Reload the interface now to switch the window style?"
-      ReloadPrompt.Show(Localization and Localization.Text(question) or question)
+      applyPhoneLayout(value == true)
       return
     end
     if key == "allowAddonIntegration" then

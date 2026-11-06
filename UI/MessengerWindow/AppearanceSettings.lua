@@ -32,6 +32,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   windowScale = 1.0,
+  phoneLayout = true,
 }
 
 local function pctFormat(v)
@@ -101,13 +102,32 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   hudStyleSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
+  local windowStyleSpecs = {
+    {
+      key = "phoneLayout",
+      label = text("Phone-style window"),
+      labelKey = "Phone-style window",
+      initial = config.phoneLayout ~= false,
+      onChange = function(value)
+        onChange("phoneLayout", value)
+      end,
+      tooltipLines = {
+        text("Phone-style window"),
+        text("The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."),
+      },
+      anchorOffsetY = gap,
+    },
+  }
+  local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
+  SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
+
   local themePresetSelector = panel:bind(
     sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
       onChange("themePreset", v)
     end),
     { type = "selector", key = "themePreset", default = presetDefault }
   )
-  themePresetSelector.row:SetPoint("TOPLEFT", hudStyleSelector.row, "BOTTOMLEFT", 0, gap)
+  themePresetSelector.row:SetPoint("TOPLEFT", windowStyleToggles[1].row, "BOTTOMLEFT", 0, gap)
 
   local windowScaleRow = panel:bind(
     slider(text("Window Scale"), 0.75, 1.50, 0.05, config.windowScale or DEFAULTS.windowScale, pctFormat, function(v)
@@ -225,6 +245,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     header.hint:SetText(text("Customize theme presets, fonts, and window opacity."))
     hudStyleSelector.label:SetText(text("Native WoW HUD"))
     hudStyleSelector.setOptionsList(Options.BuildHudStyleOptions())
+    SettingsControls.RelabelToggles(windowStyleToggles, windowStyleSpecs, text)
     themePresetSelector.label:SetText(text("Theme Preset"))
     themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
     windowScaleRow.label:SetText(text("Window Scale"))

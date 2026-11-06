@@ -116,6 +116,7 @@ function SettingsPanels.Create(factory, options)
         windowOpacityInactive = settingsConfig.windowOpacityInactive,
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
+        phoneLayout = settingsConfig.phoneLayout,
       },
     },
     {
@@ -123,7 +124,6 @@ function SettingsPanels.Create(factory, options)
       settingsKey = "behaviorSettings",
       create = options.behaviorCreate,
       config = {
-        phoneLayout = settingsConfig.phoneLayout,
         dimWhenMoving = settingsConfig.dimWhenMoving,
         autoFocusComposer = settingsConfig.autoFocusComposer,
         deselectComposerOnSend = settingsConfig.deselectComposerOnSend,
