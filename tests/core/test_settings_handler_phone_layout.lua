@@ -49,6 +49,28 @@ return function()
     assert(case.shownOnToggle[1] == true, "the toggle shows the saved style again")
   end)
 
+  -- test_a_changed_icon_mode_updates_the_window_after_applying
+  do
+    local order = {}
+    local runtime = {
+      store = { config = {} },
+      window = {
+        dockPhoneIcon = function()
+          table.insert(order, "dock")
+        end,
+      },
+    }
+    local onChange = SettingsHandler.Create({
+      runtime = runtime,
+      accountSettings = {},
+      applyIconMode = function()
+        table.insert(order, "mode")
+      end,
+    })
+    onChange("iconMode", "minimap")
+    assert(order[1] == "mode" and order[2] == "dock", "the window sees the new mode")
+  end
+
   -- test_a_changed_icon_size_docks_after_resizing
   do
     local case = build(true)

@@ -138,9 +138,15 @@ function PhoneWiring.Attach(hooks, options)
     end,
   }
 
+  -- Docked and still the floating button: the icon mode can take it away.
+  local function syncIconSlot()
+    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon)
+  end
+
   -- Already riding (the scale changed, or Alt+Z brought the UI back): the
   -- button only needs its new spot, with no opening to replay.
   local function dock()
+    syncIconSlot()
     local icon = dockedIcon
     if not (icon and icon.isRiding()) then
       return
@@ -249,6 +255,7 @@ function PhoneWiring.Attach(hooks, options)
 
   frame:HookScript("OnShow", clampToSpot)
   frame:HookScript("OnShow", openFromIcon)
+  frame:HookScript("OnShow", syncIconSlot)
   frame:HookScript("OnHide", function()
     -- A hidden viewport stops ticking, which would leave a slide hanging.
     slide.finishNow()

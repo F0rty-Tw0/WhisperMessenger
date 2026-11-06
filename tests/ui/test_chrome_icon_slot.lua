@@ -64,6 +64,20 @@ return function()
     assert(shift == L.PHONE_ICON_SLOT_CLEARANCE, "classic: moved by the clearance, got " .. tostring(shift))
   end
 
+  -- test_an_empty_spot_gives_its_room_back
+  for _, nativeChrome in ipairs({ false, true }) do
+    Hud.Configure(nativeChrome and "classic" or "off")
+    local classic = build(nativeChrome, false)
+    local phone = build(nativeChrome, true)
+    Hud.Configure(nativeChrome and "classic" or "off")
+    phone.setIconSlotOccupied(false)
+    assert(leftOffset(phone.newConversationButton) == leftOffset(classic.newConversationButton), "title buttons go all the way left")
+    phone.setIconSlotOccupied(true)
+    local shift = leftOffset(phone.newConversationButton) - leftOffset(classic.newConversationButton)
+    assert(shift == L.PHONE_ICON_SLOT_CLEARANCE, "and move clear again, got " .. tostring(shift))
+    Hud.Configure("off")
+  end
+
   -- test_spot_clears_the_content_below_the_title_bar
   do
     local bottom = -L.PHONE_ICON_SLOT_Y + L.PHONE_ICON_SLOT_SIZE / 2

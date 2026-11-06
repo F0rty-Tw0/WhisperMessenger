@@ -237,6 +237,12 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     refreshBack()
   end
 
+  -- A corner spot keeps the title buttons clear only while a button is on it.
+  local function setIconSlotOccupied(occupied)
+    titleBarParts.leftClearance = occupied and iconSlotClearance or 0
+    TitleBarLayout.Apply(titleBarParts, Theme)
+  end
+
   return {
     frame = frame,
     background = chrome.background,
@@ -256,6 +262,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setPatchNotesGlow = patchNotes.setGlowing,
     setMarkAllReadShown = setMarkAllReadShown,
     setPhoneChatView = setPhoneChatView,
+    setIconSlotOccupied = setIconSlotOccupied,
     iconSlot = iconSlot,
     titleBar = chrome.titleBar,
   }

@@ -24,6 +24,10 @@ local function layOut(case)
   at(case.rodeTo.region, 93, 917)
 end
 
+local function titleOffset(case)
+  return select(4, case.window.newConversationButton:GetPoint())
+end
+
 return function()
   -- test_the_docked_button_follows_the_window_back_and_forward
   do
@@ -107,6 +111,42 @@ return function()
     local search = case.window.contactsRailSearchButton
     search.scripts.OnClick(search)
     assert(case.saved.state == nil, "a wide window is never the saved size")
+  end
+
+  -- test_with_no_button_the_title_buttons_use_the_corner
+  do
+    local case = build({
+      getDockIcon = function()
+        return nil
+      end,
+    })
+    case.window.frame:Show()
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X, "got " .. tostring(titleOffset(case)))
+  end
+
+  -- test_a_docked_button_keeps_the_corner_clear
+  do
+    local case = build()
+    case.window.frame:Show()
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, "got " .. tostring(titleOffset(case)))
+  end
+
+  -- test_the_corner_follows_the_icon_mode_with_the_window_open
+  do
+    local dockable = true
+    local case
+    case = build({
+      getDockIcon = function()
+        return dockable and case.icon or nil
+      end,
+    })
+    case.window.frame:Show()
+    dockable = false
+    case.window.dockPhoneIcon()
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X, "the button left, so the room comes back")
+    dockable = true
+    case.window.dockPhoneIcon()
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, "and it is back on the spot")
   end
 
   -- test_a_button_not_on_the_window_keeps_its_strata

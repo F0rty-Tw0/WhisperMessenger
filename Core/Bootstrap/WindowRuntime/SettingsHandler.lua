@@ -52,6 +52,14 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
+  -- A change to the floating button reaches the phone window it may ride.
+  local function dockPhoneIcon()
+    local window = runtime.window
+    if window and window.dockPhoneIcon then
+      window.dockPhoneIcon()
+    end
+  end
+
   return function(key, value)
     -- Not a setting: the Filters page changed the ignore list or rules.
     if key == "filters" then
@@ -247,15 +255,12 @@ function SettingsHandler.Create(options)
 
     if key == "iconMode" and options.applyIconMode then
       options.applyIconMode()
+      dockPhoneIcon()
     end
 
     if key == "iconSize" and icon and icon.applyIconSize then
       icon.applyIconSize(persistedValue)
-      -- A button riding the phone window takes its spot at the new size.
-      local window = runtime.window
-      if window and window.dockPhoneIcon then
-        window.dockPhoneIcon()
-      end
+      dockPhoneIcon()
     end
 
     if key == "iconDesaturated" then
