@@ -11,6 +11,7 @@ local Localization = ns.Localization or require("WhisperMessenger.Locale.Localiz
 local ToggleSpecs = {}
 
 ToggleSpecs.DEFAULTS = {
+  phoneLayout = true,
   dimWhenMoving = true,
   autoFocusComposer = false,
   deselectComposerOnSend = false,
@@ -28,6 +29,19 @@ function ToggleSpecs.Build(config, onChange)
 
   local specs = {
     {
+      key = "phoneLayout",
+      labelKey = "Phone-style window",
+      initial = config.phoneLayout ~= false,
+      onChange = function(value)
+        onChange("phoneLayout", value)
+      end,
+      tooltipLines = {
+        text("Phone-style window"),
+        text("The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."),
+      },
+      anchorOffsetY = -24,
+    },
+    {
       key = "dimWhenMoving",
       labelKey = "Dim when moving",
       initial = config.dimWhenMoving ~= false,
@@ -38,7 +52,6 @@ function ToggleSpecs.Build(config, onChange)
         text("Dim when moving"),
         text("Reduces window opacity while your character is moving."),
       },
-      anchorOffsetY = -24,
     },
     {
       key = "autoFocusComposer",

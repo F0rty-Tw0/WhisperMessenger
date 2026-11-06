@@ -11,7 +11,7 @@ end
 
 return function()
   local factory = FakeUI.NewFactory()
-  local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1 }
+  local accountState = { conversations = {}, contacts = {}, pendingHydration = {}, schemaVersion = 1, settings = { phoneLayout = false } }
   local characterState = {
     window = {
       anchorPoint = "TOPLEFT",

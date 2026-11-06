@@ -7,6 +7,7 @@ local ChatReplyState = ns.ChatReplyState or (type(require) == "function" and req
 local Localization = ns.Localization or (type(require) == "function" and require("WhisperMessenger.Locale.Localization")) or nil
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
+local ReloadPrompt = ns.ReloadPrompt or require("WhisperMessenger.UI.Shared.ReloadPrompt")
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
@@ -71,6 +72,13 @@ function SettingsHandler.Create(options)
           appearance.setHudStyle(savedStyle)
         end
       end)
+      return
+    end
+    -- The window is built for one style; the other needs a fresh build.
+    if key == "phoneLayout" then
+      accountSettings.phoneLayout = value == true
+      local question = "Reload the interface now to switch the window style?"
+      ReloadPrompt.Show(Localization and Localization.Text(question) or question)
       return
     end
     if key == "allowAddonIntegration" then

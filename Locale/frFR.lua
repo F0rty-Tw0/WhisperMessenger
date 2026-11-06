@@ -132,6 +132,9 @@ local French = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configurez le comportement de la fenêtre.",
+  ["Phone-style window"] = "Fenêtre style téléphone",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Le bouton flottant ouvre une liste de discussions au format téléphone, attachée à lui. Cliquez sur une discussion pour y glisser.",
+  ["Reload the interface now to switch the window style?"] = "Recharger l'interface maintenant pour changer le style de la fenêtre ?",
   ["Dim when moving"] = "Atténuer pendant les déplacements",
   ["Reduces window opacity while your character is moving."] = "Réduit l'opacité de la fenêtre quand votre personnage se déplace.",
   ["Auto-focus chat input"] = "Focus automatique de la saisie",

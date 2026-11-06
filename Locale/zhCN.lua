@@ -132,6 +132,9 @@ local SimplifiedChinese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "控制信使窗口的行为。",
+  ["Phone-style window"] = "手机样式窗口",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "浮动按钮会打开一个附着在其上的手机大小聊天列表。点击聊天即可滑入。",
+  ["Reload the interface now to switch the window style?"] = "现在重载界面以切换窗口样式吗?",
   ["Dim when moving"] = "移动时变暗",
   ["Reduces window opacity while your character is moving."] = "在角色移动时降低窗口不透明度。",
   ["Auto-focus chat input"] = "自动聚焦输入框",

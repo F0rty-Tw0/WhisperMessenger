@@ -27,6 +27,8 @@ local ContactsWiring = ns.MessengerWindowContactsWiring or require("WhisperMesse
 local ConversationWiring = ns.MessengerWindowConversationWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
+local PhoneWiring = ns.MessengerWindowPhoneWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneWiring")
+local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local sizeValue = UIHelpers.sizeValue
@@ -42,13 +44,15 @@ function MessengerWindow.Create(factory, options)
   local initialScale = WindowScale.Normalize(settingsConfig.windowScale)
   settingsConfig.windowScale = initialScale
   local state = options.state or {}
-  local initialState = WindowSizing.InitialState(parent, state, initialScale)
+  local phoneLayout = options.phoneLayout == true
+  local phone = PhoneWiring.Hooks()
+  local initialState = WindowSizing.InitialState(parent, state, initialScale, phoneLayout)
   local windowGeometry = WindowGeometry.Create({
     parent = parent,
     theme = Theme,
     clampState = WindowBounds.ClampState,
     clampContactsWidth = LayoutBuilder.ClampContactsWidth,
-    captureFramePosition = captureFramePosition,
+    captureFramePosition = phoneLayout and PhoneDock.CapturePosition or captureFramePosition,
     sizeValue = sizeValue,
     initialState = initialState,
     initialContactsWidth = state.contactsWidth,
@@ -73,11 +77,12 @@ function MessengerWindow.Create(factory, options)
     useNativeChrome = nativeChrome,
     windowScale = initialScale,
     onMarkAllRead = options.onMarkAllRead,
+    phoneLayout = phoneLayout,
   })
   local frame = chrome.frame
 
   -- Build layout (panes)
-  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth })
+  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth, phoneLayout = phoneLayout })
   currentContactsWidth = layout.expandedContactsWidth or layout.contactsWidth or currentContactsWidth
   windowGeometry.setContactsWidth(currentContactsWidth)
   local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or layout.optionsContentPane
@@ -145,6 +150,12 @@ function MessengerWindow.Create(factory, options)
     onClose = options.onClose,
     onPanelShown = options.onPanelShown,
     onConversationUncovered = options.onConversationUncovered,
+    onCoverChanged = function(covered)
+      phone.onCoverChanged(covered)
+    end,
+    onPanesShown = function()
+      phone.onPanesShown()
+    end,
     getContactsRail = function()
       return contactsRail
     end,
@@ -197,6 +208,9 @@ function MessengerWindow.Create(factory, options)
       SelectionSync.SetComposerEnabled(composer, selectedContact, noticeText)
     end,
     onSelectConversation = options.onSelectConversation,
+    onSelectionChanged = function(key)
+      phone.onSelection(key)
+    end,
     getSelectedContact = options.getSelectedContact,
     getConversation = options.getConversation,
     getStatus = options.getStatus,
@@ -220,6 +234,8 @@ function MessengerWindow.Create(factory, options)
     end
   end
 
+  local onPositionChanged, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,
     setContactsWidth = function(nextContactsWidth)
@@ -241,7 +257,7 @@ function MessengerWindow.Create(factory, options)
     chrome = chrome,
     settingsPanels = settingsPanels,
     closeWindow = closeWindow,
-    onResetWindowPosition = options.onResetWindowPosition,
+    onResetWindowPosition = onResetWindowPosition,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     onStartConversation = options.onStartConversation,
@@ -249,11 +265,14 @@ function MessengerWindow.Create(factory, options)
     windowGeometry = windowGeometry,
     frame = frame,
     refreshWindowAlpha = refreshWindowAlpha,
-    onPositionChanged = options.onPositionChanged,
+    onPositionChanged = onPositionChanged,
+    onBack = function()
+      return phone.onBack()
+    end,
     theme = Theme,
     composerInput = composerInput,
     getAutoFocusChatInput = function()
-      return not holdComposerFocus and settingsConfig.autoFocusComposer == true
+      return not holdComposerFocus and settingsConfig.autoFocusComposer == true and not phone.isListView()
     end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)
@@ -293,6 +312,22 @@ function MessengerWindow.Create(factory, options)
     relayoutWindow = relayoutWindow,
   })
 
+  if phoneLayout then
+    PhoneWiring.Attach(phone, {
+      frame = frame,
+      layout = layout,
+      chrome = chrome,
+      tabToggle = contactsRuntime.tabToggle,
+      composerInput = composerInput,
+      windowVisibility = windowVisibility,
+      windowOptions = options,
+      settingsConfig = settingsConfig,
+      getSelectedKey = getSelectedConversationKey,
+      refreshSelection = refreshSelection,
+      applyWindowSize = scriptResult.applyWindowSize,
+    })
+  end
+
   local refreshLanguage = LanguageRefresh.Create({
     layout = layout,
     composer = composer,
@@ -317,12 +352,17 @@ function MessengerWindow.Create(factory, options)
     composer = composer,
     refreshSelection = refreshSelection,
     handleContactSelected = handleContactSelected,
-    setScale = windowSizing.setScale,
+    setScale = function(nextScale)
+      local scale = windowSizing.setScale(nextScale)
+      phone.dock()
+      return scale
+    end,
     relayoutCurrentSize = windowSizing.relayoutCurrentSize,
     refreshLanguage = refreshLanguage,
     panelHost = panelHost,
     windowVisibility = windowVisibility,
     showWithoutComposerFocus = showWithoutComposerFocus,
+    phone = phoneLayout and phone or nil,
   })
 end
 

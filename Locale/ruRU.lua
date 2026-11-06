@@ -132,6 +132,9 @@ local Russian = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Настройте поведение окна мессенджера.",
+  ["Phone-style window"] = "Окно в стиле телефона",
+  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Плавающая кнопка открывает прикреплённый к ней список чатов размером с телефон. Нажмите на чат, чтобы перейти к нему.",
+  ["Reload the interface now to switch the window style?"] = "Перезагрузить интерфейс сейчас, чтобы сменить стиль окна?",
   ["Dim when moving"] = "Затемнять при движении",
   ["Reduces window opacity while your character is moving."] = "Уменьшает прозрачность окна, пока персонаж движется.",
   ["Auto-focus chat input"] = "Автофокус ввода чата",

@@ -11,14 +11,17 @@ local sizeValue = UIHelpers.sizeValue
 local WindowSizing = {}
 
 -- Saved window state with defaults filled in, clamped to the parent at scale.
-function WindowSizing.InitialState(parent, state, scale)
+-- phone: the portrait phone window, with its own default size.
+function WindowSizing.InitialState(parent, state, scale, phone)
+  local L = Theme.LAYOUT
   return WindowBounds.ClampState(parent, {
+    phoneLayout = phone == true or nil,
     anchorPoint = state.anchorPoint or "CENTER",
     relativePoint = state.relativePoint or state.anchorPoint or "CENTER",
     x = state.x or 0,
     y = state.y or 0,
-    width = state.width or Theme.WINDOW_WIDTH,
-    height = state.height or Theme.WINDOW_HEIGHT,
+    width = state.width or (phone and L.PHONE_WINDOW_WIDTH or Theme.WINDOW_WIDTH),
+    height = state.height or (phone and L.PHONE_WINDOW_HEIGHT or Theme.WINDOW_HEIGHT),
     minimized = state.minimized or false,
     contactsCollapsed = state.contactsCollapsed == true,
   }, Theme, scale)

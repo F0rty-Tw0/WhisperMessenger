@@ -95,6 +95,16 @@ end
 -- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
 -- blizzardChrome (bool), retailChrome (bool).
 function TitleBarLayout.Apply(parts, theme)
+  TitleBarLayout.ApplyLook(parts, theme)
+  -- Phone chat view: back takes the first left slot, like on a phone. The
+  -- left cluster is hidden then, so nothing else is there.
+  if parts.phoneChatView then
+    parts.backButton:ClearAllPoints()
+    parts.backButton:SetPoint(parts.newConversationButton:GetPoint())
+  end
+end
+
+function TitleBarLayout.ApplyLook(parts, theme)
   if not parts.buttons then
     parts.buttons = {
       parts.newConversationButton,

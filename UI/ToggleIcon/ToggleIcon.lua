@@ -16,6 +16,7 @@ local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.Toggl
 local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
 local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
 local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
+local IconRide = ns.ToggleIconIconRide or require("WhisperMessenger.UI.ToggleIcon.IconRide")
 
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 
@@ -178,6 +179,7 @@ function ToggleIcon.Create(factory, options)
     squareLook.apply(desaturation.isActive())
   end
 
+  local drag = {}
   local tooltip = IconTooltip.Create(frame, { badge = badge, isLocked = isLocked, options = options })
 
   -- Hover lifts the circle and returns the back bubble to the accent
@@ -209,8 +211,19 @@ function ToggleIcon.Create(factory, options)
       squareLook.setPushed(false)
     end)
 
-    IconDrag.Attach(frame, isLocked, options)
+    drag = IconDrag.Attach(frame, isLocked, options)
   end
+
+  -- The badge's level is set by number, so it does not follow the frame's.
+  local ride = IconRide.Create(frame, {
+    theme = Theme,
+    parent = parent,
+    isLocked = isLocked,
+    onPositionChanged = options.onPositionChanged,
+    onLevel = function(level)
+      badge:SetFrameLevel(level + BADGE_LEVEL_OFFSET)
+    end,
+  })
 
   local function refreshDesaturation()
     IconArt.PaintFace(art, hover.active)
@@ -275,6 +288,12 @@ function ToggleIcon.Create(factory, options)
     lockGlyph = lockGlyph,
     refreshLockGlyph = refreshLockGlyph,
     refreshTransparency = refreshTransparency,
+    rideTo = ride.rideTo,
+    rideHome = ride.rideHome,
+    isRiding = ride.isRiding,
+    adoptRidePosition = ride.adoptRidePosition,
+    setRideHome = ride.setHome,
+    setRideHandlers = drag.setRideHandlers,
   }
 end
 

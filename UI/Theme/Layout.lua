@@ -25,6 +25,19 @@ local Layout = {
   CONTACTS_RAIL_WIDTH = 50,
   CONTACTS_RAIL_COLLAPSE_BELOW = 110,
   CONTACTS_RAIL_EXPAND_ABOVE = 125,
+  -- Phone layout: a portrait window the floating button rides on. The ride
+  -- level keeps the button and its badge above the raised window (level 2000).
+  PHONE_WINDOW_WIDTH = 360,
+  PHONE_WINDOW_HEIGHT = 640,
+  PHONE_WINDOW_MIN_WIDTH = 352,
+  PHONE_WINDOW_MIN_HEIGHT = 420,
+  PHONE_RIDE_FRAME_LEVEL = 3000,
+  PHONE_RIDE_SECONDS = 0.16,
+  -- Without a portrait the button hangs off the window's corner, this far in.
+  PHONE_CORNER_OVERLAP = 6,
+  PHONE_SLIDE_SECONDS = 0.2,
+  PHONE_OPEN_SECONDS = 0.16,
+  PHONE_OPEN_FROM_SCALE = 0.3,
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
   COMPOSER_HEIGHT = 44,
