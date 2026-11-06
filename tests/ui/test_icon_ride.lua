@@ -31,8 +31,15 @@ local function build()
   return case
 end
 
+local FRAME = 1 / 60
+
+-- Runs the glide frame by frame, as the client does.
 local function tick(case, seconds)
-  case.frame.scripts.OnUpdate(case.frame, seconds)
+  local remaining = seconds
+  while remaining > 0 and case.frame.scripts.OnUpdate do
+    case.frame.scripts.OnUpdate(case.frame, math.min(FRAME, remaining))
+    remaining = remaining - FRAME
+  end
 end
 
 return function()
@@ -104,6 +111,58 @@ return function()
     tick(case, SECONDS + 0.01)
     local point, _, _, x, y = case.frame:GetPoint()
     assert(point == "CENTER" and x == 300 and y == 700, "goes home to the new spot")
+  end
+
+  -- test_every_frame_reports_the_shared_clock_ending_on_one
+  do
+    local case = build()
+    local steps = {}
+    case.ride.rideTo(case.target, function(t, p)
+      steps[#steps + 1] = { t, p }
+    end)
+    tick(case, SECONDS + 0.05)
+    assert(#steps > 3, "a step per frame, got " .. #steps)
+    assert(steps[1][2] > steps[1][1], "eased ahead of linear time")
+    local last = steps[#steps]
+    assert(last[1] == 1 and last[2] == 1, "ends exactly on one")
+  end
+
+  -- test_a_hitch_pauses_the_glide_instead_of_skipping_it
+  do
+    local case = build()
+    local steps = 0
+    case.ride.rideTo(case.target, function()
+      steps = steps + 1
+    end)
+    case.frame.scripts.OnUpdate(case.frame, 2)
+    assert(case.frame.scripts.OnUpdate ~= nil, "a slow frame must not eat the animation")
+    assert(steps == 1, "it moves on by one frame's worth")
+  end
+
+  -- test_ride_home_reports_steps_too
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.05)
+    local last
+    case.ride.rideHome(function(t)
+      last = t
+    end)
+    tick(case, SECONDS + 0.05)
+    assert(last == 1, "the closing panel shares the clock")
+  end
+
+  -- test_no_position_still_finishes_the_step
+  do
+    local case = build()
+    rawset(case.frame, "GetCenter", function()
+      return nil
+    end)
+    local last
+    case.ride.rideTo(case.target, function(t)
+      last = t
+    end)
+    assert(last == 1, "an unplaced icon cannot leave the window held")
   end
 
   -- test_new_home_while_riding_is_where_the_button_returns

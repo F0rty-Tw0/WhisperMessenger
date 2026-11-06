@@ -314,11 +314,13 @@ function MessengerWindow.Create(factory, options)
 
   if phoneLayout then
     PhoneWiring.Attach(phone, {
+      factory = factory,
       frame = frame,
       layout = layout,
       chrome = chrome,
       tabToggle = contactsRuntime.tabToggle,
       composerInput = composerInput,
+      windowAlpha = windowAlpha,
       windowVisibility = windowVisibility,
       windowOptions = options,
       settingsConfig = settingsConfig,

@@ -34,12 +34,14 @@ local function build(extra)
     isRiding = function()
       return case.rides > case.homes
     end,
-    rideTo = function(target)
+    rideTo = function(target, onStep)
       case.rides = case.rides + 1
       case.rodeTo = target
+      case.step = onStep
     end,
-    rideHome = function()
+    rideHome = function(onStep)
       case.homes = case.homes + 1
+      case.step = onStep
     end,
     adoptRidePosition = function()
       case.adopted = case.adopted + 1
@@ -139,6 +141,37 @@ return function()
     assert(case.rides == 1 and case.homes == 0, "one ride")
     case.window.closeButton.scripts.OnClick(case.window.closeButton)
     assert(case.homes == 1, "closing sends it home")
+  end
+
+  -- test_real_window_waits_unseen_then_returns_at_full_opacity
+  do
+    local case = build()
+    case.window.frame:Show()
+    assert(case.window.frame:GetAlpha() == 0, "the panel does the growing")
+    assert(case.step ~= nil, "the window follows the button's clock")
+    case.step(1, 1)
+    assert(case.window.frame:GetAlpha() == 1, "fully back, got " .. tostring(case.window.frame:GetAlpha()))
+  end
+
+  -- test_with_no_button_the_window_is_never_held_unseen
+  do
+    local case = build({
+      getDockIcon = function()
+        return nil
+      end,
+    })
+    case.window.frame:Show()
+    assert(case.window.frame:GetAlpha() == 1, "nothing would ever reveal it")
+  end
+
+  -- test_ui_returning_after_alt_z_does_not_replay_the_opening
+  do
+    local case = build()
+    local frame = case.window.frame
+    frame:Show()
+    case.step(1, 1)
+    frame:Show()
+    assert(frame:GetAlpha() == 1, "already open, so it stays visible")
   end
 
   -- test_window_grows_out_of_its_top_left_corner_spot

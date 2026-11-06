@@ -63,7 +63,8 @@ local function wideWidth(frame)
   return math.min(Theme.WINDOW_WIDTH, maxWidth or Theme.WINDOW_WIDTH)
 end
 
--- options: frame, layout, chrome, tabToggle, composerInput, windowVisibility,
+-- options: factory, frame, layout, chrome, tabToggle, composerInput,
+-- windowAlpha, windowVisibility,
 -- windowOptions (MessengerWindow.Create options), settingsConfig,
 -- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h).
 function PhoneWiring.Attach(hooks, options)
@@ -82,7 +83,15 @@ function PhoneWiring.Attach(hooks, options)
   end
 
   local slide = PhoneSlide.Create({ layout = layout, theme = Theme, isCovered = isCovered })
-  local openAnimation = PhoneOpenAnimation.Attach(frame, Theme)
+  local openAnimation = PhoneOpenAnimation.Attach(frame, {
+    factory = options.factory,
+    parent = frame:GetParent() or _G.UIParent,
+    theme = Theme,
+    setAlphaHeld = options.windowAlpha.setHeld,
+    refreshAlpha = function()
+      options.windowAlpha.refreshWindowAlpha(true)
+    end,
+  })
 
   local navigator = PhoneNavigator.Create({
     slide = slide,
@@ -121,18 +130,30 @@ function PhoneWiring.Attach(hooks, options)
     end,
   }
 
-  -- The button travels onto the window. Riding already (Alt+Z brought the UI
-  -- back, or the scale changed) it only needs its new spot.
+  -- Already riding (the scale changed, or Alt+Z brought the UI back): the
+  -- button only needs its new spot, with no opening to replay.
   local function dock()
+    local icon = getDockIcon()
+    if not (icon and icon.rideTo and icon.isRiding()) then
+      return
+    end
+    openAnimation.finish()
+    icon.rideTo(PhoneDock.RideTarget(frame, icon.frame))
+  end
+
+  -- The button travels onto the window as the window comes out of it.
+  local function openFromIcon()
     local icon = getDockIcon()
     if not (icon and icon.rideTo) then
       return
     end
-    if not icon.isRiding() then
-      PhoneDock.Place(frame, icon.frame)
+    if icon.isRiding() then
+      dock()
+      return
     end
+    PhoneDock.Place(frame, icon.frame)
     icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(frame, icon.frame))
+    icon.rideTo(PhoneDock.RideTarget(frame, icon.frame), openAnimation.beginOpen(icon.frame))
   end
 
   -- Not when only the parent hid (Alt+Z): the window is still open.
@@ -141,9 +162,9 @@ function PhoneWiring.Attach(hooks, options)
       return
     end
     local icon = getDockIcon()
-    if icon and icon.rideHome then
+    if icon and icon.rideHome and icon.isRiding() then
       icon.setRideHandlers(nil)
-      icon.rideHome()
+      icon.rideHome(openAnimation.beginClose(icon.frame))
     end
   end
 
@@ -191,10 +212,7 @@ function PhoneWiring.Attach(hooks, options)
     options.applyWindowSize(L.PHONE_WINDOW_WIDTH, L.PHONE_WINDOW_HEIGHT)
   end
 
-  frame:HookScript("OnShow", function()
-    dock()
-    openAnimation.play("TOPLEFT")
-  end)
+  frame:HookScript("OnShow", openFromIcon)
   frame:HookScript("OnHide", function()
     -- A hidden viewport stops ticking, which would leave a slide hanging.
     slide.finishNow()
