@@ -7,17 +7,9 @@ end
 -- glides and grows to its spot on the window, then pins there so it follows
 -- the window, keeping its badge and click. Home is its normal anchor, scale
 -- and level, restored exactly when it returns.
+local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
+
 local IconRide = {}
-
--- Longest step the clock takes in one frame. Opening the window does its
--- heavy refresh just as the glide starts; a slow frame then pauses the glide
--- instead of skipping most of it.
-local MAX_STEP = 1 / 30
-
-local function easeOut(t)
-  local inverse = 1 - t
-  return 1 - inverse * inverse * inverse
-end
 
 -- Screen-pixel centre of a region; nil when the client has none yet.
 local function screenCenter(region)
@@ -84,39 +76,35 @@ function IconRide.Create(frame, options)
   -- getEnd() is read every tick: the window may still be settling on screen.
   -- onStep(t, p), when given, runs each frame with the linear time and eased
   -- path, ending on (1, 1), so other animations can share this clock.
-  local function glide(toScale, getEnd, onArrive, onStep)
+  -- instant: arrive at once, whatever the frame's visibility.
+  local function glide(toScale, getEnd, onArrive, onStep, instant)
     onStep = onStep or function(_t, _p) end
     local fromX, fromY = screenCenter(frame)
     local fromScale = frame:GetScale()
     local endX = getEnd()
     -- A hidden frame never ticks, so a glide would wait until it shows again.
-    if fromX == nil or endX == nil or not frame:IsVisible() then
-      frame:SetScript("OnUpdate", nil)
+    if instant or fromX == nil or endX == nil or not frame:IsVisible() then
+      GlideClock.Stop(frame)
       onArrive()
       onStep(1, 1)
       return
     end
-    local elapsed = 0
-    frame:SetScript("OnUpdate", function(_self, delta)
-      elapsed = elapsed + math.min(delta, MAX_STEP)
-      if elapsed >= duration then
-        frame:SetScript("OnUpdate", nil)
-        onArrive()
-        onStep(1, 1)
-        return
-      end
-      local t = elapsed / duration
-      local p = easeOut(t)
+    local function tick(t, p)
       local toX, toY = getEnd()
       if toX then
         placeAt(fromX + (toX - fromX) * p, fromY + (toY - fromY) * p, fromScale + (toScale - fromScale) * p)
       end
       onStep(t, p)
-    end)
+    end
+    local function done()
+      onArrive()
+      onStep(1, 1)
+    end
+    GlideClock.Run(frame, duration, tick, done)
   end
 
   -- target: region, relativePoint, x, y, scale, level.
-  local function rideTo(target, onStep)
+  local function rideTo(target, onStep, instant)
     if home == nil then
       captureHome()
     end
@@ -129,7 +117,7 @@ function IconRide.Create(frame, options)
       frame:SetScale(target.scale)
       frame:ClearAllPoints()
       frame:SetPoint("CENTER", target.region, target.relativePoint, target.x, target.y)
-    end, onStep)
+    end, onStep, instant)
   end
 
   local function restoreHome()
@@ -146,7 +134,7 @@ function IconRide.Create(frame, options)
     onRidingChanged(false)
   end
 
-  local function rideHome(onStep)
+  local function rideHome(onStep, instant)
     local saved = home
     if not riding or saved == nil then
       return
@@ -154,7 +142,7 @@ function IconRide.Create(frame, options)
     riding = false
     glide(saved.scale, function()
       return saved.centerX, saved.centerY
-    end, restoreHome, onStep)
+    end, restoreHome, onStep, instant)
   end
 
   -- The window moved: where the button is now becomes home. Returns the
