@@ -1,3 +1,4 @@
+local PhoneSlideClock = require("tests.helpers.phone_slide_clock")
 local PhoneSlide = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneSlide")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
@@ -25,16 +26,6 @@ end
 
 local function tick(viewport, seconds)
   viewport.scripts.OnUpdate(viewport, seconds)
-end
-
--- Frame by frame until the slide ends; one tick is clamped to 1/30 s.
-local function runOut(viewport)
-  for _ = 1, 60 do
-    if viewport.scripts.OnUpdate == nil then
-      return
-    end
-    tick(viewport, 1 / 60)
-  end
 end
 
 return function()
@@ -74,7 +65,7 @@ return function()
     slide.animateTo(1, function()
       finished = finished + 1
     end)
-    runOut(viewport)
+    PhoneSlideClock.Finish(viewport)
     assert(finished == 1, "done callback runs once")
     assert(layout.phoneProgress == 1, "ends on the chat")
     assert(viewport.clipsChildren == false, "clipping ends with the slide, so pop-ups are never cut off")
@@ -115,7 +106,7 @@ return function()
     slide.animateTo(0, function()
       second = second + 1
     end)
-    runOut(viewport)
+    PhoneSlideClock.Finish(viewport)
     assert(first == 0, "the abandoned slide never reports done")
     assert(second == 1, "the new slide reports done")
   end

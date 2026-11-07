@@ -1,3 +1,4 @@
+local PhoneSlideClock = require("tests.helpers.phone_slide_clock")
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
@@ -7,8 +8,6 @@ local PhoneRuntime = {}
 
 PhoneRuntime.KEY = "wow::WOW::arthas-area52"
 PhoneRuntime.OTHER = "wow::WOW::jaina-area52"
-
-local SLIDE_FRAMES = 60
 
 local function conversation(name, unread)
   return {
@@ -60,14 +59,7 @@ function PhoneRuntime.Run(settings, body)
 end
 
 function PhoneRuntime.FinishSlide(runtime)
-  local viewport = runtime.window.phoneViewport
-  -- The slide clamps one tick to 1/30 s, so a slow frame cannot skip it.
-  for _ = 1, SLIDE_FRAMES do
-    if not (viewport.scripts and viewport.scripts.OnUpdate) then
-      return
-    end
-    viewport.scripts.OnUpdate(viewport, 1 / 60)
-  end
+  PhoneSlideClock.Finish(runtime.window.phoneViewport)
 end
 
 function PhoneRuntime.ClickRow(runtime, key)

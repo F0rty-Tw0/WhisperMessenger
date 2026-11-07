@@ -1,3 +1,4 @@
+local PhoneSlideClock = require("tests.helpers.phone_slide_clock")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
@@ -5,8 +6,6 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 -- A real phone-layout window with a recording stand-in for the button.
 local PhoneWindow = {}
-
-local SLIDE_FRAMES = 60
 
 local function contacts()
   return ContactsList.BuildItems({
@@ -85,14 +84,7 @@ function PhoneWindow.Select(case, key)
 end
 
 function PhoneWindow.FinishSlide(case)
-  local viewport = case.window.phoneViewport
-  -- The slide clamps one tick to 1/30 s, so a slow frame cannot skip it.
-  for _ = 1, SLIDE_FRAMES do
-    if not (viewport.scripts and viewport.scripts.OnUpdate) then
-      return
-    end
-    viewport.scripts.OnUpdate(viewport, 1 / 60)
-  end
+  PhoneSlideClock.Finish(case.window.phoneViewport)
 end
 
 return PhoneWindow
