@@ -237,8 +237,10 @@ function PhoneWiring.Attach(hooks, options)
     return not isCovered() and navigator.back()
   end
 
-  -- Settings and addon panels are laid out for a wide window; it grows away
-  -- from the button while they show and returns after.
+  -- covered here means the wide window is needed: the options pane or a panel
+  -- that is not compact shows. The window grows away from the button
+  -- meanwhile and returns after. (Compact panels cover the chat but keep the
+  -- narrow window.)
   hooks.onCoverChanged = function(covered)
     covered = covered == true
     if covered == (layout.phoneWide == true) then
