@@ -55,7 +55,17 @@ return function()
 
   assert(accountState.conversations["wow::WOW::jaina-proudmoore"].unreadCount == 1)
 
-  EventBridge.RouteChannelEvent(arthasRuntime, "CHAT_MSG_CHANNEL", "WTS [Thunderfury] 50k", "Jaina-Proudmoore", "", "2. Trade - Stormwind City")
+  EventBridge.RouteChannelEvent(
+    arthasRuntime,
+    "CHAT_MSG_CHANNEL",
+    "WTS [Thunderfury] 50k",
+    "Jaina-Proudmoore",
+    "",
+    "2. Trade - Stormwind City",
+    "",
+    "",
+    2
+  )
 
   local thrallCharacterState = {
     window = { x = 0, y = 0, width = 900, height = 560, minimized = false },

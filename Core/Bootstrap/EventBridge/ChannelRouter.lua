@@ -12,8 +12,8 @@ local ChannelKey = ns.ChannelChatIngestChannelKey or require("WhisperMessenger.C
 local PerfCounters = ns.PerfCounters or require("WhisperMessenger.Util.PerfCounters")
 
 -- Public channel lines: filtered first, then kept as whisper-chat context
--- (ChannelMessageStore) and, for channels the player turned on, stored as
--- channel chats.
+-- (ChannelMessageStore) when built-in or turned on and, for channels the
+-- player turned on, stored as channel chats.
 local ChannelRouter = {}
 
 local EVENT_NAME = "CHAT_MSG_CHANNEL"
@@ -58,14 +58,16 @@ function ChannelRouter.RouteChannelEvent(runtime, eventName, ...)
     return true
   end
 
+  -- Only built-in channels and channels the player turned on are whisper
+  -- context; addon channels can post many lines a second.
+  local isChat = ChannelChatIngest.IsEnabled(runtime, zoneChannelID, channelBaseName)
   local store = runtime.channelMessageStore
-  if store ~= nil then
+  if store ~= nil and (isChat or ChannelKey.IsBuiltIn(zoneChannelID)) then
     local sentAt = runtime.now and runtime.now() or 0
-    ChannelMessageStore.Record(store, playerName, text, channelLabel, sentAt)
+    ChannelMessageStore.Record(store, playerName, text, channelLabel, sentAt, zoneChannelID)
   end
 
   -- Channels that are not chats stop here and build no payload.
-  local isChat = ChannelChatIngest.IsEnabled(runtime, zoneChannelID, channelBaseName)
   if isChat and not (runtime.isChannelIngestSuspended and runtime.isChannelIngestSuspended()) then
     ingest(runtime, {
       text = text,

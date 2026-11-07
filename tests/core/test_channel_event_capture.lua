@@ -112,6 +112,45 @@ return function()
     assert(PerfCounters.Get("unknownChannelIDs") == 1, "only the unknown non-zero ID counts, got " .. PerfCounters.Get("unknownChannelIDs"))
   end
 
+  -- test_custom_channel_line_not_ticked_is_not_kept_as_context
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = {}
+    EventBridge.RouteChannelEvent(
+      runtime,
+      "CHAT_MSG_CHANNEL",
+      "FIF:Q:12345",
+      "Finder",
+      "",
+      "5. ForeverItemFinder",
+      "",
+      "",
+      0,
+      5,
+      "ForeverItemFinder",
+      0,
+      8120
+    )
+    assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "finder") == nil, "an addon channel line is not kept as whisper context")
+  end
+
+  -- test_ticked_custom_channel_line_is_kept_as_context
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = { ["c:guildalliance"] = true }
+    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "anyone up?", "Pal", "", "5. GuildAlliance", "", "", 0, 5, "GuildAlliance", 0, 8121)
+    assert(ChannelMessageStore.GetLatest(runtime.channelMessageStore, "pal") ~= nil, "a channel the player ticked is kept as context")
+  end
+
+  -- test_built_in_line_is_kept_with_its_zone_channel_id
+  do
+    local runtime = makeRuntime()
+    runtime.accountState.settings.enabledChannels = {}
+    tradeLine(runtime, "WTS ore", "Seller", 8122, 2)
+    local entry = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "seller")
+    assert(entry ~= nil and entry.zoneChannelID == 2, "a built-in channel line is kept with its zone channel ID")
+  end
+
   -- test_ignored_sender_is_not_kept_as_context
   do
     local runtime = makeRuntime()
@@ -186,7 +225,10 @@ return function()
       "WTS [Thunderfury] 50k", -- text
       "Arthas-Area52", -- senderName
       "", -- languageName
-      "2. Trade - Stormwind City" -- channelString
+      "2. Trade - Stormwind City", -- channelString
+      "", -- target
+      "", -- flags
+      2 -- zoneChannelID
     )
 
     assert(result ~= nil, "should return store on success")
@@ -228,17 +270,17 @@ return function()
     }
 
     -- "2. Trade - Stormwind City" → "Trade"
-    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg1", "P1-Realm", "", "2. Trade - Stormwind City")
+    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg1", "P1-Realm", "", "2. Trade - Stormwind City", "", "", 2)
     local e1 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p1-realm")
     assert(e1.channelLabel == "Trade", "expected 'Trade', got: " .. tostring(e1.channelLabel))
 
     -- "1. General - Dornogal" → "General"
-    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg2", "P2-Realm", "", "1. General - Dornogal")
+    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg2", "P2-Realm", "", "1. General - Dornogal", "", "", 1)
     local e2 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p2-realm")
     assert(e2.channelLabel == "General", "expected 'General', got: " .. tostring(e2.channelLabel))
 
-    -- "4. LookingForGroup" (no zone suffix) → "LookingForGroup" (number prefix still stripped)
-    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg3", "P3-Realm", "", "4. LookingForGroup")
+    -- "4. LookingForGroup" (no zone suffix, Classic Era zone ID 24) → "LookingForGroup" (number prefix still stripped)
+    EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg3", "P3-Realm", "", "4. LookingForGroup", "", "", 24)
     local e3 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p3-realm")
     assert(e3.channelLabel == "LookingForGroup", "custom channel should drop its number, got: " .. tostring(e3.channelLabel))
   end

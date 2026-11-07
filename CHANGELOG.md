@@ -17,6 +17,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. A square button sits inside the title bar instead, in both windows, and changing its shape moves it there right away. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: Dragging the button while it sits on the open window no longer makes the window jump.
+- Fixed: Messages from addon chat channels (like Forever Item Finder's) no longer show up inside your whisper chats. Channels you turned on as chats, and the game's own channels like Trade, still show their latest message there.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
 - Fixed: The floating button no longer stays invisible when its transparency is set high. While you have anything unread it shows fully, and it fades back to your chosen transparency once you have read them.
 - Fixed: Copy Character Name in the right-click menu of a chat or a message no longer shows an error. It opens a small box with the name selected, ready to copy with Ctrl+C. In WoW: Forever it copies the name without the realm, like the game's own menu does.
