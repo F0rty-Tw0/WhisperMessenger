@@ -5,7 +5,8 @@ end
 
 -- Sizes and anchors every title-bar button (and the title under the custom
 -- chrome). Custom chrome: one hit size, one gap, everything centred on the
--- title bar vertically, the title centred horizontally (like the native HUD),
+-- title bar vertically, the title centred horizontally in the bar space right
+-- of the docked button's slot (like the native HUD),
 -- outer glyph ink mirrored on both edges. Native WoW HUD (the
 -- Blizzard template) keeps its own compact offsets.
 local TitleBarLayout = {}
@@ -44,7 +45,7 @@ local function applyModern(parts, L)
   for _, button in ipairs(parts.buttons) do
     button:SetFrameLevel(buttonLevel)
   end
-  place(parts.title, "CENTER", parts.titleBar, "CENTER", 0, 0)
+  place(parts.title, "CENTER", parts.titleBar, "CENTER", leftRoom(parts) / 2, 0)
   place(parts.closeButton, "RIGHT", parts.titleBar, "RIGHT", -L.TITLE_BAR_INSET_X, 0)
   place(parts.newConversationButton, "LEFT", parts.titleBar, "LEFT", L.TITLE_BAR_INSET_X + leftRoom(parts), 0)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", gap, 0)
