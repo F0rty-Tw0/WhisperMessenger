@@ -19,6 +19,7 @@ local ComposerLaunchers = ns.ComposerLaunchers or require("WhisperMessenger.UI.C
 local ReplyState = ns.ComposerReplyState or require("WhisperMessenger.UI.Composer.ReplyState")
 local ComposerLimit = ns.ComposerLimit or require("WhisperMessenger.UI.Composer.ComposerLimit")
 local ComposerSendFocus = ns.ComposerSendFocus or require("WhisperMessenger.UI.Composer.ComposerSendFocus")
+local SlashCommand = ns.ComposerSlashCommand or require("WhisperMessenger.UI.Composer.SlashCommand")
 
 local Composer = {}
 
@@ -139,6 +140,16 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     PickerStyles.HideTooltip()
   end)
 
+  local function clearAfterSend()
+    replies.clear()
+    input:SetText("")
+    limit.remember()
+    if onDraftChanged then
+      onDraftChanged(selectedContact.conversationKey, "")
+    end
+    sendFocus.afterSend()
+  end
+
   local function submitMessage()
     if sendDisabled then
       return
@@ -146,6 +157,15 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
 
     local text = input.GetText and input:GetText() or input.text
     if text == nil or text == "" then
+      return
+    end
+
+    -- A slash command never goes out as a whisper; with no chat box to run it, the text stays put.
+    local command = SlashCommand.Parse(text)
+    if command ~= nil then
+      if SlashCommand.Run(command) then
+        clearAfterSend()
+      end
       return
     end
 
@@ -163,13 +183,7 @@ function Composer.Create(factory, parent, selectedContact, onSend, onEscape, get
     })
 
     if accepted ~= false then
-      replies.clear()
-      input:SetText("")
-      limit.remember()
-      if onDraftChanged then
-        onDraftChanged(selectedContact.conversationKey, "")
-      end
-      sendFocus.afterSend()
+      clearAfterSend()
     end
   end
 
