@@ -237,6 +237,7 @@ function PreviewReplyHold.Create(factory, previewFrame, options)
 
   -- The open re-enters the card (selectConversation -> refresh -> clear),
   -- whose stash must not write the runtime's draft a second time.
+  -- Returns handled (the hold owned the click) and opened (the chat opened).
   function hold.onOpen()
     if not holding() then
       return false
@@ -247,11 +248,12 @@ function PreviewReplyHold.Create(factory, previewFrame, options)
     if not ok then
       error(result, 0)
     end
-    if result == true then
+    local opened = result == true
+    if opened then
       stale = false
       clearRow(true)
     end
-    return true
+    return true, opened
   end
 
   function hold.isRowShown()

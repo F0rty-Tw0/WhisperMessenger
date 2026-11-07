@@ -286,6 +286,7 @@ function ToggleIcon.Create(factory, options)
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = incomingPreview.setExternalPreview,
     isExternalPreviewShown = incomingPreview.isExternalShown,
+    openShownPreview = incomingPreview.openShownPreview,
     setExternalPulse = pulseState.setExternal,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
     applyIconSize = applyIconSize,

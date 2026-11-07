@@ -97,6 +97,24 @@ function IncomingPreview.Create(factory, frame, options)
     hideCard = clearIncomingPreview,
   })
 
+  -- Opens the whisper on the card; true when the chat opened. The owner
+  -- acknowledges the whisper, and the refresh then clears the preview.
+  local function openOwnPreview()
+    local handled, opened = hold.onOpen()
+    if handled then
+      return opened
+    end
+    return options.onOpenPreview ~= nil and options.onOpenPreview() == true
+  end
+
+  -- The button click: only a whisper card on screen opens, not another addon's.
+  local function openShownPreview()
+    if externalEntry ~= nil or lastPreviewSenderName == nil or not previewFrame:IsVisible() then
+      return false
+    end
+    return openOwnPreview()
+  end
+
   if dismiss.button.SetScript then
     dismiss.button:SetScript("OnClick", dismissCurrent)
   end
@@ -112,11 +130,8 @@ function IncomingPreview.Create(factory, frame, options)
         if externalEntry == current then
           clearIncomingPreview()
         end
-      elseif button == "LeftButton" and hold.onOpen() then
-        return
-      elseif button == "LeftButton" and options.onOpenPreview then
-        -- The owner acknowledges the whisper; the refresh then clears the preview.
-        options.onOpenPreview()
+      elseif button == "LeftButton" then
+        openOwnPreview()
       end
     end)
     previewFrame:SetScript("OnShow", function()
@@ -256,6 +271,7 @@ function IncomingPreview.Create(factory, frame, options)
     setIncomingPreview = setIncomingPreview,
     setExternalPreview = setExternalPreview,
     isExternalShown = isExternalShown,
+    openShownPreview = openShownPreview,
     setSuppressed = setSuppressed,
     applyPreviewPosition = positioner.apply,
     applyTheme = applyTheme,

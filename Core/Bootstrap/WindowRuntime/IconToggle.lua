@@ -33,12 +33,26 @@ local function targetPanelKey(runtime)
   return registry.firstBadgedKey()
 end
 
--- Whispers win, and a visible window still hides. Otherwise an addon page
--- with something waiting opens; with no such page, or when opening it is
--- refused, the plain toggle runs.
+-- The widget's whisper card on screen opens its chat, as a click on the card
+-- would. False when no such card shows or the open was refused.
+local function openShownWhisperPreview(runtime)
+  local widget = runtime.getWidgetIcon and runtime.getWidgetIcon() or nil
+  return widget ~= nil and widget.openShownPreview ~= nil and widget.openShownPreview() == true
+end
+
+-- A visible window still hides. A whisper card on the widget opens its chat;
+-- other whispers run the plain toggle. Otherwise an addon page with something
+-- waiting opens; with no such page, or when opening it is refused, the plain
+-- toggle runs.
 function IconToggle.Wrap(runtime, toggle, buildContacts)
   return function()
-    if runtime.isWindowVisible() or BadgeFilter.SumWhisperUnread(buildContacts()) > 0 then
+    if runtime.isWindowVisible() then
+      return toggle()
+    end
+    if openShownWhisperPreview(runtime) then
+      return
+    end
+    if BadgeFilter.SumWhisperUnread(buildContacts()) > 0 then
       return toggle()
     end
     local key = targetPanelKey(runtime)
