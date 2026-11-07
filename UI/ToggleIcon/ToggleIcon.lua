@@ -304,6 +304,8 @@ function ToggleIcon.Create(factory, options)
     setRideHome = ride.setHome,
     setRideStrata = ride.setStrata,
     setRideHandlers = drag.setRideHandlers,
+    -- The window docks a square and a circle on different spots.
+    getWidgetShape = options.getWidgetShape,
   }
 end
 

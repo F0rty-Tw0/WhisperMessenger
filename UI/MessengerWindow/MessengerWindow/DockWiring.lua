@@ -67,19 +67,6 @@ function DockWiring.Attach(window, parts)
     end,
   }
 
-  -- A window opening for the first time may have no position until next frame.
-  local function clampToSpot()
-    if PhoneDock.ClampToSpot(window, chrome.iconSlot) then
-      return
-    end
-    local timer = _G.C_Timer
-    if type(timer) == "table" and type(timer.After) == "function" then
-      timer.After(0, function()
-        PhoneDock.ClampToSpot(window, chrome.iconSlot)
-      end)
-    end
-  end
-
   local getGrowSource, isGrowAnimationOn = WindowGrowAnimation.Defaults(windowOptions.getGrowSource, windowOptions.isGrowAnimationOn)
   local flow = PhoneDockFlow.Attach(window, {
     chrome = chrome,
@@ -95,7 +82,25 @@ function DockWiring.Attach(window, parts)
     return true
   end
 
-  hooks.dock = flow.dock
+  -- The clamp reaches over the button's spot, which depends on its shape. A
+  -- window opening for the first time may have no position until next frame.
+  local function clampToSpot()
+    if PhoneDock.ClampToSpot(window, flow.spot()) then
+      return
+    end
+    local timer = _G.C_Timer
+    if type(timer) == "table" and type(timer.After) == "function" then
+      timer.After(0, function()
+        PhoneDock.ClampToSpot(window, flow.spot())
+      end)
+    end
+  end
+
+  -- A re-dock can change the spot (the widget shape changed).
+  hooks.dock = function()
+    flow.dock()
+    clampToSpot()
+  end
   -- The button's current spot becomes its home. A locked icon keeps its home
   -- and the icon saves through its own onPositionChanged (shared widget position).
   hooks.onWindowMoved = function()

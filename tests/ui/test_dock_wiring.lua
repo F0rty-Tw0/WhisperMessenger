@@ -184,6 +184,55 @@ return function()
     assert(case.homeInstant == true, name .. ": and jumps home")
   end)
 
+  -- test_square_docked_window_adds_no_overhang_to_the_screen_clamp
+  eachLayout(function(name, phone)
+    local case = PhoneWindow.Build({ phoneLayout = phone })
+    local shape = "circle"
+    case.icon.getWidgetShape = function()
+      return shape
+    end
+    local frame = case.window.frame
+    frame:Show()
+    local corner = case.rodeTo.region
+    at(frame, 100, 900)
+    at(corner, 93, 917)
+    frame:Hide()
+    frame:Show()
+    assert(select(1, frame:GetClampRectInsets()) == -7, name .. ": the circle reaches over its corner")
+    shape = "square"
+    case.window.dockPhoneIcon()
+    local titleSpot = case.rodeTo.region
+    assert(titleSpot ~= corner and titleSpot:GetHeight() == L.TOP_BAR_HEIGHT, name .. ": re-docked into the title bar")
+    at(titleSpot, 104, 899)
+    case.window.dockPhoneIcon()
+    local left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, name .. ": switching to square drops the overhang, got " .. tostring(left) .. "," .. tostring(top))
+    frame:Hide()
+    frame:Show()
+    left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, name .. ": and reopening keeps none, got " .. tostring(left) .. "," .. tostring(top))
+  end)
+
+  -- test_the_real_square_button_docks_inside_the_title_bar  (custom, Classic and Retail chrome)
+  local function squareDocks(label, settings, height)
+    settings.widgetShape, settings.windowAnimation = "square", false
+    PhoneRuntime.Run(settings, function(runtime)
+      runtime.toggle()
+      local icon = runtime.icon
+      assert(icon.isRiding(), label .. ": rides the window")
+      local _, spot = icon.frame:GetPoint()
+      assert(spot:GetHeight() == height, label .. ": on the title-bar spot, got " .. tostring(spot:GetHeight()))
+    end)
+  end
+  for _, phone in ipairs({ true, false }) do
+    local layout = phone and "compact" or "regular"
+    squareDocks(layout .. " custom", { phoneLayout = phone, hudStyle = "off" }, L.TOP_BAR_HEIGHT)
+    squareDocks(layout .. " classic", { phoneLayout = phone, hudStyle = "classic" }, L.CHROME_BUTTON_SIZE)
+    RetailHud.With(function()
+      squareDocks(layout .. " retail", { phoneLayout = phone, hudStyle = "retail" }, L.CHROME_BUTTON_SIZE)
+    end)
+  end
+
   -- test_wrapped_position_adopts_the_buttons_spot_before_saving
   do
     local calls = {}

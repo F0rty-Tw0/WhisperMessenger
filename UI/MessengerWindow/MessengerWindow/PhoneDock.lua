@@ -6,9 +6,10 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 
 -- Where the phone window opens and where the floating button rides on it.
--- Every window style declares one icon spot (chrome.iconSlot), so this has no
--- per-style cases: with Open at saved spot off, the window opens with its spot
--- on the button; the button grows to fill the spot.
+-- Every window style declares its icon spots (chrome.iconSlot for the circle,
+-- chrome.titleIconSlot for the square), so this has no per-style cases: with
+-- Open at saved spot off, the window opens with its spot on the button; the
+-- button grows or shrinks to fill the spot.
 local PhoneDock = {}
 
 -- Spot centre relative to the window's top-left corner. Before the client has
@@ -50,9 +51,10 @@ function PhoneDock.Center(frame)
   frame:SetPoint("TOPLEFT", frame:GetParent() or _G.UIParent, "CENTER", -L.PHONE_WINDOW_WIDTH / 2, L.PHONE_WINDOW_HEIGHT / 2)
 end
 
--- The spot sticks out past the window's corner; the screen clamp only knows
--- the window's own edges, so it is told to reach over the spot. False while
--- the client has no position for them yet.
+-- The corner spot sticks out past the window's corner; the screen clamp only
+-- knows the window's own edges, so it is told to reach over the spot. A spot
+-- inside the window (the title bar's) adds nothing. False while the client has
+-- no position for them yet.
 function PhoneDock.ClampToSpot(frame, slot)
   local frameLeft = frame.GetLeft and frame:GetLeft()
   local frameTop = frame.GetTop and frame:GetTop()
