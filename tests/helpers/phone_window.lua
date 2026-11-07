@@ -3,6 +3,8 @@ local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local FakeUI = require("tests.helpers.fake_ui")
+local GrowRig = require("tests.helpers.grow_rig")
+local WindowGrowAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
 -- A real phone-layout window with a recording stand-in for the button.
 local PhoneWindow = {}
@@ -103,30 +105,22 @@ function PhoneWindow.FinishSlide(case)
   PhoneSlideClock.Finish(case.window.phoneViewport)
 end
 
-local function setRect(region, left, bottom, right, top)
-  for name, value in pairs({ GetLeft = left, GetBottom = bottom, GetRight = right, GetTop = top }) do
-    rawset(region, name, function()
-      return value
-    end)
-  end
-end
-
 -- Screen positions and visibility, which the fake client does not give.
 -- Window 100..460 x 100..740; button centred on 800,500; minimap icon centred on 1516,116.
 function PhoneWindow.Lay(case)
   case.uiParent:Show()
   case.fab:Show()
   case.minimap:Show()
-  setRect(case.window.frame, 100, 100, 460, 740)
-  setRect(case.fab, 779, 479, 821, 521)
-  setRect(case.minimap, 1500, 100, 1532, 132)
+  GrowRig.rect(case.window.frame, 100, 100, 460, 740)
+  GrowRig.rect(case.fab, 779, 479, 821, 521)
+  GrowRig.rect(case.minimap, 1500, 100, 1532, 132)
 end
 
--- The grow panel is the one frame built at level 1990 (PANEL_LEVEL in WindowGrowAnimation.lua).
+-- The grow panel is the one frame built at the panel level.
 function PhoneWindow.Panel(case)
   local found
   for _, created in ipairs(case.created) do
-    if created:GetFrameLevel() == 1990 then
+    if created:GetFrameLevel() == WindowGrowAnimation.PANEL_LEVEL then
       assert(found == nil, "two frames at the panel level")
       found = created
     end
@@ -134,9 +128,7 @@ function PhoneWindow.Panel(case)
   return assert(found, "no grow panel was built")
 end
 
-function PhoneWindow.HasClock(frame)
-  return frame.scripts ~= nil and frame.scripts.OnUpdate ~= nil
-end
+PhoneWindow.HasClock = GrowRig.running
 
 -- Ticks the frame's OnUpdate until the clock ends itself.
 function PhoneWindow.RunClock(frame)

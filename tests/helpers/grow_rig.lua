@@ -1,11 +1,12 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
+local WindowGrowAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
 -- Pieces for tests that drive the window's grow/shrink panel by hand.
 local GrowRig = {}
 
 GrowRig.STEP = 1 / 30 -- GlideClock's per-frame cap
-local PANEL_LEVEL = 1990 -- WindowGrowAnimation's panel level
+local PANEL_LEVEL = WindowGrowAnimation.PANEL_LEVEL
 
 function GrowRig.rect(frame, left, bottom, right, top)
   rawset(frame, "GetLeft", function()

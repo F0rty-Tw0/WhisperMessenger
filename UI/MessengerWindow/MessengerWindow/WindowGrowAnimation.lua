@@ -21,6 +21,8 @@ local PANEL_FADE_START = 0.85
 -- in over a solid panel; under the button (PHONE_RIDE_FRAME_LEVEL) too.
 local PANEL_LEVEL = 1990
 local MIN_PANEL_SIZE = 1
+-- Tests find the panel by its level.
+WindowGrowAnimation.PANEL_LEVEL = PANEL_LEVEL
 
 local function noSource()
   return nil
