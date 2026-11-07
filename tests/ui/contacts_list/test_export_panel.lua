@@ -180,6 +180,18 @@ return function()
     end)
   end
 
+  -- test_only_the_latest_load_is_redrawn
+  do
+    withQueuedTimers(function(flush)
+      local panel = show(450)
+      FindUI.click(button(panel, "Show more"))
+      local calls = countSetText(panel)
+      flush()
+      assert(calls.count == 1, "stale redraw skipped, got " .. calls.count)
+      assert(panel.editBox:GetText() == panel.text, "latest text kept")
+    end)
+  end
+
   -- test_typing_does_not_change_the_text
   do
     local panel = show(3)

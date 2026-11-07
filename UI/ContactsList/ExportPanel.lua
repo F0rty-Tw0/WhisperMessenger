@@ -54,8 +54,8 @@ local function loadedText(panel)
   return panel.header .. "\n" .. concat(panel.lines, "\n", total - panel.loaded + 1, total)
 end
 
--- WoW: Forever doesn't draw text set while the panel opens; setting it
--- again a frame later does. Skipped once the panel is closed or reloaded.
+-- WoW: Forever leaves the text a load sets undrawn; setting it again a
+-- frame later draws it. Skipped once the panel is closed or loads again.
 local function redrawNextFrame(panel)
   local timer = _G.C_Timer
   if type(timer) ~= "table" or type(timer.After) ~= "function" then
