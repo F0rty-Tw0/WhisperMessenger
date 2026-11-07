@@ -125,7 +125,8 @@ function MessengerWindow.Create(factory, options)
   local refreshSelection = composerRuntime.refreshSelection
   local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
-  local onPositionChanged, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local wrappedPosition, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,

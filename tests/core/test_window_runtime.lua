@@ -371,6 +371,7 @@ return function()
     "getGrowSource",
     "isGrowAnimationOn",
     "isIconGlideOn",
+    "isOpenAtSavedSpot",
   }) do
     assert(type(windowOptions[name]) == "function", "window options should include " .. name)
   end
@@ -378,6 +379,7 @@ return function()
   -- test_window_options_carry_the_grow_source_and_switch
   assert(windowOptions.isGrowAnimationOn() == true, "the window animation switch defaults on")
   assert(windowOptions.isIconGlideOn() == true, "Button glide defaults on")
+  assert(windowOptions.isOpenAtSavedSpot() == false, "Open at saved spot defaults off")
 
   -- Opening the owner's panel switches the preview's pulse off (and keeps the preview).
   runtime.externalPreview.set("ca", { sender = "S", text = "T", pulse = true }, false)

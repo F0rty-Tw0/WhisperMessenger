@@ -49,7 +49,23 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { phoneLayoutSpec, windowAnimationSpec, iconGlideSpec }
+  local openAtSavedSpotSpec = {
+    key = "openAtSavedSpot",
+    label = text("Open at saved spot"),
+    labelKey = "Open at saved spot",
+    initial = config.openAtSavedSpot == true,
+    onChange = function(value)
+      onChange("openAtSavedSpot", value)
+    end,
+    tooltipLines = {
+      text("Open at saved spot"),
+      text(
+        "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window."
+      ),
+    },
+  }
+
+  return { phoneLayoutSpec, windowAnimationSpec, iconGlideSpec, openAtSavedSpotSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

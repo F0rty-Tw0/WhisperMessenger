@@ -39,6 +39,8 @@ function PhoneWindow.Build(extra)
   case.minimap = factory.CreateFrame("Button", "Mini", _G.UIParent)
   -- homeMoves: calls that would move the button's home (ToggleIcon's setRideHome).
   case.rides, case.homes, case.homeMoves = 0, 0, 0
+  -- adopted: calls that would make the button's current spot its home (adoptRidePosition).
+  case.adopted = 0
   case.icon = {
     frame = fab,
     isRiding = function()
@@ -57,6 +59,9 @@ function PhoneWindow.Build(extra)
     end,
     setRideHome = function()
       case.homeMoves = case.homeMoves + 1
+    end,
+    adoptRidePosition = function()
+      case.adopted = case.adopted + 1
     end,
     setRideHandlers = function(handlers)
       case.rideHandlers = handlers

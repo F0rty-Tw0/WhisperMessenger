@@ -96,4 +96,16 @@ return function()
     assert(source.isIconGlideOn() == true, "on again")
     assert(build("widget", nil, nil, nil).isIconGlideOn() == true, "no settings table counts as on")
   end
+
+  -- test_open_at_saved_spot_is_off_unless_switched_on
+  do
+    local settings = {}
+    local source = build("widget", nil, nil, settings)
+    assert(source.isOpenAtSavedSpot() == false, "missing counts as off")
+    settings.openAtSavedSpot = true
+    assert(source.isOpenAtSavedSpot() == true, "on, read live")
+    settings.openAtSavedSpot = false
+    assert(source.isOpenAtSavedSpot() == false, "off again")
+    assert(build("widget", nil, nil, nil).isOpenAtSavedSpot() == false, "no settings table counts as off")
+  end
 end

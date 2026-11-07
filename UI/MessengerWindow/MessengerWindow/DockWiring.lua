@@ -12,17 +12,28 @@ local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
 -- The floating button docking on the window's corner while it is open, and
 -- the window growing out of its source, in both layouts. Hooks() returns the
 -- calls MessengerWindow makes while building, which do nothing until Attach
--- fills them in.
+-- fills them in. With Open at saved spot off, the window opens at the button
+-- and the button's home follows every move of the window.
 local DockWiring = {}
 
 function DockWiring.Hooks()
   return {
     dock = function() end,
+    onWindowMoved = function() end,
     onStrataChanged = function(_strata) end,
     isWindowPart = function(_candidate)
       return false
     end,
   }
+end
+
+-- The window's position callback, run after the window moved by hand (drag,
+-- resize, rail snap): the button adopts the spot first, then onPositionChanged.
+function DockWiring.WrapPosition(hooks, onPositionChanged)
+  return function(nextState)
+    hooks.onWindowMoved()
+    onPositionChanged(nextState)
+  end
 end
 
 -- parts: hooks (from Hooks()), factory, chrome, windowOptions
@@ -78,9 +89,21 @@ function DockWiring.Attach(window, parts)
     getGrowSource = getGrowSource,
     isGrowAnimationOn = isGrowAnimationOn,
     isIconGlideOn = windowOptions.isIconGlideOn,
+    isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot,
   })
+  local isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot or function()
+    return true
+  end
 
   hooks.dock = flow.dock
+  -- The button's current spot becomes its home. A locked icon keeps its home
+  -- and the icon saves through its own onPositionChanged (shared widget position).
+  hooks.onWindowMoved = function()
+    local icon = flow.dockedIcon()
+    if not isOpenAtSavedSpot() and icon and icon.isRiding() then
+      icon.adoptRidePosition()
+    end
+  end
   hooks.onStrataChanged = function(strata)
     flow.setStrata(strata)
   end

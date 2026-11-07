@@ -36,6 +36,7 @@ local DEFAULTS = {
   phoneLayout = true,
   windowAnimation = true,
   iconGlide = true,
+  openAtSavedSpot = false,
 }
 
 local function pctFormat(v)

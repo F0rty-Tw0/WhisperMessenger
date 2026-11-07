@@ -15,8 +15,9 @@ local PhoneDockFlow = {}
 -- openAnimation (beginOpen, beginClose, finish, play), rideHandlers (the drag
 -- handlers the button carries while docked), getGrowSource() (the frame the
 -- window grows from, or nil), isGrowAnimationOn() and isIconGlideOn() (off:
--- the button jumps instead of gliding; the window still grows from it).
--- A missing isIconGlideOn counts as on.
+-- the button jumps instead of gliding; the window still grows from it) and
+-- isOpenAtSavedSpot() (off: the window opens with its icon spot on the button).
+-- A missing isIconGlideOn or isOpenAtSavedSpot counts as on.
 function PhoneDockFlow.Attach(frame, options)
   local chrome = options.chrome
   local getDockIcon = options.getDockIcon
@@ -25,6 +26,9 @@ function PhoneDockFlow.Attach(frame, options)
   local getGrowSource = options.getGrowSource
   local isGrowAnimationOn = options.isGrowAnimationOn
   local isIconGlideOn = options.isIconGlideOn or function()
+    return true
+  end
+  local isOpenAtSavedSpot = options.isOpenAtSavedSpot or function()
     return true
   end
   -- The button on the window now. getDockIcon stops returning it once the
@@ -81,6 +85,11 @@ function PhoneDockFlow.Attach(frame, options)
     end
     isOpen = true
     local icon = getDockIcon()
+    -- Only a button on screen can take the window to it: without one, the
+    -- window opens at its saved spot.
+    if not isOpenAtSavedSpot() and icon and icon.rideTo and icon.frame:IsVisible() then
+      PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
+    end
     local source = growSource()
     rememberedSource = source
     local dockable = icon and icon.rideTo

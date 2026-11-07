@@ -5,8 +5,8 @@ end
 
 -- Picks the icon the window grows from and shrinks into: the floating button
 -- when it is up, else the minimap icon (minimap or both mode), else nothing.
--- Also answers whether the grow animation and the button glide are switched
--- on, read live.
+-- Also answers whether the grow animation, the button glide and Open at saved
+-- spot are switched on, read live.
 local GrowSource = {}
 
 function GrowSource.Create(options)
@@ -41,7 +41,17 @@ function GrowSource.Create(options)
     return isGrowAnimationOn() and (not settings or settings.iconGlide ~= false)
   end
 
-  return { getGrowSource = getGrowSource, isGrowAnimationOn = isGrowAnimationOn, isIconGlideOn = isIconGlideOn }
+  -- Off (the default): the window opens at the floating button.
+  local function isOpenAtSavedSpot()
+    return settings ~= nil and settings.openAtSavedSpot == true
+  end
+
+  return {
+    getGrowSource = getGrowSource,
+    isGrowAnimationOn = isGrowAnimationOn,
+    isIconGlideOn = isIconGlideOn,
+    isOpenAtSavedSpot = isOpenAtSavedSpot,
+  }
 end
 
 ns.BootstrapWindowRuntimeGrowSource = GrowSource

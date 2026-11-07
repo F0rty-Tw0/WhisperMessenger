@@ -2,6 +2,7 @@ local PhoneWindow = require("tests.helpers.phone_window")
 local PhoneRuntime = require("tests.helpers.phone_runtime")
 local RetailHud = require("tests.helpers.retail_hud")
 local Theme = require("WhisperMessenger.UI.Theme")
+local DockWiring = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
 local SettingsHandler = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.SettingsHandler")
 local withPopups = require("tests.helpers.reload_popups").With
 
@@ -182,4 +183,21 @@ return function()
     frame:Hide()
     assert(case.homeInstant == true, name .. ": and jumps home")
   end)
+
+  -- test_wrapped_position_adopts_the_buttons_spot_before_saving
+  do
+    local calls = {}
+    local hooks = DockWiring.Hooks()
+    local wrapped = DockWiring.WrapPosition(hooks, function(state)
+      calls[#calls + 1] = "saved " .. state.tag
+    end)
+    hooks.onWindowMoved()
+    wrapped({ tag = "idle" })
+    assert(table.concat(calls, ",") == "saved idle", "idle hooks do nothing before the save")
+    hooks.onWindowMoved = function()
+      calls[#calls + 1] = "adopted"
+    end
+    wrapped({ tag = "moved" })
+    assert(table.concat(calls, ",") == "saved idle,adopted,saved moved", "adopt first, then save, got " .. table.concat(calls, ","))
+  end
 end

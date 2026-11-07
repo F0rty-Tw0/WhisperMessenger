@@ -6,13 +6,14 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New phone-style window: the messenger button grows into the window's top-left icon and opens a tall, phone-sized list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens where you last left it, with the button flying onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
+- New phone-style window: the messenger button grows into the window's top-left icon and opens a tall, phone-sized list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
 - New installs start with the phone-style window. If you already use the addon, your window stays as it is, and you can turn the new one on with "Phone-style window" under Appearance settings.
 - Closing the phone-style window sends the icon back to where it came from. Settings open wider while they're showing, then the window returns to phone size.
 - Addons that support it (Craft Alert) now open their page inside the phone-style window without widening it.
 - The regular (non-phone) window now grows out of its icon when it opens and shrinks back into it when it closes.
 - New option under Appearance: Window animation, to turn the opening and closing animation off.
 - New option under Appearance: Button glide. Turn it off and the floating button jumps onto the window's corner and back instead of gliding. It follows Window animation: with that off, the button always jumps.
+- New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window. On, the window opens where you last moved it and the button stays where it is.
 - The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. You can still click the button to close the window or drag it to move the window.
 - In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
