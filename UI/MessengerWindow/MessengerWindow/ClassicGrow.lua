@@ -10,18 +10,9 @@ local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
 -- hide. Hooks (not scripts): the window's own OnShow/OnHide stay in place.
 local ClassicGrow = {}
 
-local function noSource()
-  return nil
-end
-
-local function alwaysOn()
-  return true
-end
-
 -- options: factory, parent, theme, windowAlpha, getSource(), isOn().
 function ClassicGrow.Attach(frame, options)
-  local getSource = options.getSource or noSource
-  local isOn = options.isOn or alwaysOn
+  local getSource, isOn = WindowGrowAnimation.Defaults(options.getSource, options.isOn)
   local windowAlpha = options.windowAlpha
   local anim = WindowGrowAnimation.Attach(frame, {
     factory = options.factory,
@@ -43,11 +34,7 @@ function ClassicGrow.Attach(frame, options)
     end
     open = true
     remembered = isOn() and getSource() or nil
-    if remembered then
-      anim.play(anim.beginOpen(remembered))
-      return
-    end
-    anim.finish()
+    WindowGrowAnimation.GrowFrom(anim, remembered, anim.beginOpen)
   end)
 
   frame:HookScript("OnHide", function()
@@ -64,11 +51,7 @@ function ClassicGrow.Attach(frame, options)
     if isOn() then
       source = (remembered and remembered:IsVisible()) and remembered or getSource()
     end
-    if source then
-      anim.play(anim.beginClose(source))
-      return
-    end
-    anim.finish()
+    WindowGrowAnimation.GrowFrom(anim, source, anim.beginClose)
   end)
 end
 

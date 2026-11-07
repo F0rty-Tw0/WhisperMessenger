@@ -22,6 +22,14 @@ local PANEL_FADE_START = 0.85
 local PANEL_LEVEL = 1990
 local MIN_PANEL_SIZE = 1
 
+local function noSource()
+  return nil
+end
+
+local function alwaysOn()
+  return true
+end
+
 -- 0 before start, rising to 1 at t = 1.
 local function ramp(t, start)
   if t <= start then
@@ -197,6 +205,22 @@ function WindowGrowAnimation.Attach(frame, options)
     finish = finish,
     play = play,
   }
+end
+
+-- The window's grow options with their defaults: no source, switch on.
+function WindowGrowAnimation.Defaults(getSource, isOn)
+  return getSource or noSource, isOn or alwaysOn
+end
+
+-- A source runs anim's begin (beginOpen or beginClose) on the panel's own
+-- clock; none means no animation, and finish() also releases a hold a
+-- superseded run left on the window.
+function WindowGrowAnimation.GrowFrom(anim, source, begin)
+  if source then
+    anim.play(begin(source))
+    return
+  end
+  anim.finish()
 end
 
 ns.MessengerWindowWindowGrowAnimation = WindowGrowAnimation
