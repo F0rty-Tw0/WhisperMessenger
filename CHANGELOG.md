@@ -6,9 +6,11 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New phone-style window: the messenger button grows into the window's top-left icon and opens a tall, phone-sized list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and dragging the window takes the button with it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
+- New phone-style window: the messenger button grows into the window's top-left icon and opens a tall, phone-sized list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens where you last left it, with the button flying onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
 - New installs start with the phone-style window. If you already use the addon, your window stays as it is, and you can turn the new one on with "Phone-style window" under Appearance settings.
 - Closing the phone-style window sends the icon back to where it came from. Settings open wider while they're showing, then the window returns to phone size.
+- The classic window now grows out of its icon when it opens and shrinks back into it when it closes.
+- New option under Appearance: Window animation, to turn the opening and closing animation off.
 - In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
 - Fixed: Copy Character Name in the right-click menu of a chat or a message no longer shows an error. It opens a small box with the name selected, ready to copy with Ctrl+C. In WoW: Forever it copies the name without the realm, like the game's own menu does.

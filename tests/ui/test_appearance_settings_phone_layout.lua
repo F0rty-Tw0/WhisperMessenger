@@ -61,14 +61,15 @@ return function()
     assert(#changes == 2 and changes[2].value == false, "the toggle went back, so the next click asks again")
   end
 
-  -- test_the_toggle_sits_between_the_hud_picker_and_the_theme_preset
+  -- test_the_toggles_sit_between_the_hud_picker_and_the_theme_preset
   do
     local result = create()
     local row = FindUI.byLabel(result.frame, LABEL)
+    local animation = FindUI.byLabel(result.frame, "Window animation")
     local hud = FindUI.byLabel(result.frame, "Native WoW HUD")
     local preset = FindUI.byLabel(result.frame, "Theme Preset")
     assert(select(2, row:GetPoint()) == hud, "below the HUD picker")
-    assert(select(2, preset:GetPoint()) == row, "above the theme preset")
+    assert(select(2, preset:GetPoint()) == animation, "above the theme preset")
   end
 
   -- test_the_toggle_relabels_with_the_page
