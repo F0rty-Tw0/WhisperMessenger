@@ -5,7 +5,8 @@ end
 
 -- Sizes and anchors every title-bar button (and the title under the custom
 -- chrome). Custom chrome: one hit size, one gap, everything centred on the
--- title bar vertically, the title centred horizontally (like the native HUD),
+-- title bar vertically, the title centred horizontally in the bar space right
+-- of the docked button's slot (like the native HUD),
 -- outer glyph ink mirrored on both edges. Native WoW HUD (the
 -- Blizzard template) keeps its own compact offsets.
 local TitleBarLayout = {}
