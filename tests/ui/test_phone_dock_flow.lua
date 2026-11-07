@@ -39,7 +39,7 @@ return function()
     local case = build()
     case.flow.open()
     case.flow.dock()
-    assert(case.finished == 1 and case.rides == 2 and case.step == nil, "re-docks with no opening to replay")
+    assert(case.finished == 1 and case.rides == 2 and case.step == nil and case.rideInstant ~= true, "re-docks with no opening to replay, gliding")
   end
 
   -- test_slot_strata_and_window_part_follow_the_docked_button
@@ -73,7 +73,7 @@ return function()
     assert(case.rides == 2 and case.rideInstant == true, "a re-dock jumps when Window animation is off")
   end
 
-  -- test_glide_on_keeps_the_gliding_ride
+  -- test_window_animation_on_keeps_the_gliding_ride
   do
     local case = build()
     case.flow.open()
