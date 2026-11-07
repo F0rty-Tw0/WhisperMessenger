@@ -1,9 +1,11 @@
 local PhoneRuntime = require("tests.helpers.phone_runtime")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
+local RetailHud = require("tests.helpers.retail_hud")
 local Theme = require("WhisperMessenger.UI.Theme")
 
--- The HUD styles with no round portrait, which is every Classic client: the
--- button docks on the corner spot the window makes for it.
+-- The button docks on the corner spot, on every HUD and for every widget shape.
+-- The HUD styles with no round portrait, which is every Classic client, get a
+-- corner spot the window makes for it.
 
 local L = Theme.LAYOUT
 local WINDOW_SCALE = 1.25
@@ -12,7 +14,48 @@ local function slotScale(icon, windowScale)
   return L.PHONE_ICON_SLOT_SIZE * windowScale / icon.frame:GetWidth()
 end
 
+-- The spot the docked button sits on: the corner spot on the custom and
+-- Classic windows, the portrait on Retail.
+local function assertOnCorner(label, runtime, hudStyle)
+  local icon = runtime.icon
+  assert(icon.isRiding(), label .. ": rides the window")
+  local _, spot = icon.frame:GetPoint()
+  if hudStyle == "retail" then
+    assert(spot == runtime.window.frame.PortraitContainer.portrait, label .. ": on the portrait")
+    return
+  end
+  local point, _, relativePoint, x, y = spot:GetPoint()
+  assert(spot:GetWidth() == L.PHONE_ICON_SLOT_SIZE, label .. ": the corner spot's size, got " .. tostring(spot:GetWidth()))
+  assert(
+    point == "CENTER" and relativePoint == "TOPLEFT" and x == L.PHONE_ICON_SLOT_X and y == L.PHONE_ICON_SLOT_Y,
+    label .. ": at the corner, got " .. tostring(point) .. "," .. tostring(x) .. "," .. tostring(y)
+  )
+end
+
 return function()
+  -- test_a_square_button_docks_on_the_corner_spot_like_the_circle
+  for _, phone in ipairs({ true, false }) do
+    for _, hudStyle in ipairs({ "off", "classic", "retail" }) do
+      for _, shape in ipairs({ "circle", "square" }) do
+        local label = (phone and "compact " or "regular ") .. hudStyle .. " " .. shape
+        local settings = { phoneLayout = phone, hudStyle = hudStyle, widgetShape = shape, windowAnimation = false }
+        local function run()
+          PhoneRuntime.Run(settings, function(runtime)
+            runtime.toggle()
+            assertOnCorner(label, runtime, hudStyle)
+            runtime.window.dockPhoneIcon() -- what an icon size or mode change does
+            assertOnCorner(label .. " after a re-dock", runtime, hudStyle)
+          end)
+        end
+        if hudStyle == "retail" then
+          RetailHud.With(run)
+        else
+          run()
+        end
+      end
+    end
+  end
+
   for _, hudStyle in ipairs({ "off", "classic" }) do
     -- test_the_button_docks_on_the_corner_spot_and_goes_home
     PhoneRuntime.Run({ hudStyle = hudStyle }, function(runtime)

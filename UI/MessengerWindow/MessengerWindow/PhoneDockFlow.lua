@@ -11,7 +11,7 @@ local PhoneDockFlow = {}
 
 -- The window growing out of its source (the floating button, the minimap
 -- icon, or nothing) and shrinking back, with the floating button riding along.
--- options: chrome (iconSlot, titleIconSlot, setIconSlotOccupied), getDockIcon(),
+-- options: chrome (iconSlot, setIconSlotOccupied), getDockIcon(),
 -- openAnimation (beginOpen, beginClose, finish, play), rideHandlers (the drag
 -- handlers the button carries while docked), getGrowSource() (the frame the
 -- window grows from, or nil), isGrowAnimationOn() and isIconGlideOn() (off:
@@ -38,23 +38,14 @@ function PhoneDockFlow.Attach(frame, options)
   -- The frame this open grew from: the close shrinks back into it.
   local rememberedSource = nil
 
-  -- The square button sits inside the title bar; the circle on the corner.
-  local function spotFor(icon)
-    local square = icon ~= nil and icon.getWidgetShape ~= nil and icon.getWidgetShape() == "square"
-    if square and chrome.titleIconSlot then
-      return chrome.titleIconSlot
-    end
-    return chrome.iconSlot
-  end
-
   -- The spot of the button on the window, or of the one that would dock next.
   local function currentSpot()
-    return spotFor(dockedIcon or getDockIcon())
+    return chrome.iconSlot
   end
 
   -- Docked and still the floating button: the icon mode can take it away.
   local function syncIconSlot()
-    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon, spotFor(dockedIcon))
+    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon)
   end
 
   -- onStep: the animation's, when the window is coming out of the button.
@@ -62,7 +53,7 @@ function PhoneDockFlow.Attach(frame, options)
   local function attachIcon(icon, onStep, instant)
     dockedIcon = icon
     icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(spotFor(icon), icon.frame), onStep, instant)
+    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), onStep, instant)
     -- Reopened mid-glide, it may still be down with the window that closed.
     icon.setRideStrata(frame:GetFrameStrata())
   end
@@ -80,7 +71,7 @@ function PhoneDockFlow.Attach(frame, options)
       end
     elseif icon.isRiding() then
       openAnimation.finish()
-      icon.rideTo(PhoneDock.RideTarget(spotFor(icon), icon.frame), nil, not isIconGlideOn())
+      icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), nil, not isIconGlideOn())
     end
     syncIconSlot()
   end
@@ -101,7 +92,7 @@ function PhoneDockFlow.Attach(frame, options)
     -- Only a button on screen can take the window to it: without one, the
     -- window opens at its saved spot.
     if not isOpenAtSavedSpot() and icon and icon.rideTo and icon.frame:IsVisible() then
-      PhoneDock.Place(frame, spotFor(icon), icon.frame)
+      PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
     end
     local source = growSource()
     rememberedSource = source

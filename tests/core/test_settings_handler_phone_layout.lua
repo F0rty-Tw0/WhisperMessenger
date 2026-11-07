@@ -78,11 +78,11 @@ return function()
     assert(case.sizes[1] == 50 and case.sizes[2] == "dock", "the spot is worked out from the new size")
   end
 
-  -- test_a_changed_widget_shape_re_docks_onto_its_spot
+  -- test_a_changed_widget_shape_leaves_the_dock_alone
   do
     local case = build(true)
     case.onChange("widgetShape", "square")
     assert(case.settings.widgetShape == "square", "saved")
-    assert(case.sizes[1] == "dock", "the button moves to the new shape's spot")
+    assert(#case.sizes == 0, "every shape docks on the corner, so nothing re-docks, got " .. #case.sizes)
   end
 end

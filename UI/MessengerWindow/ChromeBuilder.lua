@@ -84,9 +84,8 @@ end
 -- Returns: { frame, background, title, newConversationButton, markAllReadButton,
 --   patchNotesButton, closeButton, optionsButton, backButton, resizeGrip,
 --   applyTheme, refreshScale, setOptionsActive, setBackVisible,
---   setPatchNotesGlow, setMarkAllReadShown, iconSlot (the circle button's
---   corner spot), titleIconSlot (the square button's spot inside the title
---   bar), setIconSlotOccupied } in every case. Non-chrome
+--   setPatchNotesGlow, setMarkAllReadShown, iconSlot (the docked button's
+--   spot), setIconSlotOccupied } in every case. Non-chrome
 -- layout (rows, composer margins, content positioning) is shared and
 -- applied universally by callers regardless of which chrome was built.
 function ChromeBuilder.Build(factory, parent, initialState, options)
@@ -160,12 +159,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     iconSlot = createCornerIconSlot(factory, frame)
     iconSlotClearance = Theme.LAYOUT.PHONE_ICON_SLOT_CLEARANCE
   end
-  -- The square button's spot; TitleBarLayout places it in the title bar.
-  local titleIconSlot = factory.CreateFrame("Frame", nil, frame)
   -- Compact starts with the button docked; the regular window starts free.
   local titleBarParts = {
     leftClearance = phoneLayout and iconSlotClearance or 0,
-    titleIconSlot = titleIconSlot,
     frame = frame,
     titleBar = chrome.titleBar,
     title = title,
@@ -243,12 +239,9 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     refreshBack()
   end
 
-  -- A spot keeps the title buttons clear only while a button is on it.
-  -- spot: the one taken, the corner (iconSlot, the default) or titleIconSlot.
-  local function setIconSlotOccupied(occupied, spot)
-    local inTitleBar = occupied == true and spot == titleIconSlot
-    titleBarParts.titleSlotOccupied = inTitleBar
-    titleBarParts.leftClearance = (occupied and not inTitleBar) and iconSlotClearance or 0
+  -- The spot keeps the title buttons clear only while a button is on it.
+  local function setIconSlotOccupied(occupied)
+    titleBarParts.leftClearance = occupied and iconSlotClearance or 0
     TitleBarLayout.Apply(titleBarParts, Theme)
   end
 
@@ -273,7 +266,6 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setPhoneChatView = setPhoneChatView,
     setIconSlotOccupied = setIconSlotOccupied,
     iconSlot = iconSlot,
-    titleIconSlot = titleIconSlot,
     titleBar = chrome.titleBar,
   }
 end

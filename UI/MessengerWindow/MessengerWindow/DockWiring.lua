@@ -83,9 +83,9 @@ function DockWiring.Attach(window, parts)
     isOpenAtSavedSpot = isOpenAtSavedSpot,
   })
 
-  -- The clamp reaches over the button's spot, which depends on its shape, and
-  -- over nothing when no button can dock. A window opening for the first time
-  -- may have no position until next frame.
+  -- The clamp reaches over the corner spot, and over nothing when no button
+  -- can dock. A window opening for the first time may have no position until
+  -- next frame.
   local function clampToSpot()
     if flow.dockedIcon() == nil and getDockIcon() == nil then
       local _, right, _, bottom = window:GetClampRectInsets()
@@ -103,7 +103,7 @@ function DockWiring.Attach(window, parts)
     end
   end
 
-  -- A re-dock can change the spot (the widget shape changed).
+  -- A re-dock follows a new icon size, scale or icon mode; the spot is always the corner.
   hooks.dock = function()
     flow.dock()
     clampToSpot()
