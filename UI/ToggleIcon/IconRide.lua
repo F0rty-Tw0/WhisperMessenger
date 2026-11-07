@@ -24,8 +24,7 @@ local function screenCenter(region)
   return x * scale, y * scale
 end
 
--- options: theme, parent, onLevel(level) (children with fixed levels),
--- isLocked(), onPositionChanged(state).
+-- options: theme, parent, onLevel(level) (children with fixed levels).
 function IconRide.Create(frame, options)
   local duration = options.theme.LAYOUT.PHONE_RIDE_SECONDS
   local parent = options.parent
@@ -145,35 +144,6 @@ function IconRide.Create(frame, options)
     end, restoreHome, onStep, instant)
   end
 
-  -- The window moved: where the button is now becomes home. Returns the
-  -- position to save, in the button's normal size.
-  local function adoptHere()
-    local screenX, screenY = screenCenter(frame)
-    if screenX == nil then
-      return nil
-    end
-    local homeScale = home and home.scale or 1
-    local effective = frame:GetEffectiveScale() / frame:GetScale() * homeScale
-    local state = { anchorPoint = "CENTER", relativePoint = "BOTTOMLEFT", x = screenX / effective, y = screenY / effective }
-    if home then
-      home.point, home.relativeTo, home.relativePoint = "CENTER", parent, "BOTTOMLEFT"
-      home.x, home.y = state.x, state.y
-      home.centerX, home.centerY = screenX, screenY
-    end
-    return state
-  end
-
-  -- A locked icon keeps its home whatever the window does.
-  local function adoptRidePosition()
-    if options.isLocked and options.isLocked() then
-      return
-    end
-    local nextState = adoptHere()
-    if nextState and options.onPositionChanged then
-      options.onPositionChanged(nextState)
-    end
-  end
-
   -- Home moved elsewhere (a position reset) while riding. Its centre is
   -- unknown until the button is there, so the return is a jump, not a glide.
   local function setHome(state)
@@ -196,8 +166,6 @@ function IconRide.Create(frame, options)
     rideTo = rideTo,
     rideHome = rideHome,
     setStrata = setStrata,
-    adoptHere = adoptHere,
-    adoptRidePosition = adoptRidePosition,
     setHome = setHome,
     isRiding = function()
       return riding

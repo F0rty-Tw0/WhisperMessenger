@@ -103,7 +103,6 @@ return function()
       frame = fab,
       isRiding = real.isRiding,
       rideHome = real.rideHome,
-      adoptRidePosition = real.adoptRidePosition,
       setRideStrata = real.setStrata,
       setRideHandlers = function() end,
       rideTo = function(target, onStep)

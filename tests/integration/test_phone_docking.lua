@@ -71,7 +71,7 @@ return function()
     case.rideHandlers.endDrag()
     assert(case.saved.state ~= nil, "players who later lose the button reopen it there")
     assert(case.saved.state.width == L.PHONE_WINDOW_WIDTH, "got " .. tostring(case.saved.state.width))
-    assert(case.adopted == 1, "the button's home moves once")
+    assert(case.adopted == 0, "the button's home stays put")
   end
 
   -- test_reset_brings_the_window_to_the_screen_centre

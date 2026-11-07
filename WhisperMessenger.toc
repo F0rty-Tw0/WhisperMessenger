@@ -443,6 +443,7 @@ UI/MessengerWindow/MessengerWindow/PhoneSlide.lua
 UI/MessengerWindow/MessengerWindow/PhoneNavigator.lua
 UI/MessengerWindow/MessengerWindow/PhoneDock.lua
 UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
+UI/MessengerWindow/MessengerWindow/PhoneDockFlow.lua
 UI/MessengerWindow/MessengerWindow/PhoneWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 

@@ -157,29 +157,6 @@ return function()
     assert(x == -20 and y == 40, "a half-way spot never becomes home")
   end
 
-  -- test_adopt_makes_the_current_spot_home
-  do
-    local case = build()
-    case.ride.rideTo(case.target)
-    tick(case, SECONDS + 0.01)
-    rawset(case.frame, "GetCenter", function()
-      return 150, 350
-    end)
-    rawset(case.frame, "GetEffectiveScale", function()
-      return 2
-    end)
-    local state = case.ride.adoptHere()
-    assert(state.anchorPoint == "CENTER" and state.relativePoint == "BOTTOMLEFT", "saved from the screen corner")
-    assert(state.x == 300 and state.y == 700, "in normal-size units, got " .. tostring(state.x))
-    rawset(case.frame, "GetEffectiveScale", function()
-      return 1
-    end)
-    case.ride.rideHome()
-    tick(case, SECONDS + 0.01)
-    local point, _, _, x, y = case.frame:GetPoint()
-    assert(point == "CENTER" and x == 300 and y == 700, "goes home to the new spot")
-  end
-
   -- test_every_frame_reports_the_shared_clock_ending_on_one
   do
     local case = build()

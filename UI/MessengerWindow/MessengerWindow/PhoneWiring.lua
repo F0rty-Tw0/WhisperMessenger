@@ -8,6 +8,7 @@ local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger
 local PhoneSlide = ns.MessengerWindowPhoneSlide or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneSlide")
 local PhoneNavigator = ns.MessengerWindowPhoneNavigator or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneNavigator")
 local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
+local PhoneDockFlow = ns.MessengerWindowPhoneDockFlow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDockFlow")
 local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
@@ -28,7 +29,6 @@ function PhoneWiring.Hooks()
       return false
     end,
     dock = function() end,
-    onWindowMoved = function() end,
     onStrataChanged = function(_strata) end,
     isWindowPart = function(_candidate)
       return false
@@ -45,7 +45,6 @@ end
 -- layout) is never the saved size. Both are safe with the idle hooks.
 function PhoneWiring.WrapPosition(hooks, options)
   local function onPositionChanged(nextState)
-    hooks.onWindowMoved()
     if options.onPositionChanged and not hooks.isWide() then
       options.onPositionChanged(nextState)
     end
@@ -83,9 +82,6 @@ function PhoneWiring.Attach(hooks, options)
     return nil
   end
   local restoreWidth, restoreHeight = nil, nil
-  -- The button on the window now. getDockIcon stops returning it once the
-  -- icon mode leaves the floating button, but it still has to go home.
-  local dockedIcon = nil
 
   local function isCovered()
     return not options.windowVisibility.isConversationPaneShown()
@@ -143,37 +139,6 @@ function PhoneWiring.Attach(hooks, options)
     end,
   }
 
-  -- Docked and still the floating button: the icon mode can take it away.
-  local function syncIconSlot()
-    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon)
-  end
-
-  -- onStep: the opening animation's, when the window is coming out of the button.
-  local function attachIcon(icon, onStep)
-    dockedIcon = icon
-    icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), onStep)
-    -- Reopened mid-glide, it may still be down with the window that closed.
-    icon.setRideStrata(frame:GetFrameStrata())
-  end
-
-  -- Already riding (the scale changed, or Alt+Z brought the UI back): the
-  -- button only needs its new spot, with no opening to replay. A button that
-  -- appears on an open window (the icon mode changed) docks where it stands.
-  local function dock()
-    local icon = dockedIcon
-    if icon == nil then
-      icon = getDockIcon()
-      if icon and icon.rideTo and frame:IsShown() then
-        attachIcon(icon)
-      end
-    elseif icon.isRiding() then
-      openAnimation.finish()
-      icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
-    end
-    syncIconSlot()
-  end
-
   -- A window opening for the first time may have no position until next frame.
   local function clampToSpot()
     if PhoneDock.ClampToSpot(frame, chrome.iconSlot) then
@@ -187,53 +152,30 @@ function PhoneWiring.Attach(hooks, options)
     end
   end
 
-  -- The button travels onto the window as the window comes out of it.
-  local function openFromIcon()
-    local icon = getDockIcon()
-    if not (icon and icon.rideTo) then
-      return
-    end
-    if icon.isRiding() then
-      dock()
-      return
-    end
-    PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
-    attachIcon(icon, openAnimation.beginOpen(icon.frame))
+  local getGrowSource = windowOptions.getGrowSource or function()
+    return nil
   end
-
-  -- Not when only the parent hid (Alt+Z): the window is still open.
-  local function undock()
-    if frame:IsShown() then
-      return
-    end
-    local icon = dockedIcon
-    dockedIcon = nil
-    if icon and icon.isRiding() then
-      icon.setRideHandlers(nil)
-      icon.rideHome(openAnimation.beginClose(icon.frame))
-    end
+  local isGrowAnimationOn = windowOptions.isGrowAnimationOn or function()
+    return true
   end
+  local flow = PhoneDockFlow.Attach(frame, {
+    chrome = chrome,
+    getDockIcon = getDockIcon,
+    openAnimation = openAnimation,
+    rideHandlers = rideHandlers,
+    getGrowSource = getGrowSource,
+    isGrowAnimationOn = isGrowAnimationOn,
+  })
 
   hooks.onSelection = navigator.syncSelection
   hooks.onPanesShown = slide.settle
   hooks.isListView = navigator.isListView
   hooks.showList = navigator.showList
-  hooks.dock = dock
-  hooks.onWindowMoved = function()
-    local icon = getDockIcon()
-    if icon and icon.isRiding and icon.isRiding() then
-      icon.adoptRidePosition()
-    end
-  end
+  hooks.dock = flow.dock
   hooks.onStrataChanged = function(strata)
-    if dockedIcon then
-      dockedIcon.setRideStrata(strata)
-    end
+    flow.setStrata(strata)
   end
-  -- A press on the docked button closes or drags the window: not a click elsewhere.
-  hooks.isWindowPart = function(candidate)
-    return dockedIcon ~= nil and candidate == dockedIcon.frame
-  end
+  hooks.isWindowPart = flow.isWindowPart
   hooks.isWide = function()
     return layout.phoneWide == true
   end
@@ -269,12 +211,12 @@ function PhoneWiring.Attach(hooks, options)
   end
 
   frame:HookScript("OnShow", clampToSpot)
-  frame:HookScript("OnShow", openFromIcon)
-  frame:HookScript("OnShow", syncIconSlot)
+  frame:HookScript("OnShow", flow.open)
+  frame:HookScript("OnShow", flow.syncIconSlot)
   frame:HookScript("OnHide", function()
     -- A hidden viewport stops ticking, which would leave a slide hanging.
     slide.finishNow()
-    undock()
+    flow.close()
   end)
 
   local selectedKey = options.getSelectedKey()
