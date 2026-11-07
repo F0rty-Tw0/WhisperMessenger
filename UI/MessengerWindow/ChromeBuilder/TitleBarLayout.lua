@@ -11,6 +11,10 @@ end
 local TitleBarLayout = {}
 
 local HUD_GAP = 2
+-- Native WoW HUD: the title strip's top edge, and where the Classic left
+-- cluster starts inside it.
+local HUD_LEFT_X = 6
+local HUD_TOP_Y = -3
 
 local function place(region, point, relativeTo, relativePoint, x, y)
   region:ClearAllPoints()
@@ -26,6 +30,24 @@ local function sizeButtons(buttons, size, glyphSize)
   end
 end
 
+-- Room the left cluster leaves for the docked button: the title-bar spot and
+-- the look's gap when the button sits there, else the corner spot's clearance.
+local function leftRoom(parts, spotSize, gap)
+  if parts.titleSlotOccupied then
+    return spotSize + gap
+  end
+  return parts.leftClearance or 0
+end
+
+-- The square button's spot: a title-bar-high square where the left cluster starts.
+local function placeTitleSlot(parts, size, point, relativeTo, relativePoint, x, y)
+  local slot = parts.titleIconSlot
+  if slot then
+    slot:SetSize(size, size)
+    place(slot, point, relativeTo, relativePoint, x, y)
+  end
+end
+
 local function applyModern(parts, L)
   local gap = L.TITLE_BUTTON_GAP
   sizeButtons(parts.buttons, L.TITLE_BUTTON_SIZE, L.TITLE_ICON_SIZE)
@@ -37,7 +59,8 @@ local function applyModern(parts, L)
   end
   place(parts.title, "CENTER", parts.titleBar, "CENTER", 0, 0)
   place(parts.closeButton, "RIGHT", parts.titleBar, "RIGHT", -L.TITLE_BAR_INSET_X, 0)
-  place(parts.newConversationButton, "LEFT", parts.titleBar, "LEFT", L.TITLE_BAR_INSET_X + (parts.leftClearance or 0), 0)
+  placeTitleSlot(parts, L.TOP_BAR_HEIGHT, "TOPLEFT", parts.titleBar, "TOPLEFT", L.TITLE_BAR_INSET_X, 0)
+  place(parts.newConversationButton, "LEFT", parts.titleBar, "LEFT", L.TITLE_BAR_INSET_X + leftRoom(parts, L.TOP_BAR_HEIGHT, gap), 0)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", gap, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", gap, 0)
   place(parts.optionsButton, "RIGHT", parts.closeButton, "LEFT", -gap, 0)
@@ -55,9 +78,12 @@ local function placeHudGear(parts, L)
   end
 end
 
+-- The HUD title strip is as tall as its buttons, so the square spot matches them.
 local function applyHud(parts, L)
   placeHudGear(parts, L)
-  place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", 6 + (parts.leftClearance or 0), -3)
+  local size = L.CHROME_BUTTON_SIZE
+  placeTitleSlot(parts, size, "TOPLEFT", parts.frame, "TOPLEFT", HUD_LEFT_X, HUD_TOP_Y)
+  place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", HUD_LEFT_X + leftRoom(parts, size, HUD_GAP), HUD_TOP_Y)
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
   place(parts.backButton, "RIGHT", parts.optionsButton, "LEFT", -HUD_GAP, 0)
@@ -80,11 +106,16 @@ local function applyRetailHud(parts, L)
       end
     end
   end
+  -- The square spot sits right of the portrait too: the ring art fills the corner.
+  local size = L.CHROME_BUTTON_SIZE
+  local room = leftRoom(parts, size, HUD_GAP)
   local titleContainer = parts.frame and parts.frame.TitleContainer
   if titleContainer then
-    place(parts.newConversationButton, "LEFT", titleContainer, "LEFT", HUD_GAP, 0)
+    placeTitleSlot(parts, size, "LEFT", titleContainer, "LEFT", HUD_GAP, 0)
+    place(parts.newConversationButton, "LEFT", titleContainer, "LEFT", HUD_GAP + room, 0)
   else
-    place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", RETAIL_LEFT_FALLBACK_X, -3)
+    placeTitleSlot(parts, size, "TOPLEFT", parts.frame, "TOPLEFT", RETAIL_LEFT_FALLBACK_X, HUD_TOP_Y)
+    place(parts.newConversationButton, "TOPLEFT", parts.frame, "TOPLEFT", RETAIL_LEFT_FALLBACK_X + room, HUD_TOP_Y)
   end
   place(parts.patchNotesButton, "LEFT", parts.newConversationButton, "RIGHT", HUD_GAP, 0)
   place(parts.markAllReadButton, "LEFT", parts.patchNotesButton, "RIGHT", HUD_GAP, 0)
@@ -94,7 +125,9 @@ end
 -- parts: frame, titleBar (custom chrome only), title, closeButton,
 -- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
 -- blizzardChrome (bool), retailChrome (bool), leftClearance (px kept free at
--- the left of the title bar, for the docked floating button's icon spot).
+-- the left of the title bar, for the docked floating button's corner spot),
+-- titleIconSlot (the square button's spot, placed here), titleSlotOccupied
+-- (bool: the button sits on that spot; the left cluster starts right of it).
 function TitleBarLayout.Apply(parts, theme)
   TitleBarLayout.ApplyLook(parts, theme)
   -- Phone chat view: back takes the first left slot, like on a phone. The
