@@ -59,6 +59,27 @@ return function()
     assert(not previewShown(runtime), "the preview is gone")
   end)
 
+  -- test_classic_button_click_with_a_preview_over_the_open_window_opens_its_chat
+  PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
+    runtime.toggle()
+    runtime.window.setTabMode("groups")
+    receiveWhisper(runtime)
+    assert(previewShown(runtime), "the preview shows over the Groups tab")
+    clickButton(runtime)
+    assert(runtime.window.frame:IsShown(), "the window stays open")
+    assert(runtime.activeConversationKey == KEY, "selected: " .. tostring(runtime.activeConversationKey))
+    assert(runtime.window.getTabMode() == "whispers", "on the whisper's tab")
+    assert(not previewShown(runtime), "the preview is gone")
+  end)
+
+  -- test_classic_button_click_on_the_open_window_without_a_preview_closes_it
+  PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
+    runtime.toggle()
+    assert(not previewShown(runtime), "no preview")
+    clickButton(runtime)
+    assert(not runtime.window.frame:IsShown(), "the window closes")
+  end)
+
   -- test_phone_button_click_without_a_preview_still_opens_the_list
   PhoneRuntime.Run(nil, function(runtime)
     assert(not previewShown(runtime), "no preview")
