@@ -14,10 +14,12 @@ local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys
 -- lockdown, so with the setting on and the window open it takes the key even
 -- while the composer is hidden (settings, a panel, the contact list) or has no
 -- conversation. A closed window leaves Enter the game's chat for the fight,
--- also when the window opens mid-fight. Calling the game's chat opener from
--- here would taint, so in combat the key focuses the composer only while it is
--- shown and the mouse is over the window, and otherwise does nothing. When
--- combat ends, PLAYER_REGEN_ENABLED keeps or releases the key as usual.
+-- also when the window opens mid-fight; a window that hides as combat starts
+-- (hide in combat) gives the key back through its own OnHide, since its hidden
+-- composer gets none. Calling the game's chat opener from here would taint, so
+-- in combat the key focuses the composer only while it is shown and the mouse
+-- is over the window, and otherwise does nothing. When combat ends,
+-- PLAYER_REGEN_ENABLED keeps or releases the key as usual.
 --
 -- Settings hide the composer's pane, so the pane's OnShow picks up a changed
 -- toggle when they close.
@@ -119,13 +121,26 @@ function ComposerSendFocus.Create(pane, input, options, deps)
     end
   end
 
+  -- A window hidden while its composer is already hidden fires no OnHide on
+  -- the composer, so the window's own one releases the key.
+  local windowHideHooked = false
+  local function hookWindowHide(window)
+    if windowHideHooked or type(window.HookScript) ~= "function" then
+      return
+    end
+    windowHideHooked = true
+    window:HookScript("OnHide", sync)
+  end
+
   -- Last chance before the lockdown: an open window keeps the key for the
   -- fight even while its composer is hidden or disabled.
   local function beforeCombat()
     if inCombat() or not options.isOn() then
       return
     end
-    if windowOf(pane):IsVisible() then
+    local window = windowOf(pane)
+    if window:IsVisible() then
+      hookWindowHide(window)
       bind()
     end
   end

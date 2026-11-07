@@ -54,6 +54,16 @@ return function()
     assert(#env.bound == 1 and env.blocked == 0, "settings or the contact list hide the composer: the open window still keeps Enter")
   end
 
+  -- test_window_hidden_on_combat_start_after_binding_gives_key_back
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.fire("PLAYER_REGEN_DISABLED")
+    env.window:Hide() -- hide-on-combat runs after us; the hidden pane gets no OnHide
+    env.combat = true
+    assert(#env.bound == 0 and env.blocked == 0, "a window hidden as combat starts leaves Enter the game's chat")
+  end
+
   -- test_open_window_with_disabled_composer_binds_at_combat_start
   do
     local env = newEnv()
