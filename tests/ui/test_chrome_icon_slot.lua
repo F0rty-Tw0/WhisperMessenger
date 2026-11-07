@@ -3,6 +3,7 @@ local RetailHud = require("tests.helpers.retail_hud")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ChromeBuilder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder")
+local WindowBounds = require("WhisperMessenger.UI.MessengerWindow.WindowBounds")
 
 local L = Theme.LAYOUT
 
@@ -86,9 +87,47 @@ return function()
     assert(right <= L.PHONE_ICON_SLOT_CLEARANCE + L.TITLE_BAR_INSET_X, "and left of the title buttons, got " .. right)
   end
 
-  -- test_classic_window_has_no_icon_spot
+  -- test_regular_window_has_a_corner_icon_spot_on_each_chrome
   do
     Hud.Configure("off")
-    assert(build(false, false).iconSlot == nil, "nothing rides the classic window")
+    assertCornerSlot(build(false, false), "regular custom")
+    Hud.Configure("classic")
+    assertCornerSlot(build(true, false), "regular classic")
+    Hud.Configure("off")
+  end
+  RetailHud.With(function()
+    local chrome = build(true, false)
+    assert(chrome.iconSlot == chrome.frame.PortraitContainer.portrait, "regular retail: the portrait is the spot")
+  end)
+
+  -- test_regular_title_buttons_move_clear_only_while_the_spot_is_taken
+  for _, nativeChrome in ipairs({ false, true }) do
+    Hud.Configure(nativeChrome and "classic" or "off")
+    local regular = build(nativeChrome, false)
+    local free = leftOffset(regular.newConversationButton)
+    regular.setIconSlotOccupied(true)
+    assert(leftOffset(regular.newConversationButton) - free == L.PHONE_ICON_SLOT_CLEARANCE, "regular: moved clear by the clearance")
+    regular.setIconSlotOccupied(false)
+    assert(leftOffset(regular.newConversationButton) == free, "regular: room given back")
+    Hud.Configure("off")
+  end
+  RetailHud.With(function()
+    local regular = build(true, false)
+    local free = leftOffset(regular.newConversationButton)
+    regular.setIconSlotOccupied(true)
+    assert(leftOffset(regular.newConversationButton) == free, "regular retail: the title bar already clears the portrait")
+  end)
+
+  -- test_regular_left_cluster_clears_the_centred_title_at_minimum_width
+  for _, nativeChrome in ipairs({ false, true }) do
+    Hud.Configure(nativeChrome and "classic" or "off")
+    local chrome = build(nativeChrome, false)
+    chrome.setIconSlotOccupied(true)
+    local size = nativeChrome and L.CHROME_BUTTON_SIZE or L.TITLE_BUTTON_SIZE
+    local gap = nativeChrome and 2 or L.TITLE_BUTTON_GAP
+    local right = leftOffset(chrome.newConversationButton) + 3 * size + 2 * gap -- new, what's new, mark all read
+    local minWidth = WindowBounds.GetResizeBounds(chrome.frame:GetParent(), Theme, 1, false, false)
+    assert(right + chrome.title:GetStringWidth() / 2 <= minWidth / 2, (nativeChrome and "classic" or "custom") .. ": cluster ends at " .. right)
+    Hud.Configure("off")
   end
 end
