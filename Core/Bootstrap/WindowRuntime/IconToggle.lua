@@ -40,17 +40,18 @@ local function openShownWhisperPreview(runtime)
   return widget ~= nil and widget.openShownPreview ~= nil and widget.openShownPreview() == true
 end
 
--- A visible window still hides. A whisper card on the widget opens its chat;
--- other whispers run the plain toggle. Otherwise an addon page with something
--- waiting opens; with no such page, or when opening it is refused, the plain
--- toggle runs.
+-- A whisper card on the widget opens its chat, even over an open window (the
+-- card shows there only when the whisper isn't on screen). Otherwise a visible
+-- window hides, other whispers run the plain toggle, and an addon page with
+-- something waiting opens; with no such page, or when opening it is refused,
+-- the plain toggle runs.
 function IconToggle.Wrap(runtime, toggle, buildContacts)
   return function()
-    if runtime.isWindowVisible() then
-      return toggle()
-    end
     if openShownWhisperPreview(runtime) then
       return
+    end
+    if runtime.isWindowVisible() then
+      return toggle()
     end
     if BadgeFilter.SumWhisperUnread(buildContacts()) > 0 then
       return toggle()
