@@ -64,6 +64,7 @@ function ToggleSpecs.Build(config, onChange)
         text(
           "After you send a message, the cursor leaves the text box so your keys control the game again. While the messenger is open, Enter puts the cursor back."
         ),
+        text("In combat, only while the mouse is over the window."),
       },
     },
     {
