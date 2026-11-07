@@ -28,8 +28,10 @@ local function ramp(t, start)
   return (t - start) / (1 - start)
 end
 
--- Screen-pixel edges; nil while the client has no position for the region.
-local function rectOf(region)
+-- Screen-pixel edges written into `into`, which is returned; nil while the
+-- client has no position for the region. Ticks pass a reused table, so a frame
+-- of animation makes no garbage.
+local function readRect(region, into)
   if not (region.GetLeft and region.GetRight and region.GetTop and region.GetBottom) then
     return nil
   end
@@ -38,20 +40,22 @@ local function rectOf(region)
     return nil
   end
   local scale = region:GetEffectiveScale()
-  return { left = left * scale, right = right * scale, top = top * scale, bottom = bottom * scale }
+  into.left, into.right, into.top, into.bottom = left * scale, right * scale, top * scale, bottom * scale
+  return into
 end
 
 -- The panel grows from a point at the icon's centre, not the icon's square:
 -- the icon is round, so the square's corners would show around it. From a
 -- point, the panel's corner stays behind the icon all the way to the window's.
-local function centerPointOf(region)
-  local rect = rectOf(region)
+local function readCenterPoint(region, into)
+  local rect = readRect(region, into)
   if rect == nil then
     return nil
   end
   local x = (rect.left + rect.right) / 2
   local y = (rect.top + rect.bottom) / 2
-  return { left = x, right = x, top = y, bottom = y }
+  rect.left, rect.right, rect.top, rect.bottom = x, x, y, y
+  return rect
 end
 
 local function buildPanel(factory, parent, theme)
@@ -75,6 +79,9 @@ function PhoneOpenAnimation.Attach(frame, options)
   local run = 0
   local opening = false
   local targetAlpha = 1
+  -- The moving end of the panel, rewritten each tick. Only one step runs at a
+  -- time (a new run makes the old step return at once), so one table is enough.
+  local scratch = {}
 
   -- In the window's strata: a window behind the map closes behind the map.
   local function paint()
@@ -126,7 +133,7 @@ function PhoneOpenAnimation.Attach(frame, options)
   local function beginOpen(iconFrame)
     finish()
     local id = run
-    local from = centerPointOf(iconFrame)
+    local from = readCenterPoint(iconFrame, {})
     targetAlpha = frame:GetAlpha()
     opening = true
     options.setAlphaHeld(true)
@@ -140,7 +147,7 @@ function PhoneOpenAnimation.Attach(frame, options)
         finish()
         return
       end
-      placePanel(from, rectOf(frame), p)
+      placePanel(from, readRect(frame, scratch), p)
       panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
       frame:SetAlpha(targetAlpha * ramp(t, REVEAL_START))
     end
@@ -151,7 +158,7 @@ function PhoneOpenAnimation.Attach(frame, options)
     run = run + 1
     local id = run
     releaseWindow()
-    local from = rectOf(frame)
+    local from = readRect(frame, {})
     paint()
     return function(t, p)
       if id ~= run then
@@ -161,7 +168,7 @@ function PhoneOpenAnimation.Attach(frame, options)
         panel:Hide()
         return
       end
-      placePanel(from, centerPointOf(iconFrame), p)
+      placePanel(from, readCenterPoint(iconFrame, scratch), p)
       panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
     end
   end
