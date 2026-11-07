@@ -35,7 +35,6 @@ local DEFAULTS = {
   windowScale = 1.0,
   phoneLayout = true,
   windowAnimation = true,
-  iconGlide = true,
   openAtSavedSpot = false,
 }
 

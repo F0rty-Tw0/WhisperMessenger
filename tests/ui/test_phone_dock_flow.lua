@@ -26,7 +26,7 @@ local function build()
   local fab = factory.CreateFrame("Button", "Fab", parent)
   fab:SetSize(42, 42)
   at(fab, 500, 600)
-  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {}, glide = true, order = {} }
+  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {}, animation = true, order = {} }
   case.slot, case.savedSpot = slot, true
   case.openStep, case.closeStep = function() end, function() end
   case.icon = {
@@ -81,10 +81,7 @@ local function build()
       return fab
     end,
     isGrowAnimationOn = function()
-      return true
-    end,
-    isIconGlideOn = function()
-      return case.glide
+      return case.animation
     end,
     isOpenAtSavedSpot = function()
       return case.savedSpot
@@ -144,34 +141,24 @@ return function()
     assert(case.rideStrata == "LOW", "the button follows the window's strata")
   end
 
-  -- test_glide_off_makes_the_button_jump_while_the_window_still_grows_from_it
+  -- test_window_animation_off_opens_and_closes_with_a_jump
   do
     local case = build()
-    case.glide = false
+    case.animation = false
     case.flow.open()
-    assert(case.rideInstant == true and case.step == nil, "the button jumps")
-    assert(table.concat(case.order, ",") == "measure,ride,play", "the grow reads the button before it jumps, got " .. table.concat(case.order, ","))
-    assert(case.openedFrom == case.fab and case.played == case.openStep, "and the window still grows from it")
-  end
-
-  -- test_glide_off_close_lands_the_button_at_once_and_the_window_shrinks_into_it
-  do
-    local case = build()
-    case.glide = false
-    case.flow.open()
+    assert(case.rideInstant == true and case.step == nil, "the button jumps onto the spot")
     case.frame.shown = false
     case.flow.close()
-    assert(case.homeInstant == true and case.step == nil, "home at once")
-    assert(case.closedInto == case.fab and case.played == case.closeStep, "the shrink still runs into it")
+    assert(case.homeInstant == true and case.step == nil and case.closedInto == nil, "home at once, no shrink")
   end
 
-  -- test_glide_off_re_dock_jumps
+  -- test_window_animation_off_makes_a_re_dock_jump
   do
     local case = build()
-    case.glide = false
     case.flow.open()
+    case.animation = false
     case.flow.dock()
-    assert(case.rides == 2 and case.rideInstant == true, "a re-dock jumps too")
+    assert(case.rides == 2 and case.rideInstant == true, "a re-dock jumps when Window animation is off")
   end
 
   -- test_glide_on_keeps_the_gliding_ride
@@ -213,15 +200,15 @@ return function()
     assert(case.closedInto == case.fab and case.homes == 1, "and shrinks back into it")
   end
 
-  -- test_a_button_appearing_on_an_open_window_follows_the_glide_switch
-  for _, glide in ipairs({ false, true }) do
+  -- test_a_button_appearing_on_an_open_window_follows_window_animation
+  for _, animation in ipairs({ false, true }) do
     local case = build()
-    case.glide, case.noIcon = glide, true
+    case.animation, case.noIcon = animation, true
     case.flow.open()
     case.frame:Show()
     case.noIcon = false
     case.flow.dock()
     assert(case.rides == 1 and case.step == nil, "docks where it stands with no opening to replay")
-    assert((case.rideInstant == true) == not glide, "glide " .. tostring(glide) .. ": instant is " .. tostring(case.rideInstant))
+    assert((case.rideInstant == true) == not animation, "animation " .. tostring(animation) .. ": instant is " .. tostring(case.rideInstant))
   end
 end

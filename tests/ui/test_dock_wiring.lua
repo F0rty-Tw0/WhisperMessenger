@@ -180,18 +180,19 @@ return function()
     assert(not string.find(line, "ClassicGrow", 1, true), "TOC still lists " .. line)
   end
 
-  -- test_glide_off_jumps_the_button_but_the_window_still_grows
+  -- test_window_animation_off_makes_the_button_jump_and_a_re_dock_jump
   eachLayout(function(name, phone)
     local case = PhoneWindow.Build({
       phoneLayout = phone,
-      isIconGlideOn = function()
+      isGrowAnimationOn = function()
         return false
       end,
     })
     local frame = case.window.frame
     frame:Show()
     assert(case.instant == true and case.step == nil, name .. ": the button jumps onto the spot")
-    assert(frame:GetAlpha() == 0, name .. ": the window grows from the button")
+    case.window.dockPhoneIcon()
+    assert(case.rides == 2 and case.instant == true, name .. ": a re-dock jumps too")
     frame:Hide()
     assert(case.homeInstant == true, name .. ": and jumps home")
   end)
