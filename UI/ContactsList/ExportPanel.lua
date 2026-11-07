@@ -54,6 +54,23 @@ local function loadedText(panel)
   return panel.header .. "\n" .. concat(panel.lines, "\n", total - panel.loaded + 1, total)
 end
 
+-- WoW: Forever leaves the text a load sets undrawn; setting it again a
+-- frame later draws it. Skipped once the panel is closed or loads again.
+local function redrawNextFrame(panel)
+  local timer = _G.C_Timer
+  if type(timer) ~= "table" or type(timer.After) ~= "function" then
+    return
+  end
+  local text = panel.text
+  timer.After(0, function()
+    if not panel:IsShown() or panel.text ~= text then
+      return
+    end
+    panel.editBox:SetText(text)
+    panel.editBox:HighlightText()
+  end)
+end
+
 -- toTop: show the newly added older lines; otherwise the newest stay in view.
 local function load(panel, toTop)
   local total = #panel.lines
@@ -71,6 +88,7 @@ local function load(panel, toTop)
   if toTop then
     ScrollView.SetVerticalScroll(panel.view, 0)
   end
+  redrawNextFrame(panel)
 end
 
 local function showUpTo(panel, count)
