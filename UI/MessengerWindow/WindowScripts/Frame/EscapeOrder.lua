@@ -31,6 +31,10 @@ local function indexOf(list, value)
   return nil
 end
 
+local function isSpecialFrame(name)
+  return name ~= nil and type(_G.UISpecialFrames) == "table" and indexOf(_G.UISpecialFrames, name) ~= nil
+end
+
 local function setSpecialFrame(name, listed)
   local list = _G.UISpecialFrames
   if name == nil or type(list) ~= "table" then
@@ -63,7 +67,7 @@ local function closesOnEscape(candidate)
     return true
   end
   local name = type(candidate.GetName) == "function" and candidate:GetName() or nil
-  return name ~= nil and type(_G.UISpecialFrames) == "table" and indexOf(_G.UISpecialFrames, name) ~= nil
+  return isSpecialFrame(name)
 end
 
 -- Game menus come from a frame pool that resets their scripts on reuse, so
@@ -89,6 +93,40 @@ function EscapeOrder.New(frame, escapeKey)
     end
   end
 
+  -- Alt+Z: when the UI comes back, the game's UIParent OnShow runs the
+  -- close-all sweep, which would close the window that only hid with its
+  -- parent. While the parent is hidden the window stays off the list, and
+  -- the parent's OnShow hook (after the sweep) puts it back if it was listed.
+  local parentHidden = false
+  local listedWhileHidden = false
+
+  local function setListed(listed)
+    if parentHidden then
+      listedWhileHidden = listed
+      return
+    end
+    setSpecialFrame(windowName(), listed)
+  end
+
+  local parent = type(frame.GetParent) == "function" and frame:GetParent() or nil
+  if parent and type(parent.HookScript) == "function" then
+    parent:HookScript("OnHide", function()
+      if parentHidden then
+        return
+      end
+      listedWhileHidden = isSpecialFrame(windowName())
+      setSpecialFrame(windowName(), false)
+      parentHidden = true
+    end)
+    parent:HookScript("OnShow", function()
+      if not parentHidden then
+        return
+      end
+      parentHidden = false
+      setSpecialFrame(windowName(), listedWhileHidden)
+    end)
+  end
+
   local order = {}
 
   -- A click inside an open popup or menu counts as a click on the window;
@@ -99,7 +137,7 @@ function EscapeOrder.New(frame, escapeKey)
     end
     yieldedTo = nil
     yieldedToOwn = false
-    setSpecialFrame(windowName(), true)
+    setListed(true)
     setKeyFocused(true)
   end
 
@@ -160,7 +198,7 @@ function EscapeOrder.New(frame, escapeKey)
     end
     yieldedTo = blocker
     yieldedToOwn = own
-    setSpecialFrame(windowName(), false)
+    setListed(false)
     setKeyFocused(false)
     return true
   end
