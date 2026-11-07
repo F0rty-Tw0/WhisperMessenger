@@ -94,7 +94,7 @@ end
 -- parts: frame, titleBar (custom chrome only), title, closeButton,
 -- newConversationButton, patchNotesButton, markAllReadButton, optionsButton, backButton,
 -- blizzardChrome (bool), retailChrome (bool), leftClearance (px kept free at
--- the left of the title bar, for the phone layout's icon spot).
+-- the left of the title bar, for the docked floating button's icon spot).
 function TitleBarLayout.Apply(parts, theme)
   TitleBarLayout.ApplyLook(parts, theme)
   -- Phone chat view: back takes the first left slot, like on a phone. The

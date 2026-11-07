@@ -52,7 +52,7 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
-  -- A change to the floating button reaches the phone window it may ride.
+  -- A change to the floating button reaches the window it may ride (either layout).
   local function dockPhoneIcon()
     local window = runtime.window
     if window and window.dockPhoneIcon then

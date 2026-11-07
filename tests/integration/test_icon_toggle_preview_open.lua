@@ -59,17 +59,15 @@ return function()
     assert(not previewShown(runtime), "the preview is gone")
   end)
 
-  -- test_classic_button_click_with_a_preview_over_the_open_window_opens_its_chat
+  -- test_classic_docked_button_shows_no_preview_over_the_open_window_and_a_click_closes_it
   PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
     runtime.toggle()
     runtime.window.setTabMode("groups")
     receiveWhisper(runtime)
-    assert(previewShown(runtime), "the preview shows over the Groups tab")
+    assert(runtime.icon.isRiding(), "the button is docked on the open window")
+    assert(not previewShown(runtime), "a docked button suppresses its card, like compact")
     clickButton(runtime)
-    assert(runtime.window.frame:IsShown(), "the window stays open")
-    assert(runtime.activeConversationKey == KEY, "selected: " .. tostring(runtime.activeConversationKey))
-    assert(runtime.window.getTabMode() == "whispers", "on the whisper's tab")
-    assert(not previewShown(runtime), "the preview is gone")
+    assert(not runtime.window.frame:IsShown(), "the click closes the window")
   end)
 
   -- test_classic_button_click_on_the_open_window_without_a_preview_closes_it
