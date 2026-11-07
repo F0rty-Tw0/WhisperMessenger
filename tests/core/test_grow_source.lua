@@ -89,6 +89,18 @@ return function()
     assert(source.isIconGlideOn == nil, "the glide is Window animation, nothing else")
   end
 
+  -- test_dock_option_is_on_unless_switched_off
+  do
+    local settings = {}
+    local source = build("widget", nil, nil, settings)
+    assert(source.isIconDockOn() == true, "missing counts as on")
+    settings.iconDock = false
+    assert(source.isIconDockOn() == false, "off, read live")
+    settings.iconDock = true
+    assert(source.isIconDockOn() == true, "on again")
+    assert(build("widget", nil, nil, nil).isIconDockOn() == true, "no settings table counts as on")
+  end
+
   -- test_open_at_saved_spot_is_off_unless_switched_on
   do
     local settings = {}

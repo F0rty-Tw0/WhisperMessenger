@@ -355,6 +355,7 @@ function WindowRuntime.Create(options)
       getDockIcon = getWidgetIcon,
       getGrowSource = growSource.getGrowSource,
       isGrowAnimationOn = growSource.isGrowAnimationOn,
+      isIconDockOn = growSource.isIconDockOn,
       isOpenAtSavedSpot = growSource.isOpenAtSavedSpot,
       initialTabMode = characterState.contactsTabMode or "whispers",
       storeConfig = runtime.store.config,

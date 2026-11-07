@@ -235,6 +235,50 @@ return function()
     assert(left == 0 and top == 0, name .. ": nothing docks, so no reach, got " .. tostring(left) .. "," .. tostring(top))
   end)
 
+  -- test_off_open_leaves_the_corner_free_and_the_option_toggles_live
+  eachLayout(function(name, phone)
+    local dockOn = false
+    local case = PhoneWindow.Build({
+      phoneLayout = phone,
+      isIconDockOn = function()
+        return dockOn
+      end,
+    })
+    case.window.frame:Show()
+    assert(case.rides == 0 and case.rideHandlers == nil, name .. ": nothing docked, a drag moves the button")
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X, name .. ": title buttons at the left edge")
+    dockOn = true
+    case.window.dockPhoneIcon()
+    assert(case.rides == 1 and titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, name .. ": OFF -> ON docks now")
+    dockOn = false
+    case.window.dockPhoneIcon()
+    assert(case.homes == 1 and titleOffset(case) == L.TITLE_BAR_INSET_X, name .. ": ON -> OFF sends it home, corner back")
+  end)
+
+  -- test_off_leaves_the_clamp_flush_with_the_screen_corner
+  eachLayout(function(name, phone)
+    local dockOn = true
+    local case = PhoneWindow.Build({
+      phoneLayout = phone,
+      isIconDockOn = function()
+        return dockOn
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local corner = case.rodeTo.region
+    at(frame, 100, 900)
+    at(corner, 93, 917)
+    frame:Hide()
+    frame:Show()
+    assert(select(1, frame:GetClampRectInsets()) == -7, name .. ": on: the docked circle reaches over its corner")
+    frame:Hide()
+    dockOn = false
+    frame:Show()
+    local left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, name .. ": off: no reach, got " .. tostring(left) .. "," .. tostring(top))
+  end)
+
   -- test_a_missing_open_at_saved_spot_option_counts_as_on
   eachLayout(function(name, phone)
     local case = PhoneWindow.Build({ phoneLayout = phone })

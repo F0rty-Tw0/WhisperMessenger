@@ -72,6 +72,9 @@ function DockWiring.Attach(window, parts)
   local isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot or function()
     return true
   end
+  local isIconDockOn = windowOptions.isIconDockOn or function()
+    return true
+  end
   local flow = PhoneDockFlow.Attach(window, {
     chrome = chrome,
     getDockIcon = getDockIcon,
@@ -80,13 +83,14 @@ function DockWiring.Attach(window, parts)
     getGrowSource = getGrowSource,
     isGrowAnimationOn = isGrowAnimationOn,
     isOpenAtSavedSpot = isOpenAtSavedSpot,
+    isIconDockOn = isIconDockOn,
   })
 
   -- The clamp reaches over the corner spot, and over nothing when no button
-  -- can dock. A window opening for the first time may have no position until
-  -- next frame.
+  -- can dock or Dock button on the window is off. A window opening for the
+  -- first time may have no position until next frame.
   local function clampToSpot()
-    if flow.dockedIcon() == nil and getDockIcon() == nil then
+    if flow.dockedIcon() == nil and (getDockIcon() == nil or not isIconDockOn()) then
       local _, right, _, bottom = window:GetClampRectInsets()
       window:SetClampRectInsets(0, right, 0, bottom)
       return
