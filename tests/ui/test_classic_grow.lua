@@ -129,7 +129,7 @@ return function()
     assert(not case.ghost:IsShown() and not Rig.running(case.ghost), "instant close")
   end
 
-  -- test_missing_options_mean_no_source_and_switch_on
+  -- test_missing_options_mean_no_source
   do
     local factory = FakeUI.NewFactory()
     local parent = factory.CreateFrame("Frame", "UIParent", nil)
@@ -144,6 +144,26 @@ return function()
     frame:Show()
     frame:Hide()
     assert(frame:GetAlpha() == 0.8, "instant, nothing held")
+  end
+
+  -- test_a_missing_switch_option_means_on
+  do
+    local factory = FakeUI.NewFactory()
+    local parent = factory.CreateFrame("Frame", "UIParent", nil)
+    local frame = factory.CreateFrame("Frame", "Window", parent)
+    Rig.rect(frame, 100, 100, 460, 740)
+    local icon = Rig.icon(80, 720, 122, 762)
+    ClassicGrow.Attach(frame, {
+      factory = factory,
+      parent = parent,
+      theme = Theme,
+      windowAlpha = { setHeld = function() end, refreshWindowAlpha = function() end },
+      getSource = function()
+        return icon
+      end,
+    })
+    frame:Show()
+    assert(Rig.running(Rig.ghostOf(frame)), "the window grows out of its icon")
   end
 
   -- test_source_gone_at_close_re_resolves_to_the_new_icon
