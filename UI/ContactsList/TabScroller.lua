@@ -105,10 +105,11 @@ end
 
 local function fitsStrip(ctx)
   local width = ctx.frame:GetWidth()
-  if width <= 0 then
+  local visible = ctx.visible
+  -- No tabs always fit, even on a strip narrower than the end reserve.
+  if width <= 0 or #visible == 0 then
     return true
   end
-  local visible = ctx.visible
 
   return runWidth(visible, 1, #visible, ctx.opts.spacing) <= width - ctx.opts.endReserve
 end
