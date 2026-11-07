@@ -8,10 +8,11 @@ local ComposerSendFocusEnv = {}
 -- env.blocked counts binding calls made in combat, which the game refuses.
 -- The pane sits under the window as in the real one: window > content area >
 -- content pane > pane, with the window under UIParent. env.window.mouseOver is
--- the cursor; no other frame in the chain reports it.
+-- the cursor; no other frame in the chain reports it. env.factory builds more
+-- frames for a test.
 function ComposerSendFocusEnv.NewEnv(overrides)
   local factory = FakeUI.NewFactory()
-  local env = { on = true, enabled = true, combat = false, keys = { "ENTER" }, bound = {}, binds = 0, blocked = 0 }
+  local env = { factory = factory, on = true, enabled = true, combat = false, keys = { "ENTER" }, bound = {}, binds = 0, blocked = 0 }
   for key, value in pairs(overrides or {}) do
     env[key] = value
   end

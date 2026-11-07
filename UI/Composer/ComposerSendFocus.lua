@@ -4,6 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys")
+local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
+  or require("WhisperMessenger.UI.MessengerWindow.WindowScripts.Frame.PointerFocus")
 
 -- "Deselect chat input after sending": a send takes the cursor out of the
 -- composer, and while the composer is on screen the game's open-chat key puts
@@ -18,8 +20,10 @@ local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys
 -- (hide in combat) gives the key back through its own OnHide, since its hidden
 -- composer gets none. Calling the game's chat opener from here would taint, so
 -- in combat the key focuses the composer only while it is shown and the mouse
--- is over the window, and otherwise does nothing. When combat ends,
--- PLAYER_REGEN_ENABLED keeps or releases the key as usual.
+-- is over the window, and otherwise does nothing. "Over the window" includes
+-- its parts outside its edges (the tabs below a compact window) and the toggle
+-- icon docked in its corner. When combat ends, PLAYER_REGEN_ENABLED keeps or
+-- releases the key as usual.
 --
 -- Settings hide the composer's pane, so the pane's OnShow picks up a changed
 -- toggle when they close.
@@ -27,6 +31,7 @@ local ComposerSendFocus = {}
 
 local BUTTON_NAME = "WhisperMessengerComposerEnterButton"
 local OPEN_CHAT_ACTION = "OPENCHAT"
+local TOGGLE_ICON_NAME = "WhisperMessengerToggleIcon"
 local EVENTS = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }
 
 local function defaultInCombat()
@@ -46,9 +51,17 @@ local function windowOf(pane)
   return frame
 end
 
+-- The window's own rect, or a frame under the cursor that belongs to the
+-- window (drawn outside it) or to the toggle icon, which is UIParent's child.
 local function defaultMouseIsOver(pane)
   local window = windowOf(pane)
-  return type(window.IsMouseOver) == "function" and window:IsMouseOver() == true
+  if type(window.IsMouseOver) == "function" and window:IsMouseOver() == true then
+    return true
+  end
+  local toggleIcon = _G[TOGGLE_ICON_NAME]
+  return PointerFocus.FindFocusAncestor(function(frame)
+    return frame == window or frame == toggleIcon
+  end) ~= nil
 end
 
 -- options.isOn(): the setting. options.isEnabled(): the composer can send.
