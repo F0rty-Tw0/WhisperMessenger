@@ -30,6 +30,9 @@ function ContactsWiring.Create(factory, options)
   local contactsRuntime
   local tabSelectionMemory = TabSelectionMemory.Create({
     rememberSelections = windowOptions.phoneLayout ~= true,
+    clearSelection = windowOptions.phoneLayout == true and windowOptions.onSelectConversation and function()
+      windowOptions.onSelectConversation(nil)
+    end or nil,
     getSelectedConversationKey = options.getSelectedConversationKey,
     getCurrentContacts = function()
       if contactsRuntime and contactsRuntime.getCurrentContacts then

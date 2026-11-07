@@ -146,7 +146,7 @@ end
 -- addon panel). Returns the toggle TabLayout.BindController builds:
 --   { frame, setMode, getMode, setModes, setShown, setOptionsShown,
 --     setUnreadCounts, setLanguage, addPanelTab, setSelectedPanel,
---     getSelectedPanel, setModeClickHandler }
+--     getSelectedPanel, setModeClickHandler, setCurrentModeClickHandler }
 function TabToggle.Create(factory, parent, options)
   options = options or {}
   if options.nativeChrome then

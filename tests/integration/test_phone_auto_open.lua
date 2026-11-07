@@ -1,5 +1,4 @@
 local PhoneRuntime = require("tests.helpers.phone_runtime")
-local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 local Poller = require("WhisperMessenger.Core.Bootstrap.AutoOpenCoordinator.Poller")
 local FakeUI = require("tests.helpers.fake_ui")
 
@@ -8,32 +7,6 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 local KEY = PhoneRuntime.KEY
 local run, finishSlide = PhoneRuntime.Run, PhoneRuntime.FinishSlide
-
-local function receiveWhisper(runtime)
-  local saved = rawget(_G, "InCombatLockdown")
-  rawset(_G, "InCombatLockdown", function()
-    return false
-  end)
-  EventBridge.RouteLiveEvent(
-    runtime,
-    runtime.refreshWindow,
-    "CHAT_MSG_WHISPER",
-    "hello",
-    "Arthas-Area52",
-    "",
-    "",
-    "",
-    0,
-    0,
-    "",
-    0,
-    999,
-    1001,
-    "Player-1-0ABC"
-  )
-  rawset(_G, "InCombatLockdown", saved)
-  finishSlide(runtime)
-end
 
 -- Types into a chat box watched by the real poller, as the player would.
 local function typeInChat(runtime, text)
@@ -66,7 +39,7 @@ end
 return function()
   -- test_auto_open_from_a_closed_window_lands_on_the_chat
   run({ autoOpenIncoming = true }, function(runtime)
-    receiveWhisper(runtime)
+    PhoneRuntime.ReceiveWhisper(runtime)
     assertOnChat(runtime)
   end)
 
@@ -74,7 +47,7 @@ return function()
   run({ autoOpenIncoming = true }, function(runtime)
     runtime.toggle()
     assert(runtime.window.contactsPane:IsShown(), "on the list")
-    receiveWhisper(runtime)
+    PhoneRuntime.ReceiveWhisper(runtime)
     assertOnChat(runtime)
     assert(not runtime.window.composer.input:HasFocus(), "the player did not ask to type")
   end)
@@ -82,7 +55,7 @@ return function()
   -- test_without_auto_open_the_list_stays_put
   run(nil, function(runtime)
     runtime.toggle()
-    receiveWhisper(runtime)
+    PhoneRuntime.ReceiveWhisper(runtime)
     assert(runtime.activeConversationKey == nil, "no chat opens by itself")
     assert(runtime.window.contactsPane:IsShown(), "still on the list")
     assert(runtime.store.conversations[KEY].unreadCount == 3, "and it counts as unread")
@@ -92,7 +65,7 @@ return function()
   run({ autoOpenIncoming = true }, function(runtime)
     runtime.toggle()
     PhoneRuntime.ClickRow(runtime, PhoneRuntime.OTHER)
-    receiveWhisper(runtime)
+    PhoneRuntime.ReceiveWhisper(runtime)
     assert(runtime.activeConversationKey == PhoneRuntime.OTHER, "the open chat stays")
   end)
 
