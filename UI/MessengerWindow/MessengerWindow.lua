@@ -150,6 +150,9 @@ function MessengerWindow.Create(factory, options)
     settingsPanels = settingsPanels,
     closeWindow = closeWindow,
     onResetWindowPosition = onResetWindowPosition,
+    onWindowMoved = function()
+      dock.onWindowMoved()
+    end,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     onStartConversation = options.onStartConversation,

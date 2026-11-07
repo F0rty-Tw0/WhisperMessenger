@@ -1,10 +1,13 @@
 local PhoneWindow = require("tests.helpers.phone_window")
 local PhoneRuntime = require("tests.helpers.phone_runtime")
 local Rig = require("tests.helpers.grow_rig")
+local Theme = require("WhisperMessenger.UI.Theme")
 
 -- Open at saved spot, in both layouts: off, the window opens with its icon
 -- spot on the floating button and the button's home follows the window; on,
 -- the window opens where it was last moved and the button stays home.
+
+local L = Theme.LAYOUT
 
 local LAYOUTS = {
   { name = "compact", phone = true },
@@ -115,6 +118,36 @@ return function()
       PhoneWindow.Fire(frame, "OnShow")
       sameAnchor(placed, { frame:GetPoint() }, name, "Alt+Z moved the window")
       assert(case.adopted == 0 and case.homes == homes, name .. ": Alt+Z adopts nothing and sends nothing home")
+    end
+
+    -- test_off_reset_window_position_moves_the_button_home_with_the_window
+    do
+      local case = laidOut(phone, false, {
+        onResetWindowPosition = function()
+          return not phone and { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 } or nil
+        end,
+      })
+      local frame = case.window.frame
+      frame:Show()
+      local atAdopt
+      local adopt = case.icon.adoptRidePosition
+      case.icon.adoptRidePosition = function()
+        atAdopt = { frame:GetPoint() }
+        adopt()
+      end
+      local reset = case.window.resetWindowButton
+      reset.scripts.OnClick(reset)
+      assert(case.adopted == 1, name .. ": the reset moved the window, so the button's home follows, got " .. case.adopted)
+      assert(atAdopt[4] == (phone and -L.PHONE_WINDOW_WIDTH / 2 or 0), name .. ": adopted after the window moved, got " .. tostring(atAdopt[4]))
+    end
+
+    -- test_on_reset_window_position_leaves_the_button_home
+    do
+      local case = laidOut(phone, true)
+      case.window.frame:Show()
+      local reset = case.window.resetWindowButton
+      reset.scripts.OnClick(reset)
+      assert(case.adopted == 0, name .. ": the button's home stays put, got " .. case.adopted)
     end
 
     -- test_changing_the_switch_applies_at_the_next_open

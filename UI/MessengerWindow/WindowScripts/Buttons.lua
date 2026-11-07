@@ -20,7 +20,7 @@ local Buttons = {}
 --   settingsPanels, settingsTabs
 --
 -- options:
---   onClose, onStartConversation, onResetWindowPosition,
+--   onClose, onStartConversation, onResetWindowPosition, onWindowMoved,
 --   onResetIconPosition, onClearAllChats, setOptionsVisible, isShown,
 --   applyState, refreshSelection
 function Buttons.WireButtons(refs, options)
@@ -66,6 +66,10 @@ function Buttons.WireButtons(refs, options)
       local nextState = options.onResetWindowPosition()
       if nextState ~= nil then
         options.applyState(nextState)
+      end
+      -- The window is where the reset left it: a docked button follows.
+      if options.onWindowMoved then
+        options.onWindowMoved()
       end
     end)
   end
