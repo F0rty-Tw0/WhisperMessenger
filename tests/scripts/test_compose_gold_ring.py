@@ -90,5 +90,69 @@ class SquareFrameTests(unittest.TestCase):
         )
 
 
+class RoundedSquareArtTests(unittest.TestCase):
+    def test_mask_is_clear_in_the_corner_and_opaque_in_the_centre(self):
+        self.assertEqual(compose_gold_ring.square_mask_pixel(0, 0, 256)[3], 0.0)
+        self.assertEqual(compose_gold_ring.square_mask_pixel(128, 128, 256)[3], 1.0)
+
+    def test_glow_is_clear_in_the_centre(self):
+        self.assertEqual(compose_gold_ring.square_glow_pixel(32, 32, 64)[3], 0.0)
+
+    def test_glow_is_bright_just_inside_the_edge(self):
+        alpha = compose_gold_ring.square_glow_pixel(32, 1, 64)[3]
+        self.assertTrue(200 / 255 < alpha <= 1.0)
+
+    def test_glow_has_faded_out_well_before_the_centre(self):
+        self.assertEqual(compose_gold_ring.square_glow_pixel(32, 20, 64)[3], 0.0)
+
+    def test_rounded_frame_is_clear_in_the_corner(self):
+        self.assertEqual(compose_gold_ring.square_rounded_pixel(1, 1, 256)[3], 0.0)
+
+    def test_rounded_frame_is_solid_just_inside_the_corner(self):
+        self.assertGreater(compose_gold_ring.square_rounded_pixel(5, 5, 256)[3], 0.9)
+
+    def test_rounded_frame_keeps_the_straight_edges(self):
+        self.assertEqual(
+            compose_gold_ring.square_rounded_pixel(128, 3, 256),
+            compose_gold_ring.square_pixel(128, 3, 256),
+        )
+
+    def test_square_glow_mode_writes_a_64_square_rgba_png(self):
+        def write(path):
+            self.assertEqual(compose_gold_ring.main(["--square-glow", path]), 0)
+
+        self.assertEqual(png_info(render(write))[:4], (64, 64, 8, 6))
+
+    def test_square_mask_mode_writes_a_256_square_rgba_png(self):
+        def write(path):
+            self.assertEqual(compose_gold_ring.main(["--square-mask", path]), 0)
+
+        self.assertEqual(png_info(render(write))[:4], (256, 256, 8, 6))
+
+    def test_square_rounded_mode_writes_a_256_square_rgba_png(self):
+        def write(path):
+            self.assertEqual(compose_gold_ring.main(["--square-rounded", path]), 0)
+
+        self.assertEqual(png_info(render(write))[:4], (256, 256, 8, 6))
+
+    def test_shipped_square_glow_matches_the_generator(self):
+        self.assertEqual(
+            png_info(render(compose_gold_ring.write_square_glow)),
+            png_info(shipped("inner-glow-square.png")),
+        )
+
+    def test_shipped_square_mask_matches_the_generator(self):
+        self.assertEqual(
+            png_info(render(compose_gold_ring.write_square_mask)),
+            png_info(shipped("mask_rounded_square.png")),
+        )
+
+    def test_shipped_rounded_frame_matches_the_generator(self):
+        self.assertEqual(
+            png_info(render(compose_gold_ring.write_square_rounded)),
+            png_info(shipped("frame_gold_square_rounded.png")),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,9 @@
 
 Usage: python scripts/compose_gold_ring.py <ring.png> <preview.png>
        python scripts/compose_gold_ring.py --square <frame.png>
+       python scripts/compose_gold_ring.py --square-glow <glow.png>
+       python scripts/compose_gold_ring.py --square-mask <mask.png>
+       python scripts/compose_gold_ring.py --square-rounded <frame.png>
 """
 import math
 import struct
@@ -12,6 +15,22 @@ SIZE = 256
 INNER = 0.78  # hole edge as a share of the radius
 LIGHT_STRENGTH = 0.22
 SQUARE_BAND = 0.10  # frame band as a share of the side
+CORNER_RATIO = 0.05  # corner radius as a share of the side
+GLOW_SIZE = 64
+# Edge glow, distance inside the edge as a share of the side -> alpha 0-255.
+# Sampled from the circle's inner-glow.png.
+GLOW_PROFILE = [
+    (0.000, 42),
+    (0.031, 255),
+    (0.0625, 243),
+    (0.094, 212),
+    (0.125, 167),
+    (0.156, 117),
+    (0.1875, 68),
+    (0.219, 28),
+    (0.250, 4),
+    (0.281, 0),
+]
 # Band profile, outer edge (0) to hole edge (1): (position, red, green, blue).
 PROFILE = [
     (0.00, 0.26, 0.17, 0.05),
@@ -72,6 +91,45 @@ def square_pixel(x, y, size):
     return color[0], color[1], color[2], alpha
 
 
+def rounded_square_distance(x, y, size, half=None):
+    """Signed distance in px inward from a rounded square's edge (negative outside).
+
+    The square has half-side `half` (default: the image edge) and corner radius
+    CORNER_RATIO * size, measured at the pixel center (x + 0.5, y + 0.5).
+    """
+    if half is None:
+        half = size / 2
+    radius = CORNER_RATIO * size
+    qx = abs(x + 0.5 - size / 2) - (half - radius)
+    qy = abs(y + 0.5 - size / 2) - (half - radius)
+    outside = math.hypot(max(qx, 0.0), max(qy, 0.0)) + min(max(qx, qy), 0.0) - radius
+    return -outside
+
+
+def glow_alpha(share):
+    """GLOW_PROFILE alpha (0-1) at a distance share of the side, linear in between."""
+    if share < 0:
+        return 0.0
+    for (p0, a0), (p1, a1) in zip(GLOW_PROFILE, GLOW_PROFILE[1:]):
+        if share <= p1:
+            return (a0 + (a1 - a0) * (share - p0) / (p1 - p0)) / 255
+    return 0.0
+
+
+def square_glow_pixel(x, y, size):
+    return 1.0, 1.0, 1.0, glow_alpha(rounded_square_distance(x, y, size) / size)
+
+
+def square_mask_pixel(x, y, size):
+    return 1.0, 1.0, 1.0, clamp01(rounded_square_distance(x, y, size) + 0.5)
+
+
+def square_rounded_pixel(x, y, size):
+    r, g, b, a = square_pixel(x, y, size)
+    outer = rounded_square_distance(x, y, size, size / 2 - 1)
+    return r, g, b, a * clamp01(outer + 0.5)
+
+
 def write_png(path, width, height, rgba_rows):
     def chunk(tag, data):
         return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data))
@@ -89,15 +147,15 @@ def to_byte(value):
     return int(round(clamp01(value) * 255))
 
 
-def write_art(path, pixel):
+def write_art(path, pixel, size=SIZE):
     rows = []
-    for y in range(SIZE):
+    for y in range(size):
         row = []
-        for x in range(SIZE):
-            r, g, b, a = pixel(x, y, SIZE)
+        for x in range(size):
+            r, g, b, a = pixel(x, y, size)
             row += [to_byte(r), to_byte(g), to_byte(b), to_byte(a)]
         rows.append(row)
-    write_png(path, SIZE, SIZE, rows)
+    write_png(path, size, size, rows)
 
 
 def write_ring(path):
@@ -106,6 +164,18 @@ def write_ring(path):
 
 def write_square(path):
     write_art(path, square_pixel)
+
+
+def write_square_glow(path):
+    write_art(path, square_glow_pixel, GLOW_SIZE)
+
+
+def write_square_mask(path):
+    write_art(path, square_mask_pixel)
+
+
+def write_square_rounded(path):
+    write_art(path, square_rounded_pixel)
 
 
 def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 0.10)):
@@ -143,9 +213,17 @@ def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 
     write_png(path, canvas * zoom, canvas * zoom, zoomed)
 
 
+SQUARE_MODES = {
+    "--square": write_square,
+    "--square-glow": write_square_glow,
+    "--square-mask": write_square_mask,
+    "--square-rounded": write_square_rounded,
+}
+
+
 def main(argv):
-    if argv[:1] == ["--square"]:
-        write_square(argv[1])
+    if argv[:1] and argv[0] in SQUARE_MODES:
+        SQUARE_MODES[argv[0]](argv[1])
         return 0
     write_ring(argv[0])
     write_preview(argv[1])
