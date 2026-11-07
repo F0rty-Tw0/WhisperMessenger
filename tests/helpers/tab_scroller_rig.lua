@@ -10,7 +10,9 @@ local DEFAULT_WIDTHS = { 50, 50, 50, 50, 50 }
 local ARROW_HEIGHT = 24
 local STRIP_HEIGHT = 24
 
--- opts: spacing (2), endReserve (0), arrowWidth (16).
+-- opts: spacing (2), endReserve (0), arrowWidth (16), arrowOutset (nil),
+-- squeeze (true: pass a squeeze hook that narrows a tab by px, never below
+-- floors[index], default 0).
 -- Returns { factory, strip, tabs, visible, scroller, prev, next, painted };
 -- `painted` collects { btn, enabled } for every paintArrow call.
 function Rig.build(widths, opts)
@@ -19,16 +21,27 @@ function Rig.build(widths, opts)
   local factory = FakeUI.NewFactory()
   local strip = factory.CreateFrame("Frame", nil, nil)
   local rig = { factory = factory, strip = strip, tabs = {}, painted = {} }
+  local floors = opts.floors or {}
+  local natural = {}
   for index, width in ipairs(widths or DEFAULT_WIDTHS) do
     local btn = factory.CreateFrame("Button", nil, strip)
     btn:SetWidth(width)
-    rig.tabs[index] = { btn = btn }
+    rig.tabs[index] = { btn = btn, index = index }
+    natural[index] = width
+  end
+  local squeeze = nil
+  if opts.squeeze then
+    squeeze = function(tab, px)
+      tab.btn:SetWidth(math.max(natural[tab.index] - px, floors[tab.index] or 0))
+    end
   end
   rig.visible = rig.tabs
   rig.scroller = TabScroller.Attach(factory, strip, {
     spacing = opts.spacing or 2,
     endReserve = opts.endReserve or 0,
     arrowWidth = arrowWidth,
+    arrowOutset = opts.arrowOutset,
+    squeeze = squeeze,
     createArrows = function(parent)
       local back = factory.CreateFrame("Button", nil, parent)
       local forward = factory.CreateFrame("Button", nil, parent)
