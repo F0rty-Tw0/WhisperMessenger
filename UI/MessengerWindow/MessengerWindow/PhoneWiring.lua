@@ -29,7 +29,6 @@ function PhoneWiring.Hooks()
       return false
     end,
     dock = function() end,
-    onWindowMoved = function() end,
     onStrataChanged = function(_strata) end,
     isWindowPart = function(_candidate)
       return false
@@ -46,7 +45,6 @@ end
 -- layout) is never the saved size. Both are safe with the idle hooks.
 function PhoneWiring.WrapPosition(hooks, options)
   local function onPositionChanged(nextState)
-    hooks.onWindowMoved()
     if options.onPositionChanged and not hooks.isWide() then
       options.onPositionChanged(nextState)
     end
@@ -174,12 +172,6 @@ function PhoneWiring.Attach(hooks, options)
   hooks.isListView = navigator.isListView
   hooks.showList = navigator.showList
   hooks.dock = flow.dock
-  hooks.onWindowMoved = function()
-    local icon = getDockIcon()
-    if icon and icon.isRiding and icon.isRiding() then
-      icon.adoptRidePosition()
-    end
-  end
   hooks.onStrataChanged = function(strata)
     flow.setStrata(strata)
   end

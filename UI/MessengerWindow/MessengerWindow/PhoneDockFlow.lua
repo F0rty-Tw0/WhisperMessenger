@@ -62,7 +62,6 @@ function PhoneDockFlow.Attach(frame, options)
       dock()
       return
     end
-    PhoneDock.Place(frame, chrome.iconSlot, icon.frame)
     attachIcon(icon, openAnimation.beginOpen(icon.frame))
   end
 

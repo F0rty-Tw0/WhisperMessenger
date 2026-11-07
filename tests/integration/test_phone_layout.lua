@@ -92,12 +92,42 @@ return function()
     assert(frame:GetAlpha() == 1, "already open, so it stays visible")
   end
 
-  -- test_window_grows_out_of_its_top_left_corner_spot
+  -- test_opening_keeps_the_windows_own_anchor
+  do
+    local case = build()
+    local frame = case.window.frame
+    local before = { frame:GetPoint() }
+    frame:Show()
+    local after = { frame:GetPoint() }
+    for i = 1, 5 do
+      assert(after[i] == before[i], "anchor part " .. i .. " changed on open")
+    end
+    assert(after[2] ~= case.fab, "the window never anchors to the button")
+  end
+
+  -- test_a_window_with_no_saved_spot_opens_centred
   do
     local case = build()
     case.window.frame:Show()
-    local point, relativeTo = case.window.frame:GetPoint()
-    assert(point == "TOPLEFT" and relativeTo ~= case.fab, "the window is screen-anchored; the button follows it")
+    local point, _, relativePoint, x, y = case.window.frame:GetPoint()
+    assert(point == "CENTER" and relativePoint == "CENTER" and x == 0 and y == 0, "got " .. tostring(point) .. "," .. tostring(x))
+  end
+
+  -- test_the_window_opens_at_its_saved_spot
+  do
+    local case = build({ state = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 300, y = 700 } })
+    local frame = case.window.frame
+    frame:Show()
+    local point, _, relativePoint, x, y = frame:GetPoint()
+    assert(point == "TOPLEFT" and relativePoint == "BOTTOMLEFT" and x == 300 and y == 700, "got " .. tostring(x) .. "," .. tostring(y))
+  end
+
+  -- test_opening_and_closing_never_save_a_position
+  do
+    local case = build()
+    case.window.frame:Show()
+    case.window.frame:Hide()
+    assert(case.saved.state == nil, "only a drag or a reset saves the spot")
   end
 
   -- test_hiding_the_whole_ui_leaves_the_button_riding
@@ -112,13 +142,13 @@ return function()
     assert(case.homes == 0, "Alt+Z hid the parent, not the window")
   end
 
-  -- test_moving_the_window_moves_the_button_home
+  -- test_moving_the_window_keeps_the_button_home
   do
     local case = build()
     local frame = case.window.frame
     frame:Show()
     frame.scripts.OnDragStop(frame)
-    assert(case.adopted == 1, "the button stays with the window")
+    assert(case.adopted == 0, "the window drag leaves the button's home alone")
   end
 
   -- test_dragging_the_riding_button_moves_the_window
@@ -133,7 +163,7 @@ return function()
     case.rideHandlers.beginDrag()
     assert(moved == 1, "the window moves")
     case.rideHandlers.endDrag()
-    assert(case.adopted == 1, "and the button's home with it")
+    assert(case.adopted == 0, "the window is saved, the button's home is not")
   end
 
   -- test_closing_sends_home_the_button_it_docked_after_the_icon_mode_changed
