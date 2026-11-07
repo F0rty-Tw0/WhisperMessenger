@@ -16,6 +16,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window (while Dock button on the window is on). On, the window opens where you last moved it and the button stays where it is.
 - The regular (non-compact) window now holds the floating button in its top-left corner while it is open, like the compact window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the compact window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
+- Fixed: In the compact window, the title no longer runs into the buttons next to it.
 - Fixed: Dragging the button while it sits on the open window no longer makes the window jump.
 - Fixed: Messages from addon chat channels (like Forever Item Finder's) and other custom channels you haven't turned on as chats no longer show up inside your whisper chats. Channels you turned on as chats, and the game's own channels like Trade, still show their latest message there.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
