@@ -197,8 +197,8 @@ function IncomingPreview.Create(factory, frame, options)
     if hold.route(hasMessage and meta or nil, false) == "ignore" then
       return
     end
-    -- Docked: the whisper is in the open window's list, and closing it
-    -- acknowledges the whisper, so the card never needs to show.
+    -- Docked: the card would cover the title bar, and closing the window
+    -- acknowledges the whispers, so the card never needs to show.
     if not hasMessage or suppressed then
       clearIncomingPreview()
       return

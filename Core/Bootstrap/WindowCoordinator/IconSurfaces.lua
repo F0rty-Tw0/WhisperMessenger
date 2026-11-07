@@ -76,7 +76,8 @@ function IconSurfaces.Update(contacts, surfaces)
   -- actually showing — the full conversation is already on screen and the
   -- popup would be redundant. On the Groups tab, or under an addon panel or
   -- the options pane, the whisper isn't visible, so the popup is still the
-  -- user's only surface.
+  -- user's only surface. Phone layout: the docked button hides its card
+  -- anyway (IncomingPreview.setSuppressed), on those views too.
   local registry = surfaces.getPanelRegistry and surfaces.getPanelRegistry()
   local total, unread = IconSurfaces.Counts(contacts, registry)
   local window = surfaces.getWindow()
