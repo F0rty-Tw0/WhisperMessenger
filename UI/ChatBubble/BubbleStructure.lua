@@ -68,9 +68,7 @@ function BubbleStructure.createStructure(frame, factory)
     frame:SetScript("OnHyperlinkLeave", function(self)
       Hyperlinks.HandleLeave()
     end)
-    frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-      Hyperlinks.HandleClick(link, text, button, self)
-    end)
+    Hyperlinks.BindClick(frame)
   end
 
   local bgFills, bgCorners
