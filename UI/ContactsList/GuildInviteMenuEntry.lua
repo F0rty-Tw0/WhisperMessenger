@@ -9,13 +9,31 @@ local IgnoreList = ns.IgnoreList or require("WhisperMessenger.Model.Filters.Igno
 local LocalPlayer = ns.LocalPlayer or require("WhisperMessenger.Core.LocalPlayer")
 local SeenGuild = ns.SeenGuild or require("WhisperMessenger.Model.SeenGuild")
 local SecretValue = ns.SecretValue or require("WhisperMessenger.Util.SecretValue")
+local Identity = ns.Identity or require("WhisperMessenger.Model.Identity.Identity")
+-- stylua: ignore start
+local PopupUI = ns.ChatBubbleContextMenuManualCopyPopupUI or require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy.PopupUI")
+-- stylua: ignore end
 
 -- A whisper row's "Guild invite" entry. WoW whisper rows only, and shown only
 -- when you are in a guild with invite rights and the player is not you, not a
 -- guildmate, and not seen in another guild this session. Clicking it opens the
 -- chat box prefilled with "/ginvite <name>" for the player to send: addon code
--- may not call the protected invite API.
+-- may not call the protected invite API. When prefilling would taint the
+-- game's slash commands (see ChatPrefill.IsSafe), the click shows the command
+-- in the copy dialog for the player to paste into chat instead.
 local GuildInviteMenuEntry = {}
+
+local COMMAND_PROMPT = "Press Ctrl+C to copy the command, then paste it into chat."
+
+-- Same-realm names drop the realm, as the game's own name display does.
+local function inviteCommand(name)
+  local command = "/ginvite " .. Identity.ShortName(name)
+  if ChatPrefill.IsSafe(command) then
+    ChatPrefill.Open(command)
+    return
+  end
+  PopupUI.ShowManualCopyDialog(command, { prompt = COMMAND_PROMPT })
+end
 
 -- A missing, throwing or secret check answers "no".
 local function callAllows(fn)
@@ -56,7 +74,7 @@ function GuildInviteMenuEntry.Add(rootDescription, item)
     return
   end
   rootDescription:CreateButton(Localization.Text("Guild invite"), function()
-    ChatPrefill.Open("/ginvite " .. name)
+    inviteCommand(name)
   end)
 end
 

@@ -527,6 +527,7 @@ local Korean = {
   ["Add friend"] = "친구 추가",
   -- Contact menu: Guild invite
   ["Guild invite"] = "길드 초대",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Ctrl+C를 눌러 명령어를 복사한 다음 대화창에 붙여넣으세요.",
 }
 
 ns.Locale_koKR = Korean

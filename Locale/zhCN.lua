@@ -527,6 +527,7 @@ local SimplifiedChinese = {
   ["Add friend"] = "添加好友",
   -- Contact menu: Guild invite
   ["Guild invite"] = "邀请加入公会",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 复制命令，然后粘贴到聊天框中。",
 }
 
 ns.Locale_zhCN = SimplifiedChinese
