@@ -38,6 +38,9 @@ local REMOVED_KEYS = {
   "Button glide",
   "The floating button glides onto the window's corner when it opens and back when it closes. Turn it off to make it jump.",
   "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window.",
+  "Show more",
+  "Show all",
+  "%d of %d lines · Ctrl+C copies",
 }
 local WINDOW_ANIMATION_KEYS = {
   "Window animation",
