@@ -40,6 +40,22 @@ return function()
     assert(x == 475 and y == 625, "got " .. tostring(x) .. "," .. tostring(y))
   end
 
+  -- test_placing_converts_the_buttons_screen_position_to_the_windows_scale
+  do
+    local frame, slot, icon, parent = build()
+    rawset(icon, "GetEffectiveScale", function()
+      return 2
+    end)
+    rawset(frame, "GetEffectiveScale", function()
+      return 4
+    end)
+    PhoneDock.Place(frame, slot, icon)
+    local _, relativeTo, _, x, y = frame:GetPoint()
+    assert(relativeTo == parent, "screen-anchored")
+    -- The button's 500,600 is 250,300 in the window's coordinates; the spot sits 25 right of and 25 below the corner.
+    assert(x == 225 and y == 325, "got " .. tostring(x) .. "," .. tostring(y))
+  end
+
   -- test_spot_with_no_position_yet_still_places_the_window
   do
     local frame, slot, icon = build()

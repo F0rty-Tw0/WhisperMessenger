@@ -363,4 +363,26 @@ return function()
     case.ride.adoptRidePosition()
     assert(saved == 0, "nothing saved while locked")
   end
+
+  -- test_adopt_ride_position_makes_the_glide_home_end_at_the_adopted_centre
+  do
+    local case = build({
+      onPositionChanged = function() end,
+    })
+    local centre = case.frame.GetCenter
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    rawset(case.frame, "GetCenter", centre)
+    case.ride.rideHome()
+    tick(case, SECONDS * 0.9)
+    assert(case.frame.scripts.OnUpdate ~= nil, "still on its way")
+    local _, _, _, x, y = case.frame:GetPoint()
+    assert(
+      math.abs(x - 300) < 40 and math.abs(y - 700) < 40,
+      "gliding to the adopted centre (150,350 at scale 2), not the first home, got " .. x .. "," .. y
+    )
+  end
 end

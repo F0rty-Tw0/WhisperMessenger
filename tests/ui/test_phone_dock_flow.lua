@@ -63,7 +63,7 @@ local function build()
       end,
     },
     getDockIcon = function()
-      return case.icon
+      return not case.noIcon and case.icon or nil
     end,
     openAnimation = {
       beginOpen = function(iconFrame)
@@ -239,5 +239,17 @@ return function()
     case.frame.shown = false
     case.flow.close()
     assert(case.closedInto == case.fab and case.homes == 1, "and shrinks back into it")
+  end
+
+  -- test_a_button_appearing_on_an_open_window_follows_the_glide_switch
+  for _, glide in ipairs({ false, true }) do
+    local case = build()
+    case.glide, case.noIcon = glide, true
+    case.flow.open()
+    case.frame:Show()
+    case.noIcon = false
+    case.flow.dock()
+    assert(case.rides == 1 and case.step == nil, "docks where it stands with no opening to replay")
+    assert((case.rideInstant == true) == not glide, "glide " .. tostring(glide) .. ": instant is " .. tostring(case.rideInstant))
   end
 end
