@@ -62,7 +62,7 @@ return function()
   -- test_the_animation_row_sits_below_the_compact_toggle
   do
     local result = create()
-    local compactMode = FindUI.byLabel(result.frame, "Phone-style window")
+    local compactMode = FindUI.byLabel(result.frame, "Compact window")
     local animation = FindUI.byLabel(result.frame, LABEL)
     assert(select(2, animation:GetPoint()) == compactMode, "anchored under the compact toggle")
   end

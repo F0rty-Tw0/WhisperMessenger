@@ -8,15 +8,15 @@ local WindowStyleSpecs = {}
 function WindowStyleSpecs.Build(config, onChange, text, gap)
   local compactLayoutSpec = {
     key = "compactLayout",
-    label = text("Phone-style window"),
-    labelKey = "Phone-style window",
+    label = text("Compact window"),
+    labelKey = "Compact window",
     initial = config.compactLayout ~= false,
     onChange = function(value)
       onChange("compactLayout", value)
     end,
     tooltipLines = {
-      text("Phone-style window"),
-      text("The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."),
+      text("Compact window"),
+      text("The floating button opens a narrow chat list attached to it. Click a chat to slide into it."),
     },
     anchorOffsetY = gap,
   }

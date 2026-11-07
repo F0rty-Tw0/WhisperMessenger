@@ -132,8 +132,8 @@ local SimplifiedChinese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "控制信使窗口的行为。",
-  ["Phone-style window"] = "手机样式窗口",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "浮动按钮会打开一个附着在其上的手机大小聊天列表。点击聊天即可滑入。",
+  ["Compact window"] = "紧凑窗口",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "浮动按钮会打开一个附着在其上的窄聊天列表。点击聊天即可滑入。",
   ["Window animation"] = "窗口动画",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "窗口打开时会从图标处展开，关闭时会缩回图标，页面也会滑动切换。关闭此选项后，所有内容将立即显示。",
   ["Dock button on the window"] = "将按钮停靠在窗口上",

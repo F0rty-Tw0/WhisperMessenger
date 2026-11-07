@@ -2,8 +2,10 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 local BehaviorSettings = require("WhisperMessenger.UI.MessengerWindow.BehaviorSettings")
+local WindowStyleSpecs = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.WindowStyleSpecs")
 
-local LABEL = "Phone-style window"
+local TOOLTIP_KEY = "The floating button opens a narrow chat list attached to it. Click a chat to slide into it."
+local LABEL = "Compact window"
 
 local function create(config)
   local factory = FakeUI.NewFactory()
@@ -78,5 +80,15 @@ return function()
     assert(type(result.setLanguage) == "function")
     result.setLanguage()
     assert(FindUI.byLabel(result.frame, LABEL) ~= nil, "label survives a language refresh")
+  end
+
+  -- test_the_tooltip_describes_a_narrow_chat_list
+  do
+    local specs = WindowStyleSpecs.Build({}, function() end, function(s)
+      return s
+    end, 0)
+    assert(specs[1].key == "compactLayout", "the first spec is the window style toggle")
+    assert(specs[1].tooltipLines[1] == LABEL, "the tooltip starts with the label")
+    assert(specs[1].tooltipLines[2] == TOOLTIP_KEY, "the tooltip describes a narrow chat list")
   end
 end
