@@ -527,6 +527,7 @@ local Russian = {
   ["Add friend"] = "Добавить в друзья",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Пригласить в гильдию",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Нажмите Ctrl+C, чтобы скопировать команду, затем вставьте её в чат.",
 }
 
 ns.Locale_ruRU = Russian

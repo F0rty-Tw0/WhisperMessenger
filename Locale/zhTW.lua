@@ -527,6 +527,7 @@ local TraditionalChinese = {
   ["Add friend"] = "加為好友",
   -- Contact menu: Guild invite
   ["Guild invite"] = "邀請加入公會",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "按 Ctrl+C 複製指令，然後貼到聊天框中。",
 }
 
 ns.Locale_zhTW = TraditionalChinese

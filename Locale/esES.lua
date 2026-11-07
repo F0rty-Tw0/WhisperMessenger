@@ -527,6 +527,7 @@ local Spanish = {
   ["Add friend"] = "Añadir amigo",
   -- Contact menu: Guild invite
   ["Guild invite"] = "Invitar a la hermandad",
+  ["Press Ctrl+C to copy the command, then paste it into chat."] = "Pulsa Ctrl+C para copiar el comando y pégalo en el chat.",
 }
 
 ns.Locale_esES = Spanish
