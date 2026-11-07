@@ -78,11 +78,19 @@ return function()
     assert(case.sizes[1] == 50 and case.sizes[2] == "dock", "the spot is worked out from the new size")
   end
 
-  -- test_a_changed_widget_shape_re_docks_onto_its_spot
+  -- test_a_changed_dock_option_is_saved_and_docks_the_window_now
+  do
+    local case = build(true)
+    case.onChange("iconDock", false)
+    assert(case.settings.iconDock == false, "saved as a plain account setting, no reload")
+    assert(#case.sizes == 1 and case.sizes[1] == "dock", "the open window re-docks at once, got " .. #case.sizes)
+  end
+
+  -- test_a_changed_widget_shape_leaves_the_dock_alone
   do
     local case = build(true)
     case.onChange("widgetShape", "square")
     assert(case.settings.widgetShape == "square", "saved")
-    assert(case.sizes[1] == "dock", "the button moves to the new shape's spot")
+    assert(#case.sizes == 0, "every shape docks on the corner, so nothing re-docks, got " .. #case.sizes)
   end
 end

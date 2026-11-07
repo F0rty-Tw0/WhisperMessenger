@@ -329,6 +329,8 @@ UI/ToggleIcon/IconTooltip.lua
 UI/ToggleIcon/IconDrag.lua
 UI/Shared/GlideClock.lua
 UI/ToggleIcon/IconRide.lua
+UI/MessengerWindow/IconSettings/Options.lua
+UI/ToggleIcon/DockedLook.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
 UI/MinimapIcon/MinimapIcon.lua
@@ -414,7 +416,6 @@ UI/MessengerWindow/FiltersSettings/RulesSection.lua
 UI/MessengerWindow/FiltersSettings.lua
 UI/MessengerWindow/NotificationSettings/SoundSelector.lua
 UI/MessengerWindow/NotificationSettings.lua
-UI/MessengerWindow/IconSettings/Options.lua
 UI/MessengerWindow/IconSettings/UnreadRows.lua
 UI/MessengerWindow/IconSettings/LookRows.lua
 UI/MessengerWindow/IconSettings.lua

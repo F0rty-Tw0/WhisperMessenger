@@ -57,12 +57,13 @@ return function()
     assert(saved ~= nil and saved.value == false, "the default is off")
   end
 
-  -- test_the_saved_spot_row_sits_below_the_button_glide_row
+  -- test_the_saved_spot_row_sits_below_the_dock_row
   do
     local result = create()
-    local glide = FindUI.byLabel(result.frame, "Button glide")
+    local dock = FindUI.byLabel(result.frame, "Dock button on the window")
     local spot = FindUI.byLabel(result.frame, LABEL)
-    assert(select(2, spot:GetPoint()) == glide, "anchored under the Button glide toggle")
+    assert(select(2, spot:GetPoint()) == dock, "anchored under the Dock button row")
+    assert(FindUI.text(result.frame, "Button glide") == nil, "the Button glide row is gone")
   end
 
   -- test_the_saved_spot_label_survives_a_language_refresh

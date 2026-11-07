@@ -14,10 +14,6 @@ return function()
   onChange("windowAnimation", true)
   assert(accountSettings.windowAnimation == true)
 
-  -- test_button_glide_is_saved_as_a_plain_account_setting
-  onChange("iconGlide", false)
-  assert(accountSettings.iconGlide == false, "saved as a plain account setting, no reload")
-
   -- test_open_at_saved_spot_is_saved_as_a_plain_account_setting
   onChange("openAtSavedSpot", true)
   assert(accountSettings.openAtSavedSpot == true, "saved as a plain account setting, no reload")

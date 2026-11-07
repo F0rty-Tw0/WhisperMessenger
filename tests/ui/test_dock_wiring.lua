@@ -180,70 +180,36 @@ return function()
     assert(not string.find(line, "ClassicGrow", 1, true), "TOC still lists " .. line)
   end
 
-  -- test_glide_off_jumps_the_button_but_the_window_still_grows
+  -- test_window_animation_off_makes_the_button_jump_and_a_re_dock_jump
   eachLayout(function(name, phone)
     local case = PhoneWindow.Build({
       phoneLayout = phone,
-      isIconGlideOn = function()
+      isGrowAnimationOn = function()
         return false
       end,
     })
     local frame = case.window.frame
     frame:Show()
     assert(case.instant == true and case.step == nil, name .. ": the button jumps onto the spot")
-    assert(frame:GetAlpha() == 0, name .. ": the window grows from the button")
+    case.window.dockPhoneIcon()
+    assert(case.rides == 2 and case.instant == true, name .. ": a re-dock jumps too")
     frame:Hide()
     assert(case.homeInstant == true, name .. ": and jumps home")
   end)
 
-  -- test_square_docked_window_adds_no_overhang_to_the_screen_clamp
+  -- test_a_re_dock_keeps_the_screen_clamp_reaching_over_the_corner
   eachLayout(function(name, phone)
     local case = PhoneWindow.Build({ phoneLayout = phone })
-    local shape = "circle"
-    case.icon.getWidgetShape = function()
-      return shape
-    end
     local frame = case.window.frame
     frame:Show()
     local corner = case.rodeTo.region
     at(frame, 100, 900)
     at(corner, 93, 917)
-    frame:Hide()
-    frame:Show()
-    assert(select(1, frame:GetClampRectInsets()) == -7, name .. ": the circle reaches over its corner")
-    shape = "square"
     case.window.dockPhoneIcon()
-    local titleSpot = case.rodeTo.region
-    assert(titleSpot ~= corner and titleSpot:GetHeight() == L.TOP_BAR_HEIGHT, name .. ": re-docked into the title bar")
-    at(titleSpot, 104, 899)
-    case.window.dockPhoneIcon()
+    assert(case.rodeTo.region == corner, name .. ": the same spot again")
     local left, _, top = frame:GetClampRectInsets()
-    assert(left == 0 and top == 0, name .. ": switching to square drops the overhang, got " .. tostring(left) .. "," .. tostring(top))
-    frame:Hide()
-    frame:Show()
-    left, _, top = frame:GetClampRectInsets()
-    assert(left == 0 and top == 0, name .. ": and reopening keeps none, got " .. tostring(left) .. "," .. tostring(top))
+    assert(left == -7 and top == 17, name .. ": still reaches over the corner, got " .. tostring(left) .. "," .. tostring(top))
   end)
-
-  -- test_the_real_square_button_docks_inside_the_title_bar  (custom, Classic and Retail chrome)
-  local function squareDocks(label, settings, height)
-    settings.widgetShape, settings.windowAnimation = "square", false
-    PhoneRuntime.Run(settings, function(runtime)
-      runtime.toggle()
-      local icon = runtime.icon
-      assert(icon.isRiding(), label .. ": rides the window")
-      local _, spot = icon.frame:GetPoint()
-      assert(spot:GetHeight() == height, label .. ": on the title-bar spot, got " .. tostring(spot:GetHeight()))
-    end)
-  end
-  for _, phone in ipairs({ true, false }) do
-    local layout = phone and "compact" or "regular"
-    squareDocks(layout .. " custom", { phoneLayout = phone, hudStyle = "off" }, L.TOP_BAR_HEIGHT)
-    squareDocks(layout .. " classic", { phoneLayout = phone, hudStyle = "classic" }, L.CHROME_BUTTON_SIZE)
-    RetailHud.With(function()
-      squareDocks(layout .. " retail", { phoneLayout = phone, hudStyle = "retail" }, L.CHROME_BUTTON_SIZE)
-    end)
-  end
 
   -- test_no_button_to_dock_leaves_the_clamp_flush_with_the_screen_corner
   eachLayout(function(name, phone)
@@ -267,6 +233,50 @@ return function()
     frame:Show()
     local left, _, top = frame:GetClampRectInsets()
     assert(left == 0 and top == 0, name .. ": nothing docks, so no reach, got " .. tostring(left) .. "," .. tostring(top))
+  end)
+
+  -- test_off_open_leaves_the_corner_free_and_the_option_toggles_live
+  eachLayout(function(name, phone)
+    local dockOn = false
+    local case = PhoneWindow.Build({
+      phoneLayout = phone,
+      isIconDockOn = function()
+        return dockOn
+      end,
+    })
+    case.window.frame:Show()
+    assert(case.rides == 0 and case.rideHandlers == nil, name .. ": nothing docked, a drag moves the button")
+    assert(titleOffset(case) == L.TITLE_BAR_INSET_X, name .. ": title buttons at the left edge")
+    dockOn = true
+    case.window.dockPhoneIcon()
+    assert(case.rides == 1 and titleOffset(case) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, name .. ": OFF -> ON docks now")
+    dockOn = false
+    case.window.dockPhoneIcon()
+    assert(case.homes == 1 and titleOffset(case) == L.TITLE_BAR_INSET_X, name .. ": ON -> OFF sends it home, corner back")
+  end)
+
+  -- test_off_leaves_the_clamp_flush_with_the_screen_corner
+  eachLayout(function(name, phone)
+    local dockOn = true
+    local case = PhoneWindow.Build({
+      phoneLayout = phone,
+      isIconDockOn = function()
+        return dockOn
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local corner = case.rodeTo.region
+    at(frame, 100, 900)
+    at(corner, 93, 917)
+    frame:Hide()
+    frame:Show()
+    assert(select(1, frame:GetClampRectInsets()) == -7, name .. ": on: the docked circle reaches over its corner")
+    frame:Hide()
+    dockOn = false
+    frame:Show()
+    local left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, name .. ": off: no reach, got " .. tostring(left) .. "," .. tostring(top))
   end)
 
   -- test_a_missing_open_at_saved_spot_option_counts_as_on

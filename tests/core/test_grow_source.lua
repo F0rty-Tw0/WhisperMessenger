@@ -83,18 +83,22 @@ return function()
     assert(build("widget", nil, nil, nil).isGrowAnimationOn() == true, "no settings table counts as on")
   end
 
-  -- test_button_glide_needs_window_animation_and_its_own_switch
+  -- test_the_glide_is_window_animation_and_has_no_reader_of_its_own
+  do
+    local source = build("widget", nil, nil, { iconGlide = false })
+    assert(source.isIconGlideOn == nil, "the glide is Window animation, nothing else")
+  end
+
+  -- test_dock_option_is_on_unless_switched_off
   do
     local settings = {}
     local source = build("widget", nil, nil, settings)
-    assert(source.isIconGlideOn() == true, "missing counts as on")
-    settings.iconGlide = false
-    assert(source.isIconGlideOn() == false, "own switch off, read live")
-    settings.iconGlide, settings.windowAnimation = true, false
-    assert(source.isIconGlideOn() == false, "Window animation off overrides it")
-    settings.windowAnimation = nil
-    assert(source.isIconGlideOn() == true, "on again")
-    assert(build("widget", nil, nil, nil).isIconGlideOn() == true, "no settings table counts as on")
+    assert(source.isIconDockOn() == true, "missing counts as on")
+    settings.iconDock = false
+    assert(source.isIconDockOn() == false, "off, read live")
+    settings.iconDock = true
+    assert(source.isIconDockOn() == true, "on again")
+    assert(build("widget", nil, nil, nil).isIconDockOn() == true, "no settings table counts as on")
   end
 
   -- test_open_at_saved_spot_is_off_unless_switched_on

@@ -263,6 +263,10 @@ function SettingsHandler.Create(options)
       dockPhoneIcon()
     end
 
+    if key == "iconDock" then
+      dockPhoneIcon()
+    end
+
     if key == "iconDesaturated" then
       if icon and icon.refreshDesaturation then
         icon.refreshDesaturation()
@@ -275,9 +279,6 @@ function SettingsHandler.Create(options)
     local repaintsIcon = key == "iconBorder" or key == "iconBorderThemed" or key == "iconBackground" or key == "widgetShape"
     if repaintsIcon and icon and icon.refreshTheme then
       icon.refreshTheme()
-    end
-    if key == "widgetShape" then
-      dockPhoneIcon() -- a docked square sits in the title bar, a circle on the corner
     end
     if key == "widgetTransparency" and icon and icon.refreshTransparency then
       icon.refreshTransparency()
