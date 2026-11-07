@@ -72,6 +72,14 @@ return function()
     assert(icon.frame.alpha == 1, "leaving hover should keep the icon opaque while whispers are unread")
   end
 
+  -- test_panel_badge_unread_alone_makes_icon_opaque
+
+  do
+    local icon = createIcon(1)
+    icon.setUnreadCount(2, 0)
+    assert(icon.frame.alpha == 1, "unread panel badges with no whispers should still make the icon opaque")
+  end
+
   -- test_icon_created_with_unread_starts_opaque
 
   do
