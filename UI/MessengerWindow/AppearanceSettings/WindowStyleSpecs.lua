@@ -31,7 +31,9 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     end,
     tooltipLines = {
       text("Window animation"),
-      text("The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once."),
+      text(
+        "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."
+      ),
     },
   }
 

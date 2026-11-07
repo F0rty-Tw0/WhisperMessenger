@@ -80,7 +80,7 @@ function PhoneWiring.Attach(hooks, options)
   local navigator = PhoneNavigator.Create({
     slide = slide,
     isAnimatable = function()
-      return frame:IsShown() and not isCovered()
+      return frame:IsShown() and not isCovered() and options.settingsConfig.windowAnimation ~= false
     end,
     onChatView = function(inChat)
       chrome.setPhoneChatView(inChat)

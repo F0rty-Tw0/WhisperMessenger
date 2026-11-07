@@ -34,10 +34,11 @@ local REMOVED_KEYS = {
   "Square button background",
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
   "Only with the square widget shape.",
+  "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
 }
 local WINDOW_ANIMATION_KEYS = {
   "Window animation",
-  "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
+  "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once.",
 }
 local BUTTON_GLIDE_KEYS = {
   "Button glide",
