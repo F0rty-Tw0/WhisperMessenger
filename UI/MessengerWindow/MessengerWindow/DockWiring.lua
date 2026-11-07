@@ -77,6 +77,7 @@ function DockWiring.Attach(window, parts)
     rideHandlers = rideHandlers,
     getGrowSource = getGrowSource,
     isGrowAnimationOn = isGrowAnimationOn,
+    isIconGlideOn = windowOptions.isIconGlideOn,
   })
 
   hooks.dock = flow.dock

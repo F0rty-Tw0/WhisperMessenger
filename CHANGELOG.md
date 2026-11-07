@@ -12,6 +12,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Addons that support it (Craft Alert) now open their page inside the phone-style window without widening it.
 - The regular (non-phone) window now grows out of its icon when it opens and shrinks back into it when it closes.
 - New option under Appearance: Window animation, to turn the opening and closing animation off.
+- New option under Appearance: Button glide. Turn it off and the floating button jumps onto the window's corner and back instead of gliding. It follows Window animation: with that off, the button always jumps.
 - The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. You can still click the button to close the window or drag it to move the window.
 - In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.

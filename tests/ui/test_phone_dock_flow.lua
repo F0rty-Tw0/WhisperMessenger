@@ -26,18 +26,19 @@ local function build()
   local fab = factory.CreateFrame("Button", "Fab", parent)
   fab:SetSize(42, 42)
   at(fab, 500, 600)
-  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {} }
+  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {}, glide = true, order = {} }
   case.openStep, case.closeStep = function() end, function() end
   case.icon = {
     frame = fab,
     isRiding = function()
       return case.rides > case.homes
     end,
-    rideTo = function(target, onStep)
-      case.rides, case.rodeTo, case.step = case.rides + 1, target, onStep
+    rideTo = function(target, onStep, instant)
+      case.rides, case.rodeTo, case.step, case.rideInstant = case.rides + 1, target, onStep, instant
+      case.order[#case.order + 1] = "ride"
     end,
-    rideHome = function(onStep)
-      case.homes, case.step = case.homes + 1, onStep
+    rideHome = function(onStep, instant)
+      case.homes, case.step, case.homeInstant = case.homes + 1, onStep, instant
     end,
     setRideHandlers = function(handlers)
       case.rideHandlers = handlers
@@ -59,7 +60,12 @@ local function build()
     openAnimation = {
       beginOpen = function(iconFrame)
         case.openedFrom = iconFrame
+        case.order[#case.order + 1] = "measure"
         return case.openStep
+      end,
+      play = function(step)
+        case.played = step
+        case.order[#case.order + 1] = "play"
       end,
       beginClose = function(iconFrame)
         case.closedInto = iconFrame
@@ -75,6 +81,9 @@ local function build()
     end,
     isGrowAnimationOn = function()
       return true
+    end,
+    isIconGlideOn = function()
+      return case.glide
     end,
   })
   return case
@@ -129,5 +138,42 @@ return function()
     assert(case.flow.isWindowPart(case.fab) == true and case.flow.isWindowPart(case.frame) == false, "only the button")
     case.flow.setStrata("LOW")
     assert(case.rideStrata == "LOW", "the button follows the window's strata")
+  end
+
+  -- test_glide_off_makes_the_button_jump_while_the_window_still_grows_from_it
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    assert(case.rideInstant == true and case.step == nil, "the button jumps")
+    assert(table.concat(case.order, ",") == "measure,ride,play", "the grow reads the button before it jumps, got " .. table.concat(case.order, ","))
+    assert(case.openedFrom == case.fab and case.played == case.openStep, "and the window still grows from it")
+  end
+
+  -- test_glide_off_close_lands_the_button_at_once_and_the_window_shrinks_into_it
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    case.frame.shown = false
+    case.flow.close()
+    assert(case.homeInstant == true and case.step == nil, "home at once")
+    assert(case.closedInto == case.fab and case.played == case.closeStep, "the shrink still runs into it")
+  end
+
+  -- test_glide_off_re_dock_jumps
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    case.flow.dock()
+    assert(case.rides == 2 and case.rideInstant == true, "a re-dock jumps too")
+  end
+
+  -- test_glide_on_keeps_the_gliding_ride
+  do
+    local case = build()
+    case.flow.open()
+    assert(not case.rideInstant and case.step == case.openStep, "unchanged when on")
   end
 end

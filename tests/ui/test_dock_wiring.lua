@@ -166,4 +166,20 @@ return function()
   for line in io.lines("WhisperMessenger.toc") do
     assert(not string.find(line, "ClassicGrow", 1, true), "TOC still lists " .. line)
   end
+
+  -- test_glide_off_jumps_the_button_but_the_window_still_grows
+  eachLayout(function(name, phone)
+    local case = PhoneWindow.Build({
+      phoneLayout = phone,
+      isIconGlideOn = function()
+        return false
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    assert(case.instant == true and case.step == nil, name .. ": the button jumps onto the spot")
+    assert(frame:GetAlpha() == 0, name .. ": the window grows from the button")
+    frame:Hide()
+    assert(case.homeInstant == true, name .. ": and jumps home")
+  end)
 end

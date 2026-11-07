@@ -13,4 +13,8 @@ return function()
   assert(accountSettings.windowAnimation == false, "the next open reads it, no reload")
   onChange("windowAnimation", true)
   assert(accountSettings.windowAnimation == true)
+
+  -- test_button_glide_is_saved_as_a_plain_account_setting
+  onChange("iconGlide", false)
+  assert(accountSettings.iconGlide == false, "saved as a plain account setting, no reload")
 end
