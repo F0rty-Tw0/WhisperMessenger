@@ -117,6 +117,9 @@ function SettingsPanels.Create(factory, options)
         windowOpacityActive = settingsConfig.windowOpacityActive,
         hudStyle = settingsConfig.hudStyle,
         phoneLayout = settingsConfig.phoneLayout,
+        windowAnimation = settingsConfig.windowAnimation,
+        iconDock = settingsConfig.iconDock,
+        openAtSavedSpot = settingsConfig.openAtSavedSpot,
       },
     },
     {

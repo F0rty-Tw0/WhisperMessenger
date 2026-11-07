@@ -45,6 +45,9 @@ return function()
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
     hudStyle = "classic",
+    windowAnimation = false,
+    iconDock = false,
+    openAtSavedSpot = true,
     -- behavior
     dimWhenMoving = false,
     autoFocusComposer = true,
@@ -170,6 +173,10 @@ return function()
     "expected appearance config.windowScale=1.25, got: " .. tostring(appearanceCapture.config.windowScale)
   )
   assert(appearanceCapture.config.showPlayerLevels == nil, "player levels key moved off the Appearance page")
+  -- Window style toggles: a missing key shows the default after /reload.
+  assert(appearanceCapture.config.windowAnimation == false, "appearance config should carry windowAnimation")
+  assert(appearanceCapture.config.iconDock == false, "appearance config should carry iconDock")
+  assert(appearanceCapture.config.openAtSavedSpot == true, "appearance config should carry openAtSavedSpot")
 
   -- Notifications owns sound settings only.
   assert(
