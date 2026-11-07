@@ -31,7 +31,8 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- to the phone window's narrowest (PHONE_WINDOW_MIN_WIDTH, 352, less the window
 -- chrome). In the phone layout WM then leaves the window narrow while the panel
 -- shows. Without it the phone window widens while the panel shows, as for
--- settings. The classic layout ignores it.
+-- settings. The classic layout ignores it. A compact panel's onSplit still
+-- reports the narrow window's list width, so do not line up with it there.
 local Panels = {}
 
 -- The panel is already stored when this runs: an icon error must not turn
