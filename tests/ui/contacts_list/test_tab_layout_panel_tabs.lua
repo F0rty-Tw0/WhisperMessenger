@@ -170,13 +170,14 @@ return function()
     assert(b[5]:GetName() == "WhisperMessengerPanelTab1" and b[6]:GetName() == "WhisperMessengerPanelTab2", "HUD: panel tabs named in order")
   end
 
-  -- test_native_panel_tabs_share_the_width_cap
+  -- test_native_panel_tab_keeps_natural_width
   do
     local toggle = build(true)
     local strip = toggle.frame
     strip:SetWidth(260)
     strip.scripts.OnSizeChanged(strip, 260, NativeTabToggle.HEIGHT)
-    toggle.addPanelTab("ca", "Alerts", noop)
-    assert(strip.maxTabWidth == 83, "HUD: panel tab shares the cap, got " .. tostring(strip.maxTabWidth))
+    toggle.addPanelTab("ca", "Craft Alert", noop)
+    local b = buttons(toggle)
+    assert(b[5].width == b[5]:GetTextWidth() + 20, "HUD: panel tab keeps its natural width, got " .. tostring(b[5].width))
   end
 end

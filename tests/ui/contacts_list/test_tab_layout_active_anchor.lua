@@ -106,4 +106,33 @@ do
   assert(lastCall(calls).active == nil, "no tab is active")
 end
 
+-- test_mode_click_leaving_a_panel_anchors_once_with_the_clicked_tab
+do
+  local toggle, tabs, calls = build()
+  toggle.setModes(ALL_MODES)
+  toggle.addPanelTab("ca", "Alerts", noop)
+  toggle.setModeClickHandler(function()
+    toggle.setSelectedPanel(nil)
+  end)
+  toggle.setSelectedPanel("ca")
+  local before = #calls
+  tabs.groups.btn.scripts.OnClick(tabs.groups.btn)
+  assert(#calls == before + 1, "one anchor for the click, got " .. (#calls - before))
+  assert(lastCall(calls).active == tabs.groups, "anchor names the clicked tab")
+end
+
+-- test_current_mode_click_leaving_a_panel_anchors_the_mode_tab
+do
+  local toggle, tabs, calls = build()
+  toggle.addPanelTab("ca", "Alerts", noop)
+  toggle.setModeClickHandler(function()
+    toggle.setSelectedPanel(nil)
+  end)
+  toggle.setSelectedPanel("ca")
+  local before = #calls
+  tabs.whispers.btn.scripts.OnClick(tabs.whispers.btn)
+  assert(#calls == before + 1, "one anchor for the click, got " .. (#calls - before))
+  assert(lastCall(calls).active == tabs.whispers, "anchor names Whispers")
+end
+
 print("PASS: test_tab_layout_active_anchor")

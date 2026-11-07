@@ -104,11 +104,12 @@ local function chain(frame, visible, from, to, spacing)
 end
 
 local function fitsStrip(ctx)
-  local width = ctx.frame:GetWidth()
-  if width <= 0 then
+  local width = ctx.frame:GetWidth() or 0
+  local visible = ctx.visible
+  -- No tabs always fit, even on a strip narrower than the end reserve.
+  if width <= 0 or #visible == 0 then
     return true
   end
-  local visible = ctx.visible
 
   return runWidth(visible, 1, #visible, ctx.opts.spacing) <= width - ctx.opts.endReserve
 end
@@ -185,7 +186,9 @@ function TabScroller.Attach(factory, frame, opts)
   arrows.prev:Hide()
   arrows.next:Hide()
 
-  local ctx = { frame = frame, opts = opts, arrows = arrows, enabled = {}, first = 1 }
+  -- Arrows start disabled, so a repaint before the first overflow is defined.
+  local enabled = { [arrows.prev] = false, [arrows.next] = false }
+  local ctx = { frame = frame, opts = opts, arrows = arrows, enabled = enabled, first = 1 }
   local scroller = {}
 
   -- visible: array of { btn = Button } in display order.

@@ -34,6 +34,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Clicking the floating button while a message preview is showing now opens that conversation, in both the compact and the regular window. With no preview showing, the button works as before.
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. When the game wouldn't let that invite go through (often until you've used a chat command such as /say since logging in), it shows the command in a small box instead, ready to copy with Ctrl+C and paste into chat. Players on your own realm are named without the realm. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 - The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
+- When the tabs below the window don't all fit, arrows appear next to them to scroll through the rest; the mouse wheel works too. With the Native WoW HUD style, tabs now show their full names instead of being cut short.
 
 ## [2.1.4] - 2026-11-05
 

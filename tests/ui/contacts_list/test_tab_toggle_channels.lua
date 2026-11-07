@@ -29,7 +29,8 @@ local function createToggle(nativeChrome)
       changes[#changes + 1] = mode
     end,
   })
-  toggle.frame:SetSize(300, 24)
+  -- Wide enough for all four tabs: a narrower strip scrolls them.
+  toggle.frame:SetSize(400, 24)
   return toggle, changes
 end
 
