@@ -74,6 +74,36 @@ return function()
     assert(runtime.window.contentPane:IsShown(), "and stays on screen")
   end)
 
+  -- test_request_follow_keeps_the_new_messages_divider
+  -- The follow switches tabs with the chat already selected: that must not
+  -- run a selection of nothing, which would drop the divider for good.
+  run({ requestsInbox = true }, function(runtime)
+    runtime.store.conversations[KEY].request = true
+    runtime.toggle()
+    runtime.refreshWindow()
+    runtime.window.setTabMode("requests")
+    PhoneRuntime.ClickRow(runtime, KEY)
+    runtime.store.conversations[KEY].request = nil
+    runtime.refreshWindow()
+    finishSlide(runtime)
+    assert(runtime.unreadDivider and runtime.unreadDivider.conversationKey == KEY, "the divider survives the follow")
+    assert(runtime.window.contentPane:IsShown() and not onList(runtime), "and the window ends on the chat view")
+  end)
+
+  -- test_tab_tap_on_the_list_with_no_chat_open_skips_the_full_refresh
+  run(nil, function(runtime)
+    runtime.toggle()
+    assert(runtime.activeConversationKey == nil and onList(runtime))
+    local refreshes, refreshSelection = 0, runtime.window.refreshSelection
+    runtime.window.refreshSelection = function(...)
+      refreshes = refreshes + 1
+      return refreshSelection(...)
+    end
+    tapTab(runtime, 2)
+    assert(runtime.window.getTabMode() == "groups", "the tab still switches")
+    assert(refreshes == 0, "no full window refresh, got " .. refreshes)
+  end)
+
   -- test_classic_tab_switch_keeps_its_old_selection_behaviour
   run({ phoneLayout = false }, function(runtime)
     runtime.toggle()

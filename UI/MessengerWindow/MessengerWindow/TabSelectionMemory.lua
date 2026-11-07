@@ -45,14 +45,35 @@ function TabSelectionMemory.Create(options)
     end
   end
 
-  local function restoreSelection(newMode)
-    local nextKey = tabSelections[newMode]
-    if not nextKey or not rememberSelections then
-      if rememberSelections then
-        refreshSelection({})
-      else
-        clearSelection()
+  -- True when a chat is open that belongs to another tab than newMode. A
+  -- chat already in newMode (a request that moved to Whispers) keeps its
+  -- runtime selection; the pane's own UI selection is still reset.
+  local function liveChatIsElsewhere(newMode)
+    local liveKey = getSelectedConversationKey()
+    if liveKey == nil then
+      return false
+    end
+    for _, item in ipairs(getCurrentContacts() or {}) do
+      if item ~= nil and item.conversationKey == liveKey then
+        return contactsTabFilter.ModeOf(item) ~= newMode
       end
+    end
+    return true
+  end
+
+  local function restoreSelection(newMode)
+    if not rememberSelections then
+      if liveChatIsElsewhere(newMode) then
+        clearSelection()
+      else
+        refreshSelection({})
+      end
+      return
+    end
+
+    local nextKey = tabSelections[newMode]
+    if not nextKey then
+      refreshSelection({})
       return
     end
 
