@@ -6,23 +6,20 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
-local DisabledState = ns.UIHelpersDisabledState or require("WhisperMessenger.UI.Helpers.DisabledState")
 local ScrollView = ns.ScrollView or require("WhisperMessenger.UI.ScrollView")
 local PickerPopup = ns.PickerPopup or require("WhisperMessenger.UI.Shared.PickerPopup")
 local DialogChrome = ns.DialogChrome or require("WhisperMessenger.UI.Shared.DialogChrome")
 
 local format = string.format
 local concat = table.concat
-local min = math.min
 
--- A conversation as copyable text in a fixed-size panel: the newest
--- PAGE_SIZE lines first, "Show more" adds the page before them, "Show all"
--- the rest. The text is selected after each load for Ctrl+C (addons can't
--- write the clipboard). Escape or the close button hides it.
+-- A whole conversation as copyable text in a fixed-size panel, newest lines
+-- in view. The store caps a conversation's lines, so all of them load at
+-- once. The text is selected for Ctrl+C (addons can't write the clipboard).
+-- Escape or the close button hides it.
 local ExportPanel = {}
 
 ExportPanel.FRAME_NAME = "WhisperMessengerExportPanel"
-ExportPanel.PAGE_SIZE = 200
 
 local WIDTH = 560
 local HEIGHT = 400
@@ -30,87 +27,41 @@ local PADDING = 18
 local TITLE_HEIGHT = 20
 local CLOSE_SIZE = 20
 local ROW_GAP = 10
-local BUTTON_WIDTH = 110
 local BUTTON_GAP = 8
 local STATUS_HEIGHT = 14
 local WELL_RADIUS = 6
 local TEXT_INSET = 8
 local SCROLL_STEP = 40
+-- The addon's own font object leaves this multi-line box blank on WoW: Forever.
+local EXPORT_FONT = "ChatFontNormal"
 
 -- One panel per frame factory, reused on every Show.
 local panels = setmetatable({}, { __mode = "k" })
 
-local function setButtonEnabled(button, enabled)
-  button:SetEnabled(enabled)
-  button:SetAlpha(enabled and 1 or DisabledState.ALPHA)
-end
-
--- The header, then the newest `loaded` lines, oldest of them first.
+-- The header, then every line, oldest first.
 local function loadedText(panel)
-  if panel.loaded == 0 then
+  if #panel.lines == 0 then
     return panel.header
   end
-  local total = #panel.lines
-  return panel.header .. "\n" .. concat(panel.lines, "\n", total - panel.loaded + 1, total)
+  return panel.header .. "\n" .. concat(panel.lines, "\n")
 end
 
--- WoW: Forever leaves the text a load sets undrawn; setting it again a
--- frame later draws it. Skipped once the panel is closed or loads again.
-local function redrawNextFrame(panel)
-  local timer = _G.C_Timer
-  if type(timer) ~= "table" or type(timer.After) ~= "function" then
-    return
-  end
-  local text = panel.text
-  timer.After(0, function()
-    if not panel:IsShown() or panel.text ~= text then
-      return
-    end
-    panel.editBox:SetText(text)
-    panel.editBox:HighlightText()
-  end)
-end
-
--- toTop: show the newly added older lines; otherwise the newest stay in view.
-local function load(panel, toTop)
-  local total = #panel.lines
+-- The newest lines stay in view.
+local function load(panel)
   panel.text = loadedText(panel)
   local box = panel.editBox
   box:SetText(panel.text)
   box:SetFocus()
   box:HighlightText()
-  panel.status:SetText(format(Localization.Text("%d of %d lines · Ctrl+C copies"), panel.loaded, total))
-  local more = panel.loaded < total
-  setButtonEnabled(panel.showMoreButton, more)
-  setButtonEnabled(panel.showAllButton, more)
-  panel.snapToEnd = not toTop
+  panel.status:SetText(format(Localization.Text("%d lines · Ctrl+C copies"), #panel.lines))
+  panel.snapToEnd = true
   ScrollView.RefreshMetrics(panel.view, box:GetHeight(), panel.snapToEnd)
-  if toTop then
-    ScrollView.SetVerticalScroll(panel.view, 0)
-  end
-  redrawNextFrame(panel)
-end
-
-local function showUpTo(panel, count)
-  local total = #panel.lines
-  if panel.loaded >= total then
-    return
-  end
-  panel.loaded = min(total, count)
-  load(panel, true)
 end
 
 local function createText(parent, font, justify)
   local label = parent:CreateFontString(nil, "OVERLAY", font)
   label:SetJustifyH(justify)
   return label
-end
-
-local function createButton(factory, body, key, onClick)
-  local button = DialogChrome.CreateButton(factory, body, BUTTON_WIDTH)
-  button.label:SetText(Localization.Text(key))
-  button:SetScript("OnClick", onClick)
-  return button
 end
 
 -- The text well: a themed input background (modern look only) holding the
@@ -139,7 +90,7 @@ local function createWell(factory, panel, body, top)
   box:SetMaxLetters(0)
   box:SetMaxBytes(0)
   box:SetAutoFocus(false)
-  UIHelpers.setFontObject(box, Theme.FONTS.composer_input)
+  UIHelpers.setFontObject(box, _G[EXPORT_FONT] and EXPORT_FONT or Theme.FONTS.composer_input)
   panel.editBox = box
   return well
 end
@@ -196,17 +147,7 @@ local function build(factory)
   panel.closeButton = DialogChrome.CreateCloseButton(factory, body, CLOSE_SIZE)
   panel.closeButton:SetPoint("TOPRIGHT", body, "TOPRIGHT", -PADDING + 4, -PADDING + 4)
 
-  local buttonsTop = PADDING + TITLE_HEIGHT + ROW_GAP
-  panel.showMoreButton = createButton(factory, body, "Show more", function()
-    showUpTo(panel, panel.loaded + ExportPanel.PAGE_SIZE)
-  end)
-  panel.showMoreButton:SetPoint("TOPLEFT", body, "TOPLEFT", PADDING, -buttonsTop)
-  panel.showAllButton = createButton(factory, body, "Show all", function()
-    showUpTo(panel, #panel.lines)
-  end)
-  panel.showAllButton:SetPoint("LEFT", panel.showMoreButton, "RIGHT", BUTTON_GAP, 0)
-
-  createWell(factory, panel, body, buttonsTop + Theme.LAYOUT.OPTION_BUTTON_HEIGHT + ROW_GAP)
+  createWell(factory, panel, body, PADDING + TITLE_HEIGHT + ROW_GAP)
   panel.status = createText(body, Theme.FONTS.contact_preview, "LEFT")
   panel.status:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", PADDING, PADDING)
 
@@ -247,13 +188,12 @@ function ExportPanel.Show(spec, factory)
   panel.title:SetText(format(Localization.Text("Export: %s"), tostring(spec.title or "")))
   panel.header = spec.header or ""
   panel.lines = spec.lines or {}
-  panel.loaded = min(#panel.lines, ExportPanel.PAGE_SIZE)
   paint(panel)
   panel:Show()
   if panel.Raise then
     panel:Raise()
   end
-  load(panel, false)
+  load(panel)
   return panel
 end
 
