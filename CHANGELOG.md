@@ -32,7 +32,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: In WoW: Forever, the Export conversation window no longer opens empty. The conversation's text now shows, ready to copy.
 - The Export conversation window now shows the whole saved conversation at once, with a taller text box; the Show more and Show all buttons are gone.
 - Clicking the floating button while a message preview is showing now opens that conversation, in both the compact and the regular window. With no preview showing, the button works as before.
-- Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
+- Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. When the game wouldn't let that invite go through (often before you've typed anything in chat since logging in), it shows the command in a small box instead, ready to copy with Ctrl+C and paste into chat. Players on your own realm are named without the realm. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 - The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
 
 ## [2.1.4] - 2026-11-05
