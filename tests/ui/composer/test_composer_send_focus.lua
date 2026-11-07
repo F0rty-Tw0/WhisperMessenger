@@ -4,13 +4,16 @@ local ComposerSendFocus = require("WhisperMessenger.UI.Composer.ComposerSendFocu
 -- Builds a ComposerSendFocus with recorded binding calls. env.on, env.enabled
 -- and env.combat drive its state; env.bound lists the keys bound now, and
 -- env.blocked counts binding calls made in combat, which the game refuses.
+-- env.window is the pane's parent; its mouseOver field is the cursor.
 local function newEnv(overrides)
   local factory = FakeUI.NewFactory()
   local env = { on = true, enabled = true, combat = false, keys = { "ENTER" }, bound = {}, binds = 0, blocked = 0 }
   for key, value in pairs(overrides or {}) do
     env[key] = value
   end
-  env.pane = factory.CreateFrame("Frame", nil, nil)
+  env.window = factory.CreateFrame("Frame", nil, nil)
+  env.window:Show()
+  env.pane = factory.CreateFrame("Frame", nil, env.window)
   env.input = factory.CreateFrame("EditBox", nil, env.pane)
   env.focus = ComposerSendFocus.Create(env.pane, env.input, {
     isOn = function()
@@ -116,7 +119,7 @@ return function()
   -- test_button_listens_for_its_events
   do
     local env = newEnv()
-    for _, event in ipairs({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }) do
+    for _, event in ipairs({ "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }) do
       assert(env.button:IsEventRegistered(event), "the button must listen for " .. event)
     end
   end
@@ -171,11 +174,11 @@ return function()
     assert(#env.bound == 1, "an enabled composer takes the key again")
   end
 
-  -- test_combat_start_unbinds
+  -- test_open_window_keeps_key_through_combat
   do
     local env = newEnv()
-    env.fire("PLAYER_REGEN_DISABLED")
-    assert(#env.bound == 0, "the key goes back to the game before the lockdown")
+    env.startCombat()
+    assert(#env.bound == 1, "the override must stay for the fight so Enter still reaches the composer")
   end
 
   -- test_no_binding_calls_in_combat
@@ -188,24 +191,96 @@ return function()
     env.fire("UPDATE_BINDINGS")
     env.fire("PLAYER_ENTERING_WORLD")
     assert(env.blocked == 0, "bindings can't change in combat")
-    assert(#env.bound == 0, "the key stays with the game for the whole fight")
+    assert(#env.bound == 1, "the override is left as it was at the start of the fight")
+  end
+
+  -- test_window_closed_at_combat_start_binds_nothing_through_combat
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.startCombat()
+    env.pane:Show()
+    env.fire("UPDATE_BINDINGS")
+    env.fire("PLAYER_ENTERING_WORLD")
+    assert(#env.bound == 0 and env.blocked == 0, "a window opened mid-fight can't bind: Enter stays the game's chat")
+  end
+
+  -- test_combat_click_focuses_when_mouse_over_window
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.window.mouseOver = true
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus == true, "in combat, Enter focuses the composer while the mouse is over the window")
+  end
+
+  -- test_combat_click_ignored_when_mouse_not_over_window
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.window.mouseOver = false
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus ~= true, "in combat, Enter does nothing while the mouse is off the window")
+  end
+
+  -- test_combat_click_ignored_when_window_closed_mid_fight
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.window.mouseOver = true
+    env.pane:Hide()
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus ~= true, "a hidden composer never takes the cursor")
+  end
+
+  -- test_combat_click_ignored_when_setting_off_or_composer_disabled
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.window.mouseOver = true
+    env.on = false
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus ~= true, "setting turned off in combat: no focus")
+    env.on = true
+    env.enabled = false
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus ~= true, "disabled composer in combat: no focus")
+  end
+
+  -- test_click_out_of_combat_ignores_mouse_position
+  do
+    local env = newEnv()
+    env.window.mouseOver = false
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus == true, "out of combat the mouse position does not matter")
+  end
+
+  -- test_combat_end_releases_key_closed_mid_fight
+  do
+    local env = newEnv()
+    env.startCombat()
+    env.pane:Hide()
+    env.endCombat()
+    assert(#env.bound == 0, "the override left by a window closed mid-fight is released after combat")
   end
 
   -- test_combat_end_rebinds_when_eligible
   do
     local env = newEnv()
+    env.pane:Hide()
     env.startCombat()
+    env.pane:Show()
     env.endCombat()
-    assert(#env.bound == 1, "the key comes back after combat")
+    assert(#env.bound == 1, "a window opened mid-fight takes the key after combat")
   end
 
-  -- test_disabled_during_combat_stays_unbound_after
+  -- test_disabled_during_combat_released_after
   do
     local env = newEnv()
     env.startCombat()
     env.enabled = false
     env.endCombat()
-    assert(#env.bound == 0, "a composer disabled in combat must not take the key after it")
+    assert(#env.bound == 0, "a composer disabled in combat gives the key back after it")
   end
 
   -- test_keys_changed_in_combat_bind_after
