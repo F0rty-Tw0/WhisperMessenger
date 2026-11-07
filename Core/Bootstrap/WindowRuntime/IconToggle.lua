@@ -41,7 +41,8 @@ local function openShownWhisperPreview(runtime)
 end
 
 -- A whisper card on the widget opens its chat, even over an open window (the
--- card shows there only when the whisper isn't on screen). Otherwise a visible
+-- card shows there when the whisper isn't on screen, or while it holds a
+-- reply being typed). Otherwise a visible
 -- window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
 -- the plain toggle runs.
