@@ -14,7 +14,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - New option under Appearance: Window animation, to turn the opening and closing animation off.
 - New option under Appearance: Button glide. Turn it off and the floating button jumps onto the window's corner and back instead of gliding. It follows Window animation: with that off, the button always jumps.
 - New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window. On, the window opens where you last moved it and the button stays where it is.
-- The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. You can still click the button to close the window or drag it to move the window.
+- The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. A square button sits inside the title bar instead, in both windows, and changing its shape moves it there right away. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
 - Fixed: The floating button no longer stays invisible when its transparency is set high. While you have anything unread it shows fully, and it fades back to your chosen transparency once you have read them.
@@ -26,7 +26,6 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: Hiding the game's interface with Alt+Z and bringing it back no longer closes the messenger with its shrink animation. The window comes back just as you left it.
 - Fixed: The square floating button now has a solid dark background behind the chat bubbles, like the round one, instead of letting the ground show through.
 - Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
-- Fixed: The square messenger button no longer hangs off the window's corner while it sits on the open window. It now fits inside the title bar, left of the other buttons, and switching the button's shape moves it there right away.
 - Clicking the floating button while a message preview is showing now opens that conversation, in both the phone-style and the regular window. With no preview showing, the button works as before.
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 
