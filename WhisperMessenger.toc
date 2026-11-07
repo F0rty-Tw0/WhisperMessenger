@@ -331,6 +331,7 @@ UI/Shared/GlideClock.lua
 UI/ToggleIcon/IconRide.lua
 UI/MessengerWindow/IconSettings/Options.lua
 UI/ToggleIcon/DockedLook.lua
+UI/ToggleIcon/IconTransparency.lua
 UI/ToggleIcon/ToggleIcon.lua
 UI/MinimapIcon/IconTooltip.lua
 UI/MinimapIcon/MinimapIcon.lua

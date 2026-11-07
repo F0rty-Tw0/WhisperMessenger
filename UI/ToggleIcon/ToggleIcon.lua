@@ -18,6 +18,7 @@ local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.Tog
 local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
 local IconRide = ns.ToggleIconIconRide or require("WhisperMessenger.UI.ToggleIcon.IconRide")
 local DockedLook = ns.ToggleIconDockedLook or require("WhisperMessenger.UI.ToggleIcon.DockedLook")
+local IconTransparency = ns.ToggleIconIconTransparency or require("WhisperMessenger.UI.ToggleIcon.IconTransparency")
 
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 
@@ -149,24 +150,10 @@ function ToggleIcon.Create(factory, options)
   local syncLockGlyphVisibility = lock.syncVisibility
   local refreshLockGlyph = lock.refresh
 
-  local function resolveWidgetTransparency()
-    local value = type(getWidgetTransparency) == "function" and tonumber(getWidgetTransparency()) or nil
-    if value == nil or value ~= value then
-      return 0
-    end
-    return math.min(1, math.max(0, value))
-  end
-
-  -- The real count, not the badge: hiding the badge must not hide the icon.
-  local hasUnread = false
-
-  local function refreshTransparency()
-    if frame.SetAlpha then
-      local opaque = hover.active or hasUnread
-      local alpha = opaque and 1 or (1 - resolveWidgetTransparency())
-      frame:SetAlpha(alpha)
-    end
-  end
+  local transparency = IconTransparency.Create(frame, {
+    hover = hover,
+    getWidgetTransparency = getWidgetTransparency,
+  })
 
   local desaturation = Desaturation.Create({ getIconDesaturated = getIconDesaturated })
 
@@ -187,8 +174,7 @@ function ToggleIcon.Create(factory, options)
 
     desaturation.update(unreadCount)
     squareLook.apply(desaturation.isActive())
-    hasUnread = unreadCount > 0
-    refreshTransparency()
+    transparency.setHasUnread(unreadCount > 0)
   end
 
   local drag = {}
@@ -199,7 +185,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetScript("OnEnter", function()
       hover.active = true
       syncLockGlyphVisibility()
-      refreshTransparency()
+      transparency.refresh()
       IconArt.PaintFace(art, true)
       squareLook.setHover(true) -- after the repaint: the square has its own fill
       tooltip.show(unreadSummary, isCompetitiveActive)
@@ -208,7 +194,7 @@ function ToggleIcon.Create(factory, options)
     frame:SetScript("OnLeave", function()
       hover.active = false
       syncLockGlyphVisibility()
-      refreshTransparency()
+      transparency.refresh()
       IconArt.PaintFace(art, false)
       squareLook.setHover(false) -- after the repaint: the square has its own fill
       tooltip.hide()
@@ -276,7 +262,7 @@ function ToggleIcon.Create(factory, options)
   setIncomingPreview(options.previewSenderName, options.previewMessageText, options.previewClassTag)
   refreshTheme()
   refreshLockGlyph()
-  refreshTransparency()
+  transparency.refresh()
 
   return {
     frame = frame,
@@ -316,7 +302,7 @@ function ToggleIcon.Create(factory, options)
     refreshTheme = refreshTheme,
     lockGlyph = lockGlyph,
     refreshLockGlyph = refreshLockGlyph,
-    refreshTransparency = refreshTransparency,
+    refreshTransparency = transparency.refresh,
     setDocked = setDocked,
     rideTo = ride.rideTo,
     rideHome = ride.rideHome,
