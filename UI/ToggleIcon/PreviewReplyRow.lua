@@ -59,12 +59,14 @@ local function layout(rowFrame, parentFrame, input, sendButton, cover)
   end
 end
 
--- options = { theme, onSubmit(text) -> bool, onHoldChanged(holding), onFocusGained(), onDisabledClick() }
+-- options = { theme, onSubmit(text) -> bool, onHoldChanged(holding),
+-- onFocusChanged(focused), onFocusGained(), onDisabledClick() }
 function PreviewReplyRow.Create(factory, parentFrame, options)
   options = options or {}
   local theme = options.theme or Theme
   local onSubmit = options.onSubmit or noop
   local onHoldChanged = options.onHoldChanged or noop
+  local onFocusChanged = options.onFocusChanged or noop
   local onFocusGained = options.onFocusGained or noop
   local onDisabledClick = options.onDisabledClick or noop
 
@@ -140,10 +142,14 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
       input:ClearFocus()
       return
     end
+    onFocusChanged(true)
     syncHold()
     onFocusGained()
   end)
-  input:SetScript("OnEditFocusLost", syncHold)
+  input:SetScript("OnEditFocusLost", function()
+    onFocusChanged(false)
+    syncHold()
+  end)
   input:SetScript("OnEnterPressed", submit)
   input:SetScript("OnEscapePressed", function()
     input:ClearFocus()
