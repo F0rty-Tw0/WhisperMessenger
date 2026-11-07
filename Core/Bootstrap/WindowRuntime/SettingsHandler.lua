@@ -52,7 +52,7 @@ function SettingsHandler.Create(options)
   end
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
-  -- A change to the floating button reaches the phone window it may ride.
+  -- A change to the floating button reaches the window it may ride (either layout).
   local function dockPhoneIcon()
     local window = runtime.window
     if window and window.dockPhoneIcon then
@@ -275,6 +275,9 @@ function SettingsHandler.Create(options)
     local repaintsIcon = key == "iconBorder" or key == "iconBorderThemed" or key == "iconBackground" or key == "widgetShape"
     if repaintsIcon and icon and icon.refreshTheme then
       icon.refreshTheme()
+    end
+    if key == "widgetShape" then
+      dockPhoneIcon() -- a docked square sits in the title bar, a circle on the corner
     end
     if key == "widgetTransparency" and icon and icon.refreshTransparency then
       icon.refreshTransparency()

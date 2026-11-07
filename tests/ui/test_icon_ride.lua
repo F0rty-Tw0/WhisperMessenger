@@ -4,7 +4,8 @@ local FakeUI = require("tests.helpers.fake_ui")
 
 local SECONDS = Theme.LAYOUT.PHONE_RIDE_SECONDS
 
-local function build()
+local function build(options)
+  options = options or {}
   local factory = FakeUI.NewFactory()
   local parent = factory.CreateFrame("Frame", "UIParent", nil)
   local frame = factory.CreateFrame("Button", "Fab", parent)
@@ -26,6 +27,8 @@ local function build()
   case.ride = IconRide.Create(frame, {
     theme = Theme,
     parent = parent,
+    isLocked = options.isLocked,
+    onPositionChanged = options.onPositionChanged,
     onLevel = function(level)
       case.levels[#case.levels + 1] = level
     end,
@@ -155,6 +158,29 @@ return function()
     tick(case, SECONDS + 0.01)
     local _, _, _, x, y = case.frame:GetPoint()
     assert(x == -20 and y == 40, "a half-way spot never becomes home")
+  end
+
+  -- test_adopt_makes_the_current_spot_home
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    rawset(case.frame, "GetEffectiveScale", function()
+      return 2
+    end)
+    local state = case.ride.adoptHere()
+    assert(state.anchorPoint == "CENTER" and state.relativePoint == "BOTTOMLEFT", "saved from the screen corner")
+    assert(state.x == 300 and state.y == 700, "in normal-size units, got " .. tostring(state.x))
+    rawset(case.frame, "GetEffectiveScale", function()
+      return 1
+    end)
+    case.ride.rideHome()
+    tick(case, SECONDS + 0.01)
+    local point, _, _, x, y = case.frame:GetPoint()
+    assert(point == "CENTER" and x == 300 and y == 700, "goes home to the new spot")
   end
 
   -- test_every_frame_reports_the_shared_clock_ending_on_one
@@ -301,5 +327,62 @@ return function()
     case.ride.rideHome(nil, true)
     assert(case.frame.scripts.OnUpdate == nil, "the old glide is gone")
     assert(select(4, case.frame:GetPoint()) == -20 and case.frame:GetScale() == 1, "home at once")
+  end
+
+  -- test_adopt_ride_position_saves_the_current_spot_through_the_icon
+  do
+    local saved = {}
+    local case = build({
+      onPositionChanged = function(state)
+        saved[#saved + 1] = state
+      end,
+    })
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    assert(#saved == 1 and saved[1].anchorPoint == "CENTER" and saved[1].relativePoint == "BOTTOMLEFT", "one save from the screen corner")
+  end
+
+  -- test_a_locked_icon_keeps_its_home_whatever_the_window_does
+  do
+    local saved = 0
+    local case = build({
+      isLocked = function()
+        return true
+      end,
+      onPositionChanged = function()
+        saved = saved + 1
+      end,
+    })
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    assert(saved == 0, "nothing saved while locked")
+  end
+
+  -- test_adopt_ride_position_makes_the_glide_home_end_at_the_adopted_centre
+  do
+    local case = build({
+      onPositionChanged = function() end,
+    })
+    local centre = case.frame.GetCenter
+    case.ride.rideTo(case.target, nil, true)
+    rawset(case.frame, "GetCenter", function()
+      return 150, 350
+    end)
+    case.ride.adoptRidePosition()
+    rawset(case.frame, "GetCenter", centre)
+    case.ride.rideHome()
+    tick(case, SECONDS * 0.9)
+    assert(case.frame.scripts.OnUpdate ~= nil, "still on its way")
+    local _, _, _, x, y = case.frame:GetPoint()
+    assert(
+      math.abs(x - 300) < 40 and math.abs(y - 700) < 40,
+      "gliding to the adopted centre (150,350 at scale 2), not the first home, got " .. x .. "," .. y
+    )
   end
 end

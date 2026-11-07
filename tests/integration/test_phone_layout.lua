@@ -4,6 +4,11 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local L = Theme.LAYOUT
 local build, select, finishSlide = PhoneWindow.Build, PhoneWindow.Select, PhoneWindow.FinishSlide
 
+-- Open at saved spot on: the window opens where it was moved and the button stays home.
+local function savedSpotOn()
+  return true
+end
+
 -- The phone layout end to end: list and chat in one narrow window, the slide
 -- between them, the back button, settings widening, and the tie to the button.
 
@@ -94,7 +99,7 @@ return function()
 
   -- test_opening_keeps_the_windows_own_anchor
   do
-    local case = build()
+    local case = build({ isOpenAtSavedSpot = savedSpotOn })
     local frame = case.window.frame
     local before = { frame:GetPoint() }
     frame:Show()
@@ -115,7 +120,10 @@ return function()
 
   -- test_the_window_opens_at_its_saved_spot
   do
-    local case = build({ state = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 300, y = 700 } })
+    local case = build({
+      isOpenAtSavedSpot = savedSpotOn,
+      state = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 300, y = 700 },
+    })
     local frame = case.window.frame
     frame:Show()
     local point, _, relativePoint, x, y = frame:GetPoint()
@@ -144,16 +152,16 @@ return function()
 
   -- test_moving_the_window_keeps_the_button_home
   do
-    local case = build()
+    local case = build({ isOpenAtSavedSpot = savedSpotOn })
     local frame = case.window.frame
     frame:Show()
     frame.scripts.OnDragStop(frame)
-    assert(case.homeMoves == 0, "the window drag leaves the button's home alone")
+    assert(case.homeMoves == 0 and case.adopted == 0, "the window drag leaves the button's home alone")
   end
 
   -- test_dragging_the_riding_button_moves_the_window
   do
-    local case = build()
+    local case = build({ isOpenAtSavedSpot = savedSpotOn })
     local frame = case.window.frame
     local moved = 0
     rawset(frame, "StartMoving", function()
@@ -163,7 +171,7 @@ return function()
     case.rideHandlers.beginDrag()
     assert(moved == 1, "the window moves")
     case.rideHandlers.endDrag()
-    assert(case.homeMoves == 0, "the window is saved, the button's home is not")
+    assert(case.homeMoves == 0 and case.adopted == 0, "the window is saved, the button's home is not")
   end
 
   -- test_closing_sends_home_the_button_it_docked_after_the_icon_mode_changed

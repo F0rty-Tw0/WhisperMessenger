@@ -63,4 +63,40 @@ return function()
     case.window.frame:Show()
     assert(case.window.frame:GetAlpha() == 1 and not Rig.running(Rig.ghostOf(case.window.frame)), "instant")
   end
+
+  -- test_a_hide_before_the_first_open_plays_no_shrink
+  do
+    local case = classic()
+    case.window.frame:Hide()
+    local ghost = Rig.ghostOf(case.window.frame)
+    assert(not ghost:IsShown() and not Rig.running(ghost), "never opened: nothing to shrink")
+  end
+
+  -- test_opening_with_the_switch_off_forgets_the_old_source
+  do
+    local iconA, iconB, on = Rig.icon(80, 720, 122, 762), Rig.icon(900, 300, 942, 342), true
+    local source = iconA
+    local case = classic({
+      getGrowSource = function()
+        return source
+      end,
+      isGrowAnimationOn = function()
+        return on
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local ghost = Rig.ghostOf(frame)
+    Rig.tick(ghost, DONE)
+    frame:Hide()
+    Rig.tick(ghost, DONE) -- closed; icon A was remembered
+    on = false
+    frame:Show() -- instant: must drop icon A
+    on = true
+    source = iconB -- icon A is still shown, but not what resolves now
+    frame:Hide()
+    Rig.tick(ghost, 0.2)
+    local x = Rig.center(ghost)
+    assert(math.abs(x - 921) < 10, "shrinks into what resolves now, got " .. x)
+  end
 end

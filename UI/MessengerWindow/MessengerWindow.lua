@@ -16,7 +16,7 @@ local ConversationWiring = ns.MessengerWindowConversationWiring or require("Whis
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
 local PhoneWiring = ns.MessengerWindowPhoneWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneWiring")
-local ClassicGrow = ns.MessengerWindowClassicGrow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ClassicGrow")
+local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
 
 local MessengerWindow = {}
 
@@ -24,13 +24,14 @@ function MessengerWindow.Create(factory, options)
   options = options or {}
 
   local shell = WindowShell.Build(factory, options)
-  local parent, settingsConfig, phoneLayout = shell.parent, shell.settingsConfig, shell.phoneLayout
+  local settingsConfig, phoneLayout = shell.settingsConfig, shell.phoneLayout
   local initialState, windowGeometry = shell.initialState, shell.windowGeometry
   local currentContactsWidth = shell.contactsWidth
   local chrome, frame, layout = shell.chrome, shell.frame, shell.layout
   local settingsRuntime = shell.settingsRuntime
   local settingsPanels = settingsRuntime.settingsPanels
   local phone = PhoneWiring.Hooks()
+  local dock = DockWiring.Hooks()
 
   local function isShown(target)
     if target and target.IsShown then
@@ -124,7 +125,8 @@ function MessengerWindow.Create(factory, options)
   local refreshSelection = composerRuntime.refreshSelection
   local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
-  local onPositionChanged, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local wrappedPosition, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,
@@ -148,6 +150,9 @@ function MessengerWindow.Create(factory, options)
     settingsPanels = settingsPanels,
     closeWindow = closeWindow,
     onResetWindowPosition = onResetWindowPosition,
+    onWindowMoved = function()
+      dock.onWindowMoved()
+    end,
     onResetIconPosition = options.onResetIconPosition,
     onClearAllChats = options.onClearAllChats,
     onStartConversation = options.onStartConversation,
@@ -165,10 +170,10 @@ function MessengerWindow.Create(factory, options)
       return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not phone.isListView()
     end,
     onStrataChanged = function(strata)
-      phone.onStrataChanged(strata)
+      dock.onStrataChanged(strata)
     end,
     isWindowPart = function(candidate)
-      return phone.isWindowPart(candidate)
+      return dock.isWindowPart(candidate)
     end,
     isContactsCollapsed = windowGeometry.isCollapsed,
     setContactsCollapsed = function(collapsed, pointerWidth)
@@ -208,34 +213,31 @@ function MessengerWindow.Create(factory, options)
     relayoutWindow = relayoutWindow,
   })
 
+  -- Phone first: its hide finishes a slide before the dock's hide closes.
   if phoneLayout then
     PhoneWiring.Attach(phone, {
-      factory = factory,
       frame = frame,
       layout = layout,
       chrome = chrome,
       tabToggle = contactsRuntime.tabToggle,
       composerInput = composerInput,
-      windowAlpha = windowAlpha,
       windowVisibility = windowVisibility,
       windowOptions = options,
       settingsConfig = settingsConfig,
       getSelectedKey = getSelectedConversationKey,
       refreshSelection = refreshSelection,
       applyWindowSize = scriptResult.applyWindowSize,
-      onPositionChanged = onPositionChanged,
-      buildState = windowGeometry.buildState,
-    })
-  else
-    ClassicGrow.Attach(frame, {
-      factory = factory,
-      parent = parent,
-      theme = Theme,
-      windowAlpha = windowAlpha,
-      getSource = options.getGrowSource,
-      isOn = options.isGrowAnimationOn,
     })
   end
+  DockWiring.Attach(frame, {
+    hooks = dock,
+    factory = factory,
+    chrome = chrome,
+    windowOptions = options,
+    windowAlpha = windowAlpha,
+    onPositionChanged = onPositionChanged,
+    buildState = windowGeometry.buildState,
+  })
 
   local refreshLanguage = LanguageRefresh.Create({
     layout = layout,
@@ -263,7 +265,7 @@ function MessengerWindow.Create(factory, options)
     handleContactSelected = selectionController.handleContactSelected,
     setScale = function(nextScale)
       local scale = windowSizing.setScale(nextScale)
-      phone.dock()
+      dock.dock()
       return scale
     end,
     relayoutCurrentSize = windowSizing.relayoutCurrentSize,
@@ -272,6 +274,7 @@ function MessengerWindow.Create(factory, options)
     windowVisibility = windowVisibility,
     showWithoutComposerFocus = composerRuntime.showWithoutComposerFocus,
     phone = phoneLayout and phone or nil,
+    dock = dock.dock,
   })
 end
 

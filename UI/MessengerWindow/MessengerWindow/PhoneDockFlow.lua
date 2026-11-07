@@ -11,10 +11,13 @@ local PhoneDockFlow = {}
 
 -- The window growing out of its source (the floating button, the minimap
 -- icon, or nothing) and shrinking back, with the floating button riding along.
--- options: chrome (iconSlot, setIconSlotOccupied), getDockIcon(),
+-- options: chrome (iconSlot, titleIconSlot, setIconSlotOccupied), getDockIcon(),
 -- openAnimation (beginOpen, beginClose, finish, play), rideHandlers (the drag
 -- handlers the button carries while docked), getGrowSource() (the frame the
--- window grows from, or nil) and isGrowAnimationOn().
+-- window grows from, or nil), isGrowAnimationOn() and isIconGlideOn() (off:
+-- the button jumps instead of gliding; the window still grows from it) and
+-- isOpenAtSavedSpot() (off: the window opens with its icon spot on the button).
+-- A missing isIconGlideOn counts as on.
 function PhoneDockFlow.Attach(frame, options)
   local chrome = options.chrome
   local getDockIcon = options.getDockIcon
@@ -22,6 +25,10 @@ function PhoneDockFlow.Attach(frame, options)
   local rideHandlers = options.rideHandlers
   local getGrowSource = options.getGrowSource
   local isGrowAnimationOn = options.isGrowAnimationOn
+  local isIconGlideOn = options.isIconGlideOn or function()
+    return true
+  end
+  local isOpenAtSavedSpot = options.isOpenAtSavedSpot
   -- The button on the window now. getDockIcon stops returning it once the
   -- icon mode leaves the floating button, but it still has to go home.
   local dockedIcon = nil
@@ -31,9 +38,23 @@ function PhoneDockFlow.Attach(frame, options)
   -- The frame this open grew from: the close shrinks back into it.
   local rememberedSource = nil
 
+  -- The square button sits inside the title bar; the circle on the corner.
+  local function spotFor(icon)
+    local square = icon ~= nil and icon.getWidgetShape ~= nil and icon.getWidgetShape() == "square"
+    if square and chrome.titleIconSlot then
+      return chrome.titleIconSlot
+    end
+    return chrome.iconSlot
+  end
+
+  -- The spot of the button on the window, or of the one that would dock next.
+  local function currentSpot()
+    return spotFor(dockedIcon or getDockIcon())
+  end
+
   -- Docked and still the floating button: the icon mode can take it away.
   local function syncIconSlot()
-    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon)
+    chrome.setIconSlotOccupied(dockedIcon ~= nil and getDockIcon() == dockedIcon, spotFor(dockedIcon))
   end
 
   -- onStep: the animation's, when the window is coming out of the button.
@@ -41,24 +62,25 @@ function PhoneDockFlow.Attach(frame, options)
   local function attachIcon(icon, onStep, instant)
     dockedIcon = icon
     icon.setRideHandlers(rideHandlers)
-    icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame), onStep, instant)
+    icon.rideTo(PhoneDock.RideTarget(spotFor(icon), icon.frame), onStep, instant)
     -- Reopened mid-glide, it may still be down with the window that closed.
     icon.setRideStrata(frame:GetFrameStrata())
   end
 
-  -- Already riding (the scale changed, or Alt+Z brought the UI back): the
-  -- button only needs its new spot, with no opening to replay. A button that
-  -- appears on an open window (the icon mode changed) docks where it stands.
+  -- Already riding (the scale or the widget shape changed, or Alt+Z brought
+  -- the UI back): the button only needs its new spot, with no opening to
+  -- replay. A button that appears on an open window (the icon mode changed)
+  -- docks where it stands.
   local function dock()
     local icon = dockedIcon
     if icon == nil then
       icon = getDockIcon()
       if icon and icon.rideTo and frame:IsShown() then
-        attachIcon(icon)
+        attachIcon(icon, nil, not isIconGlideOn())
       end
     elseif icon.isRiding() then
       openAnimation.finish()
-      icon.rideTo(PhoneDock.RideTarget(chrome.iconSlot, icon.frame))
+      icon.rideTo(PhoneDock.RideTarget(spotFor(icon), icon.frame), nil, not isIconGlideOn())
     end
     syncIconSlot()
   end
@@ -76,11 +98,23 @@ function PhoneDockFlow.Attach(frame, options)
     end
     isOpen = true
     local icon = getDockIcon()
+    -- Only a button on screen can take the window to it: without one, the
+    -- window opens at its saved spot.
+    if not isOpenAtSavedSpot() and icon and icon.rideTo and icon.frame:IsVisible() then
+      PhoneDock.Place(frame, spotFor(icon), icon.frame)
+    end
     local source = growSource()
     rememberedSource = source
     local dockable = icon and icon.rideTo
     if dockable and source == icon.frame then
-      attachIcon(icon, openAnimation.beginOpen(icon.frame))
+      if isIconGlideOn() then
+        attachIcon(icon, openAnimation.beginOpen(icon.frame))
+        return
+      end
+      -- Measure the button where it rests, then jump it; the window still grows.
+      local step = openAnimation.beginOpen(icon.frame)
+      attachIcon(icon, nil, true)
+      openAnimation.play(step)
       return
     end
     if dockable then
@@ -113,7 +147,7 @@ function PhoneDockFlow.Attach(frame, options)
     dockedIcon = nil
     if icon and icon.isRiding() then
       icon.setRideHandlers(nil)
-      if source == icon.frame then
+      if source == icon.frame and isIconGlideOn() then
         icon.rideHome(openAnimation.beginClose(icon.frame))
         return
       end
@@ -146,6 +180,7 @@ function PhoneDockFlow.Attach(frame, options)
     isWindowPart = isWindowPart,
     setStrata = setStrata,
     dockedIcon = currentDockedIcon,
+    spot = currentSpot,
   }
 end
 

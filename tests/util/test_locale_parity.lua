@@ -39,6 +39,14 @@ local WINDOW_ANIMATION_KEYS = {
   "Window animation",
   "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
 }
+local BUTTON_GLIDE_KEYS = {
+  "Button glide",
+  "The floating button glides onto the window's corner when it opens and back when it closes. Turn it off to make it jump.",
+}
+local SAVED_SPOT_KEYS = {
+  "Open at saved spot",
+  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window.",
+}
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
@@ -120,6 +128,16 @@ return function()
 
     -- test_window_animation_strings_are_translated
     for _, key in ipairs(WINDOW_ANIMATION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_button_glide_strings_are_translated
+    for _, key in ipairs(BUTTON_GLIDE_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_open_at_saved_spot_strings_are_translated
+    for _, key in ipairs(SAVED_SPOT_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

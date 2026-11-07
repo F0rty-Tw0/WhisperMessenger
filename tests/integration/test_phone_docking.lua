@@ -65,13 +65,31 @@ return function()
 
   -- test_dragging_by_the_button_saves_the_window
   do
-    local case = build()
+    local case = build({
+      isOpenAtSavedSpot = function()
+        return true
+      end,
+    })
     case.window.frame:Show()
     case.rideHandlers.beginDrag()
     case.rideHandlers.endDrag()
     assert(case.saved.state ~= nil, "players who later lose the button reopen it there")
     assert(case.saved.state.width == L.PHONE_WINDOW_WIDTH, "got " .. tostring(case.saved.state.width))
-    assert(case.homeMoves == 0, "the button's home stays put")
+    assert(case.homeMoves == 0 and case.adopted == 0, "the button's home stays put")
+  end
+
+  -- test_dragging_by_the_button_moves_the_button_home_when_the_option_is_off
+  do
+    local case = build({
+      isOpenAtSavedSpot = function()
+        return false
+      end,
+    })
+    case.window.frame:Show()
+    case.rideHandlers.beginDrag()
+    case.rideHandlers.endDrag()
+    assert(case.saved.state ~= nil, "the window is still saved")
+    assert(case.adopted == 1, "the button's spot becomes its home, got " .. case.adopted)
   end
 
   -- test_reset_brings_the_window_to_the_screen_centre

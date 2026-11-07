@@ -35,7 +35,37 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { phoneLayoutSpec, windowAnimationSpec }
+  local iconGlideSpec = {
+    key = "iconGlide",
+    label = text("Button glide"),
+    labelKey = "Button glide",
+    initial = config.iconGlide ~= false,
+    onChange = function(value)
+      onChange("iconGlide", value)
+    end,
+    tooltipLines = {
+      text("Button glide"),
+      text("The floating button glides onto the window's corner when it opens and back when it closes. Turn it off to make it jump."),
+    },
+  }
+
+  local openAtSavedSpotSpec = {
+    key = "openAtSavedSpot",
+    label = text("Open at saved spot"),
+    labelKey = "Open at saved spot",
+    initial = config.openAtSavedSpot == true,
+    onChange = function(value)
+      onChange("openAtSavedSpot", value)
+    end,
+    tooltipLines = {
+      text("Open at saved spot"),
+      text(
+        "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window."
+      ),
+    },
+  }
+
+  return { phoneLayoutSpec, windowAnimationSpec, iconGlideSpec, openAtSavedSpotSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

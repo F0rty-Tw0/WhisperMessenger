@@ -23,21 +23,29 @@ local function build()
   local slot = factory.CreateFrame("Frame", nil, frame)
   slot:SetSize(84, 84)
   at(slot, 125, 875)
+  local titleSlot = factory.CreateFrame("Frame", nil, frame)
+  titleSlot:SetSize(24, 24)
+  at(titleSlot, 112, 888)
   local fab = factory.CreateFrame("Button", "Fab", parent)
   fab:SetSize(42, 42)
   at(fab, 500, 600)
-  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {} }
+  local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {}, glide = true, order = {} }
+  case.slot, case.titleSlot, case.shape, case.savedSpot = slot, titleSlot, "circle", true
   case.openStep, case.closeStep = function() end, function() end
   case.icon = {
     frame = fab,
+    getWidgetShape = function()
+      return case.shape
+    end,
     isRiding = function()
       return case.rides > case.homes
     end,
-    rideTo = function(target, onStep)
-      case.rides, case.rodeTo, case.step = case.rides + 1, target, onStep
+    rideTo = function(target, onStep, instant)
+      case.rides, case.rodeTo, case.step, case.rideInstant = case.rides + 1, target, onStep, instant
+      case.order[#case.order + 1] = "ride"
     end,
-    rideHome = function(onStep)
-      case.homes, case.step = case.homes + 1, onStep
+    rideHome = function(onStep, instant)
+      case.homes, case.step, case.homeInstant = case.homes + 1, onStep, instant
     end,
     setRideHandlers = function(handlers)
       case.rideHandlers = handlers
@@ -49,17 +57,23 @@ local function build()
   case.flow = PhoneDockFlow.Attach(frame, {
     chrome = {
       iconSlot = slot,
-      setIconSlotOccupied = function(occupied)
-        case.occupied = occupied
+      titleIconSlot = titleSlot,
+      setIconSlotOccupied = function(occupied, spot)
+        case.occupied, case.occupiedSpot = occupied, spot
       end,
     },
     getDockIcon = function()
-      return case.icon
+      return not case.noIcon and case.icon or nil
     end,
     openAnimation = {
       beginOpen = function(iconFrame)
         case.openedFrom = iconFrame
+        case.order[#case.order + 1] = "measure"
         return case.openStep
+      end,
+      play = function(step)
+        case.played = step
+        case.order[#case.order + 1] = "play"
       end,
       beginClose = function(iconFrame)
         case.closedInto = iconFrame
@@ -75,6 +89,12 @@ local function build()
     end,
     isGrowAnimationOn = function()
       return true
+    end,
+    isIconGlideOn = function()
+      return case.glide
+    end,
+    isOpenAtSavedSpot = function()
+      return case.savedSpot
     end,
   })
   return case
@@ -129,5 +149,107 @@ return function()
     assert(case.flow.isWindowPart(case.fab) == true and case.flow.isWindowPart(case.frame) == false, "only the button")
     case.flow.setStrata("LOW")
     assert(case.rideStrata == "LOW", "the button follows the window's strata")
+  end
+
+  -- test_glide_off_makes_the_button_jump_while_the_window_still_grows_from_it
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    assert(case.rideInstant == true and case.step == nil, "the button jumps")
+    assert(table.concat(case.order, ",") == "measure,ride,play", "the grow reads the button before it jumps, got " .. table.concat(case.order, ","))
+    assert(case.openedFrom == case.fab and case.played == case.openStep, "and the window still grows from it")
+  end
+
+  -- test_glide_off_close_lands_the_button_at_once_and_the_window_shrinks_into_it
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    case.frame.shown = false
+    case.flow.close()
+    assert(case.homeInstant == true and case.step == nil, "home at once")
+    assert(case.closedInto == case.fab and case.played == case.closeStep, "the shrink still runs into it")
+  end
+
+  -- test_glide_off_re_dock_jumps
+  do
+    local case = build()
+    case.glide = false
+    case.flow.open()
+    case.flow.dock()
+    assert(case.rides == 2 and case.rideInstant == true, "a re-dock jumps too")
+  end
+
+  -- test_glide_on_keeps_the_gliding_ride
+  do
+    local case = build()
+    case.flow.open()
+    assert(not case.rideInstant and case.step == case.openStep, "unchanged when on")
+  end
+
+  -- test_square_button_rides_the_title_bar_spot_and_takes_it
+  do
+    local case = build()
+    case.shape = "square"
+    case.flow.open()
+    case.flow.syncIconSlot()
+    assert(case.rodeTo.region == case.titleSlot, "the square rides the title-bar spot")
+    assert(case.occupied == true and case.occupiedSpot == case.titleSlot, "and the title buttons clear that spot")
+  end
+
+  -- test_circle_button_keeps_the_corner_spot
+  do
+    local case = build()
+    case.flow.open()
+    case.flow.syncIconSlot()
+    assert(case.rodeTo.region == case.slot and case.occupiedSpot == case.slot, "the circle keeps the corner")
+  end
+
+  -- test_switching_shape_while_docked_moves_the_button_to_the_other_spot
+  do
+    local case = build()
+    case.flow.open()
+    case.shape = "square"
+    case.flow.dock()
+    assert(case.rodeTo.region == case.titleSlot and case.occupiedSpot == case.titleSlot, "square: into the title bar")
+    case.shape = "circle"
+    case.flow.dock()
+    assert(case.rodeTo.region == case.slot and case.occupiedSpot == case.slot, "circle: back on the corner")
+  end
+
+  -- test_square_opens_with_the_title_spot_on_the_button
+  do
+    local case = build()
+    case.shape, case.savedSpot = "square", false
+    rawset(case.fab, "IsVisible", function()
+      return true
+    end)
+    case.flow.open()
+    local _, _, _, x, y = case.frame:GetPoint()
+    assert(x == 500 - 12 and y == 600 + 12, "the title spot lands on the button, got " .. tostring(x) .. "," .. tostring(y))
+  end
+
+  -- test_square_window_grows_from_and_shrinks_into_the_button
+  do
+    local case = build()
+    case.shape = "square"
+    case.flow.open()
+    assert(case.openedFrom == case.fab and case.step == case.openStep, "grows out of the square button")
+    case.frame.shown = false
+    case.flow.close()
+    assert(case.closedInto == case.fab and case.homes == 1, "and shrinks back into it")
+  end
+
+  -- test_a_button_appearing_on_an_open_window_follows_the_glide_switch
+  for _, glide in ipairs({ false, true }) do
+    local case = build()
+    case.glide, case.noIcon = glide, true
+    case.flow.open()
+    case.frame:Show()
+    case.noIcon = false
+    case.flow.dock()
+    assert(case.rides == 1 and case.step == nil, "docks where it stands with no opening to replay")
+    assert((case.rideInstant == true) == not glide, "glide " .. tostring(glide) .. ": instant is " .. tostring(case.rideInstant))
   end
 end

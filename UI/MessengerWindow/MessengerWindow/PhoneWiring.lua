@@ -8,9 +8,6 @@ local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger
 local PhoneSlide = ns.MessengerWindowPhoneSlide or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneSlide")
 local PhoneNavigator = ns.MessengerWindowPhoneNavigator or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneNavigator")
 local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
-local PhoneDockFlow = ns.MessengerWindowPhoneDockFlow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDockFlow")
-local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
-  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
 -- Everything MessengerWindow asks of the phone layout. Hooks() returns the
 -- calls it makes while building, which do nothing until Attach fills them in,
@@ -26,11 +23,6 @@ function PhoneWiring.Hooks()
       return false
     end,
     isListView = function()
-      return false
-    end,
-    dock = function() end,
-    onStrataChanged = function(_strata) end,
-    isWindowPart = function(_candidate)
       return false
     end,
     resetWindow = function() end,
@@ -67,20 +59,16 @@ local function wideWidth(frame)
   return math.min(Theme.WINDOW_WIDTH, maxWidth or Theme.WINDOW_WIDTH)
 end
 
--- options: factory, frame, layout, chrome, tabToggle, composerInput,
--- windowAlpha, windowVisibility,
+-- options: frame, layout, chrome, tabToggle, composerInput, windowVisibility,
 -- windowOptions (MessengerWindow.Create options), settingsConfig,
--- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h),
--- onPositionChanged(state) (from WrapPosition), buildState(frame).
+-- getSelectedKey(), refreshSelection(state), applyWindowSize(w, h).
+-- The floating button's dock is DockWiring's, in both layouts.
 function PhoneWiring.Attach(hooks, options)
   local frame = options.frame
   local layout = options.layout
   local chrome = options.chrome
   local tabToggle = options.tabToggle
   local windowOptions = options.windowOptions
-  local getDockIcon = windowOptions.getDockIcon or function()
-    return nil
-  end
   local restoreWidth, restoreHeight = nil, nil
 
   local function isCovered()
@@ -88,15 +76,6 @@ function PhoneWiring.Attach(hooks, options)
   end
 
   local slide = PhoneSlide.Create({ layout = layout, theme = Theme, isCovered = isCovered })
-  local openAnimation = WindowGrowAnimation.Attach(frame, {
-    factory = options.factory,
-    parent = frame:GetParent() or _G.UIParent,
-    theme = Theme,
-    setAlphaHeld = options.windowAlpha.setHeld,
-    refreshAlpha = function()
-      options.windowAlpha.refreshWindowAlpha(true)
-    end,
-  })
 
   local navigator = PhoneNavigator.Create({
     slide = slide,
@@ -129,48 +108,10 @@ function PhoneWiring.Attach(hooks, options)
     tabToggle.setCurrentModeClickHandler(backUnlessCovered)
   end
 
-  local rideHandlers = {
-    beginDrag = function()
-      frame:StartMoving()
-    end,
-    endDrag = function()
-      frame:StopMovingOrSizing()
-      options.onPositionChanged(options.buildState(frame))
-    end,
-  }
-
-  -- A window opening for the first time may have no position until next frame.
-  local function clampToSpot()
-    if PhoneDock.ClampToSpot(frame, chrome.iconSlot) then
-      return
-    end
-    local timer = _G.C_Timer
-    if type(timer) == "table" and type(timer.After) == "function" then
-      timer.After(0, function()
-        PhoneDock.ClampToSpot(frame, chrome.iconSlot)
-      end)
-    end
-  end
-
-  local getGrowSource, isGrowAnimationOn = WindowGrowAnimation.Defaults(windowOptions.getGrowSource, windowOptions.isGrowAnimationOn)
-  local flow = PhoneDockFlow.Attach(frame, {
-    chrome = chrome,
-    getDockIcon = getDockIcon,
-    openAnimation = openAnimation,
-    rideHandlers = rideHandlers,
-    getGrowSource = getGrowSource,
-    isGrowAnimationOn = isGrowAnimationOn,
-  })
-
   hooks.onSelection = navigator.syncSelection
   hooks.onPanesShown = slide.settle
   hooks.isListView = navigator.isListView
   hooks.showList = navigator.showList
-  hooks.dock = flow.dock
-  hooks.onStrataChanged = function(strata)
-    flow.setStrata(strata)
-  end
-  hooks.isWindowPart = flow.isWindowPart
   hooks.isWide = function()
     return layout.phoneWide == true
   end
@@ -205,13 +146,9 @@ function PhoneWiring.Attach(hooks, options)
     PhoneDock.Center(frame)
   end
 
-  frame:HookScript("OnShow", clampToSpot)
-  frame:HookScript("OnShow", flow.open)
-  frame:HookScript("OnShow", flow.syncIconSlot)
   frame:HookScript("OnHide", function()
     -- A hidden viewport stops ticking, which would leave a slide hanging.
     slide.finishNow()
-    flow.close()
   end)
 
   local selectedKey = options.getSelectedKey()

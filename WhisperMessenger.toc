@@ -448,7 +448,7 @@ UI/MessengerWindow/MessengerWindow/PhoneDock.lua
 UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
 UI/MessengerWindow/MessengerWindow/PhoneDockFlow.lua
 UI/MessengerWindow/MessengerWindow/PhoneWiring.lua
-UI/MessengerWindow/MessengerWindow/ClassicGrow.lua
+UI/MessengerWindow/MessengerWindow/DockWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow.lua

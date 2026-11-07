@@ -65,7 +65,7 @@ return function()
   do
     local result = create()
     local row = FindUI.byLabel(result.frame, LABEL)
-    local animation = FindUI.byLabel(result.frame, "Window animation")
+    local animation = FindUI.byLabel(result.frame, "Open at saved spot")
     local hud = FindUI.byLabel(result.frame, "Native WoW HUD")
     local preset = FindUI.byLabel(result.frame, "Theme Preset")
     assert(select(2, row:GetPoint()) == hud, "below the HUD picker")
