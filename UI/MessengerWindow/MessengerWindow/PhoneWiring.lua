@@ -124,8 +124,12 @@ function PhoneWiring.Attach(hooks, options)
       end
     end,
   })
+  -- Under a cover no chat is on screen to leave: same guard as the back arrow.
+  local function backUnlessCovered()
+    return not isCovered() and navigator.back()
+  end
   if tabToggle and tabToggle.setCurrentModeClickHandler then
-    tabToggle.setCurrentModeClickHandler(navigator.back)
+    tabToggle.setCurrentModeClickHandler(backUnlessCovered)
   end
 
   local rideHandlers = {
@@ -233,9 +237,7 @@ function PhoneWiring.Attach(hooks, options)
     return layout.phoneWide == true
   end
 
-  hooks.onBack = function()
-    return not isCovered() and navigator.back()
-  end
+  hooks.onBack = backUnlessCovered
 
   -- Settings and addon panels are laid out for a wide window; it grows away
   -- from the button while they show and returns after.
