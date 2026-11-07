@@ -1,6 +1,6 @@
+local PhoneSlideClock = require("tests.helpers.phone_slide_clock")
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
-local Theme = require("WhisperMessenger.UI.Theme")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 -- Boots the real runtime on the phone layout for the integration tests.
@@ -8,8 +8,6 @@ local PhoneRuntime = {}
 
 PhoneRuntime.KEY = "wow::WOW::arthas-area52"
 PhoneRuntime.OTHER = "wow::WOW::jaina-area52"
-
-local SLIDE = Theme.LAYOUT.PHONE_SLIDE_SECONDS + 0.01
 
 local function conversation(name, unread)
   return {
@@ -61,10 +59,7 @@ function PhoneRuntime.Run(settings, body)
 end
 
 function PhoneRuntime.FinishSlide(runtime)
-  local viewport = runtime.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, SLIDE)
-  end
+  PhoneSlideClock.Finish(runtime.window.phoneViewport)
 end
 
 function PhoneRuntime.ClickRow(runtime, key)

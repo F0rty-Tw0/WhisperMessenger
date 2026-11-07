@@ -1,13 +1,11 @@
+local PhoneSlideClock = require("tests.helpers.phone_slide_clock")
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
-local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
 -- A real phone-layout window with a recording stand-in for the button.
 local PhoneWindow = {}
-
-local L = Theme.LAYOUT
 
 local function contacts()
   return ContactsList.BuildItems({
@@ -86,10 +84,7 @@ function PhoneWindow.Select(case, key)
 end
 
 function PhoneWindow.FinishSlide(case)
-  local viewport = case.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, L.PHONE_SLIDE_SECONDS + 0.01)
-  end
+  PhoneSlideClock.Finish(case.window.phoneViewport)
 end
 
 return PhoneWindow
