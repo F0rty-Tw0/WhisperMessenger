@@ -191,11 +191,10 @@ local function blizzardChatClickHandler()
 end
 
 -- Link clicks on frame. The script is Blizzard's own chat-frame click handler,
--- so the click runs SetItemRef untainted, as in Blizzard chat: another
--- player's profession link opens a window that casts a protected spell, which
--- the game blocks when addon code started the click. The URL copy and
--- onLinkClick are hooked to run after it. Without that handler (or
--- HookScript), the click goes through HandleClick.
+-- so the click starts in Blizzard code and protected follow-ups (opening
+-- another player's profession) are expected not to be blamed on the addon. The
+-- URL copy and onLinkClick are hooked to run after it. Without that handler
+-- (or HookScript), the click goes through HandleClick.
 function Hyperlinks.BindClick(frame, onLinkClick)
   local chatClickHandler = blizzardChatClickHandler()
   if chatClickHandler == nil or type(frame.HookScript) ~= "function" then
