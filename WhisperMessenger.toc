@@ -266,6 +266,7 @@ UI/ContactsList/RowScripts.lua
 UI/ContactsList/ActionButtons.lua
 UI/ContactsList/EmptyState.lua
 UI/ContactsList/TabLayout.lua
+UI/ContactsList/TabScroller.lua
 UI/ContactsList/NativeTabToggle.lua
 UI/ContactsList/TabToggle.lua
 UI/ContactsList/RowView.lua
