@@ -182,6 +182,44 @@ function Hyperlinks.HandleLeave()
   end
 end
 
+local function blizzardChatClickHandler()
+  local mixin = _G.ChatFrameMixin
+  if type(mixin) ~= "table" or type(mixin.OnHyperlinkClick) ~= "function" then
+    return nil
+  end
+  return mixin.OnHyperlinkClick
+end
+
+-- Link clicks on frame. The script is Blizzard's own chat-frame click handler,
+-- so the click runs SetItemRef untainted, as in Blizzard chat: another
+-- player's profession link opens a window that casts a protected spell, which
+-- the game blocks when addon code started the click. The URL copy and
+-- onLinkClick are hooked to run after it. Without that handler (or
+-- HookScript), the click goes through HandleClick.
+function Hyperlinks.BindClick(frame, onLinkClick)
+  local chatClickHandler = blizzardChatClickHandler()
+  if chatClickHandler == nil or type(frame.HookScript) ~= "function" then
+    frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
+      Hyperlinks.HandleClick(link, text, button, self)
+      if onLinkClick then
+        onLinkClick()
+      end
+    end)
+    return
+  end
+
+  frame:SetScript("OnHyperlinkClick", chatClickHandler)
+  frame:HookScript("OnHyperlinkClick", function(_self, link)
+    local externalUrl = UrlFormatter.ExtractExternalUrlFromLink(link)
+    if externalUrl ~= nil then
+      copyExternalUrl(externalUrl)
+    end
+    if onLinkClick then
+      onLinkClick()
+    end
+  end)
+end
+
 -- Links in a frame's text: hover shows the tooltip, click (and shift-click
 -- into chat) works as in the transcript. onLinkClick, when given, runs after
 -- each link click.
@@ -196,12 +234,7 @@ function Hyperlinks.EnableOn(frame, onLinkClick)
   frame:SetScript("OnHyperlinkLeave", function()
     Hyperlinks.HandleLeave()
   end)
-  frame:SetScript("OnHyperlinkClick", function(self, link, text, button)
-    Hyperlinks.HandleClick(link, text, button, self)
-    if onLinkClick then
-      onLinkClick()
-    end
-  end)
+  Hyperlinks.BindClick(frame, onLinkClick)
 end
 
 ns.UIHyperlinks = Hyperlinks
