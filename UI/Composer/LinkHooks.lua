@@ -4,6 +4,7 @@ if type(ns) ~= "table" then
 end
 
 local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMessenger.UI.Hyperlinks.QuestLinkClassic")
+local UrlFormatter = ns.UIHyperlinksUrlFormatter or require("WhisperMessenger.UI.Hyperlinks.UrlFormatter")
 
 local LinkHooks = {}
 local registeredLinkHooks = false
@@ -225,7 +226,8 @@ local function registerLinkHooks()
     if _G._wmSuspended then
       return
     end
-    if link == nil then
+    -- Our URL links only copy their address; they are never inserted.
+    if link == nil or UrlFormatter.ExtractExternalUrlFromLink(link) ~= nil then
       return
     end
 

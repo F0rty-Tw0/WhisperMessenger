@@ -80,7 +80,12 @@ return function()
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-    transcript.text.scripts.OnHyperlinkClick(transcript.text, "url:https://example.com/help", "https://example.com/help", "LeftButton")
+    transcript.text.scripts.OnHyperlinkClick(
+      transcript.text,
+      "addon:WhisperMessenger:url:https://example.com/help",
+      "https://example.com/help",
+      "LeftButton"
+    )
 
     assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
     assert(copied.text == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")
@@ -88,6 +93,22 @@ return function()
     _G.C_ExternalEventURL = savedExternalEventURL
     _G.LaunchURL = savedLaunchURL
   end)
+
+  -- test_transcript_link_clicks_start_in_blizzard_chat_handler
+  -- (another player's profession link only opens when the click starts in
+  --  Blizzard code, not in an addon function)
+
+  do
+    local savedMixin = rawget(_G, "ChatFrameMixin")
+    local mixin = { OnHyperlinkClick = function() end }
+    rawset(_G, "ChatFrameMixin", mixin)
+    local factory = FakeUI.NewFactory()
+    local transcript = makeTranscript(factory)
+    TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
+    rawset(_G, "ChatFrameMixin", savedMixin)
+
+    assert(transcript.text.scripts.OnHyperlinkClick == mixin.OnHyperlinkClick, "transcript link clicks should start in Blizzard's chat click handler")
+  end
 
   -- test_initial_layout_called
 
