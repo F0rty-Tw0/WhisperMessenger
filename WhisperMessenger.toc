@@ -537,5 +537,6 @@ Core/PublicApi/Preview.lua
 Core/PublicApi/BlockList.lua
 Core/PublicApi/UnreadCount.lua
 Core/PublicApi/Look.lua
+Core/PublicApi/Animation.lua
 Core/PublicApi.lua
 Bootstrap.lua
