@@ -83,6 +83,56 @@ return function()
     assert(viewport.scripts.OnUpdate == nil, "no ticker left on a hidden window")
   end
 
+  -- test_hiding_the_window_mid_open_leaves_no_ticker_panel_or_hold
+  do
+    local ride
+    local case = PhoneWindow.Build({
+      getDockIcon = function()
+        return ride
+      end,
+    })
+    local fab, frame = case.fab, case.window.frame
+    local parent = fab:GetParent()
+    fab:SetSize(42, 42)
+    fab:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -20, 40)
+    rect(frame, 100, 100, 460, 740)
+    rect(fab, 80, 720, 122, 762)
+    local real = IconRide.Create(fab, { theme = Theme, parent = parent })
+    -- ToggleIcon's surface for the window, over the real ride.
+    ride = {
+      frame = fab,
+      isRiding = real.isRiding,
+      rideHome = real.rideHome,
+      adoptRidePosition = real.adoptRidePosition,
+      setRideStrata = real.setStrata,
+      setRideHandlers = function() end,
+      rideTo = function(target, onStep)
+        rawset(target.region, "GetCenter", function()
+          return 300, 700
+        end)
+        return real.rideTo(target, onStep)
+      end,
+    }
+    parent:Show()
+    fab:Show()
+    frame:Show()
+    assert(fab.scripts.OnUpdate ~= nil, "setup: the opening glide is running")
+    runOut(fab, Theme.LAYOUT.PHONE_RIDE_SECONDS / 2)
+    assert(frame:GetAlpha() < 1, "setup: the window is still being revealed")
+    local panels = 0
+    for _, child in ipairs(parent.children) do
+      panels = panels + ((child ~= fab and child ~= frame and child:IsShown()) and 1 or 0)
+    end
+    assert(panels == 1, "setup: the opening panel is up, got " .. panels)
+    frame:Hide()
+    runOut(fab, Theme.LAYOUT.PHONE_RIDE_SECONDS * 2)
+    assert(fab.scripts.OnUpdate == nil, "no ticker left on the button")
+    for _, child in ipairs(parent.children) do
+      assert(child == fab or child == frame or not child:IsShown(), "no panel left over the hidden window")
+    end
+    assert(frame:GetAlpha() == 1, "the window gets its alpha back")
+  end
+
   -- test_a_finished_ride_leaves_no_ticker
   do
     local ride, frame, target = buildRide()
