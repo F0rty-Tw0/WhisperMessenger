@@ -1,6 +1,5 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
-local Theme = require("WhisperMessenger.UI.Theme")
 local EventBridge = require("WhisperMessenger.Core.Bootstrap.EventBridge")
 
 -- Boots the real runtime on the phone layout for the integration tests.
@@ -9,7 +8,7 @@ local PhoneRuntime = {}
 PhoneRuntime.KEY = "wow::WOW::arthas-area52"
 PhoneRuntime.OTHER = "wow::WOW::jaina-area52"
 
-local SLIDE = Theme.LAYOUT.PHONE_SLIDE_SECONDS + 0.01
+local SLIDE_FRAMES = 60
 
 local function conversation(name, unread)
   return {
@@ -62,8 +61,12 @@ end
 
 function PhoneRuntime.FinishSlide(runtime)
   local viewport = runtime.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, SLIDE)
+  -- The slide clamps one tick to 1/30 s, so a slow frame cannot skip it.
+  for _ = 1, SLIDE_FRAMES do
+    if not (viewport.scripts and viewport.scripts.OnUpdate) then
+      return
+    end
+    viewport.scripts.OnUpdate(viewport, 1 / 60)
   end
 end
 

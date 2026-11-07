@@ -1,13 +1,12 @@
 local MessengerWindow = require("WhisperMessenger.UI.MessengerWindow")
 local ContactsList = require("WhisperMessenger.UI.ContactsList")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
-local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
 -- A real phone-layout window with a recording stand-in for the button.
 local PhoneWindow = {}
 
-local L = Theme.LAYOUT
+local SLIDE_FRAMES = 60
 
 local function contacts()
   return ContactsList.BuildItems({
@@ -87,8 +86,12 @@ end
 
 function PhoneWindow.FinishSlide(case)
   local viewport = case.window.phoneViewport
-  if viewport.scripts and viewport.scripts.OnUpdate then
-    viewport.scripts.OnUpdate(viewport, L.PHONE_SLIDE_SECONDS + 0.01)
+  -- The slide clamps one tick to 1/30 s, so a slow frame cannot skip it.
+  for _ = 1, SLIDE_FRAMES do
+    if not (viewport.scripts and viewport.scripts.OnUpdate) then
+      return
+    end
+    viewport.scripts.OnUpdate(viewport, 1 / 60)
   end
 end
 

@@ -27,6 +27,16 @@ local function tick(viewport, seconds)
   viewport.scripts.OnUpdate(viewport, seconds)
 end
 
+-- Frame by frame until the slide ends; one tick is clamped to 1/30 s.
+local function runOut(viewport)
+  for _ = 1, 60 do
+    if viewport.scripts.OnUpdate == nil then
+      return
+    end
+    tick(viewport, 1 / 60)
+  end
+end
+
 return function()
   -- test_snap_to_chat_shows_only_the_chat_pane
   do
@@ -64,12 +74,33 @@ return function()
     slide.animateTo(1, function()
       finished = finished + 1
     end)
-    tick(viewport, DURATION + 0.01)
+    runOut(viewport)
     assert(finished == 1, "done callback runs once")
     assert(layout.phoneProgress == 1, "ends on the chat")
     assert(viewport.clipsChildren == false, "clipping ends with the slide, so pop-ups are never cut off")
     assert(viewport.scripts.OnUpdate == nil, "the ticker stops")
     assert(contentPane:IsShown() and not contactsPane:IsShown(), "the off-screen pane hides")
+  end
+
+  -- test_a_slow_first_frame_does_not_skip_the_slide
+  do
+    local slide, layout, viewport = build()
+    local finished = 0
+    slide.snapTo(0)
+    slide.animateTo(1, function()
+      finished = finished + 1
+    end)
+    tick(viewport, 0.25) -- the heavy refresh as the slide starts
+    assert(viewport.scripts.OnUpdate ~= nil, "one slow frame must not end the slide")
+    assert(layout.phoneProgress > 0 and layout.phoneProgress < 1, "partway, got " .. tostring(layout.phoneProgress))
+    assert(finished == 0, "not done yet")
+    for _ = 1, 20 do
+      if viewport.scripts.OnUpdate then
+        tick(viewport, 1 / 60)
+      end
+    end
+    assert(finished == 1 and layout.phoneProgress == 1, "small frames carry it home")
+    assert(viewport.scripts.OnUpdate == nil, "the ticker stops")
   end
 
   -- test_reversing_mid_slide_drops_the_first_callback
@@ -84,7 +115,7 @@ return function()
     slide.animateTo(0, function()
       second = second + 1
     end)
-    tick(viewport, DURATION + 0.01)
+    runOut(viewport)
     assert(first == 0, "the abandoned slide never reports done")
     assert(second == 1, "the new slide reports done")
   end
