@@ -63,6 +63,18 @@ return function()
     assert(case.saved.state ~= nil and case.saved.state.width == frame:GetWidth(), name .. ": the window is saved at its width")
   end)
 
+  -- test_dragging_by_the_button_starts_the_move_from_the_cursor
+  eachLayout(function(name, phone)
+    local case = PhoneWindow.Build({ phoneLayout = phone })
+    local frame, fromCursor = case.window.frame, nil
+    rawset(frame, "StartMoving", function(_self, alwaysStartFromMouse)
+      fromCursor = alwaysStartFromMouse
+    end)
+    frame:Show()
+    case.rideHandlers.beginDrag()
+    assert(fromCursor == true, name .. ": the window never got the press, so the move starts from the cursor, got " .. tostring(fromCursor))
+  end)
+
   -- test_strata_follows_the_window
   eachLayout(function(name, phone)
     local case = PhoneWindow.Build({ phoneLayout = phone })
