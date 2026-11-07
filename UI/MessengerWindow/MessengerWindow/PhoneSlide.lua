@@ -10,6 +10,8 @@ local PhoneViewport = ns.MessengerWindowLayoutPhoneViewport or require("WhisperM
 -- pop-ups inside the panes are never cut off, and nothing unseen takes clicks.
 local PhoneSlide = {}
 
+local min = math.min
+
 -- Longest step the clock takes in one frame, as in IconRide. Opening the window
 -- does its heavy refresh just as the slide starts; a slow frame then pauses the
 -- slide instead of skipping it.
@@ -71,7 +73,7 @@ function PhoneSlide.Create(options)
   end
 
   local function tick(_self, delta)
-    elapsed = elapsed + math.min(delta, MAX_STEP)
+    elapsed = elapsed + min(delta, MAX_STEP)
     if elapsed >= duration then
       finishNow()
       return
