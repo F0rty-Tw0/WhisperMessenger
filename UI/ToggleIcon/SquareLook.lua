@@ -24,11 +24,14 @@ SquareLook.GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_gly
 SquareLook.ACCENT_GLYPH_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_back.png"
 
 -- Halo around the two bubbles' outline (clear inside them), for the glyph
--- drawn without the background and the square look's pulse. Its canvas is
--- BUBBLE_GLOW_SCALE times the glyph's, glyph centred, so the halo has room
--- past the glyph's edges.
+-- drawn without the background. Its canvas is BUBBLE_GLOW_SCALE times the
+-- glyph's, glyph centred, so the halo has room past the glyph's edges.
 SquareLook.BUBBLE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\chat_glyph_glow.png"
 SquareLook.BUBBLE_GLOW_SCALE = 1.5
+
+-- The unread pulse's art on the square look: a glow fading inward from the
+-- square's edge, stretched over the whole button.
+SquareLook.SQUARE_GLOW_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\inner-glow-square.png"
 
 -- Thin outline around both bubbles (filling the gap between them), so the
 -- gray back bubble still reads over bright ground without the background.
@@ -94,7 +97,7 @@ end
 -- The square is drawn like EllesmereUI's action buttons (EllesmereButtonLook):
 -- the slot background and its hover and pushed effects; the square frame from
 -- IconBorder (theme accent, or gold) replaces EllesmereUI's border.
--- The unread pulse (a PulseGlow) glows around the bubbles on the square look.
+-- The unread pulse (a PulseGlow) glows along the square's edge on the square look.
 function SquareLook.Create(frame, parts)
   local function isSquare()
     return parts.getWidgetShape ~= nil and parts.getWidgetShape() == "square"
@@ -155,19 +158,16 @@ function SquareLook.Create(frame, parts)
   end
 
   -- The pulse's round art is made for the round button; on the square look
-  -- it glows around the bubbles' outline instead, square shown or not.
+  -- it glows along the square's edge instead, square shown or not. Both
+  -- arts fill the glow frame, which covers the whole button.
   local function shapePulse()
     local pulse = parts.pulse and parts.pulse.glowTexture
     if not pulse then
       return
     end
-    if isSquare() then
-      fitBubbleGlow(pulse, parts.glyph)
-    else
-      pulse:SetTexture(PulseGlow.TEXTURE)
-      pulse:ClearAllPoints()
-      pulse:SetAllPoints(parts.pulse.glowFrame)
-    end
+    pulse:SetTexture(isSquare() and SquareLook.SQUARE_GLOW_TEXTURE or PulseGlow.TEXTURE)
+    pulse:ClearAllPoints()
+    pulse:SetAllPoints(parts.pulse.glowFrame)
   end
 
   local function apply(desaturated)
