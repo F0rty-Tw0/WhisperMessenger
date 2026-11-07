@@ -36,7 +36,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. When the game wouldn't let that invite go through (often until you've used a chat command such as /say since logging in), it shows the command in a small box instead, ready to copy with Ctrl+C and paste into chat. Players on your own realm are named without the realm. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 - The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
 - When the tabs below the window don't all fit, arrows appear at the window's edges to scroll through the rest, and the tabs squeeze together slightly so more of them fit; the mouse wheel works too. With the Native WoW HUD style, tabs now show their full names instead of being cut short.
-- Fixed: With "Deselect chat input after sending" on, pressing Enter in combat no longer opens the game's chat box; it puts the cursor back in the messenger while your mouse is over it.
+- Fixed: With "Deselect chat input after sending" on, pressing Enter in combat no longer opens the game's chat box; it puts the cursor back in the messenger while your mouse is over it. With your mouse elsewhere, Enter does nothing until the fight ends.
 
 ## [2.1.4] - 2026-11-05
 
