@@ -8,8 +8,10 @@ local Fit = ns.ContactsListTabScrollerFit or require("WhisperMessenger.UI.Contac
 -- Places the tabs of a strip: all of them while they fit, else whole tabs from
 -- a `first` index between two arrows: back at the window's left edge, forward
 -- at its right edge. Tabs may draw up to 8 px narrower ("tight") when that
--- shows more of them. Skin-free: the skin sizes its tabs, supplies the arrow
--- buttons and the squeeze hook, then calls layout().
+-- shows more of them. Skin-free: the skin supplies the arrow buttons and the
+-- squeeze hook and calls layout(). Each pass runs the hook on every tab before
+-- reading its width, so a skin may size its tabs there instead of before
+-- layout().
 local TabScroller = {}
 
 -- Place passes one request may take: the first plus the re-runs for requests
