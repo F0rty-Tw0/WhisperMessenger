@@ -185,6 +185,7 @@ local function normalizeEntry(entry)
     playerName = entry.playerName,
     sentAt = sentAt,
     sequence = entrySequence(entry),
+    zoneChannelID = tonumber(entry.zoneChannelID),
   }
 end
 
@@ -228,7 +229,9 @@ function ChannelMessageStore.Restore(savedState, config, now)
   return restored
 end
 
-function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentAt)
+-- zoneChannelID is the game's channel ID (0 for a custom channel), kept so a
+-- saved line can tell built-in channels apart without their localized label.
+function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentAt, zoneChannelID)
   local key = normalizeKey(senderName)
   -- Stored text is compared later, so a secret one would log in taint.log too.
   if key == "" or SecretValue.Is(text) then
@@ -248,6 +251,7 @@ function ChannelMessageStore.Record(state, senderName, text, channelLabel, sentA
     playerName = senderName,
     sentAt = sentAt,
     sequence = state.nextSequence,
+    zoneChannelID = zoneChannelID,
   }
 
   state.entries[key] = entry
