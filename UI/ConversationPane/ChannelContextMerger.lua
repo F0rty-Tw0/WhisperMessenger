@@ -36,6 +36,7 @@ local function buildChannelMessage(entry, playerName)
     sentAt = entry.sentAt,
     playerName = playerName,
     channelLabel = entry.channelLabel,
+    zoneChannelID = entry.zoneChannelID,
   }
 end
 

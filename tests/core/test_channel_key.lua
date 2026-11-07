@@ -26,4 +26,10 @@ return function()
 
   -- test_setting_key_is_the_slug
   assert(ChannelKey.SettingKey("trade") == "trade", "the setting key is the slug")
+
+  -- test_built_in_is_any_game_channel_id
+  assert(ChannelKey.IsBuiltIn(24) == true, "a game channel ID missing from the table is built-in")
+  assert(ChannelKey.IsBuiltIn(0) == false, "zone ID 0 is a custom channel")
+  assert(ChannelKey.IsBuiltIn(nil) == false, "no ID is not built-in")
+  assert(ChannelKey.IsBuiltIn("2") == false, "only a number counts")
 end
