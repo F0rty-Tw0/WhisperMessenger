@@ -17,6 +17,7 @@ local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleI
 local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
 local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
 local IconRide = ns.ToggleIconIconRide or require("WhisperMessenger.UI.ToggleIcon.IconRide")
+local DockedLook = ns.ToggleIconDockedLook or require("WhisperMessenger.UI.ToggleIcon.DockedLook")
 
 local UnreadSummary = ns.UnreadSummary or require("WhisperMessenger.UI.Shared.UnreadSummary")
 
@@ -67,14 +68,19 @@ function ToggleIcon.Create(factory, options)
     accent = Theme.COLORS.accent,
   })
 
+  -- Riding the window the button wears the default circle; the saved look returns on landing.
+  local docked = false
+  local dockedLook = DockedLook.Wrap(options, function()
+    return docked
+  end)
   local squareLook = SquareLook.Create(frame, {
     background = background,
     glyph = chatIcon,
     roundBackground = IconArt.CIRCLE_TEX,
-    getShowBackground = options.getIconBackground,
-    getWidgetShape = options.getWidgetShape,
-    getShowBorder = options.getIconBorder,
-    getBorderThemed = options.getIconBorderThemed,
+    getShowBackground = dockedLook.getIconBackground,
+    getWidgetShape = dockedLook.getWidgetShape,
+    getShowBorder = dockedLook.getIconBorder,
+    getBorderThemed = dockedLook.getIconBorderThemed,
     border = border,
     pulse = pulseGlow,
   })
@@ -221,12 +227,16 @@ function ToggleIcon.Create(factory, options)
   end
 
   -- The badge's level is set by number, so it does not follow the frame's.
+  local setDocked
   local ride = IconRide.Create(frame, {
     theme = Theme,
     parent = parent,
     isLocked = isLocked,
     onPositionChanged = options.onPositionChanged,
-    onRidingChanged = incomingPreview.setSuppressed,
+    onRidingChanged = function(riding)
+      incomingPreview.setSuppressed(riding)
+      setDocked(riding)
+    end,
     onLevel = function(level)
       badge:SetFrameLevel(level + BADGE_LEVEL_OFFSET)
     end,
@@ -235,6 +245,16 @@ function ToggleIcon.Create(factory, options)
   local function refreshDesaturation()
     IconArt.PaintFace(art, hover.active)
     squareLook.apply(desaturation.isActive())
+  end
+
+  setDocked = function(value)
+    local nextDocked = value == true
+    if nextDocked == docked then
+      return
+    end
+
+    docked = nextDocked
+    refreshDesaturation()
   end
 
   local function refreshTheme()
@@ -297,6 +317,7 @@ function ToggleIcon.Create(factory, options)
     lockGlyph = lockGlyph,
     refreshLockGlyph = refreshLockGlyph,
     refreshTransparency = refreshTransparency,
+    setDocked = setDocked,
     rideTo = ride.rideTo,
     rideHome = ride.rideHome,
     isRiding = ride.isRiding,
