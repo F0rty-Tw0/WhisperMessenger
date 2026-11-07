@@ -11,6 +11,7 @@ local BlockList = ns.PublicApiBlockList or require("WhisperMessenger.Core.Public
 local UnreadCount = ns.PublicApiUnreadCount or require("WhisperMessenger.Core.PublicApi.UnreadCount")
 local Look = ns.PublicApiLook or require("WhisperMessenger.Core.PublicApi.Look")
 local Animation = ns.PublicApiAnimation or require("WhisperMessenger.Core.PublicApi.Animation")
+local CompactWindow = ns.PublicApiCompactWindow or require("WhisperMessenger.Core.PublicApi.CompactWindow")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
 
 local PublicApi = {}
@@ -111,6 +112,7 @@ function PublicApi.Build(runtime)
   UnreadCount.Install(api, runtime)
   Look.Install(api, runtime)
   Animation.Install(api, runtime)
+  CompactWindow.Install(api, runtime)
   if not integrationAllowed(runtime) then
     -- Same keys, so callers never nil-error; every call is refused.
     for key, value in pairs(api) do
