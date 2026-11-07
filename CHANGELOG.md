@@ -21,6 +21,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: Slash commands like /roll or /dance typed in the messenger's text box now run as if you typed them in the game's chat box, instead of being sent to your contact as a whisper.
 - Fixed: Closing the messenger with Escape no longer pops up a widget preview for a whisper that came in while the window was open.
 - Fixed: Hiding the game's interface with Alt+Z and bringing it back no longer closes the messenger with its shrink animation. The window comes back just as you left it.
+- Fixed: Clicking another player's profession link in the messenger opens their profession again instead of showing an "Interface action failed" error.
 - Fixed: The square floating button now has a solid dark background behind the chat bubbles, like the round one, instead of letting the ground show through.
 - Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
 - Clicking the floating button while a message preview is showing now opens that conversation, in both the phone-style and the regular window, even when the window is already open on another tab. With no preview showing, the button works as before.
