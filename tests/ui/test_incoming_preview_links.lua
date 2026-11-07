@@ -102,8 +102,49 @@ return function()
     end)
   end
 
+  local function test_preview_link_click_through_blizzard_handler_does_not_open_chat()
+    local saved = { mixin = rawget(_G, "ChatFrameMixin"), setItemRef = rawget(_G, "SetItemRef") }
+    local blizzardCalls = {}
+    rawset(_G, "SetItemRef", function(link, _text, button)
+      blizzardCalls[#blizzardCalls + 1] = { name = "setItemRef", link = link, button = button }
+    end)
+    rawset(_G, "ChatFrameMixin", {
+      OnHyperlinkClick = function(self, link, text, button)
+        blizzardCalls[#blizzardCalls + 1] = { name = "mixin", link = link }
+        _G.SetItemRef(link, text, button, self)
+      end,
+    })
+    local ok, err = pcall(function()
+      withSpies({ now = 10 }, function(calls)
+        local preview = build()
+        local log = {}
+        showExternal(preview, log)
+        local frame = preview.frame
+        fire(frame, "OnHyperlinkClick", ITEM_LINK, "[Signet]", "LeftButton")
+        for _, hook in ipairs((frame._hookScripts or {}).OnHyperlinkClick or {}) do
+          hook(frame, ITEM_LINK, "[Signet]", "LeftButton")
+        end
+        fire(frame, "OnMouseUp", "LeftButton")
+        assert(blizzardCalls[1] and blizzardCalls[1].name == "mixin" and blizzardCalls[1].link == ITEM_LINK, "Blizzard's handler runs the click")
+        assert(
+          blizzardCalls[2] and blizzardCalls[2].name == "setItemRef" and blizzardCalls[2].button == "LeftButton",
+          "Blizzard's handler calls SetItemRef"
+        )
+        assert(#calls == 0, "addon's own click handler is not used")
+        assert(#log == 0, "link click does not run the preview's own click")
+        assert(frame.shown == true, "preview stays up after a link click")
+      end)
+    end)
+    rawset(_G, "ChatFrameMixin", saved.mixin)
+    rawset(_G, "SetItemRef", saved.setItemRef)
+    if not ok then
+      error(err, 0)
+    end
+  end
+
   test_preview_link_hover_shows_tooltip()
   test_preview_link_click_does_not_open_chat()
+  test_preview_link_click_through_blizzard_handler_does_not_open_chat()
   test_preview_body_click_still_opens()
   test_body_click_long_after_unanswered_link_click_still_opens()
 end
