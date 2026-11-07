@@ -4,13 +4,15 @@ if type(ns) ~= "table" then
 end
 
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
 
 -- The phone window coming out of the floating button. Scaling a real window
 -- makes its text and hairlines shimmer, so nothing real is scaled: a plain
 -- panel grows from the button to the window's exact size, and the window,
--- already full size and laid out, fades in over it. IconRide's clock drives
--- every step, so the button, panel and fade can never drift apart.
-local PhoneOpenAnimation = {}
+-- already full size and laid out, fades in over it. The phone ride passes its
+-- own steps (IconRide's clock keeps button, panel and fade together); `play`
+-- runs the steps on the panel's own clock when there is no ride.
+local WindowGrowAnimation = {}
 
 -- Fractions of the animation's time.
 local REVEAL_START = 0.55
@@ -70,9 +72,10 @@ local function buildPanel(factory, parent, theme)
 end
 
 -- options: factory, parent, theme, setAlphaHeld(held), refreshAlpha().
-function PhoneOpenAnimation.Attach(frame, options)
+function WindowGrowAnimation.Attach(frame, options)
   local parent = options.parent
   local theme = options.theme
+  local duration = theme.LAYOUT.PHONE_RIDE_SECONDS
   local panel, fill, border = buildPanel(options.factory, parent, theme)
 
   -- Each run owns its steps, so a superseded run's steps do nothing.
@@ -122,6 +125,7 @@ function PhoneOpenAnimation.Attach(frame, options)
   end
 
   local function finish()
+    GlideClock.Stop(panel)
     run = run + 1
     panel:Hide()
     if releaseWindow() then
@@ -155,6 +159,7 @@ function PhoneOpenAnimation.Attach(frame, options)
 
   -- The window is already hidden; the panel takes its place and shrinks.
   local function beginClose(iconFrame)
+    GlideClock.Stop(panel)
     run = run + 1
     local id = run
     releaseWindow()
@@ -173,14 +178,27 @@ function PhoneOpenAnimation.Attach(frame, options)
     end
   end
 
+  -- Runs a begin* step on the panel's own clock. A hidden frame gets no
+  -- OnUpdate, so the panel is shown first even if the step cannot place it.
+  local function play(step)
+    step(0, 0)
+    if not panel:IsShown() then
+      panel:Show()
+    end
+    GlideClock.Run(panel, duration, step, function()
+      step(1, 1)
+    end)
+  end
+
   return {
     ghost = panel,
     beginOpen = beginOpen,
     beginClose = beginClose,
     finish = finish,
+    play = play,
   }
 end
 
-ns.MessengerWindowPhoneOpenAnimation = PhoneOpenAnimation
+ns.MessengerWindowWindowGrowAnimation = WindowGrowAnimation
 
-return PhoneOpenAnimation
+return WindowGrowAnimation
