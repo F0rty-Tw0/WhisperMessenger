@@ -17,7 +17,7 @@ local PhoneDockFlow = {}
 -- window grows from, or nil), isGrowAnimationOn() and isIconGlideOn() (off:
 -- the button jumps instead of gliding; the window still grows from it) and
 -- isOpenAtSavedSpot() (off: the window opens with its icon spot on the button).
--- A missing isIconGlideOn or isOpenAtSavedSpot counts as on.
+-- A missing isIconGlideOn counts as on.
 function PhoneDockFlow.Attach(frame, options)
   local chrome = options.chrome
   local getDockIcon = options.getDockIcon
@@ -28,9 +28,7 @@ function PhoneDockFlow.Attach(frame, options)
   local isIconGlideOn = options.isIconGlideOn or function()
     return true
   end
-  local isOpenAtSavedSpot = options.isOpenAtSavedSpot or function()
-    return true
-  end
+  local isOpenAtSavedSpot = options.isOpenAtSavedSpot
   -- The button on the window now. getDockIcon stops returning it once the
   -- icon mode leaves the floating button, but it still has to go home.
   local dockedIcon = nil

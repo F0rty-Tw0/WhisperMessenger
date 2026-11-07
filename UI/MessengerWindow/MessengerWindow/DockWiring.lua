@@ -68,6 +68,10 @@ function DockWiring.Attach(window, parts)
   }
 
   local getGrowSource, isGrowAnimationOn = WindowGrowAnimation.Defaults(windowOptions.getGrowSource, windowOptions.isGrowAnimationOn)
+  -- Absent counts as on.
+  local isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot or function()
+    return true
+  end
   local flow = PhoneDockFlow.Attach(window, {
     chrome = chrome,
     getDockIcon = getDockIcon,
@@ -76,15 +80,18 @@ function DockWiring.Attach(window, parts)
     getGrowSource = getGrowSource,
     isGrowAnimationOn = isGrowAnimationOn,
     isIconGlideOn = windowOptions.isIconGlideOn,
-    isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot,
+    isOpenAtSavedSpot = isOpenAtSavedSpot,
   })
-  local isOpenAtSavedSpot = windowOptions.isOpenAtSavedSpot or function()
-    return true
-  end
 
-  -- The clamp reaches over the button's spot, which depends on its shape. A
-  -- window opening for the first time may have no position until next frame.
+  -- The clamp reaches over the button's spot, which depends on its shape, and
+  -- over nothing when no button can dock. A window opening for the first time
+  -- may have no position until next frame.
   local function clampToSpot()
+    if flow.dockedIcon() == nil and getDockIcon() == nil then
+      local _, right, _, bottom = window:GetClampRectInsets()
+      window:SetClampRectInsets(0, right, 0, bottom)
+      return
+    end
     if PhoneDock.ClampToSpot(window, flow.spot()) then
       return
     end

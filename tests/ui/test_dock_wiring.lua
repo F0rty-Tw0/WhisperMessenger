@@ -233,6 +233,44 @@ return function()
     end)
   end
 
+  -- test_no_button_to_dock_leaves_the_clamp_flush_with_the_screen_corner
+  eachLayout(function(name, phone)
+    local dockable, case = true, nil
+    case = PhoneWindow.Build({
+      phoneLayout = phone,
+      getDockIcon = function()
+        return dockable and case.icon or nil
+      end,
+    })
+    local frame = case.window.frame
+    frame:Show()
+    local corner = case.rodeTo.region
+    at(frame, 100, 900)
+    at(corner, 93, 917)
+    frame:Hide()
+    frame:Show()
+    assert(select(1, frame:GetClampRectInsets()) == -7, name .. ": a docked circle reaches over its corner")
+    frame:Hide()
+    dockable = false
+    frame:Show()
+    local left, _, top = frame:GetClampRectInsets()
+    assert(left == 0 and top == 0, name .. ": nothing docks, so no reach, got " .. tostring(left) .. "," .. tostring(top))
+  end)
+
+  -- test_a_missing_open_at_saved_spot_option_counts_as_on
+  eachLayout(function(name, phone)
+    local case = PhoneWindow.Build({ phoneLayout = phone })
+    local frame = case.window.frame
+    local before = { frame:GetPoint() }
+    frame:Show()
+    local after = { frame:GetPoint() }
+    for i = 1, 5 do
+      assert(after[i] == before[i], name .. ": the window opens at its saved spot, anchor part " .. i)
+    end
+    case.rideHandlers.endDrag()
+    assert(case.adopted == 0, name .. ": and the button's home stays put")
+  end)
+
   -- test_wrapped_position_adopts_the_buttons_spot_before_saving
   do
     local calls = {}
