@@ -59,7 +59,7 @@ function DockWiring.Attach(window, parts)
 
   local rideHandlers = {
     beginDrag = function()
-      window:StartMoving()
+      window:StartMoving(true)
     end,
     endDrag = function()
       window:StopMovingOrSizing()
