@@ -2,6 +2,8 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local AppearanceSettings = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings")
 
+local WindowStyleSpecs = require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.WindowStyleSpecs")
+
 local LABEL = "Window animation"
 
 local function create(config)
@@ -70,5 +72,24 @@ return function()
     local result = create()
     result.setLanguage()
     assert(FindUI.byLabel(result.frame, LABEL) ~= nil, "relabelled with the page")
+  end
+
+  -- test_the_animation_tooltip_says_pages_slide_too
+  do
+    local specs = WindowStyleSpecs.Build({}, function() end, function(s)
+      return s
+    end, 0)
+    local spec
+    for _, candidate in ipairs(specs) do
+      if candidate.key == "windowAnimation" then
+        spec = candidate
+      end
+    end
+    assert(spec ~= nil, "row exists")
+    assert(
+      spec.tooltipLines[2]
+        == "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once.",
+      "got " .. tostring(spec.tooltipLines[2])
+    )
   end
 end
