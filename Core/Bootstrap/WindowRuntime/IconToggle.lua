@@ -40,10 +40,9 @@ local function openShownWhisperPreview(runtime)
   return widget ~= nil and widget.openShownPreview ~= nil and widget.openShownPreview() == true
 end
 
--- A whisper card on the widget opens its chat, even over an open window (the
--- card shows there when the whisper isn't on screen, or while it holds a
--- reply being typed). Otherwise a visible
--- window hides, other whispers run the plain toggle, and an addon page with
+-- A whisper card on the widget opens its chat. The button docked on an open
+-- window hides its card, so a click there closes the window instead.
+-- Otherwise a visible window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
 -- the plain toggle runs.
 function IconToggle.Wrap(runtime, toggle, buildContacts)
