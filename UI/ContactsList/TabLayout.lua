@@ -100,6 +100,8 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local currentModeClickHandler = nil
   local optionsShown = false
   local lastActive = nil
+  -- Set while a mode click's panel handler runs (see the tab OnClick).
+  local holdAnchor = false
 
   local function paint()
     opts.paint(currentMode, visible, selectedPanel, panelTabs)
@@ -121,7 +123,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
 
   -- A repaint-only update (theme refresh) leaves the skin's scroll alone.
   local function anchorIfActiveChanged()
-    if activeTab() ~= lastActive then
+    if not holdAnchor and activeTab() ~= lastActive then
       anchor()
     end
   end
@@ -153,7 +155,11 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
       -- the handler: it clears selectedPanel.
       local hadPanel = selectedPanel ~= nil
       if hadPanel and modeClickHandler then
+        -- The handler leaves the panel; anchoring the old mode's tab then
+        -- would scroll it in and push the clicked tab a slot.
+        holdAnchor = true
         modeClickHandler(mode)
+        holdAnchor = false
       end
       if currentMode ~= mode then
         setMode(mode)
@@ -161,6 +167,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
       elseif not hadPanel and currentModeClickHandler then
         currentModeClickHandler()
       end
+      anchorIfActiveChanged()
     end)
   end
   paint()
