@@ -97,8 +97,9 @@ function IncomingPreview.Create(factory, frame, options)
   -- Opens the whisper on the card; true when the chat opened. The owner
   -- acknowledges the whisper, and the refresh then clears the preview.
   local function openOwnPreview()
-    if hold.onOpen() then
-      return true
+    local handled, opened = hold.onOpen()
+    if handled then
+      return opened
     end
     return options.onOpenPreview ~= nil and options.onOpenPreview() == true
   end
