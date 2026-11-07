@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local Theme = require("WhisperMessenger.UI.Theme")
 local ExportPanel = require("WhisperMessenger.UI.ContactsList.ExportPanel")
 
 -- The export panel shows a whole conversation as copyable text.
@@ -30,38 +31,6 @@ end
 
 local function status(panel)
   return panel.status:GetText()
-end
-
--- Runs fn(flush) with C_Timer.After queued; flush() runs what is queued.
-local function withQueuedTimers(fn)
-  local saved = _G.C_Timer
-  local queue = {}
-  _G.C_Timer = {
-    After = function(_seconds, callback)
-      queue[#queue + 1] = callback
-    end,
-  }
-  local ok, err = pcall(fn, function()
-    local pending = queue
-    queue = {}
-    for _, callback in ipairs(pending) do
-      callback()
-    end
-  end)
-  _G.C_Timer = saved
-  assert(ok, err)
-end
-
--- Counts SetText calls on the panel's edit box from now on.
-local function countSetText(panel)
-  local box = panel.editBox
-  local original = box.SetText
-  local calls = { count = 0 }
-  box.SetText = function(self, value)
-    calls.count = calls.count + 1
-    return original(self, value)
-  end
-  return calls
 end
 
 return function()
@@ -118,41 +87,25 @@ return function()
     assert(status(again) == "3 lines · Ctrl+C copies", "status counts the new lines, got " .. tostring(status(again)))
   end
 
-  -- test_text_is_set_again_on_the_next_frame_so_the_box_draws_it
-  -- (WoW: Forever leaves the text set while opening undrawn)
+  -- test_text_uses_the_game_chat_font
+  -- (WoW: Forever draws nothing in this box with the addon's own font)
   do
-    withQueuedTimers(function(flush)
-      local panel = show(3)
-      local calls = countSetText(panel)
-      flush()
-      assert(calls.count == 1, "text set again once, got " .. calls.count)
-      assert(panel.editBox:GetText() == panel.text, "same text")
-      assert(panel.editBox.highlight ~= nil, "still selected for copying")
-    end)
+    local panel = show(3)
+    assert(_G.ChatFontNormal ~= nil, "fake UI provides ChatFontNormal")
+    assert(panel.editBox.fontObject == _G.ChatFontNormal, "box uses ChatFontNormal")
   end
 
-  -- test_closed_panel_is_not_redrawn_on_the_next_frame
+  -- test_text_falls_back_to_the_addon_font_without_the_chat_font
   do
-    withQueuedTimers(function(flush)
+    local saved = _G.ChatFontNormal
+    _G.ChatFontNormal = nil
+    local ok, err = pcall(function()
       local panel = show(3)
-      local calls = countSetText(panel)
-      panel:Hide()
-      flush()
-      assert(calls.count == 0, "hidden panel left alone, got " .. calls.count)
+      local expected = _G[Theme.FONTS.composer_input] or Theme.FONTS.composer_input
+      assert(panel.editBox.fontObject == expected, "box falls back to the composer font, got " .. tostring(panel.editBox.fontObject))
     end)
-  end
-
-  -- test_only_the_latest_load_is_redrawn
-  do
-    withQueuedTimers(function(flush)
-      local factory = FakeUI.NewFactory()
-      show(450, factory)
-      local panel = show(3, factory)
-      local calls = countSetText(panel)
-      flush()
-      assert(calls.count == 1, "stale redraw skipped, got " .. calls.count)
-      assert(panel.editBox:GetText() == panel.text, "latest text kept")
-    end)
+    _G.ChatFontNormal = saved
+    assert(ok, err)
   end
 
   -- test_typing_does_not_change_the_text

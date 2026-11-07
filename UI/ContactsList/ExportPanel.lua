@@ -32,6 +32,8 @@ local STATUS_HEIGHT = 14
 local WELL_RADIUS = 6
 local TEXT_INSET = 8
 local SCROLL_STEP = 40
+-- The addon's own font object leaves this multi-line box blank on WoW: Forever.
+local EXPORT_FONT = "ChatFontNormal"
 
 -- One panel per frame factory, reused on every Show.
 local panels = setmetatable({}, { __mode = "k" })
@@ -44,23 +46,6 @@ local function loadedText(panel)
   return panel.header .. "\n" .. concat(panel.lines, "\n")
 end
 
--- WoW: Forever leaves the text a load sets undrawn; setting it again a
--- frame later draws it. Skipped once the panel is closed or loads again.
-local function redrawNextFrame(panel)
-  local timer = _G.C_Timer
-  if type(timer) ~= "table" or type(timer.After) ~= "function" then
-    return
-  end
-  local text = panel.text
-  timer.After(0, function()
-    if not panel:IsShown() or panel.text ~= text then
-      return
-    end
-    panel.editBox:SetText(text)
-    panel.editBox:HighlightText()
-  end)
-end
-
 -- The newest lines stay in view.
 local function load(panel)
   panel.text = loadedText(panel)
@@ -71,7 +56,6 @@ local function load(panel)
   panel.status:SetText(format(Localization.Text("%d lines · Ctrl+C copies"), #panel.lines))
   panel.snapToEnd = true
   ScrollView.RefreshMetrics(panel.view, box:GetHeight(), panel.snapToEnd)
-  redrawNextFrame(panel)
 end
 
 local function createText(parent, font, justify)
@@ -106,7 +90,7 @@ local function createWell(factory, panel, body, top)
   box:SetMaxLetters(0)
   box:SetMaxBytes(0)
   box:SetAutoFocus(false)
-  UIHelpers.setFontObject(box, Theme.FONTS.composer_input)
+  UIHelpers.setFontObject(box, _G[EXPORT_FONT] and EXPORT_FONT or Theme.FONTS.composer_input)
   panel.editBox = box
   return well
 end
