@@ -6,9 +6,10 @@ end
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
 
--- The phone window coming out of the floating button. Scaling a real window
+-- The window (classic or phone) coming out of its icon (the floating button
+-- or the minimap icon) and shrinking back into it. Scaling a real window
 -- makes its text and hairlines shimmer, so nothing real is scaled: a plain
--- panel grows from the button to the window's exact size, and the window,
+-- panel grows from the icon to the window's exact size, and the window,
 -- already full size and laid out, fades in over it. The phone ride passes its
 -- own steps (IconRide's clock keeps button, panel and fade together); `play`
 -- runs the steps on the panel's own clock when there is no ride.
@@ -21,6 +22,16 @@ local PANEL_FADE_START = 0.85
 -- in over a solid panel; under the button (PHONE_RIDE_FRAME_LEVEL) too.
 local PANEL_LEVEL = 1990
 local MIN_PANEL_SIZE = 1
+-- Tests find the panel by its level.
+WindowGrowAnimation.PANEL_LEVEL = PANEL_LEVEL
+
+local function noSource()
+  return nil
+end
+
+local function alwaysOn()
+  return true
+end
 
 -- 0 before start, rising to 1 at t = 1.
 local function ramp(t, start)
@@ -97,10 +108,14 @@ function WindowGrowAnimation.Attach(frame, options)
     panel:SetAlpha(1)
   end
 
-  local function placePanel(from, to, p)
+  -- With no rect at either end, the panel would draw at the last run's spot
+  -- and size: it stays unseen instead (still shown, so play's clock ticks).
+  local function placePanel(from, to, t, p)
     if not (from and to) then
+      panel:SetAlpha(0)
       return
     end
+    panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
     local scale = panel:GetEffectiveScale()
     local left = from.left + (to.left - from.left) * p
     local right = from.right + (to.right - from.right) * p
@@ -151,8 +166,7 @@ function WindowGrowAnimation.Attach(frame, options)
         finish()
         return
       end
-      placePanel(from, readRect(frame, scratch), p)
-      panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
+      placePanel(from, readRect(frame, scratch), t, p)
       frame:SetAlpha(targetAlpha * ramp(t, REVEAL_START))
     end
   end
@@ -173,13 +187,13 @@ function WindowGrowAnimation.Attach(frame, options)
         panel:Hide()
         return
       end
-      placePanel(from, readCenterPoint(iconFrame, scratch), p)
-      panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
+      placePanel(from, readCenterPoint(iconFrame, scratch), t, p)
     end
   end
 
   -- Runs a begin* step on the panel's own clock. A hidden frame gets no
-  -- OnUpdate, so the panel is shown first even if the step cannot place it.
+  -- OnUpdate, so the panel is shown first even if the step cannot place it
+  -- (placePanel keeps an unplaced panel unseen).
   local function play(step)
     step(0, 0)
     if not panel:IsShown() then
@@ -197,6 +211,22 @@ function WindowGrowAnimation.Attach(frame, options)
     finish = finish,
     play = play,
   }
+end
+
+-- The window's grow options with their defaults: no source, switch on.
+function WindowGrowAnimation.Defaults(getSource, isOn)
+  return getSource or noSource, isOn or alwaysOn
+end
+
+-- A source runs anim's begin (beginOpen or beginClose) on the panel's own
+-- clock; none means no animation, and finish() also releases a hold a
+-- superseded run left on the window.
+function WindowGrowAnimation.GrowFrom(anim, source, begin)
+  if source then
+    anim.play(begin(source))
+    return
+  end
+  anim.finish()
 end
 
 ns.MessengerWindowWindowGrowAnimation = WindowGrowAnimation

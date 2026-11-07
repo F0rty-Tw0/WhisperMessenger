@@ -28,6 +28,7 @@ local ConversationWiring = ns.MessengerWindowConversationWiring or require("Whis
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
 local PhoneWiring = ns.MessengerWindowPhoneWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneWiring")
+local ClassicGrow = ns.MessengerWindowClassicGrow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ClassicGrow")
 local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
@@ -335,6 +336,15 @@ function MessengerWindow.Create(factory, options)
       applyWindowSize = scriptResult.applyWindowSize,
       onPositionChanged = onPositionChanged,
       buildState = windowGeometry.buildState,
+    })
+  else
+    ClassicGrow.Attach(frame, {
+      factory = factory,
+      parent = parent,
+      theme = Theme,
+      windowAlpha = windowAlpha,
+      getSource = options.getGrowSource,
+      isOn = options.isGrowAnimationOn,
     })
   end
 

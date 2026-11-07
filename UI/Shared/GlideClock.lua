@@ -3,6 +3,8 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local mathMin = math.min
+
 -- One eased clock on a frame's OnUpdate, shared by every glide and grow.
 local GlideClock = {}
 
@@ -22,7 +24,7 @@ end
 function GlideClock.Run(frame, duration, onTick, onDone)
   local elapsed = 0
   frame:SetScript("OnUpdate", function(_self, delta)
-    elapsed = elapsed + math.min(delta, MAX_STEP)
+    elapsed = elapsed + mathMin(delta, MAX_STEP)
     if elapsed >= duration then
       frame:SetScript("OnUpdate", nil)
       if onDone then

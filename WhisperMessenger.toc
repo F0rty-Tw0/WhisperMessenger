@@ -391,6 +391,7 @@ UI/MessengerWindow/GeneralSettings/RetentionRow.lua
 UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
+UI/MessengerWindow/AppearanceSettings/WindowStyleSpecs.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua
 UI/MessengerWindow/BehaviorSettings/ToggleSpecs.lua
@@ -445,6 +446,7 @@ UI/MessengerWindow/MessengerWindow/PhoneDock.lua
 UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
 UI/MessengerWindow/MessengerWindow/PhoneDockFlow.lua
 UI/MessengerWindow/MessengerWindow/PhoneWiring.lua
+UI/MessengerWindow/MessengerWindow/ClassicGrow.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/RuntimeFactory.lua

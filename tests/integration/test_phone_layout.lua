@@ -148,7 +148,7 @@ return function()
     local frame = case.window.frame
     frame:Show()
     frame.scripts.OnDragStop(frame)
-    assert(case.adopted == 0, "the window drag leaves the button's home alone")
+    assert(case.homeMoves == 0, "the window drag leaves the button's home alone")
   end
 
   -- test_dragging_the_riding_button_moves_the_window
@@ -163,7 +163,7 @@ return function()
     case.rideHandlers.beginDrag()
     assert(moved == 1, "the window moves")
     case.rideHandlers.endDrag()
-    assert(case.adopted == 0, "the window is saved, the button's home is not")
+    assert(case.homeMoves == 0, "the window is saved, the button's home is not")
   end
 
   -- test_closing_sends_home_the_button_it_docked_after_the_icon_mode_changed

@@ -10,6 +10,7 @@ local SettingsControls = ns.SettingsControls or require("WhisperMessenger.UI.Sha
 local ButtonSelector = ns.MessengerWindowButtonSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.ButtonSelector")
 local DropdownSelector = ns.MessengerWindowDropdownSelector or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.DropdownSelector")
 local Options = ns.AppearanceSettingsOptions or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.Options")
+local WindowStyleSpecs = ns.AppearanceSettingsWindowStyleSpecs or require("WhisperMessenger.UI.MessengerWindow.AppearanceSettings.WindowStyleSpecs")
 local Localization = ns.Localization or require("WhisperMessenger.Locale.Localization")
 local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 
@@ -33,6 +34,7 @@ local DEFAULTS = {
   bubbleColorPreset = "default",
   windowScale = 1.0,
   phoneLayout = true,
+  windowAnimation = true,
 }
 
 local function pctFormat(v)
@@ -102,22 +104,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   )
   hudStyleSelector.row:SetPoint("TOPLEFT", hint, "BOTTOMLEFT", 0, gap)
 
-  local windowStyleSpecs = {
-    {
-      key = "phoneLayout",
-      label = text("Phone-style window"),
-      labelKey = "Phone-style window",
-      initial = config.phoneLayout ~= false,
-      onChange = function(value)
-        onChange("phoneLayout", value)
-      end,
-      tooltipLines = {
-        text("Phone-style window"),
-        text("The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."),
-      },
-      anchorOffsetY = gap,
-    },
-  }
+  local windowStyleSpecs = WindowStyleSpecs.Build(config, onChange, text, gap)
   local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
   SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
 
@@ -127,7 +114,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
     end),
     { type = "selector", key = "themePreset", default = presetDefault }
   )
-  themePresetSelector.row:SetPoint("TOPLEFT", windowStyleToggles[1].row, "BOTTOMLEFT", 0, gap)
+  themePresetSelector.row:SetPoint("TOPLEFT", windowStyleToggles[#windowStyleToggles].row, "BOTTOMLEFT", 0, gap)
 
   local windowScaleRow = panel:bind(
     slider(text("Window Scale"), 0.75, 1.50, 0.05, config.windowScale or DEFAULTS.windowScale, pctFormat, function(v)

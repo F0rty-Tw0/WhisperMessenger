@@ -4,6 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
+local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
 local PhoneDockFlow = {}
 
@@ -65,16 +67,6 @@ function PhoneDockFlow.Attach(frame, options)
     return isGrowAnimationOn() and getGrowSource() or nil
   end
 
-  -- A source runs the grow on the panel's own clock; none means no animation,
-  -- and finish() also releases a hold a superseded run left on the window.
-  local function growFrom(source, begin)
-    if source then
-      openAnimation.play(begin(source))
-    else
-      openAnimation.finish()
-    end
-  end
-
   -- The window comes out of its source. The button rides onto the window with
   -- the animation's steps when it is the source, and jumps there otherwise.
   local function open()
@@ -94,7 +86,7 @@ function PhoneDockFlow.Attach(frame, options)
     if dockable then
       attachIcon(icon, nil, true)
     end
-    growFrom(source, openAnimation.beginOpen)
+    WindowGrowAnimation.GrowFrom(openAnimation, source, openAnimation.beginOpen)
   end
 
   -- Shrink into the source the window grew from, unless it is gone since.
@@ -125,10 +117,10 @@ function PhoneDockFlow.Attach(frame, options)
         icon.rideHome(openAnimation.beginClose(icon.frame))
         return
       end
-      -- An instant ride never sends its step (1, 1): growFrom's finish() does.
+      -- An instant ride never sends its step (1, 1): GrowFrom's finish() does.
       icon.rideHome(nil, true)
     end
-    growFrom(source, openAnimation.beginClose)
+    WindowGrowAnimation.GrowFrom(openAnimation, source, openAnimation.beginClose)
   end
 
   -- A press on the docked button closes or drags the window: not a click elsewhere.

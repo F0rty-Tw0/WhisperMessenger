@@ -35,6 +35,10 @@ local REMOVED_KEYS = {
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
   "Only with the square widget shape.",
 }
+local WINDOW_ANIMATION_KEYS = {
+  "Window animation",
+  "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
+}
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
 -- "%s|%d" for "Last seen %s ... %d"; "%%" is a literal percent, not a slot.
@@ -112,6 +116,11 @@ return function()
     -- test_removed_icon_strings_are_gone
     for _, key in ipairs(REMOVED_KEYS) do
       assert(catalog[key] == nil, code .. " still has the removed string '" .. key .. "'")
+    end
+
+    -- test_window_animation_strings_are_translated
+    for _, key in ipairs(WINDOW_ANIMATION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
     -- test_language_reload_prompt_is_translated

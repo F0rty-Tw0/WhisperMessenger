@@ -152,12 +152,7 @@ function PhoneWiring.Attach(hooks, options)
     end
   end
 
-  local getGrowSource = windowOptions.getGrowSource or function()
-    return nil
-  end
-  local isGrowAnimationOn = windowOptions.isGrowAnimationOn or function()
-    return true
-  end
+  local getGrowSource, isGrowAnimationOn = WindowGrowAnimation.Defaults(windowOptions.getGrowSource, windowOptions.isGrowAnimationOn)
   local flow = PhoneDockFlow.Attach(frame, {
     chrome = chrome,
     getDockIcon = getDockIcon,
