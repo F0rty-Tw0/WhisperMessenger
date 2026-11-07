@@ -85,7 +85,8 @@ local NO_PANEL_TAB = {
 --   initialMode, onModeChanged(mode)
 --   paint(mode, visible, selectedPanel, panelTabs)
 --   relabel(tab)       : re-reads a mode tab's label from the active locale
---   anchor(visible)    : places the visible tab buttons (mode + panel tabs)
+--   anchor(visible, activeTab) : places the visible tab buttons (mode + panel
+--                        tabs); activeTab is the one painted selected, or nil
 --   createPanelTab(title, index) : an addon panel tab with `.btn`, `.badge`
 --                        and a writable `.unread`, or nil
 function TabLayout.BindController(toggle, frame, tabsByMode, opts)
@@ -98,9 +99,31 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local modeClickHandler = nil
   local currentModeClickHandler = nil
   local optionsShown = false
+  local lastActive = nil
 
   local function paint()
     opts.paint(currentMode, visible, selectedPanel, panelTabs)
+  end
+
+  local function activeTab()
+    for _, tab in ipairs(visible) do
+      if TabLayout.IsActive(tab, currentMode, selectedPanel) then
+        return tab
+      end
+    end
+    return nil
+  end
+
+  local function anchor()
+    lastActive = activeTab()
+    opts.anchor(visible, lastActive)
+  end
+
+  -- A repaint-only update (theme refresh) leaves the skin's scroll alone.
+  local function anchorIfActiveChanged()
+    if activeTab() ~= lastActive then
+      anchor()
+    end
   end
 
   -- Through toggle.setShown looked up now, so the skin's clamp wrapper runs.
@@ -111,6 +134,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   local function setMode(mode)
     currentMode = TabLayout.ResolveMode(mode, visible)
     paint()
+    anchorIfActiveChanged()
   end
 
   -- Panel tabs always follow the visible mode tabs.
@@ -119,7 +143,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
     for _, tab in ipairs(panelTabs) do
       visible[#visible + 1] = tab
     end
-    opts.anchor(visible)
+    anchor()
   end
 
   relayout()
@@ -172,7 +196,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
       opts.relabel(tabsByMode[mode])
     end
     -- Label widths changed: re-place the tabs.
-    opts.anchor(visible)
+    anchor()
     paint()
   end
   -- An addon panel's tab, after the mode tabs in registration order. The
@@ -200,6 +224,7 @@ function TabLayout.BindController(toggle, frame, tabsByMode, opts)
   toggle.setSelectedPanel = function(key)
     selectedPanel = key
     paint()
+    anchorIfActiveChanged()
   end
   toggle.getSelectedPanel = function()
     return selectedPanel
