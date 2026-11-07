@@ -33,11 +33,11 @@ local function placeOnScreen(runtime)
   rect(icon.frame, HOME_X - 20, HOME_X + 20, HOME_Y + 20, HOME_Y - 20)
   rect(runtime.window.frame, SPOT_X, SPOT_X + 360, SPOT_Y, SPOT_Y - 640)
   local rideTo = icon.rideTo
-  icon.rideTo = function(target, onStep)
+  icon.rideTo = function(target, onStep, instant)
     rawset(target.region, "GetCenter", function()
       return SPOT_X, SPOT_Y
     end)
-    return rideTo(target, onStep)
+    return rideTo(target, onStep, instant)
   end
 end
 
