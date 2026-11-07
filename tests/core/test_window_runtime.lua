@@ -368,9 +368,14 @@ return function()
     "onMarkAllRead",
     "onPanelShown",
     "onConversationUncovered",
+    "getGrowSource",
+    "isGrowAnimationOn",
   }) do
     assert(type(windowOptions[name]) == "function", "window options should include " .. name)
   end
+
+  -- test_window_options_carry_the_grow_source_and_switch
+  assert(windowOptions.isGrowAnimationOn() == true, "the window animation switch defaults on")
 
   -- Opening the owner's panel switches the preview's pulse off (and keeps the preview).
   runtime.externalPreview.set("ca", { sender = "S", text = "T", pulse = true }, false)
