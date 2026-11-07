@@ -9,9 +9,11 @@ FontObjects.Install()
 
 local FakeUI = {}
 
-function FakeUI.NewFactory()
+-- options (optional): { masks = true } gives frames CreateMaskTexture and
+-- their textures AddMaskTexture (tests/helpers/fake_ui/mask.lua).
+function FakeUI.NewFactory(options)
   local factory = {}
-  factory.CreateFrame = FrameModule.makeCreateFrame()
+  factory.CreateFrame = FrameModule.makeCreateFrame(options)
   return factory
 end
 
