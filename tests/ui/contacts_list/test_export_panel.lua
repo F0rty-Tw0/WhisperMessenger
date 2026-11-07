@@ -37,6 +37,38 @@ local function button(panel, label)
   return FindUI.byLabel(panel, label)
 end
 
+-- Runs fn(flush) with C_Timer.After queued; flush() runs what is queued.
+local function withQueuedTimers(fn)
+  local saved = _G.C_Timer
+  local queue = {}
+  _G.C_Timer = {
+    After = function(_seconds, callback)
+      queue[#queue + 1] = callback
+    end,
+  }
+  local ok, err = pcall(fn, function()
+    local pending = queue
+    queue = {}
+    for _, callback in ipairs(pending) do
+      callback()
+    end
+  end)
+  _G.C_Timer = saved
+  assert(ok, err)
+end
+
+-- Counts SetText calls on the panel's edit box from now on.
+local function countSetText(panel)
+  local box = panel.editBox
+  local original = box.SetText
+  local calls = { count = 0 }
+  box.SetText = function(self, value)
+    calls.count = calls.count + 1
+    return original(self, value)
+  end
+  return calls
+end
+
 return function()
   Localization.Configure({ language = "enUS" })
 
@@ -122,6 +154,30 @@ return function()
     assert(again == panel, "one panel, reused")
     assert(#textLines(again) == 201, "back to the newest 200")
     assert(button(again, "Show more").enabled ~= false, "show more enabled again")
+  end
+
+  -- test_text_is_set_again_on_the_next_frame_so_the_box_draws_it
+  -- (WoW: Forever leaves the text set while opening undrawn)
+  do
+    withQueuedTimers(function(flush)
+      local panel = show(3)
+      local calls = countSetText(panel)
+      flush()
+      assert(calls.count == 1, "text set again once, got " .. calls.count)
+      assert(panel.editBox:GetText() == panel.text, "same text")
+      assert(panel.editBox.highlight ~= nil, "still selected for copying")
+    end)
+  end
+
+  -- test_closed_panel_is_not_redrawn_on_the_next_frame
+  do
+    withQueuedTimers(function(flush)
+      local panel = show(3)
+      local calls = countSetText(panel)
+      panel:Hide()
+      flush()
+      assert(calls.count == 0, "hidden panel left alone, got " .. calls.count)
+    end)
   end
 
   -- test_typing_does_not_change_the_text
