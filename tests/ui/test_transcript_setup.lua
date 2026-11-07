@@ -80,7 +80,12 @@ return function()
     local factory = FakeUI.NewFactory()
     local transcript = makeTranscript(factory)
     TranscriptSetup.ConfigureTranscript(factory, transcript, 600)
-    transcript.text.scripts.OnHyperlinkClick(transcript.text, "url:https://example.com/help", "https://example.com/help", "LeftButton")
+    transcript.text.scripts.OnHyperlinkClick(
+      transcript.text,
+      "addon:WhisperMessenger:url:https://example.com/help",
+      "https://example.com/help",
+      "LeftButton"
+    )
 
     assert(launchAttempted == false, "expected transcript URL click to avoid protected LaunchURL APIs")
     assert(copied.text == "https://example.com/help", "expected transcript URL click to copy URL as safe fallback")

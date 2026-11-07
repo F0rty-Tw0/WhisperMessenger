@@ -1,5 +1,5 @@
 -- Stub ManualCopy before requiring Hyperlinks. Hyperlinks.HandleClick on a
--- url-typed link calls require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
+-- URL link calls require("WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy")
 -- to copy the URL to clipboard. The real module pulls live UI deps; the stub
 -- lets us assert the copy invocation without dragging in a fake UI.
 local capturedCopies = {}
@@ -19,7 +19,7 @@ package.loaded["WhisperMessenger.UI.ChatBubble.ContextMenu.ManualCopy"] = manual
 local Hyperlinks = require("WhisperMessenger.UI.Hyperlinks")
 local ReactionAssets = require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
-local URL_PREFIX = "|cff71d5ff|Hurl:"
+local URL_PREFIX = "|cff71d5ff|Haddon:WhisperMessenger:url:"
 local URL_DISPLAY_SEP = "|h"
 local URL_END = "|h|r"
 
@@ -237,13 +237,13 @@ return function()
   end
 
   ----------------------------------------------------------------------------
-  -- HandleClick on a url-typed link routes the URL to the manual-copy fallback.
+  -- HandleClick on a URL link routes the URL to the manual-copy fallback.
   -- (LaunchURL is protected in addon context; clipboard copy is the fallback.)
   ----------------------------------------------------------------------------
   do
     capturedCopies = {}
     copyReturn = true
-    local handled = Hyperlinks.HandleClick("url:https://example.com/path", "https://example.com/path", "LeftButton", nil)
+    local handled = Hyperlinks.HandleClick("addon:WhisperMessenger:url:https://example.com/path", "https://example.com/path", "LeftButton", nil)
     assert(handled == true, "HandleClick on url should return true when copy succeeded")
     assert(#capturedCopies == 1, "exactly one copy invocation expected, got " .. tostring(#capturedCopies))
     assert(capturedCopies[1] == "https://example.com/path", "copied URL must match the link payload, got " .. tostring(capturedCopies[1]))
@@ -255,14 +255,14 @@ return function()
   do
     capturedCopies = {}
     copyReturn = false
-    local handled = Hyperlinks.HandleClick("url:https://fail.example.com", "x", "LeftButton", nil)
+    local handled = Hyperlinks.HandleClick("addon:WhisperMessenger:url:https://fail.example.com", "x", "LeftButton", nil)
     assert(handled == false, "HandleClick on url should return false when copy failed")
     copyReturn = true
   end
 
   ----------------------------------------------------------------------------
   -- HandleEnter on an external URL anchors the tooltip to the owner and shows
-  -- the URL as plain text (we cannot use SetHyperlink for "url:" links).
+  -- the URL as plain text (we cannot use SetHyperlink for our URL links).
   ----------------------------------------------------------------------------
   do
     local savedTooltip = _G.GameTooltip
@@ -286,7 +286,7 @@ return function()
     }
 
     local ownerStub = { id = "bubble" }
-    Hyperlinks.HandleEnter(ownerStub, "url:https://example.com")
+    Hyperlinks.HandleEnter(ownerStub, "addon:WhisperMessenger:url:https://example.com")
     assert(owner == ownerStub, "tooltip should be anchored to the owner frame")
     assert(anchor == "ANCHOR_CURSOR", "tooltip should use ANCHOR_CURSOR, got " .. tostring(anchor))
     assert(lastText == "https://example.com", "tooltip text should be the URL, got " .. tostring(lastText))

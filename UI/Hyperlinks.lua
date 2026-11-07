@@ -8,17 +8,17 @@ local QuestLinkClassic = ns.UIHyperlinksQuestLinkClassic or require("WhisperMess
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 
 local function restoreTrailingEmojiToken(hyperlink)
-  local linkType, target, display = string.match(hyperlink, "^|H([^:]+):(.-)|h(.-)|h$")
-  if linkType ~= "url" then
+  local link, display = string.match(hyperlink, "^|H(.-)|h(.-)|h$")
+  if UrlFormatter.ExtractExternalUrlFromLink(link) == nil then
     return nil
   end
 
-  local key = string.match(target, ":([%a%d_]+)$")
+  local key = string.match(link, ":([%a%d_]+)$")
   if key == nil or not string.match(display, ":" .. key .. "$") or ReactionAssets.GetInlineTextureMarkup(key) == nil then
     return nil
   end
 
-  return "|H" .. linkType .. ":" .. target .. ":|h" .. display .. ":|h"
+  return "|H" .. link .. ":|h" .. display .. ":|h"
 end
 
 local function formatEmojiInPlainSegments(value)
