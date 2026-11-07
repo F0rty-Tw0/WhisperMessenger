@@ -17,9 +17,9 @@ local applyColorTexture = UIHelpers.applyColorTexture
 -- Whispers/Groups(/Channels/Requests) tabs. They hang below the window's bottom-left
 -- edge, each at its natural width (like the game's own window tabs), so the
 -- contact list keeps its full height. When they don't all fit, TabScroller
--- shows whole tabs with back/forward arrows at the strip's two ends. The
--- Native WoW HUD uses Blizzard's tab art (NativeTabToggle); the modern skin
--- draws its own.
+-- shows whole tabs with back/forward arrows at the window's two edges, and
+-- may draw the tabs up to 8 px narrower so more fit. The Native WoW HUD uses
+-- Blizzard's tab art (NativeTabToggle); the modern skin draws its own.
 local TabToggle = {}
 
 local TAB_HEIGHT = 24
@@ -92,7 +92,7 @@ local function layoutGroup(tab)
   local extra = tab.badge.frame:IsShown() and (BADGE_GAP + BADGE_SIZE) or 0
   local labelWidth = tab.label:GetStringWidth() or 0
   tab.label:SetPoint("CENTER", tab.btn, "CENTER", -extra / 2, 0)
-  tab.underline:SetWidth(labelWidth + extra + UNDERLINE_PADDING)
+  tab.underline:SetWidth(labelWidth + extra + UNDERLINE_PADDING - (tab.squeeze or 0))
 end
 
 -- Width a tab needs; the badge is always counted so tabs never shift with
@@ -161,6 +161,12 @@ function TabToggle.Create(factory, parent, options)
     spacing = HANG_SPACING,
     endReserve = 0,
     arrowWidth = TabArrows.MODERN_WIDTH,
+    arrowOutset = HANG_LEFT_OFFSET,
+    squeeze = function(tab, px)
+      tab.squeeze = px
+      tab.btn:SetWidth(naturalWidth(tab) - px)
+      layoutGroup(tab)
+    end,
     createArrows = function(holder)
       return TabArrows.CreateModern(factory, holder)
     end,
