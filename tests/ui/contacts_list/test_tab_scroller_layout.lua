@@ -106,4 +106,12 @@ do
   assert(rig.painted[2].btn == rig.next and rig.painted[2].enabled == true, "next repainted enabled")
 end
 
+-- test_paint_before_any_overflow_reports_disabled
+do
+  local rig = Rig.build()
+  rig.scroller.paintArrows()
+  assert(#rig.painted == 2, "paintArrows paints both, got " .. #rig.painted)
+  assert(rig.painted[1].enabled == false and rig.painted[2].enabled == false, "arrows start disabled, not unknown")
+end
+
 print("PASS: test_tab_scroller_layout")

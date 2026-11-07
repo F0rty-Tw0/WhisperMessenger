@@ -185,7 +185,9 @@ function TabScroller.Attach(factory, frame, opts)
   arrows.prev:Hide()
   arrows.next:Hide()
 
-  local ctx = { frame = frame, opts = opts, arrows = arrows, enabled = {}, first = 1 }
+  -- Arrows start disabled, so a repaint before the first overflow is defined.
+  local enabled = { [arrows.prev] = false, [arrows.next] = false }
+  local ctx = { frame = frame, opts = opts, arrows = arrows, enabled = enabled, first = 1 }
   local scroller = {}
 
   -- visible: array of { btn = Button } in display order.
