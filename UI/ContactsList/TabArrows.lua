@@ -7,7 +7,8 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local DisabledState = ns.UIHelpersDisabledState or require("WhisperMessenger.UI.Helpers.DisabledState")
 
--- The back and forward arrows TabScroller pins to the tab strip's right end.
+-- The back and forward arrows TabScroller pins to the tab strip's left (back)
+-- and right (forward) ends.
 -- Modern: the bundled back chevron (mirrored for forward) tinted like an
 -- inactive tab label. Native WoW HUD: Blizzard's spellbook page buttons.
 local TabArrows = {}

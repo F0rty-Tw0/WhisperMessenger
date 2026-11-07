@@ -14,7 +14,7 @@ local TabArrows = ns.ContactsListTabArrows or require("WhisperMessenger.UI.Conta
 -- tabs hanging below the window's bottom-left edge, each sized to its label,
 -- like the Character or Professions frame tabs. When they don't all fit,
 -- TabScroller shows whole tabs with the spellbook page arrows at the strip's
--- right end. The strip is the window's child (so it stays up beside an addon
+-- two ends. The strip is the window's child (so it stays up beside an addon
 -- panel) and anchored to the window frame. Same interface as TabToggle.Create; returns nil when the template is
 -- unavailable so the caller builds the modern bar instead.
 local NativeTabToggle = {}

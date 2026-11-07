@@ -4,8 +4,9 @@ if type(ns) ~= "table" then
 end
 
 -- Places the tabs of a strip: all of them while they fit, else whole tabs from
--- a `first` index with two arrows pinned to the strip's right end. Skin-free:
--- the skin sizes its tabs, supplies the arrow buttons, then calls layout().
+-- a `first` index between two arrows: back at the strip's left end, forward at
+-- its right end. Skin-free: the skin sizes its tabs, supplies the arrow
+-- buttons, then calls layout().
 local TabScroller = {}
 
 -- Back and forward arrow.
@@ -83,8 +84,9 @@ local function revealActive(ctx, available)
   end
 end
 
--- Shows and chains tabs `from`..`to` from the strip's left edge, hides the rest.
-local function chain(frame, visible, from, to, spacing)
+-- Shows and chains tabs `from`..`to` starting `left` px from the strip's left
+-- edge, hides the rest.
+local function chain(frame, visible, from, to, spacing, left)
   local previous = nil
   for index, tab in ipairs(visible) do
     local btn = tab.btn
@@ -96,7 +98,7 @@ local function chain(frame, visible, from, to, spacing)
       if previous then
         btn:SetPoint("TOPLEFT", previous, "TOPRIGHT", spacing, 0)
       else
-        btn:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
+        btn:SetPoint("TOPLEFT", frame, "TOPLEFT", left, 0)
       end
       previous = btn
     end
@@ -114,11 +116,11 @@ local function fitsStrip(ctx)
   return runWidth(visible, 1, #visible, ctx.opts.spacing) <= width - ctx.opts.endReserve
 end
 
--- Room left of the back arrow.
+-- Room between the arrows.
 local function availableWidth(ctx)
   local opts = ctx.opts
 
-  return ctx.frame:GetWidth() - ARROW_COUNT * opts.arrowWidth - opts.endReserve - opts.spacing
+  return ctx.frame:GetWidth() - ARROW_COUNT * opts.arrowWidth - opts.endReserve - 2 * opts.spacing
 end
 
 local function setArrowEnabled(ctx, btn, enabled)
@@ -140,7 +142,7 @@ end
 local function placeFitting(ctx)
   local visible = ctx.visible
   ctx.first = 1
-  chain(ctx.frame, visible, 1, #visible, ctx.opts.spacing)
+  chain(ctx.frame, visible, 1, #visible, ctx.opts.spacing, 0)
   ctx.arrows.prev:Hide()
   ctx.arrows.next:Hide()
   ctx.frame:EnableMouseWheel(false)
@@ -155,7 +157,7 @@ local function placeOverflowing(ctx, reveal)
     revealActive(ctx, available)
   end
   local last = lastFitting(visible, ctx.first, available, spacing)
-  chain(ctx.frame, visible, ctx.first, last, spacing)
+  chain(ctx.frame, visible, ctx.first, last, spacing, ctx.opts.arrowWidth + spacing)
   setArrowEnabled(ctx, ctx.arrows.prev, ctx.first > 1)
   setArrowEnabled(ctx, ctx.arrows.next, last < #visible)
   ctx.arrows.prev:Show()
@@ -182,7 +184,7 @@ function TabScroller.Attach(factory, frame, opts)
   holder:SetAllPoints(frame)
   local arrows = opts.createArrows(holder)
   arrows.next:SetPoint("RIGHT", frame, "RIGHT", 0, 0)
-  arrows.prev:SetPoint("RIGHT", arrows.next, "LEFT", 0, 0)
+  arrows.prev:SetPoint("LEFT", frame, "LEFT", 0, 0)
   arrows.prev:Hide()
   arrows.next:Hide()
 

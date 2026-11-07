@@ -1,7 +1,7 @@
 local Rig = require("tests.helpers.tab_scroller_rig")
 
 -- Fixture: 5 tabs of width 50, spacing 2, arrows 16 wide. At strip width 150
--- two tabs fit per view (available 116) and the last first-index is 4.
+-- two tabs fit per view (available 114) and the last first-index is 4.
 
 local function shown(rig)
   return table.concat(Rig.shownIndices(rig), ",")

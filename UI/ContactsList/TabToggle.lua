@@ -17,7 +17,7 @@ local applyColorTexture = UIHelpers.applyColorTexture
 -- Whispers/Groups(/Channels/Requests) tabs. They hang below the window's bottom-left
 -- edge, each at its natural width (like the game's own window tabs), so the
 -- contact list keeps its full height. When they don't all fit, TabScroller
--- shows whole tabs with back/forward arrows at the strip's right end. The
+-- shows whole tabs with back/forward arrows at the strip's two ends. The
 -- Native WoW HUD uses Blizzard's tab art (NativeTabToggle); the modern skin
 -- draws its own.
 local TabToggle = {}

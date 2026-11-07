@@ -5,10 +5,10 @@ local TabToggle = require("WhisperMessenger.UI.ContactsList.TabToggle")
 -- Both skins on the tab scroller; each gives the same shown sets.
 -- Fake text is 7px per character.
 -- Modern tab = 7 * len + 30: Whispers 86, Groups 72, Channels 86, Requests 86,
--- Alerts 72; spacing 2, arrows 16, no end reserve. At 260 the room left of
--- the arrows is 260 - 2 * 16 - 0 - 2 = 226.
+-- Alerts 72; spacing 2, arrows 16, no end reserve. At 260 the room between
+-- the arrows is 260 - 2 * 16 - 0 - 2 * 2 = 224.
 -- Native tab = 7 * len + 20: 76, 62, 76, 76, 62; spacing 1, arrows 24, 7px
--- end reserve (the last tab's art overhang). At 260 the room is 204.
+-- end reserve (the last tab's art overhang). At 260 the room is 203.
 -- Visible order: Whispers, Groups, Channels, Requests, Alerts (a panel tab).
 -- Wide strip (500): every tab fits. Narrow strip (260): Whispers + Groups.
 
@@ -96,7 +96,7 @@ for _, skin in ipairs(SKINS) do
     local toggle = build(skin)
     resize(toggle, 260)
     local labels = shownLabels(toggle, skin)
-    local used = (#labels - 1) * skin.spacing + skin.spacing + 2 * skin.arrow + skin.reserve
+    local used = (#labels - 1) * skin.spacing + 2 * skin.spacing + 2 * skin.arrow + skin.reserve
     for _, label in ipairs(labels) do
       used = used + tab(toggle, skin, label):GetWidth()
     end
