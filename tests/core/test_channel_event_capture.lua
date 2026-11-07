@@ -282,6 +282,6 @@ return function()
     -- "4. LookingForGroup" (no zone suffix, Classic Era zone ID 24) → "LookingForGroup" (number prefix still stripped)
     EventBridge.RouteChannelEvent(runtime, "CHAT_MSG_CHANNEL", "msg3", "P3-Realm", "", "4. LookingForGroup", "", "", 24)
     local e3 = ChannelMessageStore.GetLatest(runtime.channelMessageStore, "p3-realm")
-    assert(e3.channelLabel == "LookingForGroup", "custom channel should drop its number, got: " .. tostring(e3.channelLabel))
+    assert(e3.channelLabel == "LookingForGroup", "LookingForGroup should drop its number, got: " .. tostring(e3.channelLabel))
   end
 end
