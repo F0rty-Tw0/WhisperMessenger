@@ -32,7 +32,7 @@ local function test_window_drag()
   case.window.frame:Show()
   case.window.frame.scripts.OnDragStop(case.window.frame)
   assert(case.saved.state ~= nil, "phone, docked: the window spot is saved")
-  assert(case.adopted == 0 and case.homes == 0, "phone, docked: the button's home is unchanged")
+  assert(case.homeMoves == 0 and case.homes == 0, "phone, docked: the button's home is unchanged")
 end
 
 -- Spec 5, row "Switch toggled": Opening and Closing finish as started; Closed applies at the next open; Open at the next close.

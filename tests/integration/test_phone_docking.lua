@@ -71,7 +71,7 @@ return function()
     case.rideHandlers.endDrag()
     assert(case.saved.state ~= nil, "players who later lose the button reopen it there")
     assert(case.saved.state.width == L.PHONE_WINDOW_WIDTH, "got " .. tostring(case.saved.state.width))
-    assert(case.adopted == 0, "the button's home stays put")
+    assert(case.homeMoves == 0, "the button's home stays put")
   end
 
   -- test_reset_brings_the_window_to_the_screen_centre
@@ -87,7 +87,7 @@ return function()
     assert(relativeTo == frame:GetParent(), "on the screen")
     assert(x == -L.PHONE_WINDOW_WIDTH / 2 and y == L.PHONE_WINDOW_HEIGHT / 2, "got " .. tostring(x) .. "," .. tostring(y))
     assert(frame.width == L.PHONE_WINDOW_WIDTH, "phone size, got " .. tostring(frame.width))
-    assert(case.adopted == 0, "the button's own home stays: it has its own reset")
+    assert(case.homeMoves == 0, "the button's own home stays: it has its own reset")
   end
 
   -- test_reset_under_settings_centres_the_phone_sized_window
