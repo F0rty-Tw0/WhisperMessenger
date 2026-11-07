@@ -266,6 +266,7 @@ function ToggleIcon.Create(factory, options)
     glyphOutline = squareLook.outline,
     squareHover = squareLook.hoverEffect,
     squarePushed = squareLook.pushEffect,
+    squareBackdrop = squareLook.backdrop,
     pulseTexture = pulseGlow.glowTexture,
     label = label,
     badge = badge,

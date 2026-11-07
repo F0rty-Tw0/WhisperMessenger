@@ -108,6 +108,13 @@ function SquareLook.Create(frame, parts)
   outline:SetTexture(SquareLook.OUTLINE_TEXTURE)
   applyVertexColor(outline, OUTLINE_COLOR)
   local glow = createHoverGlow(frame)
+  -- Solid square in the icon's background color under the slot fill (which
+  -- is see-through), like the circle's disc: the ground never shows behind
+  -- the bubbles.
+  local backdrop = frame:CreateTexture(nil, "BACKGROUND", nil, -1)
+  backdrop:SetAllPoints(frame)
+  backdrop:SetTexture(SquareLook.SQUARE_TEXTURE)
+  setShown(backdrop, false)
   local hovered = false
   local pushed = false
   local lastDesaturated = false
@@ -174,6 +181,8 @@ function SquareLook.Create(frame, parts)
     pushEffect.paint(look.push, look.borderPx)
     parts.background:SetTexture(square and SquareLook.SQUARE_TEXTURE or parts.roundBackground)
     setShown(parts.background, backgroundShown())
+    setShown(backdrop, squareBackgroundShown())
+    applyVertexColor(backdrop, Theme.COLORS.toggle_icon_bg)
     setShown(outline, bubblesOnly())
     lastDesaturated = desaturated == true
     paintHover()
@@ -203,6 +212,7 @@ function SquareLook.Create(frame, parts)
     pushEffect = pushEffect.fill,
     accentGlyph = accent.texture,
     outline = outline,
+    backdrop = backdrop,
     hoverGlow = glow,
     apply = apply,
     setHover = setHover,
