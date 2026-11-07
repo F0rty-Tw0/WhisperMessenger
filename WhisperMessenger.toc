@@ -327,6 +327,7 @@ UI/ToggleIcon/IconArt.lua
 UI/ToggleIcon/LockGlyph.lua
 UI/ToggleIcon/IconTooltip.lua
 UI/ToggleIcon/IconDrag.lua
+UI/ToggleIcon/IconScripts.lua
 UI/Shared/GlideClock.lua
 UI/ToggleIcon/IconRide.lua
 UI/MessengerWindow/IconSettings/Options.lua

@@ -9,13 +9,12 @@ local IncomingPreview = ns.ToggleIconIncomingPreview or require("WhisperMessenge
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local PulseState = ns.ToggleIconPulseState or require("WhisperMessenger.UI.ToggleIcon.PulseState")
 local Desaturation = ns.ToggleIconDesaturation or require("WhisperMessenger.UI.ToggleIcon.Desaturation")
-local IconClick = ns.ToggleIconIconClick or require("WhisperMessenger.UI.ToggleIcon.IconClick")
 local SquareLook = ns.ToggleIconSquareLook or require("WhisperMessenger.UI.ToggleIcon.SquareLook")
 local IconArt = ns.ToggleIconIconArt or require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local IconBorder = ns.ToggleIconIconBorder or require("WhisperMessenger.UI.ToggleIcon.IconBorder")
 local LockGlyph = ns.ToggleIconLockGlyph or require("WhisperMessenger.UI.ToggleIcon.LockGlyph")
 local IconTooltip = ns.ToggleIconIconTooltip or require("WhisperMessenger.UI.ToggleIcon.IconTooltip")
-local IconDrag = ns.ToggleIconIconDrag or require("WhisperMessenger.UI.ToggleIcon.IconDrag")
+local IconScripts = ns.ToggleIconIconScripts or require("WhisperMessenger.UI.ToggleIcon.IconScripts")
 local IconRide = ns.ToggleIconIconRide or require("WhisperMessenger.UI.ToggleIcon.IconRide")
 local DockedLook = ns.ToggleIconDockedLook or require("WhisperMessenger.UI.ToggleIcon.DockedLook")
 local IconTransparency = ns.ToggleIconIconTransparency or require("WhisperMessenger.UI.ToggleIcon.IconTransparency")
@@ -61,8 +60,6 @@ function ToggleIcon.Create(factory, options)
     ringGlyphRatio = IconArt.GLYPH_RATIO,
   })
 
-  local label = chatIcon -- reference kept for return table
-
   -- Glow pulse for unread messages (CraftScan-style looping animation)
   local pulseGlow = PulseGlow.Create(factory, frame, {
     theme = Theme,
@@ -89,9 +86,6 @@ function ToggleIcon.Create(factory, options)
   -- Unread badge, outlined so it reads where it overlaps the circle's edge
   local badgeResult = Badge.Create(factory, frame, { outline = true })
   local badge = badgeResult.frame
-  local badgeBackground = badgeResult.background
-  local badgeOutline = badgeResult.outline
-  local badgeLabel = badgeResult.label
   local innerSetUnreadCount = badgeResult.setCount
   badge:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 6, 6)
   badge:SetFrameLevel(frame:GetFrameLevel() + BADGE_LEVEL_OFFSET)
@@ -124,14 +118,6 @@ function ToggleIcon.Create(factory, options)
     getBadgePulse = options.getBadgePulse,
     isExternalShown = incomingPreview.isExternalShown,
   })
-  local previewFrame = incomingPreview.frame
-  local previewSenderLabel = incomingPreview.senderLabel
-  local previewMessageLabel = incomingPreview.messageLabel
-  local previewDismissButton = incomingPreview.dismissButton
-  local previewDismissLabel = incomingPreview.dismissLabel
-  local previewClassIcon = incomingPreview.classIcon
-  local previewClassIconFrame = incomingPreview.classIconFrame
-  local setIncomingPreview = incomingPreview.setIncomingPreview
 
   local getShowUnreadBadge = options.getShowUnreadBadge
   local getBadgePulse = options.getBadgePulse
@@ -146,7 +132,6 @@ function ToggleIcon.Create(factory, options)
   -- Hover state shared with the lock glyph, which shows only while hovered.
   local hover = { active = false }
   local lock = LockGlyph.Create(frame, ICON_SIZE, { isLocked = isLocked, hover = hover })
-  local lockGlyph = lock.texture
   local syncLockGlyphVisibility = lock.syncVisibility
   local refreshLockGlyph = lock.refresh
 
@@ -177,40 +162,23 @@ function ToggleIcon.Create(factory, options)
     transparency.setHasUnread(unreadCount > 0)
   end
 
-  local drag = {}
   local tooltip = IconTooltip.Create(frame, { badge = badge, isLocked = isLocked, options = options })
-
-  -- Hover lifts the circle and returns the back bubble to the accent
-  if frame.SetScript then
-    frame:SetScript("OnEnter", function()
-      hover.active = true
-      syncLockGlyphVisibility()
-      transparency.refresh()
-      IconArt.PaintFace(art, true)
-      squareLook.setHover(true) -- after the repaint: the square has its own fill
-      tooltip.show(unreadSummary, isCompetitiveActive)
-    end)
-
-    frame:SetScript("OnLeave", function()
-      hover.active = false
-      syncLockGlyphVisibility()
-      transparency.refresh()
-      IconArt.PaintFace(art, false)
-      squareLook.setHover(false) -- after the repaint: the square has its own fill
-      tooltip.hide()
-    end)
-
-    frame:SetScript("OnClick", IconClick.Create(options))
-
-    frame:SetScript("OnMouseDown", function()
-      squareLook.setPushed(true)
-    end)
-    frame:SetScript("OnMouseUp", function()
-      squareLook.setPushed(false)
-    end)
-
-    drag = IconDrag.Attach(frame, isLocked, options)
-  end
+  local drag = IconScripts.Attach(frame, {
+    hover = hover,
+    syncLockGlyphVisibility = syncLockGlyphVisibility,
+    refreshTransparency = transparency.refresh,
+    art = art,
+    squareLook = squareLook,
+    tooltip = tooltip,
+    getUnreadSummary = function()
+      return unreadSummary
+    end,
+    getCompetitiveActive = function()
+      return isCompetitiveActive
+    end,
+    isLocked = isLocked,
+    options = options,
+  })
 
   -- The badge's level is set by number, so it does not follow the frame's.
   local setDocked
@@ -259,7 +227,7 @@ function ToggleIcon.Create(factory, options)
   end
 
   setUnreadCount(options.unreadCount)
-  setIncomingPreview(options.previewSenderName, options.previewMessageText, options.previewClassTag)
+  incomingPreview.setIncomingPreview(options.previewSenderName, options.previewMessageText, options.previewClassTag)
   refreshTheme()
   refreshLockGlyph()
   transparency.refresh()
@@ -276,22 +244,22 @@ function ToggleIcon.Create(factory, options)
     squarePushed = squareLook.pushEffect,
     squareBackdrop = squareLook.backdrop,
     pulseTexture = pulseGlow.glowTexture,
-    label = label,
+    label = chatIcon,
     badge = badge,
-    badgeBackground = badgeBackground,
-    badgeOutline = badgeOutline,
-    badgeLabel = badgeLabel,
-    previewFrame = previewFrame,
-    previewSenderLabel = previewSenderLabel,
-    previewMessageLabel = previewMessageLabel,
+    badgeBackground = badgeResult.background,
+    badgeOutline = badgeResult.outline,
+    badgeLabel = badgeResult.label,
+    previewFrame = incomingPreview.frame,
+    previewSenderLabel = incomingPreview.senderLabel,
+    previewMessageLabel = incomingPreview.messageLabel,
     previewDetailLabel = incomingPreview.detailLabel,
-    previewDismissButton = previewDismissButton,
-    previewDismissLabel = previewDismissLabel,
-    previewClassIcon = previewClassIcon,
-    previewClassIconFrame = previewClassIconFrame,
+    previewDismissButton = incomingPreview.dismissButton,
+    previewDismissLabel = incomingPreview.dismissLabel,
+    previewClassIcon = incomingPreview.classIcon,
+    previewClassIconFrame = incomingPreview.classIconFrame,
     setUnreadCount = setUnreadCount,
     setCompetitiveContent = setCompetitiveContent,
-    setIncomingPreview = setIncomingPreview,
+    setIncomingPreview = incomingPreview.setIncomingPreview,
     setExternalPreview = incomingPreview.setExternalPreview,
     isExternalPreviewShown = incomingPreview.isExternalShown,
     openShownPreview = incomingPreview.openShownPreview,
@@ -300,7 +268,7 @@ function ToggleIcon.Create(factory, options)
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,
     refreshTheme = refreshTheme,
-    lockGlyph = lockGlyph,
+    lockGlyph = lock.texture,
     refreshLockGlyph = refreshLockGlyph,
     refreshTransparency = transparency.refresh,
     setDocked = setDocked,
