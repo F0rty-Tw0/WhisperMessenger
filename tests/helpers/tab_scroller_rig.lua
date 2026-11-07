@@ -12,7 +12,8 @@ local STRIP_HEIGHT = 24
 
 -- opts: spacing (2), endReserve (0), arrowWidth (16), arrowOutset (nil),
 -- squeeze (true: pass a squeeze hook that narrows a tab by px, never below
--- floors[index], default 0).
+-- floors[index], default 0), onSqueeze(rig, tab, px) (called after each
+-- squeeze, to act like a width read that fires OnSizeChanged).
 -- Returns { factory, strip, tabs, visible, scroller, prev, next, painted };
 -- `painted` collects { btn, enabled } for every paintArrow call.
 function Rig.build(widths, opts)
@@ -33,6 +34,9 @@ function Rig.build(widths, opts)
   if opts.squeeze then
     squeeze = function(tab, px)
       tab.btn:SetWidth(math.max(natural[tab.index] - px, floors[tab.index] or 0))
+      if opts.onSqueeze then
+        opts.onSqueeze(rig, tab, px)
+      end
     end
   end
   rig.visible = rig.tabs

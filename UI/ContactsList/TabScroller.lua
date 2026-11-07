@@ -3,63 +3,22 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
+local Fit = ns.ContactsListTabScrollerFit or require("WhisperMessenger.UI.ContactsList.TabScrollerFit")
+
 -- Places the tabs of a strip: all of them while they fit, else whole tabs from
 -- a `first` index between two arrows: back at the window's left edge, forward
--- at its right edge. Tabs may draw up to MAX_SQUEEZE px narrower ("tight")
--- when that shows more of them. Skin-free: the skin sizes its tabs, supplies
--- the arrow buttons and the squeeze hook, then calls layout().
+-- at its right edge. Tabs may draw up to 8 px narrower ("tight") when that
+-- shows more of them. Skin-free: the skin sizes its tabs, supplies the arrow
+-- buttons and the squeeze hook, then calls layout().
 local TabScroller = {}
 
--- Back and forward arrow.
-local ARROW_COUNT = 2
-
--- Most px a skin is asked to take off a tab's natural width.
-local MAX_SQUEEZE = 8
+-- Place passes one request may take: the first plus the re-runs for requests
+-- that arrived while it ran. Stops a width read that fires OnSizeChanged on
+-- every pass from looping.
+local MAX_PASSES = 4
 
 -- Stands in for a skin without a squeeze hook: tabs keep their live width.
 local function noSqueeze(_tab, _px) end
-
--- Width of tabs `from`..`to` plus spacing; `widths` is ctx.natural or ctx.tight.
-local function runWidth(widths, visible, from, to, spacing)
-  if to < from then
-    return 0
-  end
-  local total = (to - from) * spacing
-  for index = from, to do
-    total = total + widths[visible[index]]
-  end
-
-  return total
-end
-
--- Last index whose whole tab fits in `available` when the run starts at
--- `first`; the tab at `first` counts even when it is wider than `available`.
-local function lastFitting(widths, visible, first, available, spacing)
-  local last = first
-  local used = widths[visible[first]]
-  while last < #visible do
-    local usedWithNext = used + spacing + widths[visible[last + 1]]
-    if usedWithNext > available then
-      break
-    end
-    used = usedWithNext
-    last = last + 1
-  end
-
-  return last
-end
-
--- Smallest first-index whose run to the last tab fits in `available`; the last
--- tab itself when none does. Scrolling further would leave a gap at the end.
-local function maxFirstIndex(widths, visible, available, spacing)
-  for index = 1, #visible do
-    if runWidth(widths, visible, index, #visible, spacing) <= available then
-      return index
-    end
-  end
-
-  return #visible
-end
 
 local function indexOf(visible, tab)
   for index, candidate in ipairs(visible) do
@@ -82,7 +41,7 @@ local function revealActive(ctx, available)
     ctx.first = target
     return
   end
-  while lastFitting(ctx.tight, visible, ctx.first, available, ctx.opts.spacing) < target do
+  while Fit.lastFitting(ctx.tight, visible, ctx.first, available, ctx.opts.spacing) < target do
     ctx.first = ctx.first + 1
   end
 end
@@ -108,62 +67,6 @@ local function chain(frame, visible, from, to, spacing, left)
   end
 end
 
--- Records each visible tab's tight and natural width; leaves it drawn natural.
-local function measure(ctx)
-  for _, tab in ipairs(ctx.visible) do
-    ctx.squeeze(tab, MAX_SQUEEZE)
-    ctx.tight[tab] = tab.btn:GetWidth()
-    ctx.squeeze(tab, 0)
-    ctx.natural[tab] = tab.btn:GetWidth()
-  end
-end
-
--- "natural": every tab fits at natural width; "tight": every tab fits only
--- squeezed; "overflow": arrows needed.
-local function fitKind(ctx)
-  local width = ctx.frame:GetWidth() or 0
-  local visible = ctx.visible
-  -- No tabs always fit, even on a strip narrower than the end reserve.
-  if width <= 0 or #visible == 0 then
-    return "natural"
-  end
-  local room = width - ctx.opts.endReserve
-  local spacing = ctx.opts.spacing
-  if runWidth(ctx.natural, visible, 1, #visible, spacing) <= room then
-    return "natural"
-  end
-  if runWidth(ctx.tight, visible, 1, #visible, spacing) <= room then
-    return "tight"
-  end
-
-  return "overflow"
-end
-
--- Room between the arrows; the back arrow hangs `outset` px past the strip's
--- left edge, which gives that much more room.
--- Invariant: overflow room < fit room, because outset < 2 * arrowWidth +
--- 2 * spacing (modern 8 < 36, Native 11 < 50), so an overflowing view never
--- holds every tab; fitKind catches that case first.
-local function availableWidth(ctx)
-  local opts = ctx.opts
-
-  return ctx.frame:GetWidth() - ARROW_COUNT * opts.arrowWidth - opts.endReserve - 2 * opts.spacing + ctx.outset
-end
-
--- Draws tabs `from`..`to` px narrower than natural (0 = natural).
-local function squeezeRun(ctx, from, to, px)
-  for index = from, to do
-    ctx.squeeze(ctx.visible[index], px)
-  end
-end
-
--- A shown run is drawn natural when its natural width fits `room`, else tight.
-local function drawRun(ctx, from, to, room)
-  if runWidth(ctx.natural, ctx.visible, from, to, ctx.opts.spacing) > room then
-    squeezeRun(ctx, from, to, MAX_SQUEEZE)
-  end
-end
-
 local function setArrowEnabled(ctx, btn, enabled)
   ctx.enabled[btn] = enabled
   btn:SetEnabled(enabled)
@@ -184,7 +87,7 @@ local function placeFitting(ctx, kind)
   local count = #ctx.visible
   ctx.first = 1
   if kind == "tight" then
-    squeezeRun(ctx, 1, count, MAX_SQUEEZE)
+    Fit.squeezeTight(ctx, 1, count)
   end
   chain(ctx.frame, ctx.visible, 1, count, ctx.opts.spacing, 0)
   ctx.arrows.prev:Hide()
@@ -194,14 +97,14 @@ end
 
 local function placeOverflowing(ctx, reveal)
   local visible = ctx.visible
-  local available = availableWidth(ctx)
+  local available = Fit.availableWidth(ctx)
   local spacing = ctx.opts.spacing
-  ctx.first = math.max(1, math.min(ctx.first, maxFirstIndex(ctx.tight, visible, available, spacing)))
+  ctx.first = math.max(1, math.min(ctx.first, Fit.maxFirstIndex(ctx.tight, visible, available, spacing)))
   if reveal then
     revealActive(ctx, available)
   end
-  local last = lastFitting(ctx.tight, visible, ctx.first, available, spacing)
-  drawRun(ctx, ctx.first, last, available)
+  local last = Fit.lastFitting(ctx.tight, visible, ctx.first, available, spacing)
+  Fit.drawRun(ctx, ctx.first, last, available)
   chain(ctx.frame, visible, ctx.first, last, spacing, ctx.opts.arrowWidth + spacing - ctx.outset)
   setArrowEnabled(ctx, ctx.arrows.prev, ctx.first > 1)
   setArrowEnabled(ctx, ctx.arrows.next, last < #visible)
@@ -210,16 +113,48 @@ local function placeOverflowing(ctx, reveal)
   ctx.frame:EnableMouseWheel(true)
 end
 
--- `reveal` scrolls the active tab into view; a manual scroll skips it.
-local function place(ctx, reveal)
-  measure(ctx)
-  local kind = fitKind(ctx)
+-- One pass over the newest requested list. `reveal` scrolls the active tab
+-- into view; a manual scroll skips it.
+local function placeOnce(ctx, reveal)
+  ctx.visible = ctx.requested
+  ctx.activeTab = ctx.requestedActive
+  Fit.measure(ctx)
+  local kind = Fit.fitKind(ctx)
   ctx.fits = kind ~= "overflow"
   if ctx.fits then
     placeFitting(ctx, kind)
     return
   end
   placeOverflowing(ctx, reveal)
+end
+
+local function placeUntilSettled(ctx, reveal)
+  for _ = 1, MAX_PASSES do
+    ctx.again = false
+    placeOnce(ctx, reveal)
+    if not ctx.again then
+      return
+    end
+    reveal = ctx.againReveal
+  end
+end
+
+-- A width read inside a pass can fire the strip's OnSizeChanged synchronously
+-- (the client does), which lands back here. A nested pass would overwrite the
+-- widths the outer one is measuring, so it only marks `again`, and the outer
+-- pass runs once more with the newest list after it finishes.
+local function place(ctx, reveal)
+  if ctx.placing then
+    ctx.again = true
+    ctx.againReveal = reveal
+    return
+  end
+  ctx.placing = true
+  local ok, err = pcall(placeUntilSettled, ctx, reveal)
+  ctx.placing = false
+  if not ok then
+    error(err, 0)
+  end
 end
 
 -- opts: spacing (gap between tabs), endReserve (pixels kept free right of the
@@ -256,8 +191,8 @@ function TabScroller.Attach(factory, frame, opts)
 
   -- visible: array of { btn = Button } in display order.
   function scroller.layout(visible, activeTab)
-    ctx.visible = visible
-    ctx.activeTab = activeTab
+    ctx.requested = visible
+    ctx.requestedActive = activeTab
     place(ctx, true)
   end
 
@@ -271,8 +206,8 @@ function TabScroller.Attach(factory, frame, opts)
   end
 
   function scroller.refresh()
-    if ctx.visible then
-      scroller.layout(ctx.visible, ctx.activeTab)
+    if ctx.requested then
+      scroller.layout(ctx.requested, ctx.requestedActive)
     end
   end
 
