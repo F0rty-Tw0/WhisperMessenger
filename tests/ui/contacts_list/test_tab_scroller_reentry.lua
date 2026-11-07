@@ -123,7 +123,10 @@ do
     end,
   })
   rig.strip:SetWidth(WIDTH)
-  assert(not pcall(rig.scroller.layout, rig.visible, nil), "the error surfaces")
+  local ok, err = pcall(rig.scroller.layout, rig.visible, nil)
+  assert(not ok, "the error surfaces")
+  assert(string.find(tostring(err), "boom", 1, true), "the error keeps its message, got " .. tostring(err))
+  assert(string.find(tostring(err), "stack traceback", 1, true), "the error keeps the traceback of the failed place")
   rig.scroller.layout(rig.visible, nil)
   assert(shown(rig) == "1,2,3", "places again after an error, got " .. shown(rig))
 end

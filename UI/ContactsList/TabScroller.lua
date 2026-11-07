@@ -165,7 +165,9 @@ local function place(ctx, reveal)
     return
   end
   ctx.placing = true
-  local ok, err = pcall(placeUntilSettled, ctx, reveal)
+  local ok, err = xpcall(function()
+    placeUntilSettled(ctx, reveal)
+  end, debug.traceback)
   ctx.placing = false
   if not ok then
     error(err, 0)
