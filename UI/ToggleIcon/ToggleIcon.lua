@@ -224,6 +224,8 @@ function ToggleIcon.Create(factory, options)
   local ride = IconRide.Create(frame, {
     theme = Theme,
     parent = parent,
+    isLocked = isLocked,
+    onPositionChanged = options.onPositionChanged,
     onRidingChanged = incomingPreview.setSuppressed,
     onLevel = function(level)
       badge:SetFrameLevel(level + BADGE_LEVEL_OFFSET)
@@ -298,6 +300,7 @@ function ToggleIcon.Create(factory, options)
     rideTo = ride.rideTo,
     rideHome = ride.rideHome,
     isRiding = ride.isRiding,
+    adoptRidePosition = ride.adoptRidePosition,
     setRideHome = ride.setHome,
     setRideStrata = ride.setStrata,
     setRideHandlers = drag.setRideHandlers,

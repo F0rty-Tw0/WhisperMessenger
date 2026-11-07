@@ -30,6 +30,33 @@ local function build()
 end
 
 return function()
+  -- test_the_icon_spot_lands_on_the_button
+  do
+    local frame, slot, icon, parent = build()
+    PhoneDock.Place(frame, slot, icon)
+    local point, relativeTo, relativePoint, x, y = frame:GetPoint()
+    assert(point == "TOPLEFT" and relativeTo == parent and relativePoint == "BOTTOMLEFT", "screen-anchored")
+    -- The spot sits 25 right of and 25 below the corner.
+    assert(x == 475 and y == 625, "got " .. tostring(x) .. "," .. tostring(y))
+  end
+
+  -- test_spot_with_no_position_yet_still_places_the_window
+  do
+    local frame, slot, icon = build()
+    centerAt(slot, nil, nil)
+    PhoneDock.Place(frame, slot, icon)
+    local _, _, _, x, y = frame:GetPoint()
+    assert(x == 500 and y == 600, "corner on the button; the glide finds the spot once it exists")
+  end
+
+  -- test_no_button_leaves_the_window_where_it_is
+  do
+    local frame, slot, _, parent = build()
+    frame:SetPoint("CENTER", parent, "CENTER", 5, 6)
+    PhoneDock.Place(frame, slot, nil)
+    assert(select(4, frame:GetPoint()) == 5, "position untouched")
+  end
+
   -- test_ride_target_is_the_spot_at_the_spots_size
   do
     local _, slot, icon = build()
