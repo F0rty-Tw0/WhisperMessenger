@@ -23,13 +23,20 @@ local function build()
   local slot = factory.CreateFrame("Frame", nil, frame)
   slot:SetSize(84, 84)
   at(slot, 125, 875)
+  local titleSlot = factory.CreateFrame("Frame", nil, frame)
+  titleSlot:SetSize(24, 24)
+  at(titleSlot, 112, 888)
   local fab = factory.CreateFrame("Button", "Fab", parent)
   fab:SetSize(42, 42)
   at(fab, 500, 600)
   local case = { frame = frame, fab = fab, rides = 0, homes = 0, finished = 0, handlers = {}, glide = true, order = {} }
+  case.slot, case.titleSlot, case.shape, case.savedSpot = slot, titleSlot, "circle", true
   case.openStep, case.closeStep = function() end, function() end
   case.icon = {
     frame = fab,
+    getWidgetShape = function()
+      return case.shape
+    end,
     isRiding = function()
       return case.rides > case.homes
     end,
@@ -50,8 +57,9 @@ local function build()
   case.flow = PhoneDockFlow.Attach(frame, {
     chrome = {
       iconSlot = slot,
-      setIconSlotOccupied = function(occupied)
-        case.occupied = occupied
+      titleIconSlot = titleSlot,
+      setIconSlotOccupied = function(occupied, spot)
+        case.occupied, case.occupiedSpot = occupied, spot
       end,
     },
     getDockIcon = function()
@@ -84,6 +92,9 @@ local function build()
     end,
     isIconGlideOn = function()
       return case.glide
+    end,
+    isOpenAtSavedSpot = function()
+      return case.savedSpot
     end,
   })
   return case
@@ -175,5 +186,58 @@ return function()
     local case = build()
     case.flow.open()
     assert(not case.rideInstant and case.step == case.openStep, "unchanged when on")
+  end
+
+  -- test_square_button_rides_the_title_bar_spot_and_takes_it
+  do
+    local case = build()
+    case.shape = "square"
+    case.flow.open()
+    case.flow.syncIconSlot()
+    assert(case.rodeTo.region == case.titleSlot, "the square rides the title-bar spot")
+    assert(case.occupied == true and case.occupiedSpot == case.titleSlot, "and the title buttons clear that spot")
+  end
+
+  -- test_circle_button_keeps_the_corner_spot
+  do
+    local case = build()
+    case.flow.open()
+    case.flow.syncIconSlot()
+    assert(case.rodeTo.region == case.slot and case.occupiedSpot == case.slot, "the circle keeps the corner")
+  end
+
+  -- test_switching_shape_while_docked_moves_the_button_to_the_other_spot
+  do
+    local case = build()
+    case.flow.open()
+    case.shape = "square"
+    case.flow.dock()
+    assert(case.rodeTo.region == case.titleSlot and case.occupiedSpot == case.titleSlot, "square: into the title bar")
+    case.shape = "circle"
+    case.flow.dock()
+    assert(case.rodeTo.region == case.slot and case.occupiedSpot == case.slot, "circle: back on the corner")
+  end
+
+  -- test_square_opens_with_the_title_spot_on_the_button
+  do
+    local case = build()
+    case.shape, case.savedSpot = "square", false
+    rawset(case.fab, "IsVisible", function()
+      return true
+    end)
+    case.flow.open()
+    local _, _, _, x, y = case.frame:GetPoint()
+    assert(x == 500 - 12 and y == 600 + 12, "the title spot lands on the button, got " .. tostring(x) .. "," .. tostring(y))
+  end
+
+  -- test_square_window_grows_from_and_shrinks_into_the_button
+  do
+    local case = build()
+    case.shape = "square"
+    case.flow.open()
+    assert(case.openedFrom == case.fab and case.step == case.openStep, "grows out of the square button")
+    case.frame.shown = false
+    case.flow.close()
+    assert(case.closedInto == case.fab and case.homes == 1, "and shrinks back into it")
   end
 end
