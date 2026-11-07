@@ -6,9 +6,10 @@ end
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
 
--- The phone window coming out of the floating button. Scaling a real window
+-- The window (classic or phone) coming out of its icon (the floating button
+-- or the minimap icon) and shrinking back into it. Scaling a real window
 -- makes its text and hairlines shimmer, so nothing real is scaled: a plain
--- panel grows from the button to the window's exact size, and the window,
+-- panel grows from the icon to the window's exact size, and the window,
 -- already full size and laid out, fades in over it. The phone ride passes its
 -- own steps (IconRide's clock keeps button, panel and fade together); `play`
 -- runs the steps on the panel's own clock when there is no ride.
