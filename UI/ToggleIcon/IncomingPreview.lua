@@ -87,6 +87,9 @@ function IncomingPreview.Create(factory, frame, options)
     end,
     onExpire = triggerDismiss,
   })
+  if previewFrame.SetScript and previewFrame.HookScript then
+    PreviewAutoDismiss.HoldWhileHovered(previewFrame, autoDismiss)
+  end
   hold = PreviewReplyHold.Create(factory, previewFrame, {
     theme = theme,
     quickReply = options.quickReply,

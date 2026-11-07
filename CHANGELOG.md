@@ -22,6 +22,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: Closing the messenger with Escape no longer pops up a widget preview for a whisper that came in while the window was open.
 - Fixed: Hiding the game's interface with Alt+Z and bringing it back no longer closes the messenger with its shrink animation. The window comes back just as you left it.
 - Fixed: The square floating button now has a solid dark background behind the chat bubbles, like the round one, instead of letting the ground show through.
+- Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 
 ## [2.1.4] - 2026-11-05
