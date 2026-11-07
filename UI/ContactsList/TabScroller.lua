@@ -45,6 +45,44 @@ local function lastFitting(visible, first, available, spacing)
   return last
 end
 
+-- Smallest first-index whose run to the last tab fits in `available`; the last
+-- tab itself when none does. Scrolling further would leave a gap at the end.
+local function maxFirstIndex(visible, available, spacing)
+  for index = 1, #visible do
+    if runWidth(visible, index, #visible, spacing) <= available then
+      return index
+    end
+  end
+
+  return #visible
+end
+
+local function indexOf(visible, tab)
+  for index, candidate in ipairs(visible) do
+    if candidate == tab then
+      return index
+    end
+  end
+
+  return nil
+end
+
+-- Moves `first` the least that brings the active tab into view.
+local function revealActive(ctx, available)
+  local visible = ctx.visible
+  local target = ctx.activeTab and indexOf(visible, ctx.activeTab)
+  if not target then
+    return
+  end
+  if target < ctx.first then
+    ctx.first = target
+    return
+  end
+  while lastFitting(visible, ctx.first, available, ctx.opts.spacing) < target do
+    ctx.first = ctx.first + 1
+  end
+end
+
 -- Shows and chains tabs `from`..`to` from the strip's left edge, hides the rest.
 local function chain(frame, visible, from, to, spacing)
   local previous = nil
@@ -107,10 +145,16 @@ local function placeFitting(ctx)
   ctx.frame:EnableMouseWheel(false)
 end
 
-local function placeOverflowing(ctx)
+local function placeOverflowing(ctx, reveal)
   local visible = ctx.visible
-  local last = lastFitting(visible, ctx.first, availableWidth(ctx), ctx.opts.spacing)
-  chain(ctx.frame, visible, ctx.first, last, ctx.opts.spacing)
+  local available = availableWidth(ctx)
+  local spacing = ctx.opts.spacing
+  ctx.first = math.max(1, math.min(ctx.first, maxFirstIndex(visible, available, spacing)))
+  if reveal then
+    revealActive(ctx, available)
+  end
+  local last = lastFitting(visible, ctx.first, available, spacing)
+  chain(ctx.frame, visible, ctx.first, last, spacing)
   setArrowEnabled(ctx, ctx.arrows.prev, ctx.first > 1)
   setArrowEnabled(ctx, ctx.arrows.next, last < #visible)
   ctx.arrows.prev:Show()
@@ -118,12 +162,14 @@ local function placeOverflowing(ctx)
   ctx.frame:EnableMouseWheel(true)
 end
 
-local function place(ctx)
-  if fitsStrip(ctx) then
+-- `reveal` scrolls the active tab into view; a manual scroll skips it.
+local function place(ctx, reveal)
+  ctx.fits = fitsStrip(ctx)
+  if ctx.fits then
     placeFitting(ctx)
     return
   end
-  placeOverflowing(ctx)
+  placeOverflowing(ctx, reveal)
 end
 
 -- opts: spacing (gap between tabs), endReserve (pixels kept free right of the
@@ -146,7 +192,16 @@ function TabScroller.Attach(factory, frame, opts)
   function scroller.layout(visible, activeTab)
     ctx.visible = visible
     ctx.activeTab = activeTab
-    place(ctx)
+    place(ctx, true)
+  end
+
+  -- One tab per step (+1 forward, -1 back); the active tab is not revealed.
+  function scroller.scroll(step)
+    if not ctx.visible or ctx.fits then
+      return
+    end
+    ctx.first = ctx.first + step
+    place(ctx, false)
   end
 
   function scroller.refresh()
@@ -159,6 +214,15 @@ function TabScroller.Attach(factory, frame, opts)
     paintArrows(ctx)
   end
 
+  arrows.prev:SetScript("OnClick", function()
+    scroller.scroll(-1)
+  end)
+  arrows.next:SetScript("OnClick", function()
+    scroller.scroll(1)
+  end)
+  frame:SetScript("OnMouseWheel", function(_self, delta)
+    scroller.scroll(delta > 0 and -1 or 1)
+  end)
   frame:SetScript("OnSizeChanged", function()
     scroller.refresh()
   end)
