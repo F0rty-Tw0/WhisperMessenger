@@ -13,10 +13,12 @@ local TabArrows = ns.ContactsListTabArrows or require("WhisperMessenger.UI.Conta
 -- Native WoW HUD Whispers/Groups/Channels/Requests tabs: Blizzard PanelTabButtonTemplate
 -- tabs hanging below the window's bottom-left edge, each sized to its label,
 -- like the Character or Professions frame tabs. When they don't all fit,
--- TabScroller shows whole tabs with the spellbook page arrows at the strip's
--- two ends. The strip is the window's child (so it stays up beside an addon
--- panel) and anchored to the window frame. Same interface as TabToggle.Create; returns nil when the template is
--- unavailable so the caller builds the modern bar instead.
+-- TabScroller shows whole tabs with the spellbook page arrows at the window's
+-- two edges, and may draw the tabs up to 8 px narrower (never below their
+-- edge art) so more fit. The strip is the window's child (so it stays up
+-- beside an addon panel) and anchored to the window frame. Same interface as
+-- TabToggle.Create; returns nil when the template is unavailable so the
+-- caller builds the modern bar instead.
 local NativeTabToggle = {}
 
 local TAB_TEMPLATE = "PanelTabButtonTemplate"
@@ -61,8 +63,8 @@ local function regionWidth(region)
   return region and region.GetWidth and region:GetWidth() or 0
 end
 
--- Label width plus the sides, never narrower than the left + right edge
--- art, which would overlap.
+-- Label width plus the sides, minus the scroller's squeeze, never narrower
+-- than the left + right edge art, which would overlap.
 local function sizeTab(tab)
   local btn = tab.btn
   local label = btn.Text
@@ -71,7 +73,7 @@ local function sizeTab(tab)
   end
   local textWidth = btn.GetTextWidth and btn:GetTextWidth() or 0
   local artWidth = regionWidth(btn.Left) + regionWidth(btn.Right)
-  btn:SetWidth(math.max(textWidth + TAB_SIDES, artWidth))
+  btn:SetWidth(math.max(textWidth + TAB_SIDES - (tab.squeeze or 0), artWidth))
 end
 
 local function liftAboveBorder(badgeFrame, window)
@@ -144,6 +146,11 @@ function NativeTabToggle.Create(factory, parent, options)
     spacing = TAB_SPACING,
     endReserve = RIGHT_ART_OVERHANG,
     arrowWidth = TabArrows.NATIVE_SIZE,
+    arrowOutset = WINDOW_LEFT_OFFSET,
+    squeeze = function(tab, px)
+      tab.squeeze = px
+      sizeTab(tab)
+    end,
     createArrows = function(holder)
       return TabArrows.CreateNative(factory, holder)
     end,

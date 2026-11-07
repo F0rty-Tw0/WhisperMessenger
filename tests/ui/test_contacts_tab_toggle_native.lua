@@ -108,20 +108,22 @@ return function()
     assert(groups.width == 72, "HUD: short label still fits both edge pieces, got " .. tostring(groups.width))
   end
 
-  -- test_hud_tabs_keep_natural_width_on_a_narrow_strip
+  -- test_hud_tabs_never_shrink_below_label_plus_sides_minus_the_squeeze
   do
     -- No equal-share cap: a strip too narrow for every tab scrolls them
-    -- instead of cutting labels short.
+    -- instead of cutting labels short. At 260 the shown run needs the 8 px
+    -- squeeze (tight 3 tabs 192 fit the 214 room, natural 216 do not); at
+    -- 160 (room 114) only Whispers shows and its natural 76 fits.
     local toggle = createToggle(FakeUI.NewFactory(), true)
     local strip = toggle.frame
     strip:SetWidth(260)
     strip.scripts.OnSizeChanged(strip, 260, NativeTabToggle.HEIGHT)
     toggle.setModes({ "whispers", "groups", "channels", "requests" })
     local whispers = tabs(toggle)[1]
-    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: tab keeps its natural width, got " .. tostring(whispers.width))
+    assert(whispers.width == whispers:GetTextWidth() + 20 - 8, "HUD: tab squeezes 8 px to fit more, got " .. tostring(whispers.width))
     strip:SetWidth(160)
     strip.scripts.OnSizeChanged(strip, 160, NativeTabToggle.HEIGHT)
-    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: a narrower strip keeps it, got " .. tostring(whispers.width))
+    assert(whispers.width == whispers:GetTextWidth() + 20, "HUD: a run that fits natural is drawn natural, got " .. tostring(whispers.width))
   end
 
   -- test_hud_tab_show_keeps_our_size
