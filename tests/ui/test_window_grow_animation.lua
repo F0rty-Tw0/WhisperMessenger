@@ -207,6 +207,21 @@ return function()
     assert(case.ghost.scripts.OnUpdate ~= nil, "and the panel owns the clock")
   end
 
+  -- test_a_panel_the_step_cannot_place_stays_unseen
+  do
+    for _, begin in ipairs({ "beginOpen", "beginClose" }) do
+      local case = build()
+      case.animation.play(case.animation.beginOpen(case.icon))
+      tickPanel(case, SECONDS + 0.05) -- the panel keeps this run's last spot and size
+      local bare = case.factory.CreateFrame("Button", "Bare", case.parent)
+      case.animation.play(case.animation[begin](bare))
+      tickPanel(case, FRAME * 3)
+      assert(case.ghost.alpha == 0, begin .. ": not drawn at the last run's spot, got " .. tostring(case.ghost.alpha))
+      tickPanel(case, SECONDS)
+      assert(case.frame:GetAlpha() == 0.8, begin .. ": the window still ends at the player's opacity")
+    end
+  end
+
   -- test_play_drives_an_open_to_the_end_on_the_panel_clock
   do
     local case = build()

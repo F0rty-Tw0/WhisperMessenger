@@ -108,10 +108,14 @@ function WindowGrowAnimation.Attach(frame, options)
     panel:SetAlpha(1)
   end
 
-  local function placePanel(from, to, p)
+  -- With no rect at either end, the panel would draw at the last run's spot
+  -- and size: it stays unseen instead (still shown, so play's clock ticks).
+  local function placePanel(from, to, t, p)
     if not (from and to) then
+      panel:SetAlpha(0)
       return
     end
+    panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
     local scale = panel:GetEffectiveScale()
     local left = from.left + (to.left - from.left) * p
     local right = from.right + (to.right - from.right) * p
@@ -162,8 +166,7 @@ function WindowGrowAnimation.Attach(frame, options)
         finish()
         return
       end
-      placePanel(from, readRect(frame, scratch), p)
-      panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
+      placePanel(from, readRect(frame, scratch), t, p)
       frame:SetAlpha(targetAlpha * ramp(t, REVEAL_START))
     end
   end
@@ -184,13 +187,13 @@ function WindowGrowAnimation.Attach(frame, options)
         panel:Hide()
         return
       end
-      placePanel(from, readCenterPoint(iconFrame, scratch), p)
-      panel:SetAlpha(1 - ramp(t, PANEL_FADE_START))
+      placePanel(from, readCenterPoint(iconFrame, scratch), t, p)
     end
   end
 
   -- Runs a begin* step on the panel's own clock. A hidden frame gets no
-  -- OnUpdate, so the panel is shown first even if the step cannot place it.
+  -- OnUpdate, so the panel is shown first even if the step cannot place it
+  -- (placePanel keeps an unplaced panel unseen).
   local function play(step)
     step(0, 0)
     if not panel:IsShown() then
