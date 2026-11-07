@@ -78,6 +78,14 @@ return function()
     assert(case.sizes[1] == 50 and case.sizes[2] == "dock", "the spot is worked out from the new size")
   end
 
+  -- test_a_changed_dock_option_is_saved_and_docks_the_window_now
+  do
+    local case = build(true)
+    case.onChange("iconDock", false)
+    assert(case.settings.iconDock == false, "saved as a plain account setting, no reload")
+    assert(#case.sizes == 1 and case.sizes[1] == "dock", "the open window re-docks at once, got " .. #case.sizes)
+  end
+
   -- test_a_changed_widget_shape_leaves_the_dock_alone
   do
     local case = build(true)

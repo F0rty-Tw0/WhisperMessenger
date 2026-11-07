@@ -37,14 +37,19 @@ local REMOVED_KEYS = {
   "The window grows out of its icon when it opens and shrinks back into it when it closes. Turn it off to open and close it at once.",
   "Button glide",
   "The floating button glides onto the window's corner when it opens and back when it closes. Turn it off to make it jump.",
+  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window.",
 }
 local WINDOW_ANIMATION_KEYS = {
   "Window animation",
   "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once.",
 }
+local DOCK_KEYS = {
+  "Dock button on the window",
+  "While the window is open, the floating button sits in the window's top-left corner. Turn it off to leave the button where it is.",
+}
 local SAVED_SPOT_KEYS = {
   "Open at saved spot",
-  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window.",
+  "The window opens where you last moved it. Turn it off to open the window at the floating button, and move the button along when you move the window. Only while Dock button on the window is on.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 
@@ -127,6 +132,11 @@ return function()
 
     -- test_window_animation_strings_are_translated
     for _, key in ipairs(WINDOW_ANIMATION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_dock_button_strings_are_translated
+    for _, key in ipairs(DOCK_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 

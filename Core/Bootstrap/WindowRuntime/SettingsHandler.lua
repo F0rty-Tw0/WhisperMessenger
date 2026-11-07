@@ -263,6 +263,10 @@ function SettingsHandler.Create(options)
       dockPhoneIcon()
     end
 
+    if key == "iconDock" then
+      dockPhoneIcon()
+    end
+
     if key == "iconDesaturated" then
       if icon and icon.refreshDesaturation then
         icon.refreshDesaturation()
