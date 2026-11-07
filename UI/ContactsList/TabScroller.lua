@@ -19,6 +19,15 @@ local TabScroller = {}
 -- every pass from looping.
 local MAX_PASSES = 4
 
+-- Adds the stack to a layout error. Plain Lua has debug.traceback; the WoW
+-- client may not, so fall back to its debugstack.
+local function fallbackTraceback(err)
+  local debugstack = _G["debugstack"]
+  local stack = type(debugstack) == "function" and debugstack(2) or ""
+  return tostring(err) .. "\n" .. stack
+end
+local traceback = type(_G.debug) == "table" and _G.debug.traceback or fallbackTraceback
+
 -- Stands in for a skin without a squeeze hook: tabs keep their live width.
 local function noSqueeze(_tab, _px) end
 
@@ -169,7 +178,7 @@ local function place(ctx, reveal)
   ctx.placing = true
   local ok, err = xpcall(function()
     placeUntilSettled(ctx, reveal)
-  end, debug.traceback)
+  end, traceback)
   ctx.placing = false
   if not ok then
     error(err, 0)
