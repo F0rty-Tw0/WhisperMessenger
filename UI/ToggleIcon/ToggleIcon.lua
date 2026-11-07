@@ -151,9 +151,13 @@ function ToggleIcon.Create(factory, options)
     return math.min(1, math.max(0, value))
   end
 
+  -- The real count, not the badge: hiding the badge must not hide the icon.
+  local hasUnread = false
+
   local function refreshTransparency()
     if frame.SetAlpha then
-      local alpha = not hover.active and (1 - resolveWidgetTransparency()) or 1
+      local opaque = hover.active or hasUnread
+      local alpha = opaque and 1 or (1 - resolveWidgetTransparency())
       frame:SetAlpha(alpha)
     end
   end
@@ -177,6 +181,8 @@ function ToggleIcon.Create(factory, options)
 
     desaturation.update(unreadCount)
     squareLook.apply(desaturation.isActive())
+    hasUnread = unreadCount > 0
+    refreshTransparency()
   end
 
   local drag = {}
