@@ -8,13 +8,10 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ReactionAssets = ns.ChatBubbleReactionAssets or require("WhisperMessenger.UI.ChatBubble.ReactionAssets")
 local PreviewMetrics = ns.ToggleIconPreviewMetrics or require("WhisperMessenger.UI.ToggleIcon.PreviewMetrics")
 local PreviewAutoDismiss = ns.ToggleIconPreviewAutoDismiss or require("WhisperMessenger.UI.ToggleIcon.PreviewAutoDismiss")
-local PreviewChrome = ns.ToggleIconPreviewChrome or require("WhisperMessenger.UI.ToggleIcon.PreviewChrome")
 local PreviewLinks = ns.ToggleIconPreviewLinks or require("WhisperMessenger.UI.ToggleIcon.PreviewLinks")
-local PreviewDetailRow = ns.ToggleIconPreviewDetailRow or require("WhisperMessenger.UI.ToggleIcon.PreviewDetailRow")
-local PreviewDismissButton = ns.ToggleIconPreviewDismissButton or require("WhisperMessenger.UI.ToggleIcon.PreviewDismissButton")
 local PreviewReplyHold = ns.ToggleIconPreviewReplyHold or require("WhisperMessenger.UI.ToggleIcon.PreviewReplyHold")
+local PreviewCard = ns.ToggleIconPreviewCard or require("WhisperMessenger.UI.ToggleIcon.PreviewCard")
 local applyClassColor = UIHelpers.applyClassColor
-local setFontObject = UIHelpers.setFontObject
 local setTextColor = UIHelpers.setTextColor
 
 local IncomingPreview = {}
@@ -23,48 +20,13 @@ function IncomingPreview.Create(factory, frame, options)
   options = options or {}
 
   local theme = options.theme or Theme
-  local previewFrame, previewBackground = PreviewChrome.Create(factory, frame)
-  previewFrame:SetSize(PreviewMetrics.MAX_WIDTH, PreviewMetrics.HEIGHT)
-
-  local positioner = PreviewMetrics.NewPositioner(previewFrame, frame, options.getPreviewPosition)
-  positioner.apply(positioner.resolve())
-  if previewFrame.SetFrameLevel then
-    previewFrame:SetFrameLevel(frame:GetFrameLevel() + 1)
-  end
-  -- The minimap icon reparents this frame to UIParent, which would otherwise drop it to MEDIUM strata.
-  if previewFrame.SetFrameStrata then
-    previewFrame:SetFrameStrata("HIGH")
-  end
-  -- A button riding the phone window changes strata; its preview stays up.
-  if previewFrame.SetFixedFrameStrata then
-    previewFrame:SetFixedFrameStrata(true)
-  end
-  if previewFrame.EnableMouse then
-    previewFrame:EnableMouse(true)
-  end
-
-  local previewClassIconResult = UIHelpers.createCircularIcon(factory, previewFrame, PreviewMetrics.CLASS_ICON_SIZE)
-  local previewClassIconFrame = previewClassIconResult.frame
-  local previewClassIcon = previewClassIconResult.texture
-  previewClassIconFrame:SetPoint("LEFT", previewFrame, "LEFT", PreviewMetrics.LEFT_PAD, 0)
-  previewClassIconFrame:Hide()
-
-  local dismiss = PreviewDismissButton.Create(factory, previewFrame, theme)
-
-  local senderLeft = PreviewMetrics.LEFT_PAD + PreviewMetrics.CLASS_ICON_SIZE + PreviewMetrics.ICON_GAP
-  local previewSenderLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  -- Font objects only: a raw SetFont on a FontString overrides the engine's
-  -- Unicode glyph-fallback chain and blanks Cyrillic/Greek characters.
-  setFontObject(previewSenderLabel, theme.FONTS.message_text)
-  previewSenderLabel:SetPoint("TOPLEFT", previewFrame, "TOPLEFT", senderLeft, PreviewMetrics.SENDER_TOP_OFFSET)
-  PreviewChrome.SingleLine(previewSenderLabel)
-
-  local previewMessageLabel = previewFrame:CreateFontString(nil, "OVERLAY")
-  setFontObject(previewMessageLabel, theme.FONTS.message_text)
-  previewMessageLabel:SetPoint("TOPLEFT", previewSenderLabel, "BOTTOMLEFT", 0, PreviewMetrics.MESSAGE_GAP)
-  PreviewChrome.SingleLine(previewMessageLabel)
-  local detailRow = PreviewDetailRow.Create(previewFrame, previewMessageLabel, theme.FONTS.message_text)
-  previewFrame:Hide()
+  local card = PreviewCard.Create(factory, frame, theme, options.getPreviewPosition)
+  local previewFrame, previewBackground = card.frame, card.background
+  local positioner = card.positioner
+  local previewClassIconFrame, previewClassIcon = card.classIconFrame, card.classIcon
+  local previewSenderLabel, previewMessageLabel = card.senderLabel, card.messageLabel
+  local dismiss = card.dismiss
+  local detailRow = card.detailRow
 
   local autoDismiss
   local hold

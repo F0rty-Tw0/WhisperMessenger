@@ -314,6 +314,7 @@ UI/ToggleIcon/PreviewDetailRow.lua
 UI/ToggleIcon/PreviewDismissButton.lua
 UI/ToggleIcon/PreviewReplyRow.lua
 UI/ToggleIcon/PreviewReplyHold.lua
+UI/ToggleIcon/PreviewCard.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/PulseState.lua
