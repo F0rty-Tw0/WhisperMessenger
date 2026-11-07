@@ -5,6 +5,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local PulseGlow = require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 local Desaturation = require("WhisperMessenger.UI.ToggleIcon.Desaturation")
 local IconArt = require("WhisperMessenger.UI.ToggleIcon.IconArt")
 local DockedLook = require("WhisperMessenger.UI.ToggleIcon.DockedLook")
@@ -164,7 +165,19 @@ return function()
     assert(bare.getWidgetShape() == nil and bare.getIconBorder() == nil, "a missing getter stays nil when floating")
   end
 
+  local function test_docked_square_pulses_with_the_round_glow()
+    local icon, target = build({ shape = "square" })
+    icon.rideTo(target)
+    local texture = icon.pulseTexture
+    local glowFrame = texture.allPoints
+    assert(texture.texturePath == PulseGlow.TEXTURE, "docked: the round pulse art, got " .. tostring(texture.texturePath))
+    assert(glowFrame ~= nil and glowFrame == texture.parent and glowFrame.allPoints == icon.frame, "docked: round art over the glow frame")
+    icon.rideHome()
+    assert(texture.texturePath == SquareLook.SQUARE_GLOW_TEXTURE, "home: the square edge art again")
+  end
+
   test_docked_square_with_border_and_background_off_wears_the_default_circle()
+  test_docked_square_pulses_with_the_round_glow()
   test_landing_home_brings_the_saved_look_back()
   test_docked_square_with_everything_on_turns_round_and_is_square_again_at_home()
   test_docked_look_is_themed_even_when_the_saved_border_is_gold()

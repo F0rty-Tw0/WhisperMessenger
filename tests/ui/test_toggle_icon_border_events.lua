@@ -153,17 +153,19 @@ return function()
     )
   end
 
-  -- test_square_pulse_follows_the_square_glyph_after_full_ring
+  -- test_square_pulse_fills_the_glow_frame_after_full_ring
   do
     local state = { background = false }
     local icon = widget(state)
     state.shape = "square"
     icon.refreshTheme()
-    local expected = 37 * SquareLook.BUBBLE_GLOW_SCALE
+    local texture = icon.pulseTexture
+    local glowFrame = texture.allPoints
     assert(
-      near(icon.pulseTexture.width, expected),
-      "test_square_pulse_follows_the_square_glyph_after_full_ring: pulse from the 0.9 glyph, got " .. tostring(icon.pulseTexture.width)
+      texture.texturePath == SquareLook.SQUARE_GLOW_TEXTURE and glowFrame ~= nil and glowFrame == texture.parent and glowFrame.allPoints == icon.frame,
+      "test_square_pulse_fills_the_glow_frame_after_full_ring: edge art over the glow frame, got " .. tostring(texture.texturePath)
     )
+    assert(texture.point == nil, "no glyph-sized anchor left on the pulse")
   end
 
   -- test_hover_press_pulse_and_idle_gray_leave_the_ring_alone

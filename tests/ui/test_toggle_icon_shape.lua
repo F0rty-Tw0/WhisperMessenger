@@ -32,19 +32,20 @@ local function withEllesmere(fn)
   end
 end
 
--- The bubble-shaped glow, centred on the glyph and BUBBLE_GLOW_SCALE times its size.
-local function onBubbles(texture, glyph)
-  local point = texture.point or {}
-  return texture.texturePath == SquareLook.BUBBLE_GLOW_TEXTURE
-    and point[1] == "CENTER"
-    and point[2] == glyph
-    and texture.width == glyph.width * SquareLook.BUBBLE_GLOW_SCALE
-end
-
 -- The round pulse art, stretched over its glow frame, which covers the whole button.
 local function fillsButton(texture, button)
   local glowFrame = texture.allPoints
   return texture.texturePath == PulseGlow.TEXTURE
+    and texture.point == nil
+    and glowFrame ~= nil
+    and glowFrame == texture.parent
+    and glowFrame.allPoints == button
+end
+
+-- The square edge-glow art, stretched over the pulse's glow frame, which covers the whole button.
+local function fillsWithSquareGlow(texture, button)
+  local glowFrame = texture.allPoints
+  return texture.texturePath == SquareLook.SQUARE_GLOW_TEXTURE
     and texture.point == nil
     and glowFrame ~= nil
     and glowFrame == texture.parent
@@ -138,10 +139,13 @@ return function()
     shape = "square"
     icon.refreshTheme()
     assert(pulsing(), "pulse still running on square")
-    assert(onBubbles(icon.pulseTexture, icon.label), "pulse sits around the bubbles on square")
+    assert(fillsWithSquareGlow(icon.pulseTexture, icon.frame), "pulse glows along the square edge")
     shape = "circle"
     icon.refreshTheme()
     assert(pulsing() and fillsButton(icon.pulseTexture, icon.frame), "pulse back on the circle art, still running")
+    shape = "square"
+    icon.refreshTheme()
+    assert(pulsing() and fillsWithSquareGlow(icon.pulseTexture, icon.frame), "square edge art again, still running")
   end
 
   -- test_shape_change_keeps_the_hover_lift
