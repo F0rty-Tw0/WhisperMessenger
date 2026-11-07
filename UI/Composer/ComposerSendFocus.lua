@@ -10,13 +10,14 @@ local BindingKeys = ns.BindingKeys or require("WhisperMessenger.Util.BindingKeys
 -- it back. The key is an override binding on a button, like the ESC override
 -- (EscapeKey.lua), so it never touches Blizzard's chat box.
 --
--- Bindings can't change in combat, so the override is left as it was when the
--- fight began: bound if the window was open, absent if it was closed (Enter
--- stays the game's chat then, also when the window opens mid-fight). Calling
--- the game's chat opener from here would taint, so in combat the key focuses
--- the composer only while the mouse is over the window and otherwise does
--- nothing. A window closed mid-fight leaves a dead Enter until combat ends,
--- when PLAYER_REGEN_ENABLED releases it.
+-- Bindings can't change in combat. PLAYER_REGEN_DISABLED fires just before the
+-- lockdown, so with the setting on and the window open it takes the key even
+-- while the composer is hidden (settings, a panel, the contact list) or has no
+-- conversation. A closed window leaves Enter the game's chat for the fight,
+-- also when the window opens mid-fight. Calling the game's chat opener from
+-- here would taint, so in combat the key focuses the composer only while it is
+-- shown and the mouse is over the window, and otherwise does nothing. When
+-- combat ends, PLAYER_REGEN_ENABLED keeps or releases the key as usual.
 --
 -- Settings hide the composer's pane, so the pane's OnShow picks up a changed
 -- toggle when they close.
@@ -24,7 +25,7 @@ local ComposerSendFocus = {}
 
 local BUTTON_NAME = "WhisperMessengerComposerEnterButton"
 local OPEN_CHAT_ACTION = "OPENCHAT"
-local EVENTS = { "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }
+local EVENTS = { "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }
 
 local function defaultInCombat()
   return type(_G.InCombatLockdown) == "function" and _G.InCombatLockdown() == true
@@ -118,6 +119,17 @@ function ComposerSendFocus.Create(pane, input, options, deps)
     end
   end
 
+  -- Last chance before the lockdown: an open window keeps the key for the
+  -- fight even while its composer is hidden or disabled.
+  local function beforeCombat()
+    if inCombat() or not options.isOn() then
+      return
+    end
+    if windowOf(pane):IsVisible() then
+      bind()
+    end
+  end
+
   -- The override survived the fight: release it, or move it to keys changed
   -- during the fight.
   local function afterCombat()
@@ -157,7 +169,9 @@ function ComposerSendFocus.Create(pane, input, options, deps)
       end
     end
     button:SetScript("OnEvent", function(_self, event)
-      if event == "PLAYER_REGEN_ENABLED" then
+      if event == "PLAYER_REGEN_DISABLED" then
+        beforeCombat()
+      elseif event == "PLAYER_REGEN_ENABLED" then
         afterCombat()
       elseif event == "UPDATE_BINDINGS" then
         followRebind()

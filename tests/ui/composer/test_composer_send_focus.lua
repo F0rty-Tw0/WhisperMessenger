@@ -4,16 +4,24 @@ local ComposerSendFocus = require("WhisperMessenger.UI.Composer.ComposerSendFocu
 -- Builds a ComposerSendFocus with recorded binding calls. env.on, env.enabled
 -- and env.combat drive its state; env.bound lists the keys bound now, and
 -- env.blocked counts binding calls made in combat, which the game refuses.
--- env.window is the pane's parent; its mouseOver field is the cursor.
+-- The pane sits under the window as in the real one: window > content area >
+-- content pane > pane, with the window under UIParent. env.window.mouseOver is
+-- the cursor; no other frame in the chain reports it.
 local function newEnv(overrides)
   local factory = FakeUI.NewFactory()
   local env = { on = true, enabled = true, combat = false, keys = { "ENTER" }, bound = {}, binds = 0, blocked = 0 }
   for key, value in pairs(overrides or {}) do
     env[key] = value
   end
-  env.window = factory.CreateFrame("Frame", nil, nil)
+  _G.UIParent = factory.CreateFrame("Frame", "UIParent", nil)
+  _G.UIParent:Show()
+  env.window = factory.CreateFrame("Frame", nil, _G.UIParent)
   env.window:Show()
-  env.pane = factory.CreateFrame("Frame", nil, env.window)
+  local contentArea = factory.CreateFrame("Frame", nil, env.window)
+  contentArea:Show()
+  local contentPane = factory.CreateFrame("Frame", nil, contentArea)
+  contentPane:Show()
+  env.pane = factory.CreateFrame("Frame", nil, contentPane)
   env.input = factory.CreateFrame("EditBox", nil, env.pane)
   env.focus = ComposerSendFocus.Create(env.pane, env.input, {
     isOn = function()
@@ -71,6 +79,8 @@ local function newEnv(overrides)
 end
 
 return function()
+  local savedUIParent = _G.UIParent
+
   -- test_after_send_clears_focus_when_on
   do
     local env = newEnv()
@@ -119,7 +129,7 @@ return function()
   -- test_button_listens_for_its_events
   do
     local env = newEnv()
-    for _, event in ipairs({ "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }) do
+    for _, event in ipairs({ "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "UPDATE_BINDINGS", "PLAYER_ENTERING_WORLD" }) do
       assert(env.button:IsEventRegistered(event), "the button must listen for " .. event)
     end
   end
@@ -197,12 +207,65 @@ return function()
   -- test_window_closed_at_combat_start_binds_nothing_through_combat
   do
     local env = newEnv()
-    env.pane:Hide()
+    env.window:Hide()
+    env.focus.sync() -- the game fires the pane's OnHide; the fake doesn't
     env.startCombat()
-    env.pane:Show()
+    env.window:Show()
     env.fire("UPDATE_BINDINGS")
     env.fire("PLAYER_ENTERING_WORLD")
     assert(#env.bound == 0 and env.blocked == 0, "a window opened mid-fight can't bind: Enter stays the game's chat")
+  end
+
+  -- test_open_window_with_hidden_composer_binds_at_combat_start
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.startCombat()
+    assert(#env.bound == 1 and env.blocked == 0, "settings or the contact list hide the composer: the open window still keeps Enter")
+  end
+
+  -- test_open_window_with_disabled_composer_binds_at_combat_start
+  do
+    local env = newEnv()
+    env.enabled = false
+    env.focus.sync()
+    env.startCombat()
+    assert(#env.bound == 1, "no conversation selected: the open window still keeps Enter for the fight")
+  end
+
+  -- test_setting_off_binds_nothing_at_combat_start
+  do
+    local env = newEnv({ on = false })
+    env.startCombat()
+    assert(#env.bound == 0, "the setting is off: Enter stays the game's chat in combat")
+  end
+
+  -- test_combat_start_event_in_lockdown_makes_no_binding_calls
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.combat = true
+    env.fire("PLAYER_REGEN_DISABLED")
+    assert(env.blocked == 0 and #env.bound == 0, "bindings can't change once lockdown has begun")
+  end
+
+  -- test_combat_click_with_hidden_composer_does_nothing
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.startCombat()
+    env.window.mouseOver = true
+    env.button:GetScript("OnClick")(env.button)
+    assert(env.input._hasFocus ~= true, "a hidden composer swallows Enter in combat")
+  end
+
+  -- test_combat_end_releases_key_bound_for_hidden_composer
+  do
+    local env = newEnv()
+    env.pane:Hide()
+    env.startCombat()
+    env.endCombat()
+    assert(#env.bound == 0, "the composer is still hidden after the fight: the key goes back")
   end
 
   -- test_combat_click_focuses_when_mouse_over_window
@@ -267,9 +330,10 @@ return function()
   -- test_combat_end_rebinds_when_eligible
   do
     local env = newEnv()
-    env.pane:Hide()
+    env.window:Hide()
+    env.focus.sync() -- the game fires the pane's OnHide; the fake doesn't
     env.startCombat()
-    env.pane:Show()
+    env.window:Show()
     env.endCombat()
     assert(#env.bound == 1, "a window opened mid-fight takes the key after combat")
   end
@@ -346,4 +410,6 @@ return function()
     env.fire("PLAYER_ENTERING_WORLD")
     assert(env.binds == 0, "the setting is off: no override")
   end
+
+  _G.UIParent = savedUIParent
 end
