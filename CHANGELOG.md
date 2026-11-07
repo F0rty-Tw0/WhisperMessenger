@@ -17,7 +17,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - The regular (non-compact) window now holds the floating button in its top-left corner while it is open, like the compact window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
 - In the compact window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: In the compact window, the title no longer runs into the buttons next to it.
-- Fixed: With the Native WoW HUD style, turning off Requests could leave its tab on screen on top of another tab until a reload.
+- Fixed: Turning off a tab such as Requests or Channels could leave it on screen on top of another tab until a reload.
 - Fixed: Dragging the button while it sits on the open window no longer makes the window jump.
 - Fixed: Messages from addon chat channels (like Forever Item Finder's) and other custom channels you haven't turned on as chats no longer show up inside your whisper chats. Channels you turned on as chats, and the game's own channels like Trade, still show their latest message there.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.

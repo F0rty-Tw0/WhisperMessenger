@@ -38,20 +38,44 @@ local function tab(toggle, label)
   error("no tab labelled " .. label)
 end
 
--- The first width read on `btn` after Requests is hidden fires the strip's
--- OnSizeChanged once (the reads before it happen while the tabs show).
-local function fireSizeChangedOnNextRead(toggle, btn)
-  local read = btn.GetTextWidth
-  local requests = tab(toggle, "Requests")
+-- The first `method` width read on `reader` after `hidden` hides fires the
+-- strip's OnSizeChanged once (the reads before it happen while the tabs show).
+local function fireOnReadAfterHide(toggle, reader, method, hidden)
+  local read = reader[method]
   local armed = true
-  btn.GetTextWidth = function(self)
-    if armed and requests.shown == false then
+  reader[method] = function(self)
+    if armed and hidden.shown == false then
       armed = false
       toggle.frame.scripts.OnSizeChanged(toggle.frame, STRIP_WIDTH, STRIP_HEIGHT)
     end
 
     return read(self)
   end
+end
+
+local function fireSizeChangedOnNextRead(toggle, btn)
+  fireOnReadAfterHide(toggle, btn, "GetTextWidth", tab(toggle, "Requests"))
+end
+
+-- Modern tabs at 340, all four mode tabs plus Craft Alert.
+local function buildModern()
+  local factory = FakeUI.NewFactory()
+  local window = factory.CreateFrame("Frame", nil, nil)
+  local toggle = TabToggle.Create(factory, window, { initialMode = "whispers", windowFrame = window })
+  toggle.setModes(ALL_MODES)
+  toggle.addPanelTab("ca", "Craft Alert", noop)
+  toggle.frame:SetWidth(STRIP_WIDTH)
+  toggle.frame.scripts.OnSizeChanged(toggle.frame, STRIP_WIDTH, STRIP_HEIGHT)
+
+  return toggle
+end
+
+-- A modern tab's label carries its text; the button owns the label.
+local function modernLabel(toggle, text)
+  local label = FindUI.text(toggle.frame, text)
+  assert(label, "no modern tab labelled " .. text)
+
+  return label
 end
 
 -- test_native_requests_tab_hides_when_a_width_read_fires_the_resize
@@ -72,6 +96,27 @@ do
   assert(point[2] == tab(toggle, "Channels"), "Craft Alert anchors to Channels")
   assert(point[3] == "TOPRIGHT", "Craft Alert hangs off Channels' right edge")
   assert(tab(toggle, "Craft Alert").shown, "Craft Alert shows")
+end
+
+-- Showing Requests (scrolled out at 340) reads its width before the new list
+-- is placed; the resize that read fires lays out the old list, Channels too.
+-- test_native_channels_hides_when_showing_a_tab_fires_the_resize
+do
+  local toggle = build()
+  local channels = tab(toggle, "Channels")
+  fireOnReadAfterHide(toggle, tab(toggle, "Requests"), "GetTextWidth", channels)
+  toggle.setModes({ "whispers", "groups", "requests" })
+  assert(channels.shown == false, "Native Channels stays hidden after turning it off")
+end
+
+-- test_modern_channels_hides_when_sizing_a_tab_fires_the_resize
+do
+  local toggle = buildModern()
+  local channels = modernLabel(toggle, "Channels").parent
+  assert(channels.shown, "modern Channels shows while it is on")
+  fireOnReadAfterHide(toggle, modernLabel(toggle, "Whispers"), "GetStringWidth", channels)
+  toggle.setModes({ "whispers", "groups", "requests" })
+  assert(channels.shown == false, "modern Channels stays hidden after turning it off")
 end
 
 print("PASS: test_tab_toggle_resize_reentry")

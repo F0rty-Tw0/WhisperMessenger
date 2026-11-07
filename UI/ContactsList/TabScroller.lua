@@ -113,9 +113,24 @@ local function placeOverflowing(ctx, reveal)
   ctx.frame:EnableMouseWheel(true)
 end
 
+-- Hides the tabs an earlier pass placed that the new list dropped: a pass over
+-- a stale list can show a tab the skin has since hidden, and chain() only
+-- walks the new list.
+local function hideDropped(previous, requested)
+  if not previous or previous == requested then
+    return
+  end
+  for _, tab in ipairs(previous) do
+    if not indexOf(requested, tab) then
+      tab.btn:Hide()
+    end
+  end
+end
+
 -- One pass over the newest requested list. `reveal` scrolls the active tab
 -- into view; a manual scroll skips it.
 local function placeOnce(ctx, reveal)
+  hideDropped(ctx.visible, ctx.requested)
   ctx.visible = ctx.requested
   ctx.activeTab = ctx.requestedActive
   Fit.measure(ctx)
