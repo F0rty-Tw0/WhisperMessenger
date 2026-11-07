@@ -25,13 +25,13 @@ local ChromeBuilder = {}
 local function createCornerIconSlot(factory, frame)
   local L = Theme.LAYOUT
   local slot = factory.CreateFrame("Frame", nil, frame)
-  slot:SetSize(L.PHONE_ICON_SLOT_SIZE, L.PHONE_ICON_SLOT_SIZE)
-  slot:SetPoint("CENTER", frame, "TOPLEFT", L.PHONE_ICON_SLOT_X, L.PHONE_ICON_SLOT_Y)
+  slot:SetSize(L.COMPACT_ICON_SLOT_SIZE, L.COMPACT_ICON_SLOT_SIZE)
+  slot:SetPoint("CENTER", frame, "TOPLEFT", L.COMPACT_ICON_SLOT_X, L.COMPACT_ICON_SLOT_Y)
   return slot
 end
 
-local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed, phoneLayout)
-  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed, phoneLayout)
+local function applyResizeBounds(frame, parent, theme, windowScale, contactsCollapsed, compactLayout)
+  local minWidth, minHeight, maxWidth, maxHeight = WindowBounds.GetResizeBounds(parent, theme, windowScale, contactsCollapsed, compactLayout)
   if frame.SetResizeBounds then
     frame:SetResizeBounds(minWidth, minHeight, maxWidth, maxHeight)
   else
@@ -118,8 +118,8 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   -- The rail lets the window shrink further (see WindowBounds).
   local contactsCollapsed = initialState.contactsCollapsed == true
   local currentScale = normalizedWindowScale
-  local phoneLayout = options.phoneLayout == true
-  applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, phoneLayout)
+  local compactLayout = options.compactLayout == true
+  applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, compactLayout)
   frame:SetClampedToScreen(true)
 
   local frameName = frame.GetName and frame:GetName() or frame.name
@@ -157,11 +157,11 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
   local iconSlotClearance = 0
   if iconSlot == nil then
     iconSlot = createCornerIconSlot(factory, frame)
-    iconSlotClearance = Theme.LAYOUT.PHONE_ICON_SLOT_CLEARANCE
+    iconSlotClearance = Theme.LAYOUT.COMPACT_ICON_SLOT_CLEARANCE
   end
   -- Compact starts with the button docked; the regular window starts free.
   local titleBarParts = {
-    leftClearance = phoneLayout and iconSlotClearance or 0,
+    leftClearance = compactLayout and iconSlotClearance or 0,
     frame = frame,
     titleBar = chrome.titleBar,
     title = title,
@@ -192,23 +192,23 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     frame:SetScale(normalizedScale)
     Shapes.refreshHairlines()
     currentScale = normalizedScale
-    applyResizeBounds(frame, parent, Theme, normalizedScale, contactsCollapsed, phoneLayout)
+    applyResizeBounds(frame, parent, Theme, normalizedScale, contactsCollapsed, compactLayout)
     return normalizedScale
   end
 
   local function setContactsCollapsed(collapsed)
     contactsCollapsed = collapsed == true
-    applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, phoneLayout)
+    applyResizeBounds(frame, parent, Theme, currentScale, contactsCollapsed, compactLayout)
   end
 
   applyTheme(Theme)
-  -- Back shows for settings, an addon panel, or the phone layout's open chat.
+  -- Back shows for settings, an addon panel, or the compact layout's open chat.
   local backForCover = false
-  local inPhoneChat = false
+  local inCompactChat = false
   local markAllReadWanted = false
 
   local function refreshBack()
-    back.button:SetShown(backForCover or inPhoneChat)
+    back.button:SetShown(backForCover or inCompactChat)
   end
 
   local function setOptionsActive(active)
@@ -225,15 +225,15 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
 
   local function setMarkAllReadShown(shown)
     markAllReadWanted = shown == true
-    markAllRead.setShown(markAllReadWanted and not inPhoneChat)
+    markAllRead.setShown(markAllReadWanted and not inCompactChat)
   end
 
   -- The list's title-bar buttons give way to back while a chat fills the window.
-  local function setPhoneChatView(inChat)
-    inPhoneChat = inChat == true
-    titleBarParts.phoneChatView = inPhoneChat
-    newConv.button:SetShown(not inPhoneChat)
-    patchNotes.button:SetShown(not inPhoneChat)
+  local function setCompactChatView(inChat)
+    inCompactChat = inChat == true
+    titleBarParts.compactChatView = inCompactChat
+    newConv.button:SetShown(not inCompactChat)
+    patchNotes.button:SetShown(not inCompactChat)
     setMarkAllReadShown(markAllReadWanted)
     TitleBarLayout.Apply(titleBarParts, Theme)
     refreshBack()
@@ -263,7 +263,7 @@ function ChromeBuilder.Build(factory, parent, initialState, options)
     setBackVisible = setBackVisible,
     setPatchNotesGlow = patchNotes.setGlowing,
     setMarkAllReadShown = setMarkAllReadShown,
-    setPhoneChatView = setPhoneChatView,
+    setCompactChatView = setCompactChatView,
     setIconSlotOccupied = setIconSlotOccupied,
     iconSlot = iconSlot,
     titleBar = chrome.titleBar,

@@ -1,14 +1,14 @@
-local PhoneWindow = require("tests.helpers.phone_window")
+local CompactWindow = require("tests.helpers.compact_window")
 local Rig = require("tests.helpers.grow_rig")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 -- The window and clock oracles for the spec section 5 tables, on the classic
--- window and on the phone window with no docked button: both play on the
+-- window and on the compact window with no docked button: both play on the
 -- panel's own clock. Window rect 100..460 x 100..740; icon A centre (101, 741);
 -- icon B centre (921, 321).
 local GrowWorld = {}
 
-local SECONDS = Theme.LAYOUT.PHONE_RIDE_SECONDS
+local SECONDS = Theme.LAYOUT.COMPACT_RIDE_SECONDS
 local NEAR_END = SECONDS * 0.9
 local TOLERANCE = 5
 
@@ -20,8 +20,8 @@ GrowWorld.ICON_B = { 921, 321 }
 function GrowWorld.World(style)
   local w = { on = true, iconA = Rig.icon(80, 720, 122, 762), iconB = Rig.icon(900, 300, 942, 342) }
   w.source = w.iconA
-  w.case = PhoneWindow.Build({
-    phoneLayout = style == "phone",
+  w.case = CompactWindow.Build({
+    compactLayout = style == "compact",
     getDockIcon = function()
       return nil
     end,
@@ -39,7 +39,7 @@ function GrowWorld.World(style)
 end
 
 function GrowWorld.EachStyle(run)
-  for _, style in ipairs({ "classic", "phone" }) do
+  for _, style in ipairs({ "classic", "compact" }) do
     run(GrowWorld.World(style), style)
   end
 end

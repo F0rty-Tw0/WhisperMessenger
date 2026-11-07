@@ -9,6 +9,7 @@ local Helpers = ns.PersistenceHelpers or require("WhisperMessenger.Persistence.H
 -- stylua: ignore start
 local LegacyMigration = ns.SavedStateLegacyMigration or require("WhisperMessenger.Persistence.SavedState.LegacyMigration")
 local PrefixMigration = ns.SavedStatePrefixMigration or require("WhisperMessenger.Persistence.SavedState.PrefixMigration")
+local CompactRename = ns.SavedStateCompactRename or require("WhisperMessenger.Persistence.SavedState.CompactRename")
 -- stylua: ignore end
 
 local SavedState = {}
@@ -31,6 +32,7 @@ function SavedState.Initialize(accountState, characterState, localProfileId)
   local maxMessages = (account.settings and account.settings.maxMessagesPerConversation) or 200
   PrefixMigration.MigratePrefix(account.conversations, "::BN::", "bnet", character, maxMessages)
   PrefixMigration.MigratePrefix(account.conversations, "::WOW::", "wow", character, maxMessages)
+  CompactRename.Migrate(account, character)
 
   return account, character
 end

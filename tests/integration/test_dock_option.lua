@@ -1,5 +1,5 @@
-local PhoneWindow = require("tests.helpers.phone_window")
-local PhoneRuntime = require("tests.helpers.phone_runtime")
+local CompactWindow = require("tests.helpers.compact_window")
+local CompactRuntime = require("tests.helpers.compact_runtime")
 local Theme = require("WhisperMessenger.UI.Theme")
 
 -- Dock button on the window, in both layouts: on (the default), the floating
@@ -9,8 +9,8 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local L = Theme.LAYOUT
 
 local LAYOUTS = {
-  { name = "compact", phone = true },
-  { name = "regular", phone = false },
+  { name = "compact", compactMode = true },
+  { name = "regular", compactMode = false },
 }
 
 local function sameAnchor(before, after, name, what)
@@ -23,9 +23,9 @@ local function titleOffset(runtime)
   return select(4, runtime.window.newConversationButton:GetPoint())
 end
 
-local function offCase(phone)
-  local case = PhoneWindow.Build({
-    phoneLayout = phone,
+local function offCase(compactMode)
+  local case = CompactWindow.Build({
+    compactLayout = compactMode,
     isIconDockOn = function()
       return false
     end,
@@ -33,7 +33,7 @@ local function offCase(phone)
       return false
     end,
   })
-  PhoneWindow.Lay(case)
+  CompactWindow.Lay(case)
   return case
 end
 
@@ -42,8 +42,8 @@ return function()
     local name = layout.name
 
     local function run(settings, body)
-      settings.phoneLayout, settings.hudStyle = layout.phone, "off"
-      PhoneRuntime.Run(settings, body)
+      settings.compactLayout, settings.hudStyle = layout.compactMode, "off"
+      CompactRuntime.Run(settings, body)
     end
 
     -- test_off_opens_the_window_and_the_button_stays_put
@@ -69,13 +69,13 @@ return function()
       runtime.toggle()
       assert(icon.isRiding(), name .. ": docked on open")
       settings.iconDock = false
-      runtime.window.dockPhoneIcon()
+      runtime.window.dockCompactIcon()
       assert(not icon.isRiding() and icon.frame:GetScale() == 1, name .. ": home at its floating size")
       assert(titleOffset(runtime) == L.TITLE_BAR_INSET_X, name .. ": corner free")
       settings.iconDock = true
-      runtime.window.dockPhoneIcon()
+      runtime.window.dockCompactIcon()
       assert(icon.isRiding(), name .. ": docks again")
-      assert(titleOffset(runtime) == L.TITLE_BAR_INSET_X + L.PHONE_ICON_SLOT_CLEARANCE, name .. ": corner taken")
+      assert(titleOffset(runtime) == L.TITLE_BAR_INSET_X + L.COMPACT_ICON_SLOT_CLEARANCE, name .. ": corner taken")
       runtime.toggle()
       assert(not icon.isRiding(), name .. ": closing sends it home")
     end)
@@ -94,7 +94,7 @@ return function()
 
     -- test_off_with_open_at_saved_spot_off_opens_at_the_saved_spot_not_on_the_button
     do
-      local case = offCase(layout.phone)
+      local case = offCase(layout.compactMode)
       local before = { case.window.frame:GetPoint() }
       case.window.frame:Show()
       sameAnchor(before, { case.window.frame:GetPoint() }, name, "the window was placed on the button")
@@ -103,7 +103,7 @@ return function()
 
     -- test_off_moving_the_window_leaves_the_button
     do
-      local case = offCase(layout.phone)
+      local case = offCase(layout.compactMode)
       case.window.frame:Show()
       case.window.frame.scripts.OnDragStop(case.window.frame)
       assert(case.adopted == 0, name .. ": the button is not riding, so it is not adopted")

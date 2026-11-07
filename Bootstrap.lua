@@ -70,11 +70,11 @@ function Bootstrap.Initialize(factory, options)
     accountState.settings.hideFromDefaultChat = true
     accountState.settings.hudStyle = Hud.DefaultStyle()
     accountState.settings.themePreset = Hud.DefaultPreset()
-    accountState.settings.phoneLayout = true
+    accountState.settings.compactLayout = true
   end
   -- Saved either way, so a new install is not read as an update next login.
-  if accountState.settings.phoneLayout == nil then
-    accountState.settings.phoneLayout = false
+  if accountState.settings.compactLayout == nil then
+    accountState.settings.compactLayout = false
   end
   -- hudStyle replaces the old nativeChrome flag, which stays saved for
   -- older addon versions after a downgrade.

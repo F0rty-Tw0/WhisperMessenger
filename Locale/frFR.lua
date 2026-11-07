@@ -132,8 +132,8 @@ local French = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configurez le comportement de la fenêtre.",
-  ["Phone-style window"] = "Fenêtre style téléphone",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Le bouton flottant ouvre une liste de discussions au format téléphone, attachée à lui. Cliquez sur une discussion pour y glisser.",
+  ["Compact window"] = "Fenêtre compacte",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Le bouton flottant ouvre une liste de discussions étroite, attachée à lui. Cliquez sur une discussion pour y glisser.",
   ["Window animation"] = "Animation de la fenêtre",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "La fenêtre sort de son icône à l'ouverture et s'y résorbe à la fermeture, et les pages glissent. Désactivez-la pour que tout apparaisse instantanément.",
   ["Dock button on the window"] = "Ancrer le bouton à la fenêtre",

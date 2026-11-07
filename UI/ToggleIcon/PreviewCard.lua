@@ -26,7 +26,7 @@ function PreviewCard.Create(factory, frame, theme, getPreviewPosition)
   if previewFrame.SetFrameStrata then
     previewFrame:SetFrameStrata("HIGH")
   end
-  -- A button riding the phone window changes strata; its preview stays up.
+  -- A button riding the compact window changes strata; its preview stays up.
   if previewFrame.SetFixedFrameStrata then
     previewFrame:SetFixedFrameStrata(true)
   end

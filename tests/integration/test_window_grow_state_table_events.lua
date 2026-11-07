@@ -1,4 +1,4 @@
-local PhoneWindow = require("tests.helpers.phone_window")
+local CompactWindow = require("tests.helpers.compact_window")
 local Rig = require("tests.helpers.grow_rig")
 local GrowWorld = require("tests.helpers.grow_world")
 
@@ -28,11 +28,11 @@ local function test_window_drag()
     settled(w, style .. " drag leaves it open")
   end)
   -- With the button docked (D1): the drag saves the window and leaves the button's home alone.
-  local case = PhoneWindow.Build()
+  local case = CompactWindow.Build()
   case.window.frame:Show()
   case.window.frame.scripts.OnDragStop(case.window.frame)
-  assert(case.saved.state ~= nil, "phone, docked: the window spot is saved")
-  assert(case.homeMoves == 0 and case.homes == 0, "phone, docked: the button's home is unchanged")
+  assert(case.saved.state ~= nil, "compact, docked: the window spot is saved")
+  assert(case.homeMoves == 0 and case.homes == 0, "compact, docked: the button's home is unchanged")
 end
 
 -- Spec 5, row "Switch toggled": Opening and Closing finish as started; Closed applies at the next open; Open at the next close.
@@ -78,8 +78,8 @@ local function test_switch_toggled()
   end)
 end
 
--- Spec 5, row "Icon mode change": Open re-resolves at the next close (classic) and phone docks nothing here;
--- Closing runs into the remembered source. Phone Opening and Open with a docked button: test_phone_layout.lua.
+-- Spec 5, row "Icon mode change": Open re-resolves at the next close (classic) and the compact window docks nothing here;
+-- Closing runs into the remembered source. Compact-window Opening and Open with a docked button: test_compact_layout.lua.
 local function test_icon_mode_change()
   eachStyle(function(w, style)
     open(w)
@@ -106,9 +106,9 @@ local function test_icon_mode_change()
   end)
 end
 
--- Spec 5, row "Scale change": phone Opening, a button-driven grow: dock() finishes it. Classic has no cell.
+-- Spec 5, row "Scale change": compact-window Opening, a button-driven grow: dock() finishes it. Classic has no cell.
 local function test_scale_change_finishes_a_button_driven_opening()
-  local case = PhoneWindow.Build()
+  local case = CompactWindow.Build()
   local frame = case.window.frame
   frame:Show()
   local step = case.step

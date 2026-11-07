@@ -3,7 +3,7 @@ if type(ns) ~= "table" then
   ns = {}
 end
 
--- Carries the floating button onto the phone window and back. The button
+-- Carries the floating button onto the compact window and back. The button
 -- glides and grows to its spot on the window, then pins there so it follows
 -- the window, keeping its badge and click. Home is its normal anchor, scale
 -- and level, restored exactly when it returns.
@@ -27,7 +27,7 @@ end
 -- options: theme, parent, onLevel(level) (children with fixed levels),
 -- isLocked(), onPositionChanged(state).
 function IconRide.Create(frame, options)
-  local duration = options.theme.LAYOUT.PHONE_RIDE_SECONDS
+  local duration = options.theme.LAYOUT.COMPACT_RIDE_SECONDS
   local parent = options.parent
   local onLevel = options.onLevel or function(_level) end
   -- true as the button leaves for the window, false once it has landed home.

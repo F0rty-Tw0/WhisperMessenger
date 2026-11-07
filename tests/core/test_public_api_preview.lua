@@ -5,7 +5,7 @@ local NOW = 500
 
 -- opts: noWidget (getWidgetIcon returns nil), iconHidden, settings, panelShown
 -- (the visible panel's key; "ca" is the one registered panel). The returned
--- state's panelShown and riding (the button sits on the phone window) can be
+-- state's panelShown and riding (the button sits on the compact window) can be
 -- flipped by a row.
 local function makeRuntime(opts)
   opts = opts or {}
@@ -111,7 +111,7 @@ return function()
     assert(s.holder.get() == nil, "nothing stored while previews are off")
   end
 
-  local function test_false_while_the_button_rides_the_phone_window()
+  local function test_false_while_the_button_rides_the_compact_window()
     local s = makeRuntime()
     s.riding = true
     assert(s.api.ShowPreview("ca", preview()) == false, "the card stays hidden while riding, so the caller keeps its own toast")
@@ -233,7 +233,7 @@ return function()
   test_bad_arguments_return_false()
   test_false_when_widget_not_in_use()
   test_false_when_previews_are_turned_off()
-  test_false_while_the_button_rides_the_phone_window()
+  test_false_while_the_button_rides_the_compact_window()
   test_is_shown_needs_key_and_visible_frame()
   test_hide_only_hides_own_source()
   test_second_source_replaces_the_first_silently()

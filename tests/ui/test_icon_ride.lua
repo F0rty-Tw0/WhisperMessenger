@@ -2,7 +2,7 @@ local IconRide = require("WhisperMessenger.UI.ToggleIcon.IconRide")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 
-local SECONDS = Theme.LAYOUT.PHONE_RIDE_SECONDS
+local SECONDS = Theme.LAYOUT.COMPACT_RIDE_SECONDS
 
 local function build(options)
   options = options or {}

@@ -13,7 +13,7 @@ local SettingsRuntime = ns.MessengerWindowSettingsRuntime or require("WhisperMes
 local WindowGeometry = ns.MessengerWindowWindowGeometry or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGeometry")
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
-local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
+local CompactDock = ns.MessengerWindowCompactDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactDock")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local StyledTextInputPopup = ns.StyledTextInputPopup or require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local sizeValue = UIHelpers.sizeValue
@@ -28,14 +28,14 @@ function WindowShell.Build(factory, options)
   local initialScale = WindowScale.Normalize(settingsConfig.windowScale)
   settingsConfig.windowScale = initialScale
   local state = options.state or {}
-  local phoneLayout = options.phoneLayout == true
-  local initialState = WindowSizing.InitialState(parent, state, initialScale, phoneLayout)
+  local compactLayout = options.compactLayout == true
+  local initialState = WindowSizing.InitialState(parent, state, initialScale, compactLayout)
   local windowGeometry = WindowGeometry.Create({
     parent = parent,
     theme = Theme,
     clampState = WindowBounds.ClampState,
     clampContactsWidth = LayoutBuilder.ClampContactsWidth,
-    captureFramePosition = phoneLayout and PhoneDock.CapturePosition or captureFramePosition,
+    captureFramePosition = compactLayout and CompactDock.CapturePosition or captureFramePosition,
     sizeValue = sizeValue,
     initialState = initialState,
     initialContactsWidth = state.contactsWidth,
@@ -53,12 +53,12 @@ function WindowShell.Build(factory, options)
     useNativeChrome = nativeChrome,
     windowScale = initialScale,
     onMarkAllRead = options.onMarkAllRead,
-    phoneLayout = phoneLayout,
+    compactLayout = compactLayout,
   })
   local frame = chrome.frame
 
   -- Build layout (panes)
-  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth, phoneLayout = phoneLayout })
+  local layout = LayoutBuilder.Build(factory, frame, initialState, { contactsWidth = currentContactsWidth, compactLayout = compactLayout })
   currentContactsWidth = layout.expandedContactsWidth or layout.contactsWidth or currentContactsWidth
   windowGeometry.setContactsWidth(currentContactsWidth)
   local optionsScrollContent = layout.optionsScrollView and layout.optionsScrollView.content or layout.optionsContentPane
@@ -79,7 +79,7 @@ function WindowShell.Build(factory, options)
   return {
     parent = parent,
     settingsConfig = settingsConfig,
-    phoneLayout = phoneLayout,
+    compactLayout = compactLayout,
     initialState = initialState,
     windowGeometry = windowGeometry,
     contactsWidth = currentContactsWidth,

@@ -51,14 +51,14 @@ function ToggleFlow.Create(options)
     ensureWindow()
     local nextVisible = not isWindowVisible()
 
-    -- Phone layout: the button opens the list; a chat opens from a click there.
+    -- Compact layout: the button opens the list; a chat opens from a click there.
     -- A button click while a whisper preview shows never gets here: the icon
     -- click (IconToggle) opens that preview's chat first, in both layouts.
     -- Keybinds and /wm still come straight here.
-    local phoneWindow = getWindow()
-    if nextVisible and phoneWindow and phoneWindow.isPhoneLayout then
+    local compactWindow = getWindow()
+    if nextVisible and compactWindow and compactWindow.isCompactLayout then
       selectConversation(nil)
-      phoneWindow.showPhoneList()
+      compactWindow.showCompactList()
       setWindowVisible(true)
       return
     end

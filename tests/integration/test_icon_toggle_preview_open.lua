@@ -1,17 +1,17 @@
-local PhoneRuntime = require("tests.helpers.phone_runtime")
+local CompactRuntime = require("tests.helpers.compact_runtime")
 
 -- A click on the floating button while its whisper preview shows opens that
 -- whisper's chat, like a click on the preview itself. With no preview the
 -- button keeps its plain toggle.
 
-local KEY = PhoneRuntime.KEY
+local KEY = CompactRuntime.KEY
 
 -- Live whisper with the window never built yet.
 local function receiveWhisper(runtime)
-  local finishSlide = PhoneRuntime.FinishSlide
-  rawset(PhoneRuntime, "FinishSlide", function() end)
-  local ok, err = pcall(PhoneRuntime.ReceiveWhisper, runtime)
-  rawset(PhoneRuntime, "FinishSlide", finishSlide)
+  local finishSlide = CompactRuntime.FinishSlide
+  rawset(CompactRuntime, "FinishSlide", function() end)
+  local ok, err = pcall(CompactRuntime.ReceiveWhisper, runtime)
+  rawset(CompactRuntime, "FinishSlide", finishSlide)
   assert(ok, err)
 end
 
@@ -24,8 +24,8 @@ local function clickButton(runtime)
   local ok, err = pcall(button.scripts.OnClick, button, "LeftButton")
   rawset(_G, "IsShiftKeyDown", saved)
   assert(ok, err)
-  if runtime.window and runtime.window.phoneViewport then
-    PhoneRuntime.FinishSlide(runtime)
+  if runtime.window and runtime.window.compactViewport then
+    CompactRuntime.FinishSlide(runtime)
   end
 end
 
@@ -34,8 +34,8 @@ local function previewShown(runtime)
 end
 
 return function()
-  -- test_phone_button_click_with_a_preview_opens_its_chat
-  PhoneRuntime.Run(nil, function(runtime)
+  -- test_compact_button_click_with_a_preview_opens_its_chat
+  CompactRuntime.Run(nil, function(runtime)
     receiveWhisper(runtime)
     assert(previewShown(runtime), "the preview shows the whisper")
     clickButton(runtime)
@@ -46,7 +46,7 @@ return function()
   end)
 
   -- test_classic_button_click_with_a_preview_opens_its_chat_from_another_tab
-  PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
+  CompactRuntime.Run({ compactLayout = false }, function(runtime)
     runtime.toggle()
     runtime.window.setTabMode("groups")
     runtime.toggle()
@@ -60,7 +60,7 @@ return function()
   end)
 
   -- test_classic_docked_button_shows_no_preview_over_the_open_window_and_a_click_closes_it
-  PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
+  CompactRuntime.Run({ compactLayout = false }, function(runtime)
     runtime.toggle()
     runtime.window.setTabMode("groups")
     receiveWhisper(runtime)
@@ -71,15 +71,15 @@ return function()
   end)
 
   -- test_classic_button_click_on_the_open_window_without_a_preview_closes_it
-  PhoneRuntime.Run({ phoneLayout = false }, function(runtime)
+  CompactRuntime.Run({ compactLayout = false }, function(runtime)
     runtime.toggle()
     assert(not previewShown(runtime), "no preview")
     clickButton(runtime)
     assert(not runtime.window.frame:IsShown(), "the window closes")
   end)
 
-  -- test_phone_button_click_without_a_preview_still_opens_the_list
-  PhoneRuntime.Run(nil, function(runtime)
+  -- test_compact_button_click_without_a_preview_still_opens_the_list
+  CompactRuntime.Run(nil, function(runtime)
     assert(not previewShown(runtime), "no preview")
     clickButton(runtime)
     assert(runtime.window.frame:IsShown(), "the window opens")
@@ -87,8 +87,8 @@ return function()
     assert(runtime.window.contactsPane:IsShown() and not runtime.window.contentPane:IsShown(), "on the list")
   end)
 
-  -- test_phone_button_click_on_a_new_whisper_with_previews_off_opens_the_list
-  PhoneRuntime.Run({ showWidgetMessagePreview = false }, function(runtime)
+  -- test_compact_button_click_on_a_new_whisper_with_previews_off_opens_the_list
+  CompactRuntime.Run({ showWidgetMessagePreview = false }, function(runtime)
     receiveWhisper(runtime)
     assert(not previewShown(runtime), "previews are off")
     clickButton(runtime)

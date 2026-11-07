@@ -15,7 +15,7 @@ local OptionsMenuButtons = ns.MessengerWindowLayoutOptionsMenuButtons
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsMenuButtons")
 local OptionsPanelLayout = ns.MessengerWindowLayoutOptionsPanelLayout
   or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.OptionsPanelLayout")
-local PhoneViewport = ns.MessengerWindowLayoutPhoneViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.PhoneViewport")
+local CompactViewport = ns.MessengerWindowLayoutCompactViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.CompactViewport")
 local RetailChrome = ns.MessengerWindowChromeBuilderRetail or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.RetailChrome")
 local applyColorTexture = UIHelpers.applyColorTexture
 
@@ -37,7 +37,7 @@ LayoutBuilder.ClampContactsWidth = LayoutMetrics.ClampContactsWidth
 function LayoutBuilder.Build(factory, frame, initialState, _options)
   _options = _options or {}
   local sizing = LayoutMetrics.CalculateRelayout(
-    { nativeChrome = frame.contentArea ~= nil, contactsCollapsed = initialState.contactsCollapsed == true, phoneLayout = _options.phoneLayout },
+    { nativeChrome = frame.contentArea ~= nil, contactsCollapsed = initialState.contactsCollapsed == true, compactLayout = _options.compactLayout },
     initialState.width,
     initialState.height,
     _options.contactsWidth or initialState.contactsWidth,
@@ -50,14 +50,14 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsListHeight = sizing.contactsListHeight
 
   local contentParent = frame.contentArea or frame
-  local phoneViewport = nil
-  if _options.phoneLayout then
-    phoneViewport = PhoneViewport.Build(factory, contentParent, frame.contentArea and 0 or -Theme.LAYOUT.TOP_BAR_HEIGHT, Theme)
+  local compactViewport = nil
+  if _options.compactLayout then
+    compactViewport = CompactViewport.Build(factory, contentParent, frame.contentArea and 0 or -Theme.LAYOUT.TOP_BAR_HEIGHT, Theme)
   end
 
   local contactsSection = ContactsSection.Build(factory, frame, sizing, {
     theme = Theme,
-    paneParent = phoneViewport,
+    paneParent = compactViewport,
   })
   local contactsPane = contactsSection.contactsPane
   local contactsPaneBg = contactsSection.contactsPaneBg
@@ -72,19 +72,19 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   local contactsResizeHandle = contactsSection.contactsResizeHandle
   local contactsHandleWidth = contactsSection.contactsHandleWidth
 
-  local contentSection = ContentSection.Build(factory, phoneViewport or contentParent, contactsPane, sizing, {
+  local contentSection = ContentSection.Build(factory, compactViewport or contentParent, contactsPane, sizing, {
     theme = Theme,
   })
   local contentPane = contentSection.contentPane
   local threadPane = contentSection.threadPane
   local composerPane = contentSection.composerPane
   local headerDivider = nil
-  if phoneViewport then
+  if compactViewport then
     -- The strip slides under one still background; there is no split to drag.
-    RetailChrome.AnchorInsets(frame, phoneViewport, phoneViewport)
+    RetailChrome.AnchorInsets(frame, compactViewport, compactViewport)
     contactsDivider:Hide()
     contactsResizeHandle:Hide()
-    PhoneViewport.Place({ phoneViewport = phoneViewport, contactsPane = contactsPane, contentPane = contentPane })
+    CompactViewport.Place({ compactViewport = compactViewport, contactsPane = contactsPane, contentPane = contentPane })
   else
     RetailChrome.AnchorInsets(frame, contactsPane, contentPane)
   end
@@ -163,9 +163,9 @@ function LayoutBuilder.Build(factory, frame, initialState, _options)
   end
 
   return {
-    phoneLayout = _options.phoneLayout == true,
-    phoneViewport = phoneViewport,
-    phoneProgress = 0,
+    compactLayout = _options.compactLayout == true,
+    compactViewport = compactViewport,
+    compactProgress = 0,
     contactsPane = contactsPane,
     contactsPaneBg = contactsPaneBg,
     contactsTopOffset = contactsSection.contactsTopOffset,

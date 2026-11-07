@@ -1,5 +1,5 @@
-local PhoneWindow = require("tests.helpers.phone_window")
-local PhoneRuntime = require("tests.helpers.phone_runtime")
+local CompactWindow = require("tests.helpers.compact_window")
+local CompactRuntime = require("tests.helpers.compact_runtime")
 local Rig = require("tests.helpers.grow_rig")
 local Theme = require("WhisperMessenger.UI.Theme")
 
@@ -10,16 +10,16 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local L = Theme.LAYOUT
 
 local LAYOUTS = {
-  { name = "compact", phone = true },
-  { name = "regular", phone = false },
+  { name = "compact", compactMode = true },
+  { name = "regular", compactMode = false },
 }
 
 -- Window rect 100..460 x 100..740 (left 100, top 740), button centre (800, 500),
 -- the icon slot centre 25 right of and 25 below the window's top-left corner.
-local function laidOut(phone, savedSpot, extra)
+local function laidOut(compactMode, savedSpot, extra)
   local state = { savedSpot = savedSpot }
   local options = {
-    phoneLayout = phone,
+    compactLayout = compactMode,
     isOpenAtSavedSpot = function()
       return state.savedSpot
     end,
@@ -27,11 +27,11 @@ local function laidOut(phone, savedSpot, extra)
   for key, value in pairs(extra or {}) do
     options[key] = value
   end
-  local case = PhoneWindow.Build(options)
+  local case = CompactWindow.Build(options)
   case.window.frame:Show()
   local slot = case.rodeTo and case.rodeTo.region
   case.window.frame:Hide()
-  PhoneWindow.Lay(case)
+  CompactWindow.Lay(case)
   if slot then
     rawset(slot, "GetCenter", function()
       return 125, 715
@@ -49,11 +49,11 @@ end
 
 return function()
   for _, layout in ipairs(LAYOUTS) do
-    local name, phone = layout.name, layout.phone
+    local name, compactMode = layout.name, layout.compactMode
 
     -- test_off_opens_with_the_spot_on_the_button
     do
-      local case = laidOut(phone, false)
+      local case = laidOut(compactMode, false)
       case.window.frame:Show()
       local point, relativeTo, relativePoint, x, y = case.window.frame:GetPoint()
       assert(point == "TOPLEFT" and relativeTo == case.uiParent and relativePoint == "BOTTOMLEFT", name .. ": screen-anchored")
@@ -62,7 +62,7 @@ return function()
 
     -- test_on_opens_at_the_saved_spot_and_leaves_the_button_home
     do
-      local case = laidOut(phone, true)
+      local case = laidOut(compactMode, true)
       local before = { case.window.frame:GetPoint() }
       case.window.frame:Show()
       sameAnchor(before, { case.window.frame:GetPoint() }, name, "the saved spot moved on open")
@@ -72,7 +72,7 @@ return function()
 
     -- test_off_with_a_hidden_widget_opens_at_the_saved_spot_and_never_places
     do
-      local case = laidOut(phone, false)
+      local case = laidOut(compactMode, false)
       case.fab:Hide()
       local before = { case.window.frame:GetPoint() }
       case.window.frame:Show()
@@ -82,7 +82,7 @@ return function()
     -- test_off_in_minimap_mode_grows_from_the_minimap_icon_at_the_saved_spot
     do
       local minimap = Rig.icon(1500, 100, 1532, 132)
-      local case = laidOut(phone, false, {
+      local case = laidOut(compactMode, false, {
         getDockIcon = function()
           return nil
         end,
@@ -98,7 +98,7 @@ return function()
 
     -- test_off_moving_the_window_moves_the_button_home
     do
-      local case = laidOut(phone, false)
+      local case = laidOut(compactMode, false)
       case.window.frame:Show()
       case.window.frame.scripts.OnDragStop(case.window.frame)
       assert(case.adopted == 1, name .. ": adopted once on a window drag, got " .. case.adopted)
@@ -108,23 +108,23 @@ return function()
 
     -- test_off_alt_z_never_adopts_places_or_sends_the_button_home
     do
-      local case = laidOut(phone, false)
+      local case = laidOut(compactMode, false)
       local frame = case.window.frame
       local homes = case.homes
       frame:Show()
       local placed = { frame:GetPoint() }
       frame.shown = true
-      PhoneWindow.Fire(frame, "OnHide")
-      PhoneWindow.Fire(frame, "OnShow")
+      CompactWindow.Fire(frame, "OnHide")
+      CompactWindow.Fire(frame, "OnShow")
       sameAnchor(placed, { frame:GetPoint() }, name, "Alt+Z moved the window")
       assert(case.adopted == 0 and case.homes == homes, name .. ": Alt+Z adopts nothing and sends nothing home")
     end
 
     -- test_off_reset_window_position_moves_the_button_home_with_the_window
     do
-      local case = laidOut(phone, false, {
+      local case = laidOut(compactMode, false, {
         onResetWindowPosition = function()
-          return not phone and { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 } or nil
+          return not compactMode and { anchorPoint = "CENTER", relativePoint = "CENTER", x = 0, y = 0 } or nil
         end,
       })
       local frame = case.window.frame
@@ -138,12 +138,15 @@ return function()
       local reset = case.window.resetWindowButton
       reset.scripts.OnClick(reset)
       assert(case.adopted == 1, name .. ": the reset moved the window, so the button's home follows, got " .. case.adopted)
-      assert(atAdopt[4] == (phone and -L.PHONE_WINDOW_WIDTH / 2 or 0), name .. ": adopted after the window moved, got " .. tostring(atAdopt[4]))
+      assert(
+        atAdopt[4] == (compactMode and -L.COMPACT_WINDOW_WIDTH / 2 or 0),
+        name .. ": adopted after the window moved, got " .. tostring(atAdopt[4])
+      )
     end
 
     -- test_on_reset_window_position_leaves_the_button_home
     do
-      local case = laidOut(phone, true)
+      local case = laidOut(compactMode, true)
       case.window.frame:Show()
       local reset = case.window.resetWindowButton
       reset.scripts.OnClick(reset)
@@ -152,7 +155,7 @@ return function()
 
     -- test_changing_the_switch_applies_at_the_next_open
     do
-      local case = laidOut(phone, true)
+      local case = laidOut(compactMode, true)
       case.state.savedSpot = false
       case.window.frame:Show()
       assert(select(4, case.window.frame:GetPoint()) == 775, name .. ": read live, no reload")
@@ -162,7 +165,7 @@ return function()
   -- test_real_runtime_off_adopts_the_window_move_unless_the_icon_is_locked
   for _, layout in ipairs(LAYOUTS) do
     for _, locked in ipairs({ false, true }) do
-      PhoneRuntime.Run({ phoneLayout = layout.phone, lockToggleIcon = locked }, function(runtime)
+      CompactRuntime.Run({ compactLayout = layout.compactMode, lockToggleIcon = locked }, function(runtime)
         runtime.toggle()
         local icon, frame = runtime.icon, runtime.window.frame
         rawset(icon.frame, "GetCenter", function()

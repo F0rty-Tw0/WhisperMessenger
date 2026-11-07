@@ -63,8 +63,8 @@ return function()
     assert(shell.frame ~= nil and shell.frame == shell.chrome.frame, "frame is the chrome frame")
   end
 
-  -- test_phone_layout_is_off_unless_exactly_true
+  -- test_compact_layout_is_off_unless_exactly_true
   do
-    assert(build({ phoneLayout = "yes" }).phoneLayout == false, "truthy non-true value keeps the desktop layout")
+    assert(build({ compactLayout = "yes" }).compactLayout == false, "truthy non-true value keeps the desktop layout")
   end
 end

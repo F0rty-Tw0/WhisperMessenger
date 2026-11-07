@@ -9,7 +9,7 @@ local captureFramePosition = UIHelpers.captureFramePosition
 -- reports the new position through options.onPositionChanged.
 local IconDrag = {}
 
--- Returns { setRideHandlers }. While the icon rides the phone window it is
+-- Returns { setRideHandlers }. While the icon rides the compact window it is
 -- pinned there, so a drag goes to these handlers: { beginDrag, endDrag }.
 function IconDrag.Attach(frame, isLocked, options)
   local rideHandlers = nil

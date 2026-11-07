@@ -123,9 +123,9 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   else
     optionsContentWidth = (width - 20) - optionsMenuWidth - resolvedTheme.DIVIDER_THICKNESS
   end
-  -- Phone layout: list and chat each fill the window, side by side in the
+  -- Compact layout: list and chat each fill the window, side by side in the
   -- strip. While wide for settings the classic numbers above apply.
-  if layoutState.phoneLayout and not layoutState.phoneWide then
+  if layoutState.compactLayout and not layoutState.compactWide then
     local chromeWidth = hudInsets and (hudInsets.left + hudInsets.right) or 0
     contactsWidth = width - chromeWidth - layout.CONTACTS_PANE_LEFT_INSET - layout.CONTENT_PANE_RIGHT_INSET
     contentWidth = contactsWidth

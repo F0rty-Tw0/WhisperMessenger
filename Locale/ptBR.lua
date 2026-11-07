@@ -132,8 +132,8 @@ local Portuguese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Configure o comportamento da janela.",
-  ["Phone-style window"] = "Janela estilo celular",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "O botão flutuante abre uma lista de conversas do tamanho de um celular presa a ele. Clique em uma conversa para deslizar até ela.",
+  ["Compact window"] = "Janela compacta",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "O botão flutuante abre uma lista de conversas estreita presa a ele. Clique em uma conversa para deslizar até ela.",
   ["Window animation"] = "Animação da janela",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "A janela cresce a partir do ícone ao abrir e encolhe de volta para ele ao fechar, e as páginas deslizam. Desative para que tudo apareça na hora.",
   ["Dock button on the window"] = "Acoplar o botão à janela",

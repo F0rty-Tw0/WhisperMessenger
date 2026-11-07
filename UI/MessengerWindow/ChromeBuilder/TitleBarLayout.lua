@@ -107,9 +107,9 @@ end
 -- the left of the title bar, for the docked floating button's corner spot).
 function TitleBarLayout.Apply(parts, theme)
   TitleBarLayout.ApplyLook(parts, theme)
-  -- Phone chat view: back takes the first left slot, like on a phone. The
+  -- Compact chat view: back takes the first left slot, like in a mobile app. The
   -- left cluster is hidden then, so nothing else is there.
-  if parts.phoneChatView then
+  if parts.compactChatView then
     parts.backButton:ClearAllPoints()
     parts.backButton:SetPoint(parts.newConversationButton:GetPoint())
   end

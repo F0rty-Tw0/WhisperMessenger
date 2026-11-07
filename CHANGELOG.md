@@ -6,16 +6,16 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New phone-style window: the messenger button grows into the window's top-left icon and opens a tall, phone-sized list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
-- New installs start with the phone-style window. If you already use the addon, your window stays as it is, and you can turn the new one on with "Phone-style window" under Appearance settings.
-- Closing the phone-style window sends the icon back to where it came from. Settings open wider while they're showing, then the window returns to phone size.
-- Addons that support it (Craft Alert) now open their page inside the phone-style window without widening it.
-- The regular (non-phone) window now grows out of its icon when it opens and shrinks back into it when it closes.
-- New option under Appearance: Window animation, to turn the opening and closing animation off. With it off, the phone-style window's pages also switch at once instead of sliding between the chat list and a chat.
+- New compact window: the messenger button grows into the window's top-left icon and opens a tall, narrow list of your chats. Click a chat to slide into it, and use the back arrow to slide back. The button keeps your unread count the whole time, and the window opens at the button, which flies onto it. New message pop-ups stay hidden while the window is open, so they never cover its title bar.
+- New installs start with the compact window. If you already use the addon, your window stays as it is, and you can turn the new one on with "Compact window" under Appearance settings.
+- Closing the compact window sends the icon back to where it came from. Settings open wider while they're showing, then the window returns to compact size.
+- Addons that support it (Craft Alert) now open their page inside the compact window without widening it.
+- The regular (non-compact) window now grows out of its icon when it opens and shrinks back into it when it closes.
+- New option under Appearance: Window animation, to turn the opening and closing animation off. With it off, the compact window's pages also switch at once instead of sliding between the chat list and a chat.
 - New option under Appearance: Dock button on the window. Turn it off and the floating button stays where it is while the window is open.
 - New option under Appearance: Open at saved spot (off by default). Off, the window opens at the floating button, and the button follows when you move the window (while Dock button on the window is on). On, the window opens where you last moved it and the button stays where it is.
-- The regular (non-phone) window now holds the floating button in its top-left corner while it is open, like the phone-style window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
-- In the phone-style window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
+- The regular (non-compact) window now holds the floating button in its top-left corner while it is open, like the compact window does. A square button turns into the same round corner icon while it sits on the window; its border and background settings only change the floating button. You can still click the button to close the window or drag it to move the window. New message pop-ups stay hidden while the button sits on the open window.
+- In the compact window, the tabs now stay below the window while a conversation is open; tap a tab to go back to its list.
 - Fixed: Dragging the button while it sits on the open window no longer makes the window jump.
 - Fixed: Messages from addon chat channels (like Forever Item Finder's) and other custom channels you haven't turned on as chats no longer show up inside your whisper chats. Channels you turned on as chats, and the game's own channels like Trade, still show their latest message there.
 - Fixed: With "Auto-open on outgoing whisper" turned off, a greeting sent by clicking another addon's pop-up (like Craft Alert's) no longer opens the messenger.
@@ -31,7 +31,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 - Fixed: The widget's message preview closes on its timer again after you click out of its Reply box, even with text left in it (the text is kept as a draft for that chat). The timer now also waits while your mouse is over the preview, and starts over once you move away.
 - Fixed: In WoW: Forever, the Export conversation window no longer opens empty. The conversation's text now shows, ready to copy.
 - The Export conversation window now shows the whole saved conversation at once, with a taller text box; the Show more and Show all buttons are gone.
-- Clicking the floating button while a message preview is showing now opens that conversation, in both the phone-style and the regular window. With no preview showing, the button works as before.
+- Clicking the floating button while a message preview is showing now opens that conversation, in both the compact and the regular window. With no preview showing, the button works as before.
 - Right-clicking a player in the contact list now offers "Guild invite" when you're allowed to invite: it types the invite command into your chat box, and you press Enter to send it. It's hidden for your guildmates, and (with "Show player levels" on) for players the game has shown you in another guild this session.
 - The square floating button now has slightly rounded corners, and its unread glow pulses along its edge like the round button's.
 

@@ -132,8 +132,8 @@ local Korean = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "메신저 창의 동작을 설정합니다.",
-  ["Phone-style window"] = "휴대폰 스타일 창",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "떠 있는 버튼을 누르면 버튼에 붙은 휴대폰 크기의 대화 목록이 열립니다. 대화를 클릭하면 해당 대화로 넘어갑니다.",
+  ["Compact window"] = "컴팩트 창",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "떠 있는 버튼을 누르면 버튼에 붙은 좁은 대화 목록이 열립니다. 대화를 클릭하면 해당 대화로 넘어갑니다.",
   ["Window animation"] = "창 애니메이션",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "창이 열릴 때 아이콘에서 커지며 나타나고, 닫힐 때 아이콘으로 줄어들며 사라지고, 페이지는 밀려 들어옵니다. 끄면 모든 것이 즉시 나타납니다.",
   ["Dock button on the window"] = "버튼을 창에 고정",

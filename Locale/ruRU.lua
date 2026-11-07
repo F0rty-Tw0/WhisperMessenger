@@ -132,8 +132,8 @@ local Russian = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "Настройте поведение окна мессенджера.",
-  ["Phone-style window"] = "Окно в стиле телефона",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "Плавающая кнопка открывает прикреплённый к ней список чатов размером с телефон. Нажмите на чат, чтобы перейти к нему.",
+  ["Compact window"] = "Компактное окно",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "Плавающая кнопка открывает прикреплённый к ней узкий список чатов. Нажмите на чат, чтобы перейти к нему.",
   ["Window animation"] = "Анимация окна",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "Окно вырастает из своего значка при открытии и сворачивается обратно в него при закрытии, а страницы плавно сдвигаются. Отключите, чтобы всё появлялось сразу.",
   ["Dock button on the window"] = "Закреплять кнопку на окне",

@@ -15,7 +15,7 @@ local ContactsWiring = ns.MessengerWindowContactsWiring or require("WhisperMesse
 local ConversationWiring = ns.MessengerWindowConversationWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.ConversationWiring")
 local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSizing")
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
-local PhoneWiring = ns.MessengerWindowPhoneWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneWiring")
+local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
 local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
 
 local MessengerWindow = {}
@@ -24,13 +24,13 @@ function MessengerWindow.Create(factory, options)
   options = options or {}
 
   local shell = WindowShell.Build(factory, options)
-  local settingsConfig, phoneLayout = shell.settingsConfig, shell.phoneLayout
+  local settingsConfig, compactLayout = shell.settingsConfig, shell.compactLayout
   local initialState, windowGeometry = shell.initialState, shell.windowGeometry
   local currentContactsWidth = shell.contactsWidth
   local chrome, frame, layout = shell.chrome, shell.frame, shell.layout
   local settingsRuntime = shell.settingsRuntime
   local settingsPanels = settingsRuntime.settingsPanels
-  local phone = PhoneWiring.Hooks()
+  local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
 
   local function isShown(target)
@@ -88,10 +88,10 @@ function MessengerWindow.Create(factory, options)
     onPanelShown = options.onPanelShown,
     onConversationUncovered = options.onConversationUncovered,
     onCoverChanged = function(covered)
-      phone.onCoverChanged(covered)
+      compactMode.onCoverChanged(covered)
     end,
     onPanesShown = function()
-      phone.onPanesShown()
+      compactMode.onPanesShown()
     end,
     getContactsRail = function()
       return contactsRail
@@ -114,7 +114,7 @@ function MessengerWindow.Create(factory, options)
     closeWindow = closeWindow,
     refreshContacts = refreshContacts,
     onSelectionChanged = function(key)
-      phone.onSelection(key)
+      compactMode.onSelection(key)
     end,
   })
   local composer = composerRuntime.composer
@@ -125,7 +125,7 @@ function MessengerWindow.Create(factory, options)
   local refreshSelection = composerRuntime.refreshSelection
   local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
-  local wrappedPosition, onResetWindowPosition = PhoneWiring.WrapPosition(phone, options)
+  local wrappedPosition, onResetWindowPosition = CompactWiring.WrapPosition(compactMode, options)
   local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
@@ -162,12 +162,12 @@ function MessengerWindow.Create(factory, options)
     refreshWindowAlpha = refreshWindowAlpha,
     onPositionChanged = onPositionChanged,
     onBack = function()
-      return phone.onBack()
+      return compactMode.onBack()
     end,
     theme = Theme,
     composerInput = composerInput,
     getAutoFocusChatInput = function()
-      return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not phone.isListView()
+      return not isComposerFocusHeld() and settingsConfig.autoFocusComposer == true and not compactMode.isListView()
     end,
     onStrataChanged = function(strata)
       dock.onStrataChanged(strata)
@@ -213,9 +213,9 @@ function MessengerWindow.Create(factory, options)
     relayoutWindow = relayoutWindow,
   })
 
-  -- Phone first: its hide finishes a slide before the dock's hide closes.
-  if phoneLayout then
-    PhoneWiring.Attach(phone, {
+  -- Compact first: its hide finishes a slide before the dock's hide closes.
+  if compactLayout then
+    CompactWiring.Attach(compactMode, {
       frame = frame,
       layout = layout,
       chrome = chrome,
@@ -273,7 +273,7 @@ function MessengerWindow.Create(factory, options)
     panelHost = panelHost,
     windowVisibility = windowVisibility,
     showWithoutComposerFocus = composerRuntime.showWithoutComposerFocus,
-    phone = phoneLayout and phone or nil,
+    compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
   })
 end

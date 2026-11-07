@@ -28,9 +28,9 @@ local Guards = ns.PublicApiGuards or require("WhisperMessenger.Core.PublicApi.Gu
 -- changes (one call per frame at most); it may call the WhisperMessenger API;
 -- re-read counts with GetUnreadCount.
 -- compact (optional boolean): the panel lays itself out at any host width down
--- to the phone window's narrowest (PHONE_WINDOW_MIN_WIDTH, 352, less the window
--- chrome). In the phone layout WM then leaves the window narrow while the panel
--- shows. Without it the phone window widens while the panel shows, as for
+-- to the compact window's narrowest (COMPACT_WINDOW_MIN_WIDTH, 352, less the window
+-- chrome). In the compact layout WM then leaves the window narrow while the panel
+-- shows. Without it the compact window widens while the panel shows, as for
 -- settings. The classic layout ignores it. A compact panel's onSplit still
 -- reports the narrow window's list width, so do not line up with it there.
 local Panels = {}

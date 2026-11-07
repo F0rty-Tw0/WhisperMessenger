@@ -29,8 +29,8 @@ function ContactsWiring.Create(factory, options)
   -- local scope begins after the declaration statement completes.
   local contactsRuntime
   local tabSelectionMemory = TabSelectionMemory.Create({
-    rememberSelections = windowOptions.phoneLayout ~= true,
-    clearSelection = windowOptions.phoneLayout == true and windowOptions.onSelectConversation and function()
+    rememberSelections = windowOptions.compactLayout ~= true,
+    clearSelection = windowOptions.compactLayout == true and windowOptions.onSelectConversation and function()
       windowOptions.onSelectConversation(nil)
     end or nil,
     getSelectedConversationKey = options.getSelectedConversationKey,

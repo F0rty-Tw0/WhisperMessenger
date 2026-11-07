@@ -50,7 +50,7 @@ function Buttons.WireButtons(refs, options)
 
   if backButton and backButton.SetScript then
     backButton:SetScript("OnClick", function()
-      -- onBack: true when it took the click (the phone layout's open chat).
+      -- onBack: true when it took the click (the compact layout's open chat).
       if options.onBack and options.onBack() then
         return
       end

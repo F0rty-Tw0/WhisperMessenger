@@ -41,7 +41,7 @@ local function previewsTurnedOff(runtime)
   return settings ~= nil and settings.showWidgetMessagePreview == false
 end
 
--- On the phone window the button hides every card, so a true here would tell
+-- On the compact window the button hides every card, so a true here would tell
 -- the caller "shown" while the player sees nothing; false keeps its own toast.
 local function buttonRidesWindow(icon)
   return icon.isRiding ~= nil and icon.isRiding() == true

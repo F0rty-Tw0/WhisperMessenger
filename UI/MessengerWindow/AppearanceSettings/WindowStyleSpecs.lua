@@ -6,17 +6,17 @@ end
 local WindowStyleSpecs = {}
 
 function WindowStyleSpecs.Build(config, onChange, text, gap)
-  local phoneLayoutSpec = {
-    key = "phoneLayout",
-    label = text("Phone-style window"),
-    labelKey = "Phone-style window",
-    initial = config.phoneLayout ~= false,
+  local compactLayoutSpec = {
+    key = "compactLayout",
+    label = text("Compact window"),
+    labelKey = "Compact window",
+    initial = config.compactLayout ~= false,
     onChange = function(value)
-      onChange("phoneLayout", value)
+      onChange("compactLayout", value)
     end,
     tooltipLines = {
-      text("Phone-style window"),
-      text("The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."),
+      text("Compact window"),
+      text("The floating button opens a narrow chat list attached to it. Click a chat to slide into it."),
     },
     anchorOffsetY = gap,
   }
@@ -67,7 +67,7 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { phoneLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec }
+  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

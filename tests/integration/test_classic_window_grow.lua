@@ -1,15 +1,15 @@
-local PhoneWindow = require("tests.helpers.phone_window")
+local CompactWindow = require("tests.helpers.compact_window")
 local Rig = require("tests.helpers.grow_rig")
 local Theme = require("WhisperMessenger.UI.Theme")
 
-local DONE = Theme.LAYOUT.PHONE_RIDE_SECONDS + 0.1
+local DONE = Theme.LAYOUT.COMPACT_RIDE_SECONDS + 0.1
 
 local function classic(extra)
-  local options = { phoneLayout = false }
+  local options = { compactLayout = false }
   for key, value in pairs(extra or {}) do
     options[key] = value
   end
-  local case = PhoneWindow.Build(options)
+  local case = CompactWindow.Build(options)
   Rig.rect(case.window.frame, 100, 100, 460, 740)
   return case
 end

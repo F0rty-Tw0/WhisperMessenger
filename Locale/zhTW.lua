@@ -132,8 +132,8 @@ local TraditionalChinese = {
 
   -- Behavior settings
   ["Control how the messenger window behaves."] = "控制信使視窗的行為。",
-  ["Phone-style window"] = "手機樣式視窗",
-  ["The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it."] = "浮動按鈕會開啟一個附著於其上的手機大小聊天清單。點擊聊天即可滑入。",
+  ["Compact window"] = "精簡視窗",
+  ["The floating button opens a narrow chat list attached to it. Click a chat to slide into it."] = "浮動按鈕會開啟一個附著於其上的窄版聊天清單。點擊聊天即可滑入。",
   ["Window animation"] = "視窗動畫",
   ["The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once."] = "視窗開啟時會從圖示處展開，關閉時會縮回圖示，頁面也會滑動切換。關閉此選項後，所有內容將立即顯示。",
   ["Dock button on the window"] = "將按鈕停靠在視窗上",

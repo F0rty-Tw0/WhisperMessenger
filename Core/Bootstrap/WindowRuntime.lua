@@ -333,8 +333,8 @@ function WindowRuntime.Create(options)
     liveThemeSettingChanged = onSettingChanged
 
     -- Read once: changing the window style takes a reload.
-    local phoneLayout = settingsState.phoneLayout ~= false
-    runtime.phoneLayoutActive = phoneLayout
+    local compactLayout = settingsState.compactLayout ~= false
+    runtime.compactLayoutActive = compactLayout
 
     local growSource = GrowSource.Create({
       resolveIconMode = resolveIconMode,
@@ -350,8 +350,8 @@ function WindowRuntime.Create(options)
       selectedContact = selectedState.selectedContact,
       conversation = selectedState.conversation,
       status = selectedState.status,
-      state = phoneLayout and (characterState.phoneWindow or {}) or characterState.window,
-      phoneLayout = phoneLayout,
+      state = compactLayout and (characterState.compactWindow or {}) or characterState.window,
+      compactLayout = compactLayout,
       getDockIcon = getWidgetIcon,
       getGrowSource = growSource.getGrowSource,
       isGrowAnimationOn = growSource.isGrowAnimationOn,

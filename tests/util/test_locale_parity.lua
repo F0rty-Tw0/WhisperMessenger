@@ -3,6 +3,7 @@
 -- slots (%s, %d, ...) in the same count and order.
 local LOCALES = { "deDE", "esES", "esMX", "frFR", "itIT", "koKR", "ptBR", "ruRU", "zhCN", "zhTW" }
 local INVITE_TOOLTIP_KEY = "Shows an (Invite to WM) link in the chat header. Clicking it whispers that player a short message about this addon."
+local TOOLTIP_KEY = "The floating button opens a narrow chat list attached to it. Click a chat to slide into it."
 local REPLY_PLACEHOLDER_KEY = "Reply…"
 local REPLY_REASON_KEY = 'Turn on "Show widget message preview" to use this.'
 local PREVIEW_REPLY_KEYS = {
@@ -41,7 +42,10 @@ local REMOVED_KEYS = {
   "Show more",
   "Show all",
   "%d of %d lines · Ctrl+C copies",
+  "Phone-style window",
+  "The floating button opens a phone-sized chat list attached to it. Click a chat to slide into it.",
 }
+local COMPACT_WINDOW_KEYS = { "Compact window", TOOLTIP_KEY }
 local WINDOW_ANIMATION_KEYS = {
   "Window animation",
   "The window grows out of its icon when it opens and shrinks back into it when it closes, and pages slide in. Turn it off to make everything appear at once.",
@@ -135,6 +139,11 @@ return function()
 
     -- test_window_animation_strings_are_translated
     for _, key in ipairs(WINDOW_ANIMATION_KEYS) do
+      assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
+    end
+
+    -- test_compact_window_strings_are_translated
+    for _, key in ipairs(COMPACT_WINDOW_KEYS) do
       assert(type(catalog[key]) == "string" and catalog[key] ~= "", code .. " is missing a translation for '" .. key .. "'")
     end
 
