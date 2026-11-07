@@ -139,6 +139,20 @@ return function()
     assert(input.lastInsert ~= nil, "SetItemRef hook should insert when focused")
   end
 
+  -- test_set_item_ref_hook_skips_our_url_links_when_focused
+  -- (a URL click copies the address; it must not also drop the link into the
+  --  composer now that URL clicks pass through SetItemRef)
+
+  do
+    reset()
+    input.focused = true
+    local urlText = "|cff71d5ff|Haddon:WhisperMessenger:url:https://example.com|hhttps://example.com|h|r"
+    for _, fn in ipairs(setItemRefHooks) do
+      fn("addon:WhisperMessenger:url:https://example.com", urlText)
+    end
+    assert(input.lastInsert == nil, "SetItemRef hook should not insert our URL links, got: " .. tostring(input.lastInsert))
+  end
+
   -- test_refused_focus_does_not_install_overrides
   -- (an input whose own OnEditFocusGained script calls ClearFocus — a disabled
   --  or locked preview reply row — has lost focus by the time this post-hook
