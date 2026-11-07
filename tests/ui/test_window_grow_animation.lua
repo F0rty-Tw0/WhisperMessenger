@@ -42,7 +42,7 @@ local function build()
 end
 
 local FRAME = 1 / 60
-local SECONDS = Theme.LAYOUT.PHONE_RIDE_SECONDS
+local SECONDS = Theme.LAYOUT.COMPACT_RIDE_SECONDS
 
 -- Runs the panel's own clock frame by frame, as the client does.
 local function tickPanel(case, seconds)

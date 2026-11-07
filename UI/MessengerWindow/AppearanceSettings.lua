@@ -33,7 +33,7 @@ local DEFAULTS = {
   fontColor = "default",
   bubbleColorPreset = "default",
   windowScale = 1.0,
-  phoneLayout = true,
+  compactLayout = true,
   windowAnimation = true,
   iconDock = true,
   openAtSavedSpot = false,
@@ -272,7 +272,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
       hudStyleSelector.setSelected(style or hudDefault)
     end,
     -- Same, for the window style's toggle.
-    setPhoneLayout = function(enabled)
+    setCompactLayout = function(enabled)
       windowStyleToggles[1].setValue(enabled)
     end,
   }

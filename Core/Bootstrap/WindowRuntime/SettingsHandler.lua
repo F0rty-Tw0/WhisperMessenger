@@ -8,7 +8,8 @@ local Localization = ns.Localization or (type(require) == "function" and require
 local IconSurfaces = ns.BootstrapWindowCoordinatorIconSurfaces or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.IconSurfaces")
 local Store = ns.ConversationStore or (type(require) == "function" and require("WhisperMessenger.Model.ConversationStore")) or nil
 local HudStyleSetting = ns.BootstrapWindowRuntimeHudStyleSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.HudStyleSetting")
-local PhoneLayoutSetting = ns.BootstrapWindowRuntimePhoneLayoutSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PhoneLayoutSetting")
+local CompactLayoutSetting = ns.BootstrapWindowRuntimeCompactLayoutSetting
+  or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.CompactLayoutSetting")
 local IntegrationSetting = ns.BootstrapWindowRuntimeIntegrationSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationSetting")
 local LanguageSetting = ns.BootstrapWindowRuntimeLanguageSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LanguageSetting")
 local DisplayNameSetting = ns.BootstrapWindowRuntimeDisplayNameSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DisplayNameSetting")
@@ -53,10 +54,10 @@ function SettingsHandler.Create(options)
   local onShareWidgetPositionChanged = options.onShareWidgetPositionChanged
 
   -- A change to the floating button reaches the window it may ride (either layout).
-  local function dockPhoneIcon()
+  local function dockCompactIcon()
     local window = runtime.window
-    if window and window.dockPhoneIcon then
-      window.dockPhoneIcon()
+    if window and window.dockCompactIcon then
+      window.dockCompactIcon()
     end
   end
 
@@ -82,12 +83,12 @@ function SettingsHandler.Create(options)
       end)
       return
     end
-    -- Saved by PhoneLayoutSetting only when the player reloads.
-    if key == "phoneLayout" then
-      PhoneLayoutSetting.Apply(accountSettings, value == true, runtime.phoneLayoutActive ~= false, function(saved)
+    -- Saved by CompactLayoutSetting only when the player reloads.
+    if key == "compactLayout" then
+      CompactLayoutSetting.Apply(accountSettings, value == true, runtime.compactLayoutActive ~= false, function(saved)
         local appearance = runtime.window and runtime.window.appearanceSettings
-        if appearance and appearance.setPhoneLayout then
-          appearance.setPhoneLayout(saved)
+        if appearance and appearance.setCompactLayout then
+          appearance.setCompactLayout(saved)
         end
       end)
       return
@@ -255,16 +256,16 @@ function SettingsHandler.Create(options)
 
     if key == "iconMode" and options.applyIconMode then
       options.applyIconMode()
-      dockPhoneIcon()
+      dockCompactIcon()
     end
 
     if key == "iconSize" and icon and icon.applyIconSize then
       icon.applyIconSize(persistedValue)
-      dockPhoneIcon()
+      dockCompactIcon()
     end
 
     if key == "iconDock" then
-      dockPhoneIcon()
+      dockCompactIcon()
     end
 
     if key == "iconDesaturated" then

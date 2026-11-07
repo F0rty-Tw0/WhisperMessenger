@@ -88,12 +88,12 @@ return function()
     assert(calls.relayouts == 1, "layout re-applied")
   end
 
-  -- test_dock_is_exposed_without_the_phone_pieces
+  -- test_dock_is_exposed_without_the_compact_pieces
   do
     local parts = makeParts()
     parts.dock = function() end
     local window = WindowSurface.Build(parts)
-    assert(window.dockPhoneIcon == parts.dock, "the regular window re-docks too")
-    assert(window.isPhoneLayout == nil and window.showPhoneList == nil, "compact-only fields stay compact-only")
+    assert(window.dockCompactIcon == parts.dock, "the regular window re-docks too")
+    assert(window.isCompactLayout == nil and window.showCompactList == nil, "compact-only fields stay compact-only")
   end
 end

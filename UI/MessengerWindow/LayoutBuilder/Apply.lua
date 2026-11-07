@@ -5,7 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
-local PhoneViewport = ns.MessengerWindowLayoutPhoneViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.PhoneViewport")
+local CompactViewport = ns.MessengerWindowLayoutCompactViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.CompactViewport")
 local sizeValue = UIHelpers.sizeValue
 
 local Apply = {}
@@ -30,7 +30,7 @@ function Apply.Relayout(layout, relayout, theme)
   layout.contactsPane:SetSize(contactsWidth, contactsHeight)
   -- Re-anchor so the pane keeps its edge insets after every relayout.
   local contactsPaneParent = layout.contactsPane.GetParent and layout.contactsPane:GetParent() or layout.contactsPane.parent
-  if contactsPaneParent and layout.contactsPane.ClearAllPoints and not layout.phoneViewport then
+  if contactsPaneParent and layout.contactsPane.ClearAllPoints and not layout.compactViewport then
     layout.contactsPane:ClearAllPoints()
     layout.contactsPane:SetPoint(
       "TOPLEFT",
@@ -81,8 +81,8 @@ function Apply.Relayout(layout, relayout, theme)
   if layout.contentPane.ClearAllPoints then
     layout.contentPane:ClearAllPoints()
   end
-  if layout.phoneViewport then
-    PhoneViewport.Place(layout)
+  if layout.compactViewport then
+    CompactViewport.Place(layout)
   else
     layout.contentPane:SetPoint("TOPLEFT", layout.contactsPane, "TOPRIGHT", resolvedTheme.DIVIDER_THICKNESS, 0)
   end
@@ -99,7 +99,7 @@ function Apply.Relayout(layout, relayout, theme)
       contentParentForAnchor = layout.contactsPane.parent
     end
   end
-  if contentParentForAnchor and not layout.phoneViewport then
+  if contentParentForAnchor and not layout.compactViewport then
     layout.contentPane:SetPoint(
       "BOTTOMRIGHT",
       contentParentForAnchor,

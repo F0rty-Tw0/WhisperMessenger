@@ -23,7 +23,7 @@ function TabSelectionMemory.Create(options)
     refreshSelection({})
   end
 
-  -- Phone layout: a tab shows its list, never a chat it last had open;
+  -- Compact layout: a tab shows its list, never a chat it last had open;
   -- clearSelection drops the runtime's selection too (default: empty pane).
   local rememberSelections = options.rememberSelections ~= false
 

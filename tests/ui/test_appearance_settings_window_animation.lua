@@ -59,12 +59,12 @@ return function()
     assert(saved ~= nil and saved.value == true, "the default is on")
   end
 
-  -- test_the_animation_row_sits_below_the_phone_toggle
+  -- test_the_animation_row_sits_below_the_compact_toggle
   do
     local result = create()
-    local phone = FindUI.byLabel(result.frame, "Phone-style window")
+    local compactMode = FindUI.byLabel(result.frame, "Phone-style window")
     local animation = FindUI.byLabel(result.frame, LABEL)
-    assert(select(2, animation:GetPoint()) == phone, "anchored under the phone toggle")
+    assert(select(2, animation:GetPoint()) == compactMode, "anchored under the compact toggle")
   end
 
   -- test_the_animation_label_survives_a_language_refresh

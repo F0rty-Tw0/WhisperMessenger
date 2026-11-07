@@ -45,7 +45,7 @@ return function()
     windowOpacityInactive = 0.4,
     windowOpacityActive = 0.9,
     hudStyle = "classic",
-    phoneLayout = false,
+    compactLayout = false,
     windowAnimation = false,
     iconDock = false,
     openAtSavedSpot = true,
@@ -176,7 +176,7 @@ return function()
   )
   assert(appearanceCapture.config.showPlayerLevels == nil, "player levels key moved off the Appearance page")
   -- Window style toggles: a missing key shows the default after /reload.
-  assert(appearanceCapture.config.phoneLayout == false, "appearance config should carry phoneLayout")
+  assert(appearanceCapture.config.compactLayout == false, "appearance config should carry compactLayout")
   assert(appearanceCapture.config.windowAnimation == false, "appearance config should carry windowAnimation")
   assert(appearanceCapture.config.iconDock == false, "appearance config should carry iconDock")
   assert(appearanceCapture.config.openAtSavedSpot == true, "appearance config should carry openAtSavedSpot")

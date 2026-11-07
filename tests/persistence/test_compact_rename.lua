@@ -1,4 +1,5 @@
 local CompactRename = require("WhisperMessenger.Persistence.SavedState.CompactRename")
+local SavedState = require("WhisperMessenger.Persistence.SavedState")
 
 return function()
   -- test_phone_layout_moves_to_compact_layout
@@ -71,5 +72,12 @@ return function()
     assert(pcall(CompactRename.Migrate, nil, nil))
     assert(pcall(CompactRename.Migrate, {}, nil))
     assert(pcall(CompactRename.Migrate, { settings = nil }, {}))
+  end
+
+  -- test_initialize_runs_the_copy
+  do
+    local account, character = SavedState.Initialize({ settings = { phoneLayout = true } }, { phoneWindow = { x = 1 } }, "arthas-area52")
+    assert(account.settings.compactLayout == true and account.settings.phoneLayout == nil, "Initialize should copy the setting")
+    assert(character.compactWindow.x == 1 and character.phoneWindow == nil, "Initialize should copy the window spot")
   end
 end

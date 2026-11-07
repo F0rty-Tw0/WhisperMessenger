@@ -6,13 +6,13 @@ end
 local WindowStyleSpecs = {}
 
 function WindowStyleSpecs.Build(config, onChange, text, gap)
-  local phoneLayoutSpec = {
-    key = "phoneLayout",
+  local compactLayoutSpec = {
+    key = "compactLayout",
     label = text("Phone-style window"),
     labelKey = "Phone-style window",
-    initial = config.phoneLayout ~= false,
+    initial = config.compactLayout ~= false,
     onChange = function(value)
-      onChange("phoneLayout", value)
+      onChange("compactLayout", value)
     end,
     tooltipLines = {
       text("Phone-style window"),
@@ -67,7 +67,7 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { phoneLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec }
+  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

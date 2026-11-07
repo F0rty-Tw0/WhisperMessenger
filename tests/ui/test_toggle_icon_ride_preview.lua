@@ -1,7 +1,7 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local ToggleIcon = require("WhisperMessenger.UI.ToggleIcon")
 
--- The button riding the phone window hides its cards; landing home brings
+-- The button riding the compact window hides its cards; landing home brings
 -- another addon's card back. ToggleIcon wires the ride to the preview.
 
 local function build()

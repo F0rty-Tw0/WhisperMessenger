@@ -516,7 +516,7 @@ return function()
         },
         contacts = {},
         pendingHydration = {},
-        settings = { phoneLayout = false },
+        settings = { compactLayout = false },
       },
       characterState = {
         window = { x = 0, y = 0, width = 900, height = 560 },

@@ -4,8 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
-local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
-local PhoneDockFlow = ns.MessengerWindowPhoneDockFlow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDockFlow")
+local CompactDock = ns.MessengerWindowCompactDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactDock")
+local CompactDockFlow = ns.MessengerWindowCompactDockFlow or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactDockFlow")
 local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
   or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
@@ -75,7 +75,7 @@ function DockWiring.Attach(window, parts)
   local isIconDockOn = windowOptions.isIconDockOn or function()
     return true
   end
-  local flow = PhoneDockFlow.Attach(window, {
+  local flow = CompactDockFlow.Attach(window, {
     chrome = chrome,
     getDockIcon = getDockIcon,
     openAnimation = openAnimation,
@@ -95,13 +95,13 @@ function DockWiring.Attach(window, parts)
       window:SetClampRectInsets(0, right, 0, bottom)
       return
     end
-    if PhoneDock.ClampToSpot(window, flow.spot()) then
+    if CompactDock.ClampToSpot(window, flow.spot()) then
       return
     end
     local timer = _G.C_Timer
     if type(timer) == "table" and type(timer.After) == "function" then
       timer.After(0, function()
-        PhoneDock.ClampToSpot(window, flow.spot())
+        CompactDock.ClampToSpot(window, flow.spot())
       end)
     end
   end

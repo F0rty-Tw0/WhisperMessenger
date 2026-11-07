@@ -6,11 +6,11 @@ end
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local GlideClock = ns.GlideClock or require("WhisperMessenger.UI.Shared.GlideClock")
 
--- The window (classic or phone) coming out of its icon (the floating button
+-- The window (classic or compact) coming out of its icon (the floating button
 -- or the minimap icon) and shrinking back into it. Scaling a real window
 -- makes its text and hairlines shimmer, so nothing real is scaled: a plain
 -- panel grows from the icon to the window's exact size, and the window,
--- already full size and laid out, fades in over it. The phone ride passes its
+-- already full size and laid out, fades in over it. The compact ride passes its
 -- own steps (IconRide's clock keeps button, panel and fade together); `play`
 -- runs the steps on the panel's own clock when there is no ride.
 local WindowGrowAnimation = {}
@@ -19,7 +19,7 @@ local WindowGrowAnimation = {}
 local REVEAL_START = 0.55
 local PANEL_FADE_START = 0.85
 -- Under the raised window (level 2000, see WindowStrata), so the window fades
--- in over a solid panel; under the button (PHONE_RIDE_FRAME_LEVEL) too.
+-- in over a solid panel; under the button (COMPACT_RIDE_FRAME_LEVEL) too.
 local PANEL_LEVEL = 1990
 local MIN_PANEL_SIZE = 1
 -- Tests find the panel by its level.
@@ -86,7 +86,7 @@ end
 function WindowGrowAnimation.Attach(frame, options)
   local parent = options.parent
   local theme = options.theme
-  local duration = theme.LAYOUT.PHONE_RIDE_SECONDS
+  local duration = theme.LAYOUT.COMPACT_RIDE_SECONDS
   local panel, fill, border = buildPanel(options.factory, parent, theme)
 
   -- Each run owns its steps, so a superseded run's steps do nothing.
