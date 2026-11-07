@@ -281,4 +281,48 @@ return function()
     tick(case, SECONDS + 0.01)
     assert(select(4, case.frame:GetPoint()) == -20, "home unchanged")
   end
+
+  -- test_instant_ride_arrives_at_once_and_reports_one
+  do
+    local case = build()
+    local steps = {}
+    case.ride.rideTo(case.target, function(t, p)
+      steps[#steps + 1] = { t, p }
+    end, true)
+    assert(case.frame.scripts.OnUpdate == nil, "no glide: nothing ticks")
+    assert(case.ride.isRiding(), "riding from the start")
+    assert(case.frame:GetScale() == 2 and case.frame:GetFrameLevel() == 3000, "landed: size and level")
+    local _, relativeTo, relativePoint = case.frame:GetPoint()
+    assert(relativeTo == case.region and relativePoint == "CENTER", "pinned to the target")
+    assert(#steps == 1 and steps[1][1] == 1 and steps[1][2] == 1, "one step, ending on one")
+  end
+
+  -- test_instant_ride_home_restores_at_once_and_reports_one
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS + 0.01)
+    local steps = {}
+    case.ride.rideHome(function(t, p)
+      steps[#steps + 1] = { t, p }
+    end, true)
+    assert(case.frame.scripts.OnUpdate == nil, "no glide home")
+    local point, relativeTo, relativePoint, x, y = case.frame:GetPoint()
+    assert(point == "BOTTOMRIGHT" and relativeTo == case.parent and relativePoint == "BOTTOMRIGHT", "saved anchor back")
+    assert(x == -20 and y == 40 and case.frame:GetScale() == 1 and case.frame:GetFrameLevel() == 5, "saved offsets, size, level back")
+    assert(not case.ride.isRiding(), "no longer riding")
+    assert(table.concat(case.ridingChanges, ",") == "true,false", "landing home reported")
+    assert(#steps == 1 and steps[1][1] == 1 and steps[1][2] == 1, "one step, ending on one")
+  end
+
+  -- test_instant_ride_home_cancels_a_glide_in_progress
+  do
+    local case = build()
+    case.ride.rideTo(case.target)
+    tick(case, SECONDS / 2)
+    assert(case.frame.scripts.OnUpdate ~= nil, "gliding out")
+    case.ride.rideHome(nil, true)
+    assert(case.frame.scripts.OnUpdate == nil, "the old glide is gone")
+    assert(select(4, case.frame:GetPoint()) == -20 and case.frame:GetScale() == 1, "home at once")
+  end
 end

@@ -8,7 +8,8 @@ local WindowBounds = ns.MessengerWindowWindowBounds or require("WhisperMessenger
 local PhoneSlide = ns.MessengerWindowPhoneSlide or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneSlide")
 local PhoneNavigator = ns.MessengerWindowPhoneNavigator or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneNavigator")
 local PhoneDock = ns.MessengerWindowPhoneDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneDock")
-local PhoneOpenAnimation = ns.MessengerWindowPhoneOpenAnimation or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneOpenAnimation")
+local WindowGrowAnimation = ns.MessengerWindowWindowGrowAnimation
+  or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 
 -- Everything MessengerWindow asks of the phone layout. Hooks() returns the
 -- calls it makes while building, which do nothing until Attach fills them in,
@@ -91,7 +92,7 @@ function PhoneWiring.Attach(hooks, options)
   end
 
   local slide = PhoneSlide.Create({ layout = layout, theme = Theme, isCovered = isCovered })
-  local openAnimation = PhoneOpenAnimation.Attach(frame, {
+  local openAnimation = WindowGrowAnimation.Attach(frame, {
     factory = options.factory,
     parent = frame:GetParent() or _G.UIParent,
     theme = Theme,

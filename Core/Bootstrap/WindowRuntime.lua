@@ -42,6 +42,7 @@ local PreviewOpen = ns.BootstrapWindowRuntimePreviewOpen or require("WhisperMess
 local PreviewReplyRuntime = ns.BootstrapWindowRuntimePreviewReplyRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PreviewReplyRuntime")
 local LiveThemeSync = ns.BootstrapWindowRuntimeLiveThemeSync or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.LiveThemeSync")
+local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
 local EllesmereBridge = ns.ThemeEllesmereBridge or require("WhisperMessenger.UI.Theme.EllesmereBridge")
 
 local WindowRuntime = {}
@@ -335,6 +336,15 @@ function WindowRuntime.Create(options)
     local phoneLayout = settingsState.phoneLayout ~= false
     runtime.phoneLayoutActive = phoneLayout
 
+    local growSource = GrowSource.Create({
+      resolveIconMode = resolveIconMode,
+      getWidgetIcon = getWidgetIcon,
+      getMinimapIcon = function()
+        return minimapIcon
+      end,
+      settings = settingsState,
+    })
+
     local windowOptions = {
       contacts = contacts,
       selectedContact = selectedState.selectedContact,
@@ -343,6 +353,8 @@ function WindowRuntime.Create(options)
       state = phoneLayout and (characterState.phoneWindow or {}) or characterState.window,
       phoneLayout = phoneLayout,
       getDockIcon = getWidgetIcon,
+      getGrowSource = growSource.getGrowSource,
+      isGrowAnimationOn = growSource.isGrowAnimationOn,
       initialTabMode = characterState.contactsTabMode or "whispers",
       storeConfig = runtime.store.config,
       settingsConfig = settingsState,

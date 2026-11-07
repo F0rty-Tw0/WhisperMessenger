@@ -1,4 +1,4 @@
-local PhoneOpenAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneOpenAnimation")
+local WindowGrowAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 local IconRide = require("WhisperMessenger.UI.ToggleIcon.IconRide")
 local PhoneWindow = require("tests.helpers.phone_window")
 local Theme = require("WhisperMessenger.UI.Theme")
@@ -59,7 +59,7 @@ local function buildOpen()
   rect(frame, 100, 100, 460, 740)
   rect(icon, 80, 720, 122, 762)
   local held = {}
-  local animation = PhoneOpenAnimation.Attach(frame, {
+  local animation = WindowGrowAnimation.Attach(frame, {
     factory = factory,
     parent = parent,
     theme = Theme,

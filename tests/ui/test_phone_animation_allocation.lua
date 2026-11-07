@@ -1,4 +1,4 @@
-local PhoneOpenAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.PhoneOpenAnimation")
+local WindowGrowAnimation = require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowGrowAnimation")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FakeUI = require("tests.helpers.fake_ui")
 local AnimAlloc = require("tests.helpers.anim_alloc")
@@ -32,7 +32,7 @@ local function build()
   rect(icon, 80, 720, 122, 762)
   frame:SetAlpha(0.8)
   local counts = {}
-  local animation = PhoneOpenAnimation.Attach(frame, {
+  local animation = WindowGrowAnimation.Attach(frame, {
     factory = factory,
     parent = parent,
     theme = Theme,
