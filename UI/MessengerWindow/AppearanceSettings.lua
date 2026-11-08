@@ -36,7 +36,7 @@ local DEFAULTS = {
   compactLayout = false,
   windowAnimation = true,
   iconDock = true,
-  openAtSavedSpot = false,
+  openAtSavedSpot = true,
 }
 
 local function pctFormat(v)

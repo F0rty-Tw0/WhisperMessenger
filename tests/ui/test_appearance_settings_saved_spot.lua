@@ -43,9 +43,9 @@ return function()
     assert(#changes == 1 and changes[1].key == "openAtSavedSpot" and changes[1].value == true, "asks for on")
   end
 
-  -- test_reset_turns_the_saved_spot_back_off
+  -- test_reset_turns_the_saved_spot_back_on
   do
-    local result, changes = create({ openAtSavedSpot = true })
+    local result, changes = create({ openAtSavedSpot = false })
     local reset = FindUI.byLabel(result.frame, "Reset to Defaults")
     reset.scripts.OnClick(reset)
     local saved
@@ -54,7 +54,7 @@ return function()
         saved = change
       end
     end
-    assert(saved ~= nil and saved.value == false, "the default is off")
+    assert(saved ~= nil and saved.value == true, "the default is on")
   end
 
   -- test_the_saved_spot_row_sits_below_the_dock_row
