@@ -116,7 +116,10 @@ function ToggleIcon.Create(factory, options)
     start = pulseGlow.start,
     stop = pulseGlow.stop,
     getBadgePulse = options.getBadgePulse,
-    isExternalShown = incomingPreview.isExternalShown,
+    isExternalShown = function()
+      local shownElsewhere = options.isExternalShownElsewhere
+      return incomingPreview.isExternalShown() or (shownElsewhere ~= nil and shownElsewhere() == true)
+    end,
   })
 
   local getShowUnreadBadge = options.getShowUnreadBadge
@@ -267,6 +270,7 @@ function ToggleIcon.Create(factory, options)
     isExternalPreviewShown = incomingPreview.isExternalShown,
     openShownPreview = incomingPreview.openShownPreview,
     setExternalPulse = pulseState.setExternal,
+    refreshPulse = pulseState.refresh,
     applyPreviewPosition = incomingPreview.applyPreviewPosition,
     applyIconSize = applyIconSize,
     refreshDesaturation = refreshDesaturation,

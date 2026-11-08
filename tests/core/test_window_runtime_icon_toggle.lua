@@ -58,6 +58,24 @@ local function setup(opts)
   runtime.getWidgetIcon = function()
     return not opts.noWidget and widget or nil
   end
+  widget.isRiding = function()
+    return opts.riding == true
+  end
+  if opts.opensCard ~= nil then
+    -- The detached card: the active surface while detached.
+    local surface = {
+      isExternalPreviewShown = function()
+        return runtime.externalPreview.get() ~= nil
+      end,
+      openShownPreview = function()
+        calls[#calls + 1] = "openCard"
+        return opts.opensCard
+      end,
+    }
+    runtime.getActivePreviewSurface = function()
+      return surface
+    end
+  end
 
   local function toggle()
     calls[#calls + 1] = "toggle"
@@ -217,5 +235,37 @@ return function()
     runtime.externalPreview.set("ca", { sender = "CA", text = "lead" }, false)
     onToggle()
     assert(joined(calls) == "toggle", "nothing on screen and no badge keeps the plain toggle, got " .. joined(calls))
+  end
+
+  -- test_click_opens_the_detached_card_whisper
+  do
+    local onToggle, calls = setup({ noWidget = true, opensCard = true })
+    onToggle()
+    assert(joined(calls) == "openCard", "the detached card's chat opens and nothing toggles, got " .. joined(calls))
+  end
+
+  -- test_docked_widget_click_still_closes_while_detached
+  do
+    local onToggle, calls = setup({ visible = true, riding = true, opensCard = true })
+    onToggle()
+    assert(joined(calls) == "toggle", "a docked button closes the window, the card stays shut, got " .. joined(calls))
+  end
+
+  -- test_detached_card_owner_picks_the_page
+  do
+    local onToggle, calls, runtime = setup({ noWidget = true, opensCard = false })
+    runtime.panelRegistry.register(
+      "busy",
+      panel(function()
+        return 2
+      end)
+    )
+    runtime.panelRegistry.register("ca", panel())
+    runtime.externalPreview.set("ca", { sender = "CA", text = "lead" }, false)
+    onToggle()
+    assert(
+      joined(calls) == "openCard,ensure,visible:true,showPanel:ca",
+      "the card's owner page opens when the card is not a whisper, got " .. joined(calls)
+    )
   end
 end

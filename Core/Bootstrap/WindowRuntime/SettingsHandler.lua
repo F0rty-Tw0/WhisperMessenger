@@ -235,6 +235,10 @@ function SettingsHandler.Create(options)
       if minimapIcon and minimapIcon.refreshTheme then
         minimapIcon.refreshTheme()
       end
+      local detached = options.getDetachedPreview and options.getDetachedPreview()
+      if detached and detached.refreshTheme then
+        detached.refreshTheme()
+      end
       if runtime.refreshWindow then
         runtime.refreshWindow()
       end
@@ -295,6 +299,10 @@ function SettingsHandler.Create(options)
       if minimap and minimap.applyPreviewPosition then
         minimap.applyPreviewPosition(persistedValue)
       end
+    end
+
+    if options.onDetachedSetting then
+      options.onDetachedSetting(key, persistedValue)
     end
   end
 end

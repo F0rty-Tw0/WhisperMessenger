@@ -232,6 +232,7 @@ local German = {
   ["Left"] = "Links",
   ["Above"] = "Oben",
   ["Below"] = "Unten",
+  ["Detached"] = "Frei",
   ["Off"] = "Aus",
   ["Whisper"] = "Flüstern",
   ["Ping"] = "Ping",

@@ -20,7 +20,7 @@ return function()
   for _, option in ipairs(Options.BuildPositionOptions()) do
     keys[#keys + 1] = option.key
   end
-  assert(table.concat(keys, ",") == "right,left,top,bottom", "test_position_options_keep_order: got " .. table.concat(keys, ","))
+  assert(table.concat(keys, ",") == "right,left,top,bottom,detached", "test_position_options_keep_order: got " .. table.concat(keys, ","))
 
   -- test_icon_mode_options_and_default
 

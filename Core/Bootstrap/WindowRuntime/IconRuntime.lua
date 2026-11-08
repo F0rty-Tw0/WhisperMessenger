@@ -138,6 +138,7 @@ function IconRuntime.Create(options)
     onDismissPreview = dismissWidgetPreview,
     onOpenPreview = options.onOpenPreview,
     quickReply = options.quickReply,
+    isExternalShownElsewhere = options.isExternalShownElsewhere,
   })
 
   initializeIconState(icon, buildContacts(), runtime.panelRegistry, buildLatestIncomingPreview)

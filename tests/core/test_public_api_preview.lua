@@ -51,6 +51,17 @@ local function makeRuntime(opts)
       end,
     }
   end
+  if opts.surface then
+    -- The detached card, the active surface while the setting says detached.
+    local surface = {
+      isExternalPreviewShown = function()
+        return holder.get() ~= nil
+      end,
+    }
+    runtime.getActivePreviewSurface = function()
+      return surface
+    end
+  end
   state.api = PublicApi.Build(runtime)
   return state
 end
@@ -220,6 +231,47 @@ return function()
     assert(s.api.ShowPreview("ca", preview()) == true and s.holder.get().detail == nil, "detail is optional")
   end
 
+  local function test_show_preview_accepted_in_minimap_mode_while_detached()
+    local s = makeRuntime({ noWidget = true, surface = true, settings = { widgetPreviewPosition = "detached" } })
+    assert(s.api.ShowPreview("ca", preview()) == true, "the detached card needs no widget")
+    assert(s.holder.keyOf() == "ca" and s.updates == 1, "the entry is stored and the surfaces refresh")
+  end
+
+  local function test_show_preview_refused_in_minimap_mode_when_pinned()
+    local s = makeRuntime({ noWidget = true, surface = true, settings = { widgetPreviewPosition = "pinned" } })
+    assert(s.api.ShowPreview("ca", preview()) == false, "pinned and no widget keeps today's refusal")
+    assert(s.holder.get() == nil, "nothing stored")
+  end
+
+  local function test_show_preview_accepted_with_docked_widget_while_detached()
+    local s = makeRuntime({ surface = true, settings = { widgetPreviewPosition = "detached" } })
+    s.riding = true
+    assert(s.api.ShowPreview("ca", preview()) == true, "the card does not ride the window")
+  end
+
+  local function test_show_preview_refused_while_detached_with_previews_off()
+    local s = makeRuntime({
+      surface = true,
+      settings = { widgetPreviewPosition = "detached", showWidgetMessagePreview = false },
+    })
+    assert(s.api.ShowPreview("ca", preview()) == false, "previews turned off still refuse")
+  end
+
+  local function test_is_preview_shown_reads_the_detached_card()
+    local s = makeRuntime({
+      noWidget = true,
+      surface = true,
+      settings = { widgetPreviewPosition = "detached" },
+    })
+    s.api.ShowPreview("ca", preview())
+    assert(s.api.IsPreviewShown("ca") == true, "the card shows the preview")
+  end
+
+  test_show_preview_accepted_in_minimap_mode_while_detached()
+  test_show_preview_refused_in_minimap_mode_when_pinned()
+  test_show_preview_accepted_with_docked_widget_while_detached()
+  test_show_preview_refused_while_detached_with_previews_off()
+  test_is_preview_shown_reads_the_detached_card()
   test_detail_string_is_accepted_and_stored()
   test_no_detail_stores_nil()
   test_an_overwritten_is_panel_shown_does_not_change_show_preview()

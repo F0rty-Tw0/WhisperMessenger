@@ -35,6 +35,7 @@ local POSITION_OPTION_SPECS = {
   { key = "left", label = "Left" },
   { key = "top", label = "Above" },
   { key = "bottom", label = "Below" },
+  { key = "detached", label = "Detached" },
 }
 
 local function text(key)

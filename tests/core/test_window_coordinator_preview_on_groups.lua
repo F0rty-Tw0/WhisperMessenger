@@ -150,4 +150,44 @@ return function()
 
     assert(calls[1].messageText == "gg wp", "regression: preview must show when window is hidden")
   end
+
+  -- test_coordinator_routes_to_the_detached_card
+  do
+    local window = makeWindow("groups")
+    local icon, calls = captureIcon()
+    local detached, detachedCalls = captureIcon()
+    local coord = WindowCoordinator.Create({
+      runtime = makeRuntime(),
+      buildContacts = function()
+        return {}
+      end,
+      getWindow = function()
+        return window
+      end,
+      getIcon = function()
+        return icon
+      end,
+      getDetachedPreview = function()
+        return detached
+      end,
+      previewDetached = function()
+        return true
+      end,
+      buildMessagePreview = function()
+        return SAMPLE_PREVIEW
+      end,
+      isMythicRestricted = function()
+        return false
+      end,
+      requestAvailability = function() end,
+    })
+
+    coord.refreshContacts()
+
+    assert(
+      detachedCalls[1].messageText == "gg wp",
+      "the detached card gets the preview; got " .. tostring(detachedCalls[1] and detachedCalls[1].messageText)
+    )
+    assert(calls[1].messageText == nil, "the widget card stays empty; got " .. tostring(calls[1].messageText))
+  end
 end

@@ -232,6 +232,7 @@ local French = {
   ["Left"] = "Gauche",
   ["Above"] = "Au-dessus",
   ["Below"] = "En dessous",
+  ["Detached"] = "Libre",
   ["Off"] = "Désactivé",
   ["Whisper"] = "Chuchotement",
   ["Ping"] = "Ping",

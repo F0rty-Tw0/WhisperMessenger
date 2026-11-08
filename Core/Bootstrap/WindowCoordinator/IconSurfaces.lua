@@ -40,28 +40,29 @@ function IconSurfaces.ShowCounts(total, unread, icon, minimap, ldb)
 end
 
 local function setExternalPulse(icon, on)
-  if icon.setExternalPulse then
+  if icon and icon.setExternalPulse then
     icon.setExternalPulse(on)
   end
 end
 
 -- An external preview (another addon's) holds the widget until an own
 -- whisper newer than it arrives; that whisper drops it, and so does turning
--- the widget preview off. True when shown. Its pulse flag follows it; every
--- other path switches the external pulse off.
-local function showExternalPreview(icon, preview, surfaces)
+-- the widget preview off. True when shown on target (the widget, or the
+-- detached card). Its pulse flag goes to pulseIcon (the widget, may be nil)
+-- and follows it; every other path switches the external pulse off.
+local function showExternalPreview(target, pulseIcon, preview, surfaces)
   local external = surfaces.getExternalPreview and surfaces.getExternalPreview() or nil
   if external == nil then
-    setExternalPulse(icon, false)
+    setExternalPulse(pulseIcon, false)
     return false
   end
   local previewsOff = surfaces.previewsOff and surfaces.previewsOff()
-  if icon.setExternalPreview and not previewsOff and not (preview and (tonumber(preview.sentAt) or 0) > external.stamp) then
-    icon.setExternalPreview(external)
-    setExternalPulse(icon, external.pulse == true)
+  if target.setExternalPreview and not previewsOff and not (preview and (tonumber(preview.sentAt) or 0) > external.stamp) then
+    target.setExternalPreview(external)
+    setExternalPulse(pulseIcon, external.pulse == true)
     return true
   end
-  setExternalPulse(icon, false)
+  setExternalPulse(pulseIcon, false)
   if surfaces.dropExternalPreview then
     surfaces.dropExternalPreview()
   end
@@ -70,7 +71,9 @@ end
 
 -- surfaces: { getWindow, isWindowVisible, buildMessagePreview, getIcon,
 -- getMinimapIcon, getLdbObject, getCompartment?, getExternalPreview?,
--- dropExternalPreview?, previewsOff?, getPanelRegistry? }.
+-- dropExternalPreview?, previewsOff?, getPanelRegistry?, getDetachedPreview?,
+-- previewDetached? }. While previewDetached() is true the detached card (not
+-- the widget or minimap card) takes the preview.
 function IconSurfaces.Update(contacts, surfaces)
   -- Suppress the icon-anchored previews only when the Whispers tab is
   -- actually showing — the full conversation is already on screen and the
@@ -92,18 +95,31 @@ function IconSurfaces.Update(contacts, surfaces)
   local minimap = surfaces.getMinimapIcon()
   IconSurfaces.ShowCounts(total, unread, icon, minimap, surfaces.getLdbObject())
   setCount(surfaces.getCompartment and surfaces.getCompartment(), total, unread)
-  if icon and icon.setIncomingPreview and not showExternalPreview(icon, preview, surfaces) then
+  local detachedCard = surfaces.getDetachedPreview and surfaces.getDetachedPreview() or nil
+  local detached = surfaces.previewDetached and surfaces.previewDetached() and detachedCard or nil
+  if detached then
+    if not showExternalPreview(detached, icon, preview, surfaces) then
+      detached.setIncomingPreview(previewSender, previewText, previewClass, preview)
+    end
+    if icon and icon.setIncomingPreview then
+      icon.setIncomingPreview(nil, nil, nil)
+    end
+  elseif icon and icon.setIncomingPreview and not showExternalPreview(icon, icon, preview, surfaces) then
     icon.setIncomingPreview(previewSender, previewText, previewClass, preview)
   end
 
   if minimap and minimap.setIncomingPreview then
     -- The minimap preview floats on UIParent, so it must not pop (or
     -- linger) while the minimap icon itself is hidden (icon mode "widget").
-    if not minimap.isShown or minimap.isShown() then
+    if not detached and (not minimap.isShown or minimap.isShown()) then
       minimap.setIncomingPreview(previewSender, previewText, previewClass, preview)
     else
       minimap.setIncomingPreview(nil, nil, nil)
     end
+  end
+
+  if detachedCard and not detached then
+    detachedCard.setIncomingPreview(nil, nil, nil)
   end
 
   -- Every unread change ends here, so this is where panels hear of one.

@@ -10,12 +10,21 @@ local Panels = ns.PublicApiPanels or require("WhisperMessenger.Core.PublicApi.Pa
 -- commands keep the plain toggle.
 local IconToggle = {}
 
--- The owner of the preview the widget shows; nil when no preview is on
--- screen (no widget in this icon mode, or the frame hidden), since the slot
--- keeps its entry after the widget stops showing it.
+-- Where the previews show: the detached card while the runtime reports one,
+-- else the widget icon (nil in minimap mode).
+local function activeSurface(runtime)
+  if runtime.getActivePreviewSurface then
+    return runtime.getActivePreviewSurface()
+  end
+  return runtime.getWidgetIcon and runtime.getWidgetIcon() or nil
+end
+
+-- The owner of the preview the active surface shows; nil when no preview is on
+-- screen (no surface in this icon mode, or the frame hidden), since the slot
+-- keeps its entry after the surface stops showing it.
 local function shownPreviewKey(runtime)
-  local widget = runtime.getWidgetIcon and runtime.getWidgetIcon() or nil
-  if widget == nil or widget.isExternalPreviewShown == nil or not widget.isExternalPreviewShown() then
+  local surface = activeSurface(runtime)
+  if surface == nil or surface.isExternalPreviewShown == nil or not surface.isExternalPreviewShown() then
     return nil
   end
   return runtime.externalPreview and runtime.externalPreview.keyOf() or nil
@@ -33,15 +42,21 @@ local function targetPanelKey(runtime)
   return registry.firstBadgedKey()
 end
 
--- The widget's whisper card on screen opens its chat, as a click on the card
--- would. False when no such card shows or the open was refused.
+-- The active surface's whisper card on screen opens its chat, as a click on
+-- the card would. False when no such card shows, the open was refused, or the
+-- widget sits docked on the window (it hides its card, even while the detached
+-- card could open).
 local function openShownWhisperPreview(runtime)
   local widget = runtime.getWidgetIcon and runtime.getWidgetIcon() or nil
-  return widget ~= nil and widget.openShownPreview ~= nil and widget.openShownPreview() == true
+  if widget ~= nil and widget.isRiding ~= nil and widget.isRiding() then
+    return false
+  end
+  local surface = activeSurface(runtime)
+  return surface ~= nil and surface.openShownPreview ~= nil and surface.openShownPreview() == true
 end
 
--- A whisper card on the widget opens its chat. The button docked on an open
--- window hides its card, so a click there closes the window instead.
+-- A whisper card on the active surface opens its chat. The button docked on an
+-- open window hides its card, so a click there closes the window instead.
 -- Otherwise a visible window hides, other whispers run the plain toggle, and an addon page with
 -- something waiting opens; with no such page, or when opening it is refused,
 -- the plain toggle runs.
