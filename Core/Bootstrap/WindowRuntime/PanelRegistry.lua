@@ -22,7 +22,7 @@ local function whisperUnread(contact)
   return tonumber(contact.unreadCount) or 0
 end
 
-local function alwaysActive()
+local function alwaysActive(_key)
   return true
 end
 
