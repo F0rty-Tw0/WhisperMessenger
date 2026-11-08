@@ -72,9 +72,10 @@ return function()
   -- test_reset_to_defaults_leaves_the_list_alone
   do
     local registry = registryWith({ "CraftAlert" })
-    registry.setAllowed("CraftAlert", true)
     local result = build({ registry = registry, enabled = true }, { n = 0 })
+    FindUI.click(FindUI.toggle(result.frame, "CraftAlert"))
+    assert(registry.isAllowed("CraftAlert") == false, "the click unticks the addon")
     FindUI.click(FindUI.byLabel(result.frame, "Reset to Defaults"))
-    assert(registry.isAllowed("CraftAlert") == true, "reset does not re-tick addons")
+    assert(registry.isAllowed("CraftAlert") == false, "reset does not re-tick addons")
   end
 end
