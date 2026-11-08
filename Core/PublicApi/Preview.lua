@@ -57,6 +57,7 @@ function Preview.Install(api, runtime)
       return false
     end
     runtime.externalPreview.set(sourceKey, preview, isPanelShown(runtime, sourceKey))
+    Guards.Claim(runtime, "preview", sourceKey)
     runtime.updateIconSurfaces()
     return true
   end)

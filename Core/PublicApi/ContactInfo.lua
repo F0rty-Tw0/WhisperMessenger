@@ -21,6 +21,7 @@ function PublicContactInfo.Install(api, runtime)
     if not ContactInfo.Set(runtime.contactInfo, sourceKey, playerName, text, runtime, tooltipLines) then
       return false
     end
+    Guards.Claim(runtime, "note", sourceKey)
     -- Only the open chat's strip can change.
     if runtime.isWindowVisible() and ContactInfo.ResolvesTo(runtime, playerName, runtime.activeConversationKey) then
       runtime.refreshWindow()
