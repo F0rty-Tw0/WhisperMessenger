@@ -117,6 +117,14 @@ return function()
     assert(env.inserts[1] == "Gæmmer-Kazzak", "expected the plain player name, got: " .. tostring(env.inserts[1]))
   end
 
+  -- test_shift_clicked_player_name_skips_composer_when_blizzard_chat_box_is_open
+  do
+    reset(true)
+    env.blizzardActiveWindow = {}
+    _G.SetItemRef("player:Gæmmer-Kazzak:1:WHISPER", "|cff3fc7eb|Hplayer:Gæmmer-Kazzak:1:WHISPER|hGæmmer|h|r")
+    assert(#env.inserts == 0, "an open Blizzard chat box must keep the name to itself, got: " .. tostring(env.inserts[1]))
+  end
+
   -- test_shift_clicked_battlenet_name_inserts_nothing
   -- (Blizzard ignores this click so the encoded account name never reaches chat)
   do
@@ -141,6 +149,15 @@ return function()
     _G.SetItemRef("player:Ambush Rasit:3901:CHANNEL:2", rawPlayerLink)
     rawset(_G, "IsModifiedClick", chatLinkClick)
     assert(#env.inserts == 0, "a plain player click must not insert, got: " .. tostring(env.inserts[1]))
+  end
+
+  -- test_insert_clicked_player_name_ignores_a_plain_click
+  do
+    reset(true)
+    rawset(_G, "IsModifiedClick", plainClick)
+    local took = env.LinkHooks.InsertClickedPlayerName("player:Ambush Rasit:3901:CHANNEL:2")
+    rawset(_G, "IsModifiedClick", chatLinkClick)
+    assert(took == false and #env.inserts == 0, "a plain click must not insert the name, got: " .. tostring(env.inserts[1]))
   end
 
   -- test_unmodified_community_player_click_inserts_nothing
