@@ -129,4 +129,25 @@ return function()
   assert(wired.externalPreview == holder and wired.getWidgetIcon() == widget and updates == 1, "external preview wiring reaches the runtime")
   assert(bare.getWidgetIcon() == nil, "getWidgetIcon should default to no widget")
   bare.updateIconSurfaces()
+
+  -- test_panel_registry_asks_the_integration_registry_at_call_time
+  do
+    local allowed = { CraftAlert = true }
+    local rt = {}
+    RuntimeBindings.Apply({ runtime = rt })
+    assert(rt.panelRegistry.isActive("ca") == true, "no registry yet: active")
+    rt.addonIntegrations = {
+      ownerOf = function(kind, key)
+        assert(kind == "panel")
+        return key == "ca" and "CraftAlert" or nil
+      end,
+      isAllowed = function(name)
+        return allowed[name]
+      end,
+    }
+    assert(rt.panelRegistry.isActive("ca") == true)
+    allowed.CraftAlert = false
+    assert(rt.panelRegistry.isActive("ca") == false, "owner refused")
+    assert(rt.panelRegistry.isActive("unowned") == true, "unowned panels stay active")
+  end
 end

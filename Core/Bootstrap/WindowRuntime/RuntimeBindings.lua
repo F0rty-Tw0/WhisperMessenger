@@ -89,7 +89,17 @@ function RuntimeBindings.Apply(options)
   runtime.externalPreview = options.externalPreview
   runtime.getWidgetIcon = getWidgetIcon
   runtime.updateIconSurfaces = updateIconSurfaces
-  runtime.panelRegistry = PanelRegistry.New()
+  -- Read at call time: the integration registry is set after this runs.
+  runtime.panelRegistry = PanelRegistry.New({
+    isActive = function(key)
+      local registry = runtime.addonIntegrations
+      if registry == nil then
+        return true
+      end
+      local owner = registry.ownerOf("panel", key)
+      return owner == nil or registry.isAllowed(owner)
+    end,
+  })
   runtime.contactInfo = ContactInfo.New()
 
   return {

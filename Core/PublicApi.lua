@@ -13,6 +13,7 @@ local Look = ns.PublicApiLook or require("WhisperMessenger.Core.PublicApi.Look")
 local Animation = ns.PublicApiAnimation or require("WhisperMessenger.Core.PublicApi.Animation")
 local CompactWindow = ns.PublicApiCompactWindow or require("WhisperMessenger.Core.PublicApi.CompactWindow")
 local Connect = ns.PublicApiConnect or require("WhisperMessenger.Core.PublicApi.Connect")
+local IntegrationAccess = ns.BootstrapWindowRuntimeIntegrationAccess or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IntegrationAccess")
 local AddonIntegrations = ns.AddonIntegrations or require("WhisperMessenger.Model.AddonIntegrations")
 local FlavorCompat = ns.FlavorCompat or require("WhisperMessenger.Core.FlavorCompat")
 local TextLimits = ns.TextLimits or require("WhisperMessenger.Util.TextLimits")
@@ -125,6 +126,7 @@ end
 
 function PublicApi.Publish(runtime)
   local api = PublicApi.Build(runtime)
+  IntegrationAccess.Attach(runtime)
   _G.WhisperMessengerAPI = api
   return api
 end

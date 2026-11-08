@@ -89,6 +89,24 @@ local function removeNote(state, canonicalName, sourceKey)
   end
 end
 
+-- Drops one source's notes for every player. True when any note went.
+function ContactInfo.ClearSource(state, sourceKey)
+  if not isNonEmptyString(sourceKey) then
+    return false
+  end
+  local holders = {}
+  for canonicalName, notes in pairs(state) do
+    if notes[sourceKey] ~= nil then
+      holders[#holders + 1] = canonicalName
+    end
+  end
+  for _, canonicalName in ipairs(holders) do
+    removeNote(state, canonicalName, sourceKey)
+  end
+
+  return #holders > 0
+end
+
 -- The stored names that resolve to the chat, the full name first: the chat's
 -- own name and its name without the realm. Anything else cannot resolve to it.
 local function namesForChat(runtime, conversationKey)
