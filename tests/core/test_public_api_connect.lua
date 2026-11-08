@@ -206,4 +206,18 @@ return function()
     armed = false
     assert(ok, err)
   end
+
+  -- test_raising_allow_check_refuses_even_when_the_call_itself_works
+  do
+    local PublicApi = require("WhisperMessenger.Core.PublicApi")
+    local runtime = { accountState = { addonIntegrations = {} } }
+    local api = PublicApi.Build(runtime)
+    local handle = api.Connect("CraftAlert")
+    assert(handle.IsAnimationEnabled() == true, "the raw call answers true")
+    runtime.addonIntegrations.isAllowed = function()
+      error("boom")
+    end
+    assert(api.IsAnimationEnabled() == false, "shared call fails closed")
+    assert(handle.IsAnimationEnabled() == false, "handle call fails closed")
+  end
 end
