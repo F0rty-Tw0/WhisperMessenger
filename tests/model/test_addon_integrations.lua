@@ -32,6 +32,39 @@ return function()
     assert(reg.isAllowed("Foo") == false and reg.connectedRefused("Foo") == true)
     reg.setAllowed("Foo", true)
     assert(reg.connectedRefused("Foo") == true, "mark never changes after the first touch")
+    reg.touch("Foo")
+    assert(reg.isAllowed("Foo") == true and reg.connectedRefused("Foo") == true, "a later touch must not overwrite the mark")
+  end
+
+  -- test_corrupt_saved_rows_are_dropped_or_repaired_and_never_raise
+  do
+    local account = {
+      addonIntegrations = {
+        [""] = 5,
+        CraftAlert = true,
+        [7] = { allowed = true },
+        Good = { title = "Good", allowed = false },
+        Odd = { title = 12, allowed = "yes" },
+      },
+    }
+    local reg = AddonIntegrations.New(account, titles({}))
+    local ok, err = pcall(function()
+      reg.touch("")
+      reg.touch("CraftAlert")
+      assert(reg.isAllowed("") == true and reg.isAllowed("CraftAlert") == true)
+      reg.setAllowed("CraftAlert", false)
+      assert(reg.isAllowed("CraftAlert") == false)
+    end)
+    assert(ok, err)
+    local names = {}
+    for _, row in ipairs(reg.rows()) do
+      assert(type(row.name) == "string" and type(row.title) == "string" and type(row.allowed) == "boolean")
+      names[#names + 1] = row.name
+    end
+    assert(table.concat(names, ",") == "CraftAlert,Good,Odd,", table.concat(names, ","))
+    assert(account.addonIntegrations[7] == nil)
+    assert(reg.isAllowed("Good") == false, "a valid saved tick is kept")
+    assert(account.addonIntegrations.Odd.allowed == true and account.addonIntegrations.Odd.title == nil)
   end
 
   -- test_state_by_event_table (spec State x event, one row per assertion)

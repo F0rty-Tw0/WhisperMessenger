@@ -41,7 +41,25 @@ local function sortRows(rows)
   end)
 end
 
+-- A hand-edited or damaged save must not make the public API throw: drop
+-- entries that are not name -> table, and coerce allowed / title to their types.
+local function sanitize(rows)
+  for key, row in pairs(rows) do
+    if type(key) ~= "string" or type(row) ~= "table" then
+      rows[key] = nil
+    else
+      row.allowed = row.allowed ~= false
+      if type(row.title) ~= "string" then
+        row.title = nil
+      end
+    end
+  end
+end
+
 function AddonIntegrations.New(accountState, lookupTitle)
+  if type(accountState) == "table" and type(accountState.addonIntegrations) == "table" then
+    sanitize(accountState.addonIntegrations)
+  end
   local registry = {}
   local privateRows = {}
   local seen = {}
