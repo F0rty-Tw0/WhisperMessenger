@@ -295,6 +295,9 @@ UI/ConversationPane/EdgeFade.lua
 UI/ConversationPane/InfoStrip.lua
 UI/ConversationPane/ThemeRefresh.lua
 UI/ConversationPane/ConversationPane.lua
+UI/Composer/ChatLinkHookUtil.lua
+UI/Composer/ChatLinkSourcesAddOns.lua
+UI/Composer/ChatLinkSources.lua
 UI/Composer/LinkHooks.lua
 UI/Composer/Popover.lua
 UI/Composer/EmojiPicker.lua
