@@ -55,6 +55,32 @@ return function()
     assert(ComposerSurface.NATIVE_BORDER_TEXTURE == expected, "file art path, got " .. tostring(ComposerSurface.NATIVE_BORDER_TEXTURE))
   end
 
+  -- test_search_atlas_names_are_blizzards_input_box_atlases
+  do
+    local atlas = ComposerSurface.NATIVE_SEARCH_ATLAS
+    assert(atlas.left == "common-search-border-left", "left atlas, got " .. tostring(atlas.left))
+    assert(atlas.middle == "common-search-border-middle", "middle atlas, got " .. tostring(atlas.middle))
+    assert(atlas.right == "common-search-border-right", "right atlas, got " .. tostring(atlas.right))
+  end
+
+  -- test_file_border_pieces_use_input_border_slices_and_8px_edges
+  do
+    local input = FakeUI.NewFactory().CreateFrame("EditBox", nil, nil)
+    local pieces = ComposerSurface.CreateNativeBorder(input)
+    local expected = {
+      left = { 0, 0.0625, 0, 0.625 },
+      middle = { 0.0625, 0.9375, 0, 0.625 },
+      right = { 0.9375, 1, 0, 0.625 },
+    }
+    for name, coords in pairs(expected) do
+      local got = pieces[name].texCoords or {}
+      for i = 1, 4 do
+        assert(got[i] == coords[i], name .. " tex coord " .. i .. ", got " .. tostring(got[i]))
+      end
+    end
+    assert(pieces.left.width == 8 and pieces.right.width == 8, "8px edges")
+  end
+
   -- test_hud_composer_draws_blizzard_input_border_on_existing_edit_box
   do
     local composer = create(true)
