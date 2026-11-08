@@ -531,6 +531,14 @@ local function makeCreateFrame(options)
       return resizeMinWidth, resizeMinHeight, resizeMaxWidth, resizeMaxHeight
     end
 
+    function frame:GetObjectType()
+      return self.frameType
+    end
+
+    function frame:GetThumbTexture()
+      return self.thumbTexture
+    end
+
     function frame:GetRegions()
       local regions = {}
       for _, child in ipairs(self.children) do

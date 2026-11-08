@@ -2,6 +2,7 @@ local FakeUI = require("tests.helpers.fake_ui")
 local FindUI = require("tests.helpers.find_ui")
 local Localization = require("WhisperMessenger.Locale.Localization")
 local PickerPopup = require("WhisperMessenger.UI.Shared.PickerPopup")
+local StyledTextInputPopup = require("WhisperMessenger.UI.Shared.StyledTextInputPopup")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ExportPanel = require("WhisperMessenger.UI.ContactsList.ExportPanel")
 
@@ -132,6 +133,37 @@ return function()
     local panel = show(3)
     local box, scroll = panel.editBox, panel.editBox.parent
     assert(box:GetWidth() > 0 and box:GetWidth() < scroll:GetWidth(), "text narrower than the scroll box, got " .. tostring(box:GetWidth()))
+  end
+
+  -- test_modern_look_hides_blizzards_box_art
+  do
+    local saved = StyledTextInputPopup.nativeChrome
+    StyledTextInputPopup.nativeChrome = false
+    local ok, err = pcall(function()
+      local scroll = show(3).editBox.parent
+      local bar = scroll.ScrollBar
+      assert(not scroll.BorderTex:IsShown(), "Blizzard border hidden")
+      assert(not bar.Track:IsShown(), "Blizzard track hidden")
+      assert(not bar.UpButton:IsShown() and not bar.DownButton:IsShown(), "arrow buttons hidden")
+      assert(bar:IsShown() and bar:GetThumbTexture():IsShown(), "scroll bar still usable")
+      local c, want = bar:GetThumbTexture().color, Theme.COLORS.scrollbar
+      assert(c and c[1] == want[1] and c[2] == want[2] and c[3] == want[3], "thumb in the theme's scroll bar colour")
+    end)
+    StyledTextInputPopup.nativeChrome = saved
+    assert(ok, err)
+  end
+
+  -- test_native_look_keeps_blizzards_box_art
+  do
+    local saved = StyledTextInputPopup.nativeChrome
+    StyledTextInputPopup.nativeChrome = true
+    local ok, err = pcall(function()
+      local scroll = show(3).editBox.parent
+      assert(scroll.BorderTex:IsShown(), "Blizzard border kept")
+      assert(scroll.ScrollBar.UpButton:IsShown(), "arrow buttons kept")
+    end)
+    StyledTextInputPopup.nativeChrome = saved
+    assert(ok, err)
   end
 
   -- test_template_keeps_its_own_text_handler

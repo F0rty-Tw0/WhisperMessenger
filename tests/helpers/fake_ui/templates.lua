@@ -57,6 +57,22 @@ function Templates.Apply(frame, template, createFrame)
     end)
     frame.CharCount = frame:CreateFontString(nil, "OVERLAY")
     frame.CharCount:Show()
+    -- Assumed shape (key names not probed): a border texture on the scroll
+    -- frame, and a slider with up/down arrow buttons and a thumb.
+    frame.BorderTex = frame:CreateTexture(nil, "BACKGROUND")
+    frame.BorderTex:Show()
+    local bar = createFrame("Slider", nil, frame, nil)
+    bar:Show()
+    bar.Track = bar:CreateTexture(nil, "BACKGROUND")
+    bar.Track:Show()
+    bar.UpButton = createFrame("Button", nil, bar, nil)
+    bar.UpButton:Show()
+    bar.DownButton = createFrame("Button", nil, bar, nil)
+    bar.DownButton:Show()
+    local thumb = bar:CreateTexture(nil, "ARTWORK")
+    thumb:Show()
+    bar:SetThumbTexture(thumb)
+    frame.ScrollBar = bar
   elseif template == "UIPanelButtonTemplate" then
     -- Button widget methods only; the template's child keys are not faked.
     function frame:LockHighlight()
