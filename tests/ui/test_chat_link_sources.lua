@@ -138,6 +138,22 @@ return function()
     assert(env.inserts[1] == "|Hitem:33278|h[Burning Torch]|h", "expected the quest item link, got: " .. tostring(env.inserts[1]))
   end)
 
+  -- test_watch_frame_item_plain_click_inserts_nothing
+  withEnv(function()
+    rawset(_G, "WatchFrameItem_OnClick", function(_self, _button, _down) end)
+    rawset(_G, "GetQuestLogSpecialItemInfo", function(_questIndex)
+      return "|Hitem:33278|h[Burning Torch]|h", "item", 1
+    end)
+  end, function(env)
+    env.chatLink = false
+    _G.WatchFrameItem_OnClick({
+      GetID = function()
+        return 4
+      end,
+    }, "LeftButton", false)
+    assert(#env.inserts == 0, "a plain click must not insert, got " .. #env.inserts)
+  end)
+
   -- test_scoreboard_left_click_inserts_player_name
   -- (Vanilla binds ScorePlayer_OnClick, TBC and later ScorePlayer_OnMouseUp)
   withEnv(function()
@@ -155,6 +171,24 @@ return function()
     _G.ScorePlayer_OnMouseUp(row, "LeftButton")
     _G.ScorePlayer_OnMouseUp(row, "RightButton")
     assert(#env.inserts == 2 and env.inserts[2] == "Ara", "expected the name from both handlers, got " .. #env.inserts)
+  end)
+
+  -- test_scoreboard_plain_click_inserts_nothing
+  withEnv(function()
+    rawset(_G, "ScorePlayer_OnClick", function(_self, _mouseButton) end)
+    rawset(_G, "ScorePlayer_OnMouseUp", function(_self, _mouseButton) end)
+  end, function(env)
+    env.chatLink = false
+    local row = {
+      text = {
+        GetText = function()
+          return "Ara"
+        end,
+      },
+    }
+    _G.ScorePlayer_OnClick(row, "LeftButton")
+    _G.ScorePlayer_OnMouseUp(row, "LeftButton")
+    assert(#env.inserts == 0, "a plain click must not insert, got " .. #env.inserts)
   end)
 
   -- test_registering_every_hook_assigns_no_global

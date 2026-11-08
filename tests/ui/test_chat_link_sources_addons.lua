@@ -70,6 +70,16 @@ return function()
     assert(#env.inserts == 0, "ignoreModifiers clicks must not insert, got " .. #env.inserts)
   end)
 
+  -- test_achievement_plain_click_inserts_nothing
+  withEnv(function()
+    rawset(_G, "AchievementButton_OnClick", function(_button, _second, _down, _fourth) end)
+    installAchievementLink()
+  end, function(env)
+    env.chatLink = false
+    _G.AchievementButton_OnClick({ id = 6 }, "LeftButton", false)
+    assert(#env.inserts == 0, "a plain click must not insert, got " .. #env.inserts)
+  end)
+
   -- test_encounter_journal_clicks_insert_button_link_once_journal_loads
   withEnv(function(env)
     env.DeferAddOns()
@@ -110,6 +120,25 @@ return function()
       #env.inserts == 1 and env.inserts[1] == "|Hglyph:3:42|h[Glyph of Fireball]|h",
       "expected one glyph link, got: " .. tostring(env.inserts[1])
     )
+  end)
+
+  -- test_glyph_plain_click_inserts_nothing
+  withEnv(function()
+    rawset(_G, "GlyphFrameGlyph_OnClick", function(_self, _button, _down) end)
+    rawset(_G, "C_GlyphInfo", {
+      GetGlyphLink = function(slot, glyphID)
+        return "|Hglyph:" .. slot .. ":" .. glyphID .. "|h[Glyph of Fireball]|h"
+      end,
+    })
+  end, function(env)
+    env.chatLink = false
+    _G.GlyphFrameGlyph_OnClick({
+      glyphID = 42,
+      GetID = function()
+        return 3
+      end,
+    }, "LeftButton", false)
+    assert(#env.inserts == 0, "a plain click must not insert, got " .. #env.inserts)
   end)
 
   -- test_objective_tracker_headers_insert_their_links

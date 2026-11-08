@@ -19,6 +19,7 @@ local ChatLinkSourcesAddOns = ns.ComposerChatLinkSourcesAddOns or require("Whisp
 -- - an open Auction House search box also gets the item name;
 -- - quest log shift-click also toggles watching the quest;
 -- - achievement shift-click also toggles tracking it;
+-- - glyph shift-right-click also opens the remove-glyph popup;
 -- - objective tracker header shift-click also untracks the entry, and the
 --   quest item button there also uses the item;
 -- - Encounter Journal and quest tracker clicks also do their plain-click
