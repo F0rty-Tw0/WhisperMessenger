@@ -21,8 +21,9 @@ local PointerFocus = ns.MessengerWindowWindowScriptsFramePointerFocus
 -- composer gets none. Calling the game's chat opener from here would taint, so
 -- in combat the key focuses the composer only while it is shown and the mouse
 -- is over the window, and otherwise does nothing. "Over the window" includes
--- its parts outside its edges (the tabs below a compact window) and the toggle
--- icon docked in its corner. When combat ends, PLAYER_REGEN_ENABLED keeps or
+-- its parts outside its edges (the tabs below a compact window, the Retail
+-- portrait) and the toggle icon while docked in its corner, not while it
+-- floats elsewhere. When combat ends, PLAYER_REGEN_ENABLED keeps or
 -- releases the key as usual.
 --
 -- Settings hide the composer's pane, so the pane's OnShow picks up a changed
@@ -51,16 +52,55 @@ local function windowOf(pane)
   return frame
 end
 
--- The window's own rect, or a frame under the cursor that belongs to the
--- window (drawn outside it) or to the toggle icon, which is UIParent's child.
+-- region is `ancestor` or sits somewhere below it.
+local function isWithin(region, ancestor)
+  local current = region
+  while current ~= nil do
+    if current == ancestor then
+      return true
+    end
+    if type(current.GetParent) ~= "function" then
+      return false
+    end
+    current = current:GetParent()
+  end
+  return false
+end
+
+-- The toggle icon (UIParent's child) while it is pinned to the window's icon
+-- spot; nil while it floats on its own or glides between the two.
+local function dockedToggleIcon(window)
+  local icon = _G[TOGGLE_ICON_NAME]
+  if icon == nil or type(icon.GetPoint) ~= "function" then
+    return nil
+  end
+  local _, relativeTo = icon:GetPoint()
+  if relativeTo ~= nil and isWithin(relativeTo, window) then
+    return icon
+  end
+  return nil
+end
+
+-- The Retail template's portrait sticks out past the window's corner and
+-- takes no mouse, so the frame under the cursor there is whatever is behind it.
+local function overProtrudingPart(window)
+  local portrait = window.PortraitContainer
+  return portrait ~= nil and type(portrait.IsMouseOver) == "function" and portrait:IsMouseOver() == true
+end
+
+-- The window's own rect, its portrait, or a frame under the cursor that
+-- belongs to the window (drawn outside it) or to the docked toggle icon.
 local function defaultMouseIsOver(pane)
   local window = windowOf(pane)
   if type(window.IsMouseOver) == "function" and window:IsMouseOver() == true then
     return true
   end
-  local toggleIcon = _G[TOGGLE_ICON_NAME]
+  if overProtrudingPart(window) then
+    return true
+  end
+  local toggleIcon = dockedToggleIcon(window)
   return PointerFocus.FindFocusAncestor(function(frame)
-    return frame == window or frame == toggleIcon
+    return frame == window or (toggleIcon ~= nil and frame == toggleIcon)
   end) ~= nil
 end
 
