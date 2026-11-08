@@ -32,7 +32,7 @@ end
 local function clickInCombat(env)
   env.startCombat()
   env.window.mouseOver = false
-  env.button:GetScript("OnClick")(env.button)
+  env.pressKey()
 end
 
 return function()
@@ -64,12 +64,47 @@ return function()
     do
       local env = newEnv()
       local icon = env.factory.CreateFrame("Button", nil, _G.UIParent)
+      local portrait = env.factory.CreateFrame("Frame", nil, env.window)
+      icon:SetPoint("CENTER", portrait:CreateTexture(nil, "OVERLAY"), "CENTER", 0, 0)
       withFocus(shape, icon, function()
         rawset(_G, "WhisperMessengerToggleIcon", icon)
         clickInCombat(env)
       end)
       assert(env.input._hasFocus == true, shape .. ": the icon docked in the window's corner counts as over it")
     end
+
+    -- test_combat_click_over_floating_toggle_icon_does_nothing
+    do
+      local env = newEnv()
+      local icon = env.factory.CreateFrame("Button", nil, _G.UIParent)
+      icon:SetPoint("CENTER", _G.UIParent, "BOTTOMLEFT", 100, 100)
+      withFocus(shape, icon, function()
+        rawset(_G, "WhisperMessengerToggleIcon", icon)
+        clickInCombat(env)
+      end)
+      assert(env.input._hasFocus ~= true, shape .. ": the icon floating away from the window is not over it")
+    end
+
+    -- test_combat_click_over_portrait_past_window_edge_focuses
+    do
+      local env = newEnv()
+      env.window.PortraitContainer = env.factory.CreateFrame("Frame", nil, env.window)
+      env.window.PortraitContainer.mouseOver = true
+      local world = env.factory.CreateFrame("Frame", nil, nil)
+      withFocus(shape, world, function()
+        clickInCombat(env)
+      end)
+      assert(env.input._hasFocus == true, shape .. ": the portrait sticks out past the window's corner and counts as over it")
+    end
+  end
+
+  -- test_combat_click_with_empty_foci_does_nothing_off_window
+  do
+    local env = newEnv()
+    withFocus("foci", nil, function()
+      clickInCombat(env)
+    end)
+    assert(env.input._hasFocus ~= true, "nothing under the mouse: only the window's own rect counts")
   end
 
   -- test_combat_click_with_no_focus_api_does_nothing_off_window

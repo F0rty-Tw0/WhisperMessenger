@@ -306,6 +306,7 @@ UI/Composer/SendButtonStyle.lua
 UI/Composer/ReplyState.lua
 UI/Composer/ComposerLimit.lua
 UI/MessengerWindow/WindowScripts/Frame/PointerFocus.lua
+UI/Composer/ComposerEnterButton.lua
 UI/Composer/ComposerSendFocus.lua
 UI/Composer/SlashCommand.lua
 UI/Composer/Composer.lua

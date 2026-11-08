@@ -36,6 +36,16 @@ function Templates.Apply(frame, template, createFrame)
     frame.Instructions = frame:CreateFontString(nil, "ARTWORK")
     frame.clearButton = createFrame("Button", nil, frame, nil)
     frame.searchIcon = frame:CreateTexture(nil, "OVERLAY")
+  elseif template == "SecureActionButtonTemplate" then
+    -- The template's own OnClick runs the secure action, and the template
+    -- makes the button protected. frame.secureClicks counts that handler.
+    frame.secureClicks = 0
+    frame:SetScript("OnClick", function(self)
+      self.secureClicks = self.secureClicks + 1
+    end)
+    function frame:IsProtected()
+      return true, true
+    end
   elseif template == "UIPanelButtonTemplate" then
     -- Button widget methods only; the template's child keys are not faked.
     function frame:LockHighlight()

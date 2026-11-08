@@ -95,7 +95,7 @@ return function()
     env.pane:Hide()
     env.startCombat()
     env.window.mouseOver = true
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus ~= true, "a hidden composer swallows Enter in combat")
   end
 
@@ -113,7 +113,7 @@ return function()
     local env = newEnv()
     env.startCombat()
     env.window.mouseOver = true
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus == true, "in combat, Enter focuses the composer while the mouse is over the window")
   end
 
@@ -122,7 +122,7 @@ return function()
     local env = newEnv()
     env.startCombat()
     env.window.mouseOver = false
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus ~= true, "in combat, Enter does nothing while the mouse is off the window")
   end
 
@@ -132,7 +132,7 @@ return function()
     env.startCombat()
     env.window.mouseOver = true
     env.pane:Hide()
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus ~= true, "a hidden composer never takes the cursor")
   end
 
@@ -142,11 +142,11 @@ return function()
     env.startCombat()
     env.window.mouseOver = true
     env.on = false
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus ~= true, "setting turned off in combat: no focus")
     env.on = true
     env.enabled = false
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus ~= true, "disabled composer in combat: no focus")
   end
 
@@ -154,7 +154,7 @@ return function()
   do
     local env = newEnv()
     env.window.mouseOver = false
-    env.button:GetScript("OnClick")(env.button)
+    env.pressKey()
     assert(env.input._hasFocus == true, "out of combat the mouse position does not matter")
   end
 
