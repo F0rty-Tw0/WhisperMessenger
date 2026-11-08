@@ -1,8 +1,8 @@
 local FakeUI = require("tests.helpers.fake_ui")
 local Bootstrap = require("WhisperMessenger.Bootstrap")
 
--- New installs start on the compact window; players updating the addon keep the
--- classic window until they ask for the other one.
+-- The compact window is opt-in for everyone: new installs and updates start on
+-- the classic window, and a saved choice stands.
 
 local function boot(accountState)
   local factory = FakeUI.NewFactory()
