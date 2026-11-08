@@ -32,17 +32,21 @@ local function centerColumn(panel, settings, innerWidth)
   return innerWidth - 2 * gap
 end
 
-local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged)
+local function createSettingsPanel(factory, parent, createSettingsView, config, onSettingChanged, extraOptions)
   local panel = factory.CreateFrame("Frame", nil, parent)
   panel:SetAllPoints(parent)
-  local settings = createSettingsView(factory, panel, config, {
+  local viewOptions = {
     onChange = onSettingChanged,
     onLayoutChanged = function()
       if panel._wmRemeasure then
         panel._wmRemeasure()
       end
     end,
-  })
+  }
+  for key, value in pairs(extraOptions or {}) do
+    viewOptions[key] = value
+  end
+  local settings = createSettingsView(factory, panel, config, viewOptions)
   -- Propagate the inner panel's bottom marker up to the wrapper so the
   -- options scrollview's per-tab content sizing (in WindowScripts/Buttons)
   -- can find it. centerColumn insets the inner frame sideways only, so its

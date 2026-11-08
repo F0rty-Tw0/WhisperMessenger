@@ -69,6 +69,7 @@ function WindowShell.Build(factory, options)
     settingsConfig = settingsConfig,
     storeConfig = options.storeConfig or {},
     filters = options.filters,
+    integrations = options.integrations,
     onSettingChanged = options.onSettingChanged,
     theme = Theme,
     chrome = chrome,

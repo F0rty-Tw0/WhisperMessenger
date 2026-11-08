@@ -62,6 +62,7 @@ function SettingsPanels.Create(factory, options)
       panelKey = "behaviorPanel",
       settingsKey = "behaviorSettings",
       create = options.behaviorCreate,
+      viewOptions = { integrations = options.integrations },
       config = {
         dimWhenMoving = settingsConfig.dimWhenMoving,
         autoFocusComposer = settingsConfig.autoFocusComposer,
@@ -167,7 +168,7 @@ function SettingsPanels.Create(factory, options)
     end
 
     local settings
-    panel, settings = SettingsPanelFrame.Create(factory, parent, definition.create, definition.config, onSettingChanged)
+    panel, settings = SettingsPanelFrame.Create(factory, parent, definition.create, definition.config, onSettingChanged, definition.viewOptions)
     settingsPanels[index] = panel
     result[definition.panelKey] = panel
     result[definition.settingsKey] = settings
