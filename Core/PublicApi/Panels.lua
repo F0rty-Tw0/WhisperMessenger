@@ -86,9 +86,14 @@ local function isKnown(runtime, key)
 end
 
 -- Open the window on a registered panel. False, with nothing opened, when the
--- key is unknown or content restrictions refuse; also the icons' click path.
+-- key is unknown, its addon is turned off, or content restrictions refuse;
+-- also the icons' click path.
 function Panels.Open(runtime, key)
   if not isKnown(runtime, key) or Guards.IsRefused(runtime) then
+    return false
+  end
+  local registry = runtime.panelRegistry
+  if registry.isActive ~= nil and not registry.isActive(key) then
     return false
   end
   runtime.ensureWindow()
