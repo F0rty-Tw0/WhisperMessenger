@@ -45,11 +45,11 @@ return function()
 
   -- test_reset_returns_the_window_style_to_its_default
   do
-    local result, changes = create({ compactLayout = false })
+    local result, changes = create({ compactLayout = true })
     local reset = FindUI.byLabel(result.frame, "Reset to Defaults")
     reset.scripts.OnClick(reset)
     local change = changed(changes, "compactLayout")
-    assert(change ~= nil and change.value == true, "the default is the compact window")
+    assert(change ~= nil and change.value == false, "the default is the regular window; compact is opt-in")
   end
 
   -- test_set_compact_layout_shows_the_style_without_saving_it
