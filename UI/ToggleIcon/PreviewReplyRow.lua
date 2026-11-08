@@ -91,7 +91,7 @@ function PreviewReplyRow.Create(factory, parentFrame, options)
   end
   cover:Hide()
 
-  -- Parented to the input so the rounded fill never covers it.
+  -- Parented to the input so the fill or border art never covers it.
   local placeholder = input:CreateFontString(nil, "OVERLAY")
   UIHelpers.setFontObject(placeholder, theme.FONTS.composer_input)
   placeholder:SetPoint("LEFT", input, "LEFT", TEXT_INSET, 0)
