@@ -74,6 +74,7 @@ Util/ChatReplyState.lua
 Util/ChatPrefill.lua
 Model/ConversationDrafts.lua
 Model/ContactInfo.lua
+Model/AddonIntegrations.lua
 Model/OutgoingDelivery.lua
 Model/ContactPrefs.lua
 Model/MessageRequests.lua
@@ -547,5 +548,6 @@ Core/PublicApi/UnreadCount.lua
 Core/PublicApi/Look.lua
 Core/PublicApi/Animation.lua
 Core/PublicApi/CompactWindow.lua
+Core/PublicApi/Connect.lua
 Core/PublicApi.lua
 Bootstrap.lua

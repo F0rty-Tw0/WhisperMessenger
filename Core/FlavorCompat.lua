@@ -61,6 +61,29 @@ function FlavorCompat.RequestGuildRoster()
   return true
 end
 
+-- Localized TOC title of an installed addon; nil when unknown, blank or the API is missing.
+-- The old global echoes the name for unknown addons, so reason "MISSING" outranks the title.
+function FlavorCompat.GetAddOnTitle(name)
+  if type(name) ~= "string" or name == "" then
+    return nil
+  end
+  local addOns = _G["C_AddOns"]
+  local namespaced = type(addOns) == "table" and addOns.GetAddOnInfo or nil
+  local getInfo = type(namespaced) == "function" and namespaced or _G["GetAddOnInfo"]
+  if type(getInfo) ~= "function" then
+    return nil
+  end
+  local ok, _, title, _, _, reason = pcall(getInfo, name)
+  if not ok or reason == "MISSING" then
+    return nil
+  end
+  if type(title) ~= "string" or not title:find("%S") then
+    return nil
+  end
+
+  return title
+end
+
 ns.FlavorCompat = FlavorCompat
 
 return FlavorCompat

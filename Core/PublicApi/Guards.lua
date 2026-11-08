@@ -27,5 +27,15 @@ function Guards.IsNonEmptyString(value)
   return type(value) == "string" and string.find(value, "%S") ~= nil
 end
 
+-- Records who made a successful public call. Internal paths run with no
+-- apiCaller and own nothing.
+function Guards.Claim(runtime, kind, key)
+  local registry = runtime.addonIntegrations
+  if registry == nil or type(runtime.apiCaller) ~= "string" then
+    return
+  end
+  registry.claim(kind, key, runtime.apiCaller)
+end
+
 ns.PublicApiGuards = Guards
 return Guards

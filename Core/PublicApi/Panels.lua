@@ -123,6 +123,7 @@ function Panels.Install(api, runtime)
     if not runtime.panelRegistry.register(key, spec) then
       return false
     end
+    Guards.Claim(runtime, "panel", key)
     refreshIcons(runtime)
     return true
   end)
