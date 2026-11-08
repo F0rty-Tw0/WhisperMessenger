@@ -70,8 +70,37 @@ local function createText(parent, font, justify)
   return label
 end
 
+local function hideTextures(frame)
+  for _, region in ipairs({ frame:GetRegions() }) do
+    if region:GetObjectType() == "Texture" then
+      region:Hide()
+    end
+  end
+end
+
+-- Modern look: the themed well replaces Blizzard's border, and the scroll
+-- bar keeps only its thumb, painted in theme colours. Returns the thumb.
+local function slimTemplateArt(scroll)
+  hideTextures(scroll)
+  for _, child in ipairs({ scroll:GetChildren() }) do
+    if child:GetObjectType() == "Slider" then
+      local thumb = child:GetThumbTexture()
+      hideTextures(child)
+      for _, button in ipairs({ child:GetChildren() }) do
+        button:Hide()
+      end
+      if thumb then
+        thumb:Show()
+        thumb:SetWidth(Theme.LAYOUT.SCROLLBAR_WIDTH)
+      end
+      return thumb
+    end
+  end
+  return nil
+end
+
 -- Blizzard's input scroll box, nil on a client without the template.
-local function createTemplateBox(factory, well, width, height)
+local function createTemplateBox(factory, panel, well, width, height)
   local scroll = UIHelpers.createTemplatedFrame(factory, "ScrollFrame", nil, well, INPUT_SCROLL_TEMPLATE)
   if scroll == nil or scroll.EditBox == nil then
     return nil
@@ -81,6 +110,9 @@ local function createTemplateBox(factory, well, width, height)
   scroll:Show()
   if scroll.CharCount then
     scroll.CharCount:Hide()
+  end
+  if not DialogChrome.IsNative() then
+    panel.templateThumb = slimTemplateArt(scroll)
   end
   local box = scroll.EditBox
   box:SetWidth(width - TEMPLATE_BAR_WIDTH)
@@ -117,7 +149,7 @@ local function createWell(factory, panel, body, top)
 
   local width = WIDTH - PADDING * 2 - TEXT_INSET * 2
   local height = wellHeight - TEXT_INSET * 2
-  local box = createTemplateBox(factory, well, width, height) or createViewBox(factory, panel, well, width, height)
+  local box = createTemplateBox(factory, panel, well, width, height) or createViewBox(factory, panel, well, width, height)
   box:SetMultiLine(true)
   box:SetMaxLetters(0)
   box:SetMaxBytes(0)
@@ -209,6 +241,9 @@ local function paint(panel)
   UIHelpers.setTextColor(panel.title, titleColor)
   UIHelpers.setTextColor(panel.editBox, textColor)
   UIHelpers.setTextColor(panel.status, hintColor)
+  if panel.templateThumb then
+    UIHelpers.applyColorTexture(panel.templateThumb, Theme.COLORS.scrollbar)
+  end
   if panel.view and panel.view.refreshSkin then
     panel.view.refreshSkin()
   end
