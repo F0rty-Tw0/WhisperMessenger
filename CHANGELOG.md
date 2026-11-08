@@ -7,6 +7,8 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 ## [Unreleased]
 
 - Behavior settings now list every addon that uses Whisper Messenger under "Allow addon integration", each with its own checkbox. Untick one and it stops adding pages, previews and notes right away, with no reload. Addons that aren't loaded this session are greyed out and can be removed from the list with Forget.
+- Fixed: after you had typed in Whisper Messenger once, linking an item in normal chat during a boss fight could make the game block your message and blame Whisper Messenger.
+- Fixed: right-clicking a player's name in chat while typing in Whisper Messenger no longer puts a broken link in your message that the game refuses to send.
 
 ## [2.1.5] - 2026-11-08
 
